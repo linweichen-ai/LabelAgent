@@ -1,0 +1,16 @@
+// Small WebGL point renderer. Positions remain in the sensor's published coordinate frame.
+class PointCloudView {
+ constructor(canvas){
+  this.canvas=canvas;this.points=new Float32Array();this.yaw=-0.6;this.pitch=0.75;this.distance=40;this.center=[0,0,0];this.drag=null;
+  const gl=this.gl=canvas.getContext('webgl',{antialias:false});if(!gl)throw Error('浏览器不支持 WebGL 点云显示');
+  const shader=(type,source)=>{const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s};
+  const program=this.program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,`attribute vec4 point; uniform vec2 viewport; uniform vec2 angle; uniform float distance; uniform vec3 center; varying vec3 color; void main(){vec3 p=point.xyz-center;float x=cos(angle.x)*p.x-sin(angle.x)*p.y;float y=sin(angle.x)*p.x+cos(angle.x)*p.y;float z=cos(angle.y)*p.z-sin(angle.y)*y;float depth=sin(angle.y)*p.z+cos(angle.y)*y+distance;float aspect=viewport.x/viewport.y;gl_Position=vec4(x/aspect*1.7,z*1.7,depth-0.2,depth);gl_PointSize=2.0;float t=clamp((point.z+3.0)/8.0,0.0,1.0);color=mix(vec3(0.1,0.65,0.95),vec3(1.0,0.65,0.15),t);}`));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,`precision mediump float; varying vec3 color;void main(){gl_FragColor=vec4(color,1.0);}`));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));this.buffer=gl.createBuffer();
+  canvas.onpointerdown=e=>{if(e.button!==0)return;this.drag=[e.clientX,e.clientY];canvas.setPointerCapture(e.pointerId)};
+  canvas.onpointermove=e=>{if(!this.drag)return;this.yaw+=(e.clientX-this.drag[0])*0.008;this.pitch=Math.max(-1.5,Math.min(1.5,this.pitch+(e.clientY-this.drag[1])*0.008));this.drag=[e.clientX,e.clientY];this.draw()};canvas.onpointerup=()=>this.drag=null;
+  canvas.onwheel=e=>{e.preventDefault();this.distance=Math.max(1,Math.min(1000,this.distance*Math.exp(e.deltaY*0.001)));this.draw()};
+  this.observer=new ResizeObserver(()=>this.draw());this.observer.observe(canvas);
+ }
+ setPoints(points){this.points=points;this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.buffer);this.gl.bufferData(this.gl.ARRAY_BUFFER,points,this.gl.DYNAMIC_DRAW);this.draw()}
+ draw(){const gl=this.gl,c=this.canvas;if(!gl)return;const w=Math.max(1,c.clientWidth*devicePixelRatio),h=Math.max(1,c.clientHeight*devicePixelRatio);if(c.width!==w||c.height!==h){c.width=w;c.height=h}gl.viewport(0,0,c.width,c.height);gl.clearColor(0.06,0.09,0.12,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.useProgram(this.program);gl.bindBuffer(gl.ARRAY_BUFFER,this.buffer);const a=gl.getAttribLocation(this.program,'point');gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,4,gl.FLOAT,false,16,0);gl.uniform2f(gl.getUniformLocation(this.program,'viewport'),w,h);gl.uniform2f(gl.getUniformLocation(this.program,'angle'),this.yaw,this.pitch);gl.uniform1f(gl.getUniformLocation(this.program,'distance'),this.distance);gl.uniform3fv(gl.getUniformLocation(this.program,'center'),this.center);gl.drawArrays(gl.POINTS,0,this.points.length/4)}
+ destroy(){this.observer.disconnect();this.gl.deleteBuffer(this.buffer);this.gl.deleteProgram(this.program);this.gl.getExtension('WEBGL_lose_context')?.loseContext()}
+}

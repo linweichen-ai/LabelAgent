@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>标注 Agent 平台</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main class="workspace">
+  <section class="viewer">
+    <div class="windowToolbar">
+      <div class="workspaceModes" role="group" aria-label="标注模式">
+        <button id="manualModeButton" class="selected" aria-pressed="true">人工标注</button>
+        <button id="autoModeButton" aria-pressed="false">自动标注</button>
+      </div>
+      <span id="workspaceModeHint">手工绘制与编辑真值</span>
+      <button id="addWindowButton" title="添加窗口"><img src="/icons/plus.svg" alt="">添加窗口</button>
+      <button id="openFilesDialog" class="iconButton" title="加载文件" aria-label="加载文件"><img src="/icons/folder-open.svg" alt=""></button>
+      <button id="openConfigDialog" class="iconButton" title="设置" aria-label="设置"><img src="/icons/settings.svg" alt=""></button>
+    </div>
+    <div class="windowGrid" id="windowGrid">
+      <article class="sensorWindow primaryWindow" id="primaryWindow" hidden>
+        <div class="windowHeader">
+          <span id="primaryTitle">图像窗口</span>
+          <button id="annotatePrimary" title="进入标注模式" aria-label="进入标注模式" aria-pressed="false">✎</button>
+          <button id="maximizePrimary" title="放大 / 还原">⛶</button>
+          <button id="closePrimary" title="关闭窗口">×</button>
+        </div>
+        <div class="canvasWrap"><div class="imageStage" id="stage">
+          <video id="playbackVideo" preload="auto" playsinline hidden></video>
+          <img id="frameImage" alt="视频帧"><canvas id="canvas"></canvas>
+        </div></div>
+      </article>
+      <div id="emptyWindows" hidden>点击「添加窗口」选择消息源</div>
+    </div>
+    <div class="playbackBar">
+      <div class="playbackControls playbackLeft">
+        <button id="playButton" title="播放 / 暂停" aria-label="播放 / 暂停">▶</button>
+        <button id="stopButton" title="停止并回到首帧" aria-label="停止并回到首帧">■</button>
+      </div>
+      <div class="timeSeek"><input id="timeTimeline" aria-label="播放时间" type="range" min="0" max="0" step="0.001" value="0"><output id="playbackTime">00:00.00 / 00:00.00</output></div>
+      <div class="playbackControls playbackRight">
+        <select id="playbackRate" title="播放速度" aria-label="播放速度"><option value="0.1">0.1×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select>
+        <input id="frameNumber" aria-label="当前帧" type="text" inputmode="numeric" pattern="[0-9]*" value="0"><span id="frameTotal">/ 0</span>
+      </div>
+    </div>
+    <div id="imageInfo" role="status" hidden></div>
+    <div id="workbenchSplitter" role="separator" aria-label="调整操作台高度" aria-orientation="horizontal" aria-controls="workbench" tabindex="0" title="上下拖动调整操作台高度，也可使用上下方向键"></div>
+    <section id="workbench" aria-label="标注操作台">
+      <section class="panel" id="truth">
+        <div class="panelHeading"><h2>人工真值</h2><span id="referenceStatus" class="referenceStatus"></span></div>
+        <div class="truthSettings">
+          <label id="labelChoice">类别 <select id="labelSelect"></select></label>
+          <label>类别列表 <input id="labelsInput" value="person,pallet,ego,traversable_area,slope,obstacle,地面"></label>
+          <button id="labelsSave">保存类别</button>
+        </div>
+        <div class="toolrow" id="truthTools">
+          <button id="polygonButton" class="selected">多边形</button>
+          <button id="pointButton">点选目标</button>
+          <button id="negativeButton" title="点选模式下点击非目标区域">排除点</button>
+          <button id="generateMaskButton">生成轮廓</button>
+          <button id="addRegionButton" title="圈出区域并补到选中标注">补标</button>
+          <button id="eraseRegionButton" title="圈出区域并从选中标注中清除">橡皮擦</button>
+          <button id="undoButton" title="撤销上一个点">↶</button>
+          <button id="finishButton">闭合</button>
+          <button id="clearButton">清空本帧</button>
+        </div>
+        <div id="shapeList" class="shapeList"></div>
+        <div class="truthActions" id="truthActions">
+          <button id="truthSave" class="primary">保存当前帧真值</button>
+          <button id="referenceButton">设为参考帧</button>
+          <button id="openReferenceButton" hidden>打开参考帧</button>
+        </div>
+      </section>
+      <div id="autoDesk" hidden>
+        <section id="inspectionPanel" aria-label="自动标注过程">
+          <div class="inspectionHeading">
+            <div class="inspectionTitle"><strong>自动标注过程</strong><span id="inspectionContext"></span></div>
+            <div class="inspectionActions">
+              <label>处理帧数 <input id="taskCount" type="number" min="1" max="100" value="10" title="从当前帧开始处理的帧数"></label>
+              <button id="describeButton" type="button">生成真值描述</button>
+              <button id="prepareReference" type="button">参考帧准备</button>
+              <div class="runActions">
+                <button id="runButton" type="button" class="primary">开始自动标注</button>
+                <button id="saveCandidate" type="button" class="primary">保存结果</button>
+                <button id="clearAutoResult" type="button" title="仅清除当前帧自动候选及过程记录；人工真值保留">清除结果</button>
+              </div>
+              <button id="downloadDebug" type="button">下载记录</button>
+            </div>
+          </div>
+          <div class="inspectionStages" role="tablist" aria-label="自动标注阶段"></div>
+          <div id="inspectionBody" role="tabpanel"></div>
+        </section>
+      </div>
+    </section>
+  </section>
+</main>
+<dialog id="config" class="utilityDialog" aria-labelledby="configTitle">
+  <div class="dialogHeading"><h2 id="configTitle">设置</h2><button type="button" id="closeConfigDialog" class="iconButton" title="关闭" aria-label="关闭"><img src="/icons/x.svg" alt=""></button></div>
+  <div class="dialogContent">
+    <label>大模型 API 基础地址 <input id="llmUrl" placeholder="https://.../v1"></label>
+    <label>模型名 <input id="llmModel" placeholder="视觉语言模型"></label>
+    <label>API Key <input id="llmKey" type="password" placeholder="留空保持原配置"></label>
+  </div>
+  <div class="dialogActions"><button id="configSave" class="primary"><img src="/icons/check.svg" alt="">保存并关闭</button></div>
+</dialog>
+<dialog id="fileManager" class="utilityDialog" aria-labelledby="filesTitle">
+  <div class="dialogHeading"><h2 id="filesTitle">加载文件</h2><button type="button" id="closeFilesDialog" class="iconButton" title="关闭" aria-label="关闭"><img src="/icons/x.svg" alt=""></button></div>
+  <div class="dialogContent">
+    <div class="fileManagerActions"><input id="mcapPath" placeholder="MCAP 文件绝对路径" aria-label="MCAP 文件绝对路径"><button id="openButton">添加路径</button><input id="mcapFile" type="file" accept=".mcap" multiple hidden><button id="chooseButton">选择文件</button></div>
+    <div id="fileList"></div><div id="fileManagerStatus" role="status"></div>
+    <p class="fileManagerHint">删除仅移出列表，保留磁盘文件。</p>
+  </div>
+  <div class="dialogActions"><button id="doneFilesButton" class="primary"><img src="/icons/check.svg" alt="">完成</button></div>
+</dialog>
+<dialog id="addWindowDialog" aria-labelledby="addWindowTitle">
+  <form method="dialog" id="addWindowForm">
+    <div class="dialogHeading"><h2 id="addWindowTitle">添加窗口</h2><button type="button" id="closeWindowDialog" aria-label="关闭">×</button></div>
+    <label class="dialogType">窗口类型 <select id="windowType"><option value="image">图像</option><option value="pointcloud">点云</option></select></label>
+    <fieldset><legend>显示消息源（可多选）</legend><div id="windowSources"></div></fieldset>
+    <p class="dialogHint" id="windowHint">多个图像源按顺序透明叠加。</p>
+    <div class="dialogActions"><button type="button" id="cancelWindowDialog">取消</button><button type="submit" class="primary">添加窗口</button></div>
+  </form>
+</dialog>
+<div id="toast" role="status"></div>
+<script src="/pointcloud.js"></script><script src="/app.js"></script><script src="/inspection.js"></script>
+</body>
+</html>

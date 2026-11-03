@@ -116,3 +116,5 @@ python tools/collect_tiled_candidates.py --dataset <dataset> --candidates-json <
 验证阶段加 `--frames heldout --minimum-scores .5 --addition-ratios .5 --frozen-selection <tuning-selection>`。选取文件须记录 V2 指标摘要、调参选择依据、唯一参数和完整验证帧范围。所有输出目录必须新建；中断后核实旧进程已结束再以相同参数加 `--resume`，代码或输入摘要漂移会被拒绝。在输出目录创建 `STOP` 文件可于请求间停止，保留已完成的响应；恢复前移除该文件。模型服务及工作台不会因此被结束。
 
 原始图像、逐对象参考与候选轮廓、裁图响应、私有路径和模型权重继续只在本机保存。
+
+后续候选自身像素、采样密度、近似重复及八张真实完整 Agent 的复验见 [进一步测试与失败边界](refinement-results.md)。

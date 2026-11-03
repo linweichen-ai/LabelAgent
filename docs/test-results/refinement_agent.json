@@ -1,0 +1,318 @@
+{
+  "scope": "fresh_real_SAM3_and_local_VLM_Agent_functional_and_sparse_reference_test",
+  "images": 8,
+  "reference_kind": "unconfirmed_functional_fixture",
+  "independent_validation": false,
+  "real_SAM3_requests": 48,
+  "real_VLM_review_requests": 8,
+  "real_VLM_description_requests": 1,
+  "all_Agent_loops_completed": true,
+  "geometric_merge_edits": 12,
+  "VLM_tool_edits": 0,
+  "all_merged_candidates_exactly_preserved_by_VLM": true,
+  "stage_metrics": {
+    "base": {
+      "pallet": {
+        "candidates": 73,
+        "reference_points": 2190,
+        "reference_object_observations": 53,
+        "covered_projected_points": 1887,
+        "points_covered_by_other_class": 13,
+        "objects_matched_at_support_threshold": 27,
+        "best_candidate_support_sum": 25.38477467771933,
+        "image_point_coverage_sum": 6.593786820127639,
+        "images_with_reference_points": 8,
+        "projected_point_coverage": 0.8616438356164383,
+        "off_class_coverage": 0.005936073059360731,
+        "one_to_one_object_support_fraction": 0.5094339622641509,
+        "mean_best_object_support": 0.4789580127871572,
+        "mean_image_point_coverage": 0.8242233525159549
+      },
+      "person": {
+        "candidates": 15,
+        "reference_points": 4075,
+        "reference_object_observations": 14,
+        "covered_projected_points": 3627,
+        "points_covered_by_other_class": 0,
+        "objects_matched_at_support_threshold": 14,
+        "best_candidate_support_sum": 11.89263274608359,
+        "image_point_coverage_sum": 5.051420732983085,
+        "images_with_reference_points": 6,
+        "projected_point_coverage": 0.8900613496932516,
+        "off_class_coverage": 0.0,
+        "one_to_one_object_support_fraction": 1.0,
+        "mean_best_object_support": 0.8494737675773993,
+        "mean_image_point_coverage": 0.8419034554971808
+      }
+    },
+    "tiled": {
+      "pallet": {
+        "candidates": 96,
+        "reference_points": 2190,
+        "reference_object_observations": 53,
+        "covered_projected_points": 1940,
+        "points_covered_by_other_class": 13,
+        "objects_matched_at_support_threshold": 32,
+        "best_candidate_support_sum": 29.474129405117534,
+        "image_point_coverage_sum": 7.101631425160601,
+        "images_with_reference_points": 8,
+        "projected_point_coverage": 0.8858447488584474,
+        "off_class_coverage": 0.005936073059360731,
+        "one_to_one_object_support_fraction": 0.6037735849056604,
+        "mean_best_object_support": 0.556115649153161,
+        "mean_image_point_coverage": 0.8877039281450751
+      },
+      "person": {
+        "candidates": 15,
+        "reference_points": 4075,
+        "reference_object_observations": 14,
+        "covered_projected_points": 3627,
+        "points_covered_by_other_class": 24,
+        "objects_matched_at_support_threshold": 14,
+        "best_candidate_support_sum": 11.89263274608359,
+        "image_point_coverage_sum": 5.051420732983085,
+        "images_with_reference_points": 6,
+        "projected_point_coverage": 0.8900613496932516,
+        "off_class_coverage": 0.00588957055214724,
+        "one_to_one_object_support_fraction": 1.0,
+        "mean_best_object_support": 0.8494737675773993,
+        "mean_image_point_coverage": 0.8419034554971808
+      }
+    },
+    "merged": {
+      "pallet": {
+        "candidates": 84,
+        "reference_points": 2190,
+        "reference_object_observations": 53,
+        "covered_projected_points": 1940,
+        "points_covered_by_other_class": 13,
+        "objects_matched_at_support_threshold": 31,
+        "best_candidate_support_sum": 28.585240516228644,
+        "image_point_coverage_sum": 7.101631425160601,
+        "images_with_reference_points": 8,
+        "projected_point_coverage": 0.8858447488584474,
+        "off_class_coverage": 0.005936073059360731,
+        "one_to_one_object_support_fraction": 0.5849056603773585,
+        "mean_best_object_support": 0.5393441606835593,
+        "mean_image_point_coverage": 0.8877039281450751
+      },
+      "person": {
+        "candidates": 15,
+        "reference_points": 4075,
+        "reference_object_observations": 14,
+        "covered_projected_points": 3627,
+        "points_covered_by_other_class": 24,
+        "objects_matched_at_support_threshold": 14,
+        "best_candidate_support_sum": 11.89263274608359,
+        "image_point_coverage_sum": 5.051420732983085,
+        "images_with_reference_points": 6,
+        "projected_point_coverage": 0.8900613496932516,
+        "off_class_coverage": 0.00588957055214724,
+        "one_to_one_object_support_fraction": 1.0,
+        "mean_best_object_support": 0.8494737675773993,
+        "mean_image_point_coverage": 0.8419034554971808
+      }
+    },
+    "final": {
+      "pallet": {
+        "candidates": 84,
+        "reference_points": 2190,
+        "reference_object_observations": 53,
+        "covered_projected_points": 1940,
+        "points_covered_by_other_class": 13,
+        "objects_matched_at_support_threshold": 31,
+        "best_candidate_support_sum": 28.585240516228644,
+        "image_point_coverage_sum": 7.101631425160601,
+        "images_with_reference_points": 8,
+        "projected_point_coverage": 0.8858447488584474,
+        "off_class_coverage": 0.005936073059360731,
+        "one_to_one_object_support_fraction": 0.5849056603773585,
+        "mean_best_object_support": 0.5393441606835593,
+        "mean_image_point_coverage": 0.8877039281450751
+      },
+      "person": {
+        "candidates": 15,
+        "reference_points": 4075,
+        "reference_object_observations": 14,
+        "covered_projected_points": 3627,
+        "points_covered_by_other_class": 24,
+        "objects_matched_at_support_threshold": 14,
+        "best_candidate_support_sum": 11.89263274608359,
+        "image_point_coverage_sum": 5.051420732983085,
+        "images_with_reference_points": 6,
+        "projected_point_coverage": 0.8900613496932516,
+        "off_class_coverage": 0.00588957055214724,
+        "one_to_one_object_support_fraction": 1.0,
+        "mean_best_object_support": 0.8494737675773993,
+        "mean_image_point_coverage": 0.8419034554971808
+      }
+    }
+  },
+  "pixel_accuracy_evaluated": false,
+  "workbench_modified": false,
+  "cases": [
+    {
+      "camera": 0,
+      "frame": 76,
+      "seconds": 40.235,
+      "stage_candidates": {
+        "base": 16,
+        "tiled": 23,
+        "merged": 20,
+        "final": 20
+      },
+      "geometric_merge_edits": 3,
+      "VLM_tool_edits": 0,
+      "loop_completed": true,
+      "successful_vlm_calls": 1,
+      "successful_sam_calls": 6,
+      "rounds": 1,
+      "stop_reason": "done"
+    },
+    {
+      "camera": 1,
+      "frame": 76,
+      "seconds": 40.687,
+      "stage_candidates": {
+        "base": 11,
+        "tiled": 11,
+        "merged": 11,
+        "final": 11
+      },
+      "geometric_merge_edits": 0,
+      "VLM_tool_edits": 0,
+      "loop_completed": true,
+      "successful_vlm_calls": 1,
+      "successful_sam_calls": 6,
+      "rounds": 1,
+      "stop_reason": "done"
+    },
+    {
+      "camera": 2,
+      "frame": 76,
+      "seconds": 39.188,
+      "stage_candidates": {
+        "base": 10,
+        "tiled": 10,
+        "merged": 10,
+        "final": 10
+      },
+      "geometric_merge_edits": 0,
+      "VLM_tool_edits": 0,
+      "loop_completed": true,
+      "successful_vlm_calls": 1,
+      "successful_sam_calls": 6,
+      "rounds": 1,
+      "stop_reason": "done"
+    },
+    {
+      "camera": 3,
+      "frame": 76,
+      "seconds": 37.062,
+      "stage_candidates": {
+        "base": 3,
+        "tiled": 4,
+        "merged": 4,
+        "final": 4
+      },
+      "geometric_merge_edits": 0,
+      "VLM_tool_edits": 0,
+      "loop_completed": true,
+      "successful_vlm_calls": 1,
+      "successful_sam_calls": 6,
+      "rounds": 1,
+      "stop_reason": "done"
+    },
+    {
+      "camera": 0,
+      "frame": 119,
+      "seconds": 47.469,
+      "stage_candidates": {
+        "base": 19,
+        "tiled": 26,
+        "merged": 20,
+        "final": 20
+      },
+      "geometric_merge_edits": 6,
+      "VLM_tool_edits": 0,
+      "loop_completed": true,
+      "successful_vlm_calls": 1,
+      "successful_sam_calls": 6,
+      "rounds": 1,
+      "stop_reason": "done"
+    },
+    {
+      "camera": 1,
+      "frame": 119,
+      "seconds": 39.5,
+      "stage_candidates": {
+        "base": 20,
+        "tiled": 26,
+        "merged": 23,
+        "final": 23
+      },
+      "geometric_merge_edits": 3,
+      "VLM_tool_edits": 0,
+      "loop_completed": true,
+      "successful_vlm_calls": 1,
+      "successful_sam_calls": 6,
+      "rounds": 1,
+      "stop_reason": "done"
+    },
+    {
+      "camera": 2,
+      "frame": 119,
+      "seconds": 39.062,
+      "stage_candidates": {
+        "base": 6,
+        "tiled": 7,
+        "merged": 7,
+        "final": 7
+      },
+      "geometric_merge_edits": 0,
+      "VLM_tool_edits": 0,
+      "loop_completed": true,
+      "successful_vlm_calls": 1,
+      "successful_sam_calls": 6,
+      "rounds": 1,
+      "stop_reason": "done"
+    },
+    {
+      "camera": 3,
+      "frame": 119,
+      "seconds": 39.563,
+      "stage_candidates": {
+        "base": 3,
+        "tiled": 4,
+        "merged": 4,
+        "final": 4
+      },
+      "geometric_merge_edits": 0,
+      "VLM_tool_edits": 0,
+      "loop_completed": true,
+      "successful_vlm_calls": 1,
+      "successful_sam_calls": 6,
+      "rounds": 1,
+      "stop_reason": "done"
+    }
+  ],
+  "plan_sha256": "37943d3cd84eb251ec641158830cacfada995b17c0d2a9b27b0ff1949256fa92",
+  "source_code_sha256": "a35994a7a652079e9557c7b0a70b99448ed47df03b5f5fdf69c8761273658dbb",
+  "workflow_sha256": "fe5d41bf00ff1eac13327ab9ee0183cd024cdb9d154f277a14f8be32c3ba319c",
+  "merger_sha256": "1e476325e5447543e1fb5a6ee570d3dfef35b44beffa5eefbd8dcc612a481b84",
+  "canonical_queries": {
+    "pallet": "pallet",
+    "person": "person"
+  },
+  "recipe": {
+    "tile_fraction": 0.6,
+    "internal_crop_edge_margin": 2,
+    "minimum_score": 0.5,
+    "addition_ratio": 0.5,
+    "NMS_IoU": 0.8,
+    "merge_threshold": 0.5
+  },
+  "quality_improvement_attributed_to_VLM": false,
+  "geometric_recipe_adopted": false,
+  "finding": "The VLM ended each loop without tool edits and did not restore the supported object lost after merging."
+}

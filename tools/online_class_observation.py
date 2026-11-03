@@ -49,7 +49,7 @@ def classify_online(config,image,shape,template,on_call):
 
 @contextmanager
 def scoped_online_observation(policy,agent,template,on_call,on_observation):
-    if policy not in {'baseline','online_observation'}:raise ValueError('Unknown observation policy')
+    if policy not in {'baseline','online_observation','online_reconsideration'}:raise ValueError('Unknown observation policy')
     if policy=='baseline':yield;return
     original=workflow.chat
     def chat(config,instruction,image,extra_images=(),response_schema=None):
@@ -57,14 +57,29 @@ def scoped_online_observation(policy,agent,template,on_call,on_observation):
             target=largest_mask_candidate(agent.shapes,agent.width,agent.height)
             observation=classify_online(config,image,target,template,on_call)
             observation['current_label_from_candidate']=target['label']
-            on_observation(observation)
             hint=('\nFocused tool observation: '+json.dumps(observation,separators=(',',':'))
                 +'\nThese are fallible fresh image observations, not reference annotations. '
                  'Compare this current candidate label with the observed classes and the target photographs. '
                  'Use the existing tools only for a visually supported defect; preserve correct candidates. '
                  'The observation is not an operation and does not choose a tool for you. '
                  'Choose the normal review JSON yourself. A reclassification to the same label makes no change.')
-            return original(config,instruction+hint,image,extra_images=extra_images,response_schema=response_schema)
+            result=original(config,instruction+hint,image,extra_images=extra_images,response_schema=response_schema)
+            observation['initial_main_status']=result.get('status')
+            observation['initial_main_operation_count']=len(result.get('operations',[]))
+            observation['consistency_reconsideration_called']=False
+            if (policy=='online_reconsideration' and result.get('status')=='done' and not result.get('operations')
+                    and observation.get('two_view_consensus') in agent.labels
+                    and observation['two_view_consensus']!=target['label']):
+                observation['consistency_reconsideration_called']=True
+                feedback=('\nConsistency reconsideration: the paired focus observation suggests a class '
+                    'different from this candidate metadata, but your review returned done with no operations. '
+                    'The observation may be wrong. Recheck your own reason, the photographs and candidate facts. '
+                    'Return the normal review JSON again: choose a concrete tool only if a defect is visually supported, '
+                    'or retain no edit if it is not supported. Do not invent an edit merely to agree with this feedback. '
+                    'Your previous review: '+json.dumps(result,separators=(',',':')))
+                result=original(config,instruction+hint+feedback,image,extra_images=extra_images,response_schema=response_schema)
+            on_observation(observation)
+            return result
         return original(config,instruction,image,extra_images=extra_images,response_schema=response_schema)
     workflow.chat=chat
     try:yield

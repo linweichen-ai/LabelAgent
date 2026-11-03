@@ -10,7 +10,7 @@ from tools import online_class_observation as policy
 
 def agent_fixture():
     stream=io.BytesIO();Image.new('RGB',(40,30),(20,70,120)).save(stream,'PNG')
-    return stream.getvalue(),SimpleNamespace(shapes=[{'id':7,'label':'pallet','points':[[2,2],[30,2],[30,25],[2,25]]}],width=40,height=30)
+    return stream.getvalue(),SimpleNamespace(shapes=[{'id':7,'label':'pallet','points':[[2,2],[30,2],[30,25],[2,25]]}],width=40,height=30,labels=['pallet','person'])
 
 
 class OnlineObservationTests(unittest.TestCase):
@@ -49,6 +49,37 @@ class OnlineObservationTests(unittest.TestCase):
                 with policy.scoped_online_observation('online_observation',agent,{},lambda event:None,lambda event:None):workflow.chat({},'base',image)
             self.assertIs(workflow.chat,original)
             original.assert_not_called()
+
+    def test_conflict_gets_one_extra_model_decision_and_only_model_selects_the_operation(self):
+        image,agent=agent_fixture();events=[]
+        observation={'two_view_consensus':'person'}
+        final={'status':'continue','operations':[{'operation':'reclassify','shape_ids':[7],'label':'person','reason':'Photo evidence.'}]}
+        original=Mock(side_effect=[{'status':'done','operations':[],'reason':'Wrong class.'},final])
+        with patch.object(policy,'classify_online',return_value=observation),patch.object(workflow,'chat',original):
+            with policy.scoped_online_observation('online_reconsideration',agent,{},lambda event:None,events.append):
+                result=workflow.chat({},'base',image)
+        self.assertIs(result,final)
+        self.assertEqual(original.call_count,2)
+        self.assertIn('Consistency reconsideration',original.call_args.args[1])
+        self.assertTrue(events[0]['consistency_reconsideration_called'])
+
+    def test_reconsideration_can_keep_done_without_any_forced_edit(self):
+        image,agent=agent_fixture()
+        refused={'status':'done','operations':[],'reason':'Insufficient evidence.'}
+        original=Mock(side_effect=[{'status':'done','operations':[]},refused])
+        with patch.object(policy,'classify_online',return_value={'two_view_consensus':'person'}),patch.object(workflow,'chat',original):
+            with policy.scoped_online_observation('online_reconsideration',agent,{},lambda event:None,lambda event:None):
+                result=workflow.chat({},'base',image)
+        self.assertIs(result,refused)
+        self.assertEqual(result['operations'],[])
+
+    def test_same_or_uncertain_class_does_not_trigger_extra_decisions(self):
+        image,agent=agent_fixture()
+        for category in ('pallet','uncertain'):
+            original=Mock(return_value={'status':'done','operations':[]})
+            with patch.object(policy,'classify_online',return_value={'two_view_consensus':category}),patch.object(workflow,'chat',original):
+                with policy.scoped_online_observation('online_reconsideration',agent,{},lambda event:None,lambda event:None):workflow.chat({},'base',image)
+            self.assertEqual(original.call_count,1)
 
 
 if __name__=='__main__':unittest.main()

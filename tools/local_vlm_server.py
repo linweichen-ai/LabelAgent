@@ -86,6 +86,7 @@ class TransformersBackend:
             raise RuntimeError("CUDA is required; no silent CPU fallback")
         self.model_id = model_id
         self.context_budget = context_budget
+        self.image_token_budget = max_pixels//(32*32)
         self.torch = torch
         torch.set_num_threads(2)
         self.processor = AutoProcessor.from_pretrained(str(model_dir), local_files_only=True)
@@ -94,7 +95,7 @@ class TransformersBackend:
         if quantization == "nf4":
             options["quantization_config"] = BitsAndBytesConfig(load_in_4bit=True,
                 bnb_4bit_quant_type="nf4", bnb_4bit_use_double_quant=True,
-                bnb_4bit_compute_dtype=torch.bfloat16, llm_int8_skip_modules=["visual"])
+                bnb_4bit_compute_dtype=torch.bfloat16, llm_int8_skip_modules=["visual", "lm_head"])
         elif quantization != "none":
             raise ValueError("Unsupported quantization mode")
         self.model = Qwen3VLForConditionalGeneration.from_pretrained(str(model_dir), local_files_only=True,
@@ -107,7 +108,7 @@ class TransformersBackend:
         self.last_inference_stats = None
         self.model_loaded = True
 
-    def generate(self, messages, images, max_tokens):
+    def generate(self, messages, images, max_tokens, response_schema=None):
         self.torch.cuda.reset_peak_memory_stats()
         text = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         inputs = self.processor(text=[text], images=images, return_tensors="pt", padding=True)
@@ -116,13 +117,24 @@ class TransformersBackend:
         if prompt_tokens + max_tokens > self.context_budget:
             raise ValueError("Request exceeds the configured context budget; no truncation was performed")
         inputs = inputs.to(self.model.device)
+        options = {}
+        if response_schema is not None:
+            from lmformatenforcer import JsonSchemaParser
+            from lmformatenforcer.integrations.transformers import (build_transformers_prefix_allowed_tokens_fn,
+                                                                  build_token_enforcer_tokenizer_data)
+            if not hasattr(self, "format_tokenizer_data"):
+                self.format_tokenizer_data = build_token_enforcer_tokenizer_data(self.processor.tokenizer)
+            parser = JsonSchemaParser(response_schema)
+            options["prefix_allowed_tokens_fn"] = build_transformers_prefix_allowed_tokens_fn(self.format_tokenizer_data, parser)
         with self.torch.inference_mode():
-            output = self.model.generate(**inputs, max_new_tokens=max_tokens, do_sample=False, use_cache=True)
+            output = self.model.generate(**inputs, max_new_tokens=max_tokens, do_sample=False, use_cache=True, **options)
         generated = output[:, prompt_tokens:]
         content = self.processor.batch_decode(generated, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
         self.last_inference_stats = {"peak_allocated_bytes": self.torch.cuda.max_memory_allocated(),
                                      "peak_reserved_bytes": self.torch.cuda.max_memory_reserved(),
-                                     "input_images": len(images), "prompt_tokens": prompt_tokens}
+                                     "input_images": len(images), "prompt_tokens": prompt_tokens,
+                                     "completion_tokens": int(generated.shape[-1]),
+                                     "structured_output": response_schema is not None}
         return content, prompt_tokens, int(generated.shape[-1])
 
 
@@ -137,6 +149,7 @@ def create_app(backend):
                        model=backend.model_id, backend=backend.backend_name,
                        quantization=getattr(backend, "quantization", "test_double"),
                        model_memory_bytes=getattr(backend, "model_memory_bytes", None),
+                       image_token_budget=getattr(backend, "image_token_budget", None),
                        last_inference_stats=getattr(backend, "last_inference_stats", None))
 
     @app.get("/v1/models")
@@ -160,7 +173,16 @@ def create_app(backend):
             return jsonify(error={"message": "Local VLM is busy"}), 503
         start = time.monotonic()
         try:
-            content, prompt_tokens, completion_tokens = backend.generate(messages, images, max_tokens)
+            options = {}
+            if "response_format" in body:
+                format_spec = body["response_format"]
+                if not isinstance(format_spec, dict) or format_spec.get("type") != "json_schema":
+                    raise ValueError("Only json_schema response format is supported")
+                wrapper = format_spec.get("json_schema")
+                if not isinstance(wrapper, dict) or not isinstance(wrapper.get("schema"), dict):
+                    raise ValueError("response_format must contain a JSON schema")
+                options["response_schema"] = wrapper["schema"]
+            content, prompt_tokens, completion_tokens = backend.generate(messages, images, max_tokens, **options)
         finally:
             inference_lock.release()
         return jsonify(id="chatcmpl-" + uuid.uuid4().hex, object="chat.completion", created=int(time.time()),
@@ -192,6 +214,7 @@ if __name__ == "__main__":
     parser.add_argument("--minimum-free-mib", type=int, default=22000)
     parser.add_argument("--context-budget", type=int, default=8192)
     parser.add_argument("--quantization", choices=["none", "nf4"], default="none")
+    parser.add_argument("--max-image-tokens", type=int)
     parser.add_argument("--profile", choices=["shared-4090", "local-8gb"], default="shared-4090")
     args = parser.parse_args()
     if args.profile == "local-8gb":
@@ -204,6 +227,10 @@ if __name__ == "__main__":
     os.environ["HF_HUB_OFFLINE"] = "1"
     os.environ["TRANSFORMERS_OFFLINE"] = "1"
     os.environ.setdefault("OMP_NUM_THREADS", "4")
+    image_tokens = args.max_image_tokens or (256 if args.profile == "local-8gb" else 512)
+    if not 64 <= image_tokens <= 1024:
+        parser.error("Image token budget must be between 64 and 1024")
     engine = TransformersBackend(args.model_dir, args.model_id, context_budget=args.context_budget,
+                                 max_pixels=image_tokens*32*32,
                                  quantization=args.quantization)
     create_app(engine).run(host="127.0.0.1", port=args.port, threaded=True)

@@ -193,11 +193,13 @@ def sam_text(image, prompt, config):
     return sam_request(config, "/segment_text", image, prompt=prompt).get("results", [])
 
 
-def chat(config, instruction, image, extra_images=()):
+def chat(config, instruction, image, extra_images=(), response_schema=None):
     record = {"id": uuid.uuid4().hex, "service": "GPT", "status": "running",
               "started_at": time.time(), "input": {"model": config.get("llm_model"),
               "instruction": instruction, "images": [_image_summary(data)
               for data in (image, *extra_images)]}}
+    if response_schema is not None:
+        record["input"]["response_schema"] = response_schema
     review_call = _review_call.get()
     if review_call is not None:
         record.update(review_attempt=review_call["attempt"],
@@ -208,7 +210,8 @@ def chat(config, instruction, image, extra_images=()):
     raw = {}
     _emit_trace(record)
     try:
-        response = _cancellable_call(_chat, config, instruction, image, extra_images, raw)
+        options = {"response_schema": response_schema} if response_schema is not None else {}
+        response = _cancellable_call(_chat, config, instruction, image, extra_images, raw, **options)
         record.update(status="succeeded", output={"raw_text": raw.get("text"),
                                                    "parsed": response})
         return response
@@ -222,7 +225,7 @@ def chat(config, instruction, image, extra_images=()):
         _emit_trace(record)
 
 
-def _chat(config, instruction, image, extra_images=(), raw=None):
+def _chat(config, instruction, image, extra_images=(), raw=None, response_schema=None):
     if not config.get("llm_url") or not config.get("llm_model"):
         raise ValueError("请先配置大模型地址和模型名")
     content = [{"type": "text", "text": instruction}]
@@ -231,6 +234,10 @@ def _chat(config, instruction, image, extra_images=(), raw=None):
             "data:image/jpeg;base64," + base64.b64encode(data).decode()}})
     payload = {"model": config["llm_model"], "temperature": 0,
                "messages": [{"role": "user", "content": content}]}
+    if config.get("llm_prompt_profile") == "compact":
+        payload["max_tokens"] = 768
+    if response_schema is not None:
+        payload["response_format"] = {"type": "json_schema", "json_schema": {"name": "labelagent", "schema": response_schema, "strict": True}}
     request = urllib.request.Request(config["llm_url"].rstrip("/") + "/chat/completions",
         json.dumps(payload).encode(), headers={"Content-Type": "application/json",
         "Authorization": "Bearer " + config.get("llm_key", "")})
@@ -305,7 +312,37 @@ def restrict_description(result, labels):
     return {"description": result["description"].strip(), "prompts": prompts}
 
 
-DESCRIPTION_INPUT_VERSION = 6
+DESCRIPTION_INPUT_VERSION = 7
+
+COMPACT_REFERENCE_RULES = """Use the supplied reference contours as the task example. Their review status is not inferred.
+Only annotate the listed classes. Inspect original images for appearance and outlined images for geometry.
+Overlay colors are not object colors. Preserve correct visible regions and excluded holes; do not invent occluded regions.
+Instances, positions and counts can differ between frames. Never copy reference coordinates to the target.
+Reference bounding boxes summarize contours, not rectangular segmentation masks.
+Make conservative local edits only when supported by target-image and reference evidence.
+"""
+
+COMPACT_REVIEW_TOOLS = """Return one JSON object with fields status, reason, hole_assessment, operations.
+Use status "done" and empty operations when no supported edit remains; otherwise status "continue". reason explains visual evidence.
+Every operation needs operation and reason. shape_ids are existing integer IDs; polygon is [[x,y],...] with at least 3 target-image pixel points.
+Tools:
+remove: shape_ids:[id], only for an entirely false-positive instance.
+reclassify: shape_ids:[id], label:allowed class.
+add_region, erase_region: shape_ids:[id], polygon:local repair region.
+merge: shape_ids:[id1,id2,...], label:allowed class, only one real instance.
+split: shape_ids:[id], polygon:region separating instances.
+fill_gap: shape_ids:[id], hole_id:listed ID, polygon:local repair region.
+sam_points: shape_ids:[id], polygon:local region, points:list of objects with numeric x,y and integer label (1 positive, 0 negative), 1-32 points with a positive point.
+Never use sam_text in review or replace an entire correct object to repair its boundary.
+After an edit, choose continue and inspect again. When no supported edit remains choose done with no operations; never needs_review.
+If pending_sam_shape is present, add sam_assessment with boolean improved and string reason explaining the comparison.
+If not improved, the previous geometry is restored and only OpenCV local edits are allowed for that shape.
+For every listed hole return an object with hole_id, semantic ("ground" or "non_ground"), and reason in hole_assessment.
+Ground holes must be repaired with fill_gap before done. Never fill equipment or infer semantics from geometry alone.
+For floor tasks, include visible floor markings regardless of their color, without filling occluded parts.
+Image 1: target original. Image 2: target candidates with IDs. Image 3: target holes/binary-mask overview.
+If reference_provided, images 4 and 5 are reference original and reference contours.
+"""
 
 # Shared by description generation and every subsequent candidate review.
 REFERENCE_PRINCIPLES = """
@@ -357,8 +394,34 @@ def describe(config, image, annotations, labels, marked_image=None):
               f"\n允许类别：{json.dumps(labels, ensure_ascii=False)}"
               "\n密集轮廓的几何文本可能是边界范围摘要；精确边界以单独的参考轮廓图为准。"
               f"\n真值：{json.dumps(reference_geometry(annotations), ensure_ascii=False)}")
-    result = chat(config, prompt, image, extra_images=(marked_image,) if marked_image else ())
-    return restrict_description(result, labels)
+    if config.get("llm_prompt_profile") == "compact":
+        prompt = (COMPACT_REFERENCE_RULES
+            + '\n图片1是参考原图，图片2是洋红色参考轮廓。只返回JSON对象，包含description和prompts两个字段。'
+              'description用英文描述每个类别在图中的实际对象、可见边界、实例归属和排除范围，不要复述提示原则。'
+              'prompts是对象数组，每项包含label和text。label必须逐字使用允许类别，每个类别各一项，不能合并类别。'
+              'text为对应类别的1到4个英文关键词，供SAM3分割使用。'
+            + '\nInput: ' + json.dumps({"labels": labels, "reference_geometry": reference_geometry(annotations)},
+                                       ensure_ascii=False, separators=(",", ":")))
+    last_error, last_result = None, None
+    for attempt in range(MAX_PROTOCOL_RETRIES + 1):
+        instruction = prompt
+        if attempt:
+            instruction += ("\n上一份输出未通过格式检查，请修正后重新返回完整JSON。错误：" + str(last_error)
+                            + "\n上次输出：" + json.dumps(last_result, ensure_ascii=False)[:4000])
+        try:
+            options = {}
+            if config.get("llm_prompt_profile") == "compact":
+                from .protocol_schema import description_schema
+                options["response_schema"] = description_schema(labels)
+            result = chat(config, instruction, image, extra_images=(marked_image,) if marked_image else (), **options)
+        except ModelOutputError as error:
+            last_error, last_result = error, {"raw_text": error.raw_text}
+            continue
+        try:
+            return restrict_description(result, labels)
+        except ValueError as error:
+            last_error, last_result = error, result
+    raise ValueError(f"参考规范多次未通过协议校验：{last_error}")
 
 
 REPAIR_PRINCIPLES = """
@@ -569,6 +632,39 @@ def review(config, image, overlay, description, shapes, labels, history, referen
                    "必须对照未着色原图识别标线，再检查同位置二值图是否为白色；"
                    "黑色或粉色都表示尚未纳入地面，不能声称已完整包含。")
         extra_images += (sheet,)
+    if config.get("llm_prompt_profile") == "compact":
+        floor_task = any(label.strip().lower() in {"地面", "floor", "ground"} for label in labels)
+        if not floor_task and not holes:
+            extra_images = (overlay,)
+            if reference is not None:
+                extra_images += (reference["image"], reference["marked_image"])
+            if sam_comparison is not None:
+                extra_images += (sam_comparison["before_image"],)
+            extra_images += tuple(sheet for sheet, _ in gap_images or [])
+        payload = {"target_size": [width, height], "labels": labels, "rules": description.get("description", ""),
+                   "prompts": description["prompts"], "candidates": shapes, "recent_history": history[-3:],
+                   "holes": hole_report, "reference_provided": reference is not None}
+        if reference is not None:
+            payload["reference_counts"] = {label: sum(shape.get("label") == label for shape in reference["annotations"]) for label in labels}
+            if floor_task:
+                payload["reference_geometry"] = reference_geometry(reference["annotations"])
+        base_image_count = 1 + len(extra_images) - int(sam_comparison is not None) - len(gap_images or [])
+        if sam_comparison is not None:
+            payload["pending_sam_shape"] = sam_comparison["shape_id"]
+            payload["sam_before_image"] = base_image_count + 1
+        if gap_images:
+            first = base_image_count + 1 + int(sam_comparison is not None)
+            payload["gap_details"] = [{"image": first+i, "original_crop_ranges": reports}
+                                      for i, (_, reports) in enumerate(gap_images)]
+        prompt = COMPACT_REFERENCE_RULES + COMPACT_REVIEW_TOOLS + "\nInput: " + json.dumps(
+            payload, ensure_ascii=False, separators=(",", ":"))
+        if not floor_task and not holes:
+            prompt += ("\n本轮只标注提供的物体类别，不标注地面。图片1是目标原图，图片2是目标候选；"
+                       "图片3、4分别是参考原图和参考轮廓，覆盖此前通用图号说明。"
+                       "holes列表为空，hole_assessment必须是空数组，禁止编造孔洞编号。"
+                       "reference_counts是参考图的真实标注数量，目标图数量不同完全正常，不能因此修改。")
+        prompt += ("\nreason最多一句话，每轮最多3个有视觉证据的局部操作。仅允许使用candidates中的ID。"
+                   "所有reason使用英文。无法可靠定位缺陷时保持候选，返回done且operations为空。不要复述所有实例，不要输出额外解释。")
     last_result = None
     last_error = None
     for attempt in range(MAX_PROTOCOL_RETRIES + 1):
@@ -584,7 +680,11 @@ def review(config, image, overlay, description, shapes, labels, history, referen
         try:
             check_cancelled()
             try:
-                last_result = chat(config, request_prompt, image, extra_images=extra_images)
+                options = {}
+                if config.get("llm_prompt_profile") == "compact":
+                    from .protocol_schema import review_schema
+                    options["response_schema"] = review_schema(labels, shapes, holes, sam_comparison is not None)
+                last_result = chat(config, request_prompt, image, extra_images=extra_images, **options)
             except ModelOutputError as error:
                 last_result = {"raw_text": error.raw_text}
                 last_error = error

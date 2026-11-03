@@ -91,10 +91,12 @@ def acceptance(args):
     require_real_service(base, args.model)
     output = Path(args.output).resolve()
     output.mkdir(parents=True, exist_ok=False)
-    config = {"llm_url": base, "llm_model": args.model, "llm_key": "local", "sam3_url": sam}
+    config = {"llm_url": base, "llm_model": args.model, "llm_key": "local", "sam3_url": sam,
+              "llm_prompt_profile": args.prompt_profile}
     summary = {"started_utc": datetime.now(timezone.utc).isoformat(), "status": "running",
                "archive_sha256": manifest["archive_sha256"], "topic": args.topic,
                "reference_frame": args.reference_frame, "reference_kind": args.reference_kind,
+               "prompt_profile": args.prompt_profile,
                "reference_json_sha256": hashlib.sha256(reference_bytes).hexdigest(),
                "full_agent_verified": False, "pixel_accuracy_evaluated": False,
                "candidates_confirmed_as_truth": False, "workbench_modified": False, "frames": []}
@@ -160,6 +162,7 @@ if __name__ == "__main__":
     parser.add_argument("--frames", default="76,151")
     parser.add_argument("--labels", default="pallet,person")
     parser.add_argument("--max-rounds", type=int, default=5)
+    parser.add_argument("--prompt-profile", choices=["full", "compact"], default="full")
     parser.add_argument("--base", default="http://127.0.0.1:18868/v1")
     parser.add_argument("--model", default="labelagent-vlm")
     parser.add_argument("--sam", default="http://127.0.0.1:8766")

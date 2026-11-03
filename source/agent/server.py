@@ -143,6 +143,7 @@ def frame_image(index):
 def reference_signature(index):
     reference = {"file": str(state["video"].path), "topic": state["topic"], "frame": index,
                  "description_input_version": DESCRIPTION_INPUT_VERSION,
+                 "prompt_profile": state.get("config", {}).get("llm_prompt_profile", "full"),
                  "truth": state["truth"][str(index)]}
     payload = json.dumps(reference, ensure_ascii=False, sort_keys=True)
     return hashlib.sha256(payload.encode()).hexdigest()
@@ -569,8 +570,10 @@ def set_reference_frame():
 @app.post("/api/config")
 def set_config():
     body = request.get_json()
+    if "llm_prompt_profile" in body and body["llm_prompt_profile"] not in ("full", "compact"):
+        raise ValueError("Unknown model prompt profile")
     with lock:
-        for key in ("llm_url", "llm_model", "llm_key"):
+        for key in ("llm_url", "llm_model", "llm_key", "llm_prompt_profile"):
             if key in body and body[key]:
                 state["config"][key] = body[key]
         save()

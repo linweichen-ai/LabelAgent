@@ -15,7 +15,8 @@ class ContractBackend:
     model_loaded = True
     backend_name = "contract_test_double"
 
-    def generate(self, messages, images, max_tokens):
+    def generate(self, messages, images, max_tokens, response_schema=None):
+        self.received_schema = response_schema
         self.sizes = [image.size for image in images]
         return '{"protocol_test":true}', 20, 5
 
@@ -31,6 +32,18 @@ def messages(count=1):
 
 
 class LocalVLMContractTests(unittest.TestCase):
+    def test_structured_format_is_forwarded_to_backend(self):
+        schema = {"type": "object", "properties": {"status": {"enum": ["done", "continue"]}}}
+        result = self.client.post("/v1/chat/completions", json={"model": self.backend.model_id,
+            "messages": messages(), "response_format": {"type": "json_schema", "json_schema": {"schema": schema}}})
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(self.backend.received_schema, schema)
+
+    def test_unknown_structured_format_is_rejected_instead_of_ignored(self):
+        result = self.client.post("/v1/chat/completions", json={"model": self.backend.model_id,
+            "messages": messages(), "response_format": {"type": "unsupported"}})
+        self.assertEqual(result.status_code, 400)
+
     def setUp(self):
         self.backend = ContractBackend()
         self.client = MODULE.create_app(self.backend).test_client()

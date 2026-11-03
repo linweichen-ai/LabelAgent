@@ -62,13 +62,18 @@ def probe(base, model, image_paths):
             "usage": result.get("usage"), "full_agent_verified": False}
 
 
-def apply_configuration(base, model, workbench):
+def apply_configuration(base, model, workbench, prompt_profile=None):
     base, workbench = loopback_url(base), loopback_url(workbench)
     require_real_service(base, model)
     if request_json(workbench + "/api/run/status")["status"] != "idle":
         raise ValueError("Workbench has an active task; configuration was not changed")
     # Explicit nonsecret value replaces any previously configured cloud key.
-    return request_json(workbench + "/api/config", {"llm_url": base, "llm_model": model, "llm_key": "local"})
+    settings = {"llm_url": base, "llm_model": model, "llm_key": "local"}
+    if prompt_profile is not None:
+        if prompt_profile not in {"full", "compact"}:
+            raise ValueError("Unknown prompt profile")
+        settings["llm_prompt_profile"] = prompt_profile
+    return request_json(workbench + "/api/config", settings)
 
 
 if __name__ == "__main__":
@@ -78,10 +83,11 @@ if __name__ == "__main__":
     parser.add_argument("--image", action="append", required=True)
     parser.add_argument("--workbench", default="http://127.0.0.1:8765")
     parser.add_argument("--apply", action="store_true")
+    parser.add_argument("--prompt-profile", choices=["full", "compact"])
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
     result = probe(args.base, args.model, args.image)
     if args.apply:
-        result["configuration"] = apply_configuration(args.base, args.model, args.workbench)
+        result["configuration"] = apply_configuration(args.base, args.model, args.workbench, args.prompt_profile)
     Path(args.output).write_text(json.dumps(result, indent=2), encoding="utf-8")
     print(json.dumps(result, indent=2))

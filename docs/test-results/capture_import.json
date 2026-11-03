@@ -1,0 +1,58 @@
+{
+  "created_utc": "2026-11-03T04:08:24.849477+00:00",
+  "archive_sha256": "e39dcb9f1c6592e76f3bd2625e274073470450f365466f8899126580e5d25f09",
+  "extracted_file_count": 1023,
+  "reference_source": "labels",
+  "reference_is_independent_ground_truth": false,
+  "frame_groups": 152,
+  "camera_count": 4,
+  "image_count": 608,
+  "lidar_frames": 152,
+  "image_dimensions": {
+    "1920x1536": 608
+  },
+  "duration_seconds": 83.999958708,
+  "camera_lidar_timestamp_join_exact": true,
+  "nonfinite_xyz_points": 0,
+  "mcap_messages_verified": 760,
+  "pixel_ground_truth_available": false,
+  "annotations_3d_promoted_to_2d_truth": false,
+  "annotation_sources": {
+    "labels": {
+      "frames": 152,
+      "object_count": 4119,
+      "class_counts": {
+        "Pallet": 3359,
+        "Pedestrian": 760
+      },
+      "invalid_geometry": 0,
+      "duplicate_class_object_ids": 0,
+      "missing_capture_frames": 0,
+      "orphan_annotation_frames": 0
+    },
+    "ali_label": {
+      "frames": 51,
+      "object_count": 1359,
+      "class_counts": {
+        "Pallet": 1104,
+        "Pedestrian": 255
+      },
+      "invalid_geometry": 0,
+      "duplicate_class_object_ids": 0,
+      "missing_capture_frames": 101,
+      "orphan_annotation_frames": 0
+    },
+    "wilddet3d-labels": {
+      "frames": 51,
+      "object_count": 1672,
+      "class_counts": {
+        "Pallet": 1395,
+        "Pedestrian": 277
+      },
+      "invalid_geometry": 0,
+      "duplicate_class_object_ids": 0,
+      "missing_capture_frames": 101,
+      "orphan_annotation_frames": 0
+    }
+  }
+}

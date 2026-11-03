@@ -126,7 +126,7 @@ window.setWorkspaceMode=async(mode,openImage=true)=>{
  $('autoDesk').hidden=mode!=='auto';
  inspectionPanel.hidden=mode!=='auto';
  $('truth').hidden=mode==='auto';
- for(const id of ['pointButton','negativeButton','generateMaskButton'])$(id).hidden=mode==='manual';
+ for(const id of ['pointButton','negativeButton','generateMaskButton'])$(id).hidden=mode==='manual'&&catalog[topic]?.schema!=='LabelAgent.StillImage';
  $('clearButton').hidden=mode==='auto';
  $('truthSave').textContent=mode==='auto'&&candidates[String(frame)]&&shapes[String(frame)]===undefined?'确认并保存当前帧真值':'保存当前帧真值';
  if(changed){pointMode=false;negativeMode=false;regionMode='';draft=[];resetPrompts();refreshPointTools();refreshShapeList();updateReferenceStatus();draw()}

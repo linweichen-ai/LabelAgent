@@ -10,3 +10,8 @@ __pycache__/
 *.pt
 *.pth
 *.safetensors
+/.local/
+/outputs/
+/node_modules/
+*.pcd
+*.zip

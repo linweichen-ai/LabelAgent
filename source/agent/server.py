@@ -15,7 +15,7 @@ from flask import Flask, jsonify, request, send_file
 from PIL import Image, ImageDraw
 import numpy as np
 
-from .mcap_video import Video
+from .media import IMAGE_SUFFIXES, SUPPORTED_SUFFIXES, open_media as Video, read_image
 from .sensors import cloud_snapshot
 from .workflow import (DESCRIPTION_INPUT_VERSION, MAX_REVIEW_ROUNDS, RunCancelled,
                        cancellation, describe, reference_labels, restrict_description,
@@ -202,7 +202,8 @@ def get_state():
 
 @app.get("/api/frame/<int:index>")
 def get_frame(index):
-    return send_file(io.BytesIO(state["video"].frame(request.args.get("topic", state["topic"]), index)), mimetype="image/jpeg", max_age=0)
+    data = state["video"].frame(request.args.get("topic", state["topic"]), index)
+    return send_file(io.BytesIO(data), mimetype="image/png" if data.startswith(b"\x89PNG") else "image/jpeg", max_age=0)
 
 
 @app.post("/api/segment_points")
@@ -312,8 +313,10 @@ def write_library(files):
 
 def register_file(path, name=None):
     path = Path(path).expanduser().resolve()
-    if not path.is_file() or path.suffix.lower() != '.mcap':
-        raise ValueError('请选择存在的 MCAP 文件')
+    if not path.is_file() or path.suffix.lower() not in SUPPORTED_SUFFIXES:
+        raise ValueError('请选择存在的 JPG、PNG 图片或 MCAP 文件')
+    if path.suffix.lower() in IMAGE_SUFFIXES:
+        read_image(path)
     files = read_library()
     existing = next((item for item in files if item['path'] == str(path)), None)
     if existing:
@@ -398,11 +401,13 @@ def open_video():
 @app.post("/api/upload")
 def upload_video():
     uploaded = request.files.get("file")
-    if uploaded is None or not uploaded.filename or not uploaded.filename.lower().endswith(".mcap"):
-        raise ValueError("请选择 MCAP 文件")
+    if uploaded is None or not uploaded.filename or Path(uploaded.filename).suffix.lower() not in SUPPORTED_SUFFIXES:
+        raise ValueError("请选择 JPG、JPEG、PNG 图片或 MCAP 文件")
     destination = WORK / "uploads"
     destination.mkdir(exist_ok=True)
-    path = destination / f"{uuid.uuid4().hex}-{secure_filename(uploaded.filename) or 'capture.mcap'}"
+    suffix = Path(uploaded.filename).suffix.lower()
+    filename = (secure_filename(Path(uploaded.filename).stem) or "image") + suffix
+    path = destination / f"{uuid.uuid4().hex}-{filename}"
     uploaded.save(path)
     try:
         with lock:

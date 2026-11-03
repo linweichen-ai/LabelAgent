@@ -305,7 +305,7 @@ def restrict_description(result, labels):
     return {"description": result["description"].strip(), "prompts": prompts}
 
 
-DESCRIPTION_INPUT_VERSION = 5
+DESCRIPTION_INPUT_VERSION = 6
 
 # Shared by description generation and every subsequent candidate review.
 REFERENCE_PRINCIPLES = """
@@ -355,7 +355,8 @@ def describe(config, image, annotations, labels, marked_image=None):
               "例如 floor、wooden pallet；不得写完整句子、排除项或边界规则。"
               "每个允许类别必须有且只有一个 prompt。"
               f"\n允许类别：{json.dumps(labels, ensure_ascii=False)}"
-              f"\n真值：{json.dumps(annotations, ensure_ascii=False)}")
+              "\n密集轮廓的几何文本可能是边界范围摘要；精确边界以单独的参考轮廓图为准。"
+              f"\n真值：{json.dumps(reference_geometry(annotations), ensure_ascii=False)}")
     result = chat(config, prompt, image, extra_images=(marked_image,) if marked_image else ())
     return restrict_description(result, labels)
 
@@ -603,6 +604,25 @@ def review(config, image, overlay, description, shapes, labels, history, referen
         finally:
             _review_call.reset(token)
     raise ValueError(f"GPT 协议校验重试 {MAX_PROTOCOL_RETRIES} 次后仍失败：{last_error}")
+
+
+def reference_overlay(image, shapes):
+    """Outline the reference without recoloring its real appearance."""
+    result = Image.open(io.BytesIO(image)).convert("RGB")
+    draw = ImageDraw.Draw(result)
+    for number, shape in enumerate(shapes, 1):
+        for part in shape.get("parts") or [shape]:
+            for ring in [part.get("points", []), *(part.get("holes") or [])]:
+                points = [tuple(point) for point in ring]
+                if len(points) >= 3:
+                    draw.line(points+points[:1], fill=(255, 0, 255), width=3)
+        points = shape.get("points", [])
+        if points:
+            draw.text(tuple(points[0]), f"{number} {shape['label']}", fill=(255, 0, 255),
+                      stroke_width=2, stroke_fill=(0, 0, 0))
+    output = io.BytesIO()
+    result.save(output, "JPEG", quality=88)
+    return output.getvalue()
 
 
 def candidate_overlay(image, shapes):

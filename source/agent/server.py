@@ -20,7 +20,7 @@ from .sensors import cloud_snapshot
 from .candidate_import import prepare_candidate_import, merge_candidate_import
 from .workflow import (DESCRIPTION_INPUT_VERSION, MAX_REVIEW_ROUNDS, RunCancelled,
                        cancellation, describe, reference_labels, restrict_description,
-                       run, trace_calls, candidate_overlay)
+                       run, trace_calls, candidate_overlay, reference_overlay)
 
 ROOT = Path(__file__).resolve().parents[2]
 WORK = ROOT / "work"
@@ -149,21 +149,7 @@ def reference_signature(index):
 
 
 def overlay(index):
-    image = Image.open(io.BytesIO(frame_image(index))).convert("RGB")
-    draw = ImageDraw.Draw(image)
-    for number, shape in enumerate(state["truth"].get(str(index), []), 1):
-        for part in shape.get("parts") or [shape]:
-            for ring in [part.get("points", []), *(part.get("holes") or [])]:
-                points = [tuple(p) for p in ring]
-                if len(points) >= 3:
-                    draw.line(points + points[:1], fill=(255, 0, 255), width=3)
-        points = shape.get("points", [])
-        if points:
-            draw.text(tuple(points[0]), f"{number} {shape['label']}", fill=(255, 0, 255),
-                      stroke_width=2, stroke_fill=(0, 0, 0))
-    output = io.BytesIO()
-    image.save(output, "JPEG", quality=88)
-    return output.getvalue()
+    return reference_overlay(frame_image(index), state["truth"].get(str(index), []))
 
 
 @app.errorhandler(ValueError)

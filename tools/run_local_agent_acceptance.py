@@ -106,7 +106,9 @@ def acceptance(args):
         save(output / "model_trace.json", list(traces.values()))
 
     try:
-        marked = workflow.candidate_overlay(reference_image, annotations)
+        marked = workflow.reference_overlay(reference_image, annotations)
+        save(output / "reference_annotations.json", annotations)
+        (output / "reference_outline.jpg").write_bytes(marked)
         with workflow.trace_calls(record):
             description = workflow.describe(config, reference_image, annotations, labels, marked_image=marked)
             save(output / "description.json", description)

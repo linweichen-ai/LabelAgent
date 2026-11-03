@@ -9,6 +9,12 @@ SPEC.loader.exec_module(MODULE)
 
 
 class LocalVLMConnectionTests(unittest.TestCase):
+    def test_on_demand_model_is_activated_before_real_backend_validation(self):
+        healthy = {"model_loaded": True, "backend": "transformers_local_cuda", "model": "test"}
+        with patch.object(MODULE, "request_json", side_effect=[{"on_demand": True, "model_loaded": False}, healthy, {"data": [{"id": "test"}]}]) as call:
+            self.assertEqual(MODULE.require_real_service("http://localhost:18868/v1", "test"), healthy)
+            self.assertEqual(call.call_args_list[1].args, ("http://localhost:18868/activate", {}))
+
     def test_private_tunnel_url_rejects_external_hosts_and_credentials(self):
         self.assertEqual(MODULE.loopback_url("http://127.0.0.1:18868/v1/"), "http://127.0.0.1:18868/v1")
         for url in ("https://example.test/v1", "http://user:secret@localhost/v1", "http://192.168.1.2/v1", "http://localhost/v1?token=x"):

@@ -75,9 +75,9 @@ def decode_messages(messages):
 class TransformersBackend:
     backend_name = "transformers_local_cuda"
 
-    def __init__(self, model_dir, model_id, max_pixels=512*32*32, context_budget=8192):
+    def __init__(self, model_dir, model_id, max_pixels=512*32*32, context_budget=8192, quantization="none"):
         import torch
-        from transformers import AutoProcessor, Qwen3VLForConditionalGeneration
+        from transformers import AutoProcessor, Qwen3VLForConditionalGeneration, BitsAndBytesConfig
         model_dir = Path(model_dir).resolve()
         config = json.loads((model_dir / "config.json").read_text(encoding="utf-8"))
         if config.get("model_type") != "qwen3_vl":
@@ -87,14 +87,28 @@ class TransformersBackend:
         self.model_id = model_id
         self.context_budget = context_budget
         self.torch = torch
+        torch.set_num_threads(2)
         self.processor = AutoProcessor.from_pretrained(str(model_dir), local_files_only=True)
         self.processor.image_processor.size = {"longest_edge": max_pixels, "shortest_edge": 64*32*32}
+        options = {}
+        if quantization == "nf4":
+            options["quantization_config"] = BitsAndBytesConfig(load_in_4bit=True,
+                bnb_4bit_quant_type="nf4", bnb_4bit_use_double_quant=True,
+                bnb_4bit_compute_dtype=torch.bfloat16, llm_int8_skip_modules=["visual"])
+        elif quantization != "none":
+            raise ValueError("Unsupported quantization mode")
         self.model = Qwen3VLForConditionalGeneration.from_pretrained(str(model_dir), local_files_only=True,
-            dtype=torch.bfloat16, device_map={"": 0}, attn_implementation="sdpa", low_cpu_mem_usage=True)
+            dtype=torch.bfloat16, device_map={"": 0}, attn_implementation="sdpa", low_cpu_mem_usage=True, **options)
+        if quantization == "nf4" and not getattr(self.model, "is_loaded_in_4bit", False):
+            raise RuntimeError("Requested 4-bit quantization was not applied")
         self.model.eval()
+        self.quantization = quantization
+        self.model_memory_bytes = self.model.get_memory_footprint()
+        self.last_inference_stats = None
         self.model_loaded = True
 
     def generate(self, messages, images, max_tokens):
+        self.torch.cuda.reset_peak_memory_stats()
         text = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         inputs = self.processor(text=[text], images=images, return_tensors="pt", padding=True)
         inputs.pop("token_type_ids", None)
@@ -106,6 +120,9 @@ class TransformersBackend:
             output = self.model.generate(**inputs, max_new_tokens=max_tokens, do_sample=False, use_cache=True)
         generated = output[:, prompt_tokens:]
         content = self.processor.batch_decode(generated, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
+        self.last_inference_stats = {"peak_allocated_bytes": self.torch.cuda.max_memory_allocated(),
+                                     "peak_reserved_bytes": self.torch.cuda.max_memory_reserved(),
+                                     "input_images": len(images), "prompt_tokens": prompt_tokens}
         return content, prompt_tokens, int(generated.shape[-1])
 
 
@@ -117,7 +134,10 @@ def create_app(backend):
     @app.get("/health")
     def health():
         return jsonify(status="ok", model_loaded=backend.model_loaded,
-                       model=backend.model_id, backend=backend.backend_name)
+                       model=backend.model_id, backend=backend.backend_name,
+                       quantization=getattr(backend, "quantization", "test_double"),
+                       model_memory_bytes=getattr(backend, "model_memory_bytes", None),
+                       last_inference_stats=getattr(backend, "last_inference_stats", None))
 
     @app.get("/v1/models")
     def models():
@@ -163,7 +183,7 @@ def create_app(backend):
 
 
 if __name__ == "__main__":
-    from vlm_resources import inventory, require_idle_gpu
+    from vlm_resources import inventory, require_idle_gpu, require_local_gpu
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model-dir", required=True)
     parser.add_argument("--gpu-uuid", required=True)
@@ -171,11 +191,19 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=18868)
     parser.add_argument("--minimum-free-mib", type=int, default=22000)
     parser.add_argument("--context-budget", type=int, default=8192)
+    parser.add_argument("--quantization", choices=["none", "nf4"], default="none")
+    parser.add_argument("--profile", choices=["shared-4090", "local-8gb"], default="shared-4090")
     args = parser.parse_args()
-    require_idle_gpu(inventory(), args.gpu_uuid, args.minimum_free_mib)
+    if args.profile == "local-8gb":
+        if args.quantization != "nf4":
+            parser.error("The local 8GB profile requires explicit NF4 quantization")
+        require_local_gpu(inventory(), args.gpu_uuid)
+    else:
+        require_idle_gpu(inventory(), args.gpu_uuid, args.minimum_free_mib)
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_uuid
     os.environ["HF_HUB_OFFLINE"] = "1"
     os.environ["TRANSFORMERS_OFFLINE"] = "1"
     os.environ.setdefault("OMP_NUM_THREADS", "4")
-    engine = TransformersBackend(args.model_dir, args.model_id, context_budget=args.context_budget)
+    engine = TransformersBackend(args.model_dir, args.model_id, context_budget=args.context_budget,
+                                 quantization=args.quantization)
     create_app(engine).run(host="127.0.0.1", port=args.port, threaded=True)

@@ -48,6 +48,16 @@ def require_idle_gpu(rows, uuid, minimum_free_mib=22000):
     return selected
 
 
+def require_local_gpu(rows, uuid, minimum_free_mib=3500):
+    """Personal GPU profile: display processes are expected under Windows WDDM."""
+    matches = [row for row in rows if row["uuid"] == uuid]
+    if len(matches) != 1 or matches[0]["total_mib"] < 7500:
+        raise ValueError("An explicitly selected local GPU with at least 8GB is required")
+    if matches[0]["free_mib"] < minimum_free_mib:
+        raise ValueError("Insufficient free local GPU memory; no existing processes were stopped")
+    return matches[0]
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--gpu-uuid")

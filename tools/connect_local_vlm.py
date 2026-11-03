@@ -29,6 +29,8 @@ def require_real_service(base, model):
     if not base.endswith("/v1"):
         raise ValueError("VLM base URL must end in /v1")
     health = request_json(base[:-3] + "/health")
+    if not health.get("model_loaded") and health.get("on_demand"):
+        health = request_json(base[:-3] + "/activate", {})
     if not health.get("model_loaded") or health.get("backend") != "transformers_local_cuda" or health.get("model") != model:
         raise ValueError("A loaded real CUDA backend with the requested model is required")
     models = request_json(base + "/models")

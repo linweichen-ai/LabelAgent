@@ -8,6 +8,13 @@ SPEC.loader.exec_module(MODULE)
 
 
 class VLMResourceTests(unittest.TestCase):
+    def test_local_profile_preserves_display_processes_and_rejects_full_gpu(self):
+        rows = MODULE.parse_inventory("GPU-local, NVIDIA GeForce RTX 5060 Laptop GPU, 8151, 700, 5, 573.24", "GPU-local, 100")
+        self.assertEqual(MODULE.require_local_gpu(rows, "GPU-local")["uuid"], "GPU-local")
+        rows[0]["free_mib"] = 100
+        with self.assertRaises(ValueError):
+            MODULE.require_local_gpu(rows, "GPU-local")
+
     def test_occupied_card_is_rejected_even_with_memory_available(self):
         rows = MODULE.parse_inventory("GPU-a, NVIDIA GeForce RTX 4090, 24564, 10, 0, 570\n", "GPU-a, 123\n")
         with self.assertRaisesRegex(ValueError, "existing compute"):

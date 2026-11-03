@@ -15,6 +15,7 @@ from source.agent import workflow
 from tools.connect_local_vlm import loopback_url
 from tools.evaluate_instance_focus import largest_mask_candidate,render_instance_views,consensus_category
 from tools.evaluate_vlm_grounding import build_payload,validated_response
+from tools.decision_status_schema import continue_requires_operation
 
 
 def classify_online(config,image,shape,template,on_call):
@@ -49,7 +50,7 @@ def classify_online(config,image,shape,template,on_call):
 
 @contextmanager
 def scoped_online_observation(policy,agent,template,on_call,on_observation):
-    if policy not in {'baseline','online_observation','online_reconsideration'}:raise ValueError('Unknown observation policy')
+    if policy not in {'baseline','online_observation','online_reconsideration','online_action_guard'}:raise ValueError('Unknown observation policy')
     if policy=='baseline':yield;return
     original=workflow.chat
     def chat(config,instruction,image,extra_images=(),response_schema=None):
@@ -63,11 +64,13 @@ def scoped_online_observation(policy,agent,template,on_call,on_observation):
                  'Use the existing tools only for a visually supported defect; preserve correct candidates. '
                  'The observation is not an operation and does not choose a tool for you. '
                  'Choose the normal review JSON yourself. A reclassification to the same label makes no change.')
-            result=original(config,instruction+hint,image,extra_images=extra_images,response_schema=response_schema)
+            main_schema=(continue_requires_operation(response_schema)
+                if policy=='online_action_guard' and response_schema is not None else response_schema)
+            result=original(config,instruction+hint,image,extra_images=extra_images,response_schema=main_schema)
             observation['initial_main_status']=result.get('status')
             observation['initial_main_operation_count']=len(result.get('operations',[]))
             observation['consistency_reconsideration_called']=False
-            if (policy=='online_reconsideration' and result.get('status')=='done' and not result.get('operations')
+            if (policy in {'online_reconsideration','online_action_guard'} and result.get('status')=='done' and not result.get('operations')
                     and observation.get('two_view_consensus') in agent.labels
                     and observation['two_view_consensus']!=target['label']):
                 observation['consistency_reconsideration_called']=True
@@ -77,7 +80,7 @@ def scoped_online_observation(policy,agent,template,on_call,on_observation):
                     'Return the normal review JSON again: choose a concrete tool only if a defect is visually supported, '
                     'or retain no edit if it is not supported. Do not invent an edit merely to agree with this feedback. '
                     'Your previous review: '+json.dumps(result,separators=(',',':')))
-                result=original(config,instruction+hint+feedback,image,extra_images=extra_images,response_schema=response_schema)
+                result=original(config,instruction+hint+feedback,image,extra_images=extra_images,response_schema=main_schema)
             on_observation(observation)
             return result
         return original(config,instruction,image,extra_images=extra_images,response_schema=response_schema)

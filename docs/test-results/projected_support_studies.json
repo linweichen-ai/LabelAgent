@@ -428,7 +428,24 @@
     },
     "selected_using_tuning_only": true,
     "baseline_slice_matches_full_run": true,
-    "full_validation_success_claimed": false
+    "full_validation_completed": true,
+    "full_validation_success_claimed": true
+  },
+  "qualitative_visual_inspection": {
+    "reviewed_new_candidates": 47,
+    "scope": "qualitative_assistant_visual_inspection_not_independent_truth",
+    "accuracy_or_precision_estimated": false,
+    "observations": [
+      "Some additions visibly recover plastic pallets or pallet bases.",
+      "Many additions appear to be near-duplicate masks with different boundaries or holes.",
+      "One inspected candidate appears to select bright spots on wrapped cargo rather than the visible pallet base.",
+      "Some small fragments are visually ambiguous."
+    ],
+    "suspect_candidate_reference_reward": {
+      "extra_matched_object_observations": 1,
+      "extra_covered_reference_points": 18
+    },
+    "frozen_validation_parameters_changed": false
   },
   "rejected_prior_edit_impact": {
     "pallet": {

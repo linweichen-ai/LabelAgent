@@ -74,6 +74,24 @@ def decode_messages(messages):
     return converted, images
 
 
+def configure_runtime_caches(directory):
+    """Explicit process-local paths; never edits the user's existing cache links."""
+    if directory is None:
+        return {}
+    root=Path(directory).expanduser().resolve()
+    names={'XDG_CACHE_HOME':'xdg','HF_HOME':'huggingface','TORCH_HOME':'torch',
+        'TORCHINDUCTOR_CACHE_DIR':'inductor','TRITON_CACHE_DIR':'triton',
+        'CUDA_CACHE_PATH':'cuda','TMPDIR':'tmp'}
+    paths={key:(root/name).resolve() for key,name in names.items()}
+    if any(not path.is_relative_to(root) for path in paths.values()):
+        raise ValueError('Runtime cache subdirectories must remain within the chosen directory')
+    for path in paths.values():
+        path.mkdir(parents=True,exist_ok=True)
+    values={key:str(path) for key,path in paths.items()}
+    os.environ.update(values)
+    return values
+
+
 def configure_cuda_fraction(torch_module,fraction):
     if fraction is None:return
     if not isinstance(fraction,(int,float)) or isinstance(fraction,bool) or not .1<=fraction<=.35:
@@ -258,6 +276,7 @@ if __name__ == "__main__":
     from vlm_resources import inventory, require_idle_gpu, require_local_gpu,require_shared_probe_gpu
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model-dir", required=True)
+    parser.add_argument("--cache-dir", help="Explicit local-disk runtime cache directory for this process")
     parser.add_argument("--gpu-uuid", required=True)
     parser.add_argument("--model-id", default="labelagent-vlm")
     parser.add_argument("--port", type=int, default=18868)
@@ -292,6 +311,7 @@ if __name__ == "__main__":
         require_local_gpu(inventory(), args.gpu_uuid)
     else:
         require_idle_gpu(inventory(), args.gpu_uuid, args.minimum_free_mib)
+    configure_runtime_caches(args.cache_dir)
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_uuid
     os.environ["HF_HUB_OFFLINE"] = "1"
     os.environ["TRANSFORMERS_OFFLINE"] = "1"

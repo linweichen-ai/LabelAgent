@@ -47,6 +47,8 @@ python tools/load_candidates.py --path /absolute/path/to/capture.mcap --candidat
 
 导入只写入未确认候选，不写入人工真值。已有真值（包括已确认的空标注）和已有候选均受保护，重复导入会拒绝覆盖。导入前检查文件、话题、帧号、类别及多边形，失败不会部分导入。自动任务运行时禁止导入。
 
+在工作台点「添加窗口」，选择图像话题，添加后点图像窗口的 ✎ 进入标注视图，再点顶部「自动标注」查看候选。通过底部帧号切换；只有人工确认并保存后才成为工作台真值。外部候选导入不会伪造 VLM 或 Agent 的过程记录。
+
 完整的参考帧描述、视觉模型复查及 Agent 多轮修正需要另行接通本地 VLM，本轮尚未完成该闭环。
 
 ## 检查与公开范围
@@ -56,5 +58,13 @@ python -m unittest discover -s tests -v
 ```
 
 测试包括路径越界拦截、截断 PCD、点云 protobuf 往返、解析可求的三维 IoU、完整旋转的对称性与包含关系，以及阈值匹配的反例。
+
+可用 Playwright 与 Edge 验证候选浏览和刷新恢复：
+
+```sh
+node tools/verify_candidates.cjs http://127.0.0.1:8765 work/browser-check
+```
+
+该检查不点击确认保存真值。若本机 Windows 策略阻止可选的 Triton 连通区域后处理，启动 SAM3 服务前可设置 `SAM3_CC_BACKEND=opencv` 使用已安装的 OpenCV 兼容实现。
 
 原图、点云、逐对象标注、模型权重和私有路径不随仓库公开。只同步工具代码、脱敏汇总与进度。完整运行记录和图像浏览证据保留在本地数据集目录。

@@ -1,0 +1,100 @@
+{
+  "scope": "same_capture_instance_classification_diagnostic_not_accuracy",
+  "model": "Qwen3-VL-2B-Instruct NF4",
+  "image_token_budget": 256,
+  "temperature": 0,
+  "max_output_tokens": 192,
+  "fresh_real_CUDA_requests": 20,
+  "fully_completed_cases": 10,
+  "groups": {
+    "person_fixture": {
+      "cases": 2,
+      "consensus_counts": {
+        "person": 2
+      },
+      "single_counts": {
+        "person": 2
+      },
+      "context_counts": {
+        "person": 2
+      }
+    },
+    "pallet_fixture": {
+      "cases": 5,
+      "consensus_counts": {
+        "uncertain": 3,
+        "pallet": 2
+      },
+      "single_counts": {
+        "uncertain": 3,
+        "pallet": 2
+      },
+      "context_counts": {
+        "pallet": 4,
+        "person": 1
+      }
+    },
+    "blank_control": {
+      "cases": 2,
+      "consensus_counts": {
+        "uncertain": 1,
+        "pallet": 1
+      },
+      "single_counts": {
+        "uncertain": 1,
+        "pallet": 1
+      },
+      "context_counts": {
+        "pallet": 2
+      }
+    },
+    "suspected_non_pallet": {
+      "cases": 1,
+      "consensus_counts": {
+        "uncertain": 1
+      },
+      "single_counts": {
+        "uncertain": 1
+      },
+      "context_counts": {
+        "person": 1
+      }
+    }
+  },
+  "old_control_cases_preserved": 8,
+  "old_control_distinct_JPEG_files_reused_byte_identically": 24,
+  "new_person_selection": "largest_raster_mask_area_without_label_or_score_selection",
+  "new_person_crop_dimensions": [
+    [
+      905,
+      1054
+    ],
+    [
+      1052,
+      1039
+    ]
+  ],
+  "candidate_class_or_ID_text_drawn": false,
+  "fixture_role_sent_to_model": false,
+  "categories": [
+    "pallet",
+    "person",
+    "uncertain"
+  ],
+  "minimum_pallet_consensus_required": 3,
+  "checks": {
+    "all_cases_have_valid_real_CUDA_responses": true,
+    "all_person_fixtures_agree_person": true,
+    "pallet_fixtures_never_called_person": false,
+    "minimum_pallet_consensus": false,
+    "blank_views_always_uncertain": false,
+    "suspected_non_target_never_accepted": false
+  },
+  "all_predeclared_checks_passed": false,
+  "changed_task_vocabulary_prompts_and_two_cases_not_single_factor_causal_comparison": true,
+  "independent_validation": false,
+  "human_pixel_truth_added": false,
+  "workbench_modified": false,
+  "new_reclassification_filter_adopted": false,
+  "regression_tests_passed": 203
+}

@@ -1,0 +1,41 @@
+{
+  "observed_utc": "2026-11-03T21:19:57.185826+00:00",
+  "SSH_login_and_hostname_verified": true,
+  "private_account_and_host_details_published": false,
+  "GPU_inventory_verified": true,
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 4090",
+      "total_mib": 24564,
+      "free_mib": 15858,
+      "utilization_percent": 0,
+      "driver": "580.126.20"
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 4090",
+      "total_mib": 24564,
+      "free_mib": 14611,
+      "utilization_percent": 0,
+      "driver": "580.126.20"
+    }
+  ],
+  "model": "Qwen/Qwen3-VL-8B-Instruct",
+  "model_revision": "0c351dd01ed87e9c1b53cbc748cba10e6187ff3b",
+  "source_commit": "0357fab3e1c518e726be8cfac1547b2384ec7134",
+  "preparation_status": "running",
+  "preparation_stage": "install_torch",
+  "preparation_process_verified_live": true,
+  "independent_Python_and_venv_preparation_started": true,
+  "CPU_only_during_preparation": true,
+  "environment_imports_verified": false,
+  "model_weight_manifest_present": false,
+  "existing_processes_stopped": 0,
+  "shared_environments_modified": false,
+  "GPU_model_launch_attempted": false,
+  "remote_CUDA_inference_verified": false,
+  "workbench_model_reconfigured": false,
+  "current_workbench_model": "local Qwen3-VL-2B NF4",
+  "launch_gate": "existing idle-GPU resource guard remains enabled; repeat inventory before any model launch"
+}

@@ -39,6 +39,14 @@ python tools/run_sam3_baseline.py --dataset work/datasets/example --endpoint htt
 
 结果位于 `sam3_baseline/`：`public_progress.json`、`summary.json`、`requests.csv`、`responses/` 和 `candidates_by_topic.json`。当前数据没有二维像素真值，因此不计算二维 mask 准确率，也不把模型质量分数当作准确率。
 
+将候选装入工作台复核：
+
+```sh
+python tools/load_candidates.py --path /absolute/path/to/capture.mcap --candidates work/datasets/example/sam3_baseline/candidates_by_topic.json
+```
+
+导入只写入未确认候选，不写入人工真值。已有真值（包括已确认的空标注）和已有候选均受保护，重复导入会拒绝覆盖。导入前检查文件、话题、帧号、类别及多边形，失败不会部分导入。自动任务运行时禁止导入。
+
 完整的参考帧描述、视觉模型复查及 Agent 多轮修正需要另行接通本地 VLM，本轮尚未完成该闭环。
 
 ## 检查与公开范围

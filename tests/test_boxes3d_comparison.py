@@ -28,6 +28,12 @@ class Boxes3DTests(unittest.TestCase):
     def test_fully_contained_rotated_box(self):
         self.assertAlmostEqual(MODULE.iou3d(box(size=(4, 4, 4)), box(angles=(0.2, 0.4, 0.7))), 1/64, places=7)
 
+    def test_thin_box_local_height_shift_is_rotation_invariant(self):
+        a = box(size=(1.2, 0.7, 0.15), angles=(0.12, -0.04, 1.1))
+        center = a.rotation @ np.array([0, 0, 0.05])
+        b = box(center=center, size=(1.2, 0.7, 0.15), angles=(0.12, -0.04, 1.1))
+        self.assertAlmostEqual(MODULE.iou3d(a, b), 0.5, places=7)
+
     def test_disjoint_and_touching_boxes(self):
         self.assertEqual(MODULE.iou3d(box(), box(center=(2, 0, 0))), 0)
         self.assertEqual(MODULE.iou3d(box(), box(center=(1, 0, 0))), 0)

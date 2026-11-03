@@ -17,6 +17,7 @@ import numpy as np
 
 from .media import IMAGE_SUFFIXES, SUPPORTED_SUFFIXES, open_media as Video, read_image
 from .sensors import cloud_snapshot
+from .candidate_import import prepare_candidate_import, merge_candidate_import
 from .workflow import (DESCRIPTION_INPUT_VERSION, MAX_REVIEW_ROUNDS, RunCancelled,
                        cancellation, describe, reference_labels, restrict_description,
                        run, trace_calls, candidate_overlay)
@@ -373,6 +374,33 @@ def load_file(file_id):
         if item is None:
             raise ValueError('文件不在列表中')
         return jsonify(**activate_file(item))
+
+
+@app.post('/api/candidates/import')
+def import_candidates():
+    body = request.get_json()
+    with lock:
+        with run_status_lock:
+            if run_status.get("status") in {"running", "stopping"}:
+                raise ValueError("自动任务运行中，暂不能导入候选")
+        video = state.get("video")
+        if video is None or not body.get("path") or Path(body["path"]).resolve() != video.path.resolve():
+            raise ValueError("请先加载与候选对应的文件")
+        prepared = prepare_candidate_import(video, body.get("candidates_by_topic"), state.get("labels", []))
+        patch = merge_candidate_import(state, prepared)
+        previous = {key: state.get(key) for key in patch}
+        absent = [key for key in patch if key not in state]
+        try:
+            state.update(patch)
+            save()
+        except Exception:
+            state.update(previous)
+            for key in absent:
+                state.pop(key, None)
+            raise
+        return jsonify(imported_frames=sum(len(frames) for frames in prepared.values()),
+            imported_shapes=sum(len(shapes) for frames in prepared.values() for shapes in frames.values()),
+            saved_as_truth=False)
 
 
 @app.delete('/api/files/<file_id>')

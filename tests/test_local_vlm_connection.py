@@ -1,7 +1,9 @@
 import importlib.util
+import tempfile
 from pathlib import Path
 import unittest
 from unittest.mock import patch
+from PIL import Image
 
 SPEC = importlib.util.spec_from_file_location("connect_local_vlm", Path(__file__).resolve().parents[1] / "tools/connect_local_vlm.py")
 MODULE = importlib.util.module_from_spec(SPEC)
@@ -9,6 +11,15 @@ SPEC.loader.exec_module(MODULE)
 
 
 class LocalVLMConnectionTests(unittest.TestCase):
+    def test_compact_probe_uses_structured_output_too(self):
+        reply = {"choices": [{"message": {"content": '{"visible_objects":["pallet"],"image_count":1}'}}],
+                 "local_vlm": {"image_count": 1}}
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/"image.png"
+            Image.new("RGB", (16,16)).save(path)
+            with patch.object(MODULE, "require_real_service"), patch.object(MODULE, "request_json", return_value=reply) as call:
+                self.assertTrue(MODULE.probe("http://localhost:18868/v1", "test", [path], structured=True)["real_vlm_probe_passed"])
+            self.assertEqual(call.call_args.args[1]["response_format"]["type"], "json_schema")
     def test_on_demand_model_is_activated_before_real_backend_validation(self):
         healthy = {"model_loaded": True, "backend": "transformers_local_cuda", "model": "test"}
         with patch.object(MODULE, "request_json", side_effect=[{"on_demand": True, "model_loaded": False}, healthy, {"data": [{"id": "test"}]}]) as call:

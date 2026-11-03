@@ -41,7 +41,7 @@ def state_path():
 
 def save():
     temporary = state_path().with_suffix(".tmp")
-    temporary.write_text(json.dumps({k: v for k, v in state.items() if k != "video"}, ensure_ascii=False, indent=2))
+    temporary.write_text(json.dumps({k: v for k, v in state.items() if k != "video"}, ensure_ascii=False, indent=2), encoding="utf-8")
     temporary.replace(state_path())
 
 
@@ -53,14 +53,14 @@ def update_run_status(**changes):
 def save_run(output):
     path = WORK / "last_run.json"
     temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps(output, ensure_ascii=False, indent=2))
+    temporary.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
     temporary.replace(path)
 
 
 def save_debug(trace):
     path = WORK / "model_debug.json"
     temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps({"trace": trace}, ensure_ascii=False, indent=2))
+    temporary.write_text(json.dumps({"trace": trace}, ensure_ascii=False, indent=2), encoding="utf-8")
     temporary.replace(path)
 
 
@@ -104,7 +104,7 @@ def inspection_image(name):
 def save_description_trace(trace, description):
     path = WORK / "description_debug.json"
     temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps({"trace": trace, "description": description}, ensure_ascii=False))
+    temporary.write_text(json.dumps({"trace": trace, "description": description}, ensure_ascii=False), encoding="utf-8")
     temporary.replace(path)
 
 
@@ -121,7 +121,7 @@ def redact_debug(value):
 
 def load():
     if state_path().exists():
-        stored = json.loads(state_path().read_text())
+        stored = json.loads(state_path().read_text(encoding="utf-8"))
         state.update(stored)
     for key in ("sam_url", "cvat_url", "cvat_token"):
         state["config"].pop(key, None)
@@ -175,7 +175,7 @@ def get_state():
     reference = state.get("reference_frames", {}).get(state["topic"], []) if state["topic"] else []
     path = WORK / "description.json"
     if state["video"] and reference and path.exists():
-        saved = json.loads(path.read_text())
+        saved = json.loads(path.read_text(encoding="utf-8"))
         if saved.get("reference_signature") == reference_signature(reference[0]):
             description = saved
     return jsonify(loaded=state["video"] is not None,
@@ -290,12 +290,12 @@ def library_path():
 
 
 def read_library():
-    return json.loads(library_path().read_text()) if library_path().exists() else []
+    return json.loads(library_path().read_text(encoding="utf-8")) if library_path().exists() else []
 
 
 def write_library(files):
     temporary = library_path().with_suffix('.tmp')
-    temporary.write_text(json.dumps(files, ensure_ascii=False, indent=2))
+    temporary.write_text(json.dumps(files, ensure_ascii=False, indent=2), encoding="utf-8")
     temporary.replace(library_path())
 
 
@@ -510,7 +510,7 @@ def clear_auto_result(index):
             path = WORK / filename
             if not path.exists():
                 continue
-            record = json.loads(path.read_text())
+            record = json.loads(path.read_text(encoding="utf-8"))
             scoped_run = belongs(record) or any(belongs(call) for call in record.get("trace", []))
             if filename == "last_run.json" and not scoped_run:
                 continue
@@ -529,7 +529,7 @@ def clear_auto_result(index):
                     if (record.get("current") or {}).get("frame") == index:
                         record["current"] = None
             temporary = path.with_suffix(".tmp")
-            temporary.write_text(json.dumps(record, ensure_ascii=False, indent=2))
+            temporary.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
             temporary.replace(path)
         with run_status_lock:
             if belongs(run_status):
@@ -546,7 +546,7 @@ def clear_auto_result(index):
             for filename in ("last_run.json", "model_debug.json", "description_debug.json"):
                 path = WORK / filename
                 if path.exists():
-                    still_used.update(inspection_image_names(json.loads(path.read_text())))
+                    still_used.update(inspection_image_names(json.loads(path.read_text(encoding="utf-8"))))
             for name in removed_images - still_used:
                 (WORK / "inspection" / name).unlink(missing_ok=True)
         return jsonify(frame=index, candidate_removed=removed_candidate, audit_removed=removed_audit,
@@ -605,7 +605,7 @@ def describe_truth():
                 state["truth"][str(index)], allowed_labels, overlay(index))
         result["reference_signature"] = reference_signature(index)
         save_description_trace(trace, result)
-        (WORK / "description.json").write_text(json.dumps(result, ensure_ascii=False, indent=2))
+        (WORK / "description.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
         return jsonify(result)
 
 
@@ -644,7 +644,7 @@ def run_workflow():
         description = body.get("description")
         if description is None:
             description_path = WORK / "description.json"
-            description = json.loads(description_path.read_text()) if description_path.exists() else None
+            description = json.loads(description_path.read_text(encoding="utf-8")) if description_path.exists() else None
         supplied_prompts = description.get("prompts", []) if isinstance(description, dict) else []
         supplied_labels = [item.get("label") for item in supplied_prompts if isinstance(item, dict)]
         if (not isinstance(description, dict) or not description.get("description")
@@ -779,7 +779,7 @@ def get_run_debug():
         path = WORK / "last_run.json"
     if not path.exists():
         return jsonify(trace=[])
-    output = json.loads(path.read_text())
+    output = json.loads(path.read_text(encoding="utf-8"))
     return jsonify(trace=output.get("trace", []))
 
 
@@ -787,7 +787,7 @@ def get_run_debug():
 def get_inspection():
     def read(name):
         path = WORK / name
-        return json.loads(path.read_text()) if path.exists() else {}
+        return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
     output = read("last_run.json")
     description_record = read("description_debug.json")
     legacy_trace = not output.get("file") and not output.get("topic")

@@ -39,7 +39,7 @@ def require_real_service(base, model):
     return health
 
 
-def probe(base, model, image_paths):
+def probe(base, model, image_paths, structured=False):
     base = loopback_url(base)
     require_real_service(base, model)
     parts = [{"type": "text", "text": '观察所附图像，返回严格 JSON：{"visible_objects":["图中可见的物体类别"],"image_count":图片数}。不要输出其他文字。'}]
@@ -50,8 +50,17 @@ def probe(base, model, image_paths):
             output = io.BytesIO()
             image.convert("RGB").save(output, "JPEG", quality=90)
         parts.append({"type": "image_url", "image_url": {"url": "data:image/jpeg;base64," + base64.b64encode(output.getvalue()).decode()}})
-    result = request_json(base + "/chat/completions", {"model": model, "temperature": 0, "max_tokens": 512,
-                          "messages": [{"role": "user", "content": parts}]})
+    payload = {"model": model, "temperature": 0, "max_tokens": 512,
+               "messages": [{"role": "user", "content": parts}]}
+    if structured:
+        parts[0]["text"] = ("Observe the supplied photographs. Return a JSON object with visible_objects "
+                            "(at most four short English object class names) and image_count (number of input pictures).")
+        schema = {"type": "object", "properties": {
+            "visible_objects": {"type": "array", "maxItems": 4, "items": {"type": "string", "pattern": "[A-Za-z -]{1,30}"}},
+            "image_count": {"type": "integer", "enum": [len(image_paths)]}},
+            "required": ["visible_objects", "image_count"], "additionalProperties": False}
+        payload["response_format"] = {"type": "json_schema", "json_schema": {"name": "vision_probe", "schema": schema, "strict": True}}
+    result = request_json(base + "/chat/completions", payload)
     text = result["choices"][0]["message"]["content"].strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
     decision = json.loads(text)
     if not isinstance(decision, dict) or not isinstance(decision.get("visible_objects"), list):
@@ -86,7 +95,7 @@ if __name__ == "__main__":
     parser.add_argument("--prompt-profile", choices=["full", "compact"])
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
-    result = probe(args.base, args.model, args.image)
+    result = probe(args.base, args.model, args.image, structured=args.prompt_profile == "compact")
     if args.apply:
         result["configuration"] = apply_configuration(args.base, args.model, args.workbench, args.prompt_profile)
     Path(args.output).write_text(json.dumps(result, indent=2), encoding="utf-8")

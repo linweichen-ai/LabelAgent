@@ -26,5 +26,7 @@
   "reference_3d_source": "labels",
   "reference_3d_frames": 152,
   "human_reviewed_2d_reference_added": false,
-  "credentials_published": false
+  "credentials_published": false,
+  "scope": "remote_4090_8b_preparation_snapshot",
+  "local_gpu_result": "local_gpu_progress.json"
 }

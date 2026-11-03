@@ -5,9 +5,11 @@ Contract tests use an explicitly named test double, not real inference.
 """
 import argparse
 import base64
+import hashlib
 import io
 import json
 import os
+import sys
 from pathlib import Path
 import threading
 import time
@@ -72,18 +74,52 @@ def decode_messages(messages):
     return converted, images
 
 
+def configure_cuda_fraction(torch_module,fraction):
+    if fraction is None:return
+    if not isinstance(fraction,(int,float)) or isinstance(fraction,bool) or not .1<=fraction<=.35:
+        raise ValueError('Probe allocator fraction must be between .1 and .35')
+    torch_module.cuda.memory.set_per_process_memory_fraction(float(fraction),device=0)
+
+
+def arm_probe_deadline(seconds):
+    if type(seconds) is not int or not 30<=seconds<=900:
+        raise ValueError('Bounded GPU probes must last between 30 and 900 seconds')
+    def expire():
+        sys.stderr.write('Bounded VLM probe expired; exiting this process only.\n')
+        sys.stderr.flush()
+        os._exit(124)
+    timer=threading.Timer(seconds,expire)
+    timer.daemon=True
+    timer.start()
+    return timer
+
+
+def require_runtime_probe_headroom(torch_module,fraction,reserve_mib):
+    if fraction is None:return
+    free,total=torch_module.cuda.mem_get_info(0)
+    held=torch_module.cuda.memory_reserved(0)
+    remaining=max(0,int(total*fraction)-held)
+    if free<remaining+(reserve_mib+512)*1024**2:
+        raise RuntimeError('Shared GPU headroom changed; this probe did not start a new inference')
+
+
 class TransformersBackend:
     backend_name = "transformers_local_cuda"
 
-    def __init__(self, model_dir, model_id, max_pixels=512*32*32, context_budget=8192, quantization="none"):
+    def __init__(self, model_dir, model_id, max_pixels=512*32*32, context_budget=8192, quantization="none",memory_fraction=None,probe_reserve_mib=None):
         import torch
         from transformers import AutoProcessor, Qwen3VLForConditionalGeneration, BitsAndBytesConfig
         model_dir = Path(model_dir).resolve()
-        config = json.loads((model_dir / "config.json").read_text(encoding="utf-8"))
+        config_raw=(model_dir / "config.json").read_bytes()
+        config = json.loads(config_raw)
         if config.get("model_type") != "qwen3_vl":
             raise ValueError("Only dense Qwen3-VL checkpoints are supported by this deployment profile")
         if not torch.cuda.is_available():
             raise RuntimeError("CUDA is required; no silent CPU fallback")
+        configure_cuda_fraction(torch,memory_fraction)
+        self.process_allocator_fraction=memory_fraction
+        self.probe_reserved_free_mib=probe_reserve_mib
+        self.model_config_sha256=hashlib.sha256(config_raw).hexdigest()
         self.model_id = model_id
         self.context_budget = context_budget
         self.image_token_budget = max_pixels//(32*32)
@@ -110,6 +146,7 @@ class TransformersBackend:
 
     def generate(self, messages, images, max_tokens, response_schema=None):
         started = time.monotonic()
+        require_runtime_probe_headroom(self.torch,self.process_allocator_fraction,self.probe_reserved_free_mib)
         self.torch.cuda.reset_peak_memory_stats()
         text = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         inputs = self.processor(text=[text], images=images, return_tensors="pt", padding=True)
@@ -158,6 +195,10 @@ def create_app(backend):
                        model=backend.model_id, backend=backend.backend_name,
                        quantization=getattr(backend, "quantization", "test_double"),
                        model_memory_bytes=getattr(backend, "model_memory_bytes", None),
+                       model_config_sha256=getattr(backend,"model_config_sha256",None),
+                       process_allocator_fraction=getattr(backend,"process_allocator_fraction",None),
+                       probe_lifetime_seconds=getattr(backend,"probe_lifetime_seconds",None),
+                       probe_reserved_free_mib=getattr(backend,"probe_reserved_free_mib",None),
                        image_token_budget=getattr(backend, "image_token_budget", None),
                        last_inference_stats=getattr(backend, "last_inference_stats", None))
 
@@ -214,7 +255,7 @@ def create_app(backend):
 
 
 if __name__ == "__main__":
-    from vlm_resources import inventory, require_idle_gpu, require_local_gpu
+    from vlm_resources import inventory, require_idle_gpu, require_local_gpu,require_shared_probe_gpu
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model-dir", required=True)
     parser.add_argument("--gpu-uuid", required=True)
@@ -224,9 +265,28 @@ if __name__ == "__main__":
     parser.add_argument("--context-budget", type=int, default=8192)
     parser.add_argument("--quantization", choices=["none", "nf4"], default="none")
     parser.add_argument("--max-image-tokens", type=int)
-    parser.add_argument("--profile", choices=["shared-4090", "local-8gb"], default="shared-4090")
+    parser.add_argument("--profile", choices=["shared-4090", "local-8gb","shared-4090-probe"], default="shared-4090")
+    parser.add_argument('--probe-memory-fraction',type=float)
+    parser.add_argument('--probe-reserve-mib',type=int)
+    parser.add_argument('--probe-seconds',type=int)
     args = parser.parse_args()
-    if args.profile == "local-8gb":
+    is_probe=args.profile=='shared-4090-probe'
+    image_tokens=args.max_image_tokens if args.max_image_tokens is not None else (256 if args.profile in {'local-8gb','shared-4090-probe'} else 512)
+    if not 64<=image_tokens<=1024:parser.error('Image token budget must be between 64 and 1024')
+    fraction=None
+    if is_probe:
+        if args.quantization!='nf4' or image_tokens>256 or args.context_budget>16384:
+            parser.error('Shared probes require NF4, at most 256 image tokens and context at most 16384')
+        fraction=args.probe_memory_fraction if args.probe_memory_fraction is not None else .35
+        reserve=args.probe_reserve_mib if args.probe_reserve_mib is not None else 4096
+        seconds=args.probe_seconds if args.probe_seconds is not None else 900
+        if not 30<=seconds<=900:parser.error('Probe lifetime must be between 30 and 900 seconds')
+        limits=require_shared_probe_gpu(inventory(),args.gpu_uuid,fraction,reserve)
+        print(json.dumps({'bounded_probe_resource_check':limits}),flush=True)
+        deadline=arm_probe_deadline(seconds)
+    elif any(value is not None for value in (args.probe_memory_fraction,args.probe_reserve_mib,args.probe_seconds)):
+        parser.error('Probe-only options require the explicit shared-4090-probe profile')
+    elif args.profile == "local-8gb":
         if args.quantization != "nf4":
             parser.error("The local 8GB profile requires explicit NF4 quantization")
         require_local_gpu(inventory(), args.gpu_uuid)
@@ -236,10 +296,9 @@ if __name__ == "__main__":
     os.environ["HF_HUB_OFFLINE"] = "1"
     os.environ["TRANSFORMERS_OFFLINE"] = "1"
     os.environ.setdefault("OMP_NUM_THREADS", "4")
-    image_tokens = args.max_image_tokens or (256 if args.profile == "local-8gb" else 512)
-    if not 64 <= image_tokens <= 1024:
-        parser.error("Image token budget must be between 64 and 1024")
     engine = TransformersBackend(args.model_dir, args.model_id, context_budget=args.context_budget,
                                  max_pixels=image_tokens*32*32,
-                                 quantization=args.quantization)
+                                 quantization=args.quantization,memory_fraction=fraction,
+                                 probe_reserve_mib=reserve if is_probe else None)
+    if is_probe:engine.probe_lifetime_seconds=seconds
     create_app(engine).run(host="127.0.0.1", port=args.port, threaded=True)

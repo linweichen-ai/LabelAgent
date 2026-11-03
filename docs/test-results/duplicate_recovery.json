@@ -1,0 +1,1293 @@
+{
+  "updated_utc": "2026-11-03T16:56:12.163386+00:00",
+  "scope": "controlled_exact_duplicate_recovery_not_segmentation_accuracy",
+  "reference_kind": "unconfirmed_functional_fixture",
+  "seed_candidates": "real_SAM3_unconfirmed",
+  "model": "Qwen3-VL-2B-Instruct",
+  "quantization": "nf4",
+  "feature_state": {
+    "available_in_isolated_evaluation": true,
+    "enabled_by_default": false,
+    "enabled_in_current_workbench": false,
+    "operation_driven_variant_in_release": false
+  },
+  "method": {
+    "injection": "one exact copy of largest candidate in the selected class, with a fresh integer ID",
+    "comparison": "per-label raster-mask multiset relative to the unconfirmed seed; IDs and ordering may change",
+    "tuning_camera": 1,
+    "tuning_frame": 76,
+    "same_capture_temporal_correlation": true,
+    "no_independent_scene_generalization_claim": true
+  },
+  "presence_gated_holdout": {
+    "plan": [
+      {
+        "camera": 0,
+        "frame": 58,
+        "classes": [
+          "none",
+          "person",
+          "pallet"
+        ]
+      },
+      {
+        "camera": 1,
+        "frame": 122,
+        "classes": [
+          "none",
+          "person",
+          "pallet"
+        ]
+      },
+      {
+        "camera": 2,
+        "frame": 45,
+        "classes": [
+          "none",
+          "person",
+          "pallet"
+        ]
+      },
+      {
+        "camera": 3,
+        "frame": 90,
+        "classes": [
+          "none",
+          "pallet"
+        ]
+      }
+    ],
+    "frozen_candidate_sha256": "57bb3fb9ea5185fadc2c747b2d7be6535ef6325fff70a37dfced79bc37126913",
+    "candidate_unchanged_during_run": true,
+    "cases": {
+      "baseline": [
+        {
+          "camera": 0,
+          "case": "00_frame_58_none",
+          "frame": 58,
+          "injected_class": null,
+          "seed_candidates": 8,
+          "challenged_candidates": 8,
+          "call_completed": true,
+          "rounds": 1,
+          "stop_reason": "done",
+          "converged": true,
+          "applied_edits": 0,
+          "remaining_candidates": 8,
+          "known_injection_recovered": null,
+          "control_preserved": true,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": false,
+          "successful_real_vlm_calls": 1,
+          "seconds": 4.938
+        },
+        {
+          "camera": 0,
+          "case": "01_frame_58_person",
+          "frame": 58,
+          "injected_class": "person",
+          "seed_candidates": 8,
+          "challenged_candidates": 9,
+          "call_completed": true,
+          "rounds": 1,
+          "stop_reason": "done",
+          "converged": true,
+          "applied_edits": 0,
+          "remaining_candidates": 9,
+          "known_injection_recovered": false,
+          "control_preserved": null,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": false,
+          "successful_real_vlm_calls": 1,
+          "seconds": 5.313
+        },
+        {
+          "camera": 0,
+          "case": "02_frame_58_pallet",
+          "frame": 58,
+          "injected_class": "pallet",
+          "seed_candidates": 8,
+          "challenged_candidates": 9,
+          "call_completed": true,
+          "rounds": 1,
+          "stop_reason": "done",
+          "converged": true,
+          "applied_edits": 0,
+          "remaining_candidates": 9,
+          "known_injection_recovered": false,
+          "control_preserved": null,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": false,
+          "successful_real_vlm_calls": 1,
+          "seconds": 5.875
+        },
+        {
+          "camera": 1,
+          "case": "00_frame_122_none",
+          "frame": 122,
+          "injected_class": null,
+          "seed_candidates": 19,
+          "challenged_candidates": 19,
+          "call_completed": true,
+          "rounds": 1,
+          "stop_reason": "done",
+          "converged": true,
+          "applied_edits": 0,
+          "remaining_candidates": 19,
+          "known_injection_recovered": null,
+          "control_preserved": true,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": false,
+          "successful_real_vlm_calls": 1,
+          "seconds": 6.094
+        },
+        {
+          "camera": 1,
+          "case": "01_frame_122_person",
+          "frame": 122,
+          "injected_class": "person",
+          "seed_candidates": 19,
+          "challenged_candidates": 20,
+          "call_completed": true,
+          "rounds": 1,
+          "stop_reason": "done",
+          "converged": true,
+          "applied_edits": 0,
+          "remaining_candidates": 20,
+          "known_injection_recovered": false,
+          "control_preserved": null,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": false,
+          "successful_real_vlm_calls": 1,
+          "seconds": 7.141
+        },
+        {
+          "camera": 1,
+          "case": "02_frame_122_pallet",
+          "frame": 122,
+          "injected_class": "pallet",
+          "seed_candidates": 19,
+          "challenged_candidates": 20,
+          "call_completed": true,
+          "rounds": 1,
+          "stop_reason": "done",
+          "converged": true,
+          "applied_edits": 0,
+          "remaining_candidates": 20,
+          "known_injection_recovered": false,
+          "control_preserved": null,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": false,
+          "successful_real_vlm_calls": 1,
+          "seconds": 6.89
+        },
+        {
+          "camera": 2,
+          "case": "00_frame_45_none",
+          "frame": 45,
+          "injected_class": null,
+          "seed_candidates": 13,
+          "challenged_candidates": 13,
+          "call_completed": true,
+          "rounds": 1,
+          "stop_reason": "done",
+          "converged": true,
+          "applied_edits": 0,
+          "remaining_candidates": 13,
+          "known_injection_recovered": null,
+          "control_preserved": true,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": false,
+          "successful_real_vlm_calls": 1,
+          "seconds": 6.375
+        },
+        {
+          "camera": 2,
+          "case": "01_frame_45_person",
+          "frame": 45,
+          "injected_class": "person",
+          "seed_candidates": 13,
+          "challenged_candidates": 14,
+          "call_completed": true,
+          "rounds": 1,
+          "stop_reason": "done",
+          "converged": true,
+          "applied_edits": 0,
+          "remaining_candidates": 14,
+          "known_injection_recovered": false,
+          "control_preserved": null,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": false,
+          "successful_real_vlm_calls": 1,
+          "seconds": 6.609
+        },
+        {
+          "camera": 2,
+          "case": "02_frame_45_pallet",
+          "frame": 45,
+          "injected_class": "pallet",
+          "seed_candidates": 13,
+          "challenged_candidates": 14,
+          "call_completed": true,
+          "rounds": 1,
+          "stop_reason": "done",
+          "converged": true,
+          "applied_edits": 0,
+          "remaining_candidates": 14,
+          "known_injection_recovered": false,
+          "control_preserved": null,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": false,
+          "successful_real_vlm_calls": 1,
+          "seconds": 6.281
+        },
+        {
+          "camera": 3,
+          "case": "00_frame_90_none",
+          "frame": 90,
+          "injected_class": null,
+          "seed_candidates": 6,
+          "challenged_candidates": 6,
+          "call_completed": true,
+          "rounds": 1,
+          "stop_reason": "done",
+          "converged": true,
+          "applied_edits": 0,
+          "remaining_candidates": 6,
+          "known_injection_recovered": null,
+          "control_preserved": true,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": false,
+          "successful_real_vlm_calls": 1,
+          "seconds": 9.937
+        },
+        {
+          "camera": 3,
+          "case": "01_frame_90_pallet",
+          "frame": 90,
+          "injected_class": "pallet",
+          "seed_candidates": 6,
+          "challenged_candidates": 7,
+          "call_completed": true,
+          "rounds": 1,
+          "stop_reason": "done",
+          "converged": true,
+          "applied_edits": 0,
+          "remaining_candidates": 7,
+          "known_injection_recovered": false,
+          "control_preserved": null,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": false,
+          "successful_real_vlm_calls": 1,
+          "seconds": 10.187
+        }
+      ],
+      "focused": [
+        {
+          "camera": 0,
+          "case": "00_frame_58_none",
+          "frame": 58,
+          "injected_class": null,
+          "seed_candidates": 8,
+          "challenged_candidates": 8,
+          "call_completed": true,
+          "rounds": 1,
+          "stop_reason": "done",
+          "converged": true,
+          "applied_edits": 0,
+          "remaining_candidates": 8,
+          "known_injection_recovered": null,
+          "control_preserved": true,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": false,
+          "successful_real_vlm_calls": 1,
+          "seconds": 4.828
+        },
+        {
+          "camera": 0,
+          "case": "01_frame_58_person",
+          "frame": 58,
+          "injected_class": "person",
+          "seed_candidates": 8,
+          "challenged_candidates": 9,
+          "call_completed": true,
+          "rounds": 2,
+          "stop_reason": "done",
+          "converged": true,
+          "applied_edits": 1,
+          "remaining_candidates": 8,
+          "known_injection_recovered": true,
+          "control_preserved": null,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": true,
+          "successful_real_vlm_calls": 3,
+          "seconds": 12.453
+        },
+        {
+          "camera": 0,
+          "case": "02_frame_58_pallet",
+          "frame": 58,
+          "injected_class": "pallet",
+          "seed_candidates": 8,
+          "challenged_candidates": 9,
+          "call_completed": true,
+          "rounds": 2,
+          "stop_reason": "done",
+          "converged": true,
+          "applied_edits": 1,
+          "remaining_candidates": 8,
+          "known_injection_recovered": true,
+          "control_preserved": null,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": true,
+          "successful_real_vlm_calls": 3,
+          "seconds": 12.25
+        },
+        {
+          "camera": 1,
+          "case": "00_frame_122_none",
+          "frame": 122,
+          "injected_class": null,
+          "seed_candidates": 19,
+          "challenged_candidates": 19,
+          "call_completed": true,
+          "rounds": 1,
+          "stop_reason": "done",
+          "converged": true,
+          "applied_edits": 0,
+          "remaining_candidates": 19,
+          "known_injection_recovered": null,
+          "control_preserved": true,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": false,
+          "successful_real_vlm_calls": 1,
+          "seconds": 5.938
+        },
+        {
+          "camera": 1,
+          "case": "01_frame_122_person",
+          "frame": 122,
+          "injected_class": "person",
+          "seed_candidates": 19,
+          "challenged_candidates": 20,
+          "call_completed": true,
+          "rounds": 2,
+          "stop_reason": "done",
+          "converged": true,
+          "applied_edits": 1,
+          "remaining_candidates": 19,
+          "known_injection_recovered": true,
+          "control_preserved": null,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": true,
+          "successful_real_vlm_calls": 3,
+          "seconds": 13.922
+        },
+        {
+          "camera": 1,
+          "case": "02_frame_122_pallet",
+          "frame": 122,
+          "injected_class": "pallet",
+          "seed_candidates": 19,
+          "challenged_candidates": 20,
+          "call_completed": true,
+          "rounds": 2,
+          "stop_reason": "done",
+          "converged": true,
+          "applied_edits": 1,
+          "remaining_candidates": 19,
+          "known_injection_recovered": true,
+          "control_preserved": null,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": true,
+          "successful_real_vlm_calls": 3,
+          "seconds": 14.141
+        },
+        {
+          "camera": 2,
+          "case": "00_frame_45_none",
+          "frame": 45,
+          "injected_class": null,
+          "seed_candidates": 13,
+          "challenged_candidates": 13,
+          "call_completed": true,
+          "rounds": 1,
+          "stop_reason": "done",
+          "converged": true,
+          "applied_edits": 0,
+          "remaining_candidates": 13,
+          "known_injection_recovered": null,
+          "control_preserved": true,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": false,
+          "successful_real_vlm_calls": 1,
+          "seconds": 6.86
+        },
+        {
+          "camera": 2,
+          "case": "01_frame_45_person",
+          "frame": 45,
+          "injected_class": "person",
+          "seed_candidates": 13,
+          "challenged_candidates": 14,
+          "call_completed": true,
+          "rounds": 2,
+          "stop_reason": "done",
+          "converged": true,
+          "applied_edits": 1,
+          "remaining_candidates": 13,
+          "known_injection_recovered": true,
+          "control_preserved": null,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": true,
+          "successful_real_vlm_calls": 3,
+          "seconds": 23.187
+        },
+        {
+          "camera": 2,
+          "case": "02_frame_45_pallet",
+          "frame": 45,
+          "injected_class": "pallet",
+          "seed_candidates": 13,
+          "challenged_candidates": 14,
+          "call_completed": true,
+          "rounds": 2,
+          "stop_reason": "no_progress",
+          "converged": false,
+          "applied_edits": 1,
+          "remaining_candidates": 13,
+          "known_injection_recovered": true,
+          "control_preserved": null,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": false,
+          "successful_real_vlm_calls": 3,
+          "seconds": 21.859
+        },
+        {
+          "camera": 3,
+          "case": "00_frame_90_none",
+          "frame": 90,
+          "injected_class": null,
+          "seed_candidates": 6,
+          "challenged_candidates": 6,
+          "call_completed": true,
+          "rounds": 1,
+          "stop_reason": "done",
+          "converged": true,
+          "applied_edits": 0,
+          "remaining_candidates": 6,
+          "known_injection_recovered": null,
+          "control_preserved": true,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": false,
+          "successful_real_vlm_calls": 1,
+          "seconds": 9.812
+        },
+        {
+          "camera": 3,
+          "case": "01_frame_90_pallet",
+          "frame": 90,
+          "injected_class": "pallet",
+          "seed_candidates": 6,
+          "challenged_candidates": 7,
+          "call_completed": true,
+          "rounds": 2,
+          "stop_reason": "done",
+          "converged": true,
+          "applied_edits": 1,
+          "remaining_candidates": 6,
+          "known_injection_recovered": true,
+          "control_preserved": null,
+          "unrelated_candidate_geometry_preserved": true,
+          "multi_round_correction_observed": true,
+          "successful_real_vlm_calls": 3,
+          "seconds": 20.328
+        }
+      ]
+    },
+    "summary": {
+      "baseline": {
+        "injected_cases": 7,
+        "known_injection_recovered": 0,
+        "recovered_and_converged": 0,
+        "unrelated_candidates_preserved": 7,
+        "control_cases": 4,
+        "controls_preserved": 4,
+        "controls_converged": 4
+      },
+      "focused": {
+        "injected_cases": 7,
+        "known_injection_recovered": 7,
+        "recovered_and_converged": 6,
+        "unrelated_candidates_preserved": 7,
+        "control_cases": 4,
+        "controls_preserved": 4,
+        "controls_converged": 4
+      }
+    },
+    "run_exit_codes": {
+      "baseline": [
+        {
+          "camera": 0,
+          "exit_code": 0,
+          "summary_status": "complete"
+        },
+        {
+          "camera": 1,
+          "exit_code": 0,
+          "summary_status": "complete"
+        },
+        {
+          "camera": 2,
+          "exit_code": 0,
+          "summary_status": "complete"
+        },
+        {
+          "camera": 3,
+          "exit_code": 0,
+          "summary_status": "complete"
+        }
+      ],
+      "focused": [
+        {
+          "camera": 0,
+          "exit_code": 0,
+          "summary_status": "complete"
+        },
+        {
+          "camera": 1,
+          "exit_code": 0,
+          "summary_status": "complete"
+        },
+        {
+          "camera": 2,
+          "exit_code": 0,
+          "summary_status": "complete"
+        },
+        {
+          "camera": 3,
+          "exit_code": 0,
+          "summary_status": "complete"
+        }
+      ]
+    }
+  },
+  "empty_image_controls": {
+    "before_presence_gate": [
+      {
+        "label": "person",
+        "empty_original_evidence": true,
+        "kept_without_visible_object": false,
+        "mapped_decision": {
+          "status": "continue",
+          "reason": "The two masks, despite different colors, are pixel-identical and both label 'person'. The same visible object is annotated twice, with no evidence of separate objects. The merge is",
+          "hole_assessment": [],
+          "operations": [
+            {
+              "operation": "merge",
+              "shape_ids": [
+                1,
+                2
+              ],
+              "label": "person",
+              "reason": "The two masks, despite different colors, are pixel-identical and both label 'person'. The same visible object is annotated twice, with no evidence of separate objects. The merge is"
+            }
+          ]
+        }
+      },
+      {
+        "label": "pallet",
+        "empty_original_evidence": true,
+        "kept_without_visible_object": false,
+        "mapped_decision": {
+          "status": "continue",
+          "reason": "The two masks for the same object, labeled 'pallet', are pixel-identical and both are fully contained within the same visible object. The annotation is redundant as it marks the un",
+          "hole_assessment": [],
+          "operations": [
+            {
+              "operation": "merge",
+              "shape_ids": [
+                1,
+                2
+              ],
+              "label": "pallet",
+              "reason": "The two masks for the same object, labeled 'pallet', are pixel-identical and both are fully contained within the same visible object. The annotation is redundant as it marks the un"
+            }
+          ]
+        }
+      }
+    ],
+    "after_presence_gate": [
+      {
+        "label": "person",
+        "empty_original_evidence": true,
+        "kept_without_visible_object": true,
+        "mapped_decision": null
+      },
+      {
+        "label": "pallet",
+        "empty_original_evidence": true,
+        "kept_without_visible_object": true,
+        "mapped_decision": null
+      }
+    ],
+    "whole_review_loop_after_gate": [
+      {
+        "label": "person",
+        "unsupported_merges": 0,
+        "stopped": "done",
+        "remaining_candidates": 2,
+        "rounds": 1
+      },
+      {
+        "label": "pallet",
+        "unsupported_merges": 0,
+        "stopped": "done",
+        "remaining_candidates": 2,
+        "rounds": 1
+      }
+    ],
+    "used_in_development": true
+  },
+  "fresh_SAM3_runs": {
+    "status": "complete",
+    "started_utc": "2026-11-03T16:49:59.179926+00:00",
+    "scope": "known_exact_duplicate_recovery",
+    "reference_kind": "unconfirmed_functional_fixture",
+    "generation": "fresh",
+    "topic": "/capture/camera_1/image",
+    "cases": [
+      {
+        "frame": 76,
+        "injected_class": "person",
+        "known_injection_recovered": true,
+        "control_preserved": null,
+        "unrelated_candidate_geometry_preserved": true,
+        "applied_edits": 1,
+        "multi_round_correction_observed": true,
+        "pixel_accuracy_evaluated": false,
+        "call_completed": true,
+        "seed_candidates": 11,
+        "challenged_candidates": 12,
+        "remaining_candidates": 11,
+        "rounds": 2,
+        "converged": true,
+        "stop_reason": "done",
+        "successful_real_vlm_calls": 3,
+        "successful_sam_calls": 2,
+        "fresh_generation_and_multi_round_correction": true,
+        "seconds": 53.015
+      },
+      {
+        "frame": 151,
+        "injected_class": "pallet",
+        "known_injection_recovered": true,
+        "control_preserved": null,
+        "unrelated_candidate_geometry_preserved": true,
+        "applied_edits": 1,
+        "multi_round_correction_observed": true,
+        "pixel_accuracy_evaluated": false,
+        "call_completed": true,
+        "seed_candidates": 21,
+        "challenged_candidates": 22,
+        "remaining_candidates": 21,
+        "rounds": 2,
+        "converged": true,
+        "stop_reason": "done",
+        "successful_real_vlm_calls": 3,
+        "successful_sam_calls": 2,
+        "fresh_generation_and_multi_round_correction": true,
+        "seconds": 45.454
+      }
+    ],
+    "experimental_features": {
+      "duplicate_review": true
+    },
+    "review_backend": "real_local_CUDA_VLM",
+    "pixel_accuracy_evaluated": false,
+    "workbench_modified": false,
+    "workflow_sha256": "fe5d41bf00ff1eac13327ab9ee0183cd024cdb9d154f277a14f8be32c3ba319c",
+    "reference_json_sha256": "c2f9caa065289165ac3fb6d770f5c788a24a2c7ee3e43bee62f44fe689f870f6",
+    "description_sha256": "e01380e16ec5af635fe2a14a5e1bf97223af8114d7fccd260556492095023dde",
+    "cached_candidates_sha256": null,
+    "source_images_unchanged": true,
+    "reference_image_unchanged": true,
+    "finished_utc": "2026-11-03T16:51:37.830880+00:00"
+  },
+  "rejected_protocol_retry_variant": {
+    "kept_in_release": false,
+    "case": {
+      "case": "00_frame_45_pallet",
+      "frame": 45,
+      "injected_class": "pallet",
+      "seed_candidates": 13,
+      "challenged_candidates": 14,
+      "call_completed": true,
+      "rounds": 1,
+      "stop_reason": "error",
+      "converged": false,
+      "applied_edits": 1,
+      "remaining_candidates": 13,
+      "known_injection_recovered": true,
+      "control_preserved": null,
+      "unrelated_candidate_geometry_preserved": true,
+      "multi_round_correction_observed": false,
+      "successful_real_vlm_calls": 2,
+      "seconds": 48.969
+    }
+  },
+  "rejected_operation_driven_variant": {
+    "kept_in_release": false,
+    "results": {
+      "plan": [
+        {
+          "camera": 0,
+          "frame": 104,
+          "classes": [
+            "none",
+            "person",
+            "pallet"
+          ]
+        },
+        {
+          "camera": 1,
+          "frame": 133,
+          "classes": [
+            "none",
+            "person",
+            "pallet"
+          ]
+        },
+        {
+          "camera": 2,
+          "frame": 67,
+          "classes": [
+            "none",
+            "person",
+            "pallet"
+          ]
+        },
+        {
+          "camera": 3,
+          "frame": 26,
+          "classes": [
+            "none",
+            "pallet"
+          ]
+        }
+      ],
+      "frozen_candidate_sha256": "0358408530db392aa4548b4a97fd7922b5373ea38cc0814a9acddaafa9694c8e",
+      "candidate_unchanged_during_run": true,
+      "cases": {
+        "baseline": [
+          {
+            "camera": 0,
+            "case": "00_frame_104_none",
+            "frame": 104,
+            "injected_class": null,
+            "seed_candidates": 13,
+            "challenged_candidates": 13,
+            "call_completed": true,
+            "rounds": 1,
+            "stop_reason": "done",
+            "converged": true,
+            "applied_edits": 0,
+            "remaining_candidates": 13,
+            "known_injection_recovered": null,
+            "control_preserved": true,
+            "unrelated_candidate_geometry_preserved": true,
+            "multi_round_correction_observed": false,
+            "successful_real_vlm_calls": 1,
+            "seconds": 14.36
+          },
+          {
+            "camera": 0,
+            "case": "01_frame_104_person",
+            "frame": 104,
+            "injected_class": "person",
+            "seed_candidates": 13,
+            "challenged_candidates": 14,
+            "call_completed": true,
+            "rounds": 1,
+            "stop_reason": "done",
+            "converged": true,
+            "applied_edits": 0,
+            "remaining_candidates": 14,
+            "known_injection_recovered": false,
+            "control_preserved": null,
+            "unrelated_candidate_geometry_preserved": true,
+            "multi_round_correction_observed": false,
+            "successful_real_vlm_calls": 1,
+            "seconds": 15.609
+          },
+          {
+            "camera": 0,
+            "case": "02_frame_104_pallet",
+            "frame": 104,
+            "injected_class": "pallet",
+            "seed_candidates": 13,
+            "challenged_candidates": 14,
+            "call_completed": true,
+            "rounds": 1,
+            "stop_reason": "done",
+            "converged": true,
+            "applied_edits": 0,
+            "remaining_candidates": 14,
+            "known_injection_recovered": false,
+            "control_preserved": null,
+            "unrelated_candidate_geometry_preserved": true,
+            "multi_round_correction_observed": false,
+            "successful_real_vlm_calls": 1,
+            "seconds": 15.516
+          },
+          {
+            "camera": 1,
+            "case": "00_frame_133_none",
+            "frame": 133,
+            "injected_class": null,
+            "seed_candidates": 18,
+            "challenged_candidates": 18,
+            "call_completed": true,
+            "rounds": 1,
+            "stop_reason": "done",
+            "converged": true,
+            "applied_edits": 0,
+            "remaining_candidates": 18,
+            "known_injection_recovered": null,
+            "control_preserved": true,
+            "unrelated_candidate_geometry_preserved": true,
+            "multi_round_correction_observed": false,
+            "successful_real_vlm_calls": 1,
+            "seconds": 8.406
+          },
+          {
+            "camera": 1,
+            "case": "01_frame_133_person",
+            "frame": 133,
+            "injected_class": "person",
+            "seed_candidates": 18,
+            "challenged_candidates": 19,
+            "call_completed": true,
+            "rounds": 1,
+            "stop_reason": "done",
+            "converged": true,
+            "applied_edits": 0,
+            "remaining_candidates": 19,
+            "known_injection_recovered": false,
+            "control_preserved": null,
+            "unrelated_candidate_geometry_preserved": true,
+            "multi_round_correction_observed": false,
+            "successful_real_vlm_calls": 1,
+            "seconds": 8.703
+          },
+          {
+            "camera": 1,
+            "case": "02_frame_133_pallet",
+            "frame": 133,
+            "injected_class": "pallet",
+            "seed_candidates": 18,
+            "challenged_candidates": 19,
+            "call_completed": true,
+            "rounds": 1,
+            "stop_reason": "done",
+            "converged": true,
+            "applied_edits": 0,
+            "remaining_candidates": 19,
+            "known_injection_recovered": false,
+            "control_preserved": null,
+            "unrelated_candidate_geometry_preserved": true,
+            "multi_round_correction_observed": false,
+            "successful_real_vlm_calls": 1,
+            "seconds": 8.829
+          },
+          {
+            "camera": 2,
+            "case": "00_frame_67_none",
+            "frame": 67,
+            "injected_class": null,
+            "seed_candidates": 13,
+            "challenged_candidates": 13,
+            "call_completed": true,
+            "rounds": 1,
+            "stop_reason": "done",
+            "converged": true,
+            "applied_edits": 0,
+            "remaining_candidates": 13,
+            "known_injection_recovered": null,
+            "control_preserved": true,
+            "unrelated_candidate_geometry_preserved": true,
+            "multi_round_correction_observed": false,
+            "successful_real_vlm_calls": 1,
+            "seconds": 7.391
+          },
+          {
+            "camera": 2,
+            "case": "01_frame_67_person",
+            "frame": 67,
+            "injected_class": "person",
+            "seed_candidates": 13,
+            "challenged_candidates": 14,
+            "call_completed": true,
+            "rounds": 1,
+            "stop_reason": "done",
+            "converged": true,
+            "applied_edits": 0,
+            "remaining_candidates": 14,
+            "known_injection_recovered": false,
+            "control_preserved": null,
+            "unrelated_candidate_geometry_preserved": true,
+            "multi_round_correction_observed": false,
+            "successful_real_vlm_calls": 1,
+            "seconds": 5.641
+          },
+          {
+            "camera": 2,
+            "case": "02_frame_67_pallet",
+            "frame": 67,
+            "injected_class": "pallet",
+            "seed_candidates": 13,
+            "challenged_candidates": 14,
+            "call_completed": true,
+            "rounds": 1,
+            "stop_reason": "done",
+            "converged": true,
+            "applied_edits": 0,
+            "remaining_candidates": 14,
+            "known_injection_recovered": false,
+            "control_preserved": null,
+            "unrelated_candidate_geometry_preserved": true,
+            "multi_round_correction_observed": false,
+            "successful_real_vlm_calls": 1,
+            "seconds": 5.485
+          },
+          {
+            "camera": 3,
+            "case": "00_frame_26_none",
+            "frame": 26,
+            "injected_class": null,
+            "seed_candidates": 1,
+            "challenged_candidates": 1,
+            "call_completed": true,
+            "rounds": 1,
+            "stop_reason": "done",
+            "converged": true,
+            "applied_edits": 0,
+            "remaining_candidates": 1,
+            "known_injection_recovered": null,
+            "control_preserved": true,
+            "unrelated_candidate_geometry_preserved": true,
+            "multi_round_correction_observed": false,
+            "successful_real_vlm_calls": 1,
+            "seconds": 4.813
+          }
+        ],
+        "focused": [
+          {
+            "camera": 0,
+            "case": "00_frame_104_none",
+            "frame": 104,
+            "injected_class": null,
+            "seed_candidates": 13,
+            "challenged_candidates": 13,
+            "call_completed": true,
+            "rounds": 1,
+            "stop_reason": "no_progress",
+            "converged": false,
+            "applied_edits": 0,
+            "remaining_candidates": 13,
+            "known_injection_recovered": null,
+            "control_preserved": true,
+            "unrelated_candidate_geometry_preserved": true,
+            "multi_round_correction_observed": false,
+            "successful_real_vlm_calls": 1,
+            "seconds": 47.406
+          },
+          {
+            "camera": 0,
+            "case": "01_frame_104_person",
+            "frame": 104,
+            "injected_class": "person",
+            "seed_candidates": 13,
+            "challenged_candidates": 14,
+            "call_completed": true,
+            "rounds": 3,
+            "stop_reason": "done",
+            "converged": true,
+            "applied_edits": 1,
+            "remaining_candidates": 13,
+            "known_injection_recovered": true,
+            "control_preserved": null,
+            "unrelated_candidate_geometry_preserved": true,
+            "multi_round_correction_observed": true,
+            "successful_real_vlm_calls": 4,
+            "seconds": 149.25
+          },
+          {
+            "camera": 0,
+            "case": "02_frame_104_pallet",
+            "frame": 104,
+            "injected_class": "pallet",
+            "seed_candidates": 13,
+            "challenged_candidates": 14,
+            "call_completed": true,
+            "rounds": 2,
+            "stop_reason": "done",
+            "converged": true,
+            "applied_edits": 1,
+            "remaining_candidates": 13,
+            "known_injection_recovered": true,
+            "control_preserved": null,
+            "unrelated_candidate_geometry_preserved": true,
+            "multi_round_correction_observed": true,
+            "successful_real_vlm_calls": 3,
+            "seconds": 17.437
+          },
+          {
+            "camera": 1,
+            "case": "00_frame_133_none",
+            "frame": 133,
+            "injected_class": null,
+            "seed_candidates": 18,
+            "challenged_candidates": 18,
+            "call_completed": true,
+            "rounds": 1,
+            "stop_reason": "done",
+            "converged": true,
+            "applied_edits": 0,
+            "remaining_candidates": 18,
+            "known_injection_recovered": null,
+            "control_preserved": true,
+            "unrelated_candidate_geometry_preserved": true,
+            "multi_round_correction_observed": false,
+            "successful_real_vlm_calls": 1,
+            "seconds": 8.641
+          },
+          {
+            "camera": 1,
+            "case": "01_frame_133_person",
+            "frame": 133,
+            "injected_class": "person",
+            "seed_candidates": 18,
+            "challenged_candidates": 19,
+            "call_completed": true,
+            "rounds": 3,
+            "stop_reason": "done",
+            "converged": true,
+            "applied_edits": 2,
+            "remaining_candidates": 18,
+            "known_injection_recovered": true,
+            "control_preserved": null,
+            "unrelated_candidate_geometry_preserved": true,
+            "multi_round_correction_observed": true,
+            "successful_real_vlm_calls": 4,
+            "seconds": 86.891
+          },
+          {
+            "camera": 1,
+            "case": "02_frame_133_pallet",
+            "frame": 133,
+            "injected_class": "pallet",
+            "seed_candidates": 18,
+            "challenged_candidates": 19,
+            "call_completed": true,
+            "rounds": 2,
+            "stop_reason": "done",
+            "converged": true,
+            "applied_edits": 1,
+            "remaining_candidates": 18,
+            "known_injection_recovered": true,
+            "control_preserved": null,
+            "unrelated_candidate_geometry_preserved": true,
+            "multi_round_correction_observed": true,
+            "successful_real_vlm_calls": 3,
+            "seconds": 18.593
+          },
+          {
+            "camera": 2,
+            "case": "00_frame_67_none",
+            "frame": 67,
+            "injected_class": null,
+            "seed_candidates": 13,
+            "challenged_candidates": 13,
+            "call_completed": true,
+            "rounds": 1,
+            "stop_reason": "done",
+            "converged": true,
+            "applied_edits": 0,
+            "remaining_candidates": 13,
+            "known_injection_recovered": null,
+            "control_preserved": true,
+            "unrelated_candidate_geometry_preserved": true,
+            "multi_round_correction_observed": false,
+            "successful_real_vlm_calls": 1,
+            "seconds": 5.641
+          },
+          {
+            "camera": 2,
+            "case": "01_frame_67_person",
+            "frame": 67,
+            "injected_class": "person",
+            "seed_candidates": 13,
+            "challenged_candidates": 14,
+            "call_completed": true,
+            "rounds": 3,
+            "stop_reason": "done",
+            "converged": true,
+            "applied_edits": 4,
+            "remaining_candidates": 10,
+            "known_injection_recovered": false,
+            "control_preserved": null,
+            "unrelated_candidate_geometry_preserved": false,
+            "multi_round_correction_observed": true,
+            "successful_real_vlm_calls": 4,
+            "seconds": 24.922
+          },
+          {
+            "camera": 2,
+            "case": "02_frame_67_pallet",
+            "frame": 67,
+            "injected_class": "pallet",
+            "seed_candidates": 13,
+            "challenged_candidates": 14,
+            "call_completed": true,
+            "rounds": 2,
+            "stop_reason": "done",
+            "converged": true,
+            "applied_edits": 1,
+            "remaining_candidates": 13,
+            "known_injection_recovered": true,
+            "control_preserved": null,
+            "unrelated_candidate_geometry_preserved": true,
+            "multi_round_correction_observed": true,
+            "successful_real_vlm_calls": 3,
+            "seconds": 13.312
+          },
+          {
+            "camera": 3,
+            "case": "00_frame_26_none",
+            "frame": 26,
+            "injected_class": null,
+            "seed_candidates": 1,
+            "challenged_candidates": 1,
+            "call_completed": true,
+            "rounds": 1,
+            "stop_reason": "done",
+            "converged": true,
+            "applied_edits": 0,
+            "remaining_candidates": 1,
+            "known_injection_recovered": null,
+            "control_preserved": true,
+            "unrelated_candidate_geometry_preserved": true,
+            "multi_round_correction_observed": false,
+            "successful_real_vlm_calls": 1,
+            "seconds": 4.829
+          }
+        ]
+      },
+      "summary": {
+        "baseline": {
+          "injected_cases": 6,
+          "known_injection_recovered": 0,
+          "recovered_and_converged": 0,
+          "unrelated_candidates_preserved": 6,
+          "control_cases": 4,
+          "controls_preserved": 4,
+          "controls_converged": 4
+        },
+        "focused": {
+          "injected_cases": 6,
+          "known_injection_recovered": 5,
+          "recovered_and_converged": 5,
+          "unrelated_candidates_preserved": 5,
+          "control_cases": 4,
+          "controls_preserved": 4,
+          "controls_converged": 3
+        }
+      },
+      "run_exit_codes": {
+        "baseline": [
+          {
+            "camera": 0,
+            "exit_code": 0,
+            "summary_status": "complete"
+          },
+          {
+            "camera": 1,
+            "exit_code": 0,
+            "summary_status": "complete"
+          },
+          {
+            "camera": 2,
+            "exit_code": 0,
+            "summary_status": "complete"
+          },
+          {
+            "camera": 3,
+            "exit_code": 1,
+            "summary_status": "running"
+          }
+        ],
+        "focused": [
+          {
+            "camera": 0,
+            "exit_code": 0,
+            "summary_status": "complete"
+          },
+          {
+            "camera": 1,
+            "exit_code": 0,
+            "summary_status": "complete"
+          },
+          {
+            "camera": 2,
+            "exit_code": 0,
+            "summary_status": "complete"
+          },
+          {
+            "camera": 3,
+            "exit_code": 1,
+            "summary_status": "running"
+          }
+        ]
+      }
+    },
+    "ineligible_unscored_case": {
+      "camera": 3,
+      "frame": 26,
+      "requested_class": "pallet",
+      "reason": "seed_contains_person_only"
+    },
+    "reason": "additional edits changed unrelated candidates in one eligible case; no-op/point requests also increased latency"
+  },
+  "validation": {
+    "regressions_passed": 108,
+    "actual_model_tests_separate_from_contract_doubles": true,
+    "default_request_comparisons": [
+      {
+        "profile": "full",
+        "instruction_images_and_schema_identical": true
+      },
+      {
+        "profile": "compact",
+        "instruction_images_and_schema_identical": true
+      }
+    ],
+    "saved_state_sha256_unchanged": true,
+    "original_sessions_checked": 6,
+    "original_sessions_unchanged": true,
+    "labels_unchanged": true,
+    "original_source_files_checked": 1023,
+    "original_source_files_unchanged": true,
+    "original_mcap_unchanged": true,
+    "new_session_truth_empty": true,
+    "workbench_vlm_configured": true
+  },
+  "pixel_accuracy_evaluated": false,
+  "real_world_annotation_accuracy_improvement_claimed": false,
+  "known_remaining_issues": [
+    "one presence-gated holdout restores geometry but ends no_progress",
+    "general reviews can hallucinate or propose unrelated edits",
+    "reference descriptions/reasons can be truncated",
+    "only exact copies of large candidates tested; small/partial overlaps and pixel truth remain unvalidated"
+  ]
+}

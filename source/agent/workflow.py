@@ -579,8 +579,70 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
     return result
 
 
+def _review_exact_overlap(config, image, overlay, group, shapes, labels):
+    """Ask the VLM about one identical-mask group before the general review."""
+    source = Image.open(io.BytesIO(image)).convert("RGB")
+    marked = Image.open(io.BytesIO(overlay)).convert("RGB")
+    by_id = {shape["id"]: shape for shape in shapes}
+    boxes = [by_id[identifier]["bbox"] for identifier in group["shape_ids"]]
+    left, top = min(box[0] for box in boxes), min(box[1] for box in boxes)
+    right, bottom = max(box[2] for box in boxes), max(box[3] for box in boxes)
+    padding = max(32, round(max(right-left, bottom-top)*.15))
+    crop = (max(0,left-padding),max(0,top-padding),
+            min(source.width,right+padding+1),min(source.height,bottom+padding+1))
+    def encode(picture):
+        output = io.BytesIO()
+        picture.crop(crop).save(output,"JPEG",quality=92)
+        return output.getvalue()
+    original_crop = encode(source)
+    presence_schema = {"type":"object","properties":{
+        "evidence":{"type":"string","enum":["present","absent","uncertain"]},
+        "reason":{"type":"string","minLength":1,"maxLength":120}},
+        "required":["evidence","reason"],"additionalProperties":False}
+    presence = chat(config,
+        f"Observe this uncolored photograph crop. Is a {group['label']!r} visibly present?"
+        " Return a JSON object with evidence and reason. evidence is present, absent, or uncertain."
+        " Use only the actual photograph. A blank field or uniform color contains no visible object."
+        " Do not infer an object from the class name in the question. reason is one short English sentence.",
+        original_crop,response_schema=presence_schema)
+    if (not isinstance(presence,dict) or presence.get("evidence") not in {"present","absent","uncertain"}
+            or not isinstance(presence.get("reason"),str) or not presence["reason"].strip()):
+        raise ValueError("重复候选原图检查未返回有效的 evidence 和 reason")
+    if presence["evidence"] != "present":
+        return None
+    schema = {"type":"object","properties":{
+        "decision":{"type":"string","enum":["merge","keep"]},
+        "reason":{"type":"string","minLength":1,"maxLength":180}},
+        "required":["decision","reason"],"additionalProperties":False}
+    instruction = ("Inspect a possible duplicate annotation, using these two crops of the SAME target image."
+        " Image 1 is uncolored; image 2 shows the candidate masks. Overlay colors are not object colors."
+        f" Candidate IDs {group['shape_ids']} all have label {group['label']!r} and pixel-identical masks."
+        " Decide whether these IDs annotate one visible object redundantly or represent separate objects."
+        " Return JSON with decision and reason. decision='merge' only when the same single visible object"
+        " has been annotated more than once. Otherwise, including uncertain cases, decision='keep'."
+        " A merge preserves the entire mask and its class. Do not change any other object."
+        " Give one short English sentence of visible evidence in reason. No coordinates or other fields.")
+    result = chat(config,instruction,original_crop,extra_images=(encode(marked),),response_schema=schema)
+    if not isinstance(result,dict) or result.get("decision") not in {"merge","keep"} or not isinstance(result.get("reason"),str) or not result["reason"].strip():
+        raise ValueError("重复候选复核未返回有效的 decision 和 reason")
+    if result["decision"] == "keep":
+        return None
+    decision = {"status":"continue","reason":result["reason"],"hole_assessment":[],
+                "operations":[{"operation":"merge","shape_ids":group["shape_ids"],
+                               "label":group["label"],"reason":result["reason"]}]}
+    return _validate_review_result(decision,[],shapes,labels,source.width,source.height)
+
+
 def review(config, image, overlay, description, shapes, labels, history, reference=None,
-           sam_comparison=None, hole_image=None, holes=None, gap_images=None):
+           sam_comparison=None, hole_image=None, holes=None, gap_images=None, duplicate_groups=None):
+    # Enabled only by the isolated evaluation tool while quality tests continue.
+    if not config.get("llm_duplicate_review", False):
+        duplicate_groups = None
+    if (config.get("llm_prompt_profile") == "compact" and duplicate_groups
+            and not holes and sam_comparison is None):
+        focused = _review_exact_overlap(config,image,overlay,duplicate_groups[0],shapes,labels)
+        if focused is not None:
+            return focused
     width, height = Image.open(io.BytesIO(image)).size
     prompt = (TOOLS + REFERENCE_PRINCIPLES + REPAIR_PRINCIPLES
         + "\n只能标注参考帧真值中已有的类别；即使图中可见其他物体，也不得为其创建标注。"
@@ -665,6 +727,15 @@ def review(config, image, overlay, description, shapes, labels, history, referen
                        "reference_counts是参考图的真实标注数量，目标图数量不同完全正常，不能因此修改。")
         prompt += ("\nreason最多一句话，每轮最多3个有视觉证据的局部操作。仅允许使用candidates中的ID。"
                    "所有reason使用英文。无法可靠定位缺陷时保持候选，返回done且operations为空。不要复述所有实例，不要输出额外解释。")
+    if duplicate_groups:
+        prompt += ("\nExact same-class raster-mask overlap groups: "
+                   + json.dumps(duplicate_groups, separators=(",", ":"))
+                   + "\nEach listed group has pixel-identical masks and the same label. This is a geometry observation,"
+                     " not a new reference annotation. Check whether its IDs describe one visible object twice."
+                     " If so, remove one redundant candidate or merge the IDs, preserve the visible mask and other instances,"
+                     " then return continue to inspect the result in the next round."
+                     " Do not infer duplicates from equal boxes or different-frame counts."
+                     " Return a concrete operation only when the target image supports the duplicate interpretation.")
     last_result = None
     last_error = None
     for attempt in range(MAX_PROTOCOL_RETRIES + 1):
@@ -838,6 +909,20 @@ def _shape_summary(shape):
             "bbox": [min(xs), min(ys), max(xs), max(ys)], "vertices": len(points)}
 
 
+def _exact_duplicate_groups(shapes, width, height):
+    """Expose pixel-identical candidate masks as evidence, never apply edits."""
+    from .edit_agent import _rasterize
+    groups = {}
+    for shape in shapes:
+        mask = _rasterize(shape, width, height)
+        if not mask.any():
+            continue
+        key = (shape["label"], hashlib.sha256(mask.tobytes()).digest())
+        group = groups.setdefault(key, {"label": shape["label"], "shape_ids": [], "pixels": int(mask.sum())})
+        group["shape_ids"].append(shape["id"])
+    return [group for group in groups.values() if len(group["shape_ids"]) > 1]
+
+
 def _fingerprint(shapes):
     geometry = [{key: shape.get(key) for key in ("id", "label", "points", "holes", "parts")}
                 for shape in shapes]
@@ -918,7 +1003,9 @@ class AnnotationAgent:
                     self.description, [_shape_summary(shape) for shape in self.shapes],
                     self.labels, self.audit, reference=self.reference, sam_comparison=comparison,
                     hole_image=hole_overlay(self.image, holes, self.shapes), holes=holes,
-                    gap_images=gap_images)
+                    gap_images=gap_images,
+                    duplicate_groups=(_exact_duplicate_groups(self.shapes, self.width, self.height)
+                                      if self.config.get("llm_duplicate_review", False) else None))
                 if pending:
                     assessment = decision.get("sam_assessment")
                     if not isinstance(assessment, dict) or type(assessment.get("improved")) is not bool:

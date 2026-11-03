@@ -65,6 +65,30 @@ class MergeOverlapTest(unittest.TestCase):
         with self.assertRaises(ValueError):module.merge_added_overlaps([square('a')],[square('a')],100,80)
         with self.assertRaises(ValueError):module.merge_added_overlaps([], [square('person',label='person')],100,80)
 
+    def test_verifier_rejection_keeps_both_candidates(self):
+        baseline,additions=[square('a')],[square('new',12)]
+        output,report=module.merge_added_overlaps(baseline,additions,100,80,.7,verifier=lambda *_:{'allow_merge':False})
+        self.assertEqual(output,baseline+additions)
+        self.assertEqual(report['audit'][0]['fallback_reason'],'instance_verifier_rejected')
+
+    def test_verifier_cannot_mutate_the_union_it_checks(self):
+        def verifier(anchor,addition,candidate):
+            anchor['points']=[]
+            addition['label']='person'
+            candidate['points']=[]
+            return {'allow_merge':True}
+        output,report=module.merge_added_overlaps([square('a')],[square('new',12)],100,80,.7,verifier=verifier)
+        self.assertEqual(len(output),1)
+        self.assertEqual(output[0]['label'],'pallet')
+        self.assertTrue(module.valid_shape({**output[0],'id':1},100,80))
+
+    def test_invalid_or_failed_verification_is_not_silently_accepted(self):
+        with self.assertRaises(ValueError):
+            module.merge_added_overlaps([square('a')],[square('new',12)],100,80,.7,verifier=lambda *_:{'allow_merge':'yes'})
+        with self.assertRaises(RuntimeError):
+            module.merge_added_overlaps([square('a')],[square('new',12)],100,80,.7,
+                verifier=lambda *_:(_ for _ in ()).throw(RuntimeError('service failed')))
+
 
 if __name__=='__main__':
     unittest.main()

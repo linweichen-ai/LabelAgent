@@ -17,7 +17,9 @@ from PIL import Image
 
 sys.path[:0]=[str(Path(__file__).resolve().parents[1]),str(Path(__file__).resolve().parent)]
 from connect_local_vlm import loopback_url,require_real_service
+from evaluate_point_merges import file_sha
 from merge_candidate_overlaps import merge_added_overlaps
+from point_identity_verifier import PointIdentityVerifier
 from run_local_agent_acceptance import evaluate_run,load_image,save
 from tiled_candidate_utils import augment_candidates,remap_tile_result,tile_grid
 from source.agent import workflow
@@ -32,7 +34,7 @@ def evaluate(args):
     cameras=[int(value) for value in args.cameras.split(',')]
     if (not frames or len(set(frames))!=len(frames) or not cameras or len(set(cameras))!=len(cameras)
             or any(camera not in range(4) for camera in cameras) or not 1<=args.max_rounds<=20
-            or not .3<=args.merge_threshold<=1):
+            or not .3<=args.merge_threshold<=1 or not .5<=args.point_iou<=1):
         raise ValueError('Invalid frame, camera, round budget or merge threshold')
     dataset=Path(args.dataset).resolve()
     manifest=json.loads((dataset/'import_manifest.json').read_text(encoding='utf-8'))
@@ -57,12 +59,22 @@ def evaluate(args):
     output.mkdir(parents=True,exist_ok=False)
     config={'llm_url':base,'llm_model':args.model,'llm_key':'local','sam3_url':sam,
         'llm_prompt_profile':'compact','llm_duplicate_review':False}
+    model_fingerprint=None
+    if args.verify_points:
+        repo=Path(__file__).resolve().parents[1]
+        weights=sorted((repo/'source/sam3/weights').glob('*.pt'))
+        if not weights:raise ValueError('Local SAM3 weights are required')
+        fingerprint_data={'weights_sha256':file_sha(weights[0]),
+            'point_service_sha256':file_sha(repo/'source/sam3_service/point_segment.py')}
+        model_fingerprint=sha(json.dumps(fingerprint_data,sort_keys=True).encode())
     plan={'created_utc':datetime.now(timezone.utc).isoformat(),'frames':frames,'cameras':cameras,
         'reference_kind':args.reference_kind,'reference_topic':args.reference_topic,'reference_frame':args.reference_frame,
         'reference_json_sha256':sha(reference_raw),'max_rounds':args.max_rounds,
         'queries':{'pallet':'pallet','person':'person'},'tile_fraction':.6,'internal_crop_edge_margin':2,
         'minimum_score':.5,'addition_ratio':.5,'NMS_IoU':.8,'merge_threshold':args.merge_threshold,
         'workflow_sha256':sha(Path(workflow.__file__).read_bytes()),
+        'point_verifier_enabled':args.verify_points,'point_iou':args.point_iou,
+        'point_model_fingerprint':model_fingerprint,
         'source_code_sha256':sha(Path(__file__).read_bytes()),'reference_3D_labels_used_for_prediction':False,
         'independent_scene_test':False,'candidates_confirmed_as_truth':False,'workbench_modified':False}
     save(output/'study_plan.json',plan)
@@ -77,6 +89,7 @@ def evaluate(args):
         save(output/'model_trace.json',list(traces.values()))
     exports={phase:{} for phase in ('base','tiled','merged','final')}
     inputs={}
+    point_stats={}
     try:
         save(output/'backend_receipt.json',require_real_service(base,args.model))
         marked=workflow.reference_overlay(reference_image,annotations)
@@ -95,6 +108,7 @@ def evaluate(args):
                 folder.mkdir()
                 started=time.monotonic()
                 before_traces=set(traces)
+                points_before=dict(point_stats)
                 phases={}
                 geometry={}
                 events=[]
@@ -122,7 +136,11 @@ def evaluate(args):
                                     self.next_id+=1
                         tiled,tile_info=augment_candidates(seed,proposals,self.width,self.height,
                             minimum_score=plan['minimum_score'],addition_ratio=plan['addition_ratio'],nms_iou=plan['NMS_IoU'])
-                        merged,merge_info=merge_added_overlaps(seed,tiled[len(seed):],self.width,self.height,plan['merge_threshold'])
+                        verifier=(PointIdentityVerifier(self.image,self.width,self.height,sam,output/'point_responses',
+                            args.point_iou,model_fingerprint,stats=point_stats,stop_file=output/'STOP')
+                            if args.verify_points else None)
+                        merged,merge_info=merge_added_overlaps(seed,tiled[len(seed):],self.width,self.height,
+                            plan['merge_threshold'],verifier=verifier)
                         phases.update(tiled=deepcopy(tiled),merged=deepcopy(merged))
                         geometry.update(tile_info=tile_info,merge_info=merge_info)
                         self.shapes=merged
@@ -141,6 +159,10 @@ def evaluate(args):
                     'source_image_sha256':records[topic,frame]['sha256'],
                     'stage_candidates':{phase:len(shapes) for phase,shapes in phases.items()},
                     'geometric_merge_edits':geometry.get('merge_info',{}).get('merged_additions',0),
+                    'point_verifications':point_stats.get('verifications',0)-points_before.get('verifications',0),
+                    'instance_verifier_SAM_requests':point_stats.get('fresh_requests',0)-points_before.get('fresh_requests',0),
+                    'workflow_traced_SAM_requests':evidence['successful_sam_calls'],
+                    'total_real_SAM_requests':evidence['successful_sam_calls']+point_stats.get('fresh_requests',0)-points_before.get('fresh_requests',0),
                     'VLM_tool_edits':evidence['applied_edits'],**evidence}
                 summary['cases'].append(case)
                 summary['completed_images']+=1
@@ -162,6 +184,7 @@ def evaluate(args):
         (output/'local_error.txt').write_text(str(error),encoding='utf-8')
     finally:
         summary['finished_utc']=datetime.now(timezone.utc).isoformat()
+        summary['point_verifier_stats']=point_stats
         summary['plan_unchanged']=sha((output/'study_plan.json').read_bytes())==summary['plan_sha256']
         summary['source_images_unchanged']=all(sha(load_image(dataset,records[key]))==records[key]['sha256'] for key in [reference_key,*keys])
         save(output/'summary.json',summary)
@@ -180,6 +203,8 @@ if __name__=='__main__':
     parser.add_argument('--frames',default='76,119')
     parser.add_argument('--cameras',default='0,1,2,3')
     parser.add_argument('--merge-threshold',type=float,default=.5)
+    parser.add_argument('--verify-points',action='store_true')
+    parser.add_argument('--point-iou',type=float,default=.85)
     parser.add_argument('--max-rounds',type=int,default=3)
     parser.add_argument('--base',default='http://127.0.0.1:18868/v1')
     parser.add_argument('--sam',default='http://127.0.0.1:8766')

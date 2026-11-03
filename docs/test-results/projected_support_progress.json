@@ -1,0 +1,21 @@
+{
+  "observed_utc": "2026-11-03T18:04:01.509903+00:00",
+  "stage": "frozen_tiled_candidate_validation",
+  "status": "running",
+  "same_process_verified_live": true,
+  "planned_images": 588,
+  "completed_images": 179,
+  "planned_SAM3_requests": 2352,
+  "completed_SAM3_requests": 720,
+  "plan_sha256": "ce83fd2587b027e0cf442b7f878b1512117f45346c74f90d5b0ba3b6a1ea590d",
+  "selection_json_sha256": "69b0f6c3bc128b4037b6f38560b8d397d791603f5f55844f2e1073cba519313f",
+  "frozen_parameters": {
+    "minimum_score": 0.5,
+    "addition_ratio": 0.5,
+    "nms_iou": 0.8
+  },
+  "quality_evaluation_status": "not_started",
+  "full_validation_success_claimed": false,
+  "pixel_accuracy_evaluated": false,
+  "workbench_modified": false
+}

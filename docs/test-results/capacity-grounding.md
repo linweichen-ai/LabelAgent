@@ -67,6 +67,8 @@ Windows 检查须使用启动器同样的 UTF-8 环境及包含 VLM/约束解码
 python tools/local_vlm_server.py --model-dir <private-model-directory> --gpu-uuid <verified-GPU-UUID> --profile shared-4090-probe --quantization nf4 --cache-dir <local-disk-private-cache> --probe-seconds 900 --max-image-tokens 256 --context-budget 16384 --port 18878
 ```
 
-本次成功推理使用前一提交的服务及等价的显式进程环境；新增 CLI 选项完成回归，尚未在远端重新加载验证。原工作台继续使用本机 2B，29 个原候选保留，真值未新增。下一步应分别验证更清晰的图像证据和无效操作约束，继续沿用原冻结质量要求，不能把强制 `done` 当作修复。
+本次成功推理使用前一提交的服务及等价的显式进程环境；新增 CLI 后续已在远端重新加载，并以一张合成灰图完成真实 CUDA 请求，见 [缓存实测](runtime_cache_cli_actual.json)。原工作台继续使用本机 2B，29 个原候选保留，真值未新增。下一步应分别验证更清晰的图像证据和无效操作约束，继续沿用原冻结质量要求，不能把强制 `done` 当作修复。
 
 [原始数据、会话、状态和远端释放核验](vlm_capacity_preservation.json)：1,023 个原始文件、MCAP、6 个原会话和保存状态保持一致，生产 `workflow.py` 与固定关键词基线也逐字节不变。
+
+后续 [排除同类重分类对照](reclassification-policy.md) 完成 8 次本机真实请求，两个类别翻转仍未恢复。195 项回归通过，协议策略未启用；没有将模型返回 done 当作错误修复。

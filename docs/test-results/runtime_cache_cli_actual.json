@@ -1,0 +1,37 @@
+{
+  "scope": "published_cache_CLI_real_CUDA_synthetic_image_probe_not_dataset_quality",
+  "source_commit": "f1a305b0296f377e6312e2be9ffe04c1bbe715a2",
+  "model": "Qwen3-VL-8B-Instruct NF4",
+  "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+  "explicit_cache_CLI_used": true,
+  "process_cache_paths_on_local_ext4": true,
+  "all_seven_cache_subdirectories_exist": true,
+  "synthetic_blank_images": 1,
+  "real_CUDA_requests": 1,
+  "returned_category": "empty",
+  "seconds": 7.492,
+  "usage": {
+    "completion_tokens": 7,
+    "prompt_tokens": 139,
+    "total_tokens": 146
+  },
+  "inference_stats": {
+    "completion_tokens": 7,
+    "constraint_setup_seconds": 5.89,
+    "generation_seconds": 1.55,
+    "input_images": 1,
+    "peak_allocated_bytes": 7375993856,
+    "peak_reserved_bytes": 7610564608,
+    "preprocess_seconds": 0.052,
+    "prompt_tokens": 139,
+    "structured_output": true
+  },
+  "last_observed_NVML_process_mib": 7726,
+  "owned_worker_stopped_and_GPU_released": true,
+  "all_three_prior_GPU_processes_preserved": true,
+  "original_network_cache_link_modified": false,
+  "data_set_accuracy_evaluated": false,
+  "new_forwarding_connections_failed": 2,
+  "existing_management_SSH_remained_usable": true,
+  "SSH_failure_root_cause_verified": false
+}

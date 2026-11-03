@@ -2,7 +2,7 @@
 
 ## 当前状态（2026-11-04）
 
-远端双 RTX 4090 已恢复 SSH 登录，新的独立环境和固定版本 8B 权重全部校验完成。本轮在一张卡上以 NF4 及显存余量限制完成 23 次真实图片请求，保留其他三个 GPU 进程。20 次同输入分类对照没有改善困难托盘识别；第 76、151 帧的真实 Agent 均请求无变化重分类，以 `no_progress` 停止，未通过完整收敛验收。测试进程和额外隧道已释放，工作台仍使用本机 2B。见 [实测及失败边界](test-results/capacity-grounding.md) 和 [远端状态](test-results/remote_vlm_progress.json)。
+远端双 RTX 4090 已恢复 SSH 登录，新的独立环境和固定版本 8B 权重全部校验完成。先后在一张卡上以 NF4 及显存余量限制完成 23 次数据集图片请求和 1 次合成灰图探测，保留其他三个 GPU 进程。20 次同输入分类对照没有改善困难托盘识别；第 76、151 帧的真实 Agent 均请求无变化重分类，以 `no_progress` 停止，未通过完整收敛验收。测试进程和额外隧道已释放，工作台仍使用本机 2B。见 [实测及失败边界](test-results/capacity-grounding.md) 和 [远端状态](test-results/remote_vlm_progress.json)。
 
 本机路线继续使用 Qwen3-VL-2B NF4 与 SAM3，见 [本机运行](local-gpu.md) 和 [实际结果](test-results/local_gpu_results.md)。远端采用固定版本 Qwen3-VL-8B-Instruct，保存官方原始权重，计划在推理加载时量化；CUDA 图片推理已实测，识别和 Agent 修正仍未达到冻结要求。现有空闲卡检查保持启用，不停止驻留服务以腾出显存。
 
@@ -60,9 +60,9 @@ python tools/local_vlm_server.py --model-dir <private-model-directory> --model-i
 
 35% 是 PyTorch 分配器上限，原生 CUDA 上下文等不受该分配器约束；512 MiB 为预留估计，并非硬隔离。加载后须验证本进程实际显存占用与剩余量，条件不足则停止自己创建的探测进程，不停止其他服务。该模式不负责常驻部署，也不自动改工作台模型。独立的新端口避免覆盖本机 2B 入口。
 
-已完成 2B/8B 同输入真实对照及控制机制验证；8B 未改善本组困难样例，190 项回归通过，见 [容量对照](test-results/capacity-grounding.md)。
+已完成 2B/8B 同输入真实对照及控制机制验证；8B 未改善本组困难样例，195 项回归通过，见 [容量对照](test-results/capacity-grounding.md)。
 
-本轮发现默认缓存指向网络存储，首个图片请求等待文件读取。为本进程指定本地缓存后实际请求成功。使用 `--cache-dir` 显式隔离缓存，不更改现有全局缓存或符号链接。CLI 选项已回归；本次远端实测使用等价的进程环境设置，详见容量记录。
+本轮发现默认缓存指向网络存储，首个图片请求等待文件读取。为本进程指定本地缓存后实际请求成功。使用 `--cache-dir` 显式隔离缓存，不更改现有全局缓存或符号链接。此前使用等价环境设置；随后新增 CLI 已在远端加载，并完成一张合成灰图的真实 CUDA 请求。新转发连接仍有超时，已有管理会话可用，见 [缓存入口实测](test-results/runtime_cache_cli_actual.json)。
 
 ## Windows 连接与工作台配置
 

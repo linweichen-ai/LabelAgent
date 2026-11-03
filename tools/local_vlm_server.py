@@ -109,6 +109,7 @@ class TransformersBackend:
         self.model_loaded = True
 
     def generate(self, messages, images, max_tokens, response_schema=None):
+        started = time.monotonic()
         self.torch.cuda.reset_peak_memory_stats()
         text = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         inputs = self.processor(text=[text], images=images, return_tensors="pt", padding=True)
@@ -117,6 +118,8 @@ class TransformersBackend:
         if prompt_tokens + max_tokens > self.context_budget:
             raise ValueError("Request exceeds the configured context budget; no truncation was performed")
         inputs = inputs.to(self.model.device)
+        preprocess_seconds = time.monotonic() - started
+        constraint_started = time.monotonic()
         options = {}
         if response_schema is not None:
             from lmformatenforcer import JsonSchemaParser
@@ -126,14 +129,20 @@ class TransformersBackend:
                 self.format_tokenizer_data = build_token_enforcer_tokenizer_data(self.processor.tokenizer)
             parser = JsonSchemaParser(response_schema)
             options["prefix_allowed_tokens_fn"] = build_transformers_prefix_allowed_tokens_fn(self.format_tokenizer_data, parser)
+        constraint_setup_seconds = time.monotonic() - constraint_started
+        generation_started = time.monotonic()
         with self.torch.inference_mode():
             output = self.model.generate(**inputs, max_new_tokens=max_tokens, do_sample=False, use_cache=True, **options)
+        generation_seconds = time.monotonic() - generation_started
         generated = output[:, prompt_tokens:]
         content = self.processor.batch_decode(generated, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
         self.last_inference_stats = {"peak_allocated_bytes": self.torch.cuda.max_memory_allocated(),
                                      "peak_reserved_bytes": self.torch.cuda.max_memory_reserved(),
                                      "input_images": len(images), "prompt_tokens": prompt_tokens,
                                      "completion_tokens": int(generated.shape[-1]),
+                                     "preprocess_seconds": round(preprocess_seconds, 3),
+                                     "constraint_setup_seconds": round(constraint_setup_seconds, 3),
+                                     "generation_seconds": round(generation_seconds, 3),
                                      "structured_output": response_schema is not None}
         return content, prompt_tokens, int(generated.shape[-1])
 

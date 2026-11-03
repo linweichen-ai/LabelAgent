@@ -312,7 +312,7 @@ def restrict_description(result, labels):
     return {"description": result["description"].strip(), "prompts": prompts}
 
 
-DESCRIPTION_INPUT_VERSION = 7
+DESCRIPTION_INPUT_VERSION = 8
 
 COMPACT_REFERENCE_RULES = """Use the supplied reference contours as the task example. Their review status is not inferred.
 Only annotate the listed classes. Inspect original images for appearance and outlined images for geometry.

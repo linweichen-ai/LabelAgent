@@ -6,14 +6,20 @@ def obj(properties, required=None):
             "additionalProperties": False}
 
 
+def bounded_text(limit):
+    # Native JSON string bounds avoid compiling a large finite regex for each
+    # request, and retain normal JSON quote/escape handling in the decoder.
+    return {"type": "string", "minLength": 1, "maxLength": limit}
+
+
 def reason():
-    return {"type": "string", "pattern": "[ -~]{1,180}"}
+    return bounded_text(180)
 
 
 def description_schema(labels):
     prompt = obj({"label": {"type": "string", "enum": labels},
-                  "text": {"type": "string", "pattern": "[A-Za-z0-9 -]{1,40}"}})
-    return obj({"description": {"type": "string", "pattern": "[ -~]{1,700}"},
+                  "text": bounded_text(40)})
+    return obj({"description": bounded_text(700),
                 "prompts": {"type": "array", "items": prompt, "minItems": len(labels), "maxItems": len(labels)}})
 
 

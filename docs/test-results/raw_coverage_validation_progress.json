@@ -1,5 +1,5 @@
 {
-  "observed_utc": "2026-11-04T05:07:46.529590+00:00",
+  "observed_utc": "2026-11-04T05:49:24.497163+00:00",
   "phase": "collecting_remaining_dense_proposals",
   "primary_method": "raw_certificate_priority",
   "primary_parameters_frozen_before_new_requests": true,
@@ -11,7 +11,10 @@
   "remaining_images": 556,
   "completed_dense_requests_for32": 288,
   "planned_remaining_dense_requests": 5004,
-  "completed_remaining_dense_requests": 137,
+  "completed_remaining_dense_requests": 1368,
   "cached_four_crop_responses_available": 2352,
-  "scope": "same-capture validation, not independent external accuracy"
+  "scope": "same-capture validation, not independent external accuracy",
+  "completed_remaining_dense_images": 152,
+  "remaining_process_verified_live": true,
+  "merge_readiness_verified": true
 }

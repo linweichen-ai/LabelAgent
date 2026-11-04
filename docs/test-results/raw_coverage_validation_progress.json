@@ -1,13 +1,17 @@
 {
-  "observed_utc": "2026-11-04T04:56:45.671039+00:00",
-  "phase": "dense_collection_complete_cache_replay_or_prediction_pending",
+  "observed_utc": "2026-11-04T05:07:46.529590+00:00",
+  "phase": "collecting_remaining_dense_proposals",
   "primary_method": "raw_certificate_priority",
-  "validation_plan_sha256": "0f5f473f7af73d85dd25908eef13dd64d501919015d7ad120ca01988419bdf9a",
   "primary_parameters_frozen_before_new_requests": true,
-  "planned_images": 32,
-  "completed_new_SAM_requests": 288,
-  "planned_new_SAM_requests": 288,
-  "reused_four_crop_responses": 128,
-  "primary_passed_validation": null,
-  "scope": "same capture expanded validation, not independent external accuracy"
+  "primary_20_tuning_passed": true,
+  "primary_32_expansion_passed": true,
+  "primary_588_passed": null,
+  "completed_expansion_images": 32,
+  "full_validation_images": 588,
+  "remaining_images": 556,
+  "completed_dense_requests_for32": 288,
+  "planned_remaining_dense_requests": 5004,
+  "completed_remaining_dense_requests": 137,
+  "cached_four_crop_responses_available": 2352,
+  "scope": "same-capture validation, not independent external accuracy"
 }

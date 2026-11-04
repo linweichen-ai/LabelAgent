@@ -7,13 +7,23 @@ import numpy as np
 from source.agent.edit_agent import _rasterize, valid_shape
 
 
-def tile_grid(width, height, fraction=.6):
-    """Four fixed overlapping crops, expressed as exclusive PIL bounds."""
-    if width < 2 or height < 2 or not .5 <= fraction < 1:
+def tile_grid(width, height, fraction=.6, divisions=2):
+    """Fixed overlapping image-only crops, in exclusive PIL coordinates.
+
+    The default remains the original four crops. Denser grids require explicit
+    arguments, complete coverage and distinct bounds for every requested tile.
+    """
+    if (not isinstance(divisions, int) or isinstance(divisions, bool) or not 2 <= divisions <= 8
+            or width < divisions or height < divisions
+            or not math.isfinite(fraction) or not 1/divisions <= fraction < 1):
         raise ValueError('Invalid grid dimensions or crop fraction')
     tw, th = math.ceil(width*fraction), math.ceil(height*fraction)
-    return list(dict.fromkeys((x, y, x+tw, y+th)
-        for y in (0, height-th) for x in (0, width-tw)))
+    xs = [round(i*(width-tw)/(divisions-1)) for i in range(divisions)]
+    ys = [round(i*(height-th)/(divisions-1)) for i in range(divisions)]
+    bounds = [(x,y,x+tw,y+th) for y in ys for x in xs]
+    if len(set(bounds)) != divisions**2:
+        raise ValueError('Image is too small for distinct requested crops')
+    return bounds
 
 
 def remap_tile_result(result, bounds, width, height, identifier, edge_margin=2):

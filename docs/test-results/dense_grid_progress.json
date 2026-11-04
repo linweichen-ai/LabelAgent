@@ -1,0 +1,50 @@
+{
+  "created_utc": "2026-11-04T00:03:08.010342+00:00",
+  "frames": [
+    15,
+    45,
+    76,
+    105,
+    135
+  ],
+  "cameras": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "planned_images": 20,
+  "planned_new_SAM3_requests": 180,
+  "grid_spec": {
+    "divisions": 3,
+    "crop_fraction": 0.45
+  },
+  "fixed_method": {
+    "minimum_score": 0.5,
+    "addition_ratio": 0.5,
+    "nms_iou": 0.8
+  },
+  "metric_sha256": "7648246cb6c821eabc5586d9147c6e1957fafb403ac28d8db77e6cf62e3907c3",
+  "previous_best_summary_sha256": "ffbdc81439fca7f43464971475611f1a837c6a2c6189a896d2cc679dd72ced32",
+  "comparison_requires": {
+    "strict_instance_gain_over_previous_best": true,
+    "point_coverage_not_below_previous_best": true,
+    "person_off_class_not_above_previous_best": true,
+    "original_minimum_absolute_gain": 0.02,
+    "original_maximum_candidate_count_ratio": 1.5,
+    "original_maximum_union_area_ratio": 1.25,
+    "original_person_off_class_increase_limit": 0.005,
+    "all_original_candidates_preserved": true
+  },
+  "scope": "fixed_20_image_tuning; previously scored capture; no independent heldout accuracy claim",
+  "prediction_reads_3D_reference": false,
+  "no_automatic_broader_run": true,
+  "collector_sha256": "0ecb339cb11e7d587c72a8fbf08ac77e0f6ccb410f29b40e18f201dda40f4811",
+  "postprocessor_sha256": "5ff48b771443fd696f2e6ab42c1c708bd9ad370b4284815c11a9c8c14ff2e2b0",
+  "evaluator_sha256": "0da59b3ed6ccf8b4c0f2d574d261341849058533c16e22a206efa594076c3009",
+  "status": "queued_for_local_GPU_after_existing_work",
+  "completed_new_requests": 0,
+  "adopted": false,
+  "tests_passed": 219,
+  "workbench_modified": false
+}

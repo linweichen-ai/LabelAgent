@@ -45,12 +45,16 @@ def method_grid(scores, budgets, nms_iou):
         for score in scores for budget in budgets}
 
 
-def check_frozen_selection(selection, methods, frames, metric_sha):
+def check_frozen_selection(selection, methods, frames, metric_sha, grid_spec=None):
     if (selection.get('selected_using_tuning_only') is not True or selection.get('metric_version') != 2
             or selection.get('metric_sha256') != metric_sha or selection.get('winner') == 'pallet_baseline'
             or len(methods) != 1 or methods.get(selection.get('winner')) != selection.get('frozen_parameters')
             or frames != selection.get('heldout_frames')):
         raise ValueError('Validation must use exactly the frozen method, metric and held-out frames')
+    expected_grid = selection.get('grid_spec', {'divisions':2,'crop_fraction':.6})
+    actual_grid = grid_spec if grid_spec is not None else {'divisions':2,'crop_fraction':.6}
+    if actual_grid != expected_grid:
+        raise ValueError('Validation crop geometry differs from the frozen tuning grid')
     winner = [row for row in selection.get('results', []) if row.get('method') == selection.get('winner')]
     if len(winner) != 1 or winner[0].get('eligible') is not True or not all(winner[0].get('checks', {}).values()):
         raise ValueError('Frozen winner did not pass the predeclared tuning checks')
@@ -88,12 +92,16 @@ def collect(args):
             raise ValueError('Baseline is not bound to a selected source image')
         if str(row['frame']) not in baseline.get(row['topic'], {}):
             raise ValueError('Missing baseline candidates')
+    # Validate before creating an output directory or sending any request.
+    tile_grid(1920,1536,args.crop_fraction,args.grid_divisions)
+    grid_spec = {'divisions':args.grid_divisions,'crop_fraction':args.crop_fraction}
     sam = loopback_url(args.sam)
     methods = method_grid(args.minimum_scores, args.addition_ratios, args.nms_iou)
     if selection is not None:
-        check_frozen_selection(selection, methods, frames, sha(Path(__file__).with_name('evaluate_projected_support.py').read_bytes()))
-    requested_plan = {'version': 1, 'frames': frames, 'cameras': cameras, 'planned_images': len(records),
-        'planned_SAM3_requests': 4*len(records), 'query': 'pallet', 'crop_fraction': .6, 'internal_edge_margin_pixels': 2,
+        check_frozen_selection(selection, methods, frames, sha(Path(__file__).with_name('evaluate_projected_support.py').read_bytes()), grid_spec)
+    requested_plan = {'version': 2, 'frames': frames, 'cameras': cameras, 'planned_images': len(records),
+        'planned_SAM3_requests': args.grid_divisions**2*len(records), 'query': 'pallet', 'crop_fraction': args.crop_fraction,
+        'grid_spec': grid_spec, 'internal_edge_margin_pixels': 2,
         'methods': methods, 'prediction_uses_reference_labels': False,
         'ranking': 'confidence*(1-max_mask_iou_with_baseline); baseline preferred; NMS includes accepted additions',
         'addition_budget_rule': 'max(1,floor(number_of_baseline_pallets*addition_ratio))',
@@ -149,7 +157,7 @@ def collect(args):
             width, height = image.size
             proposals = []
             camera = topic.split('/')[2]
-            for tile_index, bounds in enumerate(tile_grid(width, height, plan['crop_fraction'])):
+            for tile_index, bounds in enumerate(tile_grid(width, height, plan['crop_fraction'],plan['grid_spec']['divisions'])):
                 if stop_requested or (output/'STOP').exists():
                     progress['status'] = 'stopped'
                     break
@@ -238,6 +246,8 @@ if __name__ == '__main__':
     parser.add_argument('--minimum-scores', default='.8,.9')
     parser.add_argument('--addition-ratios', default='.25,.5')
     parser.add_argument('--nms-iou', type=float, default=.8)
+    parser.add_argument('--grid-divisions', type=int, default=2)
+    parser.add_argument('--crop-fraction', type=float, default=.6)
     parser.add_argument('--frozen-selection')
     parser.add_argument('--state-file')
     parser.add_argument('--resume', action='store_true')

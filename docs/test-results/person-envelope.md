@@ -73,3 +73,5 @@
 实现入口为 `tools/select_person_envelope_candidates.py`、`tools/person_guard_envelope.py` 和 `tools/merge_person_envelope_predictions.py`。原选择器及指标字节不变。全阶段为同一历史短采集上的参考一致性实验，没有训练权重或调用云模型。
 
 [全部脱敏检查与结果](person_envelope_results.json) · [完整研究阶段快照](person_envelope_progress.json) · [此前完整失败记录](raw-coverage-full.md)
+
+后续独立的原始点并集约束研究见[完整修复报告](person-cross-refinement-full.md)；不改写本文方案失败。

@@ -1,9 +1,9 @@
 {
-  "observed_utc": "2026-11-04T08:15:17.053242+00:00",
-  "phase": "select_remaining",
+  "observed_utc": "2026-11-04T08:24:55.502272+00:00",
+  "phase": "complete",
   "primary_method": "anchor_subset_priority",
   "full_validation_images": 588,
-  "primary_passed": null,
+  "primary_passed": true,
   "model_calls": 0,
   "workbench_writes": false,
   "maximum_new_raw_points": 0,
@@ -48,12 +48,45 @@
     "plan_unchanged": true
   },
   "remaining_selection": {
-    "status": "running",
-    "completed_images": 450,
-    "reference_files_opened": null,
-    "code_unchanged": null,
-    "plan_unchanged": null
+    "status": "complete",
+    "completed_images": 556,
+    "reference_files_opened": 0,
+    "code_unchanged": true,
+    "plan_unchanged": true
   },
   "regression_tests_passed": 348,
-  "regression_skipped": 0
+  "regression_skipped": 0,
+  "scored_images": 588,
+  "full_prediction_images": 588,
+  "adopted": false,
+  "primary_gate_radius_pixels": 3,
+  "all_original_checks": {
+    "strict_instance_gain_over_previous_best": true,
+    "point_coverage_not_below_previous_best": true,
+    "person_off_class_not_above_previous_best": true,
+    "original_minimum_two_percentage_point_gain": true,
+    "original_count_ratio_limit": true,
+    "original_union_area_limit": true,
+    "original_person_cross_class_limit": true,
+    "all_original_candidates_preserved": true
+  },
+  "primary_counts": {
+    "pallet_objects_matched": 2259,
+    "pallet_reference_objects": 3672,
+    "pallet_points_covered": 139492,
+    "pallet_reference_points": 168738,
+    "pallet_candidates": 5921,
+    "pallet_union_pixels": 24159834,
+    "person_points_covered_by_pallet": 2184,
+    "person_reference_points": 304357
+  },
+  "all_five_regression_cases_repaired_at_original_radius": true,
+  "every_image_pallet_and_person_counts_equal_four_crop_at_original_radius": true,
+  "all_original_data_protection_checks_passed": true,
+  "final_report": "person-cross-refinement-full.md",
+  "final_results": "anchor_subset_full_results.json",
+  "diagnostic_limitations": {
+    "zero_pixel_pallet_coverage_change": -1,
+    "six_pixel_person_cross_change": 4
+  }
 }

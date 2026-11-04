@@ -1,6 +1,6 @@
 {
-  "status": "real80_person_crops_complete_tuning_unchanged_full_running",
-  "observed_utc": "2026-11-04T12:54:52.399720+00:00",
+  "status": "full_person_collection_complete_selection_or_scoring_running",
+  "observed_utc": "2026-11-04T13:39:58.095279+00:00",
   "tests_passed": 402,
   "tests_skipped": 0,
   "new_SAM3_successful_calls_tuning": 80,
@@ -170,5 +170,20 @@
   "collection_plan_sha256": "5d2076eff6880fd0e996399a6fad0170532e16e064bc25d159034195e4a3af6e",
   "adopted": false,
   "default_enabled": false,
-  "independent_accuracy_measured": false
+  "independent_accuracy_measured": false,
+  "full_collection_complete": true,
+  "new_SAM3_successful_calls_full": 2352,
+  "unique_new_SAM3_calls_tuning_and_full": 2432,
+  "full_collection_summary": {
+    "completed_requests": 2352,
+    "completed_images": 588,
+    "seed_shapes": 2701,
+    "images_with_seeds": 479,
+    "new_requests_this_process": 2352,
+    "cached_reused_this_process": 0,
+    "busy_rejections": 512,
+    "input_code_and_plan_unchanged": true,
+    "reference_files_opened": 0,
+    "approved_reference_files_opened": 0
+  }
 }

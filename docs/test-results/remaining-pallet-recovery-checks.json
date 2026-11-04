@@ -1,0 +1,29 @@
+{
+  "checks": {
+    "PAL_support_strict_gain": true,
+    "PAL_point_coverage_not_lower": true,
+    "person_point_coverage_not_lower": true,
+    "person_off_class_not_higher": true,
+    "PAL_candidate_ratio_at_most_1_5": true,
+    "PAL_union_area_ratio_at_most_1_25": true,
+    "initial_C_foreground_preserved": true,
+    "original_SAM_PAL_preserved": true,
+    "review_protocol_no_errors": true,
+    "all_six_runs_converged_within_three_rounds": false
+  },
+  "all_conditions_passed": false,
+  "totals": {
+    "A_current": {
+      "PAL_count": 24,
+      "PAL_union_pixels": 98009
+    },
+    "C_hybrid": {
+      "PAL_count": 27,
+      "PAL_union_pixels": 122302
+    }
+  },
+  "candidate_ratio": 1.125,
+  "union_area_ratio": 1.2478649919905316,
+  "automatic_adoption": false,
+  "reason": "Two exposed same-capture images; no dense floor truth; unchanged criteria and failed conditions retained."
+}

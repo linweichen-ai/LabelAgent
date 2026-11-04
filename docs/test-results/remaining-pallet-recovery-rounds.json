@@ -1,0 +1,142 @@
+[
+  {
+    "case": "camera0_frame76",
+    "arm": "A_current",
+    "round": 1,
+    "ground_tasks": 0,
+    "resolved_by_SAM": 0,
+    "pending_after_SAM": 0,
+    "individual_fill_ops": 0,
+    "tool_errors": []
+  },
+  {
+    "case": "camera0_frame76",
+    "arm": "B_sam7",
+    "round": 1,
+    "ground_tasks": 8,
+    "resolved_by_SAM": 5,
+    "pending_after_SAM": 3,
+    "individual_fill_ops": 0,
+    "tool_errors": []
+  },
+  {
+    "case": "camera0_frame76",
+    "arm": "B_sam7",
+    "round": 2,
+    "ground_tasks": 3,
+    "resolved_by_SAM": 0,
+    "pending_after_SAM": 0,
+    "individual_fill_ops": 3,
+    "tool_errors": []
+  },
+  {
+    "case": "camera0_frame76",
+    "arm": "B_sam7",
+    "round": 3,
+    "ground_tasks": 0,
+    "resolved_by_SAM": 0,
+    "pending_after_SAM": 0,
+    "individual_fill_ops": 0,
+    "tool_errors": []
+  },
+  {
+    "case": "camera0_frame76",
+    "arm": "C_hybrid",
+    "round": 1,
+    "ground_tasks": 18,
+    "resolved_by_SAM": 11,
+    "pending_after_SAM": 7,
+    "individual_fill_ops": 0,
+    "tool_errors": []
+  },
+  {
+    "case": "camera0_frame76",
+    "arm": "C_hybrid",
+    "round": 2,
+    "ground_tasks": 7,
+    "resolved_by_SAM": 5,
+    "pending_after_SAM": 0,
+    "individual_fill_ops": 2,
+    "tool_errors": []
+  },
+  {
+    "case": "camera0_frame76",
+    "arm": "C_hybrid",
+    "round": 3,
+    "ground_tasks": 0,
+    "resolved_by_SAM": 0,
+    "pending_after_SAM": 0,
+    "individual_fill_ops": 0,
+    "tool_errors": []
+  },
+  {
+    "case": "camera1_frame76",
+    "arm": "A_current",
+    "round": 1,
+    "ground_tasks": 0,
+    "resolved_by_SAM": 0,
+    "pending_after_SAM": 0,
+    "individual_fill_ops": 0,
+    "tool_errors": []
+  },
+  {
+    "case": "camera1_frame76",
+    "arm": "B_sam7",
+    "round": 1,
+    "ground_tasks": 14,
+    "resolved_by_SAM": 10,
+    "pending_after_SAM": 4,
+    "individual_fill_ops": 0,
+    "tool_errors": []
+  },
+  {
+    "case": "camera1_frame76",
+    "arm": "B_sam7",
+    "round": 2,
+    "ground_tasks": 4,
+    "resolved_by_SAM": 1,
+    "pending_after_SAM": 1,
+    "individual_fill_ops": 2,
+    "tool_errors": []
+  },
+  {
+    "case": "camera1_frame76",
+    "arm": "B_sam7",
+    "round": 3,
+    "ground_tasks": 1,
+    "resolved_by_SAM": 0,
+    "pending_after_SAM": 0,
+    "individual_fill_ops": 1,
+    "tool_errors": []
+  },
+  {
+    "case": "camera1_frame76",
+    "arm": "C_hybrid",
+    "round": 1,
+    "ground_tasks": 26,
+    "resolved_by_SAM": 16,
+    "pending_after_SAM": 10,
+    "individual_fill_ops": 0,
+    "tool_errors": []
+  },
+  {
+    "case": "camera1_frame76",
+    "arm": "C_hybrid",
+    "round": 2,
+    "ground_tasks": 11,
+    "resolved_by_SAM": 1,
+    "pending_after_SAM": 8,
+    "individual_fill_ops": 2,
+    "tool_errors": []
+  },
+  {
+    "case": "camera1_frame76",
+    "arm": "C_hybrid",
+    "round": 3,
+    "ground_tasks": 8,
+    "resolved_by_SAM": 0,
+    "pending_after_SAM": 0,
+    "individual_fill_ops": 3,
+    "tool_errors": []
+  }
+]

@@ -162,16 +162,29 @@ def main():
         target=assets/('fixed_grid_'+folder.parent.name+'_'+folder.name+'.jpg')
         stage_card(folder.parent.name,'同一训练权重固定网格 · '+folder.name,crop,panoptic(crop,local),target)
         gallery.append(target);recovery_frames.append((target,1))
-    refinement_rows=read(Path(cfg['instance_generation'])/'refinement_progress.json')['rows']
+    refinement_rows=read(Path(cfg['instance_generation'])/'refinement_progress.json')['rows'];refine_video_counts={}
     for number,row in enumerate(refinement_rows,1):
         image=Image.open(out/'inputs'/(row['case']+'.png')).convert('RGB');box=row['crop']
         before=panoptic(image,[row['original_model_shape']]).crop(box);after=panoptic(image,[row['shape']]).crop(box)
         target=assets/('model_instance_refinement_'+row['key']+'.jpg')
         stage_card(row['case'],'独立训练实例 → SAM3：'+('细化有效' if row['refinement_accepted'] else '保留原训练候选'),before,after,target,left_caption='训练模型候选局部')
         gallery.append(target)
-        if number<=10:recovery_frames.append((target,3))
+        refine_video_counts[row['case']]=refine_video_counts.get(row['case'],0)+1
+        if refine_video_counts[row['case']]<=5:recovery_frames.append((target,3))
     for file in sorted((Path(cfg['instance_generation'])/'visual_cache').glob('*.png')):
         target=assets/('model_target_evidence_'+file.name);shutil.copy2(file,target);gallery.append(target)
+    for mode in ['gap_atlas_preflight','gap_no_prior_preflight']:
+        diagnostic=read(efficiency/mode/'completed.json')
+        for row in diagnostic['rows']:
+            image=Image.open(out/'inputs'/(row['case']+'.png')).convert('RGB')
+            if mode=='gap_atlas_preflight':
+                key=row['receipt']['key'];file=efficiency/mode/'cache'/(key+'_mapped.png');count=row['atlas_complete_gaps']
+                atlas=assets/('rejected_atlas_input_'+key+'.png');shutil.copy2(efficiency/mode/'cache'/(key+'_input.png'),atlas);gallery.append(atlas)
+            else:file=efficiency/mode/(row['case']+'_'+row['arm']+'_raw_mask.png');count=row['no_prior_complete_gaps']
+            mask=np.asarray(Image.open(file))>0;original=np.asarray(image);rendered=original.copy();rendered[mask]=(original[mask]*.5+np.array([35,200,190])*.5).astype('uint8')
+            target=assets/('rejected_preflight_'+mode+'_'+row['case']+'_'+row['arm']+'.jpg')
+            stage_card(row['case'],'未采用预检 '+mode+' '+row['arm']+f" 完整满足{count}/{row['original_ground_tasks']}",image,Image.fromarray(rendered),target)
+            gallery.append(target);diagnosis_video.append((target,2))
     scores=result['common_class_scores'];compact=[]
     for arm in ('A_current','B_sam7','C_hybrid'):
         p=scores[arm]['pallet'];h=scores[arm]['person'];r=p['radii']['3'];hr=h['radii']['3']
@@ -225,7 +238,7 @@ def main():
     acceptance={'checks':checks,'all_conditions_passed':all(checks.values()),'totals':totals,'candidate_ratio':count_ratio,'union_area_ratio':area_ratio,
         'automatic_adoption':False,'reason':'Two exposed same-capture images; no dense floor truth; unchanged criteria and failed conditions retained.'}
     save(out/'acceptance_checks.json',acceptance)
-    d.text((70,1010),f"预设检查：实例支持未增；PAL面积 {area_ratio:.4f}×（上限1.25×）；三轮内未全部收敛。",
+    d.text((70,1010),f"预设检查：实例支持 {compact[2]["pallet_instances_supported"]}/{compact[2]["reference_pallet_instances"]}；PAL面积 {area_ratio:.4f}×（上限1.25×）；收敛 {converged}/6。",
            font=font,fill='#ffcfb4')
     summary.save(summary_file,quality=95)
     receipts=[]

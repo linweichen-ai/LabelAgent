@@ -1,0 +1,41 @@
+{
+  "status": "prepared_tests_passed_waiting_for_existing_model_batch",
+  "observed_utc": "2026-11-04T10:42:52.520460+00:00",
+  "tests_passed": 377,
+  "tests_skipped": 0,
+  "images_planned": 20,
+  "SAM3_requests_planned": 80,
+  "SAM3_requests_completed": 0,
+  "initial_SAM3_http_attempts": 1,
+  "initial_response_status": 503,
+  "initial_model_inference_successes": 0,
+  "query": "wooden pallet",
+  "grid_spec": {
+    "divisions": 2,
+    "crop_fraction": 0.6
+  },
+  "internal_edge_margin_pixels": 2,
+  "original_sampler_default_query": "pallet",
+  "frozen_query_required_for_validation": true,
+  "cached_response_binding_fields": [
+    "topic",
+    "frame",
+    "tile_index",
+    "bounds",
+    "source_image_sha256",
+    "crop_png_sha256",
+    "query",
+    "plan_sha256"
+  ],
+  "raw_replay_has_early_candidate_budget": false,
+  "resumes_same_frozen_collection_plan": true,
+  "other_model_batch_interrupted": false,
+  "model_services_restarted": false,
+  "workbench_modified": false,
+  "new_reference_labels_created": false,
+  "new_metric_results_available": false,
+  "best_full_588_matches_unchanged": 2298,
+  "independent_accuracy_measured": false,
+  "outer_plan_sha256": "953de3ab84ba0f62062b92c51abaa7088d3988428bc1fe2bec322a63da254af9",
+  "collection_plan_sha256": "0a8c2245bb0ee3b767791276b631e311afae6ff4cced7283ae8bc889de35c891"
+}

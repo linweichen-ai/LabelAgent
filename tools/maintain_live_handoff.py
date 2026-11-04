@@ -322,8 +322,19 @@ def sync_git(config, observation):
             try:
                 git(repo, 'merge', '--no-edit', commit)
             except Exception:
-                git(repo, 'merge', '--abort', check=False)
-                raise
+                conflicts = git(repo, 'diff', '--name-only', '--diff-filter=U')[0].splitlines()
+                allowed = set(config.get('producer_authoritative_reports', []))
+                if conflicts and set(conflicts) <= allowed:
+                    # Only explicitly configured generated reports use the owning
+                    # producer version. Both upstream histories remain intact.
+                    for path in conflicts:
+                        content = git(repo, 'show', source + ':' + path)[0]
+                        atomic(repo / path, content + '\n')
+                        git(repo, 'add', '--', path)
+                    git(repo, 'commit', '--no-edit')
+                else:
+                    git(repo, 'merge', '--abort', check=False)
+                    raise
     payload = {'schema': 1, 'producer_commit': source, 'cnb_progress_commit': cnb, **observation}
     dest = repo / 'docs/progress/live-handoff.json'
     prior = read_json(dest, {})

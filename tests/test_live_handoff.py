@@ -95,6 +95,9 @@ class HandoffChecks(unittest.TestCase):
             run('-C', producer, 'config', 'user.name', 'Test')
             run('-C', producer, 'config', 'user.email', 'test@example.invalid')
             (producer / 'code.py').write_text('print(1)\n')
+            progress_path = 'docs/test-results/raw_coverage_validation_progress.json'
+            (producer / progress_path).parent.mkdir(parents=True)
+            (producer / progress_path).write_text('{"status":"initial"}\n')
             run('-C', producer, 'add', '.')
             run('-C', producer, 'commit', '-m', 'initial')
             run('-C', producer, 'branch', '-M', 'work')
@@ -108,18 +111,28 @@ class HandoffChecks(unittest.TestCase):
             run('-C', repo, 'config', 'user.name', 'Test')
             run('-C', repo, 'config', 'user.email', 'test@example.invalid')
             config = {'repo': str(repo), 'producer_branch': 'work', 'cnb_progress_branch': 'progress',
-                      'publish_branch': 'handoff'}
+                      'publish_branch': 'handoff', 'producer_authoritative_reports': [progress_path]}
             observation = {'primary_588_passed': None, 'pipeline': {'status': 'scoring'}, 'scores': {}}
             first = m.sync_git(config, observation)
             self.assertTrue(first['both_verified'])
             second = m.sync_git(config, observation)
             self.assertEqual(first['commit'], second['commit'])
             (producer / 'code.py').write_text('print(2)\n')
+            (producer / progress_path).write_text('{"status":"source-final"}\n')
             run('-C', producer, 'add', '.')
             run('-C', producer, 'commit', '-m', 'new code')
+            cnb_writer = root / 'cnb-writer'
+            run('clone', '--branch', 'progress', upstreams[1], cnb_writer)
+            run('-C', cnb_writer, 'config', 'user.name', 'Test')
+            run('-C', cnb_writer, 'config', 'user.email', 'test@example.invalid')
+            (cnb_writer / progress_path).write_text('{"status":"cnb-final"}\n')
+            run('-C', cnb_writer, 'add', '.')
+            run('-C', cnb_writer, 'commit', '-m', 'concurrent generated report')
+            run('-C', cnb_writer, 'push', 'origin', 'progress')
             third = m.sync_git(config, observation)
             self.assertNotEqual(first['commit'], third['commit'])
             self.assertEqual((repo / 'code.py').read_text(), 'print(2)\n')
+            self.assertEqual(json.loads((repo / progress_path).read_text())['status'], 'source-final')
             # An unrelated remote commit must be preserved by rejected normal push.
             run('-C', producer, 'push', upstreams[0], 'HEAD:refs/heads/other')
             run('-C', producer, 'fetch', upstreams[0], 'handoff')

@@ -93,8 +93,9 @@ def git(repo, *args, check=True):
                             encoding='utf-8', errors='replace', timeout=150,
                             env={**os.environ, 'GIT_TERMINAL_PROMPT': '0', 'GCM_INTERACTIVE': 'Never'})
     if check and result.returncode:
-        # Do not propagate credential-helper/network output into a shareable report.
-        raise RuntimeError('Git operation failed: ' + args[0])
+        detail = safe_message(result.stderr)
+        detail = re.sub(r'https://[^/@\s]+:[^/@\s]+@', 'https://[redacted]@', detail)
+        raise RuntimeError('Git operation failed: ' + args[0] + ': ' + detail[:700])
     return result.stdout.strip(), result.returncode
 
 
@@ -126,7 +127,7 @@ def process_matches(pid, created):
 
 def safe_message(text):
     # Entire credential-bearing messages are excluded, even from the private export.
-    if re.search(r'password|密码|私钥|令牌|access.token|Bearer\s|gh[pousr]_|github_pat_', text, re.I):
+    if re.search(r'password|密码|私钥|令牌|\btoken\b|Bearer\s|gh[pousr]_|github_pat_', text, re.I):
         return '[含账户或凭据信息的消息已省略]'
     text = re.sub(r'<oai-mem-citation>[\s\S]*?</oai-mem-citation>', '', text)
     text = re.sub(r'\b(?:\d{1,3}\.){3}\d{1,3}\b', '[本地或私有地址]', text)
@@ -305,10 +306,12 @@ def sync_git(config, observation):
     repo = Path(config['repo'])
     if git(repo, 'status', '--porcelain')[0]:
         raise RuntimeError('Isolated sync checkout contains uncommitted changes; review before resuming')
-    git(repo, 'fetch', 'producer', config['producer_branch'])
-    source = git(repo, 'rev-parse', 'FETCH_HEAD')[0]
-    git(repo, 'fetch', 'cnb', config['cnb_progress_branch'])
-    cnb = git(repo, 'rev-parse', 'FETCH_HEAD')[0]
+    source_ref = 'refs/remotes/producer/' + config['producer_branch']
+    cnb_ref = 'refs/remotes/cnb/' + config['cnb_progress_branch']
+    git(repo, 'fetch', 'producer', 'refs/heads/' + config['producer_branch'] + ':' + source_ref)
+    source = git(repo, 'rev-parse', source_ref)[0]
+    git(repo, 'fetch', 'cnb', 'refs/heads/' + config['cnb_progress_branch'] + ':' + cnb_ref)
+    cnb = git(repo, 'rev-parse', cnb_ref)[0]
     for commit in (source, cnb):
         if git(repo, 'merge-base', '--is-ancestor', commit, 'HEAD', check=False)[1]:
             # Refuse publishing newly added dataset/model/media/credential files.
@@ -462,6 +465,11 @@ def main():
     config = read_json(args.config)
     control = Path(config['control'])
     control.mkdir(parents=True, exist_ok=True)
+    def log_event(result):
+        with (control / 'events.jsonl').open('a', encoding='utf-8') as log:
+            log.write(json.dumps(result, ensure_ascii=False) + '\n')
+        if __import__('sys').stdout is not None:
+            print(json.dumps(result, ensure_ascii=False), flush=True)
     # Kernel-held lock releases on process death; stale metadata cannot block recovery.
     lock = open(control / 'watch.lock', 'a+b')
     if os.name == 'nt':
@@ -479,13 +487,13 @@ def main():
             return
         try:
             result = cycle(config)
-            print(json.dumps(result, ensure_ascii=False), flush=True)
+            log_event(result)
         except Exception as exc:
             result = {'status': 'error', 'checked_at': now(), 'pid': os.getpid(),
                       'error_type': type(exc).__name__, 'message': str(exc)[:250]}
             write_json(control / 'last_error.json', result)
             write_json(Path(config['handoff']) / '06_核验/后台同步状态.json', result)
-            print(json.dumps(result, ensure_ascii=False), flush=True)
+            log_event(result)
             if not args.watch:
                 raise
         if not args.watch:

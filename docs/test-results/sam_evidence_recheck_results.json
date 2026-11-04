@@ -1,0 +1,94 @@
+{
+  "status": "verified",
+  "observed_utc": "2026-11-04T16:27:53.394800+00:00",
+  "new_VLM_calls": 5,
+  "new_quality_calls": 4,
+  "new_default_restore_guard_calls": 1,
+  "new_SAM_calls": 0,
+  "all29_original_cases_retained": true,
+  "all5_full_payload_hashes_reproduced": true,
+  "all4_quality_payloads_differ_from_original58": true,
+  "all5_response_ids_new_and_unique": true,
+  "actual_default_restore_guard_tokens": [
+    238
+  ],
+  "raw_fresh_view_categories": [
+    {
+      "case_id": "region_15",
+      "view": "overview",
+      "category": "person",
+      "actual_visual_tokens": 256
+    },
+    {
+      "case_id": "region_15",
+      "view": "linked",
+      "category": "person",
+      "actual_visual_tokens": 768
+    },
+    {
+      "case_id": "legacy_07",
+      "view": "overview",
+      "category": "person",
+      "actual_visual_tokens": 256
+    },
+    {
+      "case_id": "legacy_07",
+      "view": "linked",
+      "category": "person",
+      "actual_visual_tokens": 768
+    }
+  ],
+  "fresh_conflicting_views_human_confirmed_category": 2,
+  "fresh_conflicting_views_old_qualitative_role": 2,
+  "human_correct_before": 14,
+  "human_correct_after": 14,
+  "human_wrong_before": 0,
+  "human_wrong_after": 0,
+  "legacy_pallet_correct_before": 2,
+  "legacy_pallet_correct_after": 2,
+  "legacy_required": 3,
+  "all_guarded_output_categories_unchanged": true,
+  "strict_categorical_gain": false,
+  "all_checks_passed": false,
+  "checks": {
+    "human_consensus_strictly_above11": true,
+    "no_previous_correct_human_region_lost": true,
+    "all5_confirmed_people_correct": true,
+    "no_new_opposite_class_view_error": true,
+    "all_original_legacy_checks_passed": false,
+    "all5_new_responses_valid_real_CUDA": true,
+    "all14_previous_human_correct_retained": true,
+    "zero_wrong_human_consensus": true,
+    "no_fresh_explicit_opposite_class_view": false,
+    "strict_categorical_gain_vs_previous_guard": false,
+    "sensitive_default_budget_guard_passed": true,
+    "all_source_code_config_state_bindings_unchanged": true,
+    "plan_unchanged": true
+  },
+  "auxiliary_diagnostic": [
+    {
+      "case_id": "region_15",
+      "target_pixels": 1220,
+      "auxiliary_pixels": 1220,
+      "auxiliary_exactly_equals_target": true,
+      "target_fully_retained": true
+    },
+    {
+      "case_id": "legacy_07",
+      "target_pixels": 509,
+      "auxiliary_pixels": 376,
+      "auxiliary_exactly_equals_target": false,
+      "target_fully_retained": true
+    }
+  ],
+  "all304_source_code_config_state_bindings_unchanged": true,
+  "new_targeted_tests": 6,
+  "test_seconds": 0.032,
+  "new_human_question_sent": false,
+  "adopted": false,
+  "default_enabled": false,
+  "workbench_writes": false,
+  "independent_validation": false,
+  "independent_pixel_accuracy": false,
+  "scope": "Failed fixed5-call local2B visual-reframing recheck. Model-derived auxiliary masks are not independent truth; one exactly equals the target. Wider-context diagnosis is separate, not evaluated by these5 calls."
+}

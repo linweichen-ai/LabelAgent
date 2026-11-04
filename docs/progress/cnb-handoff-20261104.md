@@ -5,8 +5,10 @@
 - 目标仓库：https://cnb.cool/seer-robotics/EIC/BEV/LabelAgent
 - 本地进度分支：`codex/labelagent-progress-20261104`。
 - 起点：`25d6dd375bc74e05a948ce45ade5aca5b665fd56`，包含目前已提交的工作台修复、模型接入、测试工具及进度文档。
-- CNB Git 请求已到达凭据阶段，但当前没有可用登录凭据。用户选择先准备本地分支、稍后授权；尚未发布到 CNB。
+- 已发布到 CNB，并回读核对准备提交 `b04007cb89264068f8633d9708e100b82e5ccdaa`。用户截图确认原地址是可访问的私有仓库；旧 Windows 凭据未通过接口认证，改用 CNB 官方 CLI 浏览器设备授权后恢复访问。
+- 首次推送遇到 `shallow update not allowed`；从原 GitHub 远端补齐 Git 历史后成功，未强推或改写提交。CNB `main` 保持 `eab8eb79c57b08072c11214e4adceed8b73bc7b8`。
 - GitHub 的 `origin` 保留，CNB 使用附加 remote `cnb`。本地运行分支、模型服务及正在采集的任务保持原状。
+- 进度分支已跟踪对应 CNB 分支；项目内仅对 CNB 地址配置官方 Git 凭据助手，后续由官方工具使用本机授权，不在仓库中保存令牌。
 - 后续按可复核阶段同步代码和脱敏结果摘要；运行中的请求计数属于快照，不宣称已经建立持续自动推送服务。
 - 不提交原始数据、逐目标坐标、标注状态、图像、模型权重、凭据或本地私有路径。
 

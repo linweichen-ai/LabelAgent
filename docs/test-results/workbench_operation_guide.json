@@ -1,5 +1,5 @@
 {
-  "verified_at": "2026-11-04T03:34:51.296Z",
+  "verified_at": "2026-11-04T05:33:38.212Z",
   "scope": "Operation tutorial showing existing recorded results, not a new inference or quality evaluation",
   "navigation_checks": [
     "add image window",
@@ -25,5 +25,15 @@
     "next_previous_and_zoom_verified": true,
     "screenshots_uploaded": false
   },
-  "passed": true
+  "passed": true,
+  "visible_browser_verified": true,
+  "camera_entry_fix": {
+    "same_camera_request_does_not_rewrite_history": true,
+    "same_camera_elapsed_seconds_one_local_sample": 0.004435599999851547,
+    "other_camera_switch_and_annotation_roundtrip_verified": true,
+    "invalid_camera_rejected": true,
+    "regression_tests_passed": 303,
+    "only_workbench_restarted": true,
+    "model_services_restarted": false
+  }
 }

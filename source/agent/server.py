@@ -439,14 +439,15 @@ def set_topic():
     with lock:
         if body["topic"] not in state["video"].topics:
             raise ValueError("话题不存在")
-        state.setdefault("truths_by_topic", {})[state["topic"]] = state["truth"]
-        state.setdefault("candidates_by_topic", {})[state["topic"]] = state.get("candidates", {})
-        state.setdefault("agent_runs_by_topic", {})[state["topic"]] = state.get("agent_runs", {})
-        state["topic"] = body["topic"]
-        state["truth"] = state["truths_by_topic"].get(state["topic"], {})
-        state["candidates"] = state["candidates_by_topic"].get(state["topic"], {})
-        state["agent_runs"] = state["agent_runs_by_topic"].get(state["topic"], {})
-        save()
+        if body["topic"] != state["topic"]:
+            state.setdefault("truths_by_topic", {})[state["topic"]] = state["truth"]
+            state.setdefault("candidates_by_topic", {})[state["topic"]] = state.get("candidates", {})
+            state.setdefault("agent_runs_by_topic", {})[state["topic"]] = state.get("agent_runs", {})
+            state["topic"] = body["topic"]
+            state["truth"] = state["truths_by_topic"].get(state["topic"], {})
+            state["candidates"] = state["candidates_by_topic"].get(state["topic"], {})
+            state["agent_runs"] = state["agent_runs_by_topic"].get(state["topic"], {})
+            save()
         return jsonify(topic=state["topic"], truth=state["truth"], candidates=state["candidates"], agent_runs=state["agent_runs"], reference_frames=state.get("reference_frames", {}))
 
 

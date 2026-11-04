@@ -991,6 +991,9 @@ class AnnotationAgent:
         self.sam_pending = None
         self.sam_points_by_shape = {}
         self.sam_fallback = set()
+        if self.config.get('llm_residual_gap_recovery',False):
+            self.config['_gap_points_by_shape']=self.sam_points_by_shape
+            self.config['_gap_feedback']={}
 
     def progress(self, phase, **details):
         check_cancelled()
@@ -1133,7 +1136,14 @@ class AnnotationAgent:
                             prior_mask = _rasterize(old_shape, self.width, self.height)
                             encoded = io.BytesIO()
                             Image.fromarray(prior_mask * 255).save(encoded, "PNG")
-                            result = sam_request(self.config, "/segment_points", self.image, points=all_points,
+                            request_points=all_points
+                            if item.get('reviewed_gap_ids') and self.config.get('llm_residual_gap_recovery',False):
+                                active=[g for g in holes if g['id'] in item['reviewed_gap_ids']]
+                                request_points=[p for p in all_points if any(g['mask'][int(p['y']),int(p['x'])] for g in active)]
+                                anchor=next((p for p in reversed(all_points) if p['label']==1 and prior_mask[int(p['y']),int(p['x'])]),None)
+                                if anchor and anchor not in request_points:request_points.append(anchor)
+                                if not request_points or len(request_points)>32:raise ValueError('Invalid active residual prompt budget')
+                            result = sam_request(self.config, "/segment_points", self.image, points=request_points,
                                 mask=base64.b64encode(encoded.getvalue()).decode("ascii"), polygon=polygon)
                             parts = result.get("parts") if isinstance(result, dict) else None
                             if not parts:
@@ -1147,6 +1157,8 @@ class AnnotationAgent:
                                 raise ValueError("SAM 3 返回无效轮廓")
                             before_mask = _rasterize(old_shape, self.width, self.height)
                             sam_mask = _rasterize(sam_shape, self.width, self.height)
+                            if item.get('reviewed_gap_ids') and self.config.get('llm_residual_gap_recovery',False):
+                                self.config['_gap_feedback'][ids[0]]={'mask':sam_mask.copy(),'original_cumulative_points':all_points,'active_request_points':request_points}
                             region = np.zeros_like(before_mask)
                             cv2.fillPoly(region, [np.asarray(polygon, dtype=np.int32)], 1)
                             resolved_reviewed=[];unresolved_reviewed=[]
@@ -1189,6 +1201,7 @@ class AnnotationAgent:
                                 outcome.update(resolved_gap_ids=resolved_reviewed,unresolved_gap_ids=unresolved_reviewed,
                                     accepted_gap_coverage=1.0,raw_model_warnings=result.get('warnings',[]),
                                     partial_batch=bool(unresolved_reviewed))
+                                if self.config.get('llm_residual_gap_recovery',False):outcome['active_request_point_count']=len(request_points)
                         else:
                             updated, applied, queue = apply_operations(
                                 self.shapes, [item], self.labels, self.width, self.height,

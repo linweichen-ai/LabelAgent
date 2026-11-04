@@ -1,0 +1,11 @@
+# Independent instance and residual gap recovery
+
+Opt-in experiment; no application default or annotation write. Run `run_recovery_comparison.py --config <private-config.json>` against a frozen snapshot and the same trained model package. Private configurations and source data are in the handoff. Generation and diagnostic helpers retain the archived workstation layout and require rebinding paths on another machine.
+
+The complete fixed grid is 640×512 at x=[0,426,853,1280], y=[0,341,682,1024], on both original images. The same trained checkpoint performs 32 CPU forwards with unchanged postprocessing. SAM text inference uses the full grid and two fixed prompts. No projected reference coordinates are used for generation.
+
+Independent trained instances are admitted without requiring overlap with the original SAM union. Real SAM points and prior-mask refinement use image crops; a failure remains explicitly unrefined. Target-aware two-view review inspects selected original pixels and raw context separately. Full candidate masks are admitted or rejected against unchanged global count/union budgets; no budget clipping occurs. Raw candidates, failed variants and functional negative controls are retained. Model category decisions are not human truth.
+
+`llm_residual_gap_recovery` enables optional controller feedback. The cumulative original point history stays capped at 32; actual prompts focus on currently approved pending regions and one floor anchor. New points may only come from model-uncovered pixels inside those approved regions. On the second round, at most two separately counted `fill_gap` operations may precede one actual SAM call. The next round must observe and assess its result. This is still three operations per round, at most three rounds, and 100% actual coverage per admitted gap; all other pixels remain locked. Remaining tasks cannot be relabelled away to claim convergence.
+
+Atlas input and omitted-prior preflights did not improve complete gap coverage and were not adopted. Their saved results remain diagnostic evidence. Only the unchanged V2 scorer determines instance support, with the original min5 points, radius3, purity0.67 and one-to-one support0.5 settings. Two exposed frames do not establish independent accuracy or justify default adoption.

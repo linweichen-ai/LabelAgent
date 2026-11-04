@@ -1,0 +1,57 @@
+{
+  "observed_utc": "2026-11-04T08:08:54.771310+00:00",
+  "phase": "select_remaining",
+  "primary_method": "anchor_subset_priority",
+  "full_validation_images": 588,
+  "primary_passed": null,
+  "model_calls": 0,
+  "workbench_writes": false,
+  "maximum_new_raw_points": 0,
+  "frozen_plan_sha256": "b6b5144cb967178847472018b8b73c0fea1540a87d3c47d2c248dd6c8c0d4065",
+  "tuning_counts": {
+    "pallet_objects_matched": 77,
+    "pallet_reference_objects": 118,
+    "pallet_points_covered": 5179,
+    "pallet_reference_points": 6291,
+    "pallet_candidates": 195,
+    "pallet_union_pixels": 836922,
+    "person_points_covered_by_pallet": 55,
+    "person_reference_points": 11068
+  },
+  "tuning_checks": {
+    "strict_instance_gain_over_previous_best": true,
+    "point_coverage_not_below_previous_best": true,
+    "person_off_class_not_above_previous_best": true,
+    "original_minimum_two_percentage_point_gain": true,
+    "original_count_ratio_limit": true,
+    "original_union_area_limit": true,
+    "original_person_cross_class_limit": true,
+    "all_original_candidates_preserved": true
+  },
+  "comparison_requires": {
+    "strict_instance_gain_over_previous_best": true,
+    "point_coverage_not_below_previous_best": true,
+    "person_off_class_not_above_previous_best": true,
+    "original_minimum_absolute_gain": 0.02,
+    "original_maximum_candidate_count_ratio": 1.5,
+    "original_maximum_union_area_ratio": 1.25,
+    "original_person_off_class_increase_limit": 0.005,
+    "all_original_candidates_preserved": true
+  },
+  "default_enabled": false,
+  "scope": "Repeated same-capture frozen evaluation, not independent external validation",
+  "32_selection": {
+    "status": "complete",
+    "completed_images": 32,
+    "reference_files_opened": 0,
+    "code_unchanged": true,
+    "plan_unchanged": true
+  },
+  "remaining_selection": {
+    "status": "running",
+    "completed_images": 93,
+    "reference_files_opened": null,
+    "code_unchanged": null,
+    "plan_unchanged": null
+  }
+}

@@ -22,6 +22,9 @@ def sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def run(args):
+    minimum_extra=getattr(args,'minimum_extra_raw3_points',1)
+    if type(minimum_extra) is not int or minimum_extra not in (1,3):
+        raise ValueError('Minimum total raw3px points must be 1 (original) or 3 (bounded study)')
     dataset=Path(args.dataset).resolve();manifest=read(dataset/'import_manifest.json');paths=[dataset/'import_manifest.json']
     def bound(path,receipt_path,parent=False):
         path,receipt_path=Path(path).resolve(),Path(receipt_path).resolve();receipt=read(receipt_path)
@@ -57,12 +60,13 @@ def run(args):
         'secondary_can_replace_primary':False,'methods':methods,'frames':frames,'cameras':cameras,'planned_images':len(pairs),
         'input_bindings':bindings,'code_sha256':sha(__file__),'helper_sha256':helper_hashes,
         'metric_sha256':sha(REPO/'tools/evaluate_projected_support.py'),
-        'fixed_parameters':{'minimum_score':.5,'nms_iou':.8,'global_candidate_count_ratio':1.5,'global_union_area_ratio':1.25},
+        'fixed_parameters':{'minimum_score':.5,'nms_iou':.8,'global_candidate_count_ratio':1.5,'global_union_area_ratio':1.25,
+            'minimum_extra_raw3_points':minimum_extra},
         'local_candidate_budget':'none; distribute unused slots under unchanged original global caps',
         'ranking':'original baseline-relative fixed spatial component-mass priority; deterministic global order',
         'anchor_contract':'Every old four-crop shape stays as the literal prefix, including zero-point masks',
         'primary_raw_contract':'Exact old raw-visible-point union at ellipse radii 0/3/6 per image',
-        'extra_eligibility':'nonempty total raw coverage at3px; no novel-point minimum',
+        'extra_eligibility':f'at least {minimum_extra} total raw covered points at3px; no novel-point minimum; anchors exempt',
         'prediction_reads_reference':False,'approved_reference_inputs':False,'model_calls':0,'workbench_writes':False,
         'scope':'new bounded exploratory study, not independent accuracy or default adoption'}
     save(output/'study_plan.json',plan);plan_sha=sha(output/'study_plan.json')
@@ -105,11 +109,13 @@ def run(args):
                 record=masks[shape['id']]
                 if any(_iou(record,r)>=.8 for r in old_records[image_key]):continue
                 hits={r:point_hits(record,pixels,r,w,h) for r in (0,3,6)}
-                if not hits[3].any():continue
+                total_raw3=int(np.count_nonzero(hits[3]))
+                if total_raw3<minimum_extra:continue
                 allowed={r:not np.any(hits[r]&~anchor_hits[image_key][r]) for r in (0,3,6)}
                 if not allowed[3]:continue
                 candidates.append({'key':image_key,'shape':shape,'record':record,
                     'priority':float(context.priority(shape,tuple(seed),'component_mass')),
+                    'total_raw3_points':total_raw3,
                     'allowed':{'r3':True,'all':all(allowed.values())}})
             images.setdefault(topic,{})[key]=source['sha256'];progress['prepared_images']+=1
             save(output/'progress.json',progress)
@@ -131,6 +137,7 @@ def run(args):
                 if not exact['3'] or mode=='all' and not all(exact.values()):raise ValueError('Actual raw-union certificate differs')
                 readbacks.append({'topic':topic,'frame':int(key),'method':name,'old_four_prefix_exact':True,'raw_union_equal':exact})
             outputs[name]=mapping;summaries[name]=summary
+            summary['selected_extra_raw3_below3']=sum(c['total_raw3_points']<3 for c in selected)
         if any(sha(p)!=value for p,value in bindings.items()):raise ValueError('Input changed')
         for name,mapping in outputs.items():
             file=output/(name+'_candidates.json');save(file,mapping)
@@ -140,6 +147,8 @@ def run(args):
                 'source':'reference_free_literal_four_crop_anchors_and_global_raw_subset_additions'})
         progress.update(status='complete',completed_images=len(pairs),allocation=summaries,readbacks=readbacks,
             globally_eligible_candidates=len(candidates),baseline_pallet_candidates=base_count,baseline_union_pixels=base_area,
+            eligible_extra_raw3_below3=sum(c['total_raw3_points']<3 for c in candidates),
+            minimum_extra_raw3_points=minimum_extra,point_gate_applies_to_anchors=False,
             all_predictions_frozen_before_scoring=True,plan_sha256=plan_sha)
     except InterruptedError:progress['status']='stopped'
     except Exception as error:
@@ -163,4 +172,5 @@ if __name__=='__main__':
     for name in ('dataset','baseline-json','baseline-receipt','anchor-json','anchor-receipt','output'):p.add_argument('--'+name,required=True)
     p.add_argument('--pool-json',action='append',required=True);p.add_argument('--pool-receipt',action='append',required=True)
     p.add_argument('--deny-reference-root',action='append',default=[])
+    p.add_argument('--minimum-extra-raw3-points',type=int,choices=(1,3),default=1)
     raise SystemExit(run(p.parse_args()))

@@ -5,6 +5,9 @@ import numpy as np
 from tools.global_anchor_additions import point_hits,union_pixels,allocate
 from tools.tiled_candidate_utils import _mask_record
 from source.agent.edit_agent import _rasterize
+from tools.evaluate_projected_support import mask_support
+from tools.select_global_anchor_additions import run
+from types import SimpleNamespace
 
 def shape(i,x0,y0,x1,y1):return {'id':i,'label':'pallet','points':[[x0,y0],[x1,y0],[x1,y1],[x0,y1]],'holes':[]}
 def candidate(i,key,record,priority=.9,all_allowed=True):
@@ -48,5 +51,19 @@ class GlobalAnchorTests(unittest.TestCase):
         a=_mask_record(shape(1,1,1,3,3),32,24)
         with self.assertRaises(ValueError):allocate({('a','0'):[a]},[],0,100,'all')
         with self.assertRaises(ValueError):allocate({('a','0'):[a]},[],1,8,'all')
+
+    def test_five_point_reference_can_match_three_candidate_hits_but_not_two(self):
+        # The original metric's five-point minimum is an object denominator.
+        pixels=np.array([[20,20],[40,20],[60,20],[80,20],[100,20]],dtype=np.int32)
+        points=np.arange(5);bits=np.ones(5,dtype=np.uint8);owner=np.ones(5,dtype=np.int64)
+        boxes=[{'bit':1,'obj_id':'synthetic_object'}]
+        for right,expected in ((43,0),(63,1)):
+            value=mask_support([shape(1,15,15,right,25)],points,pixels,bits,owner,boxes,128,48,radii=(3,))
+            self.assertEqual(value['classes']['pallet']['supported_reference_objects'],1)
+            self.assertEqual(value['classes']['pallet']['radii']['3']['objects_matched_at_support_threshold'],expected)
+
+    def test_unsupported_total_point_gate_fails_before_opening_inputs(self):
+        for invalid in (0,2,5,True,3.0):
+            with self.assertRaises(ValueError):run(SimpleNamespace(minimum_extra_raw3_points=invalid))
 
 if __name__=='__main__':unittest.main()

@@ -89,13 +89,14 @@ def digest(path):
 
 
 def git(repo, *args, check=True):
-    result = subprocess.run(['git', '-C', str(repo), *args], capture_output=True,
+    result = subprocess.run(['git', '-C', str(repo), *args], capture_output=True, stdin=subprocess.DEVNULL,
                             encoding='utf-8', errors='replace', timeout=150,
                             env={**os.environ, 'GIT_TERMINAL_PROMPT': '0', 'GCM_INTERACTIVE': 'Never'})
     if check and result.returncode:
-        detail = safe_message(result.stderr)
+        detail = safe_message(result.stderr or result.stdout)
         detail = re.sub(r'https://[^/@\s]+:[^/@\s]+@', 'https://[redacted]@', detail)
-        raise RuntimeError('Git operation failed: ' + args[0] + ': ' + detail[:700])
+        raise RuntimeError('Git operation failed: ' + ' '.join(args[:2]) +
+                           ' (exit ' + str(result.returncode) + '): ' + detail[:700])
     return result.stdout.strip(), result.returncode
 
 

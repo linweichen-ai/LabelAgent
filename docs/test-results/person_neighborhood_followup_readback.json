@@ -1,0 +1,64 @@
+{
+  "status": "complete",
+  "all_5_methods_588_images_read_back": true,
+  "comparison_recomputed_exactly": true,
+  "frozen_plan_byte_exact_before_and_after_recovery": true,
+  "code_and_metric_bindings_unchanged": true,
+  "prediction_hashes": {
+    "pallet_baseline": "591ebba97aeaca4f58dfcb0eecfd79ec026b4915aa670143d46d9702181b7f92",
+    "four_crop_control": "b6be477759b2a07fad832cf33c440e01addbaf90f480488dfb0195a68f35c889",
+    "accepted_raw_subset_control": "542833b92253a71759c43303b2a78d3880683d90f375095f3b2f594e28473884",
+    "cross_view_person_control": "705ba36d58435ecf5353d7d307ed15cf58500dcdb73413553a69e64cea022ee0",
+    "person_neighborhood_veto": "cb00e222c70647589c9eeaca52e218f55b47e7177feb732ed0175a9e36fb4885"
+  },
+  "three_control_exports_byte_exact": true,
+  "historical_four_crop_different_serialization_but_all_candidate_objects_exact": true,
+  "primary_passed": false,
+  "approved13_pallet5_person_retained": true,
+  "delta_vs_2298": {
+    "matched": 46,
+    "pallet_points": 2970,
+    "person_cross": 6
+  },
+  "radii_diagnostic": {
+    "0": {
+      "person_cross_increase": 4,
+      "images_with_increase": 1,
+      "pallet_points_lost_images": 0
+    },
+    "3": {
+      "person_cross_increase": 6,
+      "images_with_increase": 1,
+      "pallet_points_lost_images": 0
+    },
+    "6": {
+      "person_cross_increase": 8,
+      "images_with_increase": 1,
+      "pallet_points_lost_images": 0
+    }
+  },
+  "all_source_data_and_workbench_preserved": true,
+  "model_calls": 0,
+  "workbench_writes": false,
+  "comparison_sha256": "cc9eec0889de0605b359d4f9568c1804f46cac748420e38bc30526bec0017c8e",
+  "protection": {
+    "source_files_checked": 1023,
+    "previous_sessions_checked": 7,
+    "approved_reference_shapes": 15,
+    "checks": {
+      "all_seven_previous_sessions_unchanged": true,
+      "approved_reference_preserved": true,
+      "target76_still_unconfirmed": true,
+      "prior_user_frame77_candidate_preserved": true,
+      "latest_UI_candidates_and_agent_run_preserved": true,
+      "active_review_session_preserved": true,
+      "labels_and_config_preserved": true,
+      "approved_reference_hash_matches": true,
+      "original_mcap_unchanged": true,
+      "review_mcap_unchanged": true,
+      "dataset_mcap_unchanged": true,
+      "all_original_source_files_unchanged": true
+    },
+    "all_checks_passed": true
+  }
+}

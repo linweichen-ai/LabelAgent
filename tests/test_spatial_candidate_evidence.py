@@ -57,6 +57,26 @@ class SpatialEvidenceTests(unittest.TestCase):
   self.assertEqual(info['added_pallets'],2);self.assertEqual(selected[:4],baseline)
   self.assertEqual(baseline+proposals,before)
 
+ def test_dual_priority_is_the_fixed_mean_before_and_after_actual_acceptance(self):
+  proposals=[shape(1,6,18),shape(2,38,48,score=.9)]
+  context=SpatialPointNovelty([],proposals,80,20,self.sensor());a=proposals[0]
+  before=context.callback('dual_mass')(a,())
+  for policy,component in (('dual_mass','component_mass'),('dual_fraction','component_fraction')):
+   for selected in ((),(a,)):
+    actual=context.callback(policy)(a,selected)
+    expected=.5*(context.priority(a,selected,component)+context.priority(a,selected,'all_dynamic'))
+    self.assertAlmostEqual(actual,expected);self.assertTrue(0<=actual<=1)
+  self.assertLess(context.callback('dual_mass')(a,(a,)),before)
+
+ def test_complete_point_coverage_distinguishes_tied_foreground_components(self):
+  baseline=[shape(1,6,18,0,2)]
+  a,b=shape(2,6,18),shape(3,38,48)
+  pixels=np.array([[x,y] for x0,y in ((10,10),(10,4),(40,10),(40,4)) for x in range(x0,x0+6)])
+  xyz=np.array([[offset+i*.01,0,z] for offset,z in ((0,1),(0,4),(1,1),(1,4)) for i in range(6)])
+  context=SpatialPointNovelty(baseline,[a,b],80,20,{'pixels':pixels,'xyz':xyz,'depths':xyz[:,2]})
+  self.assertEqual(context.priority(a,baseline,'component_mass'),context.priority(b,baseline,'component_mass'))
+  self.assertGreater(context.callback('dual_mass')(b,baseline),context.callback('dual_mass')(a,baseline))
+
  def test_missing_support_is_soft_and_invalid_inputs_fail_closed(self):
   proposal=shape(1,6,18,score=.8)
   context=SpatialPointNovelty([], [proposal],80,20,{'pixels':np.empty((0,2),int),'xyz':np.empty((0,3)),'depths':np.empty(0)})

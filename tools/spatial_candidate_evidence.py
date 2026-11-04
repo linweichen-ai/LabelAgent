@@ -101,6 +101,9 @@ class SpatialPointNovelty:
   return self.base[shape['id']]*factor
 
  def callback(self,policy):
+  if policy in {'dual_mass','dual_fraction'}:
+   component_policy='component_mass' if policy=='dual_mass' else 'component_fraction'
+   return lambda shape,selected:.5*(self.priority(shape,selected,component_policy)+self.priority(shape,selected,'all_dynamic'))
   if policy not in {'all_dynamic','component_mass','component_fraction'}:raise ValueError('Unknown spatial policy')
   return lambda shape,selected:self.priority(shape,selected,policy)
 

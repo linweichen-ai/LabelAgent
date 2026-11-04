@@ -1,6 +1,6 @@
 {
-  "status": "tuning_unchanged_full_running",
-  "observed_utc": "2026-11-04T12:03:56.608917+00:00",
+  "status": "full_execution_disk_full_recovery_running",
+  "observed_utc": "2026-11-04T12:18:53.300431+00:00",
   "tests_passed": 395,
   "tests_skipped": 0,
   "new_model_calls": 0,
@@ -145,5 +145,16 @@
   "previous_accepted_full_matches": 2298,
   "adopted": false,
   "default_enabled": false,
-  "independent_accuracy_measured": false
+  "independent_accuracy_measured": false,
+  "storage_recovery": {
+    "original_failure": "output disk full while saving first complete candidate exports",
+    "full_score_observed_before_recovery": false,
+    "original_failure_preserved": true,
+    "recovery_running": true,
+    "scientific_source_and_parameters_unchanged": true,
+    "original_frozen_plan_sha256": "cd467bb5bbc9b99efecd582fa3f368fffb27b26e9e12211b7048ddc28473eba3",
+    "recovery_plan_byte_exact_original": true,
+    "new_model_calls": 0,
+    "source_data_moved_or_deleted": false
+  }
 }

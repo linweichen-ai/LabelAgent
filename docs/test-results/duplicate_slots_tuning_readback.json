@@ -1,0 +1,20 @@
+{
+  "status": "complete_no_recycling_opportunity_not_expanded",
+  "images": 20,
+  "removed": 0,
+  "added": 0,
+  "matched": 78,
+  "pallet_points": 5214,
+  "person_cross": 55,
+  "byte_exact_incumbent": true,
+  "all_radius_points_cross_and_object_counts_nonregressing": true,
+  "reference_files_opened": 0,
+  "approved_reference_files_opened": 0,
+  "full588_started": false,
+  "regression_passed": 412,
+  "regression_skipped": 0,
+  "model_calls": 0,
+  "workbench_writes": false,
+  "default_enabled": false,
+  "comparison_sha256": "a6c859b16493981e88c839cb59144d5c32dcd8d7fd88a4668ff94dec21699bac"
+}

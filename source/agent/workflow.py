@@ -585,6 +585,15 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
                 or not isinstance(assessment.get("reason"), str) or not assessment["reason"].strip()):
             errors.append('GPT 未评估 SAM 3 点提示结果；必须提供 sam_assessment:'
                           '{"improved":true或false,"reason":"比较依据"}')
+    for operation in result['operations']:
+        reviewed=operation.get('reviewed_gap_ids') if isinstance(operation,dict) else None
+        if reviewed is not None:
+            ground_ids={a['hole_id'] for a in result.get('hole_assessment',[]) if a['semantic']=='ground'}
+            if (operation.get('operation')!='sam_points' or not isinstance(reviewed,list) or not reviewed
+                or not all(isinstance(x,str) for x in reviewed)
+                or len(reviewed)!=len(set(reviewed)) or not set(reviewed)<=ground_ids
+                or any(hole_ids[x]['shape_id']!=operation['shape_ids'][0] for x in reviewed if x in hole_ids)):
+                errors.append('SAM gap batch must bind unique explicitly reviewed ground gaps of its one shape')
     if errors:
         raise ValueError("\n".join(errors))
     return result
@@ -1031,6 +1040,10 @@ class AnnotationAgent:
                 pending = self.sam_pending
                 comparison = ({"shape_id": pending["shape_id"],
                     "before_image": candidate_overlay(self.image, pending["before"])} if pending else None)
+                if comparison is not None and pending.get('reviewed_gap_ids'):
+                    comparison['reviewed_gap_ids']=pending['reviewed_gap_ids']
+                    comparison['before_shapes']=pending['before']
+                    comparison['unresolved_gap_ids']=pending.get('unresolved_gap_ids',[])
                 holes = candidate_holes(self.shapes, self.labels, self.width, self.height)
                 gap_images = gap_detail_images(self.image, self.shapes, holes)
                 decision = review(self.config, self.image, candidate_overlay(self.image, self.shapes),
@@ -1051,6 +1064,11 @@ class AnnotationAgent:
                         self.sam_points_by_shape.pop(pending["shape_id"], None)
                         decision["sam_rollback"] = {"shape_id": pending["shape_id"],
                             "reason": assessment.get("reason", "未改进")}
+                        if pending.get('reviewed_gap_ids'):
+                            # Current gap IDs describe the rejected new geometry.
+                            # Reobserve restored geometry before applying edits.
+                            decision['operations']=[]
+                            decision['status']='continue'
                     self.sam_pending = None
                 before = _fingerprint(self.shapes)
                 entry = {"round": number, "decision": decision, "tool_results": [],
@@ -1058,7 +1076,7 @@ class AnnotationAgent:
                 if decision.get("sam_rollback"):
                     entry["sam_rollback"] = decision["sam_rollback"]
                 self.audit.append(entry)
-                sam_failed = False
+                sam_failed = bool(decision.get('sam_rollback'))
                 for item in decision["operations"]:
                     self.progress("editing", round=number, operation=item)
                     old = copy.deepcopy(self.shapes)
@@ -1120,7 +1138,9 @@ class AnnotationAgent:
                             parts = result.get("parts") if isinstance(result, dict) else None
                             if not parts:
                                 raise ValueError("SAM 3 点提示未生成有效候选")
-                            if result.get("warnings"):
+                            reviewed=item.get('reviewed_gap_ids')
+                            partial_enabled=reviewed is not None and self.config.get('sam_accept_complete_gap_subsets',False)
+                            if result.get("warnings") and not (partial_enabled and all('未覆盖全部正点' in str(w) for w in result['warnings'])):
                                 raise ValueError("SAM 3 点提示不满足输入点：" + "; ".join(result["warnings"]))
                             sam_shape = {"id": ids[0], "label": old_shape["label"], "parts": parts}
                             if not valid_shape(sam_shape, self.width, self.height):
@@ -1129,17 +1149,46 @@ class AnnotationAgent:
                             sam_mask = _rasterize(sam_shape, self.width, self.height)
                             region = np.zeros_like(before_mask)
                             cv2.fillPoly(region, [np.asarray(polygon, dtype=np.int32)], 1)
-                            before_mask[region != 0] = sam_mask[region != 0]
+                            resolved_reviewed=[];unresolved_reviewed=[]
+                            if reviewed is not None:
+                                if not self.config.get('llm_batch_reviewed_gaps',False):raise ValueError('Reviewed SAM batch is not enabled')
+                                bound=np.zeros_like(before_mask)
+                                for identifier in reviewed:
+                                    hole=next((h for h in holes if h['id']==identifier and h['shape_id']==ids[0]),None)
+                                    if hole is None:raise ValueError('Reviewed gap binding changed')
+                                    if partial_enabled and np.any((hole['mask']!=0)&(sam_mask==0)):
+                                        unresolved_reviewed.append(identifier)
+                                    else:
+                                        resolved_reviewed.append(identifier);bound |= hole['mask']
+                                if not resolved_reviewed:raise ValueError('No reviewed gap was completely satisfied by actual SAM pixels')
+                                # A model prediction, not automatic union filling. No old
+                                # pixel can be erased and no unapproved pixel can be added.
+                                before_mask |= sam_mask & bound
+                            else:
+                                before_mask[region != 0] = sam_mask[region != 0]
                             new_shape = _shape_from_mask(before_mask, old_shape["label"], ids[0])
+                            if reviewed is not None and new_shape is not None:
+                                restored=_rasterize(new_shape,self.width,self.height)
+                                original=_rasterize(old_shape,self.width,self.height)
+                                if np.any((original!=0)&(restored==0)) or np.any((restored!=0)&(original==0)&(bound==0)):
+                                    raise ValueError('SAM batch polygon conversion violated the approved pixel boundary')
                             if new_shape is None or np.array_equal(before_mask, _rasterize(old_shape, self.width, self.height)):
                                 raise ValueError("SAM 点提示局部修复后区域为空或没有变化")
                             self.sam_pending = {"shape_id": ids[0], "before": old}
+                            if reviewed is not None:
+                                self.sam_pending['reviewed_gap_ids']=resolved_reviewed
+                                self.sam_pending['unresolved_gap_ids']=unresolved_reviewed
+                                self.sam_pending['raw_warnings']=result.get('warnings',[])
                             self.sam_points_by_shape[ids[0]] = all_points
                             self.shapes = [shape for shape in self.shapes if shape["id"] != ids[0]] + [new_shape]
                             self.generated += 1
                             outcome = {"operation": "sam_points", "shape_ids": ids,
                                        "result_ids": [ids[0]], "status": "applied",
                                        "point_count": len(all_points)}
+                            if reviewed is not None:
+                                outcome.update(resolved_gap_ids=resolved_reviewed,unresolved_gap_ids=unresolved_reviewed,
+                                    accepted_gap_coverage=1.0,raw_model_warnings=result.get('warnings',[]),
+                                    partial_batch=bool(unresolved_reviewed))
                         else:
                             updated, applied, queue = apply_operations(
                                 self.shapes, [item], self.labels, self.width, self.height,
@@ -1185,7 +1234,7 @@ class AnnotationAgent:
                 entry["after_shape_count"] = len(self.shapes)
                 entry["after_fingerprint"] = after
                 # A 'done' sent with edits cannot validate their result. Observe again.
-                if decision["status"] == "done" and not decision["operations"]:
+                if decision["status"] == "done" and not decision["operations"] and not decision.get('sam_rollback'):
                     converged = not self.queue
                     stop_reason = "done" if converged else "error"
                     break

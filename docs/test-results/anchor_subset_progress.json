@@ -1,5 +1,5 @@
 {
-  "observed_utc": "2026-11-04T08:08:54.771310+00:00",
+  "observed_utc": "2026-11-04T08:15:17.053242+00:00",
   "phase": "select_remaining",
   "primary_method": "anchor_subset_priority",
   "full_validation_images": 588,
@@ -49,9 +49,11 @@
   },
   "remaining_selection": {
     "status": "running",
-    "completed_images": 93,
+    "completed_images": 450,
     "reference_files_opened": null,
     "code_unchanged": null,
     "plan_unchanged": null
-  }
+  },
+  "regression_tests_passed": 348,
+  "regression_skipped": 0
 }

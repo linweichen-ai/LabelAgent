@@ -812,5 +812,146 @@
   "new_model_weights_trained": false,
   "production_defaults_changed": false,
   "reference_completeness_verified": false,
-  "source_images_and_coordinates_uploaded": false
+  "source_images_and_coordinates_uploaded": false,
+  "additional_completed_recipe": {
+    "approved_reference_audit": {
+      "status": "complete",
+      "scope": "approved model-derived mask consistency on one image",
+      "images": 1,
+      "approved_objects": 18,
+      "human_approved": true,
+      "reference_geometry_copied_from_model_seed": true,
+      "independent_reannotation": false,
+      "unannotated_region_is_verified_negative": false,
+      "independent_accuracy_measured": false,
+      "methods": {
+        "anchor_subset_priority": {
+          "pallet": {
+            "approved_objects": 13,
+            "prediction_objects": 18,
+            "approved_mask_exactly_reused_objects": 11,
+            "mean_best_iou_per_approved_object": 0.9077704192076271,
+            "approved_objects_with_multiple_candidate_hits_at_0_5": 2,
+            "approved_union_pixels": 56556,
+            "prediction_union_pixels": 57920,
+            "intersection_pixels": 55443,
+            "approved_union_coverage": 0.9803203904095056,
+            "union_iou_against_approved": 0.9391865566716922,
+            "prediction_pixels_outside_approved_union": 2477,
+            "outside_pixels_are_verified_errors": false,
+            "matches": {
+              "0.5": {
+                "matched_approved_objects": 12,
+                "unmatched_approved_objects": 1,
+                "unmatched_prediction_objects": 6,
+                "matched_iou_mean": 0.9812425860023725,
+                "unmatched_predictions_are_verified_errors": false
+              },
+              "0.75": {
+                "matched_approved_objects": 12,
+                "unmatched_approved_objects": 1,
+                "unmatched_prediction_objects": 6,
+                "matched_iou_mean": 0.9812425860023725,
+                "unmatched_predictions_are_verified_errors": false
+              },
+              "0.9": {
+                "matched_approved_objects": 11,
+                "unmatched_approved_objects": 2,
+                "unmatched_prediction_objects": 7,
+                "matched_iou_mean": 1.0,
+                "unmatched_predictions_are_verified_errors": false
+              }
+            }
+          },
+          "person": {
+            "approved_objects": 5,
+            "prediction_objects": 5,
+            "approved_mask_exactly_reused_objects": 5,
+            "mean_best_iou_per_approved_object": 1.0,
+            "approved_objects_with_multiple_candidate_hits_at_0_5": 0,
+            "approved_union_pixels": 406995,
+            "prediction_union_pixels": 406995,
+            "intersection_pixels": 406995,
+            "approved_union_coverage": 1.0,
+            "union_iou_against_approved": 1.0,
+            "prediction_pixels_outside_approved_union": 0,
+            "outside_pixels_are_verified_errors": false,
+            "matches": {
+              "0.5": {
+                "matched_approved_objects": 5,
+                "unmatched_approved_objects": 0,
+                "unmatched_prediction_objects": 0,
+                "matched_iou_mean": 1.0,
+                "unmatched_predictions_are_verified_errors": false
+              },
+              "0.75": {
+                "matched_approved_objects": 5,
+                "unmatched_approved_objects": 0,
+                "unmatched_prediction_objects": 0,
+                "matched_iou_mean": 1.0,
+                "unmatched_predictions_are_verified_errors": false
+              },
+              "0.9": {
+                "matched_approved_objects": 5,
+                "unmatched_approved_objects": 0,
+                "unmatched_prediction_objects": 0,
+                "matched_iou_mean": 1.0,
+                "unmatched_predictions_are_verified_errors": false
+              }
+            }
+          }
+        }
+      },
+      "all_source_bindings_unchanged": true,
+      "model_calls": 0,
+      "prediction_exports_created": false,
+      "workbench_writes": false,
+      "image_sha256": "3d0b716d9ef4613e60c793962f6c9e1f6388b55b10c9b32673244efe9ce33c3a",
+      "reference_sha256": "6a0ddffb08de3d92731a35be519e852e46a0d060faed9efedbd1d243a8b13ef7"
+    },
+    "independent_three_dimensional_readback": {
+      "status": "complete",
+      "observed_utc": "2026-11-04T08:57:40.435488+00:00",
+      "full_3px_requirements_passed": true,
+      "row": {
+        "method": "anchor_subset_priority",
+        "pallet_objects_matched": 2259,
+        "pallet_reference_objects": 3672,
+        "pallet_points_covered": 139492,
+        "pallet_reference_points": 168738,
+        "pallet_candidates": 5921,
+        "pallet_union_pixels": 24159834,
+        "person_points_covered_by_pallet": 2184,
+        "person_reference_points": 304357,
+        "checks": {
+          "strict_instance_gain_over_previous_best": true,
+          "point_coverage_not_below_previous_best": true,
+          "person_off_class_not_above_previous_best": true,
+          "original_minimum_two_percentage_point_gain": true,
+          "original_count_ratio_limit": true,
+          "original_union_area_limit": true,
+          "original_person_cross_class_limit": true,
+          "all_original_candidates_preserved": true
+        },
+        "passed_numeric_and_preservation_gates": true,
+        "raw_point_coverage_nonregression_every_image": true,
+        "eligible": true
+      },
+      "all588_original_comparison_fields_recomputed_exactly": true,
+      "every_image_3px_point_and_person_counts_equal_four_crop": true,
+      "source_comparison_sha256": "e4c1c040f06c4914ce7c609c1448c1541e64365367b5400fa48c303b7cef8357",
+      "frozen_plan_sha256": "b6b5144cb967178847472018b8b73c0fea1540a87d3c47d2c248dd6c8c0d4065",
+      "diagnostic_limitations": {
+        "zero_pixel_pallet_coverage_change": -1,
+        "six_pixel_person_cross_change": 4
+      },
+      "source_recipe_is_in_separate_worktree": true,
+      "live_workbench_default_adopted": false,
+      "new_model_calls": 0,
+      "full_rerun_performed": false,
+      "scope": "independent readback of completed same-capture reference consistency, not independent accuracy"
+    },
+    "selector_not_installed_in_running_workbench": true,
+    "reference_and_predictions_not_modified": true
+  }
 }

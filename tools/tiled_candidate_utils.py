@@ -189,7 +189,8 @@ def augment_candidates(baseline, proposals, width, height, minimum_score=.8, add
 
 
 def augment_preserving_selected(original, selected, proposals, width, height,
-        minimum_score=.5, addition_ratio=.5, nms_iou=.8, maximum_person_overlap=None):
+        minimum_score=.5, addition_ratio=.5, nms_iou=.8, maximum_person_overlap=None,
+        ranking_scores=None,dynamic_diversity=False):
     """Keep previously selected masks, using only the original remaining budget."""
     if selected[:len(original)] != original or len(selected) < len(original):
         raise ValueError('Selected candidates must retain the entire original prefix')
@@ -205,11 +206,15 @@ def augment_preserving_selected(original, selected, proposals, width, height,
     remaining = budget-already_added
     # A prefix of the same greedy ranking has identical choices at any smaller
     # budget; no reference geometry is involved in choosing the retained masks.
-    augmented, _ = augment_candidates(selected, proposals, width, height,
+    augmented, proposal_info = augment_candidates(selected, proposals, width, height,
         minimum_score=minimum_score, addition_ratio=1., nms_iou=nms_iou,
-        maximum_person_overlap=maximum_person_overlap)
+        maximum_person_overlap=maximum_person_overlap,ranking_scores=ranking_scores,
+        dynamic_diversity=dynamic_diversity)
     additions = augmented[len(selected):][:remaining]
-    return deepcopy(selected)+additions, {'baseline_candidates_preserved': True,
+    info={'baseline_candidates_preserved': True,
         'previously_selected_candidates_preserved': True, 'original_pallets': original_pallets,
         'original_addition_budget': budget, 'previous_additions': already_added,
         'remaining_addition_budget': remaining, 'added_pallets': len(additions)}
+    for key in ('maximum_predicted_person_overlap','proposals_rejected_by_predicted_person','ranking_source','dynamic_diversity'):
+        if key in proposal_info:info[key]=proposal_info[key]
+    return deepcopy(selected)+additions,info

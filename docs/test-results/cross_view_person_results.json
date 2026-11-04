@@ -1,6 +1,6 @@
 {
   "status": "full_expansion_failed_person_nonincrease_not_adopted",
-  "observed_utc": "2026-11-04T11:46:50.965610+00:00",
+  "observed_utc": "2026-11-04T11:53:12.852753+00:00",
   "tests_passed": 388,
   "tests_skipped": 0,
   "tuning_images": 20,
@@ -596,5 +596,29 @@
     }
   },
   "full_comparison_sha256": "3c67932122a98c5fd04d799bd9ac7484fc3eb2fa1af8471f1f8af73d46c5740f",
-  "full_audit_sha256": "8493918577c4eba99cc17824e58a7a3f02bdbf5c701edcec05c7dfd57374e82a"
+  "full_audit_sha256": "8493918577c4eba99cc17824e58a7a3f02bdbf5c701edcec05c7dfd57374e82a",
+  "post_score_secondary_control": {
+    "status": "complete_no_gain_vs_accepted_2298",
+    "pre_frozen_predictions": true,
+    "new_predictions_created": false,
+    "new_model_calls": 0,
+    "evaluated_images": 588,
+    "changed_shape_set_images_vs_accepted": 12,
+    "tuning20_shape_sets_equal_accepted": true,
+    "pallet_objects_matched": 2298,
+    "pallet_points_covered": 139492,
+    "person_points_covered_by_pallet": 2184,
+    "pallet_candidates": 6328,
+    "pallet_union_pixels": 24168150,
+    "all_original_eight_checks_passed": true,
+    "strict_gain_vs_accepted_2298": false,
+    "all_images_both_classes_all_radii_point_counts_exact": true,
+    "old_four_literal_prefix": true,
+    "approved_13_pallet5_people_retained": true,
+    "cross_view_primary_failed_and_unchanged": true,
+    "adopted": false,
+    "default_enabled": false,
+    "comparison_sha256": "5d414c3bac3908e79cf8ac1da9851dcfa5c9ed3003d49646a87c981b07132f72",
+    "plan_sha256": "84405c31ebea9bb5189f04c5dbd4868e367be19e13a9cc5a84ba64012eeff805"
+  }
 }

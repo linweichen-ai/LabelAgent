@@ -100,5 +100,40 @@
   "workbench_writes": false,
   "current_full_plan_unchanged": true,
   "raw_media_uploaded": false,
-  "scope": "Post-score human category confirmation and model-anchored region agreement; not independent dense accuracy or extra instance count"
+  "scope": "Post-score human category confirmation and model-anchored region agreement; not independent dense accuracy or extra instance count",
+  "full_final_region_coverage_known": true,
+  "current_full_posthoc_readback": {
+    "status": "complete",
+    "rows": [
+      {
+        "method": "original_person_15cm_control",
+        "model_anchor_pixels": 231,
+        "anchor_pixels_covered_by_pallet_union": 231,
+        "anchor_region_coverage_fraction": 1.0,
+        "maximum_candidate_iou_to_model_anchor": 1.0,
+        "exact_model_anchor_raster_retained": true
+      },
+      {
+        "method": "crop_person_direct_control",
+        "model_anchor_pixels": 231,
+        "anchor_pixels_covered_by_pallet_union": 231,
+        "anchor_region_coverage_fraction": 1.0,
+        "maximum_candidate_iou_to_model_anchor": 1.0,
+        "exact_model_anchor_raster_retained": true
+      },
+      {
+        "method": "crop_person_15cm_veto",
+        "model_anchor_pixels": 231,
+        "anchor_pixels_covered_by_pallet_union": 231,
+        "anchor_region_coverage_fraction": 1.0,
+        "maximum_candidate_iou_to_model_anchor": 1.0,
+        "exact_model_anchor_raster_retained": true
+      }
+    ],
+    "original_joint_primary_passed": false,
+    "full_final_region_coverage_known": true,
+    "posthoc_to_frozen_primary": true,
+    "original_3D_scores_changed": false,
+    "independent_boundary_truth": false
+  }
 }

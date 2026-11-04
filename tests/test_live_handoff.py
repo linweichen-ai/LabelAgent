@@ -4,6 +4,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 
 spec = importlib.util.spec_from_file_location('maintain', Path(__file__).resolve().parents[1] / 'tools/maintain_live_handoff.py')
 m = importlib.util.module_from_spec(spec)
@@ -11,6 +12,55 @@ spec.loader.exec_module(m)
 
 
 class HandoffChecks(unittest.TestCase):
+    def test_linked_artifacts_are_scoped_versioned_and_deduplicated(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            home = root / 'deliverables/handoff'
+            control = root / 'control'
+            control.mkdir()
+            source = root / 'outputs/labelagent_example/picture.png'
+            source.parent.mkdir(parents=True)
+            source.write_bytes(b'first-image')
+            denied = source.with_name('auth.png')
+            denied.write_bytes(b'private-auth-screen')
+            outside = root / 'other/private.png'
+            outside.parent.mkdir()
+            outside.write_bytes(b'outside')
+            transcript = home / '05_对话记录/chat.txt'
+            transcript.parent.mkdir(parents=True)
+            transcript.write_text('\n'.join(f'[image]({p.as_posix()})' for p in (source, denied, outside)), encoding='utf-8')
+            config = {'handoff': str(home), 'control': str(control), 'media_workspace': str(root),
+                      'artifact_stable_seconds': 0}
+            self.assertEqual(len(m.collect_delivered_artifacts(config)), 1)
+            self.assertEqual(m.collect_delivered_artifacts(config), [])
+            source.write_bytes(b'new-version')
+            self.assertEqual(len(m.collect_delivered_artifacts(config)), 1)
+            files = list((home / '03_图片').rglob('*.png'))
+            self.assertEqual(len(files), 2)
+            self.assertNotIn(b'private-auth-screen', [p.read_bytes() for p in files])
+
+    def test_important_notifications_quiet_when_unchanged_and_deduplicate_failures(self):
+        with tempfile.TemporaryDirectory() as folder:
+            config = {'control': folder, 'handoff': str(Path(folder) / 'handoff')}
+            sync = {'producer_commit': 'first', 'commit': 'mirror'}
+            observation = {'scores': {}, 'primary_588_passed': None}
+            threads = [{'id': 'thread', 'latest_message_utc': '2026-11-04T07:00:00Z'}]
+            with mock.patch.object(m, 'notify_desktop', return_value={'status': 'submitted'}) as notify:
+                m.report_changes(config, sync, observation, threads, [])
+                m.report_changes(config, sync, observation, threads, [])
+                notify.assert_not_called()
+                sync['producer_commit'] = 'second'
+                m.report_changes(config, sync, observation, threads, [])
+                self.assertEqual(notify.call_count, 1)
+                m.report_changes(config, sync, observation, threads, [])
+                self.assertEqual(notify.call_count, 1)
+                failure = {'error_type': 'RuntimeError', 'message': 'fetch failed'}
+                m.report_failure(config, failure)
+                m.report_failure(config, failure)
+                self.assertEqual(notify.call_count, 2)
+                m.report_changes(config, sync, observation, threads, [])
+                self.assertEqual(notify.call_count, 3)
+
     def test_credential_message_is_omitted(self):
         self.assertNotIn('secret-example', m.safe_message('password: secret-example'))
         self.assertNotIn('secret-example', m.safe_message('密码 secret-example'))

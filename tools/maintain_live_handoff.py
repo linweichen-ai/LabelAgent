@@ -17,6 +17,8 @@ import subprocess
 import time
 import zipfile
 from datetime import datetime, timezone, timedelta
+from urllib.parse import unquote
+from html.parser import HTMLParser
 
 TZ = timezone(timedelta(hours=8))
 METHODS = ('pallet_baseline', 'four_crop_control', 'spatial_component_mass_control',
@@ -90,6 +92,7 @@ def digest(path):
 
 def git(repo, *args, check=True):
     result = subprocess.run(['git', '-C', str(repo), *args], capture_output=True, stdin=subprocess.DEVNULL,
+                            creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
                             encoding='utf-8', errors='replace', timeout=150,
                             env={**os.environ, 'GIT_TERMINAL_PROMPT': '0', 'GCM_INTERACTIVE': 'Never'})
     if check and result.returncode:
@@ -142,10 +145,11 @@ def export_threads(config, state):
         st = path.stat()
         previous = state.get(item['id'], {})
         target = Path(config['handoff']) / '05_对话记录' / (item['id'] + '.txt')
-        if previous.get('size') == st.st_size and target.exists():
+        if (previous.get('size') == st.st_size and target.exists()
+                and 'important_updates' in previous.get('summary', {})):
             results.append(previous['summary'])
             continue
-        messages, lines, last = 0, [], None
+        messages, lines, last, updates = 0, [], None, []
         with path.open(encoding='utf-8') as f:
             for line in f:
                 try:
@@ -173,11 +177,195 @@ def export_threads(config, state):
                 messages += 1
                 last = event.get('timestamp')
                 lines.append(f"[{last}] {'用户' if role == 'user' else '助手'}\n{text}\n")
+                if role == 'assistant' and re.search(r'完成|通过|结果|失败|出错|无法|已建|重要|需要您', text):
+                    updates.append({'time': last, 'text': text[:500]})
         atomic(target, '仅导出用户与助手可见文本；不含工具输出，凭据消息省略。\n\n' + '\n'.join(lines))
-        summary = {'id': item['id'], 'messages_exported': messages, 'latest_message_utc': last}
+        summary = {'id': item['id'], 'messages_exported': messages, 'latest_message_utc': last,
+                   'important_updates': updates[-5:]}
         state[item['id']] = {'size': st.st_size, 'summary': summary}
         results.append(summary)
     return results
+
+
+class LocalMediaReferences(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.paths = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag in ('img', 'video', 'source'):
+            self.paths.extend(v for k, v in attrs if k in ('src', 'poster') and v)
+
+
+def collect_delivered_artifacts(config):
+    """Collect local outputs explicitly linked in the watched chats, never tool logs."""
+    workspace = Path(config.get('media_workspace', Path(config['handoff']).parents[1])).resolve()
+    home = Path(config['handoff'])
+    control = Path(config['control'])
+    old = read_json(control / 'delivered_artifacts.json', {})
+    entries = dict(old)
+    candidates = set()
+    extensions = {'.png', '.jpg', '.jpeg', '.gif', '.mp4', '.webm', '.json', '.md', '.txt'}
+    def approved(path):
+        try:
+            resolved = path.resolve()
+            rel = resolved.relative_to(workspace)
+        except (ValueError, OSError):
+            return None
+        if len(rel.parts) < 3 or rel.parts[0] != 'outputs' or not rel.parts[1].startswith('labelagent_'):
+            return None
+        if re.search(r'cnb|auth|credential|token|login|browser.profile', str(rel), re.I):
+            return None
+        return resolved if resolved.is_file() else None
+    for transcript in (home / '05_对话记录').glob('*.txt'):
+        text = shared_bytes(transcript).decode('utf-8')
+        for match in re.finditer(r'\]\(([^\n]*?)\)', text):
+            raw = unquote(match.group(1).strip().strip('<>'))
+            if not re.match(r'^[A-Za-z]:[/\\]', raw):
+                continue
+            path = approved(Path(raw))
+            if not path:
+                continue
+            if path.suffix.lower() == '.html':
+                parser = LocalMediaReferences()
+                parser.feed(shared_bytes(path).decode('utf-8', errors='replace'))
+                for item in parser.paths:
+                    if re.match(r'^(?:https?:|data:|//)', item):
+                        continue
+                    target = approved(path.parent / unquote(item))
+                    if target and target.suffix.lower() in extensions:
+                        candidates.add(target)
+            elif path.suffix.lower() in extensions:
+                candidates.add(path)
+    for gallery_root in config.get('artifact_gallery_roots', []):
+        for index in Path(gallery_root).glob('*/index.html'):
+            path = approved(index)
+            if not path:
+                continue
+            parser = LocalMediaReferences()
+            parser.feed(shared_bytes(path).decode('utf-8', errors='replace'))
+            for item in parser.paths:
+                if re.match(r'^(?:https?:|data:|//)', item):
+                    continue
+                target = approved(path.parent / unquote(item))
+                if target and target.suffix.lower() in extensions:
+                    candidates.add(target)
+    existing = {}
+    for folder in ('03_图片', '04_视频', '09_新增结果'):
+        for p in (home / folder).rglob('*'):
+            if p.is_file():
+                existing[digest(p)] = p.relative_to(home).as_posix()
+    added = []
+    for source in sorted(candidates):
+        info = source.stat()
+        key = str(source)
+        previous = old.get(key, {})
+        if previous.get('size') == info.st_size and previous.get('mtime_ns') == info.st_mtime_ns:
+            if (home / previous['destination']).exists():
+                continue
+        if time.time() - info.st_mtime < config.get('artifact_stable_seconds', 10):
+            continue
+        if info.st_size > 512 * 1024 * 1024:
+            continue
+        data = shared_bytes(source)
+        after = source.stat()
+        if (after.st_size, after.st_mtime_ns) != (info.st_size, info.st_mtime_ns):
+            continue
+        suffix = source.suffix.lower()
+        if suffix in ('.md', '.txt', '.json'):
+            text = data.decode('utf-8', errors='replace')
+            if safe_message(text) == '[含账户或凭据信息的消息已省略]':
+                continue
+        sha = hashlib.sha256(data).hexdigest()
+        if sha in existing:
+            destination = existing[sha]
+        else:
+            group = '04_视频/对话新增' if suffix in ('.mp4', '.webm') else (
+                '03_图片/对话新增' if suffix in ('.png', '.jpg', '.jpeg', '.gif') else '09_新增结果')
+            destination = group + '/' + source.stem[:75] + '_' + sha[:12] + suffix
+            atomic(home / destination, data)
+            existing[sha] = destination
+            added.append(destination)
+        entries[key] = {'size': info.st_size, 'mtime_ns': info.st_mtime_ns,
+                        'sha256': sha, 'destination': destination}
+    write_json(control / 'delivered_artifacts.json', entries)
+    write_json(home / '06_核验/新增资料来源.json', {'files': entries})
+    return added
+
+
+def notify_desktop(config, title, body):
+    script = config.get('notification_script')
+    if not script:
+        return {'status': 'not_configured'}
+    payload = Path(config['control']) / 'notification_payload.json'
+    write_json(payload, {'title': title, 'body': body[:220]})
+    try:
+        result = subprocess.run(['powershell.exe', '-NoProfile', '-ExecutionPolicy', 'Bypass',
+                                 '-File', script, '-Payload', str(payload)],
+                                capture_output=True, stdin=subprocess.DEVNULL,
+                                creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
+                                timeout=20, encoding='utf-8', errors='replace')
+        return {'status': 'submitted' if result.returncode == 0 else 'unavailable',
+                'exit_code': result.returncode}
+    except (OSError, subprocess.TimeoutExpired):
+        return {'status': 'unavailable'}
+
+
+def record_important(config, event):
+    control = Path(config['control'])
+    home = Path(config['handoff'])
+    notices = read_json(control / 'important_history.json', [])
+    event = {'time': now(), **event}
+    event['desktop_notification'] = notify_desktop(config, 'LabelAgent · ' + event['title'], event['body'])
+    notices.append(event)
+    write_json(control / 'important_history.json', notices)
+    write_json(home / '06_核验/重要进展历史.json', notices)
+    atomic(home / '08_重要进展.txt', '\n\n'.join(
+        f"[{v['time']}] {v['title']}\n{v['body']}" for v in reversed(notices)))
+    return event
+
+
+def report_changes(config, sync, observation, threads, added):
+    path = Path(config['control']) / 'notice_state.json'
+    prior = read_json(path, {})
+    latest = {t['id']: t['latest_message_utc'] for t in threads}
+    state = {'producer_commit': sync['producer_commit'], 'scores': observation['scores'],
+             'primary_588_passed': observation['primary_588_passed'], 'threads': latest,
+             'status': 'ok'}
+    reasons, details = [], []
+    if prior:
+        if prior.get('producer_commit') != state['producer_commit']:
+            reasons.append('新代码已同步')
+        if prior.get('scores') != state['scores'] or prior.get('primary_588_passed') != state['primary_588_passed']:
+            reasons.append('验证结果有更新')
+        if prior.get('status') == 'error':
+            reasons.append('双平台同步已恢复')
+        for thread in threads:
+            seen = prior.get('threads', {}).get(thread['id'])
+            for update in thread.get('important_updates', []):
+                if seen and update.get('time') and update['time'] > seen:
+                    text = re.sub(r'\[([^\]]*)\]\([^)]*\)', r'\1', update['text'])
+                    details.append(re.sub(r'\s+', ' ', text)[:180])
+        if details:
+            reasons.append('对话有重要进展')
+    if added:
+        reasons.append(f'新增{len(added)}份媒体或结果')
+    if reasons:
+        record_important(config, {'title': '；'.join(reasons),
+                         'body': (details[-1] if details else '两端提交已核对一致，新增资料已归入交接目录。'),
+                         'commit': sync['commit'], 'new_artifacts': added})
+    write_json(path, state)
+
+
+def report_failure(config, result):
+    path = Path(config['control']) / 'notice_state.json'
+    state = read_json(path, {})
+    key = result.get('error_type', '') + ':' + result.get('message', '')
+    if state.get('error_key') != key or state.get('status') != 'error':
+        record_important(config, {'title': '同步需要关注',
+                         'body': '自动同步遇到问题，已保留现有文件并将重试。详情见交接目录后台同步状态。'})
+    state.update(status='error', error_key=key)
+    write_json(path, state)
 
 
 def compact_score(value):
@@ -377,8 +565,8 @@ def build_handoff(config, observation, sync, threads):
                'duplicate_first_second_link_corrected_by_user': True, 'third_distinct_link_pending': False})
     conclusion = observation['primary_588_passed']
     status = '尚未取得完整588图验收结论' if conclusion is None else ('通过冻结同集标准' if conclusion else '未通过冻结同集标准')
-    pictures = sorted(p for p in (home / '03_图片').rglob('*') if p.suffix.lower() in ('.png', '.jpg'))
-    videos = sorted((home / '04_视频').glob('*.mp4'))
+    pictures = sorted(p for p in (home / '03_图片').rglob('*') if p.suffix.lower() in ('.png', '.jpg', '.jpeg', '.gif'))
+    videos = sorted(p for p in (home / '04_视频').rglob('*') if p.suffix.lower() in ('.mp4', '.webm'))
     scores = '\n'.join(f"{method}: 实例{v['matched']}/{v['reference_objects']}，点{v['covered_points']}/{v['reference_points']}，人员交叉{v['person_cross_points']}，候选{v['candidates']}"
                        for method, v in observation['scores'].items())
     failed = 'person_off_class_not_above_previous_best' in observation.get('primary_failed_checks', [])
@@ -408,6 +596,8 @@ GitHub/CNB交接分支：{sync['branch']}；两端提交已回读一致。
 3. 备份与持续更新
 整个目录可直接备份；先打开00_交接入口.html。02_代码保留按提交命名的源码ZIP；06_核验含SHA256清单和提交核对。
 同步器每60秒检查已提交代码、对话文本、真实进度与新增素材；原工作台和实验进程由原任务维护。
+同时收集对话中明确交付的本地图片、视频和结果摘要；新增资料按内容摘要保留版本，图片视频只留本地。
+重要结果、代码更新、新资料及同步失败会发送Windows桌面通知，并记录在08_重要进展.txt；无变化不重复提醒。
 机器休眠、进程退出或网络故障期间不能更新；恢复后续传。只有失败、完成或有实质变化时需要关注。
 凭据消息和工具输出不进入对话导出；图片、视频和对话记录只保留本地，飞书上传由用户进行。
 用户已补齐第三个独立链接，三段对话均已读取，脱敏文本在05_对话记录。
@@ -457,7 +647,9 @@ def cycle(config):
     write_json(control / 'thread_offsets.json', state)
     observation = public_observation(config)
     collect_media(config)
+    added = collect_delivered_artifacts(config)
     sync = sync_git(config, observation)
+    report_changes(config, sync, observation, threads, added)
     write_json(home / '06_核验/后台同步状态.json', {'status': 'ok', 'checked_at': now(),
                'pid': os.getpid(), 'interval_seconds': config.get('interval_seconds', 60),
                'stop_file': str(control / 'STOP'), 'last_verified_commit': sync['commit']})
@@ -505,6 +697,10 @@ def main():
                       'error_type': type(exc).__name__, 'message': str(exc)[:250]}
             write_json(control / 'last_error.json', result)
             write_json(Path(config['handoff']) / '06_核验/后台同步状态.json', result)
+            try:
+                report_failure(config, result)
+            except Exception:
+                pass  # Notification failure must not prevent the next sync attempt.
             log_event(result)
             if not args.watch:
                 raise

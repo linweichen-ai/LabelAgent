@@ -135,5 +135,18 @@
     "posthoc_to_frozen_primary": true,
     "original_3D_scores_changed": false,
     "independent_boundary_truth": false
+  },
+  "reference_composition_diagnostic": {
+    "report": "confirmed-region-composition.md",
+    "region_observations": 19,
+    "A1_person_reference_counts_by_radius": {
+      "0": 4,
+      "3": 6,
+      "6": 8
+    },
+    "full_extra_person_reference_points_exactly_A1_support": true,
+    "A1_erode3_has_no_visible_reference_points": true,
+    "original_scores_or_gates_changed": false,
+    "reference_corruption_proven": false
   }
 }

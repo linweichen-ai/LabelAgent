@@ -1,11 +1,11 @@
 {
-  "observed_utc": "2026-11-04T07:25:40.835078+00:00",
-  "phase": "score_raw_certificate_components",
+  "observed_utc": "2026-11-04T07:30:58.129199+00:00",
+  "phase": "complete",
   "primary_method": "raw_certificate_priority",
   "primary_parameters_frozen_before_new_requests": true,
   "primary_20_tuning_passed": true,
   "primary_32_expansion_passed": true,
-  "primary_588_passed": null,
+  "primary_588_passed": false,
   "completed_expansion_images": 32,
   "full_validation_images": 588,
   "remaining_images": 556,
@@ -19,10 +19,10 @@
   "merge_readiness_verified": true,
   "resumed_cached_responses": 2169,
   "new_requests_this_resumed_process": 2835,
-  "full_pipeline_waiter_verified_live": true,
+  "full_pipeline_waiter_verified_live": false,
   "adoption_gate_readiness_verified": true,
   "remaining_collection_complete": true,
-  "full_pipeline_verified_live": true,
+  "full_pipeline_verified_live": false,
   "completed_remaining_selection_images": 556,
   "full_predictions_merged_images": 588,
   "all_full_predictions_frozen_before_scoring": true,
@@ -45,8 +45,8 @@
       "missing_prediction_images": 0
     },
     "raw_certificate_components": {
-      "status": "running",
-      "evaluated_images": 188,
+      "status": "complete",
+      "evaluated_images": 588,
       "planned_images": 588,
       "missing_prediction_images": 0
     },
@@ -63,5 +63,14 @@
       "missing_prediction_images": 0
     }
   },
-  "historical_four_crop_all_images_classes_radii_and_groups_exact": true
+  "historical_four_crop_all_images_classes_radii_and_groups_exact": true,
+  "full_pipeline_complete": true,
+  "scored_images_per_method": 588,
+  "completed_score_methods": 5,
+  "adopted": false,
+  "failed_primary_checks": [
+    "person_off_class_not_above_previous_best"
+  ],
+  "final_report": "raw-coverage-full-588.md",
+  "all_original_data_and_confirmed_annotations_preserved": true
 }

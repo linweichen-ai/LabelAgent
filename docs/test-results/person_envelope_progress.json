@@ -1,0 +1,18 @@
+{
+  "observed_utc": "2026-11-04T07:55:14.797827+00:00",
+  "phase": "select_remaining",
+  "owner_process_verified_live": true,
+  "primary_method": "convex_hull_guard",
+  "primary_frozen_before_full_prediction": true,
+  "full_validation_images": 588,
+  "completed_expansion_images": 32,
+  "remaining_planned_images": 556,
+  "completed_remaining_prediction_images": 240,
+  "full_evaluation_complete": false,
+  "primary_full_passed": null,
+  "secondary_can_replace_primary": false,
+  "new_model_requests": 0,
+  "full_plan_sha256": "0beda4cbb670272860fce2f73188f512fbff93ac3aa91d0ee7813eab568d38ba",
+  "production_default_changed": false,
+  "scope": "Same previously used capture; not independent pixel accuracy"
+}

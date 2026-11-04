@@ -573,12 +573,14 @@ def build_handoff(config, observation, sync, threads):
                        for method, v in observation['scores'].items())
     failed = 'person_off_class_not_above_previous_best' in observation.get('primary_failed_checks', [])
     reason = '主方案人员交叉覆盖超过旧四分块，未通过；保持原标准，不采用为默认。' if failed else ''
+    publication = ('云端同步待重试；本页包含最新本地资料。上次双端已核对提交：' + str(sync.get('last_verified_commit', '无'))
+                   if sync.get('sync_pending') else '两端提交已回读一致。')
     text = f'''LabelAgent 交接说明（可直接整理到飞书）
 更新时间：{now()}
 
 当前代码：{sync['commit']}
 工作源提交：{sync['producer_commit']}
-GitHub/CNB交接分支：{sync['branch']}；两端提交已回读一致。
+GitHub/CNB交接分支：{sync['branch']}；{publication}
 
 1. 数据和效果
 当前主测常熟0920数据：152时刻、四相机、608图。labels全帧作为参考；Task3为历史另一套数据。
@@ -651,7 +653,20 @@ def cycle(config):
     observation = public_observation(config)
     collect_media(config)
     added = collect_delivered_artifacts(config)
-    sync = sync_git(config, observation)
+    try:
+        sync = sync_git(config, observation)
+    except Exception as error:
+        # Local deliverables must remain available during a remote outage.
+        prior = read_json(control / 'latest.json', {})
+        pending = {**prior, 'commit': git(config['repo'], 'rev-parse', 'HEAD')[0],
+                   'producer_commit': prior.get('producer_commit', '未核对'),
+                   'branch': config['publish_branch'], 'both_verified': False,
+                   'sync_pending': True, 'last_verified_commit': prior.get('commit'),
+                   'error': safe_message(str(error))[:250]}
+        counts = build_handoff(config, observation, pending, threads)
+        write_json(control / 'local_handoff.json', {'status': 'local_ready_remote_pending',
+                   'checked_at': now(), 'commit': pending['commit'], **counts})
+        raise
     report_changes(config, sync, observation, threads, added)
     write_json(home / '06_核验/后台同步状态.json', {'status': 'ok', 'checked_at': now(),
                'pid': os.getpid(), 'interval_seconds': config.get('interval_seconds', 60),

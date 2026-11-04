@@ -1,6 +1,6 @@
 {
-  "observed_utc": "2026-11-04T06:19:04.710399+00:00",
-  "phase": "collection_resumed_full_postprocessor_waiting",
+  "observed_utc": "2026-11-04T06:52:02.653811+00:00",
+  "phase": "replay_remaining",
   "primary_method": "raw_certificate_priority",
   "primary_parameters_frozen_before_new_requests": true,
   "primary_20_tuning_passed": true,
@@ -11,14 +11,16 @@
   "remaining_images": 556,
   "completed_dense_requests_for32": 288,
   "planned_remaining_dense_requests": 5004,
-  "completed_remaining_dense_requests": 2629,
+  "completed_remaining_dense_requests": 5004,
   "cached_four_crop_responses_available": 2352,
   "scope": "same-capture validation, not independent external accuracy",
-  "completed_remaining_dense_images": 292,
-  "remaining_process_verified_live": true,
+  "completed_remaining_dense_images": 556,
+  "remaining_process_verified_live": false,
   "merge_readiness_verified": true,
   "resumed_cached_responses": 2169,
-  "new_requests_this_resumed_process": 460,
+  "new_requests_this_resumed_process": 2835,
   "full_pipeline_waiter_verified_live": true,
-  "adoption_gate_readiness_verified": true
+  "adoption_gate_readiness_verified": true,
+  "remaining_collection_complete": true,
+  "full_pipeline_verified_live": true
 }

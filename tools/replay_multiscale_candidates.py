@@ -1,7 +1,7 @@
 """Reuse bound real SAM crop responses for image-only multiscale proposals.
 
 Reads no 3D reference labels, workbench API, or model API.
-Explicit --lidar-study, --lidar-novelty-study or --lidar-point-only-study adds label-free raw sensor data;
+Explicit sensor study options add unlabelled raw data; --lidar-spatial-study uses local 3D components.
 all existing image-only modes retain their original behavior.
 All proposals remain unconfirmed; default workbench behavior is unchanged.
 """
@@ -27,9 +27,10 @@ def read(path):return json.loads(path.read_text(encoding='utf-8'))
 def replay(args):
     novelty_study=bool(getattr(args,'lidar_novelty_study',False))
     point_only_study=bool(getattr(args,'lidar_point_only_study',False))
-    point_study=novelty_study or point_only_study
+    spatial_study=bool(getattr(args,'lidar_spatial_study',False))
+    point_study=novelty_study or point_only_study or spatial_study
     uses_lidar=args.lidar_study or point_study
-    if sum((args.preserve_four,args.diagnostic_all_proposals,args.ranking_study,args.diversity_study,args.preserved_ranking_study,args.containment_study,args.lidar_study,novelty_study,point_only_study))>1:
+    if sum((args.preserve_four,args.diagnostic_all_proposals,args.ranking_study,args.diversity_study,args.preserved_ranking_study,args.containment_study,args.lidar_study,novelty_study,point_only_study,spatial_study))>1:
         raise ValueError('Preserved-budget, unbounded diagnostic and ranking study modes are mutually exclusive')
     dataset=Path(args.dataset).resolve()
     manifest=read(dataset/'import_manifest.json')
@@ -113,6 +114,13 @@ def replay(args):
             'hybrid_dynamic_control':{'pool':'both','maximum_person_overlap':0.,'point_policy':'dynamic'},
             **{'point_only_'+mode+'_guard':{'pool':'both','maximum_person_overlap':0.,'point_policy':mode,'point_base':'point_only'}
                 for mode in ('fraction','dynamic')}}
+    if spatial_study:
+        from spatial_candidate_evidence import SpatialPointNovelty,projected_spatial_sensor,SPATIAL_RECIPE
+        methods={'four_crop_control':methods['four_crop_control'],
+            'multiscale_novelty_control':{'pool':'both','maximum_person_overlap':None},
+            'hybrid_dynamic_control':{'pool':'both','maximum_person_overlap':0.,'point_policy':'dynamic'},
+            **{'spatial_'+policy+'_guard':{'pool':'both','maximum_person_overlap':0.,'spatial_policy':policy}
+                for policy in ('all_dynamic','component_mass','component_fraction')}}
     output=Path(args.output).resolve()
     output.mkdir(parents=True,exist_ok=False)
     plan={'created_utc':datetime.now(timezone.utc).isoformat(),'version':1,
@@ -168,6 +176,14 @@ def replay(args):
                 'unsupported':'factor0.5 on chosen base; never hard-reject missing points'},
             fixed_prefix='original SAM baseline only; original masks/scores and all adoption gates retained',
             ablation='only remove pixel-IoU priority multiplier; NMS at0.8, budget0.5 and predicted-person protection unchanged')
+    if spatial_study:
+        plan.update(spatial_recipe=SPATIAL_RECIPE,
+            spatial_helper_sha256=digest(Path(__file__).with_name('spatial_candidate_evidence.py')),
+            spatial_priority={'all_dynamic':'base*(0.5+0.5*novel_all_points/(5+novel_all_points))',
+                'component_mass':'base*(0.5+0.5*coherence*novel_foreground_points/(5+novel_foreground_points))',
+                'component_fraction':'base*(0.5+0.5*coherence*novel_foreground_points/(5+foreground_points))',
+                'all_methods':'dynamic coverage after actual acceptance; no height/floor filtering; missing support factor0.5'},
+            fixed_prefix='original SAM baseline only; scores/geometry/all adoption gates unchanged')
     save(output/'study_plan.json',plan)
     plan_hash=digest(output/'study_plan.json')
     before=digest(Path(args.state_file)) if args.state_file else None
@@ -231,6 +247,10 @@ def replay(args):
                 point_contexts={mode:RawPointNovelty(seed,pools[0]+pools[1],width,height,sensor,base_mode=mode)
                     for mode in ({'hybrid','point_only'} if point_only_study else {'hybrid'})}
                 run['lidar_evidence'][-1]['point_novelty']={mode:context.summary() for mode,context in point_contexts.items()}
+            if spatial_study:
+                spatial_sensor=projected_spatial_sensor(xyz,sensor_info[int(topic.split('/')[2].split('_')[-1])])
+                spatial_context=SpatialPointNovelty(seed,pools[0]+pools[1],width,height,spatial_sensor)
+                run['lidar_evidence'][-1]['spatial']=spatial_context.summary()
             inputs.setdefault(topic,{})[frame]=row['sha256']
             for method,settings in methods.items():
                 proposals=pools[0] if settings['pool']=='four' else pools[1] if settings['pool']=='dense' else pools[0]+pools[1]
@@ -245,6 +265,8 @@ def replay(args):
                     if settings['point_policy']=='dynamic':
                         priority=None;callback=point_context.dynamic_priority
                     else:priority=point_context.priorities(settings['point_policy'])
+                if 'spatial_policy' in settings:
+                    priority=None;callback=spatial_context.callback(settings['spatial_policy'])
                 if settings.get('export_all'):
                     candidates=deepcopy(seed+proposals)
                     if len({shape['id'] for shape in candidates})!=len(candidates):
@@ -265,6 +287,8 @@ def replay(args):
                     info['ranking_source']='raw_LiDAR_height_and_original_predictions; model scores retained'
                 if 'point_policy' in settings:
                     info['ranking_source']='raw_LiDAR_novel_low_point_support; model scores retained'
+                if 'spatial_policy' in settings:
+                    info['ranking_source']='unlabelled_full_height_spatial_point_support; original scores retained'
                 if candidates[:len(seed)]!=seed:raise ValueError('An original candidate changed')
                 maps[method].setdefault(topic,{})[frame]=candidates
                 run['postprocessing'].append({'frame':row['frame'],'topic':topic,'method':method,**info})
@@ -297,6 +321,7 @@ def replay(args):
                 run['raw_sensor_sources_unchanged']=True
             except Exception:run['raw_sensor_sources_unchanged']=False
             run['sensor_helper_unchanged']=digest(Path(__file__).with_name('lidar_candidate_evidence.py'))==plan['sensor_helper_sha256']
+            if spatial_study:run['spatial_helper_unchanged']=digest(Path(__file__).with_name('spatial_candidate_evidence.py'))==plan['spatial_helper_sha256']
             sensor_audit.stop()
             run['reference_files_opened']=len(sensor_audit.denied)
             run['raw_source_files_read']=sorted(sensor_audit.sources)
@@ -319,4 +344,5 @@ if __name__=='__main__':
     parser.add_argument('--lidar-study',action='store_true')
     parser.add_argument('--lidar-novelty-study',action='store_true')
     parser.add_argument('--lidar-point-only-study',action='store_true')
+    parser.add_argument('--lidar-spatial-study',action='store_true')
     raise SystemExit(replay(parser.parse_args()))

@@ -162,10 +162,27 @@ def actual_image_encoding(inputs,processor,image_count):
     return rows,[math.prod(row)//(merge**2) for row in rows]
 
 
+def trim_idle_cuda_cache(torch_module,enabled):
+    """Release large unused allocator blocks, while keeping the live model."""
+    if not enabled:
+        return {'enabled':False,'performed':False,'released_reserved_bytes':0}
+    allocated=int(torch_module.cuda.memory_allocated())
+    reserved=int(torch_module.cuda.memory_reserved())
+    performed=reserved-allocated>=512*1024**2
+    if performed:
+        torch_module.cuda.empty_cache()
+    after_allocated=int(torch_module.cuda.memory_allocated())
+    after_reserved=int(torch_module.cuda.memory_reserved())
+    return {'enabled':True,'performed':performed,'allocated_bytes_before':allocated,
+        'reserved_bytes_before':reserved,'allocated_bytes_after':after_allocated,
+        'reserved_bytes_after':after_reserved,
+        'released_reserved_bytes':max(0,reserved-after_reserved)}
+
+
 class TransformersBackend:
     backend_name = "transformers_local_cuda"
 
-    def __init__(self, model_dir, model_id, max_pixels=512*32*32, context_budget=8192, quantization="none",memory_fraction=None,probe_reserve_mib=None,allow_single_image_budget_override=False):
+    def __init__(self, model_dir, model_id, max_pixels=512*32*32, context_budget=8192, quantization="none",memory_fraction=None,probe_reserve_mib=None,allow_single_image_budget_override=False,idle_cache_release=False):
         if allow_single_image_budget_override and (quantization!='nf4' or memory_fraction is not None):
             raise ValueError('Single-image overrides cannot bypass a shared probe allocator limit')
         import torch
@@ -181,6 +198,8 @@ class TransformersBackend:
         self.process_allocator_fraction=memory_fraction
         self.probe_reserved_free_mib=probe_reserve_mib
         self.allow_single_image_budget_override=bool(allow_single_image_budget_override)
+        self.idle_cache_release=bool(idle_cache_release)
+        self.last_cache_release=None
         self.model_config_sha256=hashlib.sha256(config_raw).hexdigest()
         self.model_id = model_id
         self.context_budget = context_budget
@@ -269,6 +288,8 @@ def create_app(backend):
                        probe_reserved_free_mib=getattr(backend,"probe_reserved_free_mib",None),
                        image_token_budget=getattr(backend, "image_token_budget", None),
                        supports_single_image_budget_override=getattr(backend,'allow_single_image_budget_override',False),
+                       idle_cache_release=getattr(backend,'idle_cache_release',False),
+                       last_cache_release=getattr(backend,'last_cache_release',None),
                        last_inference_stats=getattr(backend, "last_inference_stats", None))
 
     @app.get("/v1/models")
@@ -308,6 +329,13 @@ def create_app(backend):
             content, prompt_tokens, completion_tokens = backend.generate(messages, images, max_tokens, **options)
             # Snapshot while this request still owns the inference lock.
             request_stats=deepcopy(getattr(backend,'last_inference_stats',None) or {})
+            # generate() has returned, so temporary tensors no longer occupy
+            # live Python locals. The lock still excludes a new inference.
+            try:
+                cache_release=trim_idle_cuda_cache(getattr(backend,'torch',None),getattr(backend,'idle_cache_release',False))
+            except RuntimeError as error:
+                cache_release={'enabled':True,'performed':False,'error_type':type(error).__name__}
+            backend.last_cache_release=cache_release
         finally:
             inference_lock.release()
         return jsonify(id="chatcmpl-" + uuid.uuid4().hex, object="chat.completion", created=int(time.time()),
@@ -323,6 +351,7 @@ def create_app(backend):
                        "actual_image_token_counts":request_stats.get('actual_image_token_counts'),
                        "image_grid_thw":request_stats.get('image_grid_thw'),
                        "inference_stats":request_stats,
+                       "cache_release":cache_release,
                        "seconds": round(time.monotonic() - start, 3)})
 
     @app.errorhandler(ValueError)
@@ -384,6 +413,7 @@ if __name__ == "__main__":
                                  max_pixels=image_tokens*32*32,
                                  quantization=args.quantization,memory_fraction=fraction,
                                  probe_reserve_mib=reserve if is_probe else None,
-                                 allow_single_image_budget_override=args.profile=='local-8gb')
+                                 allow_single_image_budget_override=args.profile=='local-8gb',
+                                 idle_cache_release=args.profile=='local-8gb')
     if is_probe:engine.probe_lifetime_seconds=seconds
     create_app(engine).run(host="127.0.0.1", port=args.port, threaded=True)

@@ -113,6 +113,9 @@ def main():
             'queries':queries,'bootstrap_rules':rules,'max_review_rounds':cfg['max_rounds'],
             'compact_response_max_tokens':cfg.get('review_max_tokens',768),
             'brief_hole_reasons':bool(cfg.get('brief_hole_reasons',False)),
+            'hole_review_batch_size':cfg.get('hole_review_batch_size'),
+            'hole_review_adapter_sha256':sha(Path(__file__).with_name('bounded_review.py')) if cfg.get('hole_review_batch_size') else None,
+            'operation_cap_per_whole_agent_round':3,
             'sam_text_reused_across_arms_with_identical_input_and_query':True,
             'mask_refinement':'up to three component-interior positive clicks, two automatic exterior clicks, original prior mask; reject invalid or warned output',
             'missing_class_completion':'same seven fixed SAM3 text queries, only for classes absent from Mask2Former seeds; accounted separately',
@@ -150,6 +153,12 @@ def main():
                 progress('waiting_for_existing_model_request', attempt=attempt+1);time.sleep(3)
         raise RuntimeError('Existing model request remained busy')
     workflow._chat = cooperative_chat
+    if cfg.get('hole_review_batch_size'):
+        from bounded_review import install_review_batches
+        batches=[]
+        def batch_record(value):
+            batches.append(value);save(out/'batch_reviews.json',batches)
+        install_review_batches(workflow,cfg['hole_review_batch_size'],3,batch_record)
     all_seeds, drafts, refinement = {}, {}, []
     with workflow.trace_calls(log_call):
         # All model-network stages precede VLM review to limit normal GPU swaps.

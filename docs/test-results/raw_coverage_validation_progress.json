@@ -1,0 +1,13 @@
+{
+  "observed_utc": "2026-11-04T04:56:45.671039+00:00",
+  "phase": "dense_collection_complete_cache_replay_or_prediction_pending",
+  "primary_method": "raw_certificate_priority",
+  "validation_plan_sha256": "0f5f473f7af73d85dd25908eef13dd64d501919015d7ad120ca01988419bdf9a",
+  "primary_parameters_frozen_before_new_requests": true,
+  "planned_images": 32,
+  "completed_new_SAM_requests": 288,
+  "planned_new_SAM_requests": 288,
+  "reused_four_crop_responses": 128,
+  "primary_passed_validation": null,
+  "scope": "same capture expanded validation, not independent external accuracy"
+}

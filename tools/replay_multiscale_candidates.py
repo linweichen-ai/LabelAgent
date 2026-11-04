@@ -24,6 +24,21 @@ from tiled_candidate_utils import augment_candidates,augment_preserving_selected
 def digest(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def read(path):return json.loads(path.read_text(encoding='utf-8'))
 
+def select_replay_frames(plans,selection=None):
+    if len(plans)!=2 or plans[0]['cameras']!=plans[1]['cameras']:
+        raise ValueError('Two source plans with identical cameras required')
+    if selection is None:
+        if plans[0]['frames']!=plans[1]['frames']:
+            raise ValueError('Different source frame cohorts require an explicit shared subset')
+        return list(plans[0]['frames'])
+    chosen=[int(value) for value in selection.split(',') if value.strip()]
+    if not chosen or len(chosen)!=len(set(chosen)):
+        raise ValueError('Nonempty distinct explicit frames required')
+    if any(not set(chosen)<=set(plan['frames']) for plan in plans):
+        raise ValueError('Every explicit frame must occur in both complete source studies')
+    return sorted(chosen)
+
+
 def replay(args):
     novelty_study=bool(getattr(args,'lidar_novelty_study',False))
     point_only_study=bool(getattr(args,'lidar_point_only_study',False))
@@ -52,8 +67,7 @@ def replay(args):
                 or plan['baseline_prediction_sha256']!=digest(baseline_path)
                 or plan['archive_sha256']!=manifest['archive_sha256'] or plan['query']!='pallet'):
             raise ValueError('Source study is incomplete or its binding changed')
-    if plans[0]['frames']!=plans[1]['frames'] or plans[0]['cameras']!=plans[1]['cameras']:
-        raise ValueError('Source studies must use identical frames and cameras')
+    selected_frames=select_replay_frames(plans,getattr(args,'frames',None))
     grids=[plan.get('grid_spec',{'divisions':2,'crop_fraction':plan['crop_fraction']}) for plan in plans]
     if grids!=[{'divisions':2,'crop_fraction':.6},{'divisions':3,'crop_fraction':.45}]:
         raise ValueError('This comparison requires the original four-crop and new nine-crop studies in order')
@@ -133,9 +147,9 @@ def replay(args):
     output=Path(args.output).resolve()
     output.mkdir(parents=True,exist_ok=False)
     plan={'created_utc':datetime.now(timezone.utc).isoformat(),'version':1,
-        'frames':plans[0]['frames'],'cameras':plans[0]['cameras'],
-        'planned_images':len(plans[0]['frames'])*len(plans[0]['cameras']),
-        'new_model_requests':0,'historical_real_SAM3_responses_reused':sum(p['planned_SAM3_requests'] for p in plans),
+        'frames':selected_frames,'cameras':plans[0]['cameras'],
+        'planned_images':len(selected_frames)*len(plans[0]['cameras']),
+        'new_model_requests':0,'historical_real_SAM3_responses_reused':len(selected_frames)*len(plans[0]['cameras'])*sum(g['divisions']**2 for g in grids),
         'parent_plan_sha256':[p['plan_sha256'] for p in progress],
         'methods':methods,'diagnostic_only':args.diagnostic_all_proposals,
         'priority_seed':'previous_four_crop_selection' if args.preserved_ranking_study else 'original_candidates',
@@ -347,6 +361,7 @@ if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     for name in ('dataset','candidates-json','prediction-receipt','output'):parser.add_argument('--'+name,required=True)
     parser.add_argument('--study',action='append',required=True)
+    parser.add_argument('--frames',help='Explicit shared frame subset; source plans and response receipts remain unchanged')
     parser.add_argument('--state-file')
     parser.add_argument('--preserve-four',action='store_true')
     parser.add_argument('--diagnostic-all-proposals',action='store_true')

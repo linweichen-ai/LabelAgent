@@ -1,6 +1,6 @@
 {
-  "observed_utc": "2026-11-04T06:52:02.653811+00:00",
-  "phase": "replay_remaining",
+  "observed_utc": "2026-11-04T07:19:04.018094+00:00",
+  "phase": "score_pallet_baseline",
   "primary_method": "raw_certificate_priority",
   "primary_parameters_frozen_before_new_requests": true,
   "primary_20_tuning_passed": true,
@@ -22,5 +22,21 @@
   "full_pipeline_waiter_verified_live": true,
   "adoption_gate_readiness_verified": true,
   "remaining_collection_complete": true,
-  "full_pipeline_verified_live": true
+  "full_pipeline_verified_live": true,
+  "completed_remaining_selection_images": 556,
+  "full_predictions_merged_images": 588,
+  "all_full_predictions_frozen_before_scoring": true,
+  "historical_candidate_export_control_exact": true,
+  "preservation_source_files_checked": 1023,
+  "preservation_previous_sessions_checked": 7,
+  "approved_reference_shapes_preserved": 15,
+  "workbench_annotation_writes": false,
+  "score_progress_snapshot": {
+    "pallet_baseline": {
+      "status": "complete",
+      "evaluated_images": 588,
+      "planned_images": 588,
+      "missing_prediction_images": 0
+    }
+  }
 }

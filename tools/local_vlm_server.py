@@ -5,9 +5,12 @@ Contract tests use an explicitly named test double, not real inference.
 """
 import argparse
 import base64
+from contextlib import contextmanager
+from copy import deepcopy
 import hashlib
 import io
 import json
+import math
 import os
 import sys
 from pathlib import Path
@@ -121,10 +124,50 @@ def require_runtime_probe_headroom(torch_module,fraction,reserve_mib):
         raise RuntimeError('Shared GPU headroom changed; this probe did not start a new inference')
 
 
+def checked_single_image_budget(value,backend,image_count):
+    if type(value) is not int or not 64<=value<=1024:
+        raise ValueError('image_token_budget must be an integer from 64 to 1024')
+    if (not getattr(backend,'allow_single_image_budget_override',False)
+            or getattr(backend,'quantization',None)!='nf4'
+            or getattr(backend,'process_allocator_fraction',None) is not None or image_count!=1):
+        raise ValueError('Image budget override requires the local NF4 single-image mode')
+    return value
+
+
+@contextmanager
+def temporary_image_budget(processor,budget):
+    if budget is None:
+        yield
+        return
+    if type(budget) is not int or not 64<=budget<=1024:
+        raise ValueError('Invalid temporary image token budget')
+    original=processor.image_processor.size
+    processor.image_processor.size={**original,'longest_edge':budget*32*32}
+    try:
+        yield
+    finally:
+        processor.image_processor.size=original
+
+
+def actual_image_encoding(inputs,processor,image_count):
+    grid=inputs.get('image_grid_thw')
+    if grid is None:raise RuntimeError('Image processor did not report its actual image grid')
+    rows=grid.tolist()
+    merge=int(processor.image_processor.merge_size)
+    if merge<1 or len(rows)!=image_count:
+        raise RuntimeError('Image processor grid does not match the supplied images')
+    if any(len(row)!=3 or any(type(value) is not int or value<1 for value in row)
+            or math.prod(row)%(merge**2) for row in rows):
+        raise RuntimeError('Invalid actual image grid')
+    return rows,[math.prod(row)//(merge**2) for row in rows]
+
+
 class TransformersBackend:
     backend_name = "transformers_local_cuda"
 
-    def __init__(self, model_dir, model_id, max_pixels=512*32*32, context_budget=8192, quantization="none",memory_fraction=None,probe_reserve_mib=None):
+    def __init__(self, model_dir, model_id, max_pixels=512*32*32, context_budget=8192, quantization="none",memory_fraction=None,probe_reserve_mib=None,allow_single_image_budget_override=False):
+        if allow_single_image_budget_override and (quantization!='nf4' or memory_fraction is not None):
+            raise ValueError('Single-image overrides cannot bypass a shared probe allocator limit')
         import torch
         from transformers import AutoProcessor, Qwen3VLForConditionalGeneration, BitsAndBytesConfig
         model_dir = Path(model_dir).resolve()
@@ -137,6 +180,7 @@ class TransformersBackend:
         configure_cuda_fraction(torch,memory_fraction)
         self.process_allocator_fraction=memory_fraction
         self.probe_reserved_free_mib=probe_reserve_mib
+        self.allow_single_image_budget_override=bool(allow_single_image_budget_override)
         self.model_config_sha256=hashlib.sha256(config_raw).hexdigest()
         self.model_id = model_id
         self.context_budget = context_budget
@@ -162,12 +206,16 @@ class TransformersBackend:
         self.last_inference_stats = None
         self.model_loaded = True
 
-    def generate(self, messages, images, max_tokens, response_schema=None):
+    def generate(self, messages, images, max_tokens, response_schema=None,image_token_budget=None):
         started = time.monotonic()
         require_runtime_probe_headroom(self.torch,self.process_allocator_fraction,self.probe_reserved_free_mib)
+        if image_token_budget is not None:
+            checked_single_image_budget(image_token_budget,self,len(images))
         self.torch.cuda.reset_peak_memory_stats()
         text = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-        inputs = self.processor(text=[text], images=images, return_tensors="pt", padding=True)
+        with temporary_image_budget(self.processor,image_token_budget):
+            inputs = self.processor(text=[text], images=images, return_tensors="pt", padding=True)
+        image_grids,image_counts=actual_image_encoding(inputs,self.processor,len(images))
         inputs.pop("token_type_ids", None)
         prompt_tokens = int(inputs["input_ids"].shape[-1])
         if prompt_tokens + max_tokens > self.context_budget:
@@ -199,6 +247,8 @@ class TransformersBackend:
                                      "constraint_setup_seconds": round(constraint_setup_seconds, 3),
                                      "generation_seconds": round(generation_seconds, 3),
                                      "structured_output": response_schema is not None}
+        self.last_inference_stats.update(image_grid_thw=image_grids,actual_image_token_counts=image_counts,
+            effective_image_token_budget=self.image_token_budget if image_token_budget is None else image_token_budget)
         return content, prompt_tokens, int(generated.shape[-1])
 
 
@@ -218,6 +268,7 @@ def create_app(backend):
                        probe_lifetime_seconds=getattr(backend,"probe_lifetime_seconds",None),
                        probe_reserved_free_mib=getattr(backend,"probe_reserved_free_mib",None),
                        image_token_budget=getattr(backend, "image_token_budget", None),
+                       supports_single_image_budget_override=getattr(backend,'allow_single_image_budget_override',False),
                        last_inference_stats=getattr(backend, "last_inference_stats", None))
 
     @app.get("/v1/models")
@@ -237,11 +288,15 @@ def create_app(backend):
         if body.get("temperature", 0) != 0:
             raise ValueError("This deterministic service accepts temperature 0")
         messages, images = decode_messages(body.get("messages"))
+        image_budget=None
+        if 'image_token_budget' in body:
+            image_budget=checked_single_image_budget(body['image_token_budget'],backend,len(images))
         if not inference_lock.acquire(blocking=False):
             return jsonify(error={"message": "Local VLM is busy"}), 503
         start = time.monotonic()
         try:
             options = {}
+            if image_budget is not None:options['image_token_budget']=image_budget
             if "response_format" in body:
                 format_spec = body["response_format"]
                 if not isinstance(format_spec, dict) or format_spec.get("type") != "json_schema":
@@ -251,6 +306,8 @@ def create_app(backend):
                     raise ValueError("response_format must contain a JSON schema")
                 options["response_schema"] = wrapper["schema"]
             content, prompt_tokens, completion_tokens = backend.generate(messages, images, max_tokens, **options)
+            # Snapshot while this request still owns the inference lock.
+            request_stats=deepcopy(getattr(backend,'last_inference_stats',None) or {})
         finally:
             inference_lock.release()
         return jsonify(id="chatcmpl-" + uuid.uuid4().hex, object="chat.completion", created=int(time.time()),
@@ -259,6 +316,13 @@ def create_app(backend):
             usage={"prompt_tokens": prompt_tokens, "completion_tokens": completion_tokens,
                    "total_tokens": prompt_tokens + completion_tokens},
             local_vlm={"backend": backend.backend_name, "image_count": len(images),
+                       "quantization":getattr(backend,'quantization','test_double'),
+                       "model_config_sha256":getattr(backend,'model_config_sha256',None),
+                       "requested_image_token_budget":image_budget,
+                       "effective_image_token_budget":request_stats.get('effective_image_token_budget',getattr(backend,'image_token_budget',None)),
+                       "actual_image_token_counts":request_stats.get('actual_image_token_counts'),
+                       "image_grid_thw":request_stats.get('image_grid_thw'),
+                       "inference_stats":request_stats,
                        "seconds": round(time.monotonic() - start, 3)})
 
     @app.errorhandler(ValueError)
@@ -319,6 +383,7 @@ if __name__ == "__main__":
     engine = TransformersBackend(args.model_dir, args.model_id, context_budget=args.context_budget,
                                  max_pixels=image_tokens*32*32,
                                  quantization=args.quantization,memory_fraction=fraction,
-                                 probe_reserve_mib=reserve if is_probe else None)
+                                 probe_reserve_mib=reserve if is_probe else None,
+                                 allow_single_image_budget_override=args.profile=='local-8gb')
     if is_probe:engine.probe_lifetime_seconds=seconds
     create_app(engine).run(host="127.0.0.1", port=args.port, threaded=True)

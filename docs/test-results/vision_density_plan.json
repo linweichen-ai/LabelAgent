@@ -1,6 +1,6 @@
 {
   "created_utc": "2026-11-04T01:02:50.564241+00:00",
-  "status": "prepared_not_model_tested",
+  "status": "completed_quality_failed",
   "model_config_sha256": "bec4b3d446efa05807365c9e1cec03ac590836879d02f3a6da879971154bdd3b",
   "quantization": "nf4",
   "model": "labelagent-vlm",
@@ -9,7 +9,7 @@
     1024
   ],
   "planned_real_requests": 40,
-  "completed_real_requests": 0,
+  "completed_real_requests": 40,
   "per_request_images": 1,
   "max_tokens": 192,
   "temperature": 0,
@@ -54,7 +54,7 @@
     "valid_schema"
   ],
   "preflight_must_fail_before_requests_if_server_does_not_explicitly_support_override": true,
-  "current_server_override_support_verified": false,
+  "current_server_override_support_verified": true,
   "workbench_config_modified": false,
   "higher_density_default_installed": false,
   "reference_status": "unconfirmed_functional_fixture_not_independent_2D_ground_truth",
@@ -65,5 +65,6 @@
   "views_per_case": 2,
   "fixture_sha256": "91438e566e68d3b53b4cfc2c0a11aefd7b2c38c8e43b0dd6a3ce9c85533ea143",
   "policy_order_counterbalanced": true,
-  "inputs_identical_within_policy_pairs": true
+  "inputs_identical_within_policy_pairs": true,
+  "results": "vision_density_results.json"
 }

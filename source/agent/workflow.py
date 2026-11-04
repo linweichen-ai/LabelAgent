@@ -235,7 +235,10 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
     payload = {"model": config["llm_model"], "temperature": 0,
                "messages": [{"role": "user", "content": content}]}
     if config.get("llm_prompt_profile") == "compact":
-        payload["max_tokens"] = 768
+        token_limit = config.get("llm_max_tokens", 768)
+        if type(token_limit) is not int or not 256 <= token_limit <= 4096:
+            raise ValueError("compact 模式 llm_max_tokens 须为 256～4096 的整数")
+        payload["max_tokens"] = token_limit
     if response_schema is not None:
         payload["response_format"] = {"type": "json_schema", "json_schema": {"name": "labelagent", "schema": response_schema, "strict": True}}
     request = urllib.request.Request(config["llm_url"].rstrip("/") + "/chat/completions",

@@ -1,0 +1,70 @@
+{
+  "status": "LOCAL_CROSS_SCENE_PROBE_COMPLETE",
+  "images": 3,
+  "real_model_forwards": 6,
+  "standalone_readback_real_forwards": 1,
+  "device": "cpu",
+  "GPU_model_requests": 0,
+  "new_training_updates": 0,
+  "workbench_writes": 0,
+  "model_weights_unchanged": true,
+  "protected_state_before_after_equal": true,
+  "scope": "Three current capture images; qualitative domain-transfer probe, not pixel accuracy or independent benchmark.",
+  "predicted_area_is_not_accuracy": true,
+  "standalone_postprocess_pixelwise_exact": true,
+  "observations": "Floor proposals appeared; visible suspected wall-as-floor mistakes and pallet misses. Not enabled as workbench default.",
+  "class_names": [
+    "pallet",
+    "person",
+    "floor",
+    "slope",
+    "ego",
+    "other_robot",
+    "cargo_floor"
+  ],
+  "new_vehicle_class_supported_by_these_weights": false,
+  "rows": [
+    {
+      "method": "R5_default",
+      "case": "A",
+      "floor_predicted_area_percent": 37.207,
+      "person_predicted_area_percent": 15.729,
+      "pallet_predicted_area_percent": 0.0
+    },
+    {
+      "method": "R5_default",
+      "case": "B",
+      "floor_predicted_area_percent": 36.641,
+      "person_predicted_area_percent": 16.042,
+      "pallet_predicted_area_percent": 0.0
+    },
+    {
+      "method": "R5_default",
+      "case": "C",
+      "floor_predicted_area_percent": 41.018,
+      "person_predicted_area_percent": 9.625,
+      "pallet_predicted_area_percent": 0.0
+    },
+    {
+      "method": "R11_boundary_preserving",
+      "case": "A",
+      "floor_predicted_area_percent": 37.207,
+      "person_predicted_area_percent": 15.729,
+      "pallet_predicted_area_percent": 0.0
+    },
+    {
+      "method": "R11_boundary_preserving",
+      "case": "B",
+      "floor_predicted_area_percent": 36.641,
+      "person_predicted_area_percent": 16.042,
+      "pallet_predicted_area_percent": 0.0
+    },
+    {
+      "method": "R11_boundary_preserving",
+      "case": "C",
+      "floor_predicted_area_percent": 41.014,
+      "person_predicted_area_percent": 9.625,
+      "pallet_predicted_area_percent": 0.341
+    }
+  ]
+}

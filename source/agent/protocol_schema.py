@@ -23,7 +23,7 @@ def description_schema(labels):
                 "prompts": {"type": "array", "items": prompt, "minItems": len(labels), "maxItems": len(labels)}})
 
 
-def review_schema(labels, shapes, holes, sam_pending=False):
+def review_schema(labels, shapes, holes, sam_pending=False, keyed_holes=False, object_only=False):
     ids = [shape["id"] for shape in shapes]
     hole_ids = [item["id"] for item in holes]
     identifier = {"type": "integer", "enum": ids}
@@ -44,13 +44,23 @@ def review_schema(labels, shapes, holes, sam_pending=False):
                                    {"type": "array", "items": identifier, "minItems": 2, "maxItems": min(32, len(ids))}))
         if hole_ids:
             tools.append(operation(["fill_gap"], {"polygon": polygon, "hole_id": {"type": "string", "enum": hole_ids}}))
+    if object_only:
+        tools = [tool for tool in tools if set(tool['properties']['operation']['enum']) <= {'remove','reclassify','merge'}]
     assessments = {"type": "array", "maxItems": len(holes), "minItems": len(holes),
                    "items": obj({"hole_id": {"type": "string", "enum": hole_ids or ["unused"]},
                                  "semantic": {"type": "string", "enum": ["ground", "non_ground"]}, "reason": reason()})}
+    if keyed_holes and holes:
+        assessments = obj({f"h{index}": obj({
+            "semantic": {"type":"string", "enum":["ground", "non_ground"]},
+            "reason": bounded_text(60)}) for index, _ in enumerate(holes)})
     operations = {"type": "array", "maxItems": 3 if tools else 0,
                   "items": {"anyOf": tools} if tools else {"type": "object"}}
     properties = {"status": {"type": "string", "enum": ["continue", "done"]}, "reason": reason(),
                   "hole_assessment": assessments, "operations": operations}
+    if object_only and not holes:
+        # The installed decoder does not enforce maxItems=0.  An identity-only
+        # review has no hole judgement field, so it cannot invent a placeholder.
+        properties.pop('hole_assessment')
     if sam_pending:
         properties["sam_assessment"] = obj({"improved": {"type": "boolean"}, "reason": reason()})
     return obj(properties)

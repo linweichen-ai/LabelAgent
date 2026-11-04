@@ -264,8 +264,12 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
         raw["text"] = content[:20000]
     content = content.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
     try:
-        result = json.loads(content)
-    except json.JSONDecodeError as error:
+        if config.get("llm_keyed_holes", False):
+            from .keyed_holes import reject_duplicate_json_keys
+            result = json.loads(content, object_pairs_hook=reject_duplicate_json_keys)
+        else:
+            result = json.loads(content)
+    except ValueError as error:
         raise ModelOutputError(f"大模型未返回有效 JSON：{error}", content[:20000]) from error
     if not isinstance(result, dict):
         raise ModelOutputError("大模型必须返回 JSON 对象", content[:20000])
@@ -571,6 +575,10 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
         if not ground.issubset(filled) and result["status"] == "done":
             errors.append(f"GPT 不能在仍有属于地面的未修补空洞时返回 done：{sorted(ground - filled)}")
         result["hole_assessment"] = assessment
+    else:
+        if result.get('hole_assessment', []) != []:
+            errors.append('No holes were supplied; hole_assessment must be empty, never an invented unused ID')
+        result['hole_assessment'] = []
     if sam_comparison is not None:
         assessment = result.get("sam_assessment")
         if (not isinstance(assessment, dict) or type(assessment.get("improved")) is not bool
@@ -637,7 +645,8 @@ def _review_exact_overlap(config, image, overlay, group, shapes, labels):
 
 
 def review(config, image, overlay, description, shapes, labels, history, reference=None,
-           sam_comparison=None, hole_image=None, holes=None, gap_images=None, duplicate_groups=None):
+           sam_comparison=None, hole_image=None, holes=None, gap_images=None, duplicate_groups=None,
+           candidate_geometry=None):
     # Enabled only by the isolated evaluation tool while quality tests continue.
     if not config.get("llm_duplicate_review", False):
         duplicate_groups = None
@@ -659,7 +668,7 @@ def review(config, image, overlay, description, shapes, labels, history, referen
         f"\n历史决策及工具结果（最近 8 轮）：{json.dumps(history[-8:], ensure_ascii=False)}")
     holes = holes or []
     hole_report = [{**{key: value for key, value in item.items() if key != "mask"},
-                    "number": index} for index, item in enumerate(holes, 1)]
+                    "number": item.get("number", index)} for index, item in enumerate(holes, 1)]
     prompt += f"\n本轮从当前候选 mask 提取的封闭空洞和开放缺口清单：{json.dumps(hole_report, ensure_ascii=False)}"
     prompt += ("\n开放缺口只是几何候选，绝不自动等同于地面。即使内部空洞清单为空，"
                "也必须检查与设备排除区域相连的标线漏标。图像 3 左半是原图加缺口，"
@@ -709,6 +718,8 @@ def review(config, image, overlay, description, shapes, labels, history, referen
         payload = {"target_size": [width, height], "labels": labels, "rules": description.get("description", ""),
                    "prompts": description["prompts"], "candidates": shapes, "recent_history": history[-3:],
                    "holes": hole_report, "reference_provided": reference is not None}
+        if config.get("llm_keyed_holes", False) and holes:
+            payload["hole_handles"] = {f"h{i}": h["id"] for i,h in enumerate(holes)}
         if reference is not None:
             payload["reference_counts"] = {label: sum(shape.get("label") == label for shape in reference["annotations"]) for label in labels}
             if floor_task:
@@ -723,6 +734,13 @@ def review(config, image, overlay, description, shapes, labels, history, referen
                                       for i, (_, reports) in enumerate(gap_images)]
         prompt = COMPACT_REFERENCE_RULES + COMPACT_REVIEW_TOOLS + "\nInput: " + json.dumps(
             payload, ensure_ascii=False, separators=(",", ":"))
+        if config.get("llm_keyed_holes", False) and holes:
+            prompt += ("\nHole transport format overrides the general array example: hole_assessment is an OBJECT. "
+                       "Use every required h0/h1/... key in hole_handles exactly once, each containing semantic and reason. "
+                       "These handles map only to listed original hole IDs. Image numbers remain the provided number. "
+                       "Do not copy long IDs into assessment keys. Keep reasons to three evidence words. "
+                       "Operations still use original shape IDs, original hole IDs and valid target-pixel polygons. "
+                       "Do not return done while any assessed ground hole remains unfilled.")
         if not floor_task and not holes:
             prompt += ("\n本轮只标注提供的物体类别，不标注地面。图片1是目标原图，图片2是目标候选；"
                        "图片3、4分别是参考原图和参考轮廓，覆盖此前通用图号说明。"
@@ -730,6 +748,12 @@ def review(config, image, overlay, description, shapes, labels, history, referen
                        "reference_counts是参考图的真实标注数量，目标图数量不同完全正常，不能因此修改。")
         prompt += ("\nreason最多一句话，每轮最多3个有视觉证据的局部操作。仅允许使用candidates中的ID。"
                    "所有reason使用英文。无法可靠定位缺陷时保持候选，返回done且operations为空。不要复述所有实例，不要输出额外解释。")
+        if config.get('llm_object_only_review', False):
+            prompt += ('\nThis is object identity review only: remove/reclassify/merge are the only tools. '
+                       'A separate per-gap visual review handles floor repair. Do not output polygons or infer missing floor. '
+                       'Return ONLY status, reason, operations; omit hole_assessment because no holes are requested here.')
+        elif not holes:
+            prompt += '\nThere are NO supplied holes. hole_assessment MUST be []. Never invent unused or any placeholder ID.'
     if duplicate_groups:
         prompt += ("\nExact same-class raster-mask overlap groups: "
                    + json.dumps(duplicate_groups, separators=(",", ":"))
@@ -757,14 +781,21 @@ def review(config, image, overlay, description, shapes, labels, history, referen
                 options = {}
                 if config.get("llm_prompt_profile") == "compact":
                     from .protocol_schema import review_schema
-                    options["response_schema"] = review_schema(labels, shapes, holes, sam_comparison is not None)
+                    options["response_schema"] = review_schema(labels, shapes, holes, sam_comparison is not None,
+                        keyed_holes=bool(config.get("llm_keyed_holes", False)),
+                        object_only=bool(config.get('llm_object_only_review',False)))
                 last_result = chat(config, request_prompt, image, extra_images=extra_images, **options)
             except ModelOutputError as error:
                 last_result = {"raw_text": error.raw_text}
                 last_error = error
             else:
                 try:
-                    return _validate_review_result(last_result, holes, shapes, labels, width, height,
+                    if config.get("llm_keyed_holes", False) and holes:
+                        from .keyed_holes import decode_keyed_assessments
+                        decoded_result = decode_keyed_assessments(last_result, holes)
+                    else:
+                        decoded_result = last_result
+                    return _validate_review_result(decoded_result, holes, shapes, labels, width, height,
                                                    sam_comparison)
                 except ValueError as error:
                     last_error = error
@@ -1007,6 +1038,7 @@ class AnnotationAgent:
                     self.labels, self.audit, reference=self.reference, sam_comparison=comparison,
                     hole_image=hole_overlay(self.image, holes, self.shapes), holes=holes,
                     gap_images=gap_images,
+                    candidate_geometry=self.shapes,
                     duplicate_groups=(_exact_duplicate_groups(self.shapes, self.width, self.height)
                                       if self.config.get("llm_duplicate_review", False) else None))
                 if pending:

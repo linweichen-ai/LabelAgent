@@ -127,9 +127,12 @@ def _candidate_gap_regions(shape, width, height):
 def _valid_region(points, width, height):
     if not isinstance(points, list) or not 3 <= len(points) <= 2000:
         return False
-    return all(isinstance(point, list) and len(point) == 2 and
+    coordinates_valid = all(isinstance(point, list) and len(point) == 2 and
                all(isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value) for value in point) and
                0 <= point[0] < width and 0 <= point[1] < height for point in points)
+    if not coordinates_valid or len({tuple(p) for p in points}) < 3:
+        return False
+    return abs(float(cv2.contourArea(np.asarray(points,dtype=np.float32)))) > .01
 
 
 def valid_shape(shape, width, height):

@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "producer_commit": "a2cd111861e8713347aadd4a7d12953ba62958c8",
+  "cnb_progress_commit": "ea3b005abcf125aa22843f244362e06fde515b27",
+  "scope": "same-capture sparse projected reference agreement; not pixel accuracy",
+  "pipeline": {
+    "status": "complete",
+    "full_images": 588,
+    "primary_method": "raw_certificate_priority",
+    "completed_requests": 5004,
+    "completed_images": 556,
+    "last_completed_stage": "score_raw_certificate_components",
+    "all_full_predictions_frozen_before_scoring": true
+  },
+  "pipeline_process_verified_live": false,
+  "scores": {
+    "pallet_baseline": {
+      "images": 588,
+      "matched": 2020,
+      "reference_objects": 3672,
+      "covered_points": 133337,
+      "reference_points": 168738,
+      "candidates": 4280,
+      "person_cross_points": 2003
+    },
+    "four_crop_control": {
+      "images": 588,
+      "matched": 2249,
+      "reference_objects": 3672,
+      "covered_points": 139492,
+      "reference_points": 168738,
+      "candidates": 5684,
+      "person_cross_points": 2184
+    },
+    "spatial_component_mass_control": {
+      "images": 588,
+      "matched": 2294,
+      "reference_objects": 3672,
+      "covered_points": 141199,
+      "reference_points": 168738,
+      "candidates": 6017,
+      "person_cross_points": 2062
+    },
+    "raw_certificate_priority": {
+      "images": 588,
+      "matched": 2286,
+      "reference_objects": 3672,
+      "covered_points": 141174,
+      "reference_points": 168738,
+      "candidates": 6052,
+      "person_cross_points": 2193
+    },
+    "raw_certificate_components": {
+      "images": 588,
+      "matched": 2283,
+      "reference_objects": 3672,
+      "covered_points": 141206,
+      "reference_points": 168738,
+      "candidates": 6052,
+      "person_cross_points": 2194
+    }
+  },
+  "primary_588_passed": false,
+  "default_workbench_changed_by_sync": false,
+  "annotation_writes_by_sync": false,
+  "model_requests_by_sync": 0,
+  "original_gate_comparison_complete": true,
+  "video_verified": true
+}

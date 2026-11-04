@@ -1,6 +1,6 @@
 {
-  "observed_utc": "2026-11-04T07:19:04.018094+00:00",
-  "phase": "score_pallet_baseline",
+  "observed_utc": "2026-11-04T07:25:40.835078+00:00",
+  "phase": "score_raw_certificate_components",
   "primary_method": "raw_certificate_priority",
   "primary_parameters_frozen_before_new_requests": true,
   "primary_20_tuning_passed": true,
@@ -32,11 +32,36 @@
   "approved_reference_shapes_preserved": 15,
   "workbench_annotation_writes": false,
   "score_progress_snapshot": {
+    "four_crop_control": {
+      "status": "complete",
+      "evaluated_images": 588,
+      "planned_images": 588,
+      "missing_prediction_images": 0
+    },
     "pallet_baseline": {
       "status": "complete",
       "evaluated_images": 588,
       "planned_images": 588,
       "missing_prediction_images": 0
+    },
+    "raw_certificate_components": {
+      "status": "running",
+      "evaluated_images": 188,
+      "planned_images": 588,
+      "missing_prediction_images": 0
+    },
+    "raw_certificate_priority": {
+      "status": "complete",
+      "evaluated_images": 588,
+      "planned_images": 588,
+      "missing_prediction_images": 0
+    },
+    "spatial_component_mass_control": {
+      "status": "complete",
+      "evaluated_images": 588,
+      "planned_images": 588,
+      "missing_prediction_images": 0
     }
-  }
+  },
+  "historical_four_crop_all_images_classes_radii_and_groups_exact": true
 }

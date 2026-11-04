@@ -597,7 +597,7 @@ GitHub/CNB交接分支：{sync['branch']}；{publication}
 后续人员保护等试验的最新进展见08_重要进展.txt及07_文档，首轮结果作为历史对照保留。
 {scores}
 {reason}
-当前指标是稀疏三维参考投影一致性，不是二维像素准确率；尚无独立外部测试或权重微调结论。
+当前指标是稀疏三维参考投影一致性，不是二维像素准确率；本轮常熟采集未做权重微调。外部CVAT已训练模型的迁移测试另见新增报告，尚无独立外部测试结论。
 
 2. 图片和视频
 本文件夹包含 {len(pictures)} 张图片、{len(videos)} 个视频。
@@ -627,8 +627,17 @@ progress/dataset-comparison.md：历史里程碑和失败实验；test-results�
     atomic(home / '01_进度与飞书说明.txt', text)
     blocks = ['<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>LabelAgent 实时交接</title>',
               '<style>body{font:16px/1.7 "Microsoft YaHei",sans-serif;background:#f1f5f9;color:#172033;max-width:1100px;margin:30px auto;padding:24px}section{background:white;padding:24px;border-radius:14px;margin:20px 0}img{max-width:100%;border-radius:8px}video{width:100%}pre{white-space:pre-wrap}a{color:#1260bd}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}</style>',
-              '<h1>LabelAgent 实时交接</h1><section><pre>' + html.escape(text) + '</pre></section>',
-              '<section><h2>视频</h2>']
+              '<h1>LabelAgent 实时交接</h1>']
+    local_reports = sorted((home / '09_补充成果').rglob('index.html'),
+                           key=lambda p: p.stat().st_mtime, reverse=True)
+    if local_reports:
+        blocks.append('<section><h2>新增对照与诊断报告</h2>')
+        for report in local_reports:
+            rel = report.relative_to(home).as_posix()
+            label = report.relative_to(home).parts[1] + ' / ' + report.parent.name
+            blocks.append(f'<p><a href="{html.escape(rel)}">{html.escape(label)}</a></p>')
+        blocks.append('</section>')
+    blocks += ['<section><pre>' + html.escape(text) + '</pre></section>', '<section><h2>视频</h2>']
     for v in videos:
         rel = v.relative_to(home).as_posix()
         blocks.append(f'<h3>{html.escape(v.stem)}</h3><video controls preload="metadata" src="{html.escape(rel)}"></video>')

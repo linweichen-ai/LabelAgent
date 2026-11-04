@@ -1,0 +1,83 @@
+{
+  "frames": [
+    15,
+    45,
+    76,
+    105,
+    135
+  ],
+  "cameras": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "planned_images": 20,
+  "new_model_requests": 0,
+  "historical_real_SAM3_responses_reused": 260,
+  "parent_plan_sha256": [
+    "7514ee065534af6ae92443defa6ee749fb5b74121f8634379e2998936eefa51c",
+    "f87dec0b838ddb3acc2b23e11e81daa3899b640839d30f8dfd5e91b165ecac43"
+  ],
+  "methods": {
+    "four_crop_control": {
+      "pool": "four",
+      "maximum_person_overlap": null
+    },
+    "multiscale_novelty_control": {
+      "pool": "both",
+      "maximum_person_overlap": null
+    },
+    "novel_consensus_rank": {
+      "pool": "both",
+      "maximum_person_overlap": null,
+      "ranking": "novel_consensus"
+    },
+    "novel_consensus_rank_person_guard": {
+      "pool": "both",
+      "maximum_person_overlap": 0.0,
+      "ranking": "novel_consensus"
+    },
+    "dynamic_diversity_rank": {
+      "pool": "both",
+      "maximum_person_overlap": null,
+      "dynamic_diversity": true
+    },
+    "dynamic_diversity_rank_person_guard": {
+      "pool": "both",
+      "maximum_person_overlap": 0.0,
+      "dynamic_diversity": true
+    }
+  },
+  "fixed_parameters": {
+    "minimum_score": 0.5,
+    "addition_ratio": 0.5,
+    "nms_iou": 0.8
+  },
+  "ranking_specifications": {
+    "confidence": "original SAM3 confidence",
+    "consensus": "confidence*(0.5+0.5*max_mask_IoU_to_the_other_crop_scale)",
+    "novel_consensus": "confidence*(1-max_mask_IoU_to_original_pallets)*(0.5+0.5*cross_scale_IoU)",
+    "dynamic_diversity": "recompute confidence*(1-max_mask_IoU_to_original_and_accepted_pallets) after each addition",
+    "tie_breaking": "original model confidence then earlier proposal input index"
+  },
+  "prediction_uses_3D_reference": false,
+  "person_guard_source": "original SAM3 person predictions, not reference truth",
+  "code_sha256": "bc841f1da792dca8706d7dc976aa8fc90dbbe48f05eaef891c406bc84fc35166",
+  "postprocessor_sha256": "2727e7edb96f477acf86f1db0f3dcb58e96033776b98fb9316c8cf404dbdfe11",
+  "comparison_requires": {
+    "strict_instance_gain_over_previous_best": true,
+    "point_coverage_not_below_previous_best": true,
+    "person_off_class_not_above_previous_best": true,
+    "original_minimum_absolute_gain": 0.02,
+    "original_maximum_candidate_count_ratio": 1.5,
+    "original_maximum_union_area_ratio": 1.25,
+    "original_person_off_class_increase_limit": 0.005,
+    "all_original_candidates_preserved": true
+  },
+  "scope": "exploratory_same_capture_tuning_not_independent_accuracy",
+  "automatic_broader_run": false,
+  "status": "prediction_replay_in_progress_not_yet_scored",
+  "tests_passed": 234,
+  "adopted": false
+}

@@ -81,13 +81,47 @@ def _iou(first, second):
     return intersection/(first['area']+second['area']-intersection)
 
 
-def augment_candidates(baseline, proposals, width, height, minimum_score=.8, addition_ratio=.5, nms_iou=.8, maximum_person_overlap=None):
+def proposal_priorities(first_scale, second_scale, width, height, mode='confidence', baseline=None):
+    """Use confidence or geometric agreement with the other image-crop scale."""
+    if mode not in ('confidence','consensus','novel_consensus'):
+        raise ValueError('Unknown image-only proposal priority')
+    all_proposals=first_scale+second_scale
+    identifiers=[shape['id'] for shape in all_proposals]
+    if len(set(identifiers))!=len(identifiers):
+        raise ValueError('Cross-scale proposal IDs must be unique')
+    for index,shape in enumerate(all_proposals,1):
+        score=float(shape.get('score',-1))
+        if (shape.get('label')!='pallet' or not math.isfinite(score) or not 0<=score<=1
+                or not valid_shape({**shape,'id':index},width,height)):
+            raise ValueError('Invalid image-only priority input')
+    if mode=='confidence':
+        return {shape['id']:float(shape['score']) for shape in all_proposals}
+    if mode=='novel_consensus' and baseline is None:
+        raise ValueError('Novel consensus priorities require the original image predictions')
+    baseline_records=[_mask_record(shape,width,height) for shape in (baseline or []) if shape['label']=='pallet']
+    records=[[_mask_record(shape,width,height) for shape in group] for group in (first_scale,second_scale)]
+    priorities={}
+    for scale,group in enumerate((first_scale,second_scale)):
+        for shape,record in zip(group,records[scale]):
+            agreement=max((_iou(record,other) for other in records[1-scale]),default=0.)
+            novelty=1-max((_iou(record,old) for old in baseline_records),default=0.) if mode=='novel_consensus' else 1.
+            priorities[shape['id']]=float(shape['score'])*novelty*(.5+.5*agreement)
+    return priorities
+
+
+def augment_candidates(baseline, proposals, width, height, minimum_score=.8, addition_ratio=.5, nms_iou=.8, maximum_person_overlap=None, ranking_scores=None, dynamic_diversity=False):
     """Keep the baseline byte-equivalent as objects; append bounded novel masks."""
     if not 0 <= minimum_score <= 1 or not 0 < addition_ratio <= 1 or not 0 < nms_iou <= 1:
         raise ValueError('Invalid augmentation settings')
     if maximum_person_overlap is not None and (not math.isfinite(maximum_person_overlap)
             or not 0 <= maximum_person_overlap <= 1):
         raise ValueError('Invalid predicted-person overlap limit')
+    if ranking_scores is not None:
+        identifiers=[shape['id'] for shape in proposals]
+        if len(set(identifiers))!=len(identifiers) or set(ranking_scores)!=set(identifiers):
+            raise ValueError('Priority scores must bind every unique proposal ID exactly')
+        if any(not math.isfinite(float(value)) or not 0<=float(value)<=1 for value in ranking_scores.values()):
+            raise ValueError('Invalid image-only priority score')
     for index, shape in enumerate([*baseline, *proposals], 1):
         if not valid_shape({**shape, 'id': index}, width, height):
             raise ValueError('Invalid candidate geometry')
@@ -120,10 +154,20 @@ def augment_candidates(baseline, proposals, width, height, minimum_score=.8, add
         overlap = max((_iou(record, old) for old in existing), default=0.)
         if overlap >= nms_iou:
             continue
-        ranked.append((score*(1-overlap), score, -index, shape, record))
+        priority=score*(1-overlap) if ranking_scores is None else float(ranking_scores[shape['id']])
+        ranked.append((priority, score, -index, shape, record))
     ranked.sort(key=lambda item: item[:3], reverse=True)
     additions = []
-    for _, _, _, shape, record in ranked:
+    while ranked:
+        if dynamic_diversity:
+            def current_priority(item):
+                _,score,order,shape,record=item
+                base=score if ranking_scores is None else float(ranking_scores[shape['id']])
+                return (base*(1-max((_iou(record,old) for old in existing),default=0.)),score,order)
+            selected=max(range(len(ranked)),key=lambda index:current_priority(ranked[index]))
+        else:
+            selected=0
+        _, _, _, shape, record=ranked.pop(selected)
         if any(_iou(record, old) >= nms_iou for old in existing):
             continue
         if shape['id'] in {value['id'] for value in [*baseline, *additions]}:
@@ -137,6 +181,10 @@ def augment_candidates(baseline, proposals, width, height, minimum_score=.8, add
     if person_mask is not None:
         info.update(maximum_predicted_person_overlap=maximum_person_overlap,
                     proposals_rejected_by_predicted_person=rejected_by_person)
+    if ranking_scores is not None:
+        info['ranking_source']='explicit_image_only_priorities; original model scores retained'
+    if dynamic_diversity:
+        info['dynamic_diversity']='base priority*(1-max_mask_IoU_to_baseline_and_already_accepted_additions)'
     return deepcopy(baseline)+additions, info
 
 

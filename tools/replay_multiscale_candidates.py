@@ -17,14 +17,14 @@ from PIL import Image
 
 sys.path[:0]=[str(Path(__file__).resolve().parents[1]),str(Path(__file__).resolve().parent)]
 from run_local_agent_acceptance import load_image,save
-from tiled_candidate_utils import augment_candidates,augment_preserving_selected,remap_tile_result,tile_grid
+from tiled_candidate_utils import augment_candidates,augment_preserving_selected,proposal_priorities,remap_tile_result,tile_grid
 
 def digest(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def read(path):return json.loads(path.read_text(encoding='utf-8'))
 
 def replay(args):
-    if args.preserve_four and args.diagnostic_all_proposals:
-        raise ValueError('Preserved-budget and unbounded diagnostic modes cannot be combined')
+    if sum((args.preserve_four,args.diagnostic_all_proposals,args.ranking_study,args.diversity_study))>1:
+        raise ValueError('Preserved-budget, unbounded diagnostic and ranking study modes are mutually exclusive')
     dataset=Path(args.dataset).resolve()
     manifest=read(dataset/'import_manifest.json')
     baseline_path=Path(args.candidates_json).resolve()
@@ -61,6 +61,19 @@ def replay(args):
             'all_four_proposals':{'pool':'four','maximum_person_overlap':None,'export_all':True},
             'all_dense_proposals':{'pool':'dense','maximum_person_overlap':None,'export_all':True},
             'all_multiscale_proposals':{'pool':'both','maximum_person_overlap':None,'export_all':True}}
+    if args.ranking_study:
+        methods={'four_crop_control':methods['four_crop_control'],
+            'multiscale_novelty_control':{'pool':'both','maximum_person_overlap':None},
+            **{f'{mode}_rank'+('_person_guard' if guard else ''):
+                {'pool':'both','maximum_person_overlap':0. if guard else None,'ranking':mode}
+                for mode in ('confidence','consensus') for guard in (False,True)}}
+    if args.diversity_study:
+        methods={'four_crop_control':methods['four_crop_control'],
+            'multiscale_novelty_control':{'pool':'both','maximum_person_overlap':None},
+            **{'novel_consensus_rank'+('_person_guard' if guard else ''):
+                {'pool':'both','maximum_person_overlap':0. if guard else None,'ranking':'novel_consensus'} for guard in (False,True)},
+            **{'dynamic_diversity_rank'+('_person_guard' if guard else ''):
+                {'pool':'both','maximum_person_overlap':0. if guard else None,'dynamic_diversity':True} for guard in (False,True)}}
     output=Path(args.output).resolve()
     output.mkdir(parents=True,exist_ok=False)
     plan={'created_utc':datetime.now(timezone.utc).isoformat(),'version':1,
@@ -69,6 +82,11 @@ def replay(args):
         'new_model_requests':0,'historical_real_SAM3_responses_reused':sum(p['planned_SAM3_requests'] for p in plans),
         'parent_plan_sha256':[p['plan_sha256'] for p in progress],
         'methods':methods,'diagnostic_only':args.diagnostic_all_proposals,
+        'ranking_specifications':{'confidence':'original SAM3 confidence',
+            'consensus':'confidence*(0.5+0.5*max_mask_IoU_to_the_other_crop_scale)',
+            'novel_consensus':'confidence*(1-max_mask_IoU_to_original_pallets)*(0.5+0.5*cross_scale_IoU)',
+            'dynamic_diversity':'recompute confidence*(1-max_mask_IoU_to_original_and_accepted_pallets) after each addition',
+            'tie_breaking':'original model confidence then earlier proposal input index'},
         'fixed_parameters':{'minimum_score':.5,'addition_ratio':.5,'nms_iou':.8},
         'prediction_uses_3D_reference':False,'person_guard_source':'original SAM3 person predictions, not reference truth',
         'archive_sha256':manifest['archive_sha256'],'baseline_prediction_sha256':digest(baseline_path),
@@ -119,6 +137,8 @@ def replay(args):
                 pools.append(proposals)
             seed=baseline[topic][frame]
             selected_four,_=augment_candidates(seed,pools[0],width,height,**plan['fixed_parameters'])
+            priorities={mode:proposal_priorities(pools[0],pools[1],width,height,mode,baseline=seed)
+                        for mode in {settings['ranking'] for settings in methods.values() if 'ranking' in settings}}
             inputs.setdefault(topic,{})[frame]=row['sha256']
             for method,settings in methods.items():
                 proposals=pools[0] if settings['pool']=='four' else pools[1] if settings['pool']=='dense' else pools[0]+pools[1]
@@ -133,7 +153,9 @@ def replay(args):
                         **plan['fixed_parameters'],maximum_person_overlap=settings['maximum_person_overlap'])
                 else:
                     candidates,info=augment_candidates(seed,proposals,width,height,
-                        **plan['fixed_parameters'],maximum_person_overlap=settings['maximum_person_overlap'])
+                        **plan['fixed_parameters'],maximum_person_overlap=settings['maximum_person_overlap'],
+                        ranking_scores=priorities.get(settings.get('ranking')),
+                        dynamic_diversity=settings.get('dynamic_diversity',False))
                 if candidates[:len(seed)]!=seed:raise ValueError('An original candidate changed')
                 maps[method].setdefault(topic,{})[frame]=candidates
                 run['postprocessing'].append({'frame':row['frame'],'topic':topic,'method':method,**info})
@@ -170,4 +192,6 @@ if __name__=='__main__':
     parser.add_argument('--state-file')
     parser.add_argument('--preserve-four',action='store_true')
     parser.add_argument('--diagnostic-all-proposals',action='store_true')
+    parser.add_argument('--ranking-study',action='store_true')
+    parser.add_argument('--diversity-study',action='store_true')
     raise SystemExit(replay(parser.parse_args()))

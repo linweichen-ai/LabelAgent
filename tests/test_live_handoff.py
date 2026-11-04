@@ -32,6 +32,26 @@ class HandoffChecks(unittest.TestCase):
             self.assertNotIn('private-path', json.dumps(value))
             self.assertIsNone(value['primary_588_passed'])
 
+    def test_completed_failed_gate_and_private_fields(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            full = root / 'raw_certificate_full_predictions_v1'
+            p = {'supported_reference_objects': 3672, 'reference_projected_points': 168738,
+                 'candidates': 6052, 'radii': {'3': {'objects_matched_at_support_threshold': 2286,
+                  'covered_projected_points': 141174, 'points_covered_by_other_class': 2193}}}
+            score = {'status': 'complete', 'evaluated_images': 588, 'metric_version': 2,
+                     'missing_prediction_images': 0, 'groups': {'all': {'pallet': p, 'person': p}}}
+            for method in m.METHODS:
+                m.write_json(full / ('evaluation_' + method) / 'summary.json', score)
+            m.write_json(full / 'comparison.json', {'status': 'complete', 'scored_images_per_method': 588,
+                'primary_method': 'raw_certificate_priority', 'primary_passed': False,
+                'rows': [{'method': 'raw_certificate_priority', 'checks': {
+                    'person_off_class_not_above_previous_best': False, 'private_token': 'secret-example'}}]})
+            value = m.public_observation({'evidence': folder, 'video': folder})
+            self.assertFalse(value['primary_588_passed'])
+            self.assertEqual(value['primary_failed_checks'], ['person_off_class_not_above_previous_best'])
+            self.assertNotIn('secret-example', json.dumps(value))
+
     def test_atomic_read_and_idempotent_write(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / 'x.json'

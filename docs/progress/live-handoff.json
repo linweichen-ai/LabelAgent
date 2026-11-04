@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "producer_commit": "b4bda4f0026848f932dbc609f229383412c74b24",
+  "producer_commit": "e6e90f654cad6e55dfb0060ce4f7a49cdfff7399",
   "cnb_progress_commit": "fca33a83ccd30714aefd276cc9db317a74ab330c",
   "scope": "same-capture sparse projected reference agreement; not pixel accuracy",
   "pipeline": {

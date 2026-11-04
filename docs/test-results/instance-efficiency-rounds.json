@@ -1,0 +1,180 @@
+[
+  {
+    "case": "camera0_frame76",
+    "arm": "A_current",
+    "converged": true,
+    "stop_reason": "done",
+    "rounds": [
+      {
+        "round": 1,
+        "approved_ground_tasks": 0,
+        "SAM_whole_gaps_resolved": 0,
+        "SAM_whole_gaps_pending": 0,
+        "ordinary_fill_operations_applied": 0,
+        "tool_rejections": [],
+        "SAM_rollback": false
+      }
+    ]
+  },
+  {
+    "case": "camera0_frame76",
+    "arm": "B_sam7",
+    "converged": true,
+    "stop_reason": "done",
+    "rounds": [
+      {
+        "round": 1,
+        "approved_ground_tasks": 8,
+        "SAM_whole_gaps_resolved": 5,
+        "SAM_whole_gaps_pending": 3,
+        "ordinary_fill_operations_applied": 0,
+        "tool_rejections": [],
+        "SAM_rollback": false
+      },
+      {
+        "round": 2,
+        "approved_ground_tasks": 3,
+        "SAM_whole_gaps_resolved": 0,
+        "SAM_whole_gaps_pending": 0,
+        "ordinary_fill_operations_applied": 3,
+        "tool_rejections": [],
+        "SAM_rollback": false
+      },
+      {
+        "round": 3,
+        "approved_ground_tasks": 0,
+        "SAM_whole_gaps_resolved": 0,
+        "SAM_whole_gaps_pending": 0,
+        "ordinary_fill_operations_applied": 0,
+        "tool_rejections": [],
+        "SAM_rollback": false
+      }
+    ]
+  },
+  {
+    "case": "camera0_frame76",
+    "arm": "C_hybrid",
+    "converged": false,
+    "stop_reason": "max_rounds",
+    "rounds": [
+      {
+        "round": 1,
+        "approved_ground_tasks": 18,
+        "SAM_whole_gaps_resolved": 11,
+        "SAM_whole_gaps_pending": 7,
+        "ordinary_fill_operations_applied": 0,
+        "tool_rejections": [],
+        "SAM_rollback": false
+      },
+      {
+        "round": 2,
+        "approved_ground_tasks": 7,
+        "SAM_whole_gaps_resolved": 0,
+        "SAM_whole_gaps_pending": 0,
+        "ordinary_fill_operations_applied": 0,
+        "tool_rejections": [
+          "No reviewed gap was completely satisfied by actual SAM pixels"
+        ],
+        "SAM_rollback": false
+      },
+      {
+        "round": 3,
+        "approved_ground_tasks": 7,
+        "SAM_whole_gaps_resolved": 0,
+        "SAM_whole_gaps_pending": 0,
+        "ordinary_fill_operations_applied": 3,
+        "tool_rejections": [],
+        "SAM_rollback": false
+      }
+    ]
+  },
+  {
+    "case": "camera1_frame76",
+    "arm": "A_current",
+    "converged": true,
+    "stop_reason": "done",
+    "rounds": [
+      {
+        "round": 1,
+        "approved_ground_tasks": 0,
+        "SAM_whole_gaps_resolved": 0,
+        "SAM_whole_gaps_pending": 0,
+        "ordinary_fill_operations_applied": 0,
+        "tool_rejections": [],
+        "SAM_rollback": false
+      }
+    ]
+  },
+  {
+    "case": "camera1_frame76",
+    "arm": "B_sam7",
+    "converged": false,
+    "stop_reason": "max_rounds",
+    "rounds": [
+      {
+        "round": 1,
+        "approved_ground_tasks": 14,
+        "SAM_whole_gaps_resolved": 10,
+        "SAM_whole_gaps_pending": 4,
+        "ordinary_fill_operations_applied": 0,
+        "tool_rejections": [],
+        "SAM_rollback": false
+      },
+      {
+        "round": 2,
+        "approved_ground_tasks": 4,
+        "SAM_whole_gaps_resolved": 0,
+        "SAM_whole_gaps_pending": 0,
+        "ordinary_fill_operations_applied": 0,
+        "tool_rejections": [
+          "No reviewed gap was completely satisfied by actual SAM pixels"
+        ],
+        "SAM_rollback": false
+      },
+      {
+        "round": 3,
+        "approved_ground_tasks": 4,
+        "SAM_whole_gaps_resolved": 0,
+        "SAM_whole_gaps_pending": 0,
+        "ordinary_fill_operations_applied": 3,
+        "tool_rejections": [],
+        "SAM_rollback": false
+      }
+    ]
+  },
+  {
+    "case": "camera1_frame76",
+    "arm": "C_hybrid",
+    "converged": false,
+    "stop_reason": "max_rounds",
+    "rounds": [
+      {
+        "round": 1,
+        "approved_ground_tasks": 26,
+        "SAM_whole_gaps_resolved": 16,
+        "SAM_whole_gaps_pending": 10,
+        "ordinary_fill_operations_applied": 0,
+        "tool_rejections": [],
+        "SAM_rollback": false
+      },
+      {
+        "round": 2,
+        "approved_ground_tasks": 11,
+        "SAM_whole_gaps_resolved": 1,
+        "SAM_whole_gaps_pending": 10,
+        "ordinary_fill_operations_applied": 0,
+        "tool_rejections": [],
+        "SAM_rollback": false
+      },
+      {
+        "round": 3,
+        "approved_ground_tasks": 10,
+        "SAM_whole_gaps_resolved": 0,
+        "SAM_whole_gaps_pending": 0,
+        "ordinary_fill_operations_applied": 3,
+        "tool_rejections": [],
+        "SAM_rollback": false
+      }
+    ]
+  }
+]

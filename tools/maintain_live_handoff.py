@@ -252,7 +252,7 @@ def collect_delivered_artifacts(config):
                 if target and target.suffix.lower() in extensions:
                     candidates.add(target)
     existing = {}
-    for folder in ('03_图片', '04_视频', '09_新增结果'):
+    for folder in ('03_图片', '04_视频', '09_新增结果', '09_补充成果'):
         for p in (home / folder).rglob('*'):
             if p.is_file():
                 existing[digest(p)] = p.relative_to(home).as_posix()
@@ -562,9 +562,30 @@ def refresh_manifest(home):
 def build_handoff(config, observation, sync, threads):
     home = Path(config['handoff'])
     copy = home / '02_代码' / ('LabelAgent_' + sync['commit'][:12] + '.zip')
+    archive_source = copy
     if not copy.exists():
-        git(config['repo'], 'archive', '--format=zip', '--output=' + str(copy.resolve()), sync['commit'])
-    with zipfile.ZipFile(copy) as archive:
+        bases = sorted((home / '02_代码').glob('LabelAgent_*.zip'), key=lambda p:p.stat().st_mtime, reverse=True)
+        if bases and shutil.disk_usage(home).free < 512 * 1024**2:
+            base = bases[0]
+            base_commit = git(config['repo'], 'rev-parse', base.stem.removeprefix('LabelAgent_') + '^{commit}')[0]
+            stem = 'LabelAgent_' + sync['commit'][:12]
+            patch = home / '02_代码' / (stem + '.patch')
+            atomic(patch, git(config['repo'], 'diff', '--binary', '--full-index', base_commit, sync['commit'])[0] + '\n')
+            tree = git(config['repo'], '-c', 'core.quotepath=false', 'ls-tree', '-r', '-z', '--full-tree', sync['commit'])[0]
+            files = {entry.split('\t',1)[1]:entry.split('\t',1)[0].split()[2] for entry in tree.split('\0') if entry}
+            write_json(home / '02_代码' / (stem + '.json'), {'mode':'verified_full_base_plus_binary_diff',
+                       'base_zip':base.name,'base_zip_sha256':digest(base),'base_commit':base_commit,
+                       'target_commit':sync['commit'],'patch':patch.name,'patch_sha256':digest(patch),'git_blobs':files})
+            shutil.copy2(Path(__file__).with_name('restore_code_snapshot.py'), home / '02_代码/restore_code_snapshot.py')
+            atomic(home / '02_代码/空间不足时的代码备份说明.txt',
+                   '旧完整ZIP全部保留。空间不足时，新提交以完整ZIP＋二进制差异＋逐文件Git内容摘要交接，没有丢弃代码更新。\n'
+                   '还原：python restore_code_snapshot.py --receipt LabelAgent_目标提交.json --outdir 空目录\n'
+                   '完整ZIP、对应JSON、patch和还原脚本需一起备份；脚本会核对还原后的每个目标文件。\n')
+            archive_source = Path(config['control']) / 'current_docs.zip'
+            git(config['repo'], 'archive', '--format=zip', '--output=' + str(archive_source.resolve()), sync['commit'], 'docs')
+        else:
+            git(config['repo'], 'archive', '--format=zip', '--output=' + str(copy.resolve()), sync['commit'])
+    with zipfile.ZipFile(archive_source) as archive:
         for name in archive.namelist():
             parts = Path(name).parts
             if name.startswith('docs/') and not name.endswith('/') and '..' not in parts:

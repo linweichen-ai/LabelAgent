@@ -1,0 +1,9 @@
+{
+  "reference_annotations": true,
+  "reference_description": true,
+  "metric_unchanged": true,
+  "annotation_writes": 0,
+  "training_updates": 0,
+  "source_images_unchanged": true,
+  "weights_unchanged": true
+}

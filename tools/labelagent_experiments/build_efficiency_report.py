@@ -129,6 +129,17 @@ def main():
         if row in vetoes and len(diagnosis_video)<16:diagnosis_video.append((file,3))
     # Real photographs and exact model-input evidence, never synthetic results.
     efficiency=Path(cfg['instance_generation']).parent
+    agent_replay=[]
+    for arm in ('B_sam7','C_hybrid'):
+        for frame,camera in cfg['cases']:
+            case=f'camera{camera}_frame{frame}'
+            for original in sorted((out/arm/case).glob('*.jpg')):
+                with Image.open(original) as im: photo=im.convert('RGB')
+                canvas=Image.new('RGB',(1920,1080),'#132334');draw=ImageDraw.Draw(canvas)
+                draw.text((25,18),case+' / '+arm+' / '+original.stem,font=titlefont,fill='white')
+                canvas.paste(ImageOps.contain(photo,(1840,930)),(40,90))
+                file=assets/('actual_agent_'+arm+'_'+case+'_'+original.name);canvas.save(file,quality=93);gallery.append(file)
+                if any(s in original.name for s in ['seed_cache','observing','finished']):agent_replay.append((file,2))
     for number,original in enumerate(sorted((efficiency/'diagnosis').glob('*.jpg')),1):
         file=assets/('old_addition_'+original.name);shutil.copy2(original,file);gallery.append(file)
         if number<=5:diagnosis_video.append((file,3))
@@ -216,6 +227,7 @@ def main():
     video('01_真实阶段结果回放.mp4',replays)
     video('02_同图三方案对照.mp4',comparisons)
     video('03_实例面积与SAM修复证据.mp4',diagnosis_video)
+    video('04_Agent三轮真实阶段回放.mp4',agent_replay)
     save(out/'media_verification.json',{'status':'PASS','videos':receipts,'pictures':len(gallery),'unconfirmed_candidates':True})
     converged=sum(bool(r['converged']) for r in result['agent_runs'])
     failed=sum(r['stop_reason']=='error' for r in result['agent_runs'])
@@ -253,8 +265,9 @@ def main():
             for audit in r['agent']['audit']:
                 ops=audit['decision']['operations']
                 budget_rows.append({'case':case,'arm':arm,'round':audit['round'],'operations':len(ops),
-                    'SAM_points':max([len(o.get('points',[])) for o in ops]+[0])})
-    assert all(r['operations']<=3 and r['SAM_points']<=32 and r['round']<=3 for r in budget_rows)
+                    'SAM_points':max([len(o.get('points',[])) for o in ops]+[0]),
+                    'SAM_cumulative_points':max([v.get('point_count',0) for v in audit.get('tool_results',[])]+[0])})
+    assert all(r['operations']<=3 and r['SAM_points']<=32 and r['SAM_cumulative_points']<=32 and r['round']<=3 for r in budget_rows)
     save(out/'budget_audit.json',{'passed':True,'rows':budget_rows,'limits_unchanged':True})
     public['generation']=read(Path(cfg['instance_generation'])/'completed.json')
     public['negative_hint_pilot_converged']=sum(bool(r['converged']) for r in pilot['agent_runs'])
@@ -269,6 +282,7 @@ def main():
       '<section><h2>原因与修复</h2>',
       '<p>旧版11个新增托盘掩码没有增加新的合格参考对象，部分增加了同一对象外围范围。候选数量不等于新实例支持；按原V2规则还必须满足单实例点覆盖0.5、点纯度0.67和一对一匹配。没有把未标注二维区域当成误检真值。</p>',
       '<p>新实例分离使用37次真实局部SAM3调用、16次原图类别核验。B使用原SAM候选裁剪，C再加入训练过的Mask2Former固定四分区裁剪提示。新掩码裁在原SAM托盘并集内，原掩码全部保留；按冻结规则排重、限量。它能控制新增面积，但这种保守方法无法恢复原并集外的空间漏检。原图核验来自模型，不是人工真值。</p>',
+      f'<p>旧C托盘参考点覆盖495/579；本轮C为{c["pallet_points_covered"]}/{c["reference_pallet_points"]}。面积下降的同时丢失了旧补充候选带来的部分点覆盖，并没有改善实例支持。通过面积条件不能代替质量提升。</p>',
       f'<p>旧33次填补中，{old["operations_with_incomplete_target_polygon"]}次操作框没有完整包含目标，{old["operations_leaving_reviewed_target_pixels_missing"]}次实际编辑后仍留目标像素。缺口框右、下界是闭区间，旧算法误按半开区间处理，留下边条并在后续重复。新算法补齐闭区间；原有分数和验收阈值不变。</p>',
       '<p>首轮已批准的地面任务为8、18、14、26个，旧每轮最多3次编辑，本来就可能超出三轮。新流程用一次真实SAM3多点操作处理一组已逐项看过的缺口，只有被实际SAM掩码100%包含的完整缺口才可写入候选。部分覆盖的缺口整块不接纳并显式待办；所有未批准区域保持像素锁。下一轮必须由真实模型比较前后图。</p>',
       '<p>第一次批处理把“不确定、保留”误作为负提示，触发负点排除失败；这次改成不确定区域锁定、不给负提示。预检只基于实际SAM满足缺口数选择正提示模式，不使用3D参考分数。正点未全覆盖警告原样保留，不能使整批冒充成功；其他警告仍拒绝。少量剩余任务继续按原单项工具修复，每轮仍最多3项，最多3轮，SAM累计点最多32。</p>',

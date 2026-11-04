@@ -54,12 +54,33 @@ class HandoffChecks(unittest.TestCase):
                 self.assertEqual(notify.call_count, 1)
                 m.report_changes(config, sync, observation, threads, [])
                 self.assertEqual(notify.call_count, 1)
+                threads[0].update(latest_message_utc='2026-11-04T07:05:00Z', important_updates=[
+                    {'time': '2026-11-04T07:05:00Z', 'text': '完整验证完成，未通过原要求。'}])
+                m.report_changes(config, sync, observation, threads, [])
+                m.report_changes(config, sync, observation, threads, [])
+                self.assertEqual(notify.call_count, 2)
                 failure = {'error_type': 'RuntimeError', 'message': 'fetch failed'}
                 m.report_failure(config, failure)
                 m.report_failure(config, failure)
-                self.assertEqual(notify.call_count, 2)
-                m.report_changes(config, sync, observation, threads, [])
                 self.assertEqual(notify.call_count, 3)
+                m.report_changes(config, sync, observation, threads, [])
+                self.assertEqual(notify.call_count, 4)
+
+    def test_new_gallery_references_collect_images_without_a_chat_link(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            gallery_root = root / 'outputs/labelagent_example'
+            gallery = gallery_root / 'new_gallery'
+            gallery.mkdir(parents=True)
+            (gallery / 'index.html').write_text('<img src="case.jpg"><img src="https://example.invalid/remote.jpg">')
+            (gallery / 'case.jpg').write_bytes(b'actual-local-picture')
+            control = root / 'control'
+            control.mkdir()
+            config = {'handoff': str(root / 'handoff'), 'control': str(control), 'media_workspace': str(root),
+                      'artifact_stable_seconds': 0, 'artifact_gallery_roots': [str(gallery_root)]}
+            added = m.collect_delivered_artifacts(config)
+            self.assertEqual(len(added), 1)
+            self.assertEqual(m.collect_delivered_artifacts(config), [])
 
     def test_credential_message_is_omitted(self):
         self.assertNotIn('secret-example', m.safe_message('password: secret-example'))

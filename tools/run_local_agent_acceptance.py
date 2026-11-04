@@ -21,7 +21,14 @@ from connect_local_vlm import loopback_url, require_real_service
 def save(path, value):
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
-    temporary.replace(path)
+    for attempt in range(10):
+        try:
+            temporary.replace(path)
+            break
+        except PermissionError:
+            if attempt == 9:
+                raise
+            time.sleep(min(.05 * 2**attempt, 1.0))
 
 
 def load_image(dataset, record):

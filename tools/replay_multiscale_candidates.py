@@ -1,6 +1,8 @@
 """Reuse bound real SAM crop responses for image-only multiscale proposals.
 
-Reads no 3D labels, point clouds, calibration, workbench API, or model API.
+Reads no 3D reference labels, workbench API, or model API.
+The explicit --lidar-study option adds label-free raw point clouds/calibration;
+all existing image-only modes retain their original behavior.
 All proposals remain unconfirmed; default workbench behavior is unchanged.
 """
 import argparse
@@ -23,7 +25,7 @@ def digest(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def read(path):return json.loads(path.read_text(encoding='utf-8'))
 
 def replay(args):
-    if sum((args.preserve_four,args.diagnostic_all_proposals,args.ranking_study,args.diversity_study,args.preserved_ranking_study,args.containment_study))>1:
+    if sum((args.preserve_four,args.diagnostic_all_proposals,args.ranking_study,args.diversity_study,args.preserved_ranking_study,args.containment_study,args.lidar_study))>1:
         raise ValueError('Preserved-budget, unbounded diagnostic and ranking study modes are mutually exclusive')
     dataset=Path(args.dataset).resolve()
     manifest=read(dataset/'import_manifest.json')
@@ -86,6 +88,14 @@ def replay(args):
                 {'pool':'both','maximum_person_overlap':0. if guard else None,
                  'soft_containment':True,'dynamic_diversity':dynamic}
                 for dynamic in (False,True) for guard in (False,True)}}
+    if args.lidar_study:
+        from lidar_candidate_evidence import (PLANE_RECIPE,POINT_RECIPE,ReferenceReadAudit,
+            read_xyz,fit_support_plane,sensor_cameras,projected_sensor,candidate_evidence,height_priorities)
+        methods={'four_crop_control':methods['four_crop_control'],
+            'multiscale_novelty_control':{'pool':'both','maximum_person_overlap':None},
+            'lidar_positive_guard':{'pool':'both','maximum_person_overlap':0.,'height_priority':'positive'},
+            'lidar_penalty_guard':{'pool':'both','maximum_person_overlap':0.,'height_priority':'penalty'},
+            'preserve_four_lidar_penalty_guard':{'pool':'both','maximum_person_overlap':0.,'height_priority':'penalty','preserve_four':True}}
     output=Path(args.output).resolve()
     output.mkdir(parents=True,exist_ok=False)
     plan={'created_utc':datetime.now(timezone.utc).isoformat(),'version':1,
@@ -112,6 +122,18 @@ def replay(args):
             'original_maximum_union_area_ratio':1.25,'original_person_off_class_increase_limit':.005,
             'all_original_candidates_preserved':True},
         'scope':'exploratory_same_capture_tuning_not_independent_accuracy','automatic_broader_run':False}
+    if args.lidar_study:
+        sensor_paths=['calib/lidar2camera.yaml',*[f'calib/camera{c}_calib.yaml' for c in plan['cameras']],
+            *[f"lidar/{manifest['timestamps_ns'][f]}.pcd" for f in plan['frames']]]
+        plan.update(plane_recipe=PLANE_RECIPE,point_recipe=POINT_RECIPE,
+            sensor_helper_sha256=digest(Path(__file__).with_name('lidar_candidate_evidence.py')),
+            raw_sensor_source_sha256={p:manifest['extracted_sha256'][p] for p in sensor_paths},
+            source_units='nominal metres from supplied calibration; not independently certified',
+            height_rank={'positive':'novelty*confidence*(1+low_object_fraction)/2; uniform scale preserves ordering',
+                'penalty':'novelty*confidence*(1-0.75*floor_fraction)*(1-0.75*tall_fraction)',
+                'unsupported':'neutral evidence factor 1 before uniform positive-mode scaling; never reject because points are missing',
+                'preserved_seed':'previous four-crop candidates for the residual-budget variant'},
+            reference_file_read_boundary_enforced=True)
     save(output/'study_plan.json',plan)
     plan_hash=digest(output/'study_plan.json')
     before=digest(Path(args.state_file)) if args.state_file else None
@@ -120,7 +142,13 @@ def replay(args):
     save(output/'progress.json',run)
     maps={method:{} for method in methods}
     inputs={}
+    sensor_audit=ReferenceReadAudit(dataset) if args.lidar_study else None
+    if sensor_audit:sensor_audit.start()
     try:
+        if args.lidar_study:
+            sensor_info,_=sensor_cameras(dataset,manifest,plan['cameras'])
+            sensor_cache={}
+            run['lidar_evidence']=[]
         topics={f'/capture/camera_{camera}/image' for camera in plan['cameras']}
         records=sorted((row for row in manifest['records'] if row['topic'] in topics and row['frame'] in plan['frames']),key=lambda r:(r['frame'],r['topic']))
         if len(records)!=plan['planned_images']:raise ValueError('Incomplete source selection')
@@ -154,11 +182,25 @@ def replay(args):
             priorities={mode:proposal_priorities(pools[0],pools[1],width,height,mode,
                         baseline=selected_four if args.preserved_ranking_study else seed)
                         for mode in {settings['ranking'] for settings in methods.values() if 'ranking' in settings}}
+            if args.lidar_study:
+                if row['frame'] not in sensor_cache:
+                    xyz,_=read_xyz(dataset,manifest,row['frame'])
+                    sensor_cache[row['frame']]=(xyz,fit_support_plane(xyz))
+                xyz,plane=sensor_cache[row['frame']]
+                sensor=projected_sensor(xyz,sensor_info[int(topic.split('/')[2].split('_')[-1])],plane)
+                evidence={s['id']:candidate_evidence(s,width,height,sensor) for s in pools[0]+pools[1]}
+                save(output/f"sensor_{topic.split('/')[2]}_{int(frame):04d}.json",{'plane':plane,'candidates':evidence})
+                run['lidar_evidence'].append({'frame':row['frame'],'topic':topic,'plane':plane,
+                    'projected_raw_points':len(sensor['pixels']),'proposals':len(evidence),
+                    'proposals_with_height_evidence':sum(v['supported'] for v in evidence.values())})
             inputs.setdefault(topic,{})[frame]=row['sha256']
             for method,settings in methods.items():
                 proposals=pools[0] if settings['pool']=='four' else pools[1] if settings['pool']=='dense' else pools[0]+pools[1]
                 priority=priorities.get(settings.get('ranking'))
                 if priority is not None:priority={shape['id']:priority[shape['id']] for shape in proposals}
+                if 'height_priority' in settings:
+                    priority=height_priorities(selected_four if settings.get('preserve_four') else seed,
+                        proposals,width,height,evidence,settings['height_priority'])
                 if settings.get('export_all'):
                     candidates=deepcopy(seed+proposals)
                     if len({shape['id'] for shape in candidates})!=len(candidates):
@@ -175,6 +217,8 @@ def replay(args):
                         ranking_scores=priority,
                         dynamic_diversity=settings.get('dynamic_diversity',False),
                         soft_containment=settings.get('soft_containment',False))
+                if 'height_priority' in settings:
+                    info['ranking_source']='raw_LiDAR_height_and_original_predictions; model scores retained'
                 if candidates[:len(seed)]!=seed:raise ValueError('An original candidate changed')
                 maps[method].setdefault(topic,{})[frame]=candidates
                 run['postprocessing'].append({'frame':row['frame'],'topic':topic,'method':method,**info})
@@ -200,8 +244,19 @@ def replay(args):
             baseline_cache_unchanged=digest(baseline_path)==binding['prediction_json_sha256'],
             state_sha256_unchanged=digest(Path(args.state_file))==before if args.state_file else None,
             finished_utc=datetime.now(timezone.utc).isoformat())
+        if args.lidar_study:
+            from tools.evaluate_projected_support import checked_source
+            try:
+                for p in plan['raw_sensor_source_sha256']:checked_source(dataset,manifest,p)
+                run['raw_sensor_sources_unchanged']=True
+            except Exception:run['raw_sensor_sources_unchanged']=False
+            run['sensor_helper_unchanged']=digest(Path(__file__).with_name('lidar_candidate_evidence.py'))==plan['sensor_helper_sha256']
+            sensor_audit.stop()
+            run['reference_files_opened']=len(sensor_audit.denied)
+            run['raw_source_files_read']=sorted(sensor_audit.sources)
+            if sensor_audit.denied:run['status']='failed'
         save(output/'progress.json',run)
-    print(json.dumps({k:v for k,v in run.items() if k not in ('postprocessing','source_response_bindings')}),flush=True)
+    print(json.dumps({k:v for k,v in run.items() if k not in ('postprocessing','source_response_bindings','lidar_evidence','raw_source_files_read')}),flush=True)
     return 0 if run['status']=='complete' else 1
 
 if __name__=='__main__':
@@ -215,4 +270,5 @@ if __name__=='__main__':
     parser.add_argument('--diversity-study',action='store_true')
     parser.add_argument('--preserved-ranking-study',action='store_true')
     parser.add_argument('--containment-study',action='store_true')
+    parser.add_argument('--lidar-study',action='store_true')
     raise SystemExit(replay(parser.parse_args()))

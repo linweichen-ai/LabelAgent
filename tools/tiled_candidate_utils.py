@@ -81,10 +81,13 @@ def _iou(first, second):
     return intersection/(first['area']+second['area']-intersection)
 
 
-def augment_candidates(baseline, proposals, width, height, minimum_score=.8, addition_ratio=.5, nms_iou=.8):
+def augment_candidates(baseline, proposals, width, height, minimum_score=.8, addition_ratio=.5, nms_iou=.8, maximum_person_overlap=None):
     """Keep the baseline byte-equivalent as objects; append bounded novel masks."""
     if not 0 <= minimum_score <= 1 or not 0 < addition_ratio <= 1 or not 0 < nms_iou <= 1:
         raise ValueError('Invalid augmentation settings')
+    if maximum_person_overlap is not None and (not math.isfinite(maximum_person_overlap)
+            or not 0 <= maximum_person_overlap <= 1):
+        raise ValueError('Invalid predicted-person overlap limit')
     for index, shape in enumerate([*baseline, *proposals], 1):
         if not valid_shape({**shape, 'id': index}, width, height):
             raise ValueError('Invalid candidate geometry')
@@ -93,6 +96,13 @@ def augment_candidates(baseline, proposals, width, height, minimum_score=.8, add
     pallet = [shape for shape in baseline if shape['label'] == 'pallet']
     existing = [_mask_record(shape, width, height) for shape in pallet]
     limit = max(1, math.floor(len(pallet)*addition_ratio))
+    person_mask = None
+    if maximum_person_overlap is not None:
+        person_mask = np.zeros((height,width),dtype=bool)
+        for shape in baseline:
+            if shape['label'] == 'person':
+                person_mask |= _rasterize(shape,width,height) != 0
+    rejected_by_person = 0
     ranked = []
     for index, shape in enumerate(proposals):
         score = float(shape.get('score', -1))
@@ -101,6 +111,12 @@ def augment_candidates(baseline, proposals, width, height, minimum_score=.8, add
         if score < minimum_score:
             continue
         record = _mask_record(shape, width, height)
+        if person_mask is not None:
+            x0,y0,x1,y1 = record['bbox']
+            fraction = np.count_nonzero(record['mask'] & person_mask[y0:y1,x0:x1])/record['area']
+            if fraction > maximum_person_overlap:
+                rejected_by_person += 1
+                continue
         overlap = max((_iou(record, old) for old in existing), default=0.)
         if overlap >= nms_iou:
             continue
@@ -116,5 +132,36 @@ def augment_candidates(baseline, proposals, width, height, minimum_score=.8, add
         existing.append(record)
         if len(additions) >= limit:
             break
-    return deepcopy(baseline)+additions, {'baseline_pallets': len(pallet), 'tile_proposals': len(proposals),
+    info = {'baseline_pallets': len(pallet), 'tile_proposals': len(proposals),
         'addition_budget': limit, 'added_pallets': len(additions), 'baseline_candidates_preserved': True}
+    if person_mask is not None:
+        info.update(maximum_predicted_person_overlap=maximum_person_overlap,
+                    proposals_rejected_by_predicted_person=rejected_by_person)
+    return deepcopy(baseline)+additions, info
+
+
+def augment_preserving_selected(original, selected, proposals, width, height,
+        minimum_score=.5, addition_ratio=.5, nms_iou=.8, maximum_person_overlap=None):
+    """Keep previously selected masks, using only the original remaining budget."""
+    if selected[:len(original)] != original or len(selected) < len(original):
+        raise ValueError('Selected candidates must retain the entire original prefix')
+    if any(shape['label'] != 'pallet' for shape in selected[len(original):]):
+        raise ValueError('Previously selected additions must be pallet proposals')
+    if not 0 < addition_ratio <= 1:
+        raise ValueError('Invalid original addition budget')
+    original_pallets = sum(shape['label']=='pallet' for shape in original)
+    budget = max(1, math.floor(original_pallets*addition_ratio))
+    already_added = len(selected)-len(original)
+    if already_added > budget:
+        raise ValueError('Previously selected candidates already exceed the original budget')
+    remaining = budget-already_added
+    # A prefix of the same greedy ranking has identical choices at any smaller
+    # budget; no reference geometry is involved in choosing the retained masks.
+    augmented, _ = augment_candidates(selected, proposals, width, height,
+        minimum_score=minimum_score, addition_ratio=1., nms_iou=nms_iou,
+        maximum_person_overlap=maximum_person_overlap)
+    additions = augmented[len(selected):][:remaining]
+    return deepcopy(selected)+additions, {'baseline_candidates_preserved': True,
+        'previously_selected_candidates_preserved': True, 'original_pallets': original_pallets,
+        'original_addition_budget': budget, 'previous_additions': already_added,
+        'remaining_addition_budget': remaining, 'added_pallets': len(additions)}

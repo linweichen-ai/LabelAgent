@@ -1,6 +1,6 @@
 {
-  "observed_utc": "2026-11-04T07:55:14.797827+00:00",
-  "phase": "select_remaining",
+  "observed_utc": "2026-11-04T08:24:55.513220+00:00",
+  "phase": "complete",
   "owner_process_verified_live": true,
   "primary_method": "convex_hull_guard",
   "primary_frozen_before_full_prediction": true,
@@ -14,5 +14,15 @@
   "new_model_requests": 0,
   "full_plan_sha256": "0beda4cbb670272860fce2f73188f512fbff93ac3aa91d0ee7813eab568d38ba",
   "production_default_changed": false,
-  "scope": "Same previously used capture; not independent pixel accuracy"
+  "scope": "Same previously used capture; not independent pixel accuracy",
+  "primary_588_passed": false,
+  "full_pipeline_complete": true,
+  "full_pipeline_verified_live": false,
+  "full_primary_counts": {
+    "matched": 2284,
+    "covered_points": 141153,
+    "person_cross": 2191
+  },
+  "default_enabled": false,
+  "subsequent_separate_study": "person-cross-refinement-full.md"
 }

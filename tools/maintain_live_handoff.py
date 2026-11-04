@@ -15,6 +15,7 @@ import re
 import shutil
 import subprocess
 import time
+import zipfile
 from datetime import datetime, timezone, timedelta
 
 TZ = timezone(timedelta(hours=8))
@@ -211,8 +212,18 @@ def public_observation(config):
     comparison = read_json(full / 'comparison.json', {})
     if comparison.get('status') == 'complete' and comparison.get('scored_images_per_method') == 588:
         if comparison.get('primary_method') == 'raw_certificate_priority' and len(result['scores']) == 5:
-            result['primary_588_passed'] = comparison.get('primary_passed')
-            result['original_gate_comparison_complete'] = True
+            passed = comparison.get('primary_passed')
+            if type(passed) is bool:
+                result['primary_588_passed'] = passed
+                result['original_gate_comparison_complete'] = True
+                primary = next((row for row in comparison.get('rows', [])
+                                if row.get('method') == 'raw_certificate_priority'), {})
+                allowed = ('strict_instance_gain_over_previous_best', 'point_coverage_not_below_previous_best',
+                           'person_off_class_not_above_previous_best', 'original_minimum_two_percentage_point_gain',
+                           'original_count_ratio_limit', 'original_union_area_limit',
+                           'original_person_cross_class_limit', 'all_original_candidates_preserved')
+                result['primary_failed_checks'] = [key for key in allowed if primary.get('checks', {}).get(key) is False]
+                result['comparison_sha256'] = digest(full / 'comparison.json')
     video = read_json(Path(config['video']) / '_audit/verification_receipt.json', {})
     result['video_verified'] = video.get('status') == 'complete' and video.get('video_fully_decoded') is True
     return result
@@ -257,6 +268,14 @@ def collect_media(config):
 def public_document(observation, source, cnb):
     passed = observation['primary_588_passed']
     conclusion = '尚未取得完整验收结论' if passed is None else ('通过冻结的同集参考标准' if passed else '未通过冻结的同集参考标准')
+    rows = ['| 方法 | 实例支持 | 覆盖参考点 | 人员交叉点 | 托盘候选 |',
+            '| --- | --- | --- | --- | --- |']
+    for method, score in observation['scores'].items():
+        rows.append(f"| {method} | {score['matched']}/{score['reference_objects']} | "
+                    f"{score['covered_points']}/{score['reference_points']} | {score['person_cross_points']} | {score['candidates']} |")
+    table = '\n'.join(rows)
+    reason = ('主方案人员交叉覆盖超过旧四分块，因此按原标准不采用；不放宽要求、不替换默认流程。'
+              if 'person_off_class_not_above_previous_best' in observation.get('primary_failed_checks', []) else '')
     return f'''# 实时交接与双平台同步
 
 更新于：{now()}（北京时间）
@@ -273,6 +292,12 @@ def public_document(observation, source, cnb):
 - 持续任务仅同步已提交代码及白名单汇总，不启动推理、不确认标注。默认每60秒检查；机器休眠、退出或网络不可用时暂停，恢复后续传。STOP文件可停止。
 
 机器可读阶段见 [live-handoff.json](live-handoff.json)。原始阶段记录见 [dataset-comparison.md](dataset-comparison.md)。
+
+## 完整588图逐组结果
+
+{table}
+
+{reason}
 '''
 
 
@@ -326,6 +351,11 @@ def build_handoff(config, observation, sync, threads):
     copy = home / '02_代码' / ('LabelAgent_' + sync['commit'][:12] + '.zip')
     if not copy.exists():
         git(config['repo'], 'archive', '--format=zip', '--output=' + str(copy.resolve()), sync['commit'])
+    with zipfile.ZipFile(copy) as archive:
+        for name in archive.namelist():
+            parts = Path(name).parts
+            if name.startswith('docs/') and not name.endswith('/') and '..' not in parts:
+                atomic(home / '07_文档' / Path(*parts[1:]), archive.read(name))
     write_json(home / '06_核验/双平台提交核对.json', sync)
     write_json(home / '06_核验/当前进度.json', observation)
     write_json(home / '06_核验/对话读取范围.json', {'provided_links': 3, 'unique_threads': threads,
@@ -334,6 +364,10 @@ def build_handoff(config, observation, sync, threads):
     status = '尚未取得完整588图验收结论' if conclusion is None else ('通过冻结同集标准' if conclusion else '未通过冻结同集标准')
     pictures = sorted(p for p in (home / '03_图片').rglob('*') if p.suffix.lower() in ('.png', '.jpg'))
     videos = sorted((home / '04_视频').glob('*.mp4'))
+    scores = '\n'.join(f"{method}: 实例{v['matched']}/{v['reference_objects']}，点{v['covered_points']}/{v['reference_points']}，人员交叉{v['person_cross_points']}，候选{v['candidates']}"
+                       for method, v in observation['scores'].items())
+    failed = 'person_off_class_not_above_previous_best' in observation.get('primary_failed_checks', [])
+    reason = '主方案人员交叉覆盖超过旧四分块，未通过；保持原标准，不采用为默认。' if failed else ''
     text = f'''LabelAgent 交接说明（可直接整理到飞书）
 更新时间：{now()}
 
@@ -345,6 +379,8 @@ GitHub/CNB交接分支：{sync['branch']}；两端提交已回读一致。
 当前主测常熟0920数据：152时刻、四相机、608图。labels全帧作为参考；Task3为历史另一套数据。
 20图调参、588图同采集复验。已有32图实例118→119/205、点覆盖7406→7603，人员交叉点119不变。
 完整588图：{status}；阶段 {observation['pipeline'].get('status')}；评分 {len(observation['scores'])}/5。
+{scores}
+{reason}
 当前指标是稀疏三维参考投影一致性，不是二维像素准确率；尚无独立外部测试或权重微调结论。
 
 2. 图片和视频
@@ -360,6 +396,15 @@ GitHub/CNB交接分支：{sync['branch']}；两端提交已回读一致。
 机器休眠、进程退出或网络故障期间不能更新；恢复后续传。只有失败、完成或有实质变化时需要关注。
 凭据消息和工具输出不进入对话导出；图片、视频和对话记录只保留本地，飞书上传由用户进行。
 用户已补齐第三个独立链接，三段对话均已读取，脱敏文本在05_对话记录。
+
+4. 操作、模型与部署资料
+07_文档保留当前代码提交内的完整进度、部署与测试文档。
+local-gpu.md：本机Qwen3-VL-2B NF4与SAM3单卡轮换。
+local-vlm.md：视觉模型接口、独立验收与远端配置。
+pai-dsw.md：PAI环境配置；准备完成不等于更大模型已部署。
+workbench-walkthrough.md：参考帧、目标帧、自动标注和人工保存步骤。
+progress/dataset-comparison.md：历史里程碑和失败实验；test-results记录各项对照。
+本地工作台 http://127.0.0.1:8765/ ；逐步教程 http://127.0.0.1:8767/ 。离线图片与视频不依赖这些服务。
 '''
     atomic(home / '01_进度与飞书说明.txt', text)
     blocks = ['<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>LabelAgent 实时交接</title>',
@@ -375,7 +420,7 @@ GitHub/CNB交接分支：{sync['branch']}；两端提交已回读一致。
         blocks.append(f'<figure><a href="{rel}"><img loading="lazy" src="{rel}"></a><figcaption>{html.escape(p.relative_to(home).as_posix())}</figcaption></figure>')
     blocks.append('</div></section><section><h2>备份文件</h2>')
     for p in sorted(home.rglob('*')):
-        if p.is_file() and p.suffix in ('.zip', '.txt', '.json') and p.name != '文件SHA256清单.json':
+        if p.is_file() and p.suffix in ('.zip', '.txt', '.json', '.md') and p.name != '文件SHA256清单.json':
             rel = html.escape(p.relative_to(home).as_posix())
             blocks.append(f'<p><a href="{rel}">{rel}</a></p>')
     blocks.append('</section></html>')

@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "producer_commit": "a2cd111861e8713347aadd4a7d12953ba62958c8",
-  "cnb_progress_commit": "ea3b005abcf125aa22843f244362e06fde515b27",
+  "producer_commit": "ffd078368cd807a11f1ed058625957d7cfcf69b2",
+  "cnb_progress_commit": "74c6d186f0bf403930ea8e55eebb64ddb8d1bc5c",
   "scope": "same-capture sparse projected reference agreement; not pixel accuracy",
   "pipeline": {
     "status": "complete",
@@ -65,5 +65,9 @@
   "annotation_writes_by_sync": false,
   "model_requests_by_sync": 0,
   "original_gate_comparison_complete": true,
+  "primary_failed_checks": [
+    "person_off_class_not_above_previous_best"
+  ],
+  "comparison_sha256": "d3568b71df827f709cd82e91e485bc1484b46abb8fa79490caf95552dec42aba",
   "video_verified": true
 }

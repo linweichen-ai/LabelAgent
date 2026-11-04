@@ -1,6 +1,6 @@
 {
-  "status": "full_execution_disk_full_recovery_running",
-  "observed_utc": "2026-11-04T12:18:53.300431+00:00",
+  "status": "full_joint_checks_failed_not_adopted",
+  "observed_utc": "2026-11-04T12:28:53.493168+00:00",
   "tests_passed": 395,
   "tests_skipped": 0,
   "new_model_calls": 0,
@@ -138,8 +138,8 @@
     "cross_view_person_control": true
   },
   "tuning_primary_byte_exact_previous_cross_view": true,
-  "full_complete": false,
-  "full_passed": null,
+  "full_complete": true,
+  "full_passed": false,
   "full_plan_sha256": "cd467bb5bbc9b99efecd582fa3f368fffb27b26e9e12211b7048ddc28473eba3",
   "tuning_plan_sha256": "69196ad0c151bb317054cf1f5f9903e5194e2f08366fb64365721ce6df30c15c",
   "previous_accepted_full_matches": 2298,
@@ -147,14 +147,176 @@
   "default_enabled": false,
   "independent_accuracy_measured": false,
   "storage_recovery": {
-    "original_failure": "output disk full while saving first complete candidate exports",
-    "full_score_observed_before_recovery": false,
+    "reason": "original output disk became full before complete predictions or scoring",
     "original_failure_preserved": true,
-    "recovery_running": true,
-    "scientific_source_and_parameters_unchanged": true,
+    "scientific_code_and_parameters_unchanged": true,
     "original_frozen_plan_sha256": "cd467bb5bbc9b99efecd582fa3f368fffb27b26e9e12211b7048ddc28473eba3",
-    "recovery_plan_byte_exact_original": true,
-    "new_model_calls": 0,
-    "source_data_moved_or_deleted": false
-  }
+    "recovery_new_model_calls": 0,
+    "full_scoring_before_recovery": false
+  },
+  "full_rows": [
+    {
+      "method": "pallet_baseline",
+      "pallet_objects_matched": 2020,
+      "pallet_reference_objects": 3672,
+      "pallet_points_covered": 133337,
+      "pallet_reference_points": 168738,
+      "pallet_candidates": 4280,
+      "pallet_union_pixels": 22237754,
+      "person_points_covered_by_pallet": 2003,
+      "person_reference_points": 304357,
+      "checks": {
+        "strict_instance_gain_over_previous_best": false,
+        "point_coverage_not_below_previous_best": false,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": false,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "passed_numeric_and_preservation_gates": false,
+      "raw_point_coverage_nonregression_every_image": false,
+      "eligible": false
+    },
+    {
+      "method": "four_crop_control",
+      "pallet_objects_matched": 2249,
+      "pallet_reference_objects": 3672,
+      "pallet_points_covered": 139492,
+      "pallet_reference_points": 168738,
+      "pallet_candidates": 5684,
+      "pallet_union_pixels": 24141289,
+      "person_points_covered_by_pallet": 2184,
+      "person_reference_points": 304357,
+      "checks": {
+        "strict_instance_gain_over_previous_best": false,
+        "point_coverage_not_below_previous_best": true,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "passed_numeric_and_preservation_gates": false,
+      "raw_point_coverage_nonregression_every_image": true,
+      "eligible": false
+    },
+    {
+      "method": "accepted_raw_subset_control",
+      "pallet_objects_matched": 2298,
+      "pallet_reference_objects": 3672,
+      "pallet_points_covered": 139492,
+      "pallet_reference_points": 168738,
+      "pallet_candidates": 6328,
+      "pallet_union_pixels": 24168046,
+      "person_points_covered_by_pallet": 2184,
+      "person_reference_points": 304357,
+      "checks": {
+        "strict_instance_gain_over_previous_best": true,
+        "point_coverage_not_below_previous_best": true,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "passed_numeric_and_preservation_gates": true,
+      "raw_point_coverage_nonregression_every_image": true,
+      "eligible": false
+    },
+    {
+      "method": "cross_view_person_control",
+      "pallet_objects_matched": 2346,
+      "pallet_reference_objects": 3672,
+      "pallet_points_covered": 142543,
+      "pallet_reference_points": 168738,
+      "pallet_candidates": 6420,
+      "pallet_union_pixels": 25851718,
+      "person_points_covered_by_pallet": 2194,
+      "person_reference_points": 304357,
+      "checks": {
+        "strict_instance_gain_over_previous_best": true,
+        "point_coverage_not_below_previous_best": true,
+        "person_off_class_not_above_previous_best": false,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "passed_numeric_and_preservation_gates": false,
+      "raw_point_coverage_nonregression_every_image": true,
+      "eligible": false
+    },
+    {
+      "method": "person_neighborhood_veto",
+      "pallet_objects_matched": 2344,
+      "pallet_reference_objects": 3672,
+      "pallet_points_covered": 142462,
+      "pallet_reference_points": 168738,
+      "pallet_candidates": 6420,
+      "pallet_union_pixels": 25829136,
+      "person_points_covered_by_pallet": 2190,
+      "person_reference_points": 304357,
+      "checks": {
+        "strict_instance_gain_over_previous_best": true,
+        "point_coverage_not_below_previous_best": true,
+        "person_off_class_not_above_previous_best": false,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "passed_numeric_and_preservation_gates": false,
+      "raw_point_coverage_nonregression_every_image": true,
+      "eligible": false
+    }
+  ],
+  "full_additional_readbacks": {
+    "all_radius_per_image_point_nonregression": true,
+    "all_radius_per_image_person_cross_nonincrease": false,
+    "old_four_literal_prefix": true
+  },
+  "full_original_gates_passed": false,
+  "full_strict_instance_gain_vs_2298": true,
+  "full_approved_13_pallet5_person_retained": true,
+  "full_approved_retention": {
+    "pallet": {
+      "approved_objects": 13,
+      "approved_mask_exactly_reused_objects": 13
+    },
+    "person": {
+      "approved_objects": 5,
+      "approved_mask_exactly_reused_objects": 5
+    }
+  },
+  "full_controls_byte_exact": true,
+  "primary_score_reused_byte_exact": false,
+  "full_radius_diagnostic": {
+    "0": {
+      "person_cross_delta": 4,
+      "images_person_cross_increased": 1,
+      "pallet_point_delta": 2938,
+      "images_pallet_points_decreased": 0
+    },
+    "3": {
+      "person_cross_delta": 6,
+      "images_person_cross_increased": 1,
+      "pallet_point_delta": 2970,
+      "images_pallet_points_decreased": 0
+    },
+    "6": {
+      "person_cross_delta": 8,
+      "images_person_cross_increased": 1,
+      "pallet_point_delta": 2824,
+      "images_pallet_points_decreased": 0
+    }
+  },
+  "full_comparison_sha256": "cc9eec0889de0605b359d4f9568c1804f46cac748420e38bc30526bec0017c8e",
+  "full_audit_sha256": "0193c3ae7cb6f214895597672ca36bb02e3ddd19380c3094e0fc640eed964bc6",
+  "qualified_for_offline_joint_result": false
 }

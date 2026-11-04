@@ -1,0 +1,133 @@
+{
+  "status": "verified",
+  "observed_utc": "2026-11-04T15:56:35.869904+00:00",
+  "posthoc_development_replay": true,
+  "total_cases": 29,
+  "human_cases": 19,
+  "legacy_cases": 10,
+  "raw_cached_quality_responses_reused": 58,
+  "unique_quality_response_ids": 58,
+  "original59_files_preserved": true,
+  "all178_input_code_config_state_bindings_unchanged": true,
+  "uniform_source_ids": [
+    "legacy_04",
+    "legacy_03"
+  ],
+  "nonuniform_sources": 27,
+  "changed_views": [
+    {
+      "id": "legacy_04",
+      "view": "overview",
+      "from": "pallet",
+      "to": "uncertain"
+    },
+    {
+      "id": "legacy_04",
+      "view": "linked",
+      "from": "pallet",
+      "to": "uncertain"
+    },
+    {
+      "id": "legacy_03",
+      "view": "overview",
+      "from": "pallet",
+      "to": "uncertain"
+    },
+    {
+      "id": "legacy_03",
+      "view": "linked",
+      "from": "pallet",
+      "to": "uncertain"
+    }
+  ],
+  "raw_blank_pallet_consensus": 2,
+  "guarded_blank_pallet_consensus": 0,
+  "all_blank_views_uncertain_after_guard": true,
+  "human_correct_before": 14,
+  "human_correct_after": 14,
+  "human_wrong_consensus_before": 1,
+  "human_wrong_consensus_after": 1,
+  "remaining_human_wrong_consensus_ids": [
+    "region_06"
+  ],
+  "remaining_new_opposite_view_errors": [
+    {
+      "case_id": "region_06",
+      "view": "overview"
+    },
+    {
+      "case_id": "region_05",
+      "view": "linked"
+    }
+  ],
+  "legacy_group_counts_after": {
+    "blank_control": {
+      "cases": 2,
+      "pallet_consensus": 0,
+      "person_consensus": 0,
+      "all_views_uncertain": 2
+    },
+    "pallet_fixture": {
+      "cases": 5,
+      "pallet_consensus": 4,
+      "person_consensus": 0,
+      "all_views_uncertain": 0
+    },
+    "person_fixture": {
+      "cases": 2,
+      "pallet_consensus": 0,
+      "person_consensus": 2,
+      "all_views_uncertain": 0
+    },
+    "suspected_non_pallet": {
+      "cases": 1,
+      "pallet_consensus": 0,
+      "person_consensus": 1,
+      "all_views_uncertain": 0
+    }
+  },
+  "legacy_checks_before": {
+    "all_cases_have_valid_real_CUDA_responses": true,
+    "all_person_fixtures_agree_person": true,
+    "pallet_fixtures_never_called_person": false,
+    "minimum_pallet_consensus": true,
+    "blank_views_always_uncertain": false,
+    "suspected_non_target_never_accepted": false
+  },
+  "legacy_checks_after": {
+    "all_cases_have_valid_real_CUDA_responses": true,
+    "all_person_fixtures_agree_person": true,
+    "pallet_fixtures_never_called_person": false,
+    "minimum_pallet_consensus": true,
+    "blank_views_always_uncertain": true,
+    "suspected_non_target_never_accepted": false
+  },
+  "all_original_quality_checks_passed": false,
+  "helper_tests_passed": 8,
+  "existing_card_tests_passed": 4,
+  "test_seconds": 0.152,
+  "new_model_calls": 0,
+  "new_SAM_calls": 0,
+  "adopted": false,
+  "default_enabled": false,
+  "workbench_writes": false,
+  "independent_validation": false,
+  "pixel_accuracy_measured": false,
+  "availability_checks": {
+    "all29_cases_and58_quality_responses_replayed": true,
+    "raw_results_reproduced": true,
+    "all_available_source_predictions_unchanged": true,
+    "no_new_confident_class_generated": true,
+    "no_correct_human_region_lost_vs_raw_cards": true,
+    "input_code_config_annotation_bindings_unchanged": true,
+    "plan_unchanged": true
+  },
+  "original_quality_checks_after": {
+    "human_consensus_strictly_above11": true,
+    "no_previous_correct_human_region_lost": true,
+    "all5_confirmed_people_correct": true,
+    "no_new_opposite_class_view_error": false,
+    "all_original_legacy_checks_passed": false
+  },
+  "scope": "Posthoc replay on all29 existing development cases, including2 synthetic uniform controls. No independent segmentation accuracy or end-to-end Agent acceptance. Original59-call trial remains failed."
+}

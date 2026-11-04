@@ -1,0 +1,92 @@
+{
+  "status": "complete",
+  "all_6_methods_588_images_read_back": true,
+  "all_class_three_radius_integer_totals_recomputed": true,
+  "comparison_recomputed_exactly": true,
+  "code_metric_plan_and_input_bindings_unchanged": true,
+  "prediction_hashes": {
+    "pallet_baseline": "591ebba97aeaca4f58dfcb0eecfd79ec026b4915aa670143d46d9702181b7f92",
+    "four_crop_control": "b6be477759b2a07fad832cf33c440e01addbaf90f480488dfb0195a68f35c889",
+    "accepted_raw_subset_control": "542833b92253a71759c43303b2a78d3880683d90f375095f3b2f594e28473884",
+    "cross_view_person_control": "705ba36d58435ecf5353d7d307ed15cf58500dcdb73413553a69e64cea022ee0",
+    "original_person_neighborhood_control": "cb00e222c70647589c9eeaca52e218f55b47e7177feb732ed0175a9e36fb4885",
+    "person_box_neighborhood_veto": "660f5d92d11dddfbc68257d0c0db3694650764dd2437de734e0c5d6f1eceb0c9"
+  },
+  "three_controls_and_original15cm_control_byte_exact": true,
+  "historical_four_crop_serialization_difference_verified": true,
+  "original_eight_gates_passed": true,
+  "all_joint_requirements_passed": true,
+  "delta_vs_2298": {
+    "matched": 44,
+    "pallet_points": 2912,
+    "person_cross": 0
+  },
+  "radii_diagnostic": {
+    "0": {
+      "person_cross_delta": 0,
+      "images_with_person_increase": 0,
+      "pallet_points_lost_images": 0,
+      "person_points_lost_images": 0
+    },
+    "3": {
+      "person_cross_delta": 0,
+      "images_with_person_increase": 0,
+      "pallet_points_lost_images": 0,
+      "person_points_lost_images": 0
+    },
+    "6": {
+      "person_cross_delta": 0,
+      "images_with_person_increase": 0,
+      "pallet_points_lost_images": 0,
+      "person_points_lost_images": 0
+    }
+  },
+  "original_six_point_case": {
+    "accepted_raw_subset_control": {
+      "0": 2,
+      "3": 2,
+      "6": 9
+    },
+    "original_person_neighborhood_control": {
+      "0": 6,
+      "3": 8,
+      "6": 17
+    },
+    "person_box_neighborhood_veto": {
+      "0": 2,
+      "3": 2,
+      "6": 9
+    }
+  },
+  "approved13_pallet5_person_retained": true,
+  "all_source_data_and_workbench_preserved": true,
+  "current_state_still_matches_preservation": true,
+  "full_validation_model_calls": 0,
+  "workbench_writes": false,
+  "comparison_sha256": "7c4ba7011e9194afa1bf9b3ed31b3c28da42035e85d2b0c9f514822cbb00d4ae",
+  "frozen_plan_sha256": "fd0c00dec30219cb4f6384ba6c3097ce58477921f7600e6dbe594530cca0b429",
+  "diagnostic_native_person_crop_calls": 16,
+  "diagnostic_crop_results_used_by_predictor": false,
+  "tuning": {
+    "images": 20,
+    "matched": 78,
+    "pallet_points": 5214,
+    "person_cross": 55,
+    "primary_byte_exact_old15cm": true
+  },
+  "regression": {
+    "passed": 400,
+    "skipped": 0
+  },
+  "all_eight_original_thresholds_unchanged": true,
+  "new_guard": {
+    "source": "baseline unpadded per-instance axis-aligned boxes across four views",
+    "dilation_pixels": 6,
+    "neighborhood_meters": 0.15,
+    "recursive": false,
+    "new_padding_parameters": 0
+  },
+  "independent_dense_pixel_accuracy_evaluated": false,
+  "default_enabled": false,
+  "confirmed_annotation_writes": 0
+}

@@ -35,6 +35,17 @@ run_status = {"status": "idle"}
 run_stop_event = threading.Event()
 
 
+def _commit_work_file(temporary, destination):
+    for attempt in range(10):
+        try:
+            temporary.replace(destination)
+            return
+        except PermissionError:
+            if attempt == 9:
+                raise
+            time.sleep(min(.05 * 2**attempt, 1.0))
+
+
 def state_path():
     return WORK / "state.json"
 
@@ -42,7 +53,7 @@ def state_path():
 def save():
     temporary = state_path().with_suffix(".tmp")
     temporary.write_text(json.dumps({k: v for k, v in state.items() if k != "video"}, ensure_ascii=False, indent=2), encoding="utf-8")
-    temporary.replace(state_path())
+    _commit_work_file(temporary, state_path())
 
 
 def update_run_status(**changes):
@@ -54,14 +65,14 @@ def save_run(output):
     path = WORK / "last_run.json"
     temporary = path.with_suffix(".tmp")
     temporary.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
-    temporary.replace(path)
+    _commit_work_file(temporary, path)
 
 
 def save_debug(trace):
     path = WORK / "model_debug.json"
     temporary = path.with_suffix(".tmp")
     temporary.write_text(json.dumps({"trace": trace}, ensure_ascii=False, indent=2), encoding="utf-8")
-    temporary.replace(path)
+    _commit_work_file(temporary, path)
 
 
 def inspection_image_names(value):
@@ -90,7 +101,7 @@ def save_inspection_image(data):
     if not path.exists():
         temporary = folder / (uuid.uuid4().hex + ".tmp")
         temporary.write_bytes(data)
-        temporary.replace(path)
+        _commit_work_file(temporary, path)
     return "/api/inspection/image/" + name
 
 
@@ -105,7 +116,7 @@ def save_description_trace(trace, description):
     path = WORK / "description_debug.json"
     temporary = path.with_suffix(".tmp")
     temporary.write_text(json.dumps({"trace": trace, "description": description}, ensure_ascii=False), encoding="utf-8")
-    temporary.replace(path)
+    _commit_work_file(temporary, path)
 
 
 def redact_debug(value):
@@ -296,7 +307,7 @@ def read_library():
 def write_library(files):
     temporary = library_path().with_suffix('.tmp')
     temporary.write_text(json.dumps(files, ensure_ascii=False, indent=2), encoding="utf-8")
-    temporary.replace(library_path())
+    _commit_work_file(temporary, library_path())
 
 
 def register_file(path, name=None):
@@ -531,7 +542,7 @@ def clear_auto_result(index):
                         record["current"] = None
             temporary = path.with_suffix(".tmp")
             temporary.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
-            temporary.replace(path)
+            _commit_work_file(temporary, path)
         with run_status_lock:
             if belongs(run_status):
                 run_status["events"] = [event for event in run_status.get("events", [])

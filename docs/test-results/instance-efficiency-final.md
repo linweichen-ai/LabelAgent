@@ -38,3 +38,5 @@
 | camera1_frame76 C_hybrid | 3 | False | max_rounds | 5 |
 
 失败条件：PAL_support_strict_gain, all_six_runs_converged_within_three_rounds
+
+低空间交接保护已用真实完整ZIP和真实提交差异执行一次完整还原，954个目标文件按Git正文摘要全部核对通过；Windows文本换行仅为计算摘要而规范化，未改文件内容或二进制。低空间分支选择使用模拟空间状态，归档、差异和还原是真实执行。

@@ -90,7 +90,7 @@ def digest(path):
     return hashlib.sha256(shared_bytes(path)).hexdigest()
 
 
-def git(repo, *args, check=True):
+def git(repo, *args, check=True, raw=False):
     result = subprocess.run(['git', '-C', str(repo), *args], capture_output=True, stdin=subprocess.DEVNULL,
                             creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
                             encoding='utf-8', errors='replace', timeout=150,
@@ -100,7 +100,7 @@ def git(repo, *args, check=True):
         detail = re.sub(r'https://[^/@\s]+:[^/@\s]+@', 'https://[redacted]@', detail)
         raise RuntimeError('Git operation failed: ' + ' '.join(args[:2]) +
                            ' (exit ' + str(result.returncode) + '): ' + detail[:700])
-    return result.stdout.strip(), result.returncode
+    return (result.stdout if raw else result.stdout.strip()), result.returncode
 
 
 def process_matches(pid, created):
@@ -570,7 +570,7 @@ def build_handoff(config, observation, sync, threads):
             base_commit = git(config['repo'], 'rev-parse', base.stem.removeprefix('LabelAgent_') + '^{commit}')[0]
             stem = 'LabelAgent_' + sync['commit'][:12]
             patch = home / '02_代码' / (stem + '.patch')
-            atomic(patch, git(config['repo'], 'diff', '--binary', '--full-index', base_commit, sync['commit'])[0] + '\n')
+            atomic(patch, git(config['repo'], 'diff', '--binary', '--full-index', base_commit, sync['commit'], raw=True)[0])
             tree = git(config['repo'], '-c', 'core.quotepath=false', 'ls-tree', '-r', '-z', '--full-tree', sync['commit'])[0]
             files = {entry.split('\t',1)[1]:entry.split('\t',1)[0].split()[2] for entry in tree.split('\0') if entry}
             write_json(home / '02_代码' / (stem + '.json'), {'mode':'verified_full_base_plus_binary_diff',

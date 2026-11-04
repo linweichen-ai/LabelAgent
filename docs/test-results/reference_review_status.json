@@ -1,5 +1,5 @@
 {
-  "status": "awaiting_user_review",
+  "status": "approved_and_frame76_completed",
   "reference_frame": 0,
   "camera": 1,
   "draft_candidates": 15,
@@ -16,6 +16,41 @@
   "independent_review_session": true,
   "previous_sessions_checked": 7,
   "preservation_checks": {
+    "all_seven_previous_sessions_preserved": true,
+    "approved_reference_exact": true,
+    "approved_reference_only_truth_in_new_session": true,
+    "target_76_remains_unconfirmed": true,
+    "only_target_76_candidate": true,
+    "only_target_76_agent_run": true,
+    "model_configuration_preserved": true,
+    "labels_preserved": true,
+    "reference_file_hash_matches_approval": true,
+    "original_mcap_unchanged": true,
+    "review_mcap_unchanged": true,
+    "source_target_image_unchanged": true,
+    "browser_no_page_errors": true,
+    "browser_no_failed_responses": true,
+    "all_1023_original_source_files_unchanged": true,
+    "original_dataset_mcap_unchanged": true
+  },
+  "browser_verified": true,
+  "browser_page_errors": [],
+  "human_approved": true,
+  "saved_as_truth": true,
+  "reference_activated": true,
+  "new_SAM3_requests": 2,
+  "frame_76_run_started": true,
+  "next_action_after_explicit_user_approval": "completed: approved reference saved, real description generated, frame76 segmented and reviewed; target remains unconfirmed",
+  "raw_images_and_per_object_annotations_uploaded": false,
+  "frame_76_run_completed": true,
+  "observed_successful_VLM_calls": 2,
+  "observed_VLM_scope": "latest successful description trace plus target review, not unretained retries",
+  "target_76_saved_as_truth": false,
+  "actual_candidate_counts": {
+    "pallet": 9,
+    "person": 2
+  },
+  "preparation_checks": {
     "all_previous_sessions_preserved": true,
     "all_previous_labels_preserved": true,
     "model_configuration_preserved": true,
@@ -27,14 +62,5 @@
     "original_reference_seed_unchanged": true,
     "source_frame_unchanged": true
   },
-  "browser_verified": true,
-  "browser_page_errors": [],
-  "human_approved": false,
-  "saved_as_truth": false,
-  "reference_activated": false,
-  "new_SAM3_requests": 0,
-  "new_VLM_requests": 0,
-  "frame_76_run_started": false,
-  "next_action_after_explicit_user_approval": "save the approved draft as reference in the independent session, generate description, run exactly frame 76, preserve originals and publish deidentified actual results",
-  "raw_images_and_per_object_annotations_uploaded": false
+  "result": "approved_frame76_result.json"
 }

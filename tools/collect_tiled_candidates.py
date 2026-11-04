@@ -26,6 +26,7 @@ sys.path[:0] = [str(Path(__file__).resolve().parents[1]), str(Path(__file__).res
 from connect_local_vlm import loopback_url
 from run_local_agent_acceptance import load_image, save
 from tiled_candidate_utils import augment_candidates, remap_tile_result, tile_grid
+from crop_response_binding import check_crop_receipt
 
 
 def sha(raw):
@@ -45,11 +46,11 @@ def method_grid(scores, budgets, nms_iou):
         for score in scores for budget in budgets}
 
 
-def check_frozen_selection(selection, methods, frames, metric_sha, grid_spec=None):
+def check_frozen_selection(selection, methods, frames, metric_sha, grid_spec=None, query='pallet'):
     if (selection.get('selected_using_tuning_only') is not True or selection.get('metric_version') != 2
             or selection.get('metric_sha256') != metric_sha or selection.get('winner') == 'pallet_baseline'
             or len(methods) != 1 or methods.get(selection.get('winner')) != selection.get('frozen_parameters')
-            or frames != selection.get('heldout_frames')):
+            or frames != selection.get('heldout_frames') or query != selection.get('query','pallet')):
         raise ValueError('Validation must use exactly the frozen method, metric and held-out frames')
     expected_grid = selection.get('grid_spec', {'divisions':2,'crop_fraction':.6})
     actual_grid = grid_spec if grid_spec is not None else {'divisions':2,'crop_fraction':.6}
@@ -61,6 +62,9 @@ def check_frozen_selection(selection, methods, frames, metric_sha, grid_spec=Non
 
 
 def collect(args):
+    query=getattr(args,'prompt','pallet')
+    if query not in ('pallet','wooden pallet','plastic pallet','pallet base'):
+        raise ValueError('Unsupported fixed pallet query')
     dataset = Path(args.dataset).resolve()
     manifest_path = dataset/'import_manifest.json'
     manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
@@ -98,9 +102,9 @@ def collect(args):
     sam = loopback_url(args.sam)
     methods = method_grid(args.minimum_scores, args.addition_ratios, args.nms_iou)
     if selection is not None:
-        check_frozen_selection(selection, methods, frames, sha(Path(__file__).with_name('evaluate_projected_support.py').read_bytes()), grid_spec)
+        check_frozen_selection(selection, methods, frames, sha(Path(__file__).with_name('evaluate_projected_support.py').read_bytes()), grid_spec, query)
     requested_plan = {'version': 2, 'frames': frames, 'cameras': cameras, 'planned_images': len(records),
-        'planned_SAM3_requests': args.grid_divisions**2*len(records), 'query': 'pallet', 'crop_fraction': args.crop_fraction,
+        'planned_SAM3_requests': args.grid_divisions**2*len(records), 'query': query, 'crop_fraction': args.crop_fraction,
         'grid_spec': grid_spec, 'internal_edge_margin_pixels': 2,
         'methods': methods, 'prediction_uses_reference_labels': False,
         'ranking': 'confidence*(1-max_mask_iou_with_baseline); baseline preferred; NMS includes accepted additions',
@@ -109,6 +113,7 @@ def collect(args):
         'baseline_prediction_sha256': sha(raw_baseline), 'manifest_sha256': sha(manifest_path.read_bytes()),
         'collector_sha256': sha(Path(__file__).read_bytes()),
         'postprocessor_sha256': sha(Path(__file__).with_name('tiled_candidate_utils.py').read_bytes()),
+        'crop_binding_sha256': sha(Path(__file__).with_name('crop_response_binding.py').read_bytes()),
         'frozen_selection_sha256': sha(selection_raw) if selection_raw is not None else None,
         'scope': 'frozen_method_validation' if selection is not None else 'tuning',
         'selection': {'primary': 'pallet one_to_one_object_support_fraction at 3px tolerance, metric V2',
@@ -168,9 +173,8 @@ def collect(args):
                 response_file = output/'responses'/f'{camera}_{int(frame):04d}_tile_{tile_index}.json'
                 if response_file.exists():
                     receipt = json.loads(response_file.read_text(encoding='utf-8'))
-                    if (receipt['plan_sha256'] != plan_hash or receipt['source_image_sha256'] != row['sha256']
-                            or receipt['crop_png_sha256'] != sha(crop_bytes) or receipt['bounds'] != list(bounds)):
-                        raise ValueError('Cached crop response does not match the frozen inputs')
+                    check_crop_receipt(receipt,{'topic':topic,'frame':row['frame'],'tile_index':tile_index,'bounds':list(bounds),
+                        'source_image_sha256':row['sha256'],'crop_png_sha256':sha(crop_bytes),'query':plan['query'],'plan_sha256':plan_hash})
                 else:
                     started = time.monotonic()
                     request = urllib.request.Request(sam+'/segment_text',
@@ -243,6 +247,7 @@ if __name__ == '__main__':
     parser.add_argument('--frames', default='15,45,76,105,135')
     parser.add_argument('--cameras', default='0,1,2,3')
     parser.add_argument('--sam', default='http://127.0.0.1:8766')
+    parser.add_argument('--prompt',choices=('pallet','wooden pallet','plastic pallet','pallet base'),default='pallet')
     parser.add_argument('--minimum-scores', default='.8,.9')
     parser.add_argument('--addition-ratios', default='.25,.5')
     parser.add_argument('--nms-iou', type=float, default=.8)

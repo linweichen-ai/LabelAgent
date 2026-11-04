@@ -35,3 +35,5 @@
 新增工具`tools/source_image_evidence.py`及离线入口`tools/evaluate_source_availability.py`已保存，输出同时保留原类别和保护后类别。工具没有修改通用模型接口、工作台默认策略、源数据、标注、候选或原三维分数。全程0次新VLM／SAM3调用、0次训练；目前只支持这一类确定无空间变化的输入保护，不代表真实场景误报率或VLM能力提升。
 
 [脱敏计数与原条件](source_availability_results.json) · [原59次卡片结果](target-cards.md)
+
+后续[同区域SAM3类别证据实测](sam-class-guards.md)保留14处正确一致，并拦下1处一致错类；实际补充54次双类别局部分割后，旧托盘确认仍仅2/5，原至少3/5要求未通过，未启用默认策略。

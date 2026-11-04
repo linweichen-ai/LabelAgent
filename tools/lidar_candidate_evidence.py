@@ -156,3 +156,66 @@ def height_priorities(seed,proposals,width,height,evidence,mode):
         # This preserves their ordering and does not change model confidence.
         result[shape['id']]=float(shape.get('score',0))*novelty*factor/(2 if mode=='positive' else 1)
     return result
+
+
+POINT_NOVELTY_RECIPE={'height_band':[.04,.45],'minimum_low_points':5,'saturation_points':5,
+    'missing_support_factor':.5,'minimum_evidence_factor':.5,'maximum_evidence_factor':1.,
+    'mask_dilation':'same 3px square as height evidence','baseline':'original pallet masks only',
+    'dynamic':'update covered raw point indices after each actually selected candidate'}
+
+
+class RawPointNovelty:
+    """Score unlabelled low-height point coverage, with no reference objects."""
+    def __init__(self,baseline,proposals,width,height,sensor,base_mode='hybrid'):
+        if base_mode not in {'hybrid','point_only'}:raise ValueError('Unknown raw point priority base')
+        self.base_mode=base_mode
+        shapes=[*baseline,*proposals]
+        if len({s['id'] for s in shapes})!=len(shapes):raise ValueError('Raw point facts need unique candidate IDs')
+        self.proposals=proposals;self.baseline_ids={s['id'] for s in baseline}
+        self.available=bool(sensor['plane_usable'])
+        self.pixels=sensor['pixels']
+        lo,hi=POINT_NOVELTY_RECIPE['height_band']
+        self.low=((sensor['heights']>=lo)&(sensor['heights']<=hi) if self.available else np.zeros(len(self.pixels),dtype=bool))
+        self.masks={}
+        radius=POINT_RECIPE['mask_dilation_pixels'];kernel=np.ones((2*radius+1,2*radius+1),np.uint8)
+        for shape in shapes:
+            if shape['label']!='pallet':continue
+            mask=cv2.dilate(_rasterize(shape,width,height),kernel)
+            self.masks[shape['id']]=(mask[self.pixels[:,1],self.pixels[:,0]]!=0)&self.low
+        old=[_mask_record(s,width,height) for s in baseline if s['label']=='pallet']
+        self.base={}
+        for shape in proposals:
+            record=_mask_record(shape,width,height)
+            self.base[shape['id']]=float(shape['score'])*(1-max((_iou(record,v) for v in old),default=0.) if base_mode=='hybrid' else 1.)
+        self.seed_coverage=np.zeros(len(self.pixels),dtype=bool)
+        for shape in baseline:
+            if shape['label']=='pallet':self.seed_coverage|=self.masks[shape['id']]
+        self.covered=self.seed_coverage.copy();self.token=()
+
+    def _score(self,shape,covered,mode):
+        point_mask=self.masks[shape['id']]
+        count=int(np.count_nonzero(point_mask))
+        factor=POINT_NOVELTY_RECIPE['missing_support_factor']
+        if self.available and count>=POINT_NOVELTY_RECIPE['minimum_low_points']:
+            novel=int(np.count_nonzero(point_mask&~covered))
+            denominator=POINT_NOVELTY_RECIPE['saturation_points']+(count if mode=='fraction' else novel)
+            factor=.5+.5*novel/denominator
+        return self.base[shape['id']]*factor
+
+    def priorities(self,mode):
+        if mode not in {'mass','fraction'}:raise ValueError('Unknown raw point priority')
+        return {s['id']:self._score(s,self.seed_coverage,mode) for s in self.proposals}
+
+    def dynamic_priority(self,shape,selected):
+        token=tuple(s['id'] for s in selected if s['label']=='pallet' and s['id'] not in self.baseline_ids)
+        if token!=self.token:
+            self.covered=self.seed_coverage.copy()
+            for identifier in token:self.covered|=self.masks[identifier]
+            self.token=token
+        return self._score(shape,self.covered,'mass')
+
+    def summary(self):
+        return {'base_mode':self.base_mode,'raw_visible_points':len(self.pixels),'low_points':int(np.count_nonzero(self.low)),
+            'low_points_covered_by_original':int(np.count_nonzero(self.seed_coverage)),
+            'proposals_with_minimum_low_points':sum(np.count_nonzero(self.masks[s['id']])>=5 for s in self.proposals),
+            'reference_labels_used':False}

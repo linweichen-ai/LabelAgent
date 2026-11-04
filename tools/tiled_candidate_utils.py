@@ -1,4 +1,4 @@
-"""Image-grid proposal augmentation; no reference labels or 3D inputs."""
+"""Candidate augmentation with optional external priorities; no data loading."""
 from copy import deepcopy
 import math
 
@@ -109,13 +109,15 @@ def proposal_priorities(first_scale, second_scale, width, height, mode='confiden
     return priorities
 
 
-def augment_candidates(baseline, proposals, width, height, minimum_score=.8, addition_ratio=.5, nms_iou=.8, maximum_person_overlap=None, ranking_scores=None, dynamic_diversity=False, soft_containment=False):
+def augment_candidates(baseline, proposals, width, height, minimum_score=.8, addition_ratio=.5, nms_iou=.8, maximum_person_overlap=None, ranking_scores=None, dynamic_diversity=False, soft_containment=False, priority_callback=None):
     """Keep the baseline byte-equivalent as objects; append bounded novel masks."""
     if not 0 <= minimum_score <= 1 or not 0 < addition_ratio <= 1 or not 0 < nms_iou <= 1:
         raise ValueError('Invalid augmentation settings')
     if maximum_person_overlap is not None and (not math.isfinite(maximum_person_overlap)
             or not 0 <= maximum_person_overlap <= 1):
         raise ValueError('Invalid predicted-person overlap limit')
+    if priority_callback is not None and (not callable(priority_callback) or ranking_scores is not None or dynamic_diversity or soft_containment):
+        raise ValueError('A dynamic priority callback cannot mix with other priority policies')
     if ranking_scores is not None:
         identifiers=[shape['id'] for shape in proposals]
         if len(set(identifiers))!=len(identifiers) or set(ranking_scores)!=set(identifiers):
@@ -170,7 +172,13 @@ def augment_candidates(baseline, proposals, width, height, minimum_score=.8, add
     ranked.sort(key=lambda item: item[:3], reverse=True)
     additions = []
     while ranked:
-        if dynamic_diversity:
+        if priority_callback is not None:
+            current=tuple([*baseline,*additions])
+            values=[float(priority_callback(item[3],current)) for item in ranked]
+            if any(not math.isfinite(value) or not 0<=value<=1 for value in values):
+                raise ValueError('Invalid dynamic priority value')
+            selected=max(range(len(ranked)),key=lambda index:(values[index],ranked[index][1],ranked[index][2]))
+        elif dynamic_diversity:
             def current_priority(item):
                 _,score,order,shape,record=item
                 base=score if ranking_scores is None else float(ranking_scores[shape['id']])
@@ -199,6 +207,8 @@ def augment_candidates(baseline, proposals, width, height, minimum_score=.8, add
                     proposals_rejected_by_predicted_person=rejected_by_person)
     if ranking_scores is not None:
         info['ranking_source']='explicit_image_only_priorities; original model scores retained'
+    if priority_callback is not None:
+        info['ranking_source']='explicit_dynamic_priorities; original model scores retained'
     if dynamic_diversity:
         info['dynamic_diversity']='base priority*(1-max_mask_IoU_to_baseline_and_already_accepted_additions)'
     if soft_containment:

@@ -551,6 +551,14 @@ def sync_git(config, observation):
             'branch': config['publish_branch']}
 
 
+def refresh_manifest(home):
+    home = Path(home)
+    manifest = [{'path': p.relative_to(home).as_posix(), 'bytes': p.stat().st_size, 'sha256': digest(p)}
+                for p in sorted(home.rglob('*')) if p.is_file() and p.name != '文件SHA256清单.json']
+    write_json(home / '06_核验/文件SHA256清单.json', {'created_at': now(), 'files': manifest})
+    return manifest
+
+
 def build_handoff(config, observation, sync, threads):
     home = Path(config['handoff'])
     copy = home / '02_代码' / ('LabelAgent_' + sync['commit'][:12] + '.zip')
@@ -635,9 +643,7 @@ progress/dataset-comparison.md：历史里程碑和失败实验；test-results�
             blocks.append(f'<p><a href="{rel}">{rel}</a></p>')
     blocks.append('</section></html>')
     atomic(home / '00_交接入口.html', '\n'.join(blocks))
-    manifest = [{'path': p.relative_to(home).as_posix(), 'bytes': p.stat().st_size, 'sha256': digest(p)}
-                for p in sorted(home.rglob('*')) if p.is_file() and p.name != '文件SHA256清单.json']
-    write_json(home / '06_核验/文件SHA256清单.json', {'created_at': now(), 'files': manifest})
+    manifest = refresh_manifest(home)
     return {'pictures': len(pictures), 'videos': len(videos), 'files': len(manifest)}
 
 
@@ -719,6 +725,7 @@ def main():
                 report_failure(config, result)
             except Exception:
                 pass  # Notification failure must not prevent the next sync attempt.
+            refresh_manifest(config['handoff'])
             log_event(result)
             if not args.watch:
                 raise

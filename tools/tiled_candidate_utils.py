@@ -109,7 +109,7 @@ def proposal_priorities(first_scale, second_scale, width, height, mode='confiden
     return priorities
 
 
-def augment_candidates(baseline, proposals, width, height, minimum_score=.8, addition_ratio=.5, nms_iou=.8, maximum_person_overlap=None, ranking_scores=None, dynamic_diversity=False):
+def augment_candidates(baseline, proposals, width, height, minimum_score=.8, addition_ratio=.5, nms_iou=.8, maximum_person_overlap=None, ranking_scores=None, dynamic_diversity=False, soft_containment=False):
     """Keep the baseline byte-equivalent as objects; append bounded novel masks."""
     if not 0 <= minimum_score <= 1 or not 0 < addition_ratio <= 1 or not 0 < nms_iou <= 1:
         raise ValueError('Invalid augmentation settings')
@@ -129,6 +129,16 @@ def augment_candidates(baseline, proposals, width, height, minimum_score=.8, add
         raise ValueError('This experiment augments pallet candidates only')
     pallet = [shape for shape in baseline if shape['label'] == 'pallet']
     existing = [_mask_record(shape, width, height) for shape in pallet]
+    pallet_union=None
+    if soft_containment:
+        pallet_union=np.zeros((height,width),dtype=bool)
+        for record in existing:
+            x0,y0,x1,y1=record['bbox']
+            pallet_union[y0:y1,x0:x1]|=record['mask']!=0
+    def containment_factor(record):
+        x0,y0,x1,y1=record['bbox']
+        outside=np.count_nonzero((record['mask']!=0) & ~pallet_union[y0:y1,x0:x1])/record['area']
+        return .5+.5*outside
     limit = max(1, math.floor(len(pallet)*addition_ratio))
     person_mask = None
     if maximum_person_overlap is not None:
@@ -155,6 +165,7 @@ def augment_candidates(baseline, proposals, width, height, minimum_score=.8, add
         if overlap >= nms_iou:
             continue
         priority=score*(1-overlap) if ranking_scores is None else float(ranking_scores[shape['id']])
+        if soft_containment:priority*=containment_factor(record)
         ranked.append((priority, score, -index, shape, record))
     ranked.sort(key=lambda item: item[:3], reverse=True)
     additions = []
@@ -163,7 +174,9 @@ def augment_candidates(baseline, proposals, width, height, minimum_score=.8, add
             def current_priority(item):
                 _,score,order,shape,record=item
                 base=score if ranking_scores is None else float(ranking_scores[shape['id']])
-                return (base*(1-max((_iou(record,old) for old in existing),default=0.)),score,order)
+                priority=base*(1-max((_iou(record,old) for old in existing),default=0.))
+                if soft_containment:priority*=containment_factor(record)
+                return (priority,score,order)
             selected=max(range(len(ranked)),key=lambda index:current_priority(ranked[index]))
         else:
             selected=0
@@ -174,6 +187,9 @@ def augment_candidates(baseline, proposals, width, height, minimum_score=.8, add
             raise ValueError('Proposal ID collides with an existing ID')
         additions.append(deepcopy(shape))
         existing.append(record)
+        if soft_containment:
+            x0,y0,x1,y1=record['bbox']
+            pallet_union[y0:y1,x0:x1]|=record['mask']!=0
         if len(additions) >= limit:
             break
     info = {'baseline_pallets': len(pallet), 'tile_proposals': len(proposals),
@@ -185,6 +201,9 @@ def augment_candidates(baseline, proposals, width, height, minimum_score=.8, add
         info['ranking_source']='explicit_image_only_priorities; original model scores retained'
     if dynamic_diversity:
         info['dynamic_diversity']='base priority*(1-max_mask_IoU_to_baseline_and_already_accepted_additions)'
+    if soft_containment:
+        info['soft_containment']={'factor':'0.5+0.5*fraction_outside_pallet_prediction_union',
+                                  'union_updated_during_ranking':bool(dynamic_diversity)}
     return deepcopy(baseline)+additions, info
 
 

@@ -23,7 +23,7 @@ def digest(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def read(path):return json.loads(path.read_text(encoding='utf-8'))
 
 def replay(args):
-    if sum((args.preserve_four,args.diagnostic_all_proposals,args.ranking_study,args.diversity_study,args.preserved_ranking_study))>1:
+    if sum((args.preserve_four,args.diagnostic_all_proposals,args.ranking_study,args.diversity_study,args.preserved_ranking_study,args.containment_study))>1:
         raise ValueError('Preserved-budget, unbounded diagnostic and ranking study modes are mutually exclusive')
     dataset=Path(args.dataset).resolve()
     manifest=read(dataset/'import_manifest.json')
@@ -79,6 +79,13 @@ def replay(args):
             'preserved_novelty_control':{'pool':'dense','maximum_person_overlap':0.,'preserve_four':True},
             'preserve_four_novel_consensus_guard':{'pool':'dense','maximum_person_overlap':0.,'preserve_four':True,'ranking':'novel_consensus'},
             'preserve_four_dynamic_guard':{'pool':'dense','maximum_person_overlap':0.,'preserve_four':True,'dynamic_diversity':True}}
+    if args.containment_study:
+        methods={'four_crop_control':methods['four_crop_control'],
+            'multiscale_novelty_control':{'pool':'both','maximum_person_overlap':None},
+            **{('dynamic' if dynamic else 'static')+'_containment_rank'+('_person_guard' if guard else ''):
+                {'pool':'both','maximum_person_overlap':0. if guard else None,
+                 'soft_containment':True,'dynamic_diversity':dynamic}
+                for dynamic in (False,True) for guard in (False,True)}}
     output=Path(args.output).resolve()
     output.mkdir(parents=True,exist_ok=False)
     plan={'created_utc':datetime.now(timezone.utc).isoformat(),'version':1,
@@ -92,6 +99,7 @@ def replay(args):
             'consensus':'confidence*(0.5+0.5*max_mask_IoU_to_the_other_crop_scale)',
             'novel_consensus':'confidence*(1-max_mask_IoU_to_original_pallets)*(0.5+0.5*cross_scale_IoU)',
             'dynamic_diversity':'recompute confidence*(1-max_mask_IoU_to_original_and_accepted_pallets) after each addition',
+            'soft_containment':'multiply original novelty priority by 0.5+0.5*fraction_outside_pallet_union; original model score retained',
             'tie_breaking':'original model confidence then earlier proposal input index'},
         'fixed_parameters':{'minimum_score':.5,'addition_ratio':.5,'nms_iou':.8},
         'prediction_uses_3D_reference':False,'person_guard_source':'original SAM3 person predictions, not reference truth',
@@ -165,7 +173,8 @@ def replay(args):
                     candidates,info=augment_candidates(seed,proposals,width,height,
                         **plan['fixed_parameters'],maximum_person_overlap=settings['maximum_person_overlap'],
                         ranking_scores=priority,
-                        dynamic_diversity=settings.get('dynamic_diversity',False))
+                        dynamic_diversity=settings.get('dynamic_diversity',False),
+                        soft_containment=settings.get('soft_containment',False))
                 if candidates[:len(seed)]!=seed:raise ValueError('An original candidate changed')
                 maps[method].setdefault(topic,{})[frame]=candidates
                 run['postprocessing'].append({'frame':row['frame'],'topic':topic,'method':method,**info})
@@ -205,4 +214,5 @@ if __name__=='__main__':
     parser.add_argument('--ranking-study',action='store_true')
     parser.add_argument('--diversity-study',action='store_true')
     parser.add_argument('--preserved-ranking-study',action='store_true')
+    parser.add_argument('--containment-study',action='store_true')
     raise SystemExit(replay(parser.parse_args()))

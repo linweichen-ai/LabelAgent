@@ -146,7 +146,7 @@ def export_threads(config, state):
         previous = state.get(item['id'], {})
         target = Path(config['handoff']) / '05_对话记录' / (item['id'] + '.txt')
         if (previous.get('size') == st.st_size and target.exists()
-                and 'important_updates' in previous.get('summary', {})):
+                and previous.get('summary', {}).get('notice_filter_version') == 2):
             results.append(previous['summary'])
             continue
         messages, lines, last, updates = 0, [], None, []
@@ -177,11 +177,12 @@ def export_threads(config, state):
                 messages += 1
                 last = event.get('timestamp')
                 lines.append(f"[{last}] {'用户' if role == 'user' else '助手'}\n{text}\n")
-                if role == 'assistant' and re.search(r'完成|通过|结果|失败|出错|无法|已建|重要|需要您', text):
+                retrospective = re.search(r'是的[，,].{0,10}问过|当时讨论了|您之前问过|您明确问过', text[:300])
+                if role == 'assistant' and not retrospective and re.search(r'完成|通过|结果|失败|出错|无法|已建|重要|需要您', text):
                     updates.append({'time': last, 'text': text[:500]})
         atomic(target, '仅导出用户与助手可见文本；不含工具输出，凭据消息省略。\n\n' + '\n'.join(lines))
         summary = {'id': item['id'], 'messages_exported': messages, 'latest_message_utc': last,
-                   'important_updates': updates[-5:]}
+                   'important_updates': updates[-5:], 'notice_filter_version': 2}
         state[item['id']] = {'size': st.st_size, 'summary': summary}
         results.append(summary)
     return results
@@ -335,7 +336,7 @@ def report_changes(config, sync, observation, threads, added):
     reasons, details = [], []
     if prior:
         if prior.get('producer_commit') != state['producer_commit']:
-            reasons.append('新代码已同步')
+            reasons.append('项目更新已同步')
         if prior.get('scores') != state['scores'] or prior.get('primary_588_passed') != state['primary_588_passed']:
             reasons.append('验证结果有更新')
         if prior.get('status') == 'error':
@@ -345,14 +346,15 @@ def report_changes(config, sync, observation, threads, added):
             for update in thread.get('important_updates', []):
                 if seen and update.get('time') and update['time'] > seen:
                     text = re.sub(r'\[([^\]]*)\]\([^)]*\)', r'\1', update['text'])
-                    details.append(re.sub(r'\s+', ' ', text)[:180])
+                    rank = 3 if re.search(r'完整.{0,12}验证|未通过|评分|误覆盖', text) else 1
+                    details.append((rank, re.sub(r'\s+', ' ', text)[:180]))
         if details:
             reasons.append('对话有重要进展')
     if added:
         reasons.append(f'新增{len(added)}份媒体或结果')
     if reasons:
         record_important(config, {'title': '；'.join(reasons),
-                         'body': (details[-1] if details else '两端提交已核对一致，新增资料已归入交接目录。'),
+                         'body': (max(details, key=lambda item: item[0])[1] if details else '两端提交已核对一致，新增资料已归入交接目录。'),
                          'commit': sync['commit'], 'new_artifacts': added})
     write_json(path, state)
 
@@ -473,7 +475,7 @@ def public_document(observation, source, cnb):
 - 本交接分支同时发布到 GitHub 与 CNB，以提交摘要相同为同步完成条件。
 - 上游工作代码提交：`{source}`；CNB 既有进度提交：`{cnb}`。
 - 用户已补齐第三个独立链接，目前读取三段对话，涵盖研究优化、CNB同步和真实操作视频。
-- 当前完整 588 图：{conclusion}。阶段 `{observation['pipeline'].get('status', 'unknown')}`，已完成评分组数 {len(observation['scores'])}/5。
+- 首轮冻结 588 图：{conclusion}。阶段 `{observation['pipeline'].get('status', 'unknown')}`，已完成评分组数 {len(observation['scores'])}/5。后续试验见最新进度文档。
 - 当前数据为常熟0920：152 时刻、4 相机、608 图；参考采用 labels。20 图用于调参，588 图用于同采集复验。
 - 32 图已有结果：实例 118→119/205，参考点覆盖 7406→7603，人员交叉点保持119。完整结论以588图原标准核验为准。
 - 稀疏三维参考投影一致性不能解释为二维像素准确率或独立外部验证。未进行 Qwen 或 SAM3 权重微调。
@@ -524,7 +526,7 @@ def sync_git(config, observation):
                 else:
                     git(repo, 'merge', '--abort', check=False)
                     raise
-    payload = {'schema': 1, 'producer_commit': source, 'cnb_progress_commit': cnb, **observation}
+    payload = {'schema': 2, 'producer_commit': source, 'cnb_progress_commit': cnb, **observation}
     dest = repo / 'docs/progress/live-handoff.json'
     prior = read_json(dest, {})
     if prior != payload:
@@ -581,7 +583,8 @@ GitHub/CNB交接分支：{sync['branch']}；两端提交已回读一致。
 1. 数据和效果
 当前主测常熟0920数据：152时刻、四相机、608图。labels全帧作为参考；Task3为历史另一套数据。
 20图调参、588图同采集复验。已有32图实例118→119/205、点覆盖7406→7603，人员交叉点119不变。
-完整588图：{status}；阶段 {observation['pipeline'].get('status')}；评分 {len(observation['scores'])}/5。
+首轮冻结588图：{status}；阶段 {observation['pipeline'].get('status')}；评分 {len(observation['scores'])}/5。
+后续人员保护等试验的最新进展见08_重要进展.txt及07_文档，首轮结果作为历史对照保留。
 {scores}
 {reason}
 当前指标是稀疏三维参考投影一致性，不是二维像素准确率；尚无独立外部测试或权重微调结论。

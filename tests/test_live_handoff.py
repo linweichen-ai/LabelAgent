@@ -12,6 +12,18 @@ spec.loader.exec_module(m)
 
 
 class HandoffChecks(unittest.TestCase):
+    def test_retrospective_discussion_does_not_become_a_new_milestone(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            event = {'type': 'response_item', 'timestamp': '2026-11-04T08:00:00Z', 'payload': {
+                'type': 'message', 'role': 'assistant', 'content': [{'type': 'output_text',
+                'text': '是的，您明确问过。当时讨论了模型验证结果和微调准备。'}]}}
+            path = root / 'thread.jsonl'
+            path.write_text(json.dumps(event), encoding='utf-8')
+            values = m.export_threads({'threads': [{'id': 'test', 'path': str(path)}], 'handoff': folder}, {})
+            self.assertEqual(values[0]['messages_exported'], 1)
+            self.assertEqual(values[0]['important_updates'], [])
+
     def test_linked_artifacts_are_scoped_versioned_and_deduplicated(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

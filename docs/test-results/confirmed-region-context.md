@@ -43,3 +43,7 @@ A1已由用户确认是托盘可见部分，模型的单独像素图为不确定
 运行入口为`tools/evaluate_confirmed_region_context.py --fixture-json <本机冻结参考> --output <新实验目录>`；参考配置绑定本机批准记录及图片，不上传仓库。
 
 [脱敏结果](confirmed_region_context_results.json) · [历史局部分类对照](instance-focus.md) · [A1人工确认](semantic-A1-review.md)
+
+## 后续同输入8B对照
+
+已复用本轮57份2B响应，与服务器8B配对；原上下文单项14/19→18/19，但原一致确认11/19→10/19，旧功能面板也未全部通过，工作台保持2B。原两种上下文规则和失利样例均保留，详见[容量对照、原门槛及回收记录](confirmed-region-capacity.md)。

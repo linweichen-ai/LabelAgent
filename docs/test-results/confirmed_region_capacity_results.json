@@ -1,0 +1,398 @@
+{
+  "status": "complete_verified",
+  "observed_utc": "2026-11-04T14:53:24.094300+00:00",
+  "new_local_2B_requests": 20,
+  "reused_local_2B_responses": 57,
+  "new_remote_8B_requests": 77,
+  "new_requests_total": 97,
+  "evaluated_responses_total": 154,
+  "legacy_pair_fingerprints_equal": 20,
+  "legacy_actual_encodings_equal": 20,
+  "human_full_payload_hashes_equal": 57,
+  "human_actual_encodings_equal": 57,
+  "old2B_legacy_category_results_reproduced": 20,
+  "human_region_count": 19,
+  "human_images": 2,
+  "distinct_physical_instances_counted": false,
+  "human_policies": {
+    "2B": {
+      "tight_context": {
+        "cases": 19,
+        "valid_pairs": 19,
+        "correct_consensus": 11,
+        "consensus_counts": {
+          "pallet": 6,
+          "person": 5,
+          "uncertain": 8
+        },
+        "by_confirmed_category": {
+          "pallet": {
+            "cases": 14,
+            "correct_consensus": 6,
+            "wrong_opposite_class_views": 5,
+            "uncertain_consensus": 8
+          },
+          "person": {
+            "cases": 5,
+            "correct_consensus": 5,
+            "wrong_opposite_class_views": 0,
+            "uncertain_consensus": 0
+          }
+        }
+      },
+      "expanded_context": {
+        "cases": 19,
+        "valid_pairs": 19,
+        "correct_consensus": 11,
+        "consensus_counts": {
+          "pallet": 6,
+          "person": 5,
+          "uncertain": 8
+        },
+        "by_confirmed_category": {
+          "pallet": {
+            "cases": 14,
+            "correct_consensus": 6,
+            "wrong_opposite_class_views": 3,
+            "uncertain_consensus": 8
+          },
+          "person": {
+            "cases": 5,
+            "correct_consensus": 5,
+            "wrong_opposite_class_views": 0,
+            "uncertain_consensus": 0
+          }
+        }
+      }
+    },
+    "8B": {
+      "tight_context": {
+        "cases": 19,
+        "valid_pairs": 19,
+        "correct_consensus": 10,
+        "consensus_counts": {
+          "pallet": 5,
+          "uncertain": 9,
+          "person": 5
+        },
+        "by_confirmed_category": {
+          "pallet": {
+            "cases": 14,
+            "correct_consensus": 5,
+            "wrong_opposite_class_views": 1,
+            "uncertain_consensus": 9
+          },
+          "person": {
+            "cases": 5,
+            "correct_consensus": 5,
+            "wrong_opposite_class_views": 0,
+            "uncertain_consensus": 0
+          }
+        }
+      },
+      "expanded_context": {
+        "cases": 19,
+        "valid_pairs": 19,
+        "correct_consensus": 10,
+        "consensus_counts": {
+          "pallet": 5,
+          "uncertain": 9,
+          "person": 5
+        },
+        "by_confirmed_category": {
+          "pallet": {
+            "cases": 14,
+            "correct_consensus": 5,
+            "wrong_opposite_class_views": 2,
+            "uncertain_consensus": 9
+          },
+          "person": {
+            "cases": 5,
+            "correct_consensus": 5,
+            "wrong_opposite_class_views": 0,
+            "uncertain_consensus": 0
+          }
+        }
+      }
+    }
+  },
+  "human_correct_categories_by_view": {
+    "2B": {
+      "single": 12,
+      "context": 14,
+      "expanded": 16
+    },
+    "8B": {
+      "single": 10,
+      "context": 18,
+      "expanded": 17
+    }
+  },
+  "human_primary_outcomes": [
+    {
+      "case_id": "region_01",
+      "confirmed_category": "pallet",
+      "2B_consensus": "pallet",
+      "8B_consensus": "pallet",
+      "2B_correct": true,
+      "8B_correct": true
+    },
+    {
+      "case_id": "region_02",
+      "confirmed_category": "pallet",
+      "2B_consensus": "pallet",
+      "8B_consensus": "pallet",
+      "2B_correct": true,
+      "8B_correct": true
+    },
+    {
+      "case_id": "region_03",
+      "confirmed_category": "pallet",
+      "2B_consensus": "pallet",
+      "8B_consensus": "uncertain",
+      "2B_correct": true,
+      "8B_correct": false
+    },
+    {
+      "case_id": "region_04",
+      "confirmed_category": "person",
+      "2B_consensus": "person",
+      "8B_consensus": "person",
+      "2B_correct": true,
+      "8B_correct": true
+    },
+    {
+      "case_id": "region_05",
+      "confirmed_category": "pallet",
+      "2B_consensus": "uncertain",
+      "8B_consensus": "uncertain",
+      "2B_correct": false,
+      "8B_correct": false
+    },
+    {
+      "case_id": "region_06",
+      "confirmed_category": "pallet",
+      "2B_consensus": "uncertain",
+      "8B_consensus": "uncertain",
+      "2B_correct": false,
+      "8B_correct": false
+    },
+    {
+      "case_id": "region_07",
+      "confirmed_category": "person",
+      "2B_consensus": "person",
+      "8B_consensus": "person",
+      "2B_correct": true,
+      "8B_correct": true
+    },
+    {
+      "case_id": "region_08",
+      "confirmed_category": "pallet",
+      "2B_consensus": "pallet",
+      "8B_consensus": "pallet",
+      "2B_correct": true,
+      "8B_correct": true
+    },
+    {
+      "case_id": "region_09",
+      "confirmed_category": "pallet",
+      "2B_consensus": "uncertain",
+      "8B_consensus": "uncertain",
+      "2B_correct": false,
+      "8B_correct": false
+    },
+    {
+      "case_id": "region_10",
+      "confirmed_category": "pallet",
+      "2B_consensus": "uncertain",
+      "8B_consensus": "uncertain",
+      "2B_correct": false,
+      "8B_correct": false
+    },
+    {
+      "case_id": "region_11",
+      "confirmed_category": "person",
+      "2B_consensus": "person",
+      "8B_consensus": "person",
+      "2B_correct": true,
+      "8B_correct": true
+    },
+    {
+      "case_id": "region_12",
+      "confirmed_category": "pallet",
+      "2B_consensus": "uncertain",
+      "8B_consensus": "uncertain",
+      "2B_correct": false,
+      "8B_correct": false
+    },
+    {
+      "case_id": "region_13",
+      "confirmed_category": "pallet",
+      "2B_consensus": "uncertain",
+      "8B_consensus": "uncertain",
+      "2B_correct": false,
+      "8B_correct": false
+    },
+    {
+      "case_id": "region_14",
+      "confirmed_category": "pallet",
+      "2B_consensus": "pallet",
+      "8B_consensus": "pallet",
+      "2B_correct": true,
+      "8B_correct": true
+    },
+    {
+      "case_id": "region_15",
+      "confirmed_category": "pallet",
+      "2B_consensus": "uncertain",
+      "8B_consensus": "uncertain",
+      "2B_correct": false,
+      "8B_correct": false
+    },
+    {
+      "case_id": "region_16",
+      "confirmed_category": "pallet",
+      "2B_consensus": "uncertain",
+      "8B_consensus": "uncertain",
+      "2B_correct": false,
+      "8B_correct": false
+    },
+    {
+      "case_id": "region_17",
+      "confirmed_category": "person",
+      "2B_consensus": "person",
+      "8B_consensus": "person",
+      "2B_correct": true,
+      "8B_correct": true
+    },
+    {
+      "case_id": "region_18",
+      "confirmed_category": "person",
+      "2B_consensus": "person",
+      "8B_consensus": "person",
+      "2B_correct": true,
+      "8B_correct": true
+    },
+    {
+      "case_id": "region_19",
+      "confirmed_category": "pallet",
+      "2B_consensus": "pallet",
+      "8B_consensus": "pallet",
+      "2B_correct": true,
+      "8B_correct": true
+    }
+  ],
+  "primary_lost_regions": [
+    "region_03"
+  ],
+  "primary_gained_regions": [],
+  "new_opposite_class_primary_view_errors": [],
+  "legacy_checks": {
+    "2B": {
+      "all_cases_have_valid_real_CUDA_responses": true,
+      "all_person_fixtures_agree_person": true,
+      "pallet_fixtures_never_called_person": false,
+      "minimum_pallet_consensus": false,
+      "blank_views_always_uncertain": false,
+      "suspected_non_target_never_accepted": false
+    },
+    "8B": {
+      "all_cases_have_valid_real_CUDA_responses": true,
+      "all_person_fixtures_agree_person": true,
+      "pallet_fixtures_never_called_person": true,
+      "minimum_pallet_consensus": false,
+      "blank_views_always_uncertain": false,
+      "suspected_non_target_never_accepted": false
+    }
+  },
+  "legacy_consensus_by_role": {
+    "2B": {
+      "blank_control": {
+        "uncertain": 1,
+        "pallet": 1
+      },
+      "pallet_fixture": {
+        "uncertain": 3,
+        "pallet": 2
+      },
+      "person_fixture": {
+        "person": 2
+      },
+      "suspected_non_pallet": {
+        "uncertain": 1
+      }
+    },
+    "8B": {
+      "blank_control": {
+        "uncertain": 2
+      },
+      "pallet_fixture": {
+        "uncertain": 4,
+        "pallet": 1
+      },
+      "person_fixture": {
+        "person": 2
+      },
+      "suspected_non_pallet": {
+        "uncertain": 1
+      }
+    }
+  },
+  "A1": {
+    "2B": {
+      "single": "uncertain",
+      "context": "person",
+      "expanded": "person"
+    },
+    "8B": {
+      "single": "uncertain",
+      "context": "pallet",
+      "expanded": "person"
+    }
+  },
+  "A1_human_confirmation_preserved": true,
+  "checks": {
+    "all97_new_requests_complete_real_CUDA": true,
+    "all77_input_fingerprints_or_full_payloads_match": true,
+    "all77_actual_image_encodings_match": true,
+    "human_primary_correct_consensus_strictly_above11": false,
+    "no_previously_correct_human_region_lost": false,
+    "all5_confirmed_people_remain_correct": true,
+    "no_new_opposite_class_primary_view_error": true,
+    "all_original_legacy_functional_checks_8B_pass": false,
+    "input_code_and_state_preserved": true
+  },
+  "all_predeclared_primary_checks_passed": false,
+  "peak_allocated_bytes_max": {
+    "2B": 2484160512,
+    "8B": 7593712640
+  },
+  "model_config_sha256": {
+    "2B": "bec4b3d446efa05807365c9e1cec03ac590836879d02f3a6da879971154bdd3b",
+    "8B": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+  },
+  "source_code_same_but_GPU_hardware_and_environments_different": true,
+  "pure_model_size_causality_proven": false,
+  "adopted": false,
+  "workbench_model_switched": false,
+  "new_SAM_calls": 0,
+  "candidate_edits_created": false,
+  "independent_pixel_accuracy_measured": false,
+  "original_3D_scores_or_thresholds_changed": false,
+  "all_source_bindings_unchanged": true,
+  "comparison_frozen_sha256": "3d211962c643f0f1704803ca89105230c5448e57129b02fc023865f298c6dbe1",
+  "verification_script_sha256": "3d914763b71d4361c38d872894ba5b1febd203834f52bc18d63b5fe68c90d546",
+  "remote_model_temporary": true,
+  "remote_owned_model_stopped": true,
+  "SSH_and_forward_closed": true,
+  "foreign_processes_stopped": 0,
+  "official_8B_shards_reverified": 4,
+  "remote_allocator_fraction": 0.35,
+  "remote_reserved_MiB": 4096,
+  "remote_lifetime_seconds": 900,
+  "workbench_model": "local Qwen3-VL-2B NF4",
+  "workbench_state_unchanged": true,
+  "comparison_requirements_fixed_before_first8B_inference": true,
+  "local20_baseline_started_before_comparison_freeze": true,
+  "comparison_verified_sha256": "505900be2cf905bae291f5fa4580f719102a2caa31e2e11e9e1c15ea3c6ba35a"
+}

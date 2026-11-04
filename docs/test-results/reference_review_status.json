@@ -1,0 +1,40 @@
+{
+  "status": "awaiting_user_review",
+  "reference_frame": 0,
+  "camera": 1,
+  "draft_candidates": 15,
+  "counts": {
+    "pallet": 10,
+    "person": 5
+  },
+  "seed_candidates": 17,
+  "removed_duplicate_candidates": 2,
+  "draft_sha256": "9725a6336daf8ef3eaba96921900c609cd12348cdbac28cc4451aaf9893792f2",
+  "source_image_sha256": "3d0b716d9ef4613e60c793962f6c9e1f6388b55b10c9b32673244efe9ce33c3a",
+  "preparation": "reused real SAM3 candidates, visually reviewed and deduplicated by assistant",
+  "pallet_mask_convention": "outer contour; small grid holes not individually cut out; occluded body not extrapolated",
+  "independent_review_session": true,
+  "previous_sessions_checked": 7,
+  "preservation_checks": {
+    "all_previous_sessions_preserved": true,
+    "all_previous_labels_preserved": true,
+    "model_configuration_preserved": true,
+    "new_session_truth_empty": true,
+    "new_session_reference_unset": true,
+    "draft_roundtrip_exact": true,
+    "new_session_agent_runs_empty": true,
+    "original_mcap_hash_unchanged": true,
+    "original_reference_seed_unchanged": true,
+    "source_frame_unchanged": true
+  },
+  "browser_verified": true,
+  "browser_page_errors": [],
+  "human_approved": false,
+  "saved_as_truth": false,
+  "reference_activated": false,
+  "new_SAM3_requests": 0,
+  "new_VLM_requests": 0,
+  "frame_76_run_started": false,
+  "next_action_after_explicit_user_approval": "save the approved draft as reference in the independent session, generate description, run exactly frame 76, preserve originals and publish deidentified actual results",
+  "raw_images_and_per_object_annotations_uploaded": false
+}

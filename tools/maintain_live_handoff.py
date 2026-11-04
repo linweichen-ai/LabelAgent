@@ -628,7 +628,7 @@ progress/dataset-comparison.md：历史里程碑和失败实验；test-results�
         blocks.append(f'<figure><a href="{rel}"><img loading="lazy" src="{rel}"></a><figcaption>{html.escape(p.relative_to(home).as_posix())}</figcaption></figure>')
     blocks.append('</div></section><section><h2>备份文件</h2>')
     for p in sorted(home.rglob('*')):
-        if p.is_file() and p.suffix in ('.zip', '.txt', '.json', '.md') and p.name != '文件SHA256清单.json':
+        if p.is_file() and p.suffix in ('.zip', '.txt', '.json', '.md', '.html') and p.name not in ('文件SHA256清单.json', '00_交接入口.html'):
             rel = html.escape(p.relative_to(home).as_posix())
             blocks.append(f'<p><a href="{rel}">{rel}</a></p>')
     blocks.append('</section></html>')

@@ -1,0 +1,208 @@
+{
+  "status": "comparison_recorded_agent_review_incomplete",
+  "agent_runs_converged": 2,
+  "agent_runs_failed": 4,
+  "end_to_end_agent_review_passed": false,
+  "images": 2,
+  "mask2former_checkpoint_sha256": "d11c2e7f86cd5189605b857c4697e55a5caead0a6888b52b2f5ff814150f5291",
+  "weights_unchanged": true,
+  "source_images_unchanged": true,
+  "protected_state_before_after_equal": true,
+  "annotation_writes": 0,
+  "mask2former_source_real_forwards": 2,
+  "mask2former_fresh_forwards_this_run": 0,
+  "SAM_source_requests": 19,
+  "VLM_real_requests": 14,
+  "VLM_protocol_valid_replies": 2,
+  "common_class_comparison": [
+    {
+      "arm": "A_current",
+      "pallet_instances_supported": 12,
+      "reference_pallet_instances": 17,
+      "pallet_points_covered": 482,
+      "reference_pallet_points": 579,
+      "person_points_covered_by_pallet": 0,
+      "person_instances_supported": 3,
+      "reference_person_instances": 3,
+      "person_points_covered": 1329,
+      "reference_person_points": 1568
+    },
+    {
+      "arm": "B_sam7",
+      "pallet_instances_supported": 12,
+      "reference_pallet_instances": 17,
+      "pallet_points_covered": 482,
+      "reference_pallet_points": 579,
+      "person_points_covered_by_pallet": 0,
+      "person_instances_supported": 3,
+      "reference_person_instances": 3,
+      "person_points_covered": 1329,
+      "reference_person_points": 1568
+    },
+    {
+      "arm": "C_hybrid",
+      "pallet_instances_supported": 12,
+      "reference_pallet_instances": 17,
+      "pallet_points_covered": 482,
+      "reference_pallet_points": 579,
+      "person_points_covered_by_pallet": 0,
+      "person_instances_supported": 3,
+      "reference_person_instances": 3,
+      "person_points_covered": 1349,
+      "reference_person_points": 1568
+    }
+  ],
+  "agent_runs": [
+    {
+      "arm": "A_current",
+      "initial_counts": {
+        "pallet": 15,
+        "person": 1
+      },
+      "final_counts": {
+        "pallet": 15,
+        "person": 1
+      },
+      "rounds": 1,
+      "converged": true,
+      "stop_reason": "done",
+      "applied_edits": 0,
+      "successful_vlm_calls": 1,
+      "elapsed_seconds": 65.61
+    },
+    {
+      "arm": "B_sam7",
+      "initial_counts": {
+        "pallet": 15,
+        "person": 1,
+        "floor": 1,
+        "slope": 0,
+        "ego": 0,
+        "other_robot": 0,
+        "cargo_floor": 0
+      },
+      "final_counts": {
+        "pallet": 15,
+        "person": 1,
+        "floor": 1,
+        "slope": 0,
+        "ego": 0,
+        "other_robot": 0,
+        "cargo_floor": 0
+      },
+      "rounds": 0,
+      "converged": false,
+      "stop_reason": "error",
+      "applied_edits": 0,
+      "successful_vlm_calls": 0,
+      "elapsed_seconds": 387.38
+    },
+    {
+      "arm": "C_hybrid",
+      "initial_counts": {
+        "pallet": 15,
+        "person": 1,
+        "floor": 1,
+        "slope": 0,
+        "ego": 0,
+        "other_robot": 0,
+        "cargo_floor": 0
+      },
+      "final_counts": {
+        "pallet": 15,
+        "person": 1,
+        "floor": 1,
+        "slope": 0,
+        "ego": 0,
+        "other_robot": 0,
+        "cargo_floor": 0
+      },
+      "rounds": 0,
+      "converged": false,
+      "stop_reason": "error",
+      "applied_edits": 0,
+      "successful_vlm_calls": 0,
+      "elapsed_seconds": 205.48
+    },
+    {
+      "arm": "A_current",
+      "initial_counts": {
+        "pallet": 9,
+        "person": 2
+      },
+      "final_counts": {
+        "pallet": 9,
+        "person": 2
+      },
+      "rounds": 1,
+      "converged": true,
+      "stop_reason": "done",
+      "applied_edits": 0,
+      "successful_vlm_calls": 1,
+      "elapsed_seconds": 7.17
+    },
+    {
+      "arm": "B_sam7",
+      "initial_counts": {
+        "pallet": 9,
+        "person": 2,
+        "floor": 1,
+        "slope": 0,
+        "ego": 0,
+        "other_robot": 0,
+        "cargo_floor": 0
+      },
+      "final_counts": {
+        "pallet": 9,
+        "person": 2,
+        "floor": 1,
+        "slope": 0,
+        "ego": 0,
+        "other_robot": 0,
+        "cargo_floor": 0
+      },
+      "rounds": 0,
+      "converged": false,
+      "stop_reason": "error",
+      "applied_edits": 0,
+      "successful_vlm_calls": 0,
+      "elapsed_seconds": 289.44
+    },
+    {
+      "arm": "C_hybrid",
+      "initial_counts": {
+        "pallet": 9,
+        "person": 2,
+        "floor": 1,
+        "slope": 0,
+        "ego": 0,
+        "other_robot": 0,
+        "cargo_floor": 0
+      },
+      "final_counts": {
+        "pallet": 9,
+        "person": 2,
+        "floor": 1,
+        "slope": 0,
+        "ego": 0,
+        "other_robot": 0,
+        "cargo_floor": 0
+      },
+      "rounds": 0,
+      "converged": false,
+      "stop_reason": "error",
+      "applied_edits": 0,
+      "successful_vlm_calls": 0,
+      "elapsed_seconds": 302.91
+    }
+  ],
+  "SAM_refinement_attempts": 5,
+  "SAM_refinement_technically_accepted": 3,
+  "dense_pixel_accuracy_evaluated": false,
+  "scope": "two exposed same-capture images, exploratory comparison; floor/other classes lack dense truth; no automatic adoption",
+  "pictures": 26,
+  "videos": 2,
+  "default_workbench_changed": false,
+  "hole_review_batch_size": 10,
+  "same_operation_cap_per_whole_agent_round": 3
+}

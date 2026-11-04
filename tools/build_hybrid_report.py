@@ -68,7 +68,7 @@ def main():
         rendered={name:panoptic(image,shapes,out/'dense_exports'/name/case) for name,shapes in arms.items()}
         stages=[('01 原始图像',image),('02 实际训练交付包初稿',panoptic(image,raw)),
                 ('03 SAM3掩码与点细化',panoptic(image,refined)),('04 SAM3缺失类别补漏',panoptic(image,seed['C_hybrid'])),
-                ('05 本地Agent复核后',rendered['C_hybrid'])]
+                ('05 Agent阶段结果（失败则保留候选）',rendered['C_hybrid'])]
         for index,(title,view) in enumerate(stages):
             file=assets/(case+f'_stage_{index+1:02d}.jpg');stage_card(case,title,image,view,file);replays.append((file,4));gallery.append(file)
         panels=[('原图',image),('A 现有两类',rendered['A_current']),('B 七类SAM3',rendered['B_sam7']),('C 混合流程',rendered['C_hybrid'])]
@@ -105,7 +105,8 @@ def main():
         person=f"人员支持 {row['person_instances_supported']}/{row['reference_person_instances']}；人员参考点 {row['person_points_covered']}/{row['reference_person_points']}"
         d.text((90,y+43),person,font=font,fill='#d6eaf4');y+=112
     y+=30
-    for line in ['仅2张已暴露同采集图；这些不是像素准确率。','地面等类别没有完整二维真值，不能据此宣称七类提升。',
+    for line in [f"Agent仅{sum(bool(r['converged']) for r in result['agent_runs'])}/6组收敛；七类4组失败，整套流程未通过验收。",
+                 '仅2张已暴露同采集图；这些不是像素准确率。','地面等类别没有完整二维真值，不能据此宣称七类提升。',
                  '实际使用训练交付包 d11c2e7f…；SAM3补漏单独记账。','原始标注未写入；模型权重和原图保持。','本片是实际阶段结果回放，不是连续工作台录屏。']:
         d.text((70,y),line,font=titlefont,fill='#e0e9f4');y+=66
     summary_file=assets/'comparison_summary.jpg';summary.save(summary_file,quality=95);gallery.append(summary_file);comparisons.append((summary_file,8))
@@ -154,6 +155,7 @@ def main():
       '<h1>实际训练交付包 → SAM3 → Agent：同图三方案对照</h1>',
       f'<section><strong>真实复核记录：{converged}/6组收敛，{failed}/6组调用或协议失败。失败组保留候选，不表示Agent纠错成功，整套流程尚未通过验收。</strong></section>',
       '<section><p>本次使用CVAT项目实际单模型交付包，权重d11c2e7f…，448×576及包内专用阈值。此前R5/R11的3图试跑保留为旧版诊断，不代替此模型结果。</p>',
+      '<p>这份单模型确实完成3960次更新，但原项目交付记录也注明：人物和箱内地板有改善，小托盘仍有退步，尚未替换原默认模型。当前两张PNG的模型初稿同样未检出托盘；C方案托盘来自SAM3补漏。不能把本次失败解释为模型没有训练过，也不能仅据两图判断整个模型无效。</p>',
       '<p>A为现有两类流程；B为七类SAM3控制；C为训练模型初稿、SAM3掩码点细化、缺失类别补漏、Agent复核。B/C使用相同探索性七类规则，未假造人工七类参考。三组统一2048回复预算、最多3轮。</p>',
       '<p>首轮768 token导致孔洞判断JSON截断，第二轮出现CUDA显存失败，记录分别保留。最终版每次最多10个孔洞、全部覆盖；每个Agent轮次仍最多3项实际编辑。复用真实模型与SAM缓存，没有调权重或阈值。原始PNG一致，原标注未写入。</p></section>',
       '<section><h2>共同类别结果</h2><p>仅两张已暴露同采集图，按原V2稀疏投影参考指标计分；不是二维像素准确率。</p><table><tr><th>方案</th><th>托盘支持</th><th>托盘参考点覆盖</th><th>人员支持</th><th>人员参考点覆盖</th><th>人员被托盘误覆盖点↓</th></tr>']

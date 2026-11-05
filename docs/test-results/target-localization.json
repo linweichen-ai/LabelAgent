@@ -1,0 +1,58 @@
+{
+  "status": "verified",
+  "capacity4_payload_and_actual_encoding_matches": true,
+  "capacity_worker_stopped_receipt_verified": true,
+  "capacity_source_bindings": 338,
+  "grounded_source_bindings": 360,
+  "focused_source_bindings": 382,
+  "completion_source_bindings": 387,
+  "reconstructed_grounded_JPEGs": 8,
+  "reconstructed_focused_JPEGs": 4,
+  "whole_location_hits": 0,
+  "focused_location_hits": 2,
+  "no_classification_before_verified_location": true,
+  "real_focused_inputs_outside_region_pixel_invariant": true,
+  "original_target_all_pixels_retained": true,
+  "total_new_requests": 18,
+  "remote8B_calls": 4,
+  "local2B_calls": 14,
+  "new_SAM_calls": 0,
+  "focused_stopped_batch_calls": 2,
+  "focused_completion_new_calls": 3,
+  "focused_cached_responses_not_repeated": true,
+  "scores": {
+    "capacity": {
+      "human_correct": 14,
+      "human_wrong": 0,
+      "legacy_pallet_correct": 2,
+      "original_gates_passed": false
+    },
+    "grounded": {
+      "human_correct": 14,
+      "human_wrong": 0,
+      "legacy_pallet_correct": 2,
+      "original_gates_passed": false
+    },
+    "focused": {
+      "human_correct": 14,
+      "human_wrong": 0,
+      "legacy_pallet_correct": 2,
+      "original_gates_passed": false
+    }
+  },
+  "workbench_state_unchanged": true,
+  "model_config_unchanged": true,
+  "new_tests_passed": 21,
+  "new_test_seconds": 0.095,
+  "original_gate_lowered": false,
+  "default_enabled": false,
+  "annotations_written": false,
+  "scope": "same-capture exposed development panel, not independent accuracy",
+  "raw_images_and_coordinates_published": false,
+  "frozen_plan_sha256": {
+    "matched8B": "e7079f734ab7c625cbb0a53cebfc2ae6a9729d94f8021bf4d19713a8df273acc",
+    "localize_then_classify": "adc37c06803162a5d623442e8be31e7ef636059bfff476f7a2b7c3a1a0928144",
+    "region_only": "6be6dd3ea9f3849e02e93fffa61a85bf43e0b41c2360e2806cb1b362b140afe8",
+    "missing_requests_completion": "af2d61463b61898be9663339c912017e85daab2f9bda653ba1c98e0d940e0d9a"
+  }
+}

@@ -1,0 +1,811 @@
+{
+  "post_freeze_only": true,
+  "targets": [
+    {
+      "case": "camera0_frame76",
+      "object_id": 42,
+      "visible_reference_points": 16,
+      "incumbent_best_raw": 0.8125,
+      "incumbent_best_support": 0.0,
+      "final_best_raw": 0.8125,
+      "final_best_support": 0.0,
+      "raw_pool_best_raw": 0.875,
+      "raw_pool_best_qualified": 0.75,
+      "matching_unchanged": true,
+      "best_candidates": [
+        {
+          "key": "fb1434b8b2962bb9057f9db39e89f281dd0c646af623af50f74ff2556efb8b6f",
+          "source": "seam_guided_SAM",
+          "raw_point_fraction": 0.75,
+          "purity": 1.0,
+          "qualified_support": 0.75,
+          "added_union_pixels": 71,
+          "fits_remaining_area_alone": true
+        },
+        {
+          "key": "1b3016a2e3c1116154ea9e2e060b6ed51ff18c7d265fbcfb89287a32233774c8",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.5,
+          "purity": 1.0,
+          "qualified_support": 0.5,
+          "added_union_pixels": 9683,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "e2da676eb098684378df96b88471040e0b86348b916ad64fd8f7dc273f7096d1",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.875,
+          "purity": 0.21875,
+          "qualified_support": 0.0,
+          "added_union_pixels": 794,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "42d99814d4612e321b6fb3cfe9b60d8f297901979fba1ad9e049a2055b9f4fbb",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.8125,
+          "purity": 0.20634920634920634,
+          "qualified_support": 0.0,
+          "added_union_pixels": 391,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "d8f50ca910ae92d6f3e4fab6f4deaead7f37a6dd9b672f32deb618b4db6715ab",
+          "source": "seam_guided_SAM",
+          "raw_point_fraction": 0.625,
+          "purity": 0.37037037037037035,
+          "qualified_support": 0.0,
+          "added_union_pixels": 0,
+          "fits_remaining_area_alone": true
+        },
+        {
+          "key": "06ae0f7e2707cbbd81d6fe6545b75fdc1f1e85861322cf1808fb8eab52d19f23",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 626,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "1285a40975c9fb6660a9e4acfbbff1aafaeef63293f837633233bad3b202f557",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 20321,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "23e2733b5fad9bac91bb51445a8739ed14ca756a3fdc71fb302d37d706866ed8",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 1354,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "340cfc155e18129c0877272379a36f33d4782f2b3e11835c826574f6744d2694",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 226,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "47863dd8f56df7bad0acebfb528d0d648ac231af2feb88ca986633072304d0c7",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 3101,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "4fcb237629cff225d888a421cada50b3736bdf53f70c23fac7bd618230602add",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 325,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "5fec750e0293902f0a469a6e56335119c614403fb2786501b2ce44d03535d792",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 986,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "6d4e1ecefe5ab58b8167c98d586419e5e2a7f85ada57850e09fe0b4c78446087",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 679,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "76421458dcd0dce07638e0f37c2c7f21283c73dd87cf869d0243e05a477cf056",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 1888,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "7ca37834e03ab185f412d91cc76dbd1f8e71495a54e83d96037428d1019b6d1f",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 1153,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "813482d5794f3252b627e6c14e16be1a7a7f7a6021d39ab70359c1eafa277a7a",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 2084,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "911c8269d57935084de82c268668db22995decb6325caeddf1e1d6512e2a1ee5",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 220,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "b05ffc6fe8e9cdc8843681b56409f7e2c1c2dc92c6de1b3666415b6bcc71ced6",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 8236,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "b343427f12eaea4b714f6ee76bd125481b2236528aa1770dc21849e48ebdcc91",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 271,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "be0a8821738c51db4938407890bdb2f0c17ff1c2eec697f42c6d1f1862477711",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 9116,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "be98638000f5bdf945ebf7c49b05f74e588e6ee4d3c3bfa5ffd6b80461bd47cd",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 849,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "bec0efbd5336c36aee553c928676a3fc92cc9adcbfed934a61479c0fcf829064",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 429,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "c94b82476e4d599746d0be731306e796fcb25d89c8cf55b1a4b9be56b1d1ab42",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 12060,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "d263532b89aae5e56c960cb7f5ccfcc5a2d925bc190c2dbbc9cbf389489a5490",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 1805,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "d4b68f778a9d4f4ad5f9aaba446fb661573b18f08432d432009c0b1c4dffe608",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 1083,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "d6c3da2e2b3830585429cca23b7b1a9f3cb010db62a32c6d70188790f790f362",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 188,
+          "fits_remaining_area_alone": true
+        },
+        {
+          "key": "fd00b64858a391435cecf0bdb1ed797ea38ed6698cd764c17e95410a9d30933a",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 4071,
+          "fits_remaining_area_alone": false
+        }
+      ]
+    },
+    {
+      "case": "camera0_frame76",
+      "object_id": 48,
+      "visible_reference_points": 27,
+      "incumbent_best_raw": 0.9629629629629629,
+      "incumbent_best_support": 0.0,
+      "final_best_raw": 0.9629629629629629,
+      "final_best_support": 0.0,
+      "raw_pool_best_raw": 1.0,
+      "raw_pool_best_qualified": 0.037037037037037035,
+      "matching_unchanged": true,
+      "best_candidates": [
+        {
+          "key": "be0a8821738c51db4938407890bdb2f0c17ff1c2eec697f42c6d1f1862477711",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.037037037037037035,
+          "purity": 1.0,
+          "qualified_support": 0.037037037037037035,
+          "added_union_pixels": 9116,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "23e2733b5fad9bac91bb51445a8739ed14ca756a3fdc71fb302d37d706866ed8",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 1.0,
+          "purity": 0.4153846153846154,
+          "qualified_support": 0.0,
+          "added_union_pixels": 1354,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "d4b68f778a9d4f4ad5f9aaba446fb661573b18f08432d432009c0b1c4dffe608",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 1.0,
+          "purity": 0.38571428571428573,
+          "qualified_support": 0.0,
+          "added_union_pixels": 1083,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "340cfc155e18129c0877272379a36f33d4782f2b3e11835c826574f6744d2694",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.5925925925925926,
+          "purity": 0.38095238095238093,
+          "qualified_support": 0.0,
+          "added_union_pixels": 226,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "b343427f12eaea4b714f6ee76bd125481b2236528aa1770dc21849e48ebdcc91",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.25925925925925924,
+          "purity": 0.4117647058823529,
+          "qualified_support": 0.0,
+          "added_union_pixels": 271,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "5fec750e0293902f0a469a6e56335119c614403fb2786501b2ce44d03535d792",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.25925925925925924,
+          "purity": 0.2,
+          "qualified_support": 0.0,
+          "added_union_pixels": 986,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "06ae0f7e2707cbbd81d6fe6545b75fdc1f1e85861322cf1808fb8eab52d19f23",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 626,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "1285a40975c9fb6660a9e4acfbbff1aafaeef63293f837633233bad3b202f557",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 20321,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "1b3016a2e3c1116154ea9e2e060b6ed51ff18c7d265fbcfb89287a32233774c8",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 9683,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "42d99814d4612e321b6fb3cfe9b60d8f297901979fba1ad9e049a2055b9f4fbb",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 391,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "47863dd8f56df7bad0acebfb528d0d648ac231af2feb88ca986633072304d0c7",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 3101,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "4fcb237629cff225d888a421cada50b3736bdf53f70c23fac7bd618230602add",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 325,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "6d4e1ecefe5ab58b8167c98d586419e5e2a7f85ada57850e09fe0b4c78446087",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 679,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "76421458dcd0dce07638e0f37c2c7f21283c73dd87cf869d0243e05a477cf056",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 1888,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "7ca37834e03ab185f412d91cc76dbd1f8e71495a54e83d96037428d1019b6d1f",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 1153,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "813482d5794f3252b627e6c14e16be1a7a7f7a6021d39ab70359c1eafa277a7a",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 2084,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "911c8269d57935084de82c268668db22995decb6325caeddf1e1d6512e2a1ee5",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 220,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "b05ffc6fe8e9cdc8843681b56409f7e2c1c2dc92c6de1b3666415b6bcc71ced6",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 8236,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "be98638000f5bdf945ebf7c49b05f74e588e6ee4d3c3bfa5ffd6b80461bd47cd",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 849,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "bec0efbd5336c36aee553c928676a3fc92cc9adcbfed934a61479c0fcf829064",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 429,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "c94b82476e4d599746d0be731306e796fcb25d89c8cf55b1a4b9be56b1d1ab42",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 12060,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "d263532b89aae5e56c960cb7f5ccfcc5a2d925bc190c2dbbc9cbf389489a5490",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 1805,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "d6c3da2e2b3830585429cca23b7b1a9f3cb010db62a32c6d70188790f790f362",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 188,
+          "fits_remaining_area_alone": true
+        },
+        {
+          "key": "d8f50ca910ae92d6f3e4fab6f4deaead7f37a6dd9b672f32deb618b4db6715ab",
+          "source": "seam_guided_SAM",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 0,
+          "fits_remaining_area_alone": true
+        },
+        {
+          "key": "e2da676eb098684378df96b88471040e0b86348b916ad64fd8f7dc273f7096d1",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 794,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "fb1434b8b2962bb9057f9db39e89f281dd0c646af623af50f74ff2556efb8b6f",
+          "source": "seam_guided_SAM",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 71,
+          "fits_remaining_area_alone": true
+        },
+        {
+          "key": "fd00b64858a391435cecf0bdb1ed797ea38ed6698cd764c17e95410a9d30933a",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 4071,
+          "fits_remaining_area_alone": false
+        }
+      ]
+    },
+    {
+      "case": "camera1_frame76",
+      "object_id": 47,
+      "visible_reference_points": 11,
+      "incumbent_best_raw": 0.36363636363636365,
+      "incumbent_best_support": 0.36363636363636365,
+      "final_best_raw": 0.36363636363636365,
+      "final_best_support": 0.36363636363636365,
+      "raw_pool_best_raw": 0.09090909090909091,
+      "raw_pool_best_qualified": 0.09090909090909091,
+      "matching_unchanged": true,
+      "best_candidates": [
+        {
+          "key": "15606fc548d1c8dcdc58bc44d8e3016b41e099571ec76d2775d104131e9e9673",
+          "source": "seam_guided_SAM",
+          "raw_point_fraction": 0.09090909090909091,
+          "purity": 1.0,
+          "qualified_support": 0.09090909090909091,
+          "added_union_pixels": 0,
+          "fits_remaining_area_alone": true
+        },
+        {
+          "key": "069384997adae2e2ce6e36371f508774263a75c77b603d4e4c29675bf8719a9e",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 9066,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "1196a80492ace4e3ee4f80b54ed5e9c9a45ed0bf5a790c68f228e21a6681411c",
+          "source": "seam_guided_SAM",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 1003,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "359cd76aa21f353f81f61575645bbe1b96a0f8d74b4ae7e7ffd665b762321390",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 3870,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "4f277089051694fc358302b1a721da7efe209d2b8068881b95fa917cfe580f64",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 24761,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "742a83100a85e8763323af1f7834f82a0da69deccf5a29de8d7e3fa9eccfaa5c",
+          "source": "seam_guided_SAM",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 596,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "787d55e806e8897bb53062f71ce3b85da20e47bea62341298a2c1973b09edc43",
+          "source": "seam_guided_SAM",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 3,
+          "fits_remaining_area_alone": true
+        },
+        {
+          "key": "c5d9cb9f3a3cbc8900b0a9992220adad0a052b78e9481de8750bf135b38da727",
+          "source": "seam_guided_SAM",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 14,
+          "fits_remaining_area_alone": true
+        },
+        {
+          "key": "dc36120f628f784ebf59dc4f75dc8217a1d4b5567ef89f22397588e5b1d07a26",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 3699,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "e1ae488557cb90b98e211a38673347057f9471b2e901894b4b9278b78bec3fbe",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 2523,
+          "fits_remaining_area_alone": false
+        }
+      ]
+    },
+    {
+      "case": "camera1_frame76",
+      "object_id": 49,
+      "visible_reference_points": 6,
+      "incumbent_best_raw": 0.16666666666666666,
+      "incumbent_best_support": 0.0,
+      "final_best_raw": 0.16666666666666666,
+      "final_best_support": 0.0,
+      "raw_pool_best_raw": 0.3333333333333333,
+      "raw_pool_best_qualified": 0.0,
+      "matching_unchanged": true,
+      "best_candidates": [
+        {
+          "key": "4f277089051694fc358302b1a721da7efe209d2b8068881b95fa917cfe580f64",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.3333333333333333,
+          "purity": 0.3333333333333333,
+          "qualified_support": 0.0,
+          "added_union_pixels": 24761,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "069384997adae2e2ce6e36371f508774263a75c77b603d4e4c29675bf8719a9e",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 9066,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "1196a80492ace4e3ee4f80b54ed5e9c9a45ed0bf5a790c68f228e21a6681411c",
+          "source": "seam_guided_SAM",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 1003,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "15606fc548d1c8dcdc58bc44d8e3016b41e099571ec76d2775d104131e9e9673",
+          "source": "seam_guided_SAM",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 0,
+          "fits_remaining_area_alone": true
+        },
+        {
+          "key": "359cd76aa21f353f81f61575645bbe1b96a0f8d74b4ae7e7ffd665b762321390",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 3870,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "742a83100a85e8763323af1f7834f82a0da69deccf5a29de8d7e3fa9eccfaa5c",
+          "source": "seam_guided_SAM",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 596,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "787d55e806e8897bb53062f71ce3b85da20e47bea62341298a2c1973b09edc43",
+          "source": "seam_guided_SAM",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 3,
+          "fits_remaining_area_alone": true
+        },
+        {
+          "key": "c5d9cb9f3a3cbc8900b0a9992220adad0a052b78e9481de8750bf135b38da727",
+          "source": "seam_guided_SAM",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 14,
+          "fits_remaining_area_alone": true
+        },
+        {
+          "key": "dc36120f628f784ebf59dc4f75dc8217a1d4b5567ef89f22397588e5b1d07a26",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 3699,
+          "fits_remaining_area_alone": false
+        },
+        {
+          "key": "e1ae488557cb90b98e211a38673347057f9471b2e901894b4b9278b78bec3fbe",
+          "source": "raw_trained_instance_query",
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 2523,
+          "fits_remaining_area_alone": false
+        }
+      ]
+    }
+  ],
+  "whole_rejection_counts": {
+    "complete mask exceeds remaining original global area budget": 30,
+    "conflicts with incumbent predicted-person radius3 guard": 1
+  },
+  "neutral_review": [
+    {
+      "key": "d6c3da2e2b3830585429cca23b7b1a9f3cb010db62a32c6d70188790f790f362",
+      "source": "raw_trained_instance_query",
+      "neutral": [
+        {
+          "object": "a white rectangular object with dark spots on its surface"
+        },
+        {
+          "object": "a white rectangular object with dark circular indentations on its side, possibly a box or a piece of equipment, positioned against a dark blue surface"
+        }
+      ],
+      "neutral_passed": false
+    },
+    {
+      "key": "d8f50ca910ae92d6f3e4fab6f4deaead7f37a6dd9b672f32deb618b4db6715ab",
+      "source": "seam_guided_SAM",
+      "neutral": [
+        {
+          "object": "a light-colored, flat, rectangular surface with a textured pattern and dark markings"
+        },
+        {
+          "object": "a gray metal container with a segmented structure, viewed from the center of the image"
+        }
+      ],
+      "neutral_passed": false
+    },
+    {
+      "key": "787d55e806e8897bb53062f71ce3b85da20e47bea62341298a2c1973b09edc43",
+      "source": "seam_guided_SAM",
+      "neutral": [
+        {
+          "object": "a blurry, elongated object with a light-colored surface and a dark top edge, possibly a pen or pencil"
+        },
+        {
+          "object": "a blurry, diagonal surface with a light-colored strip and dark areas"
+        }
+      ],
+      "neutral_passed": false
+    },
+    {
+      "key": "c5d9cb9f3a3cbc8900b0a9992220adad0a052b78e9481de8750bf135b38da727",
+      "source": "seam_guided_SAM",
+      "neutral": [
+        {
+          "object": "a blurry, horizontal surface with a light grayish-white color and faint vertical lines"
+        },
+        {
+          "object": "a white, grid-like structure with horizontal bars and vertical supports, possibly a large window or a wall with a grid pattern, in a blurry image"
+        }
+      ],
+      "neutral_passed": false
+    },
+    {
+      "key": "15606fc548d1c8dcdc58bc44d8e3016b41e099571ec76d2775d104131e9e9673",
+      "source": "seam_guided_SAM",
+      "neutral": [
+        {
+          "object": "uniform dark gray surface"
+        },
+        {
+          "object": "a blurry, dark gray surface with a smooth texture and a faint horizontal line near the center"
+        }
+      ],
+      "neutral_passed": false
+    },
+    {
+      "key": "fb1434b8b2962bb9057f9db39e89f281dd0c646af623af50f74ff2556efb8b6f",
+      "source": "seam_guided_SAM",
+      "neutral": [
+        {
+          "object": "a dark blue rectangular surface with a light gray border, possibly a box or container"
+        },
+        {
+          "object": "a gray metal container with a segmented structure, viewed from a low angle"
+        }
+      ],
+      "neutral_passed": false
+    }
+  ]
+}

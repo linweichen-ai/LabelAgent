@@ -1,0 +1,327 @@
+{
+  "acceptance": {
+    "original_frozen_checks": {
+      "PAL_support_strict_gain": true,
+      "PAL_point_coverage_not_lower": true,
+      "person_point_coverage_not_lower": true,
+      "person_off_class_not_higher": true,
+      "PAL_candidate_ratio_at_most_1_5": true,
+      "PAL_union_area_ratio_at_most_1_25": true,
+      "initial_C_foreground_preserved": true,
+      "original_SAM_PAL_preserved": true,
+      "review_protocol_no_errors": true,
+      "all_six_runs_converged_within_three_rounds": true
+    },
+    "original_frozen_checks_passed": true,
+    "incumbent_checks": {
+      "support_strict_gain_over13": false,
+      "all27_incumbent_PAL_masks_preserved": true,
+      "all_incumbent_person_masks_preserved": true,
+      "convergence6of6_retained": true,
+      "pallet_points_not_lower_radius0": true,
+      "pallet_cross_class_not_higher_radius0": true,
+      "person_points_not_lower_radius0": true,
+      "person_cross_class_not_higher_radius0": true,
+      "pallet_points_not_lower_radius3": true,
+      "pallet_cross_class_not_higher_radius3": true,
+      "person_points_not_lower_radius3": true,
+      "person_cross_class_not_higher_radius3": true,
+      "pallet_points_not_lower_radius6": true,
+      "pallet_cross_class_not_higher_radius6": true,
+      "person_points_not_lower_radius6": true,
+      "person_cross_class_not_higher_radius6": true
+    },
+    "functional_single_instance_controls_passed": true,
+    "adopt_new_candidate": false,
+    "automatic_default_install": false,
+    "counts": {
+      "incumbent13": {
+        "PAL_count": 27,
+        "PAL_union_pixels": 122302
+      },
+      "append_trial": {
+        "PAL_count": 27,
+        "PAL_union_pixels": 122302
+      }
+    },
+    "area_ratio": 1.2478649919905316,
+    "count_ratio": 1.125
+  },
+  "preservation": {
+    "passed": true,
+    "original_annotations_written": 0,
+    "training_updates": 0,
+    "reference_annotations_sha256": "1a87c17fcb6d23c90414eaad36af79767d2f50cebae51a612f9a9ad91cada4a5",
+    "reference_description_sha256": "2fdff765eb2e682928cb9b78497d50d0dedcefbcadfd95ccccbf200ac80b76b0",
+    "source_image_hashes_unchanged": true,
+    "weights_unchanged": true,
+    "protected_workbench_state_unchanged": true,
+    "original_scorer_sha256": "93c5152169d04d43b25dbf4a4139b12676daf78750a7f059837121656bb644c2",
+    "reference_annotations_unchanged": true,
+    "reference_description_unchanged": true,
+    "all_incumbent_result_files_byte_unchanged": true
+  },
+  "whole_masks": {
+    "passed": true,
+    "incumbent": [
+      {
+        "case": "camera0_frame76",
+        "PAL_kept": 17,
+        "person_kept": 1,
+        "all_original_foreground_rasters_unchanged": true
+      },
+      {
+        "case": "camera1_frame76",
+        "PAL_kept": 10,
+        "person_kept": 2,
+        "all_original_foreground_rasters_unchanged": true
+      }
+    ],
+    "new_complete_predictions": [],
+    "budget_pixel_clipping": false
+  },
+  "budget": {
+    "passed": true,
+    "rows": [
+      {
+        "case": "camera0_frame76",
+        "arm": "A_current",
+        "round": 1,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "B_sam7",
+        "round": 1,
+        "operations": 3,
+        "cumulative_points": 7,
+        "actual_points": 7
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "B_sam7",
+        "round": 2,
+        "operations": 2,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "B_sam7",
+        "round": 3,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "C_hybrid",
+        "round": 1,
+        "operations": 3,
+        "cumulative_points": 7,
+        "actual_points": 7
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "C_hybrid",
+        "round": 2,
+        "operations": 2,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "C_hybrid",
+        "round": 3,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "A_current",
+        "round": 1,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "B_sam7",
+        "round": 1,
+        "operations": 3,
+        "cumulative_points": 13,
+        "actual_points": 13
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "B_sam7",
+        "round": 2,
+        "operations": 2,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "B_sam7",
+        "round": 3,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "C_hybrid",
+        "round": 1,
+        "operations": 3,
+        "cumulative_points": 13,
+        "actual_points": 13
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "C_hybrid",
+        "round": 2,
+        "operations": 2,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "C_hybrid",
+        "round": 3,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      }
+    ]
+  },
+  "functional_controls": {
+    "status": "complete",
+    "rows": [
+      {
+        "name": "gray",
+        "expected_functional_status": "not_single",
+        "decisions": [
+          {
+            "category": "uncertain",
+            "instance_status": "uncertain",
+            "evidence": "The image shows a gray background with an orange arrow pointing diagonally. The arrow is not a physical object but a loc",
+            "object": "uncertain"
+          },
+          {
+            "category": "uncertain",
+            "instance_status": "uncertain",
+            "evidence": "The image is uniformly gray with no visible material or physical object. The locator points to the edges of the image, a",
+            "object": "no visible object"
+          }
+        ],
+        "passed": true,
+        "not_independent_accuracy": true
+      },
+      {
+        "name": "white",
+        "expected_functional_status": "not_single",
+        "decisions": [
+          {
+            "category": "uncertain",
+            "instance_status": "uncertain",
+            "evidence": "The image shows a single orange pointer on a white background. The pointer is not pointing to any visible material or a ",
+            "object": "pointer"
+          },
+          {
+            "category": "uncertain",
+            "instance_status": "uncertain",
+            "evidence": "The image shows a white square with a pink outline, but no visible material or physical object is indicated by the point",
+            "object": "uncertain"
+          }
+        ],
+        "passed": true,
+        "not_independent_accuracy": true
+      },
+      {
+        "name": "raw_robot",
+        "expected_functional_status": "not_single",
+        "decisions": [
+          {
+            "category": "machine",
+            "instance_status": "single",
+            "evidence": "a gray industrial machine with a handle and wheels, located on a concrete floor",
+            "object": "a floor cleaning machine"
+          },
+          {
+            "category": "machine",
+            "instance_status": "single",
+            "evidence": "a gray robotic floor cleaning machine on a concrete floor",
+            "object": "robotic floor cleaner"
+          }
+        ],
+        "passed": true,
+        "not_independent_accuracy": true
+      },
+      {
+        "name": "pallet_stack",
+        "expected_functional_status": "repeated",
+        "decisions": [
+          {
+            "category": "pallet_base",
+            "instance_status": "single",
+            "evidence": "a stack of blue pallet bases with visible slats and feet, indicated by the orange arrow",
+            "object": "pallet_base"
+          },
+          {
+            "category": "pallet_base",
+            "instance_status": "single",
+            "evidence": "a stack of blue pallets with visible slats and feet, in a blurred image",
+            "object": "pallet_base"
+          }
+        ],
+        "passed": true,
+        "not_independent_accuracy": true
+      },
+      {
+        "name": "wood_pallet_base",
+        "expected_functional_status": "single",
+        "decisions": [
+          {
+            "category": "pallet_base",
+            "instance_status": "single",
+            "evidence": "a wooden pallet base with visible slats and feet, indicated by the orange arrow pointing to the lower right corner of a ",
+            "object": "pallet_base"
+          },
+          {
+            "category": "pallet_base",
+            "instance_status": "single",
+            "evidence": "a wooden pallet base with visible slats and feet, partially covered by a dark material",
+            "object": "pallet_base"
+          }
+        ],
+        "passed": true,
+        "not_independent_accuracy": true
+      }
+    ],
+    "all_passed": true,
+    "source": "exposed old functional crops, not new human truth"
+  },
+  "regression": {
+    "passed": true,
+    "tests": 82,
+    "failures": 0,
+    "errors": 0,
+    "modules": [
+      "test_agent",
+      "test_projected_support",
+      "test_ground_actions",
+      "test_keyed_review",
+      "test_bounded_review",
+      "test_semantic_recovery",
+      "test_projection_recovery",
+      "test_preserved_model_policy",
+      "test_instance_separation"
+    ],
+    "checked_at": "2026-11-05T15:33:37.423533+08:00",
+    "new_test_sha256": "6070ba260715ab3c49bb9a28a3022aa25fc876ec85696076eaac45c7cfeb7c86",
+    "not_scientific_pixel_accuracy": true
+  }
+}

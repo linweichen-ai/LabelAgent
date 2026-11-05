@@ -1,0 +1,7 @@
+"""Run original Agent/metric/geometry gates plus new instance invariants."""
+import json,unittest,sys,io,datetime,hashlib
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[2];repo=ROOT/'task_workspaces/labelagent_realtime_handoff_20261104';control=ROOT/'task_workspaces/labelagent_handoff_control_20261104'
+sys.path[:0]=[str(repo),str(repo/'tests'),str(repo/'tools'),str(repo/'tools/labelagent_experiments')]
+names=['test_agent','test_projected_support','test_ground_actions','test_keyed_review','test_bounded_review','test_semantic_recovery','test_projection_recovery','test_preserved_model_policy','test_instance_separation'];suite=unittest.defaultTestLoader.loadTestsFromNames(names);stream=io.StringIO();result=unittest.TextTestRunner(stream=stream,verbosity=2).run(suite);(control/'instance_separation_regression.log').write_text(stream.getvalue(),encoding='utf-8');receipt={'passed':result.wasSuccessful(),'tests':result.testsRun,'failures':len(result.failures),'errors':len(result.errors),'modules':names,'checked_at':datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8))).isoformat(),'new_test_sha256':hashlib.sha256((repo/'tests/test_instance_separation.py').read_bytes()).hexdigest(),'not_scientific_pixel_accuracy':True};(control/'instance_separation_regression.json').write_text(json.dumps(receipt,indent=2)+'\n',encoding='utf-8');print(json.dumps(receipt),flush=True)
+if not result.wasSuccessful():print(stream.getvalue());raise SystemExit(1)

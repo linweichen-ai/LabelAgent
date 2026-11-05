@@ -1,0 +1,24 @@
+"""Combine an unchanged incumbent with independent complete additions."""
+import json,hashlib,shutil
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[2];helpers=Path(__file__).parent;work=ROOT/'task_workspaces/labelagent_projection_recovery_20261105';parent=ROOT/'outputs/labelagent_projection_recovery_20261105';new=parent/'instance_generation_blue';combined=parent/'instance_generation_combined';source=ROOT/'outputs/labelagent_context_comparison_20261105';out=ROOT/'outputs/labelagent_projection_retained_comparison_20261105'
+def read(p):return json.loads(p.read_text(encoding='utf-8'))
+def save(p,v):p.parent.mkdir(parents=True,exist_ok=True);p.write_text(json.dumps(v,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+assert read(new/'completed.json')['status']=='complete'
+if out.exists() or combined.exists():raise FileExistsError('Preserve frozen comparisons')
+out.mkdir();combined.mkdir();old_gen=Path(read(ROOT/'task_workspaces/labelagent_semantic_recovery_20261105/config_context.json')['instance_generation'])
+for cam in [0,1]:
+ case=f'camera{cam}_frame76';old=read(old_gen/case/'C_children.json');extra=read(new/case/'additional_children.json');save(combined/case/'C_children.json',old+extra);save(combined/case/'B_children.json',read(old_gen/case/'B_children.json'))
+save(combined/'generation_protocol.json',{'incumbent_children_source':str(old_gen),'new_complete_additions':str(new),'all_incumbent_foreground_kept':True,'same_unchanged_acceptance':True,'new_selection_sha256':hashlib.sha256((new/'selection.json').read_bytes()).hexdigest(),'no_reference_inputs':True,'no_budget_mask_trimming':True})
+save(combined/'completed.json',{'status':'complete','original_children_preserved':True,'new_generation':read(new/'completed.json')})
+cfg=read(work/'config.json');cfg.update(instance_generation=str(combined),generation_source=str(new));save(work/'config_comparison.json',cfg)
+for folder in ['mask2former','sam_text','refinement','inputs','gap_action_cache','A_current','B_sam7']:shutil.copytree(source/folder,out/folder)
+save(out/'agent_runs.json',[r for r in read(source/'agent_runs.json') if r['arm'] in ['A_current','B_sam7']]);save(out/'model_trace.json',read(source/'model_trace.json'))
+save(out/'cache_source_binding.json',{'source':str(source),'source_plan_sha256':hashlib.sha256((source/'frozen_plan.json').read_bytes()).hexdigest(),'A_B_images_seeds_policies_identical':True,'A_B_runs_reused':4,'C_new_integrated_runs':2,'C_initial_floor_is_original_pre_review_seed_not_finished_floor':True,'incumbent_foreground_preserved':True,'no_reference_input_for_selection':True})
+save(out/'protocol_amendment.json',{'acceptance_unchanged':True,'rounds':3,'operations_per_round':3,'cumulative_points':32,'original_A_global_PAL_count_limit':36,'original_A_global_union_limit':122511.25,'incumbent_foreground_all_27_PALs_kept':True,'incumbent_13_support_and490_points_must_not_regress':True,'new_candidate_generation':'24 baseline-component point probes plus up to24 original-blue-material point probes; all complete outputs and failed requests retained separately','C_floor_controller':'same original SAM floor bootstrap and v6 context-first3-operation controller','no_reference_or_visibility_change':True,'no_budget_clipping':True,'no_default_install':True})
+runner=(helpers/'run_context_comparison.py').read_text(encoding='utf-8')
+runner=runner.replace("'C':'unchanged previous13-support foreground; original SAM floor bootstrap; first-round two individually counted context-gap edits and one true SAM; same residual controller'","'C':'all previous13-support PAL/person masks retained; append complete independently inferred instances under remaining original budget; unchanged original floor seed and three-round v6 review'")
+runner=runner.replace("sha(Path(__file__).with_name('select_preserved_model_candidates.py'))","sha(Path(__file__).with_name('generate_blue_append.py'))").replace("sha(Path(__file__).with_name('preserved_model_policy.py'))","sha(Path(__file__).with_name('incumbent_append_policy.py'))")
+runner=runner.replace("sha(Path(cfg['instance_generation']).parent/'fixed_grid/completed.json')","sha(Path(cfg['generation_source'])/'completed.json')").replace("'new_fixed_model_grid_forwards':32","'new_fixed_model_grid_forwards':0").replace("'real_mask2former_forwards_source':42","'real_mask2former_forwards_source':126")
+runner=runner.replace("'residual_policy_sha256':sha(Path(__file__).with_name('residual_gap_policy.py')),","'residual_policy_sha256':sha(Path(__file__).with_name('residual_gap_policy.py')),\n            'append_policy_sha256':sha(Path(__file__).with_name('incumbent_append_policy.py')),\n            'semantic_subject_sha256':sha(Path(__file__).with_name('semantic_subject_guard.py')),")
+(helpers/'run_retained_projection_comparison.py').write_text(runner,encoding='utf-8');print(out)

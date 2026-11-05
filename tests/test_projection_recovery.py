@@ -5,9 +5,18 @@ import sys,unittest,copy
 from pathlib import Path
 from types import SimpleNamespace
 import numpy as np
+if not (Path.cwd()/'source').exists():
+ sys.path.insert(0,str(Path(__file__).resolve().parents[2]/'task_workspaces/labelagent_projection_recovery_20261105/source_snapshot'))
 from incumbent_append_policy import append_complete_masks
 from projection_audit_core import other_box_front_hits
+from wire_geometry_policy import map_complete_response
 class ProjectionRecoveryTests(unittest.TestCase):
+ def test_wire_mapping_preserves_every_part_hole_and_small_valid_component(self):
+  from source.agent.edit_agent import _rasterize
+  response={'parts':[{'points':[[1,1],[20,1],[20,20],[1,20]],'holes':[[[5,5],[12,5],[12,12],[5,12]]]}, {'points':[[24,24],[26,24],[24,26]],'holes':[]}],'score':.9};before=copy.deepcopy(response)
+  shape,mask,proof=map_complete_response(response,[7,9,39,41],64,64)
+  expected=np.zeros((64,64),np.uint8);expected[9:41,7:39]=_rasterize({'parts':response['parts']},32,32)
+  self.assertTrue(np.array_equal(mask,expected));self.assertEqual(response,before);self.assertEqual(len(shape['parts']),2);self.assertEqual(proof['removed_pixels'],0);self.assertEqual(proof['added_pixels'],0)
  def test_append_keeps_incumbent_and_rejects_whole_oversized_prediction(self):
   original=np.zeros((32,32),np.uint8);original[5:15,5:15]=1
   inc=original.copy();inc[15:17,5:17]=1

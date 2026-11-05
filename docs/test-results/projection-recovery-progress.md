@@ -1,7 +1,3 @@
-# Point coverage, instance loss and projection audit: in progress
+# 本轮完整复测已完成
 
-Exact original-point-index decomposition explains493 versus490 coverage:11 points gained and8 lost. Camera0 gains8, camera1 gains3 and loses8. Seven lost points belong to camera1/object48; its purity-qualified support drops7/11→0 before matching. This is not a Hungarian matching bug. Most new points belong to already supported objects; one added point on camera0/object48 still fails instance purity.
-
-The source-file frame join, indexed MCAP payloads/timestamps and numeric camera calibration pass read-only checks. MCAP log/publish timestamps were supplied from filenames by the importer. PNGs have no exposure metadata, and the native PCD time column is all-zero in each of five adjacent frames. Hardware exposure alignment, original deskew state and independent reprojection accuracy therefore remain unverified. Four-camera neighborhood images, ray-box front intersections and nearby-depth proxies are diagnostic evidence, never dense visibility truth. The original8-pixel/.15m scorer and reference points are unchanged.
-
-The append-only experiment preserves all27 incumbent PAL masks, all person masks,13/17 support and the prior6/6 results. Remaining original union-area budget is209.25 pixels; whole over-budget hypotheses are rejected rather than trimmed. Two independent image-only SAM point-probe variants and their failures are retained. The final new-candidate comparison is still pending. No default install, annotation write or training update is authorized by this report.
+见[最终结论](projection-recovery-final.md)：旧点数/实例损失已逐点解释，时间与遮挡证据边界已核对；无损追加仍13/17，保留原前景与6/6。

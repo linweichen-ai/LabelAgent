@@ -1,0 +1,212 @@
+{
+  "acceptance": {
+    "original_frozen_checks": {
+      "PAL_support_strict_gain": true,
+      "PAL_point_coverage_not_lower": true,
+      "person_point_coverage_not_lower": true,
+      "person_off_class_not_higher": true,
+      "PAL_candidate_ratio_at_most_1_5": true,
+      "PAL_union_area_ratio_at_most_1_25": true,
+      "initial_C_foreground_preserved": true,
+      "original_SAM_PAL_preserved": true,
+      "review_protocol_no_errors": true,
+      "all_six_runs_converged_within_three_rounds": true
+    },
+    "original_frozen_checks_passed": true,
+    "incumbent_checks": {
+      "support_strict_gain_over13": false,
+      "all27_incumbent_PAL_masks_preserved": true,
+      "all_incumbent_person_masks_preserved": true,
+      "convergence6of6_retained": true,
+      "pallet_points_not_lower_radius0": true,
+      "pallet_cross_class_not_higher_radius0": true,
+      "person_points_not_lower_radius0": true,
+      "person_cross_class_not_higher_radius0": true,
+      "pallet_points_not_lower_radius3": true,
+      "pallet_cross_class_not_higher_radius3": true,
+      "person_points_not_lower_radius3": true,
+      "person_cross_class_not_higher_radius3": true,
+      "pallet_points_not_lower_radius6": true,
+      "pallet_cross_class_not_higher_radius6": true,
+      "person_points_not_lower_radius6": true,
+      "person_cross_class_not_higher_radius6": true
+    },
+    "adopt_new_candidate": false,
+    "automatic_default_install": false,
+    "counts": {
+      "incumbent13": {
+        "PAL_count": 27,
+        "PAL_union_pixels": 122302
+      },
+      "append_trial": {
+        "PAL_count": 28,
+        "PAL_union_pixels": 122310
+      }
+    },
+    "area_ratio": 1.2479466171474047,
+    "count_ratio": 1.1666666666666667
+  },
+  "originals": {
+    "passed": true,
+    "original_annotations_written": 0,
+    "training_updates": 0,
+    "reference_annotations_sha256": "1a87c17fcb6d23c90414eaad36af79767d2f50cebae51a612f9a9ad91cada4a5",
+    "reference_description_sha256": "2fdff765eb2e682928cb9b78497d50d0dedcefbcadfd95ccccbf200ac80b76b0",
+    "source_image_hashes_unchanged": true,
+    "weights_unchanged": true,
+    "protected_workbench_state_unchanged": true,
+    "original_scorer_sha256": "93c5152169d04d43b25dbf4a4139b12676daf78750a7f059837121656bb644c2",
+    "reference_annotations_unchanged": true,
+    "reference_description_unchanged": true,
+    "all_incumbent_result_files_byte_unchanged": true
+  },
+  "whole_masks": {
+    "passed": true,
+    "incumbent": [
+      {
+        "case": "camera0_frame76",
+        "PAL_kept": 17,
+        "person_kept": 1,
+        "all_original_foreground_rasters_unchanged": true
+      },
+      {
+        "case": "camera1_frame76",
+        "PAL_kept": 10,
+        "person_kept": 2,
+        "all_original_foreground_rasters_unchanged": true
+      }
+    ],
+    "new_complete_predictions": [
+      {
+        "case": "camera1_frame76",
+        "key": "b43775751a12621e3ae1b6f074971b888641bf5823fe5d07c2163fde46a0c5ac",
+        "source_kind": "new_true_SAM_instance",
+        "whole_original_prediction_raster_unchanged": true,
+        "mask_sha256": "fc01bc0cdaa4eabad01a1cde58b2c20953d09fc214ebd5801b527a007bf718c5"
+      }
+    ],
+    "budget_pixel_clipping": false
+  },
+  "budget": {
+    "passed": true,
+    "rows": [
+      {
+        "case": "camera0_frame76",
+        "arm": "A_current",
+        "round": 1,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "B_sam7",
+        "round": 1,
+        "operations": 3,
+        "cumulative_points": 7,
+        "actual_points": 7
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "B_sam7",
+        "round": 2,
+        "operations": 2,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "B_sam7",
+        "round": 3,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "C_hybrid",
+        "round": 1,
+        "operations": 3,
+        "cumulative_points": 7,
+        "actual_points": 7
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "C_hybrid",
+        "round": 2,
+        "operations": 2,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "C_hybrid",
+        "round": 3,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "A_current",
+        "round": 1,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "B_sam7",
+        "round": 1,
+        "operations": 3,
+        "cumulative_points": 13,
+        "actual_points": 13
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "B_sam7",
+        "round": 2,
+        "operations": 2,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "B_sam7",
+        "round": 3,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "C_hybrid",
+        "round": 1,
+        "operations": 3,
+        "cumulative_points": 13,
+        "actual_points": 13
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "C_hybrid",
+        "round": 2,
+        "operations": 2,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "C_hybrid",
+        "round": 3,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      }
+    ]
+  },
+  "wire_failed_initial": {
+    "passed": false,
+    "scope": "first append variant failed full response-raster preservation; incumbent original masks unaffected",
+    "next_action": "direct offset of every original polygon part/hole, no raster contour reconstruction"
+  }
+}

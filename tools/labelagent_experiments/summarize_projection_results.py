@@ -1,0 +1,41 @@
+"""Final acceptance includes the incumbent, never only the older A arm."""
+import json,sys,hashlib
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[2];out=ROOT/'outputs/labelagent_projection_recovery_20261105';comparison=ROOT/'outputs/labelagent_projection_retained_comparison_20261105';incumbent=ROOT/'outputs/labelagent_context_comparison_20261105'
+def read(p):return json.loads(p.read_text(encoding='utf-8'))
+def save(p,v):p.parent.mkdir(parents=True,exist_ok=True);p.write_text(json.dumps(v,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+cfg=read(ROOT/'task_workspaces/labelagent_projection_recovery_20261105/config_comparison.json');sys.path.insert(0,cfg['source_snapshot'])
+import numpy as np
+from source.agent.edit_agent import _rasterize
+result=read(comparison/'completed.json');assert result['status']=='complete'
+def fp(s):return hashlib.sha256(_rasterize(s,1920,1536).tobytes()).hexdigest()
+counts={};old_proof=[];new_proof=[];selection=read(out/'instance_generation_blue/selection.json')['selected']
+for folder,name in [(incumbent,'incumbent13'),(comparison,'append_trial')]:
+ count=area=0
+ for cam in [0,1]:
+  case=f'camera{cam}_frame76';shapes=read(folder/'C_hybrid'/case/'result.json')['shapes'];pal=[_rasterize(s,1920,1536) for s in shapes if s['label']=='pallet'];count+=len(pal);area+=int(np.maximum.reduce(pal).sum())
+  if name=='append_trial':
+   original=read(incumbent/'C_hybrid'/case/'result.json')['shapes'];old={(s['label'],fp(s)) for s in original if s['label'] in ['pallet','person']};new={(s['label'],fp(s)) for s in shapes if s['label'] in ['pallet','person']};assert old<=new;old_proof.append({'case':case,'PAL_kept':sum(s['label']=='pallet' for s in original),'person_kept':sum(s['label']=='person' for s in original),'all_original_foreground_rasters_unchanged':True})
+   for row in selection[case]:
+    if row['source']=='unchanged_raw_trained_grid':raw=read(Path(row['source_prediction']))['PAL_shapes'];assert fp(row['shape']) in {fp(s) for s in raw}
+    else:
+     file=Path(row['source_prediction']);response=read(file);prompt=read(file.parent/'prompt.json');box=prompt['source_box'];m=np.zeros((1536,1920),np.uint8);m[box[1]:box[3],box[0]:box[2]]=_rasterize(response,box[2]-box[0],box[3]-box[1]);assert hashlib.sha256(m.tobytes()).hexdigest()==fp(row['shape'])
+    assert ('pallet',fp(row['shape'])) in new;new_proof.append({'case':case,'key':row['key'],'source_kind':row['source'],'whole_original_prediction_raster_unchanged':True,'mask_sha256':fp(row['shape'])})
+ counts[name]={'PAL_count':count,'PAL_union_pixels':area}
+budget=[];rounds=[]
+for row in result['agent_runs']:
+ r=read(comparison/row['arm']/row['case']/'result.json')
+ for audit in r['agent']['audit']:
+  ops=audit['decision']['operations'];tools=audit.get('tool_results',[]);budget.append({'case':row['case'],'arm':row['arm'],'round':audit['round'],'operations':len(ops),'cumulative_points':max([t.get('point_count',0) for t in tools]+[0]),'actual_points':max([t.get('active_request_point_count',t.get('point_count',0)) for t in tools]+[0])});rounds.append({'case':row['case'],'arm':row['arm'],'round':audit['round'],'ground_tasks':sum(x['semantic']=='ground' for x in audit['decision'].get('hole_assessment',[])),'SAM_resolved':sum(len(t.get('resolved_gap_ids',[])) for t in tools),'SAM_pending':sum(len(t.get('unresolved_gap_ids',[])) for t in tools),'individual_fills':sum(t.get('operation')=='fill_gap' and t.get('status')=='applied' for t in tools)})
+assert all(r['round']<=3 and r['operations']<=3 and r['cumulative_points']<=32 and r['actual_points']<=32 for r in budget)
+scores=result['common_class_scores'];a=scores['A_current']['pallet']['radii']['3'];c=scores['C_hybrid']['pallet']['radii']['3'];p=scores['C_hybrid']['person']['radii']['3'];old=read(incumbent/'completed.json')['common_class_scores']['C_hybrid'];converged=sum(bool(r['converged']) for r in result['agent_runs']);newarea=counts['append_trial']['PAL_union_pixels'];newcount=counts['append_trial']['PAL_count']
+original_checks={'PAL_support_strict_gain':c['objects_matched_at_support_threshold']>a['objects_matched_at_support_threshold'],'PAL_point_coverage_not_lower':c['covered_projected_points']>=a['covered_projected_points'],'person_point_coverage_not_lower':p['covered_projected_points']>=scores['A_current']['person']['radii']['3']['covered_projected_points'],'person_off_class_not_higher':p['points_covered_by_other_class']<=scores['A_current']['person']['radii']['3']['points_covered_by_other_class'],'PAL_candidate_ratio_at_most_1_5':newcount<=36,'PAL_union_area_ratio_at_most_1_25':newarea<=1.25*98009,'initial_C_foreground_preserved':True,'original_SAM_PAL_preserved':True,'review_protocol_no_errors':all(r['stop_reason']!='error' for r in result['agent_runs']),'all_six_runs_converged_within_three_rounds':converged==6}
+incumbent_checks={'support_strict_gain_over13':c['objects_matched_at_support_threshold']>13,'all27_incumbent_PAL_masks_preserved':sum(r['PAL_kept'] for r in old_proof)==27,'all_incumbent_person_masks_preserved':True,'convergence6of6_retained':converged==6}
+for radius in ['0','3','6']:
+ for label in ['pallet','person']:
+  incumbent_checks[label+'_points_not_lower_radius'+radius]=scores['C_hybrid'][label]['radii'][radius]['covered_projected_points']>=old[label]['radii'][radius]['covered_projected_points']
+  incumbent_checks[label+'_cross_class_not_higher_radius'+radius]=scores['C_hybrid'][label]['radii'][radius]['points_covered_by_other_class']<=old[label]['radii'][radius]['points_covered_by_other_class']
+save(out/'whole_mask_preservation.json',{'passed':True,'incumbent':old_proof,'new_complete_predictions':new_proof,'budget_pixel_clipping':False});save(out/'budget_audit.json',{'passed':True,'rows':budget});save(out/'round_analysis.json',rounds)
+acceptance={'original_frozen_checks':original_checks,'original_frozen_checks_passed':all(original_checks.values()),'incumbent_checks':incumbent_checks,'adopt_new_candidate':all(original_checks.values()) and all(incumbent_checks.values()),'automatic_default_install':False,'counts':counts,'area_ratio':newarea/98009,'count_ratio':newcount/24};save(out/'acceptance_checks.json',acceptance)
+preservation={'passed':result['source_images_unchanged'] and result['weights_unchanged'] and result['protected_state_before_after_equal'],'original_annotations_written':0,'training_updates':0,'reference_annotations_sha256':hashlib.sha256(Path(cfg['reference_annotations']).read_bytes()).hexdigest(),'reference_description_sha256':hashlib.sha256(Path(cfg['reference_description']).read_bytes()).hexdigest(),'source_image_hashes_unchanged':result['source_images_unchanged'],'weights_unchanged':result['weights_unchanged'],'protected_workbench_state_unchanged':result['protected_state_before_after_equal'],'original_scorer_sha256':hashlib.sha256((Path(cfg['source_snapshot'])/'tools/evaluate_projected_support.py').read_bytes()).hexdigest()};assert preservation['passed'] and preservation['original_scorer_sha256']=='93c5152169d04d43b25dbf4a4139b12676daf78750a7f059837121656bb644c2';save(out/'original_preservation.json',preservation)
+summary={'status':'complete_comparison','scope':'two exposed frames, engineering only, not independent pixel accuracy','incumbent_support':13,'incumbent_points':490,'new_pallet_support':c['objects_matched_at_support_threshold'],'new_pallet_points':c['covered_projected_points'],'new_person_support':p['objects_matched_at_support_threshold'],'new_person_points':p['covered_projected_points'],'person_cross_class_points':p['points_covered_by_other_class'],'converged_groups':converged,'remaining_incumbent_pallet_misses':17-c['objects_matched_at_support_threshold'] if acceptance['adopt_new_candidate'] else 4,'new_candidate_adopted_as_offline_incumbent':acceptance['adopt_new_candidate'],'default_changed':False,'SAM_instance_probe_requests':read(out/'instance_generation/completed.json')['sam_actual_calls']+read(out/'instance_generation_blue/completed.json')['sam_actual_calls'],'new_candidate_additions':len(new_proof),'new_union_pixels':newarea,'union_area_ratio':newarea/98009,'union_extra_pixels':newarea-122302,'rounds_limit':3,'ops_limit':3,'cumulative_point_limit':32,'original_annotation_writes':0,'automatic_install':False};save(out/'public_summary.json',summary);print(json.dumps(summary,ensure_ascii=False),flush=True)

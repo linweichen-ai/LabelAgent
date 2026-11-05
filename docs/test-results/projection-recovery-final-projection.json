@@ -1,0 +1,625 @@
+{
+  "source_hashes_verified": true,
+  "five_native_time_fields_all_zero": true,
+  "hardware_exposure_sync_verified": false,
+  "deskew_state_documented": false,
+  "visibility_proxies_not_dense_truth": [
+    {
+      "camera": 0,
+      "object_id": 42,
+      "original8px_15cm_visible_points": 16,
+      "front_other_box_proxy_points": 16,
+      "nearer_lidar_in_12px_proxy_points": 16,
+      "occluding_object_ids": [
+        12,
+        43
+      ],
+      "proxies_are_not_visibility_truth": true
+    },
+    {
+      "camera": 0,
+      "object_id": 47,
+      "original8px_15cm_visible_points": 29,
+      "front_other_box_proxy_points": 29,
+      "nearer_lidar_in_12px_proxy_points": 22,
+      "occluding_object_ids": [
+        12,
+        48
+      ],
+      "proxies_are_not_visibility_truth": true
+    },
+    {
+      "camera": 0,
+      "object_id": 48,
+      "original8px_15cm_visible_points": 27,
+      "front_other_box_proxy_points": 27,
+      "nearer_lidar_in_12px_proxy_points": 7,
+      "occluding_object_ids": [
+        12,
+        49
+      ],
+      "proxies_are_not_visibility_truth": true
+    },
+    {
+      "camera": 0,
+      "object_id": 49,
+      "original8px_15cm_visible_points": 24,
+      "front_other_box_proxy_points": 24,
+      "nearer_lidar_in_12px_proxy_points": 6,
+      "occluding_object_ids": [
+        12
+      ],
+      "proxies_are_not_visibility_truth": true
+    },
+    {
+      "camera": 1,
+      "object_id": 42,
+      "original8px_15cm_visible_points": 0,
+      "front_other_box_proxy_points": 0,
+      "nearer_lidar_in_12px_proxy_points": 0,
+      "occluding_object_ids": [],
+      "proxies_are_not_visibility_truth": true
+    },
+    {
+      "camera": 1,
+      "object_id": 47,
+      "original8px_15cm_visible_points": 11,
+      "front_other_box_proxy_points": 11,
+      "nearer_lidar_in_12px_proxy_points": 5,
+      "occluding_object_ids": [
+        12,
+        48
+      ],
+      "proxies_are_not_visibility_truth": true
+    },
+    {
+      "camera": 1,
+      "object_id": 48,
+      "original8px_15cm_visible_points": 11,
+      "front_other_box_proxy_points": 11,
+      "nearer_lidar_in_12px_proxy_points": 0,
+      "occluding_object_ids": [
+        12,
+        49
+      ],
+      "proxies_are_not_visibility_truth": true
+    },
+    {
+      "camera": 1,
+      "object_id": 49,
+      "original8px_15cm_visible_points": 6,
+      "front_other_box_proxy_points": 6,
+      "nearer_lidar_in_12px_proxy_points": 1,
+      "occluding_object_ids": [
+        12
+      ],
+      "proxies_are_not_visibility_truth": true
+    },
+    {
+      "camera": 2,
+      "object_id": 42,
+      "original8px_15cm_visible_points": 0,
+      "front_other_box_proxy_points": 0,
+      "nearer_lidar_in_12px_proxy_points": 0,
+      "occluding_object_ids": [],
+      "proxies_are_not_visibility_truth": true
+    },
+    {
+      "camera": 2,
+      "object_id": 47,
+      "original8px_15cm_visible_points": 0,
+      "front_other_box_proxy_points": 0,
+      "nearer_lidar_in_12px_proxy_points": 0,
+      "occluding_object_ids": [],
+      "proxies_are_not_visibility_truth": true
+    },
+    {
+      "camera": 2,
+      "object_id": 48,
+      "original8px_15cm_visible_points": 0,
+      "front_other_box_proxy_points": 0,
+      "nearer_lidar_in_12px_proxy_points": 0,
+      "occluding_object_ids": [],
+      "proxies_are_not_visibility_truth": true
+    },
+    {
+      "camera": 2,
+      "object_id": 49,
+      "original8px_15cm_visible_points": 0,
+      "front_other_box_proxy_points": 0,
+      "nearer_lidar_in_12px_proxy_points": 0,
+      "occluding_object_ids": [],
+      "proxies_are_not_visibility_truth": true
+    },
+    {
+      "camera": 3,
+      "object_id": 42,
+      "original8px_15cm_visible_points": 0,
+      "front_other_box_proxy_points": 0,
+      "nearer_lidar_in_12px_proxy_points": 0,
+      "occluding_object_ids": [],
+      "proxies_are_not_visibility_truth": true
+    },
+    {
+      "camera": 3,
+      "object_id": 47,
+      "original8px_15cm_visible_points": 0,
+      "front_other_box_proxy_points": 0,
+      "nearer_lidar_in_12px_proxy_points": 0,
+      "occluding_object_ids": [],
+      "proxies_are_not_visibility_truth": true
+    },
+    {
+      "camera": 3,
+      "object_id": 48,
+      "original8px_15cm_visible_points": 0,
+      "front_other_box_proxy_points": 0,
+      "nearer_lidar_in_12px_proxy_points": 0,
+      "occluding_object_ids": [],
+      "proxies_are_not_visibility_truth": true
+    },
+    {
+      "camera": 3,
+      "object_id": 49,
+      "original8px_15cm_visible_points": 0,
+      "front_other_box_proxy_points": 0,
+      "nearer_lidar_in_12px_proxy_points": 0,
+      "occluding_object_ids": [],
+      "proxies_are_not_visibility_truth": true
+    }
+  ],
+  "calibration_numeric_checks": [
+    {
+      "camera": 0,
+      "determinant": 0.9999817979369999,
+      "orthonormal_error": 9.441595204200613e-05,
+      "roundtrip_max_m": 7.105427357601002e-15,
+      "provided_numeric_calibration_valid": true,
+      "independent_reprojection_accuracy_verified": false
+    },
+    {
+      "camera": 1,
+      "determinant": 0.99999783614,
+      "orthonormal_error": 0.00012429326369515383,
+      "roundtrip_max_m": 8.881784197001252e-15,
+      "provided_numeric_calibration_valid": true,
+      "independent_reprojection_accuracy_verified": false
+    },
+    {
+      "camera": 2,
+      "determinant": 1.0000270931339998,
+      "orthonormal_error": 0.00017009375120780873,
+      "roundtrip_max_m": 7.105427357601002e-15,
+      "provided_numeric_calibration_valid": true,
+      "independent_reprojection_accuracy_verified": false
+    },
+    {
+      "camera": 3,
+      "determinant": 1.0000577332400002,
+      "orthonormal_error": 0.00011707692214966815,
+      "roundtrip_max_m": 1.0658141036401503e-14,
+      "provided_numeric_calibration_valid": true,
+      "independent_reprojection_accuracy_verified": false
+    }
+  ],
+  "diagnostic_zbuffer_settings_not_adopted": [
+    {
+      "camera": 0,
+      "cell": 1,
+      "slack_m": 0.0,
+      "target_point_counts": {
+        "42": 24,
+        "47": 29,
+        "48": 27,
+        "49": 24
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 0,
+      "cell": 1,
+      "slack_m": 0.15,
+      "target_point_counts": {
+        "42": 24,
+        "47": 29,
+        "48": 27,
+        "49": 24
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 0,
+      "cell": 4,
+      "slack_m": 0.0,
+      "target_point_counts": {
+        "42": 17,
+        "47": 28,
+        "48": 27,
+        "49": 23
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 0,
+      "cell": 4,
+      "slack_m": 0.15,
+      "target_point_counts": {
+        "42": 19,
+        "47": 29,
+        "48": 27,
+        "49": 24
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 0,
+      "cell": 8,
+      "slack_m": 0.0,
+      "target_point_counts": {
+        "42": 8,
+        "47": 20,
+        "48": 18,
+        "49": 18
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 0,
+      "cell": 8,
+      "slack_m": 0.15,
+      "target_point_counts": {
+        "42": 16,
+        "47": 29,
+        "48": 27,
+        "49": 24
+      },
+      "original_metric_setting": true,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 0,
+      "cell": 16,
+      "slack_m": 0.0,
+      "target_point_counts": {
+        "42": 0,
+        "47": 7,
+        "48": 10,
+        "49": 7
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 0,
+      "cell": 16,
+      "slack_m": 0.15,
+      "target_point_counts": {
+        "42": 0,
+        "47": 19,
+        "48": 24,
+        "49": 20
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 1,
+      "cell": 1,
+      "slack_m": 0.0,
+      "target_point_counts": {
+        "42": 0,
+        "47": 11,
+        "48": 11,
+        "49": 6
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 1,
+      "cell": 1,
+      "slack_m": 0.15,
+      "target_point_counts": {
+        "42": 0,
+        "47": 11,
+        "48": 11,
+        "49": 6
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 1,
+      "cell": 4,
+      "slack_m": 0.0,
+      "target_point_counts": {
+        "42": 0,
+        "47": 11,
+        "48": 11,
+        "49": 6
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 1,
+      "cell": 4,
+      "slack_m": 0.15,
+      "target_point_counts": {
+        "42": 0,
+        "47": 11,
+        "48": 11,
+        "49": 6
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 1,
+      "cell": 8,
+      "slack_m": 0.0,
+      "target_point_counts": {
+        "42": 0,
+        "47": 8,
+        "48": 10,
+        "49": 5
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 1,
+      "cell": 8,
+      "slack_m": 0.15,
+      "target_point_counts": {
+        "42": 0,
+        "47": 11,
+        "48": 11,
+        "49": 6
+      },
+      "original_metric_setting": true,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 1,
+      "cell": 16,
+      "slack_m": 0.0,
+      "target_point_counts": {
+        "42": 0,
+        "47": 4,
+        "48": 5,
+        "49": 4
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 1,
+      "cell": 16,
+      "slack_m": 0.15,
+      "target_point_counts": {
+        "42": 0,
+        "47": 10,
+        "48": 11,
+        "49": 6
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 2,
+      "cell": 1,
+      "slack_m": 0.0,
+      "target_point_counts": {
+        "42": 0,
+        "47": 0,
+        "48": 0,
+        "49": 0
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 2,
+      "cell": 1,
+      "slack_m": 0.15,
+      "target_point_counts": {
+        "42": 0,
+        "47": 0,
+        "48": 0,
+        "49": 0
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 2,
+      "cell": 4,
+      "slack_m": 0.0,
+      "target_point_counts": {
+        "42": 0,
+        "47": 0,
+        "48": 0,
+        "49": 0
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 2,
+      "cell": 4,
+      "slack_m": 0.15,
+      "target_point_counts": {
+        "42": 0,
+        "47": 0,
+        "48": 0,
+        "49": 0
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 2,
+      "cell": 8,
+      "slack_m": 0.0,
+      "target_point_counts": {
+        "42": 0,
+        "47": 0,
+        "48": 0,
+        "49": 0
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 2,
+      "cell": 8,
+      "slack_m": 0.15,
+      "target_point_counts": {
+        "42": 0,
+        "47": 0,
+        "48": 0,
+        "49": 0
+      },
+      "original_metric_setting": true,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 2,
+      "cell": 16,
+      "slack_m": 0.0,
+      "target_point_counts": {
+        "42": 0,
+        "47": 0,
+        "48": 0,
+        "49": 0
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 2,
+      "cell": 16,
+      "slack_m": 0.15,
+      "target_point_counts": {
+        "42": 0,
+        "47": 0,
+        "48": 0,
+        "49": 0
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 3,
+      "cell": 1,
+      "slack_m": 0.0,
+      "target_point_counts": {
+        "42": 0,
+        "47": 0,
+        "48": 0,
+        "49": 0
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 3,
+      "cell": 1,
+      "slack_m": 0.15,
+      "target_point_counts": {
+        "42": 0,
+        "47": 0,
+        "48": 0,
+        "49": 0
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 3,
+      "cell": 4,
+      "slack_m": 0.0,
+      "target_point_counts": {
+        "42": 0,
+        "47": 0,
+        "48": 0,
+        "49": 0
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 3,
+      "cell": 4,
+      "slack_m": 0.15,
+      "target_point_counts": {
+        "42": 0,
+        "47": 0,
+        "48": 0,
+        "49": 0
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 3,
+      "cell": 8,
+      "slack_m": 0.0,
+      "target_point_counts": {
+        "42": 0,
+        "47": 0,
+        "48": 0,
+        "49": 0
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 3,
+      "cell": 8,
+      "slack_m": 0.15,
+      "target_point_counts": {
+        "42": 0,
+        "47": 0,
+        "48": 0,
+        "49": 0
+      },
+      "original_metric_setting": true,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 3,
+      "cell": 16,
+      "slack_m": 0.0,
+      "target_point_counts": {
+        "42": 0,
+        "47": 0,
+        "48": 0,
+        "49": 0
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    },
+    {
+      "camera": 3,
+      "cell": 16,
+      "slack_m": 0.15,
+      "target_point_counts": {
+        "42": 0,
+        "47": 0,
+        "48": 0,
+        "49": 0
+      },
+      "original_metric_setting": false,
+      "diagnostic_only_never_acceptance": true
+    }
+  ],
+  "original_metric_or_reference_changed": false,
+  "annotation_writes": 0
+}

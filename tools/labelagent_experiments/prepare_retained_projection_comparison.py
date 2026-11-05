@@ -11,7 +11,7 @@ for cam in [0,1]:
  case=f'camera{cam}_frame76';old=read(old_gen/case/'C_children.json');extra=read(new/case/'additional_children.json');save(combined/case/'C_children.json',old+extra);save(combined/case/'B_children.json',read(old_gen/case/'B_children.json'))
 save(combined/'generation_protocol.json',{'incumbent_children_source':str(old_gen),'new_complete_additions':str(new),'all_incumbent_foreground_kept':True,'same_unchanged_acceptance':True,'new_selection_sha256':hashlib.sha256((new/'selection.json').read_bytes()).hexdigest(),'no_reference_inputs':True,'no_budget_mask_trimming':True})
 save(combined/'completed.json',{'status':'complete','original_children_preserved':True,'new_generation':read(new/'completed.json')})
-cfg=read(work/'config.json');cfg.update(instance_generation=str(combined),generation_source=str(new));save(work/'config_comparison.json',cfg)
+cfg=read(work/'config.json');cfg.update(output=str(out),instance_generation=str(combined),generation_source=str(new));save(work/'config_comparison.json',cfg)
 for folder in ['mask2former','sam_text','refinement','inputs','gap_action_cache','A_current','B_sam7']:shutil.copytree(source/folder,out/folder)
 save(out/'agent_runs.json',[r for r in read(source/'agent_runs.json') if r['arm'] in ['A_current','B_sam7']]);save(out/'model_trace.json',read(source/'model_trace.json'))
 save(out/'cache_source_binding.json',{'source':str(source),'source_plan_sha256':hashlib.sha256((source/'frozen_plan.json').read_bytes()).hexdigest(),'A_B_images_seeds_policies_identical':True,'A_B_runs_reused':4,'C_new_integrated_runs':2,'C_initial_floor_is_original_pre_review_seed_not_finished_floor':True,'incumbent_foreground_preserved':True,'no_reference_input_for_selection':True})

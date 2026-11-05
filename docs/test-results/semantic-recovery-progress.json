@@ -1,19 +1,10 @@
 {
-  "status": "foreground_and_controller_comparison_complete_new_candidates_pending",
-  "pallet_support": 13,
-  "pallet_points": 490,
+  "status": "complete_superseded_by_final_report",
+  "final_report": "semantic-recovery-final.md",
+  "pallet_support_retained": 13,
+  "remaining_pallet_misses": 4,
   "agent_converged": 6,
-  "agent_total": 6,
-  "max_rounds": 3,
-  "max_ops": 3,
-  "max_points": 32,
-  "negative_controls": 7,
   "negative_controls_passed": true,
-  "positive_diagnostic_recall": 2,
-  "positive_diagnostics": 2,
-  "new_fixed_grid_forwards": 84,
-  "annotation_writes": 0,
-  "training_updates": 0,
-  "default_enabled": false,
-  "scope": "two exposed same-capture images, exploratory engineering, not generalization"
+  "new_candidate_variant_rejected": true,
+  "default_enabled": false
 }

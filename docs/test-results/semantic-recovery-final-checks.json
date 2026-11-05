@@ -1,0 +1,284 @@
+{
+  "originals": {
+    "passed": true,
+    "annotation_writes": 0,
+    "training_updates": 0,
+    "weight_unchanged": true,
+    "original_reference_annotations_unchanged": true,
+    "source_images_unchanged": true,
+    "protected_workbench_state_unchanged": true,
+    "original_scorer_sha256": "93c5152169d04d43b25dbf4a4139b12676daf78750a7f059837121656bb644c2"
+  },
+  "whole_masks": {
+    "passed": true,
+    "new_complete_model_masks": [
+      {
+        "case": "camera0_frame76",
+        "key": "ec3d1d0b23d13df6d26219f108bf97d9b07812d1b70190db107da873ad8b5a96",
+        "raster_sha256": "8a86f35297597f85ef2d2b1ed71e7f04c54081b9a9725d3118b329e67e0c9850",
+        "unchanged_original_model_instance_in_final": true
+      },
+      {
+        "case": "camera0_frame76",
+        "key": "706aa43830b0ce1b565f9e2ab4e265b8d24913510b32b2ae811cf61e34caffbf",
+        "raster_sha256": "0997a1cad9cea286f4aaf10ae6b2dc2282a15e6963c344b8d0c9ab19590cacb6",
+        "unchanged_original_model_instance_in_final": true
+      },
+      {
+        "case": "camera1_frame76",
+        "key": "2f0e96af1c6da229575dd2420e92205ad876fdb7ed2d1f3d9be6581eaf10256c",
+        "raster_sha256": "b5a92cf7636bc2d8f6896c4197522f9e4a265dbdc6d9893353df05889cf89793",
+        "unchanged_original_model_instance_in_final": true
+      },
+      {
+        "case": "camera1_frame76",
+        "key": "6b2ac98f9a5445703e7d8809c844514b083b1ad7239e2abc9c601ef71878d810",
+        "raster_sha256": "e5ec709cbc4c7db367b0ecc50b63436c0f80a4fda08badc6b019918755ed16ab",
+        "unchanged_original_model_instance_in_final": true
+      }
+    ],
+    "budget_pixel_clipping": false,
+    "context_foreground_rasters_identical_to_previous13_support": true
+  },
+  "semantic_runtime": {
+    "passed": true,
+    "actual_image_encoding_verified_for_requests": 28,
+    "model_config_sha256": "bec4b3d446efa05807365c9e1cec03ac590836879d02f3a6da879971154bdd3b",
+    "same_physical_runtime_configuration": true,
+    "prompt_and_enum_crossing_is_real": true
+  },
+  "context_budget": {
+    "passed": true,
+    "rows": [
+      {
+        "case": "camera0_frame76",
+        "arm": "A_current",
+        "round": 1,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "B_sam7",
+        "round": 1,
+        "operations": 3,
+        "cumulative_points": 7,
+        "actual_points": 7
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "B_sam7",
+        "round": 2,
+        "operations": 2,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "B_sam7",
+        "round": 3,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "C_hybrid",
+        "round": 1,
+        "operations": 3,
+        "cumulative_points": 7,
+        "actual_points": 7
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "C_hybrid",
+        "round": 2,
+        "operations": 2,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "C_hybrid",
+        "round": 3,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "A_current",
+        "round": 1,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "B_sam7",
+        "round": 1,
+        "operations": 3,
+        "cumulative_points": 13,
+        "actual_points": 13
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "B_sam7",
+        "round": 2,
+        "operations": 2,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "B_sam7",
+        "round": 3,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "C_hybrid",
+        "round": 1,
+        "operations": 3,
+        "cumulative_points": 13,
+        "actual_points": 13
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "C_hybrid",
+        "round": 2,
+        "operations": 2,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "C_hybrid",
+        "round": 3,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      }
+    ]
+  },
+  "new_candidate_budget": {
+    "passed": true,
+    "rows": [
+      {
+        "case": "camera0_frame76",
+        "arm": "A_current",
+        "round": 1,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "B_sam7",
+        "round": 1,
+        "operations": 3,
+        "cumulative_points": 7,
+        "actual_points": 7
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "B_sam7",
+        "round": 2,
+        "operations": 2,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "B_sam7",
+        "round": 3,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "C_hybrid",
+        "round": 1,
+        "operations": 3,
+        "cumulative_points": 7,
+        "actual_points": 7
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "C_hybrid",
+        "round": 2,
+        "operations": 2,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera0_frame76",
+        "arm": "C_hybrid",
+        "round": 3,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "A_current",
+        "round": 1,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "B_sam7",
+        "round": 1,
+        "operations": 3,
+        "cumulative_points": 13,
+        "actual_points": 13
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "B_sam7",
+        "round": 2,
+        "operations": 2,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "B_sam7",
+        "round": 3,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "C_hybrid",
+        "round": 1,
+        "operations": 3,
+        "cumulative_points": 13,
+        "actual_points": 13
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "C_hybrid",
+        "round": 2,
+        "operations": 2,
+        "cumulative_points": 0,
+        "actual_points": 0
+      },
+      {
+        "case": "camera1_frame76",
+        "arm": "C_hybrid",
+        "round": 3,
+        "operations": 0,
+        "cumulative_points": 0,
+        "actual_points": 0
+      }
+    ]
+  }
+}

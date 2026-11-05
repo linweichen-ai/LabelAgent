@@ -1,7 +1,7 @@
 """Freeze full-pipeline candidate comparison after reference-free generation."""
 import json,shutil,hashlib
 from pathlib import Path
-ROOT=Path(__file__).resolve().parents[2];helpers=Path(__file__).parent;work=ROOT/'task_workspaces/labelagent_semantic_recovery_20261105';source=ROOT/'outputs/labelagent_context_comparison_20261105';out=ROOT/'outputs/labelagent_semantic_comparison_20261105';generation=ROOT/'outputs/labelagent_semantic_recovery_20261105/instance_generation_contextual'
+ROOT=Path(__file__).resolve().parents[2];helpers=Path(__file__).parent;work=ROOT/'task_workspaces/labelagent_semantic_recovery_20261105';source=ROOT/'outputs/labelagent_context_comparison_20261105';out=ROOT/'outputs/labelagent_semantic_comparison_20261105';generation=ROOT/'outputs/labelagent_semantic_recovery_20261105/instance_generation_subject_guarded'
 def read(p):return json.loads(p.read_text(encoding='utf-8'))
 def save(p,v):p.parent.mkdir(parents=True,exist_ok=True);p.write_text(json.dumps(v,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 assert read(source/'completed.json')['status']=='complete' and read(generation/'completed.json')['status']=='complete'

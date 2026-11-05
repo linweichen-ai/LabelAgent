@@ -12,3 +12,8 @@ Atlas input and omitted-prior preflights did not improve complete gap coverage a
 
 
 The preserved-instance variant (`run_preserved_model_comparison.py`) retains original trained masks after review functional controls fail. SAM outputs remain advisory, not authorized boundary replacements. All raw fixed-grid instances are considered, with model-confidence × soft novelty ranking; original SAM overlap is not a hard rejection gate. Each camera retains its original 1.5 count and 1.25 union limits, which also satisfy the global limits. Whole proposals conflicting with the radius3 margin of original predicted person masks are rejected. Budget and safety checks happen before NMS against newly admitted proposals; no kept mask is clipped. All candidates remain unconfirmed, and no default is enabled. The earlier fully refined failed version remains separate.
+
+
+## Neutral semantic recovery (2026-11-05)
+
+See `semantic-recovery-final.md` under docs/test-results. All helpers are opt-in offline experiments with workstation paths to rebind. `ground_action_review_v6.py` uses two individually counted context-gap fills before the first real SAM; C uses the unchanged original SAM floor seed. `semantic_evidence_gate.py` separates neutral visual observation from target classification. `semantic_subject_guard.py` conservatively holds explicit pallet-jack/forklift subjects or uncertainty; its lexical checks are not semantic truth. The new whole-mask foreground failed instance acceptance and is not adopted. Preserve the 13-support foreground and all failed variants. No application defaults are changed.

@@ -1,0 +1,373 @@
+{
+  "status": "complete",
+  "scope": "post-freeze diagnosis; raw stages do NOT satisfy deployed count/area/semantic gates and are not adopted predictions",
+  "reference_not_used_for_selection": true,
+  "original_scorer": true,
+  "rows": [
+    {
+      "case": "camera0_frame76",
+      "stage": "old_raw_coarse_grid",
+      "proposals": 37,
+      "pallet": {
+        "covered_projected_points": 313,
+        "points_covered_by_other_class": 0,
+        "objects_matched_at_support_threshold": 7,
+        "best_candidate_support_sum": 6.783806626098715
+      },
+      "person": {
+        "covered_projected_points": 136,
+        "points_covered_by_other_class": 0,
+        "objects_matched_at_support_threshold": 1,
+        "best_candidate_support_sum": 0.5862068965517241
+      },
+      "five_original_misses": [
+        {
+          "obj_id": 42,
+          "label": "pallet",
+          "unique_visible_points": 16,
+          "best_candidate_supported_coverage": 0.0,
+          "best_candidate_point_coverage": 1.0
+        },
+        {
+          "obj_id": 48,
+          "label": "pallet",
+          "unique_visible_points": 27,
+          "best_candidate_supported_coverage": 0.0,
+          "best_candidate_point_coverage": 1.0
+        }
+      ]
+    },
+    {
+      "case": "camera0_frame76",
+      "stage": "new_raw_fine_grid",
+      "proposals": 47,
+      "pallet": {
+        "covered_projected_points": 291,
+        "points_covered_by_other_class": 0,
+        "objects_matched_at_support_threshold": 8,
+        "best_candidate_support_sum": 6.856006356193183
+      },
+      "person": {
+        "covered_projected_points": 136,
+        "points_covered_by_other_class": 0,
+        "objects_matched_at_support_threshold": 1,
+        "best_candidate_support_sum": 0.5862068965517241
+      },
+      "five_original_misses": [
+        {
+          "obj_id": 42,
+          "label": "pallet",
+          "unique_visible_points": 16,
+          "best_candidate_supported_coverage": 0.5,
+          "best_candidate_point_coverage": 0.8125
+        },
+        {
+          "obj_id": 48,
+          "label": "pallet",
+          "unique_visible_points": 27,
+          "best_candidate_supported_coverage": 0.0,
+          "best_candidate_point_coverage": 0.9629629629629629
+        }
+      ]
+    },
+    {
+      "case": "camera0_frame76",
+      "stage": "combined_unfiltered_raw",
+      "proposals": 84,
+      "pallet": {
+        "covered_projected_points": 313,
+        "points_covered_by_other_class": 0,
+        "objects_matched_at_support_threshold": 8,
+        "best_candidate_support_sum": 7.283806626098715
+      },
+      "person": {
+        "covered_projected_points": 136,
+        "points_covered_by_other_class": 0,
+        "objects_matched_at_support_threshold": 1,
+        "best_candidate_support_sum": 0.5862068965517241
+      },
+      "five_original_misses": [
+        {
+          "obj_id": 42,
+          "label": "pallet",
+          "unique_visible_points": 16,
+          "best_candidate_supported_coverage": 0.5,
+          "best_candidate_point_coverage": 1.0
+        },
+        {
+          "obj_id": 48,
+          "label": "pallet",
+          "unique_visible_points": 27,
+          "best_candidate_supported_coverage": 0.0,
+          "best_candidate_point_coverage": 1.0
+        }
+      ]
+    },
+    {
+      "case": "camera0_frame76",
+      "stage": "neutral_two_view_evidence",
+      "proposals": 2,
+      "pallet": {
+        "covered_projected_points": 288,
+        "points_covered_by_other_class": 0,
+        "objects_matched_at_support_threshold": 7,
+        "best_candidate_support_sum": 6.43292943311626
+      },
+      "person": {
+        "covered_projected_points": 136,
+        "points_covered_by_other_class": 0,
+        "objects_matched_at_support_threshold": 1,
+        "best_candidate_support_sum": 0.5862068965517241
+      },
+      "five_original_misses": [
+        {
+          "obj_id": 42,
+          "label": "pallet",
+          "unique_visible_points": 16,
+          "best_candidate_supported_coverage": 0.0,
+          "best_candidate_point_coverage": 0.8125
+        },
+        {
+          "obj_id": 48,
+          "label": "pallet",
+          "unique_visible_points": 27,
+          "best_candidate_supported_coverage": 0.0,
+          "best_candidate_point_coverage": 0.9629629629629629
+        }
+      ]
+    },
+    {
+      "case": "camera0_frame76",
+      "stage": "final_whole_mask_budget_selection",
+      "proposals": 2,
+      "pallet": {
+        "covered_projected_points": 288,
+        "points_covered_by_other_class": 0,
+        "objects_matched_at_support_threshold": 7,
+        "best_candidate_support_sum": 6.43292943311626
+      },
+      "person": {
+        "covered_projected_points": 136,
+        "points_covered_by_other_class": 0,
+        "objects_matched_at_support_threshold": 1,
+        "best_candidate_support_sum": 0.5862068965517241
+      },
+      "five_original_misses": [
+        {
+          "obj_id": 42,
+          "label": "pallet",
+          "unique_visible_points": 16,
+          "best_candidate_supported_coverage": 0.0,
+          "best_candidate_point_coverage": 0.8125
+        },
+        {
+          "obj_id": 48,
+          "label": "pallet",
+          "unique_visible_points": 27,
+          "best_candidate_supported_coverage": 0.0,
+          "best_candidate_point_coverage": 0.9629629629629629
+        }
+      ]
+    },
+    {
+      "case": "camera1_frame76",
+      "stage": "old_raw_coarse_grid",
+      "proposals": 23,
+      "pallet": {
+        "covered_projected_points": 222,
+        "points_covered_by_other_class": 0,
+        "objects_matched_at_support_threshold": 7,
+        "best_candidate_support_sum": 5.938438438438438
+      },
+      "person": {
+        "covered_projected_points": 1193,
+        "points_covered_by_other_class": 0,
+        "objects_matched_at_support_threshold": 2,
+        "best_candidate_support_sum": 1.7953612386873234
+      },
+      "five_original_misses": [
+        {
+          "obj_id": 47,
+          "label": "pallet",
+          "unique_visible_points": 11,
+          "best_candidate_supported_coverage": 0.36363636363636365,
+          "best_candidate_point_coverage": 0.36363636363636365
+        },
+        {
+          "obj_id": 48,
+          "label": "pallet",
+          "unique_visible_points": 11,
+          "best_candidate_supported_coverage": 0.6363636363636364,
+          "best_candidate_point_coverage": 0.6363636363636364
+        },
+        {
+          "obj_id": 49,
+          "label": "pallet",
+          "unique_visible_points": 6,
+          "best_candidate_supported_coverage": 0.5,
+          "best_candidate_point_coverage": 0.5
+        }
+      ]
+    },
+    {
+      "case": "camera1_frame76",
+      "stage": "new_raw_fine_grid",
+      "proposals": 46,
+      "pallet": {
+        "covered_projected_points": 226,
+        "points_covered_by_other_class": 0,
+        "objects_matched_at_support_threshold": 5,
+        "best_candidate_support_sum": 4.763613263613264
+      },
+      "person": {
+        "covered_projected_points": 1193,
+        "points_covered_by_other_class": 0,
+        "objects_matched_at_support_threshold": 2,
+        "best_candidate_support_sum": 1.7953612386873234
+      },
+      "five_original_misses": [
+        {
+          "obj_id": 47,
+          "label": "pallet",
+          "unique_visible_points": 11,
+          "best_candidate_supported_coverage": 0.36363636363636365,
+          "best_candidate_point_coverage": 0.36363636363636365
+        },
+        {
+          "obj_id": 48,
+          "label": "pallet",
+          "unique_visible_points": 11,
+          "best_candidate_supported_coverage": 0.0,
+          "best_candidate_point_coverage": 0.18181818181818182
+        },
+        {
+          "obj_id": 49,
+          "label": "pallet",
+          "unique_visible_points": 6,
+          "best_candidate_supported_coverage": 0.0,
+          "best_candidate_point_coverage": 0.3333333333333333
+        }
+      ]
+    },
+    {
+      "case": "camera1_frame76",
+      "stage": "combined_unfiltered_raw",
+      "proposals": 69,
+      "pallet": {
+        "covered_projected_points": 233,
+        "points_covered_by_other_class": 0,
+        "objects_matched_at_support_threshold": 7,
+        "best_candidate_support_sum": 5.938438438438438
+      },
+      "person": {
+        "covered_projected_points": 1193,
+        "points_covered_by_other_class": 0,
+        "objects_matched_at_support_threshold": 2,
+        "best_candidate_support_sum": 1.7953612386873234
+      },
+      "five_original_misses": [
+        {
+          "obj_id": 47,
+          "label": "pallet",
+          "unique_visible_points": 11,
+          "best_candidate_supported_coverage": 0.36363636363636365,
+          "best_candidate_point_coverage": 0.36363636363636365
+        },
+        {
+          "obj_id": 48,
+          "label": "pallet",
+          "unique_visible_points": 11,
+          "best_candidate_supported_coverage": 0.6363636363636364,
+          "best_candidate_point_coverage": 0.6363636363636364
+        },
+        {
+          "obj_id": 49,
+          "label": "pallet",
+          "unique_visible_points": 6,
+          "best_candidate_supported_coverage": 0.5,
+          "best_candidate_point_coverage": 0.5
+        }
+      ]
+    },
+    {
+      "case": "camera1_frame76",
+      "stage": "neutral_two_view_evidence",
+      "proposals": 3,
+      "pallet": {
+        "covered_projected_points": 205,
+        "points_covered_by_other_class": 0,
+        "objects_matched_at_support_threshold": 5,
+        "best_candidate_support_sum": 4.592184692184692
+      },
+      "person": {
+        "covered_projected_points": 1193,
+        "points_covered_by_other_class": 0,
+        "objects_matched_at_support_threshold": 2,
+        "best_candidate_support_sum": 1.7953612386873234
+      },
+      "five_original_misses": [
+        {
+          "obj_id": 47,
+          "label": "pallet",
+          "unique_visible_points": 11,
+          "best_candidate_supported_coverage": 0.36363636363636365,
+          "best_candidate_point_coverage": 0.36363636363636365
+        },
+        {
+          "obj_id": 48,
+          "label": "pallet",
+          "unique_visible_points": 11,
+          "best_candidate_supported_coverage": 0.0,
+          "best_candidate_point_coverage": 0.0
+        },
+        {
+          "obj_id": 49,
+          "label": "pallet",
+          "unique_visible_points": 6,
+          "best_candidate_supported_coverage": 0.0,
+          "best_candidate_point_coverage": 0.0
+        }
+      ]
+    },
+    {
+      "case": "camera1_frame76",
+      "stage": "final_whole_mask_budget_selection",
+      "proposals": 2,
+      "pallet": {
+        "covered_projected_points": 205,
+        "points_covered_by_other_class": 0,
+        "objects_matched_at_support_threshold": 5,
+        "best_candidate_support_sum": 4.592184692184692
+      },
+      "person": {
+        "covered_projected_points": 1193,
+        "points_covered_by_other_class": 0,
+        "objects_matched_at_support_threshold": 2,
+        "best_candidate_support_sum": 1.7953612386873234
+      },
+      "five_original_misses": [
+        {
+          "obj_id": 47,
+          "label": "pallet",
+          "unique_visible_points": 11,
+          "best_candidate_supported_coverage": 0.36363636363636365,
+          "best_candidate_point_coverage": 0.36363636363636365
+        },
+        {
+          "obj_id": 48,
+          "label": "pallet",
+          "unique_visible_points": 11,
+          "best_candidate_supported_coverage": 0.0,
+          "best_candidate_point_coverage": 0.0
+        },
+        {
+          "obj_id": 49,
+          "label": "pallet",
+          "unique_visible_points": 6,
+          "best_candidate_supported_coverage": 0.0,
+          "best_candidate_point_coverage": 0.0
+        }
+      ]
+    }
+  ]
+}

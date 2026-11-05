@@ -1,0 +1,128 @@
+{
+  "status": "experiments_complete",
+  "scope": "two exposed same-capture images; exploratory, not generalization",
+  "comparisons": [
+    {
+      "name": "原A两类方案",
+      "folder": "labelagent_preserved_model_comparison_20261105",
+      "arm": "A_current",
+      "pallet_support": 12,
+      "pallet_references": 17,
+      "pallet_points": 482,
+      "person_support": 3,
+      "person_points": 1329,
+      "person_off_class": 0
+    },
+    {
+      "name": "上轮C候选",
+      "folder": "labelagent_preserved_model_comparison_20261105",
+      "arm": "C_hybrid",
+      "pallet_support": 13,
+      "pallet_references": 17,
+      "pallet_points": 490,
+      "person_support": 3,
+      "person_points": 1349,
+      "person_off_class": 0
+    },
+    {
+      "name": "本轮固定前景＋新地面调度",
+      "folder": "labelagent_context_comparison_20261105",
+      "arm": "C_hybrid",
+      "pallet_support": 13,
+      "pallet_references": 17,
+      "pallet_points": 490,
+      "person_support": 3,
+      "person_points": 1349,
+      "person_off_class": 0
+    },
+    {
+      "name": "本轮新网格＋自然上下文语义门控",
+      "folder": "labelagent_semantic_comparison_20261105",
+      "arm": "C_hybrid",
+      "pallet_support": 12,
+      "pallet_references": 17,
+      "pallet_points": 493,
+      "person_support": 3,
+      "person_points": 1349,
+      "person_off_class": 0
+    }
+  ],
+  "context_acceptance": {
+    "checks": {
+      "PAL_support_strict_gain": true,
+      "PAL_point_coverage_not_lower": true,
+      "person_point_coverage_not_lower": true,
+      "person_off_class_not_higher": true,
+      "PAL_candidate_ratio_at_most_1_5": true,
+      "PAL_union_area_ratio_at_most_1_25": true,
+      "initial_C_foreground_preserved": true,
+      "original_SAM_PAL_preserved": true,
+      "review_protocol_no_errors": true,
+      "all_six_runs_converged_within_three_rounds": true
+    },
+    "all_conditions_passed": true,
+    "totals": {
+      "A_current": {
+        "PAL_count": 24,
+        "PAL_union_pixels": 98009
+      },
+      "C_hybrid": {
+        "PAL_count": 27,
+        "PAL_union_pixels": 122302
+      }
+    },
+    "candidate_ratio": 1.125,
+    "union_area_ratio": 1.2478649919905316,
+    "converged": 6,
+    "automatic_adoption": false
+  },
+  "new_candidates_acceptance": {
+    "checks": {
+      "PAL_support_strict_gain": false,
+      "PAL_point_coverage_not_lower": true,
+      "person_point_coverage_not_lower": true,
+      "person_off_class_not_higher": true,
+      "PAL_candidate_ratio_at_most_1_5": true,
+      "PAL_union_area_ratio_at_most_1_25": true,
+      "initial_C_foreground_preserved": true,
+      "original_SAM_PAL_preserved": true,
+      "review_protocol_no_errors": true,
+      "all_six_runs_converged_within_three_rounds": true
+    },
+    "all_conditions_passed": false,
+    "totals": {
+      "A_current": {
+        "PAL_count": 24,
+        "PAL_union_pixels": 98009
+      },
+      "C_hybrid": {
+        "PAL_count": 28,
+        "PAL_union_pixels": 110295
+      }
+    },
+    "candidate_ratio": 1.1666666666666667,
+    "union_area_ratio": 1.1253558346682448,
+    "converged": 6,
+    "automatic_adoption": false
+  },
+  "new_candidates_vs_previous_incumbent": {
+    "PAL_support_strict_gain_over_previous13": false,
+    "PAL_points_not_below_previous490": true,
+    "person_points_not_lower": true,
+    "person_off_class_not_higher": true
+  },
+  "negative_controls_passed": true,
+  "positive_diagnostic_recall": 2,
+  "positive_diagnostics": 2,
+  "pictures": 449,
+  "videos": 5,
+  "new_fine_grid_forwards": 84,
+  "new_semantic_hypotheses_with_evidence_not_truth": 4,
+  "automatic_adoption": false,
+  "annotation_writes": 0,
+  "retained_offline_comparison": "labelagent_context_comparison_20261105",
+  "new_instance_variant_rejected": true,
+  "remaining_previous_pallet_misses": 4,
+  "remaining_nonconverged_groups": 0,
+  "classification_control_scope": "7 exposed functional negatives,2 exposed visible-pallet diagnostics; no automatic semantic approval"
+}

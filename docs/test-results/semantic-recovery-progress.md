@@ -1,7 +1,3 @@
-# Neutral visual evidence and three-round recovery: in progress
+# 本轮对比已完成
 
-Holding the previous 13/17 foreground fixed, four fresh B/C Agent runs now finish within three rounds; two identical A results are explicitly reused. The change uses the original SAM floor seed for C and two individually counted interior-gap edits before one true first-round SAM call. This is a joint seed/controller change, not a scheduling-only causal claim. Original acceptance limits remain unchanged; full acceptance audit and new-candidate results are pending.
-
-The gray/white crossing isolates the main semantic failure: the old target-heavy prompt still emits pallet with the category enum removed; neutral observation with that same enum returns uncertain. An explicit JSON contract alone still hallucinates pallet. A neutral observation gate passes seven functional negatives and recognizes two exposed visible-pallet diagnostic crops. These are not held-out accuracy estimates or permission for automatic category approval.
-
-84 fixed fine-grid forwards use the same trained checkpoint and original thresholds. New whole-mask candidate selection is still running. The isolated gray-background prototype was stopped after 36 complete candidates yielded no independent evidence; untested candidates are not reported as tested. Local-crop SAM preflight worsened complete-gap coverage and was rejected. Originals, defaults, prior results and failed variants are retained. No annotation writes or training updates occurred.
+详见 [最终结论](semantic-recovery-final.md)：保留13/17前景，复核6/6；新候选12/17拒绝替换，原标准未放宽。

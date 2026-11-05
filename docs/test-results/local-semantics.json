@@ -1,0 +1,56 @@
+{
+  "status": "verified",
+  "phase": "first_semantic_phase_fewshot_waiting_for_model_slot",
+  "new_actual_requests": 19,
+  "new_local_requests": 15,
+  "new_remote_requests": 4,
+  "malformed_JSON_responses": 1,
+  "ceiling_only_measured_encoding_failures": 1,
+  "completed_valid_candidates": {
+    "ascii": {
+      "human_correct": 15,
+      "human_wrong": 0,
+      "legacy_pallet_correct": 2,
+      "all_gates_passed": false
+    },
+    "display": {
+      "human_correct": 15,
+      "human_wrong": 0,
+      "legacy_pallet_correct": 2,
+      "all_gates_passed": false
+    },
+    "context": {
+      "human_correct": 15,
+      "human_wrong": 0,
+      "legacy_pallet_correct": 2,
+      "all_gates_passed": false
+    },
+    "capacity": {
+      "human_correct": 15,
+      "human_wrong": 0,
+      "legacy_pallet_correct": 2,
+      "all_gates_passed": false
+    }
+  },
+  "original29_cases_and_gates_retained": true,
+  "source_binding_counts": {
+    "centered": 402,
+    "ascii": 409,
+    "ceiling_only": 421,
+    "display": 433,
+    "context": 451,
+    "capacity": 461,
+    "fewshot_prepared": 489
+  },
+  "reconstructed_JPEGs": 12,
+  "unique_new_tests_passed": 20,
+  "remote_worker_stopped": true,
+  "owned_SSH_forward_closed": true,
+  "other_remote_processes_stopped": 0,
+  "original_state_unchanged": true,
+  "original_annotations_unchanged": true,
+  "new_SAM_calls": 0,
+  "default_enabled": false,
+  "independent_validation": false,
+  "raw_media_or_private_paths_published": false
+}

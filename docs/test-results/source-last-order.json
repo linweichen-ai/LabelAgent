@@ -1,0 +1,23 @@
+{
+  "study": "Locator first, clean source last",
+  "observed_utc": "2026-11-06T18:50:52.948288+00:00",
+  "phase": "running_or_awaiting_verification",
+  "plan_sha256": "236bf2e4701f6c7d8ea6491dd023ab1560b1afdcedcb1b0ef04199943d6945f4",
+  "maximum_new_requests": 29,
+  "baseline_exact_cached_views": 28,
+  "cases": 14,
+  "intervention": "Swap the two unchanged JPEGs and all textual image-1/image-2 references; preserve complete contour, deep interior point, 3-span context, schema, class definition and actual 256x2 image budget.",
+  "expected_answers_and_old_inspections_not_sent_to_model": true,
+  "source_order_dominance_is_hypothesis_not_assumed_cause": true,
+  "tests_passed": 15,
+  "tests_are_focused": true,
+  "new_SAM_calls": 0,
+  "training_performed": false,
+  "original_annotations_written": false,
+  "candidate_adopted": false,
+  "default_enabled": false,
+  "independent_validation": false,
+  "status": "running",
+  "responses_received": 3,
+  "completed_candidate_views": 3
+}

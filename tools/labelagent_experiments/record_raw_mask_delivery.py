@@ -27,6 +27,7 @@ def main():
                'new_real_model_calls_in_raw_audit': 0, 'annotation_writes': 0,
                'live_service_modified': False, 'default_changed': False,
                'historical_internal_mask_loss_known': False}
+    receipt['bundle_sealer_modified_root_manifest_remote_watcher'] = receipt.pop('root_manifest_remote_watcher_changes', False)
     save(CONTROL / 'raw_mask_final_sync_verification.json', receipt)
     home = ROOT / 'deliverables/LabelAgent_实时交接'
     save(home / '06_核验/SAM内部掩码边界审计_最终同步核对_20261107.json', receipt)

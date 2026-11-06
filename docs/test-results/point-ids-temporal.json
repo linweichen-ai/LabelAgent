@@ -1,0 +1,154 @@
+{
+  "RGB_only": true,
+  "pairs": 16,
+  "diagnostic_supported_pairs": 6,
+  "identity_confirmations": 0,
+  "new_masks": 0,
+  "reference_points_or_calibration_read": false,
+  "rows": [
+    {
+      "seed": 1,
+      "case": "camera0_frame76",
+      "frame": 74,
+      "initial_points": 57,
+      "valid_points": 5,
+      "valid_fraction": 0.08771929824561403,
+      "anchor_valid": false
+    },
+    {
+      "seed": 1,
+      "case": "camera0_frame76",
+      "frame": 78,
+      "initial_points": 57,
+      "valid_points": 30,
+      "valid_fraction": 0.5263157894736842,
+      "anchor_valid": true
+    },
+    {
+      "seed": 2,
+      "case": "camera0_frame76",
+      "frame": 74,
+      "initial_points": 35,
+      "valid_points": 28,
+      "valid_fraction": 0.8,
+      "anchor_valid": true
+    },
+    {
+      "seed": 2,
+      "case": "camera0_frame76",
+      "frame": 78,
+      "initial_points": 35,
+      "valid_points": 23,
+      "valid_fraction": 0.6571428571428571,
+      "anchor_valid": true
+    },
+    {
+      "seed": 3,
+      "case": "camera0_frame76",
+      "frame": 74,
+      "initial_points": 17,
+      "valid_points": 11,
+      "valid_fraction": 0.6470588235294118,
+      "anchor_valid": true
+    },
+    {
+      "seed": 3,
+      "case": "camera0_frame76",
+      "frame": 78,
+      "initial_points": 17,
+      "valid_points": 10,
+      "valid_fraction": 0.5882352941176471,
+      "anchor_valid": false
+    },
+    {
+      "seed": 4,
+      "case": "camera1_frame76",
+      "frame": 74,
+      "initial_points": 4,
+      "valid_points": 0,
+      "valid_fraction": 0.0,
+      "anchor_valid": false
+    },
+    {
+      "seed": 4,
+      "case": "camera1_frame76",
+      "frame": 78,
+      "initial_points": 4,
+      "valid_points": 0,
+      "valid_fraction": 0.0,
+      "anchor_valid": false
+    },
+    {
+      "seed": 5,
+      "case": "camera1_frame76",
+      "frame": 74,
+      "initial_points": 7,
+      "valid_points": 0,
+      "valid_fraction": 0.0,
+      "anchor_valid": false
+    },
+    {
+      "seed": 5,
+      "case": "camera1_frame76",
+      "frame": 78,
+      "initial_points": 7,
+      "valid_points": 1,
+      "valid_fraction": 0.14285714285714285,
+      "anchor_valid": false
+    },
+    {
+      "seed": 6,
+      "case": "camera1_frame76",
+      "frame": 74,
+      "initial_points": 15,
+      "valid_points": 0,
+      "valid_fraction": 0.0,
+      "anchor_valid": false
+    },
+    {
+      "seed": 6,
+      "case": "camera1_frame76",
+      "frame": 78,
+      "initial_points": 15,
+      "valid_points": 0,
+      "valid_fraction": 0.0,
+      "anchor_valid": false
+    },
+    {
+      "seed": 7,
+      "case": "camera0_frame76",
+      "frame": 74,
+      "initial_points": 12,
+      "valid_points": 6,
+      "valid_fraction": 0.5,
+      "anchor_valid": true
+    },
+    {
+      "seed": 7,
+      "case": "camera0_frame76",
+      "frame": 78,
+      "initial_points": 12,
+      "valid_points": 8,
+      "valid_fraction": 0.6666666666666666,
+      "anchor_valid": false
+    },
+    {
+      "seed": 8,
+      "case": "camera0_frame76",
+      "frame": 74,
+      "initial_points": 44,
+      "valid_points": 35,
+      "valid_fraction": 0.7954545454545454,
+      "anchor_valid": true
+    },
+    {
+      "seed": 8,
+      "case": "camera0_frame76",
+      "frame": 78,
+      "initial_points": 44,
+      "valid_points": 28,
+      "valid_fraction": 0.6363636363636364,
+      "anchor_valid": true
+    }
+  ]
+}

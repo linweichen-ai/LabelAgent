@@ -1,0 +1,10 @@
+{
+  "stacked_pallets_require_separate_instances": true,
+  "cargo_body_excluded_from_base": true,
+  "frame0_approval_does_not_confirm_frame76_targets": true,
+  "boxes42_43_compatible_with_adjacent_thin_stack_layers": true,
+  "two_dimensional_identity_confirmed": false,
+  "steel_pallet_base_and_metal_skid_accepted_by_static_parser": true,
+  "static_parser_examples_are_not_model_results": true,
+  "no_label_or_threshold_change": true
+}

@@ -1,0 +1,144 @@
+{
+  "acceptance": {
+    "original_frozen_checks": {
+      "PAL_support_strict_gain": true,
+      "PAL_point_coverage_not_lower": true,
+      "person_point_coverage_not_lower": true,
+      "person_off_class_not_higher": true,
+      "PAL_candidate_ratio_at_most_1_5": true,
+      "PAL_union_area_ratio_at_most_1_25": true,
+      "initial_C_foreground_preserved": true,
+      "original_SAM_PAL_preserved": true,
+      "review_protocol_no_errors": true,
+      "all_six_runs_converged_within_three_rounds": true
+    },
+    "original_frozen_checks_passed": true,
+    "incumbent_checks": {
+      "support_strict_gain_over13": false,
+      "all27_incumbent_PAL_masks_preserved": true,
+      "all_incumbent_person_masks_preserved": true,
+      "convergence6of6_retained": true,
+      "pallet_points_not_lower_radius0": true,
+      "pallet_cross_class_not_higher_radius0": true,
+      "person_points_not_lower_radius0": true,
+      "person_cross_class_not_higher_radius0": true,
+      "pallet_points_not_lower_radius3": true,
+      "pallet_cross_class_not_higher_radius3": true,
+      "person_points_not_lower_radius3": true,
+      "person_cross_class_not_higher_radius3": true,
+      "pallet_points_not_lower_radius6": true,
+      "pallet_cross_class_not_higher_radius6": true,
+      "person_points_not_lower_radius6": true,
+      "person_cross_class_not_higher_radius6": true
+    },
+    "adopt_new_candidate": false,
+    "automatic_default_install": false,
+    "counts": {
+      "incumbent13": {
+        "PAL_count": 27,
+        "PAL_union_pixels": 122302
+      },
+      "append_trial": {
+        "PAL_count": 27,
+        "PAL_union_pixels": 122302
+      }
+    },
+    "area_ratio": 1.2478649919905316,
+    "count_ratio": 1.125
+  },
+  "all_radii": {
+    "passed": true,
+    "checks": {
+      "pallet_0_support_not_lower": true,
+      "pallet_0_points_not_lower": true,
+      "pallet_0_cross_class_not_higher": true,
+      "pallet_3_support_not_lower": true,
+      "pallet_3_points_not_lower": true,
+      "pallet_3_cross_class_not_higher": true,
+      "pallet_6_support_not_lower": true,
+      "pallet_6_points_not_lower": true,
+      "pallet_6_cross_class_not_higher": true,
+      "person_0_support_not_lower": true,
+      "person_0_points_not_lower": true,
+      "person_0_cross_class_not_higher": true,
+      "person_3_support_not_lower": true,
+      "person_3_points_not_lower": true,
+      "person_3_cross_class_not_higher": true,
+      "person_6_support_not_lower": true,
+      "person_6_points_not_lower": true,
+      "person_6_cross_class_not_higher": true
+    }
+  },
+  "original_foreground": {
+    "passed": true,
+    "incumbent": [
+      {
+        "case": "camera0_frame76",
+        "PAL_kept": 17,
+        "person_kept": 1,
+        "all_original_foreground_rasters_unchanged": true
+      },
+      {
+        "case": "camera1_frame76",
+        "PAL_kept": 10,
+        "person_kept": 2,
+        "all_original_foreground_rasters_unchanged": true
+      }
+    ],
+    "new_complete_predictions": [],
+    "budget_pixel_clipping": false
+  },
+  "complete_masks": {
+    "passed": true,
+    "reused_records": 53,
+    "new_records": 0
+  },
+  "seed_reuse": {
+    "passed": true,
+    "all6_prior_real_Agent_runs_reused": true,
+    "fresh_Agent_runs": 0,
+    "rows": [
+      {
+        "case": "camera0_frame76",
+        "all3arm_initial_geometry_identical": true,
+        "sha256": "1fb56c9fdb05fe9bcc880694feb7380615691826b6259e4b35d33eb3509da634"
+      },
+      {
+        "case": "camera1_frame76",
+        "all3arm_initial_geometry_identical": true,
+        "sha256": "84ce2f294647c71a9a164463678c109909751decc2da28a1d8e069145c3f2a71"
+      }
+    ],
+    "not_a_new_measurement_of_convergence": true
+  },
+  "regression": {
+    "passed": true,
+    "tests": 114,
+    "failures": 0,
+    "errors": 0,
+    "modules": [
+      "test_agent",
+      "test_projected_support",
+      "test_ground_actions",
+      "test_keyed_review",
+      "test_bounded_review",
+      "test_semantic_recovery",
+      "test_projection_recovery",
+      "test_preserved_model_policy",
+      "test_instance_separation",
+      "test_target_identity",
+      "test_visible_base",
+      "test_native_resume",
+      "test_point_id_policy",
+      "test_point_ids_zero_generation"
+    ],
+    "checked_at": "2026-11-07T02:29:35.558236+08:00",
+    "new_test_sha256": "dd86e8e0713ec5175a8ed7befd22001fb0fe096d4a37ea739a238edb58411544",
+    "not_scientific_pixel_accuracy": true
+  },
+  "zero_generation_receipt_repair": {
+    "no_inference_added": true,
+    "missing_empty_progress_record_fixed": true,
+    "actual_no_network_integration_test": true
+  }
+}

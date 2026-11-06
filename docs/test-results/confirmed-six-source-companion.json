@@ -1,0 +1,140 @@
+{
+  "phase": "confirmed_categories_experiment_running",
+  "observed_utc": "2026-11-06T17:03:29.120866+00:00",
+  "user_confirmed_regions": 6,
+  "confirmed_pallet_regions": 3,
+  "confirmed_person_regions": 3,
+  "category_only_not_mask_boundary_or_3D_approval": true,
+  "reference_saved_as_new_private_version": true,
+  "previous_draft_and_old_approved_references_preserved": true,
+  "baseline_replay": {
+    "cases": 6,
+    "correct_consensus": 5,
+    "wrong_consensus": 0,
+    "correct_views": 11,
+    "wrong_views": 1,
+    "abstentions": 0
+  },
+  "previous_part_object_replay": {
+    "cases": 6,
+    "correct_consensus": 4,
+    "wrong_consensus": 0,
+    "correct_views": 10,
+    "wrong_views": 0,
+    "abstentions": 2
+  },
+  "current_study_status": "failed",
+  "requests_started": 1,
+  "responses_archived": 0,
+  "max_new_requests": 29,
+  "baseline_quality_responses_reused": 28,
+  "planned_cases": 14,
+  "quality_views_per_variant": 28,
+  "model": "Qwen3-VL-2B NF4",
+  "candidate_actual_encoding": "two images, 256 tokens each",
+  "baseline_actual_encoding": "one image,256 tokens",
+  "combined_prompt_and_input_change_not_pure_causality": true,
+  "independent_validation": false,
+  "new_SAM_calls": 0,
+  "original_annotations_written": false,
+  "workbench_written": false,
+  "default_enabled": false,
+  "candidate_adopted": false,
+  "targeted_tests_passed": 7,
+  "unique_new_tests": 5,
+  "full_suite_rerun_claimed": false,
+  "study_plan_sha256": "743312b535f87bbe43b952d28cf8d861152e20512d44004fb0cf6417458dcdbb",
+  "raw_photos_geometry_annotations_and_private_paths_published": false,
+  "scores": {
+    "baseline": {
+      "protected_pallet": {
+        "regions": 2,
+        "correct_consensus": 0,
+        "correct_views": 1,
+        "wrong_views": 0
+      },
+      "person_fixture": {
+        "regions": 1,
+        "correct_consensus": 0,
+        "correct_views": 0,
+        "wrong_views": 0
+      },
+      "confirmed_six": {
+        "regions": 6,
+        "correct_consensus": 0,
+        "correct_views": 0,
+        "wrong_views": 0
+      },
+      "blank_control": {
+        "regions": 2,
+        "correct_consensus": 0,
+        "correct_views": 0,
+        "wrong_views": 0
+      },
+      "marked_blank_control": {
+        "regions": 2,
+        "correct_consensus": 0,
+        "correct_views": 0,
+        "wrong_views": 0
+      },
+      "suspected_non_pallet": {
+        "regions": 1,
+        "correct_consensus": 0,
+        "correct_views": 0,
+        "wrong_views": 0
+      }
+    },
+    "candidate": {
+      "protected_pallet": {
+        "regions": 2,
+        "correct_consensus": 0,
+        "correct_views": 0,
+        "wrong_views": 0
+      },
+      "person_fixture": {
+        "regions": 1,
+        "correct_consensus": 0,
+        "correct_views": 0,
+        "wrong_views": 0
+      },
+      "confirmed_six": {
+        "regions": 6,
+        "correct_consensus": 0,
+        "correct_views": 0,
+        "wrong_views": 0
+      },
+      "blank_control": {
+        "regions": 2,
+        "correct_consensus": 0,
+        "correct_views": 0,
+        "wrong_views": 0
+      },
+      "marked_blank_control": {
+        "regions": 2,
+        "correct_consensus": 0,
+        "correct_views": 0,
+        "wrong_views": 0
+      },
+      "suspected_non_pallet": {
+        "regions": 1,
+        "correct_consensus": 0,
+        "correct_views": 0,
+        "wrong_views": 0
+      }
+    }
+  },
+  "checks": {
+    "complete": false,
+    "two_original_pallets_all_four_views_correct": false,
+    "approved_person_control_preserved": false,
+    "no_confirmed_six_correct_pair_lost": true,
+    "no_confirmed_six_opposite_view": true,
+    "all_blank_views_abstained": false,
+    "pending_suspect_proposals_abstained": false,
+    "strict_raw_blank_or_confirmed_gain": false,
+    "source_bindings_unchanged": true,
+    "plan_unchanged": true,
+    "sensitive_default_guard_passed": false
+  },
+  "all_joint_checks_passed": false
+}

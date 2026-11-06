@@ -1,6 +1,6 @@
 {
   "study": "Target enlargement and class-blind inspection before classification",
-  "observed_utc": "2026-11-06T17:53:41.922688+00:00",
+  "observed_utc": "2026-11-06T18:07:24.473150+00:00",
   "phase": "running_or_awaiting_verification",
   "plan_sha256": "46d83dd7ebd71407eef6d86a20eba1bde384e71d2d261a4212321a1c2dacb4d8",
   "maximum_new_requests": 47,
@@ -20,9 +20,12 @@
   "default_enabled": false,
   "candidate_adopted": false,
   "independent_validation": false,
-  "status": "loading_model",
-  "attempted_requests": 0,
-  "responses_received": 0,
-  "completed_groundings": 0,
-  "completed_classifications": 0
+  "status": "running",
+  "attempted_requests": 30,
+  "responses_received": 29,
+  "initial_successful_responses": 16,
+  "completion_new_responses": 13,
+  "completed_groundings": 11,
+  "completed_classifications": 20,
+  "observed_old_pallet_wrong_or_abstaining_views": 4
 }

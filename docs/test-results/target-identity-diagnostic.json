@@ -1,0 +1,51 @@
+{
+  "old_center_in_candidate": [
+    true,
+    true
+  ],
+  "old_neutral_decisions": [
+    {
+      "object": "a dark blue rectangular surface with a light gray border, possibly a box or container"
+    },
+    {
+      "object": "a gray metal container with a segmented structure, viewed from a low angle"
+    }
+  ],
+  "old_crop_target_fractions": [
+    0.17627801561319567,
+    0.016992353440951572
+  ],
+  "mask_pixels": 1400,
+  "bbox_width_height": [
+    193,
+    22
+  ],
+  "new_observations": {
+    "status": "complete",
+    "new_neutral_views": [
+      {
+        "view": "near",
+        "decision": {
+          "object": "a large, dark gray, rectangular container with a segmented top, positioned in the foreground of a warehouse or industrial setting"
+        },
+        "unchanged_subject_gate_passed": false
+      },
+      {
+        "view": "context",
+        "decision": {
+          "object": "stack of four gray plastic containers"
+        },
+        "unchanged_subject_gate_passed": false
+      }
+    ],
+    "extent_observation": {
+      "object": "a white, rectangular object with a horizontal line across its top",
+      "target_extent": "edge_fragment",
+      "evidence": "The pixelated object is a thin, horizontal white line across the top of a white rectangular object. The line is fragmented and appears to be a partial edge, possibly a cut or a mis"
+    },
+    "old_judgments_preserved": true,
+    "no_adoption_from_diagnostic": true,
+    "model_trace_records": 3
+  },
+  "not_human_truth": true
+}

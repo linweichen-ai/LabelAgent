@@ -1,0 +1,17 @@
+"""Preserve previous runs; freeze this image-only identity/separation attempt."""
+import json,hashlib,shutil,urllib.request,subprocess
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[2];work=ROOT/'task_workspaces/labelagent_target_identity_20261106';out=ROOT/'outputs/labelagent_target_identity_20261106'
+def read(p):return json.loads(Path(p).read_text(encoding='utf-8'))
+def save(p,v):p.parent.mkdir(parents=True,exist_ok=True);p.write_text(json.dumps(v,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+if work.exists():raise FileExistsError('Preserve prior frozen attempt')
+work.mkdir();out.mkdir();old=ROOT/'task_workspaces/labelagent_instance_separation_20261105';shutil.copytree(old/'source_snapshot',work/'source_snapshot',ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
+cfg=read(old/'config_comparison.json');cfg.update(source_snapshot=str(work/'source_snapshot'),output=str(ROOT/'outputs/labelagent_target_identity_comparison_20261106'),optimization_plan=str(out/'optimization_plan.json'));save(work/'config.json',cfg)
+plan={'scope':'two exposed frames, engineering diagnosis, not independent accuracy','incumbent':'labelagent_context_comparison_20261105','preserve_all27_PAL_and3_person_masks':True,'initial_support':13,'initial_points':490,'initial_convergence':'6/6','original_limits':{'rounds':3,'operations_per_round':3,'cumulative_points':32,'count':36,'PAL_union_pixels':122511.25,'initial_union_pixels':122302},'generation_uses_reference_positions':False,'new_model_training':False,'new_mask2former_forwards':0,'reuse_frozen30_query_hypotheses':True,'SAM_generation':'up to2 deck-to-foot envelopes for each of8 original image-only parents, up to3 across-object positives and4 adjacent-layer negatives, no prior mask, no output clipping','semantic_change':'same original neutral prompt/schema256tokens and strict two-photo subject gate, but both unmarked views geometrically centered on an actual candidate foreground pixel; all original foreground retained','structure':'unchanged single-visible-base two-cue gate plus conservative extent audit when admitted; no stack/fragment promotion','functional_controls':['gray','white','raw_robot','pallet_stack','wood_pallet_base'],'raw_12of16_diagnostic':'read original exact inputs/replies; audit center-to-mask and photo context; new observations diagnostic only, cannot override old failed judgment','selection':'whole masks only, same global budgets/person guard/NMS, strict support gain over13, original0/3/6scorer only after prediction freeze','annotation_writes':0,'default_install':False}
+save(out/'optimization_plan.json',plan);shutil.copy2(ROOT/'outputs/labelagent_instance_separation_20261105/incumbent_binding.json',out/'incumbent_binding.json')
+probe={}
+for name,url in [('workbench','http://127.0.0.1:8765/api/run/status'),('SAM','http://127.0.0.1:8766/health'),('VLM','http://127.0.0.1:18868/health')]:
+ try:
+  with urllib.request.urlopen(url,timeout=15) as f:probe[name]=json.load(f)
+ except Exception as e:probe[name]={'error':str(e)}
+save(out/'service_preflight.json',probe);save(out/'resource_preflight.json',{'disk_free_bytes':shutil.disk_usage(ROOT).free,'source_code_base':'ec41572 preserved source snapshot','current_public_head':subprocess.check_output(['git','-C',str(ROOT/'task_workspaces/labelagent_realtime_handoff_20261104'),'rev-parse','HEAD'],text=True).strip()});print(json.dumps(probe,ensure_ascii=False),flush=True)

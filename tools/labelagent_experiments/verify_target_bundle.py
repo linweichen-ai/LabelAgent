@@ -1,0 +1,3 @@
+import subprocess,json
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[2];control=ROOT/'task_workspaces/labelagent_handoff_control_20261104';r=json.loads((control/'target_identity_bundle_verification.json').read_text(encoding='utf-8'));source=control/'verify_target_identity.cjs';target=control/'verify_target_bundle.cjs';target.write_text(source.read_text(encoding='utf-8').replace('target_identity','target_bundle'),encoding='utf-8');subprocess.run(['C:/Users/seer/AppData/Local/pallet-annotation-studio/node-v24.19.0-win-x64/node.exe',str(target),str(Path(r['bundle'])/'01_主报告与全部试跑')],check=True)

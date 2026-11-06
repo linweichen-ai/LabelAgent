@@ -1,0 +1,38 @@
+{
+  "study": "Complete original contour and deep interior pointer with clean context first",
+  "observed_utc": "2026-11-06T18:13:50.981614+00:00",
+  "phase": "running_or_awaiting_verification",
+  "plan_sha256": "fbb62f58edd20dc96ef91f1c6c67e270ced0556e80cbb10c51cc96c709aa5916",
+  "maximum_new_requests": 29,
+  "unchanged_inspections_reused": 14,
+  "unchanged_marker_diagnostics_reused": 4,
+  "source_layout": "Unchanged original three-span clean crop first; same crop with complete proposed-mask contour second. Point view uses deepest interior point; contour-only view uses no arrow.",
+  "classification_ignores_all_prior_model_inspection_fields": true,
+  "preceding_tight_first_layout_rejected": true,
+  "preceding_raw_counts": {
+    "six_correct_views": 10,
+    "six_correct_pairs": 5,
+    "old_pallet_correct_views": 0,
+    "person_correct_views": 2,
+    "plain_blank_abstentions": 0,
+    "marked_blank_abstentions": 0,
+    "suspect_abstentions": 0
+  },
+  "preceding_blank_inspections": {
+    "positive_geometry_passed": 8,
+    "positive_total": 9,
+    "blank_empty": 0,
+    "blank_total": 4
+  },
+  "tests_passed": 8,
+  "tests_are_focused": true,
+  "original_annotations_written": false,
+  "new_SAM_calls": 0,
+  "training_performed": false,
+  "candidate_adopted": false,
+  "default_enabled": false,
+  "independent_validation": false,
+  "status": "running",
+  "responses_received": 2,
+  "completed_classifications": 2
+}

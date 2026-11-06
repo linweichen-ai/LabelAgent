@@ -1,0 +1,19 @@
+{
+  "case": "camera1_frame76",
+  "key": "2d854b6e47e3af92fd313be5309e87c02bc36a25faa9db5afcf3f29623722b0f",
+  "mask_pixels": 8289,
+  "extra_union_pixels": 3132,
+  "remaining_original_area_budget": 209.25,
+  "fits_complete_mask": false,
+  "components": [
+    {
+      "component": 1,
+      "pixels": 8289,
+      "extra_union_pixels": 3132
+    }
+  ],
+  "largest_component_extra_pixels": 3132,
+  "raster_unchanged": true,
+  "mask_sha256": "2360d03012394cbddc172bbb9cd0b7f0dfaae1edf5c93fc42d8c539df1723aa9",
+  "reference_points_not_read": true
+}

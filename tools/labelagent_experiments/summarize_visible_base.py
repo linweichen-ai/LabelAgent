@@ -1,0 +1,2 @@
+from pathlib import Path
+p=Path(__file__).with_name('summarize_target_identity.py');s=p.read_text(encoding='utf-8').replace('labelagent_target_identity_20261106','labelagent_visible_base_20261107').replace('labelagent_target_identity_comparison_20261106','labelagent_visible_base_comparison_20261107').replace("out/'seam_generation/completed.json'","out/'seam_generation_all/completed.json'");exec(compile(s,__file__,'exec'),{'__name__':'__main__','__file__':__file__})

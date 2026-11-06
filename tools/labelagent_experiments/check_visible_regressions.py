@@ -1,0 +1,2 @@
+from pathlib import Path
+p=Path(__file__).with_name('check_instance_regressions.py');s=p.read_text(encoding='utf-8').replace("'test_instance_separation']","'test_instance_separation','test_target_identity','test_visible_base']").replace('instance_separation_regression','visible_base_regression').replace('tests/test_instance_separation.py','tests/test_visible_base.py');exec(compile(s,__file__,'exec'),{'__name__':'__main__','__file__':__file__})

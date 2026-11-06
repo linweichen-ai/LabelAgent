@@ -1,0 +1,735 @@
+{
+  "planner_declarations": [
+    {
+      "seed": 1,
+      "cue": "pointer",
+      "decision": {
+        "object": "wooden pallet",
+        "instance_scope": "edge_only",
+        "positive_points": [
+          {
+            "x": 150,
+            "y": 450
+          },
+          {
+            "x": 150,
+            "y": 450
+          },
+          {
+            "x": 150,
+            "y": 450
+          }
+        ],
+        "negative_points": [
+          {
+            "x": 150,
+            "y": 450
+          },
+          {
+            "x": 150,
+            "y": 450
+          },
+          {
+            "x": 150,
+            "y": 450
+          }
+        ],
+        "evidence": "The marked source pixels are on the edge of a wooden pallet, which is visible in the first image. The edge is the only visible part of the pallet, and it is not a complete unit. No"
+      },
+      "reason": "planner did not identify a single visible object"
+    },
+    {
+      "seed": 1,
+      "cue": "corners",
+      "decision": {
+        "object": "wooden pallet",
+        "instance_scope": "single_visible_object",
+        "positive_points": [
+          {
+            "x": 220,
+            "y": 350
+          },
+          {
+            "x": 220,
+            "y": 370
+          },
+          {
+            "x": 220,
+            "y": 390
+          }
+        ],
+        "negative_points": [
+          {
+            "x": 220,
+            "y": 400
+          },
+          {
+            "x": 220,
+            "y": 410
+          },
+          {
+            "x": 220,
+            "y": 420
+          },
+          {
+            "x": 220,
+            "y": 430
+          }
+        ],
+        "evidence": "The marked source pixels are on the edge of a wooden pallet, which is visible in the first image. The visible structure includes the wooden planks and the metal or plastic top of a"
+      },
+      "reason": "planner point in padding/outside bound source photo"
+    },
+    {
+      "seed": 2,
+      "cue": "pointer",
+      "decision": {
+        "object": "wooden pallet",
+        "instance_scope": "single_visible_object",
+        "positive_points": [
+          {
+            "x": 340,
+            "y": 400
+          },
+          {
+            "x": 340,
+            "y": 420
+          },
+          {
+            "x": 340,
+            "y": 440
+          }
+        ],
+        "negative_points": [
+          {
+            "x": 340,
+            "y": 400
+          },
+          {
+            "x": 340,
+            "y": 420
+          },
+          {
+            "x": 340,
+            "y": 440
+          }
+        ],
+        "evidence": "The marked source pixels are on the edge of a wooden pallet. The object is visible in the first image, and the marked region is on the edge of the pallet. The visible structure of "
+      },
+      "reason": "planner point in padding/outside bound source photo"
+    },
+    {
+      "seed": 2,
+      "cue": "corners",
+      "decision": {
+        "object": "a wooden pallet",
+        "instance_scope": "edge_only",
+        "positive_points": [
+          {
+            "x": 350,
+            "y": 400
+          },
+          {
+            "x": 350,
+            "y": 420
+          },
+          {
+            "x": 350,
+            "y": 440
+          }
+        ],
+        "negative_points": [
+          {
+            "x": 350,
+            "y": 450
+          },
+          {
+            "x": 350,
+            "y": 460
+          },
+          {
+            "x": 350,
+            "y": 470
+          },
+          {
+            "x": 350,
+            "y": 480
+          }
+        ],
+        "evidence": "The marked region is on the edge of a wooden pallet. The visible structure includes the edge of the pallet, which is a flat, rectangular surface with a distinct corner. The edge is"
+      },
+      "reason": "planner did not identify a single visible object"
+    },
+    {
+      "seed": 3,
+      "cue": "pointer",
+      "decision": {
+        "object": "a large industrial container or storage unit",
+        "instance_scope": "single_visible_object",
+        "positive_points": [
+          {
+            "x": 240,
+            "y": 400
+          },
+          {
+            "x": 240,
+            "y": 420
+          },
+          {
+            "x": 240,
+            "y": 440
+          }
+        ],
+        "negative_points": [
+          {
+            "x": 240,
+            "y": 400
+          },
+          {
+            "x": 240,
+            "y": 420
+          },
+          {
+            "x": 240,
+            "y": 440
+          }
+        ],
+        "evidence": "The marked source pixels are on the edge of a large, dark gray industrial container with a grid-like structure. The container is positioned in the foreground, with a light-colored,"
+      },
+      "reason": "planner point in padding/outside bound source photo"
+    },
+    {
+      "seed": 3,
+      "cue": "corners",
+      "decision": {
+        "object": "a black metal box with a white frame",
+        "instance_scope": "single_visible_object",
+        "positive_points": [
+          {
+            "x": 240,
+            "y": 480
+          },
+          {
+            "x": 240,
+            "y": 480
+          },
+          {
+            "x": 240,
+            "y": 480
+          }
+        ],
+        "negative_points": [
+          {
+            "x": 240,
+            "y": 480
+          },
+          {
+            "x": 240,
+            "y": 480
+          },
+          {
+            "x": 240,
+            "y": 480
+          }
+        ],
+        "evidence": "The marked source pixels are on the left side of a black metal box with a white frame. The box is in the foreground, and the white frame is visible on the top and sides. The box is"
+      },
+      "reason": "planner point in padding/outside bound source photo"
+    },
+    {
+      "seed": 4,
+      "cue": "pointer",
+      "decision": {
+        "object": "a blurred, abstract image with a marked seed region",
+        "instance_scope": "single_visible_object",
+        "positive_points": [
+          {
+            "x": 350,
+            "y": 400
+          },
+          {
+            "x": 350,
+            "y": 420
+          },
+          {
+            "x": 350,
+            "y": 440
+          }
+        ],
+        "negative_points": [
+          {
+            "x": 350,
+            "y": 450
+          },
+          {
+            "x": 350,
+            "y": 460
+          },
+          {
+            "x": 350,
+            "y": 470
+          },
+          {
+            "x": 350,
+            "y": 480
+          }
+        ],
+        "evidence": "The marked seed region is a bright orange diagonal line on a dark, blurred background. The region is visible as a distinct line on the left side of the image, with a clear edge. It"
+      },
+      "reason": "planner point in padding/outside bound source photo"
+    },
+    {
+      "seed": 4,
+      "cue": "corners",
+      "decision": {
+        "object": "a blurred, abstract object",
+        "instance_scope": "single_visible_object",
+        "positive_points": [
+          {
+            "x": 250,
+            "y": 350
+          },
+          {
+            "x": 350,
+            "y": 350
+          },
+          {
+            "x": 250,
+            "y": 450
+          }
+        ],
+        "negative_points": [
+          {
+            "x": 250,
+            "y": 450
+          },
+          {
+            "x": 350,
+            "y": 450
+          },
+          {
+            "x": 250,
+            "y": 350
+          },
+          {
+            "x": 350,
+            "y": 350
+          }
+        ],
+        "evidence": "The marked pixels are on a blurred, abstract object with a dark, textured surface. The object is not a complete visible structure, but a single identifiable physical unit. The seed"
+      },
+      "reason": "duplicate/conflicting prompt points"
+    },
+    {
+      "seed": 5,
+      "cue": "pointer",
+      "decision": {
+        "object": "metal railing",
+        "instance_scope": "edge_only",
+        "positive_points": [
+          {
+            "x": 240,
+            "y": 240
+          },
+          {
+            "x": 240,
+            "y": 240
+          },
+          {
+            "x": 240,
+            "y": 240
+          }
+        ],
+        "negative_points": [
+          {
+            "x": 240,
+            "y": 240
+          },
+          {
+            "x": 240,
+            "y": 240
+          },
+          {
+            "x": 240,
+            "y": 240
+          }
+        ],
+        "evidence": "The marked source pixels are on the edge of a metal railing. The railing is composed of horizontal bars with vertical supports, forming a grid-like structure. The railing is in the"
+      },
+      "reason": "planner did not identify a single visible object"
+    },
+    {
+      "seed": 5,
+      "cue": "corners",
+      "decision": {
+        "object": "a metal rack with shelves",
+        "instance_scope": "single_visible_object",
+        "positive_points": [
+          {
+            "x": 150,
+            "y": 250
+          },
+          {
+            "x": 150,
+            "y": 300
+          },
+          {
+            "x": 150,
+            "y": 350
+          }
+        ],
+        "negative_points": [
+          {
+            "x": 150,
+            "y": 400
+          },
+          {
+            "x": 150,
+            "y": 450
+          },
+          {
+            "x": 150,
+            "y": 500
+          },
+          {
+            "x": 150,
+            "y": 550
+          }
+        ],
+        "evidence": "The marked region is on the left side of the metal rack, which is visible in the first image. The rack has horizontal bars and is positioned in the background. The rack is not a 'c"
+      },
+      "reason": "planner point in padding/outside bound source photo"
+    },
+    {
+      "seed": 6,
+      "cue": "pointer",
+      "decision": {
+        "object": "a stack of metal or plastic crates",
+        "instance_scope": "edge_only",
+        "positive_points": [
+          {
+            "x": 100,
+            "y": 400
+          },
+          {
+            "x": 100,
+            "y": 450
+          },
+          {
+            "x": 100,
+            "y": 500
+          }
+        ],
+        "negative_points": [
+          {
+            "x": 100,
+            "y": 550
+          },
+          {
+            "x": 100,
+            "y": 600
+          },
+          {
+            "x": 100,
+            "y": 650
+          },
+          {
+            "x": 100,
+            "y": 700
+          }
+        ],
+        "evidence": "The marked source pixels are located on the edge of a stack of metal or plastic crates. The crates are visible in the first image, with the marked region highlighting the edge of a"
+      },
+      "reason": "planner did not identify a single visible object"
+    },
+    {
+      "seed": 6,
+      "cue": "corners",
+      "decision": {
+        "object": "a white railing or fence",
+        "instance_scope": "edge_only",
+        "positive_points": [
+          {
+            "x": 150,
+            "y": 250
+          },
+          {
+            "x": 250,
+            "y": 250
+          },
+          {
+            "x": 350,
+            "y": 250
+          }
+        ],
+        "negative_points": [
+          {
+            "x": 150,
+            "y": 350
+          },
+          {
+            "x": 250,
+            "y": 350
+          },
+          {
+            "x": 350,
+            "y": 350
+          }
+        ],
+        "evidence": "The marked region is a visible edge of a white railing or fence. The railing is composed of horizontal bars, and the edge is visible in the first image. The railing is located in a"
+      },
+      "reason": "planner did not identify a single visible object"
+    },
+    {
+      "seed": 7,
+      "cue": "pointer",
+      "decision": {
+        "object": "a stack of white boxes",
+        "instance_scope": "single_visible_object",
+        "positive_points": [
+          {
+            "x": 250,
+            "y": 250
+          },
+          {
+            "x": 250,
+            "y": 300
+          },
+          {
+            "x": 300,
+            "y": 300
+          }
+        ],
+        "negative_points": [
+          {
+            "x": 250,
+            "y": 250
+          },
+          {
+            "x": 250,
+            "y": 300
+          },
+          {
+            "x": 300,
+            "y": 300
+          }
+        ],
+        "evidence": "The marked source pixels are on the edge of a white box in the background. The object is a stack of white boxes, visible in the first image. The positive points are on the visible,"
+      },
+      "reason": "duplicate/conflicting prompt points"
+    },
+    {
+      "seed": 7,
+      "cue": "corners",
+      "decision": {
+        "object": "a stack of wooden pallets",
+        "instance_scope": "single_visible_object",
+        "positive_points": [
+          {
+            "x": 340,
+            "y": 340
+          },
+          {
+            "x": 340,
+            "y": 340
+          },
+          {
+            "x": 340,
+            "y": 340
+          }
+        ],
+        "negative_points": [
+          {
+            "x": 340,
+            "y": 340
+          },
+          {
+            "x": 340,
+            "y": 340
+          },
+          {
+            "x": 340,
+            "y": 340
+          }
+        ],
+        "evidence": "The marked source pixels are on the edge of a stack of wooden pallets. The visible structure is a stack of pallets with a light-colored top surface and a darker underside. The edge"
+      },
+      "reason": "duplicate/conflicting prompt points"
+    },
+    {
+      "seed": 8,
+      "cue": "pointer",
+      "decision": {
+        "object": "wooden pallet",
+        "instance_scope": "single_visible_object",
+        "positive_points": [
+          {
+            "x": 350,
+            "y": 350
+          },
+          {
+            "x": 350,
+            "y": 400
+          },
+          {
+            "x": 350,
+            "y": 450
+          }
+        ],
+        "negative_points": [
+          {
+            "x": 350,
+            "y": 400
+          },
+          {
+            "x": 350,
+            "y": 450
+          },
+          {
+            "x": 350,
+            "y": 450
+          },
+          {
+            "x": 350,
+            "y": 450
+          }
+        ],
+        "evidence": "The marked source pixels are on the edge of a wooden pallet. The visible structure of the pallet includes the top surface and the side edges. The top surface is flat and light in a"
+      },
+      "reason": "planner point in padding/outside bound source photo"
+    },
+    {
+      "seed": 8,
+      "cue": "corners",
+      "decision": {
+        "object": "wooden pallet",
+        "instance_scope": "single_visible_object",
+        "positive_points": [
+          {
+            "x": 310,
+            "y": 340
+          },
+          {
+            "x": 310,
+            "y": 370
+          },
+          {
+            "x": 310,
+            "y": 400
+          }
+        ],
+        "negative_points": [
+          {
+            "x": 310,
+            "y": 400
+          },
+          {
+            "x": 310,
+            "y": 400
+          },
+          {
+            "x": 310,
+            "y": 400
+          }
+        ],
+        "evidence": "The marked source pixels are on the edge of a wooden pallet. The visible structure of the pallet is a rectangular box with a flat top and a flat bottom, with visible horizontal and"
+      },
+      "reason": "duplicate/conflicting prompt points"
+    }
+  ],
+  "planner_rejections": {
+    "planner did not identify a single visible object": 5,
+    "planner point in padding/outside bound source photo": 7,
+    "duplicate/conflicting prompt points": 4
+  },
+  "planner_protocol_deviation": {
+    "declared_output_limit": 512,
+    "actual_max_tokens_field_not_sent_without_compact_profile": true,
+    "server_default_not_independently_bound": true,
+    "all_first_variant_point_plans_rejected": true,
+    "not_a_controlled_output_budget_comparison": true
+  },
+  "native_repair_not_executed": {
+    "status": "not_executed_shared_model_busy",
+    "inference_responses": 0,
+    "retained_failed_client_trace": true,
+    "native_inputs_are_preparation_only": true,
+    "no_other_client_or_service_stopped": true
+  },
+  "whole_candidate_rejections": {
+    "complete mask exceeds remaining original global area budget": 40,
+    "conflicts with incumbent predicted-person radius3 guard": 1
+  },
+  "post_freeze_new_support": [
+    {
+      "case": "camera0_frame76",
+      "object_id": 42,
+      "visible_points": 16,
+      "new_best_raw": 0.8125,
+      "new_best_support": 0.0,
+      "best_new_at_max_raw": {
+        "key": "608ca00f9214ad20b6d58ac368b764be0c5b5721cd985985aa2f7c085f77475e",
+        "source": "aspect_preserving_trained_query",
+        "new_complete": true,
+        "raw_point_fraction": 0.8125,
+        "purity": 0.20634920634920634,
+        "qualified_support": 0.0,
+        "added_union_pixels": 789,
+        "fits_remaining_area_alone": false,
+        "known_PAL_point_ownership": [
+          {
+            "object_id": 42,
+            "points": 13
+          },
+          {
+            "object_id": 43,
+            "points": 50
+          }
+        ]
+      }
+    },
+    {
+      "case": "camera0_frame76",
+      "object_id": 48,
+      "visible_points": 27,
+      "new_best_raw": 0.0,
+      "new_best_support": 0.0,
+      "best_new_at_max_raw": {
+        "key": "608ca00f9214ad20b6d58ac368b764be0c5b5721cd985985aa2f7c085f77475e",
+        "source": "aspect_preserving_trained_query",
+        "new_complete": true,
+        "raw_point_fraction": 0.0,
+        "purity": 0.0,
+        "qualified_support": 0.0,
+        "added_union_pixels": 789,
+        "fits_remaining_area_alone": false,
+        "known_PAL_point_ownership": [
+          {
+            "object_id": 42,
+            "points": 13
+          },
+          {
+            "object_id": 43,
+            "points": 50
+          }
+        ]
+      }
+    },
+    {
+      "case": "camera1_frame76",
+      "object_id": 47,
+      "visible_points": 11,
+      "new_best_raw": 0,
+      "new_best_support": 0,
+      "best_new_at_max_raw": null
+    },
+    {
+      "case": "camera1_frame76",
+      "object_id": 49,
+      "visible_points": 6,
+      "new_best_raw": 0,
+      "new_best_support": 0,
+      "best_new_at_max_raw": null
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "status": "CPU_functional_boundary_verified_not_real_SAM_inference",
+  "real_model_calls": 0,
+  "new_masks_for_acceptance": 0,
+  "service_changes": 0,
+  "original_annotations_written": 0,
+  "new_candidate_adopted": false,
+  "remaining_misses": 4,
+  "retained_pallet_support": "13/17",
+  "retained_convergence": "original 6/6",
+  "old_wire_to_full_image_preservation_still_valid": true,
+  "historical_raw_to_wire_loss_known": false,
+  "in_memory_worker_source_attested": false,
+  "cases": [
+    {
+      "case": "disconnected_one_positive",
+      "raw_pixels": 21004,
+      "wire_pixels": 10000,
+      "raw_to_wire_removed_pixels": 11004,
+      "raw_to_wire_added_pixels": 0,
+      "click_occupancy_preserved": true,
+      "warnings": [],
+      "wire_mapping_proof": {
+        "all_parts_and_holes_kept": true,
+        "removed_pixels": 0,
+        "added_pixels": 0,
+        "raster_sha256": "5f2fbb8461ac2a9fed2ccd1aa84e3d1ef53387f776c82a0e88afd46fdb74a83b"
+      }
+    },
+    {
+      "case": "jagged_boundary_one_positive",
+      "raw_pixels": 64431,
+      "wire_pixels": 64600,
+      "raw_to_wire_removed_pixels": 0,
+      "raw_to_wire_added_pixels": 169,
+      "click_occupancy_preserved": true,
+      "warnings": [],
+      "wire_mapping_proof": {
+        "all_parts_and_holes_kept": true,
+        "removed_pixels": 0,
+        "added_pixels": 0,
+        "raster_sha256": "0ed5113da079a46622bc369d2a332fb6aac7c06302af481b952872bb749ef857"
+      }
+    },
+    {
+      "case": "disconnected_with_prior_control",
+      "raw_pixels": 21004,
+      "wire_pixels": 21000,
+      "raw_to_wire_removed_pixels": 4,
+      "raw_to_wire_added_pixels": 0,
+      "click_occupancy_preserved": true,
+      "warnings": [],
+      "wire_mapping_proof": {
+        "all_parts_and_holes_kept": true,
+        "removed_pixels": 0,
+        "added_pixels": 0,
+        "raster_sha256": "c7c0a4c516918e27d428afa8b799bd2d710d7ff183acf55de2f9316086fb31a0"
+      }
+    }
+  ],
+  "functional_gallery_images": 4,
+  "functional_videos": 1,
+  "fully_decoded_frames": 240,
+  "capture_tests": 10,
+  "capture_scope": "private module only; all predictor mask candidates copied before source processing; errors retained; CPU synthetic tests only",
+  "next_real_capture": "prepared, not executed; coordinate the existing single-GPU manager before inference",
+  "acceptance_limits_changed": false
+}

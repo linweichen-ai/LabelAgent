@@ -1,6 +1,6 @@
 {
-  "phase": "confirmed_categories_experiment_running",
-  "observed_utc": "2026-11-06T17:07:34.828180+00:00",
+  "phase": "final_verified",
+  "observed_utc": "2026-11-06T17:22:47.709555+00:00",
   "user_confirmed_regions": 6,
   "confirmed_pallet_regions": 3,
   "confirmed_person_regions": 3,
@@ -23,9 +23,11 @@
     "wrong_views": 0,
     "abstentions": 2
   },
-  "current_study_status": "running",
-  "requests_started": 2,
-  "responses_archived": 1,
+  "current_study_status": "complete",
+  "requests_started": 29,
+  "responses_archived": 29,
+  "partial_answers_reused": 25,
+  "completion_new_answers": 4,
   "max_new_requests": 29,
   "baseline_quality_responses_reused": 28,
   "planned_cases": 14,
@@ -45,7 +47,125 @@
   "full_suite_rerun_claimed": false,
   "v1_http_requests_rejected_before_inference": 1,
   "v1_model_answers": 0,
-  "no_completed_model_response_repeated": true,
-  "study_plan_sha256": "8ccf04a776444f71f6dd819722a5a1016692d6b9ce2bfeac9ce45dd294c308ad",
-  "raw_photos_geometry_annotations_and_private_paths_published": false
+  "completed_quality_requests_repeated": 0,
+  "new_default_guard_requests": 1,
+  "study_plan_sha256": "5f3feaddef23c8d7613d4ef2b5d36300c47790c37fb2794e4e43f7c6b33aa747",
+  "raw_photos_geometry_annotations_and_private_paths_published": false,
+  "scores": {
+    "baseline": {
+      "protected_pallet": {
+        "regions": 2,
+        "correct_consensus": 2,
+        "correct_views": 4,
+        "wrong_views": 0
+      },
+      "person_fixture": {
+        "regions": 1,
+        "correct_consensus": 1,
+        "correct_views": 2,
+        "wrong_views": 0
+      },
+      "confirmed_six": {
+        "regions": 6,
+        "correct_consensus": 5,
+        "correct_views": 11,
+        "wrong_views": 1
+      },
+      "blank_control": {
+        "regions": 2,
+        "correct_consensus": 0,
+        "correct_views": 0,
+        "wrong_views": 4
+      },
+      "marked_blank_control": {
+        "regions": 2,
+        "correct_consensus": 0,
+        "correct_views": 0,
+        "wrong_views": 4
+      },
+      "suspected_non_pallet": {
+        "regions": 1,
+        "correct_consensus": 0,
+        "correct_views": 0,
+        "wrong_views": 2
+      }
+    },
+    "candidate": {
+      "protected_pallet": {
+        "regions": 2,
+        "correct_consensus": 2,
+        "correct_views": 4,
+        "wrong_views": 0
+      },
+      "person_fixture": {
+        "regions": 1,
+        "correct_consensus": 1,
+        "correct_views": 2,
+        "wrong_views": 0
+      },
+      "confirmed_six": {
+        "regions": 6,
+        "correct_consensus": 6,
+        "correct_views": 12,
+        "wrong_views": 0
+      },
+      "blank_control": {
+        "regions": 2,
+        "correct_consensus": 2,
+        "correct_views": 4,
+        "wrong_views": 0
+      },
+      "marked_blank_control": {
+        "regions": 2,
+        "correct_consensus": 0,
+        "correct_views": 0,
+        "wrong_views": 4
+      },
+      "suspected_non_pallet": {
+        "regions": 1,
+        "correct_consensus": 0,
+        "correct_views": 0,
+        "wrong_views": 2
+      }
+    }
+  },
+  "checks": {
+    "complete": true,
+    "two_original_pallets_all_four_views_correct": true,
+    "approved_person_control_preserved": true,
+    "no_confirmed_six_correct_pair_lost": true,
+    "no_confirmed_six_opposite_view": true,
+    "all_blank_views_abstained": false,
+    "pending_suspect_proposals_abstained": false,
+    "strict_raw_blank_or_confirmed_gain": true,
+    "source_bindings_unchanged": true,
+    "plan_unchanged": true,
+    "sensitive_default_guard_passed": true
+  },
+  "all_joint_checks_passed": false,
+  "verification": {
+    "raw_responses_verified": 29,
+    "source_bindings_unchanged": true,
+    "approved_reference_unchanged": true,
+    "original_annotations_verified": 256,
+    "original_state_unchanged": true,
+    "original29_incumbent_replay": {
+      "human_correct": 15,
+      "human_wrong": 0,
+      "legacy_pallet_correct": 3,
+      "cases": 29,
+      "two_old_targets_four_views_PAL": true,
+      "new_model_calls": 0
+    },
+    "paired_clean_images_reconstructed": 14,
+    "final_model_default_guard_tokens": [
+      238
+    ]
+  },
+  "qualitative_reason_audit": {
+    "category_agreement_does_not_establish_object_identity": true,
+    "observed_issue": "One category-matched corner-view rationale describes a nearby black circular component; possible wrong-object attribution remains.",
+    "posthoc_diagnostic_only": true,
+    "raw_outputs_and_category_scores_unchanged": true
+  }
 }

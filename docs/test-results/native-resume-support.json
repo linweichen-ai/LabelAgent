@@ -1,0 +1,96 @@
+{
+  "read_after_freeze": true,
+  "original_scorer_sha256": "93c5152169d04d43b25dbf4a4139b12676daf78750a7f059837121656bb644c2",
+  "targets": [
+    {
+      "object_id": 42,
+      "visible_reference_points": 16,
+      "incumbent_best_support": 0.0,
+      "raw_pool_best_raw": 0.875,
+      "raw_pool_best_qualified": 0.8125,
+      "new_SAM_best_raw": 0.0625,
+      "new_SAM_best_support": 0.0,
+      "old_SAM_best_support": 0.8125,
+      "case": "camera0_frame76",
+      "new_candidates": [
+        {
+          "key": "43469190292097f1cd18d0d25ae4cab77ab3a37a15392d42d7c1f8475f6819c1",
+          "source": "visible_structure_SAM",
+          "new_SAM": true,
+          "raw_point_fraction": 0.0625,
+          "purity": 0.02040816326530612,
+          "qualified_support": 0.0,
+          "added_union_pixels": 0,
+          "fits_remaining_area_alone": true,
+          "known_PAL_point_ownership": [
+            {
+              "object_id": 42,
+              "points": 1
+            },
+            {
+              "object_id": 43,
+              "points": 48
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "object_id": 48,
+      "visible_reference_points": 27,
+      "incumbent_best_support": 0.0,
+      "raw_pool_best_raw": 1.0,
+      "raw_pool_best_qualified": 0.037037037037037035,
+      "new_SAM_best_raw": 0.0,
+      "new_SAM_best_support": 0.0,
+      "old_SAM_best_support": 0.0,
+      "case": "camera0_frame76",
+      "new_candidates": [
+        {
+          "key": "43469190292097f1cd18d0d25ae4cab77ab3a37a15392d42d7c1f8475f6819c1",
+          "source": "visible_structure_SAM",
+          "new_SAM": true,
+          "raw_point_fraction": 0.0,
+          "purity": 0.0,
+          "qualified_support": 0.0,
+          "added_union_pixels": 0,
+          "fits_remaining_area_alone": true,
+          "known_PAL_point_ownership": [
+            {
+              "object_id": 42,
+              "points": 1
+            },
+            {
+              "object_id": 43,
+              "points": 48
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "object_id": 47,
+      "visible_reference_points": 11,
+      "incumbent_best_support": 0.36363636363636365,
+      "raw_pool_best_raw": 0.09090909090909091,
+      "raw_pool_best_qualified": 0.09090909090909091,
+      "new_SAM_best_raw": 0,
+      "new_SAM_best_support": 0,
+      "old_SAM_best_support": 0.09090909090909091,
+      "case": "camera1_frame76",
+      "new_candidates": []
+    },
+    {
+      "object_id": 49,
+      "visible_reference_points": 6,
+      "incumbent_best_support": 0.0,
+      "raw_pool_best_raw": 0.8333333333333334,
+      "raw_pool_best_qualified": 0.8333333333333334,
+      "new_SAM_best_raw": 0,
+      "new_SAM_best_support": 0,
+      "old_SAM_best_support": 0.8333333333333334,
+      "case": "camera1_frame76",
+      "new_candidates": []
+    }
+  ]
+}

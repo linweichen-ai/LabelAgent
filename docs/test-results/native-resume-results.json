@@ -1,0 +1,114 @@
+{
+  "status": "complete_comparison",
+  "scope": "two exposed frames, engineering only, not independent pixel accuracy",
+  "incumbent_support": 13,
+  "incumbent_points": 490,
+  "new_pallet_support": 13,
+  "new_pallet_points": 490,
+  "new_person_support": 3,
+  "new_person_points": 1349,
+  "person_cross_class_points": 0,
+  "converged_groups": 6,
+  "remaining_incumbent_pallet_misses": 4,
+  "new_candidate_adopted_as_offline_incumbent": false,
+  "default_changed": false,
+  "SAM_instance_probe_requests": 1,
+  "new_candidate_additions": 0,
+  "new_union_pixels": 122302,
+  "union_area_ratio": 1.2478649919905316,
+  "union_extra_pixels": 0,
+  "rounds_limit": 3,
+  "ops_limit": 3,
+  "cumulative_point_limit": 32,
+  "original_annotation_writes": 0,
+  "automatic_install": false,
+  "retained_pallet_support": "13/17",
+  "retained_convergence": "原有6/6保留；无新种子时逐项核对后复用",
+  "fresh_agent_runs": 0,
+  "new_candidate_adopted": false,
+  "remaining_pallet_misses": 4,
+  "annotation_writes": 0,
+  "point_planning_responses": 16,
+  "valid_point_plans": 1,
+  "new_SAM_requests": 1,
+  "new_SAM_blank_requests": 1,
+  "new_complete_masks": 1,
+  "all_complete_masks_verified": 53,
+  "fresh_Mask2Former_forwards": 0,
+  "new_semantic_trace_records": 2,
+  "request_output_limit_verified": true,
+  "planner_rejections": {
+    "duplicate/conflicting prompt points": 7,
+    "no positive bound to original seed": 1,
+    "negative conflicts with original seed": 3,
+    "schema: abstention must have empty point lists": 4
+  },
+  "whole_candidate_rejections": {
+    "complete mask exceeds remaining original global area budget": 40,
+    "conflicts with incumbent predicted-person radius3 guard": 1
+  },
+  "conclusions": [
+    "16次真实原图规划回答，1组通过严格坐标绑定；原输出限制512已逐请求核对。",
+    "1次实际SAM点请求，保留1份完整候选；没有裁掩码或预算倒推负点。",
+    "新增实例是否采用：否；剩余4个漏检，原始标注未写入。",
+    "新3973像素掩码额外并集为0；目标42只覆盖1点、邻实例43覆盖48点，纯度1/49，仍无新增独立支持；两次中性照片复核为箱体/容器。"
+  ],
+  "limitations": [
+    "同采集已暴露图上的工程诊断，不是独立密集准确率。",
+    "SAM整份输出保持完整不代表物理对象边界已获人工确认。",
+    "原有6/6仅在全部初始种子完全一致时复用，复用不计作新Agent测量。"
+  ],
+  "new_complete_postfreeze_support": [
+    {
+      "case": "camera0_frame76",
+      "target_id": 42,
+      "key": "43469190292097f1cd18d0d25ae4cab77ab3a37a15392d42d7c1f8475f6819c1",
+      "source": "visible_structure_SAM",
+      "new_SAM": true,
+      "raw_point_fraction": 0.0625,
+      "purity": 0.02040816326530612,
+      "qualified_support": 0.0,
+      "added_union_pixels": 0,
+      "fits_remaining_area_alone": true,
+      "known_PAL_point_ownership": [
+        {
+          "object_id": 42,
+          "points": 1
+        },
+        {
+          "object_id": 43,
+          "points": 48
+        }
+      ]
+    },
+    {
+      "case": "camera0_frame76",
+      "target_id": 48,
+      "key": "43469190292097f1cd18d0d25ae4cab77ab3a37a15392d42d7c1f8475f6819c1",
+      "source": "visible_structure_SAM",
+      "new_SAM": true,
+      "raw_point_fraction": 0.0,
+      "purity": 0.0,
+      "qualified_support": 0.0,
+      "added_union_pixels": 0,
+      "fits_remaining_area_alone": true,
+      "known_PAL_point_ownership": [
+        {
+          "object_id": 42,
+          "points": 1
+        },
+        {
+          "object_id": 43,
+          "points": 48
+        }
+      ]
+    }
+  ],
+  "transport_busy_failed_attempt_preserved": true,
+  "new_semantic_successful_responses": 2,
+  "independent_audit_sha256": "536b32df73ca2790130824717bd9cf5a441fa346772b7d34c354567829690090",
+  "pictures": 50,
+  "videos": 4,
+  "fully_decoded_video_frames": 1880,
+  "engineering_tests": 103
+}

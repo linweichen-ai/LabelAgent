@@ -14,4 +14,6 @@ Baseline category counts: six confirmed regions 6/6 consensus (12/12 views); two
 
 No completed improvement is claimed at this checkpoint. The candidate remains isolated; the prior method and workbench defaults are retained.
 
+Partial readback already found 4 old-pallet view regressions. The fixed comparison continues to collect C3 and matched blank diagnostics; this candidate cannot be adopted as-is. A separate geometry audit found a boundary-adjacent seed on a concave contour; an isolated complete-contour/interior-point follow-up is being prepared.
+
 These are reused development regions from one capture sequence, not independent generalization. No original annotations, source media, masks, private coordinates, credentials or private filesystem paths are included in this public report. No training or new SAM inference occurred.

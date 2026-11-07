@@ -1,0 +1,152 @@
+{
+  "status": "human_confirmed_pallet_visible_region",
+  "observed_utc": "2026-11-04T13:23:14.233873+00:00",
+  "human_confirmed_category": "pallet",
+  "visible_partial_surface": true,
+  "independent_boundary_accuracy_confirmed": false,
+  "distinct_physical_instance_count_confirmed": false,
+  "model_anchor_pixels": 231,
+  "fixed_method_region_readbacks": [
+    {
+      "method": "original_SAM3",
+      "pallet_candidates_in_image": 10,
+      "model_anchor_pixels": 231,
+      "anchor_pixels_covered_by_pallet_union": 0,
+      "anchor_region_coverage_fraction": 0.0,
+      "maximum_candidate_iou_to_model_anchor": 0.0,
+      "exact_model_anchor_raster_retained": false
+    },
+    {
+      "method": "four_crop",
+      "pallet_candidates_in_image": 15,
+      "model_anchor_pixels": 231,
+      "anchor_pixels_covered_by_pallet_union": 0,
+      "anchor_region_coverage_fraction": 0.0,
+      "maximum_candidate_iou_to_model_anchor": 0.0,
+      "exact_model_anchor_raster_retained": false
+    },
+    {
+      "method": "accepted_raw_subset",
+      "pallet_candidates_in_image": 17,
+      "model_anchor_pixels": 231,
+      "anchor_pixels_covered_by_pallet_union": 0,
+      "anchor_region_coverage_fraction": 0.0,
+      "maximum_candidate_iou_to_model_anchor": 0.0,
+      "exact_model_anchor_raster_retained": false
+    },
+    {
+      "method": "cross_view",
+      "pallet_candidates_in_image": 16,
+      "model_anchor_pixels": 231,
+      "anchor_pixels_covered_by_pallet_union": 231,
+      "anchor_region_coverage_fraction": 1.0,
+      "maximum_candidate_iou_to_model_anchor": 1.0,
+      "exact_model_anchor_raster_retained": true
+    },
+    {
+      "method": "fixed15cm",
+      "pallet_candidates_in_image": 16,
+      "model_anchor_pixels": 231,
+      "anchor_pixels_covered_by_pallet_union": 231,
+      "anchor_region_coverage_fraction": 1.0,
+      "maximum_candidate_iou_to_model_anchor": 1.0,
+      "exact_model_anchor_raster_retained": true
+    }
+  ],
+  "associated_reference_diagnosis": {
+    "cases": 1,
+    "new_3px_person_reference_cross_points": 6,
+    "case_counts_reproduced_exactly": true,
+    "all_six_outside_original6px_person_mask": true,
+    "all_six_outside15cm_protection": true,
+    "six_points_proven_actual_human_pixels": false
+  },
+  "cached_person_guard_case_readback": {
+    "cached_responses_read": 16,
+    "new_model_calls": 0,
+    "rows": [
+      {
+        "method": "original_person_15cm",
+        "A1_guard_eligible": true,
+        "novel_points_in_guard": {
+          "0": 0,
+          "3": 0,
+          "6": 0
+        }
+      },
+      {
+        "method": "crop_person_direct",
+        "A1_guard_eligible": true,
+        "novel_points_in_guard": {
+          "0": 0,
+          "3": 0,
+          "6": 0
+        }
+      },
+      {
+        "method": "crop_person_15cm",
+        "A1_guard_eligible": true,
+        "novel_points_in_guard": {
+          "0": 0,
+          "3": 0,
+          "6": 0
+        }
+      }
+    ],
+    "final_global_region_coverage_known": false
+  },
+  "original_3D_labels_or_scores_changed": false,
+  "original_18_reference_shapes_changed": false,
+  "workbench_writes": false,
+  "current_full_plan_unchanged": true,
+  "raw_media_uploaded": false,
+  "scope": "Post-score human category confirmation and model-anchored region agreement; not independent dense accuracy or extra instance count",
+  "full_final_region_coverage_known": true,
+  "current_full_posthoc_readback": {
+    "status": "complete",
+    "rows": [
+      {
+        "method": "original_person_15cm_control",
+        "model_anchor_pixels": 231,
+        "anchor_pixels_covered_by_pallet_union": 231,
+        "anchor_region_coverage_fraction": 1.0,
+        "maximum_candidate_iou_to_model_anchor": 1.0,
+        "exact_model_anchor_raster_retained": true
+      },
+      {
+        "method": "crop_person_direct_control",
+        "model_anchor_pixels": 231,
+        "anchor_pixels_covered_by_pallet_union": 231,
+        "anchor_region_coverage_fraction": 1.0,
+        "maximum_candidate_iou_to_model_anchor": 1.0,
+        "exact_model_anchor_raster_retained": true
+      },
+      {
+        "method": "crop_person_15cm_veto",
+        "model_anchor_pixels": 231,
+        "anchor_pixels_covered_by_pallet_union": 231,
+        "anchor_region_coverage_fraction": 1.0,
+        "maximum_candidate_iou_to_model_anchor": 1.0,
+        "exact_model_anchor_raster_retained": true
+      }
+    ],
+    "original_joint_primary_passed": false,
+    "full_final_region_coverage_known": true,
+    "posthoc_to_frozen_primary": true,
+    "original_3D_scores_changed": false,
+    "independent_boundary_truth": false
+  },
+  "reference_composition_diagnostic": {
+    "report": "confirmed-region-composition.md",
+    "region_observations": 19,
+    "A1_person_reference_counts_by_radius": {
+      "0": 4,
+      "3": 6,
+      "6": 8
+    },
+    "full_extra_person_reference_points_exactly_A1_support": true,
+    "A1_erode3_has_no_visible_reference_points": true,
+    "original_scores_or_gates_changed": false,
+    "reference_corruption_proven": false
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "original_sessions_checked": 6,
+  "original_sessions_unchanged": true,
+  "labels_unchanged": true,
+  "original_source_files_checked": 1023,
+  "original_source_files_unchanged": true,
+  "original_mcap_unchanged": true,
+  "new_session_truth_empty": true,
+  "workbench_vlm_configured": true,
+  "saved_workbench_state_unchanged": true,
+  "workbench_frame_76_live_navigation_passed": true,
+  "navigation_frames": [
+    76,
+    75,
+    76
+  ],
+  "visible_candidates_frame_76": 11,
+  "pallet_candidates_frame_76": 9,
+  "person_candidates_frame_76": 2,
+  "new_truth_saved": false
+}

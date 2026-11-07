@@ -1,0 +1,728 @@
+{
+  "status": "complete",
+  "started_utc": "2026-11-03T17:40:52.268933+00:00",
+  "scope": "sparse_projected_reference_agreement_not_pixel_accuracy",
+  "metric_version": 2,
+  "archive_sha256": "e39dcb9f1c6592e76f3bd2625e274073470450f365466f8899126580e5d25f09",
+  "prediction_json_sha256": "591ebba97aeaca4f58dfcb0eecfd79ec026b4915aa670143d46d9702181b7f92",
+  "planned_images": 608,
+  "evaluated_images": 608,
+  "missing_prediction_images": 0,
+  "pixel_accuracy_evaluated": false,
+  "reference_source": "labels",
+  "reference_is_independent_ground_truth": false,
+  "parameters": {
+    "radii_pixels": [
+      0,
+      3,
+      6
+    ],
+    "zbuffer_cell_pixels": 8,
+    "depth_slack_m": 0.15,
+    "near_plane_m": 0.2,
+    "minimum_unique_object_points": 5,
+    "reference_point_inside_box_tolerance_m": 0,
+    "one_to_one_object_support_threshold": 0.5,
+    "minimum_object_point_purity": 0.67,
+    "tuning_frames": [
+      15,
+      45,
+      76,
+      105,
+      135
+    ]
+  },
+  "coordinate_convention": "labels in lidar frame; provided lidar-to-camera PINHOLE transforms; no trajectory pose applied",
+  "rotation_convention": "Rz(yaw) Ry(pitch) Rx(roll), radians, inferred from field names",
+  "unlabelled_or_cross_class_ambiguous_points_are_negatives": false,
+  "groups": {
+    "all": {
+      "pallet": {
+        "images": 608,
+        "reference_projected_points": 175029,
+        "supported_reference_objects": 3790,
+        "candidates": 4423,
+        "raw_mask_union_pixels": 23022516,
+        "radii": {
+          "0": {
+            "covered_projected_points": 125885,
+            "points_covered_by_other_class": 1430,
+            "objects_matched_at_support_threshold": 2008,
+            "best_candidate_support_sum": 1679.2648806652962,
+            "image_point_coverage_sum": 399.4026142001819,
+            "images_with_reference_points": 568,
+            "projected_point_coverage": 0.7192236715058647,
+            "off_class_coverage": 0.008170074673339847,
+            "one_to_one_object_support_fraction": 0.5298153034300792,
+            "mean_best_object_support": 0.44307780492488025,
+            "mean_image_point_coverage": 0.7031736165496161
+          },
+          "3": {
+            "covered_projected_points": 138330,
+            "points_covered_by_other_class": 1945,
+            "objects_matched_at_support_threshold": 2088,
+            "best_candidate_support_sum": 1846.5556421835986,
+            "image_point_coverage_sum": 440.45963609201186,
+            "images_with_reference_points": 568,
+            "projected_point_coverage": 0.790326174519651,
+            "off_class_coverage": 0.011112444223528672,
+            "one_to_one_object_support_fraction": 0.5509234828496042,
+            "mean_best_object_support": 0.4872178475418466,
+            "mean_image_point_coverage": 0.7754571057957955
+          },
+          "6": {
+            "covered_projected_points": 147181,
+            "points_covered_by_other_class": 2570,
+            "objects_matched_at_support_threshold": 2105,
+            "best_candidate_support_sum": 1936.1185995909796,
+            "image_point_coverage_sum": 470.21249947374486,
+            "images_with_reference_points": 568,
+            "projected_point_coverage": 0.840894937410372,
+            "off_class_coverage": 0.014683281056282102,
+            "one_to_one_object_support_fraction": 0.5554089709762533,
+            "mean_best_object_support": 0.5108492347205751,
+            "mean_image_point_coverage": 0.8278389075241986
+          }
+        }
+      },
+      "person": {
+        "images": 608,
+        "reference_projected_points": 315425,
+        "supported_reference_objects": 1170,
+        "candidates": 1195,
+        "raw_mask_union_pixels": 114128095,
+        "radii": {
+          "0": {
+            "covered_projected_points": 280602,
+            "points_covered_by_other_class": 1283,
+            "objects_matched_at_support_threshold": 1116,
+            "best_candidate_support_sum": 978.6361347744646,
+            "image_point_coverage_sum": 445.53934394548696,
+            "images_with_reference_points": 499,
+            "projected_point_coverage": 0.8895997463739399,
+            "off_class_coverage": 0.00406752793849568,
+            "one_to_one_object_support_fraction": 0.9538461538461539,
+            "mean_best_object_support": 0.8364411408328757,
+            "mean_image_point_coverage": 0.8928644167244227
+          },
+          "3": {
+            "covered_projected_points": 290524,
+            "points_covered_by_other_class": 2052,
+            "objects_matched_at_support_threshold": 1136,
+            "best_candidate_support_sum": 1029.4093019469278,
+            "image_point_coverage_sum": 458.84103790244677,
+            "images_with_reference_points": 499,
+            "projected_point_coverage": 0.9210557184750733,
+            "off_class_coverage": 0.006505508440992312,
+            "one_to_one_object_support_fraction": 0.9709401709401709,
+            "mean_best_object_support": 0.8798370102110494,
+            "mean_image_point_coverage": 0.9195211180409755
+          },
+          "6": {
+            "covered_projected_points": 297154,
+            "points_covered_by_other_class": 3125,
+            "objects_matched_at_support_threshold": 1136,
+            "best_candidate_support_sum": 1060.4556288515876,
+            "image_point_coverage_sum": 468.3219132250367,
+            "images_with_reference_points": 499,
+            "projected_point_coverage": 0.9420749782040104,
+            "off_class_coverage": 0.0099072679717841,
+            "one_to_one_object_support_fraction": 0.9709401709401709,
+            "mean_best_object_support": 0.9063723323517843,
+            "mean_image_point_coverage": 0.9385208681864463
+          }
+        }
+      }
+    },
+    "validation": {
+      "pallet": {
+        "images": 588,
+        "reference_projected_points": 168738,
+        "supported_reference_objects": 3672,
+        "candidates": 4280,
+        "raw_mask_union_pixels": 22237754,
+        "radii": {
+          "0": {
+            "covered_projected_points": 121354,
+            "points_covered_by_other_class": 1353,
+            "objects_matched_at_support_threshold": 1943,
+            "best_candidate_support_sum": 1625.1944349748674,
+            "image_point_coverage_sum": 385.2687965619945,
+            "images_with_reference_points": 549,
+            "projected_point_coverage": 0.7191859569273075,
+            "off_class_coverage": 0.0080183479714113,
+            "one_to_one_object_support_fraction": 0.5291394335511983,
+            "mean_best_object_support": 0.4425910770628724,
+            "mean_image_point_coverage": 0.7017646567613743
+          },
+          "3": {
+            "covered_projected_points": 133337,
+            "points_covered_by_other_class": 1849,
+            "objects_matched_at_support_threshold": 2020,
+            "best_candidate_support_sum": 1785.1016846316047,
+            "image_point_coverage_sum": 424.9950972610864,
+            "images_with_reference_points": 549,
+            "projected_point_coverage": 0.7902013772831253,
+            "off_class_coverage": 0.010957816259526604,
+            "one_to_one_object_support_fraction": 0.5501089324618736,
+            "mean_best_object_support": 0.48613880300424966,
+            "mean_image_point_coverage": 0.7741258602205582
+          },
+          "6": {
+            "covered_projected_points": 141845,
+            "points_covered_by_other_class": 2452,
+            "objects_matched_at_support_threshold": 2033,
+            "best_candidate_support_sum": 1870.311952806303,
+            "image_point_coverage_sum": 453.8160804621986,
+            "images_with_reference_points": 549,
+            "projected_point_coverage": 0.8406227405800709,
+            "off_class_coverage": 0.014531403714634522,
+            "one_to_one_object_support_fraction": 0.5536492374727668,
+            "mean_best_object_support": 0.5093442137272067,
+            "mean_image_point_coverage": 0.826623097381054
+          }
+        }
+      },
+      "person": {
+        "images": 588,
+        "reference_projected_points": 304357,
+        "supported_reference_objects": 1131,
+        "candidates": 1156,
+        "raw_mask_union_pixels": 110331284,
+        "radii": {
+          "0": {
+            "covered_projected_points": 270801,
+            "points_covered_by_other_class": 1252,
+            "objects_matched_at_support_threshold": 1079,
+            "best_candidate_support_sum": 946.3422985335031,
+            "image_point_coverage_sum": 431.1930264238723,
+            "images_with_reference_points": 483,
+            "projected_point_coverage": 0.8897478947420299,
+            "off_class_coverage": 0.004113590290349819,
+            "one_to_one_object_support_fraction": 0.9540229885057471,
+            "mean_best_object_support": 0.8367305910994722,
+            "mean_image_point_coverage": 0.8927391851425928
+          },
+          "3": {
+            "covered_projected_points": 280403,
+            "points_covered_by_other_class": 2003,
+            "objects_matched_at_support_threshold": 1098,
+            "best_candidate_support_sum": 995.3405721330666,
+            "image_point_coverage_sum": 444.1215084811559,
+            "images_with_reference_points": 483,
+            "projected_point_coverage": 0.9212963723522049,
+            "off_class_coverage": 0.006581087341510135,
+            "one_to_one_object_support_fraction": 0.9708222811671088,
+            "mean_best_object_support": 0.8800535562626584,
+            "mean_image_point_coverage": 0.9195062287394532
+          },
+          "6": {
+            "covered_projected_points": 286801,
+            "points_covered_by_other_class": 3034,
+            "objects_matched_at_support_threshold": 1098,
+            "best_candidate_support_sum": 1025.1996255851589,
+            "image_point_coverage_sum": 453.35442175685955,
+            "images_with_reference_points": 483,
+            "projected_point_coverage": 0.9423177387081618,
+            "off_class_coverage": 0.009968556662077757,
+            "one_to_one_object_support_fraction": 0.9708222811671088,
+            "mean_best_object_support": 0.9064541340275498,
+            "mean_image_point_coverage": 0.9386219912150301
+          }
+        }
+      }
+    },
+    "camera_0": {
+      "pallet": {
+        "images": 152,
+        "reference_projected_points": 40319,
+        "supported_reference_objects": 1101,
+        "candidates": 1593,
+        "raw_mask_union_pixels": 6475271,
+        "radii": {
+          "0": {
+            "covered_projected_points": 29044,
+            "points_covered_by_other_class": 16,
+            "objects_matched_at_support_threshold": 563,
+            "best_candidate_support_sum": 498.74057233325095,
+            "image_point_coverage_sum": 103.80735617198475,
+            "images_with_reference_points": 152,
+            "projected_point_coverage": 0.7203551675388774,
+            "off_class_coverage": 0.00039683523896922045,
+            "one_to_one_object_support_fraction": 0.5113533151680291,
+            "mean_best_object_support": 0.4529887123826076,
+            "mean_image_point_coverage": 0.682943132710426
+          },
+          "3": {
+            "covered_projected_points": 31883,
+            "points_covered_by_other_class": 21,
+            "objects_matched_at_support_threshold": 538,
+            "best_candidate_support_sum": 474.95018948288475,
+            "image_point_coverage_sum": 113.83972607164256,
+            "images_with_reference_points": 152,
+            "projected_point_coverage": 0.7907686202534785,
+            "off_class_coverage": 0.0005208462511471019,
+            "one_to_one_object_support_fraction": 0.48864668483197093,
+            "mean_best_object_support": 0.4313807352251451,
+            "mean_image_point_coverage": 0.7489455662608063
+          },
+          "6": {
+            "covered_projected_points": 33839,
+            "points_covered_by_other_class": 28,
+            "objects_matched_at_support_threshold": 481,
+            "best_candidate_support_sum": 437.50285845788096,
+            "image_point_coverage_sum": 123.04406350780219,
+            "images_with_reference_points": 152,
+            "projected_point_coverage": 0.8392817282174657,
+            "off_class_coverage": 0.0006944616681961359,
+            "one_to_one_object_support_fraction": 0.4368755676657584,
+            "mean_best_object_support": 0.3973686271188746,
+            "mean_image_point_coverage": 0.8095004178144881
+          }
+        }
+      },
+      "person": {
+        "images": 152,
+        "reference_projected_points": 20953,
+        "supported_reference_objects": 152,
+        "candidates": 153,
+        "raw_mask_union_pixels": 41868716,
+        "radii": {
+          "0": {
+            "covered_projected_points": 19308,
+            "points_covered_by_other_class": 8,
+            "objects_matched_at_support_threshold": 149,
+            "best_candidate_support_sum": 144.5946540765537,
+            "image_point_coverage_sum": 144.5946540765537,
+            "images_with_reference_points": 152,
+            "projected_point_coverage": 0.9214909559490287,
+            "off_class_coverage": 0.00038180690115973846,
+            "one_to_one_object_support_fraction": 0.9802631578947368,
+            "mean_best_object_support": 0.9512806189246954,
+            "mean_image_point_coverage": 0.9512806189246954
+          },
+          "3": {
+            "covered_projected_points": 19392,
+            "points_covered_by_other_class": 12,
+            "objects_matched_at_support_threshold": 150,
+            "best_candidate_support_sum": 145.0156523538892,
+            "image_point_coverage_sum": 145.0156523538892,
+            "images_with_reference_points": 152,
+            "projected_point_coverage": 0.925499928411206,
+            "off_class_coverage": 0.0005727103517396077,
+            "one_to_one_object_support_fraction": 0.9868421052631579,
+            "mean_best_object_support": 0.9540503444334817,
+            "mean_image_point_coverage": 0.9540503444334817
+          },
+          "6": {
+            "covered_projected_points": 19482,
+            "points_covered_by_other_class": 15,
+            "objects_matched_at_support_threshold": 150,
+            "best_candidate_support_sum": 145.4700347019076,
+            "image_point_coverage_sum": 145.4700347019076,
+            "images_with_reference_points": 152,
+            "projected_point_coverage": 0.9297952560492531,
+            "off_class_coverage": 0.0007158879396745097,
+            "one_to_one_object_support_fraction": 0.9868421052631579,
+            "mean_best_object_support": 0.9570397019862341,
+            "mean_image_point_coverage": 0.9570397019862341
+          }
+        }
+      }
+    },
+    "camera_1": {
+      "pallet": {
+        "images": 152,
+        "reference_projected_points": 57449,
+        "supported_reference_objects": 1744,
+        "candidates": 1513,
+        "raw_mask_union_pixels": 7781833,
+        "radii": {
+          "0": {
+            "covered_projected_points": 39206,
+            "points_covered_by_other_class": 1055,
+            "objects_matched_at_support_threshold": 782,
+            "best_candidate_support_sum": 636.3200159116283,
+            "image_point_coverage_sum": 102.85299290630456,
+            "images_with_reference_points": 152,
+            "projected_point_coverage": 0.6824487806576268,
+            "off_class_coverage": 0.018364114257863495,
+            "one_to_one_object_support_fraction": 0.44839449541284404,
+            "mean_best_object_support": 0.364862394444741,
+            "mean_image_point_coverage": 0.6766644270151616
+          },
+          "3": {
+            "covered_projected_points": 43625,
+            "points_covered_by_other_class": 1209,
+            "objects_matched_at_support_threshold": 837,
+            "best_candidate_support_sum": 749.3005229991112,
+            "image_point_coverage_sum": 115.05427789043634,
+            "images_with_reference_points": 152,
+            "projected_point_coverage": 0.7593691796201849,
+            "off_class_coverage": 0.021044752737210397,
+            "one_to_one_object_support_fraction": 0.47993119266055045,
+            "mean_best_object_support": 0.4296447952976555,
+            "mean_image_point_coverage": 0.7569360387528706
+          },
+          "6": {
+            "covered_projected_points": 46262,
+            "points_covered_by_other_class": 1369,
+            "objects_matched_at_support_threshold": 851,
+            "best_candidate_support_sum": 808.0705346215905,
+            "image_point_coverage_sum": 122.02908731510739,
+            "images_with_reference_points": 152,
+            "projected_point_coverage": 0.8052707618931574,
+            "off_class_coverage": 0.02382983167679159,
+            "one_to_one_object_support_fraction": 0.48795871559633025,
+            "mean_best_object_support": 0.46334319645733396,
+            "mean_image_point_coverage": 0.8028229428625486
+          }
+        }
+      },
+      "person": {
+        "images": 152,
+        "reference_projected_points": 174446,
+        "supported_reference_objects": 409,
+        "candidates": 415,
+        "raw_mask_union_pixels": 59306231,
+        "radii": {
+          "0": {
+            "covered_projected_points": 158670,
+            "points_covered_by_other_class": 283,
+            "objects_matched_at_support_threshold": 400,
+            "best_candidate_support_sum": 356.61613924418873,
+            "image_point_coverage_sum": 138.46766369661654,
+            "images_with_reference_points": 152,
+            "projected_point_coverage": 0.9095651376357153,
+            "off_class_coverage": 0.0016222785274526215,
+            "one_to_one_object_support_fraction": 0.9779951100244498,
+            "mean_best_object_support": 0.8719221008415372,
+            "mean_image_point_coverage": 0.9109714716882668
+          },
+          "3": {
+            "covered_projected_points": 162485,
+            "points_covered_by_other_class": 452,
+            "objects_matched_at_support_threshold": 404,
+            "best_candidate_support_sum": 372.6464362342194,
+            "image_point_coverage_sum": 141.53150107052736,
+            "images_with_reference_points": 152,
+            "projected_point_coverage": 0.9314343693750502,
+            "off_class_coverage": 0.002591059697556837,
+            "one_to_one_object_support_fraction": 0.9877750611246944,
+            "mean_best_object_support": 0.9111159810127614,
+            "mean_image_point_coverage": 0.9311282965166273
+          },
+          "6": {
+            "covered_projected_points": 164868,
+            "points_covered_by_other_class": 675,
+            "objects_matched_at_support_threshold": 405,
+            "best_candidate_support_sum": 381.3846327845657,
+            "image_point_coverage_sum": 143.4667678550063,
+            "images_with_reference_points": 152,
+            "projected_point_coverage": 0.9450947571168156,
+            "off_class_coverage": 0.003869392247457666,
+            "one_to_one_object_support_fraction": 0.9902200488997555,
+            "mean_best_object_support": 0.9324807647544394,
+            "mean_image_point_coverage": 0.9438603148355679
+          }
+        }
+      }
+    },
+    "camera_2": {
+      "pallet": {
+        "images": 152,
+        "reference_projected_points": 60106,
+        "supported_reference_objects": 705,
+        "candidates": 857,
+        "raw_mask_union_pixels": 5806913,
+        "radii": {
+          "0": {
+            "covered_projected_points": 45271,
+            "points_covered_by_other_class": 325,
+            "objects_matched_at_support_threshold": 494,
+            "best_candidate_support_sum": 410.16315423710967,
+            "image_point_coverage_sum": 117.35325209443653,
+            "images_with_reference_points": 152,
+            "projected_point_coverage": 0.7531860379995342,
+            "off_class_coverage": 0.005407114098426114,
+            "one_to_one_object_support_fraction": 0.700709219858156,
+            "mean_best_object_support": 0.5817917081377442,
+            "mean_image_point_coverage": 0.7720608690423456
+          },
+          "3": {
+            "covered_projected_points": 49283,
+            "points_covered_by_other_class": 622,
+            "objects_matched_at_support_threshold": 534,
+            "best_candidate_support_sum": 470.2396507133771,
+            "image_point_coverage_sum": 127.14310972019132,
+            "images_with_reference_points": 152,
+            "projected_point_coverage": 0.8199347818853359,
+            "off_class_coverage": 0.010348384520680131,
+            "one_to_one_object_support_fraction": 0.7574468085106383,
+            "mean_best_object_support": 0.6670065967565633,
+            "mean_image_point_coverage": 0.8364678271065218
+          },
+          "6": {
+            "covered_projected_points": 52693,
+            "points_covered_by_other_class": 1032,
+            "objects_matched_at_support_threshold": 592,
+            "best_candidate_support_sum": 526.0667798281752,
+            "image_point_coverage_sum": 135.03447003384045,
+            "images_with_reference_points": 152,
+            "projected_point_coverage": 0.8766678867334375,
+            "off_class_coverage": 0.017169666921771538,
+            "one_to_one_object_support_fraction": 0.8397163120567376,
+            "mean_best_object_support": 0.746194013940674,
+            "mean_image_point_coverage": 0.8883846712752661
+          }
+        }
+      },
+      "person": {
+        "images": 152,
+        "reference_projected_points": 109396,
+        "supported_reference_objects": 534,
+        "candidates": 555,
+        "raw_mask_union_pixels": 11290141,
+        "radii": {
+          "0": {
+            "covered_projected_points": 93100,
+            "points_covered_by_other_class": 928,
+            "objects_matched_at_support_threshold": 497,
+            "best_candidate_support_sum": 416.83232905293954,
+            "image_point_coverage_sum": 125.66382968000903,
+            "images_with_reference_points": 152,
+            "projected_point_coverage": 0.8510366009726132,
+            "off_class_coverage": 0.008482942703572343,
+            "one_to_one_object_support_fraction": 0.9307116104868914,
+            "mean_best_object_support": 0.780584885866928,
+            "mean_image_point_coverage": 0.8267357215790068
+          },
+          "3": {
+            "covered_projected_points": 98763,
+            "points_covered_by_other_class": 1488,
+            "objects_matched_at_support_threshold": 511,
+            "best_candidate_support_sum": 447.5289909749915,
+            "image_point_coverage_sum": 133.89534298215025,
+            "images_with_reference_points": 152,
+            "projected_point_coverage": 0.9028026618889173,
+            "off_class_coverage": 0.01360195985227979,
+            "one_to_one_object_support_fraction": 0.9569288389513109,
+            "mean_best_object_support": 0.8380692714887481,
+            "mean_image_point_coverage": 0.8808904143562517
+          },
+          "6": {
+            "covered_projected_points": 102702,
+            "points_covered_by_other_class": 2264,
+            "objects_matched_at_support_threshold": 512,
+            "best_candidate_support_sum": 468.8915184908885,
+            "image_point_coverage_sum": 140.04635894150132,
+            "images_with_reference_points": 152,
+            "projected_point_coverage": 0.9388094628688435,
+            "off_class_coverage": 0.02069545504406011,
+            "one_to_one_object_support_fraction": 0.9588014981273408,
+            "mean_best_object_support": 0.8780740046645852,
+            "mean_image_point_coverage": 0.9213576246151403
+          }
+        }
+      }
+    },
+    "camera_3": {
+      "pallet": {
+        "images": 152,
+        "reference_projected_points": 17155,
+        "supported_reference_objects": 240,
+        "candidates": 460,
+        "raw_mask_union_pixels": 2958499,
+        "radii": {
+          "0": {
+            "covered_projected_points": 12364,
+            "points_covered_by_other_class": 34,
+            "objects_matched_at_support_threshold": 169,
+            "best_candidate_support_sum": 134.04113818330862,
+            "image_point_coverage_sum": 75.38901302745626,
+            "images_with_reference_points": 112,
+            "projected_point_coverage": 0.7207228213348877,
+            "off_class_coverage": 0.0019819294666278053,
+            "one_to_one_object_support_fraction": 0.7041666666666667,
+            "mean_best_object_support": 0.5585047424304526,
+            "mean_image_point_coverage": 0.6731161877451451
+          },
+          "3": {
+            "covered_projected_points": 13539,
+            "points_covered_by_other_class": 93,
+            "objects_matched_at_support_threshold": 179,
+            "best_candidate_support_sum": 152.0652789882259,
+            "image_point_coverage_sum": 84.42252240974126,
+            "images_with_reference_points": 112,
+            "projected_point_coverage": 0.7892159720198193,
+            "off_class_coverage": 0.005421160011658409,
+            "one_to_one_object_support_fraction": 0.7458333333333333,
+            "mean_best_object_support": 0.6336053291176079,
+            "mean_image_point_coverage": 0.753772521515547
+          },
+          "6": {
+            "covered_projected_points": 14387,
+            "points_covered_by_other_class": 141,
+            "objects_matched_at_support_threshold": 181,
+            "best_candidate_support_sum": 164.47842668333422,
+            "image_point_coverage_sum": 90.10487861699471,
+            "images_with_reference_points": 112,
+            "projected_point_coverage": 0.8386476245992422,
+            "off_class_coverage": 0.00821917808219178,
+            "one_to_one_object_support_fraction": 0.7541666666666667,
+            "mean_best_object_support": 0.685326777847226,
+            "mean_image_point_coverage": 0.8045078447945956
+          }
+        }
+      },
+      "person": {
+        "images": 152,
+        "reference_projected_points": 10630,
+        "supported_reference_objects": 75,
+        "candidates": 72,
+        "raw_mask_union_pixels": 1663007,
+        "radii": {
+          "0": {
+            "covered_projected_points": 9524,
+            "points_covered_by_other_class": 64,
+            "objects_matched_at_support_threshold": 70,
+            "best_candidate_support_sum": 60.59301240078273,
+            "image_point_coverage_sum": 36.813196492307675,
+            "images_with_reference_points": 43,
+            "projected_point_coverage": 0.8959548447789276,
+            "off_class_coverage": 0.006020696142991533,
+            "one_to_one_object_support_fraction": 0.9333333333333333,
+            "mean_best_object_support": 0.8079068320104364,
+            "mean_image_point_coverage": 0.8561208486583181
+          },
+          "3": {
+            "covered_projected_points": 9884,
+            "points_covered_by_other_class": 100,
+            "objects_matched_at_support_threshold": 71,
+            "best_candidate_support_sum": 64.21822238382809,
+            "image_point_coverage_sum": 38.398541495880195,
+            "images_with_reference_points": 43,
+            "projected_point_coverage": 0.929821260583255,
+            "off_class_coverage": 0.00940733772342427,
+            "one_to_one_object_support_fraction": 0.9466666666666667,
+            "mean_best_object_support": 0.8562429651177079,
+            "mean_image_point_coverage": 0.8929893371134929
+          },
+          "6": {
+            "covered_projected_points": 10102,
+            "points_covered_by_other_class": 171,
+            "objects_matched_at_support_threshold": 69,
+            "best_candidate_support_sum": 64.70944287422446,
+            "image_point_coverage_sum": 39.33875172662113,
+            "images_with_reference_points": 43,
+            "projected_point_coverage": 0.9503292568203199,
+            "off_class_coverage": 0.016086547507055505,
+            "one_to_one_object_support_fraction": 0.92,
+            "mean_best_object_support": 0.8627925716563262,
+            "mean_image_point_coverage": 0.9148546913167706
+          }
+        }
+      }
+    },
+    "tuning": {
+      "pallet": {
+        "images": 20,
+        "reference_projected_points": 6291,
+        "supported_reference_objects": 118,
+        "candidates": 143,
+        "raw_mask_union_pixels": 784762,
+        "radii": {
+          "0": {
+            "covered_projected_points": 4531,
+            "points_covered_by_other_class": 77,
+            "objects_matched_at_support_threshold": 65,
+            "best_candidate_support_sum": 54.07044569042895,
+            "image_point_coverage_sum": 14.133817638187246,
+            "images_with_reference_points": 19,
+            "projected_point_coverage": 0.7202352567159435,
+            "off_class_coverage": 0.012239707518677475,
+            "one_to_one_object_support_fraction": 0.5508474576271186,
+            "mean_best_object_support": 0.45822411602058427,
+            "mean_image_point_coverage": 0.7438851388519603
+          },
+          "3": {
+            "covered_projected_points": 4993,
+            "points_covered_by_other_class": 96,
+            "objects_matched_at_support_threshold": 68,
+            "best_candidate_support_sum": 61.453957551994044,
+            "image_point_coverage_sum": 15.464538830925349,
+            "images_with_reference_points": 19,
+            "projected_point_coverage": 0.7936735018280082,
+            "off_class_coverage": 0.015259895088221268,
+            "one_to_one_object_support_fraction": 0.576271186440678,
+            "mean_best_object_support": 0.5207962504406275,
+            "mean_image_point_coverage": 0.813923096364492
+          },
+          "6": {
+            "covered_projected_points": 5336,
+            "points_covered_by_other_class": 118,
+            "objects_matched_at_support_threshold": 72,
+            "best_candidate_support_sum": 65.80664678467636,
+            "image_point_coverage_sum": 16.396419011546037,
+            "images_with_reference_points": 19,
+            "projected_point_coverage": 0.8481958353202989,
+            "off_class_coverage": 0.018756954379271974,
+            "one_to_one_object_support_fraction": 0.6101694915254238,
+            "mean_best_object_support": 0.5576834473277658,
+            "mean_image_point_coverage": 0.8629694216603178
+          }
+        }
+      },
+      "person": {
+        "images": 20,
+        "reference_projected_points": 11068,
+        "supported_reference_objects": 39,
+        "candidates": 39,
+        "raw_mask_union_pixels": 3796811,
+        "radii": {
+          "0": {
+            "covered_projected_points": 9801,
+            "points_covered_by_other_class": 31,
+            "objects_matched_at_support_threshold": 37,
+            "best_candidate_support_sum": 32.29383624096157,
+            "image_point_coverage_sum": 14.346317521614644,
+            "images_with_reference_points": 16,
+            "projected_point_coverage": 0.8855258402602096,
+            "off_class_coverage": 0.0028008673653776655,
+            "one_to_one_object_support_fraction": 0.9487179487179487,
+            "mean_best_object_support": 0.8280470831015787,
+            "mean_image_point_coverage": 0.8966448451009152
+          },
+          "3": {
+            "covered_projected_points": 10121,
+            "points_covered_by_other_class": 49,
+            "objects_matched_at_support_threshold": 38,
+            "best_candidate_support_sum": 34.0687298138613,
+            "image_point_coverage_sum": 14.719529421290844,
+            "images_with_reference_points": 16,
+            "projected_point_coverage": 0.914438019515721,
+            "off_class_coverage": 0.004427177448500181,
+            "one_to_one_object_support_fraction": 0.9743589743589743,
+            "mean_best_object_support": 0.8735571747143924,
+            "mean_image_point_coverage": 0.9199705888306777
+          },
+          "6": {
+            "covered_projected_points": 10353,
+            "points_covered_by_other_class": 91,
+            "objects_matched_at_support_threshold": 38,
+            "best_candidate_support_sum": 35.256003266428465,
+            "image_point_coverage_sum": 14.967491468177197,
+            "images_with_reference_points": 16,
+            "projected_point_coverage": 0.9353993494759667,
+            "off_class_coverage": 0.00822190097578605,
+            "one_to_one_object_support_fraction": 0.9743589743589743,
+            "mean_best_object_support": 0.904000083754576,
+            "mean_image_point_coverage": 0.9354682167610748
+          }
+        }
+      }
+    }
+  },
+  "input_checksums_verified": true,
+  "finished_utc": "2026-11-03T17:42:30.638076+00:00"
+}

@@ -1,0 +1,53 @@
+{
+  "study": "Locator first, clean source last",
+  "observed_utc": "2026-11-07T12:54:34.299719+00:00",
+  "phase": "final_verified",
+  "plan_sha256": "236bf2e4701f6c7d8ea6491dd023ab1560b1afdcedcb1b0ef04199943d6945f4",
+  "maximum_new_requests": 29,
+  "baseline_exact_cached_views": 28,
+  "cases": 14,
+  "intervention": "Swap the two unchanged JPEGs and all textual image-1/image-2 references; preserve complete contour, deep interior point, 3-span context, schema, class definition and actual 256x2 image budget.",
+  "expected_answers_and_old_inspections_not_sent_to_model": true,
+  "source_order_dominance_is_hypothesis_not_assumed_cause": true,
+  "tests_passed": 15,
+  "tests_are_focused": true,
+  "new_SAM_calls": 0,
+  "training_performed": false,
+  "original_annotations_written": false,
+  "candidate_adopted": false,
+  "default_enabled": false,
+  "independent_validation": false,
+  "status": "complete",
+  "responses_received": 29,
+  "completed_candidate_views": 28,
+  "new_response_count": 29,
+  "baseline_cached_count": 28,
+  "baseline_counts": {
+    "six_correct_views": 12,
+    "six_correct_pairs": 6,
+    "old_pallet_correct_views": 4,
+    "person_correct_views": 2,
+    "plain_blank_abstentions": 4,
+    "marked_blank_abstentions": 1,
+    "suspect_abstentions": 0
+  },
+  "candidate_counts": {
+    "six_correct_views": 12,
+    "six_correct_pairs": 6,
+    "old_pallet_correct_views": 4,
+    "person_correct_views": 2,
+    "plain_blank_abstentions": 4,
+    "marked_blank_abstentions": 3,
+    "suspect_abstentions": 0
+  },
+  "source_bindings_unchanged": true,
+  "original_annotations_verified": 256,
+  "original_state_unchanged": true,
+  "all_joint_checks_passed": false,
+  "c3_semantic_review": {
+    "passed": true,
+    "public_conclusion": "Both new raw views describe the wooden pallet or its visible wooden edge. Assistant visual readback confirms the contour and interior pointer identify that base, while the nearby arm and circular machinery lie outside the contour. This is a development-case semantic review, not new human boundary approval.",
+    "reviewer": "assistant",
+    "human_localization_approval": false
+  }
+}

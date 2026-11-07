@@ -1,0 +1,22 @@
+{
+  "candidate_frames_imported": 608,
+  "candidate_shapes_imported": 5618,
+  "candidates_saved_as_truth": false,
+  "previous_annotation_sessions_preserved": true,
+  "reference_annotation_files_unchanged": true,
+  "sam3_weight_sha256": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+  "package_versions": {
+    "torch": "2.10.0+cu128",
+    "numpy": "1.26.4",
+    "Pillow": "12.3.0",
+    "Flask": "3.1.3",
+    "mcap": "1.5.0",
+    "scipy": "1.17.1"
+  },
+  "sam3_service_source_sha256": "7b2ebf69937b6f2c582f28c24a9a3809effb260302caf18361b091088b714ff5",
+  "sam3_point_source_sha256": "ab8861c57fbd275e8d16b5cc9bfbf734b3e4d7226d02b93d2b0ef9173fc49a81",
+  "connected_components_sha256": "05eaf393a848997e15992fccae8cdceff2c4565909ea7a847ab8a89640439783",
+  "regression_tests_passed": 63,
+  "external_vlm_calls": 0,
+  "full_agent_verified": false
+}

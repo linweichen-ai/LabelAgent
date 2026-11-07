@@ -1,0 +1,196 @@
+{
+  "phase": "final_verified",
+  "observed_utc": "2026-11-07T16:42:08.914652+00:00",
+  "status": "complete",
+  "saved_new_responses": 37,
+  "maximum_new_requests": 37,
+  "cases": 18,
+  "quality_views_per_arm": 36,
+  "baseline_cached_quality_views": 36,
+  "native_side": 128,
+  "candidate_image_count": 3,
+  "baseline_image_count": 2,
+  "candidate_visual_tokens": 768,
+  "baseline_visual_tokens": 512,
+  "increased_compute_not_equal_budget": true,
+  "control_and_logs_on_data_drive": true,
+  "native_provenance_checks": 18,
+  "body_contracts_verified": 36,
+  "boundary_checks": 5,
+  "expected_prompt_encoding_by_view": {
+    "overview": {
+      "prompt_tokens": 1111,
+      "image_grid_thw": [
+        [
+          1,
+          32,
+          32
+        ],
+        [
+          1,
+          32,
+          32
+        ],
+        [
+          1,
+          32,
+          32
+        ]
+      ],
+      "actual_image_token_counts": [
+        256,
+        256,
+        256
+      ]
+    },
+    "linked": {
+      "prompt_tokens": 1099,
+      "image_grid_thw": [
+        [
+          1,
+          32,
+          32
+        ],
+        [
+          1,
+          32,
+          32
+        ],
+        [
+          1,
+          32,
+          32
+        ]
+      ],
+      "actual_image_token_counts": [
+        256,
+        256,
+        256
+      ]
+    }
+  },
+  "original_plan_sha256": "421677cd90340f3b03e379deaaeab3a0e7e9fb5b45277bd224dc31409bf314a9",
+  "active_plan_sha256": "860e66c238e003137bb95697eea7bdb36fe4411514f6bd8ee5f3fa2bdddc63bb",
+  "helper_source_sha256": "473e351cc2e29881474d162927afde90b3f8b0a0756f95e26437a6c2480b3251",
+  "evaluator_source_sha256": "cd05e7d65fa3a8f901c5bd822f1cc1c51a452845c62deab0f8ae921f385529a5",
+  "normal_category_first_schema_preserved": true,
+  "original_annotations_written": false,
+  "new_segmentation_inference": false,
+  "candidate_adopted": false,
+  "default_enabled": false,
+  "full_project_validation_passed": false,
+  "independent_generalization": false,
+  "groups": {
+    "protected_pallet": {
+      "views": 4,
+      "baseline_correct": 4,
+      "candidate_correct": 4,
+      "baseline_categories": {
+        "pallet": 4
+      },
+      "candidate_categories": {
+        "pallet": 4
+      }
+    },
+    "person_fixture": {
+      "views": 2,
+      "baseline_correct": 2,
+      "candidate_correct": 2,
+      "baseline_categories": {
+        "person": 2
+      },
+      "candidate_categories": {
+        "person": 2
+      }
+    },
+    "suspected_non_pallet": {
+      "views": 2,
+      "baseline_correct": 0,
+      "candidate_correct": 0,
+      "baseline_categories": {
+        "pallet": 2
+      },
+      "candidate_categories": {
+        "pallet": 2
+      }
+    },
+    "blank_control": {
+      "views": 4,
+      "baseline_correct": 4,
+      "candidate_correct": 4,
+      "baseline_categories": {
+        "uncertain": 4
+      },
+      "candidate_categories": {
+        "uncertain": 4
+      }
+    },
+    "marked_blank_control": {
+      "views": 4,
+      "baseline_correct": 4,
+      "candidate_correct": 3,
+      "baseline_categories": {
+        "uncertain": 4
+      },
+      "candidate_categories": {
+        "pallet": 1,
+        "uncertain": 3
+      }
+    },
+    "confirmed_six": {
+      "views": 12,
+      "baseline_correct": 12,
+      "candidate_correct": 12,
+      "baseline_categories": {
+        "pallet": 6,
+        "person": 6
+      },
+      "candidate_categories": {
+        "pallet": 6,
+        "person": 6
+      }
+    },
+    "stress_negative": {
+      "views": 8,
+      "baseline_correct": 6,
+      "candidate_correct": 4,
+      "baseline_categories": {
+        "uncertain": 6,
+        "pallet": 1,
+        "person": 1
+      },
+      "candidate_categories": {
+        "uncertain": 4,
+        "pallet": 1,
+        "person": 3
+      }
+    }
+  },
+  "checks": {
+    "confirmed_six_12_of_12": true,
+    "old_pallets_4_of_4": true,
+    "person_control_2_of_2": true,
+    "plain_blanks_4_of_4": true,
+    "original_marked_blanks_4_of_4": false,
+    "stress_blanks_8_of_8": false,
+    "suspect_conservative_abstention_2_of_2": false,
+    "no_correct_baseline_view_lost": false,
+    "strict_stress_gain": false,
+    "default_budget_guard_passed": true,
+    "old_locator_and_clean_context_bytes_preserved": true,
+    "normal_output_schema_preserved": true,
+    "actual_three_image_encoding_verified": true,
+    "extra_visual_compute_declared": true,
+    "originals_and_references_unchanged": true,
+    "no_successful_request_repeated": true,
+    "all_native_patches_independently_reconstructed": true
+  },
+  "all_automatic_gates_passed": false,
+  "accepted_new_calls_per_part": [
+    10,
+    27
+  ],
+  "c3_assistant_semantic_review_passed": true,
+  "human_localization_approval": false,
+  "all_VLM_development_joint_checks_passed": false
+}

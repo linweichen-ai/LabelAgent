@@ -1,0 +1,157 @@
+{
+  "status": "verified",
+  "prompt_tokens": 515,
+  "image_grid_thw": [
+    [
+      1,
+      32,
+      32
+    ]
+  ],
+  "backend_decode_used": true,
+  "prompt_encoding_matches_recorded_length_and_grid": true,
+  "paths": [
+    {
+      "category": "no",
+      "field_order": "category_first",
+      "tokenization": "canonical",
+      "token_count": 11,
+      "all_tokens_allowed": true,
+      "eos_allowed": true,
+      "first_failure": null
+    },
+    {
+      "category": "no",
+      "field_order": "category_first",
+      "tokenization": "character_pieces",
+      "token_count": 45,
+      "all_tokens_allowed": true,
+      "eos_allowed": true,
+      "first_failure": null
+    },
+    {
+      "category": "no",
+      "field_order": "reason_first",
+      "tokenization": "canonical",
+      "token_count": 10,
+      "all_tokens_allowed": true,
+      "eos_allowed": true,
+      "first_failure": null
+    },
+    {
+      "category": "no",
+      "field_order": "reason_first",
+      "tokenization": "character_pieces",
+      "token_count": 45,
+      "all_tokens_allowed": true,
+      "eos_allowed": true,
+      "first_failure": null
+    },
+    {
+      "category": "yes",
+      "field_order": "category_first",
+      "tokenization": "canonical",
+      "token_count": 11,
+      "all_tokens_allowed": true,
+      "eos_allowed": true,
+      "first_failure": null
+    },
+    {
+      "category": "yes",
+      "field_order": "category_first",
+      "tokenization": "character_pieces",
+      "token_count": 46,
+      "all_tokens_allowed": true,
+      "eos_allowed": true,
+      "first_failure": null
+    },
+    {
+      "category": "yes",
+      "field_order": "reason_first",
+      "tokenization": "canonical",
+      "token_count": 10,
+      "all_tokens_allowed": true,
+      "eos_allowed": true,
+      "first_failure": null
+    },
+    {
+      "category": "yes",
+      "field_order": "reason_first",
+      "tokenization": "character_pieces",
+      "token_count": 46,
+      "all_tokens_allowed": true,
+      "eos_allowed": true,
+      "first_failure": null
+    },
+    {
+      "category": "uncertain",
+      "field_order": "category_first",
+      "tokenization": "canonical",
+      "token_count": 12,
+      "all_tokens_allowed": true,
+      "eos_allowed": true,
+      "first_failure": null
+    },
+    {
+      "category": "uncertain",
+      "field_order": "category_first",
+      "tokenization": "character_pieces",
+      "token_count": 52,
+      "all_tokens_allowed": true,
+      "eos_allowed": true,
+      "first_failure": null
+    },
+    {
+      "category": "uncertain",
+      "field_order": "reason_first",
+      "tokenization": "canonical",
+      "token_count": 11,
+      "all_tokens_allowed": true,
+      "eos_allowed": true,
+      "first_failure": null
+    },
+    {
+      "category": "uncertain",
+      "field_order": "reason_first",
+      "tokenization": "character_pieces",
+      "token_count": 52,
+      "all_tokens_allowed": true,
+      "eos_allowed": true,
+      "first_failure": null
+    }
+  ],
+  "per_label_reachable": {
+    "no": true,
+    "yes": true,
+    "uncertain": true
+  },
+  "all_labels_reachable": true,
+  "model_weights_loaded": false,
+  "new_model_calls": 0,
+  "GPU_calls": 0,
+  "cuda_initialized": false,
+  "limits": "This checks allowed paths with the installed tokenizer and prefix-filter implementation, not relative logits, learned preference, or visual correctness.",
+  "phase": "final_verified",
+  "observed_utc": "2026-11-07T14:06:54.941491+00:00",
+  "audit_source_sha256": "a926b8c65653565d959cb3543bfbe30c5aa1c694628b1fa9f8e2ce50ad7a2de1",
+  "existing_8b_resource_probe": {
+    "readonly": true,
+    "remote_model_writes": false,
+    "model_launched": false,
+    "weight_shards_present": 4,
+    "full_weight_hash_recheck_pending": true,
+    "gpu_inventory_snapshot": "0, NVIDIA GeForce RTX 4090, 24564, 23, 24059\n1, NVIDIA GeForce RTX 4090, 24564, 15, 24067"
+  },
+  "next_capacity_comparison": {
+    "status": "frozen_preparation_not_inference",
+    "plan_sha256": "fa094368c89be657cf1c59ace652d778c9a750bec81968f12d3c18f0ea7125b3",
+    "baseline_cached_quality_requests": 36,
+    "candidate_quality_requests_planned": 36,
+    "candidate_default_guard_requests_planned": 1,
+    "candidate_model_started": false
+  },
+  "candidate_adopted": false,
+  "default_enabled": false,
+  "original_annotations_written": false,
+  "all_joint_checks_passed": false
+}

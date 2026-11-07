@@ -1,0 +1,678 @@
+{
+  "observed_utc": "2026-11-05T08:52:35.524175+00:00",
+  "phase": "complete",
+  "final_complete": true,
+  "studies": [
+    {
+      "name": "conditional_evidence",
+      "status": "stopped",
+      "actual_requests": 5,
+      "requests_started": 5,
+      "archived_responses": 5,
+      "error_type": null,
+      "categories": {
+        "baseline": [
+          {
+            "case_id": "region_15",
+            "role": "protected_pallet",
+            "categories": [
+              "pallet",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "legacy_07",
+            "role": "protected_pallet",
+            "categories": [
+              "pallet",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "region_07",
+            "role": "person_fixture",
+            "categories": [
+              "person",
+              null
+            ]
+          },
+          {
+            "case_id": "legacy_10",
+            "role": "suspected_non_pallet",
+            "categories": [
+              null,
+              null
+            ]
+          },
+          {
+            "case_id": "control_gray",
+            "role": "blank_control",
+            "categories": [
+              null,
+              null
+            ]
+          },
+          {
+            "case_id": "control_white",
+            "role": "blank_control",
+            "categories": [
+              null,
+              null
+            ]
+          },
+          {
+            "case_id": "marked_gray",
+            "role": "marked_blank_control",
+            "categories": [
+              null,
+              null
+            ]
+          },
+          {
+            "case_id": "marked_white",
+            "role": "marked_blank_control",
+            "categories": [
+              null,
+              null
+            ]
+          }
+        ],
+        "candidate": [
+          {
+            "case_id": "region_15",
+            "role": "protected_pallet",
+            "categories": [
+              "uncertain",
+              "uncertain"
+            ]
+          },
+          {
+            "case_id": "legacy_07",
+            "role": "protected_pallet",
+            "categories": [
+              "uncertain",
+              "uncertain"
+            ]
+          },
+          {
+            "case_id": "region_07",
+            "role": "person_fixture",
+            "categories": [
+              "uncertain",
+              null
+            ]
+          },
+          {
+            "case_id": "legacy_10",
+            "role": "suspected_non_pallet",
+            "categories": [
+              null,
+              null
+            ]
+          },
+          {
+            "case_id": "control_gray",
+            "role": "blank_control",
+            "categories": [
+              null,
+              null
+            ]
+          },
+          {
+            "case_id": "control_white",
+            "role": "blank_control",
+            "categories": [
+              null,
+              null
+            ]
+          },
+          {
+            "case_id": "marked_gray",
+            "role": "marked_blank_control",
+            "categories": [
+              null,
+              null
+            ]
+          },
+          {
+            "case_id": "marked_white",
+            "role": "marked_blank_control",
+            "categories": [
+              null,
+              null
+            ]
+          }
+        ]
+      },
+      "development_checks": {
+        "complete": false,
+        "all_original_positive_targets_preserved": false,
+        "all_development_cases_passed": false,
+        "source_bindings_unchanged": true,
+        "plan_unchanged": true
+      }
+    },
+    {
+      "name": "cautious_reason_first",
+      "status": "stopped",
+      "actual_requests": 14,
+      "requests_started": 14,
+      "archived_responses": 14,
+      "error_type": null,
+      "categories": {
+        "baseline": [
+          {
+            "case_id": "region_15",
+            "role": "protected_pallet",
+            "categories": [
+              "pallet",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "legacy_07",
+            "role": "protected_pallet",
+            "categories": [
+              "pallet",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "region_07",
+            "role": "person_fixture",
+            "categories": [
+              "person",
+              "person"
+            ]
+          },
+          {
+            "case_id": "legacy_10",
+            "role": "suspected_non_pallet",
+            "categories": [
+              "person",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "control_gray",
+            "role": "blank_control",
+            "categories": [
+              "pallet",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "control_white",
+            "role": "blank_control",
+            "categories": [
+              "pallet",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "marked_gray",
+            "role": "marked_blank_control",
+            "categories": [
+              "person",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "marked_white",
+            "role": "marked_blank_control",
+            "categories": [
+              null,
+              null
+            ]
+          }
+        ],
+        "candidate": [
+          {
+            "case_id": "region_15",
+            "role": "protected_pallet",
+            "categories": [
+              "uncertain",
+              "uncertain"
+            ]
+          },
+          {
+            "case_id": "legacy_07",
+            "role": "protected_pallet",
+            "categories": [
+              "uncertain",
+              "uncertain"
+            ]
+          },
+          {
+            "case_id": "region_07",
+            "role": "person_fixture",
+            "categories": [
+              "uncertain",
+              "person"
+            ]
+          },
+          {
+            "case_id": "legacy_10",
+            "role": "suspected_non_pallet",
+            "categories": [
+              "uncertain",
+              "uncertain"
+            ]
+          },
+          {
+            "case_id": "control_gray",
+            "role": "blank_control",
+            "categories": [
+              "uncertain",
+              "uncertain"
+            ]
+          },
+          {
+            "case_id": "control_white",
+            "role": "blank_control",
+            "categories": [
+              "uncertain",
+              "uncertain"
+            ]
+          },
+          {
+            "case_id": "marked_gray",
+            "role": "marked_blank_control",
+            "categories": [
+              "uncertain",
+              "uncertain"
+            ]
+          },
+          {
+            "case_id": "marked_white",
+            "role": "marked_blank_control",
+            "categories": [
+              null,
+              null
+            ]
+          }
+        ]
+      },
+      "development_checks": {
+        "complete": false,
+        "all_original_positive_targets_preserved": false,
+        "all_development_cases_passed": false,
+        "source_bindings_unchanged": true,
+        "plan_unchanged": true
+      }
+    },
+    {
+      "name": "self_review_original",
+      "status": "failed",
+      "actual_requests": 1,
+      "requests_started": 1,
+      "archived_responses": 0,
+      "error_type": "AttributeError"
+    },
+    {
+      "name": "self_review_archive_recovery",
+      "status": "failed",
+      "actual_requests": 5,
+      "requests_started": 5,
+      "archived_responses": 5,
+      "error_type": "ValueError",
+      "model_review_rows": [
+        {
+          "case_id": "region_15",
+          "view": "overview",
+          "initial_category": "pallet",
+          "final_category": "uncertain"
+        },
+        {
+          "case_id": "region_15",
+          "view": "linked",
+          "initial_category": "pallet",
+          "final_category": "pallet"
+        },
+        {
+          "case_id": "legacy_07",
+          "view": "overview",
+          "initial_category": "pallet",
+          "final_category": "uncertain"
+        },
+        {
+          "case_id": "legacy_07",
+          "view": "linked",
+          "initial_category": "pallet",
+          "final_category": "uncertain"
+        }
+      ]
+    },
+    {
+      "name": "part_to_object",
+      "status": "complete",
+      "actual_requests": 17,
+      "requests_started": 17,
+      "archived_responses": 17,
+      "error_type": null,
+      "categories": {
+        "baseline": [
+          {
+            "case_id": "region_15",
+            "role": "protected_pallet",
+            "categories": [
+              "pallet",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "legacy_07",
+            "role": "protected_pallet",
+            "categories": [
+              "pallet",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "region_07",
+            "role": "person_fixture",
+            "categories": [
+              "person",
+              "person"
+            ]
+          },
+          {
+            "case_id": "legacy_10",
+            "role": "suspected_non_pallet",
+            "categories": [
+              "person",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "control_gray",
+            "role": "blank_control",
+            "categories": [
+              "pallet",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "control_white",
+            "role": "blank_control",
+            "categories": [
+              "pallet",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "marked_gray",
+            "role": "marked_blank_control",
+            "categories": [
+              "person",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "marked_white",
+            "role": "marked_blank_control",
+            "categories": [
+              "pallet",
+              "pallet"
+            ]
+          }
+        ],
+        "candidate": [
+          {
+            "case_id": "region_15",
+            "role": "protected_pallet",
+            "categories": [
+              "pallet",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "legacy_07",
+            "role": "protected_pallet",
+            "categories": [
+              "pallet",
+              "uncertain"
+            ]
+          },
+          {
+            "case_id": "region_07",
+            "role": "person_fixture",
+            "categories": [
+              "person",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "legacy_10",
+            "role": "suspected_non_pallet",
+            "categories": [
+              "uncertain",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "control_gray",
+            "role": "blank_control",
+            "categories": [
+              "uncertain",
+              "uncertain"
+            ]
+          },
+          {
+            "case_id": "control_white",
+            "role": "blank_control",
+            "categories": [
+              "pallet",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "marked_gray",
+            "role": "marked_blank_control",
+            "categories": [
+              "uncertain",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "marked_white",
+            "role": "marked_blank_control",
+            "categories": [
+              "pallet",
+              "pallet"
+            ]
+          }
+        ]
+      },
+      "development_checks": {
+        "complete": true,
+        "all_original_positive_targets_preserved": false,
+        "all_development_cases_passed": false,
+        "source_bindings_unchanged": true,
+        "plan_unchanged": true
+      }
+    },
+    {
+      "name": "fresh_comparison",
+      "status": "complete",
+      "actual_requests": 25,
+      "requests_started": 25,
+      "archived_responses": 25,
+      "error_type": null,
+      "categories": {
+        "baseline": [
+          {
+            "case_id": "N1_pallet_proposal",
+            "role": "new_unconfirmed_SAM_proposal",
+            "categories": [
+              "pallet",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "N1_person_proposal",
+            "role": "new_unconfirmed_SAM_proposal",
+            "categories": [
+              "person",
+              "person"
+            ]
+          },
+          {
+            "case_id": "N2_pallet_proposal",
+            "role": "new_unconfirmed_SAM_proposal",
+            "categories": [
+              "pallet",
+              "person"
+            ]
+          },
+          {
+            "case_id": "N2_person_proposal",
+            "role": "new_unconfirmed_SAM_proposal",
+            "categories": [
+              "person",
+              "person"
+            ]
+          },
+          {
+            "case_id": "N3_pallet_proposal",
+            "role": "new_unconfirmed_SAM_proposal",
+            "categories": [
+              "pallet",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "N3_person_proposal",
+            "role": "new_unconfirmed_SAM_proposal",
+            "categories": [
+              "person",
+              "person"
+            ]
+          }
+        ],
+        "candidate": [
+          {
+            "case_id": "N1_pallet_proposal",
+            "role": "new_unconfirmed_SAM_proposal",
+            "categories": [
+              "pallet",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "N1_person_proposal",
+            "role": "new_unconfirmed_SAM_proposal",
+            "categories": [
+              "person",
+              "uncertain"
+            ]
+          },
+          {
+            "case_id": "N2_pallet_proposal",
+            "role": "new_unconfirmed_SAM_proposal",
+            "categories": [
+              "pallet",
+              "uncertain"
+            ]
+          },
+          {
+            "case_id": "N2_person_proposal",
+            "role": "new_unconfirmed_SAM_proposal",
+            "categories": [
+              "person",
+              "person"
+            ]
+          },
+          {
+            "case_id": "N3_pallet_proposal",
+            "role": "new_unconfirmed_SAM_proposal",
+            "categories": [
+              "pallet",
+              "pallet"
+            ]
+          },
+          {
+            "case_id": "N3_person_proposal",
+            "role": "new_unconfirmed_SAM_proposal",
+            "categories": [
+              "person",
+              "person"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "new_actual_requests": 67,
+  "archived_responses": 66,
+  "one_response_lost_to_original_archive_bug": true,
+  "recovery_repeat_is_not_independent_sample": true,
+  "incumbent": "fixed 3x context point/corner views; both original pallets PAL/PAL",
+  "incumbent_retained": true,
+  "candidate_adopted": false,
+  "default_enabled": false,
+  "new_SAM_calls": 0,
+  "original_annotations_written": false,
+  "workbench_written": false,
+  "new_model_training": false,
+  "external_guards_used_to_claim_raw_improvement": false,
+  "targeted_tests_passed": 25,
+  "unique_new_tests": 11,
+  "full_suite_rerun_claimed": false,
+  "novelty": {
+    "dataset": "Capture_20261103",
+    "frames": [
+      30,
+      57,
+      35
+    ],
+    "camera": 1,
+    "audited_metadata_files": 460,
+    "excluded_timestamps": 107,
+    "scope": "No prior VLM exposure found in audited local metadata; missing/external logs cannot be ruled out.",
+    "all608_images_previously_seen_by_SAM": true,
+    "independent_scene": false,
+    "selected_before_fresh_inference": true,
+    "selected_by_model_results": false,
+    "labels_used_for_selection": false,
+    "targets": 6,
+    "views_per_target": 2
+  },
+  "fresh_accuracy_measured": false,
+  "fresh_human_truth_available": false,
+  "fresh_plan_sha256": "a710e5957768b4774d310b7e58e89566c3e8671106ced839e2250eacde8e17d6",
+  "reserved_manifest_sha256": "70ff9d843f443e9a276eaeb21f3cb77fa340f900064d4288b9695d26e8929bc8",
+  "raw_media_masks_coordinates_credentials_and_private_paths_published": false,
+  "verification": {
+    "original29_replay": {
+      "cases": 29,
+      "human_correct": 15,
+      "human_wrong": 0,
+      "legacy_pallet_correct": 3,
+      "two_pallets_all_four_views_PAL": true,
+      "new_model_calls": 0
+    },
+    "fresh_comparison": {
+      "quality_rows": 24,
+      "targets": 6,
+      "frames": 3,
+      "changed_views": 2,
+      "accuracy_measured": false,
+      "missing_independent_2D_truth": true,
+      "all_selected_regions_retained": true,
+      "reconstructed_JPEGs": 12,
+      "generic_development_expected_checks_inapplicable": true,
+      "baseline_abstentions": 0,
+      "baseline_consistent_pairs": 5,
+      "candidate_abstentions": 2,
+      "candidate_consistent_pairs": 4
+    },
+    "new_requests_total": 67,
+    "archived_response_count": 66,
+    "unarchived_response_count": 1,
+    "all_source_bindings_unchanged": true,
+    "original_state_unchanged": true,
+    "approved_reference_unchanged": true,
+    "new_response_ids_unique": true
+  }
+}

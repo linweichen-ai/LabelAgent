@@ -1,0 +1,126 @@
+{
+  "phase": "final_verified",
+  "observed_utc": "2026-11-07T18:17:43.514882+00:00",
+  "status": "complete",
+  "generate_replays_for_new_instrumentation": 8,
+  "maximum_instrumented_generations": 8,
+  "teacher_forced_label_forwards": 108,
+  "maximum_label_forwards": 108,
+  "score_conditions_collected": 36,
+  "score_condition_budget": 36,
+  "cases": 18,
+  "quality_trace_cases": 7,
+  "default_guard_traces": 1,
+  "complete_trace_text_matches": 8,
+  "category_trace_matches": 8,
+  "primary_method": "Canonical complete label-and-closing-quote raw log-likelihood sum; exact ties uncertain",
+  "secondary_method": "Schema-normalized full path sum; diagnostic only",
+  "fixed_JSON_prefix": "{\"category\":\"",
+  "fixed_prefix_and_single_tokenization_caveat": true,
+  "category_only_diagnostic_not_full_reason_or_Agent_acceptance": true,
+  "original_plan_sha256": "ef6c9e5c362bcf2788834e8638c781b110476c8ea81ad77bd838d10a11899752",
+  "helper_source_sha256": "9a2a9ef48afe5cb040a27a27fc7d2efe8531073e64ae0a332f84018f1503ba7a",
+  "worker_source_sha256": "388d85284afe4c2b8dc03b640d8f72356370f62367001e23ba60ccdc1889deaf",
+  "replay_is_not_new_independent_data": true,
+  "original_annotations_written": false,
+  "new_segmentation_inference": false,
+  "candidate_adopted": false,
+  "default_enabled": false,
+  "independent_generalization": false,
+  "groups": {
+    "protected_pallet": {
+      "conditions": 4,
+      "original_correct": 4,
+      "recent_prompt_correct": 4,
+      "primary_score_correct": 4,
+      "secondary_score_correct": 4
+    },
+    "person_fixture": {
+      "conditions": 2,
+      "original_correct": 2,
+      "recent_prompt_correct": 2,
+      "primary_score_correct": 2,
+      "secondary_score_correct": 2
+    },
+    "suspected_non_pallet": {
+      "conditions": 2,
+      "original_correct": 0,
+      "recent_prompt_correct": 0,
+      "primary_score_correct": 0,
+      "secondary_score_correct": 0
+    },
+    "blank_control": {
+      "conditions": 4,
+      "original_correct": 4,
+      "recent_prompt_correct": 4,
+      "primary_score_correct": 4,
+      "secondary_score_correct": 4
+    },
+    "marked_blank_control": {
+      "conditions": 4,
+      "original_correct": 4,
+      "recent_prompt_correct": 4,
+      "primary_score_correct": 3,
+      "secondary_score_correct": 3
+    },
+    "confirmed_six": {
+      "conditions": 12,
+      "original_correct": 12,
+      "recent_prompt_correct": 12,
+      "primary_score_correct": 12,
+      "secondary_score_correct": 12
+    },
+    "stress_negative": {
+      "conditions": 8,
+      "original_correct": 6,
+      "recent_prompt_correct": 6,
+      "primary_score_correct": 3,
+      "secondary_score_correct": 3
+    }
+  },
+  "category_diagnostic_gates": {
+    "confirmed_six_12_of_12": true,
+    "old_pallets_4_of_4": true,
+    "person2_of2": true,
+    "plain_blanks4_of4": true,
+    "original_marked4_of4": false,
+    "stress8_of8": false,
+    "suspect_policy2_of2": false,
+    "no_correct_original_lost": false,
+    "strict_stress_gain": false
+  },
+  "all_primary_category_diagnostic_gates_passed": false,
+  "total_new_model_executions": 116,
+  "shared_services_healthy_after_owned_worker_exit": true,
+  "own_allocator_bytes_before_exit": 9569280,
+  "full_joint_adoption_checks_passed": false,
+  "fresh_selected_decoder_reason_review_completed": false,
+  "hard_blank_trace_observations": [
+    {
+      "control": "gray",
+      "observed_category": "person",
+      "selected_first_token": 8987,
+      "canonical_pallet_first_token_allowed": true,
+      "canonical_person_first_token_allowed": true,
+      "canonical_uncertain_first_token_allowed": true,
+      "raw_person_first_token_score": 38.5,
+      "raw_uncertain_first_token_score": 37.75,
+      "raw_person_minus_uncertain": 0.75,
+      "raw_and_processed_person_equal": true,
+      "raw_and_processed_uncertain_equal": true
+    },
+    {
+      "control": "gradient",
+      "observed_category": "person",
+      "selected_first_token": 8987,
+      "canonical_pallet_first_token_allowed": true,
+      "canonical_person_first_token_allowed": true,
+      "canonical_uncertain_first_token_allowed": true,
+      "raw_person_first_token_score": 38.25,
+      "raw_uncertain_first_token_score": 37.25,
+      "raw_person_minus_uncertain": 1.0,
+      "raw_and_processed_person_equal": true,
+      "raw_and_processed_uncertain_equal": true
+    }
+  ]
+}

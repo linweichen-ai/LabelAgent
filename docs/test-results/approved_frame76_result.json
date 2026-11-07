@@ -1,0 +1,78 @@
+{
+  "status": "complete",
+  "completed_utc": "2026-11-04T02:57:30.990684+00:00",
+  "human_approved_reference": true,
+  "approved_reference_frame": 0,
+  "approved_reference_count": 15,
+  "approved_reference_sha256": "9725a6336daf8ef3eaba96921900c609cd12348cdbac28cc4451aaf9893792f2",
+  "target_frame": 76,
+  "camera": 1,
+  "actual_candidate_counts": {
+    "pallet": 9,
+    "person": 2
+  },
+  "candidate_count": 11,
+  "review_rounds": 1,
+  "actual_edit_operations": 0,
+  "converged": true,
+  "stop_reason": "done",
+  "observed_successful_new_SAM3_calls": 2,
+  "observed_successful_new_VLM_review_calls": 1,
+  "observed_successful_reference_description_calls": 1,
+  "description_attempt_count_scope": "workbench description trace retains latest call; not an assertion about unretained retry attempts",
+  "description_seconds_observed": 15.765,
+  "agent_browser_roundtrip_seconds": 63.67,
+  "description_characters": 700,
+  "final_reason_characters": 180,
+  "description_ends_mid_sentence": true,
+  "final_reason_ends_mid_sentence": true,
+  "description_mentions_target_before_target_supplied": true,
+  "new_geometry_and_classes_match_prior_frame76": false,
+  "exact_candidate_json_matches_prior_frame76": false,
+  "original_frame76_counts": {
+    "pallet": 9,
+    "person": 2
+  },
+  "reference_description_prompts": [
+    {
+      "label": "pallet",
+      "text": "pallet"
+    },
+    {
+      "label": "person",
+      "text": "person"
+    }
+  ],
+  "target_confirmed_as_truth": false,
+  "pixel_accuracy_evaluated": false,
+  "all_preservation_checks_passed": true,
+  "preservation_checks": {
+    "all_seven_previous_sessions_preserved": true,
+    "approved_reference_exact": true,
+    "approved_reference_only_truth_in_new_session": true,
+    "target_76_remains_unconfirmed": true,
+    "only_target_76_candidate": true,
+    "only_target_76_agent_run": true,
+    "model_configuration_preserved": true,
+    "labels_preserved": true,
+    "reference_file_hash_matches_approval": true,
+    "original_mcap_unchanged": true,
+    "review_mcap_unchanged": true,
+    "source_target_image_unchanged": true,
+    "browser_no_page_errors": true,
+    "browser_no_failed_responses": true,
+    "all_1023_original_source_files_unchanged": true,
+    "original_dataset_mcap_unchanged": true
+  },
+  "original_source_files_checked": 1023,
+  "previous_sessions_checked": 7,
+  "inspection_assets_archived": 6,
+  "browser_left_on_frame": 76,
+  "browser_final_stage": "Agent 标注结果",
+  "reference_mask_convention": "outer contour, small grid holes not individually excluded; no occlusion extrapolation",
+  "execution": "visible workbench UI, actual describe and run endpoints; no offline candidate replay",
+  "model": "Qwen3-VL-2B-Instruct NF4; sequential SAM3/VLM on local 8GB GPU",
+  "independent_evaluation": false,
+  "annotation_quality_gain_proven": false,
+  "raw_assets_uploaded": false
+}

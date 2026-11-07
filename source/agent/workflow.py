@@ -193,11 +193,13 @@ def sam_text(image, prompt, config):
     return sam_request(config, "/segment_text", image, prompt=prompt).get("results", [])
 
 
-def chat(config, instruction, image, extra_images=()):
+def chat(config, instruction, image, extra_images=(), response_schema=None):
     record = {"id": uuid.uuid4().hex, "service": "GPT", "status": "running",
               "started_at": time.time(), "input": {"model": config.get("llm_model"),
               "instruction": instruction, "images": [_image_summary(data)
               for data in (image, *extra_images)]}}
+    if response_schema is not None:
+        record["input"]["response_schema"] = response_schema
     review_call = _review_call.get()
     if review_call is not None:
         record.update(review_attempt=review_call["attempt"],
@@ -208,7 +210,8 @@ def chat(config, instruction, image, extra_images=()):
     raw = {}
     _emit_trace(record)
     try:
-        response = _cancellable_call(_chat, config, instruction, image, extra_images, raw)
+        options = {"response_schema": response_schema} if response_schema is not None else {}
+        response = _cancellable_call(_chat, config, instruction, image, extra_images, raw, **options)
         record.update(status="succeeded", output={"raw_text": raw.get("text"),
                                                    "parsed": response})
         return response
@@ -222,7 +225,7 @@ def chat(config, instruction, image, extra_images=()):
         _emit_trace(record)
 
 
-def _chat(config, instruction, image, extra_images=(), raw=None):
+def _chat(config, instruction, image, extra_images=(), raw=None, response_schema=None):
     if not config.get("llm_url") or not config.get("llm_model"):
         raise ValueError("请先配置大模型地址和模型名")
     content = [{"type": "text", "text": instruction}]
@@ -231,6 +234,10 @@ def _chat(config, instruction, image, extra_images=(), raw=None):
             "data:image/jpeg;base64," + base64.b64encode(data).decode()}})
     payload = {"model": config["llm_model"], "temperature": 0,
                "messages": [{"role": "user", "content": content}]}
+    if config.get("llm_prompt_profile") == "compact":
+        payload["max_tokens"] = 768
+    if response_schema is not None:
+        payload["response_format"] = {"type": "json_schema", "json_schema": {"name": "labelagent", "schema": response_schema, "strict": True}}
     request = urllib.request.Request(config["llm_url"].rstrip("/") + "/chat/completions",
         json.dumps(payload).encode(), headers={"Content-Type": "application/json",
         "Authorization": "Bearer " + config.get("llm_key", "")})
@@ -305,7 +312,37 @@ def restrict_description(result, labels):
     return {"description": result["description"].strip(), "prompts": prompts}
 
 
-DESCRIPTION_INPUT_VERSION = 5
+DESCRIPTION_INPUT_VERSION = 8
+
+COMPACT_REFERENCE_RULES = """Use the supplied reference contours as the task example. Their review status is not inferred.
+Only annotate the listed classes. Inspect original images for appearance and outlined images for geometry.
+Overlay colors are not object colors. Preserve correct visible regions and excluded holes; do not invent occluded regions.
+Instances, positions and counts can differ between frames. Never copy reference coordinates to the target.
+Reference bounding boxes summarize contours, not rectangular segmentation masks.
+Make conservative local edits only when supported by target-image and reference evidence.
+"""
+
+COMPACT_REVIEW_TOOLS = """Return one JSON object with fields status, reason, hole_assessment, operations.
+Use status "done" and empty operations when no supported edit remains; otherwise status "continue". reason explains visual evidence.
+Every operation needs operation and reason. shape_ids are existing integer IDs; polygon is [[x,y],...] with at least 3 target-image pixel points.
+Tools:
+remove: shape_ids:[id], only for an entirely false-positive instance.
+reclassify: shape_ids:[id], label:allowed class.
+add_region, erase_region: shape_ids:[id], polygon:local repair region.
+merge: shape_ids:[id1,id2,...], label:allowed class, only one real instance.
+split: shape_ids:[id], polygon:region separating instances.
+fill_gap: shape_ids:[id], hole_id:listed ID, polygon:local repair region.
+sam_points: shape_ids:[id], polygon:local region, points:list of objects with numeric x,y and integer label (1 positive, 0 negative), 1-32 points with a positive point.
+Never use sam_text in review or replace an entire correct object to repair its boundary.
+After an edit, choose continue and inspect again. When no supported edit remains choose done with no operations; never needs_review.
+If pending_sam_shape is present, add sam_assessment with boolean improved and string reason explaining the comparison.
+If not improved, the previous geometry is restored and only OpenCV local edits are allowed for that shape.
+For every listed hole return an object with hole_id, semantic ("ground" or "non_ground"), and reason in hole_assessment.
+Ground holes must be repaired with fill_gap before done. Never fill equipment or infer semantics from geometry alone.
+For floor tasks, include visible floor markings regardless of their color, without filling occluded parts.
+Image 1: target original. Image 2: target candidates with IDs. Image 3: target holes/binary-mask overview.
+If reference_provided, images 4 and 5 are reference original and reference contours.
+"""
 
 # Shared by description generation and every subsequent candidate review.
 REFERENCE_PRINCIPLES = """
@@ -355,9 +392,36 @@ def describe(config, image, annotations, labels, marked_image=None):
               "例如 floor、wooden pallet；不得写完整句子、排除项或边界规则。"
               "每个允许类别必须有且只有一个 prompt。"
               f"\n允许类别：{json.dumps(labels, ensure_ascii=False)}"
-              f"\n真值：{json.dumps(annotations, ensure_ascii=False)}")
-    result = chat(config, prompt, image, extra_images=(marked_image,) if marked_image else ())
-    return restrict_description(result, labels)
+              "\n密集轮廓的几何文本可能是边界范围摘要；精确边界以单独的参考轮廓图为准。"
+              f"\n真值：{json.dumps(reference_geometry(annotations), ensure_ascii=False)}")
+    if config.get("llm_prompt_profile") == "compact":
+        prompt = (COMPACT_REFERENCE_RULES
+            + '\n图片1是参考原图，图片2是洋红色参考轮廓。只返回JSON对象，包含description和prompts两个字段。'
+              'description用英文描述每个类别在图中的实际对象、可见边界、实例归属和排除范围，不要复述提示原则。'
+              'prompts是对象数组，每项包含label和text。label必须逐字使用允许类别，每个类别各一项，不能合并类别。'
+              'text为对应类别的1到4个英文关键词，供SAM3分割使用。'
+            + '\nInput: ' + json.dumps({"labels": labels, "reference_geometry": reference_geometry(annotations)},
+                                       ensure_ascii=False, separators=(",", ":")))
+    last_error, last_result = None, None
+    for attempt in range(MAX_PROTOCOL_RETRIES + 1):
+        instruction = prompt
+        if attempt:
+            instruction += ("\n上一份输出未通过格式检查，请修正后重新返回完整JSON。错误：" + str(last_error)
+                            + "\n上次输出：" + json.dumps(last_result, ensure_ascii=False)[:4000])
+        try:
+            options = {}
+            if config.get("llm_prompt_profile") == "compact":
+                from .protocol_schema import description_schema
+                options["response_schema"] = description_schema(labels)
+            result = chat(config, instruction, image, extra_images=(marked_image,) if marked_image else (), **options)
+        except ModelOutputError as error:
+            last_error, last_result = error, {"raw_text": error.raw_text}
+            continue
+        try:
+            return restrict_description(result, labels)
+        except ValueError as error:
+            last_error, last_result = error, result
+    raise ValueError(f"参考规范多次未通过协议校验：{last_error}")
 
 
 REPAIR_PRINCIPLES = """
@@ -515,8 +579,70 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
     return result
 
 
+def _review_exact_overlap(config, image, overlay, group, shapes, labels):
+    """Ask the VLM about one identical-mask group before the general review."""
+    source = Image.open(io.BytesIO(image)).convert("RGB")
+    marked = Image.open(io.BytesIO(overlay)).convert("RGB")
+    by_id = {shape["id"]: shape for shape in shapes}
+    boxes = [by_id[identifier]["bbox"] for identifier in group["shape_ids"]]
+    left, top = min(box[0] for box in boxes), min(box[1] for box in boxes)
+    right, bottom = max(box[2] for box in boxes), max(box[3] for box in boxes)
+    padding = max(32, round(max(right-left, bottom-top)*.15))
+    crop = (max(0,left-padding),max(0,top-padding),
+            min(source.width,right+padding+1),min(source.height,bottom+padding+1))
+    def encode(picture):
+        output = io.BytesIO()
+        picture.crop(crop).save(output,"JPEG",quality=92)
+        return output.getvalue()
+    original_crop = encode(source)
+    presence_schema = {"type":"object","properties":{
+        "evidence":{"type":"string","enum":["present","absent","uncertain"]},
+        "reason":{"type":"string","minLength":1,"maxLength":120}},
+        "required":["evidence","reason"],"additionalProperties":False}
+    presence = chat(config,
+        f"Observe this uncolored photograph crop. Is a {group['label']!r} visibly present?"
+        " Return a JSON object with evidence and reason. evidence is present, absent, or uncertain."
+        " Use only the actual photograph. A blank field or uniform color contains no visible object."
+        " Do not infer an object from the class name in the question. reason is one short English sentence.",
+        original_crop,response_schema=presence_schema)
+    if (not isinstance(presence,dict) or presence.get("evidence") not in {"present","absent","uncertain"}
+            or not isinstance(presence.get("reason"),str) or not presence["reason"].strip()):
+        raise ValueError("重复候选原图检查未返回有效的 evidence 和 reason")
+    if presence["evidence"] != "present":
+        return None
+    schema = {"type":"object","properties":{
+        "decision":{"type":"string","enum":["merge","keep"]},
+        "reason":{"type":"string","minLength":1,"maxLength":180}},
+        "required":["decision","reason"],"additionalProperties":False}
+    instruction = ("Inspect a possible duplicate annotation, using these two crops of the SAME target image."
+        " Image 1 is uncolored; image 2 shows the candidate masks. Overlay colors are not object colors."
+        f" Candidate IDs {group['shape_ids']} all have label {group['label']!r} and pixel-identical masks."
+        " Decide whether these IDs annotate one visible object redundantly or represent separate objects."
+        " Return JSON with decision and reason. decision='merge' only when the same single visible object"
+        " has been annotated more than once. Otherwise, including uncertain cases, decision='keep'."
+        " A merge preserves the entire mask and its class. Do not change any other object."
+        " Give one short English sentence of visible evidence in reason. No coordinates or other fields.")
+    result = chat(config,instruction,original_crop,extra_images=(encode(marked),),response_schema=schema)
+    if not isinstance(result,dict) or result.get("decision") not in {"merge","keep"} or not isinstance(result.get("reason"),str) or not result["reason"].strip():
+        raise ValueError("重复候选复核未返回有效的 decision 和 reason")
+    if result["decision"] == "keep":
+        return None
+    decision = {"status":"continue","reason":result["reason"],"hole_assessment":[],
+                "operations":[{"operation":"merge","shape_ids":group["shape_ids"],
+                               "label":group["label"],"reason":result["reason"]}]}
+    return _validate_review_result(decision,[],shapes,labels,source.width,source.height)
+
+
 def review(config, image, overlay, description, shapes, labels, history, reference=None,
-           sam_comparison=None, hole_image=None, holes=None, gap_images=None):
+           sam_comparison=None, hole_image=None, holes=None, gap_images=None, duplicate_groups=None):
+    # Enabled only by the isolated evaluation tool while quality tests continue.
+    if not config.get("llm_duplicate_review", False):
+        duplicate_groups = None
+    if (config.get("llm_prompt_profile") == "compact" and duplicate_groups
+            and not holes and sam_comparison is None):
+        focused = _review_exact_overlap(config,image,overlay,duplicate_groups[0],shapes,labels)
+        if focused is not None:
+            return focused
     width, height = Image.open(io.BytesIO(image)).size
     prompt = (TOOLS + REFERENCE_PRINCIPLES + REPAIR_PRINCIPLES
         + "\n只能标注参考帧真值中已有的类别；即使图中可见其他物体，也不得为其创建标注。"
@@ -568,6 +694,48 @@ def review(config, image, overlay, description, shapes, labels, history, referen
                    "必须对照未着色原图识别标线，再检查同位置二值图是否为白色；"
                    "黑色或粉色都表示尚未纳入地面，不能声称已完整包含。")
         extra_images += (sheet,)
+    if config.get("llm_prompt_profile") == "compact":
+        floor_task = any(label.strip().lower() in {"地面", "floor", "ground"} for label in labels)
+        if not floor_task and not holes:
+            extra_images = (overlay,)
+            if reference is not None:
+                extra_images += (reference["image"], reference["marked_image"])
+            if sam_comparison is not None:
+                extra_images += (sam_comparison["before_image"],)
+            extra_images += tuple(sheet for sheet, _ in gap_images or [])
+        payload = {"target_size": [width, height], "labels": labels, "rules": description.get("description", ""),
+                   "prompts": description["prompts"], "candidates": shapes, "recent_history": history[-3:],
+                   "holes": hole_report, "reference_provided": reference is not None}
+        if reference is not None:
+            payload["reference_counts"] = {label: sum(shape.get("label") == label for shape in reference["annotations"]) for label in labels}
+            if floor_task:
+                payload["reference_geometry"] = reference_geometry(reference["annotations"])
+        base_image_count = 1 + len(extra_images) - int(sam_comparison is not None) - len(gap_images or [])
+        if sam_comparison is not None:
+            payload["pending_sam_shape"] = sam_comparison["shape_id"]
+            payload["sam_before_image"] = base_image_count + 1
+        if gap_images:
+            first = base_image_count + 1 + int(sam_comparison is not None)
+            payload["gap_details"] = [{"image": first+i, "original_crop_ranges": reports}
+                                      for i, (_, reports) in enumerate(gap_images)]
+        prompt = COMPACT_REFERENCE_RULES + COMPACT_REVIEW_TOOLS + "\nInput: " + json.dumps(
+            payload, ensure_ascii=False, separators=(",", ":"))
+        if not floor_task and not holes:
+            prompt += ("\n本轮只标注提供的物体类别，不标注地面。图片1是目标原图，图片2是目标候选；"
+                       "图片3、4分别是参考原图和参考轮廓，覆盖此前通用图号说明。"
+                       "holes列表为空，hole_assessment必须是空数组，禁止编造孔洞编号。"
+                       "reference_counts是参考图的真实标注数量，目标图数量不同完全正常，不能因此修改。")
+        prompt += ("\nreason最多一句话，每轮最多3个有视觉证据的局部操作。仅允许使用candidates中的ID。"
+                   "所有reason使用英文。无法可靠定位缺陷时保持候选，返回done且operations为空。不要复述所有实例，不要输出额外解释。")
+    if duplicate_groups:
+        prompt += ("\nExact same-class raster-mask overlap groups: "
+                   + json.dumps(duplicate_groups, separators=(",", ":"))
+                   + "\nEach listed group has pixel-identical masks and the same label. This is a geometry observation,"
+                     " not a new reference annotation. Check whether its IDs describe one visible object twice."
+                     " If so, remove one redundant candidate or merge the IDs, preserve the visible mask and other instances,"
+                     " then return continue to inspect the result in the next round."
+                     " Do not infer duplicates from equal boxes or different-frame counts."
+                     " Return a concrete operation only when the target image supports the duplicate interpretation.")
     last_result = None
     last_error = None
     for attempt in range(MAX_PROTOCOL_RETRIES + 1):
@@ -583,7 +751,11 @@ def review(config, image, overlay, description, shapes, labels, history, referen
         try:
             check_cancelled()
             try:
-                last_result = chat(config, request_prompt, image, extra_images=extra_images)
+                options = {}
+                if config.get("llm_prompt_profile") == "compact":
+                    from .protocol_schema import review_schema
+                    options["response_schema"] = review_schema(labels, shapes, holes, sam_comparison is not None)
+                last_result = chat(config, request_prompt, image, extra_images=extra_images, **options)
             except ModelOutputError as error:
                 last_result = {"raw_text": error.raw_text}
                 last_error = error
@@ -603,6 +775,25 @@ def review(config, image, overlay, description, shapes, labels, history, referen
         finally:
             _review_call.reset(token)
     raise ValueError(f"GPT 协议校验重试 {MAX_PROTOCOL_RETRIES} 次后仍失败：{last_error}")
+
+
+def reference_overlay(image, shapes):
+    """Outline the reference without recoloring its real appearance."""
+    result = Image.open(io.BytesIO(image)).convert("RGB")
+    draw = ImageDraw.Draw(result)
+    for number, shape in enumerate(shapes, 1):
+        for part in shape.get("parts") or [shape]:
+            for ring in [part.get("points", []), *(part.get("holes") or [])]:
+                points = [tuple(point) for point in ring]
+                if len(points) >= 3:
+                    draw.line(points+points[:1], fill=(255, 0, 255), width=3)
+        points = shape.get("points", [])
+        if points:
+            draw.text(tuple(points[0]), f"{number} {shape['label']}", fill=(255, 0, 255),
+                      stroke_width=2, stroke_fill=(0, 0, 0))
+    output = io.BytesIO()
+    result.save(output, "JPEG", quality=88)
+    return output.getvalue()
 
 
 def candidate_overlay(image, shapes):
@@ -718,6 +909,20 @@ def _shape_summary(shape):
             "bbox": [min(xs), min(ys), max(xs), max(ys)], "vertices": len(points)}
 
 
+def _exact_duplicate_groups(shapes, width, height):
+    """Expose pixel-identical candidate masks as evidence, never apply edits."""
+    from .edit_agent import _rasterize
+    groups = {}
+    for shape in shapes:
+        mask = _rasterize(shape, width, height)
+        if not mask.any():
+            continue
+        key = (shape["label"], hashlib.sha256(mask.tobytes()).digest())
+        group = groups.setdefault(key, {"label": shape["label"], "shape_ids": [], "pixels": int(mask.sum())})
+        group["shape_ids"].append(shape["id"])
+    return [group for group in groups.values() if len(group["shape_ids"]) > 1]
+
+
 def _fingerprint(shapes):
     geometry = [{key: shape.get(key) for key in ("id", "label", "points", "holes", "parts")}
                 for shape in shapes]
@@ -798,7 +1003,9 @@ class AnnotationAgent:
                     self.description, [_shape_summary(shape) for shape in self.shapes],
                     self.labels, self.audit, reference=self.reference, sam_comparison=comparison,
                     hole_image=hole_overlay(self.image, holes, self.shapes), holes=holes,
-                    gap_images=gap_images)
+                    gap_images=gap_images,
+                    duplicate_groups=(_exact_duplicate_groups(self.shapes, self.width, self.height)
+                                      if self.config.get("llm_duplicate_review", False) else None))
                 if pending:
                     assessment = decision.get("sam_assessment")
                     if not isinstance(assessment, dict) or type(assessment.get("improved")) is not bool:

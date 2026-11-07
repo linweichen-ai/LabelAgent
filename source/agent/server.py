@@ -15,11 +15,12 @@ from flask import Flask, jsonify, request, send_file
 from PIL import Image, ImageDraw
 import numpy as np
 
-from .mcap_video import Video
+from .media import IMAGE_SUFFIXES, SUPPORTED_SUFFIXES, open_media as Video, read_image
 from .sensors import cloud_snapshot
+from .candidate_import import prepare_candidate_import, merge_candidate_import
 from .workflow import (DESCRIPTION_INPUT_VERSION, MAX_REVIEW_ROUNDS, RunCancelled,
                        cancellation, describe, reference_labels, restrict_description,
-                       run, trace_calls, candidate_overlay)
+                       run, trace_calls, candidate_overlay, reference_overlay)
 
 ROOT = Path(__file__).resolve().parents[2]
 WORK = ROOT / "work"
@@ -34,14 +35,25 @@ run_status = {"status": "idle"}
 run_stop_event = threading.Event()
 
 
+def _commit_work_file(temporary, destination):
+    for attempt in range(10):
+        try:
+            temporary.replace(destination)
+            return
+        except PermissionError:
+            if attempt == 9:
+                raise
+            time.sleep(min(.05 * 2**attempt, 1.0))
+
+
 def state_path():
     return WORK / "state.json"
 
 
 def save():
     temporary = state_path().with_suffix(".tmp")
-    temporary.write_text(json.dumps({k: v for k, v in state.items() if k != "video"}, ensure_ascii=False, indent=2))
-    temporary.replace(state_path())
+    temporary.write_text(json.dumps({k: v for k, v in state.items() if k != "video"}, ensure_ascii=False, indent=2), encoding="utf-8")
+    _commit_work_file(temporary, state_path())
 
 
 def update_run_status(**changes):
@@ -52,15 +64,15 @@ def update_run_status(**changes):
 def save_run(output):
     path = WORK / "last_run.json"
     temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps(output, ensure_ascii=False, indent=2))
-    temporary.replace(path)
+    temporary.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
+    _commit_work_file(temporary, path)
 
 
 def save_debug(trace):
     path = WORK / "model_debug.json"
     temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps({"trace": trace}, ensure_ascii=False, indent=2))
-    temporary.replace(path)
+    temporary.write_text(json.dumps({"trace": trace}, ensure_ascii=False, indent=2), encoding="utf-8")
+    _commit_work_file(temporary, path)
 
 
 def inspection_image_names(value):
@@ -89,7 +101,7 @@ def save_inspection_image(data):
     if not path.exists():
         temporary = folder / (uuid.uuid4().hex + ".tmp")
         temporary.write_bytes(data)
-        temporary.replace(path)
+        _commit_work_file(temporary, path)
     return "/api/inspection/image/" + name
 
 
@@ -103,8 +115,8 @@ def inspection_image(name):
 def save_description_trace(trace, description):
     path = WORK / "description_debug.json"
     temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps({"trace": trace, "description": description}, ensure_ascii=False))
-    temporary.replace(path)
+    temporary.write_text(json.dumps({"trace": trace, "description": description}, ensure_ascii=False), encoding="utf-8")
+    _commit_work_file(temporary, path)
 
 
 def redact_debug(value):
@@ -120,7 +132,7 @@ def redact_debug(value):
 
 def load():
     if state_path().exists():
-        stored = json.loads(state_path().read_text())
+        stored = json.loads(state_path().read_text(encoding="utf-8"))
         state.update(stored)
     for key in ("sam_url", "cvat_url", "cvat_token"):
         state["config"].pop(key, None)
@@ -142,27 +154,14 @@ def frame_image(index):
 def reference_signature(index):
     reference = {"file": str(state["video"].path), "topic": state["topic"], "frame": index,
                  "description_input_version": DESCRIPTION_INPUT_VERSION,
+                 "prompt_profile": state.get("config", {}).get("llm_prompt_profile", "full"),
                  "truth": state["truth"][str(index)]}
     payload = json.dumps(reference, ensure_ascii=False, sort_keys=True)
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
 def overlay(index):
-    image = Image.open(io.BytesIO(frame_image(index))).convert("RGB")
-    draw = ImageDraw.Draw(image)
-    for number, shape in enumerate(state["truth"].get(str(index), []), 1):
-        for part in shape.get("parts") or [shape]:
-            for ring in [part.get("points", []), *(part.get("holes") or [])]:
-                points = [tuple(p) for p in ring]
-                if len(points) >= 3:
-                    draw.line(points + points[:1], fill=(255, 0, 255), width=3)
-        points = shape.get("points", [])
-        if points:
-            draw.text(tuple(points[0]), f"{number} {shape['label']}", fill=(255, 0, 255),
-                      stroke_width=2, stroke_fill=(0, 0, 0))
-    output = io.BytesIO()
-    image.save(output, "JPEG", quality=88)
-    return output.getvalue()
+    return reference_overlay(frame_image(index), state["truth"].get(str(index), []))
 
 
 @app.errorhandler(ValueError)
@@ -187,7 +186,7 @@ def get_state():
     reference = state.get("reference_frames", {}).get(state["topic"], []) if state["topic"] else []
     path = WORK / "description.json"
     if state["video"] and reference and path.exists():
-        saved = json.loads(path.read_text())
+        saved = json.loads(path.read_text(encoding="utf-8"))
         if saved.get("reference_signature") == reference_signature(reference[0]):
             description = saved
     return jsonify(loaded=state["video"] is not None,
@@ -202,7 +201,8 @@ def get_state():
 
 @app.get("/api/frame/<int:index>")
 def get_frame(index):
-    return send_file(io.BytesIO(state["video"].frame(request.args.get("topic", state["topic"]), index)), mimetype="image/jpeg", max_age=0)
+    data = state["video"].frame(request.args.get("topic", state["topic"]), index)
+    return send_file(io.BytesIO(data), mimetype="image/png" if data.startswith(b"\x89PNG") else "image/jpeg", max_age=0)
 
 
 @app.post("/api/segment_points")
@@ -301,19 +301,21 @@ def library_path():
 
 
 def read_library():
-    return json.loads(library_path().read_text()) if library_path().exists() else []
+    return json.loads(library_path().read_text(encoding="utf-8")) if library_path().exists() else []
 
 
 def write_library(files):
     temporary = library_path().with_suffix('.tmp')
-    temporary.write_text(json.dumps(files, ensure_ascii=False, indent=2))
-    temporary.replace(library_path())
+    temporary.write_text(json.dumps(files, ensure_ascii=False, indent=2), encoding="utf-8")
+    _commit_work_file(temporary, library_path())
 
 
 def register_file(path, name=None):
     path = Path(path).expanduser().resolve()
-    if not path.is_file() or path.suffix.lower() != '.mcap':
-        raise ValueError('请选择存在的 MCAP 文件')
+    if not path.is_file() or path.suffix.lower() not in SUPPORTED_SUFFIXES:
+        raise ValueError('请选择存在的 JPG、PNG 图片或 MCAP 文件')
+    if path.suffix.lower() in IMAGE_SUFFIXES:
+        read_image(path)
     files = read_library()
     existing = next((item for item in files if item['path'] == str(path)), None)
     if existing:
@@ -372,6 +374,33 @@ def load_file(file_id):
         return jsonify(**activate_file(item))
 
 
+@app.post('/api/candidates/import')
+def import_candidates():
+    body = request.get_json()
+    with lock:
+        with run_status_lock:
+            if run_status.get("status") in {"running", "stopping"}:
+                raise ValueError("自动任务运行中，暂不能导入候选")
+        video = state.get("video")
+        if video is None or not body.get("path") or Path(body["path"]).resolve() != video.path.resolve():
+            raise ValueError("请先加载与候选对应的文件")
+        prepared = prepare_candidate_import(video, body.get("candidates_by_topic"), state.get("labels", []))
+        patch = merge_candidate_import(state, prepared)
+        previous = {key: state.get(key) for key in patch}
+        absent = [key for key in patch if key not in state]
+        try:
+            state.update(patch)
+            save()
+        except Exception:
+            state.update(previous)
+            for key in absent:
+                state.pop(key, None)
+            raise
+        return jsonify(imported_frames=sum(len(frames) for frames in prepared.values()),
+            imported_shapes=sum(len(shapes) for frames in prepared.values() for shapes in frames.values()),
+            saved_as_truth=False)
+
+
 @app.delete('/api/files/<file_id>')
 def remove_file(file_id):
     with lock:
@@ -398,11 +427,13 @@ def open_video():
 @app.post("/api/upload")
 def upload_video():
     uploaded = request.files.get("file")
-    if uploaded is None or not uploaded.filename or not uploaded.filename.lower().endswith(".mcap"):
-        raise ValueError("请选择 MCAP 文件")
+    if uploaded is None or not uploaded.filename or Path(uploaded.filename).suffix.lower() not in SUPPORTED_SUFFIXES:
+        raise ValueError("请选择 JPG、JPEG、PNG 图片或 MCAP 文件")
     destination = WORK / "uploads"
     destination.mkdir(exist_ok=True)
-    path = destination / f"{uuid.uuid4().hex}-{secure_filename(uploaded.filename) or 'capture.mcap'}"
+    suffix = Path(uploaded.filename).suffix.lower()
+    filename = (secure_filename(Path(uploaded.filename).stem) or "image") + suffix
+    path = destination / f"{uuid.uuid4().hex}-{filename}"
     uploaded.save(path)
     try:
         with lock:
@@ -419,14 +450,15 @@ def set_topic():
     with lock:
         if body["topic"] not in state["video"].topics:
             raise ValueError("话题不存在")
-        state.setdefault("truths_by_topic", {})[state["topic"]] = state["truth"]
-        state.setdefault("candidates_by_topic", {})[state["topic"]] = state.get("candidates", {})
-        state.setdefault("agent_runs_by_topic", {})[state["topic"]] = state.get("agent_runs", {})
-        state["topic"] = body["topic"]
-        state["truth"] = state["truths_by_topic"].get(state["topic"], {})
-        state["candidates"] = state["candidates_by_topic"].get(state["topic"], {})
-        state["agent_runs"] = state["agent_runs_by_topic"].get(state["topic"], {})
-        save()
+        if body["topic"] != state["topic"]:
+            state.setdefault("truths_by_topic", {})[state["topic"]] = state["truth"]
+            state.setdefault("candidates_by_topic", {})[state["topic"]] = state.get("candidates", {})
+            state.setdefault("agent_runs_by_topic", {})[state["topic"]] = state.get("agent_runs", {})
+            state["topic"] = body["topic"]
+            state["truth"] = state["truths_by_topic"].get(state["topic"], {})
+            state["candidates"] = state["candidates_by_topic"].get(state["topic"], {})
+            state["agent_runs"] = state["agent_runs_by_topic"].get(state["topic"], {})
+            save()
         return jsonify(topic=state["topic"], truth=state["truth"], candidates=state["candidates"], agent_runs=state["agent_runs"], reference_frames=state.get("reference_frames", {}))
 
 
@@ -490,7 +522,7 @@ def clear_auto_result(index):
             path = WORK / filename
             if not path.exists():
                 continue
-            record = json.loads(path.read_text())
+            record = json.loads(path.read_text(encoding="utf-8"))
             scoped_run = belongs(record) or any(belongs(call) for call in record.get("trace", []))
             if filename == "last_run.json" and not scoped_run:
                 continue
@@ -509,8 +541,8 @@ def clear_auto_result(index):
                     if (record.get("current") or {}).get("frame") == index:
                         record["current"] = None
             temporary = path.with_suffix(".tmp")
-            temporary.write_text(json.dumps(record, ensure_ascii=False, indent=2))
-            temporary.replace(path)
+            temporary.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
+            _commit_work_file(temporary, path)
         with run_status_lock:
             if belongs(run_status):
                 run_status["events"] = [event for event in run_status.get("events", [])
@@ -526,7 +558,7 @@ def clear_auto_result(index):
             for filename in ("last_run.json", "model_debug.json", "description_debug.json"):
                 path = WORK / filename
                 if path.exists():
-                    still_used.update(inspection_image_names(json.loads(path.read_text())))
+                    still_used.update(inspection_image_names(json.loads(path.read_text(encoding="utf-8"))))
             for name in removed_images - still_used:
                 (WORK / "inspection" / name).unlink(missing_ok=True)
         return jsonify(frame=index, candidate_removed=removed_candidate, audit_removed=removed_audit,
@@ -550,8 +582,10 @@ def set_reference_frame():
 @app.post("/api/config")
 def set_config():
     body = request.get_json()
+    if "llm_prompt_profile" in body and body["llm_prompt_profile"] not in ("full", "compact"):
+        raise ValueError("Unknown model prompt profile")
     with lock:
-        for key in ("llm_url", "llm_model", "llm_key"):
+        for key in ("llm_url", "llm_model", "llm_key", "llm_prompt_profile"):
             if key in body and body[key]:
                 state["config"][key] = body[key]
         save()
@@ -583,7 +617,7 @@ def describe_truth():
                 state["truth"][str(index)], allowed_labels, overlay(index))
         result["reference_signature"] = reference_signature(index)
         save_description_trace(trace, result)
-        (WORK / "description.json").write_text(json.dumps(result, ensure_ascii=False, indent=2))
+        (WORK / "description.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
         return jsonify(result)
 
 
@@ -622,7 +656,7 @@ def run_workflow():
         description = body.get("description")
         if description is None:
             description_path = WORK / "description.json"
-            description = json.loads(description_path.read_text()) if description_path.exists() else None
+            description = json.loads(description_path.read_text(encoding="utf-8")) if description_path.exists() else None
         supplied_prompts = description.get("prompts", []) if isinstance(description, dict) else []
         supplied_labels = [item.get("label") for item in supplied_prompts if isinstance(item, dict)]
         if (not isinstance(description, dict) or not description.get("description")
@@ -757,7 +791,7 @@ def get_run_debug():
         path = WORK / "last_run.json"
     if not path.exists():
         return jsonify(trace=[])
-    output = json.loads(path.read_text())
+    output = json.loads(path.read_text(encoding="utf-8"))
     return jsonify(trace=output.get("trace", []))
 
 
@@ -765,7 +799,7 @@ def get_run_debug():
 def get_inspection():
     def read(name):
         path = WORK / name
-        return json.loads(path.read_text()) if path.exists() else {}
+        return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
     output = read("last_run.json")
     description_record = read("description_debug.json")
     legacy_trace = not output.get("file") and not output.get("topic")

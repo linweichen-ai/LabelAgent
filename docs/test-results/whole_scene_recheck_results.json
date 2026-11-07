@@ -1,0 +1,115 @@
+{
+  "status": "verified",
+  "observed_utc": "2026-11-04T16:38:07.769517+00:00",
+  "new_VLM_calls": 5,
+  "new_quality_calls": 4,
+  "new_default_guard_calls": 1,
+  "new_SAM_calls": 0,
+  "raw_fresh_view_categories": [
+    {
+      "case_id": "region_15",
+      "view": "overview",
+      "category": "person",
+      "actual_visual_tokens": 1024,
+      "image_grid_thw": [
+        [
+          1,
+          64,
+          64
+        ]
+      ]
+    },
+    {
+      "case_id": "region_15",
+      "view": "linked",
+      "category": "person",
+      "actual_visual_tokens": 768,
+      "image_grid_thw": [
+        [
+          1,
+          32,
+          96
+        ]
+      ]
+    },
+    {
+      "case_id": "legacy_07",
+      "view": "overview",
+      "category": "pallet",
+      "actual_visual_tokens": 1024,
+      "image_grid_thw": [
+        [
+          1,
+          64,
+          64
+        ]
+      ]
+    },
+    {
+      "case_id": "legacy_07",
+      "view": "linked",
+      "category": "person",
+      "actual_visual_tokens": 768,
+      "image_grid_thw": [
+        [
+          1,
+          32,
+          96
+        ]
+      ]
+    }
+  ],
+  "all5_full_payload_bindings_reproduced": true,
+  "all5_response_ids_new_unique": true,
+  "all4_quality_payloads_distinct_from_prior62": true,
+  "source_frame_and_half_frame_region_geometry_verified": true,
+  "original_target_not_shrunk": true,
+  "all29_original_cases_kept": true,
+  "human_correct_before": 14,
+  "human_correct_after": 14,
+  "human_wrong_before": 0,
+  "human_wrong_after": 0,
+  "legacy_pallet_correct_before": 2,
+  "legacy_pallet_correct_after": 2,
+  "legacy_minimum_required": 3,
+  "guarded_outputs_unchanged": true,
+  "fresh_human_reference_conflicts": 2,
+  "fresh_qualitative_role_conflicts": 1,
+  "previous_fresh_opposite_views": 4,
+  "current_fresh_opposite_views": 3,
+  "single_legacy_overview_changed_to_pallet": true,
+  "strict_categorical_gain": false,
+  "all_checks_passed": false,
+  "checks": {
+    "human_consensus_strictly_above11": true,
+    "no_previous_correct_human_region_lost": true,
+    "all5_confirmed_people_correct": true,
+    "no_new_opposite_class_view_error": true,
+    "all_original_legacy_checks_passed": false,
+    "all5_new_responses_valid_real_CUDA": true,
+    "all14_previous_human_correct_retained": true,
+    "zero_wrong_human_consensus": true,
+    "no_fresh_explicit_opposite_class_view": false,
+    "strict_categorical_gain_vs_previous_guard": false,
+    "sensitive_default_budget_guard_passed": true,
+    "all_source_code_config_state_bindings_unchanged": true,
+    "plan_unchanged": true
+  },
+  "all322_source_code_config_state_bindings_unchanged": true,
+  "new_renderer_checks": 6,
+  "previous_recheck_checks_rerun": 6,
+  "targeted_checks_total": 12,
+  "test_seconds": 0.046,
+  "actual_sensitive_default_guard_tokens": [
+    238
+  ],
+  "live_default_image_budget": 256,
+  "workbench_status": "completed",
+  "workbench_completed": 10,
+  "adopted": false,
+  "default_enabled": false,
+  "workbench_writes": false,
+  "independent_validation": false,
+  "independent_pixel_accuracy": false,
+  "scope": "Fixed whole-scene/frame-fraction representation, prompt and measured1024/768 encoding intervention. One qualitative view changed but complete-panel confirmation did not improve; not a pure-context or independent-accuracy result."
+}

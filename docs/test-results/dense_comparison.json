@@ -1,0 +1,63 @@
+{
+  "status": "complete",
+  "observed_utc": "2026-11-04T00:13:01.395530+00:00",
+  "comparison_plan_sha256": "3bc6cde592a01b82d2d2e398a046e375680a4df4b13b47566b5c4ac38a0b9dec",
+  "study_plan_sha256": "f87dec0b838ddb3acc2b23e11e81daa3899b640839d30f8dfd5e91b165ecac43",
+  "metric_version": 2,
+  "metric_sha256": "7648246cb6c821eabc5586d9147c6e1957fafb403ac28d8db77e6cf62e3907c3",
+  "scored_images_per_method": 20,
+  "grid_spec": {
+    "divisions": 3,
+    "crop_fraction": 0.45
+  },
+  "model_requests": 180,
+  "previous_best_model_requests": 80,
+  "baseline": {
+    "pallet_objects_matched": 68,
+    "pallet_reference_objects": 118,
+    "pallet_points_covered": 4993,
+    "pallet_reference_points": 6291,
+    "pallet_candidates": 143,
+    "pallet_union_pixels": 784762,
+    "person_points_covered_by_pallet": 49,
+    "person_reference_points": 11068
+  },
+  "previous_best": {
+    "pallet_objects_matched": 75,
+    "pallet_reference_objects": 118,
+    "pallet_points_covered": 5179,
+    "pallet_reference_points": 6291,
+    "pallet_candidates": 190,
+    "pallet_union_pixels": 836336,
+    "person_points_covered_by_pallet": 55,
+    "person_reference_points": 11068
+  },
+  "dense": {
+    "pallet_objects_matched": 75,
+    "pallet_reference_objects": 118,
+    "pallet_points_covered": 5116,
+    "pallet_reference_points": 6291,
+    "pallet_candidates": 196,
+    "pallet_union_pixels": 832727,
+    "person_points_covered_by_pallet": 57,
+    "person_reference_points": 11068
+  },
+  "checks": {
+    "strict_instance_gain_over_previous_best": false,
+    "point_coverage_not_below_previous_best": false,
+    "person_off_class_not_above_previous_best": false,
+    "original_minimum_two_percentage_point_gain": true,
+    "original_count_ratio_limit": true,
+    "original_union_area_limit": true,
+    "original_person_cross_class_limit": true,
+    "all_original_candidates_preserved": true
+  },
+  "all_predeclared_checks_passed": false,
+  "adopted": false,
+  "scope": "exploratory_same_capture_tuning_not_independent_2D_accuracy",
+  "grid_used_only_images": true,
+  "other_images_previously_scored": true,
+  "expanded_to_other_images": false,
+  "grid_spec_required_in_future_frozen_selection": true,
+  "source_inputs_and_state_preserved": true
+}

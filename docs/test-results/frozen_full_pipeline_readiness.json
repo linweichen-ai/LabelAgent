@@ -1,0 +1,68 @@
+{
+  "observed_utc": "2026-11-04T06:19:04.710399+00:00",
+  "status": "collection_resumed_and_full_pipeline_waiting",
+  "tests": 333,
+  "regression_passed": true,
+  "new_checks": {
+    "adoption_gates": 8,
+    "pipeline_readiness_and_generation": 8,
+    "atomic_metadata_save": 4
+  },
+  "gate_readback": {
+    "images": 32,
+    "methods": 5,
+    "eight_original_gates_exact": true,
+    "primary_decision_exact": true,
+    "historical_full_four_crop_subset_exact": true,
+    "new_model_requests": 0,
+    "new_metric_requests": 0
+  },
+  "metadata_io_recovery": {
+    "terminal_after_completed_requests": 2169,
+    "error": "Windows denied atomic progress-file replacement",
+    "old_processes_proven_terminal_before_resume": true,
+    "original_failure_and_progress_snapshots_kept": true,
+    "bounded_replace_attempts": 10,
+    "real_Windows_reader_handle_test_passed": true,
+    "JSON_serialization_unchanged": true,
+    "cached_response_files_preserved": 2169,
+    "cached_crop_bytes_reverified_by_original_collector": true,
+    "frozen_collector_predictor_helpers_and_metric_unchanged": true,
+    "shared_metadata_IO_helper_changed": true
+  },
+  "collection_snapshot": {
+    "planned_requests": 5004,
+    "completed_unique_requests": 2629,
+    "complete_images": 292,
+    "cached_responses_reused": 2169,
+    "new_requests_this_resumed_process": 460,
+    "live_process_identity_verified": true
+  },
+  "postprocessor": {
+    "status": "waiting_for_existing_collection",
+    "live_process_identity_verified": true,
+    "old_waiter_generation_terminal_and_preserved": true,
+    "new_generation_uses_shared_write_retry": true,
+    "starts_another_collector": false,
+    "new_model_requests": 0,
+    "steps": [
+      "replay verified caches",
+      "unchanged raw selector",
+      "merge disjoint complete cohorts",
+      "original V2 scoring",
+      "original gates with fixed primary"
+    ],
+    "workbench_annotation_writes": false,
+    "full_result_complete": false
+  },
+  "source_preservation": {
+    "source_files": 1023,
+    "previous_sessions": 7,
+    "approved_reference_shapes": 15,
+    "target76_unconfirmed": true,
+    "all_checks_passed": true
+  },
+  "full_primary_588_passed": null,
+  "adopted_as_default": false,
+  "scope": "Same-capture frozen validation; full scoring still pending, not independent pixel accuracy"
+}

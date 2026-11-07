@@ -2,7 +2,7 @@
 
 The current best 2B input uses a complete magenta contour, deep-interior pointer, quarter-opacity arrow and clean source image last. Two of eight additional synthetic stress views still hallucinate an object. This comparison tests the provisioned 8B model on exactly the same requests, including all six category-confirmed targets, the two older pallets, person control, original blanks and unresolved suspect.
 
-**Status: in_progress; 5/37 fresh candidate replies saved.**
+**Status: in_progress; 18/37 fresh candidate replies saved.**
 
 The protocol was frozen before candidate inference: 18 cases, 36 quality views and one fresh default-budget guard. The 36 baseline 2B replies remain archived; every 8B view is freshly collected in a separate output without a candidate cache. Full JSON request bodies, JPEG bytes, model alias, temperature zero, max output tokens 192 and actual image-token counts are matched. Raw replies are retained before validation and are never rewritten by a guard.
 

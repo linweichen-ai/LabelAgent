@@ -1,0 +1,109 @@
+{
+  "phase": "in_progress",
+  "observed_utc": "2026-11-07T17:27:48.458759+00:00",
+  "status": "running",
+  "saved_new_responses": 5,
+  "maximum_new_requests": 37,
+  "cases": 18,
+  "baseline_cached_quality_views": 36,
+  "candidate_fresh_quality_views": 36,
+  "query_variants_are_not_independent_photographs": true,
+  "baseline_image_count": 2,
+  "candidate_image_count": 2,
+  "visual_tokens_per_arm": 512,
+  "same_model_schema_decoding_and_image_bytes": true,
+  "intervention": "Append one global whole-clean-scene absence instruction; distinguish empty scene from low-texture component in a real scene",
+  "expected_prompt_encoding_by_arm": {
+    "baseline": {
+      "overview": {
+        "prompt_tokens": 809,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            32
+          ],
+          [
+            1,
+            32,
+            32
+          ]
+        ],
+        "actual_image_token_counts": [
+          256,
+          256
+        ]
+      },
+      "linked": {
+        "prompt_tokens": 797,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            32
+          ],
+          [
+            1,
+            32,
+            32
+          ]
+        ],
+        "actual_image_token_counts": [
+          256,
+          256
+        ]
+      }
+    },
+    "candidate": {
+      "overview": {
+        "prompt_tokens": 973,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            32
+          ],
+          [
+            1,
+            32,
+            32
+          ]
+        ],
+        "actual_image_token_counts": [
+          256,
+          256
+        ]
+      },
+      "linked": {
+        "prompt_tokens": 961,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            32
+          ],
+          [
+            1,
+            32,
+            32
+          ]
+        ],
+        "actual_image_token_counts": [
+          256,
+          256
+        ]
+      }
+    }
+  },
+  "original_plan_sha256": "74cf1a7db0465497ec9efe724daba5743e613356cdb04370b1139fadba91c135",
+  "active_plan_sha256": "74cf1a7db0465497ec9efe724daba5743e613356cdb04370b1139fadba91c135",
+  "helper_source_sha256": "8da23d8c1e59b5ff4c347dd8274723d628ed95d1393d4d56335e9737fa89d0ea",
+  "evaluator_source_sha256": "2f3ee58b940e466eb598c05aa536f56afd740338404297a8b7bf9468cd61f4e7",
+  "original_annotations_written": false,
+  "new_segmentation_inference": false,
+  "raw_categories_never_rewritten": true,
+  "candidate_adopted": false,
+  "default_enabled": false,
+  "full_project_validation_passed": false,
+  "independent_generalization": false
+}

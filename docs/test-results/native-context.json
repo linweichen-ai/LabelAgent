@@ -1,8 +1,8 @@
 {
   "phase": "in_progress",
-  "observed_utc": "2026-11-07T16:27:02.183034+00:00",
+  "observed_utc": "2026-11-07T16:35:18.574880+00:00",
   "status": "running",
-  "saved_new_responses": 9,
+  "saved_new_responses": 31,
   "maximum_new_requests": 37,
   "cases": 18,
   "quality_views_per_arm": 36,
@@ -70,7 +70,7 @@
     }
   },
   "original_plan_sha256": "421677cd90340f3b03e379deaaeab3a0e7e9fb5b45277bd224dc31409bf314a9",
-  "active_plan_sha256": "421677cd90340f3b03e379deaaeab3a0e7e9fb5b45277bd224dc31409bf314a9",
+  "active_plan_sha256": "860e66c238e003137bb95697eea7bdb36fe4411514f6bd8ee5f3fa2bdddc63bb",
   "helper_source_sha256": "473e351cc2e29881474d162927afde90b3f8b0a0756f95e26437a6c2480b3251",
   "evaluator_source_sha256": "cd05e7d65fa3a8f901c5bd822f1cc1c51a452845c62deab0f8ae921f385529a5",
   "normal_category_first_schema_preserved": true,
@@ -79,5 +79,7 @@
   "candidate_adopted": false,
   "default_enabled": false,
   "full_project_validation_passed": false,
-  "independent_generalization": false
+  "independent_generalization": false,
+  "c3_assistant_semantic_review_passed": true,
+  "human_localization_approval": false
 }

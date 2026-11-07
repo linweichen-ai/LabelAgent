@@ -1,0 +1,19 @@
+{
+  "study": "Source-observer label wording comparison",
+  "phase": "running_or_awaiting_verification",
+  "observed_utc": "2026-11-07T13:32:10.930105+00:00",
+  "plan_sha256": "ac79fc4ec7d0c02610990736693ae38108d62d9848d976a61085227a0e1c0892",
+  "maximum_new_requests": 19,
+  "inverse_payload_pairs_verified": 18,
+  "intervention": "Only observer labels flat_field->no and structured_scene->yes, with the same legend names replaced. All image bytes, definitions, prompt remainder, schema structure, decoding and image budget retained.",
+  "cases": 18,
+  "raw_classifier_answers_unchanged": true,
+  "model_observer_veto_replay_not_raw_classifier_gain": true,
+  "original_annotations_written": false,
+  "candidate_adopted": false,
+  "default_enabled": false,
+  "new_SAM_calls": 0,
+  "independent_validation": false,
+  "status": "running",
+  "new_responses_received": 1
+}

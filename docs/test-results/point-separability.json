@@ -1,0 +1,145 @@
+{
+  "status": "complete_reference_only_separability_audit",
+  "cases": [
+    {
+      "camera": 0,
+      "object_id": 42,
+      "radii": [
+        {
+          "radius": 0,
+          "target_points": 16,
+          "minimum_required_target_hits": 8,
+          "target_points_reachable_without_any_other_PAL": 16,
+          "solver_status": 0,
+          "relaxation_feasible": true,
+          "optimal_other_hits": 0
+        },
+        {
+          "radius": 3,
+          "target_points": 16,
+          "minimum_required_target_hits": 8,
+          "target_points_reachable_without_any_other_PAL": 16,
+          "solver_status": 0,
+          "relaxation_feasible": true,
+          "optimal_other_hits": 0
+        },
+        {
+          "radius": 6,
+          "target_points": 16,
+          "minimum_required_target_hits": 8,
+          "target_points_reachable_without_any_other_PAL": 16,
+          "solver_status": 0,
+          "relaxation_feasible": true,
+          "optimal_other_hits": 0
+        }
+      ]
+    },
+    {
+      "camera": 0,
+      "object_id": 48,
+      "radii": [
+        {
+          "radius": 0,
+          "target_points": 27,
+          "minimum_required_target_hits": 14,
+          "target_points_reachable_without_any_other_PAL": 27,
+          "solver_status": 0,
+          "relaxation_feasible": true,
+          "optimal_other_hits": 0
+        },
+        {
+          "radius": 3,
+          "target_points": 27,
+          "minimum_required_target_hits": 14,
+          "target_points_reachable_without_any_other_PAL": 27,
+          "solver_status": 0,
+          "relaxation_feasible": true,
+          "optimal_other_hits": 0
+        },
+        {
+          "radius": 6,
+          "target_points": 27,
+          "minimum_required_target_hits": 14,
+          "target_points_reachable_without_any_other_PAL": 27,
+          "solver_status": 0,
+          "relaxation_feasible": true,
+          "optimal_other_hits": 0
+        }
+      ]
+    },
+    {
+      "camera": 1,
+      "object_id": 47,
+      "radii": [
+        {
+          "radius": 0,
+          "target_points": 11,
+          "minimum_required_target_hits": 6,
+          "target_points_reachable_without_any_other_PAL": 11,
+          "solver_status": 0,
+          "relaxation_feasible": true,
+          "optimal_other_hits": 0
+        },
+        {
+          "radius": 3,
+          "target_points": 11,
+          "minimum_required_target_hits": 6,
+          "target_points_reachable_without_any_other_PAL": 11,
+          "solver_status": 0,
+          "relaxation_feasible": true,
+          "optimal_other_hits": 0
+        },
+        {
+          "radius": 6,
+          "target_points": 11,
+          "minimum_required_target_hits": 6,
+          "target_points_reachable_without_any_other_PAL": 11,
+          "solver_status": 0,
+          "relaxation_feasible": true,
+          "optimal_other_hits": 0
+        }
+      ]
+    },
+    {
+      "camera": 1,
+      "object_id": 49,
+      "radii": [
+        {
+          "radius": 0,
+          "target_points": 6,
+          "minimum_required_target_hits": 3,
+          "target_points_reachable_without_any_other_PAL": 6,
+          "solver_status": 0,
+          "relaxation_feasible": true,
+          "optimal_other_hits": 0
+        },
+        {
+          "radius": 3,
+          "target_points": 6,
+          "minimum_required_target_hits": 3,
+          "target_points_reachable_without_any_other_PAL": 6,
+          "solver_status": 0,
+          "relaxation_feasible": true,
+          "optimal_other_hits": 0
+        },
+        {
+          "radius": 6,
+          "target_points": 6,
+          "minimum_required_target_hits": 3,
+          "target_points_reachable_without_any_other_PAL": 6,
+          "solver_status": 0,
+          "relaxation_feasible": true,
+          "optimal_other_hits": 0
+        }
+      ]
+    }
+  ],
+  "model_calls": 0,
+  "new_masks": 0,
+  "adopted": false,
+  "retained_support": "13/17",
+  "retained_original_Agent": "6/6",
+  "remaining_misses": 4,
+  "CPU_tests": 5,
+  "not_real_segmentation_or_dense_truth": true
+}

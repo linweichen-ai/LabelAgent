@@ -1,0 +1,17 @@
+{
+  "status": "complete_original_support_gate_failed",
+  "real_SAM_calls": 2,
+  "new_masks": 2,
+  "new_Agent_runs": 0,
+  "new_VLM_calls": 0,
+  "semantic_review_not_run_reason": "Both new hypotheses already fail original remaining-instance support; semantic requirements remain mandatory before any adoption",
+  "retained_support": "13/17",
+  "retained_original_Agent": "6/6",
+  "remaining_misses": 4,
+  "adopted": false,
+  "pictures": 4,
+  "videos": 1,
+  "frames": 200,
+  "all_original_six_and_reference_bytes_unchanged": true,
+  "proposal_rule_change": "Opposite-side negatives may fall inside unconfirmed search seed; no accepted/original mask changed, no final threshold changed"
+}

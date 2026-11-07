@@ -1,0 +1,21 @@
+{
+  "status": "complete_rejected_fixed_source_contrast_trial",
+  "actual_new_SAM_calls": 6,
+  "new_VLM_calls": 0,
+  "new_Agent_runs": 0,
+  "source_images": 3,
+  "fixed_photometric_arms": 2,
+  "complete_native_masks": 6,
+  "native_prompt_guard_passed": 6,
+  "new_accepted_instances": 0,
+  "retained_support": "13/17",
+  "retained_historical_Agent": "6/6",
+  "remaining_misses": 4,
+  "Agent_round_limit": 3,
+  "no_mask_clipping": true,
+  "all_original_acceptance_gates_unchanged": true,
+  "adopted": false,
+  "pictures": 4,
+  "videos": 2,
+  "saved_stage_replay_not_screen_recording": true
+}

@@ -1,0 +1,70 @@
+{
+  "status": "complete_rejected_nearzero_continuous_prior",
+  "new_actual_SAM_calls": 14,
+  "real_photo_SAM_calls": 12,
+  "gray_white_SAM_calls": 2,
+  "new_actual_VLM_calls": 2,
+  "control_logical_views": 4,
+  "control_exact_reused_views": 2,
+  "control_PAL_false_positives": 0,
+  "real_prompt_border_pass_old_new": [
+    12,
+    11
+  ],
+  "individual_area_person_prompt_pass_old_new": [
+    8,
+    9
+  ],
+  "individual_counts_not_joint_budget_admission": true,
+  "single_intervention": "global scalar on entire continuous source prior, bounded at 1e-6",
+  "same_source_RGB_prior_sign_points_precision_source_and_single_mask_path": true,
+  "not_same_as_absent_mask_embedding": true,
+  "old_original_point_segment_unchanged": true,
+  "new_Mask2Former_forwards": 0,
+  "new_training": false,
+  "one_SAM_call_per_chain": true,
+  "Agent_round_limit": 3,
+  "new_Agent_runs": 0,
+  "retained_support": "13/17",
+  "retained_original_Agent": "6/6",
+  "remaining_misses": 4,
+  "adopted": false,
+  "originals_and_all_six_results_exact": true,
+  "no_post_mask_clipping": true,
+  "dense_truth_or_independent_generalization": false,
+  "later_real_semantic_extent_LiDAR_Agent_checks": "not run because remaining-instance sparse support failed",
+  "radii_readback": [
+    {
+      "case": "camera0_frame76",
+      "radius": 0,
+      "matches": 7
+    },
+    {
+      "case": "camera0_frame76",
+      "radius": 3,
+      "matches": 7
+    },
+    {
+      "case": "camera0_frame76",
+      "radius": 6,
+      "matches": 7
+    },
+    {
+      "case": "camera1_frame76",
+      "radius": 0,
+      "matches": 4
+    },
+    {
+      "case": "camera1_frame76",
+      "radius": 3,
+      "matches": 6
+    },
+    {
+      "case": "camera1_frame76",
+      "radius": 6,
+      "matches": 6
+    }
+  ],
+  "pictures": 15,
+  "videos": 2
+}

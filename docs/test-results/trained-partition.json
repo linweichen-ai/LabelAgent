@@ -1,0 +1,21 @@
+{
+  "status": "complete_rejected_partition_hypotheses",
+  "actual_new_SAM_calls": 6,
+  "new_full_native_masks": 6,
+  "actual_new_VLM_calls": 0,
+  "all_area_person_border_guards_passed": true,
+  "reference_free_generation": true,
+  "r3_target48_high_purity_coverage": "7/27",
+  "r0_r3_r6_independent_matches_unchanged": true,
+  "new_accepted_instances": 0,
+  "retained_support": "13/17",
+  "retained_original_Agent": "6/6",
+  "remaining_misses": 4,
+  "new_Agent_runs": 0,
+  "Agent_round_limit": 3,
+  "not_human_truth": true,
+  "no_output_mask_clipping": true,
+  "adopted": false,
+  "pictures": 7,
+  "videos": 1
+}

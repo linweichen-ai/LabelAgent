@@ -1,18 +1,18 @@
 {
-  "phase": "in_progress",
-  "observed_utc": "2026-11-07T18:09:06.614679+00:00",
-  "status": "running",
-  "generate_replays_for_new_instrumentation": 7,
+  "phase": "final_verified",
+  "observed_utc": "2026-11-07T18:17:43.514882+00:00",
+  "status": "complete",
+  "generate_replays_for_new_instrumentation": 8,
   "maximum_instrumented_generations": 8,
-  "teacher_forced_label_forwards": 51,
+  "teacher_forced_label_forwards": 108,
   "maximum_label_forwards": 108,
-  "score_conditions_collected": 17,
+  "score_conditions_collected": 36,
   "score_condition_budget": 36,
   "cases": 18,
   "quality_trace_cases": 7,
   "default_guard_traces": 1,
-  "complete_trace_text_matches": 7,
-  "category_trace_matches": 7,
+  "complete_trace_text_matches": 8,
+  "category_trace_matches": 8,
   "primary_method": "Canonical complete label-and-closing-quote raw log-likelihood sum; exact ties uncertain",
   "secondary_method": "Schema-normalized full path sum; diagnostic only",
   "fixed_JSON_prefix": "{\"category\":\"",
@@ -27,6 +27,74 @@
   "candidate_adopted": false,
   "default_enabled": false,
   "independent_generalization": false,
+  "groups": {
+    "protected_pallet": {
+      "conditions": 4,
+      "original_correct": 4,
+      "recent_prompt_correct": 4,
+      "primary_score_correct": 4,
+      "secondary_score_correct": 4
+    },
+    "person_fixture": {
+      "conditions": 2,
+      "original_correct": 2,
+      "recent_prompt_correct": 2,
+      "primary_score_correct": 2,
+      "secondary_score_correct": 2
+    },
+    "suspected_non_pallet": {
+      "conditions": 2,
+      "original_correct": 0,
+      "recent_prompt_correct": 0,
+      "primary_score_correct": 0,
+      "secondary_score_correct": 0
+    },
+    "blank_control": {
+      "conditions": 4,
+      "original_correct": 4,
+      "recent_prompt_correct": 4,
+      "primary_score_correct": 4,
+      "secondary_score_correct": 4
+    },
+    "marked_blank_control": {
+      "conditions": 4,
+      "original_correct": 4,
+      "recent_prompt_correct": 4,
+      "primary_score_correct": 3,
+      "secondary_score_correct": 3
+    },
+    "confirmed_six": {
+      "conditions": 12,
+      "original_correct": 12,
+      "recent_prompt_correct": 12,
+      "primary_score_correct": 12,
+      "secondary_score_correct": 12
+    },
+    "stress_negative": {
+      "conditions": 8,
+      "original_correct": 6,
+      "recent_prompt_correct": 6,
+      "primary_score_correct": 3,
+      "secondary_score_correct": 3
+    }
+  },
+  "category_diagnostic_gates": {
+    "confirmed_six_12_of_12": true,
+    "old_pallets_4_of_4": true,
+    "person2_of2": true,
+    "plain_blanks4_of4": true,
+    "original_marked4_of4": false,
+    "stress8_of8": false,
+    "suspect_policy2_of2": false,
+    "no_correct_original_lost": false,
+    "strict_stress_gain": false
+  },
+  "all_primary_category_diagnostic_gates_passed": false,
+  "total_new_model_executions": 116,
+  "shared_services_healthy_after_owned_worker_exit": true,
+  "own_allocator_bytes_before_exit": 9569280,
+  "full_joint_adoption_checks_passed": false,
+  "fresh_selected_decoder_reason_review_completed": false,
   "hard_blank_trace_observations": [
     {
       "control": "gray",

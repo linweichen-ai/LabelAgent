@@ -1,6 +1,6 @@
 # Actual category-token scores and complete-label scoring diagnostic
 
-**Status: in_progress; traced generations 7/8; label-scoring forwards 51/108.**
+**Status: final_verified; traced generations 8/8; label-scoring forwards 108/108.**
 
 The whole-clean-scene prompt retained all protected positive categories and C3 descriptions, but stress abstention remained6/8. Two false-person explanations explicitly described an empty clean view and then mentioned the magenta guide. Prior character/token reachability, yes/no wording, schema reminders, larger capacity and evidence-first output experiments did not pass their joint gates. This diagnostic records actual model values instead of repeating those unchanged tests.
 
@@ -23,6 +23,18 @@ Five CPU checks cover sequence-versus-greedy preference, exact ties, blocked pat
 
 In these two measured paths, uncertain is permitted and its first-token score is unchanged by the constraint. Person receives a higher raw first-token score. This does not prove that every alternate tokenization or later path is unaffected, or that visual grounding is correct.
 
-Collection or independent final verification remains unfinished. No complete quality gain is claimed.
+| Group | Conditions | Original greedy reference | Recent prompt greedy | Primary complete-label score | Secondary normalized score |
+|---|---:|---:|---:|---:|---:|
+| Six confirmed categories | 12 | 12 | 12 | 12 | 12 |
+| Older pallets | 4 | 4 | 4 | 4 | 4 |
+| Person control | 2 | 2 | 2 | 2 | 2 |
+| Plain blanks | 4 | 4 | 4 | 4 | 4 |
+| Original marked blanks | 4 | 4 | 4 | 3 | 3 |
+| Synthetic stress blanks | 8 | 6 | 6 | 3 | 3 |
+| Unconfirmed suspect: abstention policy | 2 | 0 | 0 | 0 | 0 |
+
+Primary category-only diagnostic gates passed: **false**. Full joint adoption checks remain false.
+
+The primary compact-prefix scorer is rejected: stress abstention falls from6/8 to3/8 and original marked blanks fall from4/4 to3/4, despite retaining the six confirmed categories12/12 and older pallets4/4. A separate CPU audit finds one common pretty-printed category prefix in all seven actual quality token traces; its token IDs match canonical encoding, and all36 prior output strings share that prefix text. The remaining29 historical generated token sequences were not archived. A separately frozen follow-up will change only the teacher-forced prefix to this measured prefix; it must not be presented as unchanged-prefix evidence from this first experiment.
 
 Original annotation files, human references, masks, selected points and workbench defaults stay protected. No training, model download, new SAM call or raw-category rewrite occurs. U1 remains an unconfirmed conservative policy control; no human category is invented. Private photos, geometry, request bodies, full score matrices, paths, GPU IDs and host details remain local.

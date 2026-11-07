@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "data_drive_sources_verified": 2,
+  "new_files": 2,
+  "verified_identical_bytes": true,
+  "explicit_extra_roots_only": true,
+  "private_text_credentials_and_path_escapes_excluded": true,
+  "tests": 6,
+  "media_kept_in_local_handoff_not_uploaded_to_Git": true
+}

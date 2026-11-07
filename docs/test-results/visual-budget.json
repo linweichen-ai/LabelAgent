@@ -1,0 +1,26 @@
+{
+  "status": "complete_rejected_budget_candidate",
+  "successful_responses": 20,
+  "candidate_PAL_counts": {
+    "256": 0,
+    "1024": 0
+  },
+  "candidate_views_per_arm": 6,
+  "control_pass_counts": {
+    "256": 4,
+    "1024": 3
+  },
+  "controls_per_arm": 4,
+  "actual_token_counts_verified": true,
+  "same_image_bytes_between_arms": true,
+  "interpolated_inputs_not_new_native_detail": true,
+  "default_budget_after": 256,
+  "new_SAM_calls": 0,
+  "new_Agent_runs": 0,
+  "adopted": false,
+  "retained_support": "13/17",
+  "retained_original_Agent": "6/6",
+  "remaining_misses": 4,
+  "pictures": 10,
+  "videos": 2
+}

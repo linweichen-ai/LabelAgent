@@ -1,0 +1,61 @@
+{
+  "status": "complete_RGB_correspondence_only",
+  "pairs": 16,
+  "direct_supported": 6,
+  "chain_supported": 11,
+  "direct_anchor_valid": 7,
+  "chain_anchor_valid": 13,
+  "all_originals_and_old_six_exact": true,
+  "no_reference_inputs": true,
+  "new_model_calls": 9,
+  "new_masks": 0,
+  "new_Agent_runs": 0,
+  "physical_identity_confirmations": 0,
+  "complete_base_confirmations": 0,
+  "adopted": false,
+  "recovered_correspondence_pairs": [
+    {
+      "seed": 1,
+      "frame": 78
+    },
+    {
+      "seed": 3,
+      "frame": 78
+    },
+    {
+      "seed": 7,
+      "frame": 74
+    },
+    {
+      "seed": 5,
+      "frame": 74
+    },
+    {
+      "seed": 6,
+      "frame": 74
+    }
+  ],
+  "lost_correspondence_pairs": [],
+  "retained_support": "13/17",
+  "retained_original_Agent": "6/6",
+  "remaining_misses": 4,
+  "Agent_round_limit": 3,
+  "pictures": 22,
+  "same_source_initial_points_and_LK_parameters": true,
+  "whole_cycle_extra_constraint": true,
+  "not_dense_truth_or_generalization": true,
+  "physical_instance_acceptance_not_evaluated": true,
+  "videos": 3,
+  "new_unique_VLM_calls": 9,
+  "semantic_logical_views": 12,
+  "historical_exact_reused_views": 2,
+  "within_batch_identical_request_reuses": 1,
+  "total_exact_reused_logical_views": 3,
+  "new_pairs_with_both_neutral_PAL_guard": 1,
+  "new_pairs_reviewed": 5,
+  "blank_control_PAL_false_positives": 0,
+  "blank_controls_are_historical_exact_reuse": true,
+  "lexical_evidence_not_physical_identity_or_complete_base": true,
+  "engineering_tests": 4,
+  "new_SAM_calls": 0
+}

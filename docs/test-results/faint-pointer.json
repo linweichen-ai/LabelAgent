@@ -1,7 +1,7 @@
 {
   "study": "Quarter-opacity arrow with complete contour retained",
-  "observed_utc": "2026-11-07T13:03:53.681066+00:00",
-  "phase": "running_or_awaiting_verification",
+  "observed_utc": "2026-11-07T13:05:41.312626+00:00",
+  "phase": "final_verified",
   "plan_sha256": "4484ead13ef3df25d2f072e40b4669e7797cda41124e5cc97e0be58dbd833aa6",
   "maximum_new_requests": 13,
   "baseline_cached_views": 28,
@@ -14,8 +14,37 @@
   "default_enabled": false,
   "new_SAM_calls": 0,
   "independent_validation": false,
-  "status": "running",
-  "new_responses_received": 9,
+  "status": "complete",
+  "new_responses_received": 13,
   "SAM_source_binding_addendum": true,
-  "completion_plan_sha256": "fcda71020c09872d7959b9f2cd4121ee7615063f492cfa429e015ac9d25157a5"
+  "completion_plan_sha256": "fcda71020c09872d7959b9f2cd4121ee7615063f492cfa429e015ac9d25157a5",
+  "baseline_counts": {
+    "six_correct_views": 12,
+    "six_correct_pairs": 6,
+    "old_pallet_correct_views": 4,
+    "person_correct_views": 2,
+    "plain_blank_abstentions": 4,
+    "marked_blank_abstentions": 3,
+    "suspect_abstentions": 0
+  },
+  "candidate_counts": {
+    "six_correct_views": 12,
+    "six_correct_pairs": 6,
+    "old_pallet_correct_views": 4,
+    "person_correct_views": 2,
+    "plain_blank_abstentions": 4,
+    "marked_blank_abstentions": 4,
+    "suspect_abstentions": 0
+  },
+  "new_response_count": 13,
+  "source_bindings_unchanged": true,
+  "original_annotations_verified": 256,
+  "original_state_unchanged": true,
+  "all_joint_checks_passed": false,
+  "c3_semantic_review": {
+    "passed": true,
+    "public_conclusion": "The new faint-arrow view still describes the visible wooden pallet edge; assistant visual readback confirms the opaque contour encloses that base. The unchanged contour-only view is an exact cached response. Nearby machinery and the arm remain outside the contour. This is a development-case semantic review, not human mask approval or generalization.",
+    "reviewer": "assistant",
+    "human_localization_approval": false
+  }
 }

@@ -1,0 +1,98 @@
+{
+  "status": "complete_native_soft_prior_with_RMS_followup",
+  "SAM_calls_total": 42,
+  "real_photo_SAM_calls": 36,
+  "gray_white_SAM_calls": 6,
+  "new_Mask2Former_forwards": 0,
+  "new_training": false,
+  "new_VLM_calls": 4,
+  "control_logical_views": 12,
+  "control_reused_logical_views": 8,
+  "control_PAL_false_positives": 0,
+  "new_Agent_runs": 0,
+  "one_SAM_call_per_chain": true,
+  "Agent_round_limit": 3,
+  "counts": {
+    "hard": {
+      "real_pairs": 12,
+      "native_valid_prompt_and_border": 9,
+      "individual_area_person_prompt_pass": 3,
+      "negative_constraint_fail_pairs": [
+        "camera0_frame76_q2_query32_upper",
+        "camera0_frame76_q2_query32_lower",
+        "camera0_frame76_q2_query68_lower"
+      ]
+    },
+    "soft": {
+      "real_pairs": 12,
+      "native_valid_prompt_and_border": 12,
+      "individual_area_person_prompt_pass": 8,
+      "negative_constraint_fail_pairs": []
+    },
+    "rms_binary": {
+      "real_pairs": 12,
+      "native_valid_prompt_and_border": 9,
+      "individual_area_person_prompt_pass": 3,
+      "negative_constraint_fail_pairs": [
+        "camera0_frame76_q2_query32_upper",
+        "camera0_frame76_q2_query32_lower",
+        "camera0_frame76_q2_query68_lower"
+      ]
+    }
+  },
+  "opposed_mask_IoU": [
+    {
+      "teacher_key": "camera0_frame76_q1_query11",
+      "hard": 0.0,
+      "soft": 0.0,
+      "rms_binary": 0.0
+    },
+    {
+      "teacher_key": "camera0_frame76_q2_query32",
+      "hard": 0.9438677738741617,
+      "soft": 0.4316129032258065,
+      "rms_binary": 0.9452648475120385
+    },
+    {
+      "teacher_key": "camera0_frame76_q2_query47",
+      "hard": 0.48135874067937034,
+      "soft": 0.42005698005698006,
+      "rms_binary": 0.4391785150078989
+    },
+    {
+      "teacher_key": "camera0_frame76_q2_query49",
+      "hard": 0.7933518705763397,
+      "soft": 0.7619620422346967,
+      "rms_binary": 0.7956554685526648
+    },
+    {
+      "teacher_key": "camera0_frame76_q2_query68",
+      "hard": 0.1523730224812656,
+      "soft": 0.1183494293239684,
+      "rms_binary": 0.15060830653055518
+    },
+    {
+      "teacher_key": "camera1_frame76_q2_query96",
+      "hard": 0.0005346164127238706,
+      "soft": 0.0,
+      "rms_binary": 0.0006775067750677507
+    }
+  ],
+  "individual_pool_not_joint_budget_admission": true,
+  "retained_support": "13/17",
+  "retained_original_Agent": "6/6",
+  "remaining_misses": 4,
+  "adopted": false,
+  "all_originals_and_old_six_exact": true,
+  "whole_model_source_unchanged": false,
+  "original_point_segment_unchanged": true,
+  "default_prior_mode": null,
+  "RMS_followup_exploratory_after_pilot": true,
+  "RMS_does_not_isolate_all_local_magnitude_or_interpolation_factors": true,
+  "all_output_components_and_native_low_res_logits_preserved": true,
+  "no_post_mask_clipping": true,
+  "pictures": 22,
+  "videos": 3,
+  "engineering_tests": 19,
+  "not_dense_truth_or_generalization": true
+}

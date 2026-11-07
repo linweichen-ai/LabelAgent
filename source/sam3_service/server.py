@@ -29,6 +29,13 @@ def segment_points():
         if mask is not None and not isinstance(mask, str):
             raise ValueError("mask must be a base64 PNG image")
         prior_mask = base64.b64decode(mask, validate=True) if mask is not None else None
+        capture = body.get("include_raw_capture", False)
+        if not isinstance(capture, bool):
+            raise ValueError("include_raw_capture must be boolean")
+        if capture:
+            from .raw_diagnostic import segment_with_capture
+            payload, status = segment_with_capture(image_bytes, points, prior_mask)
+            return jsonify(payload), status
         return jsonify(segment(image_bytes, points, prior_mask=prior_mask))
     except (ValueError, TypeError) as error:
         return jsonify(error=str(error)), 400

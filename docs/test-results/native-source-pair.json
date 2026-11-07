@@ -1,6 +1,6 @@
 {
   "phase": "final_verified",
-  "observed_utc": "2026-11-07T18:57:03.681880+00:00",
+  "observed_utc": "2026-11-07T19:05:33.959162+00:00",
   "status": "complete",
   "saved_new_responses": 37,
   "maximum_new_requests": 37,
@@ -223,5 +223,11 @@
   "old29_regression_completed": false,
   "c3_assistant_semantic_review_passed": true,
   "human_localization_approval": false,
-  "all_VLM_development_joint_checks_passed": false
+  "all_VLM_development_joint_checks_passed": false,
+  "broader29_input_inventory": "CPU_verified_not_inference_frozen_not_run",
+  "broader29_human_regions": 19,
+  "broader29_legacy_controls": 10,
+  "broader29_real_geometry_targets": 27,
+  "broader29_unique_native_photos": 10,
+  "broader29_new_model_calls": 0
 }

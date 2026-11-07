@@ -2,7 +2,7 @@
 
 The evidence-first output protocol reduced older-pallet recall to 1/4 and stress abstention to 4/8, so it was rejected. This study returns to the incumbent normal category-first JSON and adds a clean native-photo neighborhood around the existing selected interior point. The original opaque locator remains first and the original clean context remains last.
 
-**Status: in_progress; 9/37 fresh replies saved.**
+**Status: in_progress; 31/37 fresh replies saved.**
 
 Every case uses the same 128-native-pixel square rule, clipped inside the original image, resized to the model input without drawing guides or padding. Native photograph hashes and exact crop pixels are checked. Synthetic controls use the exact native generator; plain blanks retain their source. No expected category selects the crop. Existing masks and anchors are unchanged, and the new neighborhood can be tighter or wider than the old crop.
 
@@ -12,6 +12,8 @@ All 36 bodies are frozen before inference. Independent readback preserves the ex
 
 All live progress, stdout logs and completion records are written to the data drive after the previous C-drive log-write incident. Shared-service interruptions preserve accepted replies; completed or ambiguous attempts are never blindly retried.
 
+
+Both native-neighborhood raw views identify the visible wooden pallet supporting the gray crate/container. Assistant inspection of the exact native128 patch plus the unchanged locator and context supports this C3 semantic review: the selected surface is the wooden base, not the arm or dark machinery. Existing proposed geometry is preserved; this is not new human mask-boundary approval or a measurement of model attention.
 
 Collection or independent final readback remains unfinished; no full quality gain is claimed.
 

@@ -1,6 +1,6 @@
 {
   "phase": "final_verified",
-  "observed_utc": "2026-11-07T18:32:20.389311+00:00",
+  "observed_utc": "2026-11-07T18:36:49.977758+00:00",
   "status": "complete",
   "generate_replays_for_new_instrumentation": 1,
   "maximum_instrumented_generations": 1,
@@ -28,6 +28,12 @@
   "full_joint_adoption_checks_passed": false,
   "fresh_selected_decoder_reason_review_completed": false,
   "independent_generalization": false,
+  "next_input_candidate_status": "CPU_preflight_only_not_frozen_for_GPU_not_run",
+  "next_input_candidate_new_model_calls": 0,
+  "next_input_candidate_checked_bodies": 36,
+  "next_input_candidate_unique_budget": 37,
+  "next_input_candidate_native_source_proofs": 18,
+  "next_input_helper_source_sha256": "e78aa12f8d42650490b70f9bf6c01105ab49574b599cfc596bd37622c81bcf37",
   "groups": {
     "protected_pallet": {
       "conditions": 4,

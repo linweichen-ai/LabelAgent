@@ -1,0 +1,139 @@
+{
+  "status": "complete_box_prompt_diagnostic",
+  "real_SAM_calls": 16,
+  "native_candidates": 48,
+  "valid_complete_candidates": 46,
+  "outside_prompt_box_nonzero_candidates": 36,
+  "new_VLM_calls": 40,
+  "new_Agent_runs": 0,
+  "reference_support_and_budget_candidates": [
+    {
+      "candidate": "7580ebb11d9d95b6132d3644036dde29d3bf8d29732f49bde30f5cbb4b4b2311_0_0",
+      "seed": 2,
+      "case": "camera0_frame76",
+      "object_id": 42,
+      "points": 13,
+      "coverage": 0.8125,
+      "purity": 0.9285714285714286,
+      "extra_pixels": 9,
+      "area": 2279,
+      "old_pairs_can_be_kept_exact": true,
+      "feasible_match_count_with_this_candidate_only": 8
+    },
+    {
+      "candidate": "ab6b7e5e75342f825c05d4b967f5368a735e0e3ef6addb2bae665e667964c562_0_0",
+      "seed": 3,
+      "case": "camera0_frame76",
+      "object_id": 42,
+      "points": 12,
+      "coverage": 0.75,
+      "purity": 0.8571428571428571,
+      "extra_pixels": 61,
+      "area": 2213,
+      "old_pairs_can_be_kept_exact": true,
+      "feasible_match_count_with_this_candidate_only": 8
+    },
+    {
+      "candidate": "d2dea8b0a0bfc4b733e864d00cb781d541c8f13855df1b3886cabd1b4c8adf7a_0_0",
+      "seed": 7,
+      "case": "camera0_frame76",
+      "object_id": 42,
+      "points": 13,
+      "coverage": 0.8125,
+      "purity": 0.8666666666666667,
+      "extra_pixels": 44,
+      "area": 2168,
+      "old_pairs_can_be_kept_exact": true,
+      "feasible_match_count_with_this_candidate_only": 8
+    },
+    {
+      "candidate": "f40d6357c5d19cbe38be6694fef2e154babff12fb2e134b06a2242ca57edd976_0_0",
+      "seed": 8,
+      "case": "camera0_frame76",
+      "object_id": 42,
+      "points": 13,
+      "coverage": 0.8125,
+      "purity": 1.0,
+      "extra_pixels": 34,
+      "area": 2127,
+      "old_pairs_can_be_kept_exact": true,
+      "feasible_match_count_with_this_candidate_only": 8
+    }
+  ],
+  "pool_counts_not_joint_budget_admission": true,
+  "review_comparison": {
+    "original_square": {
+      "candidate_views": 8,
+      "candidate_subject_PASS": 0,
+      "negative_views": 16,
+      "negative_rejections": 16
+    },
+    "deepest_center_aspect": {
+      "candidate_views": 8,
+      "candidate_subject_PASS": 0,
+      "negative_views": 16,
+      "negative_rejections": 16
+    },
+    "bbox_center_aspect": {
+      "candidate_views": 8,
+      "candidate_subject_PASS": 0,
+      "negative_views": 16,
+      "negative_rejections": 16
+    }
+  },
+  "original_semantic_candidates": [
+    {
+      "key": "7580ebb11d9d95b6132d3644036dde29d3bf8d29732f49bde30f5cbb4b4b2311_0_0",
+      "neutral_passed": false,
+      "matched_plain_controls_passed": true,
+      "single_base_passed": false,
+      "extent_passed": false,
+      "all_semantic_stages_passed": false
+    },
+    {
+      "key": "ab6b7e5e75342f825c05d4b967f5368a735e0e3ef6addb2bae665e667964c562_0_0",
+      "neutral_passed": false,
+      "matched_plain_controls_passed": true,
+      "single_base_passed": false,
+      "extent_passed": false,
+      "all_semantic_stages_passed": false
+    },
+    {
+      "key": "d2dea8b0a0bfc4b733e864d00cb781d541c8f13855df1b3886cabd1b4c8adf7a_0_0",
+      "neutral_passed": false,
+      "matched_plain_controls_passed": true,
+      "single_base_passed": false,
+      "extent_passed": false,
+      "all_semantic_stages_passed": false
+    },
+    {
+      "key": "f40d6357c5d19cbe38be6694fef2e154babff12fb2e134b06a2242ca57edd976_0_0",
+      "neutral_passed": false,
+      "matched_plain_controls_passed": true,
+      "single_base_passed": false,
+      "extent_passed": false,
+      "all_semantic_stages_passed": false
+    }
+  ],
+  "retained_support": "13/17",
+  "retained_original_Agent": "6/6",
+  "remaining_misses": 4,
+  "adopted": false,
+  "default_box_prompt": null,
+  "no_clipping_or_component_removal": true,
+  "all_original_six_hashes_exact": true,
+  "Agent_round_limit": 3,
+  "later_gates": "Neutral failures remain failures; full single-base, extent, visible-LiDAR and Agent gates not waived or counted as passed.",
+  "pictures": 32,
+  "videos": 3,
+  "engineering_tests": 19,
+  "scope": "Exposed capture development diagnosis, no dense truth or generalization claim",
+  "target_binding_caption_readback": {
+    "original_gray_container_descriptions": 8,
+    "bbox_gray_container_descriptions": 0,
+    "bbox_light_colored_descriptions": 8,
+    "bbox_explicit_wood_descriptions": 4,
+    "views_per_arm": 8,
+    "caption_lexical_readback_not_independent_physical_truth": true
+  }
+}

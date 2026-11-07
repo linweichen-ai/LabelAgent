@@ -9,3 +9,5 @@ The original fourteen cases and all their gates are retained. Their 56 full/weak
 Status: **running_or_awaiting_verification**. No stress-test success is claimed before complete response readback, generator reconstruction and original-file verification. These synthetic controls cannot establish real-scene false-positive accuracy or independent generalization. Existing suspect and positive requirements remain in force; no default or annotation is changed.
 
 Private images, masks, coordinates and filesystem paths stay local. Prior result: [quarter-opacity comparison](faint-pointer.md).
+
+Partial readback has already observed a new-negative hallucination. This contradicts extending the earlier four-view success to all synthetic backgrounds; the full fixed panel continues and defaults remain unchanged.

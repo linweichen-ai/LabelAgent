@@ -1,0 +1,14 @@
+{
+  "status": "frozen_source_inputs_only_inference_not_started",
+  "prepared_real_source_contexts": 6,
+  "trained_checkpoints": 2,
+  "max_new_CPU_forwards": 12,
+  "actual_new_forwards": 0,
+  "new_training": false,
+  "source_policy": "Expand existing ROI using real original RGB pixels to model576:448 ratio, keep entire original ROI, no synthetic padding",
+  "same_original_CPU_FP32_checkpoints_input_shape_and_postprocessing": true,
+  "no_reference_or_area_for_inputs": true,
+  "all_original_acceptance_gates_required": true,
+  "not_an_improved_instance_result": true,
+  "adopted": false
+}

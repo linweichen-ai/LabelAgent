@@ -1,0 +1,46 @@
+{
+  "status": "complete_frozen_replay_and_retained_weight_trial",
+  "old_cached_query_slots": 1000,
+  "retained_weight_query_slots": 1000,
+  "new_Mask2Former_CPU_forwards": 10,
+  "old_model_new_forwards": 0,
+  "new_training": false,
+  "new_SAM_calls": 0,
+  "new_VLM_calls": 0,
+  "new_Agent_runs": 0,
+  "legacy_PAL_class_kept": [
+    14,
+    14
+  ],
+  "legacy_PAL_postprocess_kept": [
+    14,
+    14
+  ],
+  "PAL_native_area_person_border_qualified": [
+    0,
+    0
+  ],
+  "old_selected_over_native_min": 0.8736462093862816,
+  "old_selected_ratio_below_0_6": 0,
+  "cached_old_panoptic_exact": 10,
+  "new_stock_panoptic_exact": 10,
+  "same_images_crops_architecture_processor_recipe_thresholds": true,
+  "old_weight_sha256": "d11c2e7f86cd5189605b857c4697e55a5caead0a6888b52b2f5ff814150f5291",
+  "candidate_weight_sha256": "6820dd6ef5cb5557550e7877c2e7f904bfcd504353180f9c01c505c5ce0ed2e2",
+  "retained_support": "13/17",
+  "retained_original_Agent": "6/6",
+  "remaining_misses": 4,
+  "adopted": false,
+  "all_originals_and_old_six_exact": true,
+  "audit_sparse_radius": 3,
+  "original_final_radii_still_required": [
+    0,
+    3,
+    6
+  ],
+  "pictures": 20,
+  "videos": 3,
+  "engineering_tests": 3,
+  "not_dense_truth_or_generalization": true,
+  "display_ROIs_reference_only_never_generation_inputs": true
+}

@@ -1,6 +1,6 @@
 # Fresh matched guide versus clean-source input comparison
 
-**Status: in_progress; 18/69 new replies saved.**
+**Status: in_progress; 42/69 new replies saved.**
 
 Adding an unmarked native neighborhood previously preserved positives but regressed stress-blank abstention from the original 6/8 to 4/8. This diagnostic freshly infers both guide and clean arms with the same neutral questions, model, normal category-first JSON, selected mask-derived point, 128-native-pixel neighborhood, clean context and three-image/768-token budget. Only image 1 changes: painted locator versus an exact copy of the clean context image. The UI locator and annotation are preserved.
 
@@ -10,6 +10,8 @@ Requests, plan, model configuration, input bytes and CPU-computed prompt lengths
 
 Acceptance retains all positive and negative gates, no loss of a correct original or matched-guide condition, strict stress improvement over original 6/8, and independent C3 semantic review. The existing evaluator also requires strict stress improvement over the freshly matched guide arm. Conservative suspect abstention is policy, not confirmed class truth.
 
+
+Assistant C3 semantic review fails for the clean-input arm: overview names the wooden pallet under the plastic crate, but linked instead describes the adjacent arm and hand as a person. The fresh painted-guide arm identifies the pallet in both conditions. The guide-removal candidate is rejected; the original target locator and default input remain preserved.
 
 Collection or independent final review is unfinished. No complete quality gain is claimed.
 

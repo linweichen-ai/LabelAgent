@@ -1,7 +1,7 @@
 {
   "study": "New-shape and new-background controlled negative stress test",
-  "phase": "running_or_awaiting_verification",
-  "observed_utc": "2026-11-07T13:15:02.749183+00:00",
+  "phase": "final_verified",
+  "observed_utc": "2026-11-07T13:18:33.050352+00:00",
   "plan_sha256": "296e9f23bb042a12d30392d94ebdb68fb7781f59de237120f887fba3e62003ea",
   "maximum_new_requests": 17,
   "original_cases_retained": 14,
@@ -19,17 +19,76 @@
   "default_enabled": false,
   "candidate_adopted": false,
   "independent_validation": false,
-  "status": "running",
-  "new_responses_received": 9,
-  "completed_rows": 68,
+  "status": "complete",
+  "new_responses_received": 13,
+  "completed_rows": 72,
   "partial_stress_counts": {
     "baseline": {
-      "received_views": 6,
-      "abstentions": 4
+      "received_views": 8,
+      "abstentions": 6
     },
     "candidate": {
-      "received_views": 6,
-      "abstentions": 4
+      "received_views": 8,
+      "abstentions": 6
     }
-  }
+  },
+  "completion_plan_sha256": "72d8504941acaea9705172f17b34b2dc1a38dfb6d524012e08d3c957af7e3acc",
+  "old_panel_counts": {
+    "baseline": {
+      "six_correct_views": 12,
+      "six_correct_pairs": 6,
+      "old_pallet_correct_views": 4,
+      "person_correct_views": 2,
+      "plain_blank_abstentions": 4,
+      "marked_blank_abstentions": 3,
+      "suspect_abstentions": 0
+    },
+    "candidate": {
+      "six_correct_views": 12,
+      "six_correct_pairs": 6,
+      "old_pallet_correct_views": 4,
+      "person_correct_views": 2,
+      "plain_blank_abstentions": 4,
+      "marked_blank_abstentions": 4,
+      "suspect_abstentions": 0
+    }
+  },
+  "stress_counts": {
+    "baseline": {
+      "views": 8,
+      "abstentions": 6,
+      "hallucinations": [
+        {
+          "case_id": "stress_A_gradient",
+          "view": "overview",
+          "category": "pallet"
+        },
+        {
+          "case_id": "stress_B_gray",
+          "view": "linked",
+          "category": "person"
+        }
+      ]
+    },
+    "candidate": {
+      "views": 8,
+      "abstentions": 6,
+      "hallucinations": [
+        {
+          "case_id": "stress_A_gradient",
+          "view": "overview",
+          "category": "pallet"
+        },
+        {
+          "case_id": "stress_B_gray",
+          "view": "linked",
+          "category": "person"
+        }
+      ]
+    }
+  },
+  "source_bindings_unchanged": true,
+  "original_annotations_verified": 256,
+  "original_state_unchanged": true,
+  "all_joint_checks_passed": false
 }

@@ -1,6 +1,6 @@
 # Whole-clean-scene absence instruction with the original locator
 
-**Status: in_progress; 5/37 new replies saved.**
+**Status: in_progress; 24/37 new replies saved.**
 
 A fresh matched guide-versus-clean ablation improved synthetic stress abstention to 8/8 after removing the locator, but caused C3 to switch from the selected wooden pallet to an adjacent arm and regressed ordinary blanks. That candidate was rejected. This trial retains the original complete locator, unmarked context, source-last order, two-image/512-token budget and normal category-first output.
 
@@ -10,6 +10,8 @@ The exact original 36 requests and responses are reused as the reference. All 36
 
 The panel contains 18 selected cases and two questions per case, not 36 independent images: six human-confirmed categories, two older pallets, person control, plain and marked blanks, synthetic stress and one unconfirmed suspect with conservative abstention policy. Suspect abstention is not human-confirmed category truth. Full original positive and negative gates, no loss of an originally correct answer, stress improvement above original 6/8 and C3 semantic review remain mandatory.
 
+
+Assistant C3 semantic review passes for this trial: both raw reasons name the visible wooden pallet edge, consistent with the selected base beneath the plastic crate in the exact source and locator views. Neither switches to the adjacent arm or describes an empty field. Short explanations are truncated by the unchanged100-character schema; this review does not measure attention or approve mask boundaries.
 
 Collection or independent final review is unfinished. No complete quality gain is claimed.
 

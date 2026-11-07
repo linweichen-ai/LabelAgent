@@ -1,0 +1,26 @@
+{
+  "study": "Whole clean-source scene observation and classifier replay",
+  "observed_utc": "2026-11-07T13:24:02.139986+00:00",
+  "phase": "running_or_awaiting_verification",
+  "plan_sha256": "85aab02ef769a1018bc54ed41bb6ad4c58aea492eb422ad291c8307016e960d0",
+  "maximum_new_requests": 19,
+  "cases": 18,
+  "tests_passed": 4,
+  "observation_input": "One unmarked source crop, no guide, selected point, object category or earlier answer.",
+  "observer_vocabulary": [
+    "flat_field",
+    "structured_scene",
+    "uncertain"
+  ],
+  "reviewed_rule": "Only structured_scene passes the original raw class; flat_field or uncertain abstains.",
+  "model_observer_veto_replay_not_raw_classifier_gain": true,
+  "source_scene_is_not_target_localization": true,
+  "original_annotations_written": false,
+  "new_SAM_calls": 0,
+  "default_enabled": false,
+  "candidate_adopted": false,
+  "independent_validation": false,
+  "status": "running",
+  "new_responses_received": 4,
+  "completed_observations": 4
+}

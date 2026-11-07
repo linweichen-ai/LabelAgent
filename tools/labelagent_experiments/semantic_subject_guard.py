@@ -8,6 +8,9 @@ def pallet_is_primary_subject(text):
  text=text.strip().lower()
  text=re.sub(r'^(?:in|at) the (?:center|foreground|background)(?: of (?:the|this) (?:image|photo))?\s*[,;:]?\s*','',text)
  text=re.sub(r'^(?:there (?:is|are)|(?:the|this) (?:central |centered |main |visible )?(?:object|surface) (?:is|appears to be))\s+','',text)
+ # Adjective coordination does not introduce a second physical subject.
+ descriptors=r'black|white|blue|gray|grey|brown|red|green|yellow|orange|beige|silver|light|dark|wooden|plastic|metal|metallic|steel|aluminum|aluminium|rubber'
+ text=re.sub(r'\b('+descriptors+r')\s+and\s+(?=(?:'+descriptors+r')\b)',r'\1 ',text)
  primary=re.split(r'\b(?:with|and|on|in|under|over|above|below|beside|behind|next to|near|against|containing|carrying)\b|[,;.]',text,maxsplit=1)[0]
  return bool(re.search(r'\bpallets?\b|\bskids?\b|托盘',primary,re.I))
 

@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "kind": "post_seal_subject_adjective_coordination_correction",
+  "old_sealed_guard_sha256": "2a644cd86587ec208b0f3abeac21e5d4541fea7e865688f816b888e239df66af",
+  "current_guard_sha256": "cfddea0dc9a34c9e168cf0a02b27b0831109c20e7a20721e1efde91721b09007",
+  "current_test_sha256": "072f9f3901bc332eb98058cba758afa92db135c3d63b6dd406b22dce8d1d99c1",
+  "all_28_saved_answer_replay_outcomes_unchanged": true,
+  "current_primary_subject_PASS": "0/6",
+  "engineering_tests": 36,
+  "new_model_calls": 0,
+  "sealed_bundle_modified": false,
+  "note": "Keep black and blue / wooden and plastic as adjective coordination while rejecting a box and a pallet. First sealed source remains intact; current source/test and QA are attached separately."
+}

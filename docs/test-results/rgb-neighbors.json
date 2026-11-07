@@ -1,0 +1,36 @@
+{
+  "status": "complete_rejected_RGB_neighbor_policy",
+  "new_actual_SAM_calls": 14,
+  "real_photo_SAM_calls": 12,
+  "blank_SAM_calls": 2,
+  "new_actual_VLM_calls": 1,
+  "control_logical_views": 4,
+  "control_exact_reused_views": 3,
+  "control_PAL_false_positives": 0,
+  "real_prompt_border_pass_old_new": [
+    12,
+    10
+  ],
+  "individual_area_person_prompt_pass_old_new": [
+    8,
+    8
+  ],
+  "old_and_new_teacher_count": 6,
+  "hypotheses_per_teacher_each": 2,
+  "one_SAM_call_per_chain": true,
+  "max_points": 3,
+  "Agent_round_limit": 3,
+  "new_Agent_runs": 0,
+  "retained_support": "13/17",
+  "retained_original_Agent": "6/6",
+  "remaining_misses": 4,
+  "adopted": false,
+  "no_output_mask_clipping": true,
+  "all_originals_and_six_results_exact": true,
+  "same_full_teacher_prior_and_RGB_crop": true,
+  "new_prompt_policy_changes_multiple_point_locations": "exploratory combined policy, not one-factor attribution",
+  "independent_dense_truth_or_generalization": false,
+  "real_remaining_semantic_extent_LiDAR_Agent_checks": "not run because original sparse support failed",
+  "pictures": 15,
+  "videos": 2
+}

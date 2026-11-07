@@ -1,11 +1,11 @@
 {
   "phase": "in_progress",
-  "observed_utc": "2026-11-07T14:25:33.862295+00:00",
+  "observed_utc": "2026-11-07T14:31:36.334995+00:00",
   "status": "running",
   "planned_fresh_candidate_calls": 37,
-  "attempted_candidate_calls": 19,
-  "saved_candidate_responses": 18,
-  "saved_validated_quality_rows": 18,
+  "attempted_candidate_calls": 26,
+  "saved_candidate_responses": 25,
+  "saved_validated_quality_rows": 25,
   "cached_2b_quality_views": 36,
   "cases": 18,
   "quality_views_per_arm": 36,
@@ -23,5 +23,8 @@
   "original_annotations_written": false,
   "new_SAM_calls": 0,
   "independent_validation": false,
-  "changes_host_runtime_as_well_as_model_size": true
+  "changes_host_runtime_as_well_as_model_size": true,
+  "c3_assistant_semantic_review_passed": true,
+  "human_localization_approval": false,
+  "owned_leases_started": 2
 }

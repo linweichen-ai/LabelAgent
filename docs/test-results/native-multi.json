@@ -1,0 +1,159 @@
+{
+  "status": "complete_native_multi_diagnostic",
+  "real_SAM_calls": 12,
+  "native_candidates": 36,
+  "complete_valid_native_candidates": 30,
+  "geometry_area_person_candidates": 21,
+  "retained_support": "13/17",
+  "retained_original_Agent": "6/6",
+  "new_Agent_runs": 0,
+  "new_VLM_calls": 14,
+  "remaining_misses": 4,
+  "adopted": false,
+  "annotation_writes": 0,
+  "all_original_six_hashes_exact": true,
+  "all_masks_untrimmed": true,
+  "old_gates_unchanged": true,
+  "pictures": 32,
+  "videos": 3,
+  "engineering_tests": 3,
+  "evidence_scope": "Exposed-capture development diagnostics; projected sparse support is not dense truth or generalization.",
+  "source_selected_vs_all_native_remaining_support": [
+    {
+      "case": "camera0_frame76",
+      "object_id": 42,
+      "radius": 3,
+      "best_qualified_support_after_geometry_area_person": {
+        "source_selected": 0.0,
+        "all_native": 0.625
+      }
+    },
+    {
+      "case": "camera0_frame76",
+      "object_id": 48,
+      "radius": 3,
+      "best_qualified_support_after_geometry_area_person": {
+        "source_selected": 0,
+        "all_native": 0
+      }
+    },
+    {
+      "case": "camera1_frame76",
+      "object_id": 47,
+      "radius": 3,
+      "best_qualified_support_after_geometry_area_person": {
+        "source_selected": 0,
+        "all_native": 0
+      }
+    },
+    {
+      "case": "camera1_frame76",
+      "object_id": 49,
+      "radius": 3,
+      "best_qualified_support_after_geometry_area_person": {
+        "source_selected": 0,
+        "all_native": 0
+      }
+    }
+  ],
+  "semantic_candidates": [
+    {
+      "key": "fa55c16f7fa85c44bde310876a97879d69bb97788152b919872f01d61545d8f5_0_2",
+      "neutral_passed": false,
+      "matched_plain_controls_passed": true,
+      "single_base_passed": false,
+      "extent_passed": false,
+      "all_semantic_stages_passed": false
+    },
+    {
+      "key": "18b4b5c49658d106e66b8303b8ef7a58adb833d5d48bcccfb1f41ca97a6bd6aa_0_2",
+      "neutral_passed": false,
+      "matched_plain_controls_passed": true,
+      "single_base_passed": false,
+      "extent_passed": false,
+      "all_semantic_stages_passed": false
+    }
+  ],
+  "semantic_neutral_passed": 0,
+  "later_gates_not_run_reason": "Both candidates fail unchanged neutral semantic identity; single-base, extent, visible-LiDAR and Agent are still required before any adoption.",
+  "matches_by_radius": [
+    {
+      "case": "camera0_frame76",
+      "radius": 0,
+      "old": 7,
+      "all_unfiltered": 9,
+      "gated_geometry_area_person": 8
+    },
+    {
+      "case": "camera0_frame76",
+      "radius": 3,
+      "old": 7,
+      "all_unfiltered": 8,
+      "gated_geometry_area_person": 8
+    },
+    {
+      "case": "camera0_frame76",
+      "radius": 6,
+      "old": 7,
+      "all_unfiltered": 8,
+      "gated_geometry_area_person": 8
+    },
+    {
+      "case": "camera1_frame76",
+      "radius": 0,
+      "old": 4,
+      "all_unfiltered": 5,
+      "gated_geometry_area_person": 4
+    },
+    {
+      "case": "camera1_frame76",
+      "radius": 3,
+      "old": 6,
+      "all_unfiltered": 7,
+      "gated_geometry_area_person": 6
+    },
+    {
+      "case": "camera1_frame76",
+      "radius": 6,
+      "old": 6,
+      "all_unfiltered": 7,
+      "gated_geometry_area_person": 6
+    }
+  ],
+  "individual_budget_matching_proof": [
+    {
+      "case": "camera0_frame76",
+      "candidate": "fa55c16f7fa85c44bde310876a97879d69bb97788152b919872f01d61545d8f5_0_2",
+      "object_id": 42,
+      "candidate_alone_added": true,
+      "all_old_matched_pairs_can_be_kept_exact": true,
+      "old_matched_count": 7,
+      "feasible_matched_count": 8,
+      "extra_pixels": 73,
+      "qualified_support": 0.625,
+      "semantic_neutral_passed": false
+    },
+    {
+      "case": "camera0_frame76",
+      "candidate": "18b4b5c49658d106e66b8303b8ef7a58adb833d5d48bcccfb1f41ca97a6bd6aa_0_2",
+      "object_id": 42,
+      "candidate_alone_added": true,
+      "all_old_matched_pairs_can_be_kept_exact": true,
+      "old_matched_count": 7,
+      "feasible_matched_count": 8,
+      "extra_pixels": 58,
+      "qualified_support": 0.625,
+      "semantic_neutral_passed": false
+    }
+  ],
+  "pool_counts_are_not_joint_budget_admission": true,
+  "binding_diagnostic_VLM_calls": 8,
+  "binding_diagnostic_does_not_override_neutral_failure": true,
+  "binding_findings": {
+    "real_extent_edge_fragment": 2,
+    "real_pointer_pallet_base": 0,
+    "gray_extent_describes_white_shape": 2,
+    "visual_readback_note": "Raw mask overlays indicate white base lower-edge pieces, while wide neutral views include foreground gray containers. Gray extent inputs retain the exact white mask on the second image; white-object descriptions are not evidence of a physical object.",
+    "adopted": false
+  }
+}

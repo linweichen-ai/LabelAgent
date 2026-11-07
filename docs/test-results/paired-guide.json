@@ -1,8 +1,8 @@
 {
-  "phase": "in_progress",
-  "observed_utc": "2026-11-07T17:12:28.457134+00:00",
-  "status": "running",
-  "saved_new_responses": 42,
+  "phase": "final_verified",
+  "observed_utc": "2026-11-07T17:22:09.112624+00:00",
+  "status": "complete",
+  "saved_new_responses": 69,
   "maximum_new_requests": 69,
   "cases": 18,
   "quality_conditions_per_arm": 36,
@@ -31,6 +31,136 @@
   "default_enabled": false,
   "full_project_validation_passed": false,
   "independent_generalization": false,
+  "groups": {
+    "protected_pallet": {
+      "conditions": 4,
+      "original_correct": 4,
+      "historical_native_correct": 4,
+      "guide_correct": 4,
+      "clean_correct": 4,
+      "guide_categories": {
+        "pallet": 4
+      },
+      "clean_categories": {
+        "pallet": 4
+      }
+    },
+    "person_fixture": {
+      "conditions": 2,
+      "original_correct": 2,
+      "historical_native_correct": 2,
+      "guide_correct": 2,
+      "clean_correct": 2,
+      "guide_categories": {
+        "person": 2
+      },
+      "clean_categories": {
+        "person": 2
+      }
+    },
+    "suspected_non_pallet": {
+      "conditions": 2,
+      "original_correct": 0,
+      "historical_native_correct": 0,
+      "guide_correct": 0,
+      "clean_correct": 0,
+      "guide_categories": {
+        "pallet": 2
+      },
+      "clean_categories": {
+        "pallet": 2
+      }
+    },
+    "blank_control": {
+      "conditions": 4,
+      "original_correct": 4,
+      "historical_native_correct": 4,
+      "guide_correct": 3,
+      "clean_correct": 3,
+      "guide_categories": {
+        "uncertain": 3,
+        "person": 1
+      },
+      "clean_categories": {
+        "uncertain": 3,
+        "person": 1
+      }
+    },
+    "marked_blank_control": {
+      "conditions": 4,
+      "original_correct": 4,
+      "historical_native_correct": 3,
+      "guide_correct": 1,
+      "clean_correct": 3,
+      "guide_categories": {
+        "pallet": 1,
+        "person": 2,
+        "uncertain": 1
+      },
+      "clean_categories": {
+        "pallet": 1,
+        "uncertain": 3
+      }
+    },
+    "confirmed_six": {
+      "conditions": 12,
+      "original_correct": 12,
+      "historical_native_correct": 12,
+      "guide_correct": 12,
+      "clean_correct": 11,
+      "guide_categories": {
+        "pallet": 6,
+        "person": 6
+      },
+      "clean_categories": {
+        "pallet": 5,
+        "person": 7
+      }
+    },
+    "stress_negative": {
+      "conditions": 8,
+      "original_correct": 6,
+      "historical_native_correct": 4,
+      "guide_correct": 2,
+      "clean_correct": 8,
+      "guide_categories": {
+        "uncertain": 2,
+        "person": 6
+      },
+      "clean_categories": {
+        "uncertain": 8
+      }
+    }
+  },
+  "checks": {
+    "confirmed_six_12_of_12": false,
+    "old_pallets_4_of_4": true,
+    "person_control_2_of_2": true,
+    "plain_blanks_4_of_4": false,
+    "original_marked_blanks_4_of_4": false,
+    "stress_blanks_8_of_8": true,
+    "suspect_conservative_abstention_2_of_2": false,
+    "no_correct_original_condition_lost": false,
+    "no_correct_matched_guide_condition_lost": false,
+    "strict_stress_gain_over_original6": true,
+    "strict_stress_gain_over_matched_guide": true,
+    "default_budget_guard_passed": true,
+    "identical_question_model_compute_verified": true,
+    "only_image1_changed": true,
+    "no_successful_request_repeated": true,
+    "normal_raw_categories_preserved": true,
+    "all_native_patches_reconstructed": true,
+    "originals_and_references_unchanged": true
+  },
+  "all_automatic_gates_passed": false,
+  "accepted_new_calls_per_part": [
+    35,
+    2,
+    32
+  ],
   "c3_assistant_semantic_review_passed": false,
-  "human_localization_approval": false
+  "human_localization_approval": false,
+  "all_VLM_development_joint_checks_passed": false,
+  "next_candidate_status": "static_body_preflight_only_no_inference",
+  "next_candidate_intervention": "Retain original two-image locator and context; append global whole-clean-scene absence instruction, separate from low texture of a real component"
 }

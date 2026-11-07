@@ -8,6 +8,10 @@ The new observation is evaluated separately from the old raw object classificati
 
 All nine protected positive sources, eight known blank/synthetic sources and the unconfirmed suspect are retained. The full six-category, two-old-pallet, person, blank, suspect, C3 and original-file requirements remain visible. No annotation or workbench default is changed.
 
-Status: **running_or_awaiting_verification**. Four focused checks passed; at most nineteen new source-observation/default-guard requests. Earlier raw classifier responses are reused for replay, not sent as observer input.
+Status: **final_verified**. Four focused checks passed; at most nineteen new source-observation/default-guard requests. Earlier raw classifier responses are reused for replay, not sent as observer input.
 
 Source media, proposed masks, private coordinates, filesystem paths and credentials remain local. This reused development panel does not establish independent real-scene accuracy.
+
+Verified outcome: all 8/8 known blank/synthetic sources were reported flat_field, but only 4/9 protected positive sources passed. All five pallet sources were incorrectly rejected by this observer; reviewed confirmed-category views fell 12/12 to 6/12 and older-pallet views 4/4 to 0/4. The four person sources passed. The old raw classifier answers were not changed.
+
+This candidate is rejected. Source-only observation is not reliable enough to veto the protected pallet classifications. Nineteen new CUDA responses, exact submitted source images, replay calculations, approved references and all 256 original annotation files were independently read back. A later controlled label-wording test may diagnose the abstract scene vocabulary; it cannot retroactively replace these failures.

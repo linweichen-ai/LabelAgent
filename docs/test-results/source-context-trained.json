@@ -1,0 +1,101 @@
+{
+  "status": "complete_rejected_context_and_trained_cue_trials",
+  "paired_context": {
+    "status": "complete_no_new_qualified_source_point",
+    "cases": 18,
+    "logical_conditions": 36,
+    "actual_unique_new_VLM_calls": 30,
+    "exact_same_batch_reused_conditions": 6,
+    "matched_image_counts": [
+      2,
+      2
+    ],
+    "matched_actual_visual_tokens": [
+      512,
+      512
+    ],
+    "only_second_image_changed": true,
+    "same_source_point_prompt_schema_model_and_decode": true,
+    "original_seed_PAL_subject_evidence": {
+      "repeated_near": 1,
+      "near_plus_context": 1
+    },
+    "counter_point_PAL_subject_evidence": {
+      "repeated_near": 0,
+      "near_plus_context": 0
+    },
+    "wood_fixture_PAL_subject_evidence": {
+      "repeated_near": false,
+      "near_plus_context": true
+    },
+    "known_non_PAL_controls_false_PAL": {
+      "repeated_near": 0,
+      "near_plus_context": 0
+    },
+    "real_point_dense_truth_or_class_accuracy_not_established": true,
+    "person_description_not_full_person_category_validation": true,
+    "neutral_padding_is_not_object_evidence": true,
+    "new_SAM_calls": 0,
+    "new_independent_masks": 0,
+    "new_Agent_runs": 0,
+    "retained_support": "13/17",
+    "retained_original_Agent": "6/6",
+    "remaining_misses": 4,
+    "Agent_round_limit": 3,
+    "adopted": false,
+    "all_original_six_bytes_exact": true,
+    "pre_inference_guard_null_PID_bug_and_fix_retained": true,
+    "same_requests_before_and_after_guard_fix": true,
+    "guard_tests": 3,
+    "not_independent_generalization": true,
+    "pictures": 19,
+    "videos": 3
+  },
+  "trained_cues": {
+    "status": "complete_trained_points_no_new_instance",
+    "cached_stock_panoptic_replays_exact": 6,
+    "old_teacher_sha256": "d11c2e7f86cd5189605b857c4697e55a5caead0a6888b52b2f5ff814150f5291",
+    "later_teacher_sha256": "6820dd6ef5cb5557550e7877c2e7f904bfcd504353180f9c01c505c5ce0ed2e2",
+    "new_Mask2Former_forwards": 0,
+    "new_training": false,
+    "source_only_point_cues": 12,
+    "PAL_subject_cues": 5,
+    "actual_new_VLM_calls": 12,
+    "exact_VLM_cache_reuses": 0,
+    "actual_new_SAM_calls": 5,
+    "new_independent_full_native_masks": 5,
+    "complete_no_border_masks": 5,
+    "area_person_valid_masks": 4,
+    "r0_r3_r6_instance_support_unchanged": true,
+    "new_accepted_instances": 0,
+    "retained_support": "13/17",
+    "retained_original_Agent": "6/6",
+    "new_Agent_runs": 0,
+    "Agent_round_limit": 3,
+    "remaining_misses": 4,
+    "adopted": false,
+    "no_output_mask_clipping": true,
+    "all_original_six_and_references_exact": true,
+    "area_cap": 122511.25,
+    "remaining_integer_pixels": 209,
+    "not_dense_truth_or_independent_generalization": true,
+    "pictures": 18,
+    "videos": 2
+  },
+  "actual_new_VLM_calls_our_two_trials": 42,
+  "actual_new_SAM_calls": 5,
+  "new_full_native_masks": 5,
+  "new_accepted_instances": 0,
+  "new_Agent_runs": 0,
+  "retained_support": "13/17",
+  "retained_original_Agent": "6/6",
+  "remaining_misses": 4,
+  "Agent_round_limit": 3,
+  "adopted": false,
+  "pictures": 37,
+  "videos": 5,
+  "external37_separate_owner_calls_readback_not_counted_as_ours": true,
+  "external37_automatic_acceptance": false,
+  "all_original_six_and_references_exact": true,
+  "no_output_mask_clipping": true
+}

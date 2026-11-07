@@ -1,8 +1,8 @@
 {
   "phase": "in_progress",
-  "observed_utc": "2026-11-07T17:27:48.458759+00:00",
+  "observed_utc": "2026-11-07T17:34:24.521434+00:00",
   "status": "running",
-  "saved_new_responses": 5,
+  "saved_new_responses": 24,
   "maximum_new_requests": 37,
   "cases": 18,
   "baseline_cached_quality_views": 36,
@@ -105,5 +105,7 @@
   "candidate_adopted": false,
   "default_enabled": false,
   "full_project_validation_passed": false,
-  "independent_generalization": false
+  "independent_generalization": false,
+  "c3_assistant_semantic_review_passed": true,
+  "human_localization_approval": false
 }

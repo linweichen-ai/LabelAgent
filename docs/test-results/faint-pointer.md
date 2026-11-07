@@ -9,3 +9,5 @@ All 14 regions and every previous positive/negative requirement remain. The 28 b
 Status: **running_or_awaiting_verification**. No completed improvement is claimed before raw-response, C3-semantic and original-file verification. Existing defaults remain. Source-last verified results: [previous comparison](source-last-order.md).
 
 This is development on a reused capture, not independent generalization or human mask-boundary validation. Private media, coordinates, masks, paths and credentials remain local.
+
+A shared-workspace SAM service file changed during the run to add an opt-in point-endpoint diagnostic. The original run and rejected continuation are retained. A separately hashed addendum records that one dependency update; this study makes zero SAM calls. All VLM requests, model configuration, references, image construction and gates remain the same. Four completed new answers are reused; only nine requests remain in the continuation.

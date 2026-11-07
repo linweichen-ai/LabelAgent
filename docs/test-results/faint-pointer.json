@@ -1,6 +1,6 @@
 {
   "study": "Quarter-opacity arrow with complete contour retained",
-  "observed_utc": "2026-11-07T12:57:54.477868+00:00",
+  "observed_utc": "2026-11-07T13:03:53.681066+00:00",
   "phase": "running_or_awaiting_verification",
   "plan_sha256": "4484ead13ef3df25d2f072e40b4669e7797cda41124e5cc97e0be58dbd833aa6",
   "maximum_new_requests": 13,
@@ -14,6 +14,8 @@
   "default_enabled": false,
   "new_SAM_calls": 0,
   "independent_validation": false,
-  "status": "loading_model",
-  "new_responses_received": 0
+  "status": "running",
+  "new_responses_received": 9,
+  "SAM_source_binding_addendum": true,
+  "completion_plan_sha256": "fcda71020c09872d7959b9f2cd4121ee7615063f492cfa429e015ac9d25157a5"
 }

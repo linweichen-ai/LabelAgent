@@ -1,0 +1,25 @@
+{
+  "study": "New-shape and new-background controlled negative stress test",
+  "phase": "running_or_awaiting_verification",
+  "observed_utc": "2026-11-07T13:10:44.723337+00:00",
+  "plan_sha256": "296e9f23bb042a12d30392d94ebdb68fb7781f59de237120f887fba3e62003ea",
+  "maximum_new_requests": 17,
+  "original_cases_retained": 14,
+  "original_exact_cached_quality_rows": 56,
+  "new_negative_cases": 4,
+  "new_negative_views_per_arm": 8,
+  "backgrounds": [
+    "uniform gray",
+    "linear grayscale gradient"
+  ],
+  "carrier_shapes": 2,
+  "synthetic_only": true,
+  "original_annotations_written": false,
+  "new_SAM_calls": 0,
+  "default_enabled": false,
+  "candidate_adopted": false,
+  "independent_validation": false,
+  "status": "running",
+  "new_responses_received": 2,
+  "completed_rows": 58
+}

@@ -1,0 +1,38 @@
+{
+  "status": "complete_rejected_curved_source_seam_prior",
+  "actual_new_SAM_requests": 8,
+  "actual_new_VLM_calls": 0,
+  "exact_prior_positive_reviews_reused": 4,
+  "prior_pairs": 4,
+  "native_masks_retained": 8,
+  "original_radii": [
+    0,
+    3,
+    6
+  ],
+  "all_original_gates_unchanged": true,
+  "retained_support": "13/17",
+  "retained_historical_Agent": "6/6",
+  "historical_Agent_not_rerun": true,
+  "new_Agent_runs": 0,
+  "remaining_misses": 4,
+  "new_accepted_instances": 0,
+  "all_8_native_point_guards_passed": true,
+  "no_output_mask_clipping": true,
+  "adopted": false,
+  "target48_paired_r3_points": [
+    26,
+    26
+  ],
+  "target48_paired_r3_purity": [
+    0.3132530120481928,
+    0.35135135135135137
+  ],
+  "old49_paired_r3_points": [
+    16,
+    10
+  ],
+  "pictures": 10,
+  "videos": 2,
+  "saved_stage_replay_not_screen_recording": true
+}

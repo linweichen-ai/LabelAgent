@@ -77,7 +77,7 @@ def prepare():
     shutil.copytree(REPORT,TARGET)
     save(TARGET/'完整证据位置与核验.json',receipt)
     (TARGET/'完整证据备份说明.txt').write_text('C盘空间不足：本目录有全部80张图及6段视频。完整原始证据另存于：\n'+str(FULL)+'\n请备份上述D盘整个目录；仅备份C盘交接文件夹不包含本轮全部原始证据。\n'+text,encoding='utf-8')
-    html=(TARGET/'index.html').read_text('utf-8');html=html.replace('<body>','<body><p style="padding:16px;background:#fff1b8">完整原始证据另存 D 盘；请同时备份 <a href="完整证据备份说明.txt">完整证据备份说明</a> 中的目录。</p>',1);(TARGET/'index.html').write_text(html,encoding='utf-8')
+    html=(TARGET/'index.html').read_text('utf-8');html=html.replace('</h1>','</h1><p style="padding:16px;background:#fff1b8">完整原始证据另存 D 盘；请同时备份 <a href="完整证据备份说明.txt">完整证据备份说明</a> 中的目录。</p>',1);assert '完整原始证据另存 D 盘' in html;(TARGET/'index.html').write_text(html,encoding='utf-8')
     save(TARGET/'交接SHA256.json',{'files':[{'path':p.relative_to(TARGET).as_posix(),'sha256':sha(p),'bytes':p.stat().st_size} for p in TARGET.rglob('*') if p.is_file()]})
     save(C/'context_graph_bundle_verification.json',receipt)
     print({k:v for k,v in receipt.items() if 'path' not in k},flush=True)

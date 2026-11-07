@@ -108,9 +108,9 @@
 <dialog id="fileManager" class="utilityDialog" aria-labelledby="filesTitle">
   <div class="dialogHeading"><h2 id="filesTitle">加载文件</h2><button type="button" id="closeFilesDialog" class="iconButton" title="关闭" aria-label="关闭"><img src="/icons/x.svg" alt=""></button></div>
   <div class="dialogContent">
-    <div class="fileManagerActions"><input id="mcapPath" placeholder="MCAP 文件绝对路径" aria-label="MCAP 文件绝对路径"><button id="openButton">添加路径</button><input id="mcapFile" type="file" accept=".mcap" multiple hidden><button id="chooseButton">选择文件</button></div>
+    <div class="fileManagerActions"><input id="mcapPath" placeholder="图片或 MCAP 文件绝对路径" aria-label="图片或 MCAP 文件绝对路径"><button id="openButton">添加路径</button><input id="mcapFile" type="file" accept=".mcap,.jpg,.jpeg,.png" multiple hidden><button id="chooseButton">选择文件</button></div>
     <div id="fileList"></div><div id="fileManagerStatus" role="status"></div>
-    <p class="fileManagerHint">删除仅移出列表，保留磁盘文件。</p>
+    <p class="fileManagerHint">支持 JPG、JPEG、PNG 图片及 MCAP，可多选。图片加载后直接进入标注；删除仅移出列表，保留磁盘文件。</p>
   </div>
   <div class="dialogActions"><button id="doneFilesButton" class="primary"><img src="/icons/check.svg" alt="">完成</button></div>
 </dialog>

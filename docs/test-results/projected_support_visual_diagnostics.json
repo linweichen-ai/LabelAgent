@@ -1,0 +1,89 @@
+{
+  "scope": "real_local_VLM_tuning_diagnostics_not_accuracy",
+  "variants": [
+    {
+      "name": "proposal_review_probe_v1",
+      "status": "complete",
+      "plan_sha256": "809fcde8a1069b58aa02dab96b70c78e9a2f381258a814f760e14d375190048e",
+      "presence_prompt": "Inspect two uncolored photographic crops of the same region: a tight view and a wider context. Is an actual transport pallet visibly identifiable? A pallet is a wooden or plastic load-bearing transport base with a deck or supporting feet. It can be empty, loaded, stacked or partly occluded. Cargo boxes, rack uprights, metal reflections and the floor are different objects. Use present only with visible structural evidence. Use absent when no pallet is visible, including uniform blank images. Use uncertain when resolution or occlusion prevents identification. Return evidence and one short English reason. Do not infer an object from this question.",
+      "region_prompt": "Inspect three crops of the same photograph. Image 1 is a tight uncolored crop. Image 2 gives wider uncolored context. Image 3 has the SAME context with one proposed region outlined in magenta; the outline color is not the object color. Does that specific outlined region annotate a visible wooden or plastic transport pallet or its visible base? Do not accept merely because a DIFFERENT pallet is nearby. Cargo, floor, rack uprights, metal reflections and isolated non-pallet fragments are not pallets. Return accept with clear structural evidence, reject with clear contrary evidence, otherwise uncertain. Return decision and one short English reason. No edits or coordinates.",
+      "crop_version": 1,
+      "candidate_cases": 8,
+      "blank_controls": 2,
+      "blank_controls_passed": 2,
+      "real_VLM_requests": 10,
+      "decisions": {
+        "accept": 0,
+        "reject": 8,
+        "uncertain": 0
+      },
+      "workbench_modified": false,
+      "state_sha256_unchanged": true,
+      "adopted_for_automatic_filtering": false
+    },
+    {
+      "name": "proposal_review_probe_v2",
+      "status": "complete",
+      "plan_sha256": "a4f953b9d70dfcc0452ba8239ad168594c1cc7f80939b0afe013674cc5b5d5e2",
+      "presence_prompt": "Is a transport pallet visible in these photographs? Return evidence as present, absent, or uncertain, and one short English reason. Use uncertain if the image is too blurry or the object is not identifiable.",
+      "region_prompt": "Inspect three crops of the same photograph. Image 1 is a tight uncolored crop. Image 2 gives wider uncolored context. Image 3 has the SAME context with one proposed region outlined in magenta; the outline color is not the object color. Does that specific outlined region annotate a visible wooden or plastic transport pallet or its visible base? Do not accept merely because a DIFFERENT pallet is nearby. Cargo, floor, rack uprights, metal reflections and isolated non-pallet fragments are not pallets. Return accept with clear structural evidence, reject with clear contrary evidence, otherwise uncertain. Return decision and one short English reason. No edits or coordinates.",
+      "crop_version": 1,
+      "candidate_cases": 8,
+      "blank_controls": 2,
+      "blank_controls_passed": 2,
+      "real_VLM_requests": 17,
+      "decisions": {
+        "accept": 7,
+        "reject": 1,
+        "uncertain": 0
+      },
+      "workbench_modified": false,
+      "state_sha256_unchanged": true,
+      "adopted_for_automatic_filtering": false
+    }
+  ],
+  "synthetic_color_controls": [
+    {
+      "expected": "red",
+      "observed": "red",
+      "passed": true
+    },
+    {
+      "expected": "blue",
+      "observed": "blue",
+      "passed": true
+    },
+    {
+      "expected": "gray",
+      "observed": "gray",
+      "passed": true
+    }
+  ],
+  "simple_photo_category_counts": {
+    "pallet": 1,
+    "person": 0,
+    "cargo_box": 0,
+    "floor": 0,
+    "rack": 0,
+    "other": 0,
+    "unclear": 3
+  },
+  "paired_neutral_presence": {
+    "photographs": 4,
+    "image_bytes_identical": true,
+    "before_absent": 4,
+    "after_present": 4,
+    "blank_controls_absent": 2,
+    "blank_controls": 2
+  },
+  "total_real_VLM_requests": 42,
+  "findings": [
+    "The long presence prompt rejected every candidate, including visually recognizable blue pallets.",
+    "Three synthetic color controls passed; the model can distinguish those input pixels.",
+    "With identical images, schema and decoding, a shorter neutral presence prompt changed four absent results to present; both blank controls remained absent.",
+    "The shorter prompt preserved visually recognizable pallets, but the subsequent region review also accepted the suspected reflected spots.",
+    "Neither variant establishes reliable automatic rejection or acceptance; neither is installed in the workbench."
+  ],
+  "pixel_accuracy_evaluated": false,
+  "independent_ground_truth_added": false
+}

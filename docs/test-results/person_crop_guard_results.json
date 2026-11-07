@@ -1,0 +1,404 @@
+{
+  "status": "full_original_joint_failed_A1_reported",
+  "observed_utc": "2026-11-04T13:49:17.875414+00:00",
+  "tests_passed": 402,
+  "tests_skipped": 0,
+  "new_SAM3_successful_calls_tuning": 80,
+  "new_VLM_calls": 0,
+  "collection": {
+    "completed_requests": 80,
+    "completed_images": 20,
+    "seed_shapes": 93,
+    "images_with_seeds": 16,
+    "cached_reused_this_process": 0,
+    "busy_rejections": 0,
+    "input_code_and_plan_unchanged": true,
+    "reference_files_opened": 0,
+    "approved_reference_files_opened": 0
+  },
+  "new_raw_protected_points_per_frame": [
+    20,
+    46,
+    24,
+    30,
+    24
+  ],
+  "probe_additional_direct_candidate_vetoes": 0,
+  "tuning_rows": [
+    {
+      "method": "pallet_baseline",
+      "pallet_objects_matched": 68,
+      "pallet_reference_objects": 118,
+      "pallet_points_covered": 4993,
+      "pallet_reference_points": 6291,
+      "pallet_candidates": 143,
+      "pallet_union_pixels": 784762,
+      "person_points_covered_by_pallet": 49,
+      "person_reference_points": 11068,
+      "checks": {
+        "strict_instance_gain_over_previous_best": false,
+        "point_coverage_not_below_previous_best": false,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": false,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "passed_numeric_and_preservation_gates": false,
+      "raw_point_coverage_nonregression_every_image": false,
+      "eligible": false
+    },
+    {
+      "method": "four_crop_control",
+      "pallet_objects_matched": 75,
+      "pallet_reference_objects": 118,
+      "pallet_points_covered": 5179,
+      "pallet_reference_points": 6291,
+      "pallet_candidates": 190,
+      "pallet_union_pixels": 836336,
+      "person_points_covered_by_pallet": 55,
+      "person_reference_points": 11068,
+      "checks": {
+        "strict_instance_gain_over_previous_best": false,
+        "point_coverage_not_below_previous_best": true,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "passed_numeric_and_preservation_gates": false,
+      "raw_point_coverage_nonregression_every_image": true,
+      "eligible": false
+    },
+    {
+      "method": "original_person_15cm_control",
+      "pallet_objects_matched": 78,
+      "pallet_reference_objects": 118,
+      "pallet_points_covered": 5214,
+      "pallet_reference_points": 6291,
+      "pallet_candidates": 214,
+      "pallet_union_pixels": 883149,
+      "person_points_covered_by_pallet": 55,
+      "person_reference_points": 11068,
+      "checks": {
+        "strict_instance_gain_over_previous_best": true,
+        "point_coverage_not_below_previous_best": true,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "passed_numeric_and_preservation_gates": true,
+      "raw_point_coverage_nonregression_every_image": true,
+      "eligible": false
+    },
+    {
+      "method": "crop_person_direct_control",
+      "pallet_objects_matched": 78,
+      "pallet_reference_objects": 118,
+      "pallet_points_covered": 5214,
+      "pallet_reference_points": 6291,
+      "pallet_candidates": 214,
+      "pallet_union_pixels": 883149,
+      "person_points_covered_by_pallet": 55,
+      "person_reference_points": 11068,
+      "checks": {
+        "strict_instance_gain_over_previous_best": true,
+        "point_coverage_not_below_previous_best": true,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "passed_numeric_and_preservation_gates": true,
+      "raw_point_coverage_nonregression_every_image": true,
+      "eligible": false
+    },
+    {
+      "method": "crop_person_15cm_veto",
+      "pallet_objects_matched": 78,
+      "pallet_reference_objects": 118,
+      "pallet_points_covered": 5214,
+      "pallet_reference_points": 6291,
+      "pallet_candidates": 214,
+      "pallet_union_pixels": 883149,
+      "person_points_covered_by_pallet": 55,
+      "person_reference_points": 11068,
+      "checks": {
+        "strict_instance_gain_over_previous_best": true,
+        "point_coverage_not_below_previous_best": true,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "passed_numeric_and_preservation_gates": true,
+      "raw_point_coverage_nonregression_every_image": true,
+      "eligible": true
+    }
+  ],
+  "tuning_controls_byte_exact": {
+    "four_crop_control": true,
+    "original_person_15cm_control": true,
+    "crop_person_direct_control": true
+  },
+  "tuning_additional_readbacks": {
+    "all_radius_per_image_point_nonregression": true,
+    "all_radius_per_image_person_cross_nonincrease": true,
+    "old_four_literal_prefix": true
+  },
+  "tuning_primary_byte_exact_previous15cm": true,
+  "tuning_qualifies_for_full_expansion": true,
+  "tuning_instance_gain_vs_previous78": false,
+  "primary_method": "crop_person_15cm_veto",
+  "secondary_can_replace_primary": false,
+  "full_images": 588,
+  "new_SAM3_calls_full_planned": 2352,
+  "full_complete": true,
+  "full_passed": false,
+  "full_plan_sha256": "eed5ce439811d840f7bc0b0bf1665f46549f692fcf991f3b2605d2fbb5ece616",
+  "tuning_plan_sha256": "c14a4513e5401dbd286c1858bed2bd21564bc172885bf5950f101f520f0b6659",
+  "collection_plan_sha256": "5d2076eff6880fd0e996399a6fad0170532e16e064bc25d159034195e4a3af6e",
+  "adopted": false,
+  "default_enabled": false,
+  "independent_accuracy_measured": false,
+  "full_collection_complete": true,
+  "new_SAM3_successful_calls_full": 2352,
+  "unique_new_SAM3_calls_tuning_and_full": 2432,
+  "full_collection_summary": {
+    "completed_requests": 2352,
+    "completed_images": 588,
+    "seed_shapes": 2701,
+    "images_with_seeds": 479,
+    "cached_reused_this_process": 0,
+    "busy_rejections": 512,
+    "input_code_and_plan_unchanged": true,
+    "reference_files_opened": 0,
+    "approved_reference_files_opened": 0
+  },
+  "full_rows": [
+    {
+      "method": "pallet_baseline",
+      "pallet_objects_matched": 2020,
+      "pallet_reference_objects": 3672,
+      "pallet_points_covered": 133337,
+      "pallet_reference_points": 168738,
+      "pallet_candidates": 4280,
+      "pallet_union_pixels": 22237754,
+      "person_points_covered_by_pallet": 2003,
+      "person_reference_points": 304357,
+      "checks": {
+        "strict_instance_gain_over_previous_best": false,
+        "point_coverage_not_below_previous_best": false,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": false,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "passed_numeric_and_preservation_gates": false,
+      "raw_point_coverage_nonregression_every_image": false,
+      "eligible": false
+    },
+    {
+      "method": "four_crop_control",
+      "pallet_objects_matched": 2249,
+      "pallet_reference_objects": 3672,
+      "pallet_points_covered": 139492,
+      "pallet_reference_points": 168738,
+      "pallet_candidates": 5684,
+      "pallet_union_pixels": 24141289,
+      "person_points_covered_by_pallet": 2184,
+      "person_reference_points": 304357,
+      "checks": {
+        "strict_instance_gain_over_previous_best": false,
+        "point_coverage_not_below_previous_best": true,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "passed_numeric_and_preservation_gates": false,
+      "raw_point_coverage_nonregression_every_image": true,
+      "eligible": false
+    },
+    {
+      "method": "accepted_raw_subset_control",
+      "pallet_objects_matched": 2298,
+      "pallet_reference_objects": 3672,
+      "pallet_points_covered": 139492,
+      "pallet_reference_points": 168738,
+      "pallet_candidates": 6328,
+      "pallet_union_pixels": 24168046,
+      "person_points_covered_by_pallet": 2184,
+      "person_reference_points": 304357,
+      "checks": {
+        "strict_instance_gain_over_previous_best": true,
+        "point_coverage_not_below_previous_best": true,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "passed_numeric_and_preservation_gates": true,
+      "raw_point_coverage_nonregression_every_image": true,
+      "eligible": false
+    },
+    {
+      "method": "original_person_15cm_control",
+      "pallet_objects_matched": 2344,
+      "pallet_reference_objects": 3672,
+      "pallet_points_covered": 142462,
+      "pallet_reference_points": 168738,
+      "pallet_candidates": 6420,
+      "pallet_union_pixels": 25829136,
+      "person_points_covered_by_pallet": 2190,
+      "person_reference_points": 304357,
+      "checks": {
+        "strict_instance_gain_over_previous_best": true,
+        "point_coverage_not_below_previous_best": true,
+        "person_off_class_not_above_previous_best": false,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "passed_numeric_and_preservation_gates": false,
+      "raw_point_coverage_nonregression_every_image": true,
+      "eligible": false
+    },
+    {
+      "method": "crop_person_15cm_veto",
+      "pallet_objects_matched": 2344,
+      "pallet_reference_objects": 3672,
+      "pallet_points_covered": 142462,
+      "pallet_reference_points": 168738,
+      "pallet_candidates": 6420,
+      "pallet_union_pixels": 25829136,
+      "person_points_covered_by_pallet": 2190,
+      "person_reference_points": 304357,
+      "checks": {
+        "strict_instance_gain_over_previous_best": true,
+        "point_coverage_not_below_previous_best": true,
+        "person_off_class_not_above_previous_best": false,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "passed_numeric_and_preservation_gates": false,
+      "raw_point_coverage_nonregression_every_image": true,
+      "eligible": false
+    },
+    {
+      "method": "crop_person_direct_control",
+      "pallet_objects_matched": 2346,
+      "pallet_reference_objects": 3672,
+      "pallet_points_covered": 142543,
+      "pallet_reference_points": 168738,
+      "pallet_candidates": 6420,
+      "pallet_union_pixels": 25851718,
+      "person_points_covered_by_pallet": 2194,
+      "person_reference_points": 304357,
+      "checks": {
+        "strict_instance_gain_over_previous_best": true,
+        "point_coverage_not_below_previous_best": true,
+        "person_off_class_not_above_previous_best": false,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "passed_numeric_and_preservation_gates": false,
+      "raw_point_coverage_nonregression_every_image": true,
+      "eligible": false
+    }
+  ],
+  "full_additional_readbacks": {
+    "crop_person_15cm_veto": {
+      "all_radius_per_image_point_nonregression": true,
+      "all_radius_per_image_person_cross_nonincrease": false,
+      "old_four_literal_prefix": true
+    },
+    "crop_person_direct_control": {
+      "all_radius_per_image_point_nonregression": true,
+      "all_radius_per_image_person_cross_nonincrease": false,
+      "old_four_literal_prefix": true
+    }
+  },
+  "full_original_primary_passed": false,
+  "full_strict_gain_vs_2298": true,
+  "full_original15cm_control_byte_exact": true,
+  "score_reused_byte_exact": {
+    "crop_person_15cm_veto": true,
+    "crop_person_direct_control": true
+  },
+  "full_radius_diagnostic": {
+    "0": {
+      "person_cross_delta": 4,
+      "images_person_cross_increased": 1,
+      "pallet_point_delta": 2938,
+      "images_pallet_points_decreased": 0
+    },
+    "3": {
+      "person_cross_delta": 6,
+      "images_person_cross_increased": 1,
+      "pallet_point_delta": 2970,
+      "images_pallet_points_decreased": 0
+    },
+    "6": {
+      "person_cross_delta": 8,
+      "images_person_cross_increased": 1,
+      "pallet_point_delta": 2824,
+      "images_pallet_points_decreased": 0
+    }
+  },
+  "full_approved_13_pallet5_person_retained": true,
+  "full_comparison_sha256": "519d0d9c6a9d98d4f2dc50973c34c04dd17ea28f4c7a8b4b747fce389930d5f0",
+  "full_audit_sha256": "8a890d0faf87bd5a2fbc65a17749cf8e1df09cd422ca4b390571029597792375",
+  "semantic_A1_posthoc_region_rows": [
+    {
+      "method": "original_person_15cm_control",
+      "model_anchor_pixels": 231,
+      "anchor_pixels_covered_by_pallet_union": 231,
+      "anchor_region_coverage_fraction": 1.0,
+      "maximum_candidate_iou_to_model_anchor": 1.0,
+      "exact_model_anchor_raster_retained": true
+    },
+    {
+      "method": "crop_person_direct_control",
+      "model_anchor_pixels": 231,
+      "anchor_pixels_covered_by_pallet_union": 231,
+      "anchor_region_coverage_fraction": 1.0,
+      "maximum_candidate_iou_to_model_anchor": 1.0,
+      "exact_model_anchor_raster_retained": true
+    },
+    {
+      "method": "crop_person_15cm_veto",
+      "model_anchor_pixels": 231,
+      "anchor_pixels_covered_by_pallet_union": 231,
+      "anchor_region_coverage_fraction": 1.0,
+      "maximum_candidate_iou_to_model_anchor": 1.0,
+      "exact_model_anchor_raster_retained": true
+    }
+  ],
+  "semantic_A1_independent_boundary_accuracy": false,
+  "qualified_under_original_joint_requirements": false
+}

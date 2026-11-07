@@ -1,4 +1,5 @@
 /.venv/
+/.venv-vlm/
 /data/
 /work/
 __pycache__/
@@ -10,3 +11,8 @@ __pycache__/
 *.pt
 *.pth
 *.safetensors
+/.local/
+/outputs/
+/node_modules/
+*.pcd
+*.zip

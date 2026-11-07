@@ -1,0 +1,140 @@
+{
+  "phase": "final_verified",
+  "observed_utc": "2026-11-07T15:36:16.967236+00:00",
+  "status": "complete",
+  "saved_new_responses": 37,
+  "maximum_new_requests": 37,
+  "cases": 18,
+  "quality_views_per_arm": 36,
+  "baseline_cached_quality_views": 36,
+  "source_evidence_instruction": "Before deciding the category, compare the same selected physical surface in both images. The class must be supported by visible material or directly connected object structure in clean image 2. Do not infer class from the outline silhouette. If only the colored guides in image 1 make an object-shaped boundary while image 2 shows a smooth field or lighting gradient without physical object structure, return uncertain. Describe structure actually visible in image 2, not a colored guide.",
+  "intervention": "One shared instruction suffix only; no image, geometry, model, schema or decoding change.",
+  "previous_accepted_candidate_replies": 12,
+  "original_plan_sha256": "1c007408ef98f9b4b9131693099e762c7c11f989f50c0b32e44e8660f17d2a1f",
+  "active_plan_sha256": "e1e2f63b3712f1dbe72098d6a5b428ab86824395a9ef65509b8129b9bf711cb4",
+  "helper_source_sha256": "32d7eff45a1f45d891035e5ea5a0d1dc8d9935640bc30ae4a5f5ecedb61d4ad4",
+  "evaluator_source_sha256": "ded3159349007735a00388742c4efc7d28015f8554414d3cf14879043bf69587",
+  "image_tokens_per_image": 256,
+  "quantization": "nf4",
+  "temperature": 0,
+  "max_tokens": 192,
+  "raw_categories_never_rewritten": true,
+  "original_annotations_written": false,
+  "new_SAM_calls": 0,
+  "candidate_adopted": false,
+  "default_enabled": false,
+  "independent_generalization": false,
+  "external_non_classifier_dependency_change_recorded": true,
+  "whole_original_source_snapshot_unchanged": false,
+  "groups": {
+    "protected_pallet": {
+      "views": 4,
+      "baseline_correct": 4,
+      "candidate_correct": 4,
+      "baseline_categories": {
+        "pallet": 4
+      },
+      "candidate_categories": {
+        "pallet": 4
+      }
+    },
+    "person_fixture": {
+      "views": 2,
+      "baseline_correct": 2,
+      "candidate_correct": 2,
+      "baseline_categories": {
+        "person": 2
+      },
+      "candidate_categories": {
+        "person": 2
+      }
+    },
+    "suspected_non_pallet": {
+      "views": 2,
+      "baseline_correct": 0,
+      "candidate_correct": 0,
+      "baseline_categories": {
+        "pallet": 2
+      },
+      "candidate_categories": {
+        "pallet": 2
+      }
+    },
+    "blank_control": {
+      "views": 4,
+      "baseline_correct": 4,
+      "candidate_correct": 4,
+      "baseline_categories": {
+        "uncertain": 4
+      },
+      "candidate_categories": {
+        "uncertain": 4
+      }
+    },
+    "marked_blank_control": {
+      "views": 4,
+      "baseline_correct": 4,
+      "candidate_correct": 4,
+      "baseline_categories": {
+        "uncertain": 4
+      },
+      "candidate_categories": {
+        "uncertain": 4
+      }
+    },
+    "confirmed_six": {
+      "views": 12,
+      "baseline_correct": 12,
+      "candidate_correct": 12,
+      "baseline_categories": {
+        "pallet": 6,
+        "person": 6
+      },
+      "candidate_categories": {
+        "pallet": 6,
+        "person": 6
+      }
+    },
+    "stress_negative": {
+      "views": 8,
+      "baseline_correct": 6,
+      "candidate_correct": 7,
+      "baseline_categories": {
+        "uncertain": 6,
+        "pallet": 1,
+        "person": 1
+      },
+      "candidate_categories": {
+        "uncertain": 7,
+        "pallet": 1
+      }
+    }
+  },
+  "checks": {
+    "confirmed_six_12_of_12": true,
+    "old_pallets_4_of_4": true,
+    "person_control_2_of_2": true,
+    "plain_blanks_4_of_4": true,
+    "original_marked_blanks_4_of_4": true,
+    "stress_blanks_8_of_8": false,
+    "suspect_conservative_abstention_2_of_2": false,
+    "no_correct_baseline_view_lost": true,
+    "strict_stress_gain": true,
+    "default_budget_guard_passed": true,
+    "exact_text_only_intervention": true,
+    "unchanged_JPEGs_geometry_and_actual_image_tokens": true,
+    "originals_and_references_unchanged": true,
+    "raw_categories_never_rewritten": true,
+    "no_successful_request_repeated": true,
+    "whole_original_source_snapshot_unchanged": false
+  },
+  "all_automatic_gates_passed": false,
+  "accepted_new_calls_per_part": [
+    8,
+    4,
+    25
+  ],
+  "c3_assistant_semantic_review_passed": false,
+  "human_localization_approval": false,
+  "all_development_joint_checks_passed": false
+}

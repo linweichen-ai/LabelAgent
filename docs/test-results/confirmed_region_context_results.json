@@ -1,0 +1,846 @@
+{
+  "status": "complete_no_consensus_gain_not_enabled",
+  "observed_utc": "2026-11-04T14:24:34.356032+00:00",
+  "actual_new_CUDA_VLM_responses": 57,
+  "new_SAM_calls": 0,
+  "targeted_tests_passed": 4,
+  "region_observations": 19,
+  "images": 2,
+  "pallet_region_observations": 14,
+  "person_region_observations": 5,
+  "independent_physical_instances_counted": false,
+  "model": "Qwen3-VL-2B-Instruct",
+  "quantization": "nf4",
+  "image_token_budget": 256,
+  "temperature": 0,
+  "max_output_tokens": 192,
+  "model_config_sha256": "bec4b3d446efa05807365c9e1cec03ac590836879d02f3a6da879971154bdd3b",
+  "context_factor": {
+    "minimum_side": 160,
+    "maximum_bbox_side_multiplier": 1.5,
+    "native_pixels": true,
+    "single_cutout_shared": true,
+    "prompts_unchanged": true
+  },
+  "by_view": {
+    "single": {
+      "correct_category": 12,
+      "cases": 19,
+      "by_confirmed_category": {
+        "pallet": {
+          "cases": 14,
+          "returned_categories": {
+            "pallet": 7,
+            "uncertain": 7
+          }
+        },
+        "person": {
+          "cases": 5,
+          "returned_categories": {
+            "person": 5
+          }
+        }
+      }
+    },
+    "context": {
+      "correct_category": 14,
+      "cases": 19,
+      "by_confirmed_category": {
+        "pallet": {
+          "cases": 14,
+          "returned_categories": {
+            "pallet": 9,
+            "person": 5
+          }
+        },
+        "person": {
+          "cases": 5,
+          "returned_categories": {
+            "person": 5
+          }
+        }
+      }
+    },
+    "expanded": {
+      "correct_category": 16,
+      "cases": 19,
+      "by_confirmed_category": {
+        "pallet": {
+          "cases": 14,
+          "returned_categories": {
+            "pallet": 11,
+            "person": 3
+          }
+        },
+        "person": {
+          "cases": 5,
+          "returned_categories": {
+            "person": 5
+          }
+        }
+      }
+    }
+  },
+  "policy_results": {
+    "tight_context": {
+      "cases": 19,
+      "valid_pairs": 19,
+      "correct_consensus": 11,
+      "consensus_counts": {
+        "pallet": 6,
+        "person": 5,
+        "uncertain": 8
+      },
+      "by_confirmed_category": {
+        "pallet": {
+          "cases": 14,
+          "correct_consensus": 6,
+          "wrong_opposite_class_views": 5,
+          "uncertain_consensus": 8
+        },
+        "person": {
+          "cases": 5,
+          "correct_consensus": 5,
+          "wrong_opposite_class_views": 0,
+          "uncertain_consensus": 0
+        }
+      }
+    },
+    "expanded_context": {
+      "cases": 19,
+      "valid_pairs": 19,
+      "correct_consensus": 11,
+      "consensus_counts": {
+        "pallet": 6,
+        "person": 5,
+        "uncertain": 8
+      },
+      "by_confirmed_category": {
+        "pallet": {
+          "cases": 14,
+          "correct_consensus": 6,
+          "wrong_opposite_class_views": 3,
+          "uncertain_consensus": 8
+        },
+        "person": {
+          "cases": 5,
+          "correct_consensus": 5,
+          "wrong_opposite_class_views": 0,
+          "uncertain_consensus": 0
+        }
+      }
+    }
+  },
+  "checks": {
+    "all_requests_valid_real_CUDA": true,
+    "strict_correct_consensus_gain": false,
+    "no_previously_correct_region_lost": true,
+    "no_opposite_class_view_increase": true,
+    "no_new_opposite_class_context_error_at_any_region": true
+  },
+  "all_predeclared_checks_passed": false,
+  "context_classification_changes": [
+    {
+      "case_id": "region_06",
+      "expected_category": "pallet",
+      "tight_context": "person",
+      "expanded_context": "pallet"
+    },
+    {
+      "case_id": "region_16",
+      "expected_category": "pallet",
+      "tight_context": "person",
+      "expanded_context": "pallet"
+    }
+  ],
+  "consensus_transitions": [],
+  "A1": {
+    "case_id": "region_12",
+    "confirmed_category": "pallet_visible_part",
+    "view_categories": {
+      "single": "uncertain",
+      "context": "person",
+      "expanded": "person"
+    },
+    "view_actual_image_token_counts": {
+      "single": [
+        72
+      ],
+      "context": [
+        72,
+        72,
+        72
+      ],
+      "expanded": [
+        72,
+        64,
+        64
+      ]
+    }
+  },
+  "fixed_single_cutout_conditional_maximum_correct_consensus": 12,
+  "conditional_ceiling_is_not_model_effect": true,
+  "case_view_outputs": [
+    {
+      "case_id": "region_01",
+      "confirmed_category": "pallet",
+      "view": "single",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        72
+      ],
+      "seconds": 10.266
+    },
+    {
+      "case_id": "region_01",
+      "confirmed_category": "pallet",
+      "view": "context",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        72,
+        72,
+        72
+      ],
+      "seconds": 3.485
+    },
+    {
+      "case_id": "region_01",
+      "confirmed_category": "pallet",
+      "view": "expanded",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        72,
+        81,
+        81
+      ],
+      "seconds": 3.5
+    },
+    {
+      "case_id": "region_02",
+      "confirmed_category": "pallet",
+      "view": "single",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        72
+      ],
+      "seconds": 3.062
+    },
+    {
+      "case_id": "region_02",
+      "confirmed_category": "pallet",
+      "view": "expanded",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        72,
+        64,
+        64
+      ],
+      "seconds": 3.063
+    },
+    {
+      "case_id": "region_02",
+      "confirmed_category": "pallet",
+      "view": "context",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        72,
+        72,
+        72
+      ],
+      "seconds": 3.172
+    },
+    {
+      "case_id": "region_03",
+      "confirmed_category": "pallet",
+      "view": "single",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        80
+      ],
+      "seconds": 3.406
+    },
+    {
+      "case_id": "region_03",
+      "confirmed_category": "pallet",
+      "view": "context",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        80,
+        80,
+        80
+      ],
+      "seconds": 3.375
+    },
+    {
+      "case_id": "region_03",
+      "confirmed_category": "pallet",
+      "view": "expanded",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        80,
+        64,
+        64
+      ],
+      "seconds": 4.078
+    },
+    {
+      "case_id": "region_04",
+      "confirmed_category": "person",
+      "view": "single",
+      "category": "person",
+      "actual_image_token_counts": [
+        91
+      ],
+      "seconds": 4.156
+    },
+    {
+      "case_id": "region_04",
+      "confirmed_category": "person",
+      "view": "expanded",
+      "category": "person",
+      "actual_image_token_counts": [
+        91,
+        256,
+        256
+      ],
+      "seconds": 3.922
+    },
+    {
+      "case_id": "region_04",
+      "confirmed_category": "person",
+      "view": "context",
+      "category": "person",
+      "actual_image_token_counts": [
+        91,
+        91,
+        91
+      ],
+      "seconds": 3.719
+    },
+    {
+      "case_id": "region_05",
+      "confirmed_category": "pallet",
+      "view": "single",
+      "category": "uncertain",
+      "actual_image_token_counts": [
+        78
+      ],
+      "seconds": 3.734
+    },
+    {
+      "case_id": "region_05",
+      "confirmed_category": "pallet",
+      "view": "context",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        78,
+        78,
+        78
+      ],
+      "seconds": 3.64
+    },
+    {
+      "case_id": "region_05",
+      "confirmed_category": "pallet",
+      "view": "expanded",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        78,
+        64,
+        64
+      ],
+      "seconds": 3.438
+    },
+    {
+      "case_id": "region_06",
+      "confirmed_category": "pallet",
+      "view": "single",
+      "category": "uncertain",
+      "actual_image_token_counts": [
+        65
+      ],
+      "seconds": 3.531
+    },
+    {
+      "case_id": "region_06",
+      "confirmed_category": "pallet",
+      "view": "expanded",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        65,
+        64,
+        64
+      ],
+      "seconds": 3.219
+    },
+    {
+      "case_id": "region_06",
+      "confirmed_category": "pallet",
+      "view": "context",
+      "category": "person",
+      "actual_image_token_counts": [
+        65,
+        65,
+        65
+      ],
+      "seconds": 3.391
+    },
+    {
+      "case_id": "region_07",
+      "confirmed_category": "person",
+      "view": "single",
+      "category": "person",
+      "actual_image_token_counts": [
+        90
+      ],
+      "seconds": 3.89
+    },
+    {
+      "case_id": "region_07",
+      "confirmed_category": "person",
+      "view": "context",
+      "category": "person",
+      "actual_image_token_counts": [
+        90,
+        90,
+        90
+      ],
+      "seconds": 3.735
+    },
+    {
+      "case_id": "region_07",
+      "confirmed_category": "person",
+      "view": "expanded",
+      "category": "person",
+      "actual_image_token_counts": [
+        90,
+        169,
+        169
+      ],
+      "seconds": 3.578
+    },
+    {
+      "case_id": "region_08",
+      "confirmed_category": "pallet",
+      "view": "single",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        68
+      ],
+      "seconds": 3.672
+    },
+    {
+      "case_id": "region_08",
+      "confirmed_category": "pallet",
+      "view": "expanded",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        68,
+        64,
+        64
+      ],
+      "seconds": 3.547
+    },
+    {
+      "case_id": "region_08",
+      "confirmed_category": "pallet",
+      "view": "context",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        68,
+        68,
+        68
+      ],
+      "seconds": 3.469
+    },
+    {
+      "case_id": "region_09",
+      "confirmed_category": "pallet",
+      "view": "single",
+      "category": "uncertain",
+      "actual_image_token_counts": [
+        75
+      ],
+      "seconds": 5.234
+    },
+    {
+      "case_id": "region_09",
+      "confirmed_category": "pallet",
+      "view": "context",
+      "category": "person",
+      "actual_image_token_counts": [
+        75,
+        75,
+        75
+      ],
+      "seconds": 3.641
+    },
+    {
+      "case_id": "region_09",
+      "confirmed_category": "pallet",
+      "view": "expanded",
+      "category": "person",
+      "actual_image_token_counts": [
+        75,
+        64,
+        64
+      ],
+      "seconds": 3.532
+    },
+    {
+      "case_id": "region_10",
+      "confirmed_category": "pallet",
+      "view": "single",
+      "category": "uncertain",
+      "actual_image_token_counts": [
+        80
+      ],
+      "seconds": 3.547
+    },
+    {
+      "case_id": "region_10",
+      "confirmed_category": "pallet",
+      "view": "expanded",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        80,
+        64,
+        64
+      ],
+      "seconds": 3.078
+    },
+    {
+      "case_id": "region_10",
+      "confirmed_category": "pallet",
+      "view": "context",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        80,
+        80,
+        80
+      ],
+      "seconds": 3.5
+    },
+    {
+      "case_id": "region_11",
+      "confirmed_category": "person",
+      "view": "single",
+      "category": "person",
+      "actual_image_token_counts": [
+        247
+      ],
+      "seconds": 3.641
+    },
+    {
+      "case_id": "region_11",
+      "confirmed_category": "person",
+      "view": "context",
+      "category": "person",
+      "actual_image_token_counts": [
+        247,
+        247,
+        247
+      ],
+      "seconds": 3.687
+    },
+    {
+      "case_id": "region_11",
+      "confirmed_category": "person",
+      "view": "expanded",
+      "category": "person",
+      "actual_image_token_counts": [
+        247,
+        256,
+        256
+      ],
+      "seconds": 3.828
+    },
+    {
+      "case_id": "region_12",
+      "confirmed_category": "pallet",
+      "view": "single",
+      "category": "uncertain",
+      "actual_image_token_counts": [
+        72
+      ],
+      "seconds": 3.094
+    },
+    {
+      "case_id": "region_12",
+      "confirmed_category": "pallet",
+      "view": "expanded",
+      "category": "person",
+      "actual_image_token_counts": [
+        72,
+        64,
+        64
+      ],
+      "seconds": 3.266
+    },
+    {
+      "case_id": "region_12",
+      "confirmed_category": "pallet",
+      "view": "context",
+      "category": "person",
+      "actual_image_token_counts": [
+        72,
+        72,
+        72
+      ],
+      "seconds": 3.485
+    },
+    {
+      "case_id": "region_13",
+      "confirmed_category": "pallet",
+      "view": "single",
+      "category": "uncertain",
+      "actual_image_token_counts": [
+        65
+      ],
+      "seconds": 3.297
+    },
+    {
+      "case_id": "region_13",
+      "confirmed_category": "pallet",
+      "view": "context",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        65,
+        65,
+        65
+      ],
+      "seconds": 3.0
+    },
+    {
+      "case_id": "region_13",
+      "confirmed_category": "pallet",
+      "view": "expanded",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        65,
+        64,
+        64
+      ],
+      "seconds": 2.843
+    },
+    {
+      "case_id": "region_14",
+      "confirmed_category": "pallet",
+      "view": "single",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        70
+      ],
+      "seconds": 3.157
+    },
+    {
+      "case_id": "region_14",
+      "confirmed_category": "pallet",
+      "view": "expanded",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        70,
+        64,
+        64
+      ],
+      "seconds": 2.64
+    },
+    {
+      "case_id": "region_14",
+      "confirmed_category": "pallet",
+      "view": "context",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        70,
+        70,
+        70
+      ],
+      "seconds": 3.36
+    },
+    {
+      "case_id": "region_15",
+      "confirmed_category": "pallet",
+      "view": "single",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        80
+      ],
+      "seconds": 3.328
+    },
+    {
+      "case_id": "region_15",
+      "confirmed_category": "pallet",
+      "view": "context",
+      "category": "person",
+      "actual_image_token_counts": [
+        80,
+        80,
+        80
+      ],
+      "seconds": 3.5
+    },
+    {
+      "case_id": "region_15",
+      "confirmed_category": "pallet",
+      "view": "expanded",
+      "category": "person",
+      "actual_image_token_counts": [
+        80,
+        64,
+        64
+      ],
+      "seconds": 3.281
+    },
+    {
+      "case_id": "region_16",
+      "confirmed_category": "pallet",
+      "view": "single",
+      "category": "uncertain",
+      "actual_image_token_counts": [
+        78
+      ],
+      "seconds": 4.281
+    },
+    {
+      "case_id": "region_16",
+      "confirmed_category": "pallet",
+      "view": "expanded",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        78,
+        64,
+        64
+      ],
+      "seconds": 3.5
+    },
+    {
+      "case_id": "region_16",
+      "confirmed_category": "pallet",
+      "view": "context",
+      "category": "person",
+      "actual_image_token_counts": [
+        78,
+        78,
+        78
+      ],
+      "seconds": 3.344
+    },
+    {
+      "case_id": "region_17",
+      "confirmed_category": "person",
+      "view": "single",
+      "category": "person",
+      "actual_image_token_counts": [
+        78
+      ],
+      "seconds": 4.078
+    },
+    {
+      "case_id": "region_17",
+      "confirmed_category": "person",
+      "view": "context",
+      "category": "person",
+      "actual_image_token_counts": [
+        78,
+        78,
+        78
+      ],
+      "seconds": 3.781
+    },
+    {
+      "case_id": "region_17",
+      "confirmed_category": "person",
+      "view": "expanded",
+      "category": "person",
+      "actual_image_token_counts": [
+        78,
+        256,
+        256
+      ],
+      "seconds": 3.907
+    },
+    {
+      "case_id": "region_18",
+      "confirmed_category": "person",
+      "view": "single",
+      "category": "person",
+      "actual_image_token_counts": [
+        75
+      ],
+      "seconds": 3.703
+    },
+    {
+      "case_id": "region_18",
+      "confirmed_category": "person",
+      "view": "expanded",
+      "category": "person",
+      "actual_image_token_counts": [
+        75,
+        256,
+        256
+      ],
+      "seconds": 3.438
+    },
+    {
+      "case_id": "region_18",
+      "confirmed_category": "person",
+      "view": "context",
+      "category": "person",
+      "actual_image_token_counts": [
+        75,
+        75,
+        75
+      ],
+      "seconds": 3.687
+    },
+    {
+      "case_id": "region_19",
+      "confirmed_category": "pallet",
+      "view": "single",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        72
+      ],
+      "seconds": 3.734
+    },
+    {
+      "case_id": "region_19",
+      "confirmed_category": "pallet",
+      "view": "context",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        72,
+        72,
+        72
+      ],
+      "seconds": 3.375
+    },
+    {
+      "case_id": "region_19",
+      "confirmed_category": "pallet",
+      "view": "expanded",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        72,
+        64,
+        64
+      ],
+      "seconds": 3.328
+    }
+  ],
+  "verified_payloads_and_response_bindings": true,
+  "shared_cutout_actual_tokens_identical_in_context_pairs": true,
+  "human_expected_roles_or_ID_text_sent_to_model": false,
+  "state_unchanged": true,
+  "input_code_approval_bindings_unchanged": true,
+  "historical_blank_and_suspect_controls_rerun": false,
+  "historical_control_failures_preserved": true,
+  "general_filter_enabled": false,
+  "candidate_edits_created": false,
+  "original_3D_scores_or_thresholds_changed": false,
+  "independent_pixel_accuracy_measured": false,
+  "summary_sha256": "d1028c2c7b51f227ded117d372c2f3a263c419f05458c15e8458d3b174377165",
+  "plan_sha256": "ee6fe3ce537ad0f3cb8b3f22c2ebb2618bd7e406d1e1f14d13478e4d310de8f2",
+  "verification_sha256": "b3d849fb7aa5d3e3303279b92a627d73201880a85c72de370dd8e46869f1e3c7",
+  "scope": "Paired category diagnosis on previously reviewed model-anchored regions in two already used images; not full Agent or pixel-quality improvement"
+}

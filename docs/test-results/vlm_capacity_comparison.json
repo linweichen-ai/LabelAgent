@@ -1,0 +1,87 @@
+{
+  "observed_utc": "2026-11-03T22:25:52.320782+00:00",
+  "scope": "same_image_bytes_schema_prompt_decoding_capacity_diagnostic_not_accuracy",
+  "model_2B": {
+    "real_CUDA_requests": 20,
+    "all_predeclared_checks_passed": false,
+    "checks": {
+      "fixture_fully_evaluated_with_valid_real_responses": true,
+      "blank_controls_not_accepted": true,
+      "no_qualitative_pallet_rejected": false,
+      "minimum_qualitative_pallet_accepts": false,
+      "suspected_non_pallet_not_accepted": true
+    },
+    "natural_cases": {
+      "reject": 3,
+      "uncertain": 4,
+      "accept": 1
+    },
+    "positive_fixtures": {
+      "reject": 1,
+      "uncertain": 3,
+      "accept": 1
+    },
+    "blanks": {
+      "uncertain": 2
+    },
+    "suspected_non_pallet": {
+      "uncertain": 1
+    },
+    "median_request_seconds": 2.664,
+    "total_request_seconds": 53.61
+  },
+  "model_8B": {
+    "real_CUDA_requests": 20,
+    "all_predeclared_checks_passed": false,
+    "checks": {
+      "fixture_fully_evaluated_with_valid_real_responses": true,
+      "blank_controls_not_accepted": true,
+      "no_qualitative_pallet_rejected": false,
+      "minimum_qualitative_pallet_accepts": false,
+      "suspected_non_pallet_not_accepted": true
+    },
+    "natural_cases": {
+      "reject": 4,
+      "uncertain": 3,
+      "accept": 1
+    },
+    "positive_fixtures": {
+      "reject": 3,
+      "uncertain": 1,
+      "accept": 1
+    },
+    "blanks": {
+      "uncertain": 2
+    },
+    "suspected_non_pallet": {
+      "uncertain": 1
+    },
+    "median_request_seconds": 4.219,
+    "total_request_seconds": 97.126
+  },
+  "input_fingerprints_equal": 20,
+  "category_responses_changed": 14,
+  "natural_decision_transitions": {
+    "reject->reject": 2,
+    "reject->uncertain": 1,
+    "uncertain->uncertain": 2,
+    "uncertain->reject": 1,
+    "uncertain->accept": 1,
+    "accept->reject": 1
+  },
+  "quantization_for_both": "nf4",
+  "image_token_budget_for_both": 256,
+  "temperature": 0,
+  "max_output_tokens": 192,
+  "model_8B_revision": "0c351dd01ed87e9c1b53cbc748cba10e6187ff3b",
+  "model_8B_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+  "model_8B_memory_footprint_bytes": 7115596584,
+  "first_remote_attempt_valid_responses": 0,
+  "first_attempt_stopped_after_verified_NFS_wait": true,
+  "second_attempt_process_caches_on_local_disk": true,
+  "pixel_accuracy_evaluated": false,
+  "independent_human_truth_added": false,
+  "independent_scene_validation": false,
+  "workbench_modified": false,
+  "automated_filter_adopted": false
+}

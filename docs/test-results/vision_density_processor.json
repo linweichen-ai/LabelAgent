@@ -1,0 +1,33 @@
+{
+  "status": "complete",
+  "scope": "CPU_real_processor_only_no_model_inference_or_quality_result",
+  "source_code_sha256": "463774fbbf1492a5c15cdd1ea2560beae4327813a3bc932ed191e757e23f5f5d",
+  "fixture_sha256": "ec83b666cff364788815e9ed36a26247c4891704beef4238836286d176618c90",
+  "model_config_sha256": "bec4b3d446efa05807365c9e1cec03ac590836879d02f3a6da879971154bdd3b",
+  "processor_type": "Qwen2VLImageProcessorFast",
+  "merge_size": 2,
+  "views_checked": 30,
+  "native_views_with_more_tokens_at_1024": 6,
+  "common_views_with_more_tokens_at_1024": 30,
+  "CUDA_initialized": false,
+  "model_weights_loaded": false,
+  "new_model_requests": 0,
+  "source_images_modified": false,
+  "upsampling_adds_source_detail": false,
+  "processor_reproduction_exact": true,
+  "small_native_views_unchanged": 24,
+  "small_native_actual_token_range": [
+    66,
+    80
+  ],
+  "common_input_256_token_range": [
+    224,
+    256
+  ],
+  "common_input_1024_token_range": [
+    952,
+    1024
+  ],
+  "model_quality_measured": false,
+  "higher_density_default_installed_by_this_study": false
+}

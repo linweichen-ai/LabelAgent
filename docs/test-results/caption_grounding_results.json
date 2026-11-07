@@ -1,0 +1,69 @@
+{
+  "status": "complete_not_adopted",
+  "new_VLM_requests": 60,
+  "new_SAM3_requests": 0,
+  "new_literal_observations": 20,
+  "new_classifications": 40,
+  "image_token_budget": 256,
+  "source_image_pixel_audit": {
+    "source_views": 20,
+    "all_decoded_pixels_and_single_image_slots_match": true,
+    "new_model_requests": 0
+  },
+  "same_twenty_original_payload_pairs": true,
+  "prior_twenty_baseline_parsed_responses_exactly_reproduced": 20,
+  "policies": {
+    "baseline": {
+      "new_classification_responses": 20,
+      "pallet_consensus_cases": 0,
+      "pallet_cases": 5,
+      "pallet_views_called_person": 7,
+      "person_views_correct": 4,
+      "blank_views_uncertain": 2,
+      "suspect_views_uncertain": 0,
+      "median_classification_seconds": 11.75,
+      "quality_checks": {
+        "all_expected_real_responses": true,
+        "people_both_views_person": true,
+        "blank_views_uncertain": false,
+        "minimum_three_pallet_consensus": false,
+        "pallet_views_never_person": false,
+        "suspect_views_uncertain": false
+      },
+      "all_quality_checks_passed": false
+    },
+    "literal_observation": {
+      "new_classification_responses": 20,
+      "pallet_consensus_cases": 1,
+      "pallet_cases": 5,
+      "pallet_views_called_person": 0,
+      "person_views_correct": 4,
+      "blank_views_uncertain": 4,
+      "suspect_views_uncertain": 2,
+      "median_classification_seconds": 11.695,
+      "quality_checks": {
+        "all_expected_real_responses": true,
+        "people_both_views_person": true,
+        "blank_views_uncertain": true,
+        "minimum_three_pallet_consensus": false,
+        "pallet_views_never_person": true,
+        "suspect_views_uncertain": true
+      },
+      "all_quality_checks_passed": false
+    }
+  },
+  "protocol_checks_passed": true,
+  "adoption_checks_passed": false,
+  "state_unchanged": true,
+  "fixture_unchanged": true,
+  "plan_unchanged": true,
+  "server_code_unchanged": true,
+  "source_code_unchanged": true,
+  "images_unchanged": true,
+  "model_config_sha256": "bec4b3d446efa05807365c9e1cec03ac590836879d02f3a6da879971154bdd3b",
+  "reference_status": "unconfirmed functional fixtures; not independent human 2D truth",
+  "pixel_accuracy_evaluated": false,
+  "workbench_policy_modified": false,
+  "private_summary_sha256": "9f56e759770ca5aaed1bfe19c8e17c34efb3fe826c25485fc2488c92454f3de4",
+  "timing_scope": "sequential observations under current desktop load; added observations cost an additional real request per view; not a general benchmark"
+}

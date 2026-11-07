@@ -1,0 +1,39 @@
+{
+  "verified_at": "2026-11-04T05:33:38.212Z",
+  "scope": "Operation tutorial showing existing recorded results, not a new inference or quality evaluation",
+  "navigation_checks": [
+    "add image window",
+    "single camera source",
+    "pencil enters annotation",
+    "approved reference and description available",
+    "frame 76 loads",
+    "stage tabs display recorded results",
+    "save button enabled"
+  ],
+  "reference_frame": 0,
+  "reference_shapes": 15,
+  "target_frame": 76,
+  "target_candidates": 11,
+  "target_pallets": 9,
+  "target_people": 2,
+  "target_saved_as_truth": false,
+  "new_model_requests": 0,
+  "saved_state_unchanged": true,
+  "page_errors": [],
+  "local_private_tutorial": {
+    "steps": 7,
+    "next_previous_and_zoom_verified": true,
+    "screenshots_uploaded": false
+  },
+  "passed": true,
+  "visible_browser_verified": true,
+  "camera_entry_fix": {
+    "same_camera_request_does_not_rewrite_history": true,
+    "same_camera_elapsed_seconds_one_local_sample": 0.004435599999851547,
+    "other_camera_switch_and_annotation_roundtrip_verified": true,
+    "invalid_camera_rejected": true,
+    "regression_tests_passed": 303,
+    "only_workbench_restarted": true,
+    "model_services_restarted": false
+  }
+}

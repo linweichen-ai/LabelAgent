@@ -1,0 +1,46 @@
+{
+  "verified_utc": "2026-11-04T07:20:38.793289+00:00",
+  "status": "complete",
+  "scope": "One real workbench Agent run and local recording; not full validation accuracy",
+  "fresh_agent_runs": 1,
+  "target_frame": 76,
+  "camera": 1,
+  "rounds": 1,
+  "candidate_count": 11,
+  "pallet_candidates": 9,
+  "person_candidates": 2,
+  "converged": true,
+  "target_confirmed_as_truth": false,
+  "no_truth_save_clicked": true,
+  "video": {
+    "codec": "H.264",
+    "container": "MP4",
+    "width": 1920,
+    "height": 1080,
+    "fps": 20,
+    "duration_seconds": 201.8,
+    "Chinese_captions": true,
+    "click_indicators": true,
+    "fully_decoded": true,
+    "sampled_frames": 7,
+    "browser_playback_verified": true,
+    "audio": false,
+    "raw_video_or_screenshots_uploaded_to_repository": false
+  },
+  "workbench_IO_fix": {
+    "actual_failure": "last_run.tmp atomic replacement denied on Windows",
+    "only_failed_workbench_restarted": true,
+    "model_services_restarted": false,
+    "bounded_replace_attempts": 10,
+    "real_Windows_reader_handle_retry_test_passed": true,
+    "regression_tests_passed": 337
+  },
+  "protected": {
+    "truth_reference_labels_configuration_unchanged": true,
+    "existing_frame77_candidates_preserved": true,
+    "original_source_files_checked": 1023,
+    "previous_sessions_checked": 7,
+    "all_checks_passed": true
+  },
+  "new_full_accuracy_claim": false
+}

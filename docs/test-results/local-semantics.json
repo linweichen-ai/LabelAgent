@@ -1,0 +1,67 @@
+{
+  "status": "verified",
+  "total_new_actual_requests": 54,
+  "new_local_requests": 50,
+  "new_remote_requests": 4,
+  "new_SAM_calls": 0,
+  "final_primary_human_correct": 15,
+  "final_primary_human_wrong": 0,
+  "final_primary_legacy_pallet_correct": 3,
+  "final_two_targets_both_point_and_box_PAL": true,
+  "final_inputs_have_no_reference_images_or_descriptions": true,
+  "original29_primary_gates_passed": true,
+  "final_auxiliary_raw_categories": {
+    "approved_person": [
+      "person",
+      "person"
+    ],
+    "pending_role_suspect": [
+      "person",
+      "pallet"
+    ],
+    "control_gray": [
+      "pallet",
+      "pallet"
+    ],
+    "control_white": [
+      "pallet",
+      "pallet"
+    ]
+  },
+  "final_auxiliary_raw_all_checks_passed": false,
+  "unchanged_existing_guards_reject_unexpected_auxiliary_proposals": true,
+  "original_primary_and_guarded_auxiliary_checks_passed": true,
+  "all_joint_raw_checks_passed": false,
+  "fewshot_image_reference_counterexamples_failed": true,
+  "text_reference_auxiliary_blanks_uncertain": true,
+  "raw_counterexample_failures_retained": true,
+  "exact_payload_cache_reuse_not_new_calls": true,
+  "reconstructed_later_JPEGs": 36,
+  "later_unique_receipts_verified": 36,
+  "unique_new_tests_passed": 28,
+  "final_primary_source_bindings": 561,
+  "final_auxiliary_source_bindings": 562,
+  "query_targets_and_controls_excluded_from_approved_references": true,
+  "reference_regions_disjoint_from_queries": true,
+  "all_source_bindings_unchanged": true,
+  "original_state_unchanged": true,
+  "original_annotations_written": false,
+  "remote_owned_worker_stopped": true,
+  "owned_forward_closed": true,
+  "default_enabled": false,
+  "adopted": false,
+  "independent_validation": false,
+  "pixel_accuracy_measured": false,
+  "per_new_phase_requests": {
+    "fewshot": 5,
+    "fewshot_aux": 6,
+    "text": 5,
+    "text_aux": 6,
+    "boxed": 3,
+    "boxed_aux": 9
+  },
+  "phase": "complete_original_panel_passed_raw_counterexamples_failed",
+  "final_complete": true,
+  "public_pr_summary": "固定三倍局部上下文、箭头／框角且不含参考照片或描述时，两目标四份回答均为托盘。原29项人工正确14/19→15/19、错误0、旧托盘2/5→3/5，通过原面板。54次新请求、28项新增检查；裸模型新增反例仍失败，既有来源/SAM保护可拒判，因此未默认启用。参考并排版虽答对正目标，却对空白也报托盘，失败结论完整保留；原始标注、工作台及其他任务保持。",
+  "raw_media_and_private_paths_published": false
+}

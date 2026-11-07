@@ -1,0 +1,27 @@
+{
+  "observed_utc": "2026-11-04T07:28:33.349243+00:00",
+  "main_capture": {
+    "name": "Capture_20261103",
+    "images": 608,
+    "timestamp_groups": 152,
+    "cameras": 4,
+    "lidar_frames": 152,
+    "reference_source": "labels",
+    "pixel_ground_truth_complete": false,
+    "annotation_sources_are_separate_datasets": false
+  },
+  "historical_task3": {
+    "images": 150,
+    "classes": 7,
+    "annotations": 1550,
+    "source_counts": {
+      "auto": 1469,
+      "manual": 81
+    },
+    "source_tag_proves_review_status": false,
+    "local_manifest_sha256": "e6fed22bfd3b26d32260da2cb5d592041c0bdc3cee3eba72572f9034ffaac961",
+    "remote_current_state_checked": false
+  },
+  "weights_finetuned_in_this_LabelAgent_work": false,
+  "paid_cloud_deployment_started": false
+}

@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "scope": "stop_resume_integration_with_historical_response_replay",
+  "real_model_requests": 0,
+  "replayed_HTTP_requests": 4,
+  "first_process_stopped_after_requests": 1,
+  "resume_new_requests": 3,
+  "first_response_unchanged": true,
+  "outputs_match_uninterrupted_historical_run": true,
+  "workbench_state_unchanged": true
+}

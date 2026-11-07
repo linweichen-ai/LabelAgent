@@ -1,0 +1,46 @@
+{
+  "status": "complete_not_adopted",
+  "new_real_VLM_requests": 8,
+  "new_SAM3_requests": 0,
+  "cached_real_SAM_candidates_reused": true,
+  "cases": 4,
+  "policies": [
+    "baseline",
+    "reason_first"
+  ],
+  "response_schema_changed": false,
+  "only_input_intervention": "append generic reason-first serialization instruction, no defect/target hint or forced edit",
+  "checks": {
+    "all_cases_have_real_responses": true,
+    "paired_first_prompts_and_images_identical": true,
+    "paired_original_schemas_identical": true,
+    "all_intervention_responses_reason_first": true,
+    "both_class_flip_controls_recovered_with_observation": false,
+    "both_natural_controls_preserved_and_converged": true
+  },
+  "all_predeclared_checks_passed": false,
+  "results": {
+    "baseline": {
+      "real_calls": 4,
+      "class_flip_controls_recovered": 0,
+      "natural_controls_preserved": 2,
+      "actual_edit_operations": 0,
+      "all_responses_reason_first": false
+    },
+    "reason_first": {
+      "real_calls": 4,
+      "class_flip_controls_recovered": 0,
+      "natural_controls_preserved": 2,
+      "actual_edit_operations": 0,
+      "all_responses_reason_first": true
+    }
+  },
+  "state_unchanged": true,
+  "workflow_unchanged": true,
+  "plan_unchanged": true,
+  "source_inputs_unchanged": true,
+  "pixel_accuracy_evaluated": false,
+  "independent_validation": false,
+  "reference_status": "unconfirmed functional reference",
+  "private_summary_sha256": "176ee463414456e4876ee8a68b4c404da1569ad8091453d2566306d05f801af9"
+}

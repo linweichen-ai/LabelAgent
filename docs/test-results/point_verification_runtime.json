@@ -1,0 +1,13 @@
+{
+  "regression_tests_passed": 153,
+  "replay": {
+    "passed": true,
+    "scope": "simulated_interruption_after_response_collection_offline_replay",
+    "replayed_images": 20,
+    "cached_real_responses_reused": 19,
+    "new_model_requests": 0,
+    "network_forbidden_during_replay": true,
+    "candidate_export_bytes_identical": true,
+    "original_cached_responses_unchanged": true
+  }
+}

@@ -56,6 +56,7 @@ function renderInspection(force=false){
  const expanded=scope===inspectionDisclosureScope?new Set([...body.querySelectorAll('.inspectionData[open]')].map(node=>node.dataset.disclosureKey)):new Set();
  inspectionDisclosureScope=scope;
  body.setAttribute('aria-labelledby','inspectionStage'+inspectionStage);body.replaceChildren();
+ if(!(window.referenceFrames?.[topic]?.length)){const card=inspectionCard(body,'开始前：准备参考帧','尚未设置');card.append(inspectionNode('p','先点击“参考帧准备”进入人工标注。在一帧上标注目标类别，保存当前帧真值并设为参考帧；切回自动标注，生成真值描述，再切到待处理帧运行。已有候选可以先查看，尚未经过人工确认。'));}
  if(inspectionStage===0){
   for(const call of describes){const card=inspectionCard(body,`参考帧 ${call.frame} → GPT`,inspectionCallState(call));inspectionBlock(card,'发送给 GPT 的完整提示词',call.input?.instruction,true);inspectionImages(card,call.input?.images||[],['GPT 输入图 1：原始参考帧','GPT 输入图 2：仅画真值轮廓的参考帧']);inspectionCallError(card,call)}
   if(!describes.length)body.append(inspectionNode('p',description?'本次使用已生成的描述，旧记录未保留生成描述时的完整调用。重新生成真值描述后可查看。':'设置参考帧并生成真值描述后，这里显示发送给 GPT 的提示词与参考帧真值图。','inspectionEmpty'));
@@ -73,6 +74,7 @@ function renderInspection(force=false){
   const final=steps.filter(x=>x.phase==='finished').at(-1),run=agentRuns[String(target)]||final?.result?.agent;
   if(run){const card=inspectionCard(body,'Agent 最终结果',run.converged?'复查完成':'流程未完成');inspectionBlock(card,'停止原因',`${agentStop[run.stop_reason]||run.stop_reason} · ${run.rounds} 轮\n${shapes[String(target)]!==undefined?'此帧已保存真值':'此帧候选尚未保存为真值，可检查后保存结果。'}`);if(final)inspectionImage(card,final.image,`帧 ${target} · Agent 最终候选 · ${final.shape_count} 个标注`);else if(candidates[String(target)]||shapes[String(target)])inspectionImage(card,'/api/frame/'+target+'?topic='+encodeURIComponent(topic),'当前已保存的候选 / 真值',candidates[String(target)]||shapes[String(target)]);if(run.review_queue?.length)inspectionBlock(card,'流程错误与未完成原因',run.review_queue,true)}
   for(const step of steps.filter(x=>x.phase!=='finished')){const card=inspectionCard(body,step.phase==='generated'?'SAM 3 初步候选':`第 ${step.round} 轮工具执行后`,`${step.shape_count} 个标注`);inspectionImage(card,step.image,'此阶段的标注结果');if(step.outcome)inspectionBlock(card,'实际执行结果',step.outcome,true)}
+  if(!run&&!steps.length&&Object.hasOwn(candidates,String(target))){const card=inspectionCard(body,'已导入的自动候选',`${candidates[String(target)].length} 个标注 · 待人工确认`);card.append(inspectionNode('p','当前候选没有对应的模型调用记录；这不表示页面卡住。上方及下图显示已有轮廓，检查无误后再点击“保存结果”。'));inspectionImage(card,'/api/frame/'+target+'?topic='+encodeURIComponent(topic),'已导入候选（非本轮推理结果）',candidates[String(target)]);}
   if(run?.audit?.length)inspectionRaw(body,'逐轮 GPT 决策与 Agent 实际执行记录',run.audit);
  }
  if(!body.children.length)body.append(inspectionNode('p',`帧 ${target} 暂无此阶段记录。开始自动标注后，会实时显示提示词、图像和调用结果。`,'inspectionEmpty'));
@@ -126,7 +128,7 @@ window.setWorkspaceMode=async(mode,openImage=true)=>{
  $('autoDesk').hidden=mode!=='auto';
  inspectionPanel.hidden=mode!=='auto';
  $('truth').hidden=mode==='auto';
- for(const id of ['pointButton','negativeButton','generateMaskButton'])$(id).hidden=mode==='manual';
+ for(const id of ['pointButton','negativeButton','generateMaskButton'])$(id).hidden=mode==='manual'&&catalog[topic]?.schema!=='LabelAgent.StillImage';
  $('clearButton').hidden=mode==='auto';
  $('truthSave').textContent=mode==='auto'&&candidates[String(frame)]&&shapes[String(frame)]===undefined?'确认并保存当前帧真值':'保存当前帧真值';
  if(changed){pointMode=false;negativeMode=false;regionMode='';draft=[];resetPrompts();refreshPointTools();refreshShapeList();updateReferenceStatus();draw()}
@@ -138,7 +140,7 @@ window.setWorkspaceMode=async(mode,openImage=true)=>{
 $('manualModeButton').onclick=()=>window.setWorkspaceMode('manual').catch(e=>toast(e.message));
 $('autoModeButton').onclick=()=>window.setWorkspaceMode('auto').catch(e=>toast(e.message));
 $('runButton').addEventListener('click',()=>{inspectionRunFrame=null;inspectionStageManual=false;inspectionStage=2;refreshInspection()});
-$('prepareReference').onclick=()=>{if(window.referenceFrames?.[topic]?.length)openReferenceFrame();else toast('请先在人工标注模式保存真值并设为参考帧')};
+$('prepareReference').onclick=async()=>{try{if(window.referenceFrames?.[topic]?.length)await openReferenceFrame();else{await window.setWorkspaceMode('manual');toast('请先在当前帧标注目标，保存当前帧真值，再点击“设为参考帧”')}}catch(error){toast(error.message)}};
 $('describeButton').addEventListener('click',()=>{inspectionStage=0;refreshInspection()});
 $('saveCandidate').onclick=async()=>{try{await saveCurrentTruth(true);renderInspection(true);refreshInspection()}catch(error){toast(error.message)}};
 $('clearAutoResult').onclick=async()=>{

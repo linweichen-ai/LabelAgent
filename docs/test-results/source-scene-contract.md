@@ -9,3 +9,5 @@ The proposed cause is not proven. All eighteen cases and every positive/negative
 Status: **running_or_awaiting_verification**. The first attempt stopped before any model request because the shared model was busy; its zero-answer record remains. The same frozen protocol is queued/retried in a new output directory. No old completed answer is repeated. No success is claimed before complete readback and preservation checks.
 
 Up to nineteen observer/default-guard calls. Private source images, masks, coordinates, paths and credentials stay local. Workbench defaults and original annotations remain intact.
+
+Partial readback: 4 known negative-source observations received, 0 reported no. The schema-visible change has not yet demonstrated useful rejection; the complete fixed run continues.

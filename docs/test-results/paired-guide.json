@@ -1,8 +1,8 @@
 {
   "phase": "in_progress",
-  "observed_utc": "2026-11-07T17:04:06.347168+00:00",
+  "observed_utc": "2026-11-07T17:12:28.457134+00:00",
   "status": "running",
-  "saved_new_responses": 18,
+  "saved_new_responses": 42,
   "maximum_new_requests": 69,
   "cases": 18,
   "quality_conditions_per_arm": 36,
@@ -22,7 +22,7 @@
   "historical_native_visual_tokens": 768,
   "normal_category_first_schema_preserved": true,
   "original_plan_sha256": "6cdc4167159eb3b2f251978e0b2f883c8b939b778ac0d277ecf2d3f9caef65e0",
-  "active_plan_sha256": "6cdc4167159eb3b2f251978e0b2f883c8b939b778ac0d277ecf2d3f9caef65e0",
+  "active_plan_sha256": "1b54d48a48549a173d76a92c41dd54eb5afc5838835392abdfb8869095666cc1",
   "helper_source_sha256": "7a76f6f78213d80d03476c2864b111e0f3145c4ec2f1ba60fc8f82472c99b652",
   "evaluator_source_sha256": "bc970ab0df50a305a766c4c13827de03231147fdf78895635674b98729bba311",
   "original_annotations_written": false,
@@ -30,5 +30,7 @@
   "candidate_adopted": false,
   "default_enabled": false,
   "full_project_validation_passed": false,
-  "independent_generalization": false
+  "independent_generalization": false,
+  "c3_assistant_semantic_review_passed": false,
+  "human_localization_approval": false
 }

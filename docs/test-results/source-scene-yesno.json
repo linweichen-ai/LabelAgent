@@ -1,7 +1,7 @@
 {
   "study": "Source-observer label wording comparison",
-  "phase": "running_or_awaiting_verification",
-  "observed_utc": "2026-11-07T13:32:10.930105+00:00",
+  "phase": "final_verified",
+  "observed_utc": "2026-11-07T13:40:00.350990+00:00",
   "plan_sha256": "ac79fc4ec7d0c02610990736693ae38108d62d9848d976a61085227a0e1c0892",
   "maximum_new_requests": 19,
   "inverse_payload_pairs_verified": 18,
@@ -14,6 +14,52 @@
   "default_enabled": false,
   "new_SAM_calls": 0,
   "independent_validation": false,
-  "status": "running",
-  "new_responses_received": 1
+  "status": "complete",
+  "new_responses_received": 19,
+  "new_response_count": 19,
+  "source_observation_positive_passed": 9,
+  "positive_sources": 9,
+  "known_negative_sources": 8,
+  "counts_by_role": {
+    "protected_pallet": {
+      "total_views": 4,
+      "raw_expected": 4,
+      "reviewed_expected": 4
+    },
+    "person_fixture": {
+      "total_views": 2,
+      "raw_expected": 2,
+      "reviewed_expected": 2
+    },
+    "suspected_non_pallet": {
+      "total_views": 2,
+      "raw_expected": 0,
+      "reviewed_expected": 0
+    },
+    "blank_control": {
+      "total_views": 4,
+      "raw_expected": 4,
+      "reviewed_expected": 4
+    },
+    "marked_blank_control": {
+      "total_views": 4,
+      "raw_expected": 4,
+      "reviewed_expected": 4
+    },
+    "confirmed_six": {
+      "total_views": 12,
+      "raw_expected": 12,
+      "reviewed_expected": 12
+    },
+    "stress_negative": {
+      "total_views": 8,
+      "raw_expected": 6,
+      "reviewed_expected": 6
+    }
+  },
+  "source_bindings_unchanged": true,
+  "original_annotations_verified": 256,
+  "original_state_unchanged": true,
+  "all_joint_checks_passed": false,
+  "known_negative_no_observations": 0
 }

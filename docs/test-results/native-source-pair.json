@@ -1,0 +1,113 @@
+{
+  "phase": "in_progress",
+  "observed_utc": "2026-11-07T18:44:59.457749+00:00",
+  "status": "running",
+  "saved_new_responses": 8,
+  "maximum_new_requests": 37,
+  "cases": 18,
+  "baseline_cached_quality_views": 36,
+  "candidate_fresh_quality_views": 36,
+  "query_variants_are_not_independent_photographs": true,
+  "image_count_per_arm": 2,
+  "visual_tokens_per_arm": 512,
+  "native_source_side": 128,
+  "first_image": "unmarked selected native source neighborhood",
+  "second_image": "original unmarked wider context",
+  "original_guide_excluded_from_candidate_model_input": true,
+  "UI_locator_masks_and_native_point_preserved": true,
+  "ordinary_greedy_category_first_JSON": true,
+  "no_class_score_reranking_or_category_rewriting": true,
+  "combined_input_and_instruction_intervention": true,
+  "expected_prompt_encoding_by_arm": {
+    "baseline": {
+      "overview": {
+        "prompt_tokens": 809,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            32
+          ],
+          [
+            1,
+            32,
+            32
+          ]
+        ],
+        "actual_image_token_counts": [
+          256,
+          256
+        ]
+      },
+      "linked": {
+        "prompt_tokens": 797,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            32
+          ],
+          [
+            1,
+            32,
+            32
+          ]
+        ],
+        "actual_image_token_counts": [
+          256,
+          256
+        ]
+      }
+    },
+    "candidate": {
+      "overview": {
+        "prompt_tokens": 828,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            32
+          ],
+          [
+            1,
+            32,
+            32
+          ]
+        ],
+        "actual_image_token_counts": [
+          256,
+          256
+        ]
+      },
+      "linked": {
+        "prompt_tokens": 832,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            32
+          ],
+          [
+            1,
+            32,
+            32
+          ]
+        ],
+        "actual_image_token_counts": [
+          256,
+          256
+        ]
+      }
+    }
+  },
+  "original_plan_sha256": "783e3397c3fef83adc1cc81c67d3844dd435ad0260cc710135c58a29c5f813d1",
+  "active_plan_sha256": "783e3397c3fef83adc1cc81c67d3844dd435ad0260cc710135c58a29c5f813d1",
+  "helper_source_sha256": "e78aa12f8d42650490b70f9bf6c01105ab49574b599cfc596bd37622c81bcf37",
+  "evaluator_source_sha256": "08761d80d389d0436d31c153c6877796d133285fc97fb20fc1d3f783aa0960ba",
+  "candidate_adopted": false,
+  "default_enabled": false,
+  "original_annotations_written": false,
+  "new_segmentation_inference": false,
+  "full_project_validation_passed": false,
+  "independent_generalization": false
+}

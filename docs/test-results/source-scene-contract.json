@@ -1,0 +1,20 @@
+{
+  "study": "Prompt-visible existing output schema and field mapping",
+  "phase": "running_or_awaiting_verification",
+  "observed_utc": "2026-11-07T13:43:57.426483+00:00",
+  "plan_sha256": "bdade880459a6dfb02f6094d54ac27576a05d393eca1e5426d57253bc2c7acfb",
+  "maximum_new_requests": 19,
+  "inverse_payload_pairs_verified": 18,
+  "intervention": "Append explicit category/reason key mapping plus the exact existing decoding schema to the otherwise unchanged yes/no observer prompt.",
+  "images_definitions_labels_decoding_and_budget_unchanged": true,
+  "initial_stopped_attempt_new_answers": 0,
+  "raw_classifier_answers_unchanged": true,
+  "model_observer_veto_replay_not_raw_classifier_gain": true,
+  "original_annotations_written": false,
+  "candidate_adopted": false,
+  "default_enabled": false,
+  "new_SAM_calls": 0,
+  "independent_validation": false,
+  "status": "running",
+  "new_responses_received": 2
+}

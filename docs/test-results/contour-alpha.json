@@ -1,10 +1,11 @@
 {
   "phase": "in_progress",
-  "observed_utc": "2026-11-07T14:48:35.900658+00:00",
+  "observed_utc": "2026-11-07T14:57:11.873604+00:00",
   "status": "running",
-  "attempted_new_requests": 15,
-  "saved_new_responses": 14,
+  "attempted_new_requests": 28,
+  "saved_new_responses": 27,
   "maximum_new_requests": 33,
+  "previous_accepted_candidate_replies": 22,
   "cases": 18,
   "quality_views_per_arm": 36,
   "cached_baseline_views": 36,
@@ -16,7 +17,8 @@
   "exact_original_locator_rebuilds": 32,
   "actual_image_tokens_per_image": 256,
   "quantization": "nf4",
-  "plan_sha256": "af7b8f1cc14f8f0ac046e357dd6cd5e1041562e3546c9813b3e1eaf9d1193215",
+  "original_plan_sha256": "af7b8f1cc14f8f0ac046e357dd6cd5e1041562e3546c9813b3e1eaf9d1193215",
+  "active_plan_sha256": "637edc9ec5b9e94aab0b0c911ec249f26f86073191521c62302dc599fe37f7db",
   "renderer_source_sha256": "dcf1829d4c5aaf779f5c1cec9864a2440c251484c72133edac6d57f8019c09aa",
   "evaluator_source_sha256": "8f72574d544ca393ba08470d0d88123c7b1678c4eb4f795c9ac8d1962a50a2d7",
   "mask_geometry_changed": false,
@@ -29,5 +31,7 @@
   "new_SAM_calls": 0,
   "default_enabled": false,
   "candidate_adopted": false,
-  "independent_generalization": false
+  "independent_generalization": false,
+  "c3_assistant_semantic_review_passed": true,
+  "human_localization_approval": false
 }

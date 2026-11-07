@@ -1,7 +1,7 @@
 {
   "study": "Prompt-visible existing output schema and field mapping",
-  "phase": "running_or_awaiting_verification",
-  "observed_utc": "2026-11-07T13:46:26.850452+00:00",
+  "phase": "final_verified",
+  "observed_utc": "2026-11-07T13:51:11.523693+00:00",
   "plan_sha256": "bdade880459a6dfb02f6094d54ac27576a05d393eca1e5426d57253bc2c7acfb",
   "maximum_new_requests": 19,
   "inverse_payload_pairs_verified": 18,
@@ -15,8 +15,56 @@
   "default_enabled": false,
   "new_SAM_calls": 0,
   "independent_validation": false,
-  "status": "running",
-  "new_responses_received": 11,
-  "partial_known_negative_sources_received": 4,
-  "partial_known_negative_sources_rejected": 0
+  "status": "complete",
+  "new_responses_received": 19,
+  "partial_known_negative_sources_received": 8,
+  "partial_known_negative_sources_rejected": 0,
+  "new_response_count": 19,
+  "positive_sources_passed": 9,
+  "positive_sources": 9,
+  "known_negative_sources_rejected": 0,
+  "known_negative_sources": 8,
+  "counts_by_role": {
+    "protected_pallet": {
+      "total_views": 4,
+      "raw_expected": 4,
+      "reviewed_expected": 4
+    },
+    "person_fixture": {
+      "total_views": 2,
+      "raw_expected": 2,
+      "reviewed_expected": 2
+    },
+    "suspected_non_pallet": {
+      "total_views": 2,
+      "raw_expected": 0,
+      "reviewed_expected": 0
+    },
+    "blank_control": {
+      "total_views": 4,
+      "raw_expected": 4,
+      "reviewed_expected": 4
+    },
+    "marked_blank_control": {
+      "total_views": 4,
+      "raw_expected": 4,
+      "reviewed_expected": 4
+    },
+    "confirmed_six": {
+      "total_views": 12,
+      "raw_expected": 12,
+      "reviewed_expected": 12
+    },
+    "stress_negative": {
+      "total_views": 8,
+      "raw_expected": 6,
+      "reviewed_expected": 6
+    }
+  },
+  "original_annotations_verified": 256,
+  "original_state_unchanged": true,
+  "source_bindings_unchanged": true,
+  "all_joint_checks_passed": false,
+  "character_parser_labels_and_both_key_orders_reachable": true,
+  "tokenizer_level_logits_not_evaluated": true
 }

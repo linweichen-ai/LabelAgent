@@ -1,7 +1,7 @@
 {
   "study": "Prompt-visible existing output schema and field mapping",
   "phase": "running_or_awaiting_verification",
-  "observed_utc": "2026-11-07T13:43:57.426483+00:00",
+  "observed_utc": "2026-11-07T13:46:26.850452+00:00",
   "plan_sha256": "bdade880459a6dfb02f6094d54ac27576a05d393eca1e5426d57253bc2c7acfb",
   "maximum_new_requests": 19,
   "inverse_payload_pairs_verified": 18,
@@ -16,5 +16,7 @@
   "new_SAM_calls": 0,
   "independent_validation": false,
   "status": "running",
-  "new_responses_received": 2
+  "new_responses_received": 11,
+  "partial_known_negative_sources_received": 4,
+  "partial_known_negative_sources_rejected": 0
 }

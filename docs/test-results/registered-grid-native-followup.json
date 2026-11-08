@@ -1,0 +1,139 @@
+{
+  "status": "complete_registered_grid_and_consensus_paired_SAM_comparison",
+  "new_CPU_forwards": 24,
+  "real_CPU": 20,
+  "synthetic_CPU": 4,
+  "original_postprocess_saved_forward_replays_exact": 48,
+  "new_neutral_VLM_calls": 18,
+  "new_full_semantics_VLM_calls": 23,
+  "new_VLM_calls_total": 41,
+  "full_semantics_exact_historical_reuses": 2,
+  "full_semantics_unique_replies": 25,
+  "full_semantics_logical_views": 108,
+  "new_SAM_calls": 14,
+  "source_points": 16,
+  "points_neutrally_admitted": 7,
+  "native_valid_full_outputs": 14,
+  "all_padding_foreground_zero_and_full_count_mapping": true,
+  "area_passing": 0,
+  "full_semantic_passing": 0,
+  "new_accepted_instances": 0,
+  "retained_support": "13/17",
+  "historical_Agent": "6/6_not_rerun",
+  "remaining_misses": 4,
+  "new_Agent_runs": 0,
+  "all_original_final_gates_unchanged": true,
+  "no_output_foreground_cuts": true,
+  "pictures": 16,
+  "videos": 4,
+  "saved_replay_frames": 640,
+  "registered_stock_coverage_post_generation": [
+    {
+      "case": "camera0_frame76",
+      "object_id": 42,
+      "models": [
+        {
+          "model": "old",
+          "points_in_any_stock_PAL_output": 0,
+          "reference_points": 16
+        },
+        {
+          "model": "retained",
+          "points_in_any_stock_PAL_output": 0,
+          "reference_points": 16
+        },
+        {
+          "model": "R5_historical_boundary",
+          "points_in_any_stock_PAL_output": 0,
+          "reference_points": 16
+        },
+        {
+          "model": "R15_PAL_candidate",
+          "points_in_any_stock_PAL_output": 0,
+          "reference_points": 16
+        }
+      ]
+    },
+    {
+      "case": "camera0_frame76",
+      "object_id": 48,
+      "models": [
+        {
+          "model": "old",
+          "points_in_any_stock_PAL_output": 27,
+          "reference_points": 27
+        },
+        {
+          "model": "retained",
+          "points_in_any_stock_PAL_output": 27,
+          "reference_points": 27
+        },
+        {
+          "model": "R5_historical_boundary",
+          "points_in_any_stock_PAL_output": 27,
+          "reference_points": 27
+        },
+        {
+          "model": "R15_PAL_candidate",
+          "points_in_any_stock_PAL_output": 27,
+          "reference_points": 27
+        }
+      ]
+    },
+    {
+      "case": "camera1_frame76",
+      "object_id": 47,
+      "models": [
+        {
+          "model": "old",
+          "points_in_any_stock_PAL_output": 0,
+          "reference_points": 11
+        },
+        {
+          "model": "retained",
+          "points_in_any_stock_PAL_output": 0,
+          "reference_points": 11
+        },
+        {
+          "model": "R5_historical_boundary",
+          "points_in_any_stock_PAL_output": 0,
+          "reference_points": 11
+        },
+        {
+          "model": "R15_PAL_candidate",
+          "points_in_any_stock_PAL_output": 11,
+          "reference_points": 11
+        }
+      ]
+    },
+    {
+      "case": "camera1_frame76",
+      "object_id": 49,
+      "models": [
+        {
+          "model": "old",
+          "points_in_any_stock_PAL_output": 0,
+          "reference_points": 6
+        },
+        {
+          "model": "retained",
+          "points_in_any_stock_PAL_output": 0,
+          "reference_points": 6
+        },
+        {
+          "model": "R5_historical_boundary",
+          "points_in_any_stock_PAL_output": 0,
+          "reference_points": 6
+        },
+        {
+          "model": "R15_PAL_candidate",
+          "points_in_any_stock_PAL_output": 4,
+          "reference_points": 6
+        }
+      ]
+    }
+  ],
+  "proposal_bottleneck": "highest_score_one_segment_and_pair_consensus_do_not_submit_R15_left_predictions",
+  "next_single_teacher_source_plan_prepared_only": true,
+  "adopted": false
+}

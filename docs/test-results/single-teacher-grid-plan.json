@@ -1,0 +1,18 @@
+{
+  "status": "prepared_not_executed_at_publication",
+  "source_points": 21,
+  "plain_controls": 2,
+  "new_calls_at_snapshot": 0,
+  "proposal_rule_changes": [
+    "up_to3_stock_PAL_per_registered_model_view",
+    "source_model_proposal_not_vetoed_by_second_model_before_neutral_review"
+  ],
+  "all_final_acceptance_gates_unchanged": true,
+  "no_output_mask_cuts": true,
+  "max_unique_SAM_point_candidates": 16,
+  "max_paired_SAM_calls": 32,
+  "Agent_round_limit": 3,
+  "new_Agent_runs": 0,
+  "original_annotations_preserved": true,
+  "not_an_independent_validation": true
+}

@@ -559,11 +559,21 @@ def sync_git(config, observation):
             'branch': config['publish_branch']}
 
 
-def refresh_manifest(home):
+def refresh_manifest(home, overflow_directory=None):
     home = Path(home)
     manifest = [{'path': p.relative_to(home).as_posix(), 'bytes': p.stat().st_size, 'sha256': digest(p)}
-                for p in sorted(home.rglob('*')) if p.is_file() and p.name != '文件SHA256清单.json']
-    write_json(home / '06_核验/文件SHA256清单.json', {'created_at': now(), 'files': manifest})
+                for p in sorted(home.rglob('*')) if p.is_file()
+                and p.name not in ('文件SHA256清单.json', '当前文件清单位置.json')]
+    payload = {'created_at': now(), 'files': manifest}
+    required = len(json.dumps(payload, ensure_ascii=False, indent=2).encode('utf-8'))
+    external = bool(overflow_directory and shutil.disk_usage(home).free < required + 48 * 1024**2)
+    target = (Path(overflow_directory) if external else home / '06_核验') / '文件SHA256清单.json'
+    write_json(target, payload)
+    write_json(home / '06_核验/当前文件清单位置.json',
+               {'path': str(target.resolve()), 'sha256': digest(target), 'members': len(manifest),
+                'external_due_to_low_space': external,
+                'old_local_manifest_retained_as_historical': external,
+                'backup_requires_current_manifest_too': external})
     return manifest
 
 
@@ -681,7 +691,7 @@ progress/dataset-comparison.md：历史里程碑和失败实验；test-results�
             blocks.append(f'<p><a href="{rel}">{rel}</a></p>')
     blocks.append('</section></html>')
     atomic(home / '00_交接入口.html', '\n'.join(blocks))
-    manifest = refresh_manifest(home)
+    manifest = refresh_manifest(home, config.get('manifest_overflow_directory'))
     return {'pictures': len(pictures), 'videos': len(videos), 'files': len(manifest)}
 
 
@@ -763,7 +773,7 @@ def main():
                 report_failure(config, result)
             except Exception:
                 pass  # Notification failure must not prevent the next sync attempt.
-            refresh_manifest(config['handoff'])
+            refresh_manifest(config['handoff'], config.get('manifest_overflow_directory'))
             log_event(result)
             if not args.watch:
                 raise

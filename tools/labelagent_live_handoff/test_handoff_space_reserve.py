@@ -6,6 +6,16 @@ from unittest.mock import patch
 import maintain
 
 class SpaceReserve(unittest.TestCase):
+    def test_external_manifest_preserves_old_copy_and_recovers(self):
+        with tempfile.TemporaryDirectory(dir=Path.cwd()/'task_workspaces') as tmp:
+            root=Path(tmp);home=root/'home';overflow=root/'overflow';(home/'06_核验').mkdir(parents=True);(home/'original.txt').write_text('untouched-original');old=home/'06_核验/文件SHA256清单.json';old.write_text('historical-manifest')
+            with patch.object(maintain.shutil,'disk_usage',return_value=SimpleNamespace(free=1024)):
+                rows=maintain.refresh_manifest(home,overflow)
+            pointer=json.loads((home/'06_核验/当前文件清单位置.json').read_text());self.assertTrue(pointer['external_due_to_low_space']);self.assertEqual(old.read_text(),'historical-manifest');self.assertEqual(maintain.digest(pointer['path']),pointer['sha256']);self.assertEqual([r['path'] for r in rows],['original.txt'])
+            with patch.object(maintain.shutil,'disk_usage',return_value=SimpleNamespace(free=100*1024**2)):
+                maintain.refresh_manifest(home,overflow)
+            pointer=json.loads((home/'06_核验/当前文件清单位置.json').read_text());self.assertFalse(pointer['external_due_to_low_space']);self.assertEqual(Path(pointer['path']),old.resolve());self.assertEqual(json.loads(old.read_text())['files'][0]['sha256'],maintain.digest(home/'original.txt'));self.assertEqual((home/'original.txt').read_text(),'untouched-original')
+
     def test_external_reference_then_verified_local_copy(self):
         with tempfile.TemporaryDirectory(dir=Path.cwd()/'task_workspaces') as tmp:
             root=Path(tmp);home=root/'handoff';control=root/'control';source=root/'gallery/run';source.mkdir(parents=True);home.mkdir();control.mkdir();media=source/'frame.jpg';media.write_bytes(b'original-media-payload');(source/'index.html').write_text('<img src="frame.jpg">');cfg={'handoff':str(home),'control':str(control),'media_workspace':str(root),'artifact_gallery_roots':[str(source.parent)],'artifact_stable_seconds':0}

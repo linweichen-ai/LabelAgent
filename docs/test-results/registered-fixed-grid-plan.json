@@ -1,0 +1,18 @@
+{
+  "status": "prepared_next_controlled_registered_grid_phase",
+  "registered_models": [
+    "R5_historical_boundary",
+    "R15_offline_PAL_candidate"
+  ],
+  "views": 12,
+  "planned_CPU_forwards": 24,
+  "new_model_calls": 0,
+  "same_grid_pixels_preprocessor_and_original_calibrated_postprocessing_as_completed_d11c_6820_grid": true,
+  "common_input": [
+    448,
+    576
+  ],
+  "native_R5_384_512_recipe_kept_as_separate_completed_trial": true,
+  "reference_coordinates_not_generation_inputs": true,
+  "all_original_final_acceptance_gates_unchanged": true
+}

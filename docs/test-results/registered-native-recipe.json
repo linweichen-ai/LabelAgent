@@ -1,0 +1,47 @@
+{
+  "status": "complete_recommended_R5_native_CPU_recipe_unreviewed_panoptic_draft",
+  "actual_new_CPU_forwards": 4,
+  "real_frames": 2,
+  "plain_controls": 2,
+  "raw_queries_preserved": 400,
+  "input_height_width": [
+    384,
+    512
+  ],
+  "boundary_model": "R5",
+  "specialist_R15_active": false,
+  "source_original_function_and_postprocess_unchanged": true,
+  "CPU_FP32_threads": 2,
+  "not_a_CUDA_performance_reproduction": true,
+  "PAL_instances": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "real_categories": [
+    [
+      "floor",
+      "person"
+    ],
+    [
+      "floor",
+      "person",
+      "person"
+    ]
+  ],
+  "source_recipe_differs_from_earlier_uniform_448_576_trials": true,
+  "new_training": false,
+  "GPU_calls": 0,
+  "new_VLM_calls": 0,
+  "new_SAM_calls": 0,
+  "new_Agent_runs": 0,
+  "new_accepted_instances": 0,
+  "retained_support": "13/17",
+  "historical_Agent": "6/6_not_rerun",
+  "remaining_misses": 4,
+  "all_original_final_acceptance_gates_unchanged": true,
+  "pictures": 4,
+  "videos": 1,
+  "draft_not_truth_or_incumbent_replacement": true
+}

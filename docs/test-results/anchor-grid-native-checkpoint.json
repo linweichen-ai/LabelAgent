@@ -1,0 +1,36 @@
+{
+  "status": "checkpoint_not_goal_completion",
+  "completed_new_CPU_forwards": 28,
+  "real_source_CPU_forwards": 22,
+  "synthetic_control_CPU_forwards": 6,
+  "completed_new_VLM_calls": 32,
+  "completed_new_SAM_requests": 11,
+  "new_training": false,
+  "new_Agent_runs": 0,
+  "retained_support": "13/17",
+  "retained_historical_Agent": "6/6_not_rerun",
+  "remaining_misses": 4,
+  "new_accepted_instances": 0,
+  "adopted": false,
+  "all_original_final_gates_unchanged": true,
+  "no_output_mask_clipping": true,
+  "pictures": 35,
+  "videos": 6,
+  "decoded_saved_replay_frames": 1400,
+  "saved_stage_replay_not_continuous_screen_recording": true,
+  "source_roi_coverage_hole_diagnosed_not_detection_success": true,
+  "new_full_grid_stock_PAL_still_misses_three_reference_targets": true,
+  "registered_native_recipe_output_classes": [
+    "floor",
+    "person"
+  ],
+  "registered_native_recipe_PAL_outputs": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "original_annotations_preserved": true,
+  "same_sparse_reference_not_new_independent_dense_truth": true,
+  "next_registered_grid_prepared_not_yet_executed": true
+}

@@ -1,0 +1,331 @@
+{
+  "status": "complete_diagnostic_after_all_grid_queries_frozen",
+  "cases": [
+    {
+      "case": "camera0_frame76",
+      "object_id": 42,
+      "models": [
+        {
+          "model": "old",
+          "original_visible_reference_points": 16,
+          "points_in_any_stock_PAL_output": 0,
+          "views": [
+            {
+              "view": "whole",
+              "reference_points_inside_observed_RGB": 16,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            },
+            {
+              "view": "q1",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 1
+            },
+            {
+              "view": "q2",
+              "reference_points_inside_observed_RGB": 16,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 5
+            },
+            {
+              "view": "q3",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            },
+            {
+              "view": "q4",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            }
+          ]
+        },
+        {
+          "model": "retained",
+          "original_visible_reference_points": 16,
+          "points_in_any_stock_PAL_output": 0,
+          "views": [
+            {
+              "view": "whole",
+              "reference_points_inside_observed_RGB": 16,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            },
+            {
+              "view": "q1",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 1
+            },
+            {
+              "view": "q2",
+              "reference_points_inside_observed_RGB": 16,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 5
+            },
+            {
+              "view": "q3",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            },
+            {
+              "view": "q4",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "camera0_frame76",
+      "object_id": 48,
+      "models": [
+        {
+          "model": "old",
+          "original_visible_reference_points": 27,
+          "points_in_any_stock_PAL_output": 27,
+          "views": [
+            {
+              "view": "whole",
+              "reference_points_inside_observed_RGB": 27,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            },
+            {
+              "view": "q1",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 1
+            },
+            {
+              "view": "q2",
+              "reference_points_inside_observed_RGB": 27,
+              "stock_PAL_hits": 27,
+              "stock_PAL_instance_count": 5
+            },
+            {
+              "view": "q3",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            },
+            {
+              "view": "q4",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            }
+          ]
+        },
+        {
+          "model": "retained",
+          "original_visible_reference_points": 27,
+          "points_in_any_stock_PAL_output": 27,
+          "views": [
+            {
+              "view": "whole",
+              "reference_points_inside_observed_RGB": 27,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            },
+            {
+              "view": "q1",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 1
+            },
+            {
+              "view": "q2",
+              "reference_points_inside_observed_RGB": 27,
+              "stock_PAL_hits": 27,
+              "stock_PAL_instance_count": 5
+            },
+            {
+              "view": "q3",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            },
+            {
+              "view": "q4",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "camera1_frame76",
+      "object_id": 47,
+      "models": [
+        {
+          "model": "old",
+          "original_visible_reference_points": 11,
+          "points_in_any_stock_PAL_output": 0,
+          "views": [
+            {
+              "view": "whole",
+              "reference_points_inside_observed_RGB": 11,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            },
+            {
+              "view": "q1",
+              "reference_points_inside_observed_RGB": 11,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 1
+            },
+            {
+              "view": "q2",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 3
+            },
+            {
+              "view": "q3",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            },
+            {
+              "view": "q4",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            }
+          ]
+        },
+        {
+          "model": "retained",
+          "original_visible_reference_points": 11,
+          "points_in_any_stock_PAL_output": 0,
+          "views": [
+            {
+              "view": "whole",
+              "reference_points_inside_observed_RGB": 11,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            },
+            {
+              "view": "q1",
+              "reference_points_inside_observed_RGB": 11,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 1
+            },
+            {
+              "view": "q2",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 3
+            },
+            {
+              "view": "q3",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            },
+            {
+              "view": "q4",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "camera1_frame76",
+      "object_id": 49,
+      "models": [
+        {
+          "model": "old",
+          "original_visible_reference_points": 6,
+          "points_in_any_stock_PAL_output": 0,
+          "views": [
+            {
+              "view": "whole",
+              "reference_points_inside_observed_RGB": 6,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            },
+            {
+              "view": "q1",
+              "reference_points_inside_observed_RGB": 6,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 1
+            },
+            {
+              "view": "q2",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 3
+            },
+            {
+              "view": "q3",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            },
+            {
+              "view": "q4",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            }
+          ]
+        },
+        {
+          "model": "retained",
+          "original_visible_reference_points": 6,
+          "points_in_any_stock_PAL_output": 0,
+          "views": [
+            {
+              "view": "whole",
+              "reference_points_inside_observed_RGB": 6,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            },
+            {
+              "view": "q1",
+              "reference_points_inside_observed_RGB": 6,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 1
+            },
+            {
+              "view": "q2",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 3
+            },
+            {
+              "view": "q3",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            },
+            {
+              "view": "q4",
+              "reference_points_inside_observed_RGB": 0,
+              "stock_PAL_hits": 0,
+              "stock_PAL_instance_count": 0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "generation_sha256": "0087c3d5f5529fb86517e520ca893d1593e6e23ca809b2663bbba61370898a85",
+  "no_generation_coordinate_or_query_selection_exports": true,
+  "source_followup_rules_were_frozen_before_this_diagnostic": true,
+  "camera1_left_targets_stock_PAL_coverage_still_zero": true,
+  "stock_count_one_in_camera1_q1_is_not_recovery_of_left_targets": true,
+  "interpretation": "Full grid repairs source-image coverage but not trained PAL proposals at the two left targets. Original source predictions and postprocessing stay unchanged; do not confuse a tile-wide PAL count with target recovery. Reference projections are the old sparse diagnostic, not dense human truth."
+}

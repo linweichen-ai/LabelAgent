@@ -1,0 +1,14 @@
+{
+  "status": "prepared_not_executed",
+  "source_points": 16,
+  "logical_SAM_requests": 32,
+  "new_model_calls": 0,
+  "original_point_caption_failed_or_uncertain": 15,
+  "previous_captions_kept_faithfully_not_relabelled_as_PAL": true,
+  "proposal_order_control": "original_trained_stock_PAL_then_complete_native_SAM_then_unchanged_whole_instance_final_review",
+  "no_NULL_promoted": true,
+  "all_final_gates_unchanged": true,
+  "Agent_round_limit": 3,
+  "new_Agent_runs": 0,
+  "not_adopted": true
+}

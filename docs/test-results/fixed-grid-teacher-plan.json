@@ -1,14 +1,203 @@
 {
-  "status": "prepared_not_executed",
-  "real_views": 10,
-  "synthetic_control_views": 2,
-  "trained_checkpoints": 2,
-  "planned_CPU_forwards": 24,
-  "new_model_calls": 0,
+  "status": "complete_CPU_raw_generation_not_candidate_or_instance_acceptance",
+  "actual_new_CPU_Mask2Former_forwards": 24,
+  "real_scene_forwards": 20,
+  "synthetic_control_forwards": 4,
+  "raw_query_logits_preserved": 2400,
   "new_training": false,
   "GPU_calls": 0,
-  "source_grid": "whole frame plus fixed four quadrants for both original cameras; real context halo and explicit gray physical-frame padding",
-  "reference_inputs_for_grid_or_sampling": false,
-  "all_original_final_criteria_unchanged": true,
-  "native_outputs_must_not_be_cut_to_fit_observed_frame": true
+  "new_VLM_calls_this_stage": 0,
+  "new_SAM_calls_this_stage": 0,
+  "new_Agent_runs": 0,
+  "all_original_final_gates_unchanged": true,
+  "original_source_pixels_exact": true,
+  "all_four_plain_model_controls_PAL_empty": true,
+  "whole_frame_stock_PAL_outputs": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "camera1_q1_stock_PAL_outputs": [
+    1,
+    1
+  ],
+  "no_reference_generation_inputs": true,
+  "new_accepted_instances": 0,
+  "retained_support": "13/17",
+  "retained_historical_Agent": "6/6_not_rerun",
+  "remaining_misses": 4,
+  "pictures": 4,
+  "videos": 1,
+  "counts": [
+    {
+      "model": "old",
+      "view": "camera0_frame76_whole",
+      "synthetic_control": false,
+      "stock_PAL_instances": 0,
+      "PAL_queries": 0
+    },
+    {
+      "model": "old",
+      "view": "camera0_frame76_q1",
+      "synthetic_control": false,
+      "stock_PAL_instances": 1,
+      "PAL_queries": 1
+    },
+    {
+      "model": "old",
+      "view": "camera0_frame76_q2",
+      "synthetic_control": false,
+      "stock_PAL_instances": 5,
+      "PAL_queries": 5
+    },
+    {
+      "model": "old",
+      "view": "camera0_frame76_q3",
+      "synthetic_control": false,
+      "stock_PAL_instances": 0,
+      "PAL_queries": 0
+    },
+    {
+      "model": "old",
+      "view": "camera0_frame76_q4",
+      "synthetic_control": false,
+      "stock_PAL_instances": 0,
+      "PAL_queries": 0
+    },
+    {
+      "model": "old",
+      "view": "camera1_frame76_whole",
+      "synthetic_control": false,
+      "stock_PAL_instances": 0,
+      "PAL_queries": 0
+    },
+    {
+      "model": "old",
+      "view": "camera1_frame76_q1",
+      "synthetic_control": false,
+      "stock_PAL_instances": 1,
+      "PAL_queries": 1
+    },
+    {
+      "model": "old",
+      "view": "camera1_frame76_q2",
+      "synthetic_control": false,
+      "stock_PAL_instances": 3,
+      "PAL_queries": 3
+    },
+    {
+      "model": "old",
+      "view": "camera1_frame76_q3",
+      "synthetic_control": false,
+      "stock_PAL_instances": 0,
+      "PAL_queries": 0
+    },
+    {
+      "model": "old",
+      "view": "camera1_frame76_q4",
+      "synthetic_control": false,
+      "stock_PAL_instances": 0,
+      "PAL_queries": 0
+    },
+    {
+      "model": "old",
+      "view": "control_gray",
+      "synthetic_control": true,
+      "stock_PAL_instances": 0,
+      "PAL_queries": 0
+    },
+    {
+      "model": "old",
+      "view": "control_white",
+      "synthetic_control": true,
+      "stock_PAL_instances": 0,
+      "PAL_queries": 0
+    },
+    {
+      "model": "retained",
+      "view": "camera0_frame76_whole",
+      "synthetic_control": false,
+      "stock_PAL_instances": 0,
+      "PAL_queries": 0
+    },
+    {
+      "model": "retained",
+      "view": "camera0_frame76_q1",
+      "synthetic_control": false,
+      "stock_PAL_instances": 1,
+      "PAL_queries": 1
+    },
+    {
+      "model": "retained",
+      "view": "camera0_frame76_q2",
+      "synthetic_control": false,
+      "stock_PAL_instances": 5,
+      "PAL_queries": 6
+    },
+    {
+      "model": "retained",
+      "view": "camera0_frame76_q3",
+      "synthetic_control": false,
+      "stock_PAL_instances": 0,
+      "PAL_queries": 0
+    },
+    {
+      "model": "retained",
+      "view": "camera0_frame76_q4",
+      "synthetic_control": false,
+      "stock_PAL_instances": 0,
+      "PAL_queries": 0
+    },
+    {
+      "model": "retained",
+      "view": "camera1_frame76_whole",
+      "synthetic_control": false,
+      "stock_PAL_instances": 0,
+      "PAL_queries": 0
+    },
+    {
+      "model": "retained",
+      "view": "camera1_frame76_q1",
+      "synthetic_control": false,
+      "stock_PAL_instances": 1,
+      "PAL_queries": 1
+    },
+    {
+      "model": "retained",
+      "view": "camera1_frame76_q2",
+      "synthetic_control": false,
+      "stock_PAL_instances": 3,
+      "PAL_queries": 3
+    },
+    {
+      "model": "retained",
+      "view": "camera1_frame76_q3",
+      "synthetic_control": false,
+      "stock_PAL_instances": 0,
+      "PAL_queries": 0
+    },
+    {
+      "model": "retained",
+      "view": "camera1_frame76_q4",
+      "synthetic_control": false,
+      "stock_PAL_instances": 0,
+      "PAL_queries": 0
+    },
+    {
+      "model": "retained",
+      "view": "control_gray",
+      "synthetic_control": true,
+      "stock_PAL_instances": 0,
+      "PAL_queries": 0
+    },
+    {
+      "model": "retained",
+      "view": "control_white",
+      "synthetic_control": true,
+      "stock_PAL_instances": 0,
+      "PAL_queries": 0
+    }
+  ],
+  "followup_source_proposals_and_full_acceptance_not_run_in_this_stage": true
 }

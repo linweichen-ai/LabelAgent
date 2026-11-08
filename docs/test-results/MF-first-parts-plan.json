@@ -1,14 +1,45 @@
 {
-  "status": "prepared_not_executed",
-  "source_points": 16,
-  "logical_SAM_requests": 32,
-  "new_model_calls": 0,
-  "original_point_caption_failed_or_uncertain": 15,
-  "previous_captions_kept_faithfully_not_relabelled_as_PAL": true,
-  "proposal_order_control": "original_trained_stock_PAL_then_complete_native_SAM_then_unchanged_whole_instance_final_review",
-  "no_NULL_promoted": true,
-  "all_final_gates_unchanged": true,
-  "Agent_round_limit": 3,
+  "status": "complete_no_new_adoption",
+  "new_SAM_requests": 29,
+  "historical_exact_SAM_reuses": 3,
+  "logical_source_requests": 32,
+  "default_native_valid": 25,
+  "default_semantic_passes": 0,
+  "native_hypotheses": 96,
+  "native_valid_hypotheses": 76,
+  "pool_semantic_passes": 0,
+  "new_VLM_calls": 156,
+  "primary_new_VLM_calls": 45,
+  "pool_new_VLM_calls": 111,
+  "new_MF_calls": 0,
   "new_Agent_runs": 0,
-  "not_adopted": true
+  "new_accepted_instances": 0,
+  "foreground_instance_support": "13/17",
+  "historical_Agent_convergence": "6/6; retained, not rerun",
+  "Agent_round_limit": 3,
+  "area_cap": 122511.25,
+  "incumbent_area": 122302,
+  "additive_headroom": 209.25,
+  "no_output_mask_clipping": true,
+  "original_annotations_preserved": true,
+  "adopted": false,
+  "pool_native_index_arms_frozen_before_reference_scoring": true,
+  "alternative_native_masks_not_simultaneous_instances": true,
+  "padding_FG_failures_default": [
+    {
+      "cue": 7,
+      "arm": "explicit_padded_view",
+      "native_FG_on_synthetic_padding": 124,
+      "no_full_frame_mask_fabricated": true
+    },
+    {
+      "cue": 8,
+      "arm": "explicit_padded_view",
+      "native_FG_on_synthetic_padding": 91,
+      "no_full_frame_mask_fabricated": true
+    }
+  ],
+  "pictures": 22,
+  "saved_stage_replays": 4,
+  "not_screen_recording": true
 }

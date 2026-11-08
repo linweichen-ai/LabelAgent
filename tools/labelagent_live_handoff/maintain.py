@@ -254,7 +254,9 @@ def collect_delivered_artifacts(config):
         key = str(source)
         previous = old.get(key, {})
         if previous.get('size') == info.st_size and previous.get('mtime_ns') == info.st_mtime_ns:
-            if (home / previous['destination']).exists():
+            external = previous.get('storage_mode') == 'external_reference_low_space'
+            retry_copy = external and shutil.disk_usage(home).free >= info.st_size + 96 * 1024**2
+            if not retry_copy and (home / previous['destination']).exists():
                 continue
         if time.time() - info.st_mtime < config.get('artifact_stable_seconds', 10):
             continue
@@ -276,6 +278,15 @@ def collect_delivered_artifacts(config):
             group = '04_视频/对话新增' if suffix in ('.mp4', '.webm') else (
                 '03_图片/对话新增' if suffix in ('.png', '.jpg', '.jpeg', '.gif') else '09_新增结果')
             destination = group + '/' + source.stem[:75] + '_' + sha[:12] + suffix
+            # Preserve the original 96 MiB reserve when media grows. An
+            # explicit external index keeps D-drive evidence discoverable;
+            # it does not pretend the bytes were copied to the C handoff.
+            if shutil.disk_usage(home).free < len(data) + 96 * 1024**2:
+                entries[key] = {'size': info.st_size, 'mtime_ns': info.st_mtime_ns,
+                                'sha256': sha, 'destination': str(source.resolve()),
+                                'storage_mode': 'external_reference_low_space',
+                                'copied_into_handoff': False}
+                continue
             atomic(home / destination, data)
             existing[sha] = destination
             added.append(destination)
@@ -283,6 +294,11 @@ def collect_delivered_artifacts(config):
                         'sha256': sha, 'destination': destination}
     write_json(control / 'delivered_artifacts.json', entries)
     write_json(home / '06_核验/新增资料来源.json', {'files': entries})
+    external_paths = [v['destination'] for v in entries.values()
+                      if v.get('storage_mode') == 'external_reference_low_space']
+    atomic(home / '06_核验/空间保护_外部原始资料索引.txt',
+           '以下资料保留在原位置，未复制到C盘交接；请连同这些文件或其完整交接目录一起备份。\n'
+           '同步器保持96MiB媒体复制空间余量，空间恢复后会补齐复制。\n' + '\n'.join(external_paths))
     return added
 
 

@@ -1,0 +1,33 @@
+{
+  "status": "complete_post_generation_cohort_coverage_audit",
+  "scope": "Recent six native-aspect/high-resolution source ROI protocols and dependent source mask graph/gap experiments; not the original full-frame baseline",
+  "cases": [
+    {
+      "case": "camera0_frame76",
+      "object_id": 42,
+      "visible_reference_points": 16,
+      "points_inside_any_recent_six_teacher_ROIs": 16
+    },
+    {
+      "case": "camera0_frame76",
+      "object_id": 48,
+      "visible_reference_points": 27,
+      "points_inside_any_recent_six_teacher_ROIs": 27
+    },
+    {
+      "case": "camera1_frame76",
+      "object_id": 47,
+      "visible_reference_points": 11,
+      "points_inside_any_recent_six_teacher_ROIs": 0
+    },
+    {
+      "case": "camera1_frame76",
+      "object_id": 49,
+      "visible_reference_points": 6,
+      "points_inside_any_recent_six_teacher_ROIs": 0
+    }
+  ],
+  "coordinates_not_published": true,
+  "reference_coordinates_not_generation_inputs": true,
+  "original_full_frame_baseline_not_invalidated": true
+}

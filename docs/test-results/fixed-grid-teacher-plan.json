@@ -1,0 +1,14 @@
+{
+  "status": "prepared_not_executed",
+  "real_views": 10,
+  "synthetic_control_views": 2,
+  "trained_checkpoints": 2,
+  "planned_CPU_forwards": 24,
+  "new_model_calls": 0,
+  "new_training": false,
+  "GPU_calls": 0,
+  "source_grid": "whole frame plus fixed four quadrants for both original cameras; real context halo and explicit gray physical-frame padding",
+  "reference_inputs_for_grid_or_sampling": false,
+  "all_original_final_criteria_unchanged": true,
+  "native_outputs_must_not_be_cut_to_fit_observed_frame": true
+}

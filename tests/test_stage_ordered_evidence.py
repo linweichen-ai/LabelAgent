@@ -81,8 +81,13 @@ class OrderedStageEvidenceTests(unittest.TestCase):
                          "peft_is_a_specific_supervised_post_training_subtype")
         self.assertEqual(plan["strategy"]["rejected_route"],
                          "ambiguous_or_full_model_post_training")
-        self.assertEqual(plan["model"]["trainable_prefixes"],
+        self.assertEqual(plan["model"]["stage0_trainable_prefixes"],
                          ["segmentation_head.mask_predictor.mask_embed."])
+        self.assertFalse(plan["model"]["stage0_is_final_upper_bound"])
+        self.assertIn("segmentation_head.", plan["model"]["future_candidate_prefixes"])
+        self.assertIn("geometry_encoder.", plan["model"]["future_candidate_prefixes"])
+        self.assertEqual(plan["staged_unfreeze_config"],
+                         "configs/sam3_sfl_cpd15y_staged_unfreeze.json")
         self.assertIn("train/_preannotations.coco.json",
                       plan["data"]["forbidden_as_truth"])
         self.assertFalse(plan["data"]["test24_in_training"])
@@ -93,6 +98,22 @@ class OrderedStageEvidenceTests(unittest.TestCase):
         self.assertEqual(plan["data"]["training_labels"], ["floor", "slope"])
         self.assertIn("training_metrics",
                       plan["launch_gate"]["without_human_truth_forbidden"])
+
+    def test_staged_unfreeze_config_is_source_bound_and_not_mask_embed_capped(self):
+        path = REPO / "configs/sam3_sfl_cpd15y_staged_unfreeze.json"
+        plan = json.loads(path.read_text(encoding="utf-8"))
+        errors = list(self.validator("sam3-staged-unfreeze.schema.json").iter_errors(plan))
+        self.assertEqual(errors, [], [error.message for error in errors])
+        for item in plan["inventory"]["source_files"]:
+            self.assertEqual(digest(REPO / item["path"]), item["sha256"])
+        self.assertFalse(plan["inventory"]["runtime_named_parameters_verified"])
+        self.assertFalse(plan["inventory"]["forward_backward_dependency_verified"])
+        self.assertFalse(plan["final_scope_policy"]["stage0_is_final_upper_bound"])
+        self.assertEqual(plan["holdout_gate"]["required_metrics"],
+                         ["pixel_recall", "mask_iou", "boundary_f1"])
+        self.assertEqual(plan["holdout_gate"]["threshold_status"],
+                         "pending_human_truth_calibration")
+        self.assertFalse(plan["adapter_policy"]["lora_claim_allowed"])
 
     def test_training_strategy_decision_is_strict_and_claim_bounded(self):
         path = REPO / "docs/test-results/sam3-peft-strategy-decision-20261111.json"

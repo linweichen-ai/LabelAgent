@@ -21,6 +21,15 @@ class Sam3PeftLaunchGateTests(unittest.TestCase):
         self.assertFalse(result["training_metrics_available"])
         self.assertFalse(result["checkpoint_available"])
         self.assertFalse(result["slope_improvement_established"])
+        self.assertFalse(result["stage0_is_final_upper_bound"])
+        self.assertEqual(result["staged_unfreeze"]["stage_names"], [
+            "mask_embed_only_reversible_baseline",
+            "full_segmentation_head",
+            "segmentation_head_plus_geometry_prompt_encoder",
+            "plus_upper_transformer_decoder_layers",
+        ])
+        self.assertFalse(result["staged_unfreeze"]["runtime_named_parameters_verified"])
+        self.assertFalse(result["staged_unfreeze"]["lora_claim_allowed"])
         self.assertIn("one_shot_dual_5090_ddp_init_smoke", result["without_human_truth_allowed"])
         self.assertIn("optimizer_step", result["without_human_truth_forbidden"])
         self.assertIsNone(result["command_preview"])

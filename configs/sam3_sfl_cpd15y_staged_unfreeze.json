@@ -1,0 +1,72 @@
+{
+  "schema_version": "labelagent.sam3-staged-unfreeze.v1",
+  "scope": "future_training_plan_not_training_execution",
+  "inventory": {
+    "source_verified": true,
+    "runtime_named_parameters_verified": false,
+    "forward_backward_dependency_verified": false,
+    "runtime_blocker": "no_local_torch_checkpoint_and_remote_authentication_unavailable",
+    "source_files": [
+      {"path": "source/sam3/sam3/model/sam3_image.py", "sha256": "baf67f45a914d9c377c850d52ed083db8924943775f5884b9fd7a5d65b8637d1"},
+      {"path": "source/sam3/sam3/model/maskformer_segmentation.py", "sha256": "f2f6b7afe03b574a4ea9265a21914ea5f089a4007a22e408675216e82b1c1484"},
+      {"path": "source/sam3/sam3/model/geometry_encoders.py", "sha256": "c2bc96b03a1adbf58fc8fa62f3b12a378287a8f668ed1511464312cf4a90a39e"},
+      {"path": "source/sam3/sam3/model/decoder.py", "sha256": "afc5b52116083e3688884908d298ec32673384389fe5411adc95a8651bf9ae02"}
+    ]
+  },
+  "stages": [
+    {
+      "stage": 0,
+      "name": "mask_embed_only_reversible_baseline",
+      "status": "stage0_static_prefix_verified_runtime_pending",
+      "named_parameter_selectors": ["segmentation_head.mask_predictor.mask_embed."],
+      "source_evidence": ["MaskPredictor.mask_embed is called directly in mask prediction"],
+      "upgrade_trigger": "versioned holdout recall/iou/boundary gate not met",
+      "rollback_to": "original_sam3_checkpoint"
+    },
+    {
+      "stage": 1,
+      "name": "full_segmentation_head",
+      "status": "source_candidate_runtime_inventory_pending",
+      "named_parameter_selectors": ["segmentation_head."],
+      "source_evidence": ["Sam3Image._run_segmentation_heads calls segmentation_head", "SegmentationHead contains pixel_decoder and mask_predictor"],
+      "upgrade_trigger": "stage0 fails versioned holdout gate after training sanity passes",
+      "rollback_to": "best_stage0_checkpoint"
+    },
+    {
+      "stage": 2,
+      "name": "segmentation_head_plus_geometry_prompt_encoder",
+      "status": "source_candidate_runtime_inventory_pending",
+      "named_parameter_selectors": ["segmentation_head.", "geometry_encoder."],
+      "source_evidence": ["Sam3Image._encode_prompt calls geometry_encoder", "SequenceGeometryEncoder owns point/box/mask prompt projections"],
+      "upgrade_trigger": "stage1 fails versioned holdout gate and prompt-grounding diagnostics implicate geometry encoding",
+      "rollback_to": "best_stage1_checkpoint"
+    },
+    {
+      "stage": 3,
+      "name": "plus_upper_transformer_decoder_layers",
+      "status": "source_candidate_runtime_inventory_pending",
+      "named_parameter_selectors": ["segmentation_head.", "geometry_encoder.", "transformer.decoder.layers.<runtime_upper_indices>.", "transformer.decoder.norm."],
+      "source_evidence": ["Sam3Image._run_decoder calls transformer.decoder", "decoder.layers and decoder.norm are real source modules"],
+      "upgrade_trigger": "stage2 fails versioned holdout gate and runtime gradient inventory identifies upper decoder dependency",
+      "rollback_to": "best_stage2_checkpoint"
+    }
+  ],
+  "holdout_gate": {
+    "comparison": "each_stage_vs_original_sam3_on_same_fixed_holdout",
+    "required_metrics": ["pixel_recall", "mask_iou", "boundary_f1"],
+    "threshold_status": "pending_human_truth_calibration",
+    "thresholds_must_be_versioned_before_training": true,
+    "promotion_rule": "advance_only_when_current_stage_fails_versioned_gate_and_training_sanity_passes",
+    "protected_sets": ["test24", "fixed_640_holdout"]
+  },
+  "adapter_policy": {
+    "implemented": false,
+    "verified": false,
+    "lora_claim_allowed": false
+  },
+  "final_scope_policy": {
+    "stage0_is_final_upper_bound": false,
+    "broader_unfreeze_default": false,
+    "full_model_review_conditions": ["phase1_peft_effective", "human_truth_scale_significantly_expanded", "reproducible_peft_bottleneck_demonstrated"]
+  }
+}

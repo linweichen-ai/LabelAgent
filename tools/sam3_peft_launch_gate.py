@@ -34,6 +34,9 @@ def blocked_smoke(plan_path: Path, manifest_path: Path):
     manifest = load_json(manifest_path)
     validate_schema(plan, ROOT / "schemas/sam3-peft-plan.schema.json")
     validate_schema(manifest, ROOT / "schemas/sam3-peft-data-manifest.schema.json")
+    staged_path = ROOT / plan["staged_unfreeze_config"]
+    staged = load_json(staged_path)
+    validate_schema(staged, ROOT / "schemas/sam3-staged-unfreeze.schema.json")
     if plan["execution_enabled"] or plan["launch_gate"]["formal_training_authorized"]:
         raise ValueError("blocked smoke requires training authorization to remain false")
     if manifest["truth"]["train_annotations_verified"]:
@@ -50,7 +53,22 @@ def blocked_smoke(plan_path: Path, manifest_path: Path):
         "backend": plan["distributed"]["backend"],
         "selected_route": plan["strategy"]["selected_route"],
         "full_model_post_training_selected": False,
-        "trainable_prefixes": plan["model"]["trainable_prefixes"],
+        "stage0_trainable_prefixes": plan["model"]["stage0_trainable_prefixes"],
+        "stage0_is_final_upper_bound": plan["model"]["stage0_is_final_upper_bound"],
+        "future_candidate_prefixes": plan["model"]["future_candidate_prefixes"],
+        "staged_unfreeze": {
+            "config": plan["staged_unfreeze_config"],
+            "stage_names": [item["name"] for item in staged["stages"]],
+            "runtime_named_parameters_verified": staged["inventory"][
+                "runtime_named_parameters_verified"
+            ],
+            "forward_backward_dependency_verified": staged["inventory"][
+                "forward_backward_dependency_verified"
+            ],
+            "holdout_metrics": staged["holdout_gate"]["required_metrics"],
+            "threshold_status": staged["holdout_gate"]["threshold_status"],
+            "lora_claim_allowed": staged["adapter_policy"]["lora_claim_allowed"],
+        },
         "without_human_truth_allowed": plan["launch_gate"]["without_human_truth_allowed"],
         "without_human_truth_forbidden": plan["launch_gate"]["without_human_truth_forbidden"],
         "training_metrics_available": False,

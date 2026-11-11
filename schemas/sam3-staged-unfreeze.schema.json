@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/sam3-staged-unfreeze.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "scope", "inventory", "stages", "holdout_gate", "adapter_policy", "final_scope_policy"],
+  "properties": {
+    "schema_version": {"const": "labelagent.sam3-staged-unfreeze.v1"},
+    "scope": {"const": "future_training_plan_not_training_execution"},
+    "inventory": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_verified", "runtime_named_parameters_verified", "forward_backward_dependency_verified", "runtime_blocker", "source_files"],
+      "properties": {
+        "source_verified": {"const": true},
+        "runtime_named_parameters_verified": {"const": false},
+        "forward_backward_dependency_verified": {"const": false},
+        "runtime_blocker": {"const": "no_local_torch_checkpoint_and_remote_authentication_unavailable"},
+        "source_files": {
+          "type": "array", "minItems": 4,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["path", "sha256"],
+            "properties": {
+              "path": {"type": "string", "minLength": 1},
+              "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+            }
+          }
+        }
+      }
+    },
+    "stages": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "prefixItems": [
+        {"$ref": "#/$defs/stage0"},
+        {"$ref": "#/$defs/stage1"},
+        {"$ref": "#/$defs/stage2"},
+        {"$ref": "#/$defs/stage3"}
+      ]
+    },
+    "holdout_gate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["comparison", "required_metrics", "threshold_status", "thresholds_must_be_versioned_before_training", "promotion_rule", "protected_sets"],
+      "properties": {
+        "comparison": {"const": "each_stage_vs_original_sam3_on_same_fixed_holdout"},
+        "required_metrics": {"const": ["pixel_recall", "mask_iou", "boundary_f1"]},
+        "threshold_status": {"const": "pending_human_truth_calibration"},
+        "thresholds_must_be_versioned_before_training": {"const": true},
+        "promotion_rule": {"const": "advance_only_when_current_stage_fails_versioned_gate_and_training_sanity_passes"},
+        "protected_sets": {"const": ["test24", "fixed_640_holdout"]}
+      }
+    },
+    "adapter_policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["implemented", "verified", "lora_claim_allowed"],
+      "properties": {
+        "implemented": {"const": false},
+        "verified": {"const": false},
+        "lora_claim_allowed": {"const": false}
+      }
+    },
+    "final_scope_policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["stage0_is_final_upper_bound", "broader_unfreeze_default", "full_model_review_conditions"],
+      "properties": {
+        "stage0_is_final_upper_bound": {"const": false},
+        "broader_unfreeze_default": {"const": false},
+        "full_model_review_conditions": {"const": ["phase1_peft_effective", "human_truth_scale_significantly_expanded", "reproducible_peft_bottleneck_demonstrated"]}
+      }
+    }
+  },
+  "$defs": {
+    "common_stage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["stage", "name", "status", "named_parameter_selectors", "source_evidence", "upgrade_trigger", "rollback_to"],
+      "properties": {
+        "stage": {"type": "integer", "minimum": 0, "maximum": 3},
+        "name": {"type": "string"},
+        "status": {"enum": ["stage0_static_prefix_verified_runtime_pending", "source_candidate_runtime_inventory_pending"]},
+        "named_parameter_selectors": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "source_evidence": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "upgrade_trigger": {"type": "string", "minLength": 1},
+        "rollback_to": {"type": "string", "minLength": 1}
+      }
+    },
+    "stage0": {"allOf": [{"$ref": "#/$defs/common_stage"}, {"properties": {"stage": {"const": 0}, "name": {"const": "mask_embed_only_reversible_baseline"}, "status": {"const": "stage0_static_prefix_verified_runtime_pending"}, "named_parameter_selectors": {"const": ["segmentation_head.mask_predictor.mask_embed."]}}}]},
+    "stage1": {"allOf": [{"$ref": "#/$defs/common_stage"}, {"properties": {"stage": {"const": 1}, "name": {"const": "full_segmentation_head"}, "status": {"const": "source_candidate_runtime_inventory_pending"}, "named_parameter_selectors": {"const": ["segmentation_head."]}}}]},
+    "stage2": {"allOf": [{"$ref": "#/$defs/common_stage"}, {"properties": {"stage": {"const": 2}, "name": {"const": "segmentation_head_plus_geometry_prompt_encoder"}, "status": {"const": "source_candidate_runtime_inventory_pending"}, "named_parameter_selectors": {"const": ["segmentation_head.", "geometry_encoder."]}}}]},
+    "stage3": {"allOf": [{"$ref": "#/$defs/common_stage"}, {"properties": {"stage": {"const": 3}, "name": {"const": "plus_upper_transformer_decoder_layers"}, "status": {"const": "source_candidate_runtime_inventory_pending"}, "named_parameter_selectors": {"const": ["segmentation_head.", "geometry_encoder.", "transformer.decoder.layers.<runtime_upper_indices>.", "transformer.decoder.norm."]}}}]}
+  }
+}

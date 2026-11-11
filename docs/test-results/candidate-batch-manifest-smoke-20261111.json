@@ -1,0 +1,78 @@
+{
+  "schema_version": "labelagent.candidate-batch-manifest-smoke.v1",
+  "observed_at": "2026-11-11T17:22:33.2262843+08:00",
+  "host": "172.16.89.244",
+  "tool": {
+    "path": "tools/build_candidate_batch_manifest.py",
+    "sha256": "009152b51d8edfe0bab8d941d2e7df34396339a6c8d618c43157617e3639be2c",
+    "execution": "ssh_stdin_no_remote_tool_file"
+  },
+  "scope": {
+    "limit": 2,
+    "gpu_calls": 0,
+    "model_calls": 0,
+    "remote_writes": false,
+    "candidate_generation_started": false
+  },
+  "manifest": {
+    "dataset_id": "sfl-cpd15y",
+    "entries": [
+      {
+        "approved_for_training": false,
+        "camera": "camera_0",
+        "candidate_only": true,
+        "capture_time": "2026-09-20T09:45:38.282479Z",
+        "dataset_id": "sfl-cpd15y",
+        "frame_id": "1789897538282478905",
+        "height": 512,
+        "image_sha256": "7184dc7426dfe9b04d2a245c677463bd280bb2656eadad10781d708010e56ca2",
+        "input_id": "3bc1b062601c78feb71cb4c4c78190526cdc5c51c591c27059c2a2c654083c08",
+        "machine_preannotation_count": 8,
+        "relative_image_path": "train/000_1789897538282478905_camera_0.png",
+        "sequence": "000",
+        "source_batch": "20260920_cs-heli_Dev_000001",
+        "source_kind": "real",
+        "truth_eligible": false,
+        "width": 640
+      },
+      {
+        "approved_for_training": false,
+        "camera": "camera_1",
+        "candidate_only": true,
+        "capture_time": "2026-09-20T09:45:38.282479Z",
+        "dataset_id": "sfl-cpd15y",
+        "frame_id": "1789897538282478905",
+        "height": 512,
+        "image_sha256": "4920a3c1035495af0cc1b1b0650012724e16a1ade58e4e49f68143aa00712c35",
+        "input_id": "54e13323ffbda2e57a2534c83ea6e4c19b216d1f22fbb267f1e970239b5525d8",
+        "machine_preannotation_count": 8,
+        "relative_image_path": "train/000_1789897538282478905_camera_1.png",
+        "sequence": "000",
+        "source_batch": "20260920_cs-heli_Dev_000001",
+        "source_kind": "real",
+        "truth_eligible": false,
+        "width": 640
+      }
+    ],
+    "entry_count": 2,
+    "fixed_holdout_exclusion": {
+      "camera": "camera_0",
+      "excluded_matches": [],
+      "frame_id": "1789897506782450197"
+    },
+    "formal_training_authorized": false,
+    "human_truth_available": false,
+    "manifest_content_sha256": "e3a2b387882977d601b604084bb62502c44cc95e3b1e24982563c0a5fb138152",
+    "preannotation_source": {
+      "categories": ["pallet", "person"],
+      "path": "train/_preannotations.coco.json",
+      "role": "machine_candidate_only",
+      "sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "truth_eligible": false
+    },
+    "schema_version": "labelagent.candidate-batch-manifest.v1",
+    "source_batch": "20260920_cs-heli_Dev_000001",
+    "source_kind": "real",
+    "split": "train"
+  }
+}

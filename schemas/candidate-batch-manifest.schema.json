@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/candidate-batch-manifest.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "dataset_id", "source_batch", "split", "source_kind", "preannotation_source", "fixed_holdout_exclusion", "entry_count", "entries", "human_truth_available", "formal_training_authorized", "manifest_content_sha256"],
+  "properties": {
+    "schema_version": {"const": "labelagent.candidate-batch-manifest.v1"},
+    "dataset_id": {"type": "string", "minLength": 1},
+    "source_batch": {"type": "string", "minLength": 1},
+    "split": {"enum": ["train", "test"]},
+    "source_kind": {"const": "real"},
+    "preannotation_source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256", "role", "truth_eligible", "categories"],
+      "properties": {
+        "path": {"type": "string", "pattern": "_preannotations\\.coco\\.json$"},
+        "sha256": {"$ref": "#/$defs/hash"},
+        "role": {"const": "machine_candidate_only"},
+        "truth_eligible": {"const": false},
+        "categories": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "fixed_holdout_exclusion": {
+      "type": "object", "additionalProperties": false,
+      "required": ["frame_id", "camera", "excluded_matches"],
+      "properties": {
+        "frame_id": {"const": "1789897506782450197"},
+        "camera": {"const": "camera_0"},
+        "excluded_matches": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}
+      }
+    },
+    "entry_count": {"type": "integer", "minimum": 0},
+    "entries": {"type": "array", "items": {"$ref": "#/$defs/entry"}},
+    "human_truth_available": {"const": false},
+    "formal_training_authorized": {"const": false},
+    "manifest_content_sha256": {"$ref": "#/$defs/hash"}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "entry": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dataset_id", "source_batch", "sequence", "frame_id", "camera", "image_sha256", "input_id", "capture_time", "source_kind", "relative_image_path", "width", "height", "machine_preannotation_count", "candidate_only", "truth_eligible", "approved_for_training"],
+      "properties": {
+        "dataset_id": {"type": "string", "minLength": 1},
+        "source_batch": {"type": "string", "minLength": 1},
+        "sequence": {"type": "string", "pattern": "^[0-9]{3}$"},
+        "frame_id": {"type": "string", "pattern": "^[0-9]+$"},
+        "camera": {"type": "string", "pattern": "^camera_[0-3]$"},
+        "image_sha256": {"$ref": "#/$defs/hash"},
+        "input_id": {"$ref": "#/$defs/hash"},
+        "capture_time": {"type": "string", "format": "date-time"},
+        "source_kind": {"const": "real"},
+        "relative_image_path": {"type": "string", "pattern": "^(train|test)/"},
+        "width": {"const": 640},
+        "height": {"const": 512},
+        "machine_preannotation_count": {"type": "integer", "minimum": 0},
+        "candidate_only": {"const": true},
+        "truth_eligible": {"const": false},
+        "approved_for_training": {"const": false}
+      }
+    }
+  }
+}

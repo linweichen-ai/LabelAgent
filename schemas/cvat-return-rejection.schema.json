@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/cvat-return-rejection.schema.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "event_type", "occurred_at", "export_event_id", "dataset_role", "split", "return_version_id", "status", "blockers", "truth_version_created", "training_return_allowed", "next_state", "idempotency_key", "event_id"],
+  "properties": {
+    "schema_version": {"const": "labelagent.cvat-return-rejection.v1"},
+    "event_type": {"const": "cvat.review.return.rejected"},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "export_event_id": {"$ref": "#/$defs/sha"},
+    "dataset_role": {"enum": ["train72", "test24"]}, "split": {"enum": ["train", "test"]},
+    "return_version_id": {"type": ["string", "null"]},
+    "status": {"const": "rejected_fail_closed"},
+    "blockers": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "truth_version_created": {"const": false}, "training_return_allowed": {"const": false},
+    "next_state": {"const": "human_review_required"},
+    "idempotency_key": {"$ref": "#/$defs/sha"}, "event_id": {"$ref": "#/$defs/sha"}
+  },
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

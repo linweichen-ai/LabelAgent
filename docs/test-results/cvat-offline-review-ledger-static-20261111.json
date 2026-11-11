@@ -1,0 +1,310 @@
+{
+  "append_only": true,
+  "generated_at": "2026-11-11T16:03:00+08:00",
+  "head_record_sha256": "e77e29adf4cfb9d29798227adaa1fde1af447be5478344cc0b5a3f54241fff96",
+  "ledger_id": "cvat-offline-static-review-ledger-20261111",
+  "record_count": 4,
+  "records": [
+    {
+      "event": {
+        "annotation_layer": "machine_preannotation",
+        "artifacts": {
+          "candidate_sha256": "07985aa38f2509adeb964c772771d19866b291f323da3602275b5bc108b2597f",
+          "candidate_uri": "example://cvat-static/candidate.json",
+          "config_sha256": "a9deb7d180fddfd62878fdbf7fe1a8dd9c6ed84414ccc67c05e4040c6260c7d1",
+          "image_sha256": "6a25887d85295ed14066aa675cecf822fe1a1fc86c7d6914d97cb79583be0c98",
+          "image_uri": "example://cvat-static/image.png",
+          "input_sha256": "2212f74897b6b06d71ec7601e35f3b39f41c602231a1c5114f1c40238fa0e355",
+          "model_sha256": "436200301b3c6f1034f9abc54ab99059b1ca217d2c8bdfd2ff3226bed25b580a",
+          "preannotation_sha256": "d99ae38cc5c380f97b08e1319063999af7fd234ac28c09c51204c57a916b65bd",
+          "preannotation_uri": "example://cvat-static/preannotation.xml"
+        },
+        "completion": {
+          "completed_by": null,
+          "completion_claim_allowed": false,
+          "human_completed": false
+        },
+        "cvat_binding": {
+          "job_id": "STATIC-OFFLINE-JOB-train72",
+          "job_version": "job-v1",
+          "package_version": "package-v1",
+          "task_id": "STATIC-OFFLINE-TASK-train72",
+          "task_version": "task-v1"
+        },
+        "dataset_role": "train72",
+        "event_id": "7b0eae60e94f8ef86f93605df6654da530430f49a31044a68a38525e86c295a5",
+        "event_type": "cvat.review.preannotation_exported",
+        "idempotency_key": "8b518a41b6f6d5781c612f1a212a73d453623f0a0c1981055bc35fd619a2a2b9",
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "EXAMPLE_FACTORY_DATASET",
+          "frame_id": "1789897538282478905",
+          "input_id": "2212f74897b6b06d71ec7601e35f3b39f41c602231a1c5114f1c40238fa0e355",
+          "sequence": "000",
+          "source_batch": "EXAMPLE_BATCH_A"
+        },
+        "label_registry": {
+          "allowed_labels": [
+            "pallet",
+            "person",
+            "floor",
+            "slope",
+            "ego",
+            "other_robot",
+            "cargo_floor"
+          ],
+          "downstream_mapping": {
+            "operation": "union",
+            "preserve_source_labels": true,
+            "source_labels": [
+              "floor",
+              "slope"
+            ],
+            "source_layer": "training_annotation",
+            "target_label": "traversable_area",
+            "target_layer": "downstream_navigation"
+          },
+          "floor_slope_distinct": true,
+          "registry_content_sha256": "2de68a7c3fa7e4d803094df9eca7d43c0bd4addfd15c7318d0ec31d2deed1f34",
+          "registry_version": "labelagent-ontology-20261111-v1"
+        },
+        "occurred_at": "2026-11-11T16:00:00+08:00",
+        "review_state": "human_review_required",
+        "routing": {
+          "priority": "high",
+          "provenance": "real",
+          "reason_codes": [
+            "LOW_CONFIDENCE"
+          ],
+          "unknown_or_new_label_pending": false
+        },
+        "schema_version": "labelagent.cvat-offline-export.v1",
+        "split": "train",
+        "write_policy": {
+          "mode": "append_only_new_version",
+          "network_or_upload_performed": false,
+          "overwrite_candidate": false,
+          "overwrite_truth": false,
+          "truth_promotion_allowed": false
+        }
+      },
+      "event_sha256": "f5d46ead3df32315d15b623b7db8db7cf6adbfbaae9eff10cc4dc4f656a62870",
+      "event_type": "cvat.review.preannotation_exported",
+      "idempotency_key": "8b518a41b6f6d5781c612f1a212a73d453623f0a0c1981055bc35fd619a2a2b9",
+      "previous_record_sha256": null,
+      "record_sha256": "265f507b023ba0f203054901e8e9d4c7ff40f9f2d7312b4220f3ec92c84913c3",
+      "sequence": 1
+    },
+    {
+      "event": {
+        "annotation_layer": "machine_preannotation",
+        "artifacts": {
+          "candidate_sha256": "cbf03e37374517564b01b75ccda321beb2a00df24763831efd34c48e56fd3ac4",
+          "candidate_uri": "example://cvat-static/candidate.json",
+          "config_sha256": "a9deb7d180fddfd62878fdbf7fe1a8dd9c6ed84414ccc67c05e4040c6260c7d1",
+          "image_sha256": "6a25887d85295ed14066aa675cecf822fe1a1fc86c7d6914d97cb79583be0c98",
+          "image_uri": "example://cvat-static/image.png",
+          "input_sha256": "2212f74897b6b06d71ec7601e35f3b39f41c602231a1c5114f1c40238fa0e355",
+          "model_sha256": "436200301b3c6f1034f9abc54ab99059b1ca217d2c8bdfd2ff3226bed25b580a",
+          "preannotation_sha256": "efb4c1aed9af4b5fb2203c0a0ca071417a080f5aef1eb725ec374a530f884d57",
+          "preannotation_uri": "example://cvat-static/preannotation.xml"
+        },
+        "completion": {
+          "completed_by": null,
+          "completion_claim_allowed": false,
+          "human_completed": false
+        },
+        "cvat_binding": {
+          "job_id": "STATIC-OFFLINE-JOB-test24",
+          "job_version": "job-v1",
+          "package_version": "package-v1",
+          "task_id": "STATIC-OFFLINE-TASK-test24",
+          "task_version": "task-v1"
+        },
+        "dataset_role": "test24",
+        "event_id": "37eb6b7271b5f69187a0245f87405cda2c4f377baa42819781f211129bacad34",
+        "event_type": "cvat.review.preannotation_exported",
+        "idempotency_key": "4ab881a4396b048462f67a40d2c91d46fcd5004e3d008e058eec90d38ca443cd",
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "EXAMPLE_FACTORY_DATASET",
+          "frame_id": "1789897538282478905",
+          "input_id": "2212f74897b6b06d71ec7601e35f3b39f41c602231a1c5114f1c40238fa0e355",
+          "sequence": "000",
+          "source_batch": "EXAMPLE_BATCH_A"
+        },
+        "label_registry": {
+          "allowed_labels": [
+            "pallet",
+            "person",
+            "floor",
+            "slope",
+            "ego",
+            "other_robot",
+            "cargo_floor"
+          ],
+          "downstream_mapping": {
+            "operation": "union",
+            "preserve_source_labels": true,
+            "source_labels": [
+              "floor",
+              "slope"
+            ],
+            "source_layer": "training_annotation",
+            "target_label": "traversable_area",
+            "target_layer": "downstream_navigation"
+          },
+          "floor_slope_distinct": true,
+          "registry_content_sha256": "2de68a7c3fa7e4d803094df9eca7d43c0bd4addfd15c7318d0ec31d2deed1f34",
+          "registry_version": "labelagent-ontology-20261111-v1"
+        },
+        "occurred_at": "2026-11-11T16:00:00+08:00",
+        "review_state": "human_review_required",
+        "routing": {
+          "priority": "high",
+          "provenance": "real",
+          "reason_codes": [
+            "VLM_SAM_CONFLICT"
+          ],
+          "unknown_or_new_label_pending": false
+        },
+        "schema_version": "labelagent.cvat-offline-export.v1",
+        "split": "test",
+        "write_policy": {
+          "mode": "append_only_new_version",
+          "network_or_upload_performed": false,
+          "overwrite_candidate": false,
+          "overwrite_truth": false,
+          "truth_promotion_allowed": false
+        }
+      },
+      "event_sha256": "dc27a486cc3841ad98a5b7071dadf7d3c52cd156491da3f9ac58d11a5e35ab43",
+      "event_type": "cvat.review.preannotation_exported",
+      "idempotency_key": "4ab881a4396b048462f67a40d2c91d46fcd5004e3d008e058eec90d38ca443cd",
+      "previous_record_sha256": "265f507b023ba0f203054901e8e9d4c7ff40f9f2d7312b4220f3ec92c84913c3",
+      "record_sha256": "bf3631c3808a609125e47cac5cf6d4ca1952932a5f6cb24b5e0290a85e808bb4",
+      "sequence": 2
+    },
+    {
+      "event": {
+        "annotation_export": {
+          "sha256": "0197f3d52768f60bad0961fc7364fe1441d2b8ee1e39929c5af8b3cf2db4e506",
+          "uri": "example://cvat-static/human-annotations.json",
+          "verified_sha256": "0197f3d52768f60bad0961fc7364fe1441d2b8ee1e39929c5af8b3cf2db4e506"
+        },
+        "approval": {
+          "annotation_export_sha256": "0197f3d52768f60bad0961fc7364fe1441d2b8ee1e39929c5af8b3cf2db4e506",
+          "approval_id": "STATIC-EVALUATION-APPROVAL",
+          "approved_at": "2026-11-11T16:01:01+08:00",
+          "decision": "approved",
+          "receipt_sha256": "bde0bb53c81a9608ca269b8c0c9c6b8e2f2a85306f7a165fd18b3264c0abb055",
+          "receipt_uri": "example://cvat-static/evaluation-approval.json",
+          "reviewer_id": "STATIC-AUTHENTICATED-REVIEWER",
+          "truth_sha256": "a727bb09416c98ea05c9e4f1cca0413b69d50dd948fd3f0dfa8adb541d1e3706"
+        },
+        "artifact_bindings": {
+          "candidate_sha256": "cbf03e37374517564b01b75ccda321beb2a00df24763831efd34c48e56fd3ac4",
+          "config_sha256": "a9deb7d180fddfd62878fdbf7fe1a8dd9c6ed84414ccc67c05e4040c6260c7d1",
+          "input_sha256": "2212f74897b6b06d71ec7601e35f3b39f41c602231a1c5114f1c40238fa0e355",
+          "label_registry_sha256": "2de68a7c3fa7e4d803094df9eca7d43c0bd4addfd15c7318d0ec31d2deed1f34",
+          "model_sha256": "436200301b3c6f1034f9abc54ab99059b1ca217d2c8bdfd2ff3226bed25b580a",
+          "source_image_sha256": "6a25887d85295ed14066aa675cecf822fe1a1fc86c7d6914d97cb79583be0c98"
+        },
+        "before_after_diff": {
+          "added": 1,
+          "after_sha256": "a727bb09416c98ea05c9e4f1cca0413b69d50dd948fd3f0dfa8adb541d1e3706",
+          "artifact_sha256": "e07a6d1f64113ec103d2065a8b37b009e507b049e9cdb542b4f190e8bd61672d",
+          "artifact_uri": "example://cvat-static/diff.json",
+          "before_sha256": "cbf03e37374517564b01b75ccda321beb2a00df24763831efd34c48e56fd3ac4",
+          "modified": 2,
+          "removed": 0
+        },
+        "dataset_role": "test24",
+        "evaluation_truth": true,
+        "event_id": "c8171f48afa4ea4d86248fd4080b42eeb2c0580ce308dc402a88fa4dc713a419",
+        "event_type": "cvat.evaluation_truth.versioned",
+        "export_event_id": "37eb6b7271b5f69187a0245f87405cda2c4f377baa42819781f211129bacad34",
+        "idempotency_key": "61149f3f2e1a37548c4787c05303149c237ec20bcb87463baa8d76305e0df234",
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "EXAMPLE_FACTORY_DATASET",
+          "frame_id": "1789897538282478905",
+          "input_id": "2212f74897b6b06d71ec7601e35f3b39f41c602231a1c5114f1c40238fa0e355",
+          "sequence": "000",
+          "source_batch": "EXAMPLE_BATCH_A"
+        },
+        "occurred_at": "2026-11-11T16:02:00+08:00",
+        "review": {
+          "actor_type": "human",
+          "decision": "corrected",
+          "reviewer": {
+            "identity_assurance": "authenticated",
+            "reviewed_at": "2026-11-11T16:01:00+08:00",
+            "reviewer_id": "STATIC-AUTHENTICATED-REVIEWER"
+          },
+          "status": "human_completed"
+        },
+        "schema_version": "labelagent.cvat-evaluation-truth.v1",
+        "split": "test",
+        "training_return_allowed": false,
+        "truth": {
+          "artifact_id": "3c376a91b35cfd071682d3e85017df00b6705d5b9d240604bc08ba47aa2336bc",
+          "sha256": "a727bb09416c98ea05c9e4f1cca0413b69d50dd948fd3f0dfa8adb541d1e3706",
+          "uri": "example://cvat-static/evaluation-truth.json"
+        },
+        "truth_eligible_for_training": false,
+        "version": {
+          "append_only": true,
+          "immutable": true,
+          "manifest_sha256": "735c5e01bc1a0422b8ef51181c9f923661e2117c4e8dddcd93ef606f721d0589",
+          "manifest_uri": "example://cvat-static/evaluation-manifest.json",
+          "overwrite_previous_truth": false,
+          "parent_version": "evaluation-v0",
+          "previous_truth_preserved": true,
+          "split": "test",
+          "truth_sha256": "a727bb09416c98ea05c9e4f1cca0413b69d50dd948fd3f0dfa8adb541d1e3706",
+          "version_id": "STATIC-EVALUATION-TRUTH-V1"
+        },
+        "write_policy": {
+          "mode": "append_only",
+          "overwrite_previous_truth": false
+        }
+      },
+      "event_sha256": "1d293ce6912b6924350b088d7dac2d408ead34c5c06e1ceb4db26b50ad4021dd",
+      "event_type": "cvat.evaluation_truth.versioned",
+      "idempotency_key": "61149f3f2e1a37548c4787c05303149c237ec20bcb87463baa8d76305e0df234",
+      "previous_record_sha256": "bf3631c3808a609125e47cac5cf6d4ca1952932a5f6cb24b5e0290a85e808bb4",
+      "record_sha256": "4c3312cda380f68f6963f95b8d56ef290c3f6c0d99e3ce2355e90a0b189b31db",
+      "sequence": 3
+    },
+    {
+      "event": {
+        "blockers": [
+          "MACHINE_OR_AUTOMATIC_COMPLETION_FORBIDDEN"
+        ],
+        "dataset_role": "train72",
+        "event_id": "ee2843e58f1e3240766fe5ae8cd8319b08c2592bc71a38097250bc51008b7f74",
+        "event_type": "cvat.review.return.rejected",
+        "export_event_id": "7b0eae60e94f8ef86f93605df6654da530430f49a31044a68a38525e86c295a5",
+        "idempotency_key": "2a54d49867c833b2b503ca7b61a09031d51b90a7a59a3efb79955c1b7ba781a2",
+        "next_state": "human_review_required",
+        "occurred_at": "2026-11-11T16:02:01+08:00",
+        "return_version_id": "STATIC-REJECTED-MACHINE-V1",
+        "schema_version": "labelagent.cvat-return-rejection.v1",
+        "split": "train",
+        "status": "rejected_fail_closed",
+        "training_return_allowed": false,
+        "truth_version_created": false
+      },
+      "event_sha256": "32322d42161527c8669050d5457991b6dccc384afb5d2facc33dec9698f78806",
+      "event_type": "cvat.review.return.rejected",
+      "idempotency_key": "2a54d49867c833b2b503ca7b61a09031d51b90a7a59a3efb79955c1b7ba781a2",
+      "previous_record_sha256": "4c3312cda380f68f6963f95b8d56ef290c3f6c0d99e3ce2355e90a0b189b31db",
+      "record_sha256": "e77e29adf4cfb9d29798227adaa1fde1af447be5478344cc0b5a3f54241fff96",
+      "sequence": 4
+    }
+  ],
+  "sample_kind": "synthetic_contract_fixture_not_production_truth",
+  "schema_version": "labelagent.cvat-review-ledger.v1",
+  "snapshot_sha256": "603759e2113b98d5c300588bc2e849d1cedd9a969a7ebafa3ec432e5a3b1e34f"
+}

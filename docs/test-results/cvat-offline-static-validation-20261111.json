@@ -1,0 +1,33 @@
+{
+  "artifact_sha256": {
+    "docs/test-results/cvat-offline-review-ledger-static-20261111.json": "8146cec4ac5e53a50831c96e1fb50e91d11f154ca3a1e8e5945bdfc4daf5dde3",
+    "examples/cvat_machine_completion_rejected_static.json": "32322d42161527c8669050d5457991b6dccc384afb5d2facc33dec9698f78806",
+    "examples/cvat_test24_evaluation_return_static.json": "1d293ce6912b6924350b088d7dac2d408ead34c5c06e1ceb4db26b50ad4021dd",
+    "examples/cvat_test24_human_completed_return_static.json": "75305221f88f3a5294f103b9e4375352d10030e231ad9c63602e46b21faac9ec",
+    "examples/cvat_train72_preannotation_export_static.json": "f5d46ead3df32315d15b623b7db8db7cf6adbfbaae9eff10cc4dc4f656a62870"
+  },
+  "cnb_status": "pending_not_contacted",
+  "contracts": {
+    "append_only_review_ledger": true,
+    "downstream_traversable_union": true,
+    "floor_slope_distinct": true,
+    "machine_completion_fail_closed": true,
+    "test24_evaluation_truth_only": true,
+    "test24_training_return_allowed": false,
+    "train72_export_is_preannotation_only": true
+  },
+  "execution_boundary": {
+    "cpu_only": true,
+    "cvat_connected": false,
+    "gpu_called": false,
+    "oss_mutated": false,
+    "remote_service_called": false,
+    "uploaded": false
+  },
+  "generated_at": "2026-11-11T16:04:00+08:00",
+  "production_training_returns_created": 0,
+  "production_truth_versions_created": 0,
+  "receipt_sha256": "43c8582511319481a60fa1865d516638c5853fcb8aa5e0cd9aae2763b2b7dddc",
+  "sample_kind": "synthetic_contract_fixture_not_production_truth",
+  "schema_version": "labelagent.cvat-offline-static-validation.v1"
+}

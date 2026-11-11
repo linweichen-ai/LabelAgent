@@ -1,0 +1,83 @@
+{
+  "annotation_export": {
+    "sha256": "0197f3d52768f60bad0961fc7364fe1441d2b8ee1e39929c5af8b3cf2db4e506",
+    "uri": "example://cvat-static/human-annotations.json",
+    "verified_sha256": "0197f3d52768f60bad0961fc7364fe1441d2b8ee1e39929c5af8b3cf2db4e506"
+  },
+  "annotation_labels": [
+    "floor",
+    "slope"
+  ],
+  "approval": {
+    "annotation_export_sha256": "0197f3d52768f60bad0961fc7364fe1441d2b8ee1e39929c5af8b3cf2db4e506",
+    "approval_id": "STATIC-EVALUATION-APPROVAL",
+    "approved_at": "2026-11-11T16:01:01+08:00",
+    "decision": "approved",
+    "receipt_sha256": "bde0bb53c81a9608ca269b8c0c9c6b8e2f2a85306f7a165fd18b3264c0abb055",
+    "receipt_uri": "example://cvat-static/evaluation-approval.json",
+    "reviewer_id": "STATIC-AUTHENTICATED-REVIEWER",
+    "truth_sha256": "a727bb09416c98ea05c9e4f1cca0413b69d50dd948fd3f0dfa8adb541d1e3706"
+  },
+  "artifact_bindings": {
+    "candidate_sha256": "cbf03e37374517564b01b75ccda321beb2a00df24763831efd34c48e56fd3ac4",
+    "config_sha256": "a9deb7d180fddfd62878fdbf7fe1a8dd9c6ed84414ccc67c05e4040c6260c7d1",
+    "input_sha256": "2212f74897b6b06d71ec7601e35f3b39f41c602231a1c5114f1c40238fa0e355",
+    "label_registry_sha256": "2de68a7c3fa7e4d803094df9eca7d43c0bd4addfd15c7318d0ec31d2deed1f34",
+    "model_sha256": "436200301b3c6f1034f9abc54ab99059b1ca217d2c8bdfd2ff3226bed25b580a",
+    "source_image_sha256": "6a25887d85295ed14066aa675cecf822fe1a1fc86c7d6914d97cb79583be0c98"
+  },
+  "before_after_diff": {
+    "added": 1,
+    "after_sha256": "a727bb09416c98ea05c9e4f1cca0413b69d50dd948fd3f0dfa8adb541d1e3706",
+    "artifact_sha256": "e07a6d1f64113ec103d2065a8b37b009e507b049e9cdb542b4f190e8bd61672d",
+    "artifact_uri": "example://cvat-static/diff.json",
+    "before_sha256": "cbf03e37374517564b01b75ccda321beb2a00df24763831efd34c48e56fd3ac4",
+    "modified": 2,
+    "removed": 0
+  },
+  "completion": {
+    "actor_type": "human",
+    "decision": "corrected",
+    "reviewer": {
+      "identity_assurance": "authenticated",
+      "reviewed_at": "2026-11-11T16:01:00+08:00",
+      "reviewer_id": "STATIC-AUTHENTICATED-REVIEWER"
+    },
+    "status": "human_completed"
+  },
+  "cvat_binding": {
+    "job_id": "STATIC-OFFLINE-JOB-test24",
+    "job_version": "job-v1",
+    "package_version": "package-v1",
+    "task_id": "STATIC-OFFLINE-TASK-test24",
+    "task_version": "task-v1"
+  },
+  "dataset_role": "test24",
+  "export_event_id": "37eb6b7271b5f69187a0245f87405cda2c4f377baa42819781f211129bacad34",
+  "identity": {
+    "camera": "camera_0",
+    "dataset_id": "EXAMPLE_FACTORY_DATASET",
+    "frame_id": "1789897538282478905",
+    "input_id": "2212f74897b6b06d71ec7601e35f3b39f41c602231a1c5114f1c40238fa0e355",
+    "sequence": "000",
+    "source_batch": "EXAMPLE_BATCH_A"
+  },
+  "split": "test",
+  "truth": {
+    "artifact_id": "3c376a91b35cfd071682d3e85017df00b6705d5b9d240604bc08ba47aa2336bc",
+    "sha256": "a727bb09416c98ea05c9e4f1cca0413b69d50dd948fd3f0dfa8adb541d1e3706",
+    "uri": "example://cvat-static/evaluation-truth.json"
+  },
+  "version": {
+    "append_only": true,
+    "immutable": true,
+    "manifest_sha256": "735c5e01bc1a0422b8ef51181c9f923661e2117c4e8dddcd93ef606f721d0589",
+    "manifest_uri": "example://cvat-static/evaluation-manifest.json",
+    "overwrite_previous_truth": false,
+    "parent_version": "evaluation-v0",
+    "previous_truth_preserved": true,
+    "split": "test",
+    "truth_sha256": "a727bb09416c98ea05c9e4f1cca0413b69d50dd948fd3f0dfa8adb541d1e3706",
+    "version_id": "STATIC-EVALUATION-TRUTH-V1"
+  }
+}

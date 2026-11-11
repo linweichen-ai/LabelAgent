@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/cvat-offline-static-validation-receipt.schema.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "generated_at", "sample_kind", "execution_boundary", "contracts", "artifact_sha256", "production_truth_versions_created", "production_training_returns_created", "cnb_status", "receipt_sha256"],
+  "properties": {
+    "schema_version": {"const": "labelagent.cvat-offline-static-validation.v1"}, "generated_at": {"type": "string", "format": "date-time"},
+    "sample_kind": {"const": "synthetic_contract_fixture_not_production_truth"},
+    "execution_boundary": {"type": "object", "additionalProperties": false, "required": ["cpu_only", "cvat_connected", "uploaded", "gpu_called", "oss_mutated", "remote_service_called"], "properties": {"cpu_only": {"const": true}, "cvat_connected": {"const": false}, "uploaded": {"const": false}, "gpu_called": {"const": false}, "oss_mutated": {"const": false}, "remote_service_called": {"const": false}}},
+    "contracts": {"type": "object", "additionalProperties": false, "required": ["train72_export_is_preannotation_only", "test24_evaluation_truth_only", "test24_training_return_allowed", "machine_completion_fail_closed", "append_only_review_ledger", "floor_slope_distinct", "downstream_traversable_union"], "properties": {"train72_export_is_preannotation_only": {"const": true}, "test24_evaluation_truth_only": {"const": true}, "test24_training_return_allowed": {"const": false}, "machine_completion_fail_closed": {"const": true}, "append_only_review_ledger": {"const": true}, "floor_slope_distinct": {"const": true}, "downstream_traversable_union": {"const": true}}},
+    "artifact_sha256": {"type": "object", "minProperties": 4, "additionalProperties": {"$ref": "#/$defs/sha"}},
+    "production_truth_versions_created": {"const": 0}, "production_training_returns_created": {"const": 0},
+    "cnb_status": {"const": "pending_not_contacted"}, "receipt_sha256": {"$ref": "#/$defs/sha"}
+  },
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

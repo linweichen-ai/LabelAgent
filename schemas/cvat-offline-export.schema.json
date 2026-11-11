@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/cvat-offline-export.schema.json",
+  "title": "Offline CVAT preannotation export",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "event_type", "occurred_at", "dataset_role", "split", "identity", "cvat_binding", "artifacts", "label_registry", "routing", "annotation_layer", "review_state", "completion", "write_policy", "idempotency_key", "event_id"],
+  "properties": {
+    "schema_version": {"const": "labelagent.cvat-offline-export.v1"},
+    "event_type": {"const": "cvat.review.preannotation_exported"},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "dataset_role": {"enum": ["train72", "test24"]},
+    "split": {"enum": ["train", "test"]},
+    "identity": {"$ref": "#/$defs/identity"},
+    "cvat_binding": {"$ref": "#/$defs/cvat_binding"},
+    "artifacts": {"$ref": "#/$defs/artifacts"},
+    "label_registry": {"$ref": "#/$defs/registry"},
+    "routing": {"$ref": "#/$defs/routing"},
+    "annotation_layer": {"const": "machine_preannotation"},
+    "review_state": {"const": "human_review_required"},
+    "completion": {"type": "object", "additionalProperties": false, "required": ["human_completed", "completed_by", "completion_claim_allowed"], "properties": {"human_completed": {"const": false}, "completed_by": {"type": "null"}, "completion_claim_allowed": {"const": false}}},
+    "write_policy": {"type": "object", "additionalProperties": false, "required": ["mode", "overwrite_candidate", "overwrite_truth", "truth_promotion_allowed", "network_or_upload_performed"], "properties": {"mode": {"const": "append_only_new_version"}, "overwrite_candidate": {"const": false}, "overwrite_truth": {"const": false}, "truth_promotion_allowed": {"const": false}, "network_or_upload_performed": {"const": false}}},
+    "idempotency_key": {"$ref": "#/$defs/sha"},
+    "event_id": {"$ref": "#/$defs/sha"}
+  },
+  "allOf": [
+    {"if": {"properties": {"dataset_role": {"const": "train72"}}}, "then": {"properties": {"split": {"const": "train"}}}},
+    {"if": {"properties": {"dataset_role": {"const": "test24"}}}, "then": {"properties": {"split": {"const": "test"}}}}
+  ],
+  "$defs": {
+    "sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "identity": {"type": "object", "additionalProperties": false, "required": ["dataset_id", "source_batch", "sequence", "frame_id", "camera", "input_id"], "properties": {"dataset_id": {"type": "string", "minLength": 1}, "source_batch": {"type": "string", "minLength": 1}, "sequence": {"type": "string", "minLength": 1}, "frame_id": {"type": "string", "minLength": 1}, "camera": {"type": "string", "minLength": 1}, "input_id": {"$ref": "#/$defs/sha"}}},
+    "cvat_binding": {"type": "object", "additionalProperties": false, "required": ["task_id", "job_id", "task_version", "job_version", "package_version"], "properties": {"task_id": {"type": "string", "minLength": 1}, "job_id": {"type": "string", "minLength": 1}, "task_version": {"type": "string", "minLength": 1}, "job_version": {"type": "string", "minLength": 1}, "package_version": {"type": "string", "minLength": 1}}},
+    "artifacts": {"type": "object", "additionalProperties": false, "required": ["image_uri", "image_sha256", "input_sha256", "candidate_uri", "candidate_sha256", "model_sha256", "config_sha256", "preannotation_uri", "preannotation_sha256"], "properties": {"image_uri": {"type": "string", "minLength": 1}, "image_sha256": {"$ref": "#/$defs/sha"}, "input_sha256": {"$ref": "#/$defs/sha"}, "candidate_uri": {"type": "string", "minLength": 1}, "candidate_sha256": {"$ref": "#/$defs/sha"}, "model_sha256": {"$ref": "#/$defs/sha"}, "config_sha256": {"$ref": "#/$defs/sha"}, "preannotation_uri": {"type": "string", "minLength": 1}, "preannotation_sha256": {"$ref": "#/$defs/sha"}}},
+    "registry": {"type": "object", "additionalProperties": false, "required": ["registry_version", "registry_content_sha256", "allowed_labels", "floor_slope_distinct", "downstream_mapping"], "properties": {"registry_version": {"type": "string", "minLength": 1}, "registry_content_sha256": {"$ref": "#/$defs/sha"}, "allowed_labels": {"type": "array", "minItems": 2, "uniqueItems": true, "contains": {"const": "floor"}}, "floor_slope_distinct": {"const": true}, "downstream_mapping": {"type": "object"}}},
+    "routing": {"type": "object", "additionalProperties": false, "required": ["reason_codes", "priority", "provenance", "unknown_or_new_label_pending"], "properties": {"reason_codes": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["UNKNOWN_LABEL", "NEW_LABEL_CANDIDATE", "LOW_CONFIDENCE", "VLM_SAM_CONFLICT", "QC_FAILURE", "HUMAN_GATE_REQUIRED"]}}, "priority": {"enum": ["critical", "high", "normal", "low"]}, "provenance": {"enum": ["real", "simulation"]}, "unknown_or_new_label_pending": {"type": "boolean"}}}
+  }
+}

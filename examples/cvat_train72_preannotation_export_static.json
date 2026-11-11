@@ -1,0 +1,82 @@
+{
+  "annotation_layer": "machine_preannotation",
+  "artifacts": {
+    "candidate_sha256": "07985aa38f2509adeb964c772771d19866b291f323da3602275b5bc108b2597f",
+    "candidate_uri": "example://cvat-static/candidate.json",
+    "config_sha256": "a9deb7d180fddfd62878fdbf7fe1a8dd9c6ed84414ccc67c05e4040c6260c7d1",
+    "image_sha256": "6a25887d85295ed14066aa675cecf822fe1a1fc86c7d6914d97cb79583be0c98",
+    "image_uri": "example://cvat-static/image.png",
+    "input_sha256": "2212f74897b6b06d71ec7601e35f3b39f41c602231a1c5114f1c40238fa0e355",
+    "model_sha256": "436200301b3c6f1034f9abc54ab99059b1ca217d2c8bdfd2ff3226bed25b580a",
+    "preannotation_sha256": "d99ae38cc5c380f97b08e1319063999af7fd234ac28c09c51204c57a916b65bd",
+    "preannotation_uri": "example://cvat-static/preannotation.xml"
+  },
+  "completion": {
+    "completed_by": null,
+    "completion_claim_allowed": false,
+    "human_completed": false
+  },
+  "cvat_binding": {
+    "job_id": "STATIC-OFFLINE-JOB-train72",
+    "job_version": "job-v1",
+    "package_version": "package-v1",
+    "task_id": "STATIC-OFFLINE-TASK-train72",
+    "task_version": "task-v1"
+  },
+  "dataset_role": "train72",
+  "event_id": "7b0eae60e94f8ef86f93605df6654da530430f49a31044a68a38525e86c295a5",
+  "event_type": "cvat.review.preannotation_exported",
+  "idempotency_key": "8b518a41b6f6d5781c612f1a212a73d453623f0a0c1981055bc35fd619a2a2b9",
+  "identity": {
+    "camera": "camera_0",
+    "dataset_id": "EXAMPLE_FACTORY_DATASET",
+    "frame_id": "1789897538282478905",
+    "input_id": "2212f74897b6b06d71ec7601e35f3b39f41c602231a1c5114f1c40238fa0e355",
+    "sequence": "000",
+    "source_batch": "EXAMPLE_BATCH_A"
+  },
+  "label_registry": {
+    "allowed_labels": [
+      "pallet",
+      "person",
+      "floor",
+      "slope",
+      "ego",
+      "other_robot",
+      "cargo_floor"
+    ],
+    "downstream_mapping": {
+      "operation": "union",
+      "preserve_source_labels": true,
+      "source_labels": [
+        "floor",
+        "slope"
+      ],
+      "source_layer": "training_annotation",
+      "target_label": "traversable_area",
+      "target_layer": "downstream_navigation"
+    },
+    "floor_slope_distinct": true,
+    "registry_content_sha256": "2de68a7c3fa7e4d803094df9eca7d43c0bd4addfd15c7318d0ec31d2deed1f34",
+    "registry_version": "labelagent-ontology-20261111-v1"
+  },
+  "occurred_at": "2026-11-11T16:00:00+08:00",
+  "review_state": "human_review_required",
+  "routing": {
+    "priority": "high",
+    "provenance": "real",
+    "reason_codes": [
+      "LOW_CONFIDENCE"
+    ],
+    "unknown_or_new_label_pending": false
+  },
+  "schema_version": "labelagent.cvat-offline-export.v1",
+  "split": "train",
+  "write_policy": {
+    "mode": "append_only_new_version",
+    "network_or_upload_performed": false,
+    "overwrite_candidate": false,
+    "overwrite_truth": false,
+    "truth_promotion_allowed": false
+  }
+}

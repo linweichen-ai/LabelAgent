@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/cvat-evaluation-truth.schema.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "event_type", "occurred_at", "export_event_id", "dataset_role", "split", "identity", "review", "annotation_export", "artifact_bindings", "before_after_diff", "truth", "version", "approval", "evaluation_truth", "training_return_allowed", "truth_eligible_for_training", "write_policy", "idempotency_key", "event_id"],
+  "properties": {
+    "schema_version": {"const": "labelagent.cvat-evaluation-truth.v1"},
+    "event_type": {"const": "cvat.evaluation_truth.versioned"},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "export_event_id": {"$ref": "#/$defs/sha"}, "dataset_role": {"const": "test24"}, "split": {"const": "test"},
+    "identity": {"type": "object"}, "review": {"type": "object"}, "annotation_export": {"type": "object"},
+    "artifact_bindings": {"type": "object"}, "before_after_diff": {"type": "object"}, "truth": {"type": "object"},
+    "version": {"type": "object", "required": ["version_id", "split", "immutable", "append_only", "overwrite_previous_truth"], "properties": {"version_id": {"type": "string", "minLength": 1}, "split": {"const": "test"}, "immutable": {"const": true}, "append_only": {"const": true}, "overwrite_previous_truth": {"const": false}}},
+    "approval": {"type": "object"}, "evaluation_truth": {"const": true}, "training_return_allowed": {"const": false}, "truth_eligible_for_training": {"const": false},
+    "write_policy": {"type": "object", "additionalProperties": false, "required": ["mode", "overwrite_previous_truth"], "properties": {"mode": {"const": "append_only"}, "overwrite_previous_truth": {"const": false}}},
+    "idempotency_key": {"$ref": "#/$defs/sha"}, "event_id": {"$ref": "#/$defs/sha"}
+  },
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

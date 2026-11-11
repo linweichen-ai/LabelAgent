@@ -1,0 +1,18 @@
+{
+  "blockers": [
+    "MACHINE_OR_AUTOMATIC_COMPLETION_FORBIDDEN"
+  ],
+  "dataset_role": "train72",
+  "event_id": "ee2843e58f1e3240766fe5ae8cd8319b08c2592bc71a38097250bc51008b7f74",
+  "event_type": "cvat.review.return.rejected",
+  "export_event_id": "7b0eae60e94f8ef86f93605df6654da530430f49a31044a68a38525e86c295a5",
+  "idempotency_key": "2a54d49867c833b2b503ca7b61a09031d51b90a7a59a3efb79955c1b7ba781a2",
+  "next_state": "human_review_required",
+  "occurred_at": "2026-11-11T16:02:01+08:00",
+  "return_version_id": "STATIC-REJECTED-MACHINE-V1",
+  "schema_version": "labelagent.cvat-return-rejection.v1",
+  "split": "train",
+  "status": "rejected_fail_closed",
+  "training_return_allowed": false,
+  "truth_version_created": false
+}

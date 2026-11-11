@@ -150,7 +150,9 @@ class FactoryOrchestratorTests(unittest.TestCase):
                   if record["event"]["trace_id"] == "known_label_waiting_human"]
         self.assertEqual(events[-1]["state"], "human_review_required")
         self.assertEqual(events[-1]["human_gate"]["status"], "pending")
-        self.assertNotIn("truth_promoted", {event["state"] for event in events})
+        states = {event["state"] for event in events}
+        self.assertNotIn("truth_promoted", states)
+        self.assertNotIn("training_eligible", states)
 
     def test_unknown_candidate_routes_to_human_and_never_mutates_ontology(self):
         ledger = load(LEDGER_PATH)
@@ -267,6 +269,10 @@ class FactoryOrchestratorTests(unittest.TestCase):
             "output_sha256": stale["bindings"]["output_sha256"],
         })
         stale["event_id"] = digest(_event_body(stale))
+        self.assertEqual(stale["previous_event_id"], first["event_id"])
+        self.assertNotEqual(stale["event_id"], qc["event_id"])
+        self.assertNotEqual(stale["bindings"]["output_sha256"],
+                            qc["bindings"]["output_sha256"])
         with self.assertRaisesRegex(ValueError, "out-of-order"):
             ledger.append(stale)
 

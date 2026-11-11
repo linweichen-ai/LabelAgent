@@ -3,88 +3,77 @@
   "$id": "https://labelagent.local/schemas/sam3-staged-unfreeze.schema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "scope", "inventory", "stages", "holdout_gate", "adapter_policy", "final_scope_policy"],
+  "required": ["schema_version", "scope", "current_verified_stage", "runtime_inventory_gate", "conditional_expansion", "unverified_module_policy", "holdout_gate", "full_model_policy"],
   "properties": {
-    "schema_version": {"const": "labelagent.sam3-staged-unfreeze.v1"},
+    "schema_version": {"const": "labelagent.sam3-conditional-unfreeze.v2"},
     "scope": {"const": "future_training_plan_not_training_execution"},
-    "inventory": {
+    "current_verified_stage": {
       "type": "object", "additionalProperties": false,
-      "required": ["source_verified", "runtime_named_parameters_verified", "forward_backward_dependency_verified", "runtime_blocker", "source_files"],
+      "required": ["stage", "name", "status", "trainable_prefixes", "runtime_exact_parameter_names_status", "runtime_trainable_parameter_count_status", "config_sha256_status", "independent_holdout_gain_status", "rollback_to"],
       "properties": {
-        "source_verified": {"const": true},
-        "runtime_named_parameters_verified": {"const": false},
-        "forward_backward_dependency_verified": {"const": false},
-        "runtime_blocker": {"const": "no_local_torch_checkpoint_and_remote_authentication_unavailable"},
-        "source_files": {
-          "type": "array", "minItems": 4,
-          "items": {
-            "type": "object", "additionalProperties": false,
-            "required": ["path", "sha256"],
-            "properties": {
-              "path": {"type": "string", "minLength": 1},
-              "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
-            }
-          }
-        }
+        "stage": {"const": 0},
+        "name": {"const": "mask_embed_only_minimal_reversible_baseline"},
+        "status": {"const": "only_currently_verified_trainable_scope"},
+        "trainable_prefixes": {"const": ["segmentation_head.mask_predictor.mask_embed."]},
+        "runtime_exact_parameter_names_status": {"const": "pending_dual_5090_inventory"},
+        "runtime_trainable_parameter_count_status": {"const": "pending_dual_5090_inventory"},
+        "config_sha256_status": {"const": "required_before_training"},
+        "independent_holdout_gain_status": {"const": "pending_human_truth_and_baseline"},
+        "rollback_to": {"const": "original_sam3_checkpoint_with_sha256"}
       }
     },
-    "stages": {
-      "type": "array", "minItems": 4, "maxItems": 4,
-      "prefixItems": [
-        {"$ref": "#/$defs/stage0"},
-        {"$ref": "#/$defs/stage1"},
-        {"$ref": "#/$defs/stage2"},
-        {"$ref": "#/$defs/stage3"}
-      ]
+    "runtime_inventory_gate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dual_5090_named_parameters_verified", "forward_backward_dependency_verified", "genuine_human_truth_version_available", "fixed_holdout_baseline_available", "all_prerequisites_required_for_expansion"],
+      "properties": {
+        "dual_5090_named_parameters_verified": {"const": false},
+        "forward_backward_dependency_verified": {"const": false},
+        "genuine_human_truth_version_available": {"const": false},
+        "fixed_holdout_baseline_available": {"const": false},
+        "all_prerequisites_required_for_expansion": {"const": true}
+      }
+    },
+    "conditional_expansion": {
+      "type": "object", "additionalProperties": false,
+      "required": ["enabled", "predeclared_stages", "predeclared_trainable_prefixes", "candidate_must_be_derived_from_live_named_parameters", "allowed_target_types_after_all_gates", "required_stage_record_fields"],
+      "properties": {
+        "enabled": {"const": false},
+        "predeclared_stages": {"const": []},
+        "predeclared_trainable_prefixes": {"const": []},
+        "candidate_must_be_derived_from_live_named_parameters": {"const": true},
+        "allowed_target_types_after_all_gates": {"const": ["confirmed_upper_decoder_named_parameters", "newly_implemented_and_verified_adapter_named_parameters"]},
+        "required_stage_record_fields": {"const": ["exact_trainable_parameter_names", "trainable_parameter_count", "training_config_sha256", "independent_holdout_baseline_metrics", "independent_holdout_candidate_metrics", "independent_holdout_gain", "rollback_checkpoint_path", "rollback_checkpoint_sha256"]}
+      }
+    },
+    "unverified_module_policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mask_decoder_exists_or_is_verified_trainable", "adapter_exists_or_is_verified_trainable", "lora_exists_or_is_verified_trainable", "claims_forbidden_until_runtime_evidence"],
+      "properties": {
+        "mask_decoder_exists_or_is_verified_trainable": {"const": false},
+        "adapter_exists_or_is_verified_trainable": {"const": false},
+        "lora_exists_or_is_verified_trainable": {"const": false},
+        "claims_forbidden_until_runtime_evidence": {"const": true}
+      }
     },
     "holdout_gate": {
       "type": "object", "additionalProperties": false,
       "required": ["comparison", "required_metrics", "threshold_status", "thresholds_must_be_versioned_before_training", "promotion_rule", "protected_sets"],
       "properties": {
-        "comparison": {"const": "each_stage_vs_original_sam3_on_same_fixed_holdout"},
+        "comparison": {"const": "candidate_vs_original_sam3_on_same_fixed_independent_holdout"},
         "required_metrics": {"const": ["pixel_recall", "mask_iou", "boundary_f1"]},
         "threshold_status": {"const": "pending_human_truth_calibration"},
         "thresholds_must_be_versioned_before_training": {"const": true},
-        "promotion_rule": {"const": "advance_only_when_current_stage_fails_versioned_gate_and_training_sanity_passes"},
+        "promotion_rule": {"const": "expand_only_after_stage0_fails_versioned_gate_and_all_runtime_prerequisites_pass"},
         "protected_sets": {"const": ["test24", "fixed_640_holdout"]}
       }
     },
-    "adapter_policy": {
+    "full_model_policy": {
       "type": "object", "additionalProperties": false,
-      "required": ["implemented", "verified", "lora_claim_allowed"],
+      "required": ["enabled", "authorization_allowed"],
       "properties": {
-        "implemented": {"const": false},
-        "verified": {"const": false},
-        "lora_claim_allowed": {"const": false}
-      }
-    },
-    "final_scope_policy": {
-      "type": "object", "additionalProperties": false,
-      "required": ["stage0_is_final_upper_bound", "broader_unfreeze_default", "full_model_review_conditions"],
-      "properties": {
-        "stage0_is_final_upper_bound": {"const": false},
-        "broader_unfreeze_default": {"const": false},
-        "full_model_review_conditions": {"const": ["phase1_peft_effective", "human_truth_scale_significantly_expanded", "reproducible_peft_bottleneck_demonstrated"]}
+        "enabled": {"const": false},
+        "authorization_allowed": {"const": false}
       }
     }
-  },
-  "$defs": {
-    "common_stage": {
-      "type": "object", "additionalProperties": false,
-      "required": ["stage", "name", "status", "named_parameter_selectors", "source_evidence", "upgrade_trigger", "rollback_to"],
-      "properties": {
-        "stage": {"type": "integer", "minimum": 0, "maximum": 3},
-        "name": {"type": "string"},
-        "status": {"enum": ["stage0_static_prefix_verified_runtime_pending", "source_candidate_runtime_inventory_pending"]},
-        "named_parameter_selectors": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
-        "source_evidence": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
-        "upgrade_trigger": {"type": "string", "minLength": 1},
-        "rollback_to": {"type": "string", "minLength": 1}
-      }
-    },
-    "stage0": {"allOf": [{"$ref": "#/$defs/common_stage"}, {"properties": {"stage": {"const": 0}, "name": {"const": "mask_embed_only_reversible_baseline"}, "status": {"const": "stage0_static_prefix_verified_runtime_pending"}, "named_parameter_selectors": {"const": ["segmentation_head.mask_predictor.mask_embed."]}}}]},
-    "stage1": {"allOf": [{"$ref": "#/$defs/common_stage"}, {"properties": {"stage": {"const": 1}, "name": {"const": "full_segmentation_head"}, "status": {"const": "source_candidate_runtime_inventory_pending"}, "named_parameter_selectors": {"const": ["segmentation_head."]}}}]},
-    "stage2": {"allOf": [{"$ref": "#/$defs/common_stage"}, {"properties": {"stage": {"const": 2}, "name": {"const": "segmentation_head_plus_geometry_prompt_encoder"}, "status": {"const": "source_candidate_runtime_inventory_pending"}, "named_parameter_selectors": {"const": ["segmentation_head.", "geometry_encoder."]}}}]},
-    "stage3": {"allOf": [{"$ref": "#/$defs/common_stage"}, {"properties": {"stage": {"const": 3}, "name": {"const": "plus_upper_transformer_decoder_layers"}, "status": {"const": "source_candidate_runtime_inventory_pending"}, "named_parameter_selectors": {"const": ["segmentation_head.", "geometry_encoder.", "transformer.decoder.layers.<runtime_upper_indices>.", "transformer.decoder.norm."]}}}]}
   }
 }

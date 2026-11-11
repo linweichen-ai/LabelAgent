@@ -110,8 +110,8 @@ unknown 候选至少记录：建议名称/同义词、证据图或掩码及哈�
 
 ## SAM3 监督微调启动门禁
 
-当前路线锁定为参数高效的 SAM3 监督微调：PEFT 是广义 post-training 的一个明确子类，本项目不采用模糊的全模型后训练。首轮冻结大图像/语言骨干，只开放经代码核验的 mask decoder/segmentation head/adapter；当前源码实际验证的首选范围仅为 `segmentation_head.mask_predictor.mask_embed.*`，adapter 尚未验证，不能声称已支持。获批后使用双 5090 DDP。72/24 机器预标注与 BEV 3D boxes 只允许作为 prompt、ROI 或 candidate，不能作为人工真值。`test24` 和固定 640 holdout 永久排除训练。没有真实人工 mask 时，只允许配置、manifest、模块清单和一次性双卡 DDP 初始化 smoke，不允许 optimizer step、训练指标或 checkpoint 声明。只有真实人工确认像素 mask 完成导出、不可变版本化、train/val/test 隔离和最终 manifest 回读后，独立训练门禁才可把 `formal_training_authorized` 设为 true。
+当前路线锁定为参数高效的 SAM3 监督微调。唯一已验证的 trainable scope 是 `segmentation_head.mask_predictor.mask_embed.*`，并仅作为 stage-0 最小可逆基线；mask decoder、adapter、LoRA 均不得表述为已存在或已验证可训练。获批后使用双 5090 DDP。72/24 机器预标注与 BEV 3D boxes 只允许作为 prompt、ROI 或 candidate，不能作为人工真值。`test24` 和固定 640 holdout 永久排除训练。没有真实人工 mask 时，只允许配置、manifest、模块清单和一次性双卡 DDP 初始化 smoke，不允许 optimizer step、训练指标或 checkpoint 声明。只有真实人工确认像素 mask 完成导出、不可变版本化、train/val/test 隔离和最终 manifest 回读后，独立训练门禁才可把 `formal_training_authorized` 设为 true。全模型微调保持禁用。
 
 当前 96 包主要覆盖 pallet/person，不能作为 slope 提升证据。slope 必须另建真实人工像素真值小集，训练/评测保持 floor 与 slope 分开，下游才执行 `traversable_area = floor UNION slope`。首轮 PEFT 在真实真值和独立 holdout 上证明确有效后，只有样本规模显著扩大且 PEFT 出现可复现瓶颈，才评估解冻 image backbone 高层或更大范围微调。详见 [`SAM3_PEFT_TRAINING_GATE.md`](SAM3_PEFT_TRAINING_GATE.md)。
 
-`mask_embed.*` 仅是 stage-0 可逆基线，不是最终能力上限。后续候选范围按真实源码/运行时参数逐级为：完整 `segmentation_head.*`、`geometry_encoder.*`、transformer decoder 运行时上半层与 norm。每级都需相对原始 SAM3 在同一固定 holdout 比较 recall、IoU、Boundary F1，并保留上一最佳 checkpoint 作为回滚点；真实 `named_parameters()` 与前后向梯度清单完成前，这些范围只能记作 source-backed candidate。未发现并验证 adapter/LoRA 参数前，仍不得宣称 LoRA 已支持。
+`mask_embed.*` 不是永久能力上限，但当前不能预先定义更宽 stage。只有 5090 实机模块/`named_parameters()` 清单、真实人工 truth、固定独立 holdout 基线全部具备，才可条件式提出已确认 decoder 高层或真正新增并验证的 adapter。每个候选阶段必须记录精确参数名、参数量、配置 SHA-256、独立 holdout 的 recall/IoU/Boundary F1 基线与增益、回滚 checkpoint 路径和 SHA-256；不满足即继续停在 stage-0。LoRA 未确认存在或可训练，不得宣称支持。

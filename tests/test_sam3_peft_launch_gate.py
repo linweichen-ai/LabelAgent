@@ -21,15 +21,23 @@ class Sam3PeftLaunchGateTests(unittest.TestCase):
         self.assertFalse(result["training_metrics_available"])
         self.assertFalse(result["checkpoint_available"])
         self.assertFalse(result["slope_improvement_established"])
+        self.assertTrue(result["stage0_is_minimal_baseline"])
         self.assertFalse(result["stage0_is_final_upper_bound"])
-        self.assertEqual(result["staged_unfreeze"]["stage_names"], [
-            "mask_embed_only_reversible_baseline",
-            "full_segmentation_head",
-            "segmentation_head_plus_geometry_prompt_encoder",
-            "plus_upper_transformer_decoder_layers",
+        self.assertEqual(result["verified_trainable_scope"]["prefixes"], [
+            "segmentation_head.mask_predictor.mask_embed."
         ])
-        self.assertFalse(result["staged_unfreeze"]["runtime_named_parameters_verified"])
-        self.assertFalse(result["staged_unfreeze"]["lora_claim_allowed"])
+        staged = result["staged_unfreeze"]
+        self.assertEqual(staged["current_stage"]["stage"], 0)
+        self.assertFalse(staged["conditional_expansion"]["enabled"])
+        self.assertEqual(staged["conditional_expansion"]["predeclared_stages"], [])
+        self.assertFalse(staged["dual_5090_named_parameters_verified"])
+        self.assertFalse(staged["unverified_module_policy"][
+            "mask_decoder_exists_or_is_verified_trainable"])
+        self.assertFalse(staged["unverified_module_policy"][
+            "adapter_exists_or_is_verified_trainable"])
+        self.assertFalse(staged["unverified_module_policy"][
+            "lora_exists_or_is_verified_trainable"])
+        self.assertFalse(staged["full_model_policy"]["enabled"])
         self.assertIn("one_shot_dual_5090_ddp_init_smoke", result["without_human_truth_allowed"])
         self.assertIn("optimizer_step", result["without_human_truth_forbidden"])
         self.assertIsNone(result["command_preview"])

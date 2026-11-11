@@ -74,6 +74,7 @@ class OrderedStageEvidenceTests(unittest.TestCase):
         errors = list(self.validator("sam3-peft-plan.schema.json").iter_errors(plan))
         self.assertEqual(errors, [], [error.message for error in errors])
         self.assertFalse(plan["execution_enabled"])
+        self.assertTrue(plan["base_config_requires_freeze_override"])
         self.assertFalse(plan["launch_gate"]["formal_training_authorized"])
         self.assertEqual(plan["strategy"]["selected_route"],
                          "supervised_parameter_efficient_finetuning")
@@ -81,11 +82,19 @@ class OrderedStageEvidenceTests(unittest.TestCase):
                          "peft_is_a_specific_supervised_post_training_subtype")
         self.assertEqual(plan["strategy"]["rejected_route"],
                          "ambiguous_or_full_model_post_training")
-        self.assertEqual(plan["model"]["stage0_trainable_prefixes"],
+        self.assertEqual(plan["model"]["verified_trainable_scope"]["prefixes"],
                          ["segmentation_head.mask_predictor.mask_embed."])
+        self.assertTrue(plan["model"]["stage0_is_minimal_baseline"])
         self.assertFalse(plan["model"]["stage0_is_final_upper_bound"])
-        self.assertIn("segmentation_head.", plan["model"]["future_candidate_prefixes"])
-        self.assertIn("geometry_encoder.", plan["model"]["future_candidate_prefixes"])
+        self.assertFalse(plan["model"]["conditional_expansion"]["enabled"])
+        self.assertEqual(plan["model"]["conditional_expansion"][
+            "predeclared_trainable_prefixes"], [])
+        self.assertFalse(plan["model"]["unverified_module_claims"][
+            "mask_decoder_trainable"])
+        self.assertFalse(plan["model"]["unverified_module_claims"][
+            "adapter_exists_or_trainable"])
+        self.assertFalse(plan["model"]["unverified_module_claims"][
+            "lora_exists_or_trainable"])
         self.assertEqual(plan["staged_unfreeze_config"],
                          "configs/sam3_sfl_cpd15y_staged_unfreeze.json")
         self.assertIn("train/_preannotations.coco.json",
@@ -99,21 +108,84 @@ class OrderedStageEvidenceTests(unittest.TestCase):
         self.assertIn("training_metrics",
                       plan["launch_gate"]["without_human_truth_forbidden"])
 
-    def test_staged_unfreeze_config_is_source_bound_and_not_mask_embed_capped(self):
+    def test_conditional_unfreeze_is_stage0_only_until_live_gates_pass(self):
         path = REPO / "configs/sam3_sfl_cpd15y_staged_unfreeze.json"
         plan = json.loads(path.read_text(encoding="utf-8"))
         errors = list(self.validator("sam3-staged-unfreeze.schema.json").iter_errors(plan))
         self.assertEqual(errors, [], [error.message for error in errors])
-        for item in plan["inventory"]["source_files"]:
-            self.assertEqual(digest(REPO / item["path"]), item["sha256"])
-        self.assertFalse(plan["inventory"]["runtime_named_parameters_verified"])
-        self.assertFalse(plan["inventory"]["forward_backward_dependency_verified"])
-        self.assertFalse(plan["final_scope_policy"]["stage0_is_final_upper_bound"])
+        current = plan["current_verified_stage"]
+        self.assertEqual(current["trainable_prefixes"],
+                         ["segmentation_head.mask_predictor.mask_embed."])
+        self.assertEqual(current["runtime_exact_parameter_names_status"],
+                         "pending_dual_5090_inventory")
+        self.assertFalse(plan["runtime_inventory_gate"][
+            "dual_5090_named_parameters_verified"])
+        self.assertFalse(plan["runtime_inventory_gate"][
+            "genuine_human_truth_version_available"])
+        self.assertFalse(plan["runtime_inventory_gate"][
+            "fixed_holdout_baseline_available"])
+        expansion = plan["conditional_expansion"]
+        self.assertFalse(expansion["enabled"])
+        self.assertEqual(expansion["predeclared_stages"], [])
+        self.assertEqual(expansion["predeclared_trainable_prefixes"], [])
+        self.assertIn("exact_trainable_parameter_names",
+                      expansion["required_stage_record_fields"])
+        self.assertIn("trainable_parameter_count",
+                      expansion["required_stage_record_fields"])
+        self.assertIn("training_config_sha256",
+                      expansion["required_stage_record_fields"])
+        self.assertIn("independent_holdout_gain",
+                      expansion["required_stage_record_fields"])
+        self.assertIn("rollback_checkpoint_sha256",
+                      expansion["required_stage_record_fields"])
         self.assertEqual(plan["holdout_gate"]["required_metrics"],
                          ["pixel_recall", "mask_iou", "boundary_f1"])
         self.assertEqual(plan["holdout_gate"]["threshold_status"],
                          "pending_human_truth_calibration")
-        self.assertFalse(plan["adapter_policy"]["lora_claim_allowed"])
+        self.assertFalse(plan["unverified_module_policy"][
+            "mask_decoder_exists_or_is_verified_trainable"])
+        self.assertFalse(plan["unverified_module_policy"][
+            "adapter_exists_or_is_verified_trainable"])
+        self.assertFalse(plan["unverified_module_policy"][
+            "lora_exists_or_is_verified_trainable"])
+        self.assertFalse(plan["full_model_policy"]["enabled"])
+
+    def test_future_stage_record_requires_parameters_hashes_holdout_and_rollback(self):
+        record = {
+            "schema_version": "labelagent.sam3-unfreeze-stage-record.v1",
+            "stage_id": "example-test-only",
+            "scope_type": "stage0_mask_embed",
+            "authorization": {
+                "dual_5090_named_parameters_verified": True,
+                "genuine_human_truth_version_available": True,
+                "fixed_holdout_baseline_available": True,
+            },
+            "exact_trainable_parameter_names": [
+                "segmentation_head.mask_predictor.mask_embed.example.weight"
+            ],
+            "trainable_parameter_count": 1,
+            "training_config_sha256": "1" * 64,
+            "base_checkpoint_sha256": "2" * 64,
+            "independent_holdout": {
+                "dataset_version": "test-only",
+                "manifest_sha256": "3" * 64,
+                "baseline_metrics": {"pixel_recall": 0.1, "mask_iou": 0.1,
+                                     "boundary_f1": 0.1},
+                "candidate_metrics": {"pixel_recall": 0.2, "mask_iou": 0.2,
+                                      "boundary_f1": 0.2},
+                "gain": {"pixel_recall": 0.1, "mask_iou": 0.1,
+                         "boundary_f1": 0.1},
+            },
+            "rollback": {
+                "checkpoint_path": "test-only/original.pt",
+                "checkpoint_sha256": "4" * 64,
+            },
+            "full_model_training": False,
+        }
+        validator = self.validator("sam3-unfreeze-stage-record.schema.json")
+        self.assertEqual(list(validator.iter_errors(record)), [])
+        del record["trainable_parameter_count"]
+        self.assertNotEqual(list(validator.iter_errors(record)), [])
 
     def test_training_strategy_decision_is_strict_and_claim_bounded(self):
         path = REPO / "docs/test-results/sam3-peft-strategy-decision-20261111.json"

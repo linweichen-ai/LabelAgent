@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/sam3-unfreeze-stage-record.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "stage_id", "scope_type", "authorization", "exact_trainable_parameter_names", "trainable_parameter_count", "training_config_sha256", "base_checkpoint_sha256", "independent_holdout", "rollback", "full_model_training"],
+  "properties": {
+    "schema_version": {"const": "labelagent.sam3-unfreeze-stage-record.v1"},
+    "stage_id": {"type": "string", "minLength": 1},
+    "scope_type": {"enum": ["stage0_mask_embed", "conditional_runtime_confirmed_scope"]},
+    "authorization": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dual_5090_named_parameters_verified", "genuine_human_truth_version_available", "fixed_holdout_baseline_available"],
+      "properties": {
+        "dual_5090_named_parameters_verified": {"const": true},
+        "genuine_human_truth_version_available": {"const": true},
+        "fixed_holdout_baseline_available": {"const": true}
+      }
+    },
+    "exact_trainable_parameter_names": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "trainable_parameter_count": {"type": "integer", "minimum": 1},
+    "training_config_sha256": {"$ref": "#/$defs/hash"},
+    "base_checkpoint_sha256": {"$ref": "#/$defs/hash"},
+    "independent_holdout": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dataset_version", "manifest_sha256", "baseline_metrics", "candidate_metrics", "gain"],
+      "properties": {
+        "dataset_version": {"type": "string", "minLength": 1},
+        "manifest_sha256": {"$ref": "#/$defs/hash"},
+        "baseline_metrics": {"$ref": "#/$defs/metrics"},
+        "candidate_metrics": {"$ref": "#/$defs/metrics"},
+        "gain": {"$ref": "#/$defs/metrics"}
+      }
+    },
+    "rollback": {
+      "type": "object", "additionalProperties": false,
+      "required": ["checkpoint_path", "checkpoint_sha256"],
+      "properties": {
+        "checkpoint_path": {"type": "string", "minLength": 1},
+        "checkpoint_sha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "full_model_training": {"const": false}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "metrics": {
+      "type": "object", "additionalProperties": false,
+      "required": ["pixel_recall", "mask_iou", "boundary_f1"],
+      "properties": {
+        "pixel_recall": {"type": "number"},
+        "mask_iou": {"type": "number"},
+        "boundary_f1": {"type": "number"}
+      }
+    }
+  }
+}

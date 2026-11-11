@@ -53,21 +53,24 @@ def blocked_smoke(plan_path: Path, manifest_path: Path):
         "backend": plan["distributed"]["backend"],
         "selected_route": plan["strategy"]["selected_route"],
         "full_model_post_training_selected": False,
-        "stage0_trainable_prefixes": plan["model"]["stage0_trainable_prefixes"],
+        "verified_trainable_scope": plan["model"]["verified_trainable_scope"],
+        "stage0_is_minimal_baseline": plan["model"]["stage0_is_minimal_baseline"],
         "stage0_is_final_upper_bound": plan["model"]["stage0_is_final_upper_bound"],
-        "future_candidate_prefixes": plan["model"]["future_candidate_prefixes"],
+        "unverified_module_claims": plan["model"]["unverified_module_claims"],
         "staged_unfreeze": {
             "config": plan["staged_unfreeze_config"],
-            "stage_names": [item["name"] for item in staged["stages"]],
-            "runtime_named_parameters_verified": staged["inventory"][
-                "runtime_named_parameters_verified"
+            "current_stage": staged["current_verified_stage"],
+            "conditional_expansion": staged["conditional_expansion"],
+            "dual_5090_named_parameters_verified": staged["runtime_inventory_gate"][
+                "dual_5090_named_parameters_verified"
             ],
-            "forward_backward_dependency_verified": staged["inventory"][
+            "forward_backward_dependency_verified": staged["runtime_inventory_gate"][
                 "forward_backward_dependency_verified"
             ],
             "holdout_metrics": staged["holdout_gate"]["required_metrics"],
             "threshold_status": staged["holdout_gate"]["threshold_status"],
-            "lora_claim_allowed": staged["adapter_policy"]["lora_claim_allowed"],
+            "unverified_module_policy": staged["unverified_module_policy"],
+            "full_model_policy": staged["full_model_policy"],
         },
         "without_human_truth_allowed": plan["launch_gate"]["without_human_truth_allowed"],
         "without_human_truth_forbidden": plan["launch_gate"]["without_human_truth_forbidden"],

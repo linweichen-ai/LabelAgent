@@ -2,25 +2,38 @@
   "schema_version": "labelagent.sam3-peft-plan.v1",
   "execution_enabled": false,
   "blocked_reason": "genuine human-confirmed _annotations.coco.json and live dual-5090 DDP smoke are not available",
-  "base_training_config": "source/sam3/sam3/train/configs/roboflow_v100/roboflow_v100_full_ft_100_images.yaml",
+  "base_training_config_reference_only": "source/sam3/sam3/train/configs/roboflow_v100/roboflow_v100_full_ft_100_images.yaml",
+  "base_config_requires_freeze_override": true,
   "staged_unfreeze_config": "configs/sam3_sfl_cpd15y_staged_unfreeze.json",
   "strategy": {
     "selected_route": "supervised_parameter_efficient_finetuning",
     "post_training_taxonomy": "peft_is_a_specific_supervised_post_training_subtype",
     "rejected_route": "ambiguous_or_full_model_post_training",
-    "phase1_goal": "validate_mask_segmentation_adaptation_before_any_broader_unfreezing",
-    "broader_unfreezing_policy": "evaluate_only_after_truth_scale_expands_and_peft_bottleneck_is_demonstrated"
+    "phase1_goal": "validate_mask_embed_stage0_before_any_conditional_expansion",
+    "broader_unfreezing_policy": "conditional_only_after_dual_5090_named_parameters_human_truth_and_fixed_holdout_baseline"
   },
   "model": {
     "checkpoint_source": "existing_verified_sam3_checkpoint_only",
     "load_from_hf": false,
     "enable_segmentation": true,
     "freeze_prefixes": ["backbone.vision_backbone.", "backbone.language_backbone."],
-    "stage0_trainable_prefixes": ["segmentation_head.mask_predictor.mask_embed."],
+    "verified_trainable_scope": {
+      "status": "only_currently_verified_scope",
+      "prefixes": ["segmentation_head.mask_predictor.mask_embed."]
+    },
+    "stage0_is_minimal_baseline": true,
     "stage0_is_final_upper_bound": false,
-    "future_candidate_prefixes": ["segmentation_head.", "geometry_encoder.", "transformer.decoder.layers.<runtime_upper_indices>.", "transformer.decoder.norm."],
-    "phase1_trainable_families": ["mask_decoder", "segmentation_head", "verified_adapters_only"],
-    "adapter_status": "not_verified_in_current_source",
+    "conditional_expansion": {
+      "enabled": false,
+      "predeclared_trainable_prefixes": [],
+      "requires": ["dual_5090_named_parameters_inventory", "genuine_human_truth_version", "fixed_holdout_baseline"],
+      "may_target_only_after_runtime_confirmation": ["confirmed_upper_decoder_named_parameters", "newly_implemented_and_verified_adapter_named_parameters"]
+    },
+    "unverified_module_claims": {
+      "mask_decoder_trainable": false,
+      "adapter_exists_or_trainable": false,
+      "lora_exists_or_trainable": false
+    },
     "full_model_training": false
   },
   "loss": {

@@ -2,28 +2,42 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "execution_enabled", "blocked_reason", "base_training_config", "staged_unfreeze_config", "strategy", "model", "loss", "data", "distributed", "budget", "checkpointing", "launch_gate"],
+  "required": ["schema_version", "execution_enabled", "blocked_reason", "base_training_config_reference_only", "base_config_requires_freeze_override", "staged_unfreeze_config", "strategy", "model", "loss", "data", "distributed", "budget", "checkpointing", "launch_gate"],
   "properties": {
     "schema_version": {"const": "labelagent.sam3-peft-plan.v1"},
     "execution_enabled": {"const": false},
     "blocked_reason": {"type": "string", "minLength": 1},
-    "base_training_config": {"const": "source/sam3/sam3/train/configs/roboflow_v100/roboflow_v100_full_ft_100_images.yaml"},
+    "base_training_config_reference_only": {"const": "source/sam3/sam3/train/configs/roboflow_v100/roboflow_v100_full_ft_100_images.yaml"},
+    "base_config_requires_freeze_override": {"const": true},
     "staged_unfreeze_config": {"const": "configs/sam3_sfl_cpd15y_staged_unfreeze.json"},
     "strategy": {"type": "object", "additionalProperties": false, "required": ["selected_route", "post_training_taxonomy", "rejected_route", "phase1_goal", "broader_unfreezing_policy"], "properties": {
       "selected_route": {"const": "supervised_parameter_efficient_finetuning"},
       "post_training_taxonomy": {"const": "peft_is_a_specific_supervised_post_training_subtype"},
       "rejected_route": {"const": "ambiguous_or_full_model_post_training"},
-      "phase1_goal": {"const": "validate_mask_segmentation_adaptation_before_any_broader_unfreezing"},
-      "broader_unfreezing_policy": {"const": "evaluate_only_after_truth_scale_expands_and_peft_bottleneck_is_demonstrated"}
+      "phase1_goal": {"const": "validate_mask_embed_stage0_before_any_conditional_expansion"},
+      "broader_unfreezing_policy": {"const": "conditional_only_after_dual_5090_named_parameters_human_truth_and_fixed_holdout_baseline"}
     }},
-    "model": {"type": "object", "additionalProperties": false, "required": ["checkpoint_source", "load_from_hf", "enable_segmentation", "freeze_prefixes", "stage0_trainable_prefixes", "stage0_is_final_upper_bound", "future_candidate_prefixes", "phase1_trainable_families", "adapter_status", "full_model_training"], "properties": {
+    "model": {"type": "object", "additionalProperties": false, "required": ["checkpoint_source", "load_from_hf", "enable_segmentation", "freeze_prefixes", "verified_trainable_scope", "stage0_is_minimal_baseline", "stage0_is_final_upper_bound", "conditional_expansion", "unverified_module_claims", "full_model_training"], "properties": {
       "checkpoint_source": {"const": "existing_verified_sam3_checkpoint_only"}, "load_from_hf": {"const": false}, "enable_segmentation": {"const": true},
       "freeze_prefixes": {"const": ["backbone.vision_backbone.", "backbone.language_backbone."]},
-      "stage0_trainable_prefixes": {"const": ["segmentation_head.mask_predictor.mask_embed."]},
+      "verified_trainable_scope": {"type": "object", "additionalProperties": false, "required": ["status", "prefixes"], "properties": {
+        "status": {"const": "only_currently_verified_scope"},
+        "prefixes": {"const": ["segmentation_head.mask_predictor.mask_embed."]}
+      }},
+      "stage0_is_minimal_baseline": {"const": true},
       "stage0_is_final_upper_bound": {"const": false},
-      "future_candidate_prefixes": {"const": ["segmentation_head.", "geometry_encoder.", "transformer.decoder.layers.<runtime_upper_indices>.", "transformer.decoder.norm."]},
-      "phase1_trainable_families": {"const": ["mask_decoder", "segmentation_head", "verified_adapters_only"]},
-      "adapter_status": {"const": "not_verified_in_current_source"}, "full_model_training": {"const": false}
+      "conditional_expansion": {"type": "object", "additionalProperties": false, "required": ["enabled", "predeclared_trainable_prefixes", "requires", "may_target_only_after_runtime_confirmation"], "properties": {
+        "enabled": {"const": false},
+        "predeclared_trainable_prefixes": {"const": []},
+        "requires": {"const": ["dual_5090_named_parameters_inventory", "genuine_human_truth_version", "fixed_holdout_baseline"]},
+        "may_target_only_after_runtime_confirmation": {"const": ["confirmed_upper_decoder_named_parameters", "newly_implemented_and_verified_adapter_named_parameters"]}
+      }},
+      "unverified_module_claims": {"type": "object", "additionalProperties": false, "required": ["mask_decoder_trainable", "adapter_exists_or_trainable", "lora_exists_or_trainable"], "properties": {
+        "mask_decoder_trainable": {"const": false},
+        "adapter_exists_or_trainable": {"const": false},
+        "lora_exists_or_trainable": {"const": false}
+      }},
+      "full_model_training": {"const": false}
     }},
     "loss": {"type": "object", "additionalProperties": false, "required": ["required_class", "required_terms", "status"], "properties": {
       "required_class": {"const": "sam3.train.loss.loss_fns.Masks"}, "required_terms": {"const": ["loss_mask", "loss_dice"]},

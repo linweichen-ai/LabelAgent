@@ -4,62 +4,65 @@ from tools.sam3_trainable_inventory import inventory_named_parameters, set_train
 
 
 class FakeParameter:
-    def __init__(self):
+    def __init__(self, count):
         self.requires_grad = True
+        self.count = count
+
+    def numel(self):
+        return self.count
 
 
 class FakeSam3:
     def __init__(self):
-        names = [
-            "backbone.vision_backbone.blocks.0.weight",
-            "backbone.language_backbone.encoder.weight",
-            "segmentation_head.mask_predictor.mask_embed.layers.0.weight",
-            "segmentation_head.pixel_decoder.conv_layers.0.weight",
-            "geometry_encoder.label_embed.weight",
-            "geometry_encoder.points_direct_project.weight",
-            "transformer.decoder.layers.0.self_attn.weight",
-            "transformer.decoder.layers.1.self_attn.weight",
-            "transformer.decoder.layers.2.self_attn.weight",
-            "transformer.decoder.layers.3.self_attn.weight",
-            "transformer.decoder.norm.weight",
+        specs = [
+            ("backbone.vision_backbone.blocks.0.weight", 100),
+            ("backbone.language_backbone.encoder.weight", 200),
+            ("segmentation_head.mask_predictor.mask_embed.layers.0.weight", 30),
+            ("segmentation_head.pixel_decoder.conv_layers.0.weight", 40),
+            ("transformer.decoder.layers.0.self_attn.weight", 50),
+            ("transformer.decoder.layers.1.self_attn.weight", 60),
         ]
-        self.parameters = [(name, FakeParameter()) for name in names]
+        self.parameters = [(name, FakeParameter(count)) for name, count in specs]
 
     def named_parameters(self):
         return iter(self.parameters)
 
 
 class Sam3TrainableInventoryTests(unittest.TestCase):
-    def test_inventory_uses_real_names_and_derives_upper_decoder_half(self):
+    def test_inventory_reports_exact_stage0_and_keeps_decoder_inventory_unauthorized(self):
         inventory = inventory_named_parameters(FakeSam3())
-        self.assertEqual(inventory["decoder_layer_indices"], [0, 1, 2, 3])
-        self.assertEqual(inventory["runtime_upper_decoder_indices"], [2, 3])
-        self.assertEqual(inventory["groups"]["stage0_mask_embed"]["parameter_count"], 1)
-        self.assertEqual(inventory["groups"]["stage1_full_segmentation_head"]["parameter_count"], 2)
-        self.assertEqual(inventory["groups"]["stage2_geometry_prompt_encoder"]["parameter_count"], 2)
-        self.assertEqual(inventory["adapter_or_lora_parameters"], [])
-        self.assertFalse(inventory["stage0_is_final_upper_bound"])
+        stage0 = inventory["verified_stage0_scope"]
+        self.assertEqual(stage0["names"], [
+            "segmentation_head.mask_predictor.mask_embed.layers.0.weight"
+        ])
+        self.assertEqual(stage0["tensor_count"], 1)
+        self.assertEqual(stage0["parameter_count"], 30)
+        conditional = inventory["conditional_inventory_only"]
+        self.assertFalse(conditional["authorized_for_training"])
+        self.assertEqual(conditional["decoder_like"]["tensor_count"], 2)
+        self.assertEqual(conditional["adapter_or_lora_like"]["names"], [])
+        self.assertFalse(inventory["conditional_expansion_enabled"])
+        self.assertFalse(inventory["full_model_training_enabled"])
 
-    def test_each_stage_is_reversible_and_backbones_remain_frozen(self):
+    def test_only_stage0_can_be_enabled_and_everything_else_remains_frozen(self):
         model = FakeSam3()
         stage0 = set_trainable_stage(model, 0)
         self.assertEqual(stage0["trainable_names"], [
             "segmentation_head.mask_predictor.mask_embed.layers.0.weight"
         ])
-        stage1 = set_trainable_stage(model, 1)
-        self.assertIn("segmentation_head.pixel_decoder.conv_layers.0.weight",
-                      stage1["trainable_names"])
-        stage2 = set_trainable_stage(model, 2)
-        self.assertIn("geometry_encoder.label_embed.weight", stage2["trainable_names"])
-        stage3 = set_trainable_stage(model, 3)
-        self.assertIn("transformer.decoder.layers.2.self_attn.weight",
-                      stage3["trainable_names"])
-        self.assertNotIn("transformer.decoder.layers.0.self_attn.weight",
-                         stage3["trainable_names"])
-        self.assertFalse(dict(model.parameters)[
-            "backbone.vision_backbone.blocks.0.weight"].requires_grad)
-        self.assertFalse(dict(model.parameters)[
-            "backbone.language_backbone.encoder.weight"].requires_grad)
+        self.assertEqual(stage0["trainable_parameter_count"], 30)
+        states = {name: parameter.requires_grad for name, parameter in model.parameters}
+        self.assertTrue(states[
+            "segmentation_head.mask_predictor.mask_embed.layers.0.weight"])
+        self.assertFalse(states[
+            "segmentation_head.pixel_decoder.conv_layers.0.weight"])
+        self.assertFalse(states["transformer.decoder.layers.1.self_attn.weight"])
+        self.assertFalse(states["backbone.vision_backbone.blocks.0.weight"])
+        self.assertFalse(states["backbone.language_backbone.encoder.weight"])
+
+    def test_broader_stage_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "only Stage-0 is authorized"):
+            set_trainable_stage(FakeSam3(), 1)
 
 
 if __name__ == "__main__":

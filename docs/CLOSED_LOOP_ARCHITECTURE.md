@@ -110,4 +110,4 @@ unknown 候选至少记录：建议名称/同义词、证据图或掩码及哈�
 
 ## SAM3 监督微调启动门禁
 
-当前路线锁定为参数高效的 SAM3 监督微调：冻结大图像/语言骨干，只训练 segmentation heads/adapters；获批后使用双 5090 DDP，不进行全模型 post-training。72/24 机器预标注与 BEV 3D boxes 只允许作为 prompt、ROI 或 candidate，不能作为人工真值。`test24` 和固定 640 holdout 永久排除训练。只有真实人工确认像素 mask 完成导出、不可变版本化、train/val/test 隔离和最终 manifest 回读后，独立训练门禁才可把 `formal_training_authorized` 设为 true。详见 [`SAM3_PEFT_TRAINING_GATE.md`](SAM3_PEFT_TRAINING_GATE.md)。
+当前路线锁定为参数高效的 SAM3 监督微调：冻结大图像/语言骨干；当前源码实际验证的首选范围仅为 `segmentation_head.mask_predictor.mask_embed.*`，adapter 尚未验证，不能声称已支持。获批后使用双 5090 DDP，不进行全模型 post-training。72/24 机器预标注与 BEV 3D boxes 只允许作为 prompt、ROI 或 candidate，不能作为人工真值。`test24` 和固定 640 holdout 永久排除训练。只有真实人工确认像素 mask 完成导出、不可变版本化、train/val/test 隔离和最终 manifest 回读后，独立训练门禁才可把 `formal_training_authorized` 设为 true。详见 [`SAM3_PEFT_TRAINING_GATE.md`](SAM3_PEFT_TRAINING_GATE.md)。

@@ -7,7 +7,7 @@ HEX64 = re.compile(r"^[0-9a-f]{64}$")
 ROUTE = "supervised_parameter_efficient_sam3"
 TRUTH_SOURCE = "human_confirmed_pixel_masks"
 REQUIRED_HOLDOUTS = {"test24", "fixed_640_holdout"}
-ALLOWED_TRAINABLE_COMPONENTS = {"segmentation_heads", "adapters"}
+ALLOWED_TRAINABLE_COMPONENTS = {"segmentation_head.mask_predictor.mask_embed"}
 
 
 def _hash_or_none(value):
@@ -37,7 +37,9 @@ def validate_training_manifest(manifest):
         components = strategy.get("trainable_components")
         if (not isinstance(components, list) or not components
                 or not set(components) <= ALLOWED_TRAINABLE_COMPONENTS):
-            errors.append("only segmentation heads and adapters may be trainable")
+            errors.append("only the source-verified mask-embedding head may be trainable")
+        if strategy.get("adapter_status") != "not_verified_in_current_source":
+            errors.append("adapter support must remain unverified until implemented and tested")
 
     distributed = manifest.get("distributed")
     if not isinstance(distributed, dict):

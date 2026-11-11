@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/sam3-peft-preflight.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "source_support", "module_plan", "data_inventory", "isolation", "ddp_check", "resource_budget", "formal_training"],
+  "properties": {
+    "schema_version": {"const": "labelagent.sam3-peft-preflight.v1"},
+    "status": {"const": "configuration_validated_training_blocked"},
+    "source_support": {
+      "type": "array", "minItems": 5,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["path", "sha256", "verified_fact"],
+        "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"$ref": "#/$defs/hash"}, "verified_fact": {"type": "string", "minLength": 1}}
+      }
+    },
+    "module_plan": {
+      "type": "object", "additionalProperties": false,
+      "required": ["freeze_image_backbone", "freeze_language_backbone", "trainable_prefix", "adapter_status", "segmentation_enabled_required", "mask_loss_required"],
+      "properties": {
+        "freeze_image_backbone": {"const": true},
+        "freeze_language_backbone": {"const": true},
+        "trainable_prefix": {"const": "segmentation_head.mask_predictor.mask_embed."},
+        "adapter_status": {"const": "not_verified_in_current_source"},
+        "segmentation_enabled_required": {"const": true},
+        "mask_loss_required": {"const": true}
+      }
+    },
+    "data_inventory": {
+      "type": "object", "additionalProperties": false,
+      "required": ["local_workspace_preannotations", "local_workspace_human_annotations", "remote_current_status", "historical_snapshot", "truth_gate"],
+      "properties": {
+        "local_workspace_preannotations": {"const": 0},
+        "local_workspace_human_annotations": {"const": 0},
+        "remote_current_status": {"const": "unverified_ssh_authentication_failed"},
+        "historical_snapshot": {"const": "96_images_72_train_24_test_preannotations_only_not_current_readback"},
+        "truth_gate": {"const": "blocked_no_human_annotations_coco"}
+      }
+    },
+    "isolation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["train72_truth_eligible", "test24_in_training", "fixed_640_holdout_in_training"],
+      "properties": {
+        "train72_truth_eligible": {"const": false},
+        "test24_in_training": {"const": false},
+        "fixed_640_holdout_in_training": {"const": false}
+      }
+    },
+    "ddp_check": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_support", "planned_backend", "planned_world_size", "live_dual_5090_smoke", "process_started"],
+      "properties": {
+        "source_support": {"const": "verified_static"},
+        "planned_backend": {"const": "nccl"},
+        "planned_world_size": {"const": 2},
+        "live_dual_5090_smoke": {"const": "blocked_ssh_authentication_failed"},
+        "process_started": {"const": false}
+      }
+    },
+    "resource_budget": {
+      "type": "object", "additionalProperties": false,
+      "required": ["per_gpu_batch_size", "precision", "gradient_accumulation", "activation_checkpointing", "measured_peak_vram_mib", "first_batch_measurement_required", "oom_policy"],
+      "properties": {
+        "per_gpu_batch_size": {"const": 1},
+        "precision": {"const": "bf16_pending_live_support_readback"},
+        "gradient_accumulation": {"const": 1},
+        "activation_checkpointing": {"const": true},
+        "measured_peak_vram_mib": {"type": "null"},
+        "first_batch_measurement_required": {"const": true},
+        "oom_policy": {"const": "stop_and_reduce_budget_no_silent_full_model_fallback"}
+      }
+    },
+    "formal_training": {
+      "type": "object", "additionalProperties": false,
+      "required": ["authorized", "started", "pid_or_job", "first_batch_loss", "checkpoint", "gpu_post_state"],
+      "properties": {
+        "authorized": {"const": false}, "started": {"const": false},
+        "pid_or_job": {"type": "null"}, "first_batch_loss": {"type": "null"},
+        "checkpoint": {"type": "null"}, "gpu_post_state": {"const": "not_applicable_no_process_started"}
+      }
+    }
+  },
+  "$defs": {"hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

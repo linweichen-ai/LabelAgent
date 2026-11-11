@@ -37,6 +37,15 @@ class TrainingGateTests(unittest.TestCase):
         self.assertIn("full-model training is forbidden by the current decision", errors)
         self.assertIn("image backbone must remain frozen", errors)
 
+    def test_unverified_adapter_cannot_be_claimed_as_trainable(self):
+        manifest = copy.deepcopy(self.blocked)
+        manifest["evidence_scope"] = "synthetic_test_only"
+        manifest["model_strategy"]["trainable_components"] = ["adapters"]
+        manifest["model_strategy"]["adapter_status"] = "supported"
+        errors = validate_training_manifest(manifest)
+        self.assertIn("only the source-verified mask-embedding head may be trainable", errors)
+        self.assertIn("adapter support must remain unverified until implemented and tested", errors)
+
     def test_protected_holdouts_cannot_enter_training(self):
         manifest = copy.deepcopy(self.blocked)
         manifest["evidence_scope"] = "synthetic_test_only"

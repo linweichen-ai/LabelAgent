@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/slope-policy-correction-event.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "event_type", "occurred_at", "immutable", "supersedes", "source", "correction", "claim_boundary"],
+  "properties": {
+    "schema_version": {"const": "labelagent.slope-policy-correction-event.v1"},
+    "event_type": {"const": "policy.corrected"},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "immutable": {"const": true},
+    "supersedes": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifact", "sha256", "artifact_modified"],
+      "properties": {
+        "artifact": {"const": "vlm_slope_candidate_review.json"},
+        "sha256": {"$ref": "#/$defs/hash"},
+        "artifact_modified": {"const": false}
+      }
+    },
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dataset_id", "source_batch", "frame_id", "camera", "image_sha256", "overlay_sha256", "vlm_request_sha256"],
+      "properties": {
+        "dataset_id": {"const": "SFL-CPD15-Y"},
+        "source_batch": {"const": "20260920_cs-heli_Dev_000001/000"},
+        "frame_id": {"const": 0},
+        "camera": {"const": "camera_0"},
+        "image_sha256": {"$ref": "#/$defs/hash"},
+        "overlay_sha256": {"$ref": "#/$defs/hash"},
+        "vlm_request_sha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "correction": {
+      "type": "object", "additionalProperties": false,
+      "required": ["label_type", "semantic_label", "business_mapping", "downstream_mapping", "traversability_status", "policy_basis", "human_pixel_truth_available", "approved_for_training"],
+      "properties": {
+        "label_type": {"const": "slope"},
+        "semantic_label": {"const": "slope_visible"},
+        "business_mapping": {"const": "traversable_area"},
+        "downstream_mapping": {
+          "type": "object", "additionalProperties": false,
+          "required": ["operation", "source_labels", "target_label", "preserve_source_labels"],
+          "properties": {
+            "operation": {"const": "union"},
+            "source_labels": {"const": ["floor", "slope"]},
+            "target_label": {"const": "traversable_area"},
+            "preserve_source_labels": {"const": true}
+          }
+        },
+        "traversability_status": {"const": "passable"},
+        "policy_basis": {"const": "user_defined_project_semantics"},
+        "human_pixel_truth_available": {"const": false},
+        "approved_for_training": {"const": false}
+      }
+    },
+    "claim_boundary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["machine_candidate_only", "truth_committed", "training_ready"],
+      "properties": {
+        "machine_candidate_only": {"const": true},
+        "truth_committed": {"const": false},
+        "training_ready": {"const": false}
+      }
+    }
+  },
+  "$defs": {"hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

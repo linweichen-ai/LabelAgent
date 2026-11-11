@@ -1,0 +1,55 @@
+{
+  "schema_version": "labelagent.sam3-peft-preflight.v1",
+  "status": "configuration_validated_training_blocked",
+  "source_support": [
+    {"path": "source/sam3/sam3/model/maskformer_segmentation.py", "sha256": "f2f6b7afe03b574a4ea9265a21914ea5f089a4007a22e408675216e82b1c1484", "verified_fact": "MaskPredictor owns mask_embed"},
+    {"path": "source/sam3/sam3/model/sam3_image.py", "sha256": "baf67f45a914d9c377c850d52ed083db8924943775f5884b9fd7a5d65b8637d1", "verified_fact": "Sam3Image owns segmentation_head"},
+    {"path": "source/sam3/sam3/train/trainer.py", "sha256": "aaa4a324b54ed69e5ba081ceb913e9bf2cd8320f5c86219a4ce8e69efd56bb93", "verified_fact": "Trainer wraps the model with DistributedDataParallel"},
+    {"path": "source/sam3/sam3/train/train.py", "sha256": "4ac0ed01c0b3eb76769f772f55311df0580bc34f38066b39ce8de5f79eae5839", "verified_fact": "single-node launcher spawns gpus_per_node processes and sets WORLD_SIZE"},
+    {"path": "source/sam3/sam3/train/configs/roboflow_v100/roboflow_v100_full_ft_100_images.yaml", "sha256": "ccd1c200fec949890c4c06ba299b34ce73b82ef6cafe70bc6edfe9707fce96d0", "verified_fact": "example uses _annotations.coco.json and two GPUs but defaults segmentation off with mask loss commented"}
+  ],
+  "module_plan": {
+    "freeze_image_backbone": true,
+    "freeze_language_backbone": true,
+    "trainable_prefix": "segmentation_head.mask_predictor.mask_embed.",
+    "adapter_status": "not_verified_in_current_source",
+    "segmentation_enabled_required": true,
+    "mask_loss_required": true
+  },
+  "data_inventory": {
+    "local_workspace_preannotations": 0,
+    "local_workspace_human_annotations": 0,
+    "remote_current_status": "unverified_ssh_authentication_failed",
+    "historical_snapshot": "96_images_72_train_24_test_preannotations_only_not_current_readback",
+    "truth_gate": "blocked_no_human_annotations_coco"
+  },
+  "isolation": {
+    "train72_truth_eligible": false,
+    "test24_in_training": false,
+    "fixed_640_holdout_in_training": false
+  },
+  "ddp_check": {
+    "source_support": "verified_static",
+    "planned_backend": "nccl",
+    "planned_world_size": 2,
+    "live_dual_5090_smoke": "blocked_ssh_authentication_failed",
+    "process_started": false
+  },
+  "resource_budget": {
+    "per_gpu_batch_size": 1,
+    "precision": "bf16_pending_live_support_readback",
+    "gradient_accumulation": 1,
+    "activation_checkpointing": true,
+    "measured_peak_vram_mib": null,
+    "first_batch_measurement_required": true,
+    "oom_policy": "stop_and_reduce_budget_no_silent_full_model_fallback"
+  },
+  "formal_training": {
+    "authorized": false,
+    "started": false,
+    "pid_or_job": null,
+    "first_batch_loss": null,
+    "checkpoint": null,
+    "gpu_post_state": "not_applicable_no_process_started"
+  }
+}

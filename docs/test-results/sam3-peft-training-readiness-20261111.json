@@ -6,7 +6,8 @@
     "full_model_training": false,
     "freeze_image_backbone": true,
     "freeze_language_backbone": true,
-    "trainable_components": ["segmentation_heads", "adapters"]
+    "trainable_components": ["segmentation_head.mask_predictor.mask_embed"],
+    "adapter_status": "not_verified_in_current_source"
   },
   "distributed": {
     "strategy": "ddp",

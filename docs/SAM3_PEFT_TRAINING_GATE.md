@@ -1,6 +1,6 @@
 # SAM3 参数高效监督微调门禁
 
-当前训练路线锁定为 supervised parameter-efficient SAM3 fine-tuning，不进行大范围或全模型 post-training。大图像骨干和语言骨干冻结，只训练 segmentation heads/adapters；正式训练获批后使用双 5090 DDP（world size 2）。
+当前训练路线锁定为 supervised parameter-efficient SAM3 fine-tuning，不进行大范围或全模型 post-training。大图像骨干和语言骨干冻结；当前源码已能精确确认的首选可训练范围是 `segmentation_head.mask_predictor.mask_embed.*`。源码中尚未找到经过验证的通用 adapter/LoRA 接入，因此 adapter 当前记为 `not_verified_in_current_source`，不能写成已支持。正式训练获批后使用双 5090 DDP（world size 2）。
 
 当前状态仍是 `formal_training_authorized=false`、`formal_training_started=false`。原因不是服务或算力不足，而是真实人工确认的像素 mask 尚未完成导出、不可变版本化和 split 隔离核验。
 
@@ -20,7 +20,7 @@
 2. 真值已生成不可变 `version_id` 和 manifest SHA-256；
 3. train/val/test 按序列或实体隔离并完成无泄漏核验；
 4. `test24` 与固定 640 holdout 的排除关系已经对最终训练 manifest 回读确认；
-5. 配置明确冻结 image/language backbone，仅开放 segmentation heads/adapters；
+5. 配置明确冻结 image/language backbone，当前仅开放源码实际存在并经过前缀核验的 mask-embedding head；若以后加入 adapter，必须先补实现、参数清单和冻结回归；
 6. 双 5090 DDP 配置为 `world_size=2`；
 7. 机器可读门禁返回零错误且 `formal_training_authorized=true`。
 

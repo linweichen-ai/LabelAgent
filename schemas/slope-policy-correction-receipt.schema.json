@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/slope-policy-correction-receipt.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "validated_at", "event", "schema", "superseded_artifact_readback", "validation"],
+  "properties": {
+    "schema_version": {"const": "labelagent.slope-policy-correction-receipt.v1"},
+    "validated_at": {"type": "string", "format": "date-time"},
+    "event": {"$ref": "#/$defs/artifact"},
+    "schema": {"$ref": "#/$defs/artifact"},
+    "superseded_artifact_readback": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifact", "expected_sha256", "actual_sha256", "unchanged"],
+      "properties": {
+        "artifact": {"const": "vlm_slope_candidate_review.json"},
+        "expected_sha256": {"$ref": "#/$defs/hash"},
+        "actual_sha256": {"$ref": "#/$defs/hash"},
+        "unchanged": {"const": true}
+      }
+    },
+    "validation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["validator", "draft", "exact_file_validated", "error_count", "status"],
+      "properties": {
+        "validator": {"const": "jsonschema"},
+        "draft": {"const": "2020-12"},
+        "exact_file_validated": {"const": true},
+        "error_count": {"const": 0},
+        "status": {"const": "passed"}
+      }
+    }
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "artifact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"$ref": "#/$defs/hash"}}
+    }
+  }
+}

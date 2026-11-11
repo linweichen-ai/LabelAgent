@@ -1,0 +1,36 @@
+{
+  "schema_version": "labelagent.fixed-holdout-chain-readback.v1",
+  "readback_scope": "existing_real_model_run_no_duplicate_inference",
+  "input": {
+    "input_id": "bc706b57eedaea59e3deda1e25eb5a20002e90b61089083e84d2f98130c5600b",
+    "source_batch": "20260920_cs-heli_Dev_000001/000",
+    "frame_id": "1789897506782450197",
+    "camera": "camera_0",
+    "width": 640,
+    "height": 512,
+    "image_sha256": "34e5094d24db487b3fcd5c458ac810cde5d58293f89fe0b92a2933c72a146812",
+    "holdout_excluded_from_training": true
+  },
+  "steps": [
+    {"name": "sam_candidate_and_first_vlm", "artifact": "fixed-holdout-1789897506782450197-v2/phase-first-receipt.json", "sha256": "483727455aab44b9fbf6804373d32b95cb0468ac6bc83477dfda6b8cc0cdabff"},
+    {"name": "sam_overlay", "artifact": "fixed-holdout-1789897506782450197-v2/sam-candidate-overlay.png", "sha256": "dcd2aa0ac34c653f21afe47945e9a432f368d446e2ece69d1a69fecc51797323"},
+    {"name": "first_vlm_response", "artifact": "fixed-holdout-1789897506782450197-v2/vlm-first-response.json", "sha256": "a2a7925cb8fe2c288aed8ad889c6bf4536d8cdf92da3fbe45c63b49e929b48c9"},
+    {"name": "agent_no_op", "artifact": "fixed-holdout-1789897506782450197-v3/agent-action.json", "sha256": "43588d4fd9ff33cf65395be539a3f0c57b1ceb17b38dd24918cdf95b90750efe"},
+    {"name": "independent_vlm_recheck", "artifact": "fixed-holdout-1789897506782450197-v3/vlm-second-response.json", "sha256": "80d114efb770a871740deb4a32faa712af351f189a252b991e1d9f5bd157bac6"},
+    {"name": "model_chain_receipt", "artifact": "fixed-holdout-1789897506782450197-v3/final-chain-receipt.json", "sha256": "9a8c9a2b843b99b4ace3472eda2f86a90eede5a66934ba7882a18381861f37b7"},
+    {"name": "human_gate_routing", "artifact": "fixed-holdout-1789897506782450197-v3/workflow-routing-correction.json", "sha256": "5f8bd58b2887f8907469b3e6d72d57a966b288c25029e30a438360813daf2444"}
+  ],
+  "result": {
+    "candidate_class": "slope",
+    "agent_action": "no_op",
+    "second_vlm_action": "no_op",
+    "second_vlm_candidate_supported": true,
+    "candidate_state": "candidate_final",
+    "workflow_state": "human_review_required",
+    "human_pixel_truth_available": false,
+    "human_gate_passed": false,
+    "truth_committed": false,
+    "training_ready": false,
+    "truth_or_version_artifacts_found": 0
+  }
+}

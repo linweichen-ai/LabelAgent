@@ -11,12 +11,13 @@
     "training_route": {"const": "supervised_parameter_efficient_sam3"},
     "model_strategy": {
       "type": "object", "additionalProperties": false,
-      "required": ["full_model_training", "freeze_image_backbone", "freeze_language_backbone", "trainable_components"],
+      "required": ["full_model_training", "freeze_image_backbone", "freeze_language_backbone", "trainable_components", "adapter_status"],
       "properties": {
         "full_model_training": {"const": false},
         "freeze_image_backbone": {"const": true},
         "freeze_language_backbone": {"const": true},
-        "trainable_components": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["segmentation_heads", "adapters"]}}
+        "trainable_components": {"const": ["segmentation_head.mask_predictor.mask_embed"]},
+        "adapter_status": {"const": "not_verified_in_current_source"}
       }
     },
     "distributed": {

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/factory-labelagent-orchestration-ledger.schema.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "ledger_id", "generated_at", "append_only", "overwrite_old_state", "silent_skip", "policy", "records", "traces", "queues", "source_accounting", "external_call_counts", "ledger_sha256"],
+  "properties": {
+    "schema_version": {"const": "labelagent.factory-orchestration-ledger.v1"},
+    "ledger_id": {"type": "string", "minLength": 1}, "generated_at": {"type": "string", "format": "date-time"},
+    "append_only": {"const": true}, "overwrite_old_state": {"const": false}, "silent_skip": {"const": false},
+    "policy": {"type": "object", "additionalProperties": false, "required": ["max_inflight", "retry_budget"], "properties": {"max_inflight": {"type": "integer", "minimum": 1}, "retry_budget": {"type": "integer", "minimum": 0}}},
+    "records": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["sequence", "event", "event_sha256", "previous_record_sha256", "record_sha256"], "properties": {"sequence": {"type": "integer", "minimum": 1}, "event": {"$ref": "https://labelagent.local/schemas/factory-labelagent-orchestration-event.schema.json"}, "event_sha256": {"$ref": "#/$defs/sha"}, "previous_record_sha256": {"oneOf": [{"$ref": "#/$defs/sha"}, {"type": "null"}]}, "record_sha256": {"$ref": "#/$defs/sha"}}}},
+    "traces": {"type": "object", "additionalProperties": {"type": "object", "additionalProperties": false, "required": ["stream_id", "event_count", "final_state", "final_operational_status"], "properties": {"stream_id": {"$ref": "#/$defs/sha"}, "event_count": {"type": "integer", "minimum": 1}, "final_state": {"type": "string"}, "final_operational_status": {"type": "string"}}}},
+    "queues": {"type": "object", "additionalProperties": false, "required": ["quarantine", "dead_letter", "backpressured", "retry_wait"], "properties": {"quarantine": {"type": "integer", "minimum": 0}, "dead_letter": {"type": "integer", "minimum": 0}, "backpressured": {"type": "integer", "minimum": 0}, "retry_wait": {"type": "integer", "minimum": 0}}},
+    "source_accounting": {"type": "object", "additionalProperties": false, "required": ["real", "simulation"], "properties": {"real": {"$ref": "#/$defs/accounting"}, "simulation": {"$ref": "#/$defs/accounting"}}},
+    "external_call_counts": {"type": "object", "additionalProperties": false, "required": ["sam", "vlm", "agent", "cvat", "gpu", "ssh", "oss", "training", "deployment"], "properties": {"sam": {"const": 0}, "vlm": {"const": 0}, "agent": {"const": 0}, "cvat": {"const": 0}, "gpu": {"const": 0}, "ssh": {"const": 0}, "oss": {"const": 0}, "training": {"const": 0}, "deployment": {"const": 0}}},
+    "ledger_sha256": {"$ref": "#/$defs/sha"}
+  },
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "accounting": {"type": "object", "additionalProperties": false, "required": ["streams", "events"], "properties": {"streams": {"type": "integer", "minimum": 0}, "events": {"type": "integer", "minimum": 0}}}}
+}

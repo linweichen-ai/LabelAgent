@@ -1,0 +1,78 @@
+{
+  "cnb_status": "pending_not_contacted",
+  "external_call_counts": {
+    "agent": 0,
+    "cvat": 0,
+    "deployment": 0,
+    "gpu": 0,
+    "oss": 0,
+    "sam": 0,
+    "ssh": 0,
+    "training": 0,
+    "vlm": 0
+  },
+  "generated_at": "2026-11-11T23:59:00+08:00",
+  "ledger_sha256": "d0c3528221e801d752467047b992d97b7b9ab0e69d3dbc892d745326dd85451e",
+  "recovered_streams": 4,
+  "replay_valid": true,
+  "report_sha256": "9f6e5ab798ee9a91ab2f075dae2f20dc6ac5e488693ae6253b1cb84a27e4ea05",
+  "safety": {
+    "append_only": true,
+    "backpressure_supported": true,
+    "cross_split_rejected": true,
+    "dead_letter_supported": true,
+    "deployments_performed": 0,
+    "floor_slope_separate": true,
+    "human_gate_enforced": true,
+    "idempotent_replay": true,
+    "illegal_transition_rejected": true,
+    "out_of_order_rejected": true,
+    "production_mutations": 0,
+    "quarantine_supported": true,
+    "real_sim_separate": true,
+    "retry_budget_enforced": true,
+    "silent_skip_forbidden": true,
+    "slope_in_traversable_union": true,
+    "training_runs_started": 0,
+    "truth_versions_created": 0
+  },
+  "schema_version": "labelagent.factory-orchestration-replay-report.v1",
+  "trace_results": [
+    {
+      "checkpoint_resume_verified": true,
+      "event_count": 7,
+      "expected_final_state": "human_review_required",
+      "final_state": "human_review_required",
+      "matches": true,
+      "stream_id": "ac0276fff97396bee7e4bb77c43c2d644111ed7ad9ed08cd022b1eab02867838",
+      "trace_id": "known_label_waiting_human"
+    },
+    {
+      "checkpoint_resume_verified": true,
+      "event_count": 2,
+      "expected_final_state": "quarantined",
+      "final_state": "quarantined",
+      "matches": true,
+      "stream_id": "22f9a634685c781a53b6d675dba4a54931d7d5bab84d7b005e5cbbb324654dd4",
+      "trace_id": "qc_failure_quarantined"
+    },
+    {
+      "checkpoint_resume_verified": true,
+      "event_count": 13,
+      "expected_final_state": "baseline_retained",
+      "final_state": "baseline_retained",
+      "matches": true,
+      "stream_id": "7d6314b068b1a8eb28c81facb86701b1dd0aff7eb4695d9dbd4d390a76b2896c",
+      "trace_id": "slope_regression_baseline_retained"
+    },
+    {
+      "checkpoint_resume_verified": true,
+      "event_count": 7,
+      "expected_final_state": "human_review_required",
+      "final_state": "human_review_required",
+      "matches": true,
+      "stream_id": "2b7f24b64cf0a1c1e04c21778963f64cbd42793b1e920cd3252222f0a521ee89",
+      "trace_id": "unknown_routes_human"
+    }
+  ]
+}

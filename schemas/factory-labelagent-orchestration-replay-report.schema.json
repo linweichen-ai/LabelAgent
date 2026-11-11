@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/factory-labelagent-orchestration-replay-report.schema.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "generated_at", "ledger_sha256", "replay_valid", "recovered_streams", "trace_results", "safety", "external_call_counts", "cnb_status", "report_sha256"],
+  "properties": {
+    "schema_version": {"const": "labelagent.factory-orchestration-replay-report.v1"},
+    "generated_at": {"type": "string", "format": "date-time"}, "ledger_sha256": {"$ref": "#/$defs/sha"},
+    "replay_valid": {"const": true}, "recovered_streams": {"const": 4},
+    "trace_results": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "object", "additionalProperties": false, "required": ["trace_id", "stream_id", "event_count", "final_state", "expected_final_state", "matches", "checkpoint_resume_verified"], "properties": {"trace_id": {"type": "string", "minLength": 1}, "stream_id": {"$ref": "#/$defs/sha"}, "event_count": {"type": "integer", "minimum": 1}, "final_state": {"type": "string"}, "expected_final_state": {"type": "string"}, "matches": {"const": true}, "checkpoint_resume_verified": {"const": true}}}},
+    "safety": {"type": "object", "additionalProperties": false, "required": ["append_only", "idempotent_replay", "out_of_order_rejected", "illegal_transition_rejected", "cross_split_rejected", "silent_skip_forbidden", "retry_budget_enforced", "dead_letter_supported", "quarantine_supported", "backpressure_supported", "human_gate_enforced", "real_sim_separate", "floor_slope_separate", "slope_in_traversable_union", "production_mutations", "truth_versions_created", "training_runs_started", "deployments_performed"], "properties": {"append_only": {"const": true}, "idempotent_replay": {"const": true}, "out_of_order_rejected": {"const": true}, "illegal_transition_rejected": {"const": true}, "cross_split_rejected": {"const": true}, "silent_skip_forbidden": {"const": true}, "retry_budget_enforced": {"const": true}, "dead_letter_supported": {"const": true}, "quarantine_supported": {"const": true}, "backpressure_supported": {"const": true}, "human_gate_enforced": {"const": true}, "real_sim_separate": {"const": true}, "floor_slope_separate": {"const": true}, "slope_in_traversable_union": {"const": true}, "production_mutations": {"const": 0}, "truth_versions_created": {"const": 0}, "training_runs_started": {"const": 0}, "deployments_performed": {"const": 0}}},
+    "external_call_counts": {"type": "object", "additionalProperties": false, "required": ["sam", "vlm", "agent", "cvat", "gpu", "ssh", "oss", "training", "deployment"], "properties": {"sam": {"const": 0}, "vlm": {"const": 0}, "agent": {"const": 0}, "cvat": {"const": 0}, "gpu": {"const": 0}, "ssh": {"const": 0}, "oss": {"const": 0}, "training": {"const": 0}, "deployment": {"const": 0}}},
+    "cnb_status": {"const": "pending_not_contacted"}, "report_sha256": {"$ref": "#/$defs/sha"}
+  },
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

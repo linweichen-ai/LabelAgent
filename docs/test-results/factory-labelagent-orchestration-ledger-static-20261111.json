@@ -1,0 +1,3473 @@
+{
+  "append_only": true,
+  "external_call_counts": {
+    "agent": 0,
+    "cvat": 0,
+    "deployment": 0,
+    "gpu": 0,
+    "oss": 0,
+    "sam": 0,
+    "ssh": 0,
+    "training": 0,
+    "vlm": 0
+  },
+  "generated_at": "2026-11-11T23:58:00+08:00",
+  "ledger_id": "factory-labelagent-static-orchestration-20261111",
+  "ledger_sha256": "d0c3528221e801d752467047b992d97b7b9ab0e69d3dbc892d745326dd85451e",
+  "overwrite_old_state": false,
+  "policy": {
+    "max_inflight": 32,
+    "retry_budget": 2
+  },
+  "queues": {
+    "backpressured": 0,
+    "dead_letter": 0,
+    "quarantine": 1,
+    "retry_wait": 0
+  },
+  "records": [
+    {
+      "event": {
+        "agent_action": "not_applicable",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "143574832069e622b26a7b6ca10d1a216d7ba09b31827fc13e6955e0db32855d",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "80f2eb73ad383d75987703361459bf3082b347cd7357880c2c21e1116625dfb4",
+            "uri": "example://static/ingested.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "0437632c82cc01cd3ebe2511481930920660338cf1d8cd7adf9d73b0216038b7",
+          "input_sha256": "28135036746be151b99c007b4dc9b855d3f1cd73ea39e8a4005be4cb18182dd1",
+          "model_sha256": null,
+          "output_sha256": "80f2eb73ad383d75987703361459bf3082b347cd7357880c2c21e1116625dfb4",
+          "prompt_sha256": null
+        },
+        "classification": "not_applicable",
+        "contract_refs": [
+          {
+            "artifact_sha256": "80f2eb73ad383d75987703361459bf3082b347cd7357880c2c21e1116625dfb4",
+            "artifact_uri": "example://static/contracts/known_label_waiting_human/ingested.json",
+            "contract_type": "factory_ingress",
+            "schema_path": "schemas/factory-data-ingress-event.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "5b0f30720ece0fe18e1fc80ac45e2d0896e8596188b79188c63125027c69ba52",
+        "event_key": "a5ab9da769384a1a30ff9d79ec0bce7eee01e29617a86d0cbe185c737565efbf",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": null,
+          "receipt_sha256": null,
+          "required": false,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "not_required"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_KNOWN",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:00:00+08:00",
+        "operational_status": "ready",
+        "previous_event_id": null,
+        "previous_state": null,
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "ingested",
+        "state_version": 1,
+        "stream_id": "ac0276fff97396bee7e4bb77c43c2d644111ed7ad9ed08cd022b1eab02867838",
+        "trace_id": "known_label_waiting_human",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "cda9a1acb2b302a4a0fabbc56affeb7a92432fbe630b9250915bd230ee05ddb9",
+      "previous_record_sha256": null,
+      "record_sha256": "c4afd1626ed487a4e9c8d7efd61630d83be98163ccdc137641cb97ce31f8e7f0",
+      "sequence": 1
+    },
+    {
+      "event": {
+        "agent_action": "not_applicable",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "143574832069e622b26a7b6ca10d1a216d7ba09b31827fc13e6955e0db32855d",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "7f5be49c2f79d17332d24e798a26c1ec06ce1968580599135b7fab6a80a707c6",
+            "uri": "example://static/qc_passed.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "bf1bfb0cf04b367cdc774a8fc436de137ac947ffd792ec083922281311144a15",
+          "input_sha256": "80f2eb73ad383d75987703361459bf3082b347cd7357880c2c21e1116625dfb4",
+          "model_sha256": null,
+          "output_sha256": "7f5be49c2f79d17332d24e798a26c1ec06ce1968580599135b7fab6a80a707c6",
+          "prompt_sha256": null
+        },
+        "classification": "not_applicable",
+        "contract_refs": [
+          {
+            "artifact_sha256": "7f5be49c2f79d17332d24e798a26c1ec06ce1968580599135b7fab6a80a707c6",
+            "artifact_uri": "example://static/contracts/known_label_waiting_human/qc_passed.json",
+            "contract_type": "factory_qc",
+            "schema_path": "schemas/factory-data-qc-event.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "1868e2b573bd2d0198d53993883073b898720648d290664cae08bab29e892121",
+        "event_key": "6d3b4ec6fc6630f646df6e658dea2075271e803c89f439da4ae2c5dbbe5f5691",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": null,
+          "receipt_sha256": null,
+          "required": false,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "not_required"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_KNOWN",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:00:01+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "5b0f30720ece0fe18e1fc80ac45e2d0896e8596188b79188c63125027c69ba52",
+        "previous_state": "ingested",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "qc_passed",
+        "state_version": 2,
+        "stream_id": "ac0276fff97396bee7e4bb77c43c2d644111ed7ad9ed08cd022b1eab02867838",
+        "trace_id": "known_label_waiting_human",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "b930f851d83346671102ea20c72840d40718425b4827833c6f81a7c93106767e",
+      "previous_record_sha256": "c4afd1626ed487a4e9c8d7efd61630d83be98163ccdc137641cb97ce31f8e7f0",
+      "record_sha256": "8f2db578e391aa056d31f77151578051e960692ae239c09364fb9f12c6737cc6",
+      "sequence": 2
+    },
+    {
+      "event": {
+        "agent_action": "not_applicable",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "143574832069e622b26a7b6ca10d1a216d7ba09b31827fc13e6955e0db32855d",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "915d75a5e2779aefaa2bfcff01615a5fae1b3d1d5c28f5ed807517953e5ee313",
+            "uri": "example://static/candidate_planned.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "402b7c4fdabb89c02be049fb66c458b8b5c395398df92ca7d243fe58b521a327",
+          "input_sha256": "7f5be49c2f79d17332d24e798a26c1ec06ce1968580599135b7fab6a80a707c6",
+          "model_sha256": "ce176ff82539a3da8cdc0031121160a74ab6745d8e0d9a83aee7676384a4c68d",
+          "output_sha256": "915d75a5e2779aefaa2bfcff01615a5fae1b3d1d5c28f5ed807517953e5ee313",
+          "prompt_sha256": "e702540eb0e3e1260b5df92027eaf815f6d6e3504c929e29742e10c7609d3220"
+        },
+        "classification": "not_applicable",
+        "contract_refs": [
+          {
+            "artifact_sha256": "915d75a5e2779aefaa2bfcff01615a5fae1b3d1d5c28f5ed807517953e5ee313",
+            "artifact_uri": "example://static/contracts/known_label_waiting_human/candidate_planned.json",
+            "contract_type": "candidate_batch_plan",
+            "schema_path": "schemas/labelagent-batch-execution-plan.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "0c3b86148ee91b9ff0fccb37cefcc5c868ed1a7b9b1424c547d90aa93fec1fb0",
+        "event_key": "55b295332dbec870275f1d02941f323872d786f8a03adb749a20512387ccf0a8",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": null,
+          "receipt_sha256": null,
+          "required": false,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "not_required"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_KNOWN",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:00:02+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "1868e2b573bd2d0198d53993883073b898720648d290664cae08bab29e892121",
+        "previous_state": "qc_passed",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "candidate_planned",
+        "state_version": 3,
+        "stream_id": "ac0276fff97396bee7e4bb77c43c2d644111ed7ad9ed08cd022b1eab02867838",
+        "trace_id": "known_label_waiting_human",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "76b4c0a934a3008220fff6256256139291b767e8377f2e23a9ed6ed589a2284c",
+      "previous_record_sha256": "8f2db578e391aa056d31f77151578051e960692ae239c09364fb9f12c6737cc6",
+      "record_sha256": "b1f916781456245aafa0152678b1ccac28a3e7e111a498cb60b1b14fe8d5a315",
+      "sequence": 3
+    },
+    {
+      "event": {
+        "agent_action": "not_applicable",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "143574832069e622b26a7b6ca10d1a216d7ba09b31827fc13e6955e0db32855d",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "fa5380b94d448688b367a5002dc966cc6e494bb24f76bab3891f6317ec6aabc8",
+            "uri": "example://static/vlm_reviewed.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "f509b8c83b64bd09489cfce44c9818091343e0f6281c65672feaea328d90cd92",
+          "input_sha256": "915d75a5e2779aefaa2bfcff01615a5fae1b3d1d5c28f5ed807517953e5ee313",
+          "model_sha256": "873fbf521fdd3e4c767f290d02fd8b1697b6104965dc0332cbfc44362c2c6cb2",
+          "output_sha256": "fa5380b94d448688b367a5002dc966cc6e494bb24f76bab3891f6317ec6aabc8",
+          "prompt_sha256": "f543369151957ae9d0f14451c02a6325c138ad745f8dccdeade0156b5cf9eb6d"
+        },
+        "classification": "known_label",
+        "contract_refs": [
+          {
+            "artifact_sha256": "fa5380b94d448688b367a5002dc966cc6e494bb24f76bab3891f6317ec6aabc8",
+            "artifact_uri": "example://static/contracts/known_label_waiting_human/vlm_reviewed.json",
+            "contract_type": "vlm_label_observation",
+            "schema_path": "schemas/vlm-label-observation.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "89b86e691859757ec0d70d323a1a5cdcfaeb3d0707ec072ba63aaa47d01f1723",
+        "event_key": "b70efbffa33da14fac58ede0eba372bbc69aeb6efe99a233c39c531373d6a803",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": null,
+          "receipt_sha256": null,
+          "required": false,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "not_required"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_KNOWN",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:00:03+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "0c3b86148ee91b9ff0fccb37cefcc5c868ed1a7b9b1424c547d90aa93fec1fb0",
+        "previous_state": "candidate_planned",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "vlm_reviewed",
+        "state_version": 4,
+        "stream_id": "ac0276fff97396bee7e4bb77c43c2d644111ed7ad9ed08cd022b1eab02867838",
+        "trace_id": "known_label_waiting_human",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "7d05b2e9003d5cf9167c176d060ccbb5eed14717026fa6dfc378ce09195110e4",
+      "previous_record_sha256": "b1f916781456245aafa0152678b1ccac28a3e7e111a498cb60b1b14fe8d5a315",
+      "record_sha256": "5fda47f3cf21d1b2486ebb6a06b909e9a292525df1363ce090dc8c07d5103e28",
+      "sequence": 4
+    },
+    {
+      "event": {
+        "agent_action": "no_op",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "143574832069e622b26a7b6ca10d1a216d7ba09b31827fc13e6955e0db32855d",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "2f418f9b90e351298f1b3e07339b68c6d4c378ff0bf2d2dc6bafd8a42a86acfe",
+            "uri": "example://static/agent_corrected.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "a29502429620532525e32ab53711d78348463fdaf6da1c8f5a8d522c57133514",
+          "input_sha256": "fa5380b94d448688b367a5002dc966cc6e494bb24f76bab3891f6317ec6aabc8",
+          "model_sha256": "845e9dd30970891668ea25dc2ae586b116f6cfc4f3953d1f3a19acc18cc7649a",
+          "output_sha256": "2f418f9b90e351298f1b3e07339b68c6d4c378ff0bf2d2dc6bafd8a42a86acfe",
+          "prompt_sha256": "3fc6e9430bf190632103f6589016599322a0eeed66b8f038d2d3c8d077993472"
+        },
+        "classification": "known_label",
+        "contract_refs": [
+          {
+            "artifact_sha256": "2f418f9b90e351298f1b3e07339b68c6d4c378ff0bf2d2dc6bafd8a42a86acfe",
+            "artifact_uri": "example://static/contracts/known_label_waiting_human/agent_corrected.json",
+            "contract_type": "closed_loop_agent_action",
+            "schema_path": "schemas/labelagent_closed_loop_event.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "8e4013a2d399196069ae04a761e6ecb92fd057899a08d51e1051fbe7c6b6e039",
+        "event_key": "f2e54075ed1dc4dbb3110b49309e97216597a519d5d99d6bb3d469873fbccaf7",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": null,
+          "receipt_sha256": null,
+          "required": false,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "not_required"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_KNOWN",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:00:04+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "89b86e691859757ec0d70d323a1a5cdcfaeb3d0707ec072ba63aaa47d01f1723",
+        "previous_state": "vlm_reviewed",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "agent_corrected",
+        "state_version": 5,
+        "stream_id": "ac0276fff97396bee7e4bb77c43c2d644111ed7ad9ed08cd022b1eab02867838",
+        "trace_id": "known_label_waiting_human",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "ef6a4bd828530fb6858654b1eba8d96c459eaed32dfabba6c3c33d57e7a472b7",
+      "previous_record_sha256": "5fda47f3cf21d1b2486ebb6a06b909e9a292525df1363ce090dc8c07d5103e28",
+      "record_sha256": "e5da769c52200d64d432a346b01129e680e52a4580520cac33e2ae9a4c1df14f",
+      "sequence": 5
+    },
+    {
+      "event": {
+        "agent_action": "no_op",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "143574832069e622b26a7b6ca10d1a216d7ba09b31827fc13e6955e0db32855d",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "3b3d790dcd04c9a9a3994caf24d82bf32eac7213e0fd84d088360ac8d05536ec",
+            "uri": "example://static/vlm_rechecked.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "e8cea0909631662459669019e997febfea744bd0409d8afa0d808c24bcfd89a2",
+          "input_sha256": "2f418f9b90e351298f1b3e07339b68c6d4c378ff0bf2d2dc6bafd8a42a86acfe",
+          "model_sha256": "e866f0935c564da1e12704ef35ddd147f9d57c10a57736c3bdcc5f0ddaa21dad",
+          "output_sha256": "3b3d790dcd04c9a9a3994caf24d82bf32eac7213e0fd84d088360ac8d05536ec",
+          "prompt_sha256": "da18e5caa59fc9e289b6bca4d860d6efeef8a003bfb0043f3e94607c9525c139"
+        },
+        "classification": "known_label",
+        "contract_refs": [
+          {
+            "artifact_sha256": "3b3d790dcd04c9a9a3994caf24d82bf32eac7213e0fd84d088360ac8d05536ec",
+            "artifact_uri": "example://static/contracts/known_label_waiting_human/vlm_rechecked.json",
+            "contract_type": "closed_loop_vlm_recheck",
+            "schema_path": "schemas/labelagent_closed_loop_event.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "2579a854b88190b3ee0314ceabca7bb6503d6cc1977f68d95c50b2b85a4a0a1c",
+        "event_key": "3a0ac9f0d3416a24ae128db07e71b7c5bf654b013330bbcecd315d83d3e8e69b",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": null,
+          "receipt_sha256": null,
+          "required": false,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "not_required"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_KNOWN",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:00:05+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "8e4013a2d399196069ae04a761e6ecb92fd057899a08d51e1051fbe7c6b6e039",
+        "previous_state": "agent_corrected",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "vlm_rechecked",
+        "state_version": 6,
+        "stream_id": "ac0276fff97396bee7e4bb77c43c2d644111ed7ad9ed08cd022b1eab02867838",
+        "trace_id": "known_label_waiting_human",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "377886d6011de332efbd335905c4ce83cd26fe2a3999c769a6865ad0449b9438",
+      "previous_record_sha256": "e5da769c52200d64d432a346b01129e680e52a4580520cac33e2ae9a4c1df14f",
+      "record_sha256": "ded8e7003d675a06e6a5927ec61c7c94b2013cc63991e484479f798c336d7a02",
+      "sequence": 6
+    },
+    {
+      "event": {
+        "agent_action": "no_op",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "143574832069e622b26a7b6ca10d1a216d7ba09b31827fc13e6955e0db32855d",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "c744721056177618363c1ffc18c07af9fc4c793b6848fd343682186111598354",
+            "uri": "example://static/human_review_required.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "5a9fa061b58b9d41b667fdb6209c5256f9c9eeaef4b897b72e103547c979561f",
+          "input_sha256": "3b3d790dcd04c9a9a3994caf24d82bf32eac7213e0fd84d088360ac8d05536ec",
+          "model_sha256": null,
+          "output_sha256": "c744721056177618363c1ffc18c07af9fc4c793b6848fd343682186111598354",
+          "prompt_sha256": null
+        },
+        "classification": "known_label",
+        "contract_refs": [
+          {
+            "artifact_sha256": "c744721056177618363c1ffc18c07af9fc4c793b6848fd343682186111598354",
+            "artifact_uri": "example://static/contracts/known_label_waiting_human/human_review_required.json",
+            "contract_type": "cvat_offline_export",
+            "schema_path": "schemas/cvat-offline-export.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "41353c69448e0a566771d2089f1b1ce31e4e067c6fa064b4d4c0c15aec638536",
+        "event_key": "f2ce54099d4fe91cc7e51d547ac676a6cb4a55d7987694a0ad67245761876e37",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": "STATIC_TASK_V1",
+          "receipt_sha256": null,
+          "required": true,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "pending"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_KNOWN",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:00:06+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "2579a854b88190b3ee0314ceabca7bb6503d6cc1977f68d95c50b2b85a4a0a1c",
+        "previous_state": "vlm_rechecked",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [
+          "human_pixel_truth_missing",
+          "candidate_only_not_truth"
+        ],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "human_review_required",
+        "state_version": 7,
+        "stream_id": "ac0276fff97396bee7e4bb77c43c2d644111ed7ad9ed08cd022b1eab02867838",
+        "trace_id": "known_label_waiting_human",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "fbbd1eea7fa537d54f3d04c499b436e0c40104aaa76ff53c19e861fc0b829919",
+      "previous_record_sha256": "ded8e7003d675a06e6a5927ec61c7c94b2013cc63991e484479f798c336d7a02",
+      "record_sha256": "be3b833f83fd0d0dfecb5090246d5bdc26e74023ec59240fbbae3c4fcd0a2df4",
+      "sequence": 7
+    },
+    {
+      "event": {
+        "agent_action": "not_applicable",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "425344c424315a39fe010deccd67e7b16f34b4aeab9466864754dfc0d724d693",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "e08e20deaf25a3eacc353e4aa99467219252e56d19d1f2e4074095beb40340ed",
+            "uri": "example://static/ingested.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "0437632c82cc01cd3ebe2511481930920660338cf1d8cd7adf9d73b0216038b7",
+          "input_sha256": "3b94b576369c2cdc209e10f58e09cc6417d2688a134c97d172de9ed74cc61275",
+          "model_sha256": null,
+          "output_sha256": "e08e20deaf25a3eacc353e4aa99467219252e56d19d1f2e4074095beb40340ed",
+          "prompt_sha256": null
+        },
+        "classification": "not_applicable",
+        "contract_refs": [
+          {
+            "artifact_sha256": "e08e20deaf25a3eacc353e4aa99467219252e56d19d1f2e4074095beb40340ed",
+            "artifact_uri": "example://static/contracts/unknown_routes_human/ingested.json",
+            "contract_type": "factory_ingress",
+            "schema_path": "schemas/factory-data-ingress-event.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "3e927010c30a91470d9afa2dc1fc66b26fab6e3919072aa64e71a03ebfba1663",
+        "event_key": "25a2c684c1ab488617b78a14f11aa61177efb8447f01622627c8376371412ca8",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": null,
+          "receipt_sha256": null,
+          "required": false,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "not_required"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_UNKNOWN",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:00:20+08:00",
+        "operational_status": "ready",
+        "previous_event_id": null,
+        "previous_state": null,
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": {
+            "random_seed": 3407,
+            "scene": "dock_slope",
+            "simulator": "STATIC_SIMULATOR",
+            "version": "STATIC_V1"
+          },
+          "source_kind": "simulation"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "ingested",
+        "state_version": 1,
+        "stream_id": "2b7f24b64cf0a1c1e04c21778963f64cbd42793b1e920cd3252222f0a521ee89",
+        "trace_id": "unknown_routes_human",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "ae25fd5b7dbd5392afc08b8373a781d359a65ee6389e56d662d886882b4ec521",
+      "previous_record_sha256": "be3b833f83fd0d0dfecb5090246d5bdc26e74023ec59240fbbae3c4fcd0a2df4",
+      "record_sha256": "739aa41963196c154b55b906170d3e53053bb0010d868130bf47611df59d05b3",
+      "sequence": 8
+    },
+    {
+      "event": {
+        "agent_action": "not_applicable",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "425344c424315a39fe010deccd67e7b16f34b4aeab9466864754dfc0d724d693",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "1e5c3bb6df4e6b46eeaa822d2b350a2668825d34641099c452f49b6813ef4067",
+            "uri": "example://static/qc_passed.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "bf1bfb0cf04b367cdc774a8fc436de137ac947ffd792ec083922281311144a15",
+          "input_sha256": "e08e20deaf25a3eacc353e4aa99467219252e56d19d1f2e4074095beb40340ed",
+          "model_sha256": null,
+          "output_sha256": "1e5c3bb6df4e6b46eeaa822d2b350a2668825d34641099c452f49b6813ef4067",
+          "prompt_sha256": null
+        },
+        "classification": "not_applicable",
+        "contract_refs": [
+          {
+            "artifact_sha256": "1e5c3bb6df4e6b46eeaa822d2b350a2668825d34641099c452f49b6813ef4067",
+            "artifact_uri": "example://static/contracts/unknown_routes_human/qc_passed.json",
+            "contract_type": "factory_qc",
+            "schema_path": "schemas/factory-data-qc-event.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "e23f0a64d2b0694e6f10efae3708b69e15f913fab2ca54cba4d0bcfcaf703ac4",
+        "event_key": "757d8bb09713dff18d3c618ba2ade8e65cee2a823ebd3959ec21e53a643be207",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": null,
+          "receipt_sha256": null,
+          "required": false,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "not_required"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_UNKNOWN",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:00:21+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "3e927010c30a91470d9afa2dc1fc66b26fab6e3919072aa64e71a03ebfba1663",
+        "previous_state": "ingested",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": {
+            "random_seed": 3407,
+            "scene": "dock_slope",
+            "simulator": "STATIC_SIMULATOR",
+            "version": "STATIC_V1"
+          },
+          "source_kind": "simulation"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "qc_passed",
+        "state_version": 2,
+        "stream_id": "2b7f24b64cf0a1c1e04c21778963f64cbd42793b1e920cd3252222f0a521ee89",
+        "trace_id": "unknown_routes_human",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "22a9cb36b737c73db2e023ddf5cfa50108e92746455e944bfc766d0c388c0c75",
+      "previous_record_sha256": "739aa41963196c154b55b906170d3e53053bb0010d868130bf47611df59d05b3",
+      "record_sha256": "cd652757c43fce274d8ad57e612a41b7e53ffe2c3eed690e875c2f40d65d49ba",
+      "sequence": 9
+    },
+    {
+      "event": {
+        "agent_action": "not_applicable",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "425344c424315a39fe010deccd67e7b16f34b4aeab9466864754dfc0d724d693",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "c1f92fb122e9645f6ed74cef267d63db3dbfde3fe7ad6088bc566a632804f579",
+            "uri": "example://static/candidate_planned.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "402b7c4fdabb89c02be049fb66c458b8b5c395398df92ca7d243fe58b521a327",
+          "input_sha256": "1e5c3bb6df4e6b46eeaa822d2b350a2668825d34641099c452f49b6813ef4067",
+          "model_sha256": "ce176ff82539a3da8cdc0031121160a74ab6745d8e0d9a83aee7676384a4c68d",
+          "output_sha256": "c1f92fb122e9645f6ed74cef267d63db3dbfde3fe7ad6088bc566a632804f579",
+          "prompt_sha256": "e702540eb0e3e1260b5df92027eaf815f6d6e3504c929e29742e10c7609d3220"
+        },
+        "classification": "not_applicable",
+        "contract_refs": [
+          {
+            "artifact_sha256": "c1f92fb122e9645f6ed74cef267d63db3dbfde3fe7ad6088bc566a632804f579",
+            "artifact_uri": "example://static/contracts/unknown_routes_human/candidate_planned.json",
+            "contract_type": "candidate_batch_plan",
+            "schema_path": "schemas/labelagent-batch-execution-plan.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "479f23f50f689802dd99c700278d192675df174757efadbc2abeeba681f2e44f",
+        "event_key": "c17c3f3dbbc56d45aa3766b3225170017420a022ccdc22fb3bf8e05c17b1f66c",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": null,
+          "receipt_sha256": null,
+          "required": false,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "not_required"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_UNKNOWN",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:00:22+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "e23f0a64d2b0694e6f10efae3708b69e15f913fab2ca54cba4d0bcfcaf703ac4",
+        "previous_state": "qc_passed",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": {
+            "random_seed": 3407,
+            "scene": "dock_slope",
+            "simulator": "STATIC_SIMULATOR",
+            "version": "STATIC_V1"
+          },
+          "source_kind": "simulation"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "candidate_planned",
+        "state_version": 3,
+        "stream_id": "2b7f24b64cf0a1c1e04c21778963f64cbd42793b1e920cd3252222f0a521ee89",
+        "trace_id": "unknown_routes_human",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "9af11ded631c3f06c55eac8fd168d3bcad5727aec5bb8086735c7c619c41a06f",
+      "previous_record_sha256": "cd652757c43fce274d8ad57e612a41b7e53ffe2c3eed690e875c2f40d65d49ba",
+      "record_sha256": "501337a47ccb7eace509fd06fa36e5736edb9683598600e743b77c480a26836a",
+      "sequence": 10
+    },
+    {
+      "event": {
+        "agent_action": "not_applicable",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "425344c424315a39fe010deccd67e7b16f34b4aeab9466864754dfc0d724d693",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "d3c8273544f90467ffb01fdc80a9d517c2b7f379e24b6cd63b8a96de3fc75fde",
+            "uri": "example://static/vlm_reviewed.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "f509b8c83b64bd09489cfce44c9818091343e0f6281c65672feaea328d90cd92",
+          "input_sha256": "c1f92fb122e9645f6ed74cef267d63db3dbfde3fe7ad6088bc566a632804f579",
+          "model_sha256": "873fbf521fdd3e4c767f290d02fd8b1697b6104965dc0332cbfc44362c2c6cb2",
+          "output_sha256": "d3c8273544f90467ffb01fdc80a9d517c2b7f379e24b6cd63b8a96de3fc75fde",
+          "prompt_sha256": "f543369151957ae9d0f14451c02a6325c138ad745f8dccdeade0156b5cf9eb6d"
+        },
+        "classification": "unknown_candidate",
+        "contract_refs": [
+          {
+            "artifact_sha256": "d3c8273544f90467ffb01fdc80a9d517c2b7f379e24b6cd63b8a96de3fc75fde",
+            "artifact_uri": "example://static/contracts/unknown_routes_human/vlm_reviewed.json",
+            "contract_type": "vlm_label_observation",
+            "schema_path": "schemas/vlm-label-observation.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "f31305ebe04cffb7ee0b7b04123335a676feeaca7ec688fb7da4f6775267f005",
+        "event_key": "4d0deb5c2725ebaf5e9706114a238e19d46019c66ee4112d7cb5ad6bee4b067f",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": null,
+          "receipt_sha256": null,
+          "required": false,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "not_required"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_UNKNOWN",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:00:23+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "479f23f50f689802dd99c700278d192675df174757efadbc2abeeba681f2e44f",
+        "previous_state": "candidate_planned",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": {
+            "random_seed": 3407,
+            "scene": "dock_slope",
+            "simulator": "STATIC_SIMULATOR",
+            "version": "STATIC_V1"
+          },
+          "source_kind": "simulation"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "vlm_reviewed",
+        "state_version": 4,
+        "stream_id": "2b7f24b64cf0a1c1e04c21778963f64cbd42793b1e920cd3252222f0a521ee89",
+        "trace_id": "unknown_routes_human",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "3747e1567b5d619e6822378d7895997d0d67219637e70af65f31fa1e6f1a0e89",
+      "previous_record_sha256": "501337a47ccb7eace509fd06fa36e5736edb9683598600e743b77c480a26836a",
+      "record_sha256": "12a540a5235195218e690cfb6c3d0ffd32abf3449e4f6aa73b7e150b34d67a39",
+      "sequence": 11
+    },
+    {
+      "event": {
+        "agent_action": "no_op",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "425344c424315a39fe010deccd67e7b16f34b4aeab9466864754dfc0d724d693",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "538aa535a76a4d5a43392cd518db1239b00c515bbd0806acb167fc028b532388",
+            "uri": "example://static/agent_corrected.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "a29502429620532525e32ab53711d78348463fdaf6da1c8f5a8d522c57133514",
+          "input_sha256": "d3c8273544f90467ffb01fdc80a9d517c2b7f379e24b6cd63b8a96de3fc75fde",
+          "model_sha256": "845e9dd30970891668ea25dc2ae586b116f6cfc4f3953d1f3a19acc18cc7649a",
+          "output_sha256": "538aa535a76a4d5a43392cd518db1239b00c515bbd0806acb167fc028b532388",
+          "prompt_sha256": "3fc6e9430bf190632103f6589016599322a0eeed66b8f038d2d3c8d077993472"
+        },
+        "classification": "unknown_candidate",
+        "contract_refs": [
+          {
+            "artifact_sha256": "538aa535a76a4d5a43392cd518db1239b00c515bbd0806acb167fc028b532388",
+            "artifact_uri": "example://static/contracts/unknown_routes_human/agent_corrected.json",
+            "contract_type": "closed_loop_agent_action",
+            "schema_path": "schemas/labelagent_closed_loop_event.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "8175ee381e936e480da8f5abb8ad643166c9f5fe979b967561b4a81fc054a845",
+        "event_key": "7865ab76fb1db5e25203e97bbf7c41c9467aa91cc178f63dea7a28a6671668e0",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": null,
+          "receipt_sha256": null,
+          "required": false,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "not_required"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_UNKNOWN",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:00:24+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "f31305ebe04cffb7ee0b7b04123335a676feeaca7ec688fb7da4f6775267f005",
+        "previous_state": "vlm_reviewed",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": {
+            "random_seed": 3407,
+            "scene": "dock_slope",
+            "simulator": "STATIC_SIMULATOR",
+            "version": "STATIC_V1"
+          },
+          "source_kind": "simulation"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "agent_corrected",
+        "state_version": 5,
+        "stream_id": "2b7f24b64cf0a1c1e04c21778963f64cbd42793b1e920cd3252222f0a521ee89",
+        "trace_id": "unknown_routes_human",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "7939f3a8d4645c11eb761f2b10162003673cf1c69c17ea820622c455cb6e2fe3",
+      "previous_record_sha256": "12a540a5235195218e690cfb6c3d0ffd32abf3449e4f6aa73b7e150b34d67a39",
+      "record_sha256": "fbeca227a0c6e8f5dfb4e4ee4f96e02a85a36750b6aa07eed336252293e8b761",
+      "sequence": 12
+    },
+    {
+      "event": {
+        "agent_action": "no_op",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "425344c424315a39fe010deccd67e7b16f34b4aeab9466864754dfc0d724d693",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "cb479963b171913bac193928ff09ae4c9b640927adeca44c3772956f2450c52f",
+            "uri": "example://static/vlm_rechecked.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "e8cea0909631662459669019e997febfea744bd0409d8afa0d808c24bcfd89a2",
+          "input_sha256": "538aa535a76a4d5a43392cd518db1239b00c515bbd0806acb167fc028b532388",
+          "model_sha256": "e866f0935c564da1e12704ef35ddd147f9d57c10a57736c3bdcc5f0ddaa21dad",
+          "output_sha256": "cb479963b171913bac193928ff09ae4c9b640927adeca44c3772956f2450c52f",
+          "prompt_sha256": "da18e5caa59fc9e289b6bca4d860d6efeef8a003bfb0043f3e94607c9525c139"
+        },
+        "classification": "unknown_candidate",
+        "contract_refs": [
+          {
+            "artifact_sha256": "cb479963b171913bac193928ff09ae4c9b640927adeca44c3772956f2450c52f",
+            "artifact_uri": "example://static/contracts/unknown_routes_human/vlm_rechecked.json",
+            "contract_type": "closed_loop_vlm_recheck",
+            "schema_path": "schemas/labelagent_closed_loop_event.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "1f8adbe91ccc14037c205dd799c790a96604f26ac526cbd9fa761725ba6de560",
+        "event_key": "643739911d9accaaa6f193fad0cdc54f776b135f9279b29470df152503edf500",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": null,
+          "receipt_sha256": null,
+          "required": false,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "not_required"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_UNKNOWN",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:00:25+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "8175ee381e936e480da8f5abb8ad643166c9f5fe979b967561b4a81fc054a845",
+        "previous_state": "agent_corrected",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": {
+            "random_seed": 3407,
+            "scene": "dock_slope",
+            "simulator": "STATIC_SIMULATOR",
+            "version": "STATIC_V1"
+          },
+          "source_kind": "simulation"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "vlm_rechecked",
+        "state_version": 6,
+        "stream_id": "2b7f24b64cf0a1c1e04c21778963f64cbd42793b1e920cd3252222f0a521ee89",
+        "trace_id": "unknown_routes_human",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "459d8771f860ad8589f02b7f1c80a0fa2e97e018c0cc17a2db985a421ba2f2b6",
+      "previous_record_sha256": "fbeca227a0c6e8f5dfb4e4ee4f96e02a85a36750b6aa07eed336252293e8b761",
+      "record_sha256": "b308fbddb69a6ae590a6fdcae48c112d981de84cf244fc38ed2283ea2521691e",
+      "sequence": 13
+    },
+    {
+      "event": {
+        "agent_action": "no_op",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "425344c424315a39fe010deccd67e7b16f34b4aeab9466864754dfc0d724d693",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "814080ecd7d3fe3bccd5ab22a4a3102f9709adb8cc322b6024920308044ac82c",
+            "uri": "example://static/human_review_required.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "5a9fa061b58b9d41b667fdb6209c5256f9c9eeaef4b897b72e103547c979561f",
+          "input_sha256": "cb479963b171913bac193928ff09ae4c9b640927adeca44c3772956f2450c52f",
+          "model_sha256": null,
+          "output_sha256": "814080ecd7d3fe3bccd5ab22a4a3102f9709adb8cc322b6024920308044ac82c",
+          "prompt_sha256": null
+        },
+        "classification": "unknown_candidate",
+        "contract_refs": [
+          {
+            "artifact_sha256": "814080ecd7d3fe3bccd5ab22a4a3102f9709adb8cc322b6024920308044ac82c",
+            "artifact_uri": "example://static/contracts/unknown_routes_human/human_review_required.json",
+            "contract_type": "cvat_offline_export",
+            "schema_path": "schemas/cvat-offline-export.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "1a4da441d7cc6d6f6ff7f426da8c3c3b16c60f483e47b5be3a839a0c4b88e4f3",
+        "event_key": "94f0252eb1b8ff7d61a385e5a3cfb3ec52618e0a60d187c4393dba882d4ebbbb",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": "STATIC_TASK_V1",
+          "receipt_sha256": null,
+          "required": true,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "pending"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_UNKNOWN",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:00:26+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "1f8adbe91ccc14037c205dd799c790a96604f26ac526cbd9fa761725ba6de560",
+        "previous_state": "vlm_rechecked",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": {
+            "random_seed": 3407,
+            "scene": "dock_slope",
+            "simulator": "STATIC_SIMULATOR",
+            "version": "STATIC_V1"
+          },
+          "source_kind": "simulation"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [
+          "unknown_candidate",
+          "ontology_review_required",
+          "automatic_ontology_mutation_forbidden"
+        ],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "human_review_required",
+        "state_version": 7,
+        "stream_id": "2b7f24b64cf0a1c1e04c21778963f64cbd42793b1e920cd3252222f0a521ee89",
+        "trace_id": "unknown_routes_human",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "ef5807df55661ac7de83c3e04e093d33a6f9d7d169be4f06fc682e3f90d47973",
+      "previous_record_sha256": "b308fbddb69a6ae590a6fdcae48c112d981de84cf244fc38ed2283ea2521691e",
+      "record_sha256": "78dfbd5d097e2cfb4ea06c02ce6350233c76a37c58cd15f2d8bf754b3e18085e",
+      "sequence": 14
+    },
+    {
+      "event": {
+        "agent_action": "not_applicable",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "9b8d02e60f566c47ceed0c375c7d4610e2186cea059cd3456d7270425fec927e",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "468b8aca9c9aef28ce6eb61d3cca33a2092ce5467c45ad5e555f325fc003058f",
+            "uri": "example://static/ingested.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "0437632c82cc01cd3ebe2511481930920660338cf1d8cd7adf9d73b0216038b7",
+          "input_sha256": "df3724d2d87b5500d25dff2459017221d1cac28048a52e51367243b3e620fed9",
+          "model_sha256": null,
+          "output_sha256": "468b8aca9c9aef28ce6eb61d3cca33a2092ce5467c45ad5e555f325fc003058f",
+          "prompt_sha256": null
+        },
+        "classification": "not_applicable",
+        "contract_refs": [
+          {
+            "artifact_sha256": "468b8aca9c9aef28ce6eb61d3cca33a2092ce5467c45ad5e555f325fc003058f",
+            "artifact_uri": "example://static/contracts/qc_failure_quarantined/ingested.json",
+            "contract_type": "factory_ingress",
+            "schema_path": "schemas/factory-data-ingress-event.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "365aaddb0e6210671ed926d97a0a2c9ea996d9b2ed341a6bb719b0119a6d8679",
+        "event_key": "e2e1d71378c3e31d840f59caac296b2e75bf3f492a8f633c08cc9699e8ed12f6",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": null,
+          "receipt_sha256": null,
+          "required": false,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "not_required"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_QC_FAIL",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:00:40+08:00",
+        "operational_status": "ready",
+        "previous_event_id": null,
+        "previous_state": null,
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "ingested",
+        "state_version": 1,
+        "stream_id": "22f9a634685c781a53b6d675dba4a54931d7d5bab84d7b005e5cbbb324654dd4",
+        "trace_id": "qc_failure_quarantined",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "c576e343228f74253cca93a58d9c01b75ed50edb631cd3b67b5616edf49c3a17",
+      "previous_record_sha256": "78dfbd5d097e2cfb4ea06c02ce6350233c76a37c58cd15f2d8bf754b3e18085e",
+      "record_sha256": "246f5968baebfee22711b4554287c65f509b857ec06dc207d58bec9eba5c4594",
+      "sequence": 15
+    },
+    {
+      "event": {
+        "agent_action": "not_applicable",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "9b8d02e60f566c47ceed0c375c7d4610e2186cea059cd3456d7270425fec927e",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "c64f2be5a8196373275b36877c56bcf01cf5c72bcba074042749094ef1f4e5a8",
+            "uri": "example://static/quarantined.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "f00da0646dead0ac2996bf69c57f83503553edd2e0bf96087d4f3ec8900c217f",
+          "input_sha256": "468b8aca9c9aef28ce6eb61d3cca33a2092ce5467c45ad5e555f325fc003058f",
+          "model_sha256": null,
+          "output_sha256": "c64f2be5a8196373275b36877c56bcf01cf5c72bcba074042749094ef1f4e5a8",
+          "prompt_sha256": null
+        },
+        "classification": "not_applicable",
+        "contract_refs": [
+          {
+            "artifact_sha256": "c64f2be5a8196373275b36877c56bcf01cf5c72bcba074042749094ef1f4e5a8",
+            "artifact_uri": "example://static/contracts/qc_failure_quarantined/quarantined.json",
+            "contract_type": "factory_qc",
+            "schema_path": "schemas/factory-data-qc-event.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "58f5bf6c9de509303756cfc2112dd56a5f6c14d7c317bb00280b3d8aff3a36c7",
+        "event_key": "fe3b53a7c5f4b84ce223cfd4a5c1a822c36e9076b2dffa81a51f342b4435aebb",
+        "event_type": "state.transition",
+        "failure_reason": "camera_2_missing_and_odom_gap",
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": null,
+          "receipt_sha256": null,
+          "required": false,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "not_required"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_QC_FAIL",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:00:41+08:00",
+        "operational_status": "quarantined",
+        "previous_event_id": "365aaddb0e6210671ed926d97a0a2c9ea996d9b2ed341a6bb719b0119a6d8679",
+        "previous_state": "ingested",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "quarantine"
+        },
+        "reason_codes": [
+          "four_camera_completeness_failed",
+          "pose_odom_continuity_failed"
+        ],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "quarantined",
+        "state_version": 2,
+        "stream_id": "22f9a634685c781a53b6d675dba4a54931d7d5bab84d7b005e5cbbb324654dd4",
+        "trace_id": "qc_failure_quarantined",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "26b8fb0d850567949c4e2fef7ef8080c437786a9b7e707d8ef264b715625a809",
+      "previous_record_sha256": "246f5968baebfee22711b4554287c65f509b857ec06dc207d58bec9eba5c4594",
+      "record_sha256": "3cc2b0081a5e428f83b7bf294c7f2f29cd5043883e5dd9ca4dfdbe4059ac5172",
+      "sequence": 16
+    },
+    {
+      "event": {
+        "agent_action": "not_applicable",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "4aa8e74401c561a020f9a1bd2c673d7c2561d85ed59c1b29cb0fc73e299da552",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "b14bec12ccc86d69b80f910fe02dcb1858ff359b272903f2c5fa7c39b96c2d9e",
+            "uri": "example://static/ingested.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "0437632c82cc01cd3ebe2511481930920660338cf1d8cd7adf9d73b0216038b7",
+          "input_sha256": "34f49e9793d20f326a5d7661cd1ce5860a4331e8c6dced90b2baff8b7158dfbc",
+          "model_sha256": null,
+          "output_sha256": "b14bec12ccc86d69b80f910fe02dcb1858ff359b272903f2c5fa7c39b96c2d9e",
+          "prompt_sha256": null
+        },
+        "classification": "not_applicable",
+        "contract_refs": [
+          {
+            "artifact_sha256": "b14bec12ccc86d69b80f910fe02dcb1858ff359b272903f2c5fa7c39b96c2d9e",
+            "artifact_uri": "example://static/contracts/slope_regression_baseline_retained/ingested.json",
+            "contract_type": "factory_ingress",
+            "schema_path": "schemas/factory-data-ingress-event.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "eb608104a33292567d3668dec797c6ad97fb8ce694faed6176d3e5d954120c3a",
+        "event_key": "c3bb43b699731cdf1b179c8d93125cd63efdee4a1e3cab08e50c2a7a69661fdd",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": null,
+          "receipt_sha256": null,
+          "required": false,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "not_required"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_SLOPE",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:01:00+08:00",
+        "operational_status": "ready",
+        "previous_event_id": null,
+        "previous_state": null,
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "ingested",
+        "state_version": 1,
+        "stream_id": "7d6314b068b1a8eb28c81facb86701b1dd0aff7eb4695d9dbd4d390a76b2896c",
+        "trace_id": "slope_regression_baseline_retained",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "3e49cfea62ab6a8172196196300b4164a80ea66a242b27f49fa24d15d280f5bf",
+      "previous_record_sha256": "3cc2b0081a5e428f83b7bf294c7f2f29cd5043883e5dd9ca4dfdbe4059ac5172",
+      "record_sha256": "aa2134331f84dd777bbdafe2f0e37b97bf641550b2d0e18711277a511263264e",
+      "sequence": 17
+    },
+    {
+      "event": {
+        "agent_action": "not_applicable",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "4aa8e74401c561a020f9a1bd2c673d7c2561d85ed59c1b29cb0fc73e299da552",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "beb5a5f71f3dc722be7dd4ace4f86c2ecd26c1bcdc05f21eabbac4f6ff55f577",
+            "uri": "example://static/qc_passed.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "bf1bfb0cf04b367cdc774a8fc436de137ac947ffd792ec083922281311144a15",
+          "input_sha256": "b14bec12ccc86d69b80f910fe02dcb1858ff359b272903f2c5fa7c39b96c2d9e",
+          "model_sha256": null,
+          "output_sha256": "beb5a5f71f3dc722be7dd4ace4f86c2ecd26c1bcdc05f21eabbac4f6ff55f577",
+          "prompt_sha256": null
+        },
+        "classification": "not_applicable",
+        "contract_refs": [
+          {
+            "artifact_sha256": "beb5a5f71f3dc722be7dd4ace4f86c2ecd26c1bcdc05f21eabbac4f6ff55f577",
+            "artifact_uri": "example://static/contracts/slope_regression_baseline_retained/qc_passed.json",
+            "contract_type": "factory_qc",
+            "schema_path": "schemas/factory-data-qc-event.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "107622cd0cb642ea1e9f4fd5355460769f97a590ab3fc199317122b0752de322",
+        "event_key": "511638e5242b210a2d64c0f686c04b5b9208dfbd1938df1f5d9ff56a5723d92e",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": null,
+          "receipt_sha256": null,
+          "required": false,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "not_required"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_SLOPE",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:01:01+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "eb608104a33292567d3668dec797c6ad97fb8ce694faed6176d3e5d954120c3a",
+        "previous_state": "ingested",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "qc_passed",
+        "state_version": 2,
+        "stream_id": "7d6314b068b1a8eb28c81facb86701b1dd0aff7eb4695d9dbd4d390a76b2896c",
+        "trace_id": "slope_regression_baseline_retained",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "83e540fc5e45893b31324cdf255f697bd7ea2f0ffdac2ea81df5a10173b5d922",
+      "previous_record_sha256": "aa2134331f84dd777bbdafe2f0e37b97bf641550b2d0e18711277a511263264e",
+      "record_sha256": "075cb19bfe926f2e5db57e796a45ab476054384a35a3b9a5a78eaed7d23065fe",
+      "sequence": 18
+    },
+    {
+      "event": {
+        "agent_action": "not_applicable",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "4aa8e74401c561a020f9a1bd2c673d7c2561d85ed59c1b29cb0fc73e299da552",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "519a0dfb41222bd7091545595c605001f4eb89e1b79f3a78d993c864a9b90187",
+            "uri": "example://static/candidate_planned.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "402b7c4fdabb89c02be049fb66c458b8b5c395398df92ca7d243fe58b521a327",
+          "input_sha256": "beb5a5f71f3dc722be7dd4ace4f86c2ecd26c1bcdc05f21eabbac4f6ff55f577",
+          "model_sha256": "ce176ff82539a3da8cdc0031121160a74ab6745d8e0d9a83aee7676384a4c68d",
+          "output_sha256": "519a0dfb41222bd7091545595c605001f4eb89e1b79f3a78d993c864a9b90187",
+          "prompt_sha256": "e702540eb0e3e1260b5df92027eaf815f6d6e3504c929e29742e10c7609d3220"
+        },
+        "classification": "not_applicable",
+        "contract_refs": [
+          {
+            "artifact_sha256": "519a0dfb41222bd7091545595c605001f4eb89e1b79f3a78d993c864a9b90187",
+            "artifact_uri": "example://static/contracts/slope_regression_baseline_retained/candidate_planned.json",
+            "contract_type": "candidate_batch_plan",
+            "schema_path": "schemas/labelagent-batch-execution-plan.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "2071a9e44530eda59821b8c4c12874f077f3a58ebf475f0027d0bba9e24e8073",
+        "event_key": "c13b297c5dc672cb5c0a7cd75cd9d679ea856119feddba43b8f21509289957d5",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": null,
+          "receipt_sha256": null,
+          "required": false,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "not_required"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_SLOPE",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:01:02+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "107622cd0cb642ea1e9f4fd5355460769f97a590ab3fc199317122b0752de322",
+        "previous_state": "qc_passed",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "candidate_planned",
+        "state_version": 3,
+        "stream_id": "7d6314b068b1a8eb28c81facb86701b1dd0aff7eb4695d9dbd4d390a76b2896c",
+        "trace_id": "slope_regression_baseline_retained",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "c7368123ea130f5157376fe36d09308dbd13000a7e1de3b35c591dd79124f598",
+      "previous_record_sha256": "075cb19bfe926f2e5db57e796a45ab476054384a35a3b9a5a78eaed7d23065fe",
+      "record_sha256": "1a516784fa512d662a053bdc8356e312c22295113aac64fe752ba084c65ca368",
+      "sequence": 19
+    },
+    {
+      "event": {
+        "agent_action": "not_applicable",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "4aa8e74401c561a020f9a1bd2c673d7c2561d85ed59c1b29cb0fc73e299da552",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "8fef340ecbff6759fe6cf56abaecf384784ef94952659d4d2cf93ae1562947d8",
+            "uri": "example://static/vlm_reviewed.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "f509b8c83b64bd09489cfce44c9818091343e0f6281c65672feaea328d90cd92",
+          "input_sha256": "519a0dfb41222bd7091545595c605001f4eb89e1b79f3a78d993c864a9b90187",
+          "model_sha256": "873fbf521fdd3e4c767f290d02fd8b1697b6104965dc0332cbfc44362c2c6cb2",
+          "output_sha256": "8fef340ecbff6759fe6cf56abaecf384784ef94952659d4d2cf93ae1562947d8",
+          "prompt_sha256": "f543369151957ae9d0f14451c02a6325c138ad745f8dccdeade0156b5cf9eb6d"
+        },
+        "classification": "known_label",
+        "contract_refs": [
+          {
+            "artifact_sha256": "8fef340ecbff6759fe6cf56abaecf384784ef94952659d4d2cf93ae1562947d8",
+            "artifact_uri": "example://static/contracts/slope_regression_baseline_retained/vlm_reviewed.json",
+            "contract_type": "vlm_label_observation",
+            "schema_path": "schemas/vlm-label-observation.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "8287c675d6aea77de3dd080118f565d86fb8332293b3744c2b256e25bce49428",
+        "event_key": "105444f86aae5a1bf39d6541d68c3ed7f037e96a18db70388803b848d1b0aea4",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": null,
+          "receipt_sha256": null,
+          "required": false,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "not_required"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_SLOPE",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:01:03+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "2071a9e44530eda59821b8c4c12874f077f3a58ebf475f0027d0bba9e24e8073",
+        "previous_state": "candidate_planned",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "vlm_reviewed",
+        "state_version": 4,
+        "stream_id": "7d6314b068b1a8eb28c81facb86701b1dd0aff7eb4695d9dbd4d390a76b2896c",
+        "trace_id": "slope_regression_baseline_retained",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "934d54057f5e4fe89ee302a215c03692d97b600cf65bcd4e644db80e08695a41",
+      "previous_record_sha256": "1a516784fa512d662a053bdc8356e312c22295113aac64fe752ba084c65ca368",
+      "record_sha256": "3d1dc8977404420e5d37e4fc607adad9d63b8edad2621d6ee4bf103091fcf9d4",
+      "sequence": 20
+    },
+    {
+      "event": {
+        "agent_action": "resegment",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "4aa8e74401c561a020f9a1bd2c673d7c2561d85ed59c1b29cb0fc73e299da552",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "694004bd91c611b7608d8ff4d7f100d9f4fa918ba7914df4cdf65303402d10c0",
+            "uri": "example://static/agent_corrected.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "a29502429620532525e32ab53711d78348463fdaf6da1c8f5a8d522c57133514",
+          "input_sha256": "8fef340ecbff6759fe6cf56abaecf384784ef94952659d4d2cf93ae1562947d8",
+          "model_sha256": "845e9dd30970891668ea25dc2ae586b116f6cfc4f3953d1f3a19acc18cc7649a",
+          "output_sha256": "694004bd91c611b7608d8ff4d7f100d9f4fa918ba7914df4cdf65303402d10c0",
+          "prompt_sha256": "3fc6e9430bf190632103f6589016599322a0eeed66b8f038d2d3c8d077993472"
+        },
+        "classification": "known_label",
+        "contract_refs": [
+          {
+            "artifact_sha256": "694004bd91c611b7608d8ff4d7f100d9f4fa918ba7914df4cdf65303402d10c0",
+            "artifact_uri": "example://static/contracts/slope_regression_baseline_retained/agent_corrected.json",
+            "contract_type": "closed_loop_agent_action",
+            "schema_path": "schemas/labelagent_closed_loop_event.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "a277224d5cfb1d300706138059b7f98112420526a3c40c50e7d62ef970d01560",
+        "event_key": "3fb70fa6f193a3a1fd932f9ba6b325976cbd24f2eac11032dcc6d55e4693a5e0",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": null,
+          "receipt_sha256": null,
+          "required": false,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "not_required"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_SLOPE",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:01:04+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "8287c675d6aea77de3dd080118f565d86fb8332293b3744c2b256e25bce49428",
+        "previous_state": "vlm_reviewed",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "agent_corrected",
+        "state_version": 5,
+        "stream_id": "7d6314b068b1a8eb28c81facb86701b1dd0aff7eb4695d9dbd4d390a76b2896c",
+        "trace_id": "slope_regression_baseline_retained",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "18ab86055218ba34ff2ad0bb8dd8fd66d408cfbf8648715016eece25557ba2ed",
+      "previous_record_sha256": "3d1dc8977404420e5d37e4fc607adad9d63b8edad2621d6ee4bf103091fcf9d4",
+      "record_sha256": "c897a063440c05ce5007467cd666ebe5f8d476cd61c18a2fdc70b3b6c1a08a3f",
+      "sequence": 21
+    },
+    {
+      "event": {
+        "agent_action": "resegment",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "4aa8e74401c561a020f9a1bd2c673d7c2561d85ed59c1b29cb0fc73e299da552",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "a41aa4592549383b5cc36cc3ca6a3b45364d7697013aa311420a08d2d23f60dc",
+            "uri": "example://static/vlm_rechecked.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "e8cea0909631662459669019e997febfea744bd0409d8afa0d808c24bcfd89a2",
+          "input_sha256": "694004bd91c611b7608d8ff4d7f100d9f4fa918ba7914df4cdf65303402d10c0",
+          "model_sha256": "e866f0935c564da1e12704ef35ddd147f9d57c10a57736c3bdcc5f0ddaa21dad",
+          "output_sha256": "a41aa4592549383b5cc36cc3ca6a3b45364d7697013aa311420a08d2d23f60dc",
+          "prompt_sha256": "da18e5caa59fc9e289b6bca4d860d6efeef8a003bfb0043f3e94607c9525c139"
+        },
+        "classification": "known_label",
+        "contract_refs": [
+          {
+            "artifact_sha256": "a41aa4592549383b5cc36cc3ca6a3b45364d7697013aa311420a08d2d23f60dc",
+            "artifact_uri": "example://static/contracts/slope_regression_baseline_retained/vlm_rechecked.json",
+            "contract_type": "closed_loop_vlm_recheck",
+            "schema_path": "schemas/labelagent_closed_loop_event.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "80307bc06fa2cf83128990c13f7590a41ac903e9ed42b4dd174cc7524a5cd485",
+        "event_key": "e1560c3a146112c07903525aa245a986b2ca25a0095b895f0880bc139b02b3f5",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": null,
+          "receipt_sha256": null,
+          "required": false,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "not_required"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_SLOPE",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:01:05+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "a277224d5cfb1d300706138059b7f98112420526a3c40c50e7d62ef970d01560",
+        "previous_state": "agent_corrected",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "vlm_rechecked",
+        "state_version": 6,
+        "stream_id": "7d6314b068b1a8eb28c81facb86701b1dd0aff7eb4695d9dbd4d390a76b2896c",
+        "trace_id": "slope_regression_baseline_retained",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "0b1107f3f267de51f7ed4a2f2e8965c3a10272b31d09078419f852347af5073b",
+      "previous_record_sha256": "c897a063440c05ce5007467cd666ebe5f8d476cd61c18a2fdc70b3b6c1a08a3f",
+      "record_sha256": "417938ee872eb260751aea9f5f2381fb04d3e93613f92b8ecc06e25be0a29ed6",
+      "sequence": 22
+    },
+    {
+      "event": {
+        "agent_action": "resegment",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "4aa8e74401c561a020f9a1bd2c673d7c2561d85ed59c1b29cb0fc73e299da552",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "d147a69f9ee4c51d97238c85f3a185eaef8e0cbfd5cbf89799094b0522f42d1f",
+            "uri": "example://static/human_review_required.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "5a9fa061b58b9d41b667fdb6209c5256f9c9eeaef4b897b72e103547c979561f",
+          "input_sha256": "a41aa4592549383b5cc36cc3ca6a3b45364d7697013aa311420a08d2d23f60dc",
+          "model_sha256": null,
+          "output_sha256": "d147a69f9ee4c51d97238c85f3a185eaef8e0cbfd5cbf89799094b0522f42d1f",
+          "prompt_sha256": null
+        },
+        "classification": "known_label",
+        "contract_refs": [
+          {
+            "artifact_sha256": "d147a69f9ee4c51d97238c85f3a185eaef8e0cbfd5cbf89799094b0522f42d1f",
+            "artifact_uri": "example://static/contracts/slope_regression_baseline_retained/human_review_required.json",
+            "contract_type": "cvat_offline_export",
+            "schema_path": "schemas/cvat-offline-export.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "69a6b376291a22dff76370ac29a4939feb14978e0a8fd86ad5cbc23bff26732e",
+        "event_key": "9ad04132d9d8c0fb3b289edfee3ad12b49dda2a3399b7ba0a55fbb2e35da8cdf",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": null,
+          "cvat_task_version": "STATIC_TASK_V1",
+          "receipt_sha256": null,
+          "required": true,
+          "review_event_id": null,
+          "source_image_sha256": null,
+          "status": "pending"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_SLOPE",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:01:06+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "80307bc06fa2cf83128990c13f7590a41ac903e9ed42b4dd174cc7524a5cd485",
+        "previous_state": "vlm_rechecked",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [
+          "slope_hard_case",
+          "human_pixel_truth_required"
+        ],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "human_review_required",
+        "state_version": 7,
+        "stream_id": "7d6314b068b1a8eb28c81facb86701b1dd0aff7eb4695d9dbd4d390a76b2896c",
+        "trace_id": "slope_regression_baseline_retained",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "03cd726376b7c2a07a78d1a7acba85864676670d43bbb672ef7615bd161fbe3f",
+      "previous_record_sha256": "417938ee872eb260751aea9f5f2381fb04d3e93613f92b8ecc06e25be0a29ed6",
+      "record_sha256": "b65f8ae035fe756a8fcbc482b2bb418cda508b4b2eec754ffac9659ff8dc2d9f",
+      "sequence": 23
+    },
+    {
+      "event": {
+        "agent_action": "resegment",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "4aa8e74401c561a020f9a1bd2c673d7c2561d85ed59c1b29cb0fc73e299da552",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "7ff762146a4293eebd9466457cc9e745e03d655cb272482523f451fc7e1fae8e",
+            "uri": "example://static/candidate_accepted.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "e439bcbc5b4ea0775ece525d4013ee7a1231261847c91f6e9b189f7a0cdc3a87",
+          "input_sha256": "d147a69f9ee4c51d97238c85f3a185eaef8e0cbfd5cbf89799094b0522f42d1f",
+          "model_sha256": null,
+          "output_sha256": "7ff762146a4293eebd9466457cc9e745e03d655cb272482523f451fc7e1fae8e",
+          "prompt_sha256": null
+        },
+        "classification": "known_label",
+        "contract_refs": [
+          {
+            "artifact_sha256": "7ff762146a4293eebd9466457cc9e745e03d655cb272482523f451fc7e1fae8e",
+            "artifact_uri": "example://static/contracts/slope_regression_baseline_retained/candidate_accepted.json",
+            "contract_type": "cvat_offline_return",
+            "schema_path": "schemas/cvat-offline-return.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "none",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "d706af292efdd2b1931a111f90d744c14245e791787bb80a968ee3edb186bca5",
+        "event_key": "471ee92a5c106a51d6446b357e36233ca1ef067a36ee3b95dc1c807c61ae7829",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": "5fd95945fb7b739eb132f65d64e2143cb88793e7f2c3cb0843162c02fb339d46",
+          "cvat_task_version": "STATIC_TASK_V1",
+          "receipt_sha256": "b6d402b8e583fe1a5f4e74e937c2063ca037657d6b1f05186889d5a1d0534e08",
+          "required": true,
+          "review_event_id": "58fac56bdd5029dd6715fb6bb73afc487e1d11652b21359fb186784e6ba66e9d",
+          "source_image_sha256": "4aa8e74401c561a020f9a1bd2c673d7c2561d85ed59c1b29cb0fc73e299da552",
+          "status": "approved"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_SLOPE",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:01:07+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "69a6b376291a22dff76370ac29a4939feb14978e0a8fd86ad5cbc23bff26732e",
+        "previous_state": "human_review_required",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [
+          "static_human_gate_fixture_only"
+        ],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "candidate_accepted",
+        "state_version": 8,
+        "stream_id": "7d6314b068b1a8eb28c81facb86701b1dd0aff7eb4695d9dbd4d390a76b2896c",
+        "trace_id": "slope_regression_baseline_retained",
+        "training_run": null,
+        "truth_version": null
+      },
+      "event_sha256": "44ebf3632af22b4297cd36ecf24b7a0804b1bdb32520add1011cab8441a072a0",
+      "previous_record_sha256": "b65f8ae035fe756a8fcbc482b2bb418cda508b4b2eec754ffac9659ff8dc2d9f",
+      "record_sha256": "6ccbc9b19963d1cbc322c968026d6d97350003c81ce1ba498d10e75a1d5bfba8",
+      "sequence": 24
+    },
+    {
+      "event": {
+        "agent_action": "resegment",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "4aa8e74401c561a020f9a1bd2c673d7c2561d85ed59c1b29cb0fc73e299da552",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "e9d180b5da486da302e6229ac391bb0a365c42b1e19370d2cd25127bf02b13bb",
+            "uri": "example://static/truth_promoted.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "d1189dced3d647b4839dc41f7ce17a30afd8bbb1e77dbc8b266198a25ce228b8",
+          "input_sha256": "7ff762146a4293eebd9466457cc9e745e03d655cb272482523f451fc7e1fae8e",
+          "model_sha256": null,
+          "output_sha256": "e9d180b5da486da302e6229ac391bb0a365c42b1e19370d2cd25127bf02b13bb",
+          "prompt_sha256": null
+        },
+        "classification": "known_label",
+        "contract_refs": [
+          {
+            "artifact_sha256": "e9d180b5da486da302e6229ac391bb0a365c42b1e19370d2cd25127bf02b13bb",
+            "artifact_uri": "example://static/contracts/slope_regression_baseline_retained/truth_promoted.json",
+            "contract_type": "immutable_truth_promotion",
+            "schema_path": "schemas/immutable-truth-promotion-event.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "simulated",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "5c2ba090a355c50cf67a3d4c06618b8eaf5499ab66e0b29b70d681a0854c1d71",
+        "event_key": "310566af9a59c432145307edd39a3ff83f29202f85eba6e6ec75e4996e401864",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": "5fd95945fb7b739eb132f65d64e2143cb88793e7f2c3cb0843162c02fb339d46",
+          "cvat_task_version": "STATIC_TASK_V1",
+          "receipt_sha256": "b6d402b8e583fe1a5f4e74e937c2063ca037657d6b1f05186889d5a1d0534e08",
+          "required": true,
+          "review_event_id": "58fac56bdd5029dd6715fb6bb73afc487e1d11652b21359fb186784e6ba66e9d",
+          "source_image_sha256": "4aa8e74401c561a020f9a1bd2c673d7c2561d85ed59c1b29cb0fc73e299da552",
+          "status": "approved"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_SLOPE",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:01:08+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "d706af292efdd2b1931a111f90d744c14245e791787bb80a968ee3edb186bca5",
+        "previous_state": "candidate_accepted",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [
+          "simulated_static_truth_transition_no_mutation"
+        ],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "truth_promoted",
+        "state_version": 9,
+        "stream_id": "7d6314b068b1a8eb28c81facb86701b1dd0aff7eb4695d9dbd4d390a76b2896c",
+        "trace_id": "slope_regression_baseline_retained",
+        "training_run": null,
+        "truth_version": {
+          "immutable": true,
+          "manifest_sha256": "267dc320b40260d0f24625f420e20a2c2e5c193da683436bf35e94a609df14f8",
+          "split": "train",
+          "version_id": "STATIC_TRUTH_V1"
+        }
+      },
+      "event_sha256": "b6c09d0f8b52e52c291dab510d358bcfa644fb0f39486268ade36a8d937b8ccd",
+      "previous_record_sha256": "6ccbc9b19963d1cbc322c968026d6d97350003c81ce1ba498d10e75a1d5bfba8",
+      "record_sha256": "1fb9c4e14a63d1e253bb4cb6d67f47ab1cb7b1c83ddb90f6b7c30cd2f8614405",
+      "sequence": 25
+    },
+    {
+      "event": {
+        "agent_action": "not_applicable",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "4aa8e74401c561a020f9a1bd2c673d7c2561d85ed59c1b29cb0fc73e299da552",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "66ffefb3c0fad75f30c7729e641b5d2d029f809f34afdf5976be6e5fe070353a",
+            "uri": "example://static/training_eligible.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "816465f4c429464ca007812df9a7df053fd838586244fcb6d0b4c60395155cfb",
+          "input_sha256": "e9d180b5da486da302e6229ac391bb0a365c42b1e19370d2cd25127bf02b13bb",
+          "model_sha256": null,
+          "output_sha256": "66ffefb3c0fad75f30c7729e641b5d2d029f809f34afdf5976be6e5fe070353a",
+          "prompt_sha256": null
+        },
+        "classification": "known_label",
+        "contract_refs": [
+          {
+            "artifact_sha256": "66ffefb3c0fad75f30c7729e641b5d2d029f809f34afdf5976be6e5fe070353a",
+            "artifact_uri": "example://static/contracts/slope_regression_baseline_retained/training_eligible.json",
+            "contract_type": "sam3_stage0_dry_run_plan",
+            "schema_path": "schemas/sam3-stage0-dry-run-plan.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "simulated",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "6f4c9bbe8310cc87f47cd5f73bc89d5ee390fa64e9c77f729f8df1111995e821",
+        "event_key": "095e966cd7ced80fe6989fbbf7b7359d470e81d27cf8d3eddd214b17bec5af06",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": "5fd95945fb7b739eb132f65d64e2143cb88793e7f2c3cb0843162c02fb339d46",
+          "cvat_task_version": "STATIC_TASK_V1",
+          "receipt_sha256": "b6d402b8e583fe1a5f4e74e937c2063ca037657d6b1f05186889d5a1d0534e08",
+          "required": true,
+          "review_event_id": "58fac56bdd5029dd6715fb6bb73afc487e1d11652b21359fb186784e6ba66e9d",
+          "source_image_sha256": "4aa8e74401c561a020f9a1bd2c673d7c2561d85ed59c1b29cb0fc73e299da552",
+          "status": "approved"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_SLOPE",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:01:09+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "5c2ba090a355c50cf67a3d4c06618b8eaf5499ab66e0b29b70d681a0854c1d71",
+        "previous_state": "truth_promoted",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [
+          "static_gate_replay_not_training_authorization"
+        ],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "training_eligible",
+        "state_version": 10,
+        "stream_id": "7d6314b068b1a8eb28c81facb86701b1dd0aff7eb4695d9dbd4d390a76b2896c",
+        "trace_id": "slope_regression_baseline_retained",
+        "training_run": null,
+        "truth_version": {
+          "immutable": true,
+          "manifest_sha256": "267dc320b40260d0f24625f420e20a2c2e5c193da683436bf35e94a609df14f8",
+          "split": "train",
+          "version_id": "STATIC_TRUTH_V1"
+        }
+      },
+      "event_sha256": "7cb3df1e668d1bb9ec6881de7ce222ad8e121ac129bec59722168c67508195d4",
+      "previous_record_sha256": "1fb9c4e14a63d1e253bb4cb6d67f47ab1cb7b1c83ddb90f6b7c30cd2f8614405",
+      "record_sha256": "b92e73d4431c7e8cea81bde60dadf7249c353e80020330e668fc6035b3ccbce0",
+      "sequence": 26
+    },
+    {
+      "event": {
+        "agent_action": "not_applicable",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "4aa8e74401c561a020f9a1bd2c673d7c2561d85ed59c1b29cb0fc73e299da552",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "3379790b1988c55fd779932ddf9c43b6860df5fe0fed47347d81f743b3ab943f",
+            "uri": "example://static/trained.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "60a7f2b2b80f2a389c21b7fbaf56cdef40e3721c3940e8e7f69154904d0a535f",
+          "input_sha256": "66ffefb3c0fad75f30c7729e641b5d2d029f809f34afdf5976be6e5fe070353a",
+          "model_sha256": "940db452285b23062e15d12b3bdf4ffb229c0d0ef4f3f71e3e56afbb2414314e",
+          "output_sha256": "3379790b1988c55fd779932ddf9c43b6860df5fe0fed47347d81f743b3ab943f",
+          "prompt_sha256": null
+        },
+        "classification": "known_label",
+        "contract_refs": [
+          {
+            "artifact_sha256": "3379790b1988c55fd779932ddf9c43b6860df5fe0fed47347d81f743b3ab943f",
+            "artifact_uri": "example://static/contracts/slope_regression_baseline_retained/trained.json",
+            "contract_type": "sam3_stage0_model_card",
+            "schema_path": "schemas/sam3-stage0-model-card.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "simulated",
+          "production_mutation": false
+        },
+        "evaluation": null,
+        "event_id": "cb131cd61a5dc9ab1318ef60db2c79926d217889e388d79c38bf6b67df14ae66",
+        "event_key": "b5133b3ada2f8d26e29be0761e7ffa56db6336b2695f8685418d73ce846e3455",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": "5fd95945fb7b739eb132f65d64e2143cb88793e7f2c3cb0843162c02fb339d46",
+          "cvat_task_version": "STATIC_TASK_V1",
+          "receipt_sha256": "b6d402b8e583fe1a5f4e74e937c2063ca037657d6b1f05186889d5a1d0534e08",
+          "required": true,
+          "review_event_id": "58fac56bdd5029dd6715fb6bb73afc487e1d11652b21359fb186784e6ba66e9d",
+          "source_image_sha256": "4aa8e74401c561a020f9a1bd2c673d7c2561d85ed59c1b29cb0fc73e299da552",
+          "status": "approved"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_SLOPE",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:01:10+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "6f4c9bbe8310cc87f47cd5f73bc89d5ee390fa64e9c77f729f8df1111995e821",
+        "previous_state": "training_eligible",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [
+          "simulated_static_training_result_reference"
+        ],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "trained",
+        "state_version": 11,
+        "stream_id": "7d6314b068b1a8eb28c81facb86701b1dd0aff7eb4695d9dbd4d390a76b2896c",
+        "trace_id": "slope_regression_baseline_retained",
+        "training_run": {
+          "checkpoint_sha256": "63421820d73efa8f557daa69d3f9769bcc37bc0bc328b59995d82c97d9cbfccf",
+          "package_sha256": "bc4a71180870f7945155fbb02f4b0a2e3faa2a62d6d31b7039013055ed19869a",
+          "run_id": "STATIC_STAGE0_RUN",
+          "simulated_static_replay": true
+        },
+        "truth_version": {
+          "immutable": true,
+          "manifest_sha256": "267dc320b40260d0f24625f420e20a2c2e5c193da683436bf35e94a609df14f8",
+          "split": "train",
+          "version_id": "STATIC_TRUTH_V1"
+        }
+      },
+      "event_sha256": "04a4d1ff4afc90230c8f9db89e44c1a7d8a1ed666d69f3b0fa27c71c4b2f340a",
+      "previous_record_sha256": "b92e73d4431c7e8cea81bde60dadf7249c353e80020330e668fc6035b3ccbce0",
+      "record_sha256": "96f1661da15cae131d87876887178794752a4aa39ed330f1e2e22d7558bb3d7a",
+      "sequence": 27
+    },
+    {
+      "event": {
+        "agent_action": "not_applicable",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "4aa8e74401c561a020f9a1bd2c673d7c2561d85ed59c1b29cb0fc73e299da552",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "848d33117b0f5271d7b00fff48e0033c7f0be5446f48efeb70fb60421fa97a2c",
+            "uri": "example://static/evaluated.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "8fe4f09ddda97a68bfcf01569d4af24f4c8925037c2a68d3c634d887f3842926",
+          "input_sha256": "3379790b1988c55fd779932ddf9c43b6860df5fe0fed47347d81f743b3ab943f",
+          "model_sha256": "99bb3207319649e6ed700008532f429a4ebfb2c1748894cfbe8785de7d4389c9",
+          "output_sha256": "848d33117b0f5271d7b00fff48e0033c7f0be5446f48efeb70fb60421fa97a2c",
+          "prompt_sha256": null
+        },
+        "classification": "known_label",
+        "contract_refs": [
+          {
+            "artifact_sha256": "848d33117b0f5271d7b00fff48e0033c7f0be5446f48efeb70fb60421fa97a2c",
+            "artifact_uri": "example://static/contracts/slope_regression_baseline_retained/evaluated.json",
+            "contract_type": "sam3_stage0_deployment_decision",
+            "schema_path": "schemas/sam3-stage0-deployment-decision.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "simulated",
+          "production_mutation": false
+        },
+        "evaluation": {
+          "deployment_gate_passed": false,
+          "fixed_holdout_manifest_sha256": "2ebb776a59170aab60e66e6a298b316fb57aaa419bdc590a1fd0f2563ac7216a",
+          "overall": {
+            "boundary_f1": 0.67,
+            "false_positives": 8,
+            "mask_iou": 0.72,
+            "object_precision": 0.8,
+            "object_recall": 0.75
+          },
+          "overall_guard_passed": true,
+          "per_class": {
+            "floor": {
+              "boundary_f1": 0.76,
+              "false_positives": 3,
+              "mask_iou": 0.81,
+              "object_precision": 0.87,
+              "object_recall": 0.83
+            },
+            "slope": {
+              "boundary_f1": 0.54,
+              "false_positives": 6,
+              "mask_iou": 0.61,
+              "object_precision": 0.71,
+              "object_recall": 0.64
+            }
+          },
+          "slope_guard_passed": false,
+          "source_real": {
+            "boundary_f1": 0.66,
+            "false_positives": 7,
+            "mask_iou": 0.71,
+            "object_precision": 0.79,
+            "object_recall": 0.74
+          },
+          "source_simulation": {
+            "boundary_f1": 0.69,
+            "false_positives": 1,
+            "mask_iou": 0.74,
+            "object_precision": 0.82,
+            "object_recall": 0.77
+          }
+        },
+        "event_id": "6e28d2cdc6f8cbb722e121b140ded114ce3eb9b42770a62c6391964460051737",
+        "event_key": "6f83c2c0dadd463a04cc4e01e793dcec7ee2c9ba60fa3ea6dcb34c7b3c3b5db0",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": "5fd95945fb7b739eb132f65d64e2143cb88793e7f2c3cb0843162c02fb339d46",
+          "cvat_task_version": "STATIC_TASK_V1",
+          "receipt_sha256": "b6d402b8e583fe1a5f4e74e937c2063ca037657d6b1f05186889d5a1d0534e08",
+          "required": true,
+          "review_event_id": "58fac56bdd5029dd6715fb6bb73afc487e1d11652b21359fb186784e6ba66e9d",
+          "source_image_sha256": "4aa8e74401c561a020f9a1bd2c673d7c2561d85ed59c1b29cb0fc73e299da552",
+          "status": "approved"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_SLOPE",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:01:11+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "cb131cd61a5dc9ab1318ef60db2c79926d217889e388d79c38bf6b67df14ae66",
+        "previous_state": "trained",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [
+          "slope_boundary_f1_regressed",
+          "slope_false_positives_increased"
+        ],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "evaluated",
+        "state_version": 12,
+        "stream_id": "7d6314b068b1a8eb28c81facb86701b1dd0aff7eb4695d9dbd4d390a76b2896c",
+        "trace_id": "slope_regression_baseline_retained",
+        "training_run": {
+          "checkpoint_sha256": "63421820d73efa8f557daa69d3f9769bcc37bc0bc328b59995d82c97d9cbfccf",
+          "package_sha256": "bc4a71180870f7945155fbb02f4b0a2e3faa2a62d6d31b7039013055ed19869a",
+          "run_id": "STATIC_STAGE0_RUN",
+          "simulated_static_replay": true
+        },
+        "truth_version": {
+          "immutable": true,
+          "manifest_sha256": "267dc320b40260d0f24625f420e20a2c2e5c193da683436bf35e94a609df14f8",
+          "split": "train",
+          "version_id": "STATIC_TRUTH_V1"
+        }
+      },
+      "event_sha256": "845c24119dfb3cf3a222a454d2ae8d1f0c449206c7f48ec74e2f7f7bc43943d8",
+      "previous_record_sha256": "96f1661da15cae131d87876887178794752a4aa39ed330f1e2e22d7558bb3d7a",
+      "record_sha256": "5d48400d9a51c97046d2cd2de7ac509e24f99dd9fca0a18bc7b200e44c03cdb2",
+      "sequence": 28
+    },
+    {
+      "event": {
+        "agent_action": "not_applicable",
+        "artifacts": [
+          {
+            "kind": "source_image",
+            "sha256": "4aa8e74401c561a020f9a1bd2c673d7c2561d85ed59c1b29cb0fc73e299da552",
+            "uri": "example://static/source.png"
+          },
+          {
+            "kind": "state_output",
+            "sha256": "2aa3c19afd97d1002e50c197ddc82f17d451f3f39ae5e0db60fa44fdb88c7975",
+            "uri": "example://static/baseline_retained.json"
+          }
+        ],
+        "batch_key": "b1432107a5e885bfebd8a008464d9dbc83ad7835c3670f6ccd2e810e4910692b",
+        "bindings": {
+          "config_sha256": "0ec60987ec0ed412806092558b9cdd07eb979bbb06e350a38acedccf6c425c72",
+          "input_sha256": "848d33117b0f5271d7b00fff48e0033c7f0be5446f48efeb70fb60421fa97a2c",
+          "model_sha256": null,
+          "output_sha256": "2aa3c19afd97d1002e50c197ddc82f17d451f3f39ae5e0db60fa44fdb88c7975",
+          "prompt_sha256": null
+        },
+        "classification": "known_label",
+        "contract_refs": [
+          {
+            "artifact_sha256": "2aa3c19afd97d1002e50c197ddc82f17d451f3f39ae5e0db60fa44fdb88c7975",
+            "artifact_uri": "example://static/contracts/slope_regression_baseline_retained/baseline_retained.json",
+            "contract_type": "sam3_stage0_deployment_decision",
+            "schema_path": "schemas/sam3-stage0-deployment-decision.schema.json",
+            "source_event_id": null
+          }
+        ],
+        "effect": {
+          "external_call_count": 0,
+          "mode": "simulated",
+          "production_mutation": false
+        },
+        "evaluation": {
+          "deployment_gate_passed": false,
+          "fixed_holdout_manifest_sha256": "2ebb776a59170aab60e66e6a298b316fb57aaa419bdc590a1fd0f2563ac7216a",
+          "overall": {
+            "boundary_f1": 0.67,
+            "false_positives": 8,
+            "mask_iou": 0.72,
+            "object_precision": 0.8,
+            "object_recall": 0.75
+          },
+          "overall_guard_passed": true,
+          "per_class": {
+            "floor": {
+              "boundary_f1": 0.76,
+              "false_positives": 3,
+              "mask_iou": 0.81,
+              "object_precision": 0.87,
+              "object_recall": 0.83
+            },
+            "slope": {
+              "boundary_f1": 0.54,
+              "false_positives": 6,
+              "mask_iou": 0.61,
+              "object_precision": 0.71,
+              "object_recall": 0.64
+            }
+          },
+          "slope_guard_passed": false,
+          "source_real": {
+            "boundary_f1": 0.66,
+            "false_positives": 7,
+            "mask_iou": 0.71,
+            "object_precision": 0.79,
+            "object_recall": 0.74
+          },
+          "source_simulation": {
+            "boundary_f1": 0.69,
+            "false_positives": 1,
+            "mask_iou": 0.74,
+            "object_precision": 0.82,
+            "object_recall": 0.77
+          }
+        },
+        "event_id": "0977cc1d7669bc5681a17f8107e848a670d280dad53a37be121a5f05ce50ae5f",
+        "event_key": "90a6a3ccbcdb6f031afbc5bc513c6d89666d5734cc7b5699270faa709a05eee0",
+        "event_type": "state.transition",
+        "failure_reason": null,
+        "human_gate": {
+          "candidate_sha256": "5fd95945fb7b739eb132f65d64e2143cb88793e7f2c3cb0843162c02fb339d46",
+          "cvat_task_version": "STATIC_TASK_V1",
+          "receipt_sha256": "b6d402b8e583fe1a5f4e74e937c2063ca037657d6b1f05186889d5a1d0534e08",
+          "required": true,
+          "review_event_id": "58fac56bdd5029dd6715fb6bb73afc487e1d11652b21359fb186784e6ba66e9d",
+          "source_image_sha256": "4aa8e74401c561a020f9a1bd2c673d7c2561d85ed59c1b29cb0fc73e299da552",
+          "status": "approved"
+        },
+        "identity": {
+          "camera": "camera_0",
+          "dataset_id": "SFL-CPD15-Y",
+          "frame_id": "FRAME_SLOPE",
+          "sequence": "000",
+          "source_batch": "STATIC_ORCHESTRATION",
+          "split": "train"
+        },
+        "label_policy": {
+          "downstream_operation": "union",
+          "downstream_source_labels": [
+            "floor",
+            "slope"
+          ],
+          "downstream_target": "traversable_area",
+          "policy_basis": "user_defined_project_semantics",
+          "preserve_separate_training_labels": true,
+          "semantic_labels": [
+            "floor",
+            "slope"
+          ],
+          "slope_default": "passable"
+        },
+        "occurred_at": "2026-11-11T23:01:12+08:00",
+        "operational_status": "ready",
+        "previous_event_id": "6e28d2cdc6f8cbb722e121b140ded114ce3eb9b42770a62c6391964460051737",
+        "previous_state": "evaluated",
+        "provenance": {
+          "execution_mode": "static_replay",
+          "external_effects_allowed": false,
+          "sample_kind": "synthetic_contract_fixture_not_production",
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "queue": {
+          "depth": 0,
+          "high_watermark": 32,
+          "name": "factory_labelagent",
+          "route": "active"
+        },
+        "reason_codes": [
+          "deployment_gate_failed_slope_guard",
+          "incumbent_retained"
+        ],
+        "retry": {
+          "attempt": 0,
+          "max_attempts": 2,
+          "retryable": false
+        },
+        "schema_version": "labelagent.factory-orchestration-event.v1",
+        "state": "baseline_retained",
+        "state_version": 13,
+        "stream_id": "7d6314b068b1a8eb28c81facb86701b1dd0aff7eb4695d9dbd4d390a76b2896c",
+        "trace_id": "slope_regression_baseline_retained",
+        "training_run": {
+          "checkpoint_sha256": "63421820d73efa8f557daa69d3f9769bcc37bc0bc328b59995d82c97d9cbfccf",
+          "package_sha256": "bc4a71180870f7945155fbb02f4b0a2e3faa2a62d6d31b7039013055ed19869a",
+          "run_id": "STATIC_STAGE0_RUN",
+          "simulated_static_replay": true
+        },
+        "truth_version": {
+          "immutable": true,
+          "manifest_sha256": "267dc320b40260d0f24625f420e20a2c2e5c193da683436bf35e94a609df14f8",
+          "split": "train",
+          "version_id": "STATIC_TRUTH_V1"
+        }
+      },
+      "event_sha256": "83cf0d300f6ee875277790b26938d914f2f5cf60a433d62151ba731432fcfc20",
+      "previous_record_sha256": "5d48400d9a51c97046d2cd2de7ac509e24f99dd9fca0a18bc7b200e44c03cdb2",
+      "record_sha256": "a262fa2e0ce19b277bd72f00b360f35c0224c192d292261a0b2bffd9699d0a12",
+      "sequence": 29
+    }
+  ],
+  "schema_version": "labelagent.factory-orchestration-ledger.v1",
+  "silent_skip": false,
+  "source_accounting": {
+    "real": {
+      "events": 22,
+      "streams": 3
+    },
+    "simulation": {
+      "events": 7,
+      "streams": 1
+    }
+  },
+  "traces": {
+    "known_label_waiting_human": {
+      "event_count": 7,
+      "final_operational_status": "ready",
+      "final_state": "human_review_required",
+      "stream_id": "ac0276fff97396bee7e4bb77c43c2d644111ed7ad9ed08cd022b1eab02867838"
+    },
+    "qc_failure_quarantined": {
+      "event_count": 2,
+      "final_operational_status": "quarantined",
+      "final_state": "quarantined",
+      "stream_id": "22f9a634685c781a53b6d675dba4a54931d7d5bab84d7b005e5cbbb324654dd4"
+    },
+    "slope_regression_baseline_retained": {
+      "event_count": 13,
+      "final_operational_status": "ready",
+      "final_state": "baseline_retained",
+      "stream_id": "7d6314b068b1a8eb28c81facb86701b1dd0aff7eb4695d9dbd4d390a76b2896c"
+    },
+    "unknown_routes_human": {
+      "event_count": 7,
+      "final_operational_status": "ready",
+      "final_state": "human_review_required",
+      "stream_id": "2b7f24b64cf0a1c1e04c21778963f64cbd42793b1e920cd3252222f0a521ee89"
+    }
+  }
+}

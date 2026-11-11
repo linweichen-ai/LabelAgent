@@ -41,6 +41,7 @@ check_gpu() {
 }
 
 wait_health() {
+  # Under set -u, URL expansion must happen after port has been assigned.
   local port="$1" limit="$2" pid="$3"
   local url="http://127.0.0.1:$port/health"
   local count

@@ -41,7 +41,8 @@ check_gpu() {
 }
 
 wait_health() {
-  local port="$1" limit="$2" pid="$3" url="http://127.0.0.1:$port/health"
+  local port="$1" limit="$2" pid="$3"
+  local url="http://127.0.0.1:$port/health"
   local count
   for ((count=0; count<limit; count++)); do
     if curl --fail --silent "$url" >/dev/null; then

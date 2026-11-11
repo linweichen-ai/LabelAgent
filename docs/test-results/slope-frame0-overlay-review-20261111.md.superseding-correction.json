@@ -1,0 +1,20 @@
+{
+  "schema_version": "labelagent.historical-evidence-superseding-correction.v1",
+  "correction_id": "corr-supersede-slope-overlay-report-1b93bd1a",
+  "occurred_at": "2026-11-11T16:02:57+08:00",
+  "immutable": true,
+  "prior_artifact_path": "docs/test-results/slope-frame0-overlay-review-20261111.md",
+  "prior_sha256": "1b93bd1ae0963141202bb1133dfd626a9b3b690283126d04780e34908a037fce",
+  "prior_event_id": "legacy-report:slope-frame0-overlay-review-20261111",
+  "supersedes_event_id": null,
+  "superseded_by": "corr-supersede-slope-overlay-report-1b93bd1a",
+  "new_policy": {
+    "label_type": "slope", "traversability_status": "passable",
+    "policy_basis": "user_defined_project_semantics",
+    "downstream_mapping": {"operation": "union", "source_labels": ["floor", "slope"], "target_label": "traversable_area", "preserve_source_labels": true},
+    "human_pixel_truth_available": false, "approved_for_training": false
+  },
+  "routing_correction": null,
+  "prompt_provenance_correction": null,
+  "claim_boundary": {"prior_artifact_modified": false, "human_truth": false, "approved_for_training": false, "training_started": false}
+}

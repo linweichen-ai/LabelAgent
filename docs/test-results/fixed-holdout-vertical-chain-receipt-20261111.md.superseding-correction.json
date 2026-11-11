@@ -1,0 +1,20 @@
+{
+  "schema_version": "labelagent.historical-evidence-superseding-correction.v1",
+  "correction_id": "corr-supersede-fixed-holdout-report-70c4cc40",
+  "occurred_at": "2026-11-11T16:02:57+08:00",
+  "immutable": true,
+  "prior_artifact_path": "docs/test-results/fixed-holdout-vertical-chain-receipt-20261111.md",
+  "prior_sha256": "70c4cc4029e9e5668ee9c7cfeadeedf4559fa1a5b09b2d5d878ba59053bb065e",
+  "prior_event_id": "fixed-holdout:bc706b57eedaea59:machine-candidate-report",
+  "supersedes_event_id": null,
+  "superseded_by": "corr-supersede-fixed-holdout-report-70c4cc40",
+  "new_policy": {
+    "label_type": "slope", "traversability_status": "passable",
+    "policy_basis": "user_defined_project_semantics",
+    "downstream_mapping": {"operation": "union", "source_labels": ["floor", "slope"], "target_label": "traversable_area", "preserve_source_labels": true},
+    "human_pixel_truth_available": false, "approved_for_training": false
+  },
+  "routing_correction": {"from_state": "candidate_final", "to_state": "human_review_required", "reason": "human_pixel_truth_missing"},
+  "prompt_provenance_correction": {"point": [390, 220], "prompt_provenance": "assistant_selected_prompt", "prompt_role": "operator_seed", "human_selected": false, "human_truth": false},
+  "claim_boundary": {"prior_artifact_modified": false, "human_truth": false, "approved_for_training": false, "training_started": false}
+}

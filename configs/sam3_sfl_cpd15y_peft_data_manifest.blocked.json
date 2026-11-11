@@ -1,0 +1,31 @@
+{
+  "schema_version": "labelagent.sam3-peft-data-manifest.v1",
+  "status": "blocked_no_verified_human_annotations",
+  "inventory": {
+    "historical_pack_images": 96,
+    "historical_train_images": 72,
+    "historical_test_images": 24,
+    "local_pack_present": false,
+    "remote_current_readback": "blocked_ssh_authentication_failed",
+    "machine_preannotations_only": true
+  },
+  "truth": {
+    "train_annotations_path": "train/_annotations.coco.json",
+    "test_annotations_path": "test/_annotations.coco.json",
+    "train_annotations_verified": false,
+    "test_annotations_verified": false,
+    "forbidden_truth_inputs": ["train/_preannotations.coco.json", "test/_preannotations.coco.json", "bev_3d_boxes"]
+  },
+  "isolation": {
+    "train_sequences": ["000", "001", "002", "003", "004", "005", "006", "007", "008"],
+    "test_sequences": ["010", "011", "012"],
+    "test24_in_training": false,
+    "fixed_640_holdout_in_training": false,
+    "fixed_holdout_input_id": "bc706b57eedaea59e3deda1e25eb5a20002e90b61089083e84d2f98130c5600b"
+  },
+  "authorization": {
+    "formal_training_authorized": false,
+    "formal_training_started": false,
+    "process_started": false
+  }
+}

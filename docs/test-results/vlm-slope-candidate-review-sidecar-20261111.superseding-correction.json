@@ -1,0 +1,20 @@
+{
+  "schema_version": "labelagent.historical-evidence-superseding-correction.v1",
+  "correction_id": "corr-supersede-vlm-slope-sidecar-aee398ed",
+  "occurred_at": "2026-11-11T16:02:57+08:00",
+  "immutable": true,
+  "prior_artifact_path": "outputs/sfl_cpd15y_stage2_20261110/slope_review/vlm_slope_candidate_review.json",
+  "prior_sha256": "aee398edace4c7b46ed04a1379a05cd6f0502e3809b7ae1a88972dba005a7dea",
+  "prior_event_id": "legacy-sidecar:vlm-slope-candidate-review-aee398ed",
+  "supersedes_event_id": null,
+  "superseded_by": "corr-supersede-vlm-slope-sidecar-aee398ed",
+  "new_policy": {
+    "label_type": "slope", "traversability_status": "passable",
+    "policy_basis": "user_defined_project_semantics",
+    "downstream_mapping": {"operation": "union", "source_labels": ["floor", "slope"], "target_label": "traversable_area", "preserve_source_labels": true},
+    "human_pixel_truth_available": false, "approved_for_training": false
+  },
+  "routing_correction": null,
+  "prompt_provenance_correction": null,
+  "claim_boundary": {"prior_artifact_modified": false, "human_truth": false, "approved_for_training": false, "training_started": false}
+}

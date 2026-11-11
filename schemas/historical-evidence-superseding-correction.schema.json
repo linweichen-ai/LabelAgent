@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/historical-evidence-superseding-correction.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "correction_id", "occurred_at", "immutable",
+    "prior_artifact_path", "prior_sha256", "prior_event_id",
+    "supersedes_event_id", "superseded_by", "new_policy",
+    "routing_correction", "prompt_provenance_correction", "claim_boundary"
+  ],
+  "properties": {
+    "schema_version": {"const": "labelagent.historical-evidence-superseding-correction.v1"},
+    "correction_id": {"type": "string", "pattern": "^corr-supersede-[a-z0-9-]+$"},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "immutable": {"const": true},
+    "prior_artifact_path": {"type": "string", "minLength": 1},
+    "prior_sha256": {"$ref": "#/$defs/hash"},
+    "prior_event_id": {"type": "string", "minLength": 1},
+    "supersedes_event_id": {"type": ["string", "null"], "minLength": 1},
+    "superseded_by": {"type": "string", "pattern": "^corr-supersede-[a-z0-9-]+$"},
+    "new_policy": {"$ref": "#/$defs/new_policy"},
+    "routing_correction": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["from_state", "to_state", "reason"],
+          "properties": {
+            "from_state": {"const": "candidate_final"},
+            "to_state": {"const": "human_review_required"},
+            "reason": {"const": "human_pixel_truth_missing"}
+          }
+        }
+      ]
+    },
+    "prompt_provenance_correction": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["point", "prompt_provenance", "prompt_role", "human_selected", "human_truth"],
+          "properties": {
+            "point": {
+              "type": "array", "prefixItems": [{"type": "integer"}, {"type": "integer"}],
+              "minItems": 2, "maxItems": 2
+            },
+            "prompt_provenance": {"const": "assistant_selected_prompt"},
+            "prompt_role": {"const": "operator_seed"},
+            "human_selected": {"const": false},
+            "human_truth": {"const": false}
+          }
+        }
+      ]
+    },
+    "claim_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prior_artifact_modified", "human_truth", "approved_for_training", "training_started"],
+      "properties": {
+        "prior_artifact_modified": {"const": false},
+        "human_truth": {"const": false},
+        "approved_for_training": {"const": false},
+        "training_started": {"const": false}
+      }
+    }
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "new_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label_type", "traversability_status", "policy_basis",
+        "downstream_mapping", "human_pixel_truth_available", "approved_for_training"
+      ],
+      "properties": {
+        "label_type": {"const": "slope"},
+        "traversability_status": {"const": "passable"},
+        "policy_basis": {"const": "user_defined_project_semantics"},
+        "downstream_mapping": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation", "source_labels", "target_label", "preserve_source_labels"],
+          "properties": {
+            "operation": {"const": "union"},
+            "source_labels": {"const": ["floor", "slope"]},
+            "target_label": {"const": "traversable_area"},
+            "preserve_source_labels": {"const": true}
+          }
+        },
+        "human_pixel_truth_available": {"const": false},
+        "approved_for_training": {"const": false}
+      }
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "schema_version": "labelagent.immutable-evidence-peft-prep-receipt.v1",
+  "occurred_at": "2026-11-11T16:02:57+08:00",
+  "history": {
+    "user_named_head": "963a46c2d39df5228174770f083e370d09e68875",
+    "history_rewritten": false,
+    "restore_source": "cc20fb0",
+    "restored_file_count": 9,
+    "all_restored_files_match_cc20fb0_blob_bytes": true
+  },
+  "prior_artifacts": [
+    {"path": "docs/test-results/closed-loop-slope-known-label-candidate-generated-20261111.json", "sha256": "fe801bed6cd617cd3e545c159af14d975d71f8d1f3d3eee1d1076112c5909b00"},
+    {"path": "docs/test-results/closed-loop-slope-known-label-events-20261111.md", "sha256": "f3d2db0a13a819c919a29454b479c69918d052d448d4c74e8ff29b1216985861"},
+    {"path": "docs/test-results/closed-loop-slope-known-label-vlm-reviewed-20261111.json", "sha256": "7cc56fbe1c9493c5dadde5d0d8c0518cf585250e945ccbcad2ae6fc278b2c93e"},
+    {"path": "docs/test-results/dual-5090-acceptance-20261111.md", "sha256": "036de2d944539dca2ffc22b3195e1136875d852d43d42fd630f2ecf3b450b30a"},
+    {"path": "docs/test-results/dual-5090-packaging-newline-defect-20261111.md", "sha256": "2907fd6af91b33fe040ca2bae25e8e415d257b42fe664e919ee1f20a1c0f2367"},
+    {"path": "docs/test-results/fixed-holdout-vertical-chain-receipt-20261111.json", "sha256": "1caa15b53e573301928288f9ff9a459619a18339948d0cef146dc8c4f30200eb"},
+    {"path": "docs/test-results/fixed-holdout-vertical-chain-receipt-20261111.md", "sha256": "70c4cc4029e9e5668ee9c7cfeadeedf4559fa1a5b09b2d5d878ba59053bb065e"},
+    {"path": "docs/test-results/slope-frame0-overlay-review-20261111.json", "sha256": "79a1be7b9e0a7141a1233e6cc59572e9b42abe63b19312345c9e37db478c7a19"},
+    {"path": "docs/test-results/slope-frame0-overlay-review-20261111.md", "sha256": "1b93bd1ae0963141202bb1133dfd626a9b3b690283126d04780e34908a037fce"},
+    {"path": "outputs/sfl_cpd15y_stage2_20261110/slope_review/vlm_slope_candidate_review.json", "sha256": "aee398edace4c7b46ed04a1379a05cd6f0502e3809b7ae1a88972dba005a7dea"}
+  ],
+  "corrections": {
+    "schema": "schemas/historical-evidence-superseding-correction.schema.json",
+    "validated_file_count": 10,
+    "exact_file_schema_errors": 0,
+    "new_policy": "passable/user_defined_project_semantics/floor_union_slope",
+    "human_pixel_truth_available": false,
+    "approved_for_training": false,
+    "fixed_holdout_route": "candidate_final->human_review_required"
+  },
+  "training_inventory": {
+    "local_annotations_coco_count": 0,
+    "local_preannotations_coco_count": 0,
+    "historical_96_pack": "72_train_24_test_machine_preannotations_only",
+    "historical_cvat_human_review_status": "pending",
+    "remote_5090_readback": "blocked_permission_denied",
+    "remote_4090_readback": "blocked_permission_denied",
+    "genuine_human_annotations_verified": false
+  },
+  "peft_preparation": {
+    "plan_sha256": "815bcc7937713abb83343b404a282143b8f5692b577c39d44b3960751c131342",
+    "blocked_manifest_sha256": "755980b1f903e56c885187901cf5be3c884b9891aab7e06b901e6e0323ab4ff8",
+    "world_size": 2,
+    "backend": "nccl",
+    "trainable_prefix": "segmentation_head.mask_predictor.mask_embed.",
+    "train72_sequences": ["000", "001", "002", "003", "004", "005", "006", "007", "008"],
+    "test24_sequences": ["010", "011", "012"],
+    "test24_in_training": false,
+    "fixed_640_holdout_in_training": false,
+    "blocked_launch_gate_smoke_passed": true,
+    "executable_hydra_config_ready": false,
+    "formal_training_authorized": false,
+    "formal_training_started": false,
+    "process_started": false
+  },
+  "tests": {
+    "relevant_tests_passed": 50,
+    "relevant_tests_failed": 0
+  }
+}

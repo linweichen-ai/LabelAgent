@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/sam3-peft-data-manifest.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "inventory", "truth", "isolation", "authorization"],
+  "properties": {
+    "schema_version": {"const": "labelagent.sam3-peft-data-manifest.v1"},
+    "status": {"const": "blocked_no_verified_human_annotations"},
+    "inventory": {
+      "type": "object", "additionalProperties": false,
+      "required": ["historical_pack_images", "historical_train_images", "historical_test_images", "local_pack_present", "remote_current_readback", "machine_preannotations_only"],
+      "properties": {
+        "historical_pack_images": {"const": 96},
+        "historical_train_images": {"const": 72},
+        "historical_test_images": {"const": 24},
+        "local_pack_present": {"const": false},
+        "remote_current_readback": {"const": "blocked_ssh_authentication_failed"},
+        "machine_preannotations_only": {"const": true}
+      }
+    },
+    "truth": {
+      "type": "object", "additionalProperties": false,
+      "required": ["train_annotations_path", "test_annotations_path", "train_annotations_verified", "test_annotations_verified", "forbidden_truth_inputs"],
+      "properties": {
+        "train_annotations_path": {"const": "train/_annotations.coco.json"},
+        "test_annotations_path": {"const": "test/_annotations.coco.json"},
+        "train_annotations_verified": {"const": false},
+        "test_annotations_verified": {"const": false},
+        "forbidden_truth_inputs": {"const": ["train/_preannotations.coco.json", "test/_preannotations.coco.json", "bev_3d_boxes"]}
+      }
+    },
+    "isolation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["train_sequences", "test_sequences", "test24_in_training", "fixed_640_holdout_in_training", "fixed_holdout_input_id"],
+      "properties": {
+        "train_sequences": {"const": ["000", "001", "002", "003", "004", "005", "006", "007", "008"]},
+        "test_sequences": {"const": ["010", "011", "012"]},
+        "test24_in_training": {"const": false},
+        "fixed_640_holdout_in_training": {"const": false},
+        "fixed_holdout_input_id": {"const": "bc706b57eedaea59e3deda1e25eb5a20002e90b61089083e84d2f98130c5600b"}
+      }
+    },
+    "authorization": {
+      "type": "object", "additionalProperties": false,
+      "required": ["formal_training_authorized", "formal_training_started", "process_started"],
+      "properties": {
+        "formal_training_authorized": {"const": false},
+        "formal_training_started": {"const": false},
+        "process_started": {"const": false}
+      }
+    }
+  }
+}

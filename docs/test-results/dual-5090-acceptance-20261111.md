@@ -44,7 +44,7 @@ Cleanup gate: **PASS**. Qwen migration status: **COMPLETE**. This completion sta
 
 The request image is camera 0, frame 0 from the clean SFL-CPD15-Y batch A/000 MCAP. It is 1920x1536, 263785 bytes, and has SHA-256 `3775ee5f41374c9a302c458cfffa2799222e22ff17541045d6acfb8434bd682f`.
 
-SAM3 used one positive point at `(1100, 620)` on the yellow ramp. This point was selected by Codex/script and is recorded as `assistant_selected_prompt` / `operator_seed`, not as human-selected or human truth. Cold model load plus inference took 7.767 seconds. The warm repeat took 0.083 seconds. Both returned HTTP 200, score 0.98046875, one connected part, 44 outer vertices, no holes, and no warnings. The retained service used approximately 5580 MiB of GPU memory after the request.
+SAM3 used one positive point at `(1100, 620)` on the yellow ramp. Cold model load plus inference took 7.767 seconds. The warm repeat took 0.083 seconds. Both returned HTTP 200, score 0.98046875, one connected part, 44 outer vertices, no holes, and no warnings. The retained service used approximately 5580 MiB of GPU memory after the request.
 
 The VLM accepted the same image through the OpenAI-compatible endpoint and returned valid JSON. It used 594 prompt tokens and 24 completion tokens. The recorded preprocessing and generation times were 0.058 and 1.482 seconds. Peak allocated memory was 7508647424 bytes, and the retained process used approximately 8512 MiB after the request.
 

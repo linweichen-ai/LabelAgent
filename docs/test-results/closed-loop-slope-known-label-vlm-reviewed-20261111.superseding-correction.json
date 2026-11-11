@@ -1,0 +1,20 @@
+{
+  "schema_version": "labelagent.historical-evidence-superseding-correction.v1",
+  "correction_id": "corr-supersede-slope-vlm-7cc56fbe",
+  "occurred_at": "2026-11-11T16:02:57+08:00",
+  "immutable": true,
+  "prior_artifact_path": "docs/test-results/closed-loop-slope-known-label-vlm-reviewed-20261111.json",
+  "prior_sha256": "7cc56fbe1c9493c5dadde5d0d8c0518cf585250e945ccbcad2ae6fc278b2c93e",
+  "prior_event_id": "evt-slope-a000-f0-vlm-aee398ed",
+  "supersedes_event_id": "evt-slope-a000-f0-vlm-aee398ed",
+  "superseded_by": "corr-supersede-slope-vlm-7cc56fbe",
+  "new_policy": {
+    "label_type": "slope", "traversability_status": "passable",
+    "policy_basis": "user_defined_project_semantics",
+    "downstream_mapping": {"operation": "union", "source_labels": ["floor", "slope"], "target_label": "traversable_area", "preserve_source_labels": true},
+    "human_pixel_truth_available": false, "approved_for_training": false
+  },
+  "routing_correction": null,
+  "prompt_provenance_correction": null,
+  "claim_boundary": {"prior_artifact_modified": false, "human_truth": false, "approved_for_training": false, "training_started": false}
+}

@@ -1,0 +1,48 @@
+{
+  "evidence_type": "closed_loop_gate_readback",
+  "schema_version": "labelagent.closed-loop.v1",
+  "dataset_id": "SFL-CPD15-Y",
+  "source_batch": "20260920_cs-heli_Dev_000001/000",
+  "frame_id": "0",
+  "sensor": "/capture/camera_0/image",
+  "captured_at": "2026-09-20T09:45:06.782450Z",
+  "timestamp_source": "capture",
+  "source_kind": "real",
+  "content_sha256": "3775ee5f41374c9a302c458cfffa2799222e22ff17541045d6acfb8434bd682f",
+  "input_id": "d6dd4871302ea90d9d0431af92545f044b5c3f636188e1bc8b75912dd5f629bd",
+  "events": [
+    {
+      "sequence": 1,
+      "state": "received",
+      "event_id": "345c4a5d6b52322a55b50bdcbc830a5e2d1a55d187b89fcdf6bcb8b40a48c107"
+    },
+    {
+      "sequence": 2,
+      "state": "human_review_required",
+      "event_id": "1f597f981ae8d2a4029fc420f4f3bb42d3fb22e631633b5c2303fa2a1c5725bd",
+      "reasons": ["missing_human_truth", "not_a_reference_frame"]
+    }
+  ],
+  "workbench_readback": {
+    "candidate_shape_count": 1,
+    "human_truth_shape_count": 0,
+    "is_reference_frame": false
+  },
+  "idempotency_replay": {
+    "created": false,
+    "idempotent_replay": true,
+    "event_count_after_replay": 2,
+    "last_event_id_unchanged": true,
+    "receipt_sha256_unchanged": true
+  },
+  "receipt": {
+    "receipt_sha256": "ca80800cfe3851adcb9292eecfa2d50df67870572bd2e519728977759d534e4f",
+    "last_state": "human_review_required",
+    "human_gate_passed": false,
+    "full_agent_path_observed": false,
+    "minimum_closed_loop_complete": false,
+    "training_ready": false
+  },
+  "claim": "real input and human gate reached; minimum closed loop not complete",
+  "raw_data_in_repository": false
+}

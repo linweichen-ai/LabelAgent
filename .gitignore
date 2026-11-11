@@ -1,5 +1,6 @@
 /.venv/
 /.venv-vlm/
+/.venv-schema/
 /data/
 /work/
 __pycache__/

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/labelagent-closed-loop.schema.json",
+  "title": "LabelAgent closed-loop evidence envelope",
+  "type": "object",
+  "required": ["schema_version", "input", "events", "receipt"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": "labelagent.closed-loop.v1"},
+    "input": {
+      "type": "object",
+      "required": ["dataset_id", "source_batch", "frame_id", "sensor", "captured_at", "source_kind", "content_sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "dataset_id": {"type": "string", "minLength": 1},
+        "source_batch": {"type": "string", "minLength": 1},
+        "frame_id": {"type": "string", "minLength": 1},
+        "sensor": {"type": "string", "minLength": 1},
+        "captured_at": {"type": "string", "format": "date-time"},
+        "source_kind": {"enum": ["real", "sim"]},
+        "content_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "source_uri": {"type": "string"},
+        "timestamp_source": {"type": "string"}
+      }
+    },
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["event_id", "previous_event_id", "state", "actor", "action", "label_layer", "payload"],
+        "properties": {
+          "event_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "previous_event_id": {"type": ["string", "null"]},
+          "state": {"type": "string"},
+          "actor": {"type": "object"},
+          "action": {"type": "string"},
+          "label_layer": {"enum": ["preannotation", "agent_candidate", "human_truth"]},
+          "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+          "model": {"type": ["object", "null"]},
+          "prompt": {"type": ["object", "null"]},
+          "payload": {"type": "object"},
+          "artifacts": {"type": "array"},
+          "metrics": {"type": "object"}
+        }
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "required": ["input_id", "last_state", "human_gate_passed", "full_agent_path_observed", "minimum_closed_loop_complete", "training_ready", "receipt_sha256"]
+    },
+    "registration": {
+      "type": "object",
+      "required": ["input_id", "created", "idempotent_replay"]
+    },
+    "workbench_readback": {
+      "type": "object",
+      "required": ["truth_shape_count", "is_reference_frame", "candidate_shape_count"]
+    },
+    "bundle_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

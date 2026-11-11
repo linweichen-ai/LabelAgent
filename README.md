@@ -1,5 +1,7 @@
 # 视频全景自动标注原型
 
+持续数据闭环的输入幂等、事件状态机、open-set 人工门禁、真值回流和 KPI 定义见[闭环架构与证据门禁](docs/closed-loop-architecture.md)。闭环 schema 位于 `schemas/labelagent-closed-loop.schema.json`；服务健康或 Agent `done` 均不等于闭环完成。
+
 本机 8GB 显卡可通过按需进程轮换运行 Qwen3-VL-2B NF4 与 SAM3，工作台保持在线。两帧真实功能验收、候选导入及原始数据保护已经完成；本轮没有实际修改候选，不代表准确率提升。见 [本机运行说明](docs/local-gpu.md)、[结果与局限](docs/test-results/local_gpu_results.md) 和 [当前进度](docs/progress/dataset-comparison.md)。
 
 仓库已经包含 `source/sam3` 的 SAM 3 源码，克隆后无需再初始化子模块。安装依赖需要 Python 3.12 和支持 CUDA 的 NVIDIA 显卡：

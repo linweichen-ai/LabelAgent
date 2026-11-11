@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/labelagent-batch-admission-receipt.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "generated_at", "status", "plan_version", "plan_content_sha256", "input_manifest", "resource_readback", "blockers", "execution", "candidate_only", "truth_promotion_allowed", "next_action", "receipt_content_sha256"],
+  "properties": {
+    "schema_version": {"const": "labelagent.batch-admission-receipt.v1"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "status": {"const": "rejected_fail_closed"},
+    "plan_version": {"type": "string", "minLength": 1},
+    "plan_content_sha256": {"$ref": "#/$defs/hash"},
+    "input_manifest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256", "split", "entry_count"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/hash"},
+        "split": {"const": "train72"},
+        "entry_count": {"type": "integer", "minimum": 1}
+      }
+    },
+    "resource_readback": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256", "content_sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/hash"},
+        "content_sha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "blockers": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "execution": {"const": {"plan_generated": true, "gpu_calls": 0, "inference_service_calls": 0, "candidate_artifacts_written": 0, "truth_artifacts_written": 0, "processes_created": 0, "remote_mutation_performed": false}},
+    "candidate_only": {"const": true},
+    "truth_promotion_allowed": {"const": false},
+    "next_action": {"const": "wait_for_resource_gate_then_explicit_execution"},
+    "receipt_content_sha256": {"$ref": "#/$defs/hash"}
+  },
+  "$defs": {"hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

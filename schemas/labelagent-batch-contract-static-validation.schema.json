@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/labelagent-batch-contract-static-validation.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "validated_at", "scope", "environment", "resource_gate", "split_gate", "execution_boundary", "artifacts", "tests", "validation_passed"],
+  "properties": {
+    "schema_version": {"const": "labelagent.batch-contract-static-validation.v1"},
+    "validated_at": {"type": "string", "format": "date-time"},
+    "scope": {"const": "cpu_only_contract_schema_negative_tests_and_static_examples"},
+    "environment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["python_path", "python_version", "jsonschema_version", "dependency_install_performed", "conda_test_modified"],
+      "properties": {
+        "python_path": {"const": ".venv-schema/Scripts/python.exe"},
+        "python_version": {"const": "3.14.7"},
+        "jsonschema_version": {"const": "4.25.1"},
+        "dependency_install_performed": {"const": false},
+        "conda_test_modified": {"const": false}
+      }
+    },
+    "resource_gate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["candidate_generation_allowed", "blockers", "decision"],
+      "properties": {
+        "candidate_generation_allowed": {"const": false},
+        "blockers": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "decision": {"const": "plan_and_rejection_receipt_only"}
+      }
+    },
+    "split_gate": {"const": {"train72_candidate_plan_records": 72, "test24_candidate_generation": "rejected_fail_closed", "test24_role": "evaluation_only_no_training_return"}},
+    "execution_boundary": {"const": {"gpu_model_calls": 0, "inference_service_calls": 0, "candidate_artifacts_written": 0, "truth_artifacts_written": 0, "processes_created": 0, "remote_mutation_performed": false}},
+    "artifacts": {
+      "type": "array", "minItems": 12, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"$ref": "#/$defs/hash"}
+        }
+      }
+    },
+    "tests": {
+      "type": "object", "additionalProperties": false,
+      "required": ["modules", "test_count", "failures", "errors", "schema_error_count", "negative_cases_passed"],
+      "properties": {
+        "modules": {"const": ["tests.test_labelagent_batch_contract", "tests.test_candidate_batch_manifest_v2"]},
+        "test_count": {"const": 21},
+        "failures": {"const": 0},
+        "errors": {"const": 0},
+        "schema_error_count": {"const": 0},
+        "negative_cases_passed": {"type": "integer", "minimum": 7}
+      }
+    },
+    "validation_passed": {"const": true}
+  },
+  "$defs": {"hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

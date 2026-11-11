@@ -1,0 +1,38 @@
+{
+  "schema_version": "labelagent.batch-execution-config.v1",
+  "execution_enabled": false,
+  "execution_mode": "static_cpu_plan_only",
+  "allowed_candidate_input_split": "train72",
+  "test24_policy": {
+    "evaluation_only": true,
+    "candidate_generation_allowed": false,
+    "training_return_allowed": false
+  },
+  "pipeline": [
+    "sam_candidate",
+    "vlm_review",
+    "agent_action",
+    "vlm_recheck"
+  ],
+  "resource_gate": {
+    "required_before_any_inference_service_call": true,
+    "on_rejection": "plan_and_rejection_receipt_only",
+    "gpu_calls_on_rejection": 0,
+    "inference_service_calls_on_rejection": 0
+  },
+  "output_policy": {
+    "layer": "machine_candidate",
+    "write_mode": "append_only_explicit_new_version",
+    "candidate_only": true,
+    "truth_eligible": false,
+    "automatic_truth_promotion": false,
+    "overwrite_existing_candidate": false,
+    "overwrite_human_truth": false
+  },
+  "human_review_routing": {
+    "unknown_or_new_label": {"reason_code": "unknown_or_new_label", "priority": "p1_high"},
+    "low_confidence": {"reason_code": "low_confidence", "priority": "p2_normal"},
+    "vlm_sam_conflict": {"reason_code": "vlm_sam_conflict", "priority": "p1_high"},
+    "qc_failed": {"reason_code": "qc_failed", "priority": "p0_critical"}
+  }
+}

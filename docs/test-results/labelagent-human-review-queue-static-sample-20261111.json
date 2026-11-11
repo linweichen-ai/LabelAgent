@@ -1,0 +1,152 @@
+{
+  "entries": [
+    {
+      "automatic_truth_promotion": false,
+      "candidate_only": true,
+      "candidate_ref": {
+        "artifact_id": "b152dbdf293caa56a89f92cb38d1fac44288d1766219a0278c6ef4d70081d39b",
+        "artifact_state": "contract_fixture_not_materialized",
+        "path": "candidate_outputs/candidate-batch-20261111-v1/train72/000/1789897538282478905_camera_0.candidate.json",
+        "sha256": "9db5b8e68d7a54d6e41b0e1d4f4665dad32fcffbc1e4372c656e80ab0c18c5a0"
+      },
+      "created_at": "2026-11-11T17:40:27+08:00",
+      "idempotency_key": "1b12e999b3c26d49c0f8b3c6ccb9ebf11195fa8bacf0646b3eaf891ab4d869e2",
+      "priority": "p1_high",
+      "provenance": {
+        "camera": "camera_0",
+        "dataset_id": "sfl-cpd15y",
+        "execution_plan_sha256": "f28227dff3edeb5c06336844e48ce46769020fb79f6396bf900f0bf8d735db55",
+        "frame_id": "1789897538282478905",
+        "pipeline_config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+        "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+        "sam3_model_sha256": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "sequence": "000",
+        "source_batch": "20260920_cs-heli_Dev_000001",
+        "source_image_sha256": "7184dc7426dfe9b04d2a245c677463bd280bb2656eadad10781d708010e56ca2",
+        "split": "train72",
+        "vlm_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "queue_item_id": "c0ab2a28828f811bb1e54c6565365ad1e48a59f01dba7d455bf08cd56a4ff5f0",
+      "reason_code": "unknown_or_new_label",
+      "review_status": "pending",
+      "source_stage": "vlm_review",
+      "state": "human_review_required",
+      "synthetic_test_only": true,
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "candidate_only": true,
+      "candidate_ref": {
+        "artifact_id": "c8aeb74d6a1fcca2845105c08e4eb95dcb6c6231c6762cb2be12da0e63363ca4",
+        "artifact_state": "contract_fixture_not_materialized",
+        "path": "candidate_outputs/candidate-batch-20261111-v1/train72/000/1789897538282478905_camera_0.candidate.json",
+        "sha256": "5e0abf81d5ca0fa88689b921c3642fe69e13f77737a94ecc25ddcc21f68842a4"
+      },
+      "created_at": "2026-11-11T17:40:27+08:00",
+      "idempotency_key": "88703e67b84cceec67df782b02b016df2093a4d6f819e546a0b4a3cf9fcd4854",
+      "priority": "p2_normal",
+      "provenance": {
+        "camera": "camera_0",
+        "dataset_id": "sfl-cpd15y",
+        "execution_plan_sha256": "f28227dff3edeb5c06336844e48ce46769020fb79f6396bf900f0bf8d735db55",
+        "frame_id": "1789897538282478905",
+        "pipeline_config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+        "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+        "sam3_model_sha256": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "sequence": "000",
+        "source_batch": "20260920_cs-heli_Dev_000001",
+        "source_image_sha256": "7184dc7426dfe9b04d2a245c677463bd280bb2656eadad10781d708010e56ca2",
+        "split": "train72",
+        "vlm_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "queue_item_id": "e28bd2910cd9c173c4be97b739d8a83fc6359e7ddb9131c60776ffc7ef017379",
+      "reason_code": "low_confidence",
+      "review_status": "pending",
+      "source_stage": "vlm_review",
+      "state": "human_review_required",
+      "synthetic_test_only": true,
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "candidate_only": true,
+      "candidate_ref": {
+        "artifact_id": "7f81f3b1629f1efe490bc6f06f049e5c5acfa9881b9a5050ca7d20485e9786a3",
+        "artifact_state": "contract_fixture_not_materialized",
+        "path": "candidate_outputs/candidate-batch-20261111-v1/train72/000/1789897538282478905_camera_0.candidate.json",
+        "sha256": "fe5b89ced43d2587d8b8b29e1e98ccec7d48d5ad3b62dedb17f8664d2a4e016b"
+      },
+      "created_at": "2026-11-11T17:40:27+08:00",
+      "idempotency_key": "771f60dc86af314feced76b7df8080010f6fc061d1e27220b317b5deb660afe7",
+      "priority": "p1_high",
+      "provenance": {
+        "camera": "camera_0",
+        "dataset_id": "sfl-cpd15y",
+        "execution_plan_sha256": "f28227dff3edeb5c06336844e48ce46769020fb79f6396bf900f0bf8d735db55",
+        "frame_id": "1789897538282478905",
+        "pipeline_config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+        "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+        "sam3_model_sha256": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "sequence": "000",
+        "source_batch": "20260920_cs-heli_Dev_000001",
+        "source_image_sha256": "7184dc7426dfe9b04d2a245c677463bd280bb2656eadad10781d708010e56ca2",
+        "split": "train72",
+        "vlm_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "queue_item_id": "5d9b9d94b693197b5cefd7204a0b2a3295c3c448e415d6bd63b3627ee5372e76",
+      "reason_code": "vlm_sam_conflict",
+      "review_status": "pending",
+      "source_stage": "vlm_recheck",
+      "state": "human_review_required",
+      "synthetic_test_only": true,
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "candidate_only": true,
+      "candidate_ref": {
+        "artifact_id": "ac7fd242c9b047d88d90eb75486495488d4529488f1e85748ff781150ee5663e",
+        "artifact_state": "contract_fixture_not_materialized",
+        "path": "candidate_outputs/candidate-batch-20261111-v1/train72/000/1789897538282478905_camera_0.candidate.json",
+        "sha256": "3ef152b830d2a4502856524ddc193401ab1ed5b3b353c4fd343b1bc756218220"
+      },
+      "created_at": "2026-11-11T17:40:27+08:00",
+      "idempotency_key": "8a34d2c212da8638af26abeb21b312e0a07ad8d8d1b5a2634ca16b7e997755d1",
+      "priority": "p0_critical",
+      "provenance": {
+        "camera": "camera_0",
+        "dataset_id": "sfl-cpd15y",
+        "execution_plan_sha256": "f28227dff3edeb5c06336844e48ce46769020fb79f6396bf900f0bf8d735db55",
+        "frame_id": "1789897538282478905",
+        "pipeline_config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+        "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+        "sam3_model_sha256": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "sequence": "000",
+        "source_batch": "20260920_cs-heli_Dev_000001",
+        "source_image_sha256": "7184dc7426dfe9b04d2a245c677463bd280bb2656eadad10781d708010e56ca2",
+        "split": "train72",
+        "vlm_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "queue_item_id": "507008b2162d10918fa9059ba409e2577b01c9457ca6ad7af37e8fe56e61eea9",
+      "reason_code": "qc_failed",
+      "review_status": "pending",
+      "source_stage": "quality_check",
+      "state": "human_review_required",
+      "synthetic_test_only": true,
+      "truth_eligible": false
+    }
+  ],
+  "entry_count": 4,
+  "generated_at": "2026-11-11T17:40:27+08:00",
+  "queue_content_sha256": "2741decfedc40f28e8fdc123a9b6bfa6f25f00a03c8cbf4d30128f0c384b3a13",
+  "queue_version": "human-review-queue-static-20261111-v1",
+  "sample_kind": "static_contract_fixture",
+  "schema_version": "labelagent.human-review-queue.v1",
+  "truth_promotion_allowed": false,
+  "write_policy": {
+    "mode": "append_only_explicit_new_version",
+    "overwrite_existing_queue_item": false,
+    "overwrite_human_truth": false
+  }
+}

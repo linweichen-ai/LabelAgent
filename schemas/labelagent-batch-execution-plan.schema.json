@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/labelagent-batch-execution-plan.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plan_version", "generated_at", "execution_mode", "plan_state", "resource_admission", "input_manifest", "pipeline", "record_count", "records", "output_policy", "execution_counters", "plan_content_sha256"],
+  "properties": {
+    "schema_version": {"const": "labelagent.batch-execution-plan.v1"},
+    "plan_version": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "execution_mode": {"const": "static_cpu_plan_only"},
+    "plan_state": {"enum": ["planned_not_executed", "rejected_resource_gate"]},
+    "resource_admission": {
+      "type": "object", "additionalProperties": false,
+      "required": ["allowed", "blockers", "readback_content_sha256"],
+      "properties": {
+        "allowed": {"type": "boolean"},
+        "blockers": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "readback_content_sha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "input_manifest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["manifest_version", "manifest_content_sha256", "split", "entry_count"],
+      "properties": {
+        "manifest_version": {"type": "string", "minLength": 1},
+        "manifest_content_sha256": {"$ref": "#/$defs/hash"},
+        "split": {"const": "train72"},
+        "entry_count": {"type": "integer", "minimum": 1}
+      }
+    },
+    "pipeline": {"const": ["sam_candidate", "vlm_review", "agent_action", "vlm_recheck"]},
+    "record_count": {"type": "integer", "minimum": 1},
+    "records": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/record"}},
+    "output_policy": {"const": {
+      "layer": "machine_candidate",
+      "write_mode": "append_only_explicit_new_version",
+      "candidate_only": true,
+      "truth_eligible": false,
+      "automatic_truth_promotion": false,
+      "overwrite_existing_candidate": false,
+      "overwrite_human_truth": false
+    }},
+    "execution_counters": {"const": {
+      "gpu_calls": 0,
+      "inference_service_calls": 0,
+      "candidate_artifacts_written": 0,
+      "truth_artifacts_written": 0,
+      "processes_created": 0
+    }},
+    "plan_content_sha256": {"$ref": "#/$defs/hash"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"resource_admission": {"properties": {"allowed": {"const": false}}}}},
+      "then": {
+        "properties": {
+          "plan_state": {"const": "rejected_resource_gate"},
+          "resource_admission": {"properties": {"blockers": {"minItems": 1}}}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"resource_admission": {"properties": {"allowed": {"const": true}}}}},
+      "then": {
+        "properties": {
+          "plan_state": {"const": "planned_not_executed"},
+          "resource_admission": {"properties": {"blockers": {"maxItems": 0}}}
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "artifact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifact_id", "path", "sha256", "kind"],
+      "properties": {
+        "artifact_id": {"$ref": "#/$defs/hash"},
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/hash"},
+        "kind": {"enum": ["sam_candidate", "vlm_review", "agent_action", "vlm_recheck", "failure_receipt"]}
+      }
+    },
+    "stage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["stage", "status", "attempt", "failure_reason", "artifact_refs"],
+      "properties": {
+        "stage": {"enum": ["sam_candidate", "vlm_review", "agent_action", "vlm_recheck"]},
+        "status": {"enum": ["planned", "blocked", "not_started", "running", "succeeded", "failed", "human_review_required"]},
+        "attempt": {"type": "integer", "minimum": 0},
+        "failure_reason": {"type": ["string", "null"]},
+        "artifact_refs": {"type": "array", "items": {"$ref": "#/$defs/artifact"}}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"enum": ["planned", "running", "succeeded"]}}},
+          "then": {"properties": {"failure_reason": {"type": "null"}}}
+        },
+        {
+          "if": {"properties": {"status": {"enum": ["blocked", "not_started", "failed", "human_review_required"]}}},
+          "then": {"properties": {"failure_reason": {"type": "string", "minLength": 1}}}
+        },
+        {
+          "if": {"properties": {"status": {"enum": ["planned", "blocked", "not_started"]}}},
+          "then": {"properties": {"artifact_refs": {"maxItems": 0}}}
+        },
+        {
+          "if": {"properties": {"status": {"enum": ["succeeded", "human_review_required"]}}},
+          "then": {"properties": {"artifact_refs": {"minItems": 1}}}
+        }
+      ]
+    },
+    "route": {
+      "type": "object", "additionalProperties": false,
+      "required": ["reason_code", "priority", "target_state"],
+      "properties": {
+        "reason_code": {"enum": ["unknown_or_new_label", "low_confidence", "vlm_sam_conflict", "qc_failed"]},
+        "priority": {"enum": ["p0_critical", "p1_high", "p2_normal"]},
+        "target_state": {"const": "human_review_required"}
+      }
+    },
+    "record": {
+      "type": "object", "additionalProperties": false,
+      "required": ["record_id", "idempotency_key", "split", "sequence", "frame_id", "camera", "source_image_sha256", "preannotation_sha256", "model_sha256", "config_sha256", "output_candidate_path", "output_write_mode", "candidate_only", "truth_eligible", "automatic_truth_promotion", "stages", "review_routes"],
+      "properties": {
+        "record_id": {"$ref": "#/$defs/hash"},
+        "idempotency_key": {"$ref": "#/$defs/hash"},
+        "split": {"const": "train72"},
+        "sequence": {"type": "string", "pattern": "^[0-9]{3}$"},
+        "frame_id": {"type": "string", "pattern": "^[0-9]+$"},
+        "camera": {"type": "string", "pattern": "^camera_[0-3]$"},
+        "source_image_sha256": {"$ref": "#/$defs/hash"},
+        "preannotation_sha256": {"$ref": "#/$defs/hash"},
+        "model_sha256": {
+          "type": "object", "additionalProperties": false,
+          "required": ["sam3", "vlm"],
+          "properties": {"sam3": {"$ref": "#/$defs/hash"}, "vlm": {"$ref": "#/$defs/hash"}}
+        },
+        "config_sha256": {"$ref": "#/$defs/hash"},
+        "output_candidate_path": {"type": "string", "pattern": "^candidate_outputs/.+\\.candidate\\.json$"},
+        "output_write_mode": {"const": "append_only_explicit_new_version"},
+        "candidate_only": {"const": true},
+        "truth_eligible": {"const": false},
+        "automatic_truth_promotion": {"const": false},
+        "stages": {
+          "type": "array", "minItems": 4, "maxItems": 4,
+          "prefixItems": [
+            {"allOf": [{"$ref": "#/$defs/stage"}, {"properties": {"stage": {"const": "sam_candidate"}}}]},
+            {"allOf": [{"$ref": "#/$defs/stage"}, {"properties": {"stage": {"const": "vlm_review"}}}]},
+            {"allOf": [{"$ref": "#/$defs/stage"}, {"properties": {"stage": {"const": "agent_action"}}}]},
+            {"allOf": [{"$ref": "#/$defs/stage"}, {"properties": {"stage": {"const": "vlm_recheck"}}}]}
+          ],
+          "items": false
+        },
+        "review_routes": {"type": "array", "minItems": 4, "maxItems": 4, "uniqueItems": true, "items": {"$ref": "#/$defs/route"}}
+      }
+    }
+  }
+}

@@ -1,0 +1,5232 @@
+{
+  "execution_counters": {
+    "candidate_artifacts_written": 0,
+    "gpu_calls": 0,
+    "inference_service_calls": 0,
+    "processes_created": 0,
+    "truth_artifacts_written": 0
+  },
+  "execution_mode": "static_cpu_plan_only",
+  "generated_at": "2026-11-11T17:40:27+08:00",
+  "input_manifest": {
+    "entry_count": 72,
+    "manifest_content_sha256": "8e1ded379e67e002184bf53ddac3a7b66ff1acc3531d403cc15026582ff3e5d7",
+    "manifest_version": "candidate-batch-20261111-v1",
+    "split": "train72"
+  },
+  "output_policy": {
+    "automatic_truth_promotion": false,
+    "candidate_only": true,
+    "layer": "machine_candidate",
+    "overwrite_existing_candidate": false,
+    "overwrite_human_truth": false,
+    "truth_eligible": false,
+    "write_mode": "append_only_explicit_new_version"
+  },
+  "pipeline": [
+    "sam_candidate",
+    "vlm_review",
+    "agent_action",
+    "vlm_recheck"
+  ],
+  "plan_content_sha256": "f28227dff3edeb5c06336844e48ce46769020fb79f6396bf900f0bf8d735db55",
+  "plan_state": "rejected_resource_gate",
+  "plan_version": "labelagent-batch-plan-20261111-v1",
+  "record_count": 72,
+  "records": [
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_0",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789897538282478905",
+      "idempotency_key": "9ec93ee9cb6e39c854f1de37e89ae0a5c5b08c47355c8d72466a224a3f690ad9",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/000/1789897538282478905_camera_0.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "5da0975a51451b4b543a5ec53bfbec14924e6262b9fd40aca71d075756f95be6",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "000",
+      "source_image_sha256": "7184dc7426dfe9b04d2a245c677463bd280bb2656eadad10781d708010e56ca2",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_1",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789897538282478905",
+      "idempotency_key": "34e846dacc3c263bcf3a035c269466bf51d9959a6f53feb70f01937376c08e7b",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/000/1789897538282478905_camera_1.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "e3f90f8ece9b648cb4625155dd3167f9047d70506a31008aa628a05f20ca98de",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "000",
+      "source_image_sha256": "4920a3c1035495af0cc1b1b0650012724e16a1ade58e4e49f68143aa00712c35",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_2",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789897538282478905",
+      "idempotency_key": "e1d77bf4407f8299d388eb220c88e7fd1dc96853d2364303970c6c8a57f535fa",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/000/1789897538282478905_camera_2.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "3c48b7cb51f8064b2d650ff7fa1805cafb540b00c636cc8d09917c5fa5ea2cb5",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "000",
+      "source_image_sha256": "c6d8b933398352af513823a7d546c62f935c1318011758a38bb6e46a0b035d51",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_3",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789897538282478905",
+      "idempotency_key": "d16b3ddcf7dea6454b8704bfd87e30ba9249237cb50f72cb4a69108975cc2a78",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/000/1789897538282478905_camera_3.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "5b4709ff8029258b3f51d4fb7a81920514dac7e0504c7494105e922063adc7d9",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "000",
+      "source_image_sha256": "9e322f77aa32395cca75298de96a4aa0673a23c85770a610f2f1fe78452799d1",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_0",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789897567982480905",
+      "idempotency_key": "2e4c55a4ddf493151171abc35bf7699d0b4c0f66d09abac5ccd1beef12e84716",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/000/1789897567982480905_camera_0.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "52d8cecec710eeeb1974fa3914667aa90075d446b318b63432726121048fbe43",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "000",
+      "source_image_sha256": "90a6ace367f4fe1a305906c310bdf000c75927a8ca59a6255ebe809805bc0473",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_1",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789897567982480905",
+      "idempotency_key": "65a7b6048e0034c86c70ab4f92d82155035f472392493dbacdc28003abeaf57b",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/000/1789897567982480905_camera_1.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "7b9717e33ae4237ec3c4dc1e6170d74a10df541d400c81e4de5e8712d261883d",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "000",
+      "source_image_sha256": "8df1fd27de5f2e1afa4aaa3796605e637ce4ac848b269e436b2f557957723a43",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_2",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789897567982480905",
+      "idempotency_key": "691714f65c9f1c4c2c72f507c7c3f39857a716cebff7ab16681de7d20262fbc4",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/000/1789897567982480905_camera_2.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "540f77cfdbdae8ab88032de942818b5941dc688a9b70308b2c23cf797ec3080d",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "000",
+      "source_image_sha256": "4fe26f01eb44175029e6fce5d22b2e692e0ef4dd60e91e88340627a8b652dbb6",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_3",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789897567982480905",
+      "idempotency_key": "0f1ac201fcab5b7209f9791403e864b34fab9ab22edfcab90428a8e067146a18",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/000/1789897567982480905_camera_3.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "9ebf1ae1f47e674949a83b6301013272289f1afe997315cf8cddb0bc905b5344",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "000",
+      "source_image_sha256": "fb09dbb02b128eceab2d6cabaa814fe117ee9e8340e8b54acf8ddd54b0513a8e",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_0",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789897699515779197",
+      "idempotency_key": "8fff6bd0ea17b8e51c7277101de9bc7d905f1e0e51ed6c3cb80343180bc6a2aa",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/001/1789897699515779197_camera_0.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "0443db3249ef907f13362febe4d862dff47497dcae255d54d96fa5ae026c6bec",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "001",
+      "source_image_sha256": "33bea6add9ccfe8cc7fc806a1c58765491737687184fc252fd7edfb642b67103",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_1",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789897699515779197",
+      "idempotency_key": "6b2033f916b331bb206ebfa212e32cd4eabbd3697143d7ea7b644884e62232c5",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/001/1789897699515779197_camera_1.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "95d5703da1abc7a46202a487a2fcfda0de86f874ae9b3872f46bf4b92d91895d",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "001",
+      "source_image_sha256": "bbbd93803e6ca0466af9311d7393ca8dac5147ece49b0fca2124a6d623cc2d6c",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_2",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789897699515779197",
+      "idempotency_key": "a81e49877064b632ed7b6627ef7d0b8f26ca778a1707c279794a594ccff1f1e4",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/001/1789897699515779197_camera_2.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "0ce84fc827becce935cbb61039d21381edeb0e3b819ee0288969ff7e82973fba",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "001",
+      "source_image_sha256": "76c2b8cba68ef3e1d5db6171ca7bf4a42919efd719e11bac7de778bfefd1785d",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_3",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789897699515779197",
+      "idempotency_key": "b0ce8630ac4cfef0fd47e7ce45d054f1a016806313cc5e6e6c5534aa6d81331b",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/001/1789897699515779197_camera_3.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "da44ab5e420064006457e5fbe9424e797b42179a5c1eebb47a9d7cba5036b195",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "001",
+      "source_image_sha256": "2a698f6dd2b9fa3b4584cc69f68da706f8539f5fead27cf30c9a6c3c3f7b7fb1",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_0",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789897794915849905",
+      "idempotency_key": "133fa811ed7731ecb6fddf60fa68cb524eeb715808366f3ca1fde39790ce56fb",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/001/1789897794915849905_camera_0.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "544454efc1820699a9dda2bd1b9b8f2f330355f1f48a93e8a2bd7cf17250727e",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "001",
+      "source_image_sha256": "4920fb932e571e346a8047475c100ffdaf6040587a141d1c38ea016a019073f2",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_1",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789897794915849905",
+      "idempotency_key": "805d20e04d774cad913b4938472b9bd73c6b3ed82a0ee409abbf7f5fe35034a4",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/001/1789897794915849905_camera_1.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "4f83eafb52f01770c710c64e90ea2e592a61d9d6c4e96b3d60d4e2f392035d1f",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "001",
+      "source_image_sha256": "1b2a7de6901b66600840179960cda7aab1074cb3c230f2a1eeda850e010131fd",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_2",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789897794915849905",
+      "idempotency_key": "968a223e7b18cefc7236e61344af0c118c3a44f39058a5494bfe436e3a38d548",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/001/1789897794915849905_camera_2.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "3ff5c69dff909d19e8074fca5fc3cdc360657dd34455a51e4609777a853c1701",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "001",
+      "source_image_sha256": "8d7850a07d8da82b6aa9ae3d3c272a09fcb696b46e79b5b3fcd4fc108eca0921",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_3",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789897794915849905",
+      "idempotency_key": "7b06b8bb30ef4c7adb8285916f3805b9420c3f4060c51979ff4f3f1c799afd59",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/001/1789897794915849905_camera_3.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "389bc2404d26913cca57a70d832ac58796909fe38d487427d8ae5e5b7354cae1",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "001",
+      "source_image_sha256": "dfac5dffd84f9a37238abb5bb8b760f2b76e97714fa545e3fb61393655cff975",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_0",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898036148973197",
+      "idempotency_key": "69455ebff7def55b38b439583ae51d6dc2c7edc76aea6800aa7955fa766e57fb",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/002/1789898036148973197_camera_0.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "00649790dbd6bc5a9981786099589277fe4971b9405623019fb70eab56aa5ee5",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "002",
+      "source_image_sha256": "43676b5e92884149f6c3d3f70efa4e5276ae2579e3862202c3f21010672c0014",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_1",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898036148973197",
+      "idempotency_key": "eb684e2276d95c16a8b310cfc3dcb6f522dcd835a4b3fb4c7a434ee0e3000c00",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/002/1789898036148973197_camera_1.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "2e0197f56a65167723d43c1cf77b4e037875eecfb8e741afc42b1a4ac8dba888",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "002",
+      "source_image_sha256": "3e4b8d9aa7c59c45ee1223754ba09b382a235ae7ab7f42dae18372bcd7fffcfd",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_2",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898036148973197",
+      "idempotency_key": "0609cf5ac0c9de16745f2b6917fad783aefc08ff238916f81f0de0f467f901c0",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/002/1789898036148973197_camera_2.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "db044798587d5c677632d0ddfccc3f6f5d5faa8e488a2a513c5180120ad2937d",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "002",
+      "source_image_sha256": "1d2c78d429a6b45a723ec0c5e2c741c3e7fc4f3346625b99232686e89a7fb4f1",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_3",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898036148973197",
+      "idempotency_key": "32b9d53107a9c110457c45bda5ded13b77c9bf5be71f6696d0c61254871331e1",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/002/1789898036148973197_camera_3.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "867155979eb47d7bee8c57cd04bb158d7e9c3b0f3690568bab279fca479a0f19",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "002",
+      "source_image_sha256": "e0c2921c13c9480371e852b53dd7560aae87a6fbaea16baa12529f5a4ce30872",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_0",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898052949154906",
+      "idempotency_key": "fb4c1dc0d9c23a48a03d44ece23728244802bb916b9fd4385ca6e905f339a12f",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/002/1789898052949154906_camera_0.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "83b3a056b4608e65169546381d5eff223c8f1feefc16a69ff59595ccb4febb6c",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "002",
+      "source_image_sha256": "f6036d9a55a7682a341c698e333b0412ce1b9a497ce78d4481c3a9b4d4d35127",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_1",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898052949154906",
+      "idempotency_key": "38592730b01b5f7f7160eecfed2afb2b50ce698efb3243fbbcb956e360f69e61",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/002/1789898052949154906_camera_1.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "948c7ea285545122e888f8409734ecc3dd727c42edca246b601e32578d36fe1a",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "002",
+      "source_image_sha256": "824eb7630c3ca3c5913ec90fc74cce0ebaa8a76f64dd59e06bd6b75b3bdb37f2",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_2",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898052949154906",
+      "idempotency_key": "d4400a591f0e32cb55b0c8b5d93a0baba18aed45c13cd46f376fa2b9af67b9bf",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/002/1789898052949154906_camera_2.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "698bef12cc19239203ae9434efb261b97b25584a5add4e966d88a20a02efb20a",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "002",
+      "source_image_sha256": "3dc3989c2163abae7095ce4dcde7108dd82ec24a6ad9bed723fdbdfaad064897",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_3",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898052949154906",
+      "idempotency_key": "76588d557a5270bb6e82d7aa09ebca038484d4b6dd16fb334f481ca99bb7e80a",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/002/1789898052949154906_camera_3.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "b62ec6ab2e78a0a8552a9cb8d10df37697c8f8c47ccc5ba4ebb5074e9a2bd734",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "002",
+      "source_image_sha256": "b2a4ab14abb23f659426ff14acb93018e65cb49c3528d9fc6152e27302c557b0",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_0",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898134449159197",
+      "idempotency_key": "c4e3c0883c36be7e941fd4190d3dddb06528778d890feb687513e8dc4d970946",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/003/1789898134449159197_camera_0.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "09a35f790753016939285e831ff943d644d3c82073ff56035b5d0da04ade945b",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "003",
+      "source_image_sha256": "02ec34ff9bfda9de1608e1073e75127b39df6e5ca871382a25d62b07100f67e6",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_1",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898134449159197",
+      "idempotency_key": "f5835b25b6460835fba5ebfe1d0010fd506d6f109764eba510fd3b88235f7be7",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/003/1789898134449159197_camera_1.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "a6f69b7b87fce2a4e7a5f4cc44e64e32608e323e396a6c9c8239b79bbec39a29",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "003",
+      "source_image_sha256": "a1bd6cf180def58b12d8c6cdeadc9bcf12d19d0c07e95984fddcbfba066a9f40",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_2",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898134449159197",
+      "idempotency_key": "eab39da1e4dbd6eab2075c79b5d8837a567928244862b98ad6fc676f5cfad75c",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/003/1789898134449159197_camera_2.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "f2e915e6dc919dfdf881ea351f44ab3ece8e6478f0f1164e84efeeb64f202639",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "003",
+      "source_image_sha256": "c767f521648b03505cee747579f1283a6b864748341c519dfb88f12c5b52d66c",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_3",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898134449159197",
+      "idempotency_key": "edf905db9cd77379297b01686cd588315f4903327ccb25fb91f3abd4eca75345",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/003/1789898134449159197_camera_3.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "498e7b5f09321e581bb17b46190a60a7bcba73a69860f90883111ebd8ea55373",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "003",
+      "source_image_sha256": "52383ebfe6606fa5bcf6ab77cd9721bb1240fd696a2f8b02adb660557b6f9825",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_0",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898190549174197",
+      "idempotency_key": "16445a5866b6d68c465bf55d4a449428d9b5313152a83ecb70e91ebaf80316b9",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/003/1789898190549174197_camera_0.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "4fccc961244f650e7d9ae88638c68a10431318415c3fa047833b2117393be526",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "003",
+      "source_image_sha256": "b7fbe12247b1c6378933538ffd9392a0f27b5aa754a72b657f8cecf9d4a8a230",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_1",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898190549174197",
+      "idempotency_key": "a47543ea6e6fc2cefae0ffec87bfec405fe7de2a4e8aa798b989ba4a58446be8",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/003/1789898190549174197_camera_1.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "3a466b62755c60f99c082711d7c569bd6c7533d24e66b711d5f2afce5fb2e5cc",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "003",
+      "source_image_sha256": "440692be810d8b64ada766bc17b9426a9da54ea6b8fa6facabcbb1b93879fc77",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_2",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898190549174197",
+      "idempotency_key": "8150053d38a388742f3a3273322f536178c23a5a5f9077eb94ec1da276a146d5",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/003/1789898190549174197_camera_2.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "ed23fa5bf1a3c1f7b6c58269adbf23207466a3856d5a8af2bfe2c0b52293dfc3",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "003",
+      "source_image_sha256": "8e19f75f90dbbf1276456fdd8b67d893649a3a375e6ee63f8fba4d7e76735e5a",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_3",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898190549174197",
+      "idempotency_key": "6a532d0eafb97ce02d37887486cd4bbf9cd0d6cff3456ff0a8b0a331bac9bb45",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/003/1789898190549174197_camera_3.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "248915fe6e79ba470e417e86450706bbb0b2c8ca0baaf6a906cbf04dc97d6a39",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "003",
+      "source_image_sha256": "af80255a62c9ed7fcda9a5e34e7041bd0a9ce67b318ff42188f21a4d02602149",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_0",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898294082381197",
+      "idempotency_key": "988c2493f8efbb18d98a77e2f2616d8565fa84d7b1ce5dad6e23a357f5987560",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/004/1789898294082381197_camera_0.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "d762d40238cc22d9d7795d7808dbb2b89f0a4f221b6988713c59ef504dc97fea",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "004",
+      "source_image_sha256": "228cfd44ac3b2b5cb262080569d517c85877aa9d6ecf8998cada1d1adf48e0d6",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_1",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898294082381197",
+      "idempotency_key": "86401bb1327520410c5ce1aaa442dc2a9ca61db6cb42831be80092ce00c95a54",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/004/1789898294082381197_camera_1.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "81c1ab88e249793ece8c848ef086a451c88b46b384d10e808874d53bec61874c",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "004",
+      "source_image_sha256": "974d62bfb57357ec88c1e941483ec5c21249d2bcfa96691526b21628f6a4e10b",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_2",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898294082381197",
+      "idempotency_key": "f02dd3c610324a4cadea57c924d6993d38b45ff86fecb99a67a4749db456cde4",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/004/1789898294082381197_camera_2.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "6f073ea64642414605c74c17f26fae789b06451787e03e256fc18c12f78c03f5",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "004",
+      "source_image_sha256": "28f2a6aaf4df2d734e866370494f0587ce5589ae16043955e6e51251f6db5c22",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_3",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898294082381197",
+      "idempotency_key": "b448fefa04344481cf0d7e3959ec09a76d57c39283409bd77086f3207a7c1f55",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/004/1789898294082381197_camera_3.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "5e53aad26d041008f81c087e5266bb3122265df96e6cac92506968334da164a7",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "004",
+      "source_image_sha256": "a03b6f7b59aa2cad9294d193517a9ac385168f884999af6f6dee30940fa1a5bb",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_0",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898396982491905",
+      "idempotency_key": "8308ad8ef0c6c8045fca382b47855efea460cfcd6ae05f264ec50a5f54d11323",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/004/1789898396982491905_camera_0.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "15a67ec9695bf6445b5a8a81d2465e27fbe55a6f82f69331fa04b10715e64960",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "004",
+      "source_image_sha256": "7c0c9ecb4d794ad79846f7ca1a09dc710ebe7f271c49b423542a22eb7b58ac57",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_1",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898396982491905",
+      "idempotency_key": "edf75ffa71b6249b59d69217ac4ca9a3041c098a52d31f1c258255588a6a91ef",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/004/1789898396982491905_camera_1.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "de8f0e9e75e35489448ee6e96695dd228cb52571e191e0d6ac6151c05b68f3a8",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "004",
+      "source_image_sha256": "bf70d43f5e0969bbb44a1ee30718239d9c6ce244c9627726cec6472e3baeedb0",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_2",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898396982491905",
+      "idempotency_key": "9074d6c9f4dd6abaf05d221977bf0ea71692a1290def883e9f6fe6c3d65f23b0",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/004/1789898396982491905_camera_2.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "f71763ff988466480367aa6e5c3f0529083e22b99eca2ca39d7a42aa06e2046a",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "004",
+      "source_image_sha256": "7c149d2a8d8931d79a52ac5b0724b225061757fa5bc1a824b8c82493af204bdf",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_3",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789898396982491905",
+      "idempotency_key": "1b08b879ae5886ff408919d80d9ef49327f0f55d37a3b6bc879e6bd3b50a19f4",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/004/1789898396982491905_camera_3.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "8d48593518e1eaa39c0def3d2042c3c7f178bd130026160e6eea0711c258aa23",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "004",
+      "source_image_sha256": "e2b6e8431d8025ebf5e00c5230ec19158a2e18a95572559684bdc88f29663777",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_0",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899371082473367",
+      "idempotency_key": "3a4bb1a5fdbb0e08f0894974f69365c38e0bc7a858ad35f60858798a4a74e995",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/005/1789899371082473367_camera_0.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "149bb51ddfea1863b6bd087795fd8ac0b46a788edac3bb0134ac791843ba2cf8",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "005",
+      "source_image_sha256": "003d26ca763bee72ccf464e01059f12d2272595d95152e82dbc9ebaf01a7312d",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_1",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899371082473367",
+      "idempotency_key": "231c8ec32a1f253de17f10336a89f2184a5bc6f8145637ae829fb17b82c3e131",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/005/1789899371082473367_camera_1.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "abdafc1efe394943baf9a06574c64d6b010eee387de9ce5aa56f3e5ed40e92bb",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "005",
+      "source_image_sha256": "3a5030098f00bbf75f2abc0bf1628b30fa373ee95fa01fde4734d274af5196f9",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_2",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899371082473367",
+      "idempotency_key": "aee87dffaf77f3024b42d42c7654ff817f9111d4d011b127b17ace878b00ad4e",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/005/1789899371082473367_camera_2.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "ef72eb55adc5e09148836627091f44caa7725973b13844866f44b39372d75457",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "005",
+      "source_image_sha256": "3ae87c50f4f7d09a711eda6375117e33f187a190452e8dddd7cdbdd15b71906c",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_3",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899371082473367",
+      "idempotency_key": "7cc806d9d902dca8f71e1efd436581d9458f88ff0b9d75fd2ccd90cda6edd34b",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/005/1789899371082473367_camera_3.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "3cb3b9d437739e20aff3a609b536a2536082619ca81e48721ddd717d081be7af",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "005",
+      "source_image_sha256": "55588f78cc434135aef5392a61415b53b0521ba043890b7b85a7cb80a0d41953",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_0",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899475182359367",
+      "idempotency_key": "7a56b7ff7ec7a508025dc7968408de72f75f776d2490d6e4d43efa109c76d4b8",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/005/1789899475182359367_camera_0.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "88f32f8bb58ff89f4dcb567d5598aee0f0eca1251d1b9a21617cee2f1f0c73ff",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "005",
+      "source_image_sha256": "edd84a38428cc7b2d6ecf9d6d1329dfea9ec39c4c73139865ce37dc4f01aab01",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_1",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899475182359367",
+      "idempotency_key": "d27228fa13b17d8aec17e674fe4f5b4a6556276098937e6125d64551337c8dec",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/005/1789899475182359367_camera_1.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "a5e9f8cdcff00560f22ecdf2ff5c25662b8881e7a6a3d3ec43c63fb774dc5872",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "005",
+      "source_image_sha256": "c23038bc1a09cfc9fc1dbd45a61aeee5eee7b8fa7fd5758f0143d1f2c84acc02",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_2",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899475182359367",
+      "idempotency_key": "77b13d9df7693b74e64a41beea943bccb47998d4debe1d72ccee6a63abc29545",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/005/1789899475182359367_camera_2.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "4f623461b59bc4f4dca33868332f35d9b8b690372ce1d5c836fe26dd8c4379fa",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "005",
+      "source_image_sha256": "d98d793c6463873e121f66208b0384839452aabf2750251a65802ad9c98425fa",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_3",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899475182359367",
+      "idempotency_key": "6df218cd69ccc8ff4b60325fa108765ad1d2611d7bf8618d46a3604e5d286f83",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/005/1789899475182359367_camera_3.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "b94677a6c5eaa9c088137181fbdc6eb891a50acfa3e7f199849ca61eea8b2c34",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "005",
+      "source_image_sha256": "c7492e72974da2743d17990d9bd1b7473485435c01efe465022a30fc23dd707c",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_0",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899592982447364",
+      "idempotency_key": "4dde3912ff78616eb77ce2dd546137c4ad4654fbd74119c15a00be84c21b7aa9",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/006/1789899592982447364_camera_0.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "f911cc2052e949ad6f4154a673ab7d095005082822bdf0a1f49ea16749ded842",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "006",
+      "source_image_sha256": "03f4ae1ad56d2ff642ca140a74c1214a5e8b046ceb478a45beccef8e8a1d8063",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_1",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899592982447364",
+      "idempotency_key": "a2f6cb775fb3f706768f0e34169e2c4eed1aa082751674e877c6a3bf5e7a9b48",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/006/1789899592982447364_camera_1.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "3ecb722bcf87abc5f786aa922a314729e1e38d86bcd81937cbe0614e1379d911",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "006",
+      "source_image_sha256": "6b79687b349aabb1a8e9ba750576c116583c15db50d39af39a4191e464c87426",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_2",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899592982447364",
+      "idempotency_key": "69b5b437f9ddbec1927fb5a5aba9b2d67cba842db1634493ef4b154f88c6d365",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/006/1789899592982447364_camera_2.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "73d5009249a2d44c2139297937d7290610fc7e2389be69780a5915bb1de42507",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "006",
+      "source_image_sha256": "c1bb535259a56627f383b10748a95f121fcb58a4fefebea58995669534000068",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_3",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899592982447364",
+      "idempotency_key": "899f7dff926a3ee042283c8aa29e8d9a78b78107380ae8860955ff747afd573f",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/006/1789899592982447364_camera_3.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "7711b33c5aac2787400853e8ee827cedc069d0bab7e1d944e4b2711f1a18e920",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "006",
+      "source_image_sha256": "cedba5d9b01a73a95f1892557c519b0d312c1e5f7f479cecd5291129f0828460",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_0",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899604682346364",
+      "idempotency_key": "b68c5c78c7340ee02ffbf2aaeca69d2fc985c03d1bcf23ff867652095935dd0c",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/006/1789899604682346364_camera_0.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "25c08a3bc70119200621b792f40fb72b4523fcc8384e0ef2b6f3b6d7240a4176",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "006",
+      "source_image_sha256": "c6883375747f7921181398cfb691400d48980e54090c6e43ee4a2cc38bc489c7",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_1",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899604682346364",
+      "idempotency_key": "3a624cd4fc610a0796c1091ec2a83d430e5bf837107fa449fe45a65725e86ba5",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/006/1789899604682346364_camera_1.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "91da77ba0f73f3cc24b5a7362baa551f6d613bc05918cb4065f654bf08b176ac",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "006",
+      "source_image_sha256": "0d5b95b6e9f9c71405edf09664bf8f9f18dd8efb387c340a8a915d6e8fbe6784",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_2",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899604682346364",
+      "idempotency_key": "50c0bc21a81f43eb62451a20a79aa918ab24f1d3a465fed6df5d184b856b0869",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/006/1789899604682346364_camera_2.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "026e14b6edbfe22b77647141d8fd23fbf0952199a1a466e4b0d30e77f47f3242",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "006",
+      "source_image_sha256": "60d16f231683d65c5d4b41968ec7383d532bf5c2456b05a17cc5752df0972c6b",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_3",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899604682346364",
+      "idempotency_key": "1d25d4c365c12ea4970851e663c7b097ca9f4eabcc3b8254cb4f8a6494428f63",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/006/1789899604682346364_camera_3.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "b57a13a869c406e1248ccf364a487ab08ebf1cd985a196cb9c06e2598a97bb1a",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "006",
+      "source_image_sha256": "8425f8d7d89dfcdbb40981e32f7f276d7024b480e37b6bde9c7c85e981c6fc7a",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_0",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899569749168367",
+      "idempotency_key": "75b331829949c8502e339e0f5bf5fd5d3548bd29a809882ee3f0d7f1c42ca5fc",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/007/1789899569749168367_camera_0.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "ae591c3b340ba7ce9ab20a6420a1b3e33ec9fdbe4e74f721096bf47b3949ba94",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "007",
+      "source_image_sha256": "ccd25c1c67ef98a8181ff40a46b95d62a8454510d5e0b7f3797669446c76fb4e",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_1",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899569749168367",
+      "idempotency_key": "9a76df2e73702d0931f32c5ec4c6d8f7dd2e63b2515e09241e1a190da21bf067",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/007/1789899569749168367_camera_1.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "40d81a0be9e383bbef5e9dca76f2bf4d4097db9047378c73374ffb1c0b4a210d",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "007",
+      "source_image_sha256": "3e0f3c675ba6c34179a47cb227ba6a46c84a23c550e958bf51bf3f95e887f712",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_2",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899569749168367",
+      "idempotency_key": "601eea29e99c8dfe0eac3fa3f5d22e8e369156cc28db6d12be536f155f3b19f7",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/007/1789899569749168367_camera_2.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "4677d961eb1fd470ea9c8f10b981768168e96d5d6cdc5d938c8bf7eb47cd331a",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "007",
+      "source_image_sha256": "0e19732780b6da33a6a5381263881f3472025f8fd5a1dc9f256d2cf14e5a35e1",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_3",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899569749168367",
+      "idempotency_key": "0a9c99e32a7eedcc981ad830ebabaef281eec9c1f6f7ba506766d24b0acc13b5",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/007/1789899569749168367_camera_3.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "715476bad440224cec533a859fecf95b01b4e667ba5ccf83cefba4f340e29fe1",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "007",
+      "source_image_sha256": "28a5a68be9f1f12fe088177ad8a4210c3102703db466078889d6f481fc03fbfc",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_0",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899639649165367",
+      "idempotency_key": "8eedbf4fb89b7239be6258e50dbf679f50eaab10cf7a2b17e0fd238f6481be4a",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/007/1789899639649165367_camera_0.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "17cd75c565af8c96223d6bc72742a4bcae0e2f08f104d3f74baba651cead1aa4",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "007",
+      "source_image_sha256": "19965fd3c8aa63dea8b5d0e847bcbf8f78d0dd4eb842497e10c3eb3651091071",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_1",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899639649165367",
+      "idempotency_key": "bbdc960257d2b7749cba4aac83a6222ade4e61c230bcf828aae02f542aa1a782",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/007/1789899639649165367_camera_1.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "ba96c1f864f2306573276b845d164939b5559ab8e8139518424fba1915bcaf30",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "007",
+      "source_image_sha256": "b4674cc3f7fd7df40e032e5662af7368b1dcd30911458b156c822ee9c4f9dff3",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_2",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899639649165367",
+      "idempotency_key": "6daae482dbd25a8dcf86ef9c0e40bc62124e8ac7181bc1ca507eb65f1f220039",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/007/1789899639649165367_camera_2.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "96b1785260b70ea9889a0d546a15d7fe8f866ad33d8da6e7fd91448bdea178fb",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "007",
+      "source_image_sha256": "102600f549f8fe6fe7dcb31914be802673eb49c1d305a4fa336cc5b20219a335",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_3",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899639649165367",
+      "idempotency_key": "531a7366995b14306e18b4970644e194fe6886e39cc6602e39a654e05ff0e520",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/007/1789899639649165367_camera_3.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "b7f45b166e0f0159b59d452ff5b7d5c072fa5026f9cf588f6cbbafb876b4a048",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "007",
+      "source_image_sha256": "a722a7b5b0e607eb109262a53c8ed2e4bf7c5e66008b7770facd19b05eca1b6a",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_0",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899740482474075",
+      "idempotency_key": "3db2e10f2b00b526bfb36cc76b5636371681eef203fd2648d2364d73c180ae8e",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/008/1789899740482474075_camera_0.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "e6c352a2dcf703173be3941f4b35c1c584a27f74f787aefb4fb0e7999886e568",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "008",
+      "source_image_sha256": "d80fa84b137897a268ff633d09057cd9d01e765dfe44bfa7228d016bbab1c3d9",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_1",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899740482474075",
+      "idempotency_key": "794af0fc190a69e7943cac1f2f40da3b0a7061d6f03243b9e0b0a500491aaddd",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/008/1789899740482474075_camera_1.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "16df42df369863884b868b90fb1d2f3a86c0b52adaf46435ff50d7f14c1ad16c",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "008",
+      "source_image_sha256": "2400a8d957b0c8e9129dc75f40f6a57254ec2cb37e9b119bef2d1319e25d84e6",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_2",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899740482474075",
+      "idempotency_key": "8e3f5e1f8163d5602a7919036a4966f48df360b4a4a5cd9513a49b4b1c4c4b18",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/008/1789899740482474075_camera_2.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "2bdfc9047ff08e2b6ff421b6130b0e02c6dcf7a6dd2ccdf64e3e3312cc86b81d",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "008",
+      "source_image_sha256": "6403f0f196f18653898e5413fd651d89309bd93841d44745be3f06523e7a586a",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_3",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899740482474075",
+      "idempotency_key": "be5902b3fd88e43d51e7952719331ada63e5e0cd1c98b59f3ee8899863ef3bbe",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/008/1789899740482474075_camera_3.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "1a59fba05d9edeea083583731e31f2bc8363e4407c4561dfa6398ab5c39b0af7",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "008",
+      "source_image_sha256": "cb30781c2fe5a02f5db30c382c244408d84bed2b1a3c7c3f7e575aa874ee1ef6",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_0",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899770782473075",
+      "idempotency_key": "ca4d0cc4028767d6ed6aad2dadfc7725a79da43aba0113263ed94aace27f3067",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/008/1789899770782473075_camera_0.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "a3762ed3b6fbb8f3fb8542c64723e1f95be45ce153e6a97610579c5aac590a22",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "008",
+      "source_image_sha256": "bda2fdb367f2ca96b619e5c08f09081cc99fbe23c816007023ce0ff95eb655ad",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_1",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899770782473075",
+      "idempotency_key": "918faf15f049a33b8bf8370b5393167ae027dc0ab03a09228b9aea2b3da53ad1",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/008/1789899770782473075_camera_1.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "4d3f6fcb7524c6a343337029e2e7e5e1dce6f1ac4b993a05ca2388bc6cd03f86",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "008",
+      "source_image_sha256": "08253fcf0538d9112fd6c8cea07b358be62ec85c827f466a7f85e0bc48036c5e",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_2",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899770782473075",
+      "idempotency_key": "5395d9165fd8596a41647d6b50f8c831f98f8c2fcbce8f004346c85afb2a4b35",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/008/1789899770782473075_camera_2.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "72d679180949434d04dee2931d886d161d4cdd4333b53d0e4f097ddaef63e20c",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "008",
+      "source_image_sha256": "fefaa5a1df6c20180847d68d99327489dc33b54176f8c9b8cc3c7de8ac2590de",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    },
+    {
+      "automatic_truth_promotion": false,
+      "camera": "camera_3",
+      "candidate_only": true,
+      "config_sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+      "frame_id": "1789899770782473075",
+      "idempotency_key": "e019c50572da4c01f55035ff3e0433fa9e1535d137e019fafed0a262be8f7fbd",
+      "model_sha256": {
+        "sam3": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+        "vlm": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+      },
+      "output_candidate_path": "candidate_outputs/candidate-batch-20261111-v1/train72/008/1789899770782473075_camera_3.candidate.json",
+      "output_write_mode": "append_only_explicit_new_version",
+      "preannotation_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "record_id": "d012a8e4cdc264bf424bda3f7fa409d6203666a57104ee2829ebbed17fa23cd3",
+      "review_routes": [
+        {
+          "priority": "p1_high",
+          "reason_code": "unknown_or_new_label",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p2_normal",
+          "reason_code": "low_confidence",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p1_high",
+          "reason_code": "vlm_sam_conflict",
+          "target_state": "human_review_required"
+        },
+        {
+          "priority": "p0_critical",
+          "reason_code": "qc_failed",
+          "target_state": "human_review_required"
+        }
+      ],
+      "sequence": "008",
+      "source_image_sha256": "69220f9502c4ee41369622d4fc2eb6b9286e32e59d3068649b9ee8eb148e29d5",
+      "split": "train72",
+      "stages": [
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "resource_gate_not_passed",
+          "stage": "sam_candidate",
+          "status": "blocked"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_review",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "agent_action",
+          "status": "not_started"
+        },
+        {
+          "artifact_refs": [],
+          "attempt": 0,
+          "failure_reason": "upstream_not_run_due_to_resource_gate",
+          "stage": "vlm_recheck",
+          "status": "not_started"
+        }
+      ],
+      "truth_eligible": false
+    }
+  ],
+  "resource_admission": {
+    "allowed": false,
+    "blockers": [
+      "dual_5090_gpu0_foreign_compute_process:1206460:swd",
+      "dual_5090_gpu0_foreign_compute_process:1206461:swd",
+      "dual_5090_gpu1_foreign_compute_process:1206461:swd"
+    ],
+    "readback_content_sha256": "9bb3c5e99000c2f65b13a5660973c52423fbbfb3624be26cc8abf95d886449ad"
+  },
+  "schema_version": "labelagent.batch-execution-plan.v1"
+}

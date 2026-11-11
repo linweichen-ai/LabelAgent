@@ -1,0 +1,36 @@
+{
+  "blockers": [
+    "dual_5090_gpu0_foreign_compute_process:1206460:swd",
+    "dual_5090_gpu0_foreign_compute_process:1206461:swd",
+    "dual_5090_gpu1_foreign_compute_process:1206461:swd"
+  ],
+  "candidate_only": true,
+  "execution": {
+    "candidate_artifacts_written": 0,
+    "gpu_calls": 0,
+    "inference_service_calls": 0,
+    "plan_generated": true,
+    "processes_created": 0,
+    "remote_mutation_performed": false,
+    "truth_artifacts_written": 0
+  },
+  "generated_at": "2026-11-11T17:40:27+08:00",
+  "input_manifest": {
+    "entry_count": 72,
+    "path": "docs/test-results/candidate-batch-manifest-train72-20261111.json",
+    "sha256": "89dab2b2552b860871b516670dd1961b84b5238d7fa9faa1ef695b182fba37a7",
+    "split": "train72"
+  },
+  "next_action": "wait_for_resource_gate_then_explicit_execution",
+  "plan_content_sha256": "f28227dff3edeb5c06336844e48ce46769020fb79f6396bf900f0bf8d735db55",
+  "plan_version": "labelagent-batch-plan-20261111-v1",
+  "receipt_content_sha256": "1302df16dee8811cc2133f0326c80d6d0f1e5da7fab08f56a4b3c4dfb0a0ad4e",
+  "resource_readback": {
+    "content_sha256": "9bb3c5e99000c2f65b13a5660973c52423fbbfb3624be26cc8abf95d886449ad",
+    "path": "docs/test-results/labelagent-batch-resource-readback-20261111.json",
+    "sha256": "927f954cef0baf9ca98cba5f7d9d249a23027511562ab76223e248ad4321c8ed"
+  },
+  "schema_version": "labelagent.batch-admission-receipt.v1",
+  "status": "rejected_fail_closed",
+  "truth_promotion_allowed": false
+}

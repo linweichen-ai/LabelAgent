@@ -1,0 +1,60 @@
+{
+  "schema_version": "labelagent.batch-contract-static-validation.v1",
+  "validated_at": "2026-11-11T17:53:53+08:00",
+  "scope": "cpu_only_contract_schema_negative_tests_and_static_examples",
+  "environment": {
+    "python_path": ".venv-schema/Scripts/python.exe",
+    "python_version": "3.14.7",
+    "jsonschema_version": "4.25.1",
+    "dependency_install_performed": false,
+    "conda_test_modified": false
+  },
+  "resource_gate": {
+    "candidate_generation_allowed": false,
+    "blockers": [
+      "dual_5090_gpu0_foreign_compute_process:1206460:swd",
+      "dual_5090_gpu0_foreign_compute_process:1206461:swd",
+      "dual_5090_gpu1_foreign_compute_process:1206461:swd"
+    ],
+    "decision": "plan_and_rejection_receipt_only"
+  },
+  "split_gate": {
+    "train72_candidate_plan_records": 72,
+    "test24_candidate_generation": "rejected_fail_closed",
+    "test24_role": "evaluation_only_no_training_return"
+  },
+  "execution_boundary": {
+    "gpu_model_calls": 0,
+    "inference_service_calls": 0,
+    "candidate_artifacts_written": 0,
+    "truth_artifacts_written": 0,
+    "processes_created": 0,
+    "remote_mutation_performed": false
+  },
+  "artifacts": [
+    {"path": "configs/labelagent_batch_execution_contract.json", "sha256": "bd3742aaca096c37c648d9a49dc651ab42690e62d8940daa3456d6a7d6447314"},
+    {"path": "tools/labelagent_batch_contract.py", "sha256": "2a3b97df70d4445a350177cf2a32540fed1c6763089135c3aa3fab0c2d4195c9"},
+    {"path": "schemas/labelagent-batch-resource-readback.schema.json", "sha256": "56a6b9fbba0ea0dcf54746bdcc656bd745c060f3cf3d06b99d1c0dfe034375d0"},
+    {"path": "schemas/labelagent-batch-execution-plan.schema.json", "sha256": "4011b4d07a4475a609bca7b154c4188fd8a2f6e53e92a0aac966928d849b7086"},
+    {"path": "schemas/labelagent-human-review-queue.schema.json", "sha256": "28481324218afbf235b4018d3078a30a15e6c2045ef9cc7b5dcd2c342ddf20b1"},
+    {"path": "schemas/labelagent-batch-admission-receipt.schema.json", "sha256": "bf0b8d0bfbeb9d91b96537204b534af78ac5d31737d16cdfd13547476f4d35dc"},
+    {"path": "schemas/labelagent-batch-contract-static-validation.schema.json", "sha256": "0ac48b85c2e8851b980c53a8ca43eb398578d7433969714dd84952a63bea11dd"},
+    {"path": "docs/test-results/labelagent-batch-resource-readback-20261111.json", "sha256": "927f954cef0baf9ca98cba5f7d9d249a23027511562ab76223e248ad4321c8ed"},
+    {"path": "docs/test-results/labelagent-batch-execution-plan-rejected-20261111.json", "sha256": "e3a59bf70f4e013486df77e4ffd448d2abec8600bcb0a2176a66701c71d3b5e8"},
+    {"path": "docs/test-results/labelagent-human-review-queue-static-sample-20261111.json", "sha256": "c0e072dd86a3d5a1ad32f7d4e01c54cd71787aef34adab868c5674c653e3b51a"},
+    {"path": "docs/test-results/labelagent-batch-admission-rejected-20261111.json", "sha256": "ae1c045f4e7ee6a5a9885686386a26608cf9159c7525c66fe27e6c48e23f9fab"},
+    {"path": "tests/test_labelagent_batch_contract.py", "sha256": "6293b0d1624e5b5aa29395d83c4d3773f5c9704ccc65366325c612dcba335d21"}
+  ],
+  "tests": {
+    "modules": [
+      "tests.test_labelagent_batch_contract",
+      "tests.test_candidate_batch_manifest_v2"
+    ],
+    "test_count": 21,
+    "failures": 0,
+    "errors": 0,
+    "schema_error_count": 0,
+    "negative_cases_passed": 8
+  },
+  "validation_passed": true
+}

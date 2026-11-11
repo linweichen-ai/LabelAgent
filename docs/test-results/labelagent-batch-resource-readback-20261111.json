@@ -1,0 +1,70 @@
+{
+  "schema_version": "labelagent.batch-resource-readback.v1",
+  "observed_at": "2026-11-11T17:40:27+08:00",
+  "mode": "one_shot_read_only_no_polling",
+  "hosts": {
+    "factory_4090": {
+      "address": "172.16.89.248",
+      "hostname": "vis",
+      "gpus": [
+        {"index": 0, "uuid": "GPU-8dde4d59-7e14-09ff-46c0-35da2f7177b8", "name": "NVIDIA GeForce RTX 4090", "memory_used_mib": 13418, "memory_free_mib": 10664, "utilization_percent": 21},
+        {"index": 1, "uuid": "GPU-f8597845-b2fa-5ca1-6918-816853753818", "name": "NVIDIA GeForce RTX 4090", "memory_used_mib": 9717, "memory_free_mib": 14365, "utilization_percent": 0}
+      ],
+      "compute_processes": [
+        {"pid": 3302154, "owner": "clw", "gpu_indices": [0], "used_gpu_memory_mib": 7276, "command_role": "managed_sam3_service"},
+        {"pid": 1896541, "owner": "lyy", "gpu_indices": [0], "used_gpu_memory_mib": 6108, "command_role": "foreign_training"},
+        {"pid": 2680031, "owner": "clw", "gpu_indices": [1], "used_gpu_memory_mib": 9694, "command_role": "managed_vlm_service"}
+      ],
+      "services": [
+        {"name": "sam3", "port": 18766, "model_loaded": true, "health_only": true},
+        {"name": "vlm8b", "port": 18878, "model_loaded": true, "health_only": true}
+      ],
+      "mutation_performed": false
+    },
+    "dual_5090": {
+      "address": "172.16.89.244",
+      "hostname": "vis",
+      "gpus": [
+        {"index": 0, "uuid": "GPU-8fc83bb8-cdd1-8da3-98b7-990f5de229ff", "name": "NVIDIA GeForce RTX 5090", "memory_used_mib": 16635, "memory_free_mib": 15474, "utilization_percent": 62},
+        {"index": 1, "uuid": "GPU-45a88393-aad3-3ee0-022a-4d4dad168088", "name": "NVIDIA GeForce RTX 5090", "memory_used_mib": 18315, "memory_free_mib": 13797, "utilization_percent": 64}
+      ],
+      "compute_processes": [
+        {"pid": 1131700, "owner": "clw", "gpu_indices": [0], "used_gpu_memory_mib": 6218, "command_role": "managed_sam3_service"},
+        {"pid": 1206460, "owner": "swd", "gpu_indices": [0], "used_gpu_memory_mib": 9796, "command_role": "foreign_training"},
+        {"pid": 1206461, "owner": "swd", "gpu_indices": [0, 1], "used_gpu_memory_mib": 10190, "command_role": "foreign_training"},
+        {"pid": 1074814, "owner": "clw", "gpu_indices": [1], "used_gpu_memory_mib": 8588, "command_role": "managed_vlm_service"}
+      ],
+      "services": [
+        {"name": "sam3", "port": 18766, "model_loaded": true, "health_only": true},
+        {"name": "vlm8b", "port": 18878, "model_loaded": true, "health_only": true}
+      ],
+      "protected_port_18001_listening": true,
+      "mutation_performed": false
+    }
+  },
+  "data_gate": {
+    "pack_root": "/home/clw/projects/labelagent-5090/train_data/sam3_annotation_pack_96",
+    "human_annotation_files": [],
+    "machine_preannotation_files": [
+      "train/_preannotations.coco.json",
+      "test/_preannotations.coco.json"
+    ],
+    "human_truth_available": false
+  },
+  "admission": {
+    "candidate_generation_allowed": false,
+    "blockers": [
+      "dual_5090_gpu0_foreign_compute_process:1206460:swd",
+      "dual_5090_gpu0_foreign_compute_process:1206461:swd",
+      "dual_5090_gpu1_foreign_compute_process:1206461:swd"
+    ]
+  },
+  "execution": {
+    "health_probe_calls": 4,
+    "gpu_model_calls": 0,
+    "inference_service_calls": 0,
+    "processes_created": false,
+    "remote_mutation_performed": false
+  },
+  "readback_content_sha256": "9bb3c5e99000c2f65b13a5660973c52423fbbfb3624be26cc8abf95d886449ad"
+}

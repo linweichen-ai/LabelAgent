@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/labelagent-human-review-queue.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "queue_version", "generated_at", "sample_kind", "write_policy", "entry_count", "entries", "truth_promotion_allowed", "queue_content_sha256"],
+  "properties": {
+    "schema_version": {"const": "labelagent.human-review-queue.v1"},
+    "queue_version": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "sample_kind": {"enum": ["static_contract_fixture", "live_append_only_queue"]},
+    "write_policy": {"const": {"mode": "append_only_explicit_new_version", "overwrite_existing_queue_item": false, "overwrite_human_truth": false}},
+    "entry_count": {"type": "integer", "minimum": 1},
+    "entries": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/entry"}},
+    "truth_promotion_allowed": {"const": false},
+    "queue_content_sha256": {"$ref": "#/$defs/hash"}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "entry": {
+      "type": "object", "additionalProperties": false,
+      "required": ["queue_item_id", "idempotency_key", "state", "reason_code", "priority", "source_stage", "candidate_ref", "provenance", "review_status", "candidate_only", "truth_eligible", "automatic_truth_promotion", "synthetic_test_only", "created_at"],
+      "properties": {
+        "queue_item_id": {"$ref": "#/$defs/hash"},
+        "idempotency_key": {"$ref": "#/$defs/hash"},
+        "state": {"const": "human_review_required"},
+        "reason_code": {"enum": ["unknown_or_new_label", "low_confidence", "vlm_sam_conflict", "qc_failed"]},
+        "priority": {"enum": ["p0_critical", "p1_high", "p2_normal"]},
+        "source_stage": {"enum": ["sam_candidate", "vlm_review", "agent_action", "vlm_recheck", "quality_check"]},
+        "candidate_ref": {
+          "type": "object", "additionalProperties": false,
+          "required": ["artifact_id", "path", "sha256", "artifact_state"],
+          "properties": {
+            "artifact_id": {"$ref": "#/$defs/hash"},
+            "path": {"type": "string", "pattern": "^candidate_outputs/"},
+            "sha256": {"$ref": "#/$defs/hash"},
+            "artifact_state": {"enum": ["materialized", "contract_fixture_not_materialized"]}
+          }
+        },
+        "provenance": {
+          "type": "object", "additionalProperties": false,
+          "required": ["dataset_id", "source_batch", "split", "sequence", "frame_id", "camera", "source_image_sha256", "preannotation_sha256", "sam3_model_sha256", "vlm_config_sha256", "pipeline_config_sha256", "execution_plan_sha256"],
+          "properties": {
+            "dataset_id": {"type": "string", "minLength": 1},
+            "source_batch": {"type": "string", "minLength": 1},
+            "split": {"const": "train72"},
+            "sequence": {"type": "string", "pattern": "^[0-9]{3}$"},
+            "frame_id": {"type": "string", "pattern": "^[0-9]+$"},
+            "camera": {"type": "string", "pattern": "^camera_[0-3]$"},
+            "source_image_sha256": {"$ref": "#/$defs/hash"},
+            "preannotation_sha256": {"$ref": "#/$defs/hash"},
+            "sam3_model_sha256": {"$ref": "#/$defs/hash"},
+            "vlm_config_sha256": {"$ref": "#/$defs/hash"},
+            "pipeline_config_sha256": {"$ref": "#/$defs/hash"},
+            "execution_plan_sha256": {"$ref": "#/$defs/hash"}
+          }
+        },
+        "review_status": {"const": "pending"},
+        "candidate_only": {"const": true},
+        "truth_eligible": {"const": false},
+        "automatic_truth_promotion": {"const": false},
+        "synthetic_test_only": {"type": "boolean"},
+        "created_at": {"type": "string", "format": "date-time"}
+      },
+      "allOf": [
+        {"if": {"properties": {"reason_code": {"const": "qc_failed"}}}, "then": {"properties": {"priority": {"const": "p0_critical"}}}},
+        {"if": {"properties": {"reason_code": {"enum": ["unknown_or_new_label", "vlm_sam_conflict"]}}}, "then": {"properties": {"priority": {"const": "p1_high"}}}},
+        {"if": {"properties": {"reason_code": {"const": "low_confidence"}}}, "then": {"properties": {"priority": {"const": "p2_normal"}}}}
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"sample_kind": {"const": "static_contract_fixture"}}},
+      "then": {"properties": {"entries": {"items": {"properties": {"synthetic_test_only": {"const": true}, "candidate_ref": {"properties": {"artifact_state": {"const": "contract_fixture_not_materialized"}}}}}}}}
+    },
+    {
+      "if": {"properties": {"sample_kind": {"const": "live_append_only_queue"}}},
+      "then": {"properties": {"entries": {"items": {"properties": {"synthetic_test_only": {"const": false}, "candidate_ref": {"properties": {"artifact_state": {"const": "materialized"}}}}}}}}
+    }
+  ]
+}

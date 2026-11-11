@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/labelagent-batch-resource-readback.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "observed_at", "mode", "hosts", "data_gate", "admission", "execution", "readback_content_sha256"],
+  "properties": {
+    "schema_version": {"const": "labelagent.batch-resource-readback.v1"},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "mode": {"const": "one_shot_read_only_no_polling"},
+    "hosts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["factory_4090", "dual_5090"],
+      "properties": {
+        "factory_4090": {"$ref": "#/$defs/host"},
+        "dual_5090": {"$ref": "#/$defs/host"}
+      }
+    },
+    "data_gate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["pack_root", "human_annotation_files", "machine_preannotation_files", "human_truth_available"],
+      "properties": {
+        "pack_root": {"type": "string", "minLength": 1},
+        "human_annotation_files": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "_annotations\\.coco\\.json$"}},
+        "machine_preannotation_files": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "pattern": "_preannotations\\.coco\\.json$"}},
+        "human_truth_available": {"type": "boolean"}
+      }
+    },
+    "admission": {
+      "type": "object", "additionalProperties": false,
+      "required": ["candidate_generation_allowed", "blockers"],
+      "properties": {
+        "candidate_generation_allowed": {"type": "boolean"},
+        "blockers": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "execution": {
+      "type": "object", "additionalProperties": false,
+      "required": ["health_probe_calls", "gpu_model_calls", "inference_service_calls", "processes_created", "remote_mutation_performed"],
+      "properties": {
+        "health_probe_calls": {"type": "integer", "minimum": 0},
+        "gpu_model_calls": {"const": 0},
+        "inference_service_calls": {"const": 0},
+        "processes_created": {"const": false},
+        "remote_mutation_performed": {"const": false}
+      }
+    },
+    "readback_content_sha256": {"$ref": "#/$defs/hash"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"admission": {"properties": {"candidate_generation_allowed": {"const": false}}}}},
+      "then": {"properties": {"admission": {"properties": {"blockers": {"minItems": 1}}}}}
+    },
+    {
+      "if": {"properties": {"admission": {"properties": {"candidate_generation_allowed": {"const": true}}}}},
+      "then": {"properties": {"admission": {"properties": {"blockers": {"maxItems": 0}}}}}
+    }
+  ],
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "gpu": {
+      "type": "object", "additionalProperties": false,
+      "required": ["index", "uuid", "name", "memory_used_mib", "memory_free_mib", "utilization_percent"],
+      "properties": {
+        "index": {"type": "integer", "minimum": 0, "maximum": 1},
+        "uuid": {"type": "string", "pattern": "^GPU-"},
+        "name": {"type": "string", "minLength": 1},
+        "memory_used_mib": {"type": "integer", "minimum": 0},
+        "memory_free_mib": {"type": "integer", "minimum": 0},
+        "utilization_percent": {"type": "integer", "minimum": 0, "maximum": 100}
+      }
+    },
+    "process": {
+      "type": "object", "additionalProperties": false,
+      "required": ["pid", "owner", "gpu_indices", "used_gpu_memory_mib", "command_role"],
+      "properties": {
+        "pid": {"type": "integer", "minimum": 1},
+        "owner": {"type": "string", "minLength": 1},
+        "gpu_indices": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "integer", "minimum": 0, "maximum": 1}},
+        "used_gpu_memory_mib": {"type": "integer", "minimum": 1},
+        "command_role": {"enum": ["managed_sam3_service", "managed_vlm_service", "foreign_training"]}
+      }
+    },
+    "service": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "port", "model_loaded", "health_only"],
+      "properties": {
+        "name": {"enum": ["sam3", "vlm8b"]},
+        "port": {"enum": [18766, 18878]},
+        "model_loaded": {"const": true},
+        "health_only": {"const": true}
+      }
+    },
+    "host": {
+      "type": "object", "additionalProperties": false,
+      "required": ["address", "hostname", "gpus", "compute_processes", "services", "mutation_performed"],
+      "properties": {
+        "address": {"type": "string", "minLength": 1},
+        "hostname": {"type": "string", "minLength": 1},
+        "gpus": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"$ref": "#/$defs/gpu"}},
+        "compute_processes": {"type": "array", "items": {"$ref": "#/$defs/process"}},
+        "services": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"$ref": "#/$defs/service"}},
+        "protected_port_18001_listening": {"type": "boolean"},
+        "mutation_performed": {"const": false}
+      }
+    }
+  }
+}

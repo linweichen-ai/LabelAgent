@@ -1,0 +1,58 @@
+{
+  "schema_version": "labelagent.sam3-96-pack-remote-readback.v1",
+  "observed_at": "2026-11-11T17:18:37.4863130+08:00",
+  "host": "172.16.89.244",
+  "access_mode": "read_only_ssh",
+  "pack_root": "/home/clw/projects/labelagent-5090/train_data/sam3_annotation_pack_96",
+  "splits": {
+    "train72": {
+      "preannotations_path": "train/_preannotations.coco.json",
+      "preannotations_sha256": "f60a9d83c90f77e366a6d621b30c51564cb22ce5d272455a302d897369f3cb8a",
+      "preannotations_size_bytes": 1710255,
+      "image_count": 72,
+      "annotation_count": 685,
+      "categories": ["pallet", "person"],
+      "sequences": ["000", "001", "002", "003", "004", "005", "006", "007", "008"],
+      "human_annotations_path": "train/_annotations.coco.json",
+      "human_annotations_present": false
+    },
+    "test24": {
+      "preannotations_path": "test/_preannotations.coco.json",
+      "preannotations_sha256": "c2e0448fae986a423f0b5d71b7615ccdb07c531250d739ce11c3dc923f25b300",
+      "preannotations_size_bytes": 543352,
+      "image_count": 24,
+      "annotation_count": 226,
+      "categories": ["pallet", "person"],
+      "sequences": ["010", "011", "012"],
+      "human_annotations_path": "test/_annotations.coco.json",
+      "human_annotations_present": false
+    }
+  },
+  "fixed_holdout": {
+    "input_id": "bc706b57eedaea59e3deda1e25eb5a20002e90b61089083e84d2f98130c5600b",
+    "frame_id": "1789897506782450197",
+    "camera": "camera_0",
+    "train_filename_matches": 0,
+    "test_filename_matches": 0,
+    "included_in_training": false
+  },
+  "role_boundary": {
+    "machine_preannotations_truth_eligible": false,
+    "allowed_roles": ["prompt", "roi", "candidate"],
+    "formal_training_authorized": false,
+    "formal_training_started": false
+  },
+  "supersedes_current_state_claims": [
+    {
+      "path": "docs/test-results/sam3-peft-preflight-20261111.json",
+      "old_claim": "remote_current_status=unverified_ssh_authentication_failed",
+      "new_claim": "remote pack verified read-only; human annotations absent"
+    },
+    {
+      "path": "configs/sam3_sfl_cpd15y_peft_data_manifest.blocked.json",
+      "old_claim": "remote_current_readback=blocked_ssh_authentication_failed",
+      "new_claim": "remote_current_readback=verified_read_only_ssh_20261111"
+    }
+  ],
+  "remote_mutation_performed": false
+}

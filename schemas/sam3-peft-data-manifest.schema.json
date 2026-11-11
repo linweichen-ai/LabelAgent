@@ -9,13 +9,16 @@
     "status": {"const": "blocked_no_verified_human_annotations"},
     "inventory": {
       "type": "object", "additionalProperties": false,
-      "required": ["historical_pack_images", "historical_train_images", "historical_test_images", "local_pack_present", "remote_current_readback", "machine_preannotations_only"],
+      "required": ["historical_pack_images", "historical_train_images", "historical_test_images", "local_pack_present", "remote_pack_present", "remote_current_readback", "remote_pack_root", "remote_readback_receipt", "machine_preannotations_only"],
       "properties": {
         "historical_pack_images": {"const": 96},
         "historical_train_images": {"const": 72},
         "historical_test_images": {"const": 24},
         "local_pack_present": {"const": false},
-        "remote_current_readback": {"const": "blocked_ssh_authentication_failed"},
+        "remote_pack_present": {"const": true},
+        "remote_current_readback": {"const": "verified_read_only_ssh_20261111"},
+        "remote_pack_root": {"const": "/home/clw/projects/labelagent-5090/train_data/sam3_annotation_pack_96"},
+        "remote_readback_receipt": {"const": "docs/test-results/sam3-96-pack-remote-readback-20261111.json"},
         "machine_preannotations_only": {"const": true}
       }
     },

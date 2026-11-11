@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/sam3-96-pack-remote-readback.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "observed_at", "host", "access_mode", "pack_root", "splits", "fixed_holdout", "role_boundary", "supersedes_current_state_claims", "remote_mutation_performed"],
+  "properties": {
+    "schema_version": {"const": "labelagent.sam3-96-pack-remote-readback.v1"},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "host": {"const": "172.16.89.244"},
+    "access_mode": {"const": "read_only_ssh"},
+    "pack_root": {"const": "/home/clw/projects/labelagent-5090/train_data/sam3_annotation_pack_96"},
+    "splits": {
+      "type": "object", "additionalProperties": false,
+      "required": ["train72", "test24"],
+      "properties": {
+        "train72": {"$ref": "#/$defs/split"},
+        "test24": {"$ref": "#/$defs/split"}
+      }
+    },
+    "fixed_holdout": {
+      "type": "object", "additionalProperties": false,
+      "required": ["input_id", "frame_id", "camera", "train_filename_matches", "test_filename_matches", "included_in_training"],
+      "properties": {
+        "input_id": {"const": "bc706b57eedaea59e3deda1e25eb5a20002e90b61089083e84d2f98130c5600b"},
+        "frame_id": {"const": "1789897506782450197"},
+        "camera": {"const": "camera_0"},
+        "train_filename_matches": {"const": 0},
+        "test_filename_matches": {"const": 0},
+        "included_in_training": {"const": false}
+      }
+    },
+    "role_boundary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["machine_preannotations_truth_eligible", "allowed_roles", "formal_training_authorized", "formal_training_started"],
+      "properties": {
+        "machine_preannotations_truth_eligible": {"const": false},
+        "allowed_roles": {"const": ["prompt", "roi", "candidate"]},
+        "formal_training_authorized": {"const": false},
+        "formal_training_started": {"const": false}
+      }
+    },
+    "supersedes_current_state_claims": {
+      "type": "array", "minItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["path", "old_claim", "new_claim"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "old_claim": {"type": "string", "minLength": 1},
+          "new_claim": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "remote_mutation_performed": {"const": false}
+  },
+  "$defs": {
+    "split": {
+      "type": "object", "additionalProperties": false,
+      "required": ["preannotations_path", "preannotations_sha256", "preannotations_size_bytes", "image_count", "annotation_count", "categories", "sequences", "human_annotations_path", "human_annotations_present"],
+      "properties": {
+        "preannotations_path": {"type": "string", "pattern": "_preannotations\\.coco\\.json$"},
+        "preannotations_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "preannotations_size_bytes": {"type": "integer", "minimum": 1},
+        "image_count": {"type": "integer", "minimum": 1},
+        "annotation_count": {"type": "integer", "minimum": 0},
+        "categories": {"const": ["pallet", "person"]},
+        "sequences": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^[0-9]{3}$"}},
+        "human_annotations_path": {"type": "string", "pattern": "_annotations\\.coco\\.json$"},
+        "human_annotations_present": {"const": false}
+      }
+    }
+  }
+}

@@ -6,7 +6,10 @@
     "historical_train_images": 72,
     "historical_test_images": 24,
     "local_pack_present": false,
-    "remote_current_readback": "blocked_ssh_authentication_failed",
+    "remote_pack_present": true,
+    "remote_current_readback": "verified_read_only_ssh_20261111",
+    "remote_pack_root": "/home/clw/projects/labelagent-5090/train_data/sam3_annotation_pack_96",
+    "remote_readback_receipt": "docs/test-results/sam3-96-pack-remote-readback-20261111.json",
     "machine_preannotations_only": true
   },
   "truth": {

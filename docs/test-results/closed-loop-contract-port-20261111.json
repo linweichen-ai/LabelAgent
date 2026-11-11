@@ -1,0 +1,47 @@
+{
+  "recorded_at": "2026-11-11T11:43:52+08:00",
+  "status": "contract_port_validated_pipeline_not_run",
+  "source_delivery": {
+    "workspace": "task_workspaces/sfl_cpd15y_20261110",
+    "source_tests_discovered": 8,
+    "source_tests_passed": 8,
+    "note": "The delivered test file currently contains eight tests; the earlier 4/4 count was stale."
+  },
+  "ported_contract": {
+    "event_schema": "schemas/labelagent_closed_loop_event.schema.json",
+    "placeholder_example": "examples/closed_loop_unknown_candidate_event.json",
+    "dependency_free_validator": "source/agent/closed_loop_contract.py",
+    "tests": "tests/test_closed_loop_contract.py",
+    "target_architecture": "docs/CLOSED_LOOP_ARCHITECTURE.md",
+    "runtime_ledger_preserved": "source/agent/closed_loop.py"
+  },
+  "review_changes": [
+    "Kept the high-level 1.1 event protocol separate from the existing append-only runtime ledger.",
+    "Made every example identifier, URI, hash and model field visibly synthetic or placeholder.",
+    "Required timezone-aware timestamps and complete simulation metadata.",
+    "Required event_type and workflow.state consistency.",
+    "Kept the current runtime stricter than the future protocol: truth commits require timestamped human approval.",
+    "Kept slope semantic detection separate from traversability and required geometry evidence for traversability decisions."
+  ],
+  "verification": {
+    "target_affected_tests_run": 90,
+    "target_affected_tests_passed": 86,
+    "target_affected_tests_skipped": 4,
+    "event_schema_draft_2020_12_valid": true,
+    "placeholder_example_schema_valid": true,
+    "placeholder_example_contract_errors": 0,
+    "schema_auto_truth_rejection_errors": 5,
+    "sam_service_model_loaded_after_port": true,
+    "vlm_service_model_loaded_after_port": true,
+    "workbench_loaded_after_port": true,
+    "workbench_truth_frames_after_port": 0,
+    "workbench_frame0_candidates_after_port": 1,
+    "workbench_reference_topics_after_port": 0
+  },
+  "non_claims": [
+    "No full LabelAgent pipeline was run by this contract port.",
+    "No placeholder value is a real observation or production result.",
+    "No SAM or VLM fine-tuning was performed.",
+    "No candidate was promoted to truth."
+  ]
+}

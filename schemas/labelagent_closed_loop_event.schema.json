@@ -1,0 +1,279 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/labelagent_closed_loop_event.schema.json",
+  "title": "LabelAgent closed-loop event protocol 1.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "event_id", "event_type", "occurred_at", "run_id",
+    "correlation_id", "idempotency_key", "workflow", "source", "producer",
+    "decision", "artifacts"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.1.0"},
+    "event_id": {"type": "string", "minLength": 8},
+    "event_type": {
+      "enum": [
+        "frame.ingested", "quality.checked", "candidate.generated",
+        "vlm.reviewed", "agent.action", "unknown.proposed",
+        "ontology.reviewed", "human.reviewed", "truth.committed",
+        "dataset.versioned", "evaluation.completed", "training.completed",
+        "deployment.promoted", "deployment.rolled_back"
+      ]
+    },
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "run_id": {"type": "string", "minLength": 8},
+    "correlation_id": {"type": "string", "minLength": 8},
+    "parent_event_id": {"type": ["string", "null"]},
+    "idempotency_key": {"type": "string", "minLength": 16},
+    "workflow": {"$ref": "#/$defs/workflow"},
+    "source": {"$ref": "#/$defs/source"},
+    "producer": {"$ref": "#/$defs/producer"},
+    "decision": {"$ref": "#/$defs/decision"},
+    "task_context": {"$ref": "#/$defs/task_context"},
+    "slope_context": {"$ref": "#/$defs/slope_context"},
+    "unknown_candidate": {"$ref": "#/$defs/unknown_candidate"},
+    "review": {"$ref": "#/$defs/review"},
+    "artifacts": {"type": "array", "items": {"$ref": "#/$defs/artifact"}},
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "latency_ms": {"type": "number", "minimum": 0},
+        "human_seconds": {"type": "number", "minimum": 0},
+        "agent_rounds": {"type": "integer", "minimum": 0},
+        "estimated_cost": {"type": "number", "minimum": 0},
+        "slope_iou": {"type": "number", "minimum": 0, "maximum": 1},
+        "slope_dice": {"type": "number", "minimum": 0, "maximum": 1},
+        "slope_boundary_f1": {"type": "number", "minimum": 0, "maximum": 1},
+        "slope_false_traversable_count": {"type": "integer", "minimum": 0}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": ["event_type"],
+        "properties": {"event_type": {"const": "unknown.proposed"}}
+      },
+      "then": {
+        "required": ["unknown_candidate", "review"],
+        "properties": {
+          "workflow": {
+            "properties": {"state": {"const": "ontology_review_required"}}
+          },
+          "decision": {
+            "properties": {"status": {"const": "review_required"}}
+          },
+          "review": {
+            "properties": {
+              "required": {"const": true},
+              "status": {"const": "pending"}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["event_type"],
+        "properties": {"event_type": {"const": "truth.committed"}}
+      },
+      "then": {
+        "required": ["review"],
+        "properties": {
+          "workflow": {
+            "properties": {"previous_state": {"const": "human_approved"}}
+          },
+          "review": {
+            "required": ["required", "status", "reviewer_type", "reviewed_at"],
+            "properties": {
+              "required": {"const": true},
+              "status": {"const": "approved"},
+              "reviewer_type": {"const": "human"},
+              "reviewed_at": {"type": "string", "format": "date-time"}
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["previous_state", "state", "iteration", "max_iterations"],
+      "properties": {
+        "previous_state": {
+          "type": ["string", "null"],
+          "enum": [
+            null, "ingested", "qc_passed", "quarantined",
+            "candidates_generated", "vlm_reviewed", "agent_iteration",
+            "auto_accepted", "review_required", "ontology_review_required",
+            "ontology_versioned", "reprocess_required", "human_approved",
+            "human_rejected", "truth_committed", "dataset_versioned",
+            "evaluated", "trained", "deployment_candidate", "promoted",
+            "rolled_back"
+          ]
+        },
+        "state": {
+          "enum": [
+            "ingested", "qc_passed", "quarantined", "candidates_generated",
+            "vlm_reviewed", "agent_iteration", "auto_accepted",
+            "review_required", "ontology_review_required", "ontology_versioned",
+            "reprocess_required", "human_approved", "human_rejected",
+            "truth_committed", "dataset_versioned", "evaluated", "trained",
+            "deployment_candidate", "promoted", "rolled_back"
+          ]
+        },
+        "iteration": {"type": "integer", "minimum": 0},
+        "max_iterations": {"type": "integer", "minimum": 1}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dataset_id", "source_batch", "frame_id", "capture_time", "origin",
+        "modality", "content_sha256"
+      ],
+      "properties": {
+        "dataset_id": {"type": "string", "minLength": 1},
+        "source_batch": {"type": "string", "minLength": 1},
+        "frame_id": {"type": ["string", "integer"]},
+        "camera": {"type": ["string", "null"]},
+        "topic": {"type": ["string", "null"]},
+        "capture_time": {"type": "string", "format": "date-time"},
+        "origin": {"enum": ["real", "simulation"]},
+        "modality": {"enum": ["image", "point_cloud", "multimodal"]},
+        "content_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "simulation": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "simulator": {"type": "string", "minLength": 1},
+            "scene_config": {"type": "string", "minLength": 1},
+            "random_seed": {"type": "integer"},
+            "sensor_version": {"type": "string", "minLength": 1}
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": ["origin"],
+            "properties": {"origin": {"const": "simulation"}}
+          },
+          "then": {
+            "required": ["simulation"],
+            "properties": {
+              "simulation": {
+                "type": "object",
+                "required": ["simulator", "scene_config", "random_seed", "sensor_version"]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["component", "code_commit"],
+      "properties": {
+        "component": {"enum": ["ingestor", "quality_gate", "sam", "vlm", "agent", "human", "trainer", "deployer"]},
+        "model_name": {"type": ["string", "null"]},
+        "model_version": {"type": ["string", "null"]},
+        "prompt_version": {"type": ["string", "null"]},
+        "code_commit": {"type": "string", "minLength": 7},
+        "ontology_version": {"type": ["string", "null"]}
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "confidence", "reason_codes"],
+      "properties": {
+        "status": {"enum": ["accepted", "rejected", "review_required", "unknown", "quarantined", "committed", "versioned", "promoted", "rolled_back"]},
+        "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "reason_codes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "summary": {"type": "string"}
+      }
+    },
+    "task_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hard_case_tags"],
+      "properties": {
+        "hard_case_tags": {
+          "type": "array",
+          "items": {"enum": ["slope", "small_object", "occlusion", "glare", "novel_label", "model_conflict"]},
+          "uniqueItems": true
+        },
+        "evaluation_stratum": {"type": ["string", "null"]}
+      }
+    },
+    "slope_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["semantic_label", "traversability_status", "geometry_evidence_sufficient", "geometry_evidence_artifact_ids", "human_pixel_truth_available"],
+      "properties": {
+        "semantic_label": {"const": "slope_visible"},
+        "traversability_status": {"enum": ["unknown", "review_required", "traversable", "non_traversable"]},
+        "geometry_evidence_sufficient": {"type": "boolean"},
+        "geometry_evidence_artifact_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "human_pixel_truth_available": {"type": "boolean"}
+      }
+    },
+    "unknown_candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidate_id", "proposed_name", "confidence", "nearest_known_labels", "evidence_artifact_ids", "ontology_mutation_allowed"],
+      "properties": {
+        "candidate_id": {"type": "string", "minLength": 8},
+        "proposed_name": {"type": "string", "minLength": 1},
+        "aliases": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "nearest_known_labels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["label", "similarity", "difference"],
+            "properties": {
+              "label": {"type": "string"},
+              "similarity": {"type": "number", "minimum": 0, "maximum": 1},
+              "difference": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "evidence_artifact_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}, "uniqueItems": true},
+        "recommended_action": {"enum": ["merge_existing", "create_new", "hold_unknown", "reject"]},
+        "ontology_mutation_allowed": {"const": false}
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "status"],
+      "properties": {
+        "required": {"type": "boolean"},
+        "status": {"enum": ["not_required", "pending", "approved", "rejected"]},
+        "reason": {"type": "string"},
+        "reviewer_type": {"enum": ["none", "human", "policy"]},
+        "reviewed_at": {"type": ["string", "null"], "format": "date-time"}
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id", "kind", "uri", "sha256"],
+      "properties": {
+        "artifact_id": {"type": "string", "minLength": 8},
+        "kind": {"enum": ["image", "point_cloud", "mask", "box", "label_json", "agent_trace", "report", "model"]},
+        "uri": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    }
+  }
+}

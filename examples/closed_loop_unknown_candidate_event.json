@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.1.0",
+  "event_id": "evt-example-unknown-0001",
+  "event_type": "unknown.proposed",
+  "occurred_at": "2026-11-11T10:00:00+08:00",
+  "run_id": "run-example-frame0-camera0",
+  "correlation_id": "corr-example-frame0-camera0",
+  "parent_event_id": "evt-example-vlm-review-0001",
+  "idempotency_key": "example-placeholder-idempotency-key",
+  "workflow": {
+    "previous_state": "vlm_reviewed",
+    "state": "ontology_review_required",
+    "iteration": 0,
+    "max_iterations": 3
+  },
+  "source": {
+    "dataset_id": "EXAMPLE_DATASET_NOT_REAL",
+    "source_batch": "EXAMPLE_BATCH_NOT_REAL",
+    "frame_id": "EXAMPLE_FRAME_NOT_REAL",
+    "camera": "example_camera",
+    "topic": "/example/camera/image",
+    "capture_time": "2026-11-11T10:00:00+08:00",
+    "origin": "real",
+    "modality": "multimodal",
+    "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "simulation": null
+  },
+  "producer": {
+    "component": "vlm",
+    "model_name": "example-model-not-run",
+    "model_version": "placeholder",
+    "prompt_version": "placeholder-open-set-v1",
+    "code_commit": "0000000-example-placeholder",
+    "ontology_version": "example-ontology-not-production"
+  },
+  "decision": {
+    "status": "review_required",
+    "confidence": 0.71,
+    "reason_codes": ["EXAMPLE_NO_CONFIDENT_MATCH", "EXAMPLE_VISUAL_DIFFERENCE"],
+    "summary": "SYNTHETIC PLACEHOLDER ONLY: no model inference, real observation, or production ontology mutation is represented."
+  },
+  "unknown_candidate": {
+    "candidate_id": "unknown-example-0001",
+    "proposed_name": "example_unconfirmed_object",
+    "aliases": [],
+    "confidence": 0.71,
+    "nearest_known_labels": [
+      {
+        "label": "example_existing_label",
+        "similarity": 0.41,
+        "difference": "Placeholder difference text; not a real visual finding."
+      }
+    ],
+    "evidence_artifact_ids": ["artifact-example-image-0001", "artifact-example-mask-0001"],
+    "recommended_action": "hold_unknown",
+    "ontology_mutation_allowed": false
+  },
+  "review": {
+    "required": true,
+    "status": "pending",
+    "reason": "Example new-label candidates require human ontology review.",
+    "reviewer_type": "human",
+    "reviewed_at": null
+  },
+  "artifacts": [
+    {
+      "artifact_id": "artifact-example-image-0001",
+      "kind": "image",
+      "uri": "example://not-a-real-artifact/frame.jpg",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    {
+      "artifact_id": "artifact-example-mask-0001",
+      "kind": "mask",
+      "uri": "example://not-a-real-artifact/mask.json",
+      "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    }
+  ],
+  "metrics": {
+    "latency_ms": 0,
+    "human_seconds": 0,
+    "agent_rounds": 0,
+    "estimated_cost": 0
+  }
+}

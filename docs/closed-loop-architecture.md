@@ -2,6 +2,8 @@
 
 本设计把模型服务、候选和可信真值分开。服务健康只表示基础设施可用；只有一帧同时留下输入、SAM、VLM、Agent、再次 VLM、人工门禁、最终候选或真值和哈希回执，才可称为最小闭环跑通。
 
+本文描述当前运行时哈希账本。跨组件 1.1 版高层事件格式、仿真元数据与 slope 安全规则见 [`CLOSED_LOOP_ARCHITECTURE.md`](CLOSED_LOOP_ARCHITECTURE.md)；两层协议互补，后者不得覆盖本文账本。其 unknown 示例是显式占位数据，不是实测或生产结果。
+
 ```mermaid
 flowchart LR
   A[工厂帧输入与内容哈希] --> B[幂等输入登记]

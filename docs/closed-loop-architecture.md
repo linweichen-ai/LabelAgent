@@ -88,4 +88,6 @@ python tools/closed_loop_human_gate.py `
 
 `tools/closed_loop_vertical.py` 从回环工作台读取一帧，直接从 MCAP 解出采集时间，计算实际帧哈希并写入账本。当前没有人工参考真值时，它只会写 `received → human_review_required`，回执中的 `minimum_closed_loop_complete=false`。这是一条真实的门禁证据，不是完成声明。
 
+`tools/closed_loop_register_image.py` 用于直接登记一张已落地的真实图像。调用方必须提供 OSS 等原始来源 URI、数据批次、真实 `frame_id`、相机、带时区采集时间和预期 SHA-256；工具会重新读取文件并核验哈希，只写入 `received`，不会臆造 SAM、VLM、Agent 或人工事件。后续模型步骤必须沿用返回的 `input_id` 追加证据，直到人工门禁和不可变版本回执齐备后才能声称闭环完成。
+
 机器约束见 `schemas/labelagent-closed-loop.schema.json`，代码约束见 `source/agent/closed_loop.py`。

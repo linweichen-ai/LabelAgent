@@ -1,0 +1,110 @@
+{
+  "evidence_date": "2026-11-11",
+  "demo_service_smoke": {
+    "evidence_class": "service_load_and_interface_smoke_only",
+    "factory_closed_loop_evidence": false,
+    "input": {
+      "path": "/home/clw/projects/labelagent-5090/app/source/sam3/assets/images/truck.jpg",
+      "bytes": 271475,
+      "sha256": "941715e721c8864324a1425b445ea4dde0498b995c45ddce0141a58971c6ff99"
+    },
+    "sam": {
+      "http_status": 200,
+      "seconds": 0.09,
+      "score": 0.94921875,
+      "part_count": 1,
+      "outer_vertex_count": 84,
+      "hole_count": 1,
+      "warnings": [],
+      "result_sha256": "99cec29c463ce9810dcd0e3f1c299791a6b914ff3feaa9c0429d2306396a8f9b",
+      "summary_sha256": "87f4e48fca64f884bb96e0f9ea599e290f922c0e3356bcae64b35baf8d3fff5b"
+    },
+    "vlm": {
+      "real_vlm_probe_passed": true,
+      "input_images": 1,
+      "full_agent_verified": false,
+      "usage": {
+        "prompt_tokens": 580,
+        "completion_tokens": 28,
+        "total_tokens": 608
+      },
+      "result_sha256": "3faeb5d80fe2b33c5a7a664f60cf492c690149a92d6442ee850e3f1131cbdb11",
+      "summary_sha256": "72adc0e016c0e6ed41af7aa325ed1e452b4561192c84f20c02df761f6db60241"
+    },
+    "remote_receipt_dir": "/home/clw/run/labelagent-5090/service-smoke-demo-1htiovlp"
+  },
+  "factory_frame": {
+    "evidence_class": "real_factory_frame_registered_and_model_interface_probed",
+    "minimum_closed_loop_complete": false,
+    "dataset_id": "sfl-cpd15y",
+    "source_batch": "20260920_cs-heli_Dev_000001/000",
+    "numbered_directory": "000",
+    "frame_id": "1789897506782450197",
+    "camera": "camera_0",
+    "captured_at": "2026-09-20T09:45:06.782450197Z",
+    "timestamp_source": "frame_id_unix_ns",
+    "oss_uri": "oss://seer-kubeflow/dataset/robot_data/SFL-CPD15-Y/20260920_cs-heli_Dev_000001/000/bevannotation_data/cameras_640x512/camera_0/1789897506782450197.png",
+    "bytes": 416542,
+    "media_type": "image/png",
+    "width": 640,
+    "height": 512,
+    "sha256": "34e5094d24db487b3fcd5c458ac810cde5d58293f89fe0b92a2933c72a146812",
+    "oss_readback": {
+      "last_modified": "2026-11-02T10:37:43+08:00",
+      "etag": "5E5B2FB31645FE726FD109F9C62E0E63",
+      "quiet_cat_bytes": 416542,
+      "quiet_cat_sha256_matches_landed_copy": true,
+      "note": "ossutil cat must use -q because the default command appends elapsed status text to stdout"
+    },
+    "annotation_cross_check": {
+      "label_frame_id_matches": true,
+      "label_object_count": 18,
+      "object_types": [
+        "Pallet",
+        "Pedestrian"
+      ],
+      "listed_in_specified_annotation_frames": true,
+      "same_frame_present_in_all_four_cameras": true
+    },
+    "registration": {
+      "input_id": "bc706b57eedaea59e3deda1e25eb5a20002e90b61089083e84d2f98130c5600b",
+      "event_count": 1,
+      "last_state": "received",
+      "receipt_sha256": "87d4316cb4e11424b278b5f0918fcc05bfc5b94f709fcb9bf957d0b6412064a2",
+      "bundle_sha256": "9bce329d57a9ca5ec3f764322810f75ff76b47e87c4107f877c841263ba75914",
+      "model_events_recorded": false,
+      "human_gate_passed": false
+    },
+    "sam_probe": {
+      "prompt_provenance": "human_selected_positive_point_on_visible_yellow_ramp",
+      "point": {
+        "x": 390,
+        "y": 220,
+        "label": 1
+      },
+      "http_status": 200,
+      "seconds": 0.065,
+      "score": 0.98046875,
+      "part_count": 1,
+      "outer_vertex_count": 103,
+      "hole_count": 0,
+      "warnings": [],
+      "result_sha256": "0be59d677c0a910fbf79437484f25cdfdd8256aed4e347a656447bbe9f642593",
+      "summary_sha256": "2d0b43c5ed4dcbebfa06663f00019840c676c0e4bc0c279ad73cd625a4c0d60a"
+    },
+    "vlm_probe": {
+      "real_vlm_probe_passed": true,
+      "input_images": 1,
+      "full_agent_verified": false,
+      "usage": {
+        "prompt_tokens": 414,
+        "completion_tokens": 31,
+        "total_tokens": 445
+      },
+      "result_sha256": "12567932b403eb390b7e10bcaa8dd12adbaddb26ecec4ee3d402cf56ec989a85",
+      "summary_sha256": "9b6e95c7fd9bb23f4234df471239e17cb4ee24703fd2de18fdb4040f5a770669"
+    },
+    "remote_receipt_dir": "/home/clw/run/labelagent-5090/factory-frame-1789897506782450197-AWkFGAWh",
+    "evidence_boundary": "SAM was point-prompted by a human and VLM only performed an image-interface probe. No SAM-candidate-aware VLM review, Agent action, VLM re-verification, human decision, truth commit, or immutable dataset version is claimed."
+  }
+}

@@ -23,9 +23,9 @@ from .workflow import (DESCRIPTION_INPUT_VERSION, MAX_REVIEW_ROUNDS, RunCancelle
                        run, trace_calls, candidate_overlay, reference_overlay)
 
 ROOT = Path(__file__).resolve().parents[2]
-WORK = ROOT / "work"
+WORK = Path(os.environ.get("LABELAGENT_WORK", ROOT / "work")).expanduser().resolve()
 WEB = ROOT / "source" / "web"
-WORK.mkdir(exist_ok=True)
+WORK.mkdir(parents=True, exist_ok=True)
 app = Flask(__name__, static_folder=str(WEB), static_url_path="")
 app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024 * 1024
 state = {"video": None, "topic": None, "labels": [], "truth": {}, "reference_frames": {}, "config": {}, "candidates": {}, "candidates_by_topic": {}, "agent_runs": {}, "agent_runs_by_topic": {}}

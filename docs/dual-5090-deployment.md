@@ -28,6 +28,17 @@ bash tools/dual_5090_services.sh status all
 
 本机访问使用 SSH 隧道，例如把 5090 的 `18766`、`18878` 映射到未占用的本地端口。健康检查分别为 `/health` 和 `/health`；VLM 还提供 OpenAI 兼容的 `/v1/chat/completions`。
 
+若需保留原工作台作为基线，可为第二个工作台设置独立目录和端口：
+
+```bash
+LABELAGENT_WORK=/path/to/isolated-work \
+SAM3_URL=http://127.0.0.1:<sam-tunnel-port> \
+AUTOLABEL_PORT=<free-local-port> \
+python -m source.agent.server
+```
+
+然后通过 `/api/config` 将该工作台的 `llm_url` 指向 VLM 隧道。独立工作目录用于隔离真值、候选、运行记录和模型配置；不得让两个工作台共写同一个 `work` 目录。
+
 ## 验收边界
 
 健康检查只证明服务进程和模型装载状态。正式验收还必须各跑一次真实请求，并记录模型、GPU UUID、耗时、显存和输出摘要。SAM 微调必须等人工确认的 mask 真值准备好后再启动；没有真值时只能做基线推理和候选生成，不能称为微调完成或效果提升。

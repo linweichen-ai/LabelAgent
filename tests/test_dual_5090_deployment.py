@@ -17,6 +17,11 @@ class Dual5090DeploymentTests(unittest.TestCase):
         self.assertIn('local port="$1" limit="$2" pid="$3"\n'
                       '  local url="http://127.0.0.1:$port/health"', script)
 
+    def test_workbench_supports_an_isolated_work_directory(self):
+        server = (ROOT / "source/agent/server.py").read_text(encoding="utf-8")
+        self.assertIn('os.environ.get("LABELAGENT_WORK", ROOT / "work")', server)
+        self.assertIn("WORK.mkdir(parents=True, exist_ok=True)", server)
+
 
 if __name__ == "__main__":
     unittest.main()

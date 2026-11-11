@@ -51,6 +51,23 @@ def require_idle_gpu(rows, uuid, minimum_free_mib=22000):
     return selected
 
 
+def require_dedicated_5090_gpu(rows, uuid, minimum_free_mib=28000):
+    """Dedicated RTX 5090 profile: reject a busy or ambiguously selected card."""
+    matches = [row for row in rows if row["uuid"] == uuid]
+    if len(matches) != 1:
+        raise ValueError("Selected GPU UUID was not found")
+    selected = matches[0]
+    if "RTX 5090" not in selected["name"]:
+        raise ValueError("Selected hardware is not the requested RTX 5090")
+    if not selected.get("free_memory_reported"):
+        raise ValueError("A direct free-memory inventory is required for the dedicated RTX 5090 profile")
+    if selected["has_compute_process"] or selected["utilization_percent"] > 10:
+        raise ValueError("Selected RTX 5090 has existing compute work; no processes were stopped")
+    if selected["free_mib"] < minimum_free_mib:
+        raise ValueError("Selected RTX 5090 has insufficient free memory for this deployment profile")
+    return selected
+
+
 def require_local_gpu(rows, uuid, minimum_free_mib=3500):
     """Personal GPU profile: display processes are expected under Windows WDDM."""
     matches = [row for row in rows if row["uuid"] == uuid]
@@ -88,9 +105,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--gpu-uuid")
     parser.add_argument("--minimum-free-mib", type=int, default=22000)
+    parser.add_argument("--hardware-profile", choices=["idle-4090", "dedicated-5090"],
+                        default="idle-4090")
     args = parser.parse_args()
     rows = inventory()
     result = {"gpus": rows, "read_only": True}
     if args.gpu_uuid:
-        result["selected"] = require_idle_gpu(rows, args.gpu_uuid, args.minimum_free_mib)
+        if args.hardware_profile == "dedicated-5090":
+            result["selected"] = require_dedicated_5090_gpu(
+                rows, args.gpu_uuid, max(args.minimum_free_mib, 28000))
+        else:
+            result["selected"] = require_idle_gpu(rows, args.gpu_uuid,
+                                                  args.minimum_free_mib)
     print(json.dumps(result, indent=2))

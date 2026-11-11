@@ -366,7 +366,9 @@ def create_app(backend):
 
 
 if __name__ == "__main__":
-    from vlm_resources import inventory, require_idle_gpu, require_local_gpu,require_shared_probe_gpu
+    from vlm_resources import (inventory, require_dedicated_5090_gpu,
+                               require_idle_gpu, require_local_gpu,
+                               require_shared_probe_gpu)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model-dir", required=True)
     parser.add_argument("--cache-dir", help="Explicit local-disk runtime cache directory for this process")
@@ -377,7 +379,8 @@ if __name__ == "__main__":
     parser.add_argument("--context-budget", type=int, default=8192)
     parser.add_argument("--quantization", choices=["none", "nf4"], default="none")
     parser.add_argument("--max-image-tokens", type=int)
-    parser.add_argument("--profile", choices=["shared-4090", "local-8gb","shared-4090-probe"], default="shared-4090")
+    parser.add_argument("--profile", choices=["shared-4090", "local-8gb", "shared-4090-probe",
+                                               "dedicated-5090"], default="shared-4090")
     parser.add_argument('--probe-memory-fraction',type=float)
     parser.add_argument('--probe-reserve-mib',type=int)
     parser.add_argument('--probe-seconds',type=int)
@@ -402,6 +405,9 @@ if __name__ == "__main__":
         if args.quantization != "nf4":
             parser.error("The local 8GB profile requires explicit NF4 quantization")
         require_local_gpu(inventory(), args.gpu_uuid)
+    elif args.profile == "dedicated-5090":
+        require_dedicated_5090_gpu(inventory(), args.gpu_uuid,
+                                   max(args.minimum_free_mib, 28000))
     else:
         require_idle_gpu(inventory(), args.gpu_uuid, args.minimum_free_mib)
     configure_runtime_caches(args.cache_dir)

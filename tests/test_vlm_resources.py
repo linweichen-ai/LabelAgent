@@ -59,6 +59,32 @@ class VLMResourceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "insufficient"):
             MODULE.require_idle_gpu(rows, "GPU-a")
 
+    def test_dedicated_5090_requires_direct_free_memory_and_idle_card(self):
+        rows = MODULE.parse_inventory(
+            "GPU-5090, NVIDIA GeForce RTX 5090, 32607, 88, 0, 595.99, 32519", "")
+        selected = MODULE.require_dedicated_5090_gpu(rows, "GPU-5090")
+        self.assertEqual(selected["uuid"], "GPU-5090")
+
+        rows[0]["has_compute_process"] = True
+        with self.assertRaisesRegex(ValueError, "existing compute"):
+            MODULE.require_dedicated_5090_gpu(rows, "GPU-5090")
+
+    def test_dedicated_5090_rejects_wrong_hardware_or_low_headroom(self):
+        wrong = MODULE.parse_inventory(
+            "GPU-a, NVIDIA GeForce RTX 4090, 24564, 10, 0, 595.99, 24554", "")
+        with self.assertRaisesRegex(ValueError, "not the requested RTX 5090"):
+            MODULE.require_dedicated_5090_gpu(wrong, "GPU-a")
+
+        low = MODULE.parse_inventory(
+            "GPU-5090, NVIDIA GeForce RTX 5090, 32607, 6000, 0, 595.99, 26607", "")
+        with self.assertRaisesRegex(ValueError, "insufficient"):
+            MODULE.require_dedicated_5090_gpu(low, "GPU-5090")
+
+        legacy = MODULE.parse_inventory(
+            "GPU-5090, NVIDIA GeForce RTX 5090, 32607, 88, 0, 595.99", "")
+        with self.assertRaisesRegex(ValueError, "direct free-memory"):
+            MODULE.require_dedicated_5090_gpu(legacy, "GPU-5090")
+
 
 if __name__ == "__main__":
     unittest.main()

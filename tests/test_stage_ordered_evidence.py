@@ -68,6 +68,20 @@ class OrderedStageEvidenceTests(unittest.TestCase):
         self.assertFalse(preflight["formal_training"]["started"])
         self.assertFalse(preflight["ddp_check"]["process_started"])
 
+    def test_training_plan_is_schema_valid_and_cannot_launch(self):
+        path = REPO / "configs/sam3_sfl_cpd15y_peft_plan.json"
+        plan = json.loads(path.read_text(encoding="utf-8"))
+        errors = list(self.validator("sam3-peft-plan.schema.json").iter_errors(plan))
+        self.assertEqual(errors, [], [error.message for error in errors])
+        self.assertFalse(plan["execution_enabled"])
+        self.assertFalse(plan["launch_gate"]["formal_training_authorized"])
+        self.assertEqual(plan["model"]["trainable_prefixes"],
+                         ["segmentation_head.mask_predictor.mask_embed."])
+        self.assertIn("train/_preannotations.coco.json",
+                      plan["data"]["forbidden_as_truth"])
+        self.assertFalse(plan["data"]["test24_in_training"])
+        self.assertFalse(plan["data"]["fixed_640_holdout_in_training"])
+
 
 if __name__ == "__main__":
     unittest.main()

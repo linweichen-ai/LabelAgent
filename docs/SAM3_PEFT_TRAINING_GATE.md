@@ -24,4 +24,4 @@
 6. 双 5090 DDP 配置为 `world_size=2`；
 7. 机器可读门禁返回零错误且 `formal_training_authorized=true`。
 
-机器可读当前状态见 [`test-results/sam3-peft-training-readiness-20261111.json`](test-results/sam3-peft-training-readiness-20261111.json)，Schema 见 [`../schemas/sam3-peft-training-gate.schema.json`](../schemas/sam3-peft-training-gate.schema.json)。当前文件只固化训练决策和启动门禁，不表示已经微调、启动训练或取得训练效果。
+机器可读当前状态见 [`test-results/sam3-peft-training-readiness-20261111.json`](test-results/sam3-peft-training-readiness-20261111.json)，不可启动的配置计划见 [`../configs/sam3_sfl_cpd15y_peft_plan.json`](../configs/sam3_sfl_cpd15y_peft_plan.json)，Schema 见 [`../schemas/sam3-peft-training-gate.schema.json`](../schemas/sam3-peft-training-gate.schema.json)。当前文件只固化训练决策和启动门禁，不表示已经微调、启动训练或取得训练效果。

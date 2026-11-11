@@ -21,7 +21,7 @@ SAM 候选后，首轮 VLM 同时读取原图与 overlay；Agent 明确记录 `n
 
 本地工作区没有找到 `_preannotations.coco.json` 或人工 `_annotations.coco.json`；此前 96 帧快照是 72 train/24 test 的机器预标注，不是当前远端回读。对 factory-4090 与双 5090 的只读 SSH 当前均因认证失败，无法声称远端现状或真实双卡 DDP smoke 已通过。预飞回执 `sam3-peft-preflight-20261111.json` SHA-256 为 `fc235b0f1ac9f0ad2935da5927a16887be8307f2241dd8932a3094089c239ac4`。
 
-资源计划仅为：每卡 batch size 1、BF16 待服务器实测确认、gradient accumulation 1、启用 activation checkpointing；首批前后向必须实测峰值显存。当前 `formal_training_authorized=false`、`formal_training_started=false`，无 PID/job、loss 或 checkpoint。
+资源计划仅为：每卡 batch size 1、BF16 待服务器实测确认、gradient accumulation 1、启用 activation checkpointing；首批前后向必须实测峰值显存。不可启动的配置计划保存在 `configs/sam3_sfl_cpd15y_peft_plan.json`，其 Schema 强制 `execution_enabled=false`、禁止 `_preannotations.coco.json` 作为真值，并固定双卡 NCCL DDP。当前 `formal_training_authorized=false`、`formal_training_started=false`，无 PID/job、loss 或 checkpoint。
 
 ## 4. 进程边界
 

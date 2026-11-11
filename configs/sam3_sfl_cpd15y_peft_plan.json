@@ -1,0 +1,54 @@
+{
+  "schema_version": "labelagent.sam3-peft-plan.v1",
+  "execution_enabled": false,
+  "blocked_reason": "genuine human-confirmed _annotations.coco.json and live dual-5090 DDP smoke are not available",
+  "base_training_config": "source/sam3/sam3/train/configs/roboflow_v100/roboflow_v100_full_ft_100_images.yaml",
+  "model": {
+    "checkpoint_source": "existing_verified_sam3_checkpoint_only",
+    "load_from_hf": false,
+    "enable_segmentation": true,
+    "freeze_prefixes": ["backbone.vision_backbone.", "backbone.language_backbone."],
+    "trainable_prefixes": ["segmentation_head.mask_predictor.mask_embed."],
+    "adapter_status": "not_verified_in_current_source",
+    "full_model_training": false
+  },
+  "loss": {
+    "required_class": "sam3.train.loss.loss_fns.Masks",
+    "required_terms": ["loss_mask", "loss_dice"],
+    "status": "must_be_instantiated_and_forward_backward_verified_before_authorization"
+  },
+  "data": {
+    "train_images": 72,
+    "test_images": 24,
+    "train_annotation_required": "train/_annotations.coco.json",
+    "test_annotation_required": "test/_annotations.coco.json",
+    "forbidden_as_truth": ["train/_preannotations.coco.json", "test/_preannotations.coco.json", "bev_3d_boxes"],
+    "fixed_640_holdout_in_training": false,
+    "test24_in_training": false
+  },
+  "distributed": {
+    "backend": "nccl",
+    "nodes": 1,
+    "gpus_per_node": 2,
+    "world_size": 2,
+    "synchronous_ddp": true
+  },
+  "budget": {
+    "precision": "bf16_pending_live_support_readback",
+    "batch_size_per_gpu": 1,
+    "gradient_accumulation_steps": 1,
+    "activation_checkpointing": true,
+    "first_batch_memory_measurement_required": true
+  },
+  "checkpointing": {
+    "save_enabled": true,
+    "rank0_only": true,
+    "record_base_and_output_sha256": true
+  },
+  "launch_gate": {
+    "formal_training_authorized": false,
+    "require_human_truth_manifest": true,
+    "require_split_isolation_readback": true,
+    "require_live_dual_gpu_smoke": true
+  }
+}

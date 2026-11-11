@@ -3,9 +3,11 @@
   "status": "contract_port_validated_pipeline_not_run",
   "source_delivery": {
     "workspace": "task_workspaces/sfl_cpd15y_20261110",
+    "revised_handoff_baseline_tests": 5,
+    "revised_handoff_baseline_passed": 5,
     "source_tests_discovered": 8,
     "source_tests_passed": 8,
-    "note": "The delivered test file currently contains eight tests; the earlier 4/4 count was stale."
+    "note": "The revised handoff baseline is 5/5 and supersedes the earlier 4/4 statement. The current delivered file contains eight tests and passes 8/8 because three additional slope and geometry-evidence gates are also present."
   },
   "ported_contract": {
     "event_schema": "schemas/labelagent_closed_loop_event.schema.json",

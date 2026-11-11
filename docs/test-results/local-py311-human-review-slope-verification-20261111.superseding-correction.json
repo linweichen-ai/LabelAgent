@@ -1,0 +1,32 @@
+{
+  "schema_version": "labelagent.historical-evidence-superseding-correction.v1",
+  "correction_id": "corr-supersede-local-py311-9626d26d",
+  "occurred_at": "2026-11-11T16:25:51+08:00",
+  "immutable": true,
+  "prior_artifact_path": "docs/test-results/local-py311-human-review-slope-verification-20261111.json",
+  "prior_sha256": "9626d26de1a5d8fad1c7f2acdb39b789f394a8371215dda7361c46e4817c5cc5",
+  "prior_event_id": "legacy-receipt:local-py311-human-review-slope-verification-20261111",
+  "supersedes_event_id": null,
+  "superseded_by": "corr-supersede-local-py311-9626d26d",
+  "new_policy": {
+    "label_type": "slope",
+    "traversability_status": "passable",
+    "policy_basis": "user_defined_project_semantics",
+    "downstream_mapping": {
+      "operation": "union",
+      "source_labels": ["floor", "slope"],
+      "target_label": "traversable_area",
+      "preserve_source_labels": true
+    },
+    "human_pixel_truth_available": false,
+    "approved_for_training": false
+  },
+  "routing_correction": null,
+  "prompt_provenance_correction": null,
+  "claim_boundary": {
+    "prior_artifact_modified": false,
+    "human_truth": false,
+    "approved_for_training": false,
+    "training_started": false
+  }
+}

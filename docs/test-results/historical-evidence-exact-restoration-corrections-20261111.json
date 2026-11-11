@@ -1,0 +1,124 @@
+{
+  "schema_version": "labelagent.historical-evidence-restoration-manifest.v1",
+  "generated_at": "2026-11-11T16:25:51+08:00",
+  "audit_range": "cc20fb0..1e640d2",
+  "restore_source": "cc20fb0",
+  "history_rewritten": false,
+  "selection_rule": "changed_under_docs_test-results_and_already_exists_at_cc20fb0",
+  "supersedes_prior_restore_receipt": {
+    "path": "docs/test-results/immutable-evidence-peft-prep-receipt-20261111.json",
+    "sha256": "c1f3d528d83e4fd7bc8c80771e99b4186cd2190f2e9248e01a611fdb621906b3",
+    "correction_scope": "restored_file_count_and_prior_artifact_inventory_only",
+    "prior_restored_file_count": 9,
+    "corrected_restored_file_count": 11,
+    "prior_artifact_modified": false
+  },
+  "restored_artifact_count": 11,
+  "restored_artifacts": [
+    {
+      "path": "docs/test-results/closed-loop-runtime-review-remediation-20261111.md",
+      "cc20_blob": "cd81c2662212e211a5b3ae461bf875cab5c5d6ab",
+      "sha256": "35fdf1b09c5e3cf9df629ecc95e4c9d3903586102e6088bbbc44252ba9adcf22",
+      "exact_blob_restored": true,
+      "correction_event_path": "docs/test-results/closed-loop-runtime-review-remediation-20261111.superseding-correction.json",
+      "correction_event_sha256": "c95bd02ad2f7fe222e199e98d6dd2ce6147529bc11fad8469e7bbad3333d3c0f",
+      "correction_event_id": "corr-supersede-runtime-review-35fdf1b0"
+    },
+    {
+      "path": "docs/test-results/closed-loop-slope-known-label-candidate-generated-20261111.json",
+      "cc20_blob": "bb7699035a4a3b9f43f3a33e09f37b3f6bc74b27",
+      "sha256": "fe801bed6cd617cd3e545c159af14d975d71f8d1f3d3eee1d1076112c5909b00",
+      "exact_blob_restored": true,
+      "correction_event_path": "docs/test-results/closed-loop-slope-known-label-candidate-generated-20261111.superseding-correction.json",
+      "correction_event_sha256": "ca7df362a6295d1b2fe8ada28c8a5088335da0c94c8e06eedc4eee05bc056c2f",
+      "correction_event_id": "corr-supersede-slope-candidate-fe801bed"
+    },
+    {
+      "path": "docs/test-results/closed-loop-slope-known-label-events-20261111.md",
+      "cc20_blob": "e7f78ef0ca4ecdd634217ac4adade36eaff60f64",
+      "sha256": "f3d2db0a13a819c919a29454b479c69918d052d448d4c74e8ff29b1216985861",
+      "exact_blob_restored": true,
+      "correction_event_path": "docs/test-results/closed-loop-slope-known-label-events-20261111.superseding-correction.json",
+      "correction_event_sha256": "fb4f85d5fe94e519e7a3351c962f6f6e20ebecaff2ecdce0832f9820b4e2c1a3",
+      "correction_event_id": "corr-supersede-slope-events-report-f3d2db0a"
+    },
+    {
+      "path": "docs/test-results/closed-loop-slope-known-label-vlm-reviewed-20261111.json",
+      "cc20_blob": "27a4374f117064c83c342943b8fc6e63982478a6",
+      "sha256": "7cc56fbe1c9493c5dadde5d0d8c0518cf585250e945ccbcad2ae6fc278b2c93e",
+      "exact_blob_restored": true,
+      "correction_event_path": "docs/test-results/closed-loop-slope-known-label-vlm-reviewed-20261111.superseding-correction.json",
+      "correction_event_sha256": "3868f12adab2cb397958447b6dead7c3418a7c6915f5313c01745ea3f0cf2144",
+      "correction_event_id": "corr-supersede-slope-vlm-7cc56fbe"
+    },
+    {
+      "path": "docs/test-results/dual-5090-acceptance-20261111.md",
+      "cc20_blob": "2816bf18ca5b54461eab3b96c46938d7da1d328d",
+      "sha256": "036de2d944539dca2ffc22b3195e1136875d852d43d42fd630f2ecf3b450b30a",
+      "exact_blob_restored": true,
+      "correction_event_path": "docs/test-results/dual-5090-acceptance-20261111.superseding-correction.json",
+      "correction_event_sha256": "7bb8df7ea7f30cc6b44092fc831202a3d7530c8a0824c9aebf4141b3a3492c50",
+      "correction_event_id": "corr-supersede-dual-5090-acceptance-036de2d9"
+    },
+    {
+      "path": "docs/test-results/dual-5090-packaging-newline-defect-20261111.md",
+      "cc20_blob": "832eb37afbe0b1ab06532ecd57c56759a984180b",
+      "sha256": "2907fd6af91b33fe040ca2bae25e8e415d257b42fe664e919ee1f20a1c0f2367",
+      "exact_blob_restored": true,
+      "correction_event_path": "docs/test-results/dual-5090-packaging-newline-defect-20261111.superseding-correction.json",
+      "correction_event_sha256": "453782cad04dcb93e8d7f482674e74de8ce79f79949f3e23df01912d8145fd87",
+      "correction_event_id": "corr-supersede-dual-5090-packaging-2907fd6a"
+    },
+    {
+      "path": "docs/test-results/fixed-holdout-vertical-chain-receipt-20261111.json",
+      "cc20_blob": "8080489c1c0925137c46871f4d10fe2bf8531f51",
+      "sha256": "1caa15b53e573301928288f9ff9a459619a18339948d0cef146dc8c4f30200eb",
+      "exact_blob_restored": true,
+      "correction_event_path": "docs/test-results/fixed-holdout-vertical-chain-receipt-20261111.superseding-correction.json",
+      "correction_event_sha256": "3b917e03b37e7f4e9bd0cb6fb89e082043655e378cc37413f68c7718c18404a7",
+      "correction_event_id": "corr-supersede-fixed-holdout-json-1caa15b5"
+    },
+    {
+      "path": "docs/test-results/fixed-holdout-vertical-chain-receipt-20261111.md",
+      "cc20_blob": "ca0ff227ccd6a63623cd067d8ade81386abfa7ea",
+      "sha256": "70c4cc4029e9e5668ee9c7cfeadeedf4559fa1a5b09b2d5d878ba59053bb065e",
+      "exact_blob_restored": true,
+      "correction_event_path": "docs/test-results/fixed-holdout-vertical-chain-receipt-20261111.md.superseding-correction.json",
+      "correction_event_sha256": "1d62dcbc28c67be22dcd04fc105c3e715553b54bfef2d5527e0a566ad2e9790e",
+      "correction_event_id": "corr-supersede-fixed-holdout-report-70c4cc40"
+    },
+    {
+      "path": "docs/test-results/local-py311-human-review-slope-verification-20261111.json",
+      "cc20_blob": "0c5a6223abf7a4cb2782670e431e157e13269bad",
+      "sha256": "9626d26de1a5d8fad1c7f2acdb39b789f394a8371215dda7361c46e4817c5cc5",
+      "exact_blob_restored": true,
+      "correction_event_path": "docs/test-results/local-py311-human-review-slope-verification-20261111.superseding-correction.json",
+      "correction_event_sha256": "1f0049090e67480508600abd1b7f17d2f79c608e0d884f60f8a706097f4a4612",
+      "correction_event_id": "corr-supersede-local-py311-9626d26d"
+    },
+    {
+      "path": "docs/test-results/slope-frame0-overlay-review-20261111.json",
+      "cc20_blob": "25dc545a436c10b5739f09e40beb0e6a1cc1c0e4",
+      "sha256": "79a1be7b9e0a7141a1233e6cc59572e9b42abe63b19312345c9e37db478c7a19",
+      "exact_blob_restored": true,
+      "correction_event_path": "docs/test-results/slope-frame0-overlay-review-20261111.superseding-correction.json",
+      "correction_event_sha256": "0d29bc85f4a55e67ffc3786a1636749b5bd42966d928e8771a28e36730248513",
+      "correction_event_id": "corr-supersede-slope-overlay-json-79a1be7b"
+    },
+    {
+      "path": "docs/test-results/slope-frame0-overlay-review-20261111.md",
+      "cc20_blob": "f71a45ae56d07bad90c1976fc1f81681c2cece27",
+      "sha256": "1b93bd1ae0963141202bb1133dfd626a9b3b690283126d04780e34908a037fce",
+      "exact_blob_restored": true,
+      "correction_event_path": "docs/test-results/slope-frame0-overlay-review-20261111.md.superseding-correction.json",
+      "correction_event_sha256": "f0044ac281e5162046c3599611a94fe5fd53f10742c83ff61c35bebe2ea66679",
+      "correction_event_id": "corr-supersede-slope-overlay-report-1b93bd1a"
+    }
+  ],
+  "correction_schema": "schemas/historical-evidence-superseding-correction.schema.json",
+  "schema_validation": {
+    "manifest_errors": 0,
+    "correction_files_validated": 11,
+    "correction_errors": 0
+  }
+}

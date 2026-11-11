@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/labelagent-label-registry.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "registry_version", "append_only", "labels", "training_semantics", "downstream_mapping", "unknown_policy", "registry_content_sha256"],
+  "properties": {
+    "schema_version": {"const": "labelagent.label-registry.v1"},
+    "registry_version": {"type": "string", "minLength": 1},
+    "append_only": {"const": true},
+    "labels": {
+      "type": "array", "minItems": 2,
+      "contains": {"type": "object", "properties": {"name": {"const": "floor"}}, "required": ["name"]},
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["class_id", "name", "training_label"],
+        "properties": {
+          "class_id": {"type": "integer", "minimum": 1},
+          "name": {"type": "string", "minLength": 1},
+          "training_label": {"const": true}
+        }
+      }
+    },
+    "training_semantics": {"const": {"floor_slope_distinct": true, "permanent_merge_allowed": false}},
+    "downstream_mapping": {"const": {"target_label": "traversable_area", "operation": "union", "source_labels": ["floor", "slope"], "source_layer": "training_annotation", "target_layer": "downstream_navigation", "preserve_source_labels": true}},
+    "unknown_policy": {"const": {"unknown": "human_review_required", "new_label_candidate": "human_review_required", "ontology_mutation_allowed": false, "automatic_truth_promotion": false}},
+    "registry_content_sha256": {"$ref": "#/$defs/hash"}
+  },
+  "allOf": [
+    {"properties": {"labels": {"contains": {"type": "object", "properties": {"name": {"const": "slope"}}, "required": ["name"]}}}}
+  ],
+  "$defs": {"hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

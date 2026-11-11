@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/factory-data-static-validation-receipt.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "validated_at", "scope", "environment", "execution_boundary", "qc_coverage", "label_policy", "truth_gate", "ledger", "artifacts", "tests", "validation_passed"],
+  "properties": {
+    "schema_version": {"const": "labelagent.factory-data-static-validation.v1"},
+    "validated_at": {"type": "string", "format": "date-time"},
+    "scope": {"const": "factory_ingress_qc_truth_promotion_append_only_static_acceptance"},
+    "environment": {
+      "const": {
+        "python_path": ".venv-schema/Scripts/python.exe",
+        "python_version": "3.14.7",
+        "jsonschema_version": "4.25.1",
+        "dependency_install_performed": false,
+        "conda_test_modified": false
+      }
+    },
+    "execution_boundary": {
+      "const": {
+        "gpu_calls": 0,
+        "remote_service_calls": 0,
+        "oss_reads": 0,
+        "oss_writes": 0,
+        "remote_connections": 0,
+        "source_objects_modified": false,
+        "production_truth_artifacts_written": 0
+      }
+    },
+    "qc_coverage": {"const": ["file_integrity", "four_camera_completeness", "camera_frame_alignment", "timestamp_alignment", "calibration_presence", "calibration_version_consistency", "pose_odom_continuity"]},
+    "label_policy": {"const": {"training_labels_distinct": ["floor", "slope"], "downstream_mapping": "traversable_area=floor_union_slope", "unknown_and_new_label_route": "human_review_required"}},
+    "truth_gate": {"const": {"genuine_human_review_required": true, "machine_preannotation_direct_promotion": false, "synthetic_fixture_promotion": false, "test_split_promotion": false, "old_truth_overwrite": false, "positive_contract_path_tested_in_memory_only": true, "production_truth_version_created": false}},
+    "ledger": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256", "record_count", "head_record_sha256", "snapshot_sha256", "truth_promoted_event_count", "truth_rejected_event_count"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/hash"},
+        "record_count": {"const": 5},
+        "head_record_sha256": {"$ref": "#/$defs/hash"},
+        "snapshot_sha256": {"$ref": "#/$defs/hash"},
+        "truth_promoted_event_count": {"const": 0},
+        "truth_rejected_event_count": {"const": 1}
+      }
+    },
+    "artifacts": {
+      "type": "array", "minItems": 15, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"$ref": "#/$defs/hash"}
+        }
+      }
+    },
+    "tests": {
+      "type": "object", "additionalProperties": false,
+      "required": ["modules", "test_count", "failures", "errors", "schema_error_count"],
+      "properties": {
+        "modules": {"type": "array", "minItems": 10, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "test_count": {"const": 84},
+        "failures": {"const": 0},
+        "errors": {"const": 0},
+        "schema_error_count": {"const": 0}
+      }
+    },
+    "validation_passed": {"const": true}
+  },
+  "$defs": {"hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

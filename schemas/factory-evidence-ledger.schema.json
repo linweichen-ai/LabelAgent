@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/factory-evidence-ledger.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "ledger_id", "generated_at", "sample_kind", "append_only", "overwrite_allowed", "record_count", "head_record_sha256", "records", "snapshot_sha256"],
+  "properties": {
+    "schema_version": {"const": "labelagent.factory-ledger-snapshot.v1"},
+    "ledger_id": {"type": "string", "minLength": 1},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "sample_kind": {"enum": ["static_contract_fixture", "runtime_readback"]},
+    "append_only": {"const": true},
+    "overwrite_allowed": {"const": false},
+    "record_count": {"type": "integer", "minimum": 1},
+    "head_record_sha256": {"$ref": "#/$defs/hash"},
+    "records": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/record"}},
+    "snapshot_sha256": {"$ref": "#/$defs/hash"}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "record": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "sequence", "previous_record_sha256", "idempotency_key", "event_type", "event_sha256", "event", "record_sha256"],
+      "properties": {
+        "schema_version": {"const": "labelagent.factory-ledger-record.v1"},
+        "sequence": {"type": "integer", "minimum": 1},
+        "previous_record_sha256": {"oneOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]},
+        "idempotency_key": {"$ref": "#/$defs/hash"},
+        "event_type": {"enum": ["factory.frame_bundle.ingested", "factory.frame_bundle.qc", "truth.version.promoted", "truth.promotion_rejected"]},
+        "event_sha256": {"$ref": "#/$defs/hash"},
+        "event": {"type": "object"},
+        "record_sha256": {"$ref": "#/$defs/hash"}
+      }
+    }
+  }
+}

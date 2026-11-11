@@ -1,0 +1,33 @@
+{
+  "schema_version": "labelagent.label-registry.v1",
+  "registry_version": "labelagent-ontology-20261111-v1",
+  "append_only": true,
+  "labels": [
+    {"class_id": 1, "name": "pallet", "training_label": true},
+    {"class_id": 2, "name": "person", "training_label": true},
+    {"class_id": 3, "name": "floor", "training_label": true},
+    {"class_id": 4, "name": "slope", "training_label": true},
+    {"class_id": 5, "name": "ego", "training_label": true},
+    {"class_id": 6, "name": "other_robot", "training_label": true},
+    {"class_id": 7, "name": "cargo_floor", "training_label": true}
+  ],
+  "training_semantics": {
+    "floor_slope_distinct": true,
+    "permanent_merge_allowed": false
+  },
+  "downstream_mapping": {
+    "target_label": "traversable_area",
+    "operation": "union",
+    "source_labels": ["floor", "slope"],
+    "source_layer": "training_annotation",
+    "target_layer": "downstream_navigation",
+    "preserve_source_labels": true
+  },
+  "unknown_policy": {
+    "unknown": "human_review_required",
+    "new_label_candidate": "human_review_required",
+    "ontology_mutation_allowed": false,
+    "automatic_truth_promotion": false
+  },
+  "registry_content_sha256": "2de68a7c3fa7e4d803094df9eca7d43c0bd4addfd15c7318d0ec31d2deed1f34"
+}

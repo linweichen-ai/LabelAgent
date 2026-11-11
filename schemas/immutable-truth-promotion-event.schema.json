@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/immutable-truth-promotion-event.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "event_type", "occurred_at", "input_id", "ingress_event_id", "qc_event_id", "idempotency_key", "source", "candidate", "review", "before_after_diff", "truth", "version", "approval", "direct_machine_preannotation_promotion", "write_policy", "event_id"],
+  "properties": {
+    "schema_version": {"const": "labelagent.truth-promotion-event.v1"},
+    "event_type": {"const": "truth.version.promoted"},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "input_id": {"$ref": "#/$defs/hash"},
+    "ingress_event_id": {"$ref": "#/$defs/hash"},
+    "qc_event_id": {"$ref": "#/$defs/hash"},
+    "idempotency_key": {"$ref": "#/$defs/hash"},
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dataset_role", "synthetic_test_only", "source_kind", "dataset_id", "source_batch", "sequence", "frame_id", "camera", "ingress_event_id", "qc_event_id"],
+      "properties": {
+        "dataset_role": {"enum": ["train_candidate", "val_candidate"]},
+        "synthetic_test_only": {"const": false},
+        "source_kind": {"const": "real"},
+        "dataset_id": {"type": "string", "minLength": 1},
+        "source_batch": {"type": "string", "minLength": 1},
+        "sequence": {"type": "string", "minLength": 1},
+        "frame_id": {"type": "string", "minLength": 1},
+        "camera": {"enum": ["camera_0", "camera_1", "camera_2", "camera_3"]},
+        "ingress_event_id": {"$ref": "#/$defs/hash"},
+        "qc_event_id": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "candidate": {"$ref": "#/$defs/candidate"},
+    "review": {"$ref": "#/$defs/review"},
+    "before_after_diff": {"$ref": "#/$defs/diff"},
+    "truth": {"$ref": "#/$defs/truth"},
+    "version": {"$ref": "#/$defs/version"},
+    "approval": {"$ref": "#/$defs/approval"},
+    "direct_machine_preannotation_promotion": {"const": false},
+    "write_policy": {"const": {"mode": "append_only_new_truth_version", "overwrite_previous_truth": false, "old_truth_preserved": true}},
+    "event_id": {"$ref": "#/$defs/hash"}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "candidate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifact_id", "uri", "sha256", "source_image_sha256", "layer"],
+      "properties": {
+        "artifact_id": {"$ref": "#/$defs/hash"}, "uri": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/hash"}, "source_image_sha256": {"$ref": "#/$defs/hash"},
+        "layer": {"const": "machine_candidate"}
+      }
+    },
+    "review": {
+      "type": "object", "additionalProperties": false,
+      "required": ["review_id", "review_origin", "reviewer_declared_id", "identity_assurance", "reviewed_at", "decision", "receipt_uri", "receipt_sha256", "candidate_sha256", "source_image_sha256"],
+      "properties": {
+        "review_id": {"type": "string", "minLength": 1},
+        "review_origin": {"const": "genuine_human_review"},
+        "reviewer_declared_id": {"type": "string", "minLength": 1},
+        "identity_assurance": {"enum": ["self_declared", "authenticated"]},
+        "reviewed_at": {"type": "string", "format": "date-time"},
+        "decision": {"enum": ["accepted", "corrected"]},
+        "receipt_uri": {"type": "string", "minLength": 1},
+        "receipt_sha256": {"$ref": "#/$defs/hash"},
+        "candidate_sha256": {"$ref": "#/$defs/hash"},
+        "source_image_sha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "diff": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifact_uri", "artifact_sha256", "before_sha256", "after_sha256", "added", "removed", "modified"],
+      "properties": {
+        "artifact_uri": {"type": "string", "minLength": 1}, "artifact_sha256": {"$ref": "#/$defs/hash"},
+        "before_sha256": {"$ref": "#/$defs/hash"}, "after_sha256": {"$ref": "#/$defs/hash"},
+        "added": {"type": "integer", "minimum": 0}, "removed": {"type": "integer", "minimum": 0}, "modified": {"type": "integer", "minimum": 0}
+      }
+    },
+    "truth": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifact_id", "uri", "sha256", "layer"],
+      "properties": {
+        "artifact_id": {"$ref": "#/$defs/hash"}, "uri": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/hash"}, "layer": {"const": "human_truth"}
+      }
+    },
+    "version": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version_id", "parent_version", "split", "manifest_uri", "manifest_sha256", "truth_sha256", "immutable", "append_only", "overwrite_previous_truth", "previous_truth_preserved"],
+      "properties": {
+        "version_id": {"type": "string", "minLength": 1}, "parent_version": {"type": ["string", "null"]},
+        "split": {"enum": ["train", "val"]}, "manifest_uri": {"type": "string", "minLength": 1},
+        "manifest_sha256": {"$ref": "#/$defs/hash"}, "truth_sha256": {"$ref": "#/$defs/hash"},
+        "immutable": {"const": true}, "append_only": {"const": true},
+        "overwrite_previous_truth": {"const": false}, "previous_truth_preserved": {"const": true}
+      }
+    },
+    "approval": {
+      "type": "object", "additionalProperties": false,
+      "required": ["approval_id", "decision", "receipt_uri", "receipt_sha256", "review_id", "candidate_sha256", "source_image_sha256", "truth_sha256", "approved_at", "approver_declared_id", "identity_assurance"],
+      "properties": {
+        "approval_id": {"type": "string", "minLength": 1}, "decision": {"const": "approved"},
+        "receipt_uri": {"type": "string", "minLength": 1}, "receipt_sha256": {"$ref": "#/$defs/hash"},
+        "review_id": {"type": "string", "minLength": 1}, "candidate_sha256": {"$ref": "#/$defs/hash"},
+        "source_image_sha256": {"$ref": "#/$defs/hash"}, "truth_sha256": {"$ref": "#/$defs/hash"},
+        "approved_at": {"type": "string", "format": "date-time"},
+        "approver_declared_id": {"type": "string", "minLength": 1},
+        "identity_assurance": {"enum": ["self_declared", "authenticated"]}
+      }
+    }
+  }
+}

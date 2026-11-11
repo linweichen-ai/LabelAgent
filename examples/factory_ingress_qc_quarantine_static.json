@@ -1,0 +1,243 @@
+{
+  "claim_boundary": "not_production_data_not_human_truth",
+  "ingress": {
+    "calibration": {
+      "artifact": {
+        "artifact_id": "cf62e1770ef67bbda74d07659dd06a4345e153dcb80f3977394194b9140cd3a4",
+        "bytes": 1031,
+        "integrity": "verified",
+        "sha256": "2f20f4fb3e77763b07d961c985faecdc6923c9f7acee7de11a98fc08d1b09512",
+        "uri": "example://factory-contract/quarantine/calibration-old.json"
+      },
+      "camera_ids": [
+        "camera_0",
+        "camera_1",
+        "camera_2"
+      ],
+      "expected_version": "calib-factory-v3",
+      "observed_version": "calib-factory-v2",
+      "present": true
+    },
+    "cameras": [
+      {
+        "artifact": {
+          "artifact_id": "9ec3db76744dd54dfce44b8933684ebf2b26fcae9cd4eca09c7ec17e95df90f1",
+          "bytes": 1023,
+          "integrity": "verified",
+          "sha256": "5a4f6829301df40483fc1a6a56637cbe9e65804888bf0d9a1a8d4bfd62e10830",
+          "uri": "example://factory-contract/quarantine/camera_0.png"
+        },
+        "camera": "camera_0",
+        "captured_at": "2026-11-11T10:01:00.000+08:00",
+        "frame_id": "1789897539282478905"
+      },
+      {
+        "artifact": {
+          "artifact_id": "579f8cf2e1552c177e26308201df9df87f13316b4053c4bf3a17ed9a16e71e7f",
+          "bytes": 1023,
+          "integrity": "corrupt",
+          "sha256": "3e371d79803a8ce559b302bec3a1fff05de4d2bf6e6f25b79fe5a5aa1e9bf96e",
+          "uri": "example://factory-contract/quarantine/camera_1.png"
+        },
+        "camera": "camera_1",
+        "captured_at": "2026-11-11T10:01:00.250+08:00",
+        "frame_id": "WRONG_FRAME"
+      },
+      {
+        "artifact": {
+          "artifact_id": "44c8776de05171e3781a9a5153f0fac51784f98f92dd4e75a709aedba6964734",
+          "bytes": 1023,
+          "integrity": "verified",
+          "sha256": "564f66d74138f6af62d99ff9a6925dbde26f5d6e8a0261ed40d4c6ee07a8865f",
+          "uri": "example://factory-contract/quarantine/camera_2.png"
+        },
+        "camera": "camera_2",
+        "captured_at": "2026-11-11T10:01:00.010+08:00",
+        "frame_id": "1789897539282478905"
+      }
+    ],
+    "event_id": "0c894bea2f3804c750fc888406b20ea2271da04b415e36bcbf101b8269d0ccf5",
+    "event_type": "factory.frame_bundle.ingested",
+    "expected_cameras": [
+      "camera_0",
+      "camera_1",
+      "camera_2",
+      "camera_3"
+    ],
+    "idempotency_key": "3fc6393761e868ec8c8debc0b018d91c6bbeb8736e618e2ab8889c07695e0612",
+    "identity": {
+      "capture_time": "2026-11-11T10:01:00+08:00",
+      "dataset_id": "EXAMPLE_FACTORY_DATASET",
+      "frame_id": "1789897539282478905",
+      "sequence": "001",
+      "source_batch": "EXAMPLE_BATCH_A"
+    },
+    "input_id": "704d3bf060eec1c443e819f3faba191fa914ec6ffef4b3b4f7d37abc3de69ad7",
+    "motion": {
+      "odom": {
+        "artifact": {
+          "artifact_id": "6ca93ceb0cbae6745296ba6d67e4a1dfe639267807d42f9b3239d6109cb525bf",
+          "bytes": 1020,
+          "integrity": "verified",
+          "sha256": "da90c6f5ce6c7aff4495f4d0c7c6bca62fda893c1741b525b96e1bdcd3f79730",
+          "uri": "example://factory-contract/quarantine/odom.mcap"
+        },
+        "discontinuity_count": 3,
+        "max_gap_ms": 420,
+        "present": true
+      },
+      "pose": {
+        "artifact": {
+          "artifact_id": "d2f7e6eff1648a37b32257c4d1765e2debfcabbd82137feaddeb9d7064f9b119",
+          "bytes": 1019,
+          "integrity": "verified",
+          "sha256": "1a228523549f89d381b54bd09c8b198df09e9506a836e8c41bbe23025db543a8",
+          "uri": "example://factory-contract/quarantine/pose.txt"
+        },
+        "discontinuity_count": 2,
+        "max_gap_ms": 350,
+        "present": true
+      }
+    },
+    "occurred_at": "2026-11-11T10:01:01+08:00",
+    "provenance": {
+      "simulation": null,
+      "source_kind": "real"
+    },
+    "schema_version": "labelagent.factory-ingress-event.v1",
+    "write_policy": {
+      "mode": "append_only",
+      "overwrite_source": false,
+      "remote_mutation": false,
+      "silent_skip": false
+    }
+  },
+  "qc": {
+    "candidate_pipeline_allowed": false,
+    "checks": [
+      {
+        "check_id": "file_integrity",
+        "evidence_artifact_ids": [
+          "44c8776de05171e3781a9a5153f0fac51784f98f92dd4e75a709aedba6964734",
+          "579f8cf2e1552c177e26308201df9df87f13316b4053c4bf3a17ed9a16e71e7f",
+          "6ca93ceb0cbae6745296ba6d67e4a1dfe639267807d42f9b3239d6109cb525bf",
+          "9ec3db76744dd54dfce44b8933684ebf2b26fcae9cd4eca09c7ec17e95df90f1",
+          "cf62e1770ef67bbda74d07659dd06a4345e153dcb80f3977394194b9140cd3a4",
+          "d2f7e6eff1648a37b32257c4d1765e2debfcabbd82137feaddeb9d7064f9b119"
+        ],
+        "observed": "corrupt=579f8cf2e1552c177e26308201df9df87f13316b4053c4bf3a17ed9a16e71e7f",
+        "reason_code": "FILE_CORRUPT",
+        "status": "fail"
+      },
+      {
+        "check_id": "four_camera_completeness",
+        "evidence_artifact_ids": [
+          "44c8776de05171e3781a9a5153f0fac51784f98f92dd4e75a709aedba6964734",
+          "579f8cf2e1552c177e26308201df9df87f13316b4053c4bf3a17ed9a16e71e7f",
+          "9ec3db76744dd54dfce44b8933684ebf2b26fcae9cd4eca09c7ec17e95df90f1"
+        ],
+        "observed": "present=camera_0,camera_1,camera_2",
+        "reason_code": "FOUR_CAMERA_INCOMPLETE",
+        "status": "fail"
+      },
+      {
+        "check_id": "camera_frame_alignment",
+        "evidence_artifact_ids": [
+          "44c8776de05171e3781a9a5153f0fac51784f98f92dd4e75a709aedba6964734",
+          "579f8cf2e1552c177e26308201df9df87f13316b4053c4bf3a17ed9a16e71e7f",
+          "9ec3db76744dd54dfce44b8933684ebf2b26fcae9cd4eca09c7ec17e95df90f1"
+        ],
+        "observed": "mismatched=camera_1",
+        "reason_code": "CAMERA_FRAME_MISALIGNED",
+        "status": "fail"
+      },
+      {
+        "check_id": "timestamp_alignment",
+        "evidence_artifact_ids": [
+          "44c8776de05171e3781a9a5153f0fac51784f98f92dd4e75a709aedba6964734",
+          "579f8cf2e1552c177e26308201df9df87f13316b4053c4bf3a17ed9a16e71e7f",
+          "9ec3db76744dd54dfce44b8933684ebf2b26fcae9cd4eca09c7ec17e95df90f1"
+        ],
+        "observed": "max_delta_ms=250.0",
+        "reason_code": "CAMERA_TIMESTAMP_DELTA_EXCEEDED",
+        "status": "fail"
+      },
+      {
+        "check_id": "calibration_presence",
+        "evidence_artifact_ids": [
+          "cf62e1770ef67bbda74d07659dd06a4345e153dcb80f3977394194b9140cd3a4"
+        ],
+        "observed": "present=True",
+        "reason_code": null,
+        "status": "pass"
+      },
+      {
+        "check_id": "calibration_version_consistency",
+        "evidence_artifact_ids": [
+          "cf62e1770ef67bbda74d07659dd06a4345e153dcb80f3977394194b9140cd3a4"
+        ],
+        "observed": "expected=calib-factory-v3;observed=calib-factory-v2",
+        "reason_code": "CALIBRATION_VERSION_MISMATCH",
+        "status": "fail"
+      },
+      {
+        "check_id": "pose_odom_continuity",
+        "evidence_artifact_ids": [
+          "6ca93ceb0cbae6745296ba6d67e4a1dfe639267807d42f9b3239d6109cb525bf",
+          "d2f7e6eff1648a37b32257c4d1765e2debfcabbd82137feaddeb9d7064f9b119"
+        ],
+        "observed": "pose_gap_ms=350;odom_gap_ms=420;pose_breaks=2;odom_breaks=3",
+        "reason_code": "POSE_ODOM_DISCONTINUITY",
+        "status": "fail"
+      }
+    ],
+    "event_id": "c668b63c39fa0c671fa58621dac05dee98f6cda8d2be9b817507a4bb5d228ef6",
+    "event_type": "factory.frame_bundle.qc",
+    "idempotency_key": "424922ff772f5d6ee45668e23b13dd2d14a972333dca9becb71e69b7cd2e6a26",
+    "ingress_event_id": "0c894bea2f3804c750fc888406b20ea2271da04b415e36bcbf101b8269d0ccf5",
+    "input_id": "704d3bf060eec1c443e819f3faba191fa914ec6ffef4b3b4f7d37abc3de69ad7",
+    "occurred_at": "2026-11-11T10:01:02+08:00",
+    "outcome": "quarantined",
+    "policy": {
+      "max_camera_timestamp_delta_ms": 50,
+      "max_odom_gap_ms": 100,
+      "max_pose_gap_ms": 100,
+      "policy_sha256": "cca00d2d7aa520e96ea96c5eb506fdfe302320e58f45c9dac296097c86d8d0a3",
+      "policy_version": "factory-qc-static-20261111-v1"
+    },
+    "quarantine": {
+      "failed_check_ids": [
+        "file_integrity",
+        "four_camera_completeness",
+        "camera_frame_alignment",
+        "timestamp_alignment",
+        "calibration_version_consistency",
+        "pose_odom_continuity"
+      ],
+      "ingress_event_id": "0c894bea2f3804c750fc888406b20ea2271da04b415e36bcbf101b8269d0ccf5",
+      "path": "quarantine/704d3bf060eec1c443e819f3faba191fa914ec6ffef4b3b4f7d37abc3de69ad7/factory-qc-static-20261111-v1.json",
+      "quarantine_id": "dbb02c1979f6f433700c50771b16c4ea9577843e697a8e94526a7bf6a78bef5d",
+      "reason_codes": [
+        "FILE_CORRUPT",
+        "FOUR_CAMERA_INCOMPLETE",
+        "CAMERA_FRAME_MISALIGNED",
+        "CAMERA_TIMESTAMP_DELTA_EXCEEDED",
+        "CALIBRATION_VERSION_MISMATCH",
+        "POSE_ODOM_DISCONTINUITY"
+      ],
+      "release_allowed": false,
+      "required_action": "human_review_or_reingest",
+      "silent_skip": false,
+      "write_mode": "append_only"
+    },
+    "schema_version": "labelagent.factory-qc-event.v1",
+    "silent_skip": false,
+    "write_policy": {
+      "mode": "append_only",
+      "overwrite_qc": false,
+      "overwrite_source": false
+    }
+  },
+  "sample_kind": "static_contract_fixture",
+  "schema_version": "labelagent.factory-static-example.v1"
+}

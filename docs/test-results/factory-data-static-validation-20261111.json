@@ -1,0 +1,89 @@
+{
+  "schema_version": "labelagent.factory-data-static-validation.v1",
+  "validated_at": "2026-11-11T18:12:42+08:00",
+  "scope": "factory_ingress_qc_truth_promotion_append_only_static_acceptance",
+  "environment": {
+    "python_path": ".venv-schema/Scripts/python.exe",
+    "python_version": "3.14.7",
+    "jsonschema_version": "4.25.1",
+    "dependency_install_performed": false,
+    "conda_test_modified": false
+  },
+  "execution_boundary": {
+    "gpu_calls": 0,
+    "remote_service_calls": 0,
+    "oss_reads": 0,
+    "oss_writes": 0,
+    "remote_connections": 0,
+    "source_objects_modified": false,
+    "production_truth_artifacts_written": 0
+  },
+  "qc_coverage": [
+    "file_integrity",
+    "four_camera_completeness",
+    "camera_frame_alignment",
+    "timestamp_alignment",
+    "calibration_presence",
+    "calibration_version_consistency",
+    "pose_odom_continuity"
+  ],
+  "label_policy": {
+    "training_labels_distinct": ["floor", "slope"],
+    "downstream_mapping": "traversable_area=floor_union_slope",
+    "unknown_and_new_label_route": "human_review_required"
+  },
+  "truth_gate": {
+    "genuine_human_review_required": true,
+    "machine_preannotation_direct_promotion": false,
+    "synthetic_fixture_promotion": false,
+    "test_split_promotion": false,
+    "old_truth_overwrite": false,
+    "positive_contract_path_tested_in_memory_only": true,
+    "production_truth_version_created": false
+  },
+  "ledger": {
+    "path": "docs/test-results/factory-data-append-only-ledger-static-20261111.json",
+    "sha256": "9f47f7df4fe5fe3fd8fbdc6835e64bb92864aaebd03335a01cbc780b6f103986",
+    "record_count": 5,
+    "head_record_sha256": "ff68720182462f2f9e951636732ce8e8a4edce021d69999e9cfa4786ee0334fb",
+    "snapshot_sha256": "6581691c2d36ce4252c86e91acfda8762020ed08cafc8d5654616f836275cb67",
+    "truth_promoted_event_count": 0,
+    "truth_rejected_event_count": 1
+  },
+  "artifacts": [
+    {"path": "configs/labelagent_label_registry.json", "sha256": "995b2fc290b6b8152f90b1a95f17b95c5c4f9ed0b1a785a319c337895a6d186a"},
+    {"path": "source/agent/factory_data_contract.py", "sha256": "457a67779ed9ddbe80f6c2d32cc2724f473c7275d85bbd46ee2b24d41fc478ad"},
+    {"path": "tools/build_factory_data_static_acceptance.py", "sha256": "965177ab838dbeb03a2930c46230c3c09b7e59a1ab6ff215b778e3113558f6c0"},
+    {"path": "schemas/labelagent-label-registry.schema.json", "sha256": "e651160b5d1eb7a60cdc0bb0ed5cd985315a8bc62e7caee6c34759735cc5dd6b"},
+    {"path": "schemas/factory-data-ingress-event.schema.json", "sha256": "37b7f676410475c82c1073669f48eeb4b3238840091ca324eef83be64c45e6aa"},
+    {"path": "schemas/factory-data-qc-event.schema.json", "sha256": "588727235006873dd454b3414c925e969673490d6dc1f65a89f6abc5868faa52"},
+    {"path": "schemas/immutable-truth-promotion-event.schema.json", "sha256": "b5c3bf74996ca44c39e9a984a9a34bc5aa9f65cb075feac66f0d5afd4290f8c3"},
+    {"path": "schemas/truth-promotion-rejection-receipt.schema.json", "sha256": "a50cf06e0020489314492039168fd9cf11cef04fc4cba8b315c0fe7c792577f0"},
+    {"path": "schemas/factory-evidence-ledger.schema.json", "sha256": "8e963ddb1b847150fdd1787437f15d3543a2cb596f1f5b71bd985073a346ce7b"},
+    {"path": "schemas/factory-data-static-validation-receipt.schema.json", "sha256": "8b84940d5e8d742744b427252a1af9ab498861188e9ca9223b5019e967bcbe1b"},
+    {"path": "examples/factory_ingress_qc_pass_static.json", "sha256": "e3ecc514d7b1c689d336c0c6977c157c8e4ebbeabf135c7b97009389e227192a"},
+    {"path": "examples/factory_ingress_qc_quarantine_static.json", "sha256": "e8e8a136a56cc3f000613eedb6fe2576d8c9449b10e1e529ec0cbf8cd8f7cde5"},
+    {"path": "examples/factory_truth_promotion_rejected_static.json", "sha256": "26f2b4bcb6ceb3f1a4194bad3d6ca2b736c5bfd18cb10498677e8b681f5ffeb0"},
+    {"path": "docs/test-results/factory-data-append-only-ledger-static-20261111.json", "sha256": "9f47f7df4fe5fe3fd8fbdc6835e64bb92864aaebd03335a01cbc780b6f103986"},
+    {"path": "tests/test_factory_data_contract.py", "sha256": "472b722ddedde89bae7d8a99df3102231bb003e5004959b66300d69b8075a8f9"}
+  ],
+  "tests": {
+    "modules": [
+      "tests.test_factory_data_contract",
+      "tests.test_closed_loop",
+      "tests.test_closed_loop_contract",
+      "tests.test_closed_loop_slope_event",
+      "tests.test_closed_loop_human_gate",
+      "tests.test_closed_loop_vertical",
+      "tests.test_closed_loop_register_image",
+      "tests.test_slope_safety_contract",
+      "tests.test_labelagent_batch_contract",
+      "tests.test_candidate_batch_manifest_v2"
+    ],
+    "test_count": 84,
+    "failures": 0,
+    "errors": 0,
+    "schema_error_count": 0
+  },
+  "validation_passed": true
+}

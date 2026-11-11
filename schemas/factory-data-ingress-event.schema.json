@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/factory-data-ingress-event.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "event_type", "occurred_at", "identity", "provenance", "expected_cameras", "cameras", "calibration", "motion", "write_policy", "input_id", "idempotency_key", "event_id"],
+  "properties": {
+    "schema_version": {"const": "labelagent.factory-ingress-event.v1"},
+    "event_type": {"const": "factory.frame_bundle.ingested"},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "identity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dataset_id", "source_batch", "sequence", "frame_id", "capture_time"],
+      "properties": {
+        "dataset_id": {"type": "string", "minLength": 1},
+        "source_batch": {"type": "string", "minLength": 1},
+        "sequence": {"type": "string", "minLength": 1},
+        "frame_id": {"type": "string", "minLength": 1},
+        "capture_time": {"type": "string", "format": "date-time"}
+      }
+    },
+    "provenance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_kind", "simulation"],
+      "properties": {
+        "source_kind": {"enum": ["real", "sim"]},
+        "simulation": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object", "additionalProperties": false,
+              "required": ["simulator", "simulator_version", "scene", "random_seed"],
+              "properties": {
+                "simulator": {"type": "string", "minLength": 1},
+                "simulator_version": {"type": "string", "minLength": 1},
+                "scene": {"type": "string", "minLength": 1},
+                "random_seed": {"type": "integer"}
+              }
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {"if": {"properties": {"source_kind": {"const": "real"}}}, "then": {"properties": {"simulation": {"type": "null"}}}},
+        {"if": {"properties": {"source_kind": {"const": "sim"}}}, "then": {"properties": {"simulation": {"type": "object"}}}}
+      ]
+    },
+    "expected_cameras": {"const": ["camera_0", "camera_1", "camera_2", "camera_3"]},
+    "cameras": {"type": "array", "maxItems": 4, "items": {"$ref": "#/$defs/camera"}},
+    "calibration": {"$ref": "#/$defs/calibration"},
+    "motion": {
+      "type": "object", "additionalProperties": false,
+      "required": ["pose", "odom"],
+      "properties": {"pose": {"$ref": "#/$defs/motionStream"}, "odom": {"$ref": "#/$defs/motionStream"}}
+    },
+    "write_policy": {"const": {"mode": "append_only", "overwrite_source": false, "remote_mutation": false, "silent_skip": false}},
+    "input_id": {"$ref": "#/$defs/hash"},
+    "idempotency_key": {"$ref": "#/$defs/hash"},
+    "event_id": {"$ref": "#/$defs/hash"}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "artifact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifact_id", "uri", "sha256", "bytes", "integrity"],
+      "properties": {
+        "artifact_id": {"$ref": "#/$defs/hash"},
+        "uri": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/hash"},
+        "bytes": {"type": "integer", "minimum": 0},
+        "integrity": {"enum": ["verified", "corrupt"]}
+      }
+    },
+    "camera": {
+      "type": "object", "additionalProperties": false,
+      "required": ["camera", "frame_id", "captured_at", "artifact"],
+      "properties": {
+        "camera": {"enum": ["camera_0", "camera_1", "camera_2", "camera_3"]},
+        "frame_id": {"type": "string", "minLength": 1},
+        "captured_at": {"type": "string", "format": "date-time"},
+        "artifact": {"$ref": "#/$defs/artifact"}
+      }
+    },
+    "calibration": {
+      "type": "object", "additionalProperties": false,
+      "required": ["present", "expected_version", "observed_version", "camera_ids", "artifact"],
+      "properties": {
+        "present": {"type": "boolean"},
+        "expected_version": {"type": "string", "minLength": 1},
+        "observed_version": {"type": ["string", "null"]},
+        "camera_ids": {"type": "array", "uniqueItems": true, "items": {"enum": ["camera_0", "camera_1", "camera_2", "camera_3"]}},
+        "artifact": {"oneOf": [{"$ref": "#/$defs/artifact"}, {"type": "null"}]}
+      },
+      "allOf": [
+        {"if": {"properties": {"present": {"const": true}}}, "then": {"properties": {"observed_version": {"type": "string", "minLength": 1}, "artifact": {"$ref": "#/$defs/artifact"}}}},
+        {"if": {"properties": {"present": {"const": false}}}, "then": {"properties": {"observed_version": {"type": "null"}, "artifact": {"type": "null"}}}}
+      ]
+    },
+    "motionStream": {
+      "type": "object", "additionalProperties": false,
+      "required": ["present", "artifact", "max_gap_ms", "discontinuity_count"],
+      "properties": {
+        "present": {"type": "boolean"},
+        "artifact": {"oneOf": [{"$ref": "#/$defs/artifact"}, {"type": "null"}]},
+        "max_gap_ms": {"type": "number", "minimum": 0},
+        "discontinuity_count": {"type": "integer", "minimum": 0}
+      },
+      "allOf": [
+        {"if": {"properties": {"present": {"const": true}}}, "then": {"properties": {"artifact": {"$ref": "#/$defs/artifact"}}}},
+        {"if": {"properties": {"present": {"const": false}}}, "then": {"properties": {"artifact": {"type": "null"}}}}
+      ]
+    }
+  }
+}

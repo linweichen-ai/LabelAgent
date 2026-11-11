@@ -1,0 +1,27 @@
+{
+  "claim_boundary": "machine_synthetic_test_input_never_promoted",
+  "rejection": {
+    "blockers": [
+      "direct_machine_preannotation_promotion_forbidden",
+      "genuine_human_review_missing",
+      "synthetic_or_fixture_truth_promotion_forbidden",
+      "test_or_unknown_dataset_role_truth_promotion_forbidden",
+      "test_split_truth_promotion_forbidden"
+    ],
+    "event_id": "7b82d1218683be9cff2f2d1d19cdd5ffcd45f7650737bbb720904fdcb44324f0",
+    "event_type": "truth.promotion_rejected",
+    "idempotency_key": "820cfe34fcf7ffc0a63528d7442c77408bf5606886754b2e0d22538639b9ab94",
+    "ingress_event_id": "c38ee3aca1c7e2d163d9644447ade2ef7dd2606d26e520787c58e6502ee75d8f",
+    "input_id": "2212f74897b6b06d71ec7601e35f3b39f41c602231a1c5114f1c40238fa0e355",
+    "next_state": "human_review_required",
+    "occurred_at": "2026-11-11T10:02:02+08:00",
+    "old_truth_modified": false,
+    "qc_event_id": "db1de6887f6c5e376e45b11e506e8b80d0cffcf04e440984223ffcc453319517",
+    "schema_version": "labelagent.truth-promotion-rejection.v1",
+    "status": "rejected_fail_closed",
+    "truth_artifact_written": false,
+    "truth_version_created": false
+  },
+  "sample_kind": "static_contract_fixture",
+  "schema_version": "labelagent.factory-static-example.v1"
+}

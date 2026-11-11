@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/truth-promotion-rejection-receipt.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "event_type", "occurred_at", "input_id", "ingress_event_id", "qc_event_id", "idempotency_key", "status", "blockers", "truth_version_created", "truth_artifact_written", "old_truth_modified", "next_state", "event_id"],
+  "properties": {
+    "schema_version": {"const": "labelagent.truth-promotion-rejection.v1"},
+    "event_type": {"const": "truth.promotion_rejected"},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "input_id": {"$ref": "#/$defs/hash"},
+    "ingress_event_id": {"$ref": "#/$defs/hash"},
+    "qc_event_id": {"$ref": "#/$defs/hash"},
+    "idempotency_key": {"$ref": "#/$defs/hash"},
+    "status": {"const": "rejected_fail_closed"},
+    "blockers": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "truth_version_created": {"const": false},
+    "truth_artifact_written": {"const": false},
+    "old_truth_modified": {"const": false},
+    "next_state": {"const": "human_review_required"},
+    "event_id": {"$ref": "#/$defs/hash"}
+  },
+  "$defs": {"hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

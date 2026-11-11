@@ -1,0 +1,82 @@
+{
+  "evidence_type": "slope_hard_case_candidate_overlay_review",
+  "evidence_date": "2026-11-11",
+  "dataset_id": "SFL-CPD15-Y",
+  "source_batch": "20260920_cs-heli_Dev_000001/000",
+  "source_uri": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap",
+  "topic": "/capture/camera_0/image",
+  "frame_index": 0,
+  "captured_at": "2026-09-20T09:45:06.782450Z",
+  "task_context": {
+    "hard_case_tags": [
+      "slope"
+    ],
+    "evaluation_stratum": "slope_hard_case"
+  },
+  "slope_context": {
+    "semantic_label": "slope_visible",
+    "traversability_status": "review_required",
+    "geometry_evidence_sufficient": false,
+    "geometry_evidence_artifact_ids": [],
+    "human_pixel_truth_available": false
+  },
+  "frame": {
+    "width": 1920,
+    "height": 1536,
+    "bytes": 263785,
+    "decoded_format": "JPEG",
+    "sha256": "3775ee5f41374c9a302c458cfffa2799222e22ff17541045d6acfb8434bd682f"
+  },
+  "candidate": {
+    "label": "slope",
+    "source": "sam3_factory_5090_gpu0",
+    "score": 0.98046875,
+    "shape_count": 1,
+    "outer_vertex_count": 44,
+    "mask_pixels": 57614,
+    "image_fraction": 0.019536,
+    "bbox_xyxy": [
+      977,
+      550,
+      1410,
+      780
+    ],
+    "sha256": "efbcb54360b5e9d9df622aa05522d456479cd227cc616d9b0833695b957e29d2"
+  },
+  "overlay": {
+    "local_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\work\\slope-frame0-hardcase\\candidate-overlay.jpg",
+    "bytes": 249459,
+    "sha256": "ce0676eab1d73ad62bb1cc062fe1f0d99ee4a3e78600609c74aa12098fb0acfe"
+  },
+  "assistant_visual_review": {
+    "status": "candidate_looks_plausible_human_confirmation_required",
+    "main_slope_surface": "The overlay appears to cover the visible yellow slope surface broadly.",
+    "floor_seam": "The front and right slope-to-floor boundaries appear broadly aligned without obvious large floor leakage.",
+    "cargo_floor_seam": "The dark threshold at the container entrance remains a narrow ambiguous boundary and requires pixel-level human truth.",
+    "door_panel_leakage": "No obvious large-scale leakage into the white door panel is visible.",
+    "limitations": "This is assistant visual inspection, not a human approval or pixel-truth comparison."
+  },
+  "human_review": {
+    "status": "pending",
+    "truth_shape_count": 0,
+    "is_reference_frame": false
+  },
+  "quality_metrics": {
+    "iou": null,
+    "dice": null,
+    "boundary_f1": null,
+    "floor_leakage_pixels": null,
+    "cargo_floor_leakage_pixels": null,
+    "door_panel_leakage_pixels": null
+  },
+  "next_closed_loop_order": [
+    "vlm_slope_visible_review",
+    "lidar_and_vehicle_geometry_gate",
+    "agent_prompt_or_roi_action",
+    "sam_resegmentation_if_needed",
+    "vlm_and_quality_recheck",
+    "human_pixel_review",
+    "truth_version"
+  ],
+  "claim": "A real slope candidate overlay was rendered and assistant-reviewed. Human truth, segmentation quality, traversability, and closed-loop completion are not established."
+}

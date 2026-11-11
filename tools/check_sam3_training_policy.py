@@ -27,6 +27,11 @@ FORBIDDEN_PATTERNS = (
     r"stage-[123]：",
     r"只开放经代码核验的 mask decoder",
     r"开放完整 `?segmentation_head",
+    r"confirmed_upper_decoder_named_parameters",
+    r"newly_implemented_and_verified_adapter_named_parameters",
+    r"已确认的 decoder 高层",
+    r"真正新增并验证的 adapter",
+    r"解冻 image backbone 高层",
 )
 
 
@@ -55,12 +60,18 @@ def check_policy(root=ROOT):
         violations.append({"path": "peft_plan", "pattern": "conditional expansion enabled"})
     if plan["model"]["conditional_expansion"]["predeclared_trainable_prefixes"]:
         violations.append({"path": "peft_plan", "pattern": "predeclared prefixes present"})
+    if plan["model"]["conditional_expansion"]["predeclared_module_families"]:
+        violations.append({"path": "peft_plan", "pattern": "predeclared module families present"})
     if plan["model"]["full_model_training"]:
         violations.append({"path": "peft_plan", "pattern": "full model enabled"})
     if staged["current_verified_stage"]["trainable_prefixes"] != expected:
         violations.append({"path": "staged_plan", "pattern": "Stage-0 scope drift"})
     if staged["conditional_expansion"]["predeclared_stages"]:
         violations.append({"path": "staged_plan", "pattern": "predeclared stages present"})
+    if staged["conditional_expansion"]["predeclared_trainable_prefixes"]:
+        violations.append({"path": "staged_plan", "pattern": "predeclared prefixes present"})
+    if staged["conditional_expansion"]["predeclared_target_families"]:
+        violations.append({"path": "staged_plan", "pattern": "predeclared target families present"})
     if staged["full_model_policy"]["enabled"]:
         violations.append({"path": "staged_plan", "pattern": "full model enabled"})
     return violations

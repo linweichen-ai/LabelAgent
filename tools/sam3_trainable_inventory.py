@@ -40,6 +40,7 @@ def inventory_named_parameters(model):
         if "adapter" in item[0].lower() or "lora" in item[0].lower()
     ]
     return {
+        "scope": "inventory_only_not_training_authorization",
         "named_parameter_tensor_count": len(named),
         "named_parameter_count": sum(_numel(parameter) for _, parameter in named),
         "verified_stage0_scope": {

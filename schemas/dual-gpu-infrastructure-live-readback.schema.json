@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/dual-gpu-infrastructure-live-readback.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "occurred_at", "scope", "git_backup", "ssh_access", "servers", "bf16_smoke", "sam3_inventory", "claim_boundary"],
+  "properties": {
+    "schema_version": {"const": "labelagent.dual-gpu-infrastructure-live-readback.v1"},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "scope": {"const": "live_infrastructure_and_inventory_not_training"},
+    "git_backup": {
+      "type": "object", "additionalProperties": false,
+      "required": ["branch", "local_head", "github_head", "cnb_head", "all_equal"],
+      "properties": {
+        "branch": {"const": "codex/dual-5090-20261111"},
+        "local_head": {"$ref": "#/$defs/git_hash"},
+        "github_head": {"$ref": "#/$defs/git_hash"},
+        "cnb_head": {"$ref": "#/$defs/git_hash"},
+        "all_equal": {"const": true}
+      }
+    },
+    "ssh_access": {
+      "type": "object", "additionalProperties": false,
+      "required": ["key_algorithm", "fingerprint", "private_key_path", "public_key_path", "password_persisted", "authorizations"],
+      "properties": {
+        "key_algorithm": {"const": "ED25519"},
+        "fingerprint": {"type": "string", "pattern": "^SHA256:"},
+        "private_key_path": {"type": "string", "minLength": 1},
+        "public_key_path": {"type": "string", "minLength": 1},
+        "password_persisted": {"const": false},
+        "authorizations": {
+          "type": "array", "minItems": 2, "maxItems": 2,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["host", "remote_path", "matching_comment_count", "batch_login_verified"],
+            "properties": {
+              "host": {"enum": ["172.16.89.244", "172.16.89.248"]},
+              "remote_path": {"const": "/home/clw/.ssh/authorized_keys"},
+              "matching_comment_count": {"const": 1},
+              "batch_login_verified": {"const": true}
+            }
+          }
+        }
+      }
+    },
+    "servers": {
+      "type": "object", "additionalProperties": false,
+      "required": ["factory_4090", "dual_5090"],
+      "properties": {
+        "factory_4090": {"$ref": "#/$defs/server"},
+        "dual_5090": {"$ref": "#/$defs/server"}
+      }
+    },
+    "bf16_smoke": {
+      "type": "object", "additionalProperties": false,
+      "required": ["script_path", "script_sha256", "one_shot", "optimizer_step", "gpus", "residual_python_process"],
+      "properties": {
+        "script_path": {"const": "tools/cuda_bf16_one_shot.py"},
+        "script_sha256": {"$ref": "#/$defs/hash"},
+        "one_shot": {"const": true},
+        "optimizer_step": {"const": false},
+        "gpus": {
+          "type": "array", "minItems": 2, "maxItems": 2,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["uuid", "bf16_supported", "dtype", "checksum", "max_allocated_bytes"],
+            "properties": {
+              "uuid": {"type": "string", "pattern": "^GPU-"},
+              "bf16_supported": {"const": true},
+              "dtype": {"const": "torch.bfloat16"},
+              "checksum": {"type": "number"},
+              "max_allocated_bytes": {"type": "integer", "minimum": 1}
+            }
+          }
+        },
+        "residual_python_process": {"const": false}
+      }
+    },
+    "sam3_inventory": {"$ref": "#/$defs/inventory"},
+    "claim_boundary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["human_truth_available", "fixed_holdout_baseline_available", "formal_training_authorized", "training_started", "loss_available", "checkpoint_available", "full_model_training_authorized"],
+      "properties": {
+        "human_truth_available": {"const": false},
+        "fixed_holdout_baseline_available": {"const": false},
+        "formal_training_authorized": {"const": false},
+        "training_started": {"const": false},
+        "loss_available": {"const": false},
+        "checkpoint_available": {"const": false},
+        "full_model_training_authorized": {"const": false}
+      }
+    }
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "git_hash": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "gpu": {
+      "type": "object", "additionalProperties": false,
+      "required": ["index", "name", "uuid", "memory_total_mib"],
+      "properties": {
+        "index": {"type": "integer", "minimum": 0, "maximum": 1},
+        "name": {"type": "string", "minLength": 1},
+        "uuid": {"type": "string", "pattern": "^GPU-"},
+        "memory_total_mib": {"type": "integer", "minimum": 1}
+      }
+    },
+    "service": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "gpu_index", "port", "model_loaded", "preserved"],
+      "properties": {
+        "name": {"enum": ["sam3_baseline", "labelagent_vlm8b"]},
+        "gpu_index": {"type": "integer", "minimum": 0, "maximum": 1},
+        "port": {"type": "integer", "minimum": 1},
+        "model_loaded": {"const": true},
+        "preserved": {"const": true}
+      }
+    },
+    "server": {
+      "type": "object", "additionalProperties": false,
+      "required": ["host", "gpus", "services", "foreign_workloads_observed", "foreign_workloads_modified"],
+      "properties": {
+        "host": {"enum": ["172.16.89.244", "172.16.89.248"]},
+        "gpus": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"$ref": "#/$defs/gpu"}},
+        "services": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"$ref": "#/$defs/service"}},
+        "foreign_workloads_observed": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "foreign_workloads_modified": {"const": false},
+        "environment": {"type": "object"},
+        "protected_port": {"type": "object"}
+      }
+    },
+    "inventory_group": {
+      "type": "object", "additionalProperties": false,
+      "required": ["tensor_count", "parameter_count"],
+      "properties": {
+        "tensor_count": {"type": "integer", "minimum": 0},
+        "parameter_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "inventory": {
+      "type": "object", "additionalProperties": false,
+      "required": ["tool_path", "tool_sha256", "scope", "torch_version", "checkpoint_sha256", "source_sha256", "model", "verified_stage0_scope", "conditional_observations", "constructor_device_redirects", "deployed_source_modified", "conditional_expansion_authorized"],
+      "properties": {
+        "tool_path": {"const": "tools/sam3_runtime_named_parameters.py"},
+        "tool_sha256": {"$ref": "#/$defs/hash"},
+        "scope": {"const": "inventory_only_not_training_authorization"},
+        "torch_version": {"type": "string", "minLength": 1},
+        "checkpoint_sha256": {"$ref": "#/$defs/hash"},
+        "source_sha256": {"type": "object", "minProperties": 3, "additionalProperties": {"$ref": "#/$defs/hash"}},
+        "model": {
+          "type": "object", "additionalProperties": false,
+          "required": ["named_parameter_tensor_count", "named_parameter_count", "top_level_groups"],
+          "properties": {
+            "named_parameter_tensor_count": {"type": "integer", "minimum": 1},
+            "named_parameter_count": {"type": "integer", "minimum": 1},
+            "top_level_groups": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/inventory_group"}}
+          }
+        },
+        "verified_stage0_scope": {
+          "type": "object", "additionalProperties": false,
+          "required": ["prefix", "tensor_count", "parameter_count", "exact_names", "exact_names_sha256"],
+          "properties": {
+            "prefix": {"const": "segmentation_head.mask_predictor.mask_embed."},
+            "tensor_count": {"const": 6},
+            "parameter_count": {"const": 197376},
+            "exact_names": {"type": "array", "minItems": 6, "maxItems": 6, "uniqueItems": true, "items": {"type": "string", "pattern": "^segmentation_head\\.mask_predictor\\.mask_embed\\."}},
+            "exact_names_sha256": {"$ref": "#/$defs/hash"}
+          }
+        },
+        "conditional_observations": {
+          "type": "object", "additionalProperties": false,
+          "required": ["decoder_like_tensor_count", "decoder_like_parameter_count", "decoder_exact_names_sha256", "adapter_lora_tensor_count", "adapter_lora_parameter_count"],
+          "properties": {
+            "decoder_like_tensor_count": {"type": "integer", "minimum": 0},
+            "decoder_like_parameter_count": {"type": "integer", "minimum": 0},
+            "decoder_exact_names_sha256": {"$ref": "#/$defs/hash"},
+            "adapter_lora_tensor_count": {"const": 0},
+            "adapter_lora_parameter_count": {"const": 0}
+          }
+        },
+        "constructor_device_redirects": {"const": ["torch.zeros:cuda->cpu", "torch.arange:cuda->cpu"]},
+        "deployed_source_modified": {"const": false},
+        "conditional_expansion_authorized": {"const": false}
+      }
+    }
+  }
+}

@@ -31,6 +31,8 @@ class FakeSam3:
 class Sam3TrainableInventoryTests(unittest.TestCase):
     def test_inventory_reports_exact_stage0_and_keeps_decoder_inventory_unauthorized(self):
         inventory = inventory_named_parameters(FakeSam3())
+        self.assertEqual(inventory["scope"],
+                         "inventory_only_not_training_authorization")
         stage0 = inventory["verified_stage0_scope"]
         self.assertEqual(stage0["names"], [
             "segmentation_head.mask_predictor.mask_embed.layers.0.weight"

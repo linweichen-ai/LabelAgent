@@ -1,0 +1,133 @@
+{
+  "schema_version": "labelagent.dual-gpu-infrastructure-live-readback.v1",
+  "occurred_at": "2026-11-11T16:57:02+08:00",
+  "scope": "live_infrastructure_and_inventory_not_training",
+  "git_backup": {
+    "branch": "codex/dual-5090-20261111",
+    "local_head": "e969af25eb7b38287b361cb218a0fce72137c586",
+    "github_head": "e969af25eb7b38287b361cb218a0fce72137c586",
+    "cnb_head": "e969af25eb7b38287b361cb218a0fce72137c586",
+    "all_equal": true
+  },
+  "ssh_access": {
+    "key_algorithm": "ED25519",
+    "fingerprint": "SHA256:AOdwhZBVTGCqWp1kynQw0Wz86VPTbNikrPXHTWoKquM",
+    "private_key_path": "C:\\Users\\seer\\.ssh\\labelagent_clw_ed25519",
+    "public_key_path": "C:\\Users\\seer\\.ssh\\labelagent_clw_ed25519.pub",
+    "password_persisted": false,
+    "authorizations": [
+      {"host": "172.16.89.244", "remote_path": "/home/clw/.ssh/authorized_keys", "matching_comment_count": 1, "batch_login_verified": true},
+      {"host": "172.16.89.248", "remote_path": "/home/clw/.ssh/authorized_keys", "matching_comment_count": 1, "batch_login_verified": true}
+    ]
+  },
+  "servers": {
+    "factory_4090": {
+      "host": "172.16.89.248",
+      "gpus": [
+        {"index": 0, "name": "NVIDIA GeForce RTX 4090", "uuid": "GPU-8dde4d59-7e14-09ff-46c0-35da2f7177b8", "memory_total_mib": 24564},
+        {"index": 1, "name": "NVIDIA GeForce RTX 4090", "uuid": "GPU-f8597845-b2fa-5ca1-6918-816853753818", "memory_total_mib": 24564}
+      ],
+      "services": [
+        {"name": "sam3_baseline", "gpu_index": 0, "port": 18766, "model_loaded": true, "preserved": true},
+        {"name": "labelagent_vlm8b", "gpu_index": 1, "port": 18878, "model_loaded": true, "preserved": true}
+      ],
+      "foreign_workloads_observed": ["lyy SAM3 training on GPU0"],
+      "foreign_workloads_modified": false
+    },
+    "dual_5090": {
+      "host": "172.16.89.244",
+      "gpus": [
+        {"index": 0, "name": "NVIDIA GeForce RTX 5090", "uuid": "GPU-8fc83bb8-cdd1-8da3-98b7-990f5de229ff", "memory_total_mib": 32607},
+        {"index": 1, "name": "NVIDIA GeForce RTX 5090", "uuid": "GPU-45a88393-aad3-3ee0-022a-4d4dad168088", "memory_total_mib": 32607}
+      ],
+      "services": [
+        {"name": "sam3_baseline", "gpu_index": 0, "port": 18766, "model_loaded": true, "preserved": true},
+        {"name": "labelagent_vlm8b", "gpu_index": 1, "port": 18878, "model_loaded": true, "preserved": true}
+      ],
+      "foreign_workloads_observed": ["swd YOLO DDP on GPU0 and GPU1"],
+      "foreign_workloads_modified": false,
+      "environment": {
+        "python": "3.12.16",
+        "torch": "2.10.0+cu128",
+        "torch_cuda": "12.8",
+        "cuda_available": true,
+        "device_count": 2,
+        "uv_path": "/home/clw/.local/bin/uv"
+      },
+      "protected_port": {
+        "port": 18001,
+        "listening": true,
+        "modified": false,
+        "ownership_readback": "not_visible_to_clw"
+      }
+    }
+  },
+  "bf16_smoke": {
+    "script_path": "tools/cuda_bf16_one_shot.py",
+    "script_sha256": "ff89be0755f5b7f01f082c8073dc503151d47abde78ea043115b90a606ffd3eb",
+    "one_shot": true,
+    "optimizer_step": false,
+    "gpus": [
+      {"uuid": "GPU-8fc83bb8-cdd1-8da3-98b7-990f5de229ff", "bf16_supported": true, "dtype": "torch.bfloat16", "checksum": 0.07431962341070175, "max_allocated_bytes": 11142656},
+      {"uuid": "GPU-45a88393-aad3-3ee0-022a-4d4dad168088", "bf16_supported": true, "dtype": "torch.bfloat16", "checksum": 0.07431962341070175, "max_allocated_bytes": 11142656}
+    ],
+    "residual_python_process": false
+  },
+  "sam3_inventory": {
+    "tool_path": "tools/sam3_runtime_named_parameters.py",
+    "tool_sha256": "ba727d1b9f55279fa6cfe7454aee81a2b4b0bc600ee2b90556d2d7b6143ffa82",
+    "scope": "inventory_only_not_training_authorization",
+    "torch_version": "2.10.0+cu128",
+    "checkpoint_sha256": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+    "source_sha256": {
+      "model_builder.py": "dd316e4acdf3283eb9c8c160565b9ab9646a99c045797564eb709e699960873a",
+      "maskformer_segmentation.py": "f2f6b7afe03b574a4ea9265a21914ea5f089a4007a22e408675216e82b1c1484",
+      "position_encoding.py": "438b002a875ab70e9263013e7f2703bddeb4f966888acf5f247b5946f446d5ca"
+    },
+    "model": {
+      "named_parameter_tensor_count": 1432,
+      "named_parameter_count": 860055224,
+      "top_level_groups": {
+        "backbone": {"tensor_count": 727, "parameter_count": 815566592},
+        "dot_prod_scoring": {"tensor_count": 10, "parameter_count": 1182976},
+        "geometry_encoder": {"tensor_count": 76, "parameter_count": 8215808},
+        "inst_interactive_predictor": {"tensor_count": 308, "parameter_count": 11743362},
+        "segmentation_head": {"tensor_count": 28, "parameter_count": 2298881},
+        "transformer": {"tensor_count": 283, "parameter_count": 21047605}
+      }
+    },
+    "verified_stage0_scope": {
+      "prefix": "segmentation_head.mask_predictor.mask_embed.",
+      "tensor_count": 6,
+      "parameter_count": 197376,
+      "exact_names": [
+        "segmentation_head.mask_predictor.mask_embed.layers.0.weight",
+        "segmentation_head.mask_predictor.mask_embed.layers.0.bias",
+        "segmentation_head.mask_predictor.mask_embed.layers.1.weight",
+        "segmentation_head.mask_predictor.mask_embed.layers.1.bias",
+        "segmentation_head.mask_predictor.mask_embed.layers.2.weight",
+        "segmentation_head.mask_predictor.mask_embed.layers.2.bias"
+      ],
+      "exact_names_sha256": "efacf600a68248109986db8b610f9861a8255e586aa64a2909cfcaeaded686a1"
+    },
+    "conditional_observations": {
+      "decoder_like_tensor_count": 318,
+      "decoder_like_parameter_count": 17561978,
+      "decoder_exact_names_sha256": "79619a2a7c3a67119248891fef7c9e69ea4021979426bc605b17cf8b8d7123c2",
+      "adapter_lora_tensor_count": 0,
+      "adapter_lora_parameter_count": 0
+    },
+    "constructor_device_redirects": ["torch.zeros:cuda->cpu", "torch.arange:cuda->cpu"],
+    "deployed_source_modified": false,
+    "conditional_expansion_authorized": false
+  },
+  "claim_boundary": {
+    "human_truth_available": false,
+    "fixed_holdout_baseline_available": false,
+    "formal_training_authorized": false,
+    "training_started": false,
+    "loss_available": false,
+    "checkpoint_available": false,
+    "full_model_training_authorized": false
+  }
+}

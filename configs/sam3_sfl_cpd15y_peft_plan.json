@@ -27,7 +27,8 @@
       "enabled": false,
       "predeclared_trainable_prefixes": [],
       "requires": ["dual_5090_named_parameters_inventory", "genuine_human_truth_version", "fixed_holdout_baseline"],
-      "may_target_only_after_runtime_confirmation": ["confirmed_upper_decoder_named_parameters", "newly_implemented_and_verified_adapter_named_parameters"]
+      "predeclared_module_families": [],
+      "future_scope_generation": "new_config_from_dual_5090_exact_named_parameters_only_after_all_prerequisites"
     },
     "unverified_module_claims": {
       "mask_decoder_trainable": false,
@@ -63,7 +64,7 @@
     "synchronous_ddp": true
   },
   "budget": {
-    "precision": "bf16_pending_live_support_readback",
+    "precision": "bf16_verified_one_shot_no_training",
     "batch_size_per_gpu": 1,
     "gradient_accumulation_steps": 1,
     "activation_checkpointing": true,

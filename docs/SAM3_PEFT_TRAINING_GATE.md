@@ -26,18 +26,18 @@
 2. 真值已生成不可变 `version_id` 和 manifest SHA-256；
 3. train/val/test 按序列或实体隔离并完成无泄漏核验；
 4. `test24` 与固定 640 holdout 的排除关系已经对最终训练 manifest 回读确认；
-5. 配置明确冻结 image/language backbone，当前仅开放源码实际存在并经过前缀核验的 mask-embedding head；若以后加入 adapter，必须先补实现、参数清单和冻结回归；
+5. 配置明确冻结 image/language backbone，当前唯一可授权范围是经过实机前缀核验的 `segmentation_head.mask_predictor.mask_embed.*`；decoder、adapter、LoRA 不得声称存在、受支持或可训练；
 6. 双 5090 DDP 配置为 `world_size=2`；
 7. 机器可读门禁返回零错误且 `formal_training_authorized=true`。
 
 ## 后续扩大训练范围的条件
 
-首轮只允许 stage-0。条件式扩大训练范围必须同时具备：5090 实机 `named_parameters()` 模块清单、真实人工 truth version、固定独立 holdout 的原始 SAM3 基线。三项缺一时不得预先声明 stage-1/2/3，也不得预填更宽的 trainable prefix。门禁齐全后，只能按实机参数名评估已确认的 decoder 高层，或后续真正新增且完成验证的 adapter；全模型微调保持禁用。
+当前只允许 Stage-0。未来是否扩大范围不在本文件预声明：不得预设 stage 编号、模块家族或参数前缀。只有 5090 实机 `named_parameters()` 清单、真实人工 truth version、固定独立 holdout 原始 SAM3 基线三项同时齐全后，才能由当时的实机精确参数名生成一份新的候选配置；全模型微调保持禁用。
 
 ## Staged unfreeze 与回滚
 
 当前只定义一个可执行阶段：stage-0 开放 `segmentation_head.mask_predictor.mask_embed.*`，失败或退化时回滚到带 SHA-256 的原始 SAM3 checkpoint。任何后续阶段都不是预定义事实；必须由 5090 实机清点出的精确参数名动态生成，并通过真实人工 truth 和固定独立 holdout 门禁。
 
-每个新阶段记录必须包含：精确 trainable parameter names、trainable parameter count、训练配置 SHA-256、独立 holdout 的原始基线指标、候选指标与增益、回滚 checkpoint 路径及 SHA-256。指标至少包含 pixel recall、mask IoU 和 Boundary F1。只有 stage-0 未过预先版本化的门槛且三个扩展前置条件全部通过，才能提出已确认 decoder 高层或新实现 adapter 的候选阶段；工具不得自行授权。当前真实 `named_parameters()`、参数量、梯度非零清单和前后向依赖仍为 pending。执行工具 `tools/sam3_trainable_inventory.py` 只会启用 stage-0，其他参数只允许作为未授权清点结果输出。
+每份未来候选记录必须包含：精确 trainable parameter names、trainable parameter count、训练配置 SHA-256、独立 holdout 的原始基线指标、候选指标与增益、回滚 checkpoint 路径及 SHA-256。指标至少包含 pixel recall、mask IoU 和 Boundary F1。工具不得根据模块名称自行授权；`tools/sam3_trainable_inventory.py` 的非 Stage-0 输出仅为 `inventory-only`，任何 `stage>0` 请求必须拒绝。
 
 机器可读当前状态见 [`test-results/sam3-peft-training-readiness-20261111.json`](test-results/sam3-peft-training-readiness-20261111.json)，不可启动的配置计划见 [`../configs/sam3_sfl_cpd15y_peft_plan.json`](../configs/sam3_sfl_cpd15y_peft_plan.json)，Schema 见 [`../schemas/sam3-peft-training-gate.schema.json`](../schemas/sam3-peft-training-gate.schema.json)。当前文件只固化训练决策和启动门禁，不表示已经微调、启动训练或取得训练效果。

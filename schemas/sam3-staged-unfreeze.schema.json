@@ -15,8 +15,8 @@
         "name": {"const": "mask_embed_only_minimal_reversible_baseline"},
         "status": {"const": "only_currently_verified_trainable_scope"},
         "trainable_prefixes": {"const": ["segmentation_head.mask_predictor.mask_embed."]},
-        "runtime_exact_parameter_names_status": {"const": "pending_dual_5090_inventory"},
-        "runtime_trainable_parameter_count_status": {"const": "pending_dual_5090_inventory"},
+        "runtime_exact_parameter_names_status": {"const": "verified_dual_5090_inventory_receipt"},
+        "runtime_trainable_parameter_count_status": {"const": "verified_197376"},
         "config_sha256_status": {"const": "required_before_training"},
         "independent_holdout_gain_status": {"const": "pending_human_truth_and_baseline"},
         "rollback_to": {"const": "original_sam3_checkpoint_with_sha256"}
@@ -24,9 +24,10 @@
     },
     "runtime_inventory_gate": {
       "type": "object", "additionalProperties": false,
-      "required": ["dual_5090_named_parameters_verified", "forward_backward_dependency_verified", "genuine_human_truth_version_available", "fixed_holdout_baseline_available", "all_prerequisites_required_for_expansion"],
+      "required": ["dual_5090_named_parameters_verified", "inventory_receipt", "forward_backward_dependency_verified", "genuine_human_truth_version_available", "fixed_holdout_baseline_available", "all_prerequisites_required_for_expansion"],
       "properties": {
-        "dual_5090_named_parameters_verified": {"const": false},
+        "dual_5090_named_parameters_verified": {"const": true},
+        "inventory_receipt": {"const": "docs/test-results/dual-gpu-infrastructure-live-readback-20261111.json"},
         "forward_backward_dependency_verified": {"const": false},
         "genuine_human_truth_version_available": {"const": false},
         "fixed_holdout_baseline_available": {"const": false},
@@ -35,13 +36,14 @@
     },
     "conditional_expansion": {
       "type": "object", "additionalProperties": false,
-      "required": ["enabled", "predeclared_stages", "predeclared_trainable_prefixes", "candidate_must_be_derived_from_live_named_parameters", "allowed_target_types_after_all_gates", "required_stage_record_fields"],
+      "required": ["enabled", "predeclared_stages", "predeclared_trainable_prefixes", "candidate_must_be_derived_from_live_named_parameters", "predeclared_target_families", "future_scope_generation", "required_stage_record_fields"],
       "properties": {
         "enabled": {"const": false},
         "predeclared_stages": {"const": []},
         "predeclared_trainable_prefixes": {"const": []},
         "candidate_must_be_derived_from_live_named_parameters": {"const": true},
-        "allowed_target_types_after_all_gates": {"const": ["confirmed_upper_decoder_named_parameters", "newly_implemented_and_verified_adapter_named_parameters"]},
+        "predeclared_target_families": {"const": []},
+        "future_scope_generation": {"const": "new_config_from_dual_5090_exact_named_parameters_only_after_all_prerequisites"},
         "required_stage_record_fields": {"const": ["exact_trainable_parameter_names", "trainable_parameter_count", "training_config_sha256", "independent_holdout_baseline_metrics", "independent_holdout_candidate_metrics", "independent_holdout_gain", "rollback_checkpoint_path", "rollback_checkpoint_sha256"]}
       }
     },

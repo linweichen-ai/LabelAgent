@@ -30,7 +30,8 @@ class Sam3PeftLaunchGateTests(unittest.TestCase):
         self.assertEqual(staged["current_stage"]["stage"], 0)
         self.assertFalse(staged["conditional_expansion"]["enabled"])
         self.assertEqual(staged["conditional_expansion"]["predeclared_stages"], [])
-        self.assertFalse(staged["dual_5090_named_parameters_verified"])
+        self.assertTrue(staged["dual_5090_named_parameters_verified"])
+        self.assertFalse(staged["forward_backward_dependency_verified"])
         self.assertFalse(staged["unverified_module_policy"][
             "mask_decoder_exists_or_is_verified_trainable"])
         self.assertFalse(staged["unverified_module_policy"][

@@ -89,6 +89,8 @@ class OrderedStageEvidenceTests(unittest.TestCase):
         self.assertFalse(plan["model"]["conditional_expansion"]["enabled"])
         self.assertEqual(plan["model"]["conditional_expansion"][
             "predeclared_trainable_prefixes"], [])
+        self.assertEqual(plan["model"]["conditional_expansion"][
+            "predeclared_module_families"], [])
         self.assertFalse(plan["model"]["unverified_module_claims"][
             "mask_decoder_trainable"])
         self.assertFalse(plan["model"]["unverified_module_claims"][
@@ -117,9 +119,12 @@ class OrderedStageEvidenceTests(unittest.TestCase):
         self.assertEqual(current["trainable_prefixes"],
                          ["segmentation_head.mask_predictor.mask_embed."])
         self.assertEqual(current["runtime_exact_parameter_names_status"],
-                         "pending_dual_5090_inventory")
-        self.assertFalse(plan["runtime_inventory_gate"][
+                         "verified_dual_5090_inventory_receipt")
+        self.assertTrue(plan["runtime_inventory_gate"][
             "dual_5090_named_parameters_verified"])
+        self.assertEqual(
+            plan["runtime_inventory_gate"]["inventory_receipt"],
+            "docs/test-results/dual-gpu-infrastructure-live-readback-20261111.json")
         self.assertFalse(plan["runtime_inventory_gate"][
             "genuine_human_truth_version_available"])
         self.assertFalse(plan["runtime_inventory_gate"][
@@ -128,6 +133,7 @@ class OrderedStageEvidenceTests(unittest.TestCase):
         self.assertFalse(expansion["enabled"])
         self.assertEqual(expansion["predeclared_stages"], [])
         self.assertEqual(expansion["predeclared_trainable_prefixes"], [])
+        self.assertEqual(expansion["predeclared_target_families"], [])
         self.assertIn("exact_trainable_parameter_names",
                       expansion["required_stage_record_fields"])
         self.assertIn("trainable_parameter_count",

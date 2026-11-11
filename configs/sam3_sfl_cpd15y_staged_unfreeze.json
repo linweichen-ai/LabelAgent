@@ -6,14 +6,15 @@
     "name": "mask_embed_only_minimal_reversible_baseline",
     "status": "only_currently_verified_trainable_scope",
     "trainable_prefixes": ["segmentation_head.mask_predictor.mask_embed."],
-    "runtime_exact_parameter_names_status": "pending_dual_5090_inventory",
-    "runtime_trainable_parameter_count_status": "pending_dual_5090_inventory",
+    "runtime_exact_parameter_names_status": "verified_dual_5090_inventory_receipt",
+    "runtime_trainable_parameter_count_status": "verified_197376",
     "config_sha256_status": "required_before_training",
     "independent_holdout_gain_status": "pending_human_truth_and_baseline",
     "rollback_to": "original_sam3_checkpoint_with_sha256"
   },
   "runtime_inventory_gate": {
-    "dual_5090_named_parameters_verified": false,
+    "dual_5090_named_parameters_verified": true,
+    "inventory_receipt": "docs/test-results/dual-gpu-infrastructure-live-readback-20261111.json",
     "forward_backward_dependency_verified": false,
     "genuine_human_truth_version_available": false,
     "fixed_holdout_baseline_available": false,
@@ -24,10 +25,8 @@
     "predeclared_stages": [],
     "predeclared_trainable_prefixes": [],
     "candidate_must_be_derived_from_live_named_parameters": true,
-    "allowed_target_types_after_all_gates": [
-      "confirmed_upper_decoder_named_parameters",
-      "newly_implemented_and_verified_adapter_named_parameters"
-    ],
+    "predeclared_target_families": [],
+    "future_scope_generation": "new_config_from_dual_5090_exact_named_parameters_only_after_all_prerequisites",
     "required_stage_record_fields": [
       "exact_trainable_parameter_names",
       "trainable_parameter_count",

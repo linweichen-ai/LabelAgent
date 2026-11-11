@@ -89,6 +89,8 @@ unknown 候选至少记录：建议名称/同义词、证据图或掩码及哈�
 
 所有带 `hard_case_tags=["slope"]` 的样本组成独立 hard-case stratum，单独报告，不并入七类均值后隐藏失败。开发、验证和测试按采集序列或实体坡道隔离；自动接收阈值只能在首批人工像素真值建立后确定。专项数据分层、指标、仿真参数和当前真实 frame0 证据见 [`SLOPE_SEGMENTATION_ACCEPTANCE.md`](SLOPE_SEGMENTATION_ACCEPTANCE.md)。
 
+已知类 slope 机器事件可以显式携带 `approved_for_training=false`；如果没有人工像素真值，任何 `approved_for_training=true` 都会被契约拒绝。`candidate.generated`、`vlm.reviewed`、`agent.action` 和 `unknown.proposed` 等机器候选事件本身也不能批准训练。该字段在 1.1 协议中是向后兼容的可选安全声明，历史事件缺省时不被自动解释为批准。
+
 ## 仿真数据
 
 仿真事件必须记录模拟器、场景配置、随机种子和传感器版本。真实、仿真、混合训练分别报告，禁止用仿真提升代替真实工厂验证。

@@ -230,6 +230,12 @@ def validate_event(event: Mapping[str, Any]) -> list[str]:
             if (event_type == "evaluation.completed"
                     and slope.get("human_pixel_truth_available") is not True):
                 errors.append("slope evaluation requires human pixel truth")
+            if slope.get("approved_for_training") is True:
+                if slope.get("human_pixel_truth_available") is not True:
+                    errors.append("slope cannot be approved for training without human pixel truth")
+                if event_type in {"candidate.generated", "vlm.reviewed", "agent.action",
+                                  "unknown.proposed"}:
+                    errors.append("machine slope candidate events cannot be approved for training")
 
     review = event.get("review")
     if event_type == "unknown.proposed":

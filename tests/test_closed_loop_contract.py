@@ -59,7 +59,8 @@ class ClosedLoopContractTests(unittest.TestCase):
         event["slope_context"] = {
             "semantic_label": "slope_visible", "traversability_status": "traversable",
             "geometry_evidence_sufficient": False,
-            "geometry_evidence_artifact_ids": [], "human_pixel_truth_available": False}
+            "geometry_evidence_artifact_ids": [], "human_pixel_truth_available": False,
+            "approved_for_training": False}
         errors = validate_event(event)
         self.assertIn("slope traversability decisions require sufficient geometry evidence", errors)
         self.assertIn("slope traversability decisions require geometry evidence artifacts", errors)
@@ -70,8 +71,24 @@ class ClosedLoopContractTests(unittest.TestCase):
         event["slope_context"] = {
             "semantic_label": "slope_visible", "traversability_status": "review_required",
             "geometry_evidence_sufficient": False,
-            "geometry_evidence_artifact_ids": [], "human_pixel_truth_available": False}
+            "geometry_evidence_artifact_ids": [], "human_pixel_truth_available": False,
+            "approved_for_training": False}
         self.assertEqual(validate_event(event), [])
+
+    def test_machine_slope_candidate_cannot_be_training_approved(self):
+        event = copy.deepcopy(self.event)
+        event["event_type"] = "candidate.generated"
+        event["workflow"].update(previous_state="qc_passed", state="candidates_generated")
+        event.pop("unknown_candidate")
+        event["task_context"] = {"hard_case_tags": ["slope"]}
+        event["slope_context"] = {
+            "semantic_label": "slope_visible", "traversability_status": "unknown",
+            "geometry_evidence_sufficient": False,
+            "geometry_evidence_artifact_ids": [], "human_pixel_truth_available": False,
+            "approved_for_training": True}
+        errors = validate_event(event)
+        self.assertIn("slope cannot be approved for training without human pixel truth", errors)
+        self.assertIn("machine slope candidate events cannot be approved for training", errors)
 
     def test_timestamps_must_include_timezone(self):
         event = copy.deepcopy(self.event)

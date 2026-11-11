@@ -222,7 +222,8 @@
         "traversability_status": {"enum": ["unknown", "review_required", "traversable", "non_traversable"]},
         "geometry_evidence_sufficient": {"type": "boolean"},
         "geometry_evidence_artifact_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-        "human_pixel_truth_available": {"type": "boolean"}
+        "human_pixel_truth_available": {"type": "boolean"},
+        "approved_for_training": {"type": "boolean"}
       }
     },
     "unknown_candidate": {

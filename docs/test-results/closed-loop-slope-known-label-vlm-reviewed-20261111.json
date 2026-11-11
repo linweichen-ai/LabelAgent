@@ -1,0 +1,92 @@
+{
+  "schema_version": "1.1.0",
+  "event_id": "evt-slope-a000-f0-vlm-aee398ed",
+  "event_type": "vlm.reviewed",
+  "occurred_at": "2026-11-11T11:11:41+08:00",
+  "run_id": "run-slope-a000-c0-f0-3775ee5f",
+  "correlation_id": "corr-slope-a000-c0-f0-3775ee5f",
+  "parent_event_id": "evt-slope-a000-f0-candidate-b6652e98",
+  "idempotency_key": "sfl-cpd15y:a000:camera0:frame0:vlm-review:aee398edace4c7b4",
+  "workflow": {
+    "previous_state": "candidates_generated",
+    "state": "vlm_reviewed",
+    "iteration": 0,
+    "max_iterations": 3
+  },
+  "source": {
+    "dataset_id": "SFL-CPD15-Y",
+    "source_batch": "20260920_cs-heli_Dev_000001/000",
+    "frame_id": 0,
+    "camera": "camera0",
+    "topic": "/capture/camera_0/image",
+    "capture_time": "2026-09-20T09:45:06.782450Z",
+    "origin": "real",
+    "modality": "image",
+    "content_sha256": "3775ee5f41374c9a302c458cfffa2799222e22ff17541045d6acfb8434bd682f",
+    "simulation": null
+  },
+  "producer": {
+    "component": "vlm",
+    "model_name": "labelagent-vlm8b",
+    "model_version": "config-sha256:5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+    "prompt_version": "slope-known-label-review-v1:ca500cea9b84c6b4",
+    "code_commit": "a6f3d313605af3b83666844bc379aa49599d14cf",
+    "ontology_version": "labelagent-seven-class-20261111"
+  },
+  "decision": {
+    "status": "review_required",
+    "confidence": null,
+    "reason_codes": [
+      "KNOWN_LABEL_SLOPE_SUPPORTED",
+      "HUMAN_PIXEL_TRUTH_MISSING",
+      "TRAVERSABILITY_UNKNOWN",
+      "GEOMETRY_EVIDENCE_MISSING"
+    ],
+    "summary": "VLM classified the visible machine candidate as the existing slope label and supported its visual evidence. It did not establish pixel truth, training approval, or traversability."
+  },
+  "task_context": {
+    "hard_case_tags": [
+      "slope"
+    ],
+    "evaluation_stratum": "slope_hard_case"
+  },
+  "slope_context": {
+    "semantic_label": "slope_visible",
+    "traversability_status": "unknown",
+    "geometry_evidence_sufficient": false,
+    "geometry_evidence_artifact_ids": [],
+    "human_pixel_truth_available": false,
+    "approved_for_training": false
+  },
+  "review": {
+    "required": true,
+    "status": "pending",
+    "reason": "Human pixel review is still required. Geometry and vehicle constraints are absent, so traversability remains unknown.",
+    "reviewer_type": "human",
+    "reviewed_at": null
+  },
+  "artifacts": [
+    {
+      "artifact_id": "slope-frame0-overlay",
+      "kind": "image",
+      "uri": "workspace://outputs/sfl_cpd15y_stage2_20261110/slope_review/slope_candidate_overlay.png",
+      "sha256": "b103e9ba8b42fbb2be01d8943b740caac95e27ca06775712a4eac9207134a9d7"
+    },
+    {
+      "artifact_id": "slope-frame0-vlm-review",
+      "kind": "report",
+      "uri": "workspace://outputs/sfl_cpd15y_stage2_20261110/slope_review/vlm_slope_candidate_review.json",
+      "sha256": "aee398edace4c7b46ed04a1379a05cd6f0502e3809b7ae1a88972dba005a7dea"
+    },
+    {
+      "artifact_id": "slope-frame0-import-receipt",
+      "kind": "report",
+      "uri": "workspace://outputs/sfl_cpd15y_stage2_20261110/slope_review/workbench_candidate_import_receipt.json",
+      "sha256": "d82f0d239f24312abc653e3cecc1b1b82858b6b49cced1099c85981abd93c14e"
+    }
+  ],
+  "metrics": {
+    "latency_ms": 5099,
+    "agent_rounds": 0
+  }
+}

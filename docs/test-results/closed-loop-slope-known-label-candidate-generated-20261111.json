@@ -1,0 +1,96 @@
+{
+  "schema_version": "1.1.0",
+  "event_id": "evt-slope-a000-f0-candidate-b6652e98",
+  "event_type": "candidate.generated",
+  "occurred_at": "2026-11-11T10:53:13+08:00",
+  "run_id": "run-slope-a000-c0-f0-3775ee5f",
+  "correlation_id": "corr-slope-a000-c0-f0-3775ee5f",
+  "parent_event_id": null,
+  "idempotency_key": "sfl-cpd15y:a000:camera0:frame0:candidate:b6652e98aac721dd",
+  "workflow": {
+    "previous_state": "qc_passed",
+    "state": "candidates_generated",
+    "iteration": 0,
+    "max_iterations": 3
+  },
+  "source": {
+    "dataset_id": "SFL-CPD15-Y",
+    "source_batch": "20260920_cs-heli_Dev_000001/000",
+    "frame_id": 0,
+    "camera": "camera0",
+    "topic": "/capture/camera_0/image",
+    "capture_time": "2026-09-20T09:45:06.782450Z",
+    "origin": "real",
+    "modality": "image",
+    "content_sha256": "3775ee5f41374c9a302c458cfffa2799222e22ff17541045d6acfb8434bd682f",
+    "simulation": null
+  },
+  "producer": {
+    "component": "sam",
+    "model_name": "SAM3",
+    "model_version": "sha256:9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+    "prompt_version": "point-positive-v1:(1100,620)",
+    "code_commit": "a6f3d313605af3b83666844bc379aa49599d14cf",
+    "ontology_version": "labelagent-seven-class-20261111"
+  },
+  "decision": {
+    "status": "review_required",
+    "confidence": 0.98046875,
+    "reason_codes": [
+      "KNOWN_LABEL_SLOPE",
+      "HUMAN_PIXEL_TRUTH_MISSING",
+      "GEOMETRY_EVIDENCE_MISSING"
+    ],
+    "summary": "SAM produced one known-label slope_visible candidate. It remains a machine candidate and is not approved for training or traversability."
+  },
+  "task_context": {
+    "hard_case_tags": [
+      "slope"
+    ],
+    "evaluation_stratum": "slope_hard_case"
+  },
+  "slope_context": {
+    "semantic_label": "slope_visible",
+    "traversability_status": "unknown",
+    "geometry_evidence_sufficient": false,
+    "geometry_evidence_artifact_ids": [],
+    "human_pixel_truth_available": false,
+    "approved_for_training": false
+  },
+  "review": {
+    "required": true,
+    "status": "pending",
+    "reason": "Known-label slope hard case requires human pixel review; traversability also requires geometry and vehicle constraints.",
+    "reviewer_type": "human",
+    "reviewed_at": null
+  },
+  "artifacts": [
+    {
+      "artifact_id": "slope-frame0-original",
+      "kind": "image",
+      "uri": "workspace://outputs/sfl_cpd15y_stage2_20261110/slope_review/frame0_original.jpg",
+      "sha256": "3775ee5f41374c9a302c458cfffa2799222e22ff17541045d6acfb8434bd682f"
+    },
+    {
+      "artifact_id": "slope-frame0-sam-result",
+      "kind": "mask",
+      "uri": "workspace://outputs/sfl_cpd15y_stage2_20261110/slope_review/sam3_gpu0_frame0_result.json",
+      "sha256": "b6652e98aac721dd929799de059fd310cf25fdde97ec488bf9ff43471d169565"
+    },
+    {
+      "artifact_id": "slope-frame0-overlay",
+      "kind": "image",
+      "uri": "workspace://outputs/sfl_cpd15y_stage2_20261110/slope_review/slope_candidate_overlay.png",
+      "sha256": "b103e9ba8b42fbb2be01d8943b740caac95e27ca06775712a4eac9207134a9d7"
+    },
+    {
+      "artifact_id": "slope-frame0-review-manifest",
+      "kind": "report",
+      "uri": "workspace://outputs/sfl_cpd15y_stage2_20261110/slope_review/review_manifest.json",
+      "sha256": "442e0e956ffa2af3cc4e784462991d3f82b0bd2a060e6289bea7be63fa1c644a"
+    }
+  ],
+  "metrics": {
+    "agent_rounds": 0
+  }
+}

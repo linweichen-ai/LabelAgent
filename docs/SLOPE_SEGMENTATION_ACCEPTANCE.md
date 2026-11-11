@@ -9,6 +9,7 @@
 - LabelAgent 已把 `slope` 纳入七类体系，文本查询映射为 `ramp`，不是待新增 ontology 类。
 - 当前真实验收帧来自批次 A/000、`/capture/camera_0/image`、frame 0，图像 SHA-256 为 `3775ee5f41374c9a302c458cfffa2799222e22ff17541045d6acfb8434bd682f`；画面右中部有黄色斜坡。
 - SAM3 单正点 `(1100,620)` 返回 1 个候选区域、44 个外轮廓顶点、score 0.98046875。这个结果只证明服务能产生候选，当前帧没有可回读的 slope 人工像素真值，因此不能据此宣称分割质量、IoU 或可通行性正确。
+- 第一条已知类 slope high-level 事件固定保存 `human_pixel_truth_available=false`、`approved_for_training=false`、`traversability_status=unknown` 和 `geometry_evidence_sufficient=false`；它不走 unknown/ontology 分支。
 
 ## 两层语义
 

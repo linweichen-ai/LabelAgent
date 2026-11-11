@@ -9,6 +9,7 @@ import uuid
 import urllib.request
 import base64
 import hashlib
+from datetime import datetime, timezone
 from pathlib import Path
 from werkzeug.utils import secure_filename
 from flask import Flask, jsonify, request, send_file
@@ -54,6 +55,92 @@ def save():
     temporary = state_path().with_suffix(".tmp")
     temporary.write_text(json.dumps({k: v for k, v in state.items() if k != "video"}, ensure_ascii=False, indent=2), encoding="utf-8")
     _commit_work_file(temporary, state_path())
+
+
+def _canonical_json(value):
+    return json.dumps(value, ensure_ascii=False, sort_keys=True,
+                      separators=(",", ":")).encode("utf-8")
+
+
+def _sha256_json(value):
+    return hashlib.sha256(_canonical_json(value)).hexdigest()
+
+
+def _parse_review(body):
+    review = body.get("review") if isinstance(body, dict) else None
+    if not isinstance(review, dict):
+        raise ValueError("保存或驳回前必须填写人工复核信息")
+    unknown = set(review) - {"reviewer_id", "started_at", "note"}
+    if unknown:
+        raise ValueError(f"人工复核信息包含未知字段：{sorted(unknown)}")
+    reviewer_id = review.get("reviewer_id")
+    if not isinstance(reviewer_id, str) or not reviewer_id.strip() or len(reviewer_id.strip()) > 100:
+        raise ValueError("复核人 ID 不能为空且不能超过 100 个字符")
+    started_at = review.get("started_at")
+    if not isinstance(started_at, str):
+        raise ValueError("人工复核必须包含带时区的开始时间")
+    try:
+        started = datetime.fromisoformat(started_at.replace("Z", "+00:00"))
+    except ValueError as error:
+        raise ValueError("人工复核开始时间必须是 ISO-8601 格式") from error
+    if started.tzinfo is None:
+        raise ValueError("人工复核开始时间必须包含时区")
+    note = review.get("note", "")
+    if not isinstance(note, str) or len(note) > 1000:
+        raise ValueError("复核备注不能超过 1000 个字符")
+    finished = datetime.now(timezone.utc)
+    elapsed = max(0.0, (finished - started.astimezone(timezone.utc)).total_seconds())
+    return {"reviewer_id": reviewer_id.strip(),
+            "started_at": started.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "reviewed_at": finished.isoformat().replace("+00:00", "Z"),
+            "elapsed_seconds": round(elapsed, 3), "note": note.strip()}
+
+
+def human_review_records(*, video_file=None, topic=None, frame=None):
+    folder = WORK / "human_reviews"
+    records = []
+    previous = None
+    paths = sorted(folder.glob("*.json")) if folder.exists() else []
+    for path in paths:
+        record = json.loads(path.read_text(encoding="utf-8"))
+        review_id = record.pop("review_id", None)
+        if record.get("previous_review_id") != previous or _sha256_json(record) != review_id:
+            raise RuntimeError(f"人工复核审计链损坏：{path.name}")
+        record["review_id"] = review_id
+        previous = review_id
+        if video_file is not None and record.get("file") != video_file:
+            continue
+        if topic is not None and record.get("topic") != topic:
+            continue
+        if frame is not None and record.get("frame") != frame:
+            continue
+        records.append(record)
+    return records
+
+
+def append_human_review(*, frame, decision, review, frame_sha256,
+                        candidate, truth=None):
+    history = human_review_records()
+    body = {"schema_version": "labelagent.human-review.v1",
+            "sequence": len(history) + 1,
+            "previous_review_id": history[-1]["review_id"] if history else None,
+            "file": str(state["video"].path), "topic": state["topic"],
+            "frame": frame, "frame_sha256": frame_sha256,
+            "decision": decision, **review,
+            "candidate_sha256": _sha256_json(candidate) if candidate is not None else None,
+            "candidate_shape_count": len(candidate) if candidate is not None else 0,
+            "truth_sha256": _sha256_json(truth) if truth is not None else None,
+            "truth_shape_count": len(truth) if truth is not None else None}
+    review_id = _sha256_json(body)
+    record = {**body, "review_id": review_id}
+    folder = WORK / "human_reviews"
+    folder.mkdir(exist_ok=True)
+    destination = folder / f"{body['sequence']:06d}-{review_id}.json"
+    temporary = folder / (uuid.uuid4().hex + ".tmp")
+    temporary.write_text(json.dumps(record, ensure_ascii=False, indent=2,
+                                    sort_keys=True), encoding="utf-8")
+    _commit_work_file(temporary, destination)
+    return record
 
 
 def update_run_status(**changes):
@@ -478,18 +565,61 @@ def set_labels():
 def set_truth():
     body = request.get_json()
     with lock:
+        review = _parse_review(body)
         index = int(body["frame"])
-        width, height = Image.open(io.BytesIO(frame_image(index))).size
+        frame_data = frame_image(index)
+        width, height = Image.open(io.BytesIO(frame_data)).size
         shapes = body["shapes"]
         for shape in shapes:
             if shape["label"] not in state["labels"] or len(shape["points"]) < 3:
                 raise ValueError("真值类别或多边形无效")
             if any(not (0 <= x < width and 0 <= y < height) for x, y in shape["points"]):
                 raise ValueError("坐标超出图像范围")
+        candidate = state.setdefault("candidates", {}).get(str(index))
+        if candidate is None:
+            decision = "manual_annotation"
+        elif _sha256_json(candidate) == _sha256_json(shapes):
+            decision = "accept_candidate"
+        else:
+            decision = "correct_candidate"
+        audit = append_human_review(frame=index, decision=decision, review=review,
+            frame_sha256=hashlib.sha256(frame_data).hexdigest(), candidate=candidate,
+            truth=shapes)
         state["truth"][str(index)] = shapes
         state.setdefault("candidates", {}).pop(str(index), None)
         save()
-        return jsonify(saved=len(shapes))
+        return jsonify(saved=len(shapes), review=audit)
+
+
+@app.post("/api/human_review")
+def reject_candidate():
+    body = request.get_json() or {}
+    with lock:
+        review = _parse_review(body)
+        index = int(body.get("frame", -1))
+        if state["video"] is None or state["topic"] is None:
+            raise ValueError("请先加载图像消息")
+        if not 0 <= index < state["video"].topics[state["topic"]]["count"]:
+            raise ValueError("帧号无效")
+        candidate = state.setdefault("candidates", {}).get(str(index))
+        if candidate is None:
+            raise ValueError("当前帧没有可驳回的自动候选")
+        frame_data = frame_image(index)
+        audit = append_human_review(frame=index, decision="reject_candidate", review=review,
+            frame_sha256=hashlib.sha256(frame_data).hexdigest(), candidate=candidate)
+        return jsonify(rejected=True, review=audit)
+
+
+@app.get("/api/human_reviews")
+def get_human_reviews():
+    with lock:
+        if state["video"] is None or state["topic"] is None:
+            return jsonify(reviews=[])
+        frame_value = request.args.get("frame")
+        frame_number = int(frame_value) if frame_value is not None else None
+        records = human_review_records(video_file=str(state["video"].path),
+            topic=request.args.get("topic", state["topic"]), frame=frame_number)
+        return jsonify(reviews=records)
 
 
 @app.delete("/api/auto_result/<int:index>")

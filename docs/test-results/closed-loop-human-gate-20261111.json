@@ -1,0 +1,46 @@
+{
+  "recorded_at": "2026-11-11T11:34:31+08:00",
+  "status": "human_gate_ready_human_action_pending",
+  "claims": {
+    "infrastructure_available": true,
+    "human_gate_api_deployed": true,
+    "human_decision_recorded": false,
+    "minimum_closed_loop_complete": false,
+    "fine_tuning_complete": false,
+    "production_closed_loop_complete": false
+  },
+  "dual_5090": {
+    "sam_gpu": 0,
+    "sam_model_loaded": true,
+    "sam_memory_mib": 5580,
+    "vlm_gpu": 1,
+    "vlm_model_loaded": true,
+    "vlm_memory_mib": 8514,
+    "vlm_model": "labelagent-vlm8b",
+    "vlm_quantization": "nf4"
+  },
+  "real_frame_readback": {
+    "dataset_id": "SFL-CPD15-Y",
+    "source_batch": "20260920_cs-heli_Dev_000001/000",
+    "frame_id": "0",
+    "sensor": "/capture/camera_0/image",
+    "source_kind": "real",
+    "content_sha256": "3775ee5f41374c9a302c458cfffa2799222e22ff17541045d6acfb8434bd682f",
+    "candidate_shape_count": 1,
+    "candidate_label": "slope",
+    "candidate_score": 0.98046875,
+    "truth_shape_count": 0,
+    "reference_frame_count": 0,
+    "human_review_receipt_count": 0
+  },
+  "verification": {
+    "human_review_endpoint_http_status": 200,
+    "human_review_endpoint_body": {"reviews": []},
+    "affected_tests_run": 74,
+    "affected_tests_passed": 70,
+    "affected_tests_skipped": 4,
+    "javascript_syntax_checks_passed": 2,
+    "json_schema_draft_2020_12_valid": true
+  },
+  "next_gate": "A human reviewer must accept, correct, or reject frame 0 in the workbench. No candidate is promoted automatically."
+}

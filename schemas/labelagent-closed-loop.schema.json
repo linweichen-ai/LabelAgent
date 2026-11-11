@@ -57,6 +57,19 @@
       "type": "object",
       "required": ["truth_shape_count", "is_reference_frame", "candidate_shape_count"]
     },
+    "human_review": {
+      "type": "object",
+      "required": ["review_id", "reviewer_id", "decision", "started_at", "reviewed_at", "elapsed_seconds", "frame_sha256"],
+      "properties": {
+        "review_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "reviewer_id": {"type": "string", "minLength": 1},
+        "decision": {"enum": ["accept_candidate", "correct_candidate", "manual_annotation", "reject_candidate"]},
+        "started_at": {"type": "string", "format": "date-time"},
+        "reviewed_at": {"type": "string", "format": "date-time"},
+        "elapsed_seconds": {"type": "number", "minimum": 0},
+        "frame_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
     "bundle_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
   }
 }

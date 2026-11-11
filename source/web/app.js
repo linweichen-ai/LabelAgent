@@ -134,15 +134,40 @@ $('openButton').onclick=async()=>{if(fileManagerBusy)return;fileManagerBusy=true
 $('frameNumber').onchange=e=>showFrame(e.target.value);$('playButton').onclick=startPlayback;$('stopButton').onclick=async()=>{stopPlayback();clockTime=0;if(topic)await loadStill(0);updateControls();updateWindows(true)};
 $('labelsSave').onclick=async()=>{try{let data=await api('labels',{labels:$('labelsInput').value.split(',')});labels=data.labels;refreshLabels();toast('类别已保存')}catch(e){toast(e.message)}};
 $('referenceButton').onclick=async()=>{try{const data=await api('reference_frame',{frame});window.referenceFrames[topic]=[data.frame];updateReferenceStatus();toast('已设为参考帧，后续 AI 不会修改此帧')}catch(e){toast(e.message)}};
-async function saveCurrentTruth(candidateOnly=false){
+let pendingHumanReview=null;
+function checkTruthSave(candidateOnly=false){
  if(candidateOnly&&(window.workspaceMode!=='auto'||shapes[String(frame)]!==undefined||!Object.hasOwn(candidates,String(frame))))throw Error('当前帧没有待保存的自动候选');
  if(!annotationMode)throw Error('请先在主画面打开待复核的图像帧');
  if(loading||playing)throw Error('请暂停并等待原始帧加载后再保存真值');
- const savedShapes=selectedShapes(),data=await api('truth',{frame,shapes:savedShapes});
- shapes[String(frame)]=savedShapes;delete manualDrafts[String(frame)];delete autoDrafts[String(frame)];delete candidates[String(frame)];
- updateReferenceStatus();toast(`已保存 ${data.saved} 个真值标注`);
 }
-$('truthSave').onclick=()=>saveCurrentTruth().catch(e=>toast(e.message));
+function openHumanReview(candidateOnly=false){
+ try{checkTruthSave(candidateOnly)}catch(error){toast(error.message);return}
+ const hasCandidate=Object.hasOwn(candidates,String(frame))&&!Object.hasOwn(shapes,String(frame));
+ pendingHumanReview={candidateOnly,frame,topic,startedAt:new Date().toISOString()};
+ $('humanReviewContext').textContent=`帧 ${frame} · ${topic} · ${hasCandidate?'自动候选待人工确认':'纯人工标注待确认'}`;
+ $('rejectHumanReview').hidden=!hasCandidate;
+ $('humanReviewerId').value=localStorage.getItem('labelagentReviewerId')||'';
+ $('humanReviewNote').value='';
+ $('humanReviewDialog').showModal();
+ $('humanReviewerId').focus();
+}
+function humanReviewPayload(){
+ const reviewer=$('humanReviewerId').value.trim();
+ if(!reviewer)throw Error('请填写复核人 ID');
+ localStorage.setItem('labelagentReviewerId',reviewer);
+ return {reviewer_id:reviewer,started_at:pendingHumanReview.startedAt,note:$('humanReviewNote').value.trim()};
+}
+async function saveCurrentTruth(candidateOnly=false,review){
+ checkTruthSave(candidateOnly);
+ const savedShapes=selectedShapes(),data=await api('truth',{frame,shapes:savedShapes,review});
+ shapes[String(frame)]=savedShapes;delete manualDrafts[String(frame)];delete autoDrafts[String(frame)];delete candidates[String(frame)];
+ updateReferenceStatus();toast(`人工门禁通过，已保存 ${data.saved} 个真值标注（${data.review.decision}）`);
+ return data;
+}
+$('truthSave').onclick=()=>openHumanReview(false);
+$('closeHumanReview').onclick=()=>{$('humanReviewDialog').close();pendingHumanReview=null};
+$('acceptHumanReview').onclick=async()=>{if(!pendingHumanReview)return;const button=$('acceptHumanReview');button.disabled=true;try{if(frame!==pendingHumanReview.frame||topic!==pendingHumanReview.topic)throw Error('帧或消息源已变化，请重新复核');await saveCurrentTruth(pendingHumanReview.candidateOnly,humanReviewPayload());$('humanReviewDialog').close();pendingHumanReview=null;window.refreshInspection?.()}catch(error){toast(error.message)}finally{button.disabled=false}};
+$('rejectHumanReview').onclick=async()=>{if(!pendingHumanReview)return;const button=$('rejectHumanReview');button.disabled=true;try{if(frame!==pendingHumanReview.frame||topic!==pendingHumanReview.topic)throw Error('帧或消息源已变化，请重新复核');const data=await api('human_review',{frame,review:humanReviewPayload()});$('humanReviewDialog').close();pendingHumanReview=null;toast(`候选已驳回并留证（${data.review.review_id.slice(0,12)}…），未写入真值`);window.refreshInspection?.()}catch(error){toast(error.message)}finally{button.disabled=false}};
 $('openConfigDialog').onclick=()=>$('config').showModal();
 $('closeConfigDialog').onclick=()=>$('config').close();
 $('openFilesDialog').onclick=()=>{$('fileManager').showModal();refreshFiles()};

@@ -42,6 +42,11 @@ class ImageImportTests(unittest.TestCase):
     def upload(self, data, name):
         return self.client.post("/api/upload", data={"file": (io.BytesIO(data), name)})
 
+    @staticmethod
+    def review(reviewer="test-reviewer"):
+        return {"reviewer_id": reviewer,
+                "started_at": "2026-11-11T00:00:00Z", "note": "test"}
+
     def test_chinese_upload_original_pixels_odd_size_preview_and_persistence(self):
         result = self.upload(photograph(), "自己的图片.PNG")
         self.assertEqual(result.status_code, 200)
@@ -58,13 +63,42 @@ class ImageImportTests(unittest.TestCase):
             decoded = next(container.decode(video=0))
             self.assertEqual((decoded.width, decoded.height), (42, 34))
         shape = {"label": "车辆", "points": [[1, 1], [30, 1], [30, 25]], "holes": []}
-        self.assertEqual(self.client.post("/api/truth", json={"frame": 0, "shapes": [shape]}).json["saved"], 1)
+        response = self.client.post("/api/truth", json={"frame": 0,
+            "shapes": [shape], "review": self.review()})
+        self.assertEqual(response.json["saved"], 1)
+        self.assertEqual(response.json["review"]["decision"], "manual_annotation")
+        audit = self.client.get("/api/human_reviews?frame=0").json["reviews"]
+        self.assertEqual(len(audit), 1)
+        self.assertEqual(audit[0]["reviewer_id"], "test-reviewer")
+        self.assertEqual(audit[0]["truth_shape_count"], 1)
         other = self.upload(photograph("JPEG"), "另一个.jpg").json["file"]
         self.client.post(f"/api/files/{other['id']}/load")
         again = self.client.post(f"/api/files/{item['id']}/load").json
         self.assertEqual(again["truth"]["0"], [shape])
-        persisted = json.loads((self.root / "state.json").read_text())
+        persisted = json.loads((self.root / "state.json").read_text(encoding="utf-8"))
         self.assertEqual(persisted["truth"]["0"], [shape])
+
+    def test_candidate_requires_explicit_human_gate_and_rejection_never_writes_truth(self):
+        item = self.upload(photograph(), "candidate.png").json["file"]
+        self.client.post(f"/api/files/{item['id']}/load")
+        shape = {"label": "车辆", "points": [[1, 1], [30, 1], [30, 25]], "holes": []}
+        server.state["candidates"]["0"] = [shape]
+        missing = self.client.post("/api/truth", json={"frame": 0, "shapes": [shape]})
+        self.assertEqual(missing.status_code, 400)
+        rejected = self.client.post("/api/human_review", json={"frame": 0,
+            "review": self.review("rejector")})
+        self.assertEqual(rejected.status_code, 200)
+        self.assertEqual(rejected.json["review"]["decision"], "reject_candidate")
+        self.assertNotIn("0", server.state["truth"])
+        self.assertIn("0", server.state["candidates"])
+        accepted = self.client.post("/api/truth", json={"frame": 0,
+            "shapes": [shape], "review": self.review("acceptor")})
+        self.assertEqual(accepted.json["review"]["decision"], "accept_candidate")
+        self.assertIn("0", server.state["truth"])
+        self.assertNotIn("0", server.state["candidates"])
+        audits = self.client.get("/api/human_reviews?frame=0").json["reviews"]
+        self.assertEqual([item["decision"] for item in audits],
+                         ["reject_candidate", "accept_candidate"])
 
     def test_exif_orientation_and_path_import(self):
         path = self.root / "手机照片.jpeg"

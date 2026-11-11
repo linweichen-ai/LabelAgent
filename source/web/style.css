@@ -21,3 +21,4 @@ main.workspace{display:block;height:100dvh;min-height:0}.viewer{height:100%;min-
 @media(max-width:720px){.windowToolbar #workspaceModeHint{display:none}.windowToolbar{flex-wrap:wrap}.windowToolbar #addWindowButton{margin-left:auto}.inspectionTitle,.inspectionActions{flex-basis:100%}.truthSettings{flex-wrap:wrap}.truthSettings label:nth-child(2){flex-basis:60%}}
 
 .inspectionData>summary{cursor:pointer;color:#205245;line-height:1.7;padding:4px 0;overflow-wrap:anywhere}.inspectionData>summary:hover{color:#147d60}.inspectionData>.inspectionSummary{overflow-wrap:anywhere}
+.utilityDialog .dialogContent textarea{display:block;width:100%;margin-top:5px;resize:vertical}.utilityDialog .dialogContent .dialogHint{margin:4px 0 12px}

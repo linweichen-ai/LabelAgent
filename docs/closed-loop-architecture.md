@@ -52,6 +52,25 @@ VLM 只能输出 `unknown` 或 `new_label_candidate`。记录必须包含视觉�
 
 人工队列只接收 novel、低置信、模型冲突或质量检查失败样本，路由原因写入事件。最终真值版本必须记录 `train|val|test`、真值 artifact 哈希、ontology 版本、`real|sim`、样本权重和父版本。已有 split 不得因回流改变；real 与 sim 分开统计、加权和评测。
 
+工作台的“保存当前帧真值”和“保存结果”不会直接落盘；它们先弹出人工复核门禁，要求填写复核人 ID。服务端依据候选与保存结果的规范化哈希自动区分：
+
+- `accept_candidate`：候选未修改，人工直接接受；
+- `correct_candidate`：人工修改候选后接受；
+- `manual_annotation`：没有机器候选，由人工从零标注；
+- `reject_candidate`：候选被人工驳回，保留候选但绝不写入真值。
+
+每次决定写入 `LABELAGENT_WORK/human_reviews/` 的追加式哈希链，包含帧、候选、真值哈希、复核人、起止时间和耗时。`GET /api/human_reviews?frame=<id>` 可回读。`tools/closed_loop_human_gate.py` 会同时核对不可变输入帧哈希、人工回执和当前真值哈希，核对成功后才把 `human_accepted` 与 `truth_committed` 写入闭环账本；驳回只写 `human_rejected`。
+
+示例：
+
+```powershell
+python tools/closed_loop_human_gate.py `
+  --bundle outputs/frame0-gate-bundle.json `
+  --workbench-root D:/path/to/labelagent-work `
+  --ledger-root outputs/closed-loop-ledger `
+  --output outputs/frame0-human-gate-bundle.json
+```
+
 ## KPI 定义
 
 - 自动可接受率：无需人工修改且最终被接受的候选数 / 进入候选门禁的帧数。

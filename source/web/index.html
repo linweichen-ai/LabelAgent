@@ -105,6 +105,16 @@
   </div>
   <div class="dialogActions"><button id="configSave" class="primary"><img src="/icons/check.svg" alt="">保存并关闭</button></div>
 </dialog>
+<dialog id="humanReviewDialog" class="utilityDialog" aria-labelledby="humanReviewTitle">
+  <div class="dialogHeading"><h2 id="humanReviewTitle">人工复核门禁</h2><button type="button" id="closeHumanReview" class="iconButton" title="关闭" aria-label="关闭"><img src="/icons/x.svg" alt=""></button></div>
+  <div class="dialogContent">
+    <p id="humanReviewContext" class="dialogHint"></p>
+    <label>复核人 ID <input id="humanReviewerId" autocomplete="username" maxlength="100" placeholder="例如 clw"></label>
+    <label>复核备注（可选） <textarea id="humanReviewNote" maxlength="1000" rows="3" placeholder="记录修正原因或驳回理由"></textarea></label>
+    <p class="dialogHint">系统会自动区分“直接接受候选”“修正候选后接受”和“纯人工标注”，并记录帧、候选、真值哈希及复核耗时。</p>
+  </div>
+  <div class="dialogActions"><button id="rejectHumanReview">驳回候选</button><button id="acceptHumanReview" class="primary"><img src="/icons/check.svg" alt="">确认并保存真值</button></div>
+</dialog>
 <dialog id="fileManager" class="utilityDialog" aria-labelledby="filesTitle">
   <div class="dialogHeading"><h2 id="filesTitle">加载文件</h2><button type="button" id="closeFilesDialog" class="iconButton" title="关闭" aria-label="关闭"><img src="/icons/x.svg" alt=""></button></div>
   <div class="dialogContent">

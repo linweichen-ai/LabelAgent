@@ -142,7 +142,7 @@ $('autoModeButton').onclick=()=>window.setWorkspaceMode('auto').catch(e=>toast(e
 $('runButton').addEventListener('click',()=>{inspectionRunFrame=null;inspectionStageManual=false;inspectionStage=2;refreshInspection()});
 $('prepareReference').onclick=async()=>{try{if(window.referenceFrames?.[topic]?.length)await openReferenceFrame();else{await window.setWorkspaceMode('manual');toast('请先在当前帧标注目标，保存当前帧真值，再点击“设为参考帧”')}}catch(error){toast(error.message)}};
 $('describeButton').addEventListener('click',()=>{inspectionStage=0;refreshInspection()});
-$('saveCandidate').onclick=async()=>{try{await saveCurrentTruth(true);renderInspection(true);refreshInspection()}catch(error){toast(error.message)}};
+$('saveCandidate').onclick=()=>openHumanReview(true);
 $('clearAutoResult').onclick=async()=>{
  const selected=frame,selectedTopic=topic,button=$('clearAutoResult');
  if(button.disabled)return;

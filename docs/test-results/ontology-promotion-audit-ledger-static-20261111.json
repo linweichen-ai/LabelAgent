@@ -1,0 +1,511 @@
+{
+  "append_only": true,
+  "generated_at": "2026-11-11T20:07:00+08:00",
+  "head_record_sha256": "c91c0a4ab33a6b4e7f86eae6211f1feb59bc3ed9b0e03e1585c62c3f8e18ca9e",
+  "ledger_id": "ontology-static-audit-ledger-20261111",
+  "record_count": 5,
+  "records": [
+    {
+      "event": {
+        "event_id": "af4e18d4ec01bb26b348a3c65cc1308e170cfaaf9c5d1704a18dfceab4b4c9ba",
+        "event_type": "vlm.label_observation.recorded",
+        "idempotency_key": "8ec18c96e3417781841c88eb3b3b5449249083961fc2c736645cb50832866db2",
+        "identity": {
+          "dataset_id": "STATIC_DATASET",
+          "frame_id": "STATIC_FRAME_001",
+          "input_id": "7504441e51370d136df58bd50e38dd46a4cefc8d73212993597342063fd5ad32",
+          "sequence": "000",
+          "source_batch": "STATIC_BATCH"
+        },
+        "inputs": {
+          "candidate": {
+            "artifact_id": "ae75392f021890eac7958fcd8f72b00419b3cd31d2192b7cb4f8490ac39217be",
+            "sha256": "0764575e495faf345220d5483f188988fc3e91b9e9deaab4564faf87dee70a0a",
+            "uri": "example://ontology-static/real/candidate.json"
+          },
+          "model": {
+            "id": "STATIC_VLM",
+            "sha256": "e377d63c4dd694008ee31462fe46b485bf0ff144edeb037072fa10f53eadb877",
+            "version": "STATIC_V1"
+          },
+          "prompt": {
+            "id": "label-discovery",
+            "sha256": "67f9cb458df95cec6f0b112d9ec8fefa3ff70f88ede70bbae78462130c53b0be",
+            "version": "STATIC_V1"
+          },
+          "views": [
+            {
+              "artifact": {
+                "artifact_id": "68e13b87e2915c697ebe1f9bda6d59a7d507794d86abacc2adde3d7aaae4ec62",
+                "sha256": "e6e3fb57e9c65d74c19e5b51b2bc675a377bed611b28ba456c73a513e95ae349",
+                "uri": "example://ontology-static/real/camera_0.png"
+              },
+              "camera": "camera_0"
+            },
+            {
+              "artifact": {
+                "artifact_id": "050478815dd7981814710e646059a6399a8245ca0dbc3773ad4bfce1063b8d6e",
+                "sha256": "31450c11606b1022520246dd5def9d8ba9da889e8a81d5d92944ec29cac7f9eb",
+                "uri": "example://ontology-static/real/camera_1.png"
+              },
+              "camera": "camera_1"
+            },
+            {
+              "artifact": {
+                "artifact_id": "2b3999fd66186de892247a90a54ae8b7795142c2dc08bba853e51688d2ce74b3",
+                "sha256": "9d6992c7aaefb97427e131673f18afb8222c9da0cf2f4422657bcbdba6ed3ee2",
+                "uri": "example://ontology-static/real/camera_2.png"
+              },
+              "camera": "camera_2"
+            }
+          ]
+        },
+        "observed_at": "2026-11-11T20:00:00+08:00",
+        "ontology_mutation_allowed": false,
+        "provenance": {
+          "simulation": null,
+          "source_kind": "real"
+        },
+        "registry_binding": {
+          "registry_sha256": "2de68a7c3fa7e4d803094df9eca7d43c0bd4addfd15c7318d0ec31d2deed1f34",
+          "registry_version": "labelagent-ontology-20261111-v1"
+        },
+        "result": {
+          "aliases": [
+            "dock_guard",
+            "loading_bay_guard"
+          ],
+          "confidence": 0.73,
+          "evidence": {
+            "summary": "upright protective structure appears across views",
+            "view_artifact_ids": [
+              "68e13b87e2915c697ebe1f9bda6d59a7d507794d86abacc2adde3d7aaae4ec62",
+              "050478815dd7981814710e646059a6399a8245ca0dbc3773ad4bfce1063b8d6e",
+              "2b3999fd66186de892247a90a54ae8b7795142c2dc08bba853e51688d2ce74b3"
+            ],
+            "visual_cues": [
+              "fixed base",
+              "high-visibility surface"
+            ]
+          },
+          "multiview_consistency": {
+            "agreement": 0.89,
+            "conflicting_cameras": [],
+            "status": "consistent",
+            "supporting_cameras": [
+              "camera_0",
+              "camera_1",
+              "camera_2"
+            ]
+          },
+          "nearest_known_labels": [
+            {
+              "difference": "fixed protective structure, not cargo",
+              "label": "pallet",
+              "similarity": 0.31
+            }
+          ],
+          "outcome": "unknown_candidate",
+          "proposed_name": "loading_dock_guard",
+          "sam_relation": "conflict"
+        },
+        "routing": {
+          "confidence_threshold": 0.8,
+          "human_review_required": true,
+          "next_state": "human_review_required",
+          "reason_codes": [
+            "LOW_CONFIDENCE",
+            "SAM_ONTOLOGY_CONFLICT",
+            "UNKNOWN_OR_NEW_LABEL"
+          ]
+        },
+        "schema_version": "labelagent.vlm-label-observation.v1",
+        "truth_promotion_allowed": false,
+        "write_policy": {
+          "mode": "append_only",
+          "overwrite_registry": false
+        }
+      },
+      "event_sha256": "ed9366cee40343da0653a7c6dda20eaa9aafe86324d969516cdf563eb5acf7e3",
+      "event_type": "vlm.label_observation.recorded",
+      "idempotency_key": "8ec18c96e3417781841c88eb3b3b5449249083961fc2c736645cb50832866db2",
+      "previous_record_sha256": null,
+      "record_sha256": "c8d0aba4abec272df0e8b68a3a36b99659a976e0646b93e873fd0b84b963e837",
+      "sequence": 1
+    },
+    {
+      "event": {
+        "event_id": "27bc6ed2d37952ae61aaa00bc8bb2937512b8774426fbc7b4f08b1abaf8222b1",
+        "event_type": "vlm.label_observation.recorded",
+        "idempotency_key": "c766c2b52472794f80d051af893d51dba4eb9e8409f6755b628ad952482ec77d",
+        "identity": {
+          "dataset_id": "STATIC_DATASET",
+          "frame_id": "STATIC_SIM_FRAME_001",
+          "input_id": "13a934a8dfd95ce4784430ddefdc554a2809fa4426078d9f709ef0f9064b1bc7",
+          "sequence": "000",
+          "source_batch": "STATIC_BATCH"
+        },
+        "inputs": {
+          "candidate": {
+            "artifact_id": "19dd20eeacd934153987fe8bddb377180787f001eee172d5e410588085bbdfb1",
+            "sha256": "63708d6ee390a5c2ca0686c4688e0120fbc8113f1c892314aca0a94303afa617",
+            "uri": "example://ontology-static/simulation/candidate.json"
+          },
+          "model": {
+            "id": "STATIC_VLM",
+            "sha256": "e377d63c4dd694008ee31462fe46b485bf0ff144edeb037072fa10f53eadb877",
+            "version": "STATIC_V1"
+          },
+          "prompt": {
+            "id": "label-discovery",
+            "sha256": "67f9cb458df95cec6f0b112d9ec8fefa3ff70f88ede70bbae78462130c53b0be",
+            "version": "STATIC_V1"
+          },
+          "views": [
+            {
+              "artifact": {
+                "artifact_id": "33a65815f99c954e3f5eda5e66e80d3787a41a4449c47e4669b4590e542dbd94",
+                "sha256": "36fd3b410f73d52808fe6ccde8a50130908f0f7e612eb4664d7f0a742af17ccb",
+                "uri": "example://ontology-static/simulation/camera_0.png"
+              },
+              "camera": "camera_0"
+            },
+            {
+              "artifact": {
+                "artifact_id": "6e8762319a50206f74b548195dec0180fca27bb9b37bfaff5a9f93d5deb6882c",
+                "sha256": "a3f3abb2131d06ab41650a3757315f4ce12d1e7431df8ad8b5d62ee5e97b2996",
+                "uri": "example://ontology-static/simulation/camera_1.png"
+              },
+              "camera": "camera_1"
+            },
+            {
+              "artifact": {
+                "artifact_id": "33a4576facccc37a76131a03dbff9f5509a3560b975f754af4cca7cdfa95d2d1",
+                "sha256": "ec2fa592b77f2c0965a3cf2114560cebe896471eeb57f58bb27a8a99a8df4aff",
+                "uri": "example://ontology-static/simulation/camera_2.png"
+              },
+              "camera": "camera_2"
+            }
+          ]
+        },
+        "observed_at": "2026-11-11T20:00:01+08:00",
+        "ontology_mutation_allowed": false,
+        "provenance": {
+          "simulation": {
+            "scene": "STATIC_SCENE",
+            "seed": "17",
+            "simulator": "STATIC_SIMULATOR",
+            "version": "STATIC_V1"
+          },
+          "source_kind": "simulation"
+        },
+        "registry_binding": {
+          "registry_sha256": "2de68a7c3fa7e4d803094df9eca7d43c0bd4addfd15c7318d0ec31d2deed1f34",
+          "registry_version": "labelagent-ontology-20261111-v1"
+        },
+        "result": {
+          "aliases": [
+            "dock_guard",
+            "loading_bay_guard"
+          ],
+          "confidence": 0.69,
+          "evidence": {
+            "summary": "upright protective structure appears across views",
+            "view_artifact_ids": [
+              "33a65815f99c954e3f5eda5e66e80d3787a41a4449c47e4669b4590e542dbd94",
+              "6e8762319a50206f74b548195dec0180fca27bb9b37bfaff5a9f93d5deb6882c",
+              "33a4576facccc37a76131a03dbff9f5509a3560b975f754af4cca7cdfa95d2d1"
+            ],
+            "visual_cues": [
+              "fixed base",
+              "high-visibility surface"
+            ]
+          },
+          "multiview_consistency": {
+            "agreement": 0.89,
+            "conflicting_cameras": [],
+            "status": "consistent",
+            "supporting_cameras": [
+              "camera_0",
+              "camera_1",
+              "camera_2"
+            ]
+          },
+          "nearest_known_labels": [
+            {
+              "difference": "fixed protective structure, not cargo",
+              "label": "pallet",
+              "similarity": 0.31
+            }
+          ],
+          "outcome": "unknown_candidate",
+          "proposed_name": "loading_dock_guard",
+          "sam_relation": "insufficient_evidence"
+        },
+        "routing": {
+          "confidence_threshold": 0.8,
+          "human_review_required": true,
+          "next_state": "human_review_required",
+          "reason_codes": [
+            "LOW_CONFIDENCE",
+            "UNKNOWN_OR_NEW_LABEL"
+          ]
+        },
+        "schema_version": "labelagent.vlm-label-observation.v1",
+        "truth_promotion_allowed": false,
+        "write_policy": {
+          "mode": "append_only",
+          "overwrite_registry": false
+        }
+      },
+      "event_sha256": "19e883a29ebb843edc3682222a5c306ce7b7281f6e5e0fe6e9ee4c6037cd7ef9",
+      "event_type": "vlm.label_observation.recorded",
+      "idempotency_key": "c766c2b52472794f80d051af893d51dba4eb9e8409f6755b628ad952482ec77d",
+      "previous_record_sha256": "c8d0aba4abec272df0e8b68a3a36b99659a976e0646b93e873fd0b84b963e837",
+      "record_sha256": "79362fab0abc293c15c8596b346dcf3424324b32c0bde7f7ae18600ddf50e044",
+      "sequence": 2
+    },
+    {
+      "event": {
+        "candidate_names_and_aliases": [
+          "dock_guard",
+          "loading_bay_guard",
+          "loading_dock_guard"
+        ],
+        "cluster_id": "STATIC_CLUSTER_LOADING_DOCK_GUARD",
+        "clustering": {
+          "algorithm": "deterministic_evidence_alias_cluster",
+          "config_sha256": "8c37677109ecf6d4d12ea6f5e0d3198f7c0466b9036f26ae1d32fd1118122719",
+          "version": "STATIC_V1"
+        },
+        "event_id": "f97fd5022aaa0b8e93561252af1610bc4bce03c8820e94c92f933bec969c07b1",
+        "event_type": "ontology.unknown_cluster.proposed",
+        "human_review_required": true,
+        "idempotency_key": "a1c44c6e4373138776d7fc956b28ccc117bc049cc8fedbdb4f08a2e73eba926a",
+        "member_event_ids": [
+          "27bc6ed2d37952ae61aaa00bc8bb2937512b8774426fbc7b4f08b1abaf8222b1",
+          "af4e18d4ec01bb26b348a3c65cc1308e170cfaaf9c5d1704a18dfceab4b4c9ba"
+        ],
+        "member_event_sha256": [
+          "19e883a29ebb843edc3682222a5c306ce7b7281f6e5e0fe6e9ee4c6037cd7ef9",
+          "ed9366cee40343da0653a7c6dda20eaa9aafe86324d969516cdf563eb5acf7e3"
+        ],
+        "ontology_mutation_allowed": false,
+        "proposed_at": "2026-11-11T20:02:00+08:00",
+        "representative": {
+          "candidate_sha256": "0764575e495faf345220d5483f188988fc3e91b9e9deaab4564faf87dee70a0a",
+          "event_id": "af4e18d4ec01bb26b348a3c65cc1308e170cfaaf9c5d1704a18dfceab4b4c9ba",
+          "selection_policy": "max_view_evidence_then_confidence_then_event_id"
+        },
+        "schema_version": "labelagent.ontology-cluster-proposal.v1",
+        "source_kinds": [
+          "real",
+          "simulation"
+        ],
+        "source_partition_event_ids": {
+          "real": [
+            "af4e18d4ec01bb26b348a3c65cc1308e170cfaaf9c5d1704a18dfceab4b4c9ba"
+          ],
+          "simulation": [
+            "27bc6ed2d37952ae61aaa00bc8bb2937512b8774426fbc7b4f08b1abaf8222b1"
+          ]
+        },
+        "status": "proposal_only",
+        "write_policy": {
+          "mode": "append_only",
+          "overwrite_registry": false
+        }
+      },
+      "event_sha256": "518d179de51e35b6dcf8fd41af9c8d167031bfc381e58d70acebd11435d9c79b",
+      "event_type": "ontology.unknown_cluster.proposed",
+      "idempotency_key": "a1c44c6e4373138776d7fc956b28ccc117bc049cc8fedbdb4f08a2e73eba926a",
+      "previous_record_sha256": "79362fab0abc293c15c8596b346dcf3424324b32c0bde7f7ae18600ddf50e044",
+      "record_sha256": "ae73ad710cfda8ae4e75c68f87e9745b2ff0a119231d959a83730a9e580a90dc",
+      "sequence": 3
+    },
+    {
+      "event": {
+        "event_id": "59a2addf09829aa935fd9f07d9cf027875a45e3e36f32e346c643654d14ef92c",
+        "event_type": "ontology.registry.version.promoted",
+        "human_decision": {
+          "approval_id": "STATIC_ONTOLOGY_APPROVAL_V1",
+          "canonical_name": "loading_dock_guard",
+          "class_id": 8,
+          "decision": "approved_create_new_label",
+          "definition": "Fixed protective structure at a loading dock.",
+          "identity_assurance": "authenticated",
+          "receipt_sha256": "571a334519cf2afcdbaafc6cab2190679a7b6ba837fcc8861366ccdd8de7fb58",
+          "receipt_uri": "example://ontology-static/approval.json",
+          "reviewed_at": "2026-11-11T20:05:00+08:00",
+          "reviewer_id": "STATIC_AUTHENTICATED_REVIEWER"
+        },
+        "idempotency_key": "4603412eddfb790caac38eea97a574b376196fd682f072076983a6934bd9abf2",
+        "new_registry": {
+          "append_only": true,
+          "downstream_mapping": {
+            "operation": "union",
+            "preserve_source_labels": true,
+            "source_labels": [
+              "floor",
+              "slope"
+            ],
+            "source_layer": "training_annotation",
+            "target_label": "traversable_area",
+            "target_layer": "downstream_navigation"
+          },
+          "labels": [
+            {
+              "class_id": 1,
+              "name": "pallet",
+              "training_label": true
+            },
+            {
+              "class_id": 2,
+              "name": "person",
+              "training_label": true
+            },
+            {
+              "class_id": 3,
+              "name": "floor",
+              "training_label": true
+            },
+            {
+              "class_id": 4,
+              "name": "slope",
+              "training_label": true
+            },
+            {
+              "class_id": 5,
+              "name": "ego",
+              "training_label": true
+            },
+            {
+              "class_id": 6,
+              "name": "other_robot",
+              "training_label": true
+            },
+            {
+              "class_id": 7,
+              "name": "cargo_floor",
+              "training_label": true
+            },
+            {
+              "class_id": 8,
+              "name": "loading_dock_guard",
+              "training_label": true
+            }
+          ],
+          "registry_content_sha256": "03ced7baf16295f1bb8d3665239814ec3c06d10d3ccdfce18f926be543cee1ef",
+          "registry_version": "labelagent-ontology-STATIC-v2",
+          "schema_version": "labelagent.label-registry.v1",
+          "training_semantics": {
+            "floor_slope_distinct": true,
+            "permanent_merge_allowed": false
+          },
+          "unknown_policy": {
+            "automatic_truth_promotion": false,
+            "new_label_candidate": "human_review_required",
+            "ontology_mutation_allowed": false,
+            "unknown": "human_review_required"
+          }
+        },
+        "occurred_at": "2026-11-11T20:06:00+08:00",
+        "parent_registry_sha256": "2de68a7c3fa7e4d803094df9eca7d43c0bd4addfd15c7318d0ec31d2deed1f34",
+        "parent_registry_version": "labelagent-ontology-20261111-v1",
+        "proposal": {
+          "cluster_id": "STATIC_CLUSTER_LOADING_DOCK_GUARD",
+          "representative_event_id": "af4e18d4ec01bb26b348a3c65cc1308e170cfaaf9c5d1704a18dfceab4b4c9ba"
+        },
+        "proposal_event_id": "f97fd5022aaa0b8e93561252af1610bc4bce03c8820e94c92f933bec969c07b1",
+        "regression_validation": {
+          "all_required_gates_passed": true,
+          "config_sha256": "2915984666d04002a91f42810fa0a7e9053da7184fa24c1acf117fb7c1bb14ca",
+          "fixed_set_id": "STATIC_FIXED_REGRESSION_V1",
+          "manifest_sha256": "56f144b257194e124d067ddae6296c9e44165482e952a9364134df6b45c155fe",
+          "manifest_uri": "example://ontology-static/regression-manifest.json",
+          "real_metrics": {
+            "false_positive_rate": 0.04,
+            "precision": 0.92,
+            "recall": 0.83,
+            "sample_count": 12
+          },
+          "simulation_metrics": {
+            "false_positive_rate": 0.06,
+            "precision": 0.88,
+            "recall": 0.75,
+            "sample_count": 8
+          },
+          "truth_versions": {
+            "real": "STATIC_REAL_TRUTH_V1",
+            "simulation": "STATIC_SIM_TRUTH_V1"
+          },
+          "validated_at": "2026-11-11T20:04:00+08:00"
+        },
+        "replay_plan": {
+          "affected_candidate_event_ids": [
+            "27bc6ed2d37952ae61aaa00bc8bb2937512b8774426fbc7b4f08b1abaf8222b1",
+            "af4e18d4ec01bb26b348a3c65cc1308e170cfaaf9c5d1704a18dfceab4b4c9ba"
+          ],
+          "automatic_truth_promotion": false,
+          "execution_status": "planned_not_executed",
+          "plan_id": "a9f31c8ae81c9cd28e9f4cd7316a38c436d021a22c8dcaa498fabc41bf6aa95b",
+          "schema_version": "labelagent.ontology-replay-plan.v1",
+          "source_partitions": {
+            "real": [
+              "af4e18d4ec01bb26b348a3c65cc1308e170cfaaf9c5d1704a18dfceab4b4c9ba"
+            ],
+            "simulation": [
+              "27bc6ed2d37952ae61aaa00bc8bb2937512b8774426fbc7b4f08b1abaf8222b1"
+            ]
+          },
+          "source_registry_version": "labelagent-ontology-20261111-v1",
+          "target_registry_version": "labelagent-ontology-STATIC-v2",
+          "write_policy": {
+            "mode": "append_only_new_outputs",
+            "overwrite_history": false
+          }
+        },
+        "schema_version": "labelagent.ontology-registry-promotion.v1",
+        "write_policy": {
+          "mode": "append_only_new_registry_version",
+          "overwrite_parent_registry": false
+        }
+      },
+      "event_sha256": "0c963750472ef14d2f09b9f2b81ab8b635415a1027efd6b4101a9decad8e54b4",
+      "event_type": "ontology.registry.version.promoted",
+      "idempotency_key": "4603412eddfb790caac38eea97a574b376196fd682f072076983a6934bd9abf2",
+      "previous_record_sha256": "ae73ad710cfda8ae4e75c68f87e9745b2ff0a119231d959a83730a9e580a90dc",
+      "record_sha256": "2ed95959dc5ae206684f0392bad4cd534cabdcaf18b12c9cf93942be30cdf9f7",
+      "sequence": 4
+    },
+    {
+      "event": {
+        "blockers": [
+          "AUTHENTICATED_HUMAN_APPROVAL_REQUIRED"
+        ],
+        "event_id": "cd875d984a3b58768cef882781f95de8cb815279b7dbd826788de140599ba68f",
+        "event_type": "ontology.promotion.rejected",
+        "idempotency_key": "c90aefbdf4b902a79cfc1c26a01b5bf93e2d1a293bc9560a1d69db87c9fe8f4c",
+        "next_state": "human_review_required",
+        "occurred_at": "2026-11-11T20:06:01+08:00",
+        "old_registry_modified": false,
+        "parent_registry_sha256": "2de68a7c3fa7e4d803094df9eca7d43c0bd4addfd15c7318d0ec31d2deed1f34",
+        "parent_registry_version": "labelagent-ontology-20261111-v1",
+        "proposal_event_id": "f97fd5022aaa0b8e93561252af1610bc4bce03c8820e94c92f933bec969c07b1",
+        "registry_version_created": false,
+        "replay_plan_created": false,
+        "schema_version": "labelagent.ontology-promotion-rejection.v1",
+        "status": "rejected_fail_closed"
+      },
+      "event_sha256": "c0dd1bf6c6624939f9bb0021a25affbcc35f87c4657d152dbd586e5e50aba509",
+      "event_type": "ontology.promotion.rejected",
+      "idempotency_key": "c90aefbdf4b902a79cfc1c26a01b5bf93e2d1a293bc9560a1d69db87c9fe8f4c",
+      "previous_record_sha256": "2ed95959dc5ae206684f0392bad4cd534cabdcaf18b12c9cf93942be30cdf9f7",
+      "record_sha256": "c91c0a4ab33a6b4e7f86eae6211f1feb59bc3ed9b0e03e1585c62c3f8e18ca9e",
+      "sequence": 5
+    }
+  ],
+  "sample_kind": "synthetic_contract_fixture_not_production_ontology",
+  "schema_version": "labelagent.ontology-audit-ledger.v1",
+  "snapshot_sha256": "5acb68ba6f9b740140ffbcff2de7491bf89f7914e820a81a54e148c6db451787"
+}

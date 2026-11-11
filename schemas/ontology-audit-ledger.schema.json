@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://labelagent.local/schemas/ontology-audit-ledger.schema.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "ledger_id", "generated_at", "sample_kind", "append_only", "record_count", "records", "head_record_sha256", "snapshot_sha256"],
+  "properties": {"schema_version": {"const": "labelagent.ontology-audit-ledger.v1"}, "ledger_id": {"type": "string", "minLength": 1}, "generated_at": {"type": "string", "format": "date-time"}, "sample_kind": {"type": "string", "minLength": 1}, "append_only": {"const": true}, "record_count": {"type": "integer", "minimum": 1}, "records": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["sequence", "previous_record_sha256", "event_type", "idempotency_key", "event_sha256", "event", "record_sha256"], "properties": {"sequence": {"type": "integer", "minimum": 1}, "previous_record_sha256": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha"}]}, "event_type": {"enum": ["vlm.label_observation.recorded", "ontology.unknown_cluster.proposed", "ontology.registry.version.promoted", "ontology.promotion.rejected"]}, "idempotency_key": {"$ref": "#/$defs/sha"}, "event_sha256": {"$ref": "#/$defs/sha"}, "event": {"type": "object"}, "record_sha256": {"$ref": "#/$defs/sha"}}}}, "head_record_sha256": {"$ref": "#/$defs/sha"}, "snapshot_sha256": {"$ref": "#/$defs/sha"}},
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

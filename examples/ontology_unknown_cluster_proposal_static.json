@@ -1,0 +1,50 @@
+{
+  "candidate_names_and_aliases": [
+    "dock_guard",
+    "loading_bay_guard",
+    "loading_dock_guard"
+  ],
+  "cluster_id": "STATIC_CLUSTER_LOADING_DOCK_GUARD",
+  "clustering": {
+    "algorithm": "deterministic_evidence_alias_cluster",
+    "config_sha256": "8c37677109ecf6d4d12ea6f5e0d3198f7c0466b9036f26ae1d32fd1118122719",
+    "version": "STATIC_V1"
+  },
+  "event_id": "f97fd5022aaa0b8e93561252af1610bc4bce03c8820e94c92f933bec969c07b1",
+  "event_type": "ontology.unknown_cluster.proposed",
+  "human_review_required": true,
+  "idempotency_key": "a1c44c6e4373138776d7fc956b28ccc117bc049cc8fedbdb4f08a2e73eba926a",
+  "member_event_ids": [
+    "27bc6ed2d37952ae61aaa00bc8bb2937512b8774426fbc7b4f08b1abaf8222b1",
+    "af4e18d4ec01bb26b348a3c65cc1308e170cfaaf9c5d1704a18dfceab4b4c9ba"
+  ],
+  "member_event_sha256": [
+    "19e883a29ebb843edc3682222a5c306ce7b7281f6e5e0fe6e9ee4c6037cd7ef9",
+    "ed9366cee40343da0653a7c6dda20eaa9aafe86324d969516cdf563eb5acf7e3"
+  ],
+  "ontology_mutation_allowed": false,
+  "proposed_at": "2026-11-11T20:02:00+08:00",
+  "representative": {
+    "candidate_sha256": "0764575e495faf345220d5483f188988fc3e91b9e9deaab4564faf87dee70a0a",
+    "event_id": "af4e18d4ec01bb26b348a3c65cc1308e170cfaaf9c5d1704a18dfceab4b4c9ba",
+    "selection_policy": "max_view_evidence_then_confidence_then_event_id"
+  },
+  "schema_version": "labelagent.ontology-cluster-proposal.v1",
+  "source_kinds": [
+    "real",
+    "simulation"
+  ],
+  "source_partition_event_ids": {
+    "real": [
+      "af4e18d4ec01bb26b348a3c65cc1308e170cfaaf9c5d1704a18dfceab4b4c9ba"
+    ],
+    "simulation": [
+      "27bc6ed2d37952ae61aaa00bc8bb2937512b8774426fbc7b4f08b1abaf8222b1"
+    ]
+  },
+  "status": "proposal_only",
+  "write_policy": {
+    "mode": "append_only",
+    "overwrite_registry": false
+  }
+}

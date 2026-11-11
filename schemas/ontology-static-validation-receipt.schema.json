@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://labelagent.local/schemas/ontology-static-validation-receipt.schema.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "generated_at", "sample_kind", "execution_boundary", "contracts", "artifact_content_sha256", "production_registry_versions_created", "production_replays_executed", "cnb_status", "receipt_sha256"],
+  "properties": {"schema_version": {"const": "labelagent.ontology-static-validation.v1"}, "generated_at": {"type": "string", "format": "date-time"}, "sample_kind": {"const": "synthetic_contract_fixture_not_production_ontology"}, "execution_boundary": {"const": {"cpu_only": true, "vlm_called": false, "gpu_called": false, "remote_service_called": false, "cvat_or_oss_modified": false}}, "contracts": {"type": "object", "minProperties": 10, "additionalProperties": {"const": true}}, "artifact_content_sha256": {"type": "object", "minProperties": 5, "additionalProperties": {"$ref": "#/$defs/sha"}}, "production_registry_versions_created": {"const": 0}, "production_replays_executed": {"const": 0}, "cnb_status": {"const": "pending_not_contacted"}, "receipt_sha256": {"$ref": "#/$defs/sha"}},
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

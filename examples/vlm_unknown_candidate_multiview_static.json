@@ -1,0 +1,120 @@
+{
+  "event_id": "af4e18d4ec01bb26b348a3c65cc1308e170cfaaf9c5d1704a18dfceab4b4c9ba",
+  "event_type": "vlm.label_observation.recorded",
+  "idempotency_key": "8ec18c96e3417781841c88eb3b3b5449249083961fc2c736645cb50832866db2",
+  "identity": {
+    "dataset_id": "STATIC_DATASET",
+    "frame_id": "STATIC_FRAME_001",
+    "input_id": "7504441e51370d136df58bd50e38dd46a4cefc8d73212993597342063fd5ad32",
+    "sequence": "000",
+    "source_batch": "STATIC_BATCH"
+  },
+  "inputs": {
+    "candidate": {
+      "artifact_id": "ae75392f021890eac7958fcd8f72b00419b3cd31d2192b7cb4f8490ac39217be",
+      "sha256": "0764575e495faf345220d5483f188988fc3e91b9e9deaab4564faf87dee70a0a",
+      "uri": "example://ontology-static/real/candidate.json"
+    },
+    "model": {
+      "id": "STATIC_VLM",
+      "sha256": "e377d63c4dd694008ee31462fe46b485bf0ff144edeb037072fa10f53eadb877",
+      "version": "STATIC_V1"
+    },
+    "prompt": {
+      "id": "label-discovery",
+      "sha256": "67f9cb458df95cec6f0b112d9ec8fefa3ff70f88ede70bbae78462130c53b0be",
+      "version": "STATIC_V1"
+    },
+    "views": [
+      {
+        "artifact": {
+          "artifact_id": "68e13b87e2915c697ebe1f9bda6d59a7d507794d86abacc2adde3d7aaae4ec62",
+          "sha256": "e6e3fb57e9c65d74c19e5b51b2bc675a377bed611b28ba456c73a513e95ae349",
+          "uri": "example://ontology-static/real/camera_0.png"
+        },
+        "camera": "camera_0"
+      },
+      {
+        "artifact": {
+          "artifact_id": "050478815dd7981814710e646059a6399a8245ca0dbc3773ad4bfce1063b8d6e",
+          "sha256": "31450c11606b1022520246dd5def9d8ba9da889e8a81d5d92944ec29cac7f9eb",
+          "uri": "example://ontology-static/real/camera_1.png"
+        },
+        "camera": "camera_1"
+      },
+      {
+        "artifact": {
+          "artifact_id": "2b3999fd66186de892247a90a54ae8b7795142c2dc08bba853e51688d2ce74b3",
+          "sha256": "9d6992c7aaefb97427e131673f18afb8222c9da0cf2f4422657bcbdba6ed3ee2",
+          "uri": "example://ontology-static/real/camera_2.png"
+        },
+        "camera": "camera_2"
+      }
+    ]
+  },
+  "observed_at": "2026-11-11T20:00:00+08:00",
+  "ontology_mutation_allowed": false,
+  "provenance": {
+    "simulation": null,
+    "source_kind": "real"
+  },
+  "registry_binding": {
+    "registry_sha256": "2de68a7c3fa7e4d803094df9eca7d43c0bd4addfd15c7318d0ec31d2deed1f34",
+    "registry_version": "labelagent-ontology-20261111-v1"
+  },
+  "result": {
+    "aliases": [
+      "dock_guard",
+      "loading_bay_guard"
+    ],
+    "confidence": 0.73,
+    "evidence": {
+      "summary": "upright protective structure appears across views",
+      "view_artifact_ids": [
+        "68e13b87e2915c697ebe1f9bda6d59a7d507794d86abacc2adde3d7aaae4ec62",
+        "050478815dd7981814710e646059a6399a8245ca0dbc3773ad4bfce1063b8d6e",
+        "2b3999fd66186de892247a90a54ae8b7795142c2dc08bba853e51688d2ce74b3"
+      ],
+      "visual_cues": [
+        "fixed base",
+        "high-visibility surface"
+      ]
+    },
+    "multiview_consistency": {
+      "agreement": 0.89,
+      "conflicting_cameras": [],
+      "status": "consistent",
+      "supporting_cameras": [
+        "camera_0",
+        "camera_1",
+        "camera_2"
+      ]
+    },
+    "nearest_known_labels": [
+      {
+        "difference": "fixed protective structure, not cargo",
+        "label": "pallet",
+        "similarity": 0.31
+      }
+    ],
+    "outcome": "unknown_candidate",
+    "proposed_name": "loading_dock_guard",
+    "sam_relation": "conflict"
+  },
+  "routing": {
+    "confidence_threshold": 0.8,
+    "human_review_required": true,
+    "next_state": "human_review_required",
+    "reason_codes": [
+      "LOW_CONFIDENCE",
+      "SAM_ONTOLOGY_CONFLICT",
+      "UNKNOWN_OR_NEW_LABEL"
+    ]
+  },
+  "schema_version": "labelagent.vlm-label-observation.v1",
+  "truth_promotion_allowed": false,
+  "write_policy": {
+    "mode": "append_only",
+    "overwrite_registry": false
+  }
+}

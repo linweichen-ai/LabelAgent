@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://labelagent.local/schemas/ontology-promotion-rejection.schema.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "event_type", "occurred_at", "proposal_event_id", "parent_registry_version", "parent_registry_sha256", "status", "blockers", "registry_version_created", "old_registry_modified", "replay_plan_created", "next_state", "idempotency_key", "event_id"],
+  "properties": {"schema_version": {"const": "labelagent.ontology-promotion-rejection.v1"}, "event_type": {"const": "ontology.promotion.rejected"}, "occurred_at": {"type": "string", "format": "date-time"}, "proposal_event_id": {"$ref": "#/$defs/sha"}, "parent_registry_version": {"type": "string", "minLength": 1}, "parent_registry_sha256": {"$ref": "#/$defs/sha"}, "status": {"const": "rejected_fail_closed"}, "blockers": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}, "registry_version_created": {"const": false}, "old_registry_modified": {"const": false}, "replay_plan_created": {"const": false}, "next_state": {"const": "human_review_required"}, "idempotency_key": {"$ref": "#/$defs/sha"}, "event_id": {"$ref": "#/$defs/sha"}},
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

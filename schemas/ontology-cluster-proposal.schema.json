@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://labelagent.local/schemas/ontology-cluster-proposal.schema.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "event_type", "proposed_at", "cluster_id", "member_event_ids", "member_event_sha256", "representative", "candidate_names_and_aliases", "source_kinds", "source_partition_event_ids", "clustering", "status", "human_review_required", "ontology_mutation_allowed", "write_policy", "idempotency_key", "event_id"],
+  "properties": {
+    "schema_version": {"const": "labelagent.ontology-cluster-proposal.v1"}, "event_type": {"const": "ontology.unknown_cluster.proposed"}, "proposed_at": {"type": "string", "format": "date-time"}, "cluster_id": {"type": "string", "minLength": 1},
+    "member_event_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/sha"}}, "member_event_sha256": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/sha"}},
+    "representative": {"type": "object", "additionalProperties": false, "required": ["event_id", "candidate_sha256", "selection_policy"], "properties": {"event_id": {"$ref": "#/$defs/sha"}, "candidate_sha256": {"$ref": "#/$defs/sha"}, "selection_policy": {"const": "max_view_evidence_then_confidence_then_event_id"}}},
+    "candidate_names_and_aliases": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}, "source_kinds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["real", "simulation"]}}, "source_partition_event_ids": {"type": "object", "propertyNames": {"enum": ["real", "simulation"]}, "additionalProperties": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/sha"}}},
+    "clustering": {"type": "object", "additionalProperties": false, "required": ["algorithm", "version", "config_sha256"], "properties": {"algorithm": {"type": "string", "minLength": 1}, "version": {"type": "string", "minLength": 1}, "config_sha256": {"$ref": "#/$defs/sha"}}},
+    "status": {"const": "proposal_only"}, "human_review_required": {"const": true}, "ontology_mutation_allowed": {"const": false}, "write_policy": {"const": {"mode": "append_only", "overwrite_registry": false}}, "idempotency_key": {"$ref": "#/$defs/sha"}, "event_id": {"$ref": "#/$defs/sha"}
+  }, "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

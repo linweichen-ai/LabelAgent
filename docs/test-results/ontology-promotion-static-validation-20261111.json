@@ -1,0 +1,35 @@
+{
+  "artifact_content_sha256": {
+    "docs/test-results/ontology-promotion-audit-ledger-static-20261111.json": "467e34fa32fcfd79a5569770545c5f36b3470dab18a9990b66372c90e43d3a0d",
+    "examples/ontology_promotion_machine_rejected_static.json": "c0dd1bf6c6624939f9bb0021a25affbcc35f87c4657d152dbd586e5e50aba509",
+    "examples/ontology_registry_promotion_positive_static.json": "0c963750472ef14d2f09b9f2b81ab8b635415a1027efd6b4101a9decad8e54b4",
+    "examples/ontology_unknown_cluster_proposal_static.json": "518d179de51e35b6dcf8fd41af9c8d167031bfc381e58d70acebd11435d9c79b",
+    "examples/vlm_unknown_candidate_multiview_static.json": "ed9366cee40343da0653a7c6dda20eaa9aafe86324d969516cdf563eb5acf7e3"
+  },
+  "cnb_status": "pending_not_contacted",
+  "contracts": {
+    "clustering_is_proposal_only": true,
+    "floor_slope_distinct": true,
+    "human_approval_and_regression_required": true,
+    "low_confidence_routes_to_human": true,
+    "old_registry_preserved": true,
+    "real_sim_accounting_separate": true,
+    "replay_planned_not_executed": true,
+    "sam_conflict_routes_to_human": true,
+    "slope_downstream_traversable": true,
+    "unknown_routes_to_human": true
+  },
+  "execution_boundary": {
+    "cpu_only": true,
+    "cvat_or_oss_modified": false,
+    "gpu_called": false,
+    "remote_service_called": false,
+    "vlm_called": false
+  },
+  "generated_at": "2026-11-11T20:08:00+08:00",
+  "production_registry_versions_created": 0,
+  "production_replays_executed": 0,
+  "receipt_sha256": "026163571dc19fde1be70ab3acdbeffe5d69ca8925ac436e6581e07ce8c47e10",
+  "sample_kind": "synthetic_contract_fixture_not_production_ontology",
+  "schema_version": "labelagent.ontology-static-validation.v1"
+}

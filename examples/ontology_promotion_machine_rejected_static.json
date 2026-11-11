@@ -1,0 +1,18 @@
+{
+  "blockers": [
+    "AUTHENTICATED_HUMAN_APPROVAL_REQUIRED"
+  ],
+  "event_id": "cd875d984a3b58768cef882781f95de8cb815279b7dbd826788de140599ba68f",
+  "event_type": "ontology.promotion.rejected",
+  "idempotency_key": "c90aefbdf4b902a79cfc1c26a01b5bf93e2d1a293bc9560a1d69db87c9fe8f4c",
+  "next_state": "human_review_required",
+  "occurred_at": "2026-11-11T20:06:01+08:00",
+  "old_registry_modified": false,
+  "parent_registry_sha256": "2de68a7c3fa7e4d803094df9eca7d43c0bd4addfd15c7318d0ec31d2deed1f34",
+  "parent_registry_version": "labelagent-ontology-20261111-v1",
+  "proposal_event_id": "f97fd5022aaa0b8e93561252af1610bc4bce03c8820e94c92f933bec969c07b1",
+  "registry_version_created": false,
+  "replay_plan_created": false,
+  "schema_version": "labelagent.ontology-promotion-rejection.v1",
+  "status": "rejected_fail_closed"
+}

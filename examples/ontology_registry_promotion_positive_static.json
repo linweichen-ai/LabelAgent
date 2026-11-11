@@ -1,0 +1,147 @@
+{
+  "event_id": "59a2addf09829aa935fd9f07d9cf027875a45e3e36f32e346c643654d14ef92c",
+  "event_type": "ontology.registry.version.promoted",
+  "human_decision": {
+    "approval_id": "STATIC_ONTOLOGY_APPROVAL_V1",
+    "canonical_name": "loading_dock_guard",
+    "class_id": 8,
+    "decision": "approved_create_new_label",
+    "definition": "Fixed protective structure at a loading dock.",
+    "identity_assurance": "authenticated",
+    "receipt_sha256": "571a334519cf2afcdbaafc6cab2190679a7b6ba837fcc8861366ccdd8de7fb58",
+    "receipt_uri": "example://ontology-static/approval.json",
+    "reviewed_at": "2026-11-11T20:05:00+08:00",
+    "reviewer_id": "STATIC_AUTHENTICATED_REVIEWER"
+  },
+  "idempotency_key": "4603412eddfb790caac38eea97a574b376196fd682f072076983a6934bd9abf2",
+  "new_registry": {
+    "append_only": true,
+    "downstream_mapping": {
+      "operation": "union",
+      "preserve_source_labels": true,
+      "source_labels": [
+        "floor",
+        "slope"
+      ],
+      "source_layer": "training_annotation",
+      "target_label": "traversable_area",
+      "target_layer": "downstream_navigation"
+    },
+    "labels": [
+      {
+        "class_id": 1,
+        "name": "pallet",
+        "training_label": true
+      },
+      {
+        "class_id": 2,
+        "name": "person",
+        "training_label": true
+      },
+      {
+        "class_id": 3,
+        "name": "floor",
+        "training_label": true
+      },
+      {
+        "class_id": 4,
+        "name": "slope",
+        "training_label": true
+      },
+      {
+        "class_id": 5,
+        "name": "ego",
+        "training_label": true
+      },
+      {
+        "class_id": 6,
+        "name": "other_robot",
+        "training_label": true
+      },
+      {
+        "class_id": 7,
+        "name": "cargo_floor",
+        "training_label": true
+      },
+      {
+        "class_id": 8,
+        "name": "loading_dock_guard",
+        "training_label": true
+      }
+    ],
+    "registry_content_sha256": "03ced7baf16295f1bb8d3665239814ec3c06d10d3ccdfce18f926be543cee1ef",
+    "registry_version": "labelagent-ontology-STATIC-v2",
+    "schema_version": "labelagent.label-registry.v1",
+    "training_semantics": {
+      "floor_slope_distinct": true,
+      "permanent_merge_allowed": false
+    },
+    "unknown_policy": {
+      "automatic_truth_promotion": false,
+      "new_label_candidate": "human_review_required",
+      "ontology_mutation_allowed": false,
+      "unknown": "human_review_required"
+    }
+  },
+  "occurred_at": "2026-11-11T20:06:00+08:00",
+  "parent_registry_sha256": "2de68a7c3fa7e4d803094df9eca7d43c0bd4addfd15c7318d0ec31d2deed1f34",
+  "parent_registry_version": "labelagent-ontology-20261111-v1",
+  "proposal": {
+    "cluster_id": "STATIC_CLUSTER_LOADING_DOCK_GUARD",
+    "representative_event_id": "af4e18d4ec01bb26b348a3c65cc1308e170cfaaf9c5d1704a18dfceab4b4c9ba"
+  },
+  "proposal_event_id": "f97fd5022aaa0b8e93561252af1610bc4bce03c8820e94c92f933bec969c07b1",
+  "regression_validation": {
+    "all_required_gates_passed": true,
+    "config_sha256": "2915984666d04002a91f42810fa0a7e9053da7184fa24c1acf117fb7c1bb14ca",
+    "fixed_set_id": "STATIC_FIXED_REGRESSION_V1",
+    "manifest_sha256": "56f144b257194e124d067ddae6296c9e44165482e952a9364134df6b45c155fe",
+    "manifest_uri": "example://ontology-static/regression-manifest.json",
+    "real_metrics": {
+      "false_positive_rate": 0.04,
+      "precision": 0.92,
+      "recall": 0.83,
+      "sample_count": 12
+    },
+    "simulation_metrics": {
+      "false_positive_rate": 0.06,
+      "precision": 0.88,
+      "recall": 0.75,
+      "sample_count": 8
+    },
+    "truth_versions": {
+      "real": "STATIC_REAL_TRUTH_V1",
+      "simulation": "STATIC_SIM_TRUTH_V1"
+    },
+    "validated_at": "2026-11-11T20:04:00+08:00"
+  },
+  "replay_plan": {
+    "affected_candidate_event_ids": [
+      "27bc6ed2d37952ae61aaa00bc8bb2937512b8774426fbc7b4f08b1abaf8222b1",
+      "af4e18d4ec01bb26b348a3c65cc1308e170cfaaf9c5d1704a18dfceab4b4c9ba"
+    ],
+    "automatic_truth_promotion": false,
+    "execution_status": "planned_not_executed",
+    "plan_id": "a9f31c8ae81c9cd28e9f4cd7316a38c436d021a22c8dcaa498fabc41bf6aa95b",
+    "schema_version": "labelagent.ontology-replay-plan.v1",
+    "source_partitions": {
+      "real": [
+        "af4e18d4ec01bb26b348a3c65cc1308e170cfaaf9c5d1704a18dfceab4b4c9ba"
+      ],
+      "simulation": [
+        "27bc6ed2d37952ae61aaa00bc8bb2937512b8774426fbc7b4f08b1abaf8222b1"
+      ]
+    },
+    "source_registry_version": "labelagent-ontology-20261111-v1",
+    "target_registry_version": "labelagent-ontology-STATIC-v2",
+    "write_policy": {
+      "mode": "append_only_new_outputs",
+      "overwrite_history": false
+    }
+  },
+  "schema_version": "labelagent.ontology-registry-promotion.v1",
+  "write_policy": {
+    "mode": "append_only_new_registry_version",
+    "overwrite_parent_registry": false
+  }
+}

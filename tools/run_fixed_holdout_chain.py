@@ -142,6 +142,14 @@ def agent_output(action: str, sam_path: Path, sam: dict,
     return json.loads(corrected.read_text(encoding="utf-8")), corrected.read_bytes()
 
 
+def workflow_route(candidate_state: str, *, human_pixel_truth_available: bool) -> str:
+    if candidate_state not in {"candidate_final", "human_review_required"}:
+        raise ValueError("candidate state is not routable")
+    if not human_pixel_truth_available:
+        return "human_review_required"
+    return candidate_state
+
+
 def phase_first(args, root: Path, image: Path, sam_path: Path, sam: dict) -> None:
     overlay = root / "sam-candidate-overlay.png"
     overlay_sha = render_overlay(image, sam, overlay)
@@ -221,7 +229,10 @@ def phase_second(args, root: Path, image: Path, sam_path: Path, sam: dict) -> No
     if args.action == "drop":
         decision["final_route"] = "human_review_required"
     write_json_once(root / "vlm-second-decision.json", decision)
-    final_route = decision["final_route"]
+    candidate_state = decision["final_route"]
+    # A model may freeze a machine candidate, but missing human pixel truth
+    # always routes this bounded holdout to the human gate next.
+    final_route = workflow_route(candidate_state, human_pixel_truth_available=False)
     receipt = {
         "schema_version": "labelagent.fixed-holdout-chain.v1",
         "input_id": INPUT_ID, "dataset_id": "sfl-cpd15y",
@@ -239,7 +250,8 @@ def phase_second(args, root: Path, image: Path, sam_path: Path, sam: dict) -> No
         "second_vlm_response_sha256": sha256(raw),
         "second_vlm_seconds": seconds, "second_vlm_usage": envelope.get("usage"),
         "second_local_vlm": envelope.get("local_vlm"),
-        "second_vlm_decision": decision, "final_state": final_route,
+        "second_vlm_decision": decision, "candidate_state": candidate_state,
+        "final_state": final_route,
         "human_gate_passed": False, "truth_committed": False,
         "training_ready": False, "supervised_finetuning_started": False,
         "downstream_mapping": {"traversable_area": "floor UNION slope",

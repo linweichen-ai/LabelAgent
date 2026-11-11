@@ -245,9 +245,27 @@
         "model_name": {"type": ["string", "null"]},
         "model_version": {"type": ["string", "null"]},
         "prompt_version": {"type": ["string", "null"]},
+        "prompt_provenance": {"enum": ["assistant_selected_prompt", "human_selected_prompt", "model_generated_prompt", null]},
+        "prompt_role": {"enum": ["operator_seed", "human_seed", "model_seed", null]},
         "code_commit": {"type": "string", "minLength": 7},
         "ontology_version": {"type": ["string", "null"]}
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": ["component", "prompt_version"],
+            "properties": {
+              "component": {"const": "sam"},
+              "prompt_version": {"type": "string", "pattern": "[Pp][Oo][Ii][Nn][Tt]"}
+            }
+          },
+          "then": {"required": ["prompt_provenance", "prompt_role"]}
+        },
+        {
+          "if": {"required": ["prompt_provenance"], "properties": {"prompt_provenance": {"const": "assistant_selected_prompt"}}},
+          "then": {"properties": {"prompt_role": {"const": "operator_seed"}}, "required": ["prompt_role"]}
+        }
+      ]
     },
     "decision": {
       "type": "object",
@@ -288,12 +306,10 @@
     "slope_context": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["semantic_label", "traversability_status", "human_pixel_truth_available"],
+      "required": ["semantic_label", "traversability_status", "human_pixel_truth_available", "business_mapping", "downstream_mapping", "policy_default", "policy_basis", "policy_override"],
       "properties": {
         "semantic_label": {"const": "slope_visible"},
-        "traversability_status": {"enum": ["unknown", "review_required", "traversable", "non_traversable", "passable", "non_passable"]},
-        "geometry_evidence_sufficient": {"type": "boolean"},
-        "geometry_evidence_artifact_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "traversability_status": {"enum": ["passable", "non_passable"]},
         "business_mapping": {"const": "traversable_area"},
         "downstream_mapping": {"$ref": "#/$defs/downstream_mapping"},
         "policy_default": {"const": "passable"},
@@ -330,12 +346,6 @@
           "items": {"enum": ["unassigned", "near", "mid", "far", "weak_texture", "shadow", "backlight", "occlusion", "slope_foot_boundary", "slope_top_boundary"]}
         }
       },
-      "oneOf": [
-        {"required": ["geometry_evidence_sufficient", "geometry_evidence_artifact_ids"],
-         "not": {"anyOf": [{"required": ["policy_default"]}, {"required": ["policy_basis"]}, {"required": ["policy_override"]}]}},
-        {"required": ["business_mapping", "downstream_mapping", "policy_default", "policy_basis", "policy_override"],
-         "not": {"anyOf": [{"required": ["geometry_evidence_sufficient"]}, {"required": ["geometry_evidence_artifact_ids"]}]}}
-      ],
       "allOf": [
         {"if": {"required": ["policy_override"], "properties": {"policy_override": {"properties": {"status": {"const": "none"}}, "required": ["status"]}}},
          "then": {"properties": {"traversability_status": {"const": "passable"}, "policy_override": {"properties": {"rule_id": {"type": "null"}, "reason": {"type": "null"}, "decided_by": {"type": "null"}, "evidence_artifact_ids": {"maxItems": 0}}}}}},

@@ -41,7 +41,7 @@ The real request used camera 0, frame 0 from the SFL-CPD15-Y factory MCAP. The t
 
 - Image bytes: 263,785
 - Image SHA-256: `3775ee5f41374c9a302c458cfffa2799222e22ff17541045d6acfb8434bd682f`
-- Prompt: positive point `(1100, 620)`
+- Prompt: positive point `(1100, 620)`, selected by Codex/script and recorded as `assistant_selected_prompt` / `operator_seed` (not human-selected or human truth)
 - HTTP status: 200
 - Cold-load plus inference: 8.812 seconds
 - Score: 0.98046875

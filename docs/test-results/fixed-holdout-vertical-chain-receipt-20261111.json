@@ -71,18 +71,23 @@
       "consistent_with_first_review": true,
       "final_route": "candidate_final"
     },
-    "final_state": "candidate_final",
+    "candidate_state": "candidate_final",
+    "final_state": "human_review_required",
+    "routing_correction": {
+      "base_receipt_file_sha256": "9a8c9a2b843b99b4ace3472eda2f86a90eede5a66934ba7882a18381861f37b7",
+      "reason": "The VLM froze a machine candidate, then missing human pixel truth routed the workflow to human_review_required. The original model response remains unchanged."
+    },
     "human_gate_passed": false,
     "truth_committed": false,
     "training_ready": false,
     "supervised_finetuning_started": false,
-    "receipt_sha256": "acbe71398f4ff9d62d3c7677c8a5aaa743e2515e37f7d839803b9d5d8122f9d6",
-    "receipt_file_sha256": "9a8c9a2b843b99b4ace3472eda2f86a90eede5a66934ba7882a18381861f37b7"
+    "model_chain_receipt_sha256": "acbe71398f4ff9d62d3c7677c8a5aaa743e2515e37f7d839803b9d5d8122f9d6",
+    "model_chain_receipt_file_sha256": "9a8c9a2b843b99b4ace3472eda2f86a90eede5a66934ba7882a18381861f37b7"
   },
   "human_gate_verification": {
     "python_runtime": "3.11.9",
-    "relevant_unittest": "57/57 passed",
-    "schema_environment": "12/12 passed with jsonschema 4.25.1",
+    "relevant_unittest": "60/60 passed",
+    "schema_environment": "14/14 passed with jsonschema 4.25.1",
     "ui_javascript_syntax": "node --check passed",
     "covered": [
       "atomic state and audit commit with failure injection and recovery",
@@ -92,6 +97,12 @@
       "confirmed_empty is explicit",
       "reviewer identity is self-declared",
       "success requires persisted server readback"
+    ],
+    "latest_slope_policy_gates": [
+      "old geometry_evidence_sufficient/unknown policy is rejected",
+      "point-prompt SAM events require explicit prompt provenance and role",
+      "assistant_selected_prompt requires operator_seed",
+      "candidate_final routes to human_review_required when pixel truth is missing"
     ]
   },
   "business_policy": {
@@ -102,7 +113,9 @@
   "local_artifacts": {
     "root": "C:/Users/seer/Documents/ChatGPT/Seer2clw/outputs/sfl_cpd15y_stage2_20261111/fixed_holdout_chain",
     "first_review_and_failed_retry": "fixed-holdout-1789897506782450197-v2",
-    "final_second_review": "fixed-holdout-1789897506782450197-v3"
+    "final_second_review": "fixed-holdout-1789897506782450197-v3",
+    "workflow_routing_correction": "fixed-holdout-1789897506782450197-v3/workflow-routing-correction.json",
+    "workflow_routing_correction_sha256": "5f8bd58b2887f8907469b3e6d72d57a966b288c25029e30a438360813daf2444"
   },
-  "claim_boundary": "This is a machine-candidate vertical chain on one fixed holdout. VLM agreement is not human pixel truth or segmentation quality acceptance. No supervised fine-tuning was started."
+  "claim_boundary": "This is a machine-candidate vertical chain on one fixed holdout. VLM agreement freezes candidate_final, then the workflow routes to human_review_required. It is not human pixel truth or segmentation quality acceptance. No supervised fine-tuning was started."
 }

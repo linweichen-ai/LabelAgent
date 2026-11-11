@@ -19,9 +19,12 @@
 
 - `human_pixel_truth_available=false`；
 - `approved_for_training=false`；
-- `traversability_status=unknown`；
-- `geometry_evidence_sufficient=false`；
+- `business_mapping=traversable_area`；
+- `traversability_status=passable`；
+- `policy_default=passable, policy_basis=user_defined_project_semantics`；
 - `review.required=true, review.status=pending`。
+
+SAM 点 `(1100,620)` 是 Codex/脚本选择的操作种子，事件固定记录 `prompt_provenance=assistant_selected_prompt`、`prompt_role=operator_seed`，不得解释为人工提示或人工真值。
 
 事件协议新增向后兼容的可选 `approved_for_training` 字段，并增加运行时门禁：没有人工像素真值时不得为 `true`；`candidate.generated`、`vlm.reviewed`、`agent.action` 或 `unknown.proposed` 等机器事件不得批准训练。历史 1.1 事件没有该字段时不会被自动解释为批准。
 
@@ -29,6 +32,6 @@ VLM 本次没有输出可校准的数值置信度，所以事件中的 `decision
 
 ## 当前状态
 
-当前链停在 `vlm_reviewed`。工作台回读仍为 1 个 candidate、0 truth、0 reference、0 agent run；底层账本仍为 `received → human_review_required`，`minimum_closed_loop_complete=false`。未产生 Agent 动作、人工批准、`truth.committed` 或 `dataset.versioned`。
+该 1920 frame0 历史链停在 `vlm_reviewed`。工作台回读仍为 1 个 candidate、0 truth、0 reference、0 agent run；底层账本仍为 `received → human_review_required`，`minimum_closed_loop_complete=false`。未产生人工批准、`truth.committed` 或 `dataset.versioned`。它不是固定 640×512 holdout 的替代品。
 
-可通行性仍为 unknown。只有在 LiDAR 平面/法向/高差、坡度、宽度、边缘落差、障碍和车辆约束形成可追溯 artifact 后，才允许提出 `traversable` 或 `non_traversable`，且仍需相应门禁。
+业务可通行性按项目策略直接为 passable，下游投影执行 `traversable_area = floor UNION slope`。LiDAR/车辆信息只能作为候选改善或辅助观测，不能阻塞该映射。人工像素真值缺失仅阻止 IoU/专项质量结论、训练批准和真值提交。

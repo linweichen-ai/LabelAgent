@@ -3,7 +3,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from tools.run_fixed_holdout_chain import agent_output, canonical
+from tools.run_fixed_holdout_chain import agent_output, canonical, workflow_route
 
 
 class FixedHoldoutChainTests(unittest.TestCase):
@@ -24,6 +24,12 @@ class FixedHoldoutChainTests(unittest.TestCase):
             candidate, output = agent_output("drop", path, {}, None)
             self.assertEqual(candidate["parts"], [])
             self.assertEqual(output, canonical(candidate))
+
+    def test_candidate_final_routes_to_human_review_when_pixel_truth_is_missing(self):
+        self.assertEqual(workflow_route("candidate_final",
+            human_pixel_truth_available=False), "human_review_required")
+        self.assertEqual(workflow_route("candidate_final",
+            human_pixel_truth_available=True), "candidate_final")
 
 
 if __name__ == "__main__":

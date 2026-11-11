@@ -39,10 +39,9 @@
     "reason_codes": [
       "KNOWN_LABEL_SLOPE_SUPPORTED",
       "HUMAN_PIXEL_TRUTH_MISSING",
-      "TRAVERSABILITY_UNKNOWN",
-      "GEOMETRY_EVIDENCE_MISSING"
+      "PROJECT_POLICY_DEFAULT_PASSABLE"
     ],
-    "summary": "VLM classified the visible machine candidate as the existing slope label and supported its visual evidence. It did not establish pixel truth, training approval, or traversability."
+    "summary": "VLM classified the visible machine candidate as the existing slope label. Project policy maps slope with floor to traversable_area; pixel truth and training approval remain pending."
   },
   "task_context": {
     "hard_case_tags": [
@@ -52,16 +51,40 @@
   },
   "slope_context": {
     "semantic_label": "slope_visible",
-    "traversability_status": "unknown",
-    "geometry_evidence_sufficient": false,
-    "geometry_evidence_artifact_ids": [],
+    "traversability_status": "passable",
+    "business_mapping": "traversable_area",
+    "downstream_mapping": {
+      "target_label": "traversable_area",
+      "operation": "union",
+      "source_labels": ["floor", "slope"],
+      "source_layer": "training_annotation",
+      "target_layer": "downstream_navigation",
+      "preserve_source_labels": true
+    },
+    "policy_default": "passable",
+    "policy_basis": "user_defined_project_semantics",
+    "policy_override": {
+      "status": "none",
+      "rule_id": null,
+      "reason": null,
+      "decided_by": null,
+      "evidence_artifact_ids": []
+    },
+    "visible_status": "candidate_supported",
+    "candidate_sha256": "b6652e98aac721dd929799de059fd310cf25fdde97ec488bf9ff43471d169565",
+    "evidence_provenance": [{
+      "kind": "vlm_review",
+      "source": "slope-frame0-vlm-review",
+      "sha256": "aee398edace4c7b46ed04a1379a05cd6f0502e3809b7ae1a88972dba005a7dea"
+    }],
+    "hard_set_strata": ["unassigned"],
     "human_pixel_truth_available": false,
     "approved_for_training": false
   },
   "review": {
     "required": true,
     "status": "pending",
-    "reason": "Human pixel review is still required. Geometry and vehicle constraints are absent, so traversability remains unknown.",
+    "reason": "Human pixel review is still required for segmentation truth, IoU and training approval; it does not block VLM/Agent processing or the passable business mapping.",
     "reviewer_type": "human",
     "reviewed_at": null
   },

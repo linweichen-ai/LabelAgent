@@ -1,0 +1,43 @@
+{
+  "schema_version": "labelagent.sam3-peft-training-gate.v1",
+  "evidence_scope": "project_training_decision",
+  "training_route": "supervised_parameter_efficient_sam3",
+  "model_strategy": {
+    "full_model_training": false,
+    "freeze_image_backbone": true,
+    "freeze_language_backbone": true,
+    "trainable_components": ["segmentation_heads", "adapters"]
+  },
+  "distributed": {
+    "strategy": "ddp",
+    "accelerator": "dual_5090",
+    "world_size": 2
+  },
+  "data_sources": [
+    {"source_id": "machine_preannotations_72", "truth_eligible": false, "allowed_roles": ["prompt", "roi", "candidate"]},
+    {"source_id": "machine_preannotations_24", "truth_eligible": false, "allowed_roles": ["prompt", "roi", "candidate"]},
+    {"source_id": "bev_3d_boxes", "truth_eligible": false, "allowed_roles": ["prompt", "roi", "candidate"]}
+  ],
+  "truth_dataset": {
+    "required_source": "human_confirmed_pixel_masks",
+    "export_status": "not_available",
+    "mask_count": 0,
+    "version_id": null,
+    "manifest_sha256": null
+  },
+  "isolation": {
+    "protected_sets": [
+      {"set_id": "test24", "included_in_training": false},
+      {"set_id": "fixed_640_holdout", "included_in_training": false}
+    ]
+  },
+  "gates": {
+    "human_pixel_truth_export_complete": false,
+    "immutable_truth_version_committed": false,
+    "train_val_test_isolation_verified": false,
+    "protected_holdouts_verified": false
+  },
+  "formal_training_authorized": false,
+  "formal_training_started": false,
+  "decision_reason": "Blocked until genuine human-confirmed pixel masks are exported, versioned and split-isolation verified. Machine preannotations and BEV 3D boxes remain auxiliary only."
+}

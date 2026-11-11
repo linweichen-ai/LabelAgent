@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/sam3-peft-training-gate.schema.json",
+  "title": "LabelAgent SAM3 PEFT training launch gate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "evidence_scope", "training_route", "model_strategy", "distributed", "data_sources", "truth_dataset", "isolation", "gates", "formal_training_authorized", "formal_training_started", "decision_reason"],
+  "properties": {
+    "schema_version": {"const": "labelagent.sam3-peft-training-gate.v1"},
+    "evidence_scope": {"enum": ["project_training_decision", "synthetic_test_only"]},
+    "training_route": {"const": "supervised_parameter_efficient_sam3"},
+    "model_strategy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["full_model_training", "freeze_image_backbone", "freeze_language_backbone", "trainable_components"],
+      "properties": {
+        "full_model_training": {"const": false},
+        "freeze_image_backbone": {"const": true},
+        "freeze_language_backbone": {"const": true},
+        "trainable_components": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["segmentation_heads", "adapters"]}}
+      }
+    },
+    "distributed": {
+      "type": "object", "additionalProperties": false,
+      "required": ["strategy", "accelerator", "world_size"],
+      "properties": {"strategy": {"const": "ddp"}, "accelerator": {"const": "dual_5090"}, "world_size": {"const": 2}}
+    },
+    "data_sources": {
+      "type": "array", "minItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["source_id", "truth_eligible", "allowed_roles"],
+        "properties": {
+          "source_id": {"enum": ["machine_preannotations_72", "machine_preannotations_24", "bev_3d_boxes"]},
+          "truth_eligible": {"const": false},
+          "allowed_roles": {"type": "array", "uniqueItems": true, "items": {"enum": ["prompt", "roi", "candidate"]}}
+        }
+      }
+    },
+    "truth_dataset": {
+      "type": "object", "additionalProperties": false,
+      "required": ["required_source", "export_status", "mask_count", "version_id", "manifest_sha256"],
+      "properties": {
+        "required_source": {"const": "human_confirmed_pixel_masks"},
+        "export_status": {"enum": ["not_available", "exported_and_verified"]},
+        "mask_count": {"type": "integer", "minimum": 0},
+        "version_id": {"type": ["string", "null"], "minLength": 1},
+        "manifest_sha256": {"anyOf": [{"type": "string", "pattern": "^[0-9a-f]{64}$"}, {"type": "null"}]}
+      }
+    },
+    "isolation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["protected_sets"],
+      "properties": {
+        "protected_sets": {
+          "type": "array", "minItems": 2,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["set_id", "included_in_training"],
+            "properties": {"set_id": {"enum": ["test24", "fixed_640_holdout"]}, "included_in_training": {"const": false}}
+          }
+        }
+      }
+    },
+    "gates": {
+      "type": "object", "additionalProperties": false,
+      "required": ["human_pixel_truth_export_complete", "immutable_truth_version_committed", "train_val_test_isolation_verified", "protected_holdouts_verified"],
+      "properties": {
+        "human_pixel_truth_export_complete": {"type": "boolean"},
+        "immutable_truth_version_committed": {"type": "boolean"},
+        "train_val_test_isolation_verified": {"type": "boolean"},
+        "protected_holdouts_verified": {"type": "boolean"}
+      }
+    },
+    "formal_training_authorized": {"type": "boolean"},
+    "formal_training_started": {"type": "boolean"},
+    "decision_reason": {"type": "string", "minLength": 1}
+  }
+}

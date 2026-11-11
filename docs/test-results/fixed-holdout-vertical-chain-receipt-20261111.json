@@ -12,6 +12,7 @@
     }
   },
   "fixed_holdout": {
+    "evidence_scope": "real_machine_candidate_no_human_truth",
     "input_id": "bc706b57eedaea59e3deda1e25eb5a20002e90b61089083e84d2f98130c5600b",
     "dataset_id": "sfl-cpd15y",
     "source_batch": "20260920_cs-heli_Dev_000001/000",
@@ -28,6 +29,12 @@
     }
   },
   "vertical_chain": {
+    "label_type": "slope",
+    "traversability_status": "passable",
+    "policy_basis": "user_defined_project_semantics",
+    "downstream_mapping": "traversable_area = floor UNION slope",
+    "human_pixel_truth_available": false,
+    "approved_for_training": false,
     "sam_candidate_sha256": "0be59d677c0a910fbf79437484f25cdfdd8256aed4e347a656447bbe9f642593",
     "overlay_sha256": "dcd2aa0ac34c653f21afe47945e9a432f368d446e2ece69d1a69fecc51797323",
     "first_vlm": {
@@ -86,8 +93,8 @@
   },
   "human_gate_verification": {
     "python_runtime": "3.11.9",
-    "relevant_unittest": "60/60 passed",
-    "schema_environment": "14/14 passed with jsonschema 4.25.1",
+    "relevant_unittest": "61/61 passed",
+    "schema_environment": "15/15 passed with jsonschema 4.25.1",
     "ui_javascript_syntax": "node --check passed",
     "covered": [
       "atomic state and audit commit with failure injection and recovery",
@@ -115,7 +122,9 @@
     "first_review_and_failed_retry": "fixed-holdout-1789897506782450197-v2",
     "final_second_review": "fixed-holdout-1789897506782450197-v3",
     "workflow_routing_correction": "fixed-holdout-1789897506782450197-v3/workflow-routing-correction.json",
-    "workflow_routing_correction_sha256": "5f8bd58b2887f8907469b3e6d72d57a966b288c25029e30a438360813daf2444"
+    "workflow_routing_correction_sha256": "5f8bd58b2887f8907469b3e6d72d57a966b288c25029e30a438360813daf2444",
+    "slope_policy_normalization": "fixed-holdout-1789897506782450197-v3/slope-policy-normalization.json",
+    "slope_policy_normalization_sha256": "7809701bb0ebe35c404244c226cba09a4a13f74e422cad3abf6f62e8f74cf74f"
   },
   "claim_boundary": "This is a machine-candidate vertical chain on one fixed holdout. VLM agreement freezes candidate_final, then the workflow routes to human_review_required. It is not human pixel truth or segmentation quality acceptance. No supervised fine-tuning was started."
 }

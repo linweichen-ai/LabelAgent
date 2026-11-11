@@ -58,7 +58,7 @@ class ClosedLoopContractTests(unittest.TestCase):
         event = copy.deepcopy(self.event)
         event["task_context"] = {"hard_case_tags": ["slope"]}
         event["slope_context"] = {
-            "semantic_label": "slope_visible", "business_mapping": "traversable_area",
+            "label_type": "slope", "semantic_label": "slope_visible", "business_mapping": "traversable_area",
             "downstream_mapping": mapping_contract(),
             "traversability_status": "passable", "policy_default": "passable",
             "policy_basis": "user_defined_project_semantics",
@@ -75,7 +75,7 @@ class ClosedLoopContractTests(unittest.TestCase):
         event = copy.deepcopy(self.event)
         event["task_context"] = {"hard_case_tags": ["slope"]}
         event["slope_context"] = {
-            "semantic_label": "slope_visible", "business_mapping": "traversable_area",
+            "label_type": "slope", "semantic_label": "slope_visible", "business_mapping": "traversable_area",
             "downstream_mapping": mapping_contract(),
             "traversability_status": "non_passable", "policy_default": "passable",
             "policy_basis": "user_defined_project_semantics",
@@ -93,7 +93,7 @@ class ClosedLoopContractTests(unittest.TestCase):
         event.pop("unknown_candidate")
         event["task_context"] = {"hard_case_tags": ["slope"]}
         event["slope_context"] = {
-            "semantic_label": "slope_visible", "business_mapping": "traversable_area",
+            "label_type": "slope", "semantic_label": "slope_visible", "business_mapping": "traversable_area",
             "downstream_mapping": mapping_contract(),
             "traversability_status": "passable", "policy_default": "passable",
             "policy_basis": "user_defined_project_semantics",

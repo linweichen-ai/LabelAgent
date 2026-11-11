@@ -306,8 +306,9 @@
     "slope_context": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["semantic_label", "traversability_status", "human_pixel_truth_available", "business_mapping", "downstream_mapping", "policy_default", "policy_basis", "policy_override"],
+      "required": ["label_type", "semantic_label", "traversability_status", "human_pixel_truth_available", "business_mapping", "downstream_mapping", "policy_default", "policy_basis", "policy_override"],
       "properties": {
+        "label_type": {"const": "slope"},
         "semantic_label": {"const": "slope_visible"},
         "traversability_status": {"enum": ["passable", "non_passable"]},
         "business_mapping": {"const": "traversable_area"},

@@ -232,8 +232,9 @@
     },
     "slopeContext": {
       "type": "object", "additionalProperties": false,
-      "required": ["semantic_label", "visible_status", "human_pixel_truth_available", "approved_for_training", "business_mapping", "downstream_mapping", "traversability_status", "policy_default", "policy_basis", "policy_override", "candidate_sha256", "evidence_provenance", "hard_set_strata"],
+      "required": ["label_type", "semantic_label", "visible_status", "human_pixel_truth_available", "approved_for_training", "business_mapping", "downstream_mapping", "traversability_status", "policy_default", "policy_basis", "policy_override", "candidate_sha256", "evidence_provenance", "hard_set_strata"],
       "properties": {
+        "label_type": {"const": "slope"},
         "semantic_label": {"const": "slope_visible"},
         "visible_status": {"enum": ["candidate_supported", "human_confirmed", "human_rejected", "unknown"]},
         "human_pixel_truth_available": {"type": "boolean"},

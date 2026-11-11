@@ -67,7 +67,7 @@ class ClosedLoopVerticalTests(unittest.TestCase):
             "candidate_event_id": "b" * 64, "candidate_shape_count": 1,
             "truth_sha256": digest(candidate), "truth_shape_count": 1,
             "confirmed_empty": False,
-            "slope_context": {"semantic_label": "slope_visible",
+            "slope_context": {"label_type": "slope", "semantic_label": "slope_visible",
                 "visible_status": "human_confirmed",
                 "human_pixel_truth_available": True,
                 "approved_for_training": False,
@@ -96,6 +96,7 @@ class ClosedLoopVerticalTests(unittest.TestCase):
         self.assertFalse(route["quality_failure"])
         self.assertTrue(route["missing_human_gate"])
         slope = initial["events"][2]["payload"]["slope_context"]
+        self.assertEqual(slope["label_type"], "slope")
         self.assertEqual(slope["semantic_label"], "slope_visible")
         self.assertFalse(slope["human_pixel_truth_available"])
         self.assertEqual(slope["traversability_status"], "passable")

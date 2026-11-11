@@ -3,6 +3,7 @@
   "updated_at": "2026-11-11T00:00:00Z",
   "status": "blocked_waiting_for_human_pixel_truth",
   "claim_boundary": {
+    "label_type": "slope",
     "slope_visible": "candidate_supported",
     "human_pixel_truth_available": false,
     "approved_for_training": false,

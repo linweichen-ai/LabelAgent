@@ -1,6 +1,8 @@
 {
   "schema_version": "labelagent.local-test-environment-receipt.v1",
-  "verified_at": "2026-11-11T14:01:24.4484359+08:00",
+  "evidence_scope": "synthetic_test_only",
+  "production_human_truth": false,
+  "verified_at": "2026-11-11T15:29:20.2202820+08:00",
   "git_head_before_commit": "627a9cea65baa141540ca4042c617014f61363cd",
   "worktree_state": "uncommitted",
   "environment_choice": "B_local_project_python_3_11_venv",
@@ -39,8 +41,9 @@
     "reason": "Not counted as formal evidence because the production NumPy 1.26.4 pin is not a supported Python 3.14 wheel environment"
   },
   "test_scope": {
-    "command": ".venv\\Scripts\\python.exe -m unittest tests.test_closed_loop tests.test_closed_loop_contract tests.test_closed_loop_slope_event tests.test_closed_loop_vertical tests.test_closed_loop_human_gate tests.test_image_import tests.test_slope_safety_contract -q",
+    "command": ".venv\\Scripts\\python.exe -m unittest -v tests.test_fixed_holdout_chain tests.test_image_import tests.test_closed_loop_human_gate tests.test_closed_loop_vertical tests.test_slope_safety_contract tests.test_closed_loop tests.test_closed_loop_contract tests.test_closed_loop_slope_event",
     "modules": [
+      "tests.test_fixed_holdout_chain",
       "tests.test_closed_loop",
       "tests.test_closed_loop_contract",
       "tests.test_closed_loop_slope_event",
@@ -49,8 +52,8 @@
       "tests.test_image_import",
       "tests.test_slope_safety_contract"
     ],
-    "tests_run": 52,
-    "passed": 52,
+    "tests_run": 61,
+    "passed": 61,
     "failed": 0,
     "errors": 0,
     "skipped": 0,
@@ -58,6 +61,7 @@
       "forced save failure",
       "forced final transaction save failure"
     ],
+    "schema_environment_tests": "15/15 passed with jsonschema 4.25.1",
     "javascript_syntax_check": "passed",
     "git_diff_check": "passed_with_line_ending_warnings_only"
   },
@@ -69,12 +73,11 @@
   },
   "slope_gate": {
     "visible_and_traversability_separated": true,
-    "traversability_default": "unknown",
-    "required_geometry_artifacts": [
-      "lidar_geometry",
-      "slope_continuity",
-      "vehicle_constraints"
-    ],
+    "label_type": "slope",
+    "traversability_status": "passable",
+    "policy_basis": "user_defined_project_semantics",
+    "downstream_mapping": "traversable_area = floor UNION slope",
+    "geometry_or_depth_is_blocking_gate": false,
     "current_real_evidence_claim": "candidate_supported_only",
     "human_pixel_truth_available": false,
     "approved_for_training": false,

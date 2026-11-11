@@ -9,7 +9,7 @@
 - LabelAgent 已把 `slope` 纳入七类体系，文本查询映射为 `ramp`，不是待新增 ontology 类。
 - 当前真实验收帧来自批次 A/000、`/capture/camera_0/image`、frame 0，图像 SHA-256 为 `3775ee5f41374c9a302c458cfffa2799222e22ff17541045d6acfb8434bd682f`；画面右中部有黄色斜坡。
 - SAM3 单正点 `(1100,620)` 返回 1 个候选区域、44 个外轮廓顶点、score 0.98046875。该点由 Codex/脚本选择，来源必须记录为 `assistant_selected_prompt`、角色为 `operator_seed`，不是人工提示或人工真值。这个结果只证明服务能产生候选；当前帧没有可回读的 slope 人工像素真值，因此不能据此宣称分割质量或 IoU。
-- 当前协议和全部现行回执统一使用 `business_mapping=traversable_area`、`traversability_status=passable`、`policy_default=passable`、`policy_basis=user_defined_project_semantics`。不再接受或保留用 `geometry_evidence_sufficient=false` 把 slope 路由到 unknown/review_required 的旧规则。该业务映射不等于人工像素真值或训练批准。
+- 当前协议和全部现行回执统一保留 `label_type=slope`，并使用 `business_mapping=traversable_area`、`traversability_status=passable`、`policy_default=passable`、`policy_basis=user_defined_project_semantics`。不再接受或保留用 `geometry_evidence_sufficient=false` 把 slope 路由到 unknown/review_required 的旧规则。该业务映射不等于人工像素真值或训练批准。
 
 ## 两层语义
 

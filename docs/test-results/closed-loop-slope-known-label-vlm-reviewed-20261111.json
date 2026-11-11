@@ -50,6 +50,7 @@
     "evaluation_stratum": "slope_hard_case"
   },
   "slope_context": {
+    "label_type": "slope",
     "semantic_label": "slope_visible",
     "traversability_status": "passable",
     "business_mapping": "traversable_area",

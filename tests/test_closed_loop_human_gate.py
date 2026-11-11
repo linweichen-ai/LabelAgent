@@ -45,7 +45,8 @@ class HumanGateSyncTests(unittest.TestCase):
             "receipt": self.ledger.receipt()}), encoding="utf-8")
 
     def slope_context(self, visible_status, human_truth):
-        return {"semantic_label": "slope_visible", "visible_status": visible_status,
+        return {"label_type": "slope", "semantic_label": "slope_visible",
+            "visible_status": visible_status,
             "human_pixel_truth_available": human_truth, "approved_for_training": False,
             "business_mapping": "traversable_area", "traversability_status": "passable",
             "downstream_mapping": mapping_contract(),

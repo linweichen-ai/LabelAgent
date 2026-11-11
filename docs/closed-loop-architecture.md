@@ -68,7 +68,7 @@ open-set 后先写 `ontology_review_required`。人工确认新类时另写 `ont
 
 每次决定写入 `LABELAGENT_WORK/human_reviews/` 的追加式哈希链，包含数据集/版本、相机/topic、帧、候选、真值哈希、自报复核人、起止时间和耗时。状态/真值先事务式持久化，审计回执随后提交；首次状态保存失败不产生 accepted 回执或真值，最终事务标记保存失败则保留可恢复链接。接口成功前还必须从持久化 `state.json` 和不可变审计链回读，确认事务 committed、真值哈希一致、活动候选已移除，UI 只有看到 `readback.verified=true` 才显示成功。`GET /api/human_reviews?frame=<id>` 可回读。`tools/closed_loop_human_gate.py` 会同时核对不可变输入帧哈希、人工回执、当前真值哈希以及最新 `candidate_final` 的 event/artifact SHA；核对成功后才把有精确候选绑定的 `human_accepted` 与紧随其后的 `truth_committed` 写入闭环账本并把事件 ID 回写到关联回执。驳回写入 `candidate_rejected`，候选状态改为 rejected/remediation_required；完全相同的驳回幂等复放，原候选不能直接接受，只能用新复核幂等键和 `remediation_of_review_id` 提交不同哈希的修正版或新候选。
 
-Slope hard case 是独立质量门禁，训练/标注/专项评测层必须继续保留 `floor` 与 `slope` 两类以及各自真值；只有下游业务/导航投影执行 `traversable_area = floor UNION slope`。投影必须保留来源语义和候选/真值层级，不得回写或永久合并训练标签。Slope 事件还必须记录 `semantic_label=slope_visible`、`visible_status`、精确 `candidate_sha256`、evidence provenance、hard-set strata、`human_pixel_truth_available` 和 `approved_for_training`。业务政策默认 passable，不再要求 LiDAR/几何作为闭环前置条件；未来禁行只能由 human/system_policy 通过版本化 `non_passable` override 明确设置，模型不得自行推断。`evaluation_completed` 没有人工像素真值、完整 slope 单类指标或已分配 hard-set strata仍会被拒绝；机器候选仍不能自动成为真值或训练数据。
+Slope hard case 是独立质量门禁，训练/标注/专项评测层必须继续保留 `floor` 与 `slope` 两类以及各自真值；只有下游业务/导航投影执行 `traversable_area = floor UNION slope`。投影必须保留来源语义和候选/真值层级，不得回写或永久合并训练标签。Slope 事件还必须记录 `label_type=slope`、`semantic_label=slope_visible`、`visible_status`、精确 `candidate_sha256`、evidence provenance、hard-set strata、`human_pixel_truth_available` 和 `approved_for_training`。业务政策默认 passable，不再要求 LiDAR/几何作为闭环前置条件；未来禁行只能由 human/system_policy 通过版本化 `non_passable` override 明确设置，模型不得自行推断。`evaluation_completed` 没有人工像素真值、完整 slope 单类指标或已分配 hard-set strata仍会被拒绝；机器候选仍不能自动成为真值或训练数据。
 
 示例：
 

@@ -128,7 +128,8 @@ def _contains_slope(shapes):
 
 def _slope_context(*, human_truth, approved, candidate_sha, provenance_source):
     return {"task_context": {"hard_case_tags": ["slope"]},
-            "slope_context": {"semantic_label": "slope_visible",
+            "slope_context": {"label_type": "slope",
+                "semantic_label": "slope_visible",
                 "visible_status": "human_confirmed" if human_truth else "candidate_supported",
                 "human_pixel_truth_available": human_truth,
                 "approved_for_training": approved,

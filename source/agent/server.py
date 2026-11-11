@@ -133,7 +133,8 @@ def _slope_review_context(*, decision, candidate, truth, candidate_sha,
     else:
         visible_status = "candidate_supported"
     provenance_sha = candidate_sha or frame_sha256
-    return {"semantic_label": "slope_visible", "visible_status": visible_status,
+    return {"label_type": "slope", "semantic_label": "slope_visible",
+        "visible_status": visible_status,
         "human_pixel_truth_available": human_truth, "approved_for_training": False,
         "business_mapping": "traversable_area", "traversability_status": "passable",
         "downstream_mapping": mapping_contract(),

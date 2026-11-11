@@ -11,7 +11,7 @@
 3. **拒绝/修复路径**：新类使用 `open_set_candidate → ontology_review_required → ontology_approved|ontology_rejected → remediation_required`。普通候选驳回写 `candidate_rejected → remediation_required → quality_checked`；旧 `human_rejected` 也不再是无法修正的终态。`closed_loop_human_gate.py` 已把 `reject_candidate` 映射到显式 `candidate_rejected`。
 4. **Schema 收紧**：event 与 receipt 均关闭未知字段；state、actor、label layer、哈希、序号、时间、模型、prompt、artifact、metrics 和 receipt 字段均有枚举/格式/必填约束。`quality_checked`、`version_committed` 和 slope payload 也有状态特定约束；模型 actor 不能省略模型/prompt 版本。实际生成 bundle 已通过 Draft 2020-12 校验。
 5. **质量与版本证据**：候选生成前必须有 `quality_checked` 且列出真实 checks。SAM/VLM/Agent 事件必须携带模型名/版本和 prompt 版本。所有 artifact 必须有小写 SHA-256。`version_committed` 必须记录 `version_id`、`parent_version`、`train|val|test`、`split_group_id`、ontology 版本、truth SHA、manifest SHA 和与输入一致的 real/sim 来源；manifest SHA 必须引用事件 artifact，同一 split group 跨 train/val/test 会被拒绝。
-6. **Slope 安全契约**：slope hard case 必须记录 `semantic_label=slope_visible`、`human_pixel_truth_available`、`approved_for_training`、traversability、geometry sufficient 和 artifact ID。`traversable/non_traversable` 必须同时引用 `lidar_geometry` 与 `vehicle_constraints`；没有人工像素真值禁止 `evaluation_completed`，没有人工像素真值也不得批准训练。
+6. **Slope 安全契约**：slope hard case 必须记录 `label_type=slope`、`semantic_label=slope_visible`、`human_pixel_truth_available`、`approved_for_training`、`traversability_status=passable`、`policy_basis=user_defined_project_semantics` 和 artifact ID。下游统一映射为 `traversable_area = floor UNION slope`；几何/深度仅作辅助诊断，不是可通行语义门槛。没有人工像素真值禁止 `evaluation_completed` 和训练批准，但不阻塞机器候选经 VLM、Agent、VLM 复核后进入 `human_review_required`。本文涉及的注入故障和人工门禁测试均为 synthetic/test-only，不代表真实人工复核。
 
 ## Receipt 与完成口径
 

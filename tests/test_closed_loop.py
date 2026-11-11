@@ -322,7 +322,7 @@ class ClosedLoopTests(unittest.TestCase):
         self.ledger.register()
         quality(self.ledger)
         slope = {"task_context": {"hard_case_tags": ["slope"]},
-                 "slope_context": {"semantic_label": "slope_visible",
+                 "slope_context": {"label_type": "slope", "semantic_label": "slope_visible",
                     "visible_status": "candidate_supported",
                     "human_pixel_truth_available": False, "approved_for_training": False,
                     "business_mapping": "traversable_area",
@@ -367,7 +367,7 @@ class ClosedLoopTests(unittest.TestCase):
             validate_slope("sam_candidate_ready", override, [], {}, "vlm")
 
         evaluation = {"task_context": {"hard_case_tags": ["slope"]},
-                      "slope_context": {"semantic_label": "slope_visible",
+                      "slope_context": {"label_type": "slope", "semantic_label": "slope_visible",
                         "visible_status": "candidate_supported",
                         "human_pixel_truth_available": False, "approved_for_training": False,
                         "business_mapping": "traversable_area",
@@ -388,7 +388,7 @@ class ClosedLoopTests(unittest.TestCase):
 
     def test_slope_evaluation_requires_hard_set_and_complete_single_class_metrics(self):
         slope = {"task_context": {"hard_case_tags": ["slope"]},
-                 "slope_context": {"semantic_label": "slope_visible",
+                 "slope_context": {"label_type": "slope", "semantic_label": "slope_visible",
                     "visible_status": "human_confirmed",
                     "human_pixel_truth_available": True, "approved_for_training": False,
                     "business_mapping": "traversable_area",

@@ -22,7 +22,7 @@
 该帧固定携带：
 
 - `hard_case_tags=["slope"]`；
-- `semantic_label=slope_visible`；
+- `label_type=slope`，`semantic_label=slope_visible`；
 - `business_mapping=traversable_area`；
 - `traversability_status=passable`；
 - `policy_default=passable, policy_basis=user_defined_project_semantics`。

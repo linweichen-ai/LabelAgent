@@ -238,6 +238,8 @@ def validate_event(event: Mapping[str, Any]) -> list[str]:
         if not isinstance(slope, Mapping):
             errors.append("slope hard cases require slope_context")
         else:
+            if slope.get("label_type") != "slope":
+                errors.append("slope_context.label_type must be slope")
             if slope.get("semantic_label") != "slope_visible":
                 errors.append("slope_context.semantic_label must be slope_visible")
             traversability = slope.get("traversability_status")

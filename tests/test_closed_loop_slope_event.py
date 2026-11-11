@@ -37,6 +37,7 @@ class ClosedLoopSlopeEventTests(unittest.TestCase):
     def test_all_current_evidence_uses_passable_policy_without_geometry_gate(self):
         for event in (self.candidate, self.vlm):
             slope = event["slope_context"]
+            self.assertEqual(slope["label_type"], "slope")
             self.assertFalse(slope["human_pixel_truth_available"])
             self.assertFalse(slope["approved_for_training"])
             self.assertEqual(slope["business_mapping"], "traversable_area")
@@ -48,6 +49,12 @@ class ClosedLoopSlopeEventTests(unittest.TestCase):
             self.assertNotIn("geometry_evidence_artifact_ids", slope)
             self.assertTrue(event["review"]["required"])
             self.assertEqual(event["review"]["status"], "pending")
+
+    def test_label_type_is_required_and_preserved_for_quality_evaluation(self):
+        event = json.loads(json.dumps(self.candidate))
+        event["slope_context"].pop("label_type")
+        errors = validate_event(event)
+        self.assertIn("slope_context.label_type must be slope", errors)
 
     def test_assistant_selected_point_is_never_recorded_as_human_seed(self):
         producer = self.candidate["producer"]

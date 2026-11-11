@@ -276,13 +276,15 @@ def validate_slope(state, payload, artifacts, metrics, actor_type=None):
     slope = payload.get("slope_context")
     if not isinstance(slope, dict):
         raise ValueError("slope hard cases require payload.slope_context")
-    required = {"semantic_label", "visible_status", "human_pixel_truth_available",
+    required = {"label_type", "semantic_label", "visible_status", "human_pixel_truth_available",
                 "approved_for_training", "traversability_status",
                 "business_mapping", "downstream_mapping", "policy_default",
                 "policy_basis", "policy_override",
                 "candidate_sha256", "evidence_provenance", "hard_set_strata"}
     if set(slope) != required:
         raise ValueError("slope_context fields are incomplete")
+    if slope["label_type"] != "slope":
+        raise ValueError("slope_context.label_type must be slope")
     if slope["semantic_label"] != "slope_visible":
         raise ValueError("slope_context.semantic_label must be slope_visible")
     if slope["visible_status"] not in SLOPE_VISIBLE_STATUS:

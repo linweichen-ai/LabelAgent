@@ -259,6 +259,7 @@ class ImageImportTests(unittest.TestCase):
         self.assertTrue(response.json["readback"]["verified"])
         receipt = response.json["review"]
         slope = receipt["slope_context"]
+        self.assertEqual(slope["label_type"], "slope")
         self.assertEqual(slope["semantic_label"], "slope_visible")
         self.assertEqual(slope["visible_status"], "human_confirmed")
         self.assertTrue(slope["human_pixel_truth_available"])

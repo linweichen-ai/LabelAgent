@@ -25,7 +25,7 @@
 
 本轮同步完成并验证：数据集/版本/相机/topic/帧/候选哈希绑定；状态与审计的事务式写入及故障恢复；驳回后候选移出活动区并归档；同一被拒候选不得原样接受；显式 `confirmed_empty`；`reviewer_declared_id + identity_assurance=self_declared`；只有服务端持久化回读 `verified=true` 才提示成功。
 
-Python 3.11 环境相关测试 60/60 通过；schema 专用环境 14/14 通过；`node --check source/web/app.js` 通过。新增负例明确拒绝旧 geometry/unknown slope 规则、缺失点提示来源以及把 assistant point 写成人工 seed。故障注入测试中预期出现的 500 traceback 是测试主动注入保存失败，不是未处理回归。
+Python 3.11 环境相关测试 61/61 通过；schema 专用环境 15/15 通过；`node --check source/web/app.js` 通过。新增负例明确拒绝旧 geometry/unknown slope 规则、缺失 `label_type=slope`、缺失点提示来源以及把 assistant point 写成人工 seed。故障注入测试中预期出现的 500 traceback 是测试主动注入保存失败，不是未处理回归；所有模拟人工数据均仅限 synthetic/test-only 测试夹具。
 
 ## Shipping-container smoke 收口
 
@@ -33,10 +33,10 @@ Python 3.11 环境相关测试 60/60 通过；schema 专用环境 14/14 通过�
 
 ## 业务边界
 
-训练/标注/专项评测继续保留 `floor` 与 `slope` 两类；下游映射为 `traversable_area = floor UNION slope`。本轮没有 `human_accepted`、`truth_committed` 或 `training_ready`，也没有启动监督微调。
+训练/标注/专项评测继续保留 `floor` 与 `slope` 两类；下游映射为 `traversable_area = floor UNION slope`。追加策略归一化回执明确记录 `label_type=slope`、`traversability_status=passable` 和 `policy_basis=user_defined_project_semantics`。本轮没有 `human_accepted`、`truth_committed` 或 `training_ready`，也没有启动监督微调或构造模拟人工确认。
 
 原始叠图、请求、响应、失败响应和最终回执位于：
 
 `C:/Users/seer/Documents/ChatGPT/Seer2clw/outputs/sfl_cpd15y_stage2_20261111/fixed_holdout_chain/`
 
-追加的工作流路由更正 `workflow-routing-correction.json` SHA-256 为 `5f8bd58b2887f8907469b3e6d72d57a966b288c25029e30a438360813daf2444`。
+追加的工作流路由更正 `workflow-routing-correction.json` SHA-256 为 `5f8bd58b2887f8907469b3e6d72d57a966b288c25029e30a438360813daf2444`。策略归一化回执 `slope-policy-normalization.json` SHA-256 为 `7809701bb0ebe35c404244c226cba09a4a13f74e422cad3abf6f62e8f74cf74f`；两者均不改写原始模型请求/响应。

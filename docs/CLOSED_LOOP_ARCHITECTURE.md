@@ -85,7 +85,7 @@ unknown 候选至少记录：建议名称/同义词、证据图或掩码及哈�
 
 ## Slope 与可通行性
 
-`slope_visible` 是独立视觉分割语义；训练、标注和专项评测层继续保留 `floor` 与 `slope` 两类，禁止永久合并。下游业务/导航层单独执行 `traversable_area = floor UNION slope`，投影必须声明 `source_labels=[floor,slope]`、`operation=union`、`preserve_source_labels=true` 和来源层，绝不回写训练真值。新 slope 事件记录 `traversability_status=passable`、`policy_default=passable`、`policy_basis=user_defined_project_semantics`，不再以缺少 LiDAR/几何为由阻断闭环。模型只能确认 visible/candidate_supported，不能自行改变通行政策。未来禁行只能通过带版本化规则、原因和 `decided_by=human|system_policy` 的显式 `non_passable` override。分割质量仍必须用独立人工像素真值报告 IoU、Dice、Boundary F1、像素/实例 precision/recall 和混淆。
+`slope_visible` 是独立视觉分割语义；训练、标注和专项评测层继续保留 `floor` 与 `slope` 两类，禁止永久合并。下游业务/导航层单独执行 `traversable_area = floor UNION slope`，投影必须声明 `source_labels=[floor,slope]`、`operation=union`、`preserve_source_labels=true` 和来源层，绝不回写训练真值。新 slope 事件记录 `label_type=slope`、`traversability_status=passable`、`policy_default=passable`、`policy_basis=user_defined_project_semantics`，不再以缺少 LiDAR/几何为由阻断闭环。模型只能确认 visible/candidate_supported，不能自行改变通行政策。未来禁行只能通过带版本化规则、原因和 `decided_by=human|system_policy` 的显式 `non_passable` override。分割质量仍必须用独立人工像素真值报告 IoU、Dice、Boundary F1、像素/实例 precision/recall 和混淆。
 
 所有带 `hard_case_tags=["slope"]` 的样本组成独立 hard-case stratum，单独报告，不并入七类均值后隐藏失败。开发、验证和测试按采集序列或实体坡道隔离；自动接收阈值只能在首批人工像素真值建立后确定。专项数据分层、指标、仿真参数和当前真实 frame0 证据见 [`SLOPE_SEGMENTATION_ACCEPTANCE.md`](SLOPE_SEGMENTATION_ACCEPTANCE.md)。
 

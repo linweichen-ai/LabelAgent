@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/formal-ddp-preflight-decision.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "observed_at", "input_id", "mode", "preflight_passed", "requirements", "blockers", "process_created", "automatic_launch_performed", "mutation_performed", "next_action"],
+  "properties": {
+    "schema_version": {"const": "labelagent.formal-ddp-preflight-decision.v1"},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "input_id": {"type": "string", "minLength": 1},
+    "mode": {"const": "one_shot_read_only_no_polling"},
+    "preflight_passed": {"type": "boolean"},
+    "requirements": {
+      "type": "object", "additionalProperties": false,
+      "required": ["genuine_human_truth_version", "fixed_independent_holdout_baseline", "stage0_exact_six_parameters", "stage0_config_sha256", "stage0_executable_config", "no_other_user_gpu_processes", "factory_4090_baseline_protected", "explicit_output_path", "verified_rollback_path_and_sha256", "formal_training_authorized"],
+      "properties": {
+        "genuine_human_truth_version": {"type": "boolean"},
+        "fixed_independent_holdout_baseline": {"type": "boolean"},
+        "stage0_exact_six_parameters": {"type": "boolean"},
+        "stage0_config_sha256": {"type": "boolean"},
+        "stage0_executable_config": {"type": "boolean"},
+        "no_other_user_gpu_processes": {"type": "boolean"},
+        "factory_4090_baseline_protected": {"type": "boolean"},
+        "explicit_output_path": {"type": "boolean"},
+        "verified_rollback_path_and_sha256": {"type": "boolean"},
+        "formal_training_authorized": {"type": "boolean"}
+      }
+    },
+    "blockers": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "process_created": {"const": false},
+    "automatic_launch_performed": {"const": false},
+    "mutation_performed": {"const": false},
+    "next_action": {"enum": ["remain_blocked_no_process_created", "explicit_separate_launch_required"]}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"preflight_passed": {"const": true}}},
+      "then": {
+        "properties": {
+          "blockers": {"maxItems": 0},
+          "next_action": {"const": "explicit_separate_launch_required"}
+        }
+      },
+      "else": {
+        "properties": {
+          "blockers": {"minItems": 1},
+          "next_action": {"const": "remain_blocked_no_process_created"}
+        }
+      }
+    }
+  ]
+}

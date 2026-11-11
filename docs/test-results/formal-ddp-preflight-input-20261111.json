@@ -1,0 +1,59 @@
+{
+  "schema_version": "labelagent.formal-ddp-preflight-input.v1",
+  "input_id": "formal-ddp-preflight-20261111T172627+0800",
+  "observed_at": "2026-11-11T17:26:27.0259465+08:00",
+  "execution_contract": {
+    "mode": "one_shot_read_only_no_polling",
+    "auto_start_when_idle": false
+  },
+  "truth_gate": {
+    "truth_version_available": false,
+    "truth_version_id": null,
+    "truth_manifest_sha256": null,
+    "truth_manifest_sha256_verified": false
+  },
+  "holdout_gate": {
+    "fixed_independent_baseline_available": false,
+    "baseline_receipt_path": null,
+    "protected_from_training": true
+  },
+  "stage0_gate": {
+    "exact_parameter_names": [
+      "segmentation_head.mask_predictor.mask_embed.layers.0.weight",
+      "segmentation_head.mask_predictor.mask_embed.layers.0.bias",
+      "segmentation_head.mask_predictor.mask_embed.layers.1.weight",
+      "segmentation_head.mask_predictor.mask_embed.layers.1.bias",
+      "segmentation_head.mask_predictor.mask_embed.layers.2.weight",
+      "segmentation_head.mask_predictor.mask_embed.layers.2.bias"
+    ],
+    "tensor_count": 6,
+    "parameter_count": 197376,
+    "exact_names_sha256": "efacf600a68248109986db8b610f9861a8255e586aa64a2909cfcaeaded686a1",
+    "config_path": "configs/sam3_sfl_cpd15y_peft_plan.json",
+    "config_sha256": "842fbf3f264c6b462e0c70da6b16ae66490ba2d1c4ffd9f4b93ef7359d88ec2c",
+    "training_config_executable": false
+  },
+  "resource_gate": {
+    "dual_5090": [
+      {"index": 0, "uuid": "GPU-8fc83bb8-cdd1-8da3-98b7-990f5de229ff", "memory_used_mib": 16633, "utilization_percent": 66},
+      {"index": 1, "uuid": "GPU-45a88393-aad3-3ee0-022a-4d4dad168088", "memory_used_mib": 18271, "utilization_percent": 62}
+    ],
+    "other_user_processes": [
+      {"pid": 1206460, "owner": "swd", "command": "/opt/conda/bin/python3.11 -u /tmp/ultralytics/DDP/_temp_yvo2ark2125682004374096.py"},
+      {"pid": 1206461, "owner": "swd", "command": "/opt/conda/bin/python3.11 -u /tmp/ultralytics/DDP/_temp_yvo2ark2125682004374096.py"}
+    ],
+    "factory_4090_baseline": {
+      "sam3_healthy": true,
+      "vlm_healthy": true,
+      "new_work_scheduled": false,
+      "mutation_performed": false
+    }
+  },
+  "path_gate": {
+    "output_path": null,
+    "rollback_checkpoint_path": "/home/clw/models/labelagent/sam3.pt",
+    "rollback_checkpoint_sha256": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+    "rollback_checkpoint_verified": true
+  },
+  "formal_training_authorized": false
+}

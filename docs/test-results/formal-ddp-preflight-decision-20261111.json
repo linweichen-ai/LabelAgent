@@ -1,0 +1,32 @@
+{
+  "automatic_launch_performed": false,
+  "blockers": [
+    "genuine_human_pixel_truth_version_missing",
+    "truth_manifest_sha256_not_verified",
+    "fixed_independent_holdout_baseline_missing",
+    "stage0_training_config_not_executable",
+    "other_user_gpu_processes_present",
+    "training_output_path_missing",
+    "formal_training_not_authorized"
+  ],
+  "input_id": "formal-ddp-preflight-20261111T172627+0800",
+  "mode": "one_shot_read_only_no_polling",
+  "mutation_performed": false,
+  "next_action": "remain_blocked_no_process_created",
+  "observed_at": "2026-11-11T17:26:27.0259465+08:00",
+  "preflight_passed": false,
+  "process_created": false,
+  "requirements": {
+    "explicit_output_path": false,
+    "factory_4090_baseline_protected": true,
+    "fixed_independent_holdout_baseline": false,
+    "formal_training_authorized": false,
+    "genuine_human_truth_version": false,
+    "no_other_user_gpu_processes": false,
+    "stage0_config_sha256": true,
+    "stage0_exact_six_parameters": true,
+    "stage0_executable_config": false,
+    "verified_rollback_path_and_sha256": true
+  },
+  "schema_version": "labelagent.formal-ddp-preflight-decision.v1"
+}

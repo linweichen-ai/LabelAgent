@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://labelagent.local/schemas/labelagent_closed_loop_event.schema.json",
-  "title": "LabelAgent closed-loop event protocol 1.1",
+  "title": "LabelAgent closed-loop event protocol 1.1 with current slope policy profile",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -46,6 +46,15 @@
         "slope_iou": {"type": "number", "minimum": 0, "maximum": 1},
         "slope_dice": {"type": "number", "minimum": 0, "maximum": 1},
         "slope_boundary_f1": {"type": "number", "minimum": 0, "maximum": 1},
+        "slope_boundary_tolerance_px": {"type": "number", "minimum": 0},
+        "slope_pixel_precision": {"type": "number", "minimum": 0, "maximum": 1},
+        "slope_pixel_recall": {"type": "number", "minimum": 0, "maximum": 1},
+        "slope_instance_precision": {"type": "number", "minimum": 0, "maximum": 1},
+        "slope_instance_recall": {"type": "number", "minimum": 0, "maximum": 1},
+        "slope_to_floor_confusion_pixels": {"type": "integer", "minimum": 0},
+        "floor_to_slope_confusion_pixels": {"type": "integer", "minimum": 0},
+        "slope_to_step_curb_confusion_pixels": {"type": "integer", "minimum": 0},
+        "step_curb_to_slope_confusion_pixels": {"type": "integer", "minimum": 0},
         "slope_false_traversable_count": {"type": "integer", "minimum": 0}
       }
     }
@@ -93,6 +102,57 @@
               "reviewer_type": {"const": "human"},
               "reviewed_at": {"type": "string", "format": "date-time"}
             }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["producer", "slope_context"],
+        "properties": {
+          "producer": {"properties": {"component": {"enum": ["sam", "vlm", "agent"]}}, "required": ["component"]},
+          "slope_context": {"properties": {"policy_override": {"properties": {"status": {"const": "non_passable"}}, "required": ["status"]}}, "required": ["policy_override"]}
+        }
+      },
+      "then": false
+    },
+    {
+      "if": {
+        "required": ["event_type", "task_context"],
+        "properties": {
+          "event_type": {"const": "human.reviewed"},
+          "task_context": {"properties": {"hard_case_tags": {"contains": {"const": "slope"}}}}
+        }
+      },
+      "then": {
+        "required": ["slope_context"],
+        "properties": {
+          "slope_context": {
+            "required": ["visible_status", "candidate_sha256", "evidence_provenance", "hard_set_strata"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["event_type", "task_context"],
+        "properties": {
+          "event_type": {"const": "evaluation.completed"},
+          "task_context": {"properties": {"hard_case_tags": {"contains": {"const": "slope"}}}}
+        }
+      },
+      "then": {
+        "required": ["slope_context", "metrics"],
+        "properties": {
+          "slope_context": {
+            "properties": {
+              "human_pixel_truth_available": {"const": true},
+              "hard_set_strata": {"not": {"contains": {"const": "unassigned"}}}
+            },
+            "required": ["visible_status", "candidate_sha256", "evidence_provenance", "hard_set_strata"]
+          },
+          "metrics": {
+            "required": ["slope_iou", "slope_dice", "slope_boundary_f1", "slope_boundary_tolerance_px", "slope_pixel_precision", "slope_pixel_recall", "slope_instance_precision", "slope_instance_recall", "slope_to_floor_confusion_pixels", "floor_to_slope_confusion_pixels", "slope_to_step_curb_confusion_pixels", "step_curb_to_slope_confusion_pixels", "slope_false_traversable_count"]
           }
         }
       }
@@ -213,18 +273,75 @@
         "evaluation_stratum": {"type": ["string", "null"]}
       }
     },
+    "downstream_mapping": {
+      "type": "object", "additionalProperties": false,
+      "required": ["target_label", "operation", "source_labels", "source_layer", "target_layer", "preserve_source_labels"],
+      "properties": {
+        "target_label": {"const": "traversable_area"},
+        "operation": {"const": "union"},
+        "source_labels": {"const": ["floor", "slope"]},
+        "source_layer": {"const": "training_annotation"},
+        "target_layer": {"const": "downstream_navigation"},
+        "preserve_source_labels": {"const": true}
+      }
+    },
     "slope_context": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["semantic_label", "traversability_status", "geometry_evidence_sufficient", "geometry_evidence_artifact_ids", "human_pixel_truth_available"],
+      "required": ["semantic_label", "traversability_status", "human_pixel_truth_available"],
       "properties": {
         "semantic_label": {"const": "slope_visible"},
-        "traversability_status": {"enum": ["unknown", "review_required", "traversable", "non_traversable"]},
+        "traversability_status": {"enum": ["unknown", "review_required", "traversable", "non_traversable", "passable", "non_passable"]},
         "geometry_evidence_sufficient": {"type": "boolean"},
         "geometry_evidence_artifact_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "business_mapping": {"const": "traversable_area"},
+        "downstream_mapping": {"$ref": "#/$defs/downstream_mapping"},
+        "policy_default": {"const": "passable"},
+        "policy_basis": {"const": "user_defined_project_semantics"},
+        "policy_override": {
+          "type": "object", "additionalProperties": false,
+          "required": ["status", "rule_id", "reason", "decided_by", "evidence_artifact_ids"],
+          "properties": {
+            "status": {"enum": ["none", "non_passable"]},
+            "rule_id": {"type": ["string", "null"], "minLength": 1},
+            "reason": {"type": ["string", "null"], "minLength": 1},
+            "decided_by": {"enum": ["human", "system_policy", null]},
+            "evidence_artifact_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+          }
+        },
         "human_pixel_truth_available": {"type": "boolean"},
-        "approved_for_training": {"type": "boolean"}
-      }
+        "approved_for_training": {"type": "boolean"},
+        "visible_status": {"enum": ["candidate_supported", "human_confirmed", "human_rejected", "unknown"]},
+        "candidate_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+        "evidence_provenance": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["kind", "source", "sha256"],
+            "properties": {
+              "kind": {"type": "string", "minLength": 1},
+              "source": {"type": "string", "minLength": 1},
+              "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+            }
+          }
+        },
+        "hard_set_strata": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": {"enum": ["unassigned", "near", "mid", "far", "weak_texture", "shadow", "backlight", "occlusion", "slope_foot_boundary", "slope_top_boundary"]}
+        }
+      },
+      "oneOf": [
+        {"required": ["geometry_evidence_sufficient", "geometry_evidence_artifact_ids"],
+         "not": {"anyOf": [{"required": ["policy_default"]}, {"required": ["policy_basis"]}, {"required": ["policy_override"]}]}},
+        {"required": ["business_mapping", "downstream_mapping", "policy_default", "policy_basis", "policy_override"],
+         "not": {"anyOf": [{"required": ["geometry_evidence_sufficient"]}, {"required": ["geometry_evidence_artifact_ids"]}]}}
+      ],
+      "allOf": [
+        {"if": {"required": ["policy_override"], "properties": {"policy_override": {"properties": {"status": {"const": "none"}}, "required": ["status"]}}},
+         "then": {"properties": {"traversability_status": {"const": "passable"}, "policy_override": {"properties": {"rule_id": {"type": "null"}, "reason": {"type": "null"}, "decided_by": {"type": "null"}, "evidence_artifact_ids": {"maxItems": 0}}}}}},
+        {"if": {"required": ["policy_override"], "properties": {"policy_override": {"properties": {"status": {"const": "non_passable"}}, "required": ["status"]}}},
+         "then": {"properties": {"traversability_status": {"const": "non_passable"}, "policy_override": {"properties": {"rule_id": {"type": "string", "minLength": 1}, "reason": {"type": "string", "minLength": 1}, "decided_by": {"enum": ["human", "system_policy"]}}}}}}
+      ]
     },
     "unknown_candidate": {
       "type": "object",

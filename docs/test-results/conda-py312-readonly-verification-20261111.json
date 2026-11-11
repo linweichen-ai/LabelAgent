@@ -1,0 +1,62 @@
+{
+  "schema_version": "labelagent.conda-environment-verification.v1",
+  "verified_at": "2026-11-11T14:06:13.7146781+08:00",
+  "requested_conda_executable": {
+    "path": "D:\\AI\\Miniforge3\\Scripts\\conda.exe",
+    "bytes": 54040,
+    "sha256": "92c15cccdeecc3856c69dd7d47fe01d8d7782b6f4ada1dbd86790a5e702ea73f",
+    "authenticode_status": "Valid",
+    "version": "26.5.3",
+    "sandbox_launch": "failed_with_invalid_system_dll_relocation",
+    "non_sandbox_launch": "passed"
+  },
+  "target_validation": {
+    "repository": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_5090_20261111",
+    "target": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_5090_20261111\\.conda-test",
+    "relative_target": ".conda-test",
+    "inside_repository": true,
+    "existed_before_create": false
+  },
+  "creation": {
+    "command_scope": "conda create -y -p <validated target> python=3.12",
+    "transaction": "completed",
+    "resolved_python_package": "3.12.16",
+    "channel": "https://prefix.dev/conda-forge",
+    "installed_size_bytes": 149423648,
+    "base_plugin_warning": "conda-pypi entry point could not load because base environment lacks build"
+  },
+  "runtime_readback": {
+    "python_exe": {
+      "bytes": 93184,
+      "file_version": "3.12.16",
+      "sha256": "3eef802c3cf7be946d4d6e7f43d5bbabfeb3b9a6179c22efb0c976cd2e3974d1",
+      "authenticode_status": "NotSigned"
+    },
+    "python312_dll": {
+      "bytes": 7425024,
+      "sha256": "6482b13cdd4234fd99e9dccfbfca7ce34c49e40b62d011a4a15b99c1ddf7dbcd",
+      "authenticode_status": "NotSigned"
+    },
+    "python_version_command_exit_code_signed": -1058471934,
+    "python_version_command_exit_code_hex": "0xC0E90002",
+    "python_runtime_usable": false
+  },
+  "code_integrity_evidence": {
+    "log": "Microsoft-Windows-CodeIntegrity/Operational",
+    "event_id": 3077,
+    "matched_events": 8,
+    "policy_id": "{0283ac0f-fff1-49ae-ada1-8a933130cad6}",
+    "blocked_image": ".conda-test\\python312.dll",
+    "finding": "The image did not meet Enterprise signing level requirements or violated code integrity policy"
+  },
+  "disposition": {
+    "formal_test_environment": false,
+    "project_dependencies_installed": false,
+    "repository_tests_run": false,
+    "security_policy_modified": false,
+    "existing_venv_modified": false,
+    "existing_conda_environment_modified": false,
+    "cleanup_status": "retained_pending_explicit_direction",
+    "cleanup_scope_if_authorized": "only the exact .conda-test target created by this run"
+  }
+}

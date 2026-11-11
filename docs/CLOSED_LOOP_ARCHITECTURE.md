@@ -85,7 +85,7 @@ unknown 候选至少记录：建议名称/同义词、证据图或掩码及哈�
 
 ## Slope 与可通行性
 
-`slope_visible` 是视觉语义；`traversable` 是融合决策，两者不得混同。没有 LiDAR 几何、坡度、宽度、边缘落差、障碍物和车辆约束证据时，只能保持 `unknown` 或 `review_required`。如果报告 slope IoU、Dice 或边界 F1，必须有独立人工像素真值。
+`slope_visible` 是独立视觉分割语义；训练、标注和专项评测层继续保留 `floor` 与 `slope` 两类，禁止永久合并。下游业务/导航层单独执行 `traversable_area = floor UNION slope`，投影必须声明 `source_labels=[floor,slope]`、`operation=union`、`preserve_source_labels=true` 和来源层，绝不回写训练真值。新 slope 事件记录 `traversability_status=passable`、`policy_default=passable`、`policy_basis=user_defined_project_semantics`，不再以缺少 LiDAR/几何为由阻断闭环。模型只能确认 visible/candidate_supported，不能自行改变通行政策。未来禁行只能通过带版本化规则、原因和 `decided_by=human|system_policy` 的显式 `non_passable` override。分割质量仍必须用独立人工像素真值报告 IoU、Dice、Boundary F1、像素/实例 precision/recall 和混淆。
 
 所有带 `hard_case_tags=["slope"]` 的样本组成独立 hard-case stratum，单独报告，不并入七类均值后隐藏失败。开发、验证和测试按采集序列或实体坡道隔离；自动接收阈值只能在首批人工像素真值建立后确定。专项数据分层、指标、仿真参数和当前真实 frame0 证据见 [`SLOPE_SEGMENTATION_ACCEPTANCE.md`](SLOPE_SEGMENTATION_ACCEPTANCE.md)。
 
@@ -104,6 +104,6 @@ unknown 候选至少记录：建议名称/同义词、证据图或掩码及哈�
 - 端到端延迟与单帧成本；
 - Agent 平均轮次、超限率和冲突率；
 - real/simulation 分项指标与部署漂移。
-- slope IoU、Dice、多个容差的 boundary F1、跨 `floor`/`cargo_floor`/门板泄漏、距离/视角/光照分层、时序抖动、人工复核率和 `traversable` 误接受数。
+- slope mask IoU、Dice、带像素容差的 Boundary F1、像素/实例 precision/recall、双向 `slope↔floor` 与 `slope↔step/curb` 混淆、近中远/弱纹理/阴影/逆光/遮挡/坡脚/坡顶分层、时序抖动、人工复核率和违反显式禁行 override 的误放行数。
 
 无真实分母或独立人工结果时，指标为 `null`，不得填 0。

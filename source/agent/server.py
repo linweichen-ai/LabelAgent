@@ -1,5 +1,6 @@
 """Flask workbench for MCAP review and local annotation."""
 import io
+import copy
 import json
 import math
 import os
@@ -19,6 +20,7 @@ import numpy as np
 from .media import IMAGE_SUFFIXES, SUPPORTED_SUFFIXES, open_media as Video, read_image
 from .sensors import cloud_snapshot
 from .candidate_import import prepare_candidate_import, merge_candidate_import
+from .downstream_mapping import mapping_contract, project_shapes
 from .workflow import (DESCRIPTION_INPUT_VERSION, MAX_REVIEW_ROUNDS, RunCancelled,
                        cancellation, describe, reference_labels, restrict_description,
                        run, trace_calls, candidate_overlay, reference_overlay)
@@ -29,11 +31,15 @@ WEB = ROOT / "source" / "web"
 WORK.mkdir(parents=True, exist_ok=True)
 app = Flask(__name__, static_folder=str(WEB), static_url_path="")
 app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024 * 1024
-state = {"video": None, "topic": None, "labels": [], "truth": {}, "reference_frames": {}, "config": {}, "candidates": {}, "candidates_by_topic": {}, "agent_runs": {}, "agent_runs_by_topic": {}}
+state = {"video": None, "topic": None, "labels": [], "truth": {}, "reference_frames": {}, "config": {}, "candidates": {}, "candidates_by_topic": {}, "agent_runs": {}, "agent_runs_by_topic": {}, "candidate_review_status": {}, "human_review_transactions": {}}
 lock = threading.RLock()
 run_status_lock = threading.Lock()
 run_status = {"status": "idle"}
 run_stop_event = threading.Event()
+
+
+class StaleHumanReviewError(Exception):
+    """The frame or candidate changed after the reviewer opened the gate."""
 
 
 def _commit_work_file(temporary, destination):
@@ -66,16 +72,97 @@ def _sha256_json(value):
     return hashlib.sha256(_canonical_json(value)).hexdigest()
 
 
+def _valid_sha256(value):
+    return (isinstance(value, str) and len(value) == 64
+            and all(character in "0123456789abcdef" for character in value))
+
+
+def _review_scope(frame_sha256):
+    config = state.setdefault("config", {})
+    file_key = hashlib.sha256(str(state["video"].path).encode("utf-8")).hexdigest()[:16]
+    return {
+        "dataset_id": config.get("dataset_id") or f"local-workbench-{file_key}",
+        "dataset_version": config.get("dataset_version") or f"frame-content-{frame_sha256[:16]}",
+        "camera": config.get("camera") or state["topic"],
+    }
+
+
+def _assert_review_binding(body, *, frame_sha256, candidate_sha256):
+    """Validate the UI snapshot against values recomputed while holding lock."""
+    if body.get("topic") != state.get("topic"):
+        raise StaleHumanReviewError("图像源已变化，请重新打开人工复核门禁")
+    expected_frame = body.get("expected_frame_sha256")
+    if not _valid_sha256(expected_frame):
+        raise ValueError("人工复核必须包含有效的 expected_frame_sha256")
+    if "expected_candidate_sha256" not in body:
+        raise ValueError("人工复核必须包含 expected_candidate_sha256（无候选时为 null）")
+    expected_candidate = body.get("expected_candidate_sha256")
+    if expected_candidate is not None and not _valid_sha256(expected_candidate):
+        raise ValueError("expected_candidate_sha256 必须是 64 位 SHA-256 或 null")
+    scope = _review_scope(frame_sha256)
+    expected_scope = {
+        "dataset_id": body.get("expected_dataset_id"),
+        "dataset_version": body.get("expected_dataset_version"),
+        "camera": body.get("expected_camera"),
+    }
+    if any(not isinstance(value, str) or not value.strip()
+           for value in expected_scope.values()):
+        raise ValueError("人工复核必须绑定 expected_dataset_id、expected_dataset_version 和 expected_camera")
+    if (expected_frame != frame_sha256
+            or expected_candidate != candidate_sha256 or expected_scope != scope):
+        raise StaleHumanReviewError("数据集、版本、相机、帧或候选已在复核期间变化，请重新复核后提交")
+    return expected_frame, expected_candidate, scope
+
+
+def _contains_slope(shapes):
+    return bool(shapes) and any(isinstance(item, dict)
+        and item.get("label") in {"slope", "slope_visible"} for item in shapes)
+
+
+def _slope_review_context(*, decision, candidate, truth, candidate_sha,
+                          candidate_event_id, frame_sha256):
+    candidate_has_slope = _contains_slope(candidate)
+    truth_has_slope = _contains_slope(truth)
+    if not candidate_has_slope and not truth_has_slope:
+        return None
+    human_truth = truth is not None and truth_has_slope and decision != "reject_candidate"
+    if decision == "reject_candidate":
+        visible_status = "human_rejected"
+    elif human_truth:
+        visible_status = "human_confirmed"
+    else:
+        visible_status = "candidate_supported"
+    provenance_sha = candidate_sha or frame_sha256
+    return {"semantic_label": "slope_visible", "visible_status": visible_status,
+        "human_pixel_truth_available": human_truth, "approved_for_training": False,
+        "business_mapping": "traversable_area", "traversability_status": "passable",
+        "downstream_mapping": mapping_contract(),
+        "policy_default": "passable",
+        "policy_basis": "user_defined_project_semantics",
+        "policy_override": {"status": "none", "rule_id": None, "reason": None,
+            "decided_by": None, "evidence_artifact_ids": []},
+        "candidate_sha256": candidate_sha,
+        "evidence_provenance": [{"kind": "machine_candidate" if candidate_sha else "input_frame",
+            "source": candidate_event_id or "human_manual_annotation",
+            "sha256": provenance_sha}], "hard_set_strata": ["unassigned"]}
+
+
 def _parse_review(body):
     review = body.get("review") if isinstance(body, dict) else None
     if not isinstance(review, dict):
         raise ValueError("保存或驳回前必须填写人工复核信息")
-    unknown = set(review) - {"reviewer_id", "started_at", "note"}
+    unknown = set(review) - {"reviewer_declared_id", "started_at", "note",
+                             "decision_idempotency_key", "remediation_of_review_id"}
     if unknown:
         raise ValueError(f"人工复核信息包含未知字段：{sorted(unknown)}")
-    reviewer_id = review.get("reviewer_id")
-    if not isinstance(reviewer_id, str) or not reviewer_id.strip() or len(reviewer_id.strip()) > 100:
-        raise ValueError("复核人 ID 不能为空且不能超过 100 个字符")
+    reviewer_declared_id = review.get("reviewer_declared_id")
+    if (not isinstance(reviewer_declared_id, str) or not reviewer_declared_id.strip()
+            or len(reviewer_declared_id.strip()) > 100):
+        raise ValueError("复核人自报 ID 不能为空且不能超过 100 个字符")
+    decision_key = review.get("decision_idempotency_key")
+    if (not isinstance(decision_key, str) or not decision_key.strip()
+            or len(decision_key.strip()) > 200):
+        raise ValueError("人工决定必须包含不超过 200 个字符的幂等键")
     started_at = review.get("started_at")
     if not isinstance(started_at, str):
         raise ValueError("人工复核必须包含带时区的开始时间")
@@ -88,12 +175,14 @@ def _parse_review(body):
     note = review.get("note", "")
     if not isinstance(note, str) or len(note) > 1000:
         raise ValueError("复核备注不能超过 1000 个字符")
-    finished = datetime.now(timezone.utc)
-    elapsed = max(0.0, (finished - started.astimezone(timezone.utc)).total_seconds())
-    return {"reviewer_id": reviewer_id.strip(),
+    remediation = review.get("remediation_of_review_id")
+    if remediation is not None and (not isinstance(remediation, str) or len(remediation) != 64):
+        raise ValueError("remediation_of_review_id 必须是 64 位复核记录哈希")
+    return {"reviewer_declared_id": reviewer_declared_id.strip(),
+            "identity_assurance": "self_declared",
             "started_at": started.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
-            "reviewed_at": finished.isoformat().replace("+00:00", "Z"),
-            "elapsed_seconds": round(elapsed, 3), "note": note.strip()}
+            "note": note.strip(), "decision_idempotency_key": decision_key.strip(),
+            "remediation_of_review_id": remediation}
 
 
 def human_review_records(*, video_file=None, topic=None, frame=None):
@@ -118,29 +207,195 @@ def human_review_records(*, video_file=None, topic=None, frame=None):
     return records
 
 
-def append_human_review(*, frame, decision, review, frame_sha256,
-                        candidate, truth=None):
+def _review_status_key(frame):
+    return _sha256_json({"file": str(state["video"].path), "topic": state["topic"],
+                         "frame": int(frame)})
+
+
+def _persistent_state_snapshot():
+    return copy.deepcopy({key: value for key, value in state.items() if key != "video"})
+
+
+def _restore_persistent_state(snapshot):
+    video = state.get("video")
+    state.clear()
+    state.update(snapshot)
+    state["video"] = video
+
+
+def _review_by_idempotency_key(decision_key):
+    matches = [item for item in human_review_records()
+               if item.get("decision_idempotency_key") == decision_key]
+    if len(matches) > 1:
+        raise RuntimeError(f"人工决定幂等键重复：{decision_key}")
+    return matches[0] if matches else None
+
+
+def _assert_idempotent_review(existing, *, review, frame, frame_sha256,
+                              allowed_decisions, review_scope, truth=None, candidate=None):
+    expected = {"file": str(state["video"].path), "topic": state["topic"],
+                "frame": frame, "frame_sha256": frame_sha256,
+                "reviewer_declared_id": review["reviewer_declared_id"],
+                "identity_assurance": "self_declared",
+                "started_at": review["started_at"], "note": review["note"],
+                "remediation_of_review_id": review.get("remediation_of_review_id"),
+                "dataset_id": review_scope["dataset_id"],
+                "dataset_version": review_scope["dataset_version"],
+                "camera": review_scope["camera"]}
+    if existing.get("decision") not in allowed_decisions:
+        raise ValueError("该幂等键已用于另一种人工决定")
+    if any(existing.get(key) != value for key, value in expected.items()):
+        raise ValueError("该幂等键对应的人工决定内容与本次请求不一致")
+    if truth is not None and existing.get("truth_sha256") != _sha256_json(truth):
+        raise ValueError("该幂等键对应的真值与本次请求不一致")
+    if candidate is not None and existing.get("candidate_sha256") != _sha256_json(candidate):
+        raise ValueError("该幂等键对应的候选与本次请求不一致")
+
+
+def prepare_human_review(*, frame, decision, review, frame_sha256,
+                         expected_frame_sha256, expected_candidate_sha256,
+                         review_scope, candidate, truth=None, confirmed_empty=False):
     history = human_review_records()
-    body = {"schema_version": "labelagent.human-review.v1",
+    finished = datetime.now(timezone.utc)
+    started = datetime.fromisoformat(review["started_at"].replace("Z", "+00:00"))
+    candidate_sha = _sha256_json(candidate) if candidate is not None else None
+    candidate_event_id = _sha256_json({"event": "workbench_candidate",
+        "file": str(state["video"].path), "topic": state["topic"], "frame": frame,
+        "candidate_sha256": candidate_sha}) if candidate is not None else None
+    slope_context = _slope_review_context(decision=decision, candidate=candidate,
+        truth=truth, candidate_sha=candidate_sha, candidate_event_id=candidate_event_id,
+        frame_sha256=frame_sha256)
+    body = {"schema_version": "labelagent.human-review.v2",
             "sequence": len(history) + 1,
             "previous_review_id": history[-1]["review_id"] if history else None,
             "file": str(state["video"].path), "topic": state["topic"],
+            "dataset_id": review_scope["dataset_id"],
+            "dataset_version": review_scope["dataset_version"],
+            "camera": review_scope["camera"],
             "frame": frame, "frame_sha256": frame_sha256,
-            "decision": decision, **review,
-            "candidate_sha256": _sha256_json(candidate) if candidate is not None else None,
+             "expected_frame_sha256": expected_frame_sha256,
+             "expected_candidate_sha256": expected_candidate_sha256,
+             "decision": decision, **review,
+             "reviewed_at": finished.isoformat().replace("+00:00", "Z"),
+             "elapsed_seconds": round(max(0.0, (finished - started).total_seconds()), 3),
+             "candidate_sha256": candidate_sha,
+             "candidate_event_id": candidate_event_id,
             "candidate_shape_count": len(candidate) if candidate is not None else 0,
             "truth_sha256": _sha256_json(truth) if truth is not None else None,
-            "truth_shape_count": len(truth) if truth is not None else None}
+             "truth_shape_count": len(truth) if truth is not None else None,
+             "confirmed_empty": bool(confirmed_empty),
+             "slope_context": slope_context,
+             "closed_loop_linkage": {"status": "pending_sync" if truth is not None else "not_applicable",
+                 "candidate_event_id": candidate_event_id,
+                 "human_accepted_event_id": None, "truth_committed_event_id": None}}
     review_id = _sha256_json(body)
-    record = {**body, "review_id": review_id}
-    folder = WORK / "human_reviews"
+    return {**body, "review_id": review_id}
+
+
+def _review_commit_readback(record):
+    persisted = json.loads(state_path().read_text(encoding="utf-8"))
+    audit_present = any(item.get("review_id") == record["review_id"]
+                        for item in human_review_records())
+    transaction = persisted.get("human_review_transactions", {}).get(record["review_id"], {})
+    truth = persisted.get("truth", {}).get(str(record["frame"]))
+    truth_matches = (record["truth_sha256"] is None
+                     or (truth is not None and _sha256_json(truth) == record["truth_sha256"]))
+    candidate_inactive = str(record["frame"]) not in persisted.get("candidates", {})
+    rejected_archived = (record["decision"] != "reject_candidate"
+        or record["review_id"] in persisted.get("rejected_candidates", {}))
+    verified = (audit_present and transaction.get("status") == "committed"
+                and truth_matches and candidate_inactive and rejected_archived)
+    return {"verified": verified, "audit_present": audit_present,
+            "transaction_committed": transaction.get("status") == "committed",
+            "truth_sha256_matches": truth_matches,
+            "candidate_inactive": candidate_inactive,
+            "rejected_candidate_archived": rejected_archived,
+            "state_file": str(state_path())}
+
+
+def _write_pending_review(record):
+    folder = WORK / "human_review_pending"
     folder.mkdir(exist_ok=True)
-    destination = folder / f"{body['sequence']:06d}-{review_id}.json"
+    destination = folder / f"{record['review_id']}.json"
     temporary = folder / (uuid.uuid4().hex + ".tmp")
     temporary.write_text(json.dumps(record, ensure_ascii=False, indent=2,
                                     sort_keys=True), encoding="utf-8")
     _commit_work_file(temporary, destination)
+    return destination
+
+
+def _commit_review_record(record, pending_path=None):
+    folder = WORK / "human_reviews"
+    folder.mkdir(exist_ok=True)
+    destination = folder / f"{record['sequence']:06d}-{record['review_id']}.json"
+    if destination.exists():
+        if json.loads(destination.read_text(encoding="utf-8")) != record:
+            raise RuntimeError(f"人工复核提交文件冲突：{destination.name}")
+        if pending_path is not None:
+            pending_path.unlink(missing_ok=True)
+        return destination
+    history = human_review_records()
+    expected_previous = history[-1]["review_id"] if history else None
+    if (record["sequence"] != len(history) + 1
+            or record["previous_review_id"] != expected_previous):
+        raise RuntimeError("人工复核待提交记录与当前审计链不连续")
+    if pending_path is None:
+        pending_path = _write_pending_review(record)
+    _commit_work_file(pending_path, destination)
+    return destination
+
+
+def commit_human_review(record, mutation):
+    """Commit state first, then the immutable audit, with a recoverable link."""
+    snapshot = _persistent_state_snapshot()
+    pending_path = _write_pending_review(record)
+    transaction = {"review_id": record["review_id"], "status": "state_saved_pending_audit",
+        "decision": record["decision"], "file": record["file"], "topic": record["topic"],
+        "frame": record["frame"], "candidate_sha256": record["candidate_sha256"],
+        "candidate_event_id": record["candidate_event_id"],
+        "truth_sha256": record["truth_sha256"]}
+    try:
+        mutation()
+        state.setdefault("human_review_transactions", {})[record["review_id"]] = transaction
+        save()
+    except Exception:
+        _restore_persistent_state(snapshot)
+        pending_path.unlink(missing_ok=True)
+        state_path().with_suffix(".tmp").unlink(missing_ok=True)
+        raise
+    destination = _commit_review_record(record, pending_path)
+    transaction["status"] = "committed"
+    transaction["audit_file"] = destination.name
+    try:
+        save()
+    except Exception:
+        transaction["status"] = "state_saved_pending_audit"
+        transaction.pop("audit_file", None)
+        raise
     return record
+
+
+def recover_pending_human_reviews():
+    changed = False
+    transactions = state.setdefault("human_review_transactions", {})
+    pending_folder = WORK / "human_review_pending"
+    for review_id, transaction in list(transactions.items()):
+        if transaction.get("status") == "committed":
+            continue
+        pending_path = pending_folder / f"{review_id}.json"
+        final_matches = list((WORK / "human_reviews").glob(f"*-{review_id}.json"))
+        if final_matches:
+            destination = final_matches[0]
+        elif pending_path.exists():
+            record = json.loads(pending_path.read_text(encoding="utf-8"))
+            destination = _commit_review_record(record, pending_path)
+        else:
+            raise RuntimeError(f"状态包含未留证的人工作业：{review_id}")
+        transaction["status"] = "committed"
+        transaction["audit_file"] = destination.name
+        changed = True
+    if changed:
+        save()
 
 
 def update_run_status(**changes):
@@ -232,6 +487,9 @@ def load():
     state.setdefault("candidates_by_topic", {})
     state.setdefault("agent_runs", {})
     state.setdefault("agent_runs_by_topic", {})
+    state.setdefault("candidate_review_status", {})
+    state.setdefault("human_review_transactions", {})
+    recover_pending_human_reviews()
 
 
 def frame_image(index):
@@ -262,6 +520,11 @@ def runtime_error(error):
     return jsonify(error=str(error)), 503
 
 
+@app.errorhandler(StaleHumanReviewError)
+def stale_human_review(error):
+    return jsonify(error=str(error), stale_review=True), 409
+
+
 @app.get("/")
 def index():
     return app.send_static_file("index.html")
@@ -269,6 +532,8 @@ def index():
 
 @app.get("/api/state")
 def get_state():
+    with lock:
+        recover_pending_human_reviews()
     description = None
     reference = state.get("reference_frames", {}).get(state["topic"], []) if state["topic"] else []
     path = WORK / "description.json"
@@ -283,6 +548,7 @@ def get_state():
         labels=state["labels"], truth=state["truth"], reference_frames=state.get("reference_frames", {}),
         config={k: v for k, v in state["config"].items() if k != "llm_key"},
         candidates=state.get("candidates", {}), agent_runs=state.get("agent_runs", {}),
+        candidate_review_status=state.get("candidate_review_status", {}),
         description=description)
 
 
@@ -434,7 +700,8 @@ def activate_file(item):
     save()
     return dict(path=str(video.path), topics=video.topics, catalog=video.catalog, duration=video.duration,
                 topic=state['topic'], truth=state['truth'], candidates=state.get('candidates', {}),
-                agent_runs=state.get('agent_runs', {}), reference_frames=state.get('reference_frames', {}))
+                agent_runs=state.get('agent_runs', {}), reference_frames=state.get('reference_frames', {}),
+                candidate_review_status=state.get('candidate_review_status', {}))
 
 
 @app.get('/api/files')
@@ -546,7 +813,7 @@ def set_topic():
             state["candidates"] = state["candidates_by_topic"].get(state["topic"], {})
             state["agent_runs"] = state["agent_runs_by_topic"].get(state["topic"], {})
             save()
-        return jsonify(topic=state["topic"], truth=state["truth"], candidates=state["candidates"], agent_runs=state["agent_runs"], reference_frames=state.get("reference_frames", {}))
+        return jsonify(topic=state["topic"], truth=state["truth"], candidates=state["candidates"], agent_runs=state["agent_runs"], reference_frames=state.get("reference_frames", {}), candidate_review_status=state.get("candidate_review_status", {}))
 
 
 @app.post("/api/labels")
@@ -563,56 +830,182 @@ def set_labels():
 
 @app.post("/api/truth")
 def set_truth():
-    body = request.get_json()
+    body = request.get_json() or {}
     with lock:
+        recover_pending_human_reviews()
         review = _parse_review(body)
         index = int(body["frame"])
         frame_data = frame_image(index)
+        frame_sha = hashlib.sha256(frame_data).hexdigest()
         width, height = Image.open(io.BytesIO(frame_data)).size
-        shapes = body["shapes"]
+        shapes = body.get("shapes")
+        if not isinstance(shapes, list):
+            raise ValueError("真值 shapes 必须是数组")
         for shape in shapes:
             if shape["label"] not in state["labels"] or len(shape["points"]) < 3:
                 raise ValueError("真值类别或多边形无效")
             if any(not (0 <= x < width and 0 <= y < height) for x, y in shape["points"]):
                 raise ValueError("坐标超出图像范围")
+        confirmed_empty = body.get("confirmed_empty") is True
+        requested_decision = body.get("decision")
+        if not shapes and (not confirmed_empty or requested_decision != "confirmed_empty"):
+            raise ValueError("空真值必须显式设置 decision=confirmed_empty 且 confirmed_empty=true")
+        if shapes and (body.get("confirmed_empty") is True or requested_decision is not None):
+            raise ValueError("非空真值不能设置 confirmed_empty 或客户端 decision")
+        existing = _review_by_idempotency_key(review["decision_idempotency_key"])
+        if existing is not None:
+            expected_frame, expected_candidate, review_scope = _assert_review_binding(body,
+                frame_sha256=frame_sha,
+                candidate_sha256=existing.get("candidate_sha256"))
+            _assert_idempotent_review(existing, review=review, frame=index,
+                frame_sha256=frame_sha,
+                allowed_decisions={"manual_annotation", "accept_candidate",
+                                   "correct_candidate", "confirmed_empty"},
+                review_scope=review_scope, truth=shapes)
+            saved_truth = state.setdefault("truth", {}).get(str(index))
+            if saved_truth is None or _sha256_json(saved_truth) != existing.get("truth_sha256"):
+                raise RuntimeError("幂等复放找到审计记录，但持久化真值不匹配")
+            readback = _review_commit_readback(existing)
+            if not readback["verified"]:
+                raise RuntimeError("幂等复放的服务端读回验证失败")
+            return jsonify(saved=len(shapes), review=existing, readback=readback,
+                           idempotent_replay=True)
         candidate = state.setdefault("candidates", {}).get(str(index))
-        if candidate is None:
+        candidate_sha = _sha256_json(candidate) if candidate is not None else None
+        expected_frame, expected_candidate, review_scope = _assert_review_binding(body,
+            frame_sha256=frame_sha, candidate_sha256=candidate_sha)
+        status_key = _review_status_key(index)
+        review_status = state.setdefault("candidate_review_status", {}).get(status_key)
+        if review_status and review_status.get("status") == "rejected":
+            remediation = review.get("remediation_of_review_id")
+            if remediation != review_status.get("review_id"):
+                raise ValueError("该候选已被驳回；接受修正结果时必须绑定 remediation_of_review_id")
+            if candidate is None:
+                raise ValueError("已驳回候选已失活；必须先生成新的修正版候选再复核")
+            if candidate_sha == review_status.get("candidate_sha256"):
+                raise ValueError("已驳回的同一候选不能重新激活；请生成不同哈希的修正版候选")
+        if confirmed_empty:
+            decision = "confirmed_empty"
+        elif candidate is None:
             decision = "manual_annotation"
         elif _sha256_json(candidate) == _sha256_json(shapes):
             decision = "accept_candidate"
         else:
             decision = "correct_candidate"
-        audit = append_human_review(frame=index, decision=decision, review=review,
-            frame_sha256=hashlib.sha256(frame_data).hexdigest(), candidate=candidate,
-            truth=shapes)
-        state["truth"][str(index)] = shapes
-        state.setdefault("candidates", {}).pop(str(index), None)
-        save()
-        return jsonify(saved=len(shapes), review=audit)
+        audit = prepare_human_review(frame=index, decision=decision, review=review,
+            frame_sha256=frame_sha, expected_frame_sha256=expected_frame,
+            expected_candidate_sha256=expected_candidate,
+            review_scope=review_scope, candidate=candidate, truth=shapes,
+            confirmed_empty=confirmed_empty)
+        def mutation():
+            state.setdefault("truth", {})[str(index)] = shapes
+            state.setdefault("candidates", {}).pop(str(index), None)
+            if candidate is not None:
+                state.setdefault("candidate_review_status", {})[status_key] = {
+                    "status": "accepted", "remediation_required": False,
+                    "route": ("truth_committed_pending_closed_loop_sync"
+                              if decision == "accept_candidate"
+                              else "candidate_final_regeneration_required"),
+                    "review_id": audit["review_id"],
+                    "candidate_sha256": audit["candidate_sha256"],
+                    "candidate_event_id": audit["candidate_event_id"],
+                    "decision": decision, "file": audit["file"],
+                    "topic": audit["topic"], "frame": index}
+        commit_human_review(audit, mutation)
+        readback = _review_commit_readback(audit)
+        if not readback["verified"]:
+            raise RuntimeError("真值提交后的服务端读回验证失败")
+        return jsonify(saved=len(shapes), review=audit, readback=readback,
+                       idempotent_replay=False)
+
+
+@app.post("/api/human_review_binding")
+def get_human_review_binding():
+    body = request.get_json() or {}
+    with lock:
+        recover_pending_human_reviews()
+        index = int(body.get("frame", -1))
+        if state["video"] is None or state["topic"] is None:
+            raise ValueError("请先加载图像消息")
+        if body.get("topic") != state["topic"]:
+            raise StaleHumanReviewError("图像源已变化，请刷新后重新复核")
+        if not 0 <= index < state["video"].topics[state["topic"]]["count"]:
+            raise ValueError("帧号无效")
+        frame_sha = hashlib.sha256(frame_image(index)).hexdigest()
+        candidate = state.setdefault("candidates", {}).get(str(index))
+        candidate_sha = _sha256_json(candidate) if candidate is not None else None
+        scope = _review_scope(frame_sha)
+        return jsonify(frame=index, topic=state["topic"],
+                       frame_sha256=frame_sha, candidate_sha256=candidate_sha,
+                       dataset_id=scope["dataset_id"],
+                       dataset_version=scope["dataset_version"], camera=scope["camera"])
 
 
 @app.post("/api/human_review")
 def reject_candidate():
     body = request.get_json() or {}
     with lock:
+        recover_pending_human_reviews()
         review = _parse_review(body)
         index = int(body.get("frame", -1))
         if state["video"] is None or state["topic"] is None:
             raise ValueError("请先加载图像消息")
         if not 0 <= index < state["video"].topics[state["topic"]]["count"]:
             raise ValueError("帧号无效")
+        frame_data = frame_image(index)
+        frame_sha = hashlib.sha256(frame_data).hexdigest()
+        existing = _review_by_idempotency_key(review["decision_idempotency_key"])
+        if existing is not None:
+            expected_frame, expected_candidate, review_scope = _assert_review_binding(body,
+                frame_sha256=frame_sha,
+                candidate_sha256=existing.get("candidate_sha256"))
+            _assert_idempotent_review(existing, review=review, frame=index,
+                frame_sha256=frame_sha, allowed_decisions={"reject_candidate"},
+                review_scope=review_scope)
+            readback = _review_commit_readback(existing)
+            if not readback["verified"]:
+                raise RuntimeError("驳回幂等复放的服务端读回验证失败")
+            return jsonify(rejected=True, review=existing, idempotent_replay=True,
+                           remediation_required=True, readback=readback)
         candidate = state.setdefault("candidates", {}).get(str(index))
         if candidate is None:
             raise ValueError("当前帧没有可驳回的自动候选")
-        frame_data = frame_image(index)
-        audit = append_human_review(frame=index, decision="reject_candidate", review=review,
-            frame_sha256=hashlib.sha256(frame_data).hexdigest(), candidate=candidate)
-        return jsonify(rejected=True, review=audit)
+        status_key = _review_status_key(index)
+        current_status = state.setdefault("candidate_review_status", {}).get(status_key)
+        candidate_sha = _sha256_json(candidate)
+        expected_frame, expected_candidate, review_scope = _assert_review_binding(body,
+            frame_sha256=frame_sha, candidate_sha256=candidate_sha)
+        if (current_status and current_status.get("status") == "rejected"
+                and current_status.get("candidate_sha256") == candidate_sha):
+            raise ValueError("该候选已被驳回；请复用原幂等键，或先完成修正后再复核")
+        audit = prepare_human_review(frame=index, decision="reject_candidate", review=review,
+            frame_sha256=frame_sha, expected_frame_sha256=expected_frame,
+            expected_candidate_sha256=expected_candidate,
+            review_scope=review_scope, candidate=candidate)
+        def mutation():
+            state.setdefault("rejected_candidates", {})[audit["review_id"]] = {
+                "file": audit["file"], "topic": audit["topic"], "frame": index,
+                "candidate_sha256": audit["candidate_sha256"], "candidate": candidate}
+            state.setdefault("candidates", {}).pop(str(index), None)
+            state.setdefault("candidate_review_status", {})[status_key] = {
+                "status": "rejected", "remediation_required": True,
+                "route": "agent_remediation_required", "review_id": audit["review_id"],
+                "candidate_sha256": audit["candidate_sha256"],
+                "candidate_event_id": audit["candidate_event_id"],
+                "decision": "reject_candidate", "file": audit["file"],
+                "topic": audit["topic"], "frame": index}
+        commit_human_review(audit, mutation)
+        readback = _review_commit_readback(audit)
+        if not readback["verified"]:
+            raise RuntimeError("候选驳回后的服务端读回验证失败")
+        return jsonify(rejected=True, review=audit, idempotent_replay=False,
+                       remediation_required=True, readback=readback)
 
 
 @app.get("/api/human_reviews")
 def get_human_reviews():
     with lock:
+        recover_pending_human_reviews()
         if state["video"] is None or state["topic"] is None:
             return jsonify(reviews=[])
         frame_value = request.args.get("frame")
@@ -620,6 +1013,24 @@ def get_human_reviews():
         records = human_review_records(video_file=str(state["video"].path),
             topic=request.args.get("topic", state["topic"]), frame=frame_number)
         return jsonify(reviews=records)
+
+
+@app.get("/api/downstream_projection/<int:index>")
+def get_downstream_projection(index):
+    with lock:
+        if state["video"] is None or state["topic"] is None:
+            raise ValueError("请先加载图像消息")
+        if not 0 <= index < state["video"].topics[state["topic"]]["count"]:
+            raise ValueError("帧号无效")
+        key = str(index)
+        if key in state.setdefault("truth", {}):
+            shapes, source_layer = state["truth"][key], "human_truth"
+        elif key in state.setdefault("candidates", {}):
+            shapes, source_layer = state["candidates"][key], "machine_candidate"
+        else:
+            raise ValueError("当前帧没有可投影的真值或机器候选")
+        return jsonify(frame=index, topic=state["topic"],
+                       projection=project_shapes(shapes, source_layer=source_layer))
 
 
 @app.delete("/api/auto_result/<int:index>")
@@ -715,9 +1126,14 @@ def set_config():
     if "llm_prompt_profile" in body and body["llm_prompt_profile"] not in ("full", "compact"):
         raise ValueError("Unknown model prompt profile")
     with lock:
-        for key in ("llm_url", "llm_model", "llm_key", "llm_prompt_profile"):
+        for key in ("dataset_id", "dataset_version", "camera"):
+            if key in body and (not isinstance(body[key], str) or not body[key].strip()
+                                or len(body[key].strip()) > 300):
+                raise ValueError(f"{key} must be a non-empty string no longer than 300 characters")
+        for key in ("llm_url", "llm_model", "llm_key", "llm_prompt_profile",
+                    "dataset_id", "dataset_version", "camera"):
             if key in body and body[key]:
-                state["config"][key] = body[key]
+                state["config"][key] = body[key].strip() if isinstance(body[key], str) else body[key]
         save()
         return jsonify(saved=True)
 

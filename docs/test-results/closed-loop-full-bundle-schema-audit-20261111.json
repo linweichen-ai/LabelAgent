@@ -1,0 +1,42 @@
+{
+  "status": "REAL_FULL_BUNDLES_INVALID_UNCHANGED",
+  "schema_path": "schemas/labelagent-closed-loop.schema.json",
+  "schema_file_sha256": "556f8e24e0bfad17ddd2f85f5f550c71b7b8f26200b2cc7c2708bbf20fb7a476",
+  "validator": "tools/validate_closed_loop_bundle.py",
+  "core_projection_forbidden": true,
+  "existing_real_files": [
+    {
+      "path": "C:/Users/seer/Documents/ChatGPT/Seer2clw/outputs/labelagent_closed_loop_20261111/frame0-gate-bundle.json",
+      "file_sha256_before": "1d5b1555cbb04fc6520fdf2da08b6291a9c01f86bd799c9454694f3d2b8f8565",
+      "file_sha256_after": "1d5b1555cbb04fc6520fdf2da08b6291a9c01f86bd799c9454694f3d2b8f8565",
+      "file_unchanged": true,
+      "bundle_sha256_valid": true,
+      "full_root_valid": false,
+      "errors": [
+        "$.receipt: quality_gate_observed is required",
+        "$.receipt: dataset_version is required",
+        "$.receipt: dataset_split is required"
+      ]
+    },
+    {
+      "path": "C:/Users/seer/Documents/ChatGPT/Seer2clw/outputs/labelagent_closed_loop_20261111/frame0-gate-replay.json",
+      "file_sha256_before": "417d24e01948c60c97acf787067d204685ce0700dd913803c759afe51592011a",
+      "file_sha256_after": "417d24e01948c60c97acf787067d204685ce0700dd913803c759afe51592011a",
+      "file_unchanged": true,
+      "bundle_sha256_valid": true,
+      "full_root_valid": false,
+      "errors": [
+        "$.receipt: quality_gate_observed is required",
+        "$.receipt: dataset_version is required",
+        "$.receipt: dataset_split is required"
+      ]
+    }
+  ],
+  "emitted_fixture_exact_file_validation": {
+    "status": "PASS",
+    "environment": ".venv-schema",
+    "tests": "2/2",
+    "real_factory_evidence": false
+  },
+  "next_gate": "Generate a new immutable real-frame sibling bundle with the current tool and validate that exact file unchanged."
+}

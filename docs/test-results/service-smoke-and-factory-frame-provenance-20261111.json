@@ -76,7 +76,10 @@
       "human_gate_passed": false
     },
     "sam_probe": {
-      "prompt_provenance": "human_selected_positive_point_on_visible_yellow_ramp",
+      "prompt_provenance": "assistant_selected_prompt",
+      "prompt_role": "operator_seed",
+      "human_selected": false,
+      "human_truth": false,
       "point": {
         "x": 390,
         "y": 220,
@@ -105,6 +108,6 @@
       "summary_sha256": "9b6e95c7fd9bb23f4234df471239e17cb4ee24703fd2de18fdb4040f5a770669"
     },
     "remote_receipt_dir": "/home/clw/run/labelagent-5090/factory-frame-1789897506782450197-AWkFGAWh",
-    "evidence_boundary": "SAM was point-prompted by a human and VLM only performed an image-interface probe. No SAM-candidate-aware VLM review, Agent action, VLM re-verification, human decision, truth commit, or immutable dataset version is claimed."
+    "evidence_boundary": "SAM used a Codex/assistant-selected operator seed, not a human-selected prompt or human truth. VLM only performed an image-interface probe. No SAM-candidate-aware VLM review, Agent action, VLM re-verification, human decision, truth commit, or immutable dataset version is claimed."
   }
 }

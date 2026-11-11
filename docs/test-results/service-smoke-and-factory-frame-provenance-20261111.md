@@ -36,7 +36,7 @@
 
 ## 同一工厂帧的模型请求
 
-SAM 使用人工选取的黄色坡板内部正点 `(390, 220)`；这项输入必须记为人工种子，不属于纯自动候选发现。
+SAM 使用 Codex/assistant 选择的黄色坡板内部正点 `(390, 220)`；来源固定记录为 `assistant_selected_prompt` / `operator_seed`。它不是人工选择、不是 human seed，更不是人工真值，也不属于纯自动候选发现。
 
 - SAM：HTTP 200，0.065 秒，score 0.98046875，1 个 part、103 个外轮廓顶点、0 个洞、无 warning。
 - SAM 结果 SHA-256：`0be59d677c0a910fbf79437484f25cdfdd8256aed4e347a656447bbe9f642593`

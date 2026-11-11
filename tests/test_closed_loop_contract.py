@@ -4,6 +4,7 @@ from pathlib import Path
 import unittest
 
 from source.agent.closed_loop_contract import validate_event
+from source.agent.downstream_mapping import mapping_contract
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -53,27 +54,37 @@ class ClosedLoopContractTests(unittest.TestCase):
         event["task_context"] = {"hard_case_tags": ["slope"]}
         self.assertIn("slope hard cases require slope_context", validate_event(event))
 
-    def test_slope_traversability_requires_geometry_evidence(self):
+    def test_slope_defaults_to_user_defined_passable_policy_without_geometry(self):
         event = copy.deepcopy(self.event)
         event["task_context"] = {"hard_case_tags": ["slope"]}
         event["slope_context"] = {
-            "semantic_label": "slope_visible", "traversability_status": "traversable",
-            "geometry_evidence_sufficient": False,
-            "geometry_evidence_artifact_ids": [], "human_pixel_truth_available": False,
-            "approved_for_training": False}
-        errors = validate_event(event)
-        self.assertIn("slope traversability decisions require sufficient geometry evidence", errors)
-        self.assertIn("slope traversability decisions require geometry evidence artifacts", errors)
-
-    def test_slope_candidate_can_remain_review_required_without_geometry(self):
-        event = copy.deepcopy(self.event)
-        event["task_context"] = {"hard_case_tags": ["slope"]}
-        event["slope_context"] = {
-            "semantic_label": "slope_visible", "traversability_status": "review_required",
-            "geometry_evidence_sufficient": False,
-            "geometry_evidence_artifact_ids": [], "human_pixel_truth_available": False,
+            "semantic_label": "slope_visible", "business_mapping": "traversable_area",
+            "downstream_mapping": mapping_contract(),
+            "traversability_status": "passable", "policy_default": "passable",
+            "policy_basis": "user_defined_project_semantics",
+            "policy_override": {"status": "none", "rule_id": None,
+                "reason": None, "decided_by": None, "evidence_artifact_ids": []},
+            "human_pixel_truth_available": False,
             "approved_for_training": False}
         self.assertEqual(validate_event(event), [])
+        event["slope_context"]["downstream_mapping"]["source_labels"] = ["traversable_area"]
+        self.assertIn("slope downstream mapping must preserve floor/slope and union them as traversable_area",
+                      validate_event(event))
+
+    def test_model_cannot_create_non_passable_policy_override(self):
+        event = copy.deepcopy(self.event)
+        event["task_context"] = {"hard_case_tags": ["slope"]}
+        event["slope_context"] = {
+            "semantic_label": "slope_visible", "business_mapping": "traversable_area",
+            "downstream_mapping": mapping_contract(),
+            "traversability_status": "non_passable", "policy_default": "passable",
+            "policy_basis": "user_defined_project_semantics",
+            "policy_override": {"status": "non_passable", "rule_id": "SITE-001",
+                "reason": "explicit exclusion", "decided_by": "system_policy",
+                "evidence_artifact_ids": []}, "human_pixel_truth_available": False,
+            "approved_for_training": False}
+        self.assertIn("models cannot create a non-passable slope policy override",
+                      validate_event(event))
 
     def test_machine_slope_candidate_cannot_be_training_approved(self):
         event = copy.deepcopy(self.event)
@@ -82,9 +93,13 @@ class ClosedLoopContractTests(unittest.TestCase):
         event.pop("unknown_candidate")
         event["task_context"] = {"hard_case_tags": ["slope"]}
         event["slope_context"] = {
-            "semantic_label": "slope_visible", "traversability_status": "unknown",
-            "geometry_evidence_sufficient": False,
-            "geometry_evidence_artifact_ids": [], "human_pixel_truth_available": False,
+            "semantic_label": "slope_visible", "business_mapping": "traversable_area",
+            "downstream_mapping": mapping_contract(),
+            "traversability_status": "passable", "policy_default": "passable",
+            "policy_basis": "user_defined_project_semantics",
+            "policy_override": {"status": "none", "rule_id": None,
+                "reason": None, "decided_by": None, "evidence_artifact_ids": []},
+            "human_pixel_truth_available": False,
             "approved_for_training": True}
         errors = validate_event(event)
         self.assertIn("slope cannot be approved for training without human pixel truth", errors)

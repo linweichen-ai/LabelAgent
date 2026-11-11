@@ -1,0 +1,108 @@
+{
+  "evidence_date": "2026-11-11",
+  "shipping_container_smoke_closure": {
+    "status": "service_inference_pass_quality_not_accepted",
+    "main_part_bounds": {"x_min": 299, "x_max": 1182, "y_min": 98, "y_max": 679},
+    "suspected_spurious_tiny_parts": 2,
+    "tiny_part_description": "two 5/6-vertex fragments of approximately 5x6 pixels",
+    "quality_claimed": false,
+    "corrected_evidence_sha256": {
+      "json": "bda4fd8b58c6a18870fa9c4c3acee98e519eb10a9bc385feaa36601798f3dfcd",
+      "markdown": "f62eb08a6ab1b9ed6f9f2cab48edd7378c8c04fcc37c2f6f233a96d418f37ef3"
+    }
+  },
+  "fixed_holdout": {
+    "input_id": "bc706b57eedaea59e3deda1e25eb5a20002e90b61089083e84d2f98130c5600b",
+    "dataset_id": "sfl-cpd15y",
+    "source_batch": "20260920_cs-heli_Dev_000001/000",
+    "frame_id": "1789897506782450197",
+    "camera": "camera_0",
+    "image_sha256": "34e5094d24db487b3fcd5c458ac810cde5d58293f89fe0b92a2933c72a146812",
+    "holdout_excluded_from_training": true,
+    "operator_seed": {
+      "point": [390, 220],
+      "provenance": "assistant_selected_prompt",
+      "role": "operator_seed",
+      "human_selected": false,
+      "human_truth": false
+    }
+  },
+  "vertical_chain": {
+    "sam_candidate_sha256": "0be59d677c0a910fbf79437484f25cdfdd8256aed4e347a656447bbe9f642593",
+    "overlay_sha256": "dcd2aa0ac34c653f21afe47945e9a432f368d446e2ece69d1a69fecc51797323",
+    "first_vlm": {
+      "input_images": 2,
+      "request_sha256": "7191844c24c13a55c0a00df253f48be77334bcb0979cd8ae5a7ad9e68db7f298",
+      "response_sha256": "a2a7925cb8fe2c288aed8ad889c6bf4536d8cdf92da3fbe45c63b49e929b48c9",
+      "candidate_class": "slope",
+      "known_class": true,
+      "unknown_candidate": false,
+      "candidate_supported": true,
+      "mask_missing": "none",
+      "mask_excess": "none",
+      "mask_adhesion": "none",
+      "confidence": 0.95,
+      "recommended_action": "split"
+    },
+    "agent": {
+      "action": "no_op",
+      "reason": "The first review marked every mask defect none and one connected slope had no separable instance; split was internally unsupported.",
+      "input_artifact_sha256": "0be59d677c0a910fbf79437484f25cdfdd8256aed4e347a656447bbe9f642593",
+      "output_artifact_sha256": "2495ee5fcafcc4a9a272da4589bb6d3f7482bff3269972ffcf076e12e7d27a5b",
+      "serialization_note": "Parsed candidate content is unchanged; the historical run normalized JSON bytes. Future no_op is byte-preserving and regression-tested."
+    },
+    "failed_second_attempt_preserved": {
+      "response_sha256": "f56c39729d1acf4a8f5678cb5dff505707f49ab869b98283dd2d0a585702506b",
+      "failure": "HTTP 200 but structured JSON was truncated at max_tokens and was not accepted"
+    },
+    "second_vlm": {
+      "input_images": 2,
+      "request_sha256": "aa50b08c8f283f1157df1e3b41f81fd412560256eeb725e3a0862310773835ab",
+      "response_sha256": "80d114efb770a871740deb4a32faa712af351f189a252b991e1d9f5bd157bac6",
+      "candidate_class": "slope",
+      "known_class": true,
+      "unknown_candidate": false,
+      "candidate_supported": true,
+      "mask_missing": "none",
+      "mask_excess": "none",
+      "mask_adhesion": "none",
+      "confidence": 1.0,
+      "recommended_action": "no_op",
+      "consistent_with_first_review": true,
+      "final_route": "candidate_final"
+    },
+    "final_state": "candidate_final",
+    "human_gate_passed": false,
+    "truth_committed": false,
+    "training_ready": false,
+    "supervised_finetuning_started": false,
+    "receipt_sha256": "acbe71398f4ff9d62d3c7677c8a5aaa743e2515e37f7d839803b9d5d8122f9d6",
+    "receipt_file_sha256": "9a8c9a2b843b99b4ace3472eda2f86a90eede5a66934ba7882a18381861f37b7"
+  },
+  "human_gate_verification": {
+    "python_runtime": "3.11.9",
+    "relevant_unittest": "57/57 passed",
+    "schema_environment": "12/12 passed with jsonschema 4.25.1",
+    "ui_javascript_syntax": "node --check passed",
+    "covered": [
+      "atomic state and audit commit with failure injection and recovery",
+      "dataset/version/camera/topic/frame/candidate hash binding",
+      "reject deactivates and archives the candidate",
+      "same rejected candidate cannot be accepted without a different-hash remediation",
+      "confirmed_empty is explicit",
+      "reviewer identity is self-declared",
+      "success requires persisted server readback"
+    ]
+  },
+  "business_policy": {
+    "training_and_evaluation_labels": ["floor", "slope"],
+    "downstream_mapping": "traversable_area = floor UNION slope",
+    "machine_candidate_is_human_truth": false
+  },
+  "local_artifacts": {
+    "root": "C:/Users/seer/Documents/ChatGPT/Seer2clw/outputs/sfl_cpd15y_stage2_20261111/fixed_holdout_chain",
+    "first_review_and_failed_retry": "fixed-holdout-1789897506782450197-v2",
+    "final_second_review": "fixed-holdout-1789897506782450197-v3"
+  },
+  "claim_boundary": "This is a machine-candidate vertical chain on one fixed holdout. VLM agreement is not human pixel truth or segmentation quality acceptance. No supervised fine-tuning was started."
+}

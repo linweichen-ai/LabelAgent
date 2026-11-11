@@ -1,7 +1,7 @@
 {
   "evidence_type": "sam_real_factory_text_prompt_smoke",
   "evidence_time": "2026-11-11T12:32:15+08:00",
-  "acceptance": "pass",
+  "acceptance": "service_inference_pass_quality_not_accepted",
   "quality_accepted": false,
   "closed_loop_complete": false,
   "source": {
@@ -38,6 +38,13 @@
     ],
     "all_parts_nonempty": true,
     "all_coordinates_in_bounds": true,
+    "suspected_spurious_tiny_parts": true,
+    "fragment_assessment": {
+      "quality_status": "unverified_suspected_false_fragments",
+      "main_part_bounds": {"min_x": 299, "max_x": 1182, "min_y": 98, "max_y": 679},
+      "suspected_fragment_part_indices": [0, 1],
+      "reason": "Two disconnected parts contain only 5/6 vertices and span approximately 5x6 pixels; no human pixel truth is available."
+    },
     "parts": [
       {
         "vertices": 5,
@@ -88,5 +95,5 @@
     "coordinate_readback_sha256": "a01ebb63b902db9c38379adbe2bec670f5a63b25d9e817ea9c12e549eb716610",
     "log_check_sha256": "99159059e415bb14204ffcfcbd4a19307aeda501b8a2683c6e4a4c290cd23ff8"
   },
-  "boundary": "This proves one real SAM text-prompt inference and service/GPU integrity only. It does not establish segmentation quality, SAM fine-tuning, VLM or Agent review, human acceptance, truth commit, or closed-loop completion."
+  "boundary": "This proves one real SAM text-prompt inference and service/GPU integrity only. The two tiny disconnected parts are suspected spurious fragments. It does not establish segmentation quality, SAM fine-tuning, VLM or Agent review, human acceptance, truth commit, or closed-loop completion."
 }

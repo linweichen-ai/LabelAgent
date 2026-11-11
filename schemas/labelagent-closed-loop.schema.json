@@ -1,16 +1,102 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://labelagent.local/schemas/labelagent-closed-loop.schema.json",
-  "title": "LabelAgent closed-loop evidence envelope",
+  "title": "LabelAgent full closed-loop emitted bundle",
+  "$comment": "Validates the complete emitted JSON root, including registration, readback, and bundle_sha256. Do not validate a projected core subset or use the separate event schema.",
   "type": "object",
   "required": ["schema_version", "input", "events", "receipt"],
   "additionalProperties": false,
   "properties": {
     "schema_version": {"const": "labelagent.closed-loop.v1"},
+    "input": {"$ref": "#/$defs/input"},
+    "events": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/event"}},
+    "receipt": {"$ref": "#/$defs/receipt"},
+    "registration": {
+      "type": "object", "additionalProperties": false,
+      "required": ["input_id", "created", "idempotent_replay"],
+      "properties": {
+        "input_id": {"$ref": "#/$defs/hash"},
+        "created": {"type": "boolean"},
+        "idempotent_replay": {"type": "boolean"}
+      }
+    },
+    "workbench_readback": {
+      "type": "object", "additionalProperties": false,
+      "required": ["truth_shape_count", "is_reference_frame", "candidate_shape_count"],
+      "properties": {
+        "truth_shape_count": {"type": "integer", "minimum": 0},
+        "is_reference_frame": {"type": "boolean"},
+        "candidate_shape_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "local_readback": {"type": "object"},
+    "evidence_boundary": {"type": "object"},
+    "human_review": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "sequence", "previous_review_id", "file", "topic", "dataset_id", "dataset_version", "camera", "frame", "review_id", "reviewer_declared_id", "identity_assurance", "decision", "decision_idempotency_key", "remediation_of_review_id", "started_at", "reviewed_at", "elapsed_seconds", "note", "frame_sha256", "expected_frame_sha256", "candidate_sha256", "expected_candidate_sha256", "candidate_event_id", "candidate_shape_count", "truth_sha256", "truth_shape_count", "confirmed_empty", "slope_context", "closed_loop_linkage"],
+      "properties": {
+        "schema_version": {"const": "labelagent.human-review.v2"},
+        "sequence": {"type": "integer", "minimum": 1},
+        "previous_review_id": {"anyOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]},
+        "file": {"type": "string", "minLength": 1},
+        "topic": {"type": "string", "minLength": 1},
+        "dataset_id": {"type": "string", "minLength": 1},
+        "dataset_version": {"type": "string", "minLength": 1},
+        "camera": {"type": "string", "minLength": 1},
+        "frame": {"type": "integer", "minimum": 0},
+        "review_id": {"$ref": "#/$defs/hash"},
+        "reviewer_declared_id": {"type": "string", "minLength": 1},
+        "identity_assurance": {"const": "self_declared"},
+        "decision_idempotency_key": {"type": "string", "minLength": 1},
+        "remediation_of_review_id": {"anyOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]},
+        "decision": {"enum": ["accept_candidate", "correct_candidate", "manual_annotation", "confirmed_empty", "reject_candidate"]},
+        "started_at": {"type": "string", "format": "date-time"},
+        "reviewed_at": {"type": "string", "format": "date-time"},
+        "elapsed_seconds": {"type": "number", "minimum": 0},
+        "note": {"type": "string"},
+        "frame_sha256": {"$ref": "#/$defs/hash"},
+        "expected_frame_sha256": {"$ref": "#/$defs/hash"},
+        "candidate_sha256": {"anyOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]},
+        "expected_candidate_sha256": {"anyOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]},
+        "candidate_event_id": {"anyOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]},
+        "candidate_shape_count": {"type": "integer", "minimum": 0},
+        "truth_sha256": {"anyOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]},
+        "truth_shape_count": {"anyOf": [{"type": "integer", "minimum": 0}, {"type": "null"}]},
+        "confirmed_empty": {"type": "boolean"},
+        "slope_context": {"anyOf": [{"$ref": "#/$defs/slopeContext"}, {"type": "null"}]},
+        "closed_loop_linkage": {
+          "type": "object", "additionalProperties": false,
+          "required": ["status", "candidate_event_id", "human_accepted_event_id", "truth_committed_event_id"],
+          "properties": {
+            "status": {"enum": ["pending_sync", "not_applicable"]},
+            "candidate_event_id": {"anyOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]},
+            "human_accepted_event_id": {"type": "null"},
+            "truth_committed_event_id": {"type": "null"}
+          }
+        }
+      }
+    },
+    "closed_loop_linkage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "review_id", "candidate_artifact_sha256", "candidate_final_event_id", "human_accepted_event_id", "truth_committed_event_id", "candidate_rejected_event_id", "linkage_sha256"],
+      "properties": {
+        "schema_version": {"const": "labelagent.human-review-link.v1"},
+        "review_id": {"$ref": "#/$defs/hash"},
+        "candidate_artifact_sha256": {"anyOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]},
+        "candidate_final_event_id": {"anyOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]},
+        "human_accepted_event_id": {"anyOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]},
+        "truth_committed_event_id": {"anyOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]},
+        "candidate_rejected_event_id": {"anyOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]},
+        "linkage_sha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "bundle_sha256": {"$ref": "#/$defs/hash"}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
     "input": {
-      "type": "object",
+      "type": "object", "additionalProperties": false,
       "required": ["dataset_id", "source_batch", "frame_id", "sensor", "captured_at", "source_kind", "content_sha256"],
-      "additionalProperties": false,
       "properties": {
         "dataset_id": {"type": "string", "minLength": 1},
         "source_batch": {"type": "string", "minLength": 1},
@@ -18,58 +104,395 @@
         "sensor": {"type": "string", "minLength": 1},
         "captured_at": {"type": "string", "format": "date-time"},
         "source_kind": {"enum": ["real", "sim"]},
-        "content_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "source_uri": {"type": "string"},
-        "timestamp_source": {"type": "string"}
+        "content_sha256": {"$ref": "#/$defs/hash"},
+        "source_uri": {"type": "string", "minLength": 1},
+        "timestamp_source": {"type": "string", "minLength": 1}
       }
     },
-    "events": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "type": "object",
-        "required": ["event_id", "previous_event_id", "state", "actor", "action", "label_layer", "payload"],
-        "properties": {
-          "event_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-          "previous_event_id": {"type": ["string", "null"]},
-          "state": {"type": "string"},
-          "actor": {"type": "object"},
-          "action": {"type": "string"},
-          "label_layer": {"enum": ["preannotation", "agent_candidate", "human_truth"]},
-          "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
-          "model": {"type": ["object", "null"]},
-          "prompt": {"type": ["object", "null"]},
-          "payload": {"type": "object"},
-          "artifacts": {"type": "array"},
-          "metrics": {"type": "object"}
+    "actor": {
+      "type": "object", "additionalProperties": false,
+      "required": ["type", "id"],
+      "properties": {
+        "type": {"enum": ["system", "sam", "vlm", "agent", "human", "quality"]},
+        "id": {"type": "string", "minLength": 1}
+      }
+    },
+    "model": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1},
+        "weights_sha256": {"$ref": "#/$defs/hash"},
+        "config_sha256": {"$ref": "#/$defs/hash"},
+        "code_commit": {"type": "string", "minLength": 7}
+      }
+    },
+    "prompt": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version"],
+      "properties": {
+        "version": {"type": "string", "minLength": 1},
+        "content_sha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "artifact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "sha256"],
+      "properties": {
+        "artifact_id": {"type": "string", "minLength": 1},
+        "kind": {"type": "string", "minLength": 1},
+        "uri": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/hash"},
+        "bytes": {"type": "integer", "minimum": 0},
+        "media_type": {"type": "string", "minLength": 1}
+      }
+    },
+    "metrics": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "end_to_end_latency_ms": {"type": ["number", "null"], "minimum": 0},
+        "human_seconds": {"type": ["number", "null"], "minimum": 0},
+        "human_minutes": {"type": ["number", "null"], "minimum": 0},
+        "human_seconds_per_frame": {"type": ["number", "null"], "minimum": 0},
+        "human_minutes_per_frame": {"type": ["number", "null"], "minimum": 0},
+        "single_frame_cost": {"type": ["number", "null"], "minimum": 0},
+        "estimated_cost": {"type": ["number", "null"], "minimum": 0},
+        "agent_rounds": {"type": ["integer", "null"], "minimum": 0},
+        "slope_iou": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "slope_dice": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "slope_boundary_f1": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "slope_boundary_tolerance_px": {"type": ["number", "null"], "minimum": 0},
+        "slope_pixel_precision": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "slope_pixel_recall": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "slope_instance_precision": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "slope_instance_recall": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "slope_to_floor_confusion_pixels": {"type": ["integer", "null"], "minimum": 0},
+        "floor_to_slope_confusion_pixels": {"type": ["integer", "null"], "minimum": 0},
+        "slope_to_step_curb_confusion_pixels": {"type": ["integer", "null"], "minimum": 0},
+        "step_curb_to_slope_confusion_pixels": {"type": ["integer", "null"], "minimum": 0},
+        "slope_false_traversable_count": {"type": ["integer", "null"], "minimum": 0}
+      }
+    },
+    "slopeEvaluationMetrics": {
+      "type": "object",
+      "required": ["slope_iou", "slope_dice", "slope_boundary_f1", "slope_boundary_tolerance_px", "slope_pixel_precision", "slope_pixel_recall", "slope_instance_precision", "slope_instance_recall", "slope_to_floor_confusion_pixels", "floor_to_slope_confusion_pixels", "slope_to_step_curb_confusion_pixels", "step_curb_to_slope_confusion_pixels", "slope_false_traversable_count"],
+      "properties": {
+        "slope_iou": {"type": "number", "minimum": 0, "maximum": 1},
+        "slope_dice": {"type": "number", "minimum": 0, "maximum": 1},
+        "slope_boundary_f1": {"type": "number", "minimum": 0, "maximum": 1},
+        "slope_boundary_tolerance_px": {"type": "number", "minimum": 0},
+        "slope_pixel_precision": {"type": "number", "minimum": 0, "maximum": 1},
+        "slope_pixel_recall": {"type": "number", "minimum": 0, "maximum": 1},
+        "slope_instance_precision": {"type": "number", "minimum": 0, "maximum": 1},
+        "slope_instance_recall": {"type": "number", "minimum": 0, "maximum": 1},
+        "slope_to_floor_confusion_pixels": {"type": "integer", "minimum": 0},
+        "floor_to_slope_confusion_pixels": {"type": "integer", "minimum": 0},
+        "slope_to_step_curb_confusion_pixels": {"type": "integer", "minimum": 0},
+        "step_curb_to_slope_confusion_pixels": {"type": "integer", "minimum": 0},
+        "slope_false_traversable_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "qualityCheck": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "checks"],
+      "properties": {
+        "passed": {"const": true},
+        "checks": {
+          "type": "array", "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
         }
       }
     },
-    "receipt": {
-      "type": "object",
-      "required": ["input_id", "last_state", "human_gate_passed", "full_agent_path_observed", "minimum_closed_loop_complete", "training_ready", "receipt_sha256"]
-    },
-    "registration": {
-      "type": "object",
-      "required": ["input_id", "created", "idempotent_replay"]
-    },
-    "workbench_readback": {
-      "type": "object",
-      "required": ["truth_shape_count", "is_reference_frame", "candidate_shape_count"]
-    },
-    "human_review": {
-      "type": "object",
-      "required": ["review_id", "reviewer_id", "decision", "started_at", "reviewed_at", "elapsed_seconds", "frame_sha256"],
+    "datasetVersion": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version_id", "parent_version", "split", "split_group_id", "ontology_version", "source_kind", "truth_sha256", "manifest_sha256"],
       "properties": {
-        "review_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "reviewer_id": {"type": "string", "minLength": 1},
-        "decision": {"enum": ["accept_candidate", "correct_candidate", "manual_annotation", "reject_candidate"]},
-        "started_at": {"type": "string", "format": "date-time"},
-        "reviewed_at": {"type": "string", "format": "date-time"},
-        "elapsed_seconds": {"type": "number", "minimum": 0},
-        "frame_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        "version_id": {"type": "string", "minLength": 1},
+        "parent_version": {"type": ["string", "null"], "minLength": 1},
+        "split": {"enum": ["train", "val", "test"]},
+        "split_group_id": {"type": "string", "minLength": 1},
+        "ontology_version": {"type": "string", "minLength": 1},
+        "source_kind": {"enum": ["real", "sim"]},
+        "truth_sha256": {"$ref": "#/$defs/hash"},
+        "manifest_sha256": {"$ref": "#/$defs/hash"}
       }
     },
-    "bundle_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+    "downstreamMapping": {
+      "type": "object", "additionalProperties": false,
+      "required": ["target_label", "operation", "source_labels", "source_layer", "target_layer", "preserve_source_labels"],
+      "properties": {
+        "target_label": {"const": "traversable_area"},
+        "operation": {"const": "union"},
+        "source_labels": {"const": ["floor", "slope"]},
+        "source_layer": {"const": "training_annotation"},
+        "target_layer": {"const": "downstream_navigation"},
+        "preserve_source_labels": {"const": true}
+      }
+    },
+    "slopeContext": {
+      "type": "object", "additionalProperties": false,
+      "required": ["semantic_label", "visible_status", "human_pixel_truth_available", "approved_for_training", "business_mapping", "downstream_mapping", "traversability_status", "policy_default", "policy_basis", "policy_override", "candidate_sha256", "evidence_provenance", "hard_set_strata"],
+      "properties": {
+        "semantic_label": {"const": "slope_visible"},
+        "visible_status": {"enum": ["candidate_supported", "human_confirmed", "human_rejected", "unknown"]},
+        "human_pixel_truth_available": {"type": "boolean"},
+        "approved_for_training": {"type": "boolean"},
+        "business_mapping": {"const": "traversable_area"},
+        "downstream_mapping": {"$ref": "#/$defs/downstreamMapping"},
+        "traversability_status": {"enum": ["passable", "non_passable"]},
+        "policy_default": {"const": "passable"},
+        "policy_basis": {"const": "user_defined_project_semantics"},
+        "policy_override": {
+          "type": "object", "additionalProperties": false,
+          "required": ["status", "rule_id", "reason", "decided_by", "evidence_artifact_ids"],
+          "properties": {
+            "status": {"enum": ["none", "non_passable"]},
+            "rule_id": {"type": ["string", "null"], "minLength": 1},
+            "reason": {"type": ["string", "null"], "minLength": 1},
+            "decided_by": {"enum": ["human", "system_policy", null]},
+            "evidence_artifact_ids": {"type": "array", "uniqueItems": true,
+              "items": {"type": "string", "minLength": 1}}
+          }
+        },
+        "candidate_sha256": {"anyOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]},
+        "evidence_provenance": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["kind", "source", "sha256"],
+            "properties": {
+              "kind": {"type": "string", "minLength": 1},
+              "source": {"type": "string", "minLength": 1},
+              "sha256": {"$ref": "#/$defs/hash"}
+            }
+          }
+        },
+        "hard_set_strata": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": {"enum": ["unassigned", "near", "mid", "far", "weak_texture", "shadow", "backlight", "occlusion", "slope_foot_boundary", "slope_top_boundary"]}
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"approved_for_training": {"const": true}}, "required": ["approved_for_training"]},
+          "then": {"properties": {"human_pixel_truth_available": {"const": true}}}
+        },
+        {
+          "if": {"properties": {"policy_override": {"properties": {"status": {"const": "none"}}, "required": ["status"]}}, "required": ["policy_override"]},
+          "then": {
+            "properties": {
+              "traversability_status": {"const": "passable"},
+              "policy_override": {"properties": {
+                "rule_id": {"type": "null"}, "reason": {"type": "null"},
+                "decided_by": {"type": "null"}, "evidence_artifact_ids": {"maxItems": 0}}}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"policy_override": {"properties": {"status": {"const": "non_passable"}}, "required": ["status"]}}, "required": ["policy_override"]},
+          "then": {
+            "properties": {
+              "traversability_status": {"const": "non_passable"},
+              "policy_override": {"properties": {
+                "rule_id": {"type": "string", "minLength": 1},
+                "reason": {"type": "string", "minLength": 1},
+                "decided_by": {"enum": ["human", "system_policy"]}}}
+            }
+          }
+        }
+      ]
+    },
+    "event": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "input_id", "sequence", "occurred_at", "previous_event_id", "event_key", "state", "actor", "action", "label_layer", "confidence", "model", "prompt", "payload", "artifacts", "metrics", "event_id"],
+      "properties": {
+        "schema_version": {"const": "labelagent.closed-loop.v1"},
+        "input_id": {"$ref": "#/$defs/hash"},
+        "sequence": {"type": "integer", "minimum": 1},
+        "occurred_at": {"type": "string", "format": "date-time"},
+        "previous_event_id": {"anyOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]},
+        "event_key": {"$ref": "#/$defs/hash"},
+        "state": {"enum": ["received", "quality_checked", "quality_failed", "sam_candidate_ready", "vlm_reviewed", "agent_actioned", "vlm_reverified", "open_set_candidate", "ontology_review_required", "ontology_approved", "ontology_rejected", "human_review_required", "human_accepted", "human_rejected", "candidate_rejected", "remediation_required", "candidate_final", "truth_committed", "version_committed", "evaluation_completed"]},
+        "actor": {"$ref": "#/$defs/actor"},
+        "action": {"type": "string", "minLength": 1},
+        "label_layer": {"enum": ["preannotation", "agent_candidate", "human_truth"]},
+        "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "model": {"anyOf": [{"$ref": "#/$defs/model"}, {"type": "null"}]},
+        "prompt": {"anyOf": [{"$ref": "#/$defs/prompt"}, {"type": "null"}]},
+        "payload": {"type": "object"},
+        "artifacts": {"type": "array", "items": {"$ref": "#/$defs/artifact"}},
+        "metrics": {"$ref": "#/$defs/metrics"},
+        "event_id": {"$ref": "#/$defs/hash"}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"actor": {"properties": {"type": {"enum": ["sam", "vlm", "agent"]}}, "required": ["type"]}},
+            "required": ["actor"]
+          },
+          "then": {
+            "properties": {
+              "model": {"$ref": "#/$defs/model"},
+              "prompt": {"$ref": "#/$defs/prompt"}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"state": {"const": "quality_checked"}}, "required": ["state"]},
+          "then": {
+            "properties": {
+              "payload": {
+                "required": ["quality_checked"],
+                "properties": {"quality_checked": {"$ref": "#/$defs/qualityCheck"}}
+              }
+            }
+          }
+        },
+        {
+          "if": {"properties": {"state": {"const": "version_committed"}}, "required": ["state"]},
+          "then": {
+            "properties": {
+              "payload": {
+                "required": ["dataset_version"],
+                "properties": {"dataset_version": {"$ref": "#/$defs/datasetVersion"}}
+              },
+              "artifacts": {
+                "contains": {
+                  "type": "object",
+                  "properties": {"kind": {"const": "dataset_manifest"}},
+                  "required": ["kind"]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {"const": "human_accepted"},
+              "payload": {
+                "anyOf": [
+                  {"required": ["accepted_event_id"]},
+                  {"required": ["accepted_artifact_sha256"]}
+                ]
+              }
+            },
+            "required": ["state"]
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "required": ["accepted_event_id", "accepted_artifact_sha256"],
+                "properties": {
+                  "accepted_event_id": {"$ref": "#/$defs/hash"},
+                  "accepted_artifact_sha256": {"$ref": "#/$defs/hash"}
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {"payload": {"required": ["slope_context"]}}
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "required": ["task_context"],
+                "properties": {
+                  "task_context": {
+                    "type": "object", "required": ["hard_case_tags"],
+                    "properties": {"hard_case_tags": {"type": "array", "contains": {"const": "slope"}}}
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "payload": {
+                "required": ["task_context"],
+                "properties": {
+                  "task_context": {
+                    "type": "object", "required": ["hard_case_tags"],
+                    "properties": {"hard_case_tags": {"type": "array", "contains": {"const": "slope"}}}
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "required": ["slope_context"],
+                "properties": {"slope_context": {"$ref": "#/$defs/slopeContext"}}
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "actor": {"properties": {"type": {"enum": ["sam", "vlm", "agent"]}}, "required": ["type"]},
+              "payload": {"properties": {"slope_context": {"properties": {
+                "policy_override": {"properties": {"status": {"const": "non_passable"}}, "required": ["status"]}
+              }, "required": ["policy_override"]}}, "required": ["slope_context"]}
+            },
+            "required": ["actor", "payload"]
+          },
+          "then": false
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {"const": "evaluation_completed"},
+              "payload": {"required": ["slope_context"]}
+            },
+            "required": ["state"]
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "properties": {
+                  "slope_context": {
+                    "properties": {
+                      "human_pixel_truth_available": {"const": true},
+                      "hard_set_strata": {"not": {"contains": {"const": "unassigned"}}}
+                    },
+                    "required": ["human_pixel_truth_available", "hard_set_strata"]
+                  }
+                }
+              },
+              "metrics": {"$ref": "#/$defs/slopeEvaluationMetrics"}
+            }
+          }
+        }
+      ]
+    },
+    "receipt": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "input_id", "content_sha256", "event_count", "last_state", "last_event_id", "human_gate_passed", "quality_gate_observed", "full_agent_path_observed", "minimum_closed_loop_complete", "training_ready", "dataset_version", "dataset_split", "layers_seen", "as_of_event_time", "receipt_sha256"],
+      "properties": {
+        "schema_version": {"const": "labelagent.closed-loop.v1"},
+        "input_id": {"$ref": "#/$defs/hash"},
+        "content_sha256": {"$ref": "#/$defs/hash"},
+        "event_count": {"type": "integer", "minimum": 1},
+        "last_state": {"enum": ["received", "quality_checked", "quality_failed", "sam_candidate_ready", "vlm_reviewed", "agent_actioned", "vlm_reverified", "open_set_candidate", "ontology_review_required", "ontology_approved", "ontology_rejected", "human_review_required", "human_accepted", "human_rejected", "candidate_rejected", "remediation_required", "candidate_final", "truth_committed", "version_committed", "evaluation_completed"]},
+        "last_event_id": {"$ref": "#/$defs/hash"},
+        "human_gate_passed": {"type": "boolean"},
+        "quality_gate_observed": {"type": "boolean"},
+        "full_agent_path_observed": {"type": "boolean"},
+        "minimum_closed_loop_complete": {"type": "boolean"},
+        "training_ready": {"type": "boolean"},
+        "dataset_version": {"type": ["string", "null"]},
+        "dataset_split": {"type": ["string", "null"], "enum": ["train", "val", "test", null]},
+        "layers_seen": {"type": "array", "uniqueItems": true, "items": {"enum": ["preannotation", "agent_candidate", "human_truth"]}},
+        "as_of_event_time": {"type": "string", "format": "date-time"},
+        "receipt_sha256": {"$ref": "#/$defs/hash"}
+      }
+    }
   }
 }

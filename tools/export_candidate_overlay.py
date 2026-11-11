@@ -16,6 +16,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from source.agent.closed_loop import canonical_json
+from source.agent.downstream_mapping import mapping_contract
 from source.agent.edit_agent import _rasterize
 from source.agent.workflow import candidate_overlay
 
@@ -88,8 +89,13 @@ def export(args):
         "captured_at": args.captured_at,
         "hard_case_stratum": "slope",
         "semantic_label": "slope_visible",
-        "traversability_status": "review_required",
-        "geometry_evidence_sufficient": False,
+        "business_mapping": "traversable_area",
+        "downstream_mapping": mapping_contract(),
+        "traversability_status": "passable",
+        "policy_default": "passable",
+        "policy_basis": "user_defined_project_semantics",
+        "policy_override": {"status": "none", "rule_id": None, "reason": None,
+                            "decided_by": None, "evidence_artifact_ids": []},
         "frame": {"index": args.frame, "width": width, "height": height,
                   "format": image_format, "bytes": len(frame), "sha256": frame_hash},
         "candidate": {"label": args.label, "shape_count": len(shapes),

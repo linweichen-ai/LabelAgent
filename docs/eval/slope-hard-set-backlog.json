@@ -1,0 +1,91 @@
+{
+  "schema_version": "labelagent.slope-hard-set-backlog.v1",
+  "updated_at": "2026-11-11T00:00:00Z",
+  "status": "blocked_waiting_for_human_pixel_truth",
+  "claim_boundary": {
+    "slope_visible": "candidate_supported",
+    "human_pixel_truth_available": false,
+    "approved_for_training": false,
+    "approved_for_deployment": false,
+    "business_mapping": "traversable_area",
+    "downstream_mapping": {
+      "target_label": "traversable_area",
+      "operation": "union",
+      "source_labels": ["floor", "slope"],
+      "source_layer": "training_annotation",
+      "target_layer": "downstream_navigation",
+      "preserve_source_labels": true
+    },
+    "traversability_status": "passable",
+    "policy_default": "passable",
+    "policy_basis": "user_defined_project_semantics",
+    "policy_override": {
+      "status": "none",
+      "rule_id": null,
+      "reason": null,
+      "decided_by": null,
+      "evidence_artifact_ids": []
+    }
+  },
+  "known_real_evidence": {
+    "frame_sha256": "3775ee5f41374c9a302c458cfffa2799222e22ff17541045d6acfb8434bd682f",
+    "candidate_artifact_sha256": "b6652e98aac721dd929799de059fd310cf25fdde97ec488bf9ff43471d169565",
+    "overlay_sha256": "b103e9ba8b42fbb2be01d8943b740caac95e27ca06775712a4eac9207134a9d7",
+    "vlm_request_sha256": "ca500cea9b84c6b483d70715a24bdf9c695d36d3d56e33a0be610caa4ba55ca8"
+  },
+  "hard_set_strata": [
+    {"name": "near", "human_truth_frames": 0},
+    {"name": "mid", "human_truth_frames": 0},
+    {"name": "far", "human_truth_frames": 0},
+    {"name": "weak_texture", "human_truth_frames": 0},
+    {"name": "shadow", "human_truth_frames": 0},
+    {"name": "backlight", "human_truth_frames": 0},
+    {"name": "occlusion", "human_truth_frames": 0},
+    {"name": "slope_foot_boundary", "human_truth_frames": 0},
+    {"name": "slope_top_boundary", "human_truth_frames": 0}
+  ],
+  "required_metrics": [
+    "slope_iou",
+    "slope_dice",
+    "slope_boundary_f1",
+    "slope_boundary_tolerance_px",
+    "slope_pixel_precision",
+    "slope_pixel_recall",
+    "slope_instance_precision",
+    "slope_instance_recall",
+    "slope_to_floor_confusion_pixels",
+    "floor_to_slope_confusion_pixels",
+    "slope_to_step_curb_confusion_pixels",
+    "step_curb_to_slope_confusion_pixels",
+    "slope_false_traversable_count"
+  ],
+  "current_metrics": {
+    "slope_iou": null,
+    "slope_dice": null,
+    "slope_boundary_f1": null,
+    "slope_boundary_tolerance_px": null,
+    "slope_pixel_precision": null,
+    "slope_pixel_recall": null,
+    "slope_instance_precision": null,
+    "slope_instance_recall": null,
+    "slope_to_floor_confusion_pixels": null,
+    "floor_to_slope_confusion_pixels": null,
+    "slope_to_step_curb_confusion_pixels": null,
+    "step_curb_to_slope_confusion_pixels": null,
+    "slope_false_traversable_count": null
+  },
+  "non_passable_override_policy": {
+    "allowed_deciders": ["human", "system_policy"],
+    "model_inference_allowed": false,
+    "requires_rule_id": true,
+    "requires_reason": true,
+    "geometry_required": false
+  },
+  "backlog": [
+    {"id": "SLOPE-001", "status": "pending", "task": "Create sequence/entity-isolated real human pixel truth set"},
+    {"id": "SLOPE-002", "status": "pending", "task": "Assign every evaluation frame to one or more hard-set strata"},
+    {"id": "SLOPE-003", "status": "pending", "task": "Implement mask, boundary, pixel, instance, and confusion metrics"},
+    {"id": "SLOPE-004", "status": "pending", "task": "Define and version explicit site non-passable override rules without model inference"},
+    {"id": "SLOPE-005", "status": "blocked", "task": "Choose automatic acceptance thresholds only after development truth exists"}
+  ]
+}

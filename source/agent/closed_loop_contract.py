@@ -73,6 +73,15 @@ PRODUCERS = {"ingestor", "quality_gate", "sam", "vlm", "agent", "human",
              "trainer", "deployer"}
 DECISIONS = {"accepted", "rejected", "review_required", "unknown",
              "quarantined", "committed", "versioned", "promoted", "rolled_back"}
+SLOPE_HARD_SET_STRATA = {"near", "mid", "far", "weak_texture", "shadow",
+                         "backlight", "occlusion", "slope_foot_boundary",
+                         "slope_top_boundary"}
+SLOPE_EVAL_METRICS = {"slope_iou", "slope_dice", "slope_boundary_f1",
+    "slope_boundary_tolerance_px", "slope_pixel_precision", "slope_pixel_recall",
+    "slope_instance_precision", "slope_instance_recall",
+    "slope_to_floor_confusion_pixels", "floor_to_slope_confusion_pixels",
+    "slope_to_step_curb_confusion_pixels", "step_curb_to_slope_confusion_pixels",
+    "slope_false_traversable_count"}
 
 
 def _datetime_with_timezone(value: object) -> bool:
@@ -162,6 +171,7 @@ def validate_event(event: Mapping[str, Any]) -> list[str]:
             errors.append("source.content_sha256 must be lowercase SHA-256")
 
     producer = event.get("producer")
+    producer_component = producer.get("component") if isinstance(producer, Mapping) else None
     if not isinstance(producer, Mapping):
         errors.append("producer must be an object")
     else:
@@ -185,6 +195,7 @@ def validate_event(event: Mapping[str, Any]) -> list[str]:
 
     artifacts = event.get("artifacts")
     artifact_ids: set[str] = set()
+    artifact_kinds: dict[str, str] = {}
     if not isinstance(artifacts, list):
         errors.append("artifacts must be an array")
     else:
@@ -198,6 +209,8 @@ def validate_event(event: Mapping[str, Any]) -> list[str]:
             elif artifact_id in artifact_ids:
                 errors.append(f"duplicate artifact_id: {artifact_id}")
             artifact_ids.add(artifact_id)
+            if artifact_id:
+                artifact_kinds[artifact_id] = str(artifact.get("kind", ""))
             if not SHA256_RE.fullmatch(str(artifact.get("sha256", ""))):
                 errors.append(f"artifacts[{index}].sha256 must be lowercase SHA-256")
 
@@ -216,20 +229,84 @@ def validate_event(event: Mapping[str, Any]) -> list[str]:
             if slope.get("semantic_label") != "slope_visible":
                 errors.append("slope_context.semantic_label must be slope_visible")
             traversability = slope.get("traversability_status")
-            evidence = slope.get("geometry_evidence_artifact_ids")
-            if traversability in {"traversable", "non_traversable"}:
-                if slope.get("geometry_evidence_sufficient") is not True:
-                    errors.append("slope traversability decisions require sufficient geometry evidence")
-                if not isinstance(evidence, list) or not evidence:
-                    errors.append("slope traversability decisions require geometry evidence artifacts")
-            if isinstance(evidence, list):
-                missing_ids = sorted(set(map(str, evidence)) - artifact_ids)
-                if missing_ids:
-                    errors.append("slope geometry evidence references missing artifacts: "
-                                  + ", ".join(missing_ids))
+            visible_status = slope.get("visible_status")
+            if visible_status is not None and visible_status not in {
+                    "candidate_supported", "human_confirmed", "human_rejected", "unknown"}:
+                errors.append("slope_context.visible_status is invalid")
+            legacy = ("geometry_evidence_sufficient" in slope
+                      or "geometry_evidence_artifact_ids" in slope)
+            if legacy:
+                # Historical 1.1 evidence remains readable, but current emitters must
+                # use the explicit user-defined passable policy below.
+                evidence = slope.get("geometry_evidence_artifact_ids")
+                if isinstance(evidence, list):
+                    missing_ids = sorted(set(map(str, evidence)) - artifact_ids)
+                    if missing_ids:
+                        errors.append("slope geometry evidence references missing artifacts: "
+                                      + ", ".join(missing_ids))
+            else:
+                if slope.get("business_mapping") != "traversable_area":
+                    errors.append("slope business_mapping must be traversable_area")
+                expected_mapping = {"target_label": "traversable_area",
+                    "operation": "union", "source_labels": ["floor", "slope"],
+                    "source_layer": "training_annotation",
+                    "target_layer": "downstream_navigation",
+                    "preserve_source_labels": True}
+                if slope.get("downstream_mapping") != expected_mapping:
+                    errors.append("slope downstream mapping must preserve floor/slope and union them as traversable_area")
+                if slope.get("policy_default") != "passable":
+                    errors.append("slope policy_default must be passable")
+                if slope.get("policy_basis") != "user_defined_project_semantics":
+                    errors.append("slope policy_basis must be user_defined_project_semantics")
+                override = slope.get("policy_override")
+                if not isinstance(override, Mapping):
+                    errors.append("slope policy_override is required")
+                else:
+                    override_status = override.get("status")
+                    override_evidence = override.get("evidence_artifact_ids")
+                    if override_status == "none":
+                        if traversability != "passable":
+                            errors.append("default slope policy must map to passable")
+                        if (override.get("rule_id") is not None
+                                or override.get("reason") is not None
+                                or override.get("decided_by") is not None
+                                or override_evidence != []):
+                            errors.append("empty slope policy override must not carry decision metadata")
+                    elif override_status == "non_passable":
+                        if traversability != "non_passable":
+                            errors.append("non-passable override must map to non_passable")
+                        if not _nonempty(override.get("rule_id")) or not _nonempty(override.get("reason")):
+                            errors.append("non-passable override requires rule_id and reason")
+                        if override.get("decided_by") not in {"human", "system_policy"}:
+                            errors.append("slope override must be decided by human or system_policy")
+                        if producer_component in {"sam", "vlm", "agent"}:
+                            errors.append("models cannot create a non-passable slope policy override")
+                    else:
+                        errors.append("slope policy_override.status is invalid")
+                    if isinstance(override_evidence, list):
+                        missing_ids = sorted(set(map(str, override_evidence)) - artifact_ids)
+                        if missing_ids:
+                            errors.append("slope policy override references missing artifacts: "
+                                          + ", ".join(missing_ids))
+                    else:
+                        errors.append("slope policy override evidence_artifact_ids must be an array")
+            if event_type == "human.reviewed":
+                if not SHA256_RE.fullmatch(str(slope.get("candidate_sha256", ""))):
+                    errors.append("slope human review requires the exact candidate SHA-256")
+                provenance = slope.get("evidence_provenance")
+                if not isinstance(provenance, list) or not provenance:
+                    errors.append("slope human review requires evidence provenance")
             if (event_type == "evaluation.completed"
                     and slope.get("human_pixel_truth_available") is not True):
                 errors.append("slope evaluation requires human pixel truth")
+            if event_type == "evaluation.completed":
+                strata = slope.get("hard_set_strata")
+                if (not isinstance(strata, list) or not strata
+                        or "unassigned" in strata or not set(map(str, strata)) <= SLOPE_HARD_SET_STRATA):
+                    errors.append("slope evaluation requires assigned hard-set strata")
+                metrics = event.get("metrics")
+                if not isinstance(metrics, Mapping) or not SLOPE_EVAL_METRICS <= set(metrics):
+                    errors.append("slope evaluation requires complete slope-specific metrics")
             if slope.get("approved_for_training") is True:
                 if slope.get("human_pixel_truth_available") is not True:
                     errors.append("slope cannot be approved for training without human pixel truth")

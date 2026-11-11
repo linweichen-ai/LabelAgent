@@ -14,7 +14,7 @@ if str(ROOT) not in sys.path:
 from source.agent.closed_loop import ClosedLoopLedger, digest
 
 
-ACCEPTED = {"accept_candidate", "correct_candidate", "manual_annotation"}
+ACCEPTED = {"accept_candidate", "correct_candidate", "manual_annotation", "confirmed_empty"}
 
 
 def read_review_chain(workbench_root):
@@ -58,12 +58,30 @@ def sync_human_gate(*, bundle_path, workbench_root, ledger_root,
         raise ValueError("no matching human review receipt for this immutable input")
     review = matching[-1]
     decision = review["decision"]
-    common = {"actor": {"type": "human", "id": review["reviewer_id"]},
+    candidate_events = [item for item in ledger.events()
+                        if item["state"] == "candidate_final"]
+    candidate_event = candidate_events[-1] if candidate_events else None
+    candidate_sha = review.get("candidate_sha256")
+    slope_context = review.get("slope_context")
+    if slope_context is not None and slope_context.get("candidate_sha256") != candidate_sha:
+        raise ValueError("slope review context candidate hash does not match the reviewed candidate")
+    if candidate_event is not None:
+        if not any(item.get("kind") == "candidate_final" and
+                   item.get("sha256") == candidate_sha
+                   for item in candidate_event.get("artifacts", [])):
+            raise ValueError("human review candidate does not match the latest candidate_final artifact")
+    reviewer_declared_id = review.get("reviewer_declared_id")
+    if not reviewer_declared_id or review.get("identity_assurance") != "self_declared":
+        raise ValueError("human review must record a self-declared reviewer identity")
+    common = {"actor": {"type": "human", "id": reviewer_declared_id},
               "action": decision, "label_layer": "human_truth",
               "confidence": None,
               "payload": {"review_id": review["review_id"],
                           "reviewed_at": review["reviewed_at"],
+                          "reviewer_declared_id": reviewer_declared_id,
+                          "identity_assurance": "self_declared",
                           "note": review.get("note", ""),
+                          "workbench_candidate_event_id": review.get("candidate_event_id"),
                           "candidate_sha256": review.get("candidate_sha256"),
                           "truth_sha256": review.get("truth_sha256"),
                           "truth_shape_count": review.get("truth_shape_count")},
@@ -71,27 +89,61 @@ def sync_human_gate(*, bundle_path, workbench_root, ledger_root,
                              "sha256": review["review_id"]}],
               "metrics": {"human_seconds_per_frame": review["elapsed_seconds"],
                           "human_minutes_per_frame": round(review["elapsed_seconds"] / 60, 6)}}
+    if slope_context is not None:
+        common["payload"].update(task_context={"hard_case_tags": ["slope"]},
+                                 slope_context=slope_context)
     if decision == "reject_candidate":
-        ledger.append_event("human_rejected", **common)
+        rejected_event = ledger.append_event("candidate_rejected", **common)
+        human_event = truth_event = None
         truth = None
     elif decision in ACCEPTED:
+        if candidate_event is None:
+            raise ValueError("accepted candidate requires a candidate_final event")
         state = json.loads((workbench_root / "state.json").read_text(encoding="utf-8"))
         truth = truth_for(state, sensor, frame_id)
         if truth is None or digest(truth) != review.get("truth_sha256"):
             raise ValueError("current workbench truth does not match the accepted review receipt")
-        ledger.append_event("human_accepted", **common)
-        ledger.append_event("truth_committed", actor={"type": "system", "id": "truth-writer"},
+        if review.get("truth_sha256") != candidate_sha:
+            raise ValueError("accepted truth must match the reviewed candidate_final artifact")
+        common["payload"].update(
+            accepted_event_id=candidate_event["event_id"],
+            accepted_artifact_sha256=candidate_sha)
+        human_event = ledger.append_event("human_accepted", **common)
+        truth_payload = {"review_id": review["review_id"],
+                         "accepted_event_id": human_event["event_id"],
+                         "accepted_candidate_event_id": candidate_event["event_id"],
+                         "accepted_artifact_sha256": candidate_sha,
+                         "truth_sha256": review["truth_sha256"],
+                         "truth_shape_count": len(truth)}
+        if slope_context is not None:
+            truth_payload.update(task_context={"hard_case_tags": ["slope"]},
+                                 slope_context=slope_context)
+        truth_event = ledger.append_event("truth_committed", actor={"type": "system", "id": "truth-writer"},
             action="commit_reviewed_truth", label_layer="human_truth",
-            payload={"review_id": review["review_id"],
-                     "truth_sha256": review["truth_sha256"],
-                     "truth_shape_count": len(truth)},
+            payload=truth_payload,
             artifacts=[{"kind": "truth", "sha256": review["truth_sha256"]}])
     else:
         raise ValueError(f"unsupported human decision: {decision}")
+    linkage = {"schema_version": "labelagent.human-review-link.v1",
+        "review_id": review["review_id"],
+        "candidate_artifact_sha256": candidate_sha,
+        "candidate_final_event_id": candidate_event["event_id"] if candidate_event else None,
+        "human_accepted_event_id": human_event["event_id"] if human_event else None,
+        "truth_committed_event_id": truth_event["event_id"] if truth_event else None,
+        "candidate_rejected_event_id": rejected_event["event_id"] if decision == "reject_candidate" else None}
+    linkage["linkage_sha256"] = digest(linkage)
+    linkage_folder = workbench_root / "human_review_links"
+    linkage_folder.mkdir(exist_ok=True)
+    linkage_path = linkage_folder / f"{review['review_id']}.json"
+    linkage_bytes = json.dumps(linkage, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    if linkage_path.exists() and linkage_path.read_text(encoding="utf-8") != linkage_bytes:
+        raise RuntimeError("closed-loop linkage receipt conflicts with an existing receipt")
+    linkage_path.write_text(linkage_bytes, encoding="utf-8")
     receipt = ledger.receipt()
     output = {"schema_version": bundle["schema_version"], "input": envelope,
               "events": ledger.events(), "receipt": receipt,
               "human_review": review,
+              "closed_loop_linkage": linkage,
               "workbench_readback": {
                   "truth_shape_count": len(truth) if truth is not None else 0,
                   "is_reference_frame": False,

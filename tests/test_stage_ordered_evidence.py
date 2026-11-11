@@ -75,12 +75,39 @@ class OrderedStageEvidenceTests(unittest.TestCase):
         self.assertEqual(errors, [], [error.message for error in errors])
         self.assertFalse(plan["execution_enabled"])
         self.assertFalse(plan["launch_gate"]["formal_training_authorized"])
+        self.assertEqual(plan["strategy"]["selected_route"],
+                         "supervised_parameter_efficient_finetuning")
+        self.assertEqual(plan["strategy"]["post_training_taxonomy"],
+                         "peft_is_a_specific_supervised_post_training_subtype")
+        self.assertEqual(plan["strategy"]["rejected_route"],
+                         "ambiguous_or_full_model_post_training")
         self.assertEqual(plan["model"]["trainable_prefixes"],
                          ["segmentation_head.mask_predictor.mask_embed."])
         self.assertIn("train/_preannotations.coco.json",
                       plan["data"]["forbidden_as_truth"])
         self.assertFalse(plan["data"]["test24_in_training"])
         self.assertFalse(plan["data"]["fixed_640_holdout_in_training"])
+        self.assertEqual(plan["data"]["current_96_pack_classes"],
+                         ["pallet", "person"])
+        self.assertFalse(plan["data"]["slope_improvement_claim_allowed"])
+        self.assertEqual(plan["data"]["training_labels"], ["floor", "slope"])
+        self.assertIn("training_metrics",
+                      plan["launch_gate"]["without_human_truth_forbidden"])
+
+    def test_training_strategy_decision_is_strict_and_claim_bounded(self):
+        path = REPO / "docs/test-results/sam3-peft-strategy-decision-20261111.json"
+        decision = json.loads(path.read_text(encoding="utf-8"))
+        errors = list(self.validator(
+            "sam3-peft-strategy-decision.schema.json").iter_errors(decision))
+        self.assertEqual(errors, [], [error.message for error in errors])
+        self.assertEqual(decision["taxonomy"]["relationship_to_post_training"],
+                         "specific_subtype")
+        self.assertFalse(decision["taxonomy"]["full_model_post_training_selected"])
+        self.assertFalse(decision["data_scope"]["machine_preannotations_truth_eligible"])
+        self.assertFalse(decision["data_scope"]["slope_improvement_claim_allowed"])
+        self.assertEqual(decision["data_scope"]["training_labels"], ["floor", "slope"])
+        self.assertFalse(decision["claim_boundary"]["training_started"])
+        self.assertFalse(decision["claim_boundary"]["checkpoint_available"])
 
 
 if __name__ == "__main__":

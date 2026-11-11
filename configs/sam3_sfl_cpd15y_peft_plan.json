@@ -3,12 +3,20 @@
   "execution_enabled": false,
   "blocked_reason": "genuine human-confirmed _annotations.coco.json and live dual-5090 DDP smoke are not available",
   "base_training_config": "source/sam3/sam3/train/configs/roboflow_v100/roboflow_v100_full_ft_100_images.yaml",
+  "strategy": {
+    "selected_route": "supervised_parameter_efficient_finetuning",
+    "post_training_taxonomy": "peft_is_a_specific_supervised_post_training_subtype",
+    "rejected_route": "ambiguous_or_full_model_post_training",
+    "phase1_goal": "validate_mask_segmentation_adaptation_before_any_broader_unfreezing",
+    "broader_unfreezing_policy": "evaluate_only_after_truth_scale_expands_and_peft_bottleneck_is_demonstrated"
+  },
   "model": {
     "checkpoint_source": "existing_verified_sam3_checkpoint_only",
     "load_from_hf": false,
     "enable_segmentation": true,
     "freeze_prefixes": ["backbone.vision_backbone.", "backbone.language_backbone."],
     "trainable_prefixes": ["segmentation_head.mask_predictor.mask_embed."],
+    "phase1_trainable_families": ["mask_decoder", "segmentation_head", "verified_adapters_only"],
     "adapter_status": "not_verified_in_current_source",
     "full_model_training": false
   },
@@ -23,6 +31,11 @@
     "train_annotation_required": "train/_annotations.coco.json",
     "test_annotation_required": "test/_annotations.coco.json",
     "forbidden_as_truth": ["train/_preannotations.coco.json", "test/_preannotations.coco.json", "bev_3d_boxes"],
+    "current_96_pack_classes": ["pallet", "person"],
+    "slope_improvement_claim_allowed": false,
+    "slope_truth_requirement": "separate_human_confirmed_slope_pixel_mask_set",
+    "training_labels": ["floor", "slope"],
+    "downstream_mapping": "traversable_area=floor_union_slope",
     "fixed_640_holdout_in_training": false,
     "test24_in_training": false
   },
@@ -49,6 +62,8 @@
     "formal_training_authorized": false,
     "require_human_truth_manifest": true,
     "require_split_isolation_readback": true,
-    "require_live_dual_gpu_smoke": true
+    "require_live_dual_gpu_smoke": true,
+    "without_human_truth_allowed": ["config_validation", "manifest_validation", "module_inventory", "one_shot_dual_5090_ddp_init_smoke"],
+    "without_human_truth_forbidden": ["optimizer_step", "training_metrics", "checkpoint", "performance_claim"]
   }
 }

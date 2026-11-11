@@ -2,25 +2,39 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "execution_enabled", "blocked_reason", "base_training_config", "model", "loss", "data", "distributed", "budget", "checkpointing", "launch_gate"],
+  "required": ["schema_version", "execution_enabled", "blocked_reason", "base_training_config", "strategy", "model", "loss", "data", "distributed", "budget", "checkpointing", "launch_gate"],
   "properties": {
     "schema_version": {"const": "labelagent.sam3-peft-plan.v1"},
     "execution_enabled": {"const": false},
     "blocked_reason": {"type": "string", "minLength": 1},
     "base_training_config": {"const": "source/sam3/sam3/train/configs/roboflow_v100/roboflow_v100_full_ft_100_images.yaml"},
-    "model": {"type": "object", "additionalProperties": false, "required": ["checkpoint_source", "load_from_hf", "enable_segmentation", "freeze_prefixes", "trainable_prefixes", "adapter_status", "full_model_training"], "properties": {
+    "strategy": {"type": "object", "additionalProperties": false, "required": ["selected_route", "post_training_taxonomy", "rejected_route", "phase1_goal", "broader_unfreezing_policy"], "properties": {
+      "selected_route": {"const": "supervised_parameter_efficient_finetuning"},
+      "post_training_taxonomy": {"const": "peft_is_a_specific_supervised_post_training_subtype"},
+      "rejected_route": {"const": "ambiguous_or_full_model_post_training"},
+      "phase1_goal": {"const": "validate_mask_segmentation_adaptation_before_any_broader_unfreezing"},
+      "broader_unfreezing_policy": {"const": "evaluate_only_after_truth_scale_expands_and_peft_bottleneck_is_demonstrated"}
+    }},
+    "model": {"type": "object", "additionalProperties": false, "required": ["checkpoint_source", "load_from_hf", "enable_segmentation", "freeze_prefixes", "trainable_prefixes", "phase1_trainable_families", "adapter_status", "full_model_training"], "properties": {
       "checkpoint_source": {"const": "existing_verified_sam3_checkpoint_only"}, "load_from_hf": {"const": false}, "enable_segmentation": {"const": true},
       "freeze_prefixes": {"const": ["backbone.vision_backbone.", "backbone.language_backbone."]},
       "trainable_prefixes": {"const": ["segmentation_head.mask_predictor.mask_embed."]},
+      "phase1_trainable_families": {"const": ["mask_decoder", "segmentation_head", "verified_adapters_only"]},
       "adapter_status": {"const": "not_verified_in_current_source"}, "full_model_training": {"const": false}
     }},
     "loss": {"type": "object", "additionalProperties": false, "required": ["required_class", "required_terms", "status"], "properties": {
       "required_class": {"const": "sam3.train.loss.loss_fns.Masks"}, "required_terms": {"const": ["loss_mask", "loss_dice"]},
       "status": {"const": "must_be_instantiated_and_forward_backward_verified_before_authorization"}
     }},
-    "data": {"type": "object", "additionalProperties": false, "required": ["train_images", "test_images", "train_annotation_required", "test_annotation_required", "forbidden_as_truth", "fixed_640_holdout_in_training", "test24_in_training"], "properties": {
+    "data": {"type": "object", "additionalProperties": false, "required": ["train_images", "test_images", "train_annotation_required", "test_annotation_required", "forbidden_as_truth", "current_96_pack_classes", "slope_improvement_claim_allowed", "slope_truth_requirement", "training_labels", "downstream_mapping", "fixed_640_holdout_in_training", "test24_in_training"], "properties": {
       "train_images": {"const": 72}, "test_images": {"const": 24}, "train_annotation_required": {"const": "train/_annotations.coco.json"}, "test_annotation_required": {"const": "test/_annotations.coco.json"},
-      "forbidden_as_truth": {"const": ["train/_preannotations.coco.json", "test/_preannotations.coco.json", "bev_3d_boxes"]}, "fixed_640_holdout_in_training": {"const": false}, "test24_in_training": {"const": false}
+      "forbidden_as_truth": {"const": ["train/_preannotations.coco.json", "test/_preannotations.coco.json", "bev_3d_boxes"]},
+      "current_96_pack_classes": {"const": ["pallet", "person"]},
+      "slope_improvement_claim_allowed": {"const": false},
+      "slope_truth_requirement": {"const": "separate_human_confirmed_slope_pixel_mask_set"},
+      "training_labels": {"const": ["floor", "slope"]},
+      "downstream_mapping": {"const": "traversable_area=floor_union_slope"},
+      "fixed_640_holdout_in_training": {"const": false}, "test24_in_training": {"const": false}
     }},
     "distributed": {"type": "object", "additionalProperties": false, "required": ["backend", "nodes", "gpus_per_node", "world_size", "synchronous_ddp"], "properties": {
       "backend": {"const": "nccl"}, "nodes": {"const": 1}, "gpus_per_node": {"const": 2}, "world_size": {"const": 2}, "synchronous_ddp": {"const": true}
@@ -31,8 +45,10 @@
     "checkpointing": {"type": "object", "additionalProperties": false, "required": ["save_enabled", "rank0_only", "record_base_and_output_sha256"], "properties": {
       "save_enabled": {"const": true}, "rank0_only": {"const": true}, "record_base_and_output_sha256": {"const": true}
     }},
-    "launch_gate": {"type": "object", "additionalProperties": false, "required": ["formal_training_authorized", "require_human_truth_manifest", "require_split_isolation_readback", "require_live_dual_gpu_smoke"], "properties": {
-      "formal_training_authorized": {"const": false}, "require_human_truth_manifest": {"const": true}, "require_split_isolation_readback": {"const": true}, "require_live_dual_gpu_smoke": {"const": true}
+    "launch_gate": {"type": "object", "additionalProperties": false, "required": ["formal_training_authorized", "require_human_truth_manifest", "require_split_isolation_readback", "require_live_dual_gpu_smoke", "without_human_truth_allowed", "without_human_truth_forbidden"], "properties": {
+      "formal_training_authorized": {"const": false}, "require_human_truth_manifest": {"const": true}, "require_split_isolation_readback": {"const": true}, "require_live_dual_gpu_smoke": {"const": true},
+      "without_human_truth_allowed": {"const": ["config_validation", "manifest_validation", "module_inventory", "one_shot_dual_5090_ddp_init_smoke"]},
+      "without_human_truth_forbidden": {"const": ["optimizer_step", "training_metrics", "checkpoint", "performance_claim"]}
     }}
   }
 }

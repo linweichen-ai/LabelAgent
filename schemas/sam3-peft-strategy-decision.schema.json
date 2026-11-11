@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/sam3-peft-strategy-decision.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "occurred_at", "taxonomy", "phase1", "truth_gate", "data_scope", "scaling_policy", "claim_boundary"],
+  "properties": {
+    "schema_version": {"const": "labelagent.sam3-peft-strategy-decision.v1"},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "taxonomy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["selected", "relationship_to_post_training", "full_model_post_training_selected"],
+      "properties": {
+        "selected": {"const": "supervised_parameter_efficient_finetuning"},
+        "relationship_to_post_training": {"const": "specific_subtype"},
+        "full_model_post_training_selected": {"const": false}
+      }
+    },
+    "phase1": {
+      "type": "object", "additionalProperties": false,
+      "required": ["freeze_image_backbone", "freeze_language_backbone", "allowed_families", "verified_prefixes", "adapter_status", "distributed"],
+      "properties": {
+        "freeze_image_backbone": {"const": true},
+        "freeze_language_backbone": {"const": true},
+        "allowed_families": {"const": ["mask_decoder", "segmentation_head", "verified_adapters_only"]},
+        "verified_prefixes": {"const": ["segmentation_head.mask_predictor.mask_embed."]},
+        "adapter_status": {"const": "not_verified_in_current_source"},
+        "distributed": {"const": "dual_5090_nccl_ddp_world_size_2"}
+      }
+    },
+    "truth_gate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["required", "without_truth_allowed", "without_truth_forbidden", "formal_training_authorized"],
+      "properties": {
+        "required": {"const": ["cvat_human_confirmed_pixel_masks", "immutable_truth_version", "train_test_fixed_holdout_isolation"]},
+        "without_truth_allowed": {"const": ["config_validation", "manifest_validation", "module_inventory", "one_shot_dual_5090_ddp_init_smoke"]},
+        "without_truth_forbidden": {"const": ["optimizer_step", "training_metrics", "checkpoint", "performance_claim"]},
+        "formal_training_authorized": {"const": false}
+      }
+    },
+    "data_scope": {
+      "type": "object", "additionalProperties": false,
+      "required": ["machine_preannotations_truth_eligible", "current_96_pack_classes", "slope_improvement_claim_allowed", "slope_truth_requirement", "training_labels", "downstream_mapping"],
+      "properties": {
+        "machine_preannotations_truth_eligible": {"const": false},
+        "current_96_pack_classes": {"const": ["pallet", "person"]},
+        "slope_improvement_claim_allowed": {"const": false},
+        "slope_truth_requirement": {"const": "separate_human_confirmed_slope_pixel_mask_set"},
+        "training_labels": {"const": ["floor", "slope"]},
+        "downstream_mapping": {"const": "traversable_area=floor_union_slope"}
+      }
+    },
+    "scaling_policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["broader_unfreezing_default", "required_conditions"],
+      "properties": {
+        "broader_unfreezing_default": {"const": false},
+        "required_conditions": {"const": ["phase1_peft_effective", "human_truth_scale_significantly_expanded", "reproducible_peft_bottleneck_demonstrated"]}
+      }
+    },
+    "claim_boundary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["training_started", "training_metrics_available", "checkpoint_available", "slope_improvement_established"],
+      "properties": {
+        "training_started": {"const": false},
+        "training_metrics_available": {"const": false},
+        "checkpoint_available": {"const": false},
+        "slope_improvement_established": {"const": false}
+      }
+    }
+  }
+}

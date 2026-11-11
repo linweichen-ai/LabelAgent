@@ -1,0 +1,41 @@
+{
+  "schema_version": "labelagent.sam3-peft-strategy-decision.v1",
+  "occurred_at": "2026-11-11T16:30:00+08:00",
+  "taxonomy": {
+    "selected": "supervised_parameter_efficient_finetuning",
+    "relationship_to_post_training": "specific_subtype",
+    "full_model_post_training_selected": false
+  },
+  "phase1": {
+    "freeze_image_backbone": true,
+    "freeze_language_backbone": true,
+    "allowed_families": ["mask_decoder", "segmentation_head", "verified_adapters_only"],
+    "verified_prefixes": ["segmentation_head.mask_predictor.mask_embed."],
+    "adapter_status": "not_verified_in_current_source",
+    "distributed": "dual_5090_nccl_ddp_world_size_2"
+  },
+  "truth_gate": {
+    "required": ["cvat_human_confirmed_pixel_masks", "immutable_truth_version", "train_test_fixed_holdout_isolation"],
+    "without_truth_allowed": ["config_validation", "manifest_validation", "module_inventory", "one_shot_dual_5090_ddp_init_smoke"],
+    "without_truth_forbidden": ["optimizer_step", "training_metrics", "checkpoint", "performance_claim"],
+    "formal_training_authorized": false
+  },
+  "data_scope": {
+    "machine_preannotations_truth_eligible": false,
+    "current_96_pack_classes": ["pallet", "person"],
+    "slope_improvement_claim_allowed": false,
+    "slope_truth_requirement": "separate_human_confirmed_slope_pixel_mask_set",
+    "training_labels": ["floor", "slope"],
+    "downstream_mapping": "traversable_area=floor_union_slope"
+  },
+  "scaling_policy": {
+    "broader_unfreezing_default": false,
+    "required_conditions": ["phase1_peft_effective", "human_truth_scale_significantly_expanded", "reproducible_peft_bottleneck_demonstrated"]
+  },
+  "claim_boundary": {
+    "training_started": false,
+    "training_metrics_available": false,
+    "checkpoint_available": false,
+    "slope_improvement_established": false
+  }
+}

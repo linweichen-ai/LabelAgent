@@ -1,0 +1,93 @@
+{
+  "schema_version": "labelagent.gpu-resource-snapshot.v1",
+  "snapshot_id": "gpu-resource-snapshot-20261111T171049+0800",
+  "observed_at": "2026-11-11T17:10:49.4087232+08:00",
+  "factory_4090": {
+    "policy": "preserve_existing_baseline_services",
+    "sam3_health": {"status": "ok", "model_loaded": true, "port": 18766},
+    "vlm_health": {"status": "ok", "model_loaded": true, "port": 18878},
+    "mutation_performed": false
+  },
+  "dual_5090": {
+    "gpus": [
+      {
+        "index": 0,
+        "uuid": "GPU-8fc83bb8-cdd1-8da3-98b7-990f5de229ff",
+        "memory_used_mib": 18481,
+        "utilization_percent": 21
+      },
+      {
+        "index": 1,
+        "uuid": "GPU-45a88393-aad3-3ee0-022a-4d4dad168088",
+        "memory_used_mib": 9771,
+        "utilization_percent": 0
+      }
+    ],
+    "services": [
+      {
+        "role": "sam3",
+        "pid": 1131700,
+        "gpu_index": 0,
+        "command_contains": "/home/clw/projects/labelagent-5090/.venv-sam/bin/python",
+        "healthy": true
+      },
+      {
+        "role": "vlm",
+        "pid": 1074814,
+        "gpu_index": 1,
+        "command_contains": "/home/clw/projects/labelagent-5090/.venv-vlm/bin/python",
+        "healthy": true
+      }
+    ],
+    "processes": [
+      {
+        "pid": 1131700,
+        "owner": "clw",
+        "gpu_index": 0,
+        "used_memory_mib": 6218,
+        "elapsed_seconds": 17825,
+        "command": "/home/clw/projects/labelagent-5090/.venv-sam/bin/python -u -m source.sam3_service.server"
+      },
+      {
+        "pid": 1206460,
+        "owner": "swd",
+        "gpu_index": 0,
+        "used_memory_mib": 11642,
+        "elapsed_seconds": 10140,
+        "command": "/opt/conda/bin/python3.11 -u /tmp/ultralytics/DDP/_temp_yvo2ark2125682004374096.py"
+      },
+      {
+        "pid": 1206461,
+        "owner": "swd",
+        "gpu_index": 0,
+        "used_memory_mib": 498,
+        "elapsed_seconds": 10140,
+        "command": "/opt/conda/bin/python3.11 -u /tmp/ultralytics/DDP/_temp_yvo2ark2125682004374096.py"
+      },
+      {
+        "pid": 1074814,
+        "owner": "clw",
+        "gpu_index": 1,
+        "used_memory_mib": 8588,
+        "elapsed_seconds": 23175,
+        "command": "/home/clw/projects/labelagent-5090/.venv-vlm/bin/python -u tools/local_vlm_server.py --gpu-uuid GPU-45a88393-aad3-3ee0-022a-4d4dad168088 --port 18878"
+      },
+      {
+        "pid": 1206461,
+        "owner": "swd",
+        "gpu_index": 1,
+        "used_memory_mib": 1148,
+        "elapsed_seconds": 10140,
+        "command": "/opt/conda/bin/python3.11 -u /tmp/ultralytics/DDP/_temp_yvo2ark2125682004374096.py"
+      }
+    ],
+    "protected_port_18001_modified": false
+  },
+  "training_gates": {
+    "genuine_human_truth_version_available": false,
+    "fixed_independent_holdout_baseline_available": false,
+    "formal_training_authorized": false,
+    "owned_service_drain_acknowledged": false,
+    "dual_card_qualifier_present": false
+  }
+}

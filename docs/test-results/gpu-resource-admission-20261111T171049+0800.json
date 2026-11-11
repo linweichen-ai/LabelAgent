@@ -1,0 +1,77 @@
+{
+  "decisions": {
+    "dual_5090_training": {
+      "allowed": false,
+      "blockers": [
+        "foreign_compute_process:1206460:swd",
+        "foreign_compute_process:1206461:swd",
+        "genuine_human_truth_version_missing",
+        "fixed_independent_holdout_baseline_missing",
+        "formal_training_not_authorized",
+        "owned_5090_services_not_drained",
+        "dual_card_qualifier_missing"
+      ]
+    },
+    "labelagent_batch_via_gpu1_service": {
+      "allowed": false,
+      "blockers": ["foreign_compute_process:1206461:swd"]
+    },
+    "new_work_on_factory_4090": {
+      "allowed": false,
+      "blockers": ["factory_4090_reserved_for_baseline_services"]
+    },
+    "sam3_candidate_batch_via_gpu0_service": {
+      "allowed": false,
+      "blockers": [
+        "foreign_compute_process:1206460:swd",
+        "foreign_compute_process:1206461:swd"
+      ]
+    },
+    "sam3_finetune_gpu0": {
+      "allowed": false,
+      "blockers": [
+        "foreign_compute_process:1206460:swd",
+        "foreign_compute_process:1206461:swd",
+        "genuine_human_truth_version_missing",
+        "fixed_independent_holdout_baseline_missing",
+        "formal_training_not_authorized",
+        "owned_5090_services_not_drained"
+      ]
+    }
+  },
+  "foreign_processes": {
+    "gpu0": [
+      {
+        "command": "/opt/conda/bin/python3.11 -u /tmp/ultralytics/DDP/_temp_yvo2ark2125682004374096.py",
+        "elapsed_seconds": 10140,
+        "gpu_index": 0,
+        "owner": "swd",
+        "pid": 1206460,
+        "used_memory_mib": 11642
+      },
+      {
+        "command": "/opt/conda/bin/python3.11 -u /tmp/ultralytics/DDP/_temp_yvo2ark2125682004374096.py",
+        "elapsed_seconds": 10140,
+        "gpu_index": 0,
+        "owner": "swd",
+        "pid": 1206461,
+        "used_memory_mib": 498
+      }
+    ],
+    "gpu1": [
+      {
+        "command": "/opt/conda/bin/python3.11 -u /tmp/ultralytics/DDP/_temp_yvo2ark2125682004374096.py",
+        "elapsed_seconds": 10140,
+        "gpu_index": 1,
+        "owner": "swd",
+        "pid": 1206461,
+        "used_memory_mib": 1148
+      }
+    ]
+  },
+  "mutation_performed": false,
+  "observed_at": "2026-11-11T17:10:49.4087232+08:00",
+  "schema_version": "labelagent.gpu-resource-admission-decision.v1",
+  "source_snapshot_content_sha256": "267f087acce2a3bdfa6fd311d9748cd7b2c2520cc9ca30cbd052567a9bfc4981",
+  "source_snapshot_id": "gpu-resource-snapshot-20261111T171049+0800"
+}

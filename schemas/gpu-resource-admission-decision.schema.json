@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/gpu-resource-admission-decision.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "observed_at",
+    "source_snapshot_id",
+    "source_snapshot_content_sha256",
+    "foreign_processes",
+    "decisions",
+    "mutation_performed"
+  ],
+  "properties": {
+    "schema_version": {"const": "labelagent.gpu-resource-admission-decision.v1"},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "source_snapshot_id": {"type": "string", "minLength": 1},
+    "source_snapshot_content_sha256": {
+      "type": "string", "pattern": "^[0-9a-f]{64}$"
+    },
+    "foreign_processes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gpu0", "gpu1"],
+      "properties": {
+        "gpu0": {"type": "array", "items": {"$ref": "#/$defs/process"}},
+        "gpu1": {"type": "array", "items": {"$ref": "#/$defs/process"}}
+      }
+    },
+    "decisions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "new_work_on_factory_4090",
+        "sam3_candidate_batch_via_gpu0_service",
+        "labelagent_batch_via_gpu1_service",
+        "sam3_finetune_gpu0",
+        "dual_5090_training"
+      ],
+      "properties": {
+        "new_work_on_factory_4090": {"$ref": "#/$defs/decision"},
+        "sam3_candidate_batch_via_gpu0_service": {"$ref": "#/$defs/decision"},
+        "labelagent_batch_via_gpu1_service": {"$ref": "#/$defs/decision"},
+        "sam3_finetune_gpu0": {"$ref": "#/$defs/decision"},
+        "dual_5090_training": {"$ref": "#/$defs/decision"}
+      }
+    },
+    "mutation_performed": {"const": false}
+  },
+  "$defs": {
+    "process": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pid", "owner", "gpu_index", "used_memory_mib", "elapsed_seconds", "command"
+      ],
+      "properties": {
+        "pid": {"type": "integer", "minimum": 1},
+        "owner": {"type": "string", "minLength": 1},
+        "gpu_index": {"type": "integer", "minimum": 0, "maximum": 1},
+        "used_memory_mib": {"type": "integer", "minimum": 0},
+        "elapsed_seconds": {"type": "integer", "minimum": 0},
+        "command": {"type": "string", "minLength": 1}
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowed", "blockers"],
+      "properties": {
+        "allowed": {"type": "boolean"},
+        "blockers": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"allowed": {"const": true}}},
+          "then": {"properties": {"blockers": {"maxItems": 0}}},
+          "else": {"properties": {"blockers": {"minItems": 1}}}
+        }
+      ]
+    }
+  }
+}

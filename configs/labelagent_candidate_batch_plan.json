@@ -1,0 +1,47 @@
+{
+  "schema_version": "labelagent.candidate-batch-config.v1",
+  "execution_enabled": false,
+  "manifest_version": "candidate-batch-20261111-v1",
+  "input_pack": {
+    "dataset_id": "sfl-cpd15y",
+    "source_batch": "20260920_cs-heli_Dev_000001",
+    "train_split": "train72",
+    "test_split": "test24",
+    "preannotation_categories": ["pallet", "person"]
+  },
+  "model_bindings": {
+    "sam3_checkpoint_sha256": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+    "vlm_model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+  },
+  "pipeline": [
+    "sam_candidate",
+    "vlm_review",
+    "agent_action",
+    "vlm_recheck",
+    "human_review_gate"
+  ],
+  "write_policy": {
+    "mode": "append_only_explicit_new_version",
+    "candidate_root": "candidate_outputs/candidate-batch-20261111-v1",
+    "overwrite_existing_candidate": false,
+    "overwrite_human_truth": false
+  },
+  "split_policy": {
+    "train72": {
+      "candidate_generation_allowed_after_resource_admission": true,
+      "machine_candidate_truth_eligible": false,
+      "training_return_requires_separate_human_truth_version": true
+    },
+    "test24": {
+      "evaluation_only": true,
+      "training_return_allowed": false,
+      "machine_candidate_truth_eligible": false
+    }
+  },
+  "review_routing": {
+    "new_label_or_unknown": "human_review_required",
+    "low_confidence": "human_review_required",
+    "vlm_sam_conflict": "human_review_required",
+    "automatic_truth_promotion": false
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/candidate-batch-manifest-v2.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "manifest_version", "dataset_id", "source_batch", "split", "source_kind", "pipeline_config_sha256", "model_bindings", "preannotation_source", "write_policy", "split_policy", "review_routing", "fixed_holdout_exclusion", "entry_count", "entries", "human_truth_available", "formal_training_authorized", "gpu_calls", "model_calls", "manifest_content_sha256"],
+  "properties": {
+    "schema_version": {"const": "labelagent.candidate-batch-manifest.v2"},
+    "manifest_version": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"},
+    "dataset_id": {"type": "string", "minLength": 1},
+    "source_batch": {"type": "string", "minLength": 1},
+    "split": {"enum": ["train72", "test24"]},
+    "source_kind": {"const": "real"},
+    "pipeline_config_sha256": {"$ref": "#/$defs/hash"},
+    "model_bindings": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sam3_model_sha256", "vlm_config_sha256"],
+      "properties": {
+        "sam3_model_sha256": {"$ref": "#/$defs/hash"},
+        "vlm_config_sha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "preannotation_source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256", "role", "truth_eligible", "categories"],
+      "properties": {
+        "path": {"type": "string", "pattern": "^(train|test)/_preannotations\\.coco\\.json$"},
+        "sha256": {"$ref": "#/$defs/hash"},
+        "role": {"const": "machine_candidate_only"},
+        "truth_eligible": {"const": false},
+        "categories": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "write_policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "candidate_root", "overwrite_existing_candidate", "overwrite_human_truth"],
+      "properties": {
+        "mode": {"const": "append_only_explicit_new_version"},
+        "candidate_root": {"type": "string", "pattern": "^candidate_outputs/"},
+        "overwrite_existing_candidate": {"const": false},
+        "overwrite_human_truth": {"const": false}
+      }
+    },
+    "split_policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["evaluation_only", "test24_training_return_allowed", "machine_candidate_truth_eligible"],
+      "properties": {
+        "evaluation_only": {"type": "boolean"},
+        "test24_training_return_allowed": {"const": false},
+        "machine_candidate_truth_eligible": {"const": false}
+      }
+    },
+    "review_routing": {"const": {
+      "new_label_or_unknown": "human_review_required",
+      "low_confidence": "human_review_required",
+      "vlm_sam_conflict": "human_review_required",
+      "automatic_truth_promotion": false
+    }},
+    "fixed_holdout_exclusion": {
+      "type": "object", "additionalProperties": false,
+      "required": ["frame_id", "camera", "excluded_matches"],
+      "properties": {
+        "frame_id": {"const": "1789897506782450197"},
+        "camera": {"const": "camera_0"},
+        "excluded_matches": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}
+      }
+    },
+    "entry_count": {"type": "integer", "minimum": 0},
+    "entries": {"type": "array", "items": {"$ref": "#/$defs/entry"}},
+    "human_truth_available": {"const": false},
+    "formal_training_authorized": {"const": false},
+    "gpu_calls": {"const": 0},
+    "model_calls": {"const": 0},
+    "manifest_content_sha256": {"$ref": "#/$defs/hash"}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "entry": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dataset_id", "source_batch", "split", "sequence", "frame_id", "camera", "image_sha256", "input_id", "idempotency_key", "capture_time", "source_kind", "relative_image_path", "width", "height", "preannotation_sha256", "sam3_model_sha256", "vlm_config_sha256", "pipeline_config_sha256", "machine_preannotation_count", "output_candidate_path", "output_write_mode", "evaluation_only", "training_return_allowed", "candidate_only", "truth_eligible", "approved_for_training", "human_review_required_if", "automatic_truth_promotion"],
+      "properties": {
+        "dataset_id": {"type": "string", "minLength": 1},
+        "source_batch": {"type": "string", "minLength": 1},
+        "split": {"enum": ["train72", "test24"]},
+        "sequence": {"type": "string", "pattern": "^[0-9]{3}$"},
+        "frame_id": {"type": "string", "pattern": "^[0-9]+$"},
+        "camera": {"type": "string", "pattern": "^camera_[0-3]$"},
+        "image_sha256": {"$ref": "#/$defs/hash"},
+        "input_id": {"$ref": "#/$defs/hash"},
+        "idempotency_key": {"$ref": "#/$defs/hash"},
+        "capture_time": {"type": "string", "format": "date-time"},
+        "source_kind": {"const": "real"},
+        "relative_image_path": {"type": "string", "pattern": "^(train|test)/"},
+        "width": {"const": 640},
+        "height": {"const": 512},
+        "preannotation_sha256": {"$ref": "#/$defs/hash"},
+        "sam3_model_sha256": {"$ref": "#/$defs/hash"},
+        "vlm_config_sha256": {"$ref": "#/$defs/hash"},
+        "pipeline_config_sha256": {"$ref": "#/$defs/hash"},
+        "machine_preannotation_count": {"type": "integer", "minimum": 0},
+        "output_candidate_path": {"type": "string", "pattern": "^candidate_outputs/.+\\.candidate\\.json$"},
+        "output_write_mode": {"const": "append_only_explicit_new_version"},
+        "evaluation_only": {"type": "boolean"},
+        "training_return_allowed": {"const": false},
+        "candidate_only": {"const": true},
+        "truth_eligible": {"const": false},
+        "approved_for_training": {"const": false},
+        "human_review_required_if": {"const": ["new_label_or_unknown", "low_confidence", "vlm_sam_conflict"]},
+        "automatic_truth_promotion": {"const": false}
+      }
+    }
+  }
+}

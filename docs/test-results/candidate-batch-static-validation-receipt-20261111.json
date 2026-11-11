@@ -1,0 +1,52 @@
+{
+  "schema_version": "labelagent.candidate-batch-static-validation-receipt.v1",
+  "generated_at": "2026-11-11T17:35:21.2330578+08:00",
+  "execution": {
+    "mode": "static_cpu_hashing_only",
+    "gpu_calls": 0,
+    "model_calls": 0,
+    "remote_writes": false,
+    "candidate_outputs_written": false,
+    "human_truth_modified": false
+  },
+  "tool": {
+    "path": "tools/build_candidate_batch_manifest_v2.py",
+    "sha256": "76c2b33c08cf64ac8ff737bad8bd767bcb446fe2a07ea22458c54b3a154309c4"
+  },
+  "config": {
+    "path": "configs/labelagent_candidate_batch_plan.json",
+    "sha256": "9d587ae7a6ef633fe95e69d6437cd1d122d8ea196e683a996b95665729e309a1",
+    "execution_enabled": false
+  },
+  "manifests": [
+    {
+      "split": "train72",
+      "path": "docs/test-results/candidate-batch-manifest-train72-20261111.json",
+      "file_sha256": "89dab2b2552b860871b516670dd1961b84b5238d7fa9faa1ef695b182fba37a7",
+      "manifest_content_sha256": "8e1ded379e67e002184bf53ddac3a7b66ff1acc3531d403cc15026582ff3e5d7",
+      "entry_count": 72,
+      "evaluation_only": false,
+      "training_return_allowed": false
+    },
+    {
+      "split": "test24",
+      "path": "docs/test-results/candidate-batch-manifest-test24-20261111.json",
+      "file_sha256": "5d4da33709de7837ccaff1f735dbf80c3d6f8031f7966ad2e6ef5cc596df7251",
+      "manifest_content_sha256": "eacd9bf56a6051253f5934521f35897ae09687207145bf5847e74717dc14a49e",
+      "entry_count": 24,
+      "evaluation_only": true,
+      "training_return_allowed": false
+    }
+  ],
+  "routing": {
+    "new_label_or_unknown": "human_review_required",
+    "low_confidence": "human_review_required",
+    "vlm_sam_conflict": "human_review_required",
+    "automatic_truth_promotion": false
+  },
+  "write_policy": {
+    "mode": "append_only_explicit_new_version",
+    "overwrite_human_truth": false
+  },
+  "validation_passed": true
+}

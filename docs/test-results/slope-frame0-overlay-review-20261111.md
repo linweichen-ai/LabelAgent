@@ -22,13 +22,12 @@
 该帧固定携带：
 
 - `hard_case_tags=["slope"]`；
-- `label_type=slope`，`semantic_label=slope_visible`；
-- `business_mapping=traversable_area`；
-- `traversability_status=passable`；
-- `policy_default=passable, policy_basis=user_defined_project_semantics`。
+- `semantic_label=slope_visible`；
+- `traversability_status=review_required`；
+- `geometry_evidence_sufficient=false`。
 
-后续顺序为：VLM 对 `slope_visible` 和混淆类复核 → Agent 生成 ROI、正负点或明确 no-op → 必要时 SAM 重分割 → VLM/质量复核 → 人工像素审核 → 独立 `truth_version`。LiDAR/车辆约束可作为辅助观测或候选改善输入，但不再是 slope 映射为 traversable_area 的门禁。
+后续顺序为：VLM 对 `slope_visible` 和混淆类复核 → LiDAR/车辆几何门禁 → Agent 生成 ROI、正负点或明确 no-op → 必要时 SAM 重分割 → VLM/质量复核 → 人工像素审核 → 独立 `truth_version`。没有 LiDAR 平面、法向、高差、坡度、宽度、边缘落差、障碍和车辆约束证据前，不允许输出 `traversable`。
 
-当前 1920 frame0 工作台的 truth/reference 均为空，因此它仍不是人工真值或质量验收。人工像素真值缺失只阻止 IoU/训练与 `human_accepted/truth_committed`，不阻止候选感知 VLM、Agent action/no-op、VLM 二次复核和进入 `human_review_required`。固定 640×512 holdout 的实际链路另有独立回执，不以本帧替代。
+当前工作台的 `/api/run` 会强制要求已保存的人工作真值参考帧和相应描述，而 `/api/state` 回读的 truth/reference 均为空。因此本次没有启动自动标注任务，也没有用现有 SAM 候选伪造参考真值。要继续真实全流程，必须先由人确认或修正至少一帧 slope 像素真值；如果 frame0 作为参考帧，则另选同一实体/序列外的 slope 帧作为闭环目标，避免把参考真值当作目标预测效果。
 
 机器可读回执见 `slope-frame0-overlay-review-20261111.json`；专项指标与数据隔离规则见 `docs/SLOPE_SEGMENTATION_ACCEPTANCE.md`。

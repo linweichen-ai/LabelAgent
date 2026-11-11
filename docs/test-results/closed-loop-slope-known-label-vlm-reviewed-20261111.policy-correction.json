@@ -1,0 +1,36 @@
+{
+  "schema_version": "labelagent.legacy-slope-policy-correction.v1",
+  "correction_id": "corr-legacy-slope-vlm-7cc56fbe",
+  "occurred_at": "2026-11-11T15:51:45+08:00",
+  "immutable": true,
+  "archival_binding": {
+    "old_artifact_path": "docs/test-results/closed-loop-slope-known-label-vlm-reviewed-20261111.json",
+    "old_artifact_sha256": "7cc56fbe1c9493c5dadde5d0d8c0518cf585250e945ccbcad2ae6fc278b2c93e",
+    "old_event_id": "evt-slope-a000-f0-vlm-aee398ed",
+    "legacy_identifier": "evt-slope-a000-f0-vlm-aee398ed",
+    "archival_only": true,
+    "current_ingest_allowed": false
+  },
+  "superseded_by": "corr-legacy-slope-vlm-7cc56fbe",
+  "new_policy": {
+    "label_type": "slope",
+    "semantic_label": "slope_visible",
+    "business_mapping": "traversable_area",
+    "downstream_mapping": {
+      "operation": "union",
+      "source_labels": ["floor", "slope"],
+      "target_label": "traversable_area",
+      "preserve_source_labels": true
+    },
+    "traversability_status": "passable",
+    "policy_basis": "user_defined_project_semantics",
+    "human_pixel_truth_available": false,
+    "approved_for_training": false
+  },
+  "claim_boundary": {
+    "old_artifact_modified": false,
+    "machine_candidate_only": true,
+    "truth_committed": false,
+    "training_ready": false
+  }
+}

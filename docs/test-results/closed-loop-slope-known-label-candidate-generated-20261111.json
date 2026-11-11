@@ -30,8 +30,6 @@
     "model_name": "SAM3",
     "model_version": "sha256:9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
     "prompt_version": "point-positive-v1:(1100,620)",
-    "prompt_provenance": "assistant_selected_prompt",
-    "prompt_role": "operator_seed",
     "code_commit": "a6f3d313605af3b83666844bc379aa49599d14cf",
     "ontology_version": "labelagent-seven-class-20261111"
   },
@@ -41,9 +39,9 @@
     "reason_codes": [
       "KNOWN_LABEL_SLOPE",
       "HUMAN_PIXEL_TRUTH_MISSING",
-      "PROJECT_POLICY_DEFAULT_PASSABLE"
+      "GEOMETRY_EVIDENCE_MISSING"
     ],
-    "summary": "SAM produced one known-label slope_visible machine candidate. Project policy maps slope with floor to traversable_area; human pixel truth and training approval remain pending."
+    "summary": "SAM produced one known-label slope_visible candidate. It remains a machine candidate and is not approved for training or traversability."
   },
   "task_context": {
     "hard_case_tags": [
@@ -52,42 +50,17 @@
     "evaluation_stratum": "slope_hard_case"
   },
   "slope_context": {
-    "label_type": "slope",
     "semantic_label": "slope_visible",
-    "traversability_status": "passable",
-    "business_mapping": "traversable_area",
-    "downstream_mapping": {
-      "target_label": "traversable_area",
-      "operation": "union",
-      "source_labels": ["floor", "slope"],
-      "source_layer": "training_annotation",
-      "target_layer": "downstream_navigation",
-      "preserve_source_labels": true
-    },
-    "policy_default": "passable",
-    "policy_basis": "user_defined_project_semantics",
-    "policy_override": {
-      "status": "none",
-      "rule_id": null,
-      "reason": null,
-      "decided_by": null,
-      "evidence_artifact_ids": []
-    },
-    "visible_status": "candidate_supported",
-    "candidate_sha256": "b6652e98aac721dd929799de059fd310cf25fdde97ec488bf9ff43471d169565",
-    "evidence_provenance": [{
-      "kind": "sam_mask",
-      "source": "slope-frame0-sam-result",
-      "sha256": "b6652e98aac721dd929799de059fd310cf25fdde97ec488bf9ff43471d169565"
-    }],
-    "hard_set_strata": ["unassigned"],
+    "traversability_status": "unknown",
+    "geometry_evidence_sufficient": false,
+    "geometry_evidence_artifact_ids": [],
     "human_pixel_truth_available": false,
     "approved_for_training": false
   },
   "review": {
     "required": true,
     "status": "pending",
-    "reason": "Human pixel review is required only for segmentation truth, IoU and training approval; it does not block the project-default passable mapping.",
+    "reason": "Known-label slope hard case requires human pixel review; traversability also requires geometry and vehicle constraints.",
     "reviewer_type": "human",
     "reviewed_at": null
   },

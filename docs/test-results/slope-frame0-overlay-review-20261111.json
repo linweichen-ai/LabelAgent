@@ -14,29 +14,11 @@
     "evaluation_stratum": "slope_hard_case"
   },
   "slope_context": {
-    "label_type": "slope",
     "semantic_label": "slope_visible",
-    "traversability_status": "passable",
-    "business_mapping": "traversable_area",
-    "downstream_mapping": {
-      "target_label": "traversable_area",
-      "operation": "union",
-      "source_labels": ["floor", "slope"],
-      "source_layer": "training_annotation",
-      "target_layer": "downstream_navigation",
-      "preserve_source_labels": true
-    },
-    "policy_default": "passable",
-    "policy_basis": "user_defined_project_semantics",
-    "policy_override": {
-      "status": "none",
-      "rule_id": null,
-      "reason": null,
-      "decided_by": null,
-      "evidence_artifact_ids": []
-    },
-    "human_pixel_truth_available": false,
-    "approved_for_training": false
+    "traversability_status": "review_required",
+    "geometry_evidence_sufficient": false,
+    "geometry_evidence_artifact_ids": [],
+    "human_pixel_truth_available": false
   },
   "frame": {
     "width": 1920,
@@ -89,12 +71,12 @@
   },
   "next_closed_loop_order": [
     "vlm_slope_visible_review",
-    "optional_lidar_or_vehicle_observation",
+    "lidar_and_vehicle_geometry_gate",
     "agent_prompt_or_roi_action",
     "sam_resegmentation_if_needed",
     "vlm_and_quality_recheck",
     "human_pixel_review",
     "truth_version"
   ],
-  "claim": "A real slope candidate overlay was rendered and assistant-reviewed. Project policy maps slope to passable/traversable_area; human pixel truth, segmentation quality and closed-loop completion are not established."
+  "claim": "A real slope candidate overlay was rendered and assistant-reviewed. Human truth, segmentation quality, traversability, and closed-loop completion are not established."
 }

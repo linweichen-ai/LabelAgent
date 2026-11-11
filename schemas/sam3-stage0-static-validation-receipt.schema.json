@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labelagent.local/schemas/sam3-stage0-static-validation-receipt.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "generated_at", "package_id", "package_sha256", "plan_sha256", "rejection_receipt_sha256", "negative_deployment_decision_sha256", "execution_boundary", "gates", "training_started", "checkpoints_created", "deployment_candidates_created", "cnb_status", "receipt_sha256"],
+  "properties": {
+    "schema_version": {"const": "labelagent.sam3-stage0-static-validation.v1"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "package_id": {"type": "string", "minLength": 1},
+    "package_sha256": {"$ref": "#/$defs/sha"},
+    "plan_sha256": {"$ref": "#/$defs/sha"},
+    "rejection_receipt_sha256": {"$ref": "#/$defs/sha"},
+    "negative_deployment_decision_sha256": {"$ref": "#/$defs/sha"},
+    "execution_boundary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["cpu_only_static_validation", "process_created", "gpu_called", "remote_service_called", "cvat_called", "ssh_called", "oss_called"],
+      "properties": {
+        "cpu_only_static_validation": {"const": true}, "process_created": {"const": false},
+        "gpu_called": {"const": false}, "remote_service_called": {"const": false},
+        "cvat_called": {"const": false}, "ssh_called": {"const": false}, "oss_called": {"const": false}
+      }
+    },
+    "gates": {
+      "type": "object", "additionalProperties": false,
+      "required": ["exact_six_mask_embed_tensors", "exact_parameter_count_197376", "human_truth_required", "machine_preannotations_rejected_as_truth", "synthetic_fixtures_rejected_as_truth", "test24_evaluation_only", "fixed_holdout_training_forbidden", "single_dual_effective_batch_equal", "overall_and_slope_non_regression_required", "floor_slope_and_real_sim_reported_separately", "incumbent_retained_by_default", "two_stage_launcher"],
+      "properties": {
+        "exact_six_mask_embed_tensors": {"const": true}, "exact_parameter_count_197376": {"const": true},
+        "human_truth_required": {"const": true}, "machine_preannotations_rejected_as_truth": {"const": true},
+        "synthetic_fixtures_rejected_as_truth": {"const": true}, "test24_evaluation_only": {"const": true},
+        "fixed_holdout_training_forbidden": {"const": true}, "single_dual_effective_batch_equal": {"const": true},
+        "overall_and_slope_non_regression_required": {"const": true},
+        "floor_slope_and_real_sim_reported_separately": {"const": true},
+        "incumbent_retained_by_default": {"const": true}, "two_stage_launcher": {"const": true}
+      }
+    },
+    "training_started": {"const": false}, "checkpoints_created": {"const": 0},
+    "deployment_candidates_created": {"const": 0}, "cnb_status": {"const": "pending_not_contacted"},
+    "receipt_sha256": {"$ref": "#/$defs/sha"}
+  },
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

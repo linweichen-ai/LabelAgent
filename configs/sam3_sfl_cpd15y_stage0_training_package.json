@@ -1,0 +1,150 @@
+{
+  "schema_version": "labelagent.sam3-stage0-training-package.v1",
+  "package_id": "sam3-sfl-cpd15y-stage0-mask-embed-20261111-v1",
+  "execution_policy": {
+    "allowed_modes": ["compile", "dry_run", "explicit_launch_after_new_authorization"],
+    "default_mode": "compile",
+    "auto_start": false,
+    "process_creation_currently_allowed": false
+  },
+  "model": {
+    "base_checkpoint_path": "/home/clw/models/labelagent/sam3.pt",
+    "base_checkpoint_sha256": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+    "checkpoint_hash_verified_by": "docs/test-results/formal-ddp-preflight-input-20261111.json",
+    "stage0_recipe_path": "source/sam3/sam3/train/configs/sfl_cpd15y/stage0_mask_embed.yaml",
+    "stage0_recipe_sha256": "c8031bb729405c3826d8441022337327510876c6e18e1b3d774b482d164eaf50",
+    "stage0_single_gpu_recipe_path": "source/sam3/sam3/train/configs/sfl_cpd15y/stage0_mask_embed_single_gpu.yaml",
+    "stage0_single_gpu_recipe_sha256": "06e6640a316fadfa3de21f1691cdc6d97a43f880da4e580e1934a1ea199ac5d8",
+    "base_recipe_path": "source/sam3/sam3/train/configs/roboflow_v100/roboflow_v100_full_ft_100_images.yaml",
+    "base_recipe_sha256": "ccd1c200fec949890c4c06ba299b34ce73b82ef6cafe70bc6edfe9707fce96d0",
+    "scope_module_path": "source/sam3/sam3/train/stage0_scope.py",
+    "scope_module_sha256": "f2529f1571489afd95a994ed879d19287d11a4582bc900e14b8b2e4a3f39387d",
+    "trainer_module_path": "source/sam3/sam3/train/stage0_trainer.py",
+    "trainer_module_sha256": "8beeff67d273486db83d61ec79509324fe917859d98e6fd4df33c6ffeadd6087",
+    "full_model_training": false,
+    "adapter_or_lora_claimed": false
+  },
+  "trainable_scope": {
+    "stage": 0,
+    "name": "mask_embed_only_minimal_reversible_baseline",
+    "exact_parameter_names": [
+      "segmentation_head.mask_predictor.mask_embed.layers.0.weight",
+      "segmentation_head.mask_predictor.mask_embed.layers.0.bias",
+      "segmentation_head.mask_predictor.mask_embed.layers.1.weight",
+      "segmentation_head.mask_predictor.mask_embed.layers.1.bias",
+      "segmentation_head.mask_predictor.mask_embed.layers.2.weight",
+      "segmentation_head.mask_predictor.mask_embed.layers.2.bias"
+    ],
+    "tensor_count": 6,
+    "parameter_count": 197376,
+    "exact_names_sha256": "efacf600a68248109986db8b610f9861a8255e586aa64a2909cfcaeaded686a1",
+    "image_backbone_frozen": true,
+    "language_backbone_frozen": true
+  },
+  "truth": {
+    "required_source": "cvat_human_completed_pixel_masks",
+    "truth_version_id": null,
+    "truth_version_sha256": null,
+    "manifest_path": null,
+    "manifest_sha256": null,
+    "annotation_export_sha256": null,
+    "human_completed": false,
+    "immutable_version_verified": false
+  },
+  "data": {
+    "train_source": "train72_human_truth_only",
+    "train_manifest_sha256": null,
+    "validation_source": "train72_sequence_disjoint_human_truth_subset",
+    "validation_manifest_sha256": null,
+    "test24_role": "evaluation_only",
+    "test24_in_training": false,
+    "fixed_holdout_input_id": "bc706b57eedaea59e3deda1e25eb5a20002e90b61089083e84d2f98130c5600b",
+    "fixed_holdout_in_training": false,
+    "machine_preannotations_truth_eligible": false,
+    "synthetic_fixtures_truth_eligible": false,
+    "split_isolation_verified": false,
+    "real_sim_training_manifests_separate": true
+  },
+  "holdout": {
+    "fixed_independent_manifest_path": null,
+    "fixed_independent_manifest_sha256": null,
+    "incumbent_baseline_metrics_path": null,
+    "incumbent_baseline_metrics_sha256": null,
+    "baseline_verified": false,
+    "protected_from_training": true
+  },
+  "determinism": {
+    "seed": 3407,
+    "python_seed": 3407,
+    "numpy_seed": 3407,
+    "torch_seed": 3407,
+    "cuda_seed": 3407,
+    "cudnn_deterministic": true,
+    "cudnn_benchmark": false,
+    "allow_tf32": false
+  },
+  "topology": {
+    "equivalence_contract": "same_seed_data_order_optimizer_schedule_and_effective_global_batch",
+    "single_gpu": {"world_size": 1, "batch_per_gpu": 1, "gradient_accumulation_steps": 2, "effective_global_batch": 2},
+    "dual_gpu": {"strategy": "synchronous_ddp", "backend": "nccl", "world_size": 2, "batch_per_gpu": 1, "gradient_accumulation_steps": 1, "effective_global_batch": 2},
+    "gradient_reduction": "mean",
+    "equivalence_tolerance": {"loss_abs": 1e-5, "parameter_max_abs": 1e-5}
+  },
+  "optimization": {
+    "optimizer": "AdamW",
+    "learning_rate": 0.0001,
+    "weight_decay": 0.01,
+    "gradient_clip_norm": 0.1,
+    "precision": "bf16",
+    "max_epochs": 20,
+    "validation_every_epochs": 1,
+    "early_stopping": {"enabled": true, "metric": "train72_sequence_disjoint_val.mask_iou", "mode": "max", "patience_epochs": 5, "min_delta": 0.001, "fixed_holdout_used": false}
+  },
+  "checkpointing": {
+    "rank0_only": true,
+    "save_every_epochs": 1,
+    "save_best_metric": "train72_sequence_disjoint_val.mask_iou",
+    "save_last": true,
+    "record_sha256": true,
+    "resume_requires_config_and_truth_hash_match": true
+  },
+  "evaluation_gate": {
+    "required_metrics": ["mask_iou", "boundary_f1", "object_precision", "object_recall", "false_positives"],
+    "required_views": ["overall", "per_class", "source_real", "source_simulation"],
+    "required_classes": ["floor", "slope"],
+    "overall_non_regression_required": true,
+    "slope_non_regression_required": true,
+    "false_positives_must_not_increase": true,
+    "deployment_candidate_only_after_pass": true,
+    "incumbent_default": "retain_original_sam3"
+  },
+  "resources": {
+    "required_host_class": "dual_5090",
+    "required_gpu_count": 2,
+    "resource_snapshot_current": false,
+    "no_other_user_gpu_processes_verified": false,
+    "factory_4090_baseline_protected": true,
+    "ddp_initialization_verified_for_this_package": false,
+    "stage0_runtime_controls_verified": false
+  },
+  "paths": {
+    "output_root": "/home/clw/projects/labelagent-5090/train_runs/sam3_stage0",
+    "checkpoint_root": "/home/clw/projects/labelagent-5090/train_runs/sam3_stage0/checkpoints",
+    "rollback_checkpoint_path": "/home/clw/models/labelagent/sam3.pt",
+    "rollback_checkpoint_sha256": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+    "overwrite_existing_output": false
+  },
+  "resume_and_rollback": {
+    "resume_requires_explicit_checkpoint_sha256": true,
+    "resume_requires_same_truth_manifest_sha256": true,
+    "resume_requires_same_recipe_sha256": true,
+    "rollback_on_gate_failure": true,
+    "rollback_target": "base_checkpoint",
+    "deployment_alias_switch_only_after_acceptance": true
+  },
+  "authorization": {
+    "formal_training_authorized": false,
+    "launch_authorization_receipt_path": null,
+    "launch_authorization_receipt_sha256": null
+  }
+}

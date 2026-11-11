@@ -1,0 +1,14 @@
+{
+  "candidate_checkpoint_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+  "decision_sha256": "a1b7f5fcd6128da465fa92aeed4db72bf2c9be8c4382a124bfdb11736d26999e",
+  "deployment_candidate": false,
+  "evaluation_id": "STATIC_TEST_ONLY_SLOPE_REGRESSION",
+  "failures": [
+    "slope.boundary_f1_regressed"
+  ],
+  "fixed_holdout_manifest_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "incumbent_retained": true,
+  "overall_and_slope_non_regression_passed": false,
+  "real_sim_metrics_reported_separately": true,
+  "schema_version": "labelagent.sam3-stage0-deployment-decision.v1"
+}

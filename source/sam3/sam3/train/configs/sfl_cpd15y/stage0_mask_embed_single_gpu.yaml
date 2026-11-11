@@ -1,0 +1,14 @@
+# @package _global_
+defaults:
+  - stage0_mask_embed
+  - _self_
+
+# Equivalence profile for one-GPU verification only. The formal run remains DDP.
+scratch:
+  gradient_accumulation_steps: 2
+
+trainer:
+  gradient_accumulation_steps: ${scratch.gradient_accumulation_steps}
+
+launcher:
+  gpus_per_node: 1

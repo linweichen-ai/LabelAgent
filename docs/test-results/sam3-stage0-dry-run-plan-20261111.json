@@ -1,0 +1,134 @@
+{
+  "automatic_launch_performed": false,
+  "base_checkpoint_path": "/home/clw/models/labelagent/sam3.pt",
+  "base_checkpoint_sha256": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+  "blockers": [
+    "genuine_human_pixel_truth_missing",
+    "immutable_truth_version_or_manifest_binding_missing",
+    "train72_train_val_manifest_or_isolation_missing",
+    "fixed_independent_holdout_baseline_missing",
+    "dual_5090_resource_or_ddp_admission_missing",
+    "stage0_early_stop_checkpoint_runtime_control_unverified",
+    "explicit_training_authorization_missing",
+    "current_package_compile_only_process_creation_forbidden"
+  ],
+  "checkpointing": {
+    "rank0_only": true,
+    "record_sha256": true,
+    "resume_requires_config_and_truth_hash_match": true,
+    "save_best_metric": "train72_sequence_disjoint_val.mask_iou",
+    "save_every_epochs": 1,
+    "save_last": true
+  },
+  "command_preview": [
+    "python",
+    "-m",
+    "sam3.train.train",
+    "--config",
+    "sfl_cpd15y/stage0_mask_embed",
+    "--num-gpus",
+    "2",
+    "--num-nodes",
+    "1",
+    "--use-cluster",
+    "0"
+  ],
+  "compiled_at": "2026-11-11T23:40:00+08:00",
+  "dual_gpu_profile": {
+    "backend": "nccl",
+    "batch_per_gpu": 1,
+    "effective_global_batch": 2,
+    "gradient_accumulation_steps": 1,
+    "strategy": "synchronous_ddp",
+    "world_size": 2
+  },
+  "evaluation_gate": {
+    "deployment_candidate_only_after_pass": true,
+    "false_positives_must_not_increase": true,
+    "incumbent_default": "retain_original_sam3",
+    "overall_non_regression_required": true,
+    "required_classes": [
+      "floor",
+      "slope"
+    ],
+    "required_metrics": [
+      "mask_iou",
+      "boundary_f1",
+      "object_precision",
+      "object_recall",
+      "false_positives"
+    ],
+    "required_views": [
+      "overall",
+      "per_class",
+      "source_real",
+      "source_simulation"
+    ],
+    "slope_non_regression_required": true
+  },
+  "fixed_holdout_manifest_sha256": null,
+  "gpu_called": false,
+  "next_action": "remain_blocked_compile_only",
+  "optimizer": {
+    "early_stopping": {
+      "enabled": true,
+      "fixed_holdout_used": false,
+      "metric": "train72_sequence_disjoint_val.mask_iou",
+      "min_delta": 0.001,
+      "mode": "max",
+      "patience_epochs": 5
+    },
+    "gradient_clip_norm": 0.1,
+    "learning_rate": 0.0001,
+    "max_epochs": 20,
+    "optimizer": "AdamW",
+    "precision": "bf16",
+    "validation_every_epochs": 1,
+    "weight_decay": 0.01
+  },
+  "package_id": "sam3-sfl-cpd15y-stage0-mask-embed-20261111-v1",
+  "package_path": "configs/sam3_sfl_cpd15y_stage0_training_package.json",
+  "package_sha256": "0d987eb7fcab27f450568520d49d671550dc9e8f69d4a112e5d80d13a1fb7929",
+  "parameter_count": 197376,
+  "parameter_names_sha256": "efacf600a68248109986db8b610f9861a8255e586aa64a2909cfcaeaded686a1",
+  "plan_sha256": "d5f2b92934a28f1f25a58cedf4beff65bff17d8ca3f7dd091814f5db25e39c89",
+  "process_created": false,
+  "required_environment": [
+    "SAM3_STAGE0_DATA_ROOT",
+    "SAM3_STAGE0_TRAIN_ROOT",
+    "SAM3_STAGE0_VAL_ROOT",
+    "SAM3_STAGE0_OUTPUT_ROOT",
+    "SAM3_STAGE0_BPE_PATH",
+    "SAM3_STAGE0_CHECKPOINT"
+  ],
+  "schema_version": "labelagent.sam3-stage0-dry-run-plan.v1",
+  "single_gpu_equivalence_command_preview": [
+    "python",
+    "-m",
+    "sam3.train.train",
+    "--config",
+    "sfl_cpd15y/stage0_mask_embed_single_gpu",
+    "--num-gpus",
+    "1",
+    "--num-nodes",
+    "1",
+    "--use-cluster",
+    "0"
+  ],
+  "single_gpu_equivalence_profile": {
+    "batch_per_gpu": 1,
+    "effective_global_batch": 2,
+    "gradient_accumulation_steps": 2,
+    "world_size": 1
+  },
+  "stage0_recipe_path": "source/sam3/sam3/train/configs/sfl_cpd15y/stage0_mask_embed.yaml",
+  "stage0_recipe_sha256": "c8031bb729405c3826d8441022337327510876c6e18e1b3d774b482d164eaf50",
+  "stage0_single_gpu_recipe_path": "source/sam3/sam3/train/configs/sfl_cpd15y/stage0_mask_embed_single_gpu.yaml",
+  "stage0_single_gpu_recipe_sha256": "06e6640a316fadfa3de21f1691cdc6d97a43f880da4e580e1934a1ea199ac5d8",
+  "status": "rejected_fail_closed",
+  "tensor_count": 6,
+  "train_manifest_sha256": null,
+  "truth_manifest_sha256": null,
+  "truth_version_id": null,
+  "validation_manifest_sha256": null
+}

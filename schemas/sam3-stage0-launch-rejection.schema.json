@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://labelagent.local/schemas/sam3-stage0-launch-rejection.schema.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "package_id", "plan_sha256", "status", "blockers", "process_created", "gpu_called", "training_started", "checkpoint_created", "deployment_candidate_created", "incumbent_retained", "next_action", "receipt_sha256"],
+  "properties": {"schema_version": {"const": "labelagent.sam3-stage0-launch-rejection.v1"}, "package_id": {"type": "string"}, "plan_sha256": {"$ref": "#/$defs/sha"}, "status": {"const": "rejected_fail_closed"}, "blockers": {"type": "array", "minItems": 1, "uniqueItems": true}, "process_created": {"const": false}, "gpu_called": {"const": false}, "training_started": {"const": false}, "checkpoint_created": {"const": false}, "deployment_candidate_created": {"const": false}, "incumbent_retained": {"const": true}, "next_action": {"const": "await_genuine_truth_holdout_and_resource_authorization"}, "receipt_sha256": {"$ref": "#/$defs/sha"}},
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

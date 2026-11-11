@@ -1,0 +1,38 @@
+{
+  "schema_version": "labelagent.sam3-stage0-model-card.v1",
+  "model_id": "sam3-sfl-cpd15y-stage0-mask-embed",
+  "status": "not_trained_truth_gate_blocked",
+  "base_checkpoint": {
+    "path": "/home/clw/models/labelagent/sam3.pt",
+    "sha256": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e"
+  },
+  "candidate_checkpoint": null,
+  "trainable_scope": {
+    "tensor_count": 6,
+    "parameter_count": 197376,
+    "exact_names_sha256": "efacf600a68248109986db8b610f9861a8255e586aa64a2909cfcaeaded686a1"
+  },
+  "training_data": {
+    "truth_version_id": null,
+    "truth_manifest_sha256": null,
+    "machine_preannotations_used_as_truth": false,
+    "test24_used_for_training": false,
+    "fixed_holdout_used_for_training": false
+  },
+  "evaluation": {
+    "status": "not_run",
+    "overall_metrics": null,
+    "floor_metrics": null,
+    "slope_metrics": null,
+    "real_metrics": null,
+    "simulation_metrics": null,
+    "deployment_candidate": false
+  },
+  "rollback": {
+    "incumbent_retained": true,
+    "path": "/home/clw/models/labelagent/sam3.pt",
+    "sha256": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+    "alias_switch_performed": false
+  },
+  "claim_boundary": "configuration_and_dry_run_only_no_training_metrics_or_checkpoint"
+}

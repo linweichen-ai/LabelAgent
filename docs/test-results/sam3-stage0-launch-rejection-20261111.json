@@ -1,0 +1,24 @@
+{
+  "blockers": [
+    "genuine_human_pixel_truth_missing",
+    "immutable_truth_version_or_manifest_binding_missing",
+    "train72_train_val_manifest_or_isolation_missing",
+    "fixed_independent_holdout_baseline_missing",
+    "dual_5090_resource_or_ddp_admission_missing",
+    "stage0_early_stop_checkpoint_runtime_control_unverified",
+    "explicit_training_authorization_missing",
+    "current_package_compile_only_process_creation_forbidden"
+  ],
+  "checkpoint_created": false,
+  "deployment_candidate_created": false,
+  "gpu_called": false,
+  "incumbent_retained": true,
+  "next_action": "await_genuine_truth_holdout_and_resource_authorization",
+  "package_id": "sam3-sfl-cpd15y-stage0-mask-embed-20261111-v1",
+  "plan_sha256": "d5f2b92934a28f1f25a58cedf4beff65bff17d8ca3f7dd091814f5db25e39c89",
+  "process_created": false,
+  "receipt_sha256": "90602bfb40d3528d7de80cb6c91af7cfbae4b240fec1525580f93db321c6b320",
+  "schema_version": "labelagent.sam3-stage0-launch-rejection.v1",
+  "status": "rejected_fail_closed",
+  "training_started": false
+}

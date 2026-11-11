@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://labelagent.local/schemas/sam3-stage0-deployment-decision.schema.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "evaluation_id", "fixed_holdout_manifest_sha256", "candidate_checkpoint_sha256", "overall_and_slope_non_regression_passed", "failures", "deployment_candidate", "incumbent_retained", "real_sim_metrics_reported_separately", "decision_sha256"],
+  "properties": {"schema_version": {"const": "labelagent.sam3-stage0-deployment-decision.v1"}, "evaluation_id": {"type": "string"}, "fixed_holdout_manifest_sha256": {"$ref": "#/$defs/sha"}, "candidate_checkpoint_sha256": {"$ref": "#/$defs/sha"}, "overall_and_slope_non_regression_passed": {"type": "boolean"}, "failures": {"type": "array", "uniqueItems": true}, "deployment_candidate": {"type": "boolean"}, "incumbent_retained": {"type": "boolean"}, "real_sim_metrics_reported_separately": {"const": true}, "decision_sha256": {"$ref": "#/$defs/sha"}},
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

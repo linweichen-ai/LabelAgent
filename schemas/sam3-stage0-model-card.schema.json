@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://labelagent.local/schemas/sam3-stage0-model-card.schema.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "model_id", "status", "base_checkpoint", "candidate_checkpoint", "trainable_scope", "training_data", "evaluation", "rollback", "claim_boundary"],
+  "properties": {"schema_version": {"const": "labelagent.sam3-stage0-model-card.v1"}, "model_id": {"type": "string"}, "status": {"const": "not_trained_truth_gate_blocked"}, "base_checkpoint": {"type": "object"}, "candidate_checkpoint": {"type": "null"}, "trainable_scope": {"type": "object", "properties": {"tensor_count": {"const": 6}, "parameter_count": {"const": 197376}}}, "training_data": {"type": "object", "properties": {"machine_preannotations_used_as_truth": {"const": false}, "test24_used_for_training": {"const": false}, "fixed_holdout_used_for_training": {"const": false}}}, "evaluation": {"type": "object", "properties": {"status": {"const": "not_run"}, "deployment_candidate": {"const": false}}}, "rollback": {"type": "object", "properties": {"incumbent_retained": {"const": true}, "alias_switch_performed": {"const": false}}}, "claim_boundary": {"const": "configuration_and_dry_run_only_no_training_metrics_or_checkpoint"}}
+}

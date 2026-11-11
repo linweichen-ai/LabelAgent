@@ -1,0 +1,37 @@
+{
+  "checkpoints_created": 0,
+  "cnb_status": "pending_not_contacted",
+  "deployment_candidates_created": 0,
+  "execution_boundary": {
+    "cpu_only_static_validation": true,
+    "cvat_called": false,
+    "gpu_called": false,
+    "oss_called": false,
+    "process_created": false,
+    "remote_service_called": false,
+    "ssh_called": false
+  },
+  "gates": {
+    "exact_parameter_count_197376": true,
+    "exact_six_mask_embed_tensors": true,
+    "fixed_holdout_training_forbidden": true,
+    "floor_slope_and_real_sim_reported_separately": true,
+    "human_truth_required": true,
+    "incumbent_retained_by_default": true,
+    "machine_preannotations_rejected_as_truth": true,
+    "overall_and_slope_non_regression_required": true,
+    "single_dual_effective_batch_equal": true,
+    "synthetic_fixtures_rejected_as_truth": true,
+    "test24_evaluation_only": true,
+    "two_stage_launcher": true
+  },
+  "generated_at": "2026-11-11T23:41:00+08:00",
+  "negative_deployment_decision_sha256": "a1b7f5fcd6128da465fa92aeed4db72bf2c9be8c4382a124bfdb11736d26999e",
+  "package_id": "sam3-sfl-cpd15y-stage0-mask-embed-20261111-v1",
+  "package_sha256": "0d987eb7fcab27f450568520d49d671550dc9e8f69d4a112e5d80d13a1fb7929",
+  "plan_sha256": "d5f2b92934a28f1f25a58cedf4beff65bff17d8ca3f7dd091814f5db25e39c89",
+  "receipt_sha256": "607f00003716f933a2c30fbd44445b26f40a15dc33417f1bb51dee4c78cdf9d7",
+  "rejection_receipt_sha256": "90602bfb40d3528d7de80cb6c91af7cfbae4b240fec1525580f93db321c6b320",
+  "schema_version": "labelagent.sam3-stage0-static-validation.v1",
+  "training_started": false
+}

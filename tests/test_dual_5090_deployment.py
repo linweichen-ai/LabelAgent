@@ -6,11 +6,16 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class Dual5090DeploymentTests(unittest.TestCase):
-    def test_linux_deployment_files_use_lf_line_endings(self):
-        for relative in ("tools/dual_5090_services.sh",
-                         "tools/dual_5090.env.example"):
-            content = (ROOT / relative).read_bytes()
-            self.assertNotIn(b"\r\n", content, relative)
+    def test_all_shell_scripts_use_lf_line_endings(self):
+        scripts = sorted((ROOT / "tools").rglob("*.sh"))
+        self.assertTrue(scripts, "no shell scripts found")
+        for path in scripts:
+            relative = path.relative_to(ROOT).as_posix()
+            self.assertNotIn(b"\r", path.read_bytes(), relative)
+
+    def test_linux_environment_template_uses_lf_line_endings(self):
+        relative = "tools/dual_5090.env.example"
+        self.assertNotIn(b"\r", (ROOT / relative).read_bytes(), relative)
 
     def test_health_url_is_built_after_port_assignment(self):
         script = (ROOT / "tools/dual_5090_services.sh").read_text(encoding="utf-8")

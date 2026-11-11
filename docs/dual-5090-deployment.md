@@ -15,6 +15,15 @@
 
 ## 配置与启动
 
+发布或复制到 Linux 前必须先运行原始字节换行门禁：
+
+```bash
+python -m unittest \
+  tests.test_dual_5090_deployment.Dual5090DeploymentTests.test_all_shell_scripts_use_lf_line_endings
+```
+
+该门禁递归检查 `tools/**/*.sh`，任何 `CR`/CRLF 字节都会使发布失败。`.gitattributes` 的 `*.sh text eol=lf` 不能替代这个读回检查：旧 Windows 工作树或绕过 Git 属性的复制仍可能把 CRLF 带入部署包。命中时只允许先保存逐文件 SHA-256 和原件，再做 CRLF 到 LF 的纯换行转换；不得借修复换行修改脚本逻辑。
+
 复制 `tools/dual_5090.env.example` 为服务器上的 `~/projects/labelagent-5090/dual-5090.env`，填写两张卡的 UUID。SAM 权重应位于 `source/sam3/weights/*.pt`，VLM 目录必须包含 `config.json`。
 
 ```bash

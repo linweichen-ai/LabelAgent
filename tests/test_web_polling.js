@@ -190,6 +190,42 @@ test('瞬时故障重试时同一任务进度不倒退，新任务重新计数',
   assert.equal(element('runProgressTitle').textContent, '服务短暂异常，正在自动重试本帧');
   h.run("renderAgentProgressPanel({task_id:'b',status:'running',phase:'retrying',total:1,completed:0,events:[]},2)");
   assert.equal(element('runProgressPercent').textContent, '18%');
+  h.run("renderAgentProgressPanel({task_id:'b',status:'running',phase:'vlm_waiting',total:1,completed:0,round:2,max_rounds:6,retry_in_seconds:10,events:[]},12)");
+  assert.equal(element('runProgressTitle').textContent, 'VLM 正忙，任务正在排队等待');
+  assert.ok(element('runProgressDetail').textContent.includes('约 10 秒后'));
+  assert.equal(element('runProgressRound').textContent, '2 / 6');
+});
+
+test('状态读取超过八秒会解除轮询占用并在主面板提示恢复', async () => {
+  let renders = 0;
+  class FakeAbortController {
+    constructor() { this.signal = {}; }
+    abort() { if (this.signal.onabort) this.signal.onabort(); }
+  }
+  const button = { title: '', removeAttribute() {} };
+  const h = harness({
+    AbortController: FakeAbortController,
+    progressFetching: false,
+    runStatusFailureCount: 0,
+    runStatusConnectionMessage: '',
+    latestAgentJob: {status: 'running'},
+    $() { return button; },
+    renderRunButton() { renders++; },
+    fetch(url, options) {
+      return new Promise((resolve, reject) => {
+        options.signal.onabort = () => {
+          const error = new Error('aborted'); error.name = 'AbortError'; reject(error);
+        };
+      });
+    },
+  });
+  h.run(section(source('app.js'), 'async function fetchAgentStatus', 'async function ensureAutoLabelReadiness'));
+  const pending = h.run('refreshAgentProgress()');
+  await h.advance(8000);
+  await pending;
+  assert.equal(h.context.progressFetching, false);
+  assert.ok(h.context.runStatusConnectionMessage.includes('超过 8 秒'));
+  assert.equal(renders, 1);
 });
 
 test('模型未就绪时预检明确失败且不伪装为推理已启动', async () => {

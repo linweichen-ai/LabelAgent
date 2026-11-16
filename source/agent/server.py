@@ -53,6 +53,7 @@ run_status = {"status": "idle"}
 run_stop_event = threading.Event()
 run_task_id = None
 file_sessions_dirty = False
+DEFAULT_REVIEW_ROUNDS = 6
 
 
 def _update_run_status_locked(**changes):
@@ -143,6 +144,13 @@ def transient_run_failure(result):
         for key in ("error", "reason")
     ).lower()
     return next((marker for marker in TRANSIENT_RUN_ERROR_MARKERS if marker in text), None)
+
+
+def requested_review_rounds(body):
+    value = int((body or {}).get("max_rounds", DEFAULT_REVIEW_ROUNDS))
+    if not 1 <= value <= MAX_REVIEW_ROUNDS:
+        raise ValueError(f"复查轮数须为 1～{MAX_REVIEW_ROUNDS}")
+    return value
 
 
 def discover_reference_labels(config, image, labels, on_retry=None):
@@ -2390,6 +2398,7 @@ def generate_reference_draft():
                 raise ValueError("该帧已有已核验人工真值，请直接复用或另选未标注帧")
             raise ValueError("该帧已有历史标注，请先载入历史标注并完成人工复核")
         auto_detect_visible = body.get("auto_detect_visible") is True
+        max_rounds = requested_review_rounds(body)
         requested = list(state.get("labels", [])) if auto_detect_visible else body.get("labels")
         if not isinstance(requested, list) or not requested:
             raise ValueError("请选择至少一个参考类别，或启用自动识别可见类别")
@@ -2418,7 +2427,7 @@ def generate_reference_draft():
         with run_status_lock:
             _update_run_status_locked(status="running", frame=index, completed=0, total=1,
                 phase="discovering" if auto_detect_visible else "describing", round=0, error=None,
-                topic=selected_topic, file=file_name)
+                topic=selected_topic, file=file_name, max_rounds=max_rounds)
 
     debug_key = config.get("llm_key")
     def redact_snapshot(value):
@@ -2431,6 +2440,10 @@ def generate_reference_draft():
         return value
 
     def on_trace(event):
+        if event.get("service") == "GPT" and event.get("status") == "waiting":
+            update_run_status(phase="vlm_waiting",
+                              busy_retry_count=event.get("busy_retry_count", 1),
+                              retry_in_seconds=event.get("retry_in_seconds"), error=None)
         record = redact_snapshot(event | {"frame": index,
             "topic": selected_topic, "file": file_name,
             "purpose": "参考帧机器草稿"})
@@ -2480,7 +2493,7 @@ def generate_reference_draft():
                 "description_input_version": DESCRIPTION_INPUT_VERSION,
                 "llm_model": config.get("llm_model"),
                 "llm_prompt_profile": config.get("llm_prompt_profile", "full"),
-                "max_review_rounds": MAX_REVIEW_ROUNDS,
+                "max_review_rounds": max_rounds,
                 "sam_prompts": prompt_payload,
                 "auto_detect_visible": auto_detect_visible,
                 "discovery_sha256": discovery_sha256,
@@ -2500,7 +2513,7 @@ def generate_reference_draft():
                 raise RunCancelled("用户已停止参考帧草稿生成")
             update_run_status(phase="generating")
             result = run(config, target_image, description, selected,
-                         max_rounds=MAX_REVIEW_ROUNDS,
+                         max_rounds=max_rounds,
                          on_progress=on_progress, reference=None)
         if result["agent"].get("stop_reason") == "error":
             raise RuntimeError("SAM/VLM/Agent 未能生成有效参考帧草稿")
@@ -2641,7 +2654,7 @@ def run_workflow():
         if not state["truth"].get(str(reference)):
             raise ValueError("请先保存参考帧真值")
         count = int(body.get("count", 10))
-        max_rounds = MAX_REVIEW_ROUNDS
+        max_rounds = requested_review_rounds(body)
         if not 1 <= count <= 100:
             raise ValueError("处理帧数须为 1～100")
         last = min(index + count, topic_count)
@@ -2689,9 +2702,14 @@ def run_workflow():
         with run_status_lock:
             _update_run_status_locked(status="running", frame=None, completed=0, total=len(targets),
                               phase="starting", round=0, error=None, topic=topic, file=file_name,
-                              started_at=time.time(), events=[], shape_count=0)
+                              started_at=time.time(), events=[], shape_count=0,
+                              max_rounds=max_rounds)
     trace_frame = reference
     def on_trace(event):
+        if event.get("service") == "GPT" and event.get("status") == "waiting":
+            update_run_status(phase="vlm_waiting",
+                              busy_retry_count=event.get("busy_retry_count", 1),
+                              retry_in_seconds=event.get("retry_in_seconds"), error=None)
         with run_status_lock:
             phase, round_number = run_status.get("phase"), run_status.get("round", 0)
         event = redact_debug(event | {"frame": trace_frame, "round": round_number,

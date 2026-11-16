@@ -283,7 +283,15 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
                            or '"busy"' in detail.lower()))
             if local_busy and busy_attempt < busy_retry_limit:
                 busy_retry_count += 1
-                _wait_cancellable(min(30, 5 * (2 ** busy_attempt)))
+                retry_seconds = min(30, 5 * (2 ** busy_attempt))
+                review_call = _review_call.get()
+                trace_record = review_call.get("record") if review_call else None
+                if trace_record is not None:
+                    trace_record.update(status="waiting", busy_retry_count=busy_retry_count,
+                                        retry_in_seconds=retry_seconds,
+                                        error="Local VLM is busy; waiting for the shared model slot")
+                    _emit_trace(trace_record)
+                _wait_cancellable(retry_seconds)
                 continue
             raise ValueError(f"大模型请求失败（HTTP {error.code}）：{detail}") from error
         except urllib.error.URLError as error:
@@ -1307,10 +1315,25 @@ def candidate_holes(shapes, labels, width, height):
 
 
 def select_review_gaps(holes, maximum=4):
-    """Keep the largest actionable gaps so one review cannot explode in size."""
+    """Keep the largest actionable gaps so one review cannot explode in size.
+
+    Morphological closing naturally creates strips along image borders when a
+    floor mask reaches beyond the camera view.  Those strips have no visible
+    exterior context and are unsafe fill proposals, so never send them to the
+    VLM as repairable open gaps.  Enclosed holes remain reviewable.
+    """
     if type(maximum) is not int or not 1 <= maximum <= 20:
         raise ValueError("max_review_gaps must be an integer from 1 to 20")
-    selected = sorted(holes, key=lambda item: item["area"], reverse=True)[:maximum]
+    actionable = []
+    for item in holes:
+        mask = item.get("mask")
+        if item.get("kind") == "open_gap" and isinstance(mask, np.ndarray) and mask.ndim == 2:
+            height, width = mask.shape
+            x1, y1, x2, y2 = item["bbox"]
+            if x1 <= 0 or y1 <= 0 or x2 >= width - 1 or y2 >= height - 1:
+                continue
+        actionable.append(item)
+    selected = sorted(actionable, key=lambda item: item["area"], reverse=True)[:maximum]
     return sorted(selected, key=lambda item: (item["bbox"][1], item["bbox"][0], -item["area"]))
 
 

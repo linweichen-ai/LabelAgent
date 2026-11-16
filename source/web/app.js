@@ -470,11 +470,11 @@ $('doneFilesButton').onclick=()=>$('fileManager').close();
 $('configSave').onclick=async()=>{try{await api('config',{llm_url:$('llmUrl').value,llm_model:$('llmModel').value,llm_key:$('llmKey').value});$('config').close();toast('配置已保存')}catch(e){toast(e.message)}};
 let currentDescription=null;
 $('describeButton').onclick=async()=>{const button=$('describeButton');if(button.disabled)return;button.disabled=true;button.textContent='生成中…';toast('正在生成真值描述…');try{currentDescription=await api('describe',{frame});toast('描述已生成')}catch(e){toast(e.message)}finally{button.disabled=false;button.textContent='生成真值描述'}};
- const agentPhase={preflight:'检查模型与数据是否就绪',submitting:'请求已提交，等待后台确认',claiming:'后台已接收任务',starting:'准备任务',discovering:'VLM 识别当前帧可见类别',discovering_retry:'VLM 正在重试标签识别',describing:'VLM 生成真值描述',loading:'读取图像',generating:'SAM 3 生成候选',generated:'候选已生成',observing:'VLM 观察图像和候选',editing:'执行标注工具',edited:'工具执行结束',finished:'本帧结束',retrying:'服务短暂异常，正在自动重试本帧',saved:'候选已保存',completed:'本次处理结束',stopping:'正在停止',stopped:'已停止',failed:'运行失败'};
+ const agentPhase={preflight:'检查模型与数据是否就绪',submitting:'请求已提交，等待后台确认',claiming:'后台已接收任务',starting:'准备任务',discovering:'VLM 识别当前帧可见类别',discovering_retry:'VLM 正在重试标签识别',describing:'VLM 生成真值描述',loading:'读取图像',generating:'SAM 3 生成候选',generated:'候选已生成',observing:'VLM 观察图像和候选',vlm_waiting:'VLM 正忙，任务正在排队等待',editing:'执行标注工具',edited:'工具执行结束',finished:'本帧结束',retrying:'服务短暂异常，正在自动重试本帧',saved:'候选已保存',completed:'本次处理结束',stopping:'正在停止',stopped:'已停止',failed:'运行失败'};
 const agentStop={done:'Agent 流程已结束（不代表正确）',needs_review:'旧记录：请求人工复核',max_rounds:'达到最大复查轮数',no_progress:'没有有效修改',cycle:'检测到循环修改',error:'模型或工具调用失败'};
- const agentProgressStage={preflight:0,submitting:0,claiming:0,starting:0,discovering:0,discovering_retry:0,describing:0,loading:0,generating:1,generated:1,observing:2,editing:3,edited:3,finished:4,retrying:1,saved:4,completed:4,stopping:4,stopped:4,failed:4};
- const agentProgressWeight={preflight:0.01,submitting:0.02,claiming:0.03,starting:0.04,discovering:0.06,discovering_retry:0.08,describing:0.10,loading:0.12,generating:0.22,generated:0.38,observing:0.58,editing:0.74,edited:0.86,finished:0.94,retrying:0.18,saved:1};
-let progressTaskId=null,progressHighWater=0;
+ const agentProgressStage={preflight:0,submitting:0,claiming:0,starting:0,discovering:0,discovering_retry:0,describing:0,loading:0,generating:1,generated:1,observing:2,vlm_waiting:2,editing:3,edited:3,finished:4,retrying:1,saved:4,completed:4,stopping:4,stopped:4,failed:4};
+ const agentProgressWeight={preflight:0.01,submitting:0.02,claiming:0.03,starting:0.04,discovering:0.06,discovering_retry:0.08,describing:0.10,loading:0.12,generating:0.22,generated:0.38,observing:0.58,vlm_waiting:0.58,editing:0.74,edited:0.86,finished:0.94,retrying:0.18,saved:1};
+let progressTaskId=null,progressHighWater=0,runStatusConnectionMessage='';
 let progressFetching=false;
 $('downloadDebug').onclick=async()=>{
  const button=$('downloadDebug');if(button.disabled)return;button.disabled=true;
@@ -508,10 +508,12 @@ function renderAgentProgressPanel(job,elapsed){
  if(job.frame!==null&&job.frame!==undefined)details.push(`第 ${job.frame} 帧`);
  if(phase==='preflight')details.push('正在确认 SAM、VLM 和数据状态');
  if(phase==='submitting')details.push('请求已提交，请勿重复点击');
+ if(phase==='vlm_waiting')details.push(`共享模型正在处理其他请求，系统将自动重试${job.retry_in_seconds?`（约 ${job.retry_in_seconds} 秒后）`:''}`);
  if(latest?.label)details.push(`类别：${latest.label}`);
  const phaseElapsed=Math.max(0,Number(job.phase_elapsed_seconds)||0);
  if(running&&phaseElapsed>=60)details.push(`该阶段已持续 ${formatAgentDuration(phaseElapsed)}，后台仍在线，可安全停止`);
  if(status==='failed'&&job.error)details.push(job.error);
+ if(runStatusConnectionMessage)details.push(runStatusConnectionMessage);
  if(!details.length)details.push(status==='completed'?`已完成 ${completed} 帧`:status==='idle'?'点击“开始自动标注”后，这里会显示实时进度。':`已完成 ${completed}/${total} 帧`);
  const state=$('runProgressState');state.textContent=stateText;state.className=`runProgressState ${status}`;
  $('runProgressTitle').textContent=title;
@@ -525,7 +527,7 @@ function renderAgentProgressPanel(job,elapsed){
  progressBar.setAttribute('aria-valuenow',String(percent));
  $('runProgressFrames').textContent=`${completed} / ${total}`;
  $('runProgressFrame').textContent=job.frame===null||job.frame===undefined?'—':String(job.frame);
- $('runProgressRound').textContent=job.round?`${job.round} / 100`:'—';
+ $('runProgressRound').textContent=job.round?`${job.round} / ${Math.max(1,Number(job.max_rounds)||6)}`:'—';
  $('runProgressShapes').textContent=String(Math.max(0,Number(job.shape_count)||0));
  $('runProgressElapsed').textContent=formatAgentDuration(elapsed);
  const activeStage=agentProgressStage[phase]??0,finished=status==='completed';
@@ -542,12 +544,18 @@ function renderRunButton(){
  const stopping=job.status==='stopping',running=job.status==='running'||stopping;
  const elapsed=job.started_at?Math.max(0,Math.floor((running?Date.now()/1000:(job.events?.at(-1)?.time||job.started_at))-job.started_at)):null;
  button.disabled=pending||stopping;
- button.textContent=(pending?'启动中…':stopping?'正在停止…':running?'停止自动标注':'开始自动标注')+(running&&!pending?` · 第 ${job.round||0}/100 轮`: '')+(elapsed===null?'':` · ${elapsed} 秒`);
+ button.textContent=(pending?'启动中…':stopping?'正在停止…':running?'停止自动标注':'开始自动标注')+(running&&!pending?` · 第 ${job.round||0}/${Math.max(1,Number(job.max_rounds)||6)} 轮`: '')+(elapsed===null?'':` · ${elapsed} 秒`);
  button.setAttribute('aria-busy',String(pending||running));
  renderAgentProgressPanel(job,elapsed||0);
 }
 function renderAgentProgress(job){const changed=latestAgentJob?.status!==job.status||latestAgentJob?.phase!==job.phase||latestAgentJob?.frame!==job.frame;latestAgentJob=job;renderRunButton();if(changed)document.dispatchEvent(new CustomEvent('labelagent:job-status',{detail:job}))}
-async function refreshAgentProgress(){if(progressFetching)return;progressFetching=true;try{const response=await fetch('/api/run/status',{cache:'no-store'});if(!response.ok)throw Error(`HTTP ${response.status}`);renderAgentProgress(await response.json());runStatusFailureCount=0;$('runButton').removeAttribute('title')}catch{runStatusFailureCount++;$('runButton').title=runStatusFailureCount>=3?'连续无法读取推理状态；后台任务不会重复提交，请检查工作台服务连接':'暂时无法读取 Agent 状态，正在自动重试'}finally{progressFetching=false}}
+async function fetchAgentStatus(){
+ const controller=typeof AbortController==='function'?new AbortController():null,timer=controller?setTimeout(()=>controller.abort(),8000):null;
+ try{return await fetch('/api/run/status',{cache:'no-store',...(controller?{signal:controller.signal}:{})})}
+ catch(error){if(error?.name==='AbortError')throw Error('状态读取超过 8 秒');throw error}
+ finally{if(timer)clearTimeout(timer)}
+}
+async function refreshAgentProgress(){if(progressFetching)return;progressFetching=true;try{const response=await fetchAgentStatus();if(!response.ok)throw Error(`HTTP ${response.status}`);runStatusConnectionMessage='';renderAgentProgress(await response.json());runStatusFailureCount=0;$('runButton').removeAttribute('title')}catch(error){runStatusFailureCount++;runStatusConnectionMessage=runStatusFailureCount>=3?`连续无法读取推理状态：${error.message}；后台任务不会重复提交`:`暂时无法读取推理状态：${error.message}，正在自动恢复`;$('runButton').title=runStatusConnectionMessage;renderRunButton()}finally{progressFetching=false}}
 async function ensureAutoLabelReadiness(){
  const [response,workflowResponse]=await Promise.all([
   fetch('/api/model_readiness',{cache:'no-store'}),
@@ -580,7 +588,7 @@ $('runButton').onclick=async()=>{
   runRequestPhase='submitting';renderRunButton();
   const jobTopic=topic;
   stopPlayback();
-  const data=await api('run',{frame:startFrame,count});
+  const data=await api('run',{frame:startFrame,count,max_rounds:6});
   if(data.description)currentDescription=data.description;
   if(data.stopped){toast('自动标注已停止；已完成帧的候选已保存');return}
   if(!data.frames?.length)throw Error('没有实际处理任何帧。参考帧和已有真值会跳过，请增大处理帧数。');

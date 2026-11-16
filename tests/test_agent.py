@@ -737,6 +737,22 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(workflow.compact_review_token_budget(
             {"llm_prompt_profile": "compact", "llm_max_tokens": 1024}, 4), 1024)
 
+    def test_review_gap_selection_excludes_open_image_border_artifacts(self):
+        mask = np.zeros((20, 30), dtype=np.uint8)
+        holes = [
+            {"id": "edge-right", "kind": "open_gap", "area": 1000,
+             "bbox": [25, 4, 29, 14], "mask": mask},
+            {"id": "edge-bottom", "kind": "open_gap", "area": 900,
+             "bbox": [4, 18, 18, 19], "mask": mask},
+            {"id": "internal-gap", "kind": "open_gap", "area": 400,
+             "bbox": [5, 5, 12, 12], "mask": mask},
+            {"id": "enclosed-hole", "kind": "hole", "area": 300,
+             "bbox": [0, 0, 3, 3], "mask": mask},
+        ]
+        selected = workflow.select_review_gaps(holes, maximum=4)
+        self.assertEqual({item["id"] for item in selected},
+                         {"internal-gap", "enclosed-hole"})
+
     def test_truncated_compact_review_doubles_budget_once_for_protocol_repair(self):
         budgets, events = [], []
         def fake_chat(config, instruction, image, extra_images=(), raw=None,
@@ -765,15 +781,23 @@ class WorkflowTests(unittest.TestCase):
             io.BytesIO(b'{"error":{"message":"Local VLM is busy"}}'))
         success = io.BytesIO(
             b'{"choices":[{"finish_reason":"stop","message":{"content":"{\\"status\\":\\"done\\"}"}}]}')
-        raw = {}
-        with patch.object(workflow.urllib.request, "urlopen", side_effect=[busy, success]) as request, \
-             patch.object(workflow, "_wait_cancellable") as wait:
-            result = workflow._chat({"llm_url": "http://example.test",
-                "llm_model": "test"}, "inspect", image_bytes(), raw=raw)
+        raw, events = {}, []
+        token = workflow._review_call.set({"record": {
+            "id": "busy-call", "service": "GPT", "status": "running"}})
+        try:
+            with workflow.trace_calls(events.append), \
+                 patch.object(workflow.urllib.request, "urlopen", side_effect=[busy, success]) as request, \
+                 patch.object(workflow, "_wait_cancellable") as wait:
+                result = workflow._chat({"llm_url": "http://example.test",
+                    "llm_model": "test"}, "inspect", image_bytes(), raw=raw)
+        finally:
+            workflow._review_call.reset(token)
         self.assertEqual(result, {"status": "done"})
         self.assertEqual(request.call_count, 2)
         wait.assert_called_once_with(5)
         self.assertEqual(raw["busy_retry_count"], 1)
+        self.assertEqual(events[0]["status"], "waiting")
+        self.assertEqual(events[0]["retry_in_seconds"], 5)
 
     def test_trace_records_sam_transport_failure_and_restores_context(self):
         events = []
@@ -1819,7 +1843,7 @@ class ServerTests(unittest.TestCase):
             description = {"description": "a only", "prompts": [{"label": "a", "text": "square"}],
                            "reference_signature": server.reference_signature(0)}
             def fake_run(*args, **kwargs):
-                self.assertEqual(kwargs["max_rounds"], 100)
+                self.assertEqual(kwargs["max_rounds"], 5)
                 entered.set()
                 server.run_stop_event.wait(3)
                 workflow.check_cancelled()
@@ -2247,7 +2271,7 @@ class ServerTests(unittest.TestCase):
             server.run_status = {"status": "idle"}
             observed = []
             def fake_run(config, image, description, labels, max_rounds, on_progress, reference):
-                self.assertEqual(max_rounds, 100)
+                self.assertEqual(max_rounds, 2)
                 observed.append(description)
                 return {"shapes": [shape()], "candidates_added": 1, "applied": [],
                     "review_queue": [], "agent": {"converged": True, "rounds": 1,
@@ -2269,6 +2293,67 @@ class ServerTests(unittest.TestCase):
                 describe.assert_not_called()
                 self.assertIn("1", server.state["candidates"])
                 self.assertEqual(server.state["truth"], {"0": [shape()]})
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_run_defaults_to_six_review_rounds_and_rejects_out_of_range(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                "config": {}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            observed = []
+            def fake_run(config, image, description, labels, max_rounds, on_progress, reference):
+                observed.append(max_rounds)
+                return {"shapes": [shape()], "candidates_added": 1, "applied": [],
+                    "review_queue": [], "agent": {"converged": True, "rounds": 1,
+                    "max_rounds": max_rounds, "stop_reason": "done", "audit": []}}
+            description = {"description": "a only", "prompts": [{"label": "a", "text": "a"}],
+                           "reference_signature": server.reference_signature(0)}
+            try:
+                with patch.object(server, "run", side_effect=fake_run):
+                    client = server.app.test_client()
+                    response = client.post("/api/run", json={"frame": 1, "count": 1,
+                        "description": description})
+                    invalid = client.post("/api/run", json={"frame": 2, "count": 1,
+                        "max_rounds": 101, "description": description})
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertEqual(observed, [6])
+                self.assertEqual(response.json["frames"][0]["agent"]["max_rounds"], 6)
+                self.assertEqual(invalid.status_code, 400, invalid.json)
+                self.assertIn("复查轮数须为", invalid.json["error"])
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_run_exposes_shared_vlm_wait_as_a_live_phase(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                "config": {}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            observed = {}
+            def fake_run(*args, **kwargs):
+                workflow._emit_trace({"id": "busy", "service": "GPT", "status": "waiting",
+                    "busy_retry_count": 2, "retry_in_seconds": 10,
+                    "input": {}, "started_at": 1})
+                observed.update(server.app.test_client().get("/api/run/status").json)
+                return {"shapes": [shape()], "candidates_added": 1, "applied": [],
+                    "review_queue": [], "agent": {"converged": True, "rounds": 1,
+                    "max_rounds": 6, "stop_reason": "done", "audit": []}}
+            description = {"description": "a only", "prompts": [{"label": "a", "text": "a"}],
+                           "reference_signature": server.reference_signature(0)}
+            try:
+                with patch.object(server, "run", side_effect=fake_run):
+                    response = server.app.test_client().post("/api/run", json={
+                        "frame": 1, "count": 1, "description": description})
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertEqual(observed["phase"], "vlm_waiting")
+                self.assertEqual(observed["busy_retry_count"], 2)
+                self.assertEqual(observed["retry_in_seconds"], 10)
             finally:
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work
 

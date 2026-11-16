@@ -640,11 +640,34 @@ class WorkflowTests(unittest.TestCase):
             {"label": "pallet", "text": "pallet"},
             {"label": "person", "text": "person"},
             {"label": "floor", "text": "floor"},
-            {"label": "slope", "text": "ramp"},
+            {"label": "slope", "text": "traversable surface"},
             {"label": "ego", "text": "ego robot"},
             {"label": "other_robot", "text": "robot"},
             {"label": "cargo_floor", "text": "robot cargo platform"},
         ])
+
+    def test_slope_prompt_uses_evidence_backed_traversable_query(self):
+        result = workflow.restrict_description(
+            {"description": "Review the ramp.",
+             "prompts": [{"label": "slope", "text": "yellow ramp"}]}, ["slope"])
+        self.assertEqual(result["prompts"], [
+            {"label": "slope", "text": "traversable surface"}])
+
+    def test_slope_geometry_filter_keeps_broad_plane_and_routes_tall_strip(self):
+        def polygon(candidate_id, label, points):
+            part = {"points": points, "holes": []}
+            return {"id": candidate_id, "label": label, "points": points,
+                    "holes": [], "parts": [part], "score": 0.8}
+        broad = polygon(1, "slope", [[1, 2], [31, 2], [31, 10], [1, 10]])
+        tall = polygon(2, "slope", [[2, 1], [10, 1], [10, 31], [2, 31]])
+        floor = polygon(3, "floor", [[1, 1], [5, 1], [5, 30], [1, 30]])
+        retained, suppressed = workflow.filter_slope_candidate_geometry(
+            [broad, tall, floor])
+        self.assertEqual([item["id"] for item in retained], [1, 3])
+        self.assertEqual([item["id"] for item in suppressed], [2])
+        self.assertEqual(suppressed[0]["reason_code"],
+                         "slope_candidate_not_broad_planar")
+        self.assertEqual(suppressed[0]["route"], "human_review_required")
 
     def test_robot_and_person_prompts_use_exact_canonical_queries(self):
         labels = ["ego", "other_robot", "person"]

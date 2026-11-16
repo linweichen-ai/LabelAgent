@@ -152,3 +152,38 @@
 - Python 核心回归 109/109，结构化传输 1/1，进度轮询 9/9，候选审核 60/60，差异检查全部通过。
 - 第六轮备份：`D:\Apps\LabelAgent\.local\backups\workbench-stability-round6-20261117-040145`，包含门槛前生产状态、完整运行结果、模型审计和代码哈希。
 - 正式工作台已部署新门槛，运行代码哈希与开发工作树一致；机器结果仍保持候选身份，未进入人工真值或训练集。
+
+## 第七轮斜坡专项优化与部署（2026-11-17）
+
+本轮首次使用真正含人工 `slope` 真值的 `CVAT_Task3_original_annotations.mcap` 做只读专项验收。有效帧为 74、77、80、83、86、95、97、99；此前帧 29/30 的地面实验没有斜坡真值，不能再作为斜坡效果证据。
+
+### 诊断结论
+
+1. 原 `ramp` 等四组 SAM 文本提示均未通过：最佳仅 1/8 帧返回候选，0/8 帧 IoU≥0.5。人工真值内部单点提示则 8/8 帧 IoU≥0.5、平均 IoU 0.981，说明主要瓶颈是定位而不是 SAM 掩码能力，当前没有证据支持先做全模型微调。
+2. VLM 全图网格逐帧定位只成功 1/8；上半区放大成功 3/8；参考图方法补回第 97 帧但同时在第 95、99 帧给出错误点。它们保留为研究证据，没有直接进入生产路径。
+3. 可靠锚点加双向光流可安全接受 6/8 帧，接受结果平均 IoU 0.980、误接受 0；逐帧链式光流反而降为 5/8，因此未采用。最终生产方案选用了更简单、覆盖更高的直接候选过滤。
+
+### 已部署方案
+
+- `slope` 的固定 SAM 查询从 `ramp` 改为不依赖颜色的 `traversable surface`。
+- 对该查询返回的候选仅保留宽高比至少 1.5 的宽平面区域；重复出现的竖长地面条带记录为 `slope_candidate_not_broad_planar` 并转人工复核。过滤器只决定机器候选是否保留，不确认真值、不自动进入训练。
+- 在 8 帧开发集上，生产过滤器接受 7 帧、1 帧转复核；7/8 帧 IoU≥0.5，已接受候选平均 IoU 0.977，误接受为 0，全部 8 帧平均斜坡召回 0.856。第 95 帧没有宽平面候选，系统保持空候选并送审。
+- 按项目既定 `floor + slope -> traversable_area` 映射合并后，平均 IoU 0.973、精度 0.981、召回 0.992。训练标签仍保留 `floor` 与 `slope`，下游才做可通行区域并集。
+
+以上数值来自同一段 8 帧开发序列，不是跨厂区泛化结论。宽高比规则仍需在新的斜坡、平地和困难负样本上做独立验收；候选身份、人工复核门禁和 test/train 隔离均未改变。
+
+### 图像与结果证据
+
+- [第 74 帧成功斜坡](evidence/workbench-stability-20261117/slope-frame74-filtered.jpg)
+- [第 80 帧光流诊断](evidence/workbench-stability-20261117/slope-frame80-temporal-overlay.jpg)
+- [第 95 帧安全拒绝](evidence/workbench-stability-20261117/slope-frame95-review-required.jpg)
+- [第 99 帧成功斜坡](evidence/workbench-stability-20261117/slope-frame99-filtered.jpg)
+- [完整只读评测结果](evidence/workbench-stability-20261117/slope-production-filter-results.json)
+
+### 验证、备份与正式读回
+
+- Python 回归 112/112；进度轮询 9/9；候选审核 60/60；正式 Agent 生成入口实测第 95 帧保留 0 个、拒绝 2 个，第 99 帧保留 1 个、拒绝 2 个。
+- 第七轮备份：`D:\Apps\LabelAgent\.local\backups\workbench-stability-round7-20261117-044607`，含部署前工作流、状态、会话、参考描述、最近运行和模型审计。
+- 正式工作流 SHA-256：`DDE45C85B2C7624E1E603B46D472A7EEF81042EFC274757D91DB6AA3541B4234`，与开发工作树一致。
+- 正式参考描述已重新生成，`slope` 提示读回为 `traversable surface`，签名为 `a29fa798f0dd562291002f74642a6f7ae13a72059d67709f86305205214bd6d5`；描述文件 SHA-256 为 `64D735BB66D1DC8C998ECEDF0E44D3F9CAEF30DF18288283947A71DFAF419291`。
+- 正式模型读回：SAM ready、VLM ready、流程 readiness=`ready`；正式页面仍为 `http://127.0.0.1:8765`。

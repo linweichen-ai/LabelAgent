@@ -620,7 +620,7 @@ SAM_PROMPT_FALLBACKS = {
     "pallet": "pallet",
     "person": "person",
     "floor": "floor",
-    "slope": "ramp",
+    "slope": "traversable surface",
     "ego": "ego robot",
     "other_robot": "robot",
     "cargo_floor": "robot cargo platform",
@@ -637,6 +637,7 @@ SAM_PROMPT_OVERRIDES = {
     "ego": "ego robot",
     "other_robot": "robot",
     "cargo_floor": "robot cargo platform",
+    "slope": "traversable surface",
 }
 
 
@@ -1528,6 +1529,38 @@ def suppress_near_duplicate_candidates(shapes, width, height,
     return final, suppressed
 
 
+def filter_slope_candidate_geometry(shapes, minimum_width_height_ratio=1.5):
+    """Retain broad planar slope proposals; route tall strip responses to review.
+
+    The filter does not confirm a slope or use color. It only rejects the repeatable
+    vertical floor-strip distractors returned by the broader traversable-surface query.
+    """
+    if not 1.0 <= minimum_width_height_ratio <= 10.0:
+        raise ValueError("斜坡候选宽高比阈值无效")
+    retained, suppressed = [], []
+    for shape in shapes:
+        if shape.get("label") != "slope":
+            retained.append(shape)
+            continue
+        summary = _shape_summary(shape)
+        left, top, right, bottom = summary["bbox"]
+        box_width = max(1.0, float(right - left + 1))
+        box_height = max(1.0, float(bottom - top + 1))
+        ratio = box_width / box_height
+        if ratio >= minimum_width_height_ratio:
+            retained.append(shape)
+        else:
+            suppressed.append({
+                "id": shape.get("id"), "label": "slope",
+                "reason": "non_planar_slope_candidate_geometry",
+                "reason_code": "slope_candidate_not_broad_planar",
+                "route": "human_review_required",
+                "bbox": summary["bbox"], "width_height_ratio": round(ratio, 4),
+                "minimum_width_height_ratio": minimum_width_height_ratio,
+            })
+    return retained, suppressed
+
+
 def candidate_class_overlap_conflicts(shapes, width, height, threshold=0.90):
     """Flag ambiguous class pairs without deleting or relabeling either mask."""
     from .edit_agent import _rasterize
@@ -1621,15 +1654,19 @@ class AnnotationAgent:
                 raise ValueError("SAM 3 提示缺少有效类别或文本")
             self.progress("generating", prompt=item["text"], label=item["label"])
             shapes = self.candidates(sam_text(self.image, item["text"], self.config), item["label"])
+            if item["label"] == "slope" and item["text"] == "traversable surface":
+                shapes, filtered = filter_slope_candidate_geometry(shapes)
+                self.candidate_filters.extend(filtered)
             self.shapes.extend(shapes)
             self.generated += len(shapes)
             self.progress("generated")
-        self.shapes, self.candidate_filters = suppress_near_duplicate_candidates(
+        self.shapes, duplicate_filters = suppress_near_duplicate_candidates(
             self.shapes, self.width, self.height,
             preserve_class_conflicts=self.reference is None)
+        self.candidate_filters.extend(duplicate_filters)
         self.generated = len(self.shapes)
         if self.candidate_filters:
-            self.progress("generated", operation="filter_near_duplicates",
+            self.progress("generated", operation="filter_candidates",
                           outcome={"suppressed": copy.deepcopy(self.candidate_filters)})
 
     def execute(self):

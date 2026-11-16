@@ -1529,7 +1529,8 @@ def suppress_near_duplicate_candidates(shapes, width, height,
     return final, suppressed
 
 
-def filter_slope_candidate_geometry(shapes, minimum_width_height_ratio=1.5):
+def filter_slope_candidate_geometry(shapes, image_height, minimum_width_height_ratio=1.5,
+                                    minimum_height_fraction=0.07):
     """Retain broad planar slope proposals; route tall strip responses to review.
 
     The filter does not confirm a slope or use color. It only rejects the repeatable
@@ -1537,6 +1538,9 @@ def filter_slope_candidate_geometry(shapes, minimum_width_height_ratio=1.5):
     """
     if not 1.0 <= minimum_width_height_ratio <= 10.0:
         raise ValueError("斜坡候选宽高比阈值无效")
+    if type(image_height) is not int or image_height < 1 or not 0.0 < minimum_height_fraction <= 0.5:
+        raise ValueError("斜坡候选高度阈值无效")
+    minimum_height = max(4, round(image_height * minimum_height_fraction))
     retained, suppressed = [], []
     for shape in shapes:
         if shape.get("label") != "slope":
@@ -1547,16 +1551,56 @@ def filter_slope_candidate_geometry(shapes, minimum_width_height_ratio=1.5):
         box_width = max(1.0, float(right - left + 1))
         box_height = max(1.0, float(bottom - top + 1))
         ratio = box_width / box_height
-        if ratio >= minimum_width_height_ratio:
+        if ratio >= minimum_width_height_ratio and box_height >= minimum_height:
             retained.append(shape)
         else:
+            too_thin = box_height < minimum_height
             suppressed.append({
                 "id": shape.get("id"), "label": "slope",
-                "reason": "non_planar_slope_candidate_geometry",
-                "reason_code": "slope_candidate_not_broad_planar",
+                "reason": ("slope_candidate_too_thin" if too_thin
+                           else "non_planar_slope_candidate_geometry"),
+                "reason_code": ("slope_candidate_below_minimum_height" if too_thin
+                                else "slope_candidate_not_broad_planar"),
                 "route": "human_review_required",
                 "bbox": summary["bbox"], "width_height_ratio": round(ratio, 4),
                 "minimum_width_height_ratio": minimum_width_height_ratio,
+                "bbox_height": round(box_height, 2), "minimum_height": minimum_height,
+            })
+    return retained, suppressed
+
+
+def filter_slope_pallet_conflicts(shapes, width, height, maximum_slope_covered=0.5):
+    """Reject a slope draft when an independently generated pallet covers it."""
+    from .edit_agent import _rasterize
+    if not 0.0 < maximum_slope_covered <= 1.0:
+        raise ValueError("斜坡与托盘冲突阈值无效")
+    pallets = [shape for shape in shapes if shape.get("label") == "pallet"]
+    pallet_masks = [(shape, _rasterize(shape, width, height).astype(bool))
+                    for shape in pallets]
+    retained, suppressed = [], []
+    for shape in shapes:
+        if shape.get("label") != "slope":
+            retained.append(shape)
+            continue
+        slope_mask = _rasterize(shape, width, height).astype(bool)
+        slope_area = int(slope_mask.sum())
+        conflict = None
+        for pallet, pallet_mask in pallet_masks:
+            covered = (float(np.logical_and(slope_mask, pallet_mask).sum()) / slope_area
+                       if slope_area else 0.0)
+            if covered >= maximum_slope_covered and (conflict is None or covered > conflict[1]):
+                conflict = (pallet, covered)
+        if conflict is None:
+            retained.append(shape)
+        else:
+            pallet, covered = conflict
+            suppressed.append({
+                "id": shape.get("id"), "label": "slope",
+                "reason": "slope_candidate_overlaps_pallet",
+                "reason_code": "slope_candidate_pallet_conflict",
+                "route": "human_review_required", "pallet_id": pallet.get("id"),
+                "slope_covered_by_pallet": round(covered, 4),
+                "maximum_slope_covered": maximum_slope_covered,
             })
     return retained, suppressed
 
@@ -1664,7 +1708,8 @@ class AnnotationAgent:
                 sam_text(encoded.getvalue(), "traversable surface", self.config), "slope")
             if any(not valid_shape(shape, crop.width, crop.height) for shape in crop_shapes):
                 raise ValueError("SAM 3 裁剪斜坡候选超出裁剪图像范围")
-            crop_shapes, crop_filtered = filter_slope_candidate_geometry(crop_shapes)
+            crop_shapes, crop_filtered = filter_slope_candidate_geometry(
+                crop_shapes, crop.height)
             crop_box = [left, top, right, bottom]
             for item in crop_filtered:
                 item["crop_index"] = crop_index
@@ -1691,7 +1736,7 @@ class AnnotationAgent:
             self.progress("generating", prompt=item["text"], label=item["label"])
             shapes = self.candidates(sam_text(self.image, item["text"], self.config), item["label"])
             if item["label"] == "slope" and item["text"] == "traversable surface":
-                shapes, filtered = filter_slope_candidate_geometry(shapes)
+                shapes, filtered = filter_slope_candidate_geometry(shapes, self.height)
                 self.candidate_filters.extend(filtered)
                 if not shapes:
                     self.progress("generating", prompt=item["text"], label=item["label"],
@@ -1701,6 +1746,9 @@ class AnnotationAgent:
             self.shapes.extend(shapes)
             self.generated += len(shapes)
             self.progress("generated")
+        self.shapes, slope_pallet_filters = filter_slope_pallet_conflicts(
+            self.shapes, self.width, self.height)
+        self.candidate_filters.extend(slope_pallet_filters)
         self.shapes, duplicate_filters = suppress_near_duplicate_candidates(
             self.shapes, self.width, self.height,
             preserve_class_conflicts=self.reference is None)

@@ -1,0 +1,31 @@
+{
+  "date": "2026-11-17",
+  "dataset": "CVAT_Task3_original_annotations.mcap",
+  "topic": "/CVAT/Task3/images",
+  "cohort": {
+    "definition": "All human-labelled slope frames in this 150-frame session",
+    "frames": [74, 77, 80, 83, 86, 95, 97, 99],
+    "count": 8
+  },
+  "production_path": {
+    "prompts": ["pallet", "traversable surface"],
+    "pallet_conflict_guard_enabled": true,
+    "minimum_height_guard_enabled": true,
+    "crop_fallback_enabled": true
+  },
+  "result": {
+    "frames_iou_at_least_0_5": 8,
+    "mean_iou": 0.9727348586253762,
+    "mean_precision": 0.9987619857334739,
+    "mean_recall": 0.9739136545758631,
+    "crop_fallback_frames": 1,
+    "mean_seconds": 0.500125
+  },
+  "frame_95": {
+    "source": "sam_text_overlap_crop_fallback",
+    "iou": 0.9433255269320843,
+    "precision": 1.0,
+    "recall": 0.9433255269320843
+  },
+  "scope_limit": "The eight positives are one development sequence and do not establish cross-scene generalization."
+}

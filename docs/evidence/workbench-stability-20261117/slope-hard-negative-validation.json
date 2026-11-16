@@ -1,0 +1,36 @@
+{
+  "date": "2026-11-17",
+  "dataset": "CVAT_Task3_original_annotations.mcap",
+  "topic": "/CVAT/Task3/images",
+  "cohort": {
+    "definition": "Human-labelled frames with no slope instance",
+    "frames": [0, 10, 20, 30, 40, 50, 60, 70, 73, 75, 78, 81, 84, 87, 90, 94, 96, 98, 100, 110, 120, 130, 140, 149],
+    "count": 24
+  },
+  "production_path": {
+    "prompts": ["pallet", "traversable surface"],
+    "guards": [
+      "minimum width-height ratio 1.5",
+      "minimum bbox height 7 percent of input height, floor 4 pixels",
+      "reject slope when pallet covers at least 50 percent of slope area",
+      "four overlapping crops only when full-frame slope candidates all fail guards"
+    ]
+  },
+  "result": {
+    "frames_with_false_slope": 0,
+    "false_slope_candidates": 0,
+    "crop_fallback_frames": 14,
+    "mean_seconds": 0.889375
+  },
+  "comparison": {
+    "before_pallet_and_minimum_height_guards": {
+      "frames_with_false_slope": 10,
+      "false_slope_candidates": 37
+    },
+    "after_pallet_guard_only": {
+      "frames_with_false_slope": 4,
+      "false_slope_candidates": 8
+    }
+  },
+  "scope_limit": "This is a bounded 24-frame hard-negative validation, not proof of cross-factory generalization."
+}

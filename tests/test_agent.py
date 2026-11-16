@@ -662,12 +662,25 @@ class WorkflowTests(unittest.TestCase):
         tall = polygon(2, "slope", [[2, 1], [10, 1], [10, 31], [2, 31]])
         floor = polygon(3, "floor", [[1, 1], [5, 1], [5, 30], [1, 30]])
         retained, suppressed = workflow.filter_slope_candidate_geometry(
-            [broad, tall, floor])
+            [broad, tall, floor], 40)
         self.assertEqual([item["id"] for item in retained], [1, 3])
         self.assertEqual([item["id"] for item in suppressed], [2])
         self.assertEqual(suppressed[0]["reason_code"],
                          "slope_candidate_not_broad_planar")
         self.assertEqual(suppressed[0]["route"], "human_review_required")
+
+    def test_slope_geometry_filter_routes_thin_horizontal_strip(self):
+        points = [[1, 2], [35, 2], [35, 3], [1, 3]]
+        part = {"points": points, "holes": []}
+        candidate = {"id": 1, "label": "slope", "points": points,
+                     "holes": [], "parts": [part], "score": 0.8}
+        retained, suppressed = workflow.filter_slope_candidate_geometry(
+            [candidate], 40)
+        self.assertEqual(retained, [])
+        self.assertEqual([item["id"] for item in suppressed], [1])
+        self.assertEqual(suppressed[0]["reason_code"],
+                         "slope_candidate_below_minimum_height")
+        self.assertEqual(suppressed[0]["minimum_height"], 4)
 
     def test_slope_generation_uses_overlap_crops_only_after_full_frame_rejection(self):
         def result(points, score=0.8):
@@ -687,6 +700,18 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(agent.shapes[0]["source"], "sam_text_overlap_crop_fallback")
         self.assertEqual(agent.shapes[0]["crop_index"], 0)
         self.assertEqual(len(agent.candidate_filters), 4)
+
+    def test_slope_pallet_conflict_filter_preserves_pallet_and_disjoint_slope(self):
+        pallet = shape(1, "pallet", 2, 18)
+        overlapping = shape(2, "slope", 3, 17)
+        disjoint = shape(3, "slope", 22, 38)
+        retained, suppressed = workflow.filter_slope_pallet_conflicts(
+            [pallet, overlapping, disjoint], 40, 40)
+        self.assertEqual([item["id"] for item in retained], [1, 3])
+        self.assertEqual([item["id"] for item in suppressed], [2])
+        self.assertEqual(suppressed[0]["pallet_id"], 1)
+        self.assertEqual(suppressed[0]["reason_code"],
+                         "slope_candidate_pallet_conflict")
 
     def test_robot_and_person_prompts_use_exact_canonical_queries(self):
         labels = ["ego", "other_robot", "person"]

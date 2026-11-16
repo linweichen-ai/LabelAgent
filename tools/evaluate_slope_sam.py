@@ -216,7 +216,7 @@ def main():
             image_bytes = frame_cache[frame]
             width, height = Image.open(io.BytesIO(image_bytes)).size
             candidates = candidate_cache.get((frame, "traversable surface"), [])
-            retained, suppressed = filter_slope_candidate_geometry(candidates)
+            retained, suppressed = filter_slope_candidate_geometry(candidates, height)
             prediction = union_mask(retained, width, height)
             slope_shapes = [item for item in truth_by_frame[str(frame)]
                             if item.get("label") in {"slope", "斜坡", "ramp"}]
@@ -252,7 +252,7 @@ def main():
                     crop_candidates = sam_shapes(sam_text(
                         encoded.getvalue(), "traversable surface", state.get("config") or {}))
                     crop_retained, crop_suppressed = filter_slope_candidate_geometry(
-                        crop_candidates)
+                        crop_candidates, crop.height)
                     crop_mask = union_mask(crop_retained, crop.width, crop.height)
                     crop_prediction[top:bottom, left:right] |= crop_mask
                     crop_audit.append({

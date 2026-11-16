@@ -54,6 +54,17 @@ run_stop_event = threading.Event()
 run_task_id = None
 
 
+def _update_run_status_locked(**changes):
+    """Update the live job contract while run_status_lock is held."""
+    now = time.time()
+    previous_phase = run_status.get("phase")
+    run_status.update(changes)
+    if "phase" in changes and changes.get("phase") != previous_phase:
+        run_status["phase_started_at"] = now
+    run_status["updated_at"] = now
+    run_status["status_sequence"] = int(run_status.get("status_sequence", 0)) + 1
+
+
 def run_claimed(handler):
     # 非阻塞占用先于 state/status 锁，直到响应和异常收尾结束才释放。
     # 终态本身不释放占用，因此旧任务的回调和写盘不会进入下一任务代际。
@@ -70,13 +81,15 @@ def run_claimed(handler):
                 previous_status = run_status.copy()
                 run_task_id = task_id
                 run_stop_event = threading.Event()
-                run_status.update(status="running", phase="claiming", task_id=task_id,
-                                  started_at=time.time(), events=[], shape_count=0)
+                started_at = time.time()
+                _update_run_status_locked(status="running", phase="claiming", task_id=task_id,
+                                          started_at=started_at, phase_started_at=started_at,
+                                          events=[], shape_count=0)
             try:
                 result = handler(*args, **kwargs)
                 with run_status_lock:
                     if run_task_id == task_id and run_status.get("phase") == "claiming":
-                        run_status.update(status="completed", phase="completed")
+                        _update_run_status_locked(status="completed", phase="completed")
                 return result
             except BaseException as error:
                 with run_status_lock:
@@ -84,9 +97,10 @@ def run_claimed(handler):
                         run_status.clear()
                         run_status.update(previous_status)
                     elif run_task_id == task_id and run_status.get("status") in {"running", "stopping"}:
-                        run_status.update(status="stopped" if run_stop_event.is_set() else "failed",
-                                          phase="stopped" if run_stop_event.is_set() else "failed",
-                                          error=str(error)[:500], frame=None)
+                        _update_run_status_locked(
+                            status="stopped" if run_stop_event.is_set() else "failed",
+                            phase="stopped" if run_stop_event.is_set() else "failed",
+                            error=str(error)[:500], frame=None)
                 raise
         finally:
             with run_status_lock:
@@ -215,9 +229,25 @@ def state_path():
     return WORK / "state.json"
 
 
+def _read_json(path):
+    # json.loads(path.read_text()) briefly holds both the entire UTF-8 text and
+    # the decoded object. Large multi-file workspaces can exceed available RAM.
+    with path.open("r", encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def _write_json(path, value, *, pretty=False, sort_keys=False):
+    # Stream JSON directly to disk. State is deliberately compact because dense
+    # polygon points make pretty-printed workspaces several times larger.
+    with path.open("w", encoding="utf-8", newline="\n") as handle:
+        json.dump(value, handle, ensure_ascii=False, sort_keys=sort_keys,
+                  indent=2 if pretty else None,
+                  separators=None if pretty else (",", ":"))
+
+
 def save():
     temporary = state_path().with_suffix(".tmp")
-    temporary.write_text(json.dumps({k: v for k, v in state.items() if k != "video"}, ensure_ascii=False, indent=2), encoding="utf-8")
+    _write_json(temporary, {k: v for k, v in state.items() if k != "video"})
     _commit_work_file(temporary, state_path())
 
 
@@ -668,7 +698,7 @@ def prepare_human_review(*, frame, decision, review, frame_sha256,
 
 
 def _review_commit_readback(record):
-    persisted = json.loads(state_path().read_text(encoding="utf-8"))
+    persisted = _read_json(state_path())
     audit_present = any(item.get("review_id") == record["review_id"]
                         for item in human_review_records())
     transaction = persisted.get("human_review_transactions", {}).get(record["review_id"], {})
@@ -775,7 +805,7 @@ def recover_pending_human_reviews():
 
 def update_run_status(**changes):
     with run_status_lock:
-        run_status.update(changes)
+        _update_run_status_locked(**changes)
 
 
 def save_run(output):
@@ -849,7 +879,7 @@ def redact_debug(value, *, credential=None):
 
 def load():
     if state_path().exists():
-        stored = json.loads(state_path().read_text(encoding="utf-8"))
+        stored = _read_json(state_path())
         state.update(stored)
     for key in ("sam_url", "cvat_url", "cvat_token"):
         state["config"].pop(key, None)
@@ -1943,8 +1973,8 @@ def clear_auto_result(index):
                     run_status["completed"] = remaining_frames
                     run_status["total"] = remaining_frames
                     if not remaining_frames:
-                        run_status.update(status="idle", frame=None, phase=None, round=0,
-                                          shape_count=0, error=None)
+                        _update_run_status_locked(status="idle", frame=None, phase=None, round=0,
+                                                  shape_count=0, error=None)
         if removed_images:
             still_used = set()
             for filename in ("last_run.json", "model_debug.json", "description_debug.json"):
@@ -2238,7 +2268,7 @@ def generate_reference_draft():
         references_sha256 = _sha256_json(state.get("reference_frames", {}))
         trace = []
         with run_status_lock:
-            run_status.update(status="running", frame=index, completed=0, total=1,
+            _update_run_status_locked(status="running", frame=index, completed=0, total=1,
                 phase="discovering" if auto_detect_visible else "describing", round=0, error=None,
                 topic=selected_topic, file=file_name)
 
@@ -2272,8 +2302,8 @@ def generate_reference_draft():
                   "phase": event["phase"], "round": event["round"],
                   "shape_count": len(event["shapes"])}
         with run_status_lock:
-            run_status.update(phase=event["phase"], round=event["round"],
-                              shape_count=record["shape_count"])
+            _update_run_status_locked(phase=event["phase"], round=event["round"],
+                                      shape_count=record["shape_count"])
             run_status["events"] = (run_status.get("events", []) + [record])[-150:]
 
     try:
@@ -2417,8 +2447,8 @@ def generate_reference_draft():
             state["candidates"][str(index)] = combined
             state.setdefault("agent_runs", {})[str(index)] = replacement_run
             save()
-            run_status.update(status="completed", phase="completed", frame=None,
-                              completed=1, shape_count=len(combined))
+            _update_run_status_locked(status="completed", phase="completed", frame=None,
+                                      completed=1, shape_count=len(combined))
             return jsonify(frame=index, labels=selected, candidates=combined,
                            candidates_added=result["candidates_added"],
                            agent=state["agent_runs"][str(index)],
@@ -2509,7 +2539,7 @@ def run_workflow():
                 for target in targets}
         failed_frames = []
         with run_status_lock:
-            run_status.update(status="running", frame=None, completed=0, total=len(targets),
+            _update_run_status_locked(status="running", frame=None, completed=0, total=len(targets),
                               phase="starting", round=0, error=None, topic=topic, file=file_name,
                               started_at=time.time(), events=[], shape_count=0)
     trace_frame = reference
@@ -2547,7 +2577,7 @@ def run_workflow():
                 trace_frame = target
                 with run_status_lock:
                     check_cancelled()
-                    run_status.update(frame=target, phase="loading", round=0, shape_count=0)
+                    _update_run_status_locked(frame=target, phase="loading", round=0, shape_count=0)
                 target_image = video.frame(topic, target)
                 def on_progress(event, target=target):
                     record = {"time": time.time(), "frame": target,
@@ -2560,8 +2590,8 @@ def run_workflow():
                         record["stop_reason"] = event["result"]["agent"]["stop_reason"]
                     with run_status_lock:
                         check_cancelled()
-                        run_status.update(phase=event["phase"], round=event["round"],
-                            shape_count=record["shape_count"])
+                        _update_run_status_locked(phase=event["phase"], round=event["round"],
+                                                  shape_count=record["shape_count"])
                         run_status["events"] = (run_status.get("events", []) + [record])[-150:]
                     output["current"] = {"frame": target, "phase": event["phase"],
                         "round": event["round"], "audit": event["audit"],
@@ -2618,34 +2648,36 @@ def run_workflow():
                         "failed": failed, "existing_candidates_preserved": failed})
                     output["current"] = None
                     save_run(output)
-                    run_status.update(completed=len(results), phase="saved")
+                    _update_run_status_locked(completed=len(results), phase="saved")
         output["failed_frames"] = failed_frames
         with run_status_lock:
             check_cancelled()
             if failed_frames:
                 output["message"] = (f"{len(failed_frames)}/{len(results)} 帧失败；失败帧旧候选已保留，"
                                      "请查看错误后重试")
-                run_status.update(status="failed", phase="failed", frame=None,
-                                  error=output["message"])
+                _update_run_status_locked(status="failed", phase="failed", frame=None,
+                                          error=output["message"])
             else:
-                run_status.update(status="completed", phase="completed", frame=None)
+                _update_run_status_locked(status="completed", phase="completed", frame=None)
         return jsonify(output)
     except RunCancelled:
         output["current"] = None
         output["message"] = "用户已停止自动标注；已完成帧的候选已保存"
         save_run(output)
         with run_status_lock:
-            run_status.update(status="stopped", phase="stopped", frame=None,
-                              error=None, completed=len(results))
+            _update_run_status_locked(status="stopped", phase="stopped", frame=None,
+                                      error=None, completed=len(results))
         return jsonify(output | {"stopped": True})
     except Exception as error:
         output["error"] = str(error)[:500]
         save_run(output)
         with run_status_lock:
             if run_stop_event.is_set():
-                run_status.update(status="stopped", phase="stopped", error="用户已停止自动标注")
+                _update_run_status_locked(status="stopped", phase="stopped",
+                                          error="用户已停止自动标注")
             else:
-                run_status.update(status="failed", phase="failed", error=str(error)[:500])
+                _update_run_status_locked(status="failed", phase="failed",
+                                          error=str(error)[:500])
         raise
 
 
@@ -2657,14 +2689,25 @@ def stop_workflow():
         if run_status.get("status") == "stopping":
             return jsonify(status="stopping", stopped=True)
         run_stop_event.set()
-        run_status.update(status="stopping", phase="stopping")
+        _update_run_status_locked(status="stopping", phase="stopping")
     return jsonify(status="stopping", stopped=True)
 
 
 @app.get("/api/run/status")
 def get_run_status():
     with run_status_lock:
-        return jsonify(run_status.copy())
+        snapshot = copy.deepcopy(run_status)
+    observed_at = time.time()
+    started_at = snapshot.get("started_at")
+    phase_started_at = snapshot.get("phase_started_at") or started_at
+    snapshot.update(
+        observed_at=observed_at,
+        elapsed_seconds=max(0.0, observed_at - started_at) if started_at else 0.0,
+        phase_elapsed_seconds=max(0.0, observed_at - phase_started_at)
+        if phase_started_at else 0.0,
+        progress_contract_version=2,
+    )
+    return jsonify(snapshot)
 
 
 @app.get("/api/run/debug")

@@ -1,0 +1,42 @@
+{
+  "schema_version": "labelagent.workbench_stability_acceptance.v1",
+  "date": "2026-11-17",
+  "branch": "codex/workbench-stability-20261117",
+  "production_url": "http://127.0.0.1:8765",
+  "production": {
+    "status": "idle",
+    "progress_contract_version": 2,
+    "sam_ready": true,
+    "vlm_ready": true,
+    "state_bytes_before": 265256582,
+    "state_bytes_after": 34220380,
+    "state_reduction_percent": 87.1,
+    "compact_state_sha256": "0B4D4284E887F3A664F7DF81DB8F1384699BA2944F6BB236132A74264437204F"
+  },
+  "real_frame_acceptance": {
+    "frame": 31,
+    "topic": "/capture/camera_1/image",
+    "elapsed_seconds": 168.1,
+    "candidate_count": 11,
+    "candidate_classes": {
+      "floor": 1,
+      "person": 2,
+      "pallet": 8
+    },
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false
+  },
+  "stop_acceptance": {
+    "frame": 32,
+    "requested_during_phase": "discovering",
+    "terminal_status": "stopped",
+    "frame_candidate_saved": false,
+    "human_truth_changed": false
+  },
+  "tests": {
+    "python_server": "94/94",
+    "web_candidate_audit": "60/60",
+    "web_polling_and_progress": "6/6"
+  }
+}

@@ -136,3 +136,42 @@ test('引导台任务开始事件立即刷新并切换到活跃间隔', async ()
   await h.advance(3000);
   assert.equal(calls, 2);
 });
+
+test('VLM 类别识别阶段显示非零进度并保持运行动画', () => {
+  const elements = new Map();
+  function element(id) {
+    if (!elements.has(id)) elements.set(id, {
+      textContent: '', className: '', style: {}, attributes: {},
+      classList: { values: new Set(), toggle(name, enabled) {
+        if (enabled) this.values.add(name); else this.values.delete(name);
+      } },
+      setAttribute(name, value) { this.attributes[name] = value; },
+      children: id === 'runProgressStages' ? Array.from({length: 5}, () => ({
+        classList: { toggle() {} },
+      })) : [],
+    });
+    return elements.get(id);
+  }
+  const h = harness({ $: element });
+  const text = source('app.js');
+  h.run(section(text, ' const agentPhase=', "$('downloadDebug').onclick"));
+  h.run(section(text, 'function formatAgentDuration', 'function renderRunButton'));
+  h.run("renderAgentProgressPanel({status:'running',phase:'discovering',total:1,completed:0,frame:31,phase_elapsed_seconds:70,events:[]},70)");
+  assert.equal(element('runProgressPercent').textContent, '6%');
+  assert.equal(element('runProgressTitle').textContent, 'VLM 识别当前帧可见类别');
+  assert.ok(element('runProgressDetail').textContent.includes('后台仍在线'));
+  assert.ok(element('runProgressBar').classList.values.has('running'));
+  assert.ok(element('runProgressBar').classList.values.has('longPhase'));
+});
+
+test('模型未就绪时预检明确失败且不伪装为推理已启动', async () => {
+  const h = harness({
+    async fetch() {
+      return {ok: true, async json() {
+        return {ready: false, sam: {ready: true}, vlm: {ready: false, error: '服务未连接'}};
+      }};
+    },
+  });
+  h.run(section(source('app.js'), 'async function ensureAutoLabelReadiness', "$('runButton').onclick"));
+  await assert.rejects(() => h.context.ensureAutoLabelReadiness(), /模型尚未就绪.*VLM：服务未连接/);
+});

@@ -2232,6 +2232,40 @@ class ServerTests(unittest.TestCase):
                 server.run_status = old_status
                 server.WORK = old_work
 
+    def test_run_status_exposes_live_timing_and_sequence_contract(self):
+        old_status = server.run_status
+        try:
+            server.run_status = {"status": "idle"}
+            with patch.object(server.time, "time", side_effect=[100.0, 103.0]):
+                server.update_run_status(status="running", phase="discovering",
+                                         started_at=90.0, total=1, completed=0)
+                status = server.app.test_client().get("/api/run/status").json
+            self.assertEqual(status["progress_contract_version"], 2)
+            self.assertEqual(status["status_sequence"], 1)
+            self.assertEqual(status["elapsed_seconds"], 13.0)
+            self.assertEqual(status["phase_elapsed_seconds"], 3.0)
+            self.assertEqual(status["phase_started_at"], 100.0)
+            with patch.object(server.time, "time", return_value=104.0):
+                server.update_run_status(shape_count=2)
+            self.assertEqual(server.run_status["status_sequence"], 2)
+            self.assertEqual(server.run_status["phase_started_at"], 100.0)
+        finally:
+            server.run_status = old_status
+
+    def test_state_json_is_streamed_and_compact(self):
+        old_state, old_work = server.state, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": None, "labels": ["地面"],
+                            "truth": {"1": [shape()]}, "config": {}}
+            try:
+                server.save()
+                raw = server.state_path().read_text(encoding="utf-8")
+                self.assertNotIn("\n", raw)
+                self.assertEqual(server._read_json(server.state_path())["labels"], ["地面"])
+            finally:
+                server.state, server.WORK = old_state, old_work
+
 
 if __name__ == "__main__":
     unittest.main()

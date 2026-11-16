@@ -669,6 +669,25 @@ class WorkflowTests(unittest.TestCase):
                          "slope_candidate_not_broad_planar")
         self.assertEqual(suppressed[0]["route"], "human_review_required")
 
+    def test_slope_generation_uses_overlap_crops_only_after_full_frame_rejection(self):
+        def result(points, score=0.8):
+            return {"parts": [{"points": points, "holes": []}], "score": score}
+        tall = result([[2, 1], [10, 1], [10, 31], [2, 31]])
+        crop_wide = result([[1, 1], [20, 1], [20, 8], [1, 8]], 0.7)
+        crop_tall = result([[1, 1], [8, 1], [8, 20], [1, 20]])
+        agent = workflow.AnnotationAgent({}, image_bytes(), {
+            "description": "slope",
+            "prompts": [{"label": "slope", "text": "traversable surface"}],
+        }, ["slope"], 1)
+        with patch.object(workflow, "sam_text", side_effect=[
+                [tall], [crop_wide], [crop_tall], [crop_tall], [crop_tall]]) as segment:
+            agent.generate()
+        self.assertEqual(segment.call_count, 5)
+        self.assertEqual(len(agent.shapes), 1)
+        self.assertEqual(agent.shapes[0]["source"], "sam_text_overlap_crop_fallback")
+        self.assertEqual(agent.shapes[0]["crop_index"], 0)
+        self.assertEqual(len(agent.candidate_filters), 4)
+
     def test_robot_and_person_prompts_use_exact_canonical_queries(self):
         labels = ["ego", "other_robot", "person"]
         expected = [

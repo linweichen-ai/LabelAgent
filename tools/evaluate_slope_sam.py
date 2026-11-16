@@ -111,6 +111,7 @@ def main():
     parser.add_argument("--frame-selector-labels", nargs="+",
                         default=["slope", "斜坡", "ramp"])
     parser.add_argument("--truth-labels", nargs="+", default=["slope", "斜坡", "ramp"])
+    parser.add_argument("--crop-fallback", action="store_true")
     args = parser.parse_args()
 
     mcap = str(Path(args.mcap).resolve())
@@ -209,6 +210,7 @@ def main():
                 })
 
     filtered_slope_rows = []
+    crop_fallback_rows = []
     if "traversable surface" in args.prompts:
         for frame in frames:
             image_bytes = frame_cache[frame]
@@ -235,6 +237,44 @@ def main():
                 row["traversable_metrics"] = metrics(traversable_prediction,
                                                        traversable_truth)
             filtered_slope_rows.append(row)
+            if args.crop_fallback and not retained:
+                source = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+                crop_prediction = np.zeros((height, width), dtype=bool)
+                crop_audit = []
+                bounds = ((0.0, 0.0, 0.55, 0.55), (0.45, 0.0, 1.0, 0.55),
+                          (0.0, 0.45, 0.55, 1.0), (0.45, 0.45, 1.0, 1.0))
+                for crop_index, (left_f, top_f, right_f, bottom_f) in enumerate(bounds):
+                    left, top = round(width * left_f), round(height * top_f)
+                    right, bottom = round(width * right_f), round(height * bottom_f)
+                    crop = source.crop((left, top, right, bottom))
+                    encoded = io.BytesIO()
+                    crop.save(encoded, "JPEG", quality=95)
+                    crop_candidates = sam_shapes(sam_text(
+                        encoded.getvalue(), "traversable surface", state.get("config") or {}))
+                    crop_retained, crop_suppressed = filter_slope_candidate_geometry(
+                        crop_candidates)
+                    crop_mask = union_mask(crop_retained, crop.width, crop.height)
+                    crop_prediction[top:bottom, left:right] |= crop_mask
+                    crop_audit.append({
+                        "crop_index": crop_index, "bbox": [left, top, right, bottom],
+                        "retained": len(crop_retained), "suppressed": len(crop_suppressed),
+                    })
+                crop_fallback_rows.append({
+                    "frame": frame, "crop_audit": crop_audit,
+                    "retained": sum(item["retained"] for item in crop_audit),
+                    "suppressed": sum(item["suppressed"] for item in crop_audit),
+                    **metrics(crop_prediction, slope_truth),
+                })
+                if "floor" in args.prompts:
+                    floor_prediction = prediction_cache.get(
+                        (frame, "floor"), np.zeros((height, width), dtype=bool))
+                    traversable_truth = union_mask(
+                        [item for item in truth_by_frame[str(frame)]
+                         if item.get("label") in {"floor", "slope"}], width, height)
+                    crop_fallback_rows[-1]["traversable_metrics"] = metrics(
+                        floor_prediction | crop_prediction, traversable_truth)
+                render_overlay(image_bytes, slope_truth, crop_prediction,
+                               output / f"frame-{frame}-crop-fallback.jpg")
     accepted_filtered = [row for row in filtered_slope_rows if row["retained"]]
     filtered_slope_summary = None
     if filtered_slope_rows:
@@ -259,6 +299,51 @@ def main():
                     [row["traversable_metrics"]["precision"] for row in filtered_slope_rows])),
                 "traversable_mean_recall": float(np.mean(
                     [row["traversable_metrics"]["recall"] for row in filtered_slope_rows])),
+            })
+    crop_fallback_summary = None
+    if crop_fallback_rows:
+        crop_fallback_summary = {
+            "attempted_frames": len(crop_fallback_rows),
+            "frames_iou_ge_0_5": sum(row["iou"] >= 0.5 for row in crop_fallback_rows),
+            "mean_iou": float(np.mean([row["iou"] for row in crop_fallback_rows])),
+            "rows": crop_fallback_rows,
+        }
+    final_slope_summary = None
+    if filtered_slope_rows:
+        crop_by_frame = {row["frame"]: row for row in crop_fallback_rows}
+        final_rows = []
+        for row in filtered_slope_rows:
+            selected = row
+            route = "full_frame"
+            if not row["retained"] and crop_by_frame.get(row["frame"], {}).get("retained"):
+                selected = crop_by_frame[row["frame"]]
+                route = "overlap_crop_fallback"
+            final_rows.append({"frame": row["frame"], "route": route,
+                               **{key: selected.get(key) for key in
+                                  ("retained", "suppressed", "iou", "precision", "recall",
+                                   "intersection_pixels", "prediction_pixels", "truth_pixels",
+                                   "traversable_metrics")}})
+        accepted = [row for row in final_rows if row["retained"]]
+        final_slope_summary = {
+            "frames": len(final_rows), "accepted_frames": len(accepted),
+            "review_required_frames": len(final_rows) - len(accepted),
+            "frames_iou_ge_0_5": sum(row["iou"] >= 0.5 for row in final_rows),
+            "mean_iou_accepted": float(np.mean([row["iou"] for row in accepted])),
+            "mean_slope_precision_accepted": float(np.mean(
+                [row["precision"] for row in accepted])),
+            "mean_slope_recall_all": float(np.mean([row["recall"] for row in final_rows])),
+            "false_positive_accepted": sum(row["retained"] and row["intersection_pixels"] == 0
+                                           for row in final_rows),
+            "rows": final_rows,
+        }
+        if all(row.get("traversable_metrics") for row in final_rows):
+            final_slope_summary.update({
+                "traversable_mean_iou": float(np.mean(
+                    [row["traversable_metrics"]["iou"] for row in final_rows])),
+                "traversable_mean_precision": float(np.mean(
+                    [row["traversable_metrics"]["precision"] for row in final_rows])),
+                "traversable_mean_recall": float(np.mean(
+                    [row["traversable_metrics"]["recall"] for row in final_rows])),
             })
 
     summaries = []
@@ -382,6 +467,8 @@ def main():
               "combined_prompt_union": combined_prompt_union,
               "guided_prompt_unions": guided_prompt_unions,
               "filtered_slope_summary": filtered_slope_summary,
+              "crop_fallback_summary": crop_fallback_summary,
+              "final_slope_summary": final_slope_summary,
               "oracle_point_summaries": oracle_summaries, "oracle_point_rows": oracle_rows,
               "evidence_note": "Human truth was read-only; prompt selection is development-set evidence, not generalization. Point profiles use truth-derived oracle clicks and only isolate segmentation from localization."}
     (output / "results.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -389,6 +476,8 @@ def main():
                       "summaries": summaries, "combined_prompt_union": combined_prompt_union,
                       "guided_prompt_unions": guided_prompt_unions,
                       "filtered_slope_summary": filtered_slope_summary,
+                      "crop_fallback_summary": crop_fallback_summary,
+                      "final_slope_summary": final_slope_summary,
                       "oracle_point_summaries": oracle_summaries},
                      ensure_ascii=False))
 

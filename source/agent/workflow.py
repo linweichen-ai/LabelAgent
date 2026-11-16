@@ -1647,6 +1647,42 @@ class AnnotationAgent:
             self.next_id += 1
         return shapes
 
+    def slope_crop_fallback(self):
+        """Run fixed overlapping crops only when full-frame slope proposals all fail guards."""
+        from .edit_agent import _rasterize, _shape_from_mask
+        source = Image.open(io.BytesIO(self.image)).convert("RGB")
+        bounds = ((0.0, 0.0, 0.55, 0.55), (0.45, 0.0, 1.0, 0.55),
+                  (0.0, 0.45, 0.55, 1.0), (0.45, 0.45, 1.0, 1.0))
+        retained, filtered = [], []
+        for crop_index, (left_f, top_f, right_f, bottom_f) in enumerate(bounds):
+            left, top = round(self.width * left_f), round(self.height * top_f)
+            right, bottom = round(self.width * right_f), round(self.height * bottom_f)
+            crop = source.crop((left, top, right, bottom))
+            encoded = io.BytesIO()
+            crop.save(encoded, "JPEG", quality=95)
+            crop_shapes = self.candidates(
+                sam_text(encoded.getvalue(), "traversable surface", self.config), "slope")
+            if any(not valid_shape(shape, crop.width, crop.height) for shape in crop_shapes):
+                raise ValueError("SAM 3 裁剪斜坡候选超出裁剪图像范围")
+            crop_shapes, crop_filtered = filter_slope_candidate_geometry(crop_shapes)
+            crop_box = [left, top, right, bottom]
+            for item in crop_filtered:
+                item["crop_index"] = crop_index
+                item["crop_bbox"] = crop_box
+            filtered.extend(crop_filtered)
+            for shape in crop_shapes:
+                crop_mask = _rasterize(shape, crop.width, crop.height)
+                full_mask = np.zeros((self.height, self.width), dtype=np.uint8)
+                full_mask[top:bottom, left:right] = crop_mask
+                mapped = _shape_from_mask(full_mask, "slope", shape["id"])
+                if mapped is None or not valid_shape(mapped, self.width, self.height):
+                    raise ValueError("SAM 3 裁剪斜坡候选映射到原图失败")
+                mapped.update(score=shape.get("score"),
+                              source="sam_text_overlap_crop_fallback",
+                              crop_index=crop_index, crop_bbox=crop_box)
+                retained.append(mapped)
+        return retained, filtered
+
     def generate(self):
         for item in self.description.get("prompts", []):
             if (not isinstance(item, dict) or item.get("label") not in self.labels or
@@ -1657,6 +1693,11 @@ class AnnotationAgent:
             if item["label"] == "slope" and item["text"] == "traversable surface":
                 shapes, filtered = filter_slope_candidate_geometry(shapes)
                 self.candidate_filters.extend(filtered)
+                if not shapes:
+                    self.progress("generating", prompt=item["text"], label=item["label"],
+                                  operation="slope_overlap_crop_fallback")
+                    shapes, crop_filtered = self.slope_crop_fallback()
+                    self.candidate_filters.extend(crop_filtered)
             self.shapes.extend(shapes)
             self.generated += len(shapes)
             self.progress("generated")

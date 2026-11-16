@@ -87,7 +87,7 @@ test('状态请求隐藏期间完成不重建定时器，恢复后立即轮询�
   assert.equal(h.timers.size, 1);
 });
 
-test('复核台连续阶段事件不会饿死活跃轮询，完成后立即读取结果', async () => {
+test('复核台按帧完成即时读取，长阶段只保留低频恢复轮询', async () => {
   let calls = 0;
   const h = harness({ async refresh() { calls++; } });
   h.run(section(source('review.js'), '  let reviewPollTimer =', '\n})();'));
@@ -96,10 +96,13 @@ test('复核台连续阶段事件不会饿死活跃轮询，完成后立即读�
   assert.equal(calls, 1);
   for (let i = 0; i < 6; i++) {
     await h.advance(1000);
-    await h.emit('labelagent:job-status', { status: 'running', phase: `phase-${i}`, frame: i });
+    await h.emit('labelagent:job-status', { status: 'running', phase: `phase-${i}`, frame: i, task_id: 'a', completed: 0 });
   }
+  assert.equal(calls, 1);
+  await h.emit('labelagent:job-status', { status: 'running', phase: 'saved', task_id: 'a', completed: 1 });
+  await h.advance(0);
   assert.equal(calls, 2);
-  await h.emit('labelagent:job-status', { status: 'completed' });
+  await h.emit('labelagent:job-status', { status: 'completed', task_id: 'a', completed: 1 });
   await h.advance(0);
   assert.equal(calls, 3);
   assert.equal(h.timers.size, 1);

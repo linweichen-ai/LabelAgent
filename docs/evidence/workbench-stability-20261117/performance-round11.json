@@ -37,13 +37,38 @@
       "service_total_seconds": 0.7441133100073785
     }
   },
+  "review_state_polling_estimate": {
+    "scenario_seconds": 200,
+    "scope": "single frame, visible tab, no transport failures",
+    "before_full_state_requests": 109,
+    "after_full_state_requests": 8,
+    "after_summary_requests": 68,
+    "estimated_before_bytes": 212964200,
+    "estimated_after_bytes": 15673648,
+    "estimated_reduction_percent": 92.6402,
+    "evidence_kind": "schedule-derived estimate, not a browser network capture"
+  },
+  "rejected_experiments": [
+    {
+      "name": "shorten reference description to 360 characters",
+      "baseline_seconds": 34.442,
+      "candidate_seconds": 30.208,
+      "candidate_completion_tokens": 286,
+      "result": "rejected",
+      "reason": "The output still hit the exact limit and ended mid-sentence, reducing semantic completeness for only a modest speed gain.",
+      "deployed": false
+    }
+  ],
   "validation": {
     "python": "119/119",
     "web_polling": "9/9",
     "candidate_and_human_gate": "60/60",
     "formal_ready": true
   },
-  "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-performance-round11-20261117-055120",
+  "backups": [
+    "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-performance-round11-20261117-055120",
+    "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-performance-round12-20261117-061000"
+  ],
   "boundaries": [
     "No model weights were changed.",
     "No machine candidate was promoted to human truth or training data.",

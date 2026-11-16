@@ -519,10 +519,15 @@
   refresh();
   let reviewPollTimer = null;
   let latestJobStatus = 'idle';
+  let latestJobTaskId = null;
+  let latestCompletedFrames = 0;
   function scheduleReviewPoll(delay) {
     if (reviewPollTimer) clearTimeout(reviewPollTimer);
     if (document.hidden) return;
-    const interval = ['running', 'stopping'].includes(latestJobStatus) ? 5000 : 30000;
+    // Frame completion events trigger an immediate refresh below.  This timer
+    // is only a recovery heartbeat, so a long VLM round does not repeatedly
+    // download and parse the multi-megabyte full state.
+    const interval = 30000;
     reviewPollTimer = window.setTimeout(async () => {
       reviewPollTimer = null;
       if (window.workspaceMode === 'auto') await refresh();
@@ -531,10 +536,18 @@
   }
   document.addEventListener('labelagent:job-status', event => {
     const previousStatus = latestJobStatus;
-    latestJobStatus = event.detail?.status || 'idle';
+    const detail = event.detail || {};
+    latestJobStatus = detail.status || 'idle';
+    if (detail.task_id !== latestJobTaskId) {
+      latestJobTaskId = detail.task_id || null;
+      latestCompletedFrames = 0;
+    }
+    const completed = Number(detail.completed || 0);
+    const frameCompleted = completed > latestCompletedFrames;
+    latestCompletedFrames = Math.max(latestCompletedFrames, completed);
     if (window.workspaceMode !== 'auto') return;
     if (['running', 'stopping'].includes(latestJobStatus)) {
-      if (!['running', 'stopping'].includes(previousStatus)) scheduleReviewPoll(0);
+      if (!['running', 'stopping'].includes(previousStatus) || frameCompleted) scheduleReviewPoll(0);
     } else {
       scheduleReviewPoll(0);
     }

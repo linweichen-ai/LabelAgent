@@ -363,6 +363,7 @@ window.syncWorkbenchCandidateState=state=>{
  document.dispatchEvent(new CustomEvent('labelagent:candidate-state-synced',{detail:{frame,topic,candidate_count:Object.keys(candidates).length}}));
  return true;
 };
+document.addEventListener('labelagent:review-state',event=>window.syncWorkbenchCandidateState?.(event.detail?.state));
 async function openFrameForReferencePreparation(target){
  if(!topic||catalog[topic]?.type!=='image')throw Error('当前没有可用的图像话题');
  stopPlayback();

@@ -164,14 +164,59 @@ test('VLM 类别识别阶段显示非零进度并保持运行动画', () => {
   assert.ok(element('runProgressBar').classList.values.has('longPhase'));
 });
 
+test('瞬时故障重试时同一任务进度不倒退，新任务重新计数', () => {
+  const elements = new Map();
+  function element(id) {
+    if (!elements.has(id)) elements.set(id, {
+      textContent: '', className: '', style: {}, attributes: {},
+      classList: { values: new Set(), toggle(name, enabled) {
+        if (enabled) this.values.add(name); else this.values.delete(name);
+      } },
+      setAttribute(name, value) { this.attributes[name] = value; },
+      children: id === 'runProgressStages' ? Array.from({length: 5}, () => ({
+        classList: { toggle() {} },
+      })) : [],
+    });
+    return elements.get(id);
+  }
+  const h = harness({ $: element });
+  const text = source('app.js');
+  h.run(section(text, ' const agentPhase=', "$('downloadDebug').onclick"));
+  h.run(section(text, 'function formatAgentDuration', 'function renderRunButton'));
+  h.run("renderAgentProgressPanel({task_id:'a',status:'running',phase:'observing',total:1,completed:0,events:[]},10)");
+  assert.equal(element('runProgressPercent').textContent, '58%');
+  h.run("renderAgentProgressPanel({task_id:'a',status:'running',phase:'retrying',total:1,completed:0,events:[]},20)");
+  assert.equal(element('runProgressPercent').textContent, '58%');
+  assert.equal(element('runProgressTitle').textContent, '服务短暂异常，正在自动重试本帧');
+  h.run("renderAgentProgressPanel({task_id:'b',status:'running',phase:'retrying',total:1,completed:0,events:[]},2)");
+  assert.equal(element('runProgressPercent').textContent, '18%');
+});
+
 test('模型未就绪时预检明确失败且不伪装为推理已启动', async () => {
+  let calls = 0;
   const h = harness({
     async fetch() {
-      return {ok: true, async json() {
-        return {ready: false, sam: {ready: true}, vlm: {ready: false, error: '服务未连接'}};
-      }};
+      calls++;
+      return calls === 1
+        ? {ok: true, async json() { return {ready: false, sam: {ready: true}, vlm: {ready: false, error: '服务未连接'}}; }}
+        : {ok: true, async json() { return {ready: true}; }};
     },
   });
   h.run(section(source('app.js'), 'async function ensureAutoLabelReadiness', "$('runButton').onclick"));
-  await assert.rejects(() => h.context.ensureAutoLabelReadiness(), /模型尚未就绪.*VLM：服务未连接/);
+  await assert.rejects(() => h.context.ensureAutoLabelReadiness(), /尚未启动推理.*VLM：服务未连接/);
+  assert.equal(calls, 2);
+});
+
+test('参考帧描述失效时预检阻止提交长推理', async () => {
+  let calls = 0;
+  const h = harness({
+    async fetch() {
+      calls++;
+      return calls === 1
+        ? {ok: true, async json() { return {ready: true, sam: {ready: true}, vlm: {ready: true}}; }}
+        : {ok: true, async json() { return {ready: false, message: '参考帧 0 的描述已失效，请重新生成'}; }};
+    },
+  });
+  h.run(section(source('app.js'), 'async function ensureAutoLabelReadiness', "$('runButton').onclick"));
+  await assert.rejects(() => h.context.ensureAutoLabelReadiness(), /流程：参考帧 0 的描述已失效/);
 });

@@ -57,6 +57,14 @@ def check_cancelled():
         raise RunCancelled("用户已停止自动标注")
 
 
+def _wait_cancellable(seconds):
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline:
+        check_cancelled()
+        time.sleep(min(0.1, max(0, deadline - time.monotonic())))
+    check_cancelled()
+
+
 @contextmanager
 def cancellation(event):
     token = _cancel_event.set(event)
@@ -207,6 +215,8 @@ def chat(config, instruction, image, extra_images=(), response_schema=None):
               "started_at": time.time(), "input": {"model": config.get("llm_model"),
               "instruction": instruction, "images": [_image_summary(data)
               for data in (image, *extra_images)]}}
+    if config.get("llm_prompt_profile") == "compact":
+        record["input"]["max_tokens"] = int(config.get("llm_max_tokens") or 768)
     if response_schema is not None:
         record["input"]["response_schema"] = response_schema
     review_call = _review_call.get()
@@ -222,12 +232,16 @@ def chat(config, instruction, image, extra_images=(), response_schema=None):
         options = {"response_schema": response_schema} if response_schema is not None else {}
         response = _cancellable_call(_chat, config, instruction, image, extra_images, raw, **options)
         record.update(status="succeeded", output={"raw_text": raw.get("text"),
+                                                   "finish_reason": raw.get("finish_reason"),
+                                                   "busy_retry_count": raw.get("busy_retry_count", 0),
                                                    "parsed": response})
         return response
     except Exception as error:
         record.update(status="failed", error=str(error)[:500])
         if raw:
-            record["output"] = {"raw_text": raw["text"]}
+            record["output"] = {"raw_text": raw.get("text"),
+                                "finish_reason": raw.get("finish_reason"),
+                                "busy_retry_count": raw.get("busy_retry_count", 0)}
         raise
     finally:
         record["elapsed_ms"] = round((time.time() - record["started_at"]) * 1000)
@@ -244,30 +258,45 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
     payload = {"model": config["llm_model"], "temperature": 0,
                "messages": [{"role": "user", "content": content}]}
     if config.get("llm_prompt_profile") == "compact":
-        payload["max_tokens"] = 768
+        payload["max_tokens"] = int(config.get("llm_max_tokens") or 768)
     if response_schema is not None:
         payload["response_format"] = {"type": "json_schema", "json_schema": {"name": "labelagent", "schema": response_schema, "strict": True}}
     request = urllib.request.Request(config["llm_url"].rstrip("/") + "/chat/completions",
         json.dumps(payload).encode(), headers={"Content-Type": "application/json",
         "Authorization": "Bearer " + config.get("llm_key", "")})
-    try:
-        with urllib.request.urlopen(request, timeout=1200) as response:
-            result = json.load(response)
-    except (TimeoutError, socket.timeout) as error:
-        raise ValueError("llm_timeout: 大模型请求排队或推理超过 1200 秒") from error
-    except urllib.error.HTTPError as error:
+    busy_retry_limit = max(0, min(8, int(config.get("llm_busy_retries", 5))))
+    busy_retry_count = 0
+    for busy_attempt in range(busy_retry_limit + 1):
         try:
-            detail = error.read().decode("utf-8", "replace")[:300]
-        except Exception:
-            detail = error.reason
-        raise ValueError(f"大模型请求失败（HTTP {error.code}）：{detail}") from error
-    except urllib.error.URLError as error:
-        raise ValueError(f"大模型请求失败：{error.reason}") from error
-    content = result["choices"][0]["message"]["content"]
+            with urllib.request.urlopen(request, timeout=1200) as response:
+                result = json.load(response)
+            break
+        except (TimeoutError, socket.timeout) as error:
+            raise ValueError("llm_timeout: 大模型请求排队或推理超过 1200 秒") from error
+        except urllib.error.HTTPError as error:
+            try:
+                detail = error.read().decode("utf-8", "replace")[:300]
+            except Exception:
+                detail = str(error.reason)
+            local_busy = (error.code == 503 and
+                          ("local vlm is busy" in detail.lower()
+                           or '"busy"' in detail.lower()))
+            if local_busy and busy_attempt < busy_retry_limit:
+                busy_retry_count += 1
+                _wait_cancellable(min(30, 5 * (2 ** busy_attempt)))
+                continue
+            raise ValueError(f"大模型请求失败（HTTP {error.code}）：{detail}") from error
+        except urllib.error.URLError as error:
+            raise ValueError(f"大模型请求失败：{error.reason}") from error
+    if raw is not None:
+        raw["busy_retry_count"] = busy_retry_count
+    choice = result["choices"][0]
+    content = choice["message"]["content"]
     if isinstance(content, list):
         content = "".join(part.get("text", "") for part in content)
     if raw is not None:
         raw["text"] = content[:20000]
+        raw["finish_reason"] = choice.get("finish_reason")
     content = content.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
     try:
         result = json.loads(content)
@@ -276,6 +305,15 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
     if not isinstance(result, dict):
         raise ModelOutputError("大模型必须返回 JSON 对象", content[:20000])
     return result
+
+
+def compact_review_token_budget(config, hole_count):
+    """Budget structured review output from the bounded schema complexity."""
+    if config.get("llm_prompt_profile") != "compact":
+        return None
+    if config.get("llm_max_tokens") is not None:
+        return int(config["llm_max_tokens"])
+    return min(1536, 768 + 192 * min(4, max(0, int(hole_count))))
 
 
 def reference_labels(annotations, labels):
@@ -1161,6 +1199,8 @@ def review(config, image, overlay, description, shapes, labels, history, referen
                      " Return a concrete operation only when the target image supports the duplicate interpretation.")
     last_result = None
     last_error = None
+    base_review_tokens = compact_review_token_budget(config, len(holes))
+    retry_max_tokens = None
     for attempt in range(MAX_PROTOCOL_RETRIES + 1):
         if attempt:
             correction = ("\n上一份输出未通过 Agent 协议校验。请保留其中正确的视觉判断，只修正协议错误，"
@@ -1178,7 +1218,13 @@ def review(config, image, overlay, description, shapes, labels, history, referen
                 if config.get("llm_prompt_profile") == "compact":
                     from .protocol_schema import review_schema
                     options["response_schema"] = review_schema(labels, shapes, holes, sam_comparison is not None)
-                last_result = chat(config, request_prompt, image, extra_images=extra_images, **options)
+                request_config = config
+                request_tokens = retry_max_tokens or base_review_tokens
+                if request_tokens is not None and request_tokens != config.get("llm_max_tokens"):
+                    request_config = copy.deepcopy(config)
+                    request_config["llm_max_tokens"] = request_tokens
+                last_result = chat(request_config, request_prompt, image,
+                                   extra_images=extra_images, **options)
             except ModelOutputError as error:
                 last_result = {"raw_text": error.raw_text}
                 last_error = error
@@ -1196,6 +1242,12 @@ def review(config, image, overlay, description, shapes, labels, history, referen
                 record.update(status="rejected", error=str(last_error),
                               retrying=attempt < MAX_PROTOCOL_RETRIES)
                 _emit_trace(record)
+            finish_reason = (record or {}).get("output", {}).get("finish_reason")
+            if (finish_reason == "length"
+                    or isinstance(last_error, ModelOutputError)
+                    and "unterminated string" in str(last_error).lower()):
+                current_budget = retry_max_tokens or base_review_tokens or 768
+                retry_max_tokens = min(2048, max(1536, current_budget * 2))
         finally:
             _review_call.reset(token)
     raise ReviewProtocolError(

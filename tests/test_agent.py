@@ -730,6 +730,50 @@ class WorkflowTests(unittest.TestCase):
         finally:
             workflow._review_call.reset(token)
         self.assertEqual(captured["max_tokens"], 768)
+        self.assertEqual(workflow.compact_review_token_budget(
+            {"llm_prompt_profile": "compact"}, 0), 768)
+        self.assertEqual(workflow.compact_review_token_budget(
+            {"llm_prompt_profile": "compact"}, 4), 1536)
+        self.assertEqual(workflow.compact_review_token_budget(
+            {"llm_prompt_profile": "compact", "llm_max_tokens": 1024}, 4), 1024)
+
+    def test_truncated_compact_review_doubles_budget_once_for_protocol_repair(self):
+        budgets, events = [], []
+        def fake_chat(config, instruction, image, extra_images=(), raw=None,
+                      response_schema=None):
+            budgets.append(int(config.get("llm_max_tokens") or 768))
+            if len(budgets) == 1:
+                raw.update(text='{"status":"done","operations":[{"reason":"unfinished',
+                           finish_reason="length")
+                raise workflow.ModelOutputError(
+                    "大模型未返回有效 JSON：Unterminated string", raw["text"])
+            raw.update(text='{"status":"done","operations":[]}', finish_reason="stop")
+            return {"status": "done", "operations": []}
+        with workflow.trace_calls(events.append), patch.object(workflow, "_chat", side_effect=fake_chat):
+            result = workflow.review({"llm_prompt_profile": "compact"}, image_bytes(),
+                image_bytes(), {"description": "a", "prompts": []}, [], ["a"], [])
+        self.assertEqual(result["status"], "done")
+        self.assertEqual(budgets, [768, 1536])
+        gpt_events = [event for event in events if event["service"] == "GPT"
+                      and event["status"] in ("rejected", "succeeded")]
+        self.assertEqual(gpt_events[0]["output"]["finish_reason"], "length")
+        self.assertEqual(gpt_events[-1]["input"]["max_tokens"], 1536)
+
+    def test_local_vlm_busy_waits_and_retries_without_repeating_sam(self):
+        busy = workflow.urllib.error.HTTPError(
+            "http://example.test", 503, "Service Unavailable", None,
+            io.BytesIO(b'{"error":{"message":"Local VLM is busy"}}'))
+        success = io.BytesIO(
+            b'{"choices":[{"finish_reason":"stop","message":{"content":"{\\"status\\":\\"done\\"}"}}]}')
+        raw = {}
+        with patch.object(workflow.urllib.request, "urlopen", side_effect=[busy, success]) as request, \
+             patch.object(workflow, "_wait_cancellable") as wait:
+            result = workflow._chat({"llm_url": "http://example.test",
+                "llm_model": "test"}, "inspect", image_bytes(), raw=raw)
+        self.assertEqual(result, {"status": "done"})
+        self.assertEqual(request.call_count, 2)
+        wait.assert_called_once_with(5)
+        self.assertEqual(raw["busy_retry_count"], 1)
 
     def test_trace_records_sam_transport_failure_and_restores_context(self):
         events = []
@@ -1846,6 +1890,53 @@ class ServerTests(unittest.TestCase):
             finally:
                 server.state, server.run_status, server.WORK = previous_state, previous_status, previous_work
 
+    def test_describe_releases_state_lock_and_rejects_stale_completion(self):
+        old_state, old_status, old_work, old_stop = (
+            server.state, server.run_status, server.WORK, server.run_stop_event)
+        entered, release = threading.Event(), threading.Event()
+        responses = {}
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                "config": {}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            server.run_stop_event = threading.Event()
+            def blocked_describe(*args, **kwargs):
+                entered.set()
+                self.assertTrue(release.wait(3))
+                return {"description": "a only",
+                        "prompts": [{"label": "a", "text": "a"}]}
+            def request_description():
+                responses["describe"] = server.app.test_client().post(
+                    "/api/describe", json={"frame": 0})
+            def read_state():
+                responses["state"] = server.app.test_client().get("/api/state")
+            worker = threading.Thread(target=request_description)
+            reader = threading.Thread(target=read_state)
+            try:
+                with patch.object(server, "describe", side_effect=blocked_describe):
+                    worker.start()
+                    self.assertTrue(entered.wait(2))
+                    reader.start()
+                    reader.join(1)
+                    self.assertFalse(reader.is_alive(), "描述模型调用不应阻塞状态读取")
+                    self.assertEqual(responses["state"].status_code, 200)
+                    with server.lock:
+                        server.state["config"]["llm_prompt_profile"] = "compact"
+                    release.set()
+                    worker.join(3)
+                self.assertFalse(worker.is_alive())
+                self.assertEqual(responses["describe"].status_code, 409)
+                self.assertFalse((server.WORK / "description.json").exists())
+                self.assertEqual(server.run_status["status"], "failed")
+            finally:
+                release.set()
+                worker.join(3)
+                reader.join(3)
+                server.state, server.run_status, server.WORK, server.run_stop_event = (
+                    old_state, old_status, old_work, old_stop)
+
     def test_reference_outline_does_not_tint_raw_floor_or_reuse_old_description(self):
         old_state = server.state
         server.state = {"video": FakeVideo(), "topic": "camera0",
@@ -2181,6 +2272,73 @@ class ServerTests(unittest.TestCase):
             finally:
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work
 
+    def test_run_retries_one_transient_failure_then_saves_success(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                "config": {}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            attempts = []
+            failed = {"shapes": [], "candidates_added": 0, "applied": [],
+                "review_queue": [{"reason": "Agent 调用失败",
+                                  "error": "HTTP Error 503: Service Unavailable"}],
+                "agent": {"converged": False, "rounds": 0, "max_rounds": 100,
+                          "stop_reason": "error", "audit": []}}
+            succeeded = {"shapes": [shape()], "candidates_added": 1, "applied": [],
+                "review_queue": [], "agent": {"converged": True, "rounds": 1,
+                "max_rounds": 100, "stop_reason": "done", "audit": []}}
+            def fake_run(*args, **kwargs):
+                attempts.append(True)
+                return copy.deepcopy(failed if len(attempts) == 1 else succeeded)
+            try:
+                with patch.object(server, "run", side_effect=fake_run):
+                    response = server.app.test_client().post("/api/run", json={
+                        "frame": 1, "count": 1,
+                        "description": {"description": "a only",
+                            "prompts": [{"label": "a", "text": "a"}],
+                            "reference_signature": server.reference_signature(0)}})
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertEqual(len(attempts), 2)
+                self.assertFalse(response.json["frames"][0]["failed"])
+                self.assertEqual(response.json["frames"][0]["agent"]["transient_retry_count"], 1)
+                self.assertIn("1", server.state["candidates"])
+                self.assertTrue(any(event["phase"] == "retrying"
+                                    for event in server.run_status["events"]))
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_run_does_not_retry_deterministic_failure_and_preserves_candidates(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            existing = [shape()]
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                "config": {}, "candidates": {"1": copy.deepcopy(existing)},
+                "agent_runs": {"1": {"stop_reason": "done"}}}
+            server.run_status = {"status": "idle"}
+            failed = {"shapes": [], "candidates_added": 0, "applied": [],
+                "review_queue": [{"reason": "Agent 调用失败",
+                                  "error": "GPT 未评估 SAM 3 点提示结果"}],
+                "agent": {"converged": False, "rounds": 1, "max_rounds": 100,
+                          "stop_reason": "error", "audit": []}}
+            try:
+                with patch.object(server, "run", return_value=copy.deepcopy(failed)) as run_mock:
+                    response = server.app.test_client().post("/api/run", json={
+                        "frame": 1, "count": 1,
+                        "description": {"description": "a only",
+                            "prompts": [{"label": "a", "text": "a"}],
+                            "reference_signature": server.reference_signature(0)}})
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertEqual(run_mock.call_count, 1)
+                self.assertTrue(response.json["frames"][0]["failed"])
+                self.assertEqual(response.json["frames"][0]["agent"]["transient_retry_count"], 0)
+                self.assertEqual(server.state["candidates"]["1"], existing)
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
     def test_run_persists_audit_and_topic_switch(self):
         old_state = server.state
         old_status = server.run_status
@@ -2253,7 +2411,7 @@ class ServerTests(unittest.TestCase):
             server.run_status = old_status
 
     def test_state_json_is_streamed_and_compact(self):
-        old_state, old_work = server.state, server.WORK
+        old_state, old_work, old_dirty = server.state, server.WORK, server.file_sessions_dirty
         with tempfile.TemporaryDirectory() as directory:
             server.WORK = Path(directory)
             server.state = {"video": None, "labels": ["地面"],
@@ -2263,6 +2421,74 @@ class ServerTests(unittest.TestCase):
                 raw = server.state_path().read_text(encoding="utf-8")
                 self.assertNotIn("\n", raw)
                 self.assertEqual(server._read_json(server.state_path())["labels"], ["地面"])
+            finally:
+                server.state, server.WORK = old_state, old_work
+                server.file_sessions_dirty = old_dirty
+
+    def test_file_sessions_migrate_once_and_are_not_rewritten_for_current_state(self):
+        old_state, old_work, old_dirty = server.state, server.WORK, server.file_sessions_dirty
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            active = str((Path(directory) / "active.mcap").resolve())
+            inactive = str((Path(directory) / "inactive.mcap").resolve())
+            legacy = {
+                "video_path": active, "topic": "camera0", "labels": ["a"],
+                "truth": {"1": [shape()]}, "reference_frames": {}, "config": {},
+                "candidates": {}, "agent_runs": {},
+                "file_sessions": {
+                    active: {"topic": "camera0", "truth": {"old": [shape(7)]}},
+                    inactive: {"topic": "camera1", "truth": {"2": [shape(2)]}},
+                },
+            }
+            server._write_json(server.state_path(), legacy)
+            server.state = {"video": None, "topic": None, "labels": [], "truth": {},
+                            "reference_frames": {}, "config": {}, "candidates": {},
+                            "agent_runs": {}}
+            try:
+                server.load()
+                self.assertNotIn(active, server.state["file_sessions"])
+                self.assertIn(inactive, server.state["file_sessions"])
+                self.assertTrue(server.file_sessions_dirty)
+                server.save()
+                current = server._read_json(server.state_path())
+                sessions = server._read_json(server.file_sessions_path())
+                self.assertNotIn("file_sessions", current)
+                self.assertEqual(sessions[inactive]["truth"]["2"][0]["id"], 2)
+                session_hash = server.file_sessions_path().read_bytes()
+                server.state["labels"].append("b")
+                server.save()
+                self.assertEqual(server.file_sessions_path().read_bytes(), session_hash)
+                self.assertEqual(server._read_json(server.state_path())["labels"], ["a", "b"])
+            finally:
+                server.state, server.WORK = old_state, old_work
+                server.file_sessions_dirty = old_dirty
+
+    def test_run_readiness_rejects_stale_description_then_accepts_current_reference(self):
+        old_state, old_work = server.state, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "video_path": str(FakeVideo.path),
+                            "topic": "camera0", "labels": ["a"], "auto_labels": ["a"],
+                            "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                            "config": {}, "candidates": {}, "agent_runs": {}}
+            try:
+                client = server.app.test_client()
+                missing = client.get("/api/run/readiness").json
+                self.assertFalse(missing["ready"])
+                self.assertEqual(missing["code"], "description_missing")
+                (server.WORK / "description.json").write_text(json.dumps({
+                    "description": "old", "prompts": [{"label": "a", "text": "a"}],
+                    "reference_signature": "stale"}), encoding="utf-8")
+                stale = client.get("/api/run/readiness").json
+                self.assertFalse(stale["ready"])
+                self.assertEqual(stale["code"], "description_stale")
+                (server.WORK / "description.json").write_text(json.dumps({
+                    "description": "current", "prompts": [{"label": "a", "text": "a"}],
+                    "reference_signature": server.reference_signature(0)}), encoding="utf-8")
+                ready = client.get("/api/run/readiness").json
+                self.assertTrue(ready["ready"])
+                self.assertEqual(ready["reference_frame"], 0)
+                self.assertEqual(ready["labels"], ["a"])
             finally:
                 server.state, server.WORK = old_state, old_work
 

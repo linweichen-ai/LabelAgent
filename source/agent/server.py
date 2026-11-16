@@ -52,6 +52,7 @@ run_claim_lock = threading.Lock()
 run_status = {"status": "idle"}
 run_stop_event = threading.Event()
 run_task_id = None
+file_sessions_dirty = False
 
 
 def _update_run_status_locked(**changes):
@@ -116,6 +117,32 @@ REFERENCE_DISCOVERY_RETRY_ERRORS = (
     "VLM 类别判断与当前标签表不一致",
     "VLM 必须逐项判断当前标签表中的每个类别",
 )
+TRANSIENT_RUN_ERROR_MARKERS = (
+    "timed out", "timeout", "connection reset", "connection refused",
+    "connection aborted", "remote end closed", "temporarily unavailable",
+    "service unavailable", "too many requests", "http error 429",
+    "http error 500", "http error 502", "http error 503", "http error 504",
+    "http 429", "http 500", "http 502", "http 503", "http 504",
+    "local vlm is busy", "vlm is busy",
+    "超时", "连接被重置", "连接被拒绝", "连接中断", "暂时不可用", "服务不可用",
+)
+
+
+def transient_run_failure(result):
+    """Return a bounded retry reason for transport/service failures only.
+
+    Model protocol and deterministic geometry failures must stay visible for
+    review instead of being hidden behind repeated, expensive inference.
+    """
+    if not isinstance(result, dict) or result.get("agent", {}).get("stop_reason") != "error":
+        return None
+    queue = result.get("review_queue") or []
+    text = "\n".join(
+        str(entry.get(key, ""))
+        for entry in queue if isinstance(entry, dict)
+        for key in ("error", "reason")
+    ).lower()
+    return next((marker for marker in TRANSIENT_RUN_ERROR_MARKERS if marker in text), None)
 
 
 def discover_reference_labels(config, image, labels, on_retry=None):
@@ -229,6 +256,10 @@ def state_path():
     return WORK / "state.json"
 
 
+def file_sessions_path():
+    return WORK / "file_sessions.json"
+
+
 def _read_json(path):
     # json.loads(path.read_text()) briefly holds both the entire UTF-8 text and
     # the decoded object. Large multi-file workspaces can exceed available RAM.
@@ -246,8 +277,17 @@ def _write_json(path, value, *, pretty=False, sort_keys=False):
 
 
 def save():
+    global file_sessions_dirty
+    sessions = state.get("file_sessions", {})
+    sessions_path = file_sessions_path()
+    if file_sessions_dirty or (sessions and not sessions_path.exists()):
+        sessions_temporary = sessions_path.with_suffix(".tmp")
+        _write_json(sessions_temporary, sessions)
+        _commit_work_file(sessions_temporary, sessions_path)
+        file_sessions_dirty = False
     temporary = state_path().with_suffix(".tmp")
-    _write_json(temporary, {k: v for k, v in state.items() if k != "video"})
+    _write_json(temporary, {k: v for k, v in state.items()
+                            if k not in {"video", "file_sessions"}})
     _commit_work_file(temporary, state_path())
 
 
@@ -878,16 +918,34 @@ def redact_debug(value, *, credential=None):
 
 
 def load():
+    global file_sessions_dirty
+    file_sessions_dirty = False
+    legacy_sessions = None
     if state_path().exists():
         stored = _read_json(state_path())
+        legacy_sessions = stored.pop("file_sessions", None)
         state.update(stored)
+    if file_sessions_path().exists():
+        state["file_sessions"] = _read_json(file_sessions_path())
+    else:
+        state["file_sessions"] = legacy_sessions or {}
+        file_sessions_dirty = legacy_sessions is not None
     for key in ("sam_url", "cvat_url", "cvat_token"):
         state["config"].pop(key, None)
     for key in ("job_id", "task_id", "cvat_start", "cvat_count"):
         state.pop(key, None)
     for session in state.get("file_sessions", {}).values():
         for key in ("job_id", "task_id", "cvat_start", "cvat_count"):
-            session.pop(key, None)
+            if key in session:
+                session.pop(key, None)
+                file_sessions_dirty = True
+    active_path = state.get("video_path")
+    if active_path:
+        active_keys = {active_path, str(Path(active_path).resolve())}
+        for active_key in active_keys:
+            if active_key in state["file_sessions"]:
+                state["file_sessions"].pop(active_key)
+                file_sessions_dirty = True
     state.setdefault("candidates", {})
     state.setdefault("candidates_by_topic", {})
     state.setdefault("agent_runs", {})
@@ -1319,13 +1377,17 @@ def file_list():
 
 
 def activate_file(item):
+    global file_sessions_dirty
     video = Video(item['path'])
     # Preserve each file's annotations and candidates when switching records.
     sessions = state.setdefault('file_sessions', {})
     fields = ('topic', 'truth', 'truths_by_topic', 'reference_frames', 'candidates', 'candidates_by_topic', 'agent_runs', 'agent_runs_by_topic', 'candidate_revisions', 'candidate_revisions_by_topic')
     if state['video']:
         sessions[str(state['video'].path.resolve())] = {key: state.get(key) for key in fields}
-    previous = sessions.get(item['path'], {})
+        file_sessions_dirty = True
+    previous = sessions.pop(item['path'], {})
+    if previous:
+        file_sessions_dirty = True
     state.update(video=video, video_path=str(video.path), topic=next(iter(video.topics), None),
                  truth={}, truths_by_topic={}, reference_frames={}, candidates={}, candidates_by_topic={}, agent_runs={}, agent_runs_by_topic={}, candidate_revisions={}, candidate_revisions_by_topic={})
     state.update(previous)
@@ -1604,6 +1666,7 @@ def register_candidate_review_proposal():
 
 @app.delete('/api/files/<file_id>')
 def remove_file(file_id):
+    global file_sessions_dirty
     with lock:
         files = read_library()
         item = next((item for item in files if item['id'] == file_id), None)
@@ -1614,6 +1677,7 @@ def remove_file(file_id):
         if unloaded:
             sessions = state.setdefault('file_sessions', {})
             sessions[item['path']] = {key: state.get(key) for key in ('topic', 'truth', 'truths_by_topic', 'reference_frames', 'candidates', 'candidates_by_topic', 'agent_runs', 'agent_runs_by_topic', 'candidate_revisions', 'candidate_revisions_by_topic')}
+            file_sessions_dirty = True
             state.update(video=None, video_path=None, topic=None, truth={}, truths_by_topic={}, reference_frames={}, candidates={}, candidates_by_topic={}, agent_runs={}, agent_runs_by_topic={}, candidate_revisions={}, candidate_revisions_by_topic={})
             save()
         return jsonify(files=file_list(), unloaded=unloaded)
@@ -2066,38 +2130,122 @@ def model_readiness():
                    checked_at=datetime.now(timezone.utc).isoformat())
 
 
+@app.get("/api/run/readiness")
+def run_readiness():
+    """Validate local workflow prerequisites before a long model request starts."""
+    with lock:
+        if state.get("video") is None or not state.get("topic"):
+            return jsonify(ready=False, code="data_missing",
+                           message="请先加载图像或 MCAP 数据")
+        references = state.get("reference_frames", {}).get(state["topic"], [])
+        if not references:
+            return jsonify(ready=False, code="reference_missing",
+                           message="请先人工确认并锁定一个参考帧")
+        reference = references[0]
+        if not state.get("truth", {}).get(str(reference)):
+            return jsonify(ready=False, code="reference_truth_missing",
+                           reference_frame=reference,
+                           message=f"参考帧 {reference} 尚无人工真值")
+        try:
+            allowed_labels = selected_auto_labels(reference)
+        except (KeyError, ValueError) as error:
+            return jsonify(ready=False, code="label_selection_invalid",
+                           reference_frame=reference, message=str(error))
+        description_path = WORK / "description.json"
+        if not description_path.exists():
+            return jsonify(ready=False, code="description_missing",
+                           reference_frame=reference,
+                           message=f"请打开参考帧 {reference} 并生成真值描述")
+        try:
+            description = _read_json(description_path)
+            prompts = description.get("prompts", []) if isinstance(description, dict) else []
+            prompt_labels = [item.get("label") for item in prompts if isinstance(item, dict)]
+            valid = (isinstance(description, dict) and bool(description.get("description"))
+                     and len(prompts) == len(allowed_labels)
+                     and set(prompt_labels) == set(allowed_labels)
+                     and description.get("reference_signature") == reference_signature(reference))
+        except (OSError, ValueError, TypeError, KeyError):
+            valid = False
+        if not valid:
+            return jsonify(ready=False, code="description_stale",
+                           reference_frame=reference,
+                           message=f"参考帧 {reference} 的描述已失效，请重新生成")
+        return jsonify(ready=True, code="ready", reference_frame=reference,
+                       topic=state["topic"], labels=allowed_labels,
+                       description_ready=True)
+
+
 @app.post("/api/describe")
 @run_claimed
 def describe_truth():
-    body = request.get_json()
+    body = request.get_json() or {}
     with lock:
         index = int(body["frame"])
+        if state.get("video") is None or state.get("topic") is None:
+            raise ValueError("请先加载图像消息")
         if index not in state.get("reference_frames", {}).get(state["topic"], []):
             raise ValueError("请先将当前帧设为参考帧")
         if not state["truth"].get(str(index)):
             raise ValueError("请先保存该参考帧的真值")
         allowed_labels = selected_auto_labels(index)
-        selected_annotations = [shape for shape in state["truth"][str(index)]
+        selected_annotations = [shape for shape in copy.deepcopy(state["truth"][str(index)])
                                 if shape.get("label") in allowed_labels]
         selected_present = {shape.get("label") for shape in selected_annotations}
-        trace = []
+        video, topic = state["video"], state["topic"]
+        file_name = str(video.path)
+        config = copy.deepcopy(state["config"])
+        labels = copy.deepcopy(state.get("labels", []))
+        auto_labels = copy.deepcopy(state.get("auto_labels"))
+        references = copy.deepcopy(state.get("reference_frames", {}))
+        truth = copy.deepcopy(state["truth"][str(index)])
+        signature = reference_signature(index)
+        target_image = video.frame(topic, index)
+        marked_image = reference_overlay(target_image, selected_annotations)
+        with run_status_lock:
+            _update_run_status_locked(status="running", phase="describing", frame=index,
+                                      completed=0, total=1, round=0, shape_count=0,
+                                      topic=topic, file=file_name, error=None)
+
+    trace = []
+    save_debug(trace)
+    def on_trace(event):
+        event = redact_debug(event | {"frame": index, "purpose": "生成真值描述",
+            "topic": topic, "file": file_name}, credential=config.get("llm_key") or "")
+        if trace:
+            trace[0] = event
+        else:
+            trace.append(event)
         save_debug(trace)
-        def on_trace(event):
-            event = redact_debug(event | {"frame": index, "purpose": "生成真值描述",
-                "topic": state["topic"], "file": str(state["video"].path)})
-            if trace:
-                trace[0] = event
-            else:
-                trace.append(event)
-            save_debug(trace)
-        with trace_calls(on_trace, save_inspection_image):
-            result = describe(state["config"], frame_image(index),
-                selected_annotations, allowed_labels, overlay(index, allowed_labels),
+    try:
+        with cancellation(run_stop_event), trace_calls(on_trace, save_inspection_image):
+            result = describe(config, target_image,
+                selected_annotations, allowed_labels, marked_image,
                 include_unreferenced=any(label not in selected_present for label in allowed_labels))
-        result["reference_signature"] = reference_signature(index)
+        if run_stop_event.is_set():
+            raise RunCancelled("用户已停止生成真值描述")
+        with lock:
+            if (state.get("video") is not video
+                    or str(state["video"].path) != file_name
+                    or state.get("topic") != topic
+                    or state.get("config") != config
+                    or state.get("labels", []) != labels
+                    or state.get("auto_labels") != auto_labels
+                    or state.get("reference_frames", {}) != references
+                    or state.get("truth", {}).get(str(index)) != truth
+                    or reference_signature(index) != signature):
+                raise StaleHumanReviewError("数据、配置、类别或参考真值在描述期间变化，未保存旧描述")
+            result["reference_signature"] = signature
+            temporary = (WORK / "description.json").with_suffix(".tmp")
+            _write_json(temporary, result, pretty=True)
+            _commit_work_file(temporary, WORK / "description.json")
         save_description_trace(trace, result)
-        (WORK / "description.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+        update_run_status(status="completed", phase="completed", frame=None,
+                          completed=1, total=1)
         return jsonify(result)
+    except RunCancelled:
+        update_run_status(status="stopped", phase="stopped", frame=None,
+                          completed=0, total=1, error=None)
+        return jsonify(stopped=True, description_saved=False)
 
 
 @app.post("/api/reference_candidates/audit")
@@ -2605,9 +2753,38 @@ def run_workflow():
                             "result": {"agent": event["result"]["agent"]} if event.get("result") else None})
                     save_run(output)
                 check_cancelled()
-                result = run(config, target_image, description, allowed_labels,
-                    max_rounds=max_rounds, on_progress=on_progress, reference=reference_context)
+                transient_retry_errors = []
+                while True:
+                    result = run(config, target_image, description, allowed_labels,
+                        max_rounds=max_rounds, on_progress=on_progress, reference=reference_context)
+                    retry_reason = transient_run_failure(result)
+                    if retry_reason is None or transient_retry_errors:
+                        break
+                    retry_error = "\n".join(
+                        str(item.get("error") or item.get("reason") or "")[:500]
+                        for item in result.get("review_queue") or [] if isinstance(item, dict)
+                    )[:1000]
+                    transient_retry_errors.append(retry_error)
+                    retry_record = {"time": time.time(), "frame": target,
+                                    "phase": "retrying", "round": 0,
+                                    "shape_count": 0, "retry_attempt": 1,
+                                    "reason": retry_reason}
+                    with run_status_lock:
+                        check_cancelled()
+                        _update_run_status_locked(
+                            phase="retrying", round=0, shape_count=0,
+                            retry_attempt=1, retry_reason=retry_reason)
+                        run_status["events"] = (run_status.get("events", []) +
+                                                [retry_record])[-150:]
+                    output["current"] = {"frame": target, "phase": "retrying",
+                                         "round": 0, "audit": [],
+                                         "review_queue": result.get("review_queue", []),
+                                         "retry_attempt": 1}
+                    save_run(output)
                 check_cancelled()
+                result["agent"]["transient_retry_count"] = len(transient_retry_errors)
+                if transient_retry_errors:
+                    result["agent"]["transient_retry_errors"] = transient_retry_errors
                 key = str(target)
                 existing = candidates[key] or []
                 failed = result["agent"].get("stop_reason") == "error"

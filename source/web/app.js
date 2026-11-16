@@ -470,10 +470,11 @@ $('doneFilesButton').onclick=()=>$('fileManager').close();
 $('configSave').onclick=async()=>{try{await api('config',{llm_url:$('llmUrl').value,llm_model:$('llmModel').value,llm_key:$('llmKey').value});$('config').close();toast('配置已保存')}catch(e){toast(e.message)}};
 let currentDescription=null;
 $('describeButton').onclick=async()=>{const button=$('describeButton');if(button.disabled)return;button.disabled=true;button.textContent='生成中…';toast('正在生成真值描述…');try{currentDescription=await api('describe',{frame});toast('描述已生成')}catch(e){toast(e.message)}finally{button.disabled=false;button.textContent='生成真值描述'}};
- const agentPhase={preflight:'检查模型与数据是否就绪',submitting:'请求已提交，等待后台确认',claiming:'后台已接收任务',starting:'准备任务',discovering:'VLM 识别当前帧可见类别',discovering_retry:'VLM 正在重试标签识别',describing:'VLM 生成真值描述',loading:'读取图像',generating:'SAM 3 生成候选',generated:'候选已生成',observing:'VLM 观察图像和候选',editing:'执行标注工具',edited:'工具执行结束',finished:'本帧结束',saved:'候选已保存',completed:'本次处理结束',stopping:'正在停止',stopped:'已停止',failed:'运行失败'};
+ const agentPhase={preflight:'检查模型与数据是否就绪',submitting:'请求已提交，等待后台确认',claiming:'后台已接收任务',starting:'准备任务',discovering:'VLM 识别当前帧可见类别',discovering_retry:'VLM 正在重试标签识别',describing:'VLM 生成真值描述',loading:'读取图像',generating:'SAM 3 生成候选',generated:'候选已生成',observing:'VLM 观察图像和候选',editing:'执行标注工具',edited:'工具执行结束',finished:'本帧结束',retrying:'服务短暂异常，正在自动重试本帧',saved:'候选已保存',completed:'本次处理结束',stopping:'正在停止',stopped:'已停止',failed:'运行失败'};
 const agentStop={done:'Agent 流程已结束（不代表正确）',needs_review:'旧记录：请求人工复核',max_rounds:'达到最大复查轮数',no_progress:'没有有效修改',cycle:'检测到循环修改',error:'模型或工具调用失败'};
- const agentProgressStage={preflight:0,submitting:0,claiming:0,starting:0,discovering:0,discovering_retry:0,describing:0,loading:0,generating:1,generated:1,observing:2,editing:3,edited:3,finished:4,saved:4,completed:4,stopping:4,stopped:4,failed:4};
- const agentProgressWeight={preflight:0.01,submitting:0.02,claiming:0.03,starting:0.04,discovering:0.06,discovering_retry:0.08,describing:0.10,loading:0.12,generating:0.22,generated:0.38,observing:0.58,editing:0.74,edited:0.86,finished:0.94,saved:1};
+ const agentProgressStage={preflight:0,submitting:0,claiming:0,starting:0,discovering:0,discovering_retry:0,describing:0,loading:0,generating:1,generated:1,observing:2,editing:3,edited:3,finished:4,retrying:1,saved:4,completed:4,stopping:4,stopped:4,failed:4};
+ const agentProgressWeight={preflight:0.01,submitting:0.02,claiming:0.03,starting:0.04,discovering:0.06,discovering_retry:0.08,describing:0.10,loading:0.12,generating:0.22,generated:0.38,observing:0.58,editing:0.74,edited:0.86,finished:0.94,retrying:0.18,saved:1};
+let progressTaskId=null,progressHighWater=0;
 let progressFetching=false;
 $('downloadDebug').onclick=async()=>{
  const button=$('downloadDebug');if(button.disabled)return;button.disabled=true;
@@ -497,7 +498,10 @@ function renderAgentProgressPanel(job,elapsed){
  const phase=job.phase||(status==='completed'?'completed':status==='failed'?'failed':status==='stopped'?'stopped':'starting');
  const currentWeight=running&&total?agentProgressWeight[phase]||0:0;
  const estimated=total?Math.round((completed+currentWeight)/total*100):0;
- const percent=(status==='completed'||total&&completed>=total)?100:total?Math.min(99,Math.max(running?1:0,estimated)):0;
+ const taskIdentity=job.task_id||null;
+ if(taskIdentity!==progressTaskId){progressTaskId=taskIdentity;progressHighWater=0}
+ let percent=(status==='completed'||total&&completed>=total)?100:total?Math.min(99,Math.max(running?1:0,estimated)):0;
+ if(running){progressHighWater=Math.max(progressHighWater,percent);percent=progressHighWater}
  const stateText=phase==='preflight'?'检查中':phase==='submitting'?'已提交':({idle:'等待开始',running:'推理中',stopping:'停止中',completed:'已完成',stopped:'已停止',failed:'运行失败'}[status]||status);
  const title=status==='idle'?'尚未开始标注推理':agentPhase[phase]||'正在处理';
  const latest=job.events?.at(-1),details=[];
@@ -545,14 +549,19 @@ function renderRunButton(){
 function renderAgentProgress(job){const changed=latestAgentJob?.status!==job.status||latestAgentJob?.phase!==job.phase||latestAgentJob?.frame!==job.frame;latestAgentJob=job;renderRunButton();if(changed)document.dispatchEvent(new CustomEvent('labelagent:job-status',{detail:job}))}
 async function refreshAgentProgress(){if(progressFetching)return;progressFetching=true;try{const response=await fetch('/api/run/status',{cache:'no-store'});if(!response.ok)throw Error(`HTTP ${response.status}`);renderAgentProgress(await response.json());runStatusFailureCount=0;$('runButton').removeAttribute('title')}catch{runStatusFailureCount++;$('runButton').title=runStatusFailureCount>=3?'连续无法读取推理状态；后台任务不会重复提交，请检查工作台服务连接':'暂时无法读取 Agent 状态，正在自动重试'}finally{progressFetching=false}}
 async function ensureAutoLabelReadiness(){
- const response=await fetch('/api/model_readiness',{cache:'no-store'});
+ const [response,workflowResponse]=await Promise.all([
+  fetch('/api/model_readiness',{cache:'no-store'}),
+  fetch('/api/run/readiness',{cache:'no-store'}),
+ ]);
  if(!response.ok)throw Error(`模型就绪检查失败（HTTP ${response.status}）`);
- const readiness=await response.json();
- if(readiness.ready)return readiness;
+ if(!workflowResponse.ok)throw Error(`标注流程检查失败（HTTP ${workflowResponse.status}）`);
+ const readiness=await response.json(),workflow=await workflowResponse.json();
  const failures=[];
  if(!readiness.sam?.ready)failures.push(`SAM：${readiness.sam?.error||readiness.sam?.status||'未就绪'}`);
  if(!readiness.vlm?.ready)failures.push(`VLM：${readiness.vlm?.error||readiness.vlm?.status||'未就绪'}`);
- throw Error(`模型尚未就绪，尚未启动推理。${failures.join('；')}`);
+ if(!workflow.ready)failures.push(`流程：${workflow.message||'参考数据未就绪'}`);
+ if(failures.length)throw Error(`尚未启动推理。${failures.join('；')}`);
+ return {models:readiness,workflow};
 }
 $('runButton').onclick=async()=>{
  const button=$('runButton');

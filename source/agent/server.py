@@ -1,5 +1,6 @@
 """Flask workbench for MCAP review and local annotation."""
 import io
+import copy
 import json
 import math
 import os
@@ -7,8 +8,11 @@ import threading
 import time
 import uuid
 import urllib.request
+import urllib.error
 import base64
 import hashlib
+import marshal
+from datetime import datetime, timezone
 from pathlib import Path
 from werkzeug.utils import secure_filename
 from flask import Flask, jsonify, request, send_file
@@ -17,22 +21,126 @@ import numpy as np
 
 from .media import IMAGE_SUFFIXES, SUPPORTED_SUFFIXES, open_media as Video, read_image
 from .sensors import cloud_snapshot
-from .candidate_import import prepare_candidate_import, merge_candidate_import
+from .candidate_import import (prepare_candidate_import, merge_candidate_import,
+                               merge_candidate_labels)
 from .workflow import (DESCRIPTION_INPUT_VERSION, MAX_REVIEW_ROUNDS, RunCancelled,
-                       cancellation, describe, reference_labels, restrict_description,
-                       run, trace_calls, candidate_overlay, reference_overlay)
+                       cancellation, describe, discover_visible_labels, reference_labels, restrict_description,
+                       run, trace_calls, candidate_overlay, reference_overlay, chat,
+                       VISIBLE_LABEL_DEFINITIONS)
+from .candidate_class_audit import (audit_candidate_class_blind, candidate_fingerprint,
+                                    audit_high_risk_candidates, HIGH_RISK_LABELS)
+
+from . import candidate_class_audit as _candidate_audit_module
+
+_CANDIDATE_AUDIT_LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps([
+    (name, value.__code__) for name, value in sorted(vars(_candidate_audit_module).items())
+    if getattr(value, "__module__", None) == _candidate_audit_module.__name__
+    and hasattr(value, "__code__")
+])).hexdigest()
 
 ROOT = Path(__file__).resolve().parents[2]
-WORK = ROOT / "work"
+WORK = Path(os.environ.get("LABELAGENT_WORK_DIR") or ROOT / "work").resolve()
 WEB = ROOT / "source" / "web"
 WORK.mkdir(exist_ok=True)
 app = Flask(__name__, static_folder=str(WEB), static_url_path="")
 app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024 * 1024
-state = {"video": None, "topic": None, "labels": [], "truth": {}, "reference_frames": {}, "config": {}, "candidates": {}, "candidates_by_topic": {}, "agent_runs": {}, "agent_runs_by_topic": {}}
+state = {"video": None, "topic": None, "labels": [], "truth": {}, "reference_frames": {}, "config": {}, "candidates": {}, "candidates_by_topic": {}, "agent_runs": {}, "agent_runs_by_topic": {}, "candidate_revisions": {}, "candidate_revisions_by_topic": {}, "candidate_review_status": {}, "candidate_review_proposals": [], "human_review_transactions": {}, "rejected_candidates": {}}
 lock = threading.RLock()
 run_status_lock = threading.Lock()
 run_status = {"status": "idle"}
 run_stop_event = threading.Event()
+point_segment_lock = threading.Lock()
+POINT_SEGMENT_TIMEOUT_SECONDS = 180
+REFERENCE_DISCOVERY_RETRY_ERRORS = (
+    "大模型未返回有效 JSON",
+    "VLM 类别判断存在未知或重复标签",
+    "VLM 类别判断与当前标签表不一致",
+    "VLM 必须逐项判断当前标签表中的每个类别",
+)
+
+
+def discover_reference_labels(config, image, labels, on_retry=None):
+    """Retry one structurally invalid VLM registry response, then fail closed."""
+    try:
+        return discover_visible_labels(config, image, labels), 0
+    except ValueError as error:
+        if not any(marker in str(error) for marker in REFERENCE_DISCOVERY_RETRY_ERRORS):
+            raise
+        if on_retry is not None:
+            on_retry(error)
+        return discover_visible_labels(config, image, labels), 1
+
+
+def reference_visibility_review_queue(discovery, candidates):
+    """Turn VLM visibility gaps into explicit, auditable human-review routes.
+
+    A completed SAM/VLM/Agent request is not evidence that every VLM-visible
+    label has a usable mask. Keep those gaps, open-set candidates and registry
+    conflicts visible in the server ledger instead of relying only on a browser
+    warning or a generic ``no_progress`` reason.
+    """
+    if not isinstance(discovery, dict):
+        return []
+    candidate_labels = {item.get("label") for item in candidates or []
+                        if isinstance(item, dict) and item.get("label")}
+    queue = []
+    seen = set()
+
+    def append(entry):
+        key = (entry.get("reason_code"), entry.get("label"),
+               entry.get("unknown_index"), entry.get("conflict_index"))
+        if key not in seen:
+            seen.add(key)
+            queue.append(entry)
+
+    for label in discovery.get("uncertain_labels") or []:
+        append({"label": label, "reason_code": "vlm_visibility_uncertain",
+                "route": "human_review_required", "source": "visible_label_discovery",
+                "candidate_available": label in candidate_labels})
+    for label in discovery.get("visible_labels") or []:
+        if label not in candidate_labels:
+            append({"label": label, "reason_code": "vlm_visible_label_missing_candidate",
+                    "route": "human_review_required", "source": "visible_label_discovery",
+                    "candidate_available": False})
+    for flag in discovery.get("consistency_flags") or []:
+        if not isinstance(flag, dict) or flag.get("reason_code") != "vlm_open_set_output_truncated":
+            continue
+        append({"reason_code": "vlm_open_set_output_truncated",
+                "route": "ontology_review_required", "source": "visible_label_discovery",
+                "open_set_scan_complete": False, "evidence": copy.deepcopy(flag)})
+    for index, item in enumerate(discovery.get("unknown_candidates") or []):
+        proposal = copy.deepcopy(item) if isinstance(item, dict) else {"evidence": str(item)}
+        append({"reason_code": "vlm_unknown_candidate",
+                "route": "ontology_review_required", "source": "visible_label_discovery",
+                "unknown_index": index, "proposal": proposal})
+    for index, item in enumerate(discovery.get("registry_conflicts") or []):
+        conflict = copy.deepcopy(item) if isinstance(item, dict) else {"evidence": str(item)}
+        append({"reason_code": "vlm_registry_conflict",
+                "route": "human_review_required", "source": "visible_label_discovery",
+                "conflict_index": index, "conflict": conflict})
+    return queue
+
+
+@app.after_request
+def disable_workbench_asset_cache(response):
+    """Keep the local workbench UI in sync with the deployed source.
+
+    LabelAgent is a local operator tool that is updated in place.  A browser
+    keeping an older index/app bundle can hide newly added controls while the
+    backend is already on a newer version, which looks like a model hang.  API
+    and image responses keep their normal caching behavior; only UI documents
+    and assets are made non-cacheable.
+    """
+    path = request.path.lower()
+    if path == "/" or path.endswith((".html", ".js", ".css")):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
+
+class StaleHumanReviewError(Exception):
+    """The frame or candidate changed after the reviewer opened the gate."""
 
 
 def _commit_work_file(temporary, destination):
@@ -54,6 +162,558 @@ def save():
     temporary = state_path().with_suffix(".tmp")
     temporary.write_text(json.dumps({k: v for k, v in state.items() if k != "video"}, ensure_ascii=False, indent=2), encoding="utf-8")
     _commit_work_file(temporary, state_path())
+
+
+def _canonical_json(value):
+    return json.dumps(value, ensure_ascii=False, sort_keys=True,
+                      separators=(",", ":")).encode("utf-8")
+
+
+def _sha256_json(value):
+    return hashlib.sha256(_canonical_json(value)).hexdigest()
+
+
+def _valid_sha256(value):
+    return (isinstance(value, str) and len(value) == 64
+            and all(character in "0123456789abcdef" for character in value))
+
+
+def _candidate_fingerprint_or_none(candidate):
+    try:
+        return candidate_fingerprint(candidate)
+    except (ValueError, TypeError, KeyError, AttributeError):
+        return None
+
+
+def candidate_review_bindings():
+    """Return server-canonical hashes so browsers never reinterpret JSON numbers."""
+    bindings = {}
+    for frame, candidates in state.get("candidates", {}).items():
+        if not isinstance(candidates, list) or not candidates:
+            continue
+        bindings[str(frame)] = {
+            "candidate_artifact_sha256": _sha256_json(candidates),
+            "candidates": [
+                {
+                    "candidate_id": candidate.get("id"),
+                    "candidate_sha256": _sha256_json(candidate),
+                    "candidate_fingerprint": _candidate_fingerprint_or_none(candidate),
+                    "candidate_fingerprint_sha256": _candidate_fingerprint_or_none(candidate),
+                }
+                for candidate in candidates
+            ],
+        }
+    return bindings
+
+
+TRUTH_ACCEPT_DECISIONS = {
+    "manual_annotation", "accept_candidate", "correct_candidate", "confirmed_empty",
+}
+
+
+def _fetch_readiness_json(url, timeout=3):
+    """Read a small JSON health response without exposing credentials."""
+    request_value = urllib.request.Request(url, method="GET",
+        headers={"Accept": "application/json"})
+    try:
+        with urllib.request.urlopen(request_value, timeout=timeout) as response:
+            if response.status != 200:
+                raise ValueError(f"HTTP {response.status}")
+            payload = response.read(1024 * 1024 + 1)
+            if len(payload) > 1024 * 1024:
+                raise ValueError("响应超过 1 MiB")
+            result = json.loads(payload)
+            if not isinstance(result, dict):
+                raise ValueError("响应不是 JSON 对象")
+            return result
+    except (OSError, ValueError, json.JSONDecodeError,
+            urllib.error.HTTPError, urllib.error.URLError) as error:
+        raise RuntimeError(str(error)[:240]) from error
+
+
+def _normalize_dataset_split(value):
+    normalized = str(value or "").strip().lower().replace("_", "").replace("-", "")
+    if normalized in {"train", "train72", "training"}:
+        return "train"
+    if normalized in {"test", "test24", "evaluation", "eval"}:
+        return "test"
+    if normalized in {"val", "validation"}:
+        return "val"
+    if normalized in {"", "none", "unassigned", "unknown"}:
+        return "unassigned"
+    return "invalid"
+
+
+def _frame_dataset_split(frame):
+    values = []
+    config_split = state.setdefault("config", {}).get("dataset_split")
+    if config_split is not None:
+        values.append(config_split)
+    run = state.setdefault("agent_runs", {}).get(str(frame)) or {}
+    for key in ("dataset_split", "split"):
+        if run.get(key) is not None:
+            values.append(run[key])
+    for shape in state.setdefault("candidates", {}).get(str(frame), []) or []:
+        for key in ("dataset_split", "split"):
+            if shape.get(key) is not None:
+                values.append(shape[key])
+    normalized = {_normalize_dataset_split(value) for value in values}
+    normalized.discard("unassigned")
+    if "invalid" in normalized or len(normalized) > 1:
+        return "mixed"
+    return next(iter(normalized), "unassigned")
+
+
+def _review_scope(frame_sha256, frame):
+    config = state.setdefault("config", {})
+    file_key = hashlib.sha256(str(state["video"].path).encode("utf-8")).hexdigest()[:16]
+    dataset_split = _frame_dataset_split(frame)
+    split_policy = ({"train": "immutable_truth_promotion_required",
+                     "test": "evaluation_only",
+                     "val": "evaluation_only",
+                     "mixed": "blocked_mixed_split"}
+                    .get(dataset_split, "blocked_unassigned"))
+    return {
+        "dataset_id": config.get("dataset_id") or f"local-workbench-{file_key}",
+        "dataset_version": config.get("dataset_version") or f"frame-content-{frame_sha256[:16]}",
+        "camera": config.get("camera") or state["topic"],
+        "dataset_split": dataset_split,
+        "split_policy": split_policy,
+        "training_return_allowed": False,
+    }
+
+
+def _assert_review_binding(body, *, frame, frame_sha256, candidate_sha256):
+    """Validate the UI snapshot against values recomputed while holding lock."""
+    if body.get("topic") != state.get("topic"):
+        raise StaleHumanReviewError("图像源已变化，请重新打开人工复核门禁")
+    expected_frame = body.get("expected_frame_sha256")
+    if not _valid_sha256(expected_frame):
+        raise ValueError("人工复核必须包含有效的 expected_frame_sha256")
+    if "expected_candidate_sha256" not in body:
+        raise ValueError("人工复核必须包含 expected_candidate_sha256（无候选时为 null）")
+    expected_candidate = body.get("expected_candidate_sha256")
+    if expected_candidate is not None and not _valid_sha256(expected_candidate):
+        raise ValueError("expected_candidate_sha256 必须是 64 位 SHA-256 或 null")
+    scope = _review_scope(frame_sha256, frame)
+    expected_scope = {
+        "dataset_id": body.get("expected_dataset_id"),
+        "dataset_version": body.get("expected_dataset_version"),
+        "camera": body.get("expected_camera"),
+        "dataset_split": body.get("expected_dataset_split"),
+        "split_policy": body.get("expected_split_policy"),
+        "training_return_allowed": body.get("expected_training_return_allowed"),
+    }
+    for key in ("dataset_id", "dataset_version", "camera", "dataset_split", "split_policy"):
+        if not isinstance(expected_scope[key], str) or not expected_scope[key].strip():
+            raise ValueError("人工复核必须绑定数据集、版本、相机、split 和回流策略")
+    if expected_scope["training_return_allowed"] is not False:
+        raise ValueError("工作台人工复核不能直接授权训练回流")
+    if scope["dataset_split"] == "mixed":
+        raise ValueError("检测到 train/test split 混入，已阻止人工真值提交")
+    if (expected_frame != frame_sha256
+            or expected_candidate != candidate_sha256 or expected_scope != scope):
+        raise StaleHumanReviewError("数据集、版本、相机、帧或候选已在复核期间变化，请重新复核后提交")
+    return expected_frame, expected_candidate, scope
+
+
+def _resolve_review_candidate(body, frame):
+    """Bind a browser-side SAM draft without promoting or persisting it."""
+    stored = state.setdefault("candidates", {}).get(str(frame))
+    raw = body.get("draft_candidate")
+    source = body.get("draft_source")
+    if raw is None:
+        if source is not None:
+            raise ValueError("draft_source 只能与 draft_candidate 同时提供")
+        return stored, ("server_state" if stored is not None else "none"), None
+    if source != "sam_point_prompt":
+        raise ValueError("浏览器候选只允许声明为 sam_point_prompt")
+    prepared = prepare_candidate_import(state["video"], {
+        state["topic"]: {str(frame): raw}}, state.get("labels", []))
+    candidate = prepared[state["topic"]][str(frame)]
+    if not candidate:
+        raise ValueError("SAM 点提示候选不能为空")
+    for original, normalized in zip(raw, candidate):
+        if "id" not in original:
+            normalized.pop("id", None)
+    parent_sha = _sha256_json(stored) if stored is not None else None
+    return candidate, "browser_sam_point_draft", parent_sha
+
+
+def _contains_slope(shapes):
+    return bool(shapes) and any(isinstance(item, dict)
+        and item.get("label") in {"slope", "slope_visible"} for item in shapes)
+
+
+def _contains_unknown_label(shapes):
+    blocked = {"new_label_candidate"}
+    return bool(shapes) and any(isinstance(item, dict) and (
+        str(item.get("label", "")).strip().lower().startswith("unknown")
+        or str(item.get("label", "")).strip().lower() in blocked) for item in shapes)
+
+
+def _slope_review_context(*, decision, candidate, truth, candidate_sha,
+                          candidate_event_id, frame_sha256):
+    candidate_has_slope = _contains_slope(candidate)
+    truth_has_slope = _contains_slope(truth)
+    if not candidate_has_slope and not truth_has_slope:
+        return None
+    human_truth = truth is not None and truth_has_slope and decision != "reject_candidate"
+    if decision == "reject_candidate":
+        visible_status = "human_rejected"
+    elif human_truth:
+        visible_status = "human_confirmed"
+    else:
+        visible_status = "candidate_supported"
+    provenance_sha = candidate_sha or frame_sha256
+    return {"label_type": "slope", "semantic_label": "slope_visible",
+        "visible_status": visible_status,
+        "human_pixel_truth_available": human_truth, "approved_for_training": False,
+        "business_mapping": "traversable_area", "traversability_status": "passable",
+        "downstream_mapping": {"operation": "union",
+            "source_labels": ["floor", "slope"], "target_label": "traversable_area"},
+        "policy_default": "passable",
+        "policy_basis": "user_defined_project_semantics",
+        "policy_override": {"status": "none", "rule_id": None, "reason": None,
+            "decided_by": None, "evidence_artifact_ids": []},
+        "candidate_sha256": candidate_sha,
+        "evidence_provenance": [{"kind": "machine_candidate" if candidate_sha else "input_frame",
+            "source": candidate_event_id or "human_manual_annotation",
+            "sha256": provenance_sha}], "hard_set_strata": ["unassigned"]}
+
+
+def _parse_review(body):
+    review = body.get("review") if isinstance(body, dict) else None
+    if not isinstance(review, dict):
+        raise ValueError("保存或驳回前必须填写人工复核信息")
+    unknown = set(review) - {"reviewer_declared_id", "started_at", "note",
+                             "decision_idempotency_key", "remediation_of_review_id"}
+    if unknown:
+        raise ValueError(f"人工复核信息包含未知字段：{sorted(unknown)}")
+    reviewer_declared_id = review.get("reviewer_declared_id")
+    if (not isinstance(reviewer_declared_id, str) or not reviewer_declared_id.strip()
+            or len(reviewer_declared_id.strip()) > 100):
+        raise ValueError("复核人自报 ID 不能为空且不能超过 100 个字符")
+    decision_key = review.get("decision_idempotency_key")
+    if (not isinstance(decision_key, str) or not decision_key.strip()
+            or len(decision_key.strip()) > 200):
+        raise ValueError("人工决定必须包含不超过 200 个字符的幂等键")
+    started_at = review.get("started_at")
+    if not isinstance(started_at, str):
+        raise ValueError("人工复核必须包含带时区的开始时间")
+    try:
+        started = datetime.fromisoformat(started_at.replace("Z", "+00:00"))
+    except ValueError as error:
+        raise ValueError("人工复核开始时间必须是 ISO-8601 格式") from error
+    if started.tzinfo is None:
+        raise ValueError("人工复核开始时间必须包含时区")
+    note = review.get("note", "")
+    if not isinstance(note, str) or len(note) > 1000:
+        raise ValueError("复核备注不能超过 1000 个字符")
+    remediation = review.get("remediation_of_review_id")
+    if remediation is not None and not _valid_sha256(remediation):
+        raise ValueError("remediation_of_review_id 必须是 64 位复核记录哈希")
+    return {"reviewer_declared_id": reviewer_declared_id.strip(),
+            "identity_assurance": "self_declared",
+            "started_at": started.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "note": note.strip(), "decision_idempotency_key": decision_key.strip(),
+            "remediation_of_review_id": remediation}
+
+
+def human_review_records(*, video_file=None, topic=None, frame=None):
+    folder = WORK / "human_reviews"
+    records = []
+    previous = None
+    paths = sorted(folder.glob("*.json")) if folder.exists() else []
+    for path in paths:
+        record = json.loads(path.read_text(encoding="utf-8"))
+        review_id = record.pop("review_id", None)
+        if record.get("previous_review_id") != previous or _sha256_json(record) != review_id:
+            raise RuntimeError(f"人工复核审计链损坏：{path.name}")
+        record["review_id"] = review_id
+        previous = review_id
+        if video_file is not None and record.get("file") != video_file:
+            continue
+        if topic is not None and record.get("topic") != topic:
+            continue
+        if frame is not None and record.get("frame") != frame:
+            continue
+        records.append(record)
+    return records
+
+
+def _legacy_shape_source_counts(shapes):
+    counts = {"manual": 0, "auto": 0, "unknown": 0}
+    for shape in shapes or []:
+        metadata = shape.get("cvat_metadata") if isinstance(shape, dict) else None
+        source = metadata.get("source") if isinstance(metadata, dict) else None
+        if source in ("manual", "auto"):
+            counts[source] += 1
+        else:
+            counts["unknown"] += 1
+    return counts
+
+
+def current_truth_review_status():
+    """Derive whether current truth is bound to the current human-review contract.
+
+    Legacy imports remain useful as editable drafts, but only a committed v2 review
+    whose exact truth hash still matches may be reused directly as a reference.
+    """
+    if state.get("video") is None or not state.get("topic"):
+        return {}
+    video_file, selected_topic = str(state["video"].path), state["topic"]
+    transactions = state.get("human_review_transactions", {})
+    reviews_by_frame = {}
+    for record in human_review_records(video_file=video_file, topic=selected_topic):
+        if record.get("decision") in TRUTH_ACCEPT_DECISIONS:
+            reviews_by_frame.setdefault(str(record.get("frame")), []).append(record)
+    result = {}
+    for frame_key, truth in state.get("truth", {}).items():
+        truth_hash = _sha256_json(truth)
+        records = reviews_by_frame.get(str(frame_key), [])
+        record = records[-1] if records else None
+        transaction = transactions.get(record.get("review_id"), {}) if record else {}
+        checks = {
+            "nonempty_truth": isinstance(truth, list) and len(truth) > 0,
+            "current_contract": bool(record and record.get("schema_version") == "labelagent.human-review.v2"),
+            "truth_sha256_matches": bool(record and record.get("truth_sha256") == truth_hash),
+            "transaction_committed": bool(record and transaction.get("status") == "committed"),
+        }
+        verified = all(checks.values())
+        if not checks["nonempty_truth"]:
+            reason = "empty_truth_not_reference_eligible"
+        elif record is None:
+            reason = "missing_current_human_review_receipt"
+        elif not checks["current_contract"]:
+            reason = "legacy_human_review_contract"
+        elif not checks["truth_sha256_matches"]:
+            reason = "truth_changed_after_human_review"
+        elif not checks["transaction_committed"]:
+            reason = "human_review_transaction_not_committed"
+        else:
+            reason = "verified_current_human_truth"
+        result[str(frame_key)] = {
+            "reusable_as_reference": verified,
+            "current_human_review_verified": verified,
+            "reason_code": reason,
+            "truth_sha256": truth_hash,
+            "shape_count": len(truth) if isinstance(truth, list) else 0,
+            "legacy_source_counts": _legacy_shape_source_counts(truth),
+            "review_id": record.get("review_id") if record else None,
+            "decision": record.get("decision") if record else None,
+            "reviewed_at": record.get("reviewed_at") if record else None,
+            "reviewer_declared_id": record.get("reviewer_declared_id") if record else None,
+            "identity_assurance": record.get("identity_assurance") if record else None,
+            "checks": checks,
+        }
+    return result
+
+
+def _review_status_key(frame):
+    return _sha256_json({"file": str(state["video"].path), "topic": state["topic"],
+                         "frame": int(frame)})
+
+
+def _persistent_state_snapshot():
+    return copy.deepcopy({key: value for key, value in state.items() if key != "video"})
+
+
+def _restore_persistent_state(snapshot):
+    video = state.get("video")
+    state.clear()
+    state.update(snapshot)
+    state["video"] = video
+
+
+def _review_by_idempotency_key(decision_key):
+    matches = [item for item in human_review_records()
+               if item.get("decision_idempotency_key") == decision_key]
+    if len(matches) > 1:
+        raise RuntimeError(f"人工决定幂等键重复：{decision_key}")
+    return matches[0] if matches else None
+
+
+def _assert_idempotent_review(existing, *, review, frame, frame_sha256,
+                              allowed_decisions, review_scope, truth=None, candidate=None,
+                              candidate_origin="none", parent_candidate_sha256=None):
+    expected = {"file": str(state["video"].path), "topic": state["topic"],
+                "frame": frame, "frame_sha256": frame_sha256,
+                "reviewer_declared_id": review["reviewer_declared_id"],
+                "identity_assurance": "self_declared",
+                "started_at": review["started_at"], "note": review["note"],
+                "remediation_of_review_id": review.get("remediation_of_review_id"),
+                "dataset_id": review_scope["dataset_id"],
+                "dataset_version": review_scope["dataset_version"],
+                "camera": review_scope["camera"],
+                "dataset_split": review_scope["dataset_split"],
+                "split_policy": review_scope["split_policy"],
+                "training_return_allowed": review_scope["training_return_allowed"],
+                "candidate_origin": candidate_origin,
+                "parent_candidate_sha256": parent_candidate_sha256}
+    if existing.get("decision") not in allowed_decisions:
+        raise ValueError("该幂等键已用于另一种人工决定")
+    if any(existing.get(key) != value for key, value in expected.items()):
+        raise ValueError("该幂等键对应的人工决定内容与本次请求不一致")
+    if truth is not None and existing.get("truth_sha256") != _sha256_json(truth):
+        raise ValueError("该幂等键对应的真值与本次请求不一致")
+    if candidate is not None and existing.get("candidate_sha256") != _sha256_json(candidate):
+        raise ValueError("该幂等键对应的候选与本次请求不一致")
+
+
+def prepare_human_review(*, frame, decision, review, frame_sha256,
+                         expected_frame_sha256, expected_candidate_sha256,
+                         review_scope, candidate, truth=None, confirmed_empty=False,
+                         candidate_origin="none", parent_candidate_sha256=None):
+    history = human_review_records()
+    finished = datetime.now(timezone.utc)
+    started = datetime.fromisoformat(review["started_at"].replace("Z", "+00:00"))
+    candidate_sha = _sha256_json(candidate) if candidate is not None else None
+    candidate_event_id = _sha256_json({"event": "workbench_candidate",
+        "file": str(state["video"].path), "topic": state["topic"], "frame": frame,
+        "candidate_sha256": candidate_sha, "candidate_origin": candidate_origin,
+        "parent_candidate_sha256": parent_candidate_sha256}) if candidate is not None else None
+    slope_context = _slope_review_context(decision=decision, candidate=candidate,
+        truth=truth, candidate_sha=candidate_sha, candidate_event_id=candidate_event_id,
+        frame_sha256=frame_sha256)
+    body = {"schema_version": "labelagent.human-review.v2",
+            "sequence": len(history) + 1,
+            "previous_review_id": history[-1]["review_id"] if history else None,
+            "file": str(state["video"].path), "topic": state["topic"],
+            "dataset_id": review_scope["dataset_id"],
+            "dataset_version": review_scope["dataset_version"],
+            "camera": review_scope["camera"],
+            "dataset_split": review_scope["dataset_split"],
+            "split_policy": review_scope["split_policy"],
+            "training_return_allowed": review_scope["training_return_allowed"],
+            "truth_role": ("evaluation_truth" if review_scope["dataset_split"] in {"test", "val"}
+                           else "workbench_human_truth_candidate"),
+            "frame": frame, "frame_sha256": frame_sha256,
+            "expected_frame_sha256": expected_frame_sha256,
+            "expected_candidate_sha256": expected_candidate_sha256,
+            "decision": decision, **review,
+            "reviewed_at": finished.isoformat().replace("+00:00", "Z"),
+            "elapsed_seconds": round(max(0.0, (finished - started).total_seconds()), 3),
+            "candidate_sha256": candidate_sha,
+            "candidate_origin": candidate_origin,
+            "parent_candidate_sha256": parent_candidate_sha256,
+            "candidate_event_id": candidate_event_id,
+            "candidate_shape_count": len(candidate) if candidate is not None else 0,
+            "truth_sha256": _sha256_json(truth) if truth is not None else None,
+            "truth_shape_count": len(truth) if truth is not None else None,
+            "confirmed_empty": bool(confirmed_empty),
+            "slope_context": slope_context,
+            "closed_loop_linkage": {"status": "pending_sync" if truth is not None else "not_applicable",
+                "candidate_event_id": candidate_event_id,
+                "human_accepted_event_id": None, "truth_committed_event_id": None}}
+    review_id = _sha256_json(body)
+    return {**body, "review_id": review_id}
+
+
+def _review_commit_readback(record):
+    persisted = json.loads(state_path().read_text(encoding="utf-8"))
+    audit_present = any(item.get("review_id") == record["review_id"]
+                        for item in human_review_records())
+    transaction = persisted.get("human_review_transactions", {}).get(record["review_id"], {})
+    truth = persisted.get("truth", {}).get(str(record["frame"]))
+    truth_matches = (record["truth_sha256"] is None
+                     or (truth is not None and _sha256_json(truth) == record["truth_sha256"]))
+    candidate_inactive = str(record["frame"]) not in persisted.get("candidates", {})
+    rejected_archived = (record["decision"] != "reject_candidate"
+        or record["review_id"] in persisted.get("rejected_candidates", {}))
+    verified = (audit_present and transaction.get("status") == "committed"
+                and truth_matches and candidate_inactive and rejected_archived)
+    return {"verified": verified, "audit_present": audit_present,
+            "transaction_committed": transaction.get("status") == "committed",
+            "truth_sha256_matches": truth_matches,
+            "candidate_inactive": candidate_inactive,
+            "rejected_candidate_archived": rejected_archived,
+            "state_file": str(state_path())}
+
+
+def _write_pending_review(record):
+    folder = WORK / "human_review_pending"
+    folder.mkdir(exist_ok=True)
+    destination = folder / f"{record['review_id']}.json"
+    temporary = folder / (uuid.uuid4().hex + ".tmp")
+    temporary.write_text(json.dumps(record, ensure_ascii=False, indent=2,
+                                    sort_keys=True), encoding="utf-8")
+    _commit_work_file(temporary, destination)
+    return destination
+
+
+def _commit_review_record(record, pending_path=None):
+    folder = WORK / "human_reviews"
+    folder.mkdir(exist_ok=True)
+    destination = folder / f"{record['sequence']:06d}-{record['review_id']}.json"
+    if destination.exists():
+        if json.loads(destination.read_text(encoding="utf-8")) != record:
+            raise RuntimeError(f"人工复核提交文件冲突：{destination.name}")
+        if pending_path is not None:
+            pending_path.unlink(missing_ok=True)
+        return destination
+    history = human_review_records()
+    expected_previous = history[-1]["review_id"] if history else None
+    if (record["sequence"] != len(history) + 1
+            or record["previous_review_id"] != expected_previous):
+        raise RuntimeError("人工复核待提交记录与当前审计链不连续")
+    if pending_path is None:
+        pending_path = _write_pending_review(record)
+    _commit_work_file(pending_path, destination)
+    return destination
+
+
+def commit_human_review(record, mutation):
+    """Commit state first, then the immutable audit, with a recoverable link."""
+    snapshot = _persistent_state_snapshot()
+    pending_path = _write_pending_review(record)
+    transaction = {"review_id": record["review_id"], "status": "state_saved_pending_audit",
+        "decision": record["decision"], "file": record["file"], "topic": record["topic"],
+        "frame": record["frame"], "candidate_sha256": record["candidate_sha256"],
+        "candidate_event_id": record["candidate_event_id"],
+        "truth_sha256": record["truth_sha256"]}
+    try:
+        mutation()
+        state.setdefault("human_review_transactions", {})[record["review_id"]] = transaction
+        save()
+    except Exception:
+        _restore_persistent_state(snapshot)
+        pending_path.unlink(missing_ok=True)
+        state_path().with_suffix(".tmp").unlink(missing_ok=True)
+        raise
+    destination = _commit_review_record(record, pending_path)
+    transaction["status"] = "committed"
+    transaction["audit_file"] = destination.name
+    try:
+        save()
+    except Exception:
+        transaction["status"] = "state_saved_pending_audit"
+        transaction.pop("audit_file", None)
+        raise
+    return record
+
+
+def recover_pending_human_reviews():
+    changed = False
+    transactions = state.setdefault("human_review_transactions", {})
+    pending_folder = WORK / "human_review_pending"
+    for review_id, transaction in list(transactions.items()):
+        if transaction.get("status") == "committed":
+            continue
+        pending_path = pending_folder / f"{review_id}.json"
+        final_matches = list((WORK / "human_reviews").glob(f"*-{review_id}.json"))
+        if final_matches:
+            destination = final_matches[0]
+        elif pending_path.exists():
+            record = json.loads(pending_path.read_text(encoding="utf-8"))
+            destination = _commit_review_record(record, pending_path)
+        else:
+            raise RuntimeError(f"状态包含未留证的人工作业：{review_id}")
+        transaction["status"] = "committed"
+        transaction["audit_file"] = destination.name
+        changed = True
+    if changed:
+        save()
 
 
 def update_run_status(**changes):
@@ -145,6 +805,13 @@ def load():
     state.setdefault("candidates_by_topic", {})
     state.setdefault("agent_runs", {})
     state.setdefault("agent_runs_by_topic", {})
+    state.setdefault("candidate_revisions", {})
+    state.setdefault("candidate_revisions_by_topic", {})
+    state.setdefault("candidate_review_status", {})
+    state.setdefault("candidate_review_proposals", [])
+    state.setdefault("human_review_transactions", {})
+    state.setdefault("rejected_candidates", {})
+    recover_pending_human_reviews()
 
 
 def frame_image(index):
@@ -155,13 +822,165 @@ def reference_signature(index):
     reference = {"file": str(state["video"].path), "topic": state["topic"], "frame": index,
                  "description_input_version": DESCRIPTION_INPUT_VERSION,
                  "prompt_profile": state.get("config", {}).get("llm_prompt_profile", "full"),
+                 "auto_labels": selected_auto_labels(index),
                  "truth": state["truth"][str(index)]}
     payload = json.dumps(reference, ensure_ascii=False, sort_keys=True)
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
-def overlay(index):
-    return reference_overlay(frame_image(index), state["truth"].get(str(index), []))
+def overlay(index, labels=None):
+    shapes = state["truth"].get(str(index), [])
+    if labels is not None:
+        shapes = [shape for shape in shapes if shape.get("label") in labels]
+    return reference_overlay(frame_image(index), shapes)
+
+
+def selected_auto_labels(reference):
+    """Return an explicit non-empty subset of configured inference labels."""
+    available = state.get("labels") or list(dict.fromkeys(
+        shape.get("label") for shape in state["truth"][str(reference)] if shape.get("label")))
+    reference_only = reference_labels(state["truth"][str(reference)], available)
+    selected = state.get("auto_labels")
+    if not selected:
+        return reference_only
+    if (not isinstance(selected, list) or len(selected) != len(set(selected))
+            or any(label not in available for label in selected)):
+        raise ValueError("自动标注类别与类别列表不一致，请重新选择")
+    return [label for label in available if label in selected]
+
+
+def merge_inference_candidates(existing, generated, selected_labels, *, return_id_map=False):
+    """Refresh selected classes without deleting candidates from other classes."""
+    selected = set(selected_labels)
+    preserved = [shape for shape in (existing or [])
+                 if (shape.get("label") not in selected
+                     or shape.get("source") == "validated_point_preset")]
+    combined = copy.deepcopy(preserved + list(generated))
+    used = {shape.get("id") for shape in preserved if type(shape.get("id")) is int}
+    next_id = max(used, default=0) + 1
+    id_map = {}
+    for shape in combined[len(preserved):]:
+        if type(shape.get("id")) is not int:
+            continue
+        original_id = shape["id"]
+        if shape["id"] in used:
+            while next_id in used:
+                next_id += 1
+            shape["id"] = next_id
+            next_id += 1
+        id_map.setdefault(original_id, []).append(shape["id"])
+        used.add(shape["id"])
+    return (combined, id_map) if return_id_map else combined
+
+
+def bind_merged_candidate_references(result, id_map):
+    """保留工作流原始记录，为最终候选引用添加显式映射。"""
+    def remap(value):
+        if isinstance(value, list):
+            return [remap(item) for item in value]
+        if not isinstance(value, dict):
+            return value
+        output = {}
+        for key, item in value.items():
+            if key == "candidate_id" and type(item) is int:
+                output[key] = id_map.get(item, [item])[0]
+                if output[key] != item:
+                    output["original_" + key] = item
+            elif key in {"shape_ids", "result_ids"} and isinstance(item, list):
+                output[key] = [id_map.get(identifier, [identifier])[0]
+                               if type(identifier) is int else identifier for identifier in item]
+                if output[key] != item:
+                    output["original_" + key] = copy.deepcopy(item)
+            else:
+                output[key] = remap(item)
+        return output
+    original_agent = copy.deepcopy(result["agent"])
+    result["agent"] = remap(result["agent"])
+    result["review_queue"] = remap(result["review_queue"])
+    result["applied"] = remap(result["applied"])
+    result["agent"]["candidate_id_mapping"] = [
+        {"original_id": original_id, "final_ids": final_ids}
+        for original_id, final_ids in id_map.items()]
+    if any(final_ids != [original_id] for original_id, final_ids in id_map.items()):
+        result["agent"]["workflow_original_agent"] = original_agent
+
+
+def archive_candidate_revision(frame, topic, existing_candidates, existing_run,
+                               replacement_candidates, replacement_run, reason):
+    """Preserve the exact prior machine layer before refreshing current candidates."""
+    if not existing_candidates and not existing_run:
+        return None
+    prior_candidates = copy.deepcopy(existing_candidates or [])
+    prior_run = copy.deepcopy(existing_run or {})
+    replacement_candidates = copy.deepcopy(replacement_candidates or [])
+    replacement_run = copy.deepcopy(replacement_run or {})
+    prior_candidate_sha = _sha256_json(prior_candidates)
+    prior_run_sha = _sha256_json(prior_run)
+    replacement_candidate_sha = _sha256_json(replacement_candidates)
+    replacement_run_sha = _sha256_json(replacement_run)
+    if (prior_candidate_sha == replacement_candidate_sha
+            and prior_run_sha == replacement_run_sha):
+        return None
+    identity = {
+        "file": str(state["video"].path) if state.get("video") else None,
+        "topic": topic, "frame": int(frame), "reason": reason,
+        "prior_candidate_sha256": prior_candidate_sha,
+        "prior_agent_run_sha256": prior_run_sha,
+        "replacement_candidate_sha256": replacement_candidate_sha,
+        "replacement_agent_run_sha256": replacement_run_sha,
+    }
+    revision_id = _sha256_json(identity)
+    ledger = state.setdefault("candidate_revisions", {}).setdefault(str(frame), [])
+    existing = next((item for item in ledger if item.get("revision_id") == revision_id), None)
+    if existing is not None:
+        return existing
+    declared_prior_sha = prior_run.get("candidate_artifact_sha256")
+    record = {
+        "schema_version": "labelagent.candidate_revision.v1",
+        "revision_id": revision_id,
+        "sequence": len(ledger) + 1,
+        "recorded_at_unix": time.time(),
+        "reason": reason,
+        "file": identity["file"], "topic": topic, "frame": int(frame),
+        "candidate_only": True, "human_truth": False,
+        "approved_for_training": False,
+        "prior_candidate_event_id": prior_run.get("candidate_event_id"),
+        "prior_candidate_request_id": prior_run.get("candidate_request_id"),
+        "prior_candidate_output_sha256": prior_run.get("candidate_output_sha256"),
+        "prior_candidate_artifact_sha256": prior_candidate_sha,
+        "prior_declared_candidate_artifact_sha256": declared_prior_sha,
+        "prior_artifact_integrity_match": (declared_prior_sha is None
+                                             or declared_prior_sha == prior_candidate_sha),
+        "prior_agent_run_sha256": prior_run_sha,
+        "superseded_by_candidate_event_id": replacement_run.get("candidate_event_id"),
+        "superseded_by_candidate_request_id": replacement_run.get("candidate_request_id"),
+        "superseded_by_candidate_output_sha256": replacement_run.get("candidate_output_sha256"),
+        "superseded_by_candidate_artifact_sha256": replacement_candidate_sha,
+        "superseded_by_agent_run_sha256": replacement_run_sha,
+        "prior_candidates": prior_candidates,
+        "prior_agent_run": prior_run,
+    }
+    ledger.append(record)
+    return record
+
+
+def candidate_revision_summary():
+    fields = ("revision_id", "sequence", "recorded_at_unix", "reason", "topic", "frame",
+              "prior_candidate_event_id", "prior_candidate_request_id",
+              "prior_candidate_output_sha256", "prior_candidate_artifact_sha256",
+              "prior_artifact_integrity_match", "superseded_by_candidate_event_id",
+              "superseded_by_candidate_request_id", "superseded_by_candidate_output_sha256",
+              "superseded_by_candidate_artifact_sha256", "candidate_only", "human_truth",
+              "approved_for_training")
+    return {frame: [{key: revision.get(key) for key in fields} for revision in revisions]
+            for frame, revisions in state.get("candidate_revisions", {}).items()}
+
+
+def reference_candidate_event_id(candidate_request_id, candidate_output_sha256):
+    """Bind a candidate event to both the stable request and actual model output."""
+    return _sha256_json({"event": "reference_draft_candidate.v2",
+                         "candidate_request_id": candidate_request_id,
+                         "candidate_output_sha256": candidate_output_sha256})
 
 
 @app.errorhandler(ValueError)
@@ -175,13 +994,33 @@ def runtime_error(error):
     return jsonify(error=str(error)), 503
 
 
+@app.errorhandler(StaleHumanReviewError)
+def stale_human_review(error):
+    return jsonify(error=str(error), stale_review=True), 409
+
+
 @app.get("/")
 def index():
     return app.send_static_file("index.html")
 
 
+def candidate_class_audit_version():
+    # 配置和协议源码变化均使旧机器审核失效；不向浏览器暴露凭据。
+    return {
+        "schema_version": "labelagent.candidate_class_audit_version.v1",
+        "config_sha256": _sha256_json({
+            key: value for key, value in state.get("config", {}).items()
+            if key != "llm_key"}),
+        "protocol_sha256": _CANDIDATE_AUDIT_LOADED_CODE_SHA256,
+        "labels_sha256": _sha256_json({"labels": state.get("labels", []),
+                                       "definitions": VISIBLE_LABEL_DEFINITIONS}),
+    }
+
+
 @app.get("/api/state")
 def get_state():
+    with lock:
+        recover_pending_human_reviews()
     description = None
     reference = state.get("reference_frames", {}).get(state["topic"], []) if state["topic"] else []
     path = WORK / "description.json"
@@ -189,13 +1028,25 @@ def get_state():
         saved = json.loads(path.read_text(encoding="utf-8"))
         if saved.get("reference_signature") == reference_signature(reference[0]):
             description = saved
+    reference_index = reference[0] if reference else None
+    auto_labels = selected_auto_labels(reference_index) if reference_index is not None else list(state["labels"])
+    reference_only_labels = (reference_labels(state["truth"][str(reference_index)], state["labels"])
+                             if reference_index is not None else [])
+    truth_review_status = current_truth_review_status()
     return jsonify(loaded=state["video"] is not None,
         path=str(state["video"].path) if state["video"] else "",
         catalog=state["video"].catalog if state["video"] else {}, duration=state["video"].duration if state["video"] else 0,
         topics=state["video"].topics if state["video"] else {}, topic=state["topic"],
-        labels=state["labels"], truth=state["truth"], reference_frames=state.get("reference_frames", {}),
+        labels=state["labels"], auto_labels=auto_labels, reference_only_labels=reference_only_labels,
+        truth=state["truth"], truth_review_status=truth_review_status,
+        reference_frames=state.get("reference_frames", {}),
         config={k: v for k, v in state["config"].items() if k != "llm_key"},
         candidates=state.get("candidates", {}), agent_runs=state.get("agent_runs", {}),
+        candidate_revision_summary=candidate_revision_summary(),
+        candidate_review_status=state.get("candidate_review_status", {}),
+        candidate_review_proposals=state.get("candidate_review_proposals", []),
+        candidate_review_bindings=candidate_review_bindings(),
+        candidate_class_audit_version=candidate_class_audit_version(),
         description=description)
 
 
@@ -203,6 +1054,42 @@ def get_state():
 def get_frame(index):
     data = state["video"].frame(request.args.get("topic", state["topic"]), index)
     return send_file(io.BytesIO(data), mimetype="image/png" if data.startswith(b"\x89PNG") else "image/jpeg", max_age=0)
+
+
+@app.get("/api/downstream_projection/<int:index>")
+def get_downstream_projection(index):
+    """Expose the project-defined floor/slope union without changing training labels."""
+    with lock:
+        if state["video"] is None or not state["topic"]:
+            raise ValueError("请先加载图像消息")
+        count = state["video"].topics[state["topic"]]["count"]
+        if not 0 <= index < count:
+            raise ValueError("帧号无效")
+        key = str(index)
+        has_truth = key in state.get("truth", {})
+        source = copy.deepcopy((state.get("truth", {}) if has_truth
+                                else state.get("candidates", {})).get(key, []))
+    traversable, passthrough = [], []
+    for shape in source:
+        if shape.get("label") in ("floor", "slope"):
+            projected = copy.deepcopy(shape)
+            projected["source_semantic_label"] = shape["label"]
+            projected["label"] = "traversable_area"
+            traversable.append(projected)
+        else:
+            passthrough.append(shape)
+    return jsonify(projection={
+        "frame": index,
+        "topic": state["topic"],
+        "source_layer": "human_truth" if has_truth else "machine_candidate",
+        "machine_candidate_only": not has_truth,
+        "training_labels_preserved": True,
+        "policy_basis": "user_defined_project_semantics",
+        "mapping": {"operation": "union", "source_labels": ["floor", "slope"],
+                    "target_label": "traversable_area"},
+        "traversable_area_parts": traversable,
+        "passthrough_shapes": passthrough,
+    })
 
 
 @app.post("/api/segment_points")
@@ -215,16 +1102,24 @@ def get_point_segment():
         if index in state.get("reference_frames", {}).get(state["topic"], []):
             raise ValueError("参考帧只能人工调整，不能调用 SAM 生成或修改")
         image = frame_image(index)
-    service_url = os.environ.get("SAM3_URL", "http://127.0.0.1:8766").rstrip("/")
+        service_url = (state["config"].get("sam3_url") or os.environ.get("SAM3_URL")
+                       or "http://127.0.0.1:8766").rstrip("/")
+    if not point_segment_lock.acquire(blocking=False):
+        raise RuntimeError("已有点提示 SAM 请求正在计算，请勿重复点击")
     payload = json.dumps({"image": base64.b64encode(image).decode("ascii"),
                           "points": body["points"]}).encode()
     service_request = urllib.request.Request(service_url + "/segment_points", data=payload,
         headers={"Content-Type": "application/json"})
+    started = time.monotonic()
     try:
-        with urllib.request.urlopen(service_request, timeout=600) as response:
-            return jsonify(json.load(response))
+        with urllib.request.urlopen(service_request, timeout=POINT_SEGMENT_TIMEOUT_SECONDS) as response:
+            result = json.load(response)
+        result["inference_elapsed_seconds"] = round(time.monotonic() - started, 2)
+        return jsonify(result)
     except Exception as error:
         raise RuntimeError(f"SAM 3 服务不可用（{service_url}）：{error}") from error
+    finally:
+        point_segment_lock.release()
 
 @app.post("/api/edit_region")
 def edit_region():
@@ -335,19 +1230,23 @@ def activate_file(item):
     video = Video(item['path'])
     # Preserve each file's annotations and candidates when switching records.
     sessions = state.setdefault('file_sessions', {})
-    fields = ('topic', 'truth', 'truths_by_topic', 'reference_frames', 'candidates', 'candidates_by_topic', 'agent_runs', 'agent_runs_by_topic')
+    fields = ('topic', 'truth', 'truths_by_topic', 'reference_frames', 'candidates', 'candidates_by_topic', 'agent_runs', 'agent_runs_by_topic', 'candidate_revisions', 'candidate_revisions_by_topic')
     if state['video']:
         sessions[str(state['video'].path.resolve())] = {key: state.get(key) for key in fields}
     previous = sessions.get(item['path'], {})
     state.update(video=video, video_path=str(video.path), topic=next(iter(video.topics), None),
-                 truth={}, truths_by_topic={}, reference_frames={}, candidates={}, candidates_by_topic={}, agent_runs={}, agent_runs_by_topic={})
+                 truth={}, truths_by_topic={}, reference_frames={}, candidates={}, candidates_by_topic={}, agent_runs={}, agent_runs_by_topic={}, candidate_revisions={}, candidate_revisions_by_topic={})
     state.update(previous)
     if state['topic'] not in video.topics:
         state['topic'] = next(iter(video.topics), None)
     save()
     return dict(path=str(video.path), topics=video.topics, catalog=video.catalog, duration=video.duration,
-                topic=state['topic'], truth=state['truth'], candidates=state.get('candidates', {}),
-                agent_runs=state.get('agent_runs', {}), reference_frames=state.get('reference_frames', {}))
+                topic=state['topic'], truth=state['truth'],
+                truth_review_status=current_truth_review_status(),
+                candidates=state.get('candidates', {}),
+                agent_runs=state.get('agent_runs', {}),
+                candidate_revision_summary=candidate_revision_summary(),
+                reference_frames=state.get('reference_frames', {}))
 
 
 @app.get('/api/files')
@@ -356,6 +1255,61 @@ def get_files():
         if state['video']:
             register_file(state['video'].path)
         return jsonify(files=file_list())
+
+
+@app.get('/api/files/annotation-sources')
+def get_annotation_sources():
+    """List non-current registered files that contain saved annotations.
+
+    This endpoint is discovery-only.  Counts advertise drawing work that can
+    be reused, never current human truth.  After switching files, the existing
+    human-review gate still decides whether a frame can become a reference.
+    """
+    with lock:
+        current = str(state['video'].path.resolve()) if state.get('video') else None
+        sessions = state.get('file_sessions', {})
+        sources = []
+        for item in read_library():
+            path = item.get('path', '')
+            if path == current or not Path(path).is_file():
+                continue
+            session = sessions.get(path)
+            if not isinstance(session, dict):
+                continue
+            by_topic = dict(session.get('truths_by_topic') or {})
+            selected_topic = session.get('topic')
+            if selected_topic and isinstance(session.get('truth'), dict):
+                by_topic[selected_topic] = session['truth']
+            frame_count = 0
+            shape_count = 0
+            topic_count = 0
+            source_counts = {"manual": 0, "auto": 0, "unknown": 0}
+            for frames in by_topic.values():
+                if not isinstance(frames, dict):
+                    continue
+                valid = [shapes for shapes in frames.values()
+                         if isinstance(shapes, list) and shapes]
+                if valid:
+                    topic_count += 1
+                    frame_count += len(valid)
+                    shape_count += sum(len(shapes) for shapes in valid)
+                    for shapes in valid:
+                        counts = _legacy_shape_source_counts(shapes)
+                        for key in source_counts:
+                            source_counts[key] += counts[key]
+            if frame_count:
+                sources.append({"id": item['id'],
+                                "name": item.get('name') or Path(path).name,
+                                "frame_count": frame_count,
+                                "shape_count": shape_count,
+                                "topic_count": topic_count,
+                                "legacy_source_counts": source_counts,
+                                "loaded": False,
+                                "requires_current_human_review": True})
+        sources.sort(key=lambda entry: (-entry['frame_count'], entry['name']))
+        return jsonify(sources=sources,
+                       current_file_has_separate_controls=True,
+                       saved_as_truth=False)
 
 
 @app.post('/api/files')
@@ -401,6 +1355,161 @@ def import_candidates():
             saved_as_truth=False)
 
 
+@app.post('/api/candidates/merge')
+def merge_candidates():
+    """Merge an explicitly authorized label subset without replacing other candidates."""
+    body = request.get_json()
+    with lock:
+        with run_status_lock:
+            if run_status.get("status") in {"running", "stopping"}:
+                raise ValueError("自动任务运行中，暂不能合并候选")
+        video = state.get("video")
+        if video is None or not body.get("path") or Path(body["path"]).resolve() != video.path.resolve():
+            raise ValueError("请先加载与候选对应的文件")
+        selected = [str(label).strip() for label in body.get("labels", [])
+                    if str(label).strip()]
+        if (not selected or len(selected) != len(set(selected))
+                or any(label not in state.get("labels", []) for label in selected)):
+            raise ValueError("候选合并类别无效")
+        prepared = prepare_candidate_import(
+            video, body.get("candidates_by_topic"), state.get("labels", []))
+        patch = merge_candidate_labels(state, prepared, selected)
+        previous = {key: state.get(key) for key in patch}
+        absent = [key for key in patch if key not in state]
+        try:
+            state.update(patch)
+            save()
+        except Exception:
+            state.update(previous)
+            for key in absent:
+                state.pop(key, None)
+            raise
+        return jsonify(merged_frames=sum(len(frames) for frames in prepared.values()),
+            merged_shapes=sum(len(shapes) for frames in prepared.values() for shapes in frames.values()),
+            labels=selected, preserved_other_labels=True, saved_as_truth=False)
+
+
+@app.post('/api/candidates/review-proposals')
+def register_candidate_review_proposal():
+    """Append a bound machine-review suggestion without mutating the candidate layer."""
+    body = request.get_json() or {}
+    try:
+        frame = int(body.get('frame'))
+        candidate_id = int(body.get('candidate_id'))
+        confidence = float(body.get('confidence'))
+    except (TypeError, ValueError):
+        raise ValueError('候选复核建议必须包含有效的 frame、candidate_id 和 confidence')
+    if isinstance(body.get('confidence'), bool) or not 0 <= confidence <= 1:
+        raise ValueError('候选复核置信度必须在 0 到 1 之间')
+    topic = body.get('topic')
+    from_label = str(body.get('from_label') or '').strip()
+    proposed_label = str(body.get('proposed_label') or '').strip()
+    reason = str(body.get('reason') or '').strip()
+    evidence_path = str(body.get('evidence_path') or '').strip()
+    evidence_sha = body.get('evidence_sha256')
+    expected_artifact_sha = body.get('expected_candidate_artifact_sha256')
+    idempotency_key = body.get('idempotency_key')
+    source = body.get('source', 'assistant_reviewed_isolated_mask')
+    if not isinstance(topic, str) or not topic:
+        raise ValueError('候选复核建议必须绑定 topic')
+    if not from_label or not proposed_label or from_label == proposed_label:
+        raise ValueError('候选复核建议必须包含不同的原类别和建议类别')
+    if not reason or len(reason) > 2000:
+        raise ValueError('候选复核建议必须包含不超过 2000 字的判断依据')
+    if len(evidence_path) > 1000:
+        raise ValueError('候选复核证据路径过长')
+    if not _valid_sha256(evidence_sha):
+        raise ValueError('候选复核证据必须绑定有效 SHA-256')
+    if not _valid_sha256(expected_artifact_sha):
+        raise ValueError('候选复核建议必须绑定当前候选 artifact SHA-256')
+    if not _valid_sha256(idempotency_key):
+        raise ValueError('候选复核建议必须包含有效幂等键')
+    if source != 'assistant_reviewed_isolated_mask':
+        raise ValueError('候选复核建议来源必须是 assistant_reviewed_isolated_mask')
+
+    immutable_request = {
+        'topic': topic, 'frame': frame, 'candidate_id': candidate_id,
+        'from_label': from_label, 'proposed_label': proposed_label,
+        'confidence': confidence, 'reason': reason,
+        'evidence_path': evidence_path, 'evidence_sha256': evidence_sha,
+        'expected_candidate_artifact_sha256': expected_artifact_sha,
+        'source': source,
+    }
+    with lock:
+        ledger = state.setdefault('candidate_review_proposals', [])
+        existing = next((item for item in ledger
+                         if item.get('idempotency_key') == idempotency_key), None)
+        if existing is not None:
+            recorded_request = {key: existing.get(key) for key in immutable_request}
+            if recorded_request != immutable_request:
+                raise ValueError('同一幂等键对应的候选复核建议内容不同，已拒绝覆盖')
+            return jsonify(proposal=existing, idempotent_replay=True,
+                           candidate_mutated=False, saved_as_truth=False)
+
+        if state.get('video') is None or state.get('topic') is None:
+            raise ValueError('请先加载与复核建议对应的数据')
+        if topic != state['topic']:
+            raise StaleHumanReviewError('图像源已变化，请重新生成候选复核建议')
+        if not 0 <= frame < state['video'].topics[topic]['count']:
+            raise ValueError('候选复核帧号无效')
+        if str(frame) in state.setdefault('truth', {}):
+            raise ValueError('该帧已经存在人工真值，机器建议不能覆盖或回写')
+        candidates = state.setdefault('candidates', {}).get(str(frame))
+        if not isinstance(candidates, list) or not candidates:
+            raise StaleHumanReviewError('当前帧机器候选已不存在，请重新复核')
+        actual_artifact_sha = _sha256_json(candidates)
+        run = state.setdefault('agent_runs', {}).get(str(frame)) or {}
+        declared_artifact_sha = run.get('candidate_artifact_sha256')
+        if declared_artifact_sha is not None and not _valid_sha256(declared_artifact_sha):
+            raise RuntimeError('候选运行回执中的 artifact SHA-256 无效，已停止登记')
+        if expected_artifact_sha != actual_artifact_sha:
+            raise StaleHumanReviewError('候选已在复核后变化，请重新读取当前候选')
+        matches = [item for item in candidates if item.get('id') == candidate_id]
+        if len(matches) != 1:
+            raise ValueError('候选 ID 不存在或不唯一，已停止登记')
+        candidate = matches[0]
+        if candidate.get('label') != from_label:
+            raise StaleHumanReviewError('候选类别已在复核后变化，请重新检查')
+        if proposed_label not in state.get('labels', []):
+            raise ValueError('建议类别不在当前标签注册表中，必须进入 ontology 人工门禁')
+        candidate_sha = _sha256_json(candidate)
+        identity = {
+            'file': str(state['video'].path), 'topic': topic, 'frame': frame,
+            'candidate_id': candidate_id, 'candidate_sha256': candidate_sha,
+            'candidate_artifact_sha256': actual_artifact_sha,
+            'from_label': from_label, 'proposed_label': proposed_label,
+            'evidence_sha256': evidence_sha, 'idempotency_key': idempotency_key,
+        }
+        record = {
+            'schema_version': 'labelagent.candidate_review_proposal.v1',
+            'proposal_id': _sha256_json(identity),
+            'idempotency_key': idempotency_key,
+            'recorded_at_unix': time.time(),
+            'file': identity['file'], 'topic': topic, 'frame': frame,
+            'candidate_id': candidate_id, 'candidate_sha256': candidate_sha,
+            'candidate_artifact_sha256': actual_artifact_sha,
+            'declared_candidate_artifact_sha256': declared_artifact_sha,
+            'declared_artifact_integrity_match': (declared_artifact_sha is None
+                                                   or declared_artifact_sha == actual_artifact_sha),
+            'expected_candidate_artifact_sha256': expected_artifact_sha,
+            'from_label': from_label, 'proposed_label': proposed_label,
+            'confidence': confidence, 'reason': reason,
+            'evidence_path': evidence_path, 'evidence_sha256': evidence_sha,
+            'source': source, 'route': 'human_review_required',
+            'candidate_only': True, 'candidate_mutated': False,
+            'human_truth': False, 'approved_for_training': False,
+        }
+        previous = copy.deepcopy(ledger)
+        try:
+            ledger.append(record)
+            save()
+        except Exception:
+            state['candidate_review_proposals'] = previous
+            raise
+        return jsonify(proposal=record, idempotent_replay=False,
+                       candidate_mutated=False, saved_as_truth=False)
+
+
 @app.delete('/api/files/<file_id>')
 def remove_file(file_id):
     with lock:
@@ -412,8 +1521,8 @@ def remove_file(file_id):
         unloaded = state['video'] is not None and str(state['video'].path.resolve()) == item['path']
         if unloaded:
             sessions = state.setdefault('file_sessions', {})
-            sessions[item['path']] = {key: state.get(key) for key in ('topic', 'truth', 'truths_by_topic', 'reference_frames', 'candidates', 'candidates_by_topic', 'agent_runs', 'agent_runs_by_topic')}
-            state.update(video=None, video_path=None, topic=None, truth={}, truths_by_topic={}, reference_frames={}, candidates={}, candidates_by_topic={}, agent_runs={}, agent_runs_by_topic={})
+            sessions[item['path']] = {key: state.get(key) for key in ('topic', 'truth', 'truths_by_topic', 'reference_frames', 'candidates', 'candidates_by_topic', 'agent_runs', 'agent_runs_by_topic', 'candidate_revisions', 'candidate_revisions_by_topic')}
+            state.update(video=None, video_path=None, topic=None, truth={}, truths_by_topic={}, reference_frames={}, candidates={}, candidates_by_topic={}, agent_runs={}, agent_runs_by_topic={}, candidate_revisions={}, candidate_revisions_by_topic={})
             save()
         return jsonify(files=file_list(), unloaded=unloaded)
 
@@ -454,12 +1563,19 @@ def set_topic():
             state.setdefault("truths_by_topic", {})[state["topic"]] = state["truth"]
             state.setdefault("candidates_by_topic", {})[state["topic"]] = state.get("candidates", {})
             state.setdefault("agent_runs_by_topic", {})[state["topic"]] = state.get("agent_runs", {})
+            state.setdefault("candidate_revisions_by_topic", {})[state["topic"]] = state.get("candidate_revisions", {})
             state["topic"] = body["topic"]
             state["truth"] = state["truths_by_topic"].get(state["topic"], {})
             state["candidates"] = state["candidates_by_topic"].get(state["topic"], {})
             state["agent_runs"] = state["agent_runs_by_topic"].get(state["topic"], {})
+            state["candidate_revisions"] = state["candidate_revisions_by_topic"].get(state["topic"], {})
             save()
-        return jsonify(topic=state["topic"], truth=state["truth"], candidates=state["candidates"], agent_runs=state["agent_runs"], reference_frames=state.get("reference_frames", {}))
+        return jsonify(topic=state["topic"], truth=state["truth"],
+                       truth_review_status=current_truth_review_status(),
+                       candidates=state["candidates"], agent_runs=state["agent_runs"],
+                       candidate_revision_summary=candidate_revision_summary(),
+                       candidate_review_proposals=state.get("candidate_review_proposals", []),
+                       reference_frames=state.get("reference_frames", {}))
 
 
 @app.post("/api/labels")
@@ -470,26 +1586,240 @@ def set_labels():
         if len(set(labels)) != len(labels) or not labels:
             raise ValueError("类别不能为空或重复")
         state["labels"] = labels
+        if state.get("auto_labels"):
+            state["auto_labels"] = [label for label in labels if label in state["auto_labels"]]
         save()
         return jsonify(labels=labels)
 
 
+@app.post("/api/auto_labels")
+def set_auto_labels():
+    body = request.get_json() or {}
+    with lock:
+        labels = [str(label).strip() for label in body.get("labels", []) if str(label).strip()]
+        if not labels or len(labels) != len(set(labels)) or any(label not in state["labels"] for label in labels):
+            raise ValueError("请选择有效且不重复的推理类别")
+        state["auto_labels"] = [label for label in state["labels"] if label in labels]
+        save()
+        return jsonify(labels=state["auto_labels"], description_invalidated=True)
+
+
 @app.post("/api/truth")
 def set_truth():
-    body = request.get_json()
+    body = request.get_json() or {}
     with lock:
+        recover_pending_human_reviews()
+        review = _parse_review(body)
         index = int(body["frame"])
-        width, height = Image.open(io.BytesIO(frame_image(index))).size
-        shapes = body["shapes"]
+        frame_data = frame_image(index)
+        frame_sha = hashlib.sha256(frame_data).hexdigest()
+        width, height = Image.open(io.BytesIO(frame_data)).size
+        shapes = body.get("shapes")
+        if not isinstance(shapes, list):
+            raise ValueError("真值 shapes 必须是数组")
         for shape in shapes:
             if shape["label"] not in state["labels"] or len(shape["points"]) < 3:
                 raise ValueError("真值类别或多边形无效")
             if any(not (0 <= x < width and 0 <= y < height) for x, y in shape["points"]):
                 raise ValueError("坐标超出图像范围")
-        state["truth"][str(index)] = shapes
-        state.setdefault("candidates", {}).pop(str(index), None)
-        save()
-        return jsonify(saved=len(shapes))
+        confirmed_empty = body.get("confirmed_empty") is True
+        requested_decision = body.get("decision")
+        if not shapes and (not confirmed_empty or requested_decision != "confirmed_empty"):
+            raise ValueError("空真值必须显式设置 decision=confirmed_empty 且 confirmed_empty=true")
+        if shapes and (body.get("confirmed_empty") is True or requested_decision is not None):
+            raise ValueError("非空真值不能设置 confirmed_empty 或客户端 decision")
+        candidate, candidate_origin, parent_candidate_sha = _resolve_review_candidate(body, index)
+        candidate_sha = _sha256_json(candidate) if candidate is not None else None
+        existing = _review_by_idempotency_key(review["decision_idempotency_key"])
+        if existing is not None:
+            replay_has_candidate = candidate is not None or "draft_candidate" in body
+            replay_candidate_sha = candidate_sha if replay_has_candidate else existing.get("candidate_sha256")
+            replay_origin = (candidate_origin if replay_has_candidate else
+                existing.get("candidate_origin", "server_state" if replay_candidate_sha else "none"))
+            replay_parent_sha = (parent_candidate_sha if replay_has_candidate else
+                existing.get("parent_candidate_sha256"))
+            expected_frame, expected_candidate, review_scope = _assert_review_binding(body, frame=index,
+                frame_sha256=frame_sha,
+                candidate_sha256=replay_candidate_sha)
+            _assert_idempotent_review(existing, review=review, frame=index,
+                frame_sha256=frame_sha,
+                allowed_decisions={"manual_annotation", "accept_candidate",
+                                   "correct_candidate", "confirmed_empty"},
+                review_scope=review_scope, truth=shapes,
+                candidate=candidate if replay_has_candidate else None,
+                candidate_origin=replay_origin,
+                parent_candidate_sha256=replay_parent_sha)
+            saved_truth = state.setdefault("truth", {}).get(str(index))
+            if saved_truth is None or _sha256_json(saved_truth) != existing.get("truth_sha256"):
+                raise RuntimeError("幂等复放找到审计记录，但持久化真值不匹配")
+            readback = _review_commit_readback(existing)
+            if not readback["verified"]:
+                raise RuntimeError("幂等复放的服务端读回验证失败")
+            return jsonify(saved=len(shapes), review=existing, readback=readback,
+                           idempotent_replay=True)
+        expected_frame, expected_candidate, review_scope = _assert_review_binding(body, frame=index,
+            frame_sha256=frame_sha, candidate_sha256=candidate_sha)
+        if _contains_unknown_label(candidate) or _contains_unknown_label(shapes):
+            raise ValueError("未知或新类别候选只能进入 ontology 人工复核，不能直接保存为生产真值")
+        status_key = _review_status_key(index)
+        review_status = state.setdefault("candidate_review_status", {}).get(status_key)
+        if review_status and review_status.get("status") == "rejected":
+            remediation = review.get("remediation_of_review_id")
+            if remediation != review_status.get("review_id"):
+                raise ValueError("该候选已被驳回；接受修正结果时必须绑定 remediation_of_review_id")
+            if candidate is None:
+                raise ValueError("已驳回候选已失活；必须先生成新的修正版候选再复核")
+            if candidate_sha == review_status.get("candidate_sha256"):
+                raise ValueError("已驳回的同一候选不能重新激活；请生成不同哈希的修正版候选")
+        if confirmed_empty:
+            decision = "confirmed_empty"
+        elif candidate is None:
+            decision = "manual_annotation"
+        elif _sha256_json(candidate) == _sha256_json(shapes):
+            decision = "accept_candidate"
+        else:
+            decision = "correct_candidate"
+        audit = prepare_human_review(frame=index, decision=decision, review=review,
+            frame_sha256=frame_sha, expected_frame_sha256=expected_frame,
+            expected_candidate_sha256=expected_candidate,
+            review_scope=review_scope, candidate=candidate, truth=shapes,
+            confirmed_empty=confirmed_empty, candidate_origin=candidate_origin,
+            parent_candidate_sha256=parent_candidate_sha)
+        def mutation():
+            state.setdefault("truth", {})[str(index)] = shapes
+            state.setdefault("candidates", {}).pop(str(index), None)
+            if candidate is not None:
+                state.setdefault("candidate_review_status", {})[status_key] = {
+                    "status": "accepted", "remediation_required": False,
+                    "route": ("truth_committed_pending_closed_loop_sync"
+                              if decision == "accept_candidate"
+                              else "candidate_final_regeneration_required"),
+                    "review_id": audit["review_id"],
+                    "candidate_sha256": audit["candidate_sha256"],
+                    "candidate_event_id": audit["candidate_event_id"],
+                    "decision": decision, "file": audit["file"],
+                    "topic": audit["topic"], "frame": index}
+        commit_human_review(audit, mutation)
+        readback = _review_commit_readback(audit)
+        if not readback["verified"]:
+            raise RuntimeError("真值提交后的服务端读回验证失败")
+        return jsonify(saved=len(shapes), review=audit, readback=readback,
+                       idempotent_replay=False)
+
+
+@app.post("/api/human_review_binding")
+def get_human_review_binding():
+    body = request.get_json() or {}
+    with lock:
+        recover_pending_human_reviews()
+        index = int(body.get("frame", -1))
+        if state["video"] is None or state["topic"] is None:
+            raise ValueError("请先加载图像消息")
+        if body.get("topic") != state["topic"]:
+            raise StaleHumanReviewError("图像源已变化，请刷新后重新复核")
+        if not 0 <= index < state["video"].topics[state["topic"]]["count"]:
+            raise ValueError("帧号无效")
+        frame_sha = hashlib.sha256(frame_image(index)).hexdigest()
+        candidate, candidate_origin, parent_candidate_sha = _resolve_review_candidate(body, index)
+        candidate_sha = _sha256_json(candidate) if candidate is not None else None
+        scope = _review_scope(frame_sha, index)
+        review_status = state.setdefault("candidate_review_status", {}).get(
+            _review_status_key(index))
+        return jsonify(frame=index, topic=state["topic"],
+                       frame_sha256=frame_sha, candidate_sha256=candidate_sha,
+                       dataset_id=scope["dataset_id"],
+                       dataset_version=scope["dataset_version"], camera=scope["camera"],
+                       dataset_split=scope["dataset_split"],
+                       split_policy=scope["split_policy"],
+                       training_return_allowed=scope["training_return_allowed"],
+                       candidate_origin=candidate_origin,
+                       parent_candidate_sha256=parent_candidate_sha,
+                       review_status=review_status)
+
+
+@app.post("/api/human_review")
+def reject_candidate():
+    body = request.get_json() or {}
+    with lock:
+        recover_pending_human_reviews()
+        review = _parse_review(body)
+        index = int(body.get("frame", -1))
+        if state["video"] is None or state["topic"] is None:
+            raise ValueError("请先加载图像消息")
+        if not 0 <= index < state["video"].topics[state["topic"]]["count"]:
+            raise ValueError("帧号无效")
+        frame_data = frame_image(index)
+        frame_sha = hashlib.sha256(frame_data).hexdigest()
+        candidate, candidate_origin, parent_candidate_sha = _resolve_review_candidate(body, index)
+        candidate_sha = _sha256_json(candidate) if candidate is not None else None
+        existing = _review_by_idempotency_key(review["decision_idempotency_key"])
+        if existing is not None:
+            replay_has_candidate = candidate is not None or "draft_candidate" in body
+            replay_candidate_sha = candidate_sha if replay_has_candidate else existing.get("candidate_sha256")
+            replay_origin = (candidate_origin if replay_has_candidate else
+                existing.get("candidate_origin", "server_state" if replay_candidate_sha else "none"))
+            replay_parent_sha = (parent_candidate_sha if replay_has_candidate else
+                existing.get("parent_candidate_sha256"))
+            expected_frame, expected_candidate, review_scope = _assert_review_binding(body, frame=index,
+                frame_sha256=frame_sha,
+                candidate_sha256=replay_candidate_sha)
+            _assert_idempotent_review(existing, review=review, frame=index,
+                frame_sha256=frame_sha, allowed_decisions={"reject_candidate"},
+                review_scope=review_scope,
+                candidate=candidate if replay_has_candidate else None,
+                candidate_origin=replay_origin,
+                parent_candidate_sha256=replay_parent_sha)
+            readback = _review_commit_readback(existing)
+            if not readback["verified"]:
+                raise RuntimeError("驳回幂等复放的服务端读回验证失败")
+            return jsonify(rejected=True, review=existing, idempotent_replay=True,
+                           remediation_required=True, readback=readback)
+        if candidate is None:
+            raise ValueError("当前帧没有可驳回的自动候选")
+        status_key = _review_status_key(index)
+        current_status = state.setdefault("candidate_review_status", {}).get(status_key)
+        expected_frame, expected_candidate, review_scope = _assert_review_binding(body, frame=index,
+            frame_sha256=frame_sha, candidate_sha256=candidate_sha)
+        if (current_status and current_status.get("status") == "rejected"
+                and current_status.get("candidate_sha256") == candidate_sha):
+            raise ValueError("该候选已被驳回；请复用原幂等键，或先完成修正后再复核")
+        audit = prepare_human_review(frame=index, decision="reject_candidate", review=review,
+            frame_sha256=frame_sha, expected_frame_sha256=expected_frame,
+            expected_candidate_sha256=expected_candidate,
+            review_scope=review_scope, candidate=candidate,
+            candidate_origin=candidate_origin,
+            parent_candidate_sha256=parent_candidate_sha)
+        def mutation():
+            state.setdefault("rejected_candidates", {})[audit["review_id"]] = {
+                "file": audit["file"], "topic": audit["topic"], "frame": index,
+                "candidate_sha256": audit["candidate_sha256"], "candidate": candidate}
+            state.setdefault("candidates", {}).pop(str(index), None)
+            state.setdefault("candidate_review_status", {})[status_key] = {
+                "status": "rejected", "remediation_required": True,
+                "route": "agent_remediation_required", "review_id": audit["review_id"],
+                "candidate_sha256": audit["candidate_sha256"],
+                "candidate_event_id": audit["candidate_event_id"],
+                "decision": "reject_candidate", "file": audit["file"],
+                "topic": audit["topic"], "frame": index}
+        commit_human_review(audit, mutation)
+        readback = _review_commit_readback(audit)
+        if not readback["verified"]:
+            raise RuntimeError("候选驳回后的服务端读回验证失败")
+        return jsonify(rejected=True, review=audit, idempotent_replay=False,
+                       remediation_required=True, readback=readback)
+
+
+@app.get("/api/human_reviews")
+def get_human_reviews():
+    with lock:
+        recover_pending_human_reviews()
+        if state["video"] is None or state["topic"] is None:
+            return jsonify(reviews=[])
+        frame_value = request.args.get("frame")
+        frame_number = int(frame_value) if frame_value is not None else None
+        records = human_review_records(video_file=str(state["video"].path),
+            topic=request.args.get("topic", state["topic"]), frame=frame_number)
+        return jsonify(reviews=records)
 
 
 @app.delete("/api/auto_result/<int:index>")
@@ -573,6 +1903,17 @@ def set_reference_frame():
             raise ValueError("帧号无效")
         if not state["truth"].get(str(index)):
             raise ValueError("请先保存该帧真值，再设为参考帧")
+        review_status = current_truth_review_status().get(str(index), {})
+        if not review_status.get("reusable_as_reference"):
+            reasons = {
+                "missing_current_human_review_receipt": "该帧只有历史标注，尚未通过当前人工复核门禁",
+                "legacy_human_review_contract": "该帧只有旧版复核记录，需要按当前门禁重新确认",
+                "truth_changed_after_human_review": "该帧轮廓已在人工确认后发生变化，需要重新确认",
+                "human_review_transaction_not_committed": "该帧人工复核事务尚未完整提交",
+                "empty_truth_not_reference_eligible": "空真值不能作为参考帧",
+            }
+            reason = reasons.get(review_status.get("reason_code"), "该帧缺少可核验的人工确认回执")
+            raise ValueError(reason + "；请先载入为草稿、人工检查并保存真值")
         refs = state.setdefault("reference_frames", {})
         refs[state["topic"]] = [index]
         save()
@@ -585,11 +1926,52 @@ def set_config():
     if "llm_prompt_profile" in body and body["llm_prompt_profile"] not in ("full", "compact"):
         raise ValueError("Unknown model prompt profile")
     with lock:
-        for key in ("llm_url", "llm_model", "llm_key", "llm_prompt_profile"):
+        for key in ("llm_url", "llm_model", "llm_key", "llm_prompt_profile", "sam3_url"):
             if key in body and body[key]:
                 state["config"][key] = body[key]
         save()
         return jsonify(saved=True)
+
+
+@app.get("/api/model_readiness")
+def model_readiness():
+    with lock:
+        config = dict(state.setdefault("config", {}))
+    sam_url = (config.get("sam3_url") or os.environ.get("SAM3_URL")
+               or "http://127.0.0.1:8766").rstrip("/")
+    llm_url = str(config.get("llm_url") or "").rstrip("/")
+    configured_model = str(config.get("llm_model") or "").strip()
+    sam = {"ready": False, "status": "unavailable", "model_loaded": False,
+           "on_demand": False}
+    vlm = {"ready": False, "status": "unavailable", "model": configured_model,
+           "registered_models": []}
+    try:
+        health = _fetch_readiness_json(sam_url + "/health")
+        sam.update(status=health.get("status", "unknown"),
+                   model_loaded=bool(health.get("model_loaded")),
+                   on_demand=bool(health.get("on_demand")))
+        sam["ready"] = health.get("status") == "ok"
+    except RuntimeError as error:
+        sam["error"] = str(error)
+    if not llm_url:
+        vlm["error"] = "尚未配置 VLM 地址"
+    elif not configured_model:
+        vlm["error"] = "尚未配置 VLM 模型名"
+    else:
+        try:
+            listing = _fetch_readiness_json(llm_url + "/models")
+            entries = listing.get("data") if isinstance(listing.get("data"), list) else []
+            models = sorted({str(item.get("id")) for item in entries
+                             if isinstance(item, dict) and item.get("id")})
+            vlm.update(status="ok", registered_models=models,
+                       ready=configured_model in models)
+            if not vlm["ready"]:
+                vlm["error"] = (f"配置模型 {configured_model} 未在服务中登记"
+                                if models else "VLM 服务没有返回可用模型")
+        except RuntimeError as error:
+            vlm["error"] = str(error)
+    return jsonify(ready=sam["ready"] and vlm["ready"], sam=sam, vlm=vlm,
+                   checked_at=datetime.now(timezone.utc).isoformat())
 
 
 @app.post("/api/describe")
@@ -601,7 +1983,10 @@ def describe_truth():
             raise ValueError("请先将当前帧设为参考帧")
         if not state["truth"].get(str(index)):
             raise ValueError("请先保存该参考帧的真值")
-        allowed_labels = reference_labels(state["truth"][str(index)], state["labels"])
+        allowed_labels = selected_auto_labels(index)
+        selected_annotations = [shape for shape in state["truth"][str(index)]
+                                if shape.get("label") in allowed_labels]
+        selected_present = {shape.get("label") for shape in selected_annotations}
         trace = []
         save_debug(trace)
         def on_trace(event):
@@ -614,11 +1999,363 @@ def describe_truth():
             save_debug(trace)
         with trace_calls(on_trace, save_inspection_image):
             result = describe(state["config"], frame_image(index),
-                state["truth"][str(index)], allowed_labels, overlay(index))
+                selected_annotations, allowed_labels, overlay(index, allowed_labels),
+                include_unreferenced=any(label not in selected_present for label in allowed_labels))
         result["reference_signature"] = reference_signature(index)
         save_description_trace(trace, result)
         (WORK / "description.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
         return jsonify(result)
+
+
+@app.post("/api/reference_candidates/audit")
+def audit_reference_candidates():
+    """Atomically blind-audit every persisted high-risk candidate in a frame."""
+    body = request.get_json() or {}
+    if type(body.get("frame")) is not int or not isinstance(body.get("topic"), str):
+        raise ValueError("候选盲审必须包含整数 frame 和 topic")
+    index, topic = body["frame"], body["topic"]
+    expected_artifact = body.get("expected_candidate_artifact_sha256")
+    expected_frame = body.get("expected_frame_sha256")
+    with lock:
+        video = state.get("video")
+        if video is None or state.get("topic") is None:
+            raise ValueError("请先加载候选对应的数据")
+        if topic != state["topic"]:
+            raise StaleHumanReviewError("当前 topic 已变化，请重新读取候选")
+        if not 0 <= index < video.topics[topic]["count"]:
+            raise ValueError("候选盲审帧号无效")
+        if index in state.get("reference_frames", {}).get(topic, []):
+            raise ValueError("参考帧不能进行机器候选盲审")
+        if str(index) in state.get("truth", {}):
+            raise ValueError("已有真值的帧不能进行机器候选盲审")
+        with run_status_lock:
+            if run_status.get("status") in {"running", "stopping"}:
+                raise RuntimeError("自动任务运行中，暂不能进行候选盲审")
+        key = str(index)
+        candidates = copy.deepcopy(state.get("candidates", {}).get(key))
+        if not isinstance(candidates, list) or not candidates:
+            raise StaleHumanReviewError("当前帧没有持久候选")
+        artifact_sha = _sha256_json(candidates)
+        if not _valid_sha256(expected_artifact) or expected_artifact != artifact_sha:
+            raise StaleHumanReviewError("候选已变化，请重新读取当前候选")
+        if expected_frame is not None and not _valid_sha256(expected_frame):
+            raise ValueError("expected_frame_sha256 必须是有效 SHA-256")
+        image_bytes = frame_image(index)
+        input_sha = hashlib.sha256(image_bytes).hexdigest()
+        if expected_frame is not None and expected_frame != input_sha:
+            raise StaleHumanReviewError("帧图像已变化，请重新读取后复审")
+        ids = [item.get("id") for item in candidates if item.get("label") in HIGH_RISK_LABELS]
+        if len(ids) != len(set(ids)):
+            raise ValueError("高风险候选 ID 重复，拒绝复审")
+        run_stop_event.clear()
+        update_run_status(status="running", phase="candidate_class_audit", frame=index,
+                          completed=0, total=len(ids), topic=topic, error=None)
+        def check_cancelled():
+            if run_stop_event.is_set():
+                raise RunCancelled("用户已停止候选盲审")
+        audit_version = candidate_class_audit_version()
+        try:
+            with cancellation(run_stop_event):
+                audits, queue = audit_high_risk_candidates(
+                    state["config"], image_bytes, candidates, list(state.get("labels", [])),
+                    VISIBLE_LABEL_DEFINITIONS, chat, check_cancelled=check_cancelled,
+                    tolerate_errors=False)
+            check_cancelled()
+        except RunCancelled:
+            update_run_status(status="stopped", phase="stopped", frame=None, completed=0)
+            return jsonify(stopped=True, candidate_only=True, candidate_mutated=False,
+                           human_truth=False)
+        except Exception as error:
+            update_run_status(status="failed", phase="failed", frame=None,
+                              completed=0, error=str(error)[:300])
+            raise
+
+        current_candidates = state.get("candidates", {}).get(key)
+        if (_sha256_json(current_candidates) != artifact_sha
+                or hashlib.sha256(frame_image(index)).hexdigest() != input_sha
+                or state.get("topic") != topic
+                or candidate_class_audit_version() != audit_version):
+            raise StaleHumanReviewError("候选、帧或审核配置在复审期间变化，未写入任何审核结果")
+        previous_run_present = key in state.get("agent_runs", {})
+        previous_run = copy.deepcopy(state.get("agent_runs", {}).get(key, {}))
+        runs = state.setdefault("agent_runs", {})
+        replacement_run = copy.deepcopy(previous_run)
+        for audit in audits:
+            audit["audit_version"] = audit_version
+            audit["audit_sha256"] = _sha256_json({
+                k: v for k, v in audit.items() if k != "audit_sha256"})
+        for entry in queue:
+            entry["audit_sha256"] = next(
+                audit["audit_sha256"] for audit in audits
+                if audit["candidate_id"] == entry["candidate_id"])
+        replacement_run["candidate_class_audits"] = audits
+        replacement_run["candidate_class_audit_version"] = audit_version
+        old_queue = replacement_run.get("review_queue", [])
+        replacement_run["review_queue"] = [
+            item for item in old_queue
+            if item.get("source") != "candidate_class_audit"] + queue
+        replacement_run["candidate_artifact_sha256"] = artifact_sha
+        replacement_run["input_sha256"] = input_sha
+        replacement_run["candidate_class_audit_status"] = "complete"
+        replacement_run["human_review_required"] = True
+        review_status = state.setdefault("candidate_review_status", {})
+        review_status_present = key in review_status
+        previous_review_status = copy.deepcopy(review_status.get(key, {}))
+        status_for_frame = {}
+        for audit in audits:
+            status_for_frame[audit["candidate_sha256"]] = {
+                "candidate_fingerprint": audit["candidate_sha256"],
+                "candidate_artifact_sha256": artifact_sha,
+                "audit_sha256": audit["audit_sha256"], "route": audit["route"]}
+        try:
+            runs[key] = replacement_run
+            review_status[key] = status_for_frame
+            save()
+        except Exception:
+            if previous_run_present:
+                runs[key] = previous_run
+            else:
+                runs.pop(key, None)
+            if review_status_present:
+                review_status[key] = previous_review_status
+            else:
+                review_status.pop(key, None)
+            raise
+        update_run_status(status="completed", phase="completed", frame=None,
+                          completed=1, total=1)
+        bindings = candidate_review_bindings()
+        return jsonify(frame=index, topic=topic, candidates=candidates,
+                       agent=replacement_run, binding=bindings.get(key),
+                       candidate_review_bindings=bindings, input_sha256=input_sha,
+                       candidate_artifact_sha256=artifact_sha,
+                       candidate_only=True, human_truth=False,
+                       approved_for_training=False)
+
+
+@app.post("/api/reference_draft")
+def generate_reference_draft():
+    """Create a candidate-only SAM -> VLM -> Agent draft without reference truth."""
+    body = request.get_json() or {}
+    with lock:
+        with run_status_lock:
+            if run_status.get("status") in ("running", "stopping"):
+                raise RuntimeError("已有自动标注任务正在运行")
+        if state["video"] is None or state["topic"] is None:
+            raise ValueError("请先加载图像消息")
+        index = int(body.get("frame", -1))
+        count = state["video"].topics[state["topic"]]["count"]
+        if not 0 <= index < count:
+            raise ValueError("帧号无效")
+        if index in state.get("reference_frames", {}).get(state["topic"], []):
+            raise ValueError("该帧已经锁定为参考帧，机器不能再修改")
+        if str(index) in state.get("truth", {}):
+            status = current_truth_review_status().get(str(index), {})
+            if status.get("reusable_as_reference") is True:
+                raise ValueError("该帧已有已核验人工真值，请直接复用或另选未标注帧")
+            raise ValueError("该帧已有历史标注，请先载入历史标注并完成人工复核")
+        auto_detect_visible = body.get("auto_detect_visible") is True
+        requested = list(state.get("labels", [])) if auto_detect_visible else body.get("labels")
+        if not isinstance(requested, list) or not requested:
+            raise ValueError("请选择至少一个参考类别，或启用自动识别可见类别")
+        selected = []
+        for label in requested:
+            if not isinstance(label, str) or label not in state.get("labels", []):
+                raise ValueError(f"参考类别不在当前标签表中：{label}")
+            if label not in selected:
+                selected.append(label)
+        target_image = frame_image(index)
+        input_sha256 = hashlib.sha256(target_image).hexdigest()
+        file_name, selected_topic = str(state["video"].path), state["topic"]
+        trace = []
+        update_run_status(status="running", frame=index, completed=0, total=1,
+                          phase="discovering" if auto_detect_visible else "describing", round=0, error=None,
+                          topic=selected_topic, file=file_name,
+                          started_at=time.time(), events=[], shape_count=0)
+        run_stop_event.clear()
+
+        def on_trace(event):
+            record = redact_debug(event | {"frame": index,
+                "topic": selected_topic, "file": file_name,
+                "purpose": "参考帧机器草稿"})
+            existing = next((position for position, item in enumerate(trace)
+                             if item["id"] == record["id"]), None)
+            if existing is None:
+                trace.append(record)
+            else:
+                trace[existing] = record
+            save_debug(trace)
+
+        def on_progress(event):
+            if run_stop_event.is_set():
+                raise RunCancelled("用户已停止参考帧草稿生成")
+            record = {"time": time.time(), "frame": index,
+                      "phase": event["phase"], "round": event["round"],
+                      "shape_count": len(event["shapes"])}
+            with run_status_lock:
+                run_status.update(phase=event["phase"], round=event["round"],
+                                  shape_count=record["shape_count"])
+                run_status["events"] = (run_status.get("events", []) + [record])[-150:]
+
+        try:
+            with cancellation(run_stop_event), trace_calls(on_trace, save_inspection_image):
+                discovery = None
+                discovery_retry_count = 0
+                if auto_detect_visible:
+                    discovery, discovery_retry_count = discover_reference_labels(
+                        state["config"], target_image, selected,
+                        lambda error: update_run_status(
+                            phase="discovering_retry", discovery_attempt=2,
+                            error=f"首次类别结构不合规，正在自动重试：{str(error)[:300]}"))
+                    selected = discovery.get("candidate_labels") or list(dict.fromkeys(
+                        discovery["visible_labels"] + discovery["uncertain_labels"]))
+                    if not selected:
+                        raise ValueError("VLM 未发现可生成候选的已知类别；请改用单类别起稿或点提示 SAM")
+                    update_run_status(phase="describing", visible_labels=selected,
+                                      uncertain_labels=discovery["uncertain_labels"],
+                                      unknown_candidate_count=len(discovery["unknown_candidates"]),
+                                      discovery_retry_count=discovery_retry_count, error=None)
+                description = describe(state["config"], target_image, [], selected,
+                                       include_unreferenced=True)
+                prompt_payload = description.get("prompts", [])
+                discovery_sha256 = _sha256_json(discovery) if discovery is not None else None
+                pipeline_config_sha256 = _sha256_json({
+                    "description_input_version": DESCRIPTION_INPUT_VERSION,
+                    "llm_model": state["config"].get("llm_model"),
+                    "llm_prompt_profile": state["config"].get("llm_prompt_profile", "full"),
+                    "max_review_rounds": MAX_REVIEW_ROUNDS,
+                    "sam_prompts": prompt_payload,
+                    "auto_detect_visible": auto_detect_visible,
+                    "discovery_sha256": discovery_sha256,
+                })
+                candidate_request_id = _sha256_json({
+                    "request": "reference_draft_candidate",
+                    "file": file_name,
+                    "topic": selected_topic,
+                    "frame": index,
+                    "input_sha256": input_sha256,
+                    "labels": selected,
+                    "auto_detect_visible": auto_detect_visible,
+                    "discovery_sha256": discovery_sha256,
+                    "pipeline_config_sha256": pipeline_config_sha256,
+                })
+                if run_stop_event.is_set():
+                    raise RunCancelled("用户已停止参考帧草稿生成")
+                update_run_status(phase="generating")
+                result = run(state["config"], target_image, description, selected,
+                             max_rounds=MAX_REVIEW_ROUNDS,
+                             on_progress=on_progress, reference=None)
+            if result["agent"].get("stop_reason") == "error":
+                raise RuntimeError("SAM/VLM/Agent 未能生成有效参考帧草稿")
+            candidate_output_sha256 = _sha256_json(result["shapes"])
+            candidate_event_id = reference_candidate_event_id(
+                candidate_request_id, candidate_output_sha256)
+            for generated_shape in result["shapes"]:
+                generated_shape["candidate_only"] = True
+                generated_shape["human_truth"] = False
+                generated_shape["approved_for_training"] = False
+                generated_shape["provenance"] = {
+                    "kind": "machine_candidate",
+                    "pipeline": "sam_vlm_agent",
+                    "candidate_event_id": candidate_event_id,
+                    "candidate_request_id": candidate_request_id,
+                    "candidate_output_sha256": candidate_output_sha256,
+                    "input_sha256": input_sha256,
+                    "file": file_name,
+                    "topic": selected_topic,
+                    "frame": index,
+                    "labels": selected,
+                    "auto_detect_visible": auto_detect_visible,
+                    "visible_label_discovery": discovery,
+                    "discovery_sha256": discovery_sha256,
+                    "sam_prompts": prompt_payload,
+                    "llm_model": state["config"].get("llm_model"),
+                    "prompt_profile": state["config"].get("llm_prompt_profile", "full"),
+                    "description_input_version": DESCRIPTION_INPUT_VERSION,
+                    "pipeline_config_sha256": pipeline_config_sha256,
+                }
+            existing = copy.deepcopy(state.setdefault("candidates", {}).get(str(index), []))
+            existing_run = copy.deepcopy(state.setdefault("agent_runs", {}).get(str(index), {}))
+            combined, merged_id_map = merge_inference_candidates(
+                existing, result["shapes"], selected, return_id_map=True)
+            bind_merged_candidate_references(result, merged_id_map)
+            candidate_artifact_sha256 = _sha256_json(combined)
+            visibility_review_queue = reference_visibility_review_queue(discovery, combined)
+            def check_audit_cancelled():
+                if run_stop_event.is_set():
+                    raise RunCancelled("用户已停止参考帧草稿生成")
+            audit_version = candidate_class_audit_version()
+            with cancellation(run_stop_event), trace_calls(on_trace, save_inspection_image):
+                class_audits, class_review_queue = audit_high_risk_candidates(
+                    state["config"], target_image, combined, list(state["labels"]),
+                    VISIBLE_LABEL_DEFINITIONS, chat, check_cancelled=check_audit_cancelled,
+                    tolerate_errors=True)
+            if candidate_class_audit_version() != audit_version:
+                raise StaleHumanReviewError("审核配置在参考帧审核期间变化，未保存草稿审核")
+            for audit in class_audits:
+                audit["audit_version"] = audit_version
+                audit["audit_sha256"] = _sha256_json({
+                    key: value for key, value in audit.items() if key != "audit_sha256"})
+            for entry in class_review_queue:
+                entry["audit_sha256"] = next(
+                    audit["audit_sha256"] for audit in class_audits
+                    if audit["candidate_id"] == entry["candidate_id"])
+            visibility_review_queue.extend(class_review_queue)
+            replacement_run = result["agent"] | {
+                "review_queue": result["review_queue"] + visibility_review_queue,
+                "candidate_class_audits": class_audits,
+                "candidate_class_audit_version": audit_version,
+                "candidate_class_audit_status": "complete", "applied": result["applied"],
+                "candidates_added": result["candidates_added"],
+                "reference_draft": True, "candidate_only": True,
+                "human_truth": False, "approved_for_training": False,
+                "dataset_split": _frame_dataset_split(index),
+                "existing_candidates_preserved": True,
+                "candidate_event_id": candidate_event_id,
+                "candidate_request_id": candidate_request_id,
+                "candidate_output_sha256": candidate_output_sha256,
+                "candidate_artifact_sha256": candidate_artifact_sha256,
+                "input_sha256": input_sha256,
+                "pipeline_config_sha256": pipeline_config_sha256,
+                "sam_prompts": prompt_payload,
+                "auto_detect_visible": auto_detect_visible,
+                "visible_label_discovery": discovery,
+                "discovery_sha256": discovery_sha256,
+                "discovery_retry_count": discovery_retry_count,
+                "human_review_required": True}
+            revision = archive_candidate_revision(
+                index, selected_topic, existing, existing_run, combined, replacement_run,
+                reason="reference_draft_rerun")
+            state["candidates"][str(index)] = combined
+            state.setdefault("agent_runs", {})[str(index)] = replacement_run
+            save()
+            update_run_status(status="completed", phase="completed", frame=None,
+                              completed=1, shape_count=len(combined))
+            return jsonify(frame=index, labels=selected, candidates=combined,
+                           candidates_added=result["candidates_added"],
+                           agent=state["agent_runs"][str(index)],
+                           candidate_only=True, human_truth=False,
+                           approved_for_training=False,
+                           candidate_event_id=candidate_event_id,
+                           candidate_request_id=candidate_request_id,
+                           candidate_output_sha256=candidate_output_sha256,
+                           candidate_artifact_sha256=candidate_artifact_sha256,
+                           input_sha256=input_sha256,
+                           pipeline_config_sha256=pipeline_config_sha256,
+                           prior_candidate_revision_id=(revision.get("revision_id") if revision else None),
+                           candidate_revision_count=len(state.get("candidate_revisions", {}).get(str(index), [])),
+                           auto_detect_visible=auto_detect_visible,
+                           visible_label_discovery=discovery,
+                           discovery_sha256=discovery_sha256,
+                           human_review_required=True,
+                           message="SAM/VLM/Agent 草稿已生成；请人工精修并确认")
+        except RunCancelled:
+            update_run_status(status="stopped", phase="stopped", frame=None,
+                              error=None, completed=0)
+            return jsonify(stopped=True, candidate_only=True, human_truth=False)
+        except Exception as error:
+            update_run_status(status="failed", phase="failed", frame=None,
+                              error=str(error)[:500], completed=0)
+            raise
 
 
 @app.post("/api/run")
@@ -652,7 +2389,7 @@ def run_workflow():
                 f"所选范围（帧 {index}～{last - 1}）没有待处理帧。参考帧和已保存真值会跳过；"
                 "请增大处理帧数，或选择包含未标注帧的范围。"
             )
-        allowed_labels = reference_labels(state["truth"][str(reference)], state["labels"])
+        allowed_labels = selected_auto_labels(reference)
         description = body.get("description")
         if description is None:
             description_path = WORK / "description.json"
@@ -670,6 +2407,7 @@ def run_workflow():
                   "trace": [], "steps": [], "file": str(state["video"].path),
                   "topic": state["topic"], "reference": reference,
                   "message": "候选已保存到本地；请在工作台逐帧复核并保存真值"}
+        failed_frames = []
         update_run_status(status="running", frame=None, completed=0, total=len(targets),
                           phase="starting", round=0, error=None, topic=state["topic"],
                           file=str(state["video"].path),
@@ -694,9 +2432,11 @@ def run_workflow():
             save_run(output)
         try:
             with cancellation(run_stop_event), trace_calls(on_trace, save_inspection_image):
-                reference_context = {"image": frame_image(reference),
-                    "marked_image": overlay(reference),
-                    "annotations": state["truth"][str(reference)]}
+                selected_reference = [shape for shape in state["truth"][str(reference)]
+                                      if shape.get("label") in allowed_labels]
+                reference_context = ({"image": frame_image(reference),
+                    "marked_image": overlay(reference, allowed_labels),
+                    "annotations": selected_reference} if selected_reference else None)
                 for target in targets:
                     trace_frame = target
                     update_run_status(frame=target, phase="loading", round=0, shape_count=0)
@@ -736,14 +2476,28 @@ def run_workflow():
                         max_rounds=max_rounds, on_progress=on_progress, reference=reference_context)
                     if run_stop_event.is_set():
                         raise RunCancelled("用户已停止自动标注")
-                    state.setdefault("candidates", {})[str(target)] = result["shapes"]
+                    existing = state.setdefault("candidates", {}).get(str(target), [])
+                    failed = result["agent"].get("stop_reason") == "error"
+                    if failed:
+                        combined = list(existing)
+                    else:
+                        combined, merged_id_map = merge_inference_candidates(
+                            existing, result["shapes"], allowed_labels, return_id_map=True)
+                        bind_merged_candidate_references(result, merged_id_map)
+                    if failed:
+                        failed_frames.append(target)
+                    else:
+                        state["candidates"][str(target)] = combined
                     state.setdefault("agent_runs", {})[str(target)] = result["agent"] | {
                         "review_queue": result["review_queue"], "applied": result["applied"],
-                        "candidates_added": result["candidates_added"]}
+                        "candidates_added": 0 if failed else result["candidates_added"],
+                        "existing_candidates_preserved": failed}
                     save()
-                    results.append({"frame": target, "candidates_added": result["candidates_added"],
-                        "remaining": len(result["shapes"]), "applied": result["applied"],
-                        "review_queue": result["review_queue"], "agent": result["agent"]})
+                    results.append({"frame": target,
+                        "candidates_added": 0 if failed else result["candidates_added"],
+                        "remaining": len(combined), "applied": result["applied"],
+                        "review_queue": result["review_queue"], "agent": result["agent"],
+                        "failed": failed, "existing_candidates_preserved": failed})
                     output["current"] = None
                     save_run(output)
                     update_run_status(completed=len(results), phase="saved")
@@ -762,7 +2516,14 @@ def run_workflow():
             else:
                 update_run_status(status="failed", phase="failed", error=str(error)[:500])
             raise
-        update_run_status(status="completed", phase="completed", frame=None)
+        output["failed_frames"] = failed_frames
+        if failed_frames:
+            output["message"] = (f"{len(failed_frames)}/{len(results)} 帧失败；失败帧旧候选已保留，"
+                                 "请查看错误后重试")
+            update_run_status(status="failed", phase="failed", frame=None,
+                              error=output["message"])
+        else:
+            update_run_status(status="completed", phase="completed", frame=None)
         return jsonify(output)
 
 

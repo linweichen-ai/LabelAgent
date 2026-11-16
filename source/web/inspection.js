@@ -72,7 +72,7 @@ function renderInspection(force=false){
   if(!reviews.length&&agentRuns[String(target)])inspectionBlock(body,'历史 GPT 决策与执行记录（未保留完整 Prompt）',agentRuns[String(target)].audit,true);
  }else{
   const final=steps.filter(x=>x.phase==='finished').at(-1),run=agentRuns[String(target)]||final?.result?.agent;
-  if(run){const card=inspectionCard(body,'Agent 最终结果',run.converged?'复查完成':'流程未完成');inspectionBlock(card,'停止原因',`${agentStop[run.stop_reason]||run.stop_reason} · ${run.rounds} 轮\n${shapes[String(target)]!==undefined?'此帧已保存真值':'此帧候选尚未保存为真值，可检查后保存结果。'}`);if(final)inspectionImage(card,final.image,`帧 ${target} · Agent 最终候选 · ${final.shape_count} 个标注`);else if(candidates[String(target)]||shapes[String(target)])inspectionImage(card,'/api/frame/'+target+'?topic='+encodeURIComponent(topic),'当前已保存的候选 / 真值',candidates[String(target)]||shapes[String(target)]);if(run.review_queue?.length)inspectionBlock(card,'流程错误与未完成原因',run.review_queue,true)}
+  if(run){const card=inspectionCard(body,'Agent 最终结果',run.converged?'复查完成':'流程未完成'),stored=shapes[String(target)]!==undefined,verified=stored&&truthReviewStatus?.[String(target)]?.reusable_as_reference===true,saveState=verified?'此帧已保存并核验人工真值':stored?'此帧仅有历史标注，仍需当前人工复核':'此帧候选尚未保存为真值，可检查后保存结果。';inspectionBlock(card,'停止原因',`${agentStop[run.stop_reason]||run.stop_reason} · ${run.rounds} 轮\n${saveState}`);if(final)inspectionImage(card,final.image,`帧 ${target} · Agent 最终候选 · ${final.shape_count} 个标注`);else if(candidates[String(target)]||shapes[String(target)])inspectionImage(card,'/api/frame/'+target+'?topic='+encodeURIComponent(topic),'当前已保存的候选 / 标注',candidates[String(target)]||shapes[String(target)]);if(run.review_queue?.length)inspectionBlock(card,'流程错误与未完成原因',run.review_queue,true)}
   for(const step of steps.filter(x=>x.phase!=='finished')){const card=inspectionCard(body,step.phase==='generated'?'SAM 3 初步候选':`第 ${step.round} 轮工具执行后`,`${step.shape_count} 个标注`);inspectionImage(card,step.image,'此阶段的标注结果');if(step.outcome)inspectionBlock(card,'实际执行结果',step.outcome,true)}
   if(!run&&!steps.length&&Object.hasOwn(candidates,String(target))){const card=inspectionCard(body,'已导入的自动候选',`${candidates[String(target)].length} 个标注 · 待人工确认`);card.append(inspectionNode('p','当前候选没有对应的模型调用记录；这不表示页面卡住。上方及下图显示已有轮廓，检查无误后再点击“保存结果”。'));inspectionImage(card,'/api/frame/'+target+'?topic='+encodeURIComponent(topic),'已导入候选（非本轮推理结果）',candidates[String(target)]);}
   if(run?.audit?.length)inspectionRaw(body,'逐轮 GPT 决策与 Agent 实际执行记录',run.audit);
@@ -128,7 +128,13 @@ window.setWorkspaceMode=async(mode,openImage=true)=>{
  $('autoDesk').hidden=mode!=='auto';
  inspectionPanel.hidden=mode!=='auto';
  $('truth').hidden=mode==='auto';
- for(const id of ['pointButton','negativeButton','generateMaskButton'])$(id).hidden=mode==='manual'&&catalog[topic]?.schema!=='LabelAgent.StillImage';
+ // The catalog is populated asynchronously after the page scripts load.  Treat an
+ // unknown topic type as "not decided yet" instead of hiding the SAM controls;
+ // otherwise a fast page boot can permanently hide them even after an image is
+ // loaded.  A known non-image topic (for example LiDAR) still hides them.
+ const selectedTopicType=catalog[topic]?.type;
+ const pointSegmentationAvailable=selectedTopicType===undefined||selectedTopicType==='image';
+ for(const id of ['pointButton','negativeButton','generateMaskButton'])$(id).hidden=mode==='manual'&&!pointSegmentationAvailable;
  $('clearButton').hidden=mode==='auto';
  $('truthSave').textContent=mode==='auto'&&candidates[String(frame)]&&shapes[String(frame)]===undefined?'确认并保存当前帧真值':'保存当前帧真值';
  if(changed){pointMode=false;negativeMode=false;regionMode='';draft=[];resetPrompts();refreshPointTools();refreshShapeList();updateReferenceStatus();draw()}
@@ -137,10 +143,104 @@ window.setWorkspaceMode=async(mode,openImage=true)=>{
  window.resizeWorkbench();
  requestAnimationFrame(draw);
 };
-$('manualModeButton').onclick=()=>window.setWorkspaceMode('manual').catch(e=>toast(e.message));
-$('autoModeButton').onclick=()=>window.setWorkspaceMode('auto').catch(e=>toast(e.message));
+$('manualModeButton').onclick=()=>{localStorage.setItem('labelagentWorkspaceMode','manual');window.setWorkspaceMode('manual').catch(e=>toast(e.message))};
+$('autoModeButton').onclick=()=>{localStorage.setItem('labelagentWorkspaceMode','auto');window.setWorkspaceMode('auto').catch(e=>toast(e.message))};
 $('runButton').addEventListener('click',()=>{inspectionRunFrame=null;inspectionStageManual=false;inspectionStage=2;refreshInspection()});
-$('prepareReference').onclick=async()=>{try{if(window.referenceFrames?.[topic]?.length)await openReferenceFrame();else{await window.setWorkspaceMode('manual');toast('请先在当前帧标注目标，保存当前帧真值，再点击“设为参考帧”')}}catch(error){toast(error.message)}};
+function refreshPrimaryReferenceAction(){
+ const button=$('prepareReference');if(!button)return;
+ const current=String(frame),items=candidates?.[current],hasStoredTruth=Object.hasOwn(shapes||{},current);
+ const reusableCandidateCount=!hasStoredTruth&&Array.isArray(items)?items.length:0;
+ button.textContent=reusableCandidateCount?`复用 ${reusableCandidateCount} 个候选作参考`:'参考帧准备';
+ button.title=reusableCandidateCount
+  ? `直接载入当前帧 ${reusableCandidateCount} 个机器候选并逐个人工复核；不会重新运行模型或自动保存真值`
+  : '优先查找已有标注或候选；没有可复用内容时再选择 SAM + VLM 自动起稿';
+}
+document.addEventListener('labelagent:candidate-state-synced',refreshPrimaryReferenceAction);
+document.addEventListener('labelagent:frame-changed',refreshPrimaryReferenceAction);
+$('prepareReference').onclick=async()=>{try{
+ if(typeof window.openReferencePreparation!=='function')throw Error('参考帧助手未加载，已停止操作');
+ const current=Number($('frameNumber')?.value||0),items=candidates?.[String(current)],hasStoredTruth=Object.hasOwn(shapes||{},String(current));
+ if(!hasStoredTruth&&Array.isArray(items)&&items.length){
+  if(typeof window.loadCurrentFrameCandidateForReference!=='function')throw Error('候选载入助手尚未加载，已停止操作');
+  try{
+   await window.loadCurrentFrameCandidateForReference(current);
+   toast(`已载入第 ${current} 帧 ${items.length} 个机器候选；请逐个检查后再人工确认`);
+   return;
+  }catch(error){
+   toast(`${error.message}；已打开参考帧助手重新核对`);
+  }
+ }
+ await window.openReferencePreparation();
+}catch(error){toast(error.message)}};
+ const referenceReviewDock=document.createElement('section');
+ let referenceConflictEvidenceOpen=false,referenceConflictEvidenceKey='';
+referenceReviewDock.id='referenceReviewDock';referenceReviewDock.className='referenceReviewDock';referenceReviewDock.hidden=true;
+referenceReviewDock.setAttribute('role','region');referenceReviewDock.setAttribute('aria-label','参考帧逐轮廓复核快捷操作');
+ referenceReviewDock.innerHTML='<div class="referenceReviewDockCopy"><strong id="referenceReviewDockPosition">尚未选择轮廓</strong><small id="referenceReviewDockProgress">候选仍是机器草稿，逐项确认前不会写入人工真值</small></div><button id="referenceReviewDockOpen" type="button">展开完整复核</button><button id="referenceReviewDockFocus" type="button">聚焦当前</button><button id="referenceReviewDockEvidenceToggle" type="button" hidden>查看判断依据</button><button id="referenceReviewDockKeepLabel" type="button" hidden>保留当前类别</button><button id="referenceReviewDockUseVlm" type="button" hidden>采用 VLM 建议</button><button id="referenceReviewDockMissingAbsent" type="button" hidden>目视确认不存在</button><button id="referenceReviewDockAction" type="button" class="primary">检查通过并下一个 →</button><div id="referenceReviewDockEvidencePanel" class="referenceReviewDockEvidencePanel" hidden></div>';
+document.body.append(referenceReviewDock);
+ function selectedReviewModelConflict(){
+  const items=typeof selectedShapes==='function'?selectedShapes():[],shape=items?.[selectedShapeIndex],provenance=shape?.provenance||{};
+  const explicit=(provenance.vlm_conflict===true||String(shape?.review_status||'').includes('model_conflict'))&&provenance.vlm_conflict_resolved!==true;
+  if(!shape||!explicit)return null;
+  const confidence=Number(provenance.vlm_confidence),confidenceText=Number.isFinite(confidence)?`（${Math.round(confidence*100)}%）`:'';
+   const projectLabel=String(shape.label||'未命名'),vlmLabel=String(provenance.vlm_observed_label||'未给出类别'),assessments=agentRuns?.[String(frame)]?.visible_label_discovery?.assessments||[];
+   const projectAssessment=assessments.find(item=>item?.label===projectLabel),vlmAssessment=assessments.find(item=>item?.label===vlmLabel),wholeFrameBoth=projectAssessment?.evidence==='present'&&vlmAssessment?.evidence==='present';
+   const decisionHint=projectLabel==='ego'&&vlmLabel==='other_robot'
+    ?'黄色轮廓覆盖相机所在前景载体 → 保留 ego；覆盖背景独立机器人 → 改为 other_robot'
+    :`请按黄色轮廓实际覆盖对象判断是 ${projectLabel} 还是 ${vlmLabel}`;
+   const evidenceTitle=[projectAssessment?.reason&&`整帧 ${projectLabel}：${projectAssessment.reason}`,vlmAssessment?.reason&&`整帧 ${vlmLabel}：${vlmAssessment.reason}`].filter(Boolean).join('\n');
+    const proposalReason=String(provenance.vlm_reason||provenance.assistant_review_reason||'');
+    return {projectLabel,vlmLabel,confidenceText,wholeFrameBoth,decisionHint,evidenceTitle,projectReason:projectAssessment?.reason||'',vlmReason:vlmAssessment?.reason||'',proposalReason};
+ }
+function refreshReferenceReviewDock(){
+ const guide=$('referenceFinalizeGuide'),navigation=$('referenceReviewNavigation');
+ const visible=Boolean(guide&&!guide.hidden&&navigation&&!navigation.hidden);
+ referenceReviewDock.hidden=!visible;if(!visible)return;
+  const position=$('referenceReviewPosition')?.textContent||'尚未选择轮廓',modelConflict=selectedReviewModelConflict();
+  $('referenceReviewDockPosition').textContent=modelConflict?`⚠ 模型冲突 · ${position}`:position;
+   const progress=$('referenceReviewDockProgress');
+   progress.textContent=modelConflict
+    ?`候选类别 ${modelConflict.projectLabel}；当前 mask 的 VLM 复核建议 ${modelConflict.vlmLabel}${modelConflict.confidenceText}。${modelConflict.wholeFrameBoth?'整帧同时看见两类；':''}${modelConflict.decisionHint} · 未确认不是真值`
+   :`${$('referenceReviewProgress')?.textContent||'尚未开始检查'} · 机器草稿，人工确认前不是真值`;
+   progress.title=modelConflict?modelConflict.evidenceTitle:'';
+   const approve=$('referenceReviewApproveNext'),primary=$('referenceFinalizePrimary'),action=$('referenceReviewDockAction'),absent=$('referenceReviewDockMissingAbsent'),alerts=$('referenceReviewAlerts'),open=$('referenceReviewDockOpen'),focus=$('referenceReviewDockFocus'),evidenceToggle=$('referenceReviewDockEvidenceToggle'),evidencePanel=$('referenceReviewDockEvidencePanel'),keep=$('referenceReviewDockKeepLabel'),useVlm=$('referenceReviewDockUseVlm');
+   const evidenceKey=modelConflict?`${frame}:${selectedShapeIndex}:${modelConflict.projectLabel}:${modelConflict.vlmLabel}`:'';
+   if(evidenceKey!==referenceConflictEvidenceKey){referenceConflictEvidenceKey=evidenceKey;referenceConflictEvidenceOpen=false}
+   evidenceToggle.hidden=!modelConflict;evidenceToggle.textContent=referenceConflictEvidenceOpen?'收起判断依据':'查看判断依据';
+   evidencePanel.hidden=!modelConflict||!referenceConflictEvidenceOpen;
+   evidencePanel.textContent=modelConflict?[
+    `当前黄色轮廓：候选类别 ${modelConflict.projectLabel}；mask 复核建议 ${modelConflict.vlmLabel}${modelConflict.confidenceText}。`,
+     modelConflict.proposalReason&&`隔离 mask 复核：${modelConflict.proposalReason}`,
+    modelConflict.projectReason&&`整帧 ${modelConflict.projectLabel} 证据：${modelConflict.projectReason}`,
+    modelConflict.vlmReason&&`整帧 ${modelConflict.vlmLabel} 证据：${modelConflict.vlmReason}`,
+    `如何选择：${modelConflict.decisionHint}。`,
+    '证据边界：这些都是机器证据；只有您明确二选一并完成轮廓检查后，才能继续人工真值门禁。'
+   ].filter(Boolean).join('\n'):'';
+  keep.hidden=!modelConflict;useVlm.hidden=!modelConflict;open.hidden=Boolean(modelConflict);focus.hidden=Boolean(modelConflict);
+  keep.textContent=modelConflict?`保留 ${modelConflict.projectLabel}`:'保留当前类别';useVlm.textContent=modelConflict?`改为 ${modelConflict.vlmLabel}`:'采用 VLM 建议';
+ const missing=Boolean(primary?.disabled&&primary.textContent.startsWith('先处理可能漏标'));
+ const missingAdd=missing?alerts?.querySelector('[data-missing-candidate-action]'):null,missingDismiss=missing?alerts?.querySelector('[data-dismiss-missing-label]'):null,missingLabel=missingAdd?.dataset.missingCandidateAction||missingDismiss?.dataset.dismissMissingLabel||'';
+ absent.hidden=!missingDismiss;absent.disabled=!missingDismiss;absent.textContent=missingLabel?`目视确认没有 ${missingLabel}`:'目视确认不存在';absent.dataset.missingLabel=missingLabel;
+  if(modelConflict){action.textContent='先明确处理标签冲突';action.disabled=true;action.dataset.action='conflict_blocked'}
+  else if(approve&&!approve.disabled){action.textContent=approve.textContent;action.disabled=false;action.dataset.action='approve_next'}
+ else if(primary&&!primary.disabled){action.textContent=primary.textContent;action.disabled=false;action.dataset.action='finalize'}
+ else if(missing&&missingAdd){action.textContent=`点选补标 ${missingLabel}`;action.disabled=false;action.dataset.action='missing_add'}
+ else if(missing){action.textContent=primary.textContent;action.disabled=false;action.dataset.action='missing_scroll'}
+ else{action.textContent=primary?.textContent||'等待当前复核';action.disabled=true;action.dataset.action='blocked'}
+ $('referenceReviewDockFocus').disabled=Boolean($('referenceReviewFocus')?.disabled);
+ $('referenceReviewDockFocus').textContent=$('referenceReviewFocus')?.textContent||'聚焦当前';
+}
+$('referenceReviewDockOpen').onclick=()=>{$('referenceFinalizeGuide')?.scrollIntoView({behavior:'smooth',block:'center'});$('referenceReviewApproveNext')?.focus({preventScroll:true})};
+$('referenceReviewDockFocus').onclick=()=>$('referenceReviewFocus')?.click();
+ $('referenceReviewDockEvidenceToggle').onclick=()=>{referenceConflictEvidenceOpen=!referenceConflictEvidenceOpen;refreshReferenceReviewDock()};
+$('referenceReviewDockKeepLabel').onclick=()=>window.resolveSelectedModelConflict?.('keep_project_label');
+$('referenceReviewDockUseVlm').onclick=()=>window.resolveSelectedModelConflict?.('use_vlm_label');
+$('referenceReviewDockMissingAbsent').onclick=()=>{const label=$('referenceReviewDockMissingAbsent').dataset.missingLabel,button=label?$(`referenceReviewAlerts`)?.querySelector(`[data-dismiss-missing-label="${CSS.escape(label)}"]`):null;if(button)button.click();else{$('referenceReviewAlerts')?.scrollIntoView({behavior:'smooth',block:'center'});$('referenceReviewAlerts')?.querySelector('[data-dismiss-missing-label]')?.focus({preventScroll:true})}refreshReferenceReviewDock()};
+$('referenceReviewDockAction').onclick=()=>{const action=$('referenceReviewDockAction').dataset.action;if(action==='approve_next')$('referenceReviewApproveNext')?.click();else if(action==='finalize')$('referenceFinalizePrimary')?.click();else if(action==='missing_add')$('referenceReviewAlerts')?.querySelector('[data-missing-candidate-action]')?.click();else if(action==='missing_scroll'){$('referenceReviewAlerts')?.scrollIntoView({behavior:'smooth',block:'center'});$('referenceReviewAlerts')?.querySelector('button')?.focus({preventScroll:true})}refreshReferenceReviewDock()};
+new MutationObserver(refreshReferenceReviewDock).observe($('referenceFinalizeGuide'),{subtree:true,childList:true,characterData:true,attributes:true});
+document.addEventListener('labelagent:frame-changed',refreshReferenceReviewDock);
+document.addEventListener('labelagent:candidate-state-synced',refreshReferenceReviewDock);
+document.addEventListener('labelagent:review-selection-changed',refreshReferenceReviewDock);
 $('describeButton').addEventListener('click',()=>{inspectionStage=0;refreshInspection()});
 $('saveCandidate').onclick=async()=>{try{await saveCurrentTruth(true);renderInspection(true);refreshInspection()}catch(error){toast(error.message)}};
 $('clearAutoResult').onclick=async()=>{

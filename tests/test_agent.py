@@ -1,6 +1,7 @@
 """Regression tests for bounded editing and persisted agent decisions."""
 import io
 import base64
+import copy
 import json
 import tempfile
 import threading
@@ -14,7 +15,7 @@ from PIL import Image
 
 from source.agent import server, workflow
 from source.agent.edit_agent import (_hole_regions, _candidate_gap_regions, _shape_from_mask,
-                                     _rasterize, apply_operations, valid_shape)
+                                     _rasterize, _valid_region, apply_operations, valid_shape)
 
 
 def image_bytes():
@@ -86,6 +87,9 @@ class EditTests(unittest.TestCase):
         self.assertEqual(updated, [shape()])
         self.assertFalse(applied)
         self.assertTrue(queue)
+        self.assertFalse(_valid_region([[5, 5], [5, 5], [5, 5]], 40, 40))
+        self.assertFalse(_valid_region([[2, 2], [5, 5], [8, 8]], 40, 40))
+        self.assertTrue(_valid_region([[2, 2], [8, 2], [8, 8]], 40, 40))
 
     def test_merge_and_split_preserve_pixels(self):
         original = [shape(), shape(2, left=22, right=35)]
@@ -168,6 +172,87 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(chat.call_args.kwargs["extra_images"], (marked.getvalue(),))
         self.assertIn("轮廓颜色只是界面标记", chat.call_args.args[1])
         self.assertIn("仅依据图像 1", chat.call_args.args[1])
+
+    def test_visible_label_blind_review_keeps_operator_person_and_viewpoint_non_ego(self):
+        labels = ["ego", "other_robot", "person"]
+        answer = {"assessments": [
+            {"label": label, "evidence": "absent", "confidence": 0.9,
+             "reason": "No visible object."} for label in labels], "unknown_candidates": []}
+        with patch.object(workflow, "chat", return_value=answer) as chat:
+            workflow.discover_visible_labels({}, image_bytes(), labels)
+        instruction = chat.call_args.args[1]
+        self.assertIn("distinct from any human operator", instruction)
+        self.assertIn("a visible human body", instruction)
+        self.assertIn("camera viewpoint or camera position alone is never evidence", instruction)
+
+    def test_visible_label_discovery_filters_known_labels_and_routes_unknown_to_review(self):
+        answer = {"assessments": [
+            {"label": "person", "evidence": "present", "confidence": 0.94,
+             "reason": "A standing person is visible."},
+            {"label": "pallet", "evidence": "absent", "confidence": 0.91,
+             "reason": "No pallet is visible."},
+            {"label": "slope", "evidence": "uncertain", "confidence": 0.52,
+             "reason": "The distant surface is partly occluded."}],
+            "unknown_candidates": [{"candidate_name": "rack", "confidence": 0.72,
+                                    "evidence": "A large storage rack is visible."},
+                                   {"candidate_name": "person", "confidence": 0.91,
+                                    "evidence": "A person is visible."}]}
+        with patch.object(workflow, "chat", return_value=answer) as chat:
+            result = workflow.discover_visible_labels({}, image_bytes(), ["person", "pallet", "slope"])
+        self.assertEqual(result["visible_labels"], ["person"])
+        self.assertEqual(result["uncertain_labels"], ["slope"])
+        self.assertEqual(result["candidate_labels"], ["person", "slope"])
+        self.assertEqual(result["consistency_flags"], [])
+        self.assertFalse(result["registry_mutated"])
+        self.assertEqual(result["unknown_candidates"][0]["route"], "human_review_required")
+        self.assertFalse(result["unknown_candidates"][0]["ontology_mutation_allowed"])
+        self.assertEqual(result["registry_conflicts"][0]["matching_known_label"], "person")
+        self.assertEqual(result["registry_conflicts"][0]["reason_code"], "known_label_alias_conflict")
+        self.assertIn("assess every known label", chat.call_args.args[1])
+        self.assertEqual(chat.call_args.kwargs["response_schema"]["properties"]["assessments"]["minItems"], 3)
+
+    def test_visible_label_discovery_routes_contradictory_absent_to_uncertain_candidate(self):
+        answer = {"assessments": [
+            {"label": "person", "evidence": "absent", "confidence": 0.8,
+             "reason": "A person is visible in the image, but the label is not present in the list of known labels."},
+            {"label": "pallet", "evidence": "absent", "confidence": 0.9,
+             "reason": "No pallet is visible."}], "unknown_candidates": []}
+        with patch.object(workflow, "chat", return_value=answer):
+            result = workflow.discover_visible_labels({}, image_bytes(), ["person", "pallet"])
+        self.assertEqual(result["visible_labels"], [])
+        self.assertEqual(result["uncertain_labels"], ["person"])
+        self.assertEqual(result["candidate_labels"], ["person"])
+        self.assertEqual(result["assessments"][0]["evidence"], "uncertain")
+        self.assertEqual(result["consistency_flags"], [{
+            "label": "person", "original_evidence": "absent", "normalized_evidence": "uncertain",
+            "reason_code": "vlm_visibility_contradiction", "route": "human_review_required",
+            "reason": "A person is visible in the image, but the label is not present in the list of known labels."}])
+
+    def test_visible_label_discovery_routes_duplicate_and_missing_registry_labels(self):
+        answer = {"assessments": [
+            {"label": "person", "evidence": "present", "confidence": 0.9, "reason": "visible"},
+            {"label": "person", "evidence": "absent", "confidence": 0.8, "reason": "duplicate"}],
+            "unknown_candidates": []}
+        with patch.object(workflow, "chat", return_value=answer):
+            result = workflow.discover_visible_labels({}, image_bytes(), ["person", "pallet"])
+        self.assertEqual(result["uncertain_labels"], ["person", "pallet"])
+        self.assertEqual(result["visible_labels"], [])
+        self.assertTrue(any(flag["reason_code"] == "vlm_duplicate_registry_assessment"
+                            for flag in result["consistency_flags"]))
+
+    def test_visible_label_discovery_routes_english_vehicle_alias_to_registry_conflict(self):
+        answer = {"assessments": [{"label": "车辆", "evidence": "present",
+            "confidence": 0.96, "reason": "A vehicle is visible."}],
+            "unknown_candidates": [{"candidate_name": "vehicle", "confidence": 0.95,
+                                    "evidence": "A vehicle is visible."}]}
+        with patch.object(workflow, "chat", return_value=answer):
+            result = workflow.discover_visible_labels({}, image_bytes(), ["车辆"])
+        self.assertEqual(result["unknown_candidates"], [])
+        self.assertEqual(result["registry_conflicts"], [{
+            "candidate_name": "vehicle", "confidence": 0.95, "evidence": "A vehicle is visible.",
+            "route": "human_review_required", "ontology_mutation_allowed": False,
+            "matching_known_label": "车辆", "reason_code": "known_label_alias_conflict"}])
+        self.assertFalse(result["registry_mutated"])
 
     def test_description_only_uses_reference_truth_label_and_short_prompt(self):
         answer = {"description": "地面边界，不包括障碍物。", "prompts": [
@@ -341,8 +426,11 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(sam.call_count, 1)
         self.assertFalse(result["agent"]["converged"])
         self.assertEqual(result["agent"]["rounds"], 0)
-        self.assertEqual(result["agent"]["stop_reason"], "error")
+        self.assertEqual(result["agent"]["stop_reason"], "invalid_model_output")
         self.assertIn("协议校验重试 2 次后仍失败", result["review_queue"][0]["error"])
+        self.assertEqual(result["review_queue"][0]["reason_code"],
+                         "agent_invalid_model_output")
+        self.assertEqual(result["review_queue"][0]["route"], "human_review_required")
         self.assertEqual(result["shapes"][0]["parts"], shape()["parts"])
         rejected = [event for event in events if event["status"] == "rejected"]
         self.assertEqual([event["review_attempt"] for event in rejected], [1, 2, 3])
@@ -403,12 +491,81 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(_rasterize(result["shapes"][0], 40, 40).tolist(), expected.tolist())
 
     def test_keyword_from_gpt_is_preserved_when_short_and_relevant(self):
-        answer = {"description": "标注参考帧里的可见木托盘实例。", "prompts": [
-            {"label": "pallet", "text": "wooden pallet"},
+        answer = {"description": "标注参考帧里的可见车辆实例。", "prompts": [
+            {"label": "车辆", "text": "forklift"},
             {"label": "person", "text": "worker"}]}
-        result = workflow.restrict_description(answer, ["pallet"])
+        result = workflow.restrict_description(answer, ["车辆"])
         self.assertEqual(result["description"], answer["description"])
-        self.assertEqual(result["prompts"], [{"label": "pallet", "text": "wooden pallet"}])
+        self.assertEqual(result["prompts"], [{"label": "车辆", "text": "forklift"}])
+
+    def test_pallet_prompt_cannot_drift_to_stacked_cargo(self):
+        for text in ("", " stacked boxes ", "wooden pallet", "pallet"):
+            with self.subTest(text=text):
+                answer = {"description": "只标注可见托盘结构，不把堆叠箱体当作托盘。",
+                          "prompts": [{"label": "pallet", "text": text}]}
+                result = workflow.restrict_description(answer, ["pallet"])
+                self.assertEqual(result["description"], answer["description"])
+                self.assertEqual(result["prompts"], [{"label": "pallet", "text": "pallet"}])
+                self.assertEqual(answer["prompts"][0]["text"], text)
+
+    def test_known_workbench_labels_have_stable_sam_prompt_fallbacks(self):
+        labels = ["车辆", "pallet", "person", "floor", "slope", "ego", "other_robot", "cargo_floor"]
+        result = workflow.restrict_description(
+            {"description": "Review every configured class.", "prompts": []}, labels)
+        self.assertEqual(result["prompts"], [
+            {"label": "车辆", "text": "vehicle"},
+            {"label": "pallet", "text": "pallet"},
+            {"label": "person", "text": "person"},
+            {"label": "floor", "text": "floor"},
+            {"label": "slope", "text": "ramp"},
+            {"label": "ego", "text": "ego robot"},
+            {"label": "other_robot", "text": "robot"},
+            {"label": "cargo_floor", "text": "robot cargo platform"},
+        ])
+
+    def test_robot_and_person_prompts_use_exact_canonical_queries(self):
+        labels = ["ego", "other_robot", "person"]
+        expected = [
+            {"label": "ego", "text": "ego robot"},
+            {"label": "other_robot", "text": "robot"},
+            {"label": "person", "text": "person"}]
+        for prompts in ([], [
+                {"label": "ego", "text": "camera viewpoint"},
+                {"label": "other_robot", "text": "human operator"},
+                {"label": "person", "text": "operator"}]):
+            with self.subTest(prompts=prompts):
+                result = workflow.restrict_description(
+                    {"description": "区分相机载体、其他机器人与人员。", "prompts": prompts}, labels)
+                self.assertEqual(result["prompts"], expected)
+
+    def test_cargo_floor_prompt_is_overridden_even_when_gpt_returns_ambiguous_text(self):
+        result = workflow.restrict_description(
+            {"description": "cargo area", "prompts": [{"label": "cargo_floor", "text": "cargo floor"}]},
+            ["cargo_floor"])
+        self.assertEqual(result["prompts"], [
+            {"label": "cargo_floor", "text": "robot cargo platform"}])
+
+    def test_person_prompt_uses_evidence_backed_canonical_query(self):
+        result = workflow.restrict_description(
+            {"description": "people", "prompts": [
+                {"label": "person", "text": "worker operator worker worker"}]},
+            ["person"])
+        self.assertEqual(result["prompts"], [{"label": "person", "text": "person"}])
+
+    def test_candidate_filter_removes_same_label_and_floor_conflicts(self):
+        floor = shape(label="floor", shape_id=1)
+        floor_copy = shape(label="floor", shape_id=2)
+        cargo_copy = shape(label="cargo_floor", shape_id=3)
+        kept, filtered = workflow.suppress_near_duplicate_candidates(
+            [floor, floor_copy, cargo_copy], 40, 40)
+        self.assertEqual([(item["id"], item["label"]) for item in kept], [(1, "floor")])
+        self.assertEqual({item["reason"] for item in filtered},
+                         {"near_duplicate_same_label", "overlaps_warehouse_floor"})
+
+    def test_unknown_non_ascii_label_still_requires_an_explicit_mapping(self):
+        with self.assertRaisesRegex(ValueError, "缺少简短英文"):
+            workflow.restrict_description(
+                {"description": "unknown class", "prompts": []}, ["未知类别"])
 
     def test_gpt_reviews_initial_sam_candidates_against_detailed_rule(self):
         prompts = []
@@ -424,6 +581,19 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("只标注可见目标边界", prompts[0][0])
         self.assertIn('"id": 1', prompts[0][0])
         self.assertEqual(prompts[0][1], 2)
+
+    def test_unreferenced_batch_skips_reference_dependent_floor_gap_analysis(self):
+        decision = {"status": "done", "reason": "No supported edit.",
+                    "hole_assessment": [], "operations": []}
+        with patch.object(workflow, "sam_text", return_value=[sam_result()]), \
+             patch.object(workflow, "candidate_holes") as holes, \
+             patch.object(workflow, "chat", return_value=decision):
+            result = workflow.run({}, image_bytes(),
+                {"description": "generic floor", "prompts": [{"label": "floor", "text": "floor"}]},
+                ["floor"], 2, reference=None)
+        holes.assert_not_called()
+        self.assertTrue(result["agent"]["converged"])
+        self.assertEqual(result["review_queue"], [])
 
     def test_model_trace_records_empty_sam_response_and_bad_gpt_json(self):
         events = []
@@ -442,6 +612,20 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(events[3]["output"]["raw_text"], "invalid json")
         self.assertNotIn("secret-token", json.dumps(events))
         self.assertNotIn("base64", json.dumps(events))
+
+    def test_compact_review_uses_bounded_generation_budget(self):
+        captured = {}
+        def respond(request, timeout):
+            captured.update(json.loads(request.data))
+            return io.BytesIO(b'{"choices":[{"message":{"content":"{\\"status\\":\\"done\\"}"}}]}')
+        token = workflow._review_call.set({"attempt": 1, "feedback": None})
+        try:
+            with patch.object(workflow.urllib.request, "urlopen", side_effect=respond):
+                workflow._chat({"llm_url": "http://example.test", "llm_model": "test",
+                                "llm_prompt_profile": "compact"}, "inspect", image_bytes())
+        finally:
+            workflow._review_call.reset(token)
+        self.assertEqual(captured["max_tokens"], 768)
 
     def test_trace_records_sam_transport_failure_and_restores_context(self):
         events = []
@@ -499,10 +683,15 @@ class WorkflowTests(unittest.TestCase):
                         self.assertEqual(result["shapes"][0]["parts"], shape()["parts"])
                         self.assertEqual(result["shapes"][0]["id"], 1)
                     self.assertFalse(result["agent"]["converged"])
+                    self.assertEqual(result["agent"]["stop_reason"], "invalid_model_output")
                     self.assertEqual(result["agent"]["audit"], [])
                     self.assertEqual(chat.call_count, 3)
                     self.assertEqual(sam.call_count, 1)
                     self.assertIn("协议校验重试 2 次后仍失败", result["review_queue"][0]["error"])
+                    self.assertEqual(result["review_queue"][0]["reason_code"],
+                                     "agent_invalid_model_output")
+                    self.assertEqual(result["review_queue"][0]["route"],
+                                     "human_review_required")
 
     def test_sam_points_refine_existing_mask_locally_and_require_next_gpt_assessment(self):
         edit = {"operation": "sam_points", "shape_ids": [1],
@@ -531,6 +720,31 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(result["shapes"][0]["id"], 1)
         self.assertEqual(len(chat.call_args_list[1].kwargs["extra_images"]), 3)
         self.assertIn("图像 4 是修改前候选", chat.call_args_list[1].args[1])
+
+    def test_duplicate_only_sam_points_and_zero_area_polygon_are_rejected_before_sam(self):
+        invalid = {"status": "continue", "operations": [{"operation": "sam_points",
+            "shape_ids": [1], "polygon": [[10, 10], [10, 10], [10, 10]],
+            "points": [{"x": 10, "y": 10, "label": 1}] * 3,
+            "reason": "repair boundary"}]}
+        with self.assertRaisesRegex(ValueError, "有效 polygon|重复的同一个点"):
+            workflow._validate_review_result(invalid, [], [shape()], ["a"], 40, 40)
+
+    def test_conflicting_and_out_of_bounds_sam_points_are_rejected(self):
+        base = {"status": "continue", "operations": [{"operation": "sam_points",
+            "shape_ids": [1], "polygon": [[0, 0], [20, 0], [20, 20]],
+            "points": [{"x": 5, "y": 5, "label": 1}, {"x": 5, "y": 5, "label": 0}],
+            "reason": "repair boundary"}]}
+        with self.assertRaisesRegex(ValueError, "冲突"):
+            workflow._validate_review_result(base, [], [shape()], ["a"], 40, 40)
+        base["operations"][0]["points"] = [{"x": 40, "y": 5, "label": 1}]
+        with self.assertRaisesRegex(ValueError, "有效 points"):
+            workflow._validate_review_result(base, [], [shape()], ["a"], 40, 40)
+
+    def test_sam_improvement_claim_without_pending_result_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "禁止声明 improved"):
+            workflow._validate_review_result({"status": "done", "operations": [],
+                "sam_assessment": {"improved": True, "reason": "looks better"}},
+                [], [shape()], ["a"], 40, 40)
 
     def test_sam_regression_rolls_back_before_opencv_fallback(self):
         edit = {"operation": "sam_points", "shape_ids": [1],
@@ -635,6 +849,214 @@ class FakeVideo:
 
 
 class ServerTests(unittest.TestCase):
+    def test_point_segment_has_bounded_timeout_and_elapsed_receipt(self):
+        old_state = server.state
+        server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+            "truth": {}, "reference_frames": {}, "config": {}, "candidates": {}, "agent_runs": {}}
+        payload = {"points": [[1, 1], [2, 1], [2, 2]], "holes": [],
+                   "parts": [{"points": [[1, 1], [2, 1], [2, 2]], "holes": []}]}
+        try:
+            with patch.object(server.urllib.request, "urlopen",
+                              return_value=io.BytesIO(json.dumps(payload).encode())) as opened:
+                response = server.app.test_client().post("/api/segment_points", json={
+                    "frame": 1, "points": [{"x": 1, "y": 1, "label": 1}]})
+            self.assertEqual(response.status_code, 200, response.json)
+            self.assertGreaterEqual(response.json["inference_elapsed_seconds"], 0)
+            self.assertEqual(opened.call_args.kwargs["timeout"], 180)
+        finally:
+            server.state = old_state
+
+    def test_point_segment_rejects_duplicate_concurrent_request(self):
+        old_state = server.state
+        server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+            "truth": {}, "reference_frames": {}, "config": {}, "candidates": {}, "agent_runs": {}}
+        self.assertTrue(server.point_segment_lock.acquire(blocking=False))
+        try:
+            response = server.app.test_client().post("/api/segment_points", json={
+                "frame": 1, "points": [{"x": 1, "y": 1, "label": 1}]})
+            self.assertEqual(response.status_code, 503, response.json)
+            self.assertIn("请勿重复点击", response.json["error"])
+        finally:
+            server.point_segment_lock.release()
+            server.state = old_state
+
+    def test_reference_draft_records_candidate_only_provenance(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+                "truth": {}, "reference_frames": {}, "config": {"llm_model": "test-vlm"},
+                "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            generated = shape(label="person")
+            result = {"shapes": [generated], "candidates_added": 1, "applied": [],
+                "review_queue": [], "agent": {"converged": False, "rounds": 1,
+                "max_rounds": 100, "stop_reason": "no_progress", "audit": []}}
+            try:
+                with patch.object(server, "describe", return_value={"description": "people",
+                        "prompts": [{"label": "person", "text": "person"}]}), \
+                     patch.object(server, "run", return_value=result):
+                    response = server.app.test_client().post("/api/reference_draft", json={
+                        "frame": 1, "labels": ["person"]})
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertTrue(response.json["candidate_only"])
+                self.assertFalse(response.json["human_truth"])
+                self.assertFalse(response.json["approved_for_training"])
+                self.assertEqual(len(response.json["input_sha256"]), 64)
+                self.assertEqual(len(response.json["candidate_event_id"]), 64)
+                self.assertEqual(len(response.json["candidate_request_id"]), 64)
+                self.assertEqual(len(response.json["candidate_output_sha256"]), 64)
+                self.assertEqual(len(response.json["candidate_artifact_sha256"]), 64)
+                candidate = server.state["candidates"]["1"][0]
+                self.assertTrue(candidate["candidate_only"])
+                self.assertFalse(candidate["human_truth"])
+                self.assertFalse(candidate["approved_for_training"])
+                self.assertEqual(candidate["provenance"]["pipeline"], "sam_vlm_agent")
+                self.assertEqual(candidate["provenance"]["candidate_request_id"],
+                                 response.json["candidate_request_id"])
+                self.assertEqual(candidate["provenance"]["candidate_output_sha256"],
+                                 response.json["candidate_output_sha256"])
+                self.assertEqual(candidate["provenance"]["sam_prompts"], [
+                    {"label": "person", "text": "person"}])
+                self.assertEqual(server.state["truth"], {})
+                self.assertEqual(server.state["reference_frames"], {})
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_reference_draft_rerun_archives_prior_candidates_and_audit_append_only(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            prior_candidate = shape(label="person", left=2, right=12)
+            prior_candidates = [prior_candidate]
+            prior_sha = server._sha256_json(prior_candidates)
+            prior_run = {"candidate_event_id": "a" * 64,
+                         "candidate_artifact_sha256": prior_sha,
+                         "stop_reason": "done", "rounds": 1, "audit": [{"round": 1}]}
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+                "truth": {}, "reference_frames": {}, "config": {"llm_model": "test-vlm"},
+                "candidates": {"1": copy.deepcopy(prior_candidates)},
+                "agent_runs": {"1": copy.deepcopy(prior_run)}, "candidate_revisions": {}}
+            server.run_status = {"status": "idle"}
+            generated = shape(label="person", left=4, right=18)
+            result = {"shapes": [generated], "candidates_added": 1, "applied": [],
+                "review_queue": [], "agent": {"converged": False, "rounds": 1,
+                "max_rounds": 100, "stop_reason": "no_progress", "audit": []}}
+            try:
+                with patch.object(server, "describe", return_value={"description": "people",
+                        "prompts": [{"label": "person", "text": "person"}]}), \
+                     patch.object(server, "run", return_value=result):
+                    response = server.app.test_client().post("/api/reference_draft", json={
+                        "frame": 1, "labels": ["person"]})
+                self.assertEqual(response.status_code, 200, response.json)
+                revisions = server.state["candidate_revisions"]["1"]
+                self.assertEqual(len(revisions), 1)
+                revision = revisions[0]
+                self.assertEqual(response.json["prior_candidate_revision_id"], revision["revision_id"])
+                self.assertEqual(response.json["candidate_revision_count"], 1)
+                self.assertEqual(revision["prior_candidates"], prior_candidates)
+                self.assertEqual(revision["prior_agent_run"], prior_run)
+                self.assertEqual(revision["prior_candidate_artifact_sha256"], prior_sha)
+                self.assertTrue(revision["prior_artifact_integrity_match"])
+                self.assertTrue(revision["candidate_only"])
+                self.assertFalse(revision["human_truth"])
+                self.assertFalse(revision["approved_for_training"])
+                self.assertNotEqual(response.json["candidate_event_id"],
+                                    prior_run["candidate_event_id"])
+                self.assertEqual(server.state["truth"], {})
+                state_response = server.app.test_client().get("/api/state")
+                summary = state_response.json["candidate_revision_summary"]["1"][0]
+                self.assertEqual(summary["revision_id"], revision["revision_id"])
+                self.assertNotIn("prior_candidates", summary)
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_reference_candidate_event_id_changes_with_output_not_stable_request(self):
+        request_id = "a" * 64
+        first = server.reference_candidate_event_id(request_id, "b" * 64)
+        replay = server.reference_candidate_event_id(request_id, "b" * 64)
+        changed = server.reference_candidate_event_id(request_id, "c" * 64)
+        self.assertEqual(first, replay)
+        self.assertNotEqual(first, changed)
+        self.assertEqual(len(first), 64)
+
+    def test_reference_draft_auto_discovers_visible_labels_before_sam(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0",
+                "labels": ["person", "pallet", "slope"], "truth": {}, "reference_frames": {},
+                "config": {"llm_model": "test-vlm"}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            discovery = {"assessments": [
+                    {"label": "person", "evidence": "present", "confidence": .95, "reason": "visible"},
+                    {"label": "pallet", "evidence": "absent", "confidence": .91, "reason": "absent"},
+                    {"label": "slope", "evidence": "uncertain", "confidence": .51, "reason": "occluded"}],
+                "visible_labels": ["person"], "uncertain_labels": ["slope"],
+                "unknown_candidates": [{"candidate_name": "rack", "evidence": "visible rack",
+                    "confidence": .7, "route": "human_review_required",
+                    "ontology_mutation_allowed": False}], "registry_mutated": False}
+            generated = shape(label="person")
+            result = {"shapes": [generated], "candidates_added": 1, "applied": [],
+                "review_queue": [], "agent": {"stop_reason": "done", "rounds": 1, "audit": []}}
+            try:
+                with patch.object(server, "discover_visible_labels", return_value=discovery) as discover_mock, \
+                     patch.object(server, "describe", return_value={"description": "person",
+                        "prompts": [{"label": "person", "text": "person"}]}) as describe_mock, \
+                     patch.object(server, "run", return_value=result) as run_mock:
+                    response = server.app.test_client().post("/api/reference_draft", json={
+                        "frame": 1, "auto_detect_visible": True})
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertTrue(response.json["auto_detect_visible"])
+                self.assertEqual(response.json["labels"], ["person", "slope"])
+                self.assertTrue(response.json["human_review_required"])
+                self.assertEqual(response.json["visible_label_discovery"]["uncertain_labels"], ["slope"])
+                self.assertFalse(response.json["visible_label_discovery"]["unknown_candidates"][0]
+                                 ["ontology_mutation_allowed"])
+                discover_mock.assert_called_once()
+                self.assertEqual(discover_mock.call_args.args[2], ["person", "pallet", "slope"])
+                self.assertEqual(describe_mock.call_args.args[3], ["person", "slope"])
+                self.assertEqual(run_mock.call_args.args[3], ["person", "slope"])
+                queue = server.state["agent_runs"]["1"]["review_queue"]
+                self.assertIn({
+                    "label": "slope", "reason_code": "vlm_visibility_uncertain",
+                    "route": "human_review_required", "source": "visible_label_discovery",
+                    "candidate_available": False}, queue)
+                self.assertTrue(any(item["reason_code"] == "vlm_unknown_candidate" for item in queue))
+                class_review = next(item for item in queue
+                                    if item.get("source") == "candidate_class_audit")
+                self.assertEqual(class_review["shape_ids"], [generated["id"]])
+                self.assertEqual(class_review["candidate_artifact_sha256"],
+                                 response.json["candidate_artifact_sha256"])
+                self.assertEqual(server.state["truth"], {})
+                self.assertEqual(server.state["reference_frames"], {})
+                self.assertTrue(server.state["candidates"]["1"][0]["candidate_only"])
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_reference_draft_auto_detection_without_visible_known_label_fails_closed(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+                "truth": {}, "reference_frames": {}, "config": {}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            discovery = {"assessments": [{"label": "person", "evidence": "absent",
+                "confidence": .9, "reason": "absent"}], "visible_labels": [], "uncertain_labels": [],
+                "unknown_candidates": [], "registry_mutated": False}
+            try:
+                with patch.object(server, "discover_visible_labels", return_value=discovery), \
+                     patch.object(server, "describe") as describe_mock, patch.object(server, "run") as run_mock:
+                    response = server.app.test_client().post("/api/reference_draft", json={
+                        "frame": 1, "auto_detect_visible": True})
+                self.assertEqual(response.status_code, 400, response.json)
+                self.assertIn("未发现可生成候选的已知类别", response.json["error"])
+                describe_mock.assert_not_called(); run_mock.assert_not_called()
+                self.assertEqual(server.state["candidates"], {})
+                self.assertEqual(server.state["truth"], {})
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
     def test_stop_endpoint_terminates_active_run_without_saving_partial_frame(self):
         old_state, old_status, old_work, old_stop = server.state, server.run_status, server.WORK, server.run_stop_event
         entered = threading.Event()
@@ -969,6 +1391,56 @@ class ServerTests(unittest.TestCase):
                 self.assertEqual(json.loads(path.read_text()), {"previous": True})
             finally:
                 server.state = previous
+
+    def test_auto_labels_can_run_unreferenced_classes_as_a_separate_batch(self):
+        previous = server.state
+        with tempfile.TemporaryDirectory() as directory, patch.object(server, "WORK", Path(directory)):
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a", "b"],
+                "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                "config": {}, "candidates": {}, "agent_runs": {}}
+            try:
+                before = server.reference_signature(0)
+                client = server.app.test_client()
+                response = client.post("/api/auto_labels", json={"labels": ["a", "b"]})
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertEqual(response.json["labels"], ["a", "b"])
+                self.assertNotEqual(before, server.reference_signature(0))
+                state = client.get("/api/state").json
+                self.assertEqual(state["auto_labels"], ["a", "b"])
+                self.assertEqual(state["reference_only_labels"], ["a"])
+                separate = client.post("/api/auto_labels", json={"labels": ["b"]})
+                self.assertEqual(separate.status_code, 200, separate.json)
+                self.assertEqual(separate.json["labels"], ["b"])
+            finally:
+                server.state = previous
+
+    def test_separate_class_batch_preserves_other_class_candidates(self):
+        existing = [{"label": "pallet", "points": [[0, 0], [2, 0], [2, 2]]},
+                    {"label": "floor", "points": [[0, 0], [3, 0], [3, 3]]}]
+        generated = [{"label": "floor", "points": [[1, 1], [4, 1], [4, 4]]},
+                     {"label": "ego", "points": [[2, 2], [5, 2], [5, 5]]}]
+        merged = server.merge_inference_candidates(existing, generated, ["floor", "ego"])
+        self.assertEqual([shape["label"] for shape in merged], ["pallet", "floor", "ego"])
+        self.assertEqual(merged[1:], generated)
+
+    def test_describe_can_generate_prompts_for_unreferenced_selected_classes(self):
+        response = {"description": "Reference class a; class b has no reference contour.",
+                    "prompts": [{"label": "a", "text": "class a"},
+                                {"label": "b", "text": "class b"}]}
+        with patch.object(workflow, "chat", return_value=response) as chat:
+            result = workflow.describe({}, b"image", [shape()], ["a", "b"],
+                                       include_unreferenced=True)
+        self.assertEqual([item["label"] for item in result["prompts"]], ["a", "b"])
+        self.assertIn('"b"', chat.call_args.args[1])
+        self.assertIn("没有参考轮廓", chat.call_args.args[1])
+
+    def test_describe_can_use_only_unreferenced_selected_classes(self):
+        response = {"description": "Class b uses a generic object rule.",
+                    "prompts": [{"label": "b", "text": "class b"}]}
+        with patch.object(workflow, "chat", return_value=response) as chat:
+            result = workflow.describe({}, b"image", [], ["b"], include_unreferenced=True)
+        self.assertEqual(result["prompts"], [{"label": "b", "text": "class b"}])
+        self.assertIn('"b"', chat.call_args.args[1])
 
     def test_one_frame_starts_at_current_frame_and_uses_reference(self):
         old_state, old_status, old_work = server.state, server.run_status, server.WORK

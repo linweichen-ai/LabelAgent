@@ -49,3 +49,33 @@ def merge_candidate_import(state, prepared):
         existing_candidates.setdefault(topic, {}).update(frames)
     return {"candidates_by_topic": existing_candidates,
             "candidates": existing_candidates.get(current, {})}
+
+
+def merge_candidate_labels(state, prepared, selected_labels):
+    """Replace only selected candidate labels while preserving all other work."""
+    selected = set(selected_labels or [])
+    if not selected:
+        raise ValueError("请指定要合并的候选类别")
+    existing_truth = dict(state.get("truths_by_topic", {}))
+    existing_candidates = {
+        topic: copy.deepcopy(frames)
+        for topic, frames in state.get("candidates_by_topic", {}).items()
+    }
+    current = state.get("topic")
+    if current:
+        existing_truth[current] = state.get("truth", {})
+        existing_candidates[current] = copy.deepcopy(state.get("candidates", {}))
+    for topic, frames in prepared.items():
+        for key, incoming in frames.items():
+            if key in existing_truth.get(topic, {}):
+                raise ValueError("目标帧已有人工真值，候选合并不会覆盖人工结果")
+            if any(shape.get("label") not in selected for shape in incoming):
+                raise ValueError("候选中包含未授权合并的类别")
+            preserved = [shape for shape in existing_candidates.get(topic, {}).get(key, [])
+                         if shape.get("label") not in selected]
+            combined = preserved + incoming
+            for index, shape in enumerate(combined, 1):
+                shape["id"] = index
+            existing_candidates.setdefault(topic, {})[key] = combined
+    return {"candidates_by_topic": existing_candidates,
+            "candidates": existing_candidates.get(current, {})}

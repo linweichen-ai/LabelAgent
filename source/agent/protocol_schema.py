@@ -23,6 +23,31 @@ def description_schema(labels):
                 "prompts": {"type": "array", "items": prompt, "minItems": len(labels), "maxItems": len(labels)}})
 
 
+def visible_label_schema(labels):
+    """Strict VLM contract for known-label visibility and open-set hints.
+
+    Runtime validation still enforces that every configured label occurs exactly
+    once.  JSON Schema alone cannot express uniqueness by an object's ``label``
+    field without generating one positional schema per registry entry.
+    """
+    assessment = obj({
+        "label": {"type": "string", "enum": labels},
+        "evidence": {"type": "string", "enum": ["present", "absent", "uncertain"]},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "reason": reason(),
+    })
+    unknown = obj({
+        "candidate_name": bounded_text(80),
+        "evidence": reason(),
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    })
+    return obj({
+        "assessments": {"type": "array", "items": assessment,
+                        "minItems": len(labels), "maxItems": len(labels)},
+        "unknown_candidates": {"type": "array", "items": unknown, "maxItems": 5},
+    })
+
+
 def review_schema(labels, shapes, holes, sam_pending=False):
     ids = [shape["id"] for shape in shapes]
     hole_ids = [item["id"] for item in holes]

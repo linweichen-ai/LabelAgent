@@ -1354,7 +1354,7 @@ def candidate_holes(shapes, labels, width, height):
     return holes
 
 
-def select_review_gaps(holes, maximum=4):
+def select_review_gaps(holes, maximum=4, minimum_area=None):
     """Keep the largest actionable gaps so one review cannot explode in size.
 
     Morphological closing naturally creates strips along image borders when a
@@ -1364,8 +1364,19 @@ def select_review_gaps(holes, maximum=4):
     """
     if type(maximum) is not int or not 1 <= maximum <= 20:
         raise ValueError("max_review_gaps must be an integer from 1 to 20")
+    if minimum_area is None:
+        image_area = next((int(mask.shape[0] * mask.shape[1])
+                           for item in holes for mask in [item.get("mask")]
+                           if isinstance(mask, np.ndarray) and mask.ndim == 2), 0)
+        # Ignore sub-pixel-scale tail noise while keeping the same relative
+        # threshold across 1920x1536 and 640x512 inputs.
+        minimum_area = max(16, round(image_area * 0.00002))
+    if type(minimum_area) is not int or minimum_area < 1:
+        raise ValueError("minimum_review_gap_area must be a positive integer")
     actionable = []
     for item in holes:
+        if item.get("area", 0) < minimum_area:
+            continue
         mask = item.get("mask")
         if item.get("kind") == "open_gap" and isinstance(mask, np.ndarray) and mask.ndim == 2:
             height, width = mask.shape
@@ -1638,7 +1649,8 @@ class AnnotationAgent:
                 all_holes = (candidate_holes(self.shapes, self.labels, self.width, self.height)
                              if self.reference is not None else [])
                 holes = select_review_gaps(
-                    all_holes, self.config.get("max_review_gaps", 4)) if all_holes else []
+                    all_holes, self.config.get("max_review_gaps", 4),
+                    self.config.get("minimum_review_gap_area")) if all_holes else []
                 if len(all_holes) > len(holes):
                     self.progress("observing", round=number, operation="limit_review_gaps",
                                   outcome={"reviewed": len(holes),

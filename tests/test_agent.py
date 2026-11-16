@@ -837,6 +837,19 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual({item["id"] for item in selected},
                          {"internal-gap", "enclosed-hole"})
 
+    def test_review_gap_selection_suppresses_resolution_scaled_tail_noise(self):
+        mask = np.zeros((1536, 1920), dtype=np.uint8)
+        holes = [
+            {"id": "tiny", "kind": "hole", "area": 50,
+             "bbox": [10, 10, 20, 20], "mask": mask},
+            {"id": "meaningful", "kind": "hole", "area": 70,
+             "bbox": [30, 30, 40, 40], "mask": mask},
+        ]
+        selected = workflow.select_review_gaps(holes)
+        self.assertEqual([item["id"] for item in selected], ["meaningful"])
+        self.assertEqual([item["id"] for item in workflow.select_review_gaps(
+            holes, minimum_area=40)], ["tiny", "meaningful"])
+
     def test_truncated_compact_review_doubles_budget_once_for_protocol_repair(self):
         budgets, events = [], []
         def fake_chat(config, instruction, image, extra_images=(), raw=None,

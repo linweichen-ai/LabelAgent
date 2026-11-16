@@ -1,0 +1,63 @@
+{
+  "schema_version": "labelagent.new-batch-four-camera-smoke.v1",
+  "date": "2026-11-17",
+  "dataset": "batchA_0920_000_clean_review.mcap",
+  "topics": [
+    "/capture/camera_0/image",
+    "/capture/camera_1/image",
+    "/capture/camera_2/image",
+    "/capture/camera_3/image"
+  ],
+  "frames_per_topic": [0, 50, 101, 151],
+  "before_floor_conflict_guard": {
+    "frames": 16,
+    "failures": 0,
+    "multi_prompt_frames": 16,
+    "image_encoded_once_frames": 16,
+    "mean_seconds": 1.924,
+    "maximum_seconds": 2.556,
+    "slope_candidate_frames": 7
+  },
+  "assistant_visual_screening": {
+    "evidence_kind": "assistant review only; not human ground truth",
+    "obvious_ramp_candidates": [
+      {"topic": "/capture/camera_0/image", "frame": 0},
+      {"topic": "/capture/camera_0/image", "frame": 50},
+      {"topic": "/capture/camera_3/image", "frame": 101}
+    ],
+    "obvious_floor_false_positive": {
+      "topic": "/capture/camera_2/image",
+      "frame": 151,
+      "slope_covered_by_floor": 0.9981
+    },
+    "fixed_ego_structure_candidates": [
+      {"topic": "/capture/camera_3/image", "frame": 0},
+      {"topic": "/capture/camera_3/image", "frame": 50},
+      {"topic": "/capture/camera_3/image", "frame": 151}
+    ]
+  },
+  "floor_conflict_guard": {
+    "maximum_slope_covered": 0.9,
+    "uses_color": false,
+    "route": "human_review_required",
+    "floor_preserved": true
+  },
+  "after_floor_conflict_guard": {
+    "frames": 16,
+    "failures": 0,
+    "mean_seconds": 1.897,
+    "slope_candidate_frames": 6,
+    "floor_conflicts_routed": 1
+  },
+  "human_truth_positive_regression": {
+    "dataset": "CVAT_Task3_original_annotations.mcap",
+    "frames": [74, 77, 80, 83, 86, 95, 97, 99],
+    "retained": 8,
+    "total": 8,
+    "maximum_slope_covered_by_floor": 0.0015
+  },
+  "remaining_issue": "Three camera_3 candidates are fixed ego hardware; use per-camera reviewed reference/self masks or a scene-change-validated temporal guard instead of a hard-coded image-bottom rule.",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false
+}

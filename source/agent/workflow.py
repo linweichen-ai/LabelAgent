@@ -1647,6 +1647,47 @@ def filter_slope_pallet_conflicts(shapes, width, height, maximum_slope_covered=0
     return retained, suppressed
 
 
+def filter_slope_floor_conflicts(shapes, width, height, maximum_slope_covered=0.9):
+    """Route a slope proposal almost entirely explained by a floor mask to review.
+
+    This is a cross-class geometry check, not a color or texture heuristic.  The
+    floor candidate is preserved and the ambiguous slope is recorded in the
+    candidate-filter audit instead of being promoted as a second semantic mask.
+    """
+    from .edit_agent import _rasterize
+    if not 0.0 < maximum_slope_covered <= 1.0:
+        raise ValueError("斜坡与地面冲突阈值无效")
+    floors = [(shape, _rasterize(shape, width, height).astype(bool))
+              for shape in shapes if shape.get("label") == "floor"]
+    retained, suppressed = [], []
+    for shape in shapes:
+        if shape.get("label") != "slope" or not floors:
+            retained.append(shape)
+            continue
+        slope_mask = _rasterize(shape, width, height).astype(bool)
+        slope_area = int(slope_mask.sum())
+        conflict = None
+        for floor, floor_mask in floors:
+            covered = (float(np.logical_and(slope_mask, floor_mask).sum()) / slope_area
+                       if slope_area else 0.0)
+            if covered >= maximum_slope_covered and (
+                    conflict is None or covered > conflict[1]):
+                conflict = (floor, covered)
+        if conflict is None:
+            retained.append(shape)
+        else:
+            floor, covered = conflict
+            suppressed.append({
+                "id": shape.get("id"), "label": "slope",
+                "reason": "slope_candidate_covered_by_floor",
+                "reason_code": "slope_candidate_floor_conflict",
+                "route": "human_review_required", "floor_id": floor.get("id"),
+                "slope_covered_by_floor": round(covered, 4),
+                "maximum_slope_covered": maximum_slope_covered,
+            })
+    return retained, suppressed
+
+
 def candidate_class_overlap_conflicts(shapes, width, height, threshold=0.90):
     """Flag ambiguous class pairs without deleting or relabeling either mask."""
     from .edit_agent import _rasterize
@@ -1817,6 +1858,9 @@ class AnnotationAgent:
         self.shapes, slope_pallet_filters = filter_slope_pallet_conflicts(
             self.shapes, self.width, self.height)
         self.candidate_filters.extend(slope_pallet_filters)
+        self.shapes, slope_floor_filters = filter_slope_floor_conflicts(
+            self.shapes, self.width, self.height)
+        self.candidate_filters.extend(slope_floor_filters)
         self.shapes, duplicate_filters = suppress_near_duplicate_candidates(
             self.shapes, self.width, self.height,
             preserve_class_conflicts=self.reference is None)

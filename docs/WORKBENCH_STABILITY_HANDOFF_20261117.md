@@ -249,3 +249,22 @@
 前端进度轮询 9/9、候选与人工门禁 60/60、JavaScript 语法检查通过；正式页面读回已确认 30 秒恢复心跳、按帧完成即时刷新和主画面状态桥接均存在，整体 readiness=`ready`。回滚点为 `D:\Apps\LabelAgent\.local\backups\workbench-performance-round12-20261117-061000`。
 
 同时做了一个未部署的 VLM 描述压缩实验：把 description 上限从 700 缩到 360 字符，并要求两句规则摘要。耗时只从 34.44 秒降至 30.21 秒，模型仍写满上限且在 “Other” 处截断，语义完整性下降；该方案已从开发代码完全撤回，正式描述和正式状态从未被覆盖。后续 VLM 加速不能简单砍字数，必须在保持语义和读回门禁的 A/B 中验证。
+
+## 第十三轮新批次四相机烟测与斜坡跨类别守门（2026-11-17）
+
+在 `batchA_0920_000_clean_review.mcap` 四路相机上，各取 0、约 1/3、约 2/3 和末帧，共 16 帧，使用正式 8 类候选生成但不调用 VLM、不写工作台状态、不写真值。16/16 成功，均读回 `multi_prompt + image_encoded_once=true`；首轮平均 1.924 秒，最慢 2.556 秒。
+
+首轮有 7 帧保留斜坡候选。助手目视筛查（不是人工真值）显示：camera_0 的 0/50 帧和 camera_3 的 101 帧是明显坡板；camera_2 的 151 帧是大片平地；camera_3 的 0/50/151 帧是画面底部固定自车横梁。平地误报有 99.81% 像素被独立 `floor` 候选覆盖，而三个目视真坡与 `floor` 几乎不重叠。
+
+新增不依赖颜色的跨类别守门：当 `slope` 候选至少 90% 被独立 `floor` 掩码覆盖时，保留 floor，将 slope 记入 `slope_candidate_floor_conflict` 并转人工复核。规则只使用两个模型候选的像素覆盖率，不按黄色、灰色、材质或相机编号判断。
+
+使用新守门重跑同一 16 帧：16/16 成功，平均 1.897 秒；camera_2 平地误报被拦下，斜坡候选帧从 7 降至 6。随后用完整 8 类路径反查全部 8 个有人类斜坡真值的开发帧，8/8 斜坡均保留，斜坡被 floor 覆盖的最大比例为 0.15%。Python 回归更新为 120/120。
+
+camera_3 的三个固定自车横梁误报仍保留，不能假装已解决。它们在不同帧几乎固定于相同图像坐标，适合下一轮使用“每路相机独立人工参考帧/自车掩码”或带场景变化验证的跨帧静态结构守门；本轮没有写死图像底部区域，因为已知真斜坡也可能靠近边界，简单位置阈值会损害新场景召回。
+
+正式部署读回 camera_2 第 151 帧为 0 个斜坡，审计记录覆盖率 0.9981、路由 `human_review_required`，整体 readiness=`ready`。部署前回滚点为 `D:\Apps\LabelAgent\.local\backups\workbench-generalization-round13-20261117-063000`。
+
+- [四相机原图与斜坡候选对照页](evidence/workbench-stability-20261117/new-batch-four-camera-slope-candidates.jpg)
+- [第十三轮结构化结果](evidence/workbench-stability-20261117/new-batch-four-camera-smoke-round13.json)
+
+边界：新批次没有 slope 人工真值，上述 3 真/4 假只是助手目视筛查，不能作为正式 precision/recall；只有旧开发序列的 8 帧可以计算人工真值指标。所有新批次结果仍是机器候选，未进入人工真值或训练集。

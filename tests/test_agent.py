@@ -763,6 +763,20 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(suppressed[0]["slope_covered_by_pallet"], 0.0)
         self.assertEqual(suppressed[0]["slope_envelope_covered_by_pallet"], 1.0)
 
+    def test_slope_floor_conflict_routes_only_nearly_covered_slope(self):
+        floor = shape(1, "floor", 1, 30)
+        covered = shape(2, "slope", 3, 20)
+        disjoint = shape(3, "slope", 31, 38)
+        retained, suppressed = workflow.filter_slope_floor_conflicts(
+            [floor, covered, disjoint], 40, 40)
+        self.assertEqual([item["id"] for item in retained], [1, 3])
+        self.assertEqual([item["id"] for item in suppressed], [2])
+        self.assertEqual(suppressed[0]["floor_id"], 1)
+        self.assertEqual(suppressed[0]["reason_code"],
+                         "slope_candidate_floor_conflict")
+        self.assertEqual(suppressed[0]["route"], "human_review_required")
+        self.assertGreaterEqual(suppressed[0]["slope_covered_by_floor"], 0.9)
+
     def test_robot_and_person_prompts_use_exact_canonical_queries(self):
         labels = ["ego", "other_robot", "person"]
         expected = [

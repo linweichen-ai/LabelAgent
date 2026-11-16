@@ -777,6 +777,26 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(suppressed[0]["route"], "human_review_required")
         self.assertGreaterEqual(suppressed[0]["slope_covered_by_floor"], 0.9)
 
+    def test_slope_reference_ego_guard_requires_same_resolution_reviewed_ego(self):
+        ego = shape(1, "ego", 2, 24)
+        covered = shape(2, "slope", 3, 20)
+        disjoint = shape(3, "slope", 27, 38)
+        reference = {"image": image_bytes(), "annotations": [ego]}
+        retained, suppressed = workflow.filter_slope_reference_ego_conflicts(
+            [ego, covered, disjoint], reference, 40, 40)
+        self.assertEqual([item["id"] for item in retained], [1, 3])
+        self.assertEqual([item["id"] for item in suppressed], [2])
+        self.assertEqual(suppressed[0]["reason_code"],
+                         "slope_candidate_reference_ego_conflict")
+        self.assertEqual(suppressed[0]["route"], "human_review_required")
+        self.assertGreaterEqual(suppressed[0]["slope_covered_by_reference_ego"], 0.8)
+        smaller = io.BytesIO()
+        Image.new("RGB", (20, 20), "white").save(smaller, "JPEG")
+        unchanged, warnings = workflow.filter_slope_reference_ego_conflicts(
+            [covered], {"image": smaller.getvalue(), "annotations": [ego]}, 40, 40)
+        self.assertEqual(unchanged, [covered])
+        self.assertEqual(warnings, [])
+
     def test_robot_and_person_prompts_use_exact_canonical_queries(self):
         labels = ["ego", "other_robot", "person"]
         expected = [

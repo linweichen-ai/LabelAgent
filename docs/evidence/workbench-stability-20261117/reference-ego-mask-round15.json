@@ -1,0 +1,46 @@
+{
+  "schema_version": "labelagent.reference-ego-mask.v1",
+  "date": "2026-11-17",
+  "guard": {
+    "label": "slope",
+    "reviewed_reference_label": "ego",
+    "minimum_slope_covered_by_reference_ego": 0.8,
+    "same_topic_required_by_reference_contract": true,
+    "same_resolution_required": true,
+    "machine_candidate_can_create_reference_mask": false,
+    "route": "human_review_required",
+    "uses_color": false
+  },
+  "camera_3_diagnostic_only": {
+    "anchor": {
+      "topic": "/capture/camera_3/image",
+      "frame": 0,
+      "source": "assistant visually screened machine candidate",
+      "human_truth": false,
+      "persisted": false
+    },
+    "results": [
+      {"frame": 0, "slope_covered": 1.0, "retained": false, "visual_screening": "fixed ego hardware"},
+      {"frame": 50, "slope_covered": 0.9974, "retained": false, "visual_screening": "fixed ego hardware"},
+      {"frame": 101, "slope_covered": 0.0, "retained": true, "visual_screening": "obvious ramp board"},
+      {"frame": 151, "slope_covered": 0.8899, "retained": false, "visual_screening": "fixed ego hardware"}
+    ]
+  },
+  "human_truth_positive_regression": {
+    "dataset": "CVAT_Task3_original_annotations.mcap",
+    "reference_frame": 0,
+    "reference_ego_source": "imported human annotation",
+    "slope_frames": [74, 77, 80, 83, 86, 95, 97, 99],
+    "retained": 8,
+    "total": 8,
+    "false_filters": 0
+  },
+  "validation": {
+    "python": "121/121",
+    "formal_readiness": "ready",
+    "formal_workflow_sha256": "3D3524BDA02F3CF677FC142D03FB7BB6E5F1602D6FB5C2A3ED559BD37184F062"
+  },
+  "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-self-mask-round15-20261117-073000",
+  "candidate_only": true,
+  "approved_for_training": false
+}

@@ -1688,6 +1688,59 @@ def filter_slope_floor_conflicts(shapes, width, height, maximum_slope_covered=0.
     return retained, suppressed
 
 
+def filter_slope_reference_ego_conflicts(shapes, reference, width, height,
+                                         maximum_slope_covered=0.8):
+    """Use a same-camera reviewed ego mask to exclude fixed vehicle hardware.
+
+    Ego structure is rigid relative to a mounted camera, so its human-confirmed
+    reference pixels can be reused across frames of that topic.  This guard is
+    disabled without a reference, without an ``ego`` annotation, or when the
+    reference resolution differs; it never learns an exclusion zone from a
+    machine candidate.
+    """
+    from .edit_agent import _rasterize
+    if not 0.0 < maximum_slope_covered <= 1.0:
+        raise ValueError("斜坡与自车参考冲突阈值无效")
+    if not isinstance(reference, dict) or not isinstance(reference.get("annotations"), list):
+        return list(shapes), []
+    try:
+        reference_size = Image.open(io.BytesIO(reference.get("image", b""))).size
+    except (OSError, TypeError):
+        return list(shapes), []
+    if reference_size != (width, height):
+        return list(shapes), []
+    ego_shapes = [shape for shape in reference["annotations"] if shape.get("label") == "ego"]
+    if not ego_shapes:
+        return list(shapes), []
+    ego_mask = np.zeros((height, width), dtype=bool)
+    for ego in ego_shapes:
+        ego_mask |= _rasterize(ego, width, height).astype(bool)
+    if not ego_mask.any():
+        return list(shapes), []
+    retained, suppressed = [], []
+    for shape in shapes:
+        if shape.get("label") != "slope":
+            retained.append(shape)
+            continue
+        slope_mask = _rasterize(shape, width, height).astype(bool)
+        slope_area = int(slope_mask.sum())
+        covered = (float(np.logical_and(slope_mask, ego_mask).sum()) / slope_area
+                   if slope_area else 0.0)
+        if covered < maximum_slope_covered:
+            retained.append(shape)
+            continue
+        suppressed.append({
+            "id": shape.get("id"), "label": "slope",
+            "reason": "slope_candidate_covered_by_reviewed_reference_ego",
+            "reason_code": "slope_candidate_reference_ego_conflict",
+            "route": "human_review_required",
+            "slope_covered_by_reference_ego": round(covered, 4),
+            "maximum_slope_covered": maximum_slope_covered,
+            "reference_ego_instances": len(ego_shapes),
+        })
+    return retained, suppressed
+
+
 def candidate_class_overlap_conflicts(shapes, width, height, threshold=0.90):
     """Flag ambiguous class pairs without deleting or relabeling either mask."""
     from .edit_agent import _rasterize
@@ -1861,6 +1914,9 @@ class AnnotationAgent:
         self.shapes, slope_floor_filters = filter_slope_floor_conflicts(
             self.shapes, self.width, self.height)
         self.candidate_filters.extend(slope_floor_filters)
+        self.shapes, slope_ego_filters = filter_slope_reference_ego_conflicts(
+            self.shapes, self.reference, self.width, self.height)
+        self.candidate_filters.extend(slope_ego_filters)
         self.shapes, duplicate_filters = suppress_near_duplicate_candidates(
             self.shapes, self.width, self.height,
             preserve_class_conflicts=self.reference is None)

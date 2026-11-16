@@ -290,3 +290,15 @@ camera_3 的三个固定自车横梁误报仍保留，不能假装已解决。�
 正式工作台已部署并读回 `max_operations=4`、readiness=`ready`，开发与正式 `workflow.py`、`protocol_schema.py` 哈希一致。部署前回滚点：`D:\Apps\LabelAgent\.local\backups\workbench-vlm-round14-20261117-070000`。完整证据见 [第十四轮 VLM A/B](evidence/workbench-stability-20261117/vlm-four-operations-round14.json)。
 
 边界：这是同一帧的确定性工程 A/B，证明该帧输出一致并减少一次调用；尚未证明所有新场景都能稳定使用 4 个操作，因此仍保留逐项校验、下一轮复看和最大 6 轮上限。
+
+## 第十五轮同相机参考自车掩码（2026-11-17）
+
+第十三轮遗留的 camera_3 三个斜坡误报都来自固定在镜头前方的自车横梁。简单写死“图像底部”会误伤近距离坡板；额外 SAM 文本查询 `forklift forks`、`fork carriage`、`forklift attachment`、`forklift mast` 在四个诊断帧均返回 0 个候选，也不能可靠定位该结构。
+
+新增守门只使用当前相机、相同分辨率、已经人工复核并锁定的参考帧 `ego` 真值。相机与车体刚性连接时，参考 ego 像素可作为固定自车区域；目标帧 `slope` 若至少 80% 被该区域覆盖，则保留审计并转人工复核。没有参考帧、没有 ego 真值、分辨率不一致时守门完全禁用；绝不从机器候选自动学习或写入排除区。
+
+camera_3 当前尚无人工参考真值，因此只做机制隔离验证：把助手目视确认的第 0 帧固定横梁候选临时改作诊断锚点（不保存、不称为真值），第 0/50/151 帧覆盖率分别为 100%、99.74%、88.99%，均会拦截；真实坡板第 101 帧覆盖率为 0%，完整保留。随后使用 `CVAT_Task3_original_annotations.mcap` 第 0 帧真实 ego 人工真值反查全部 8 个斜坡人工正样本，8/8 保留、0 个误过滤。
+
+正式代码已部署：当前 camera_1 参考帧具有人工 ego 真值，守门只在该话题生效；其他相机仍必须分别建立人工参考帧后才启用。Python 回归 121/121、readiness=`ready`，正式与开发 `workflow.py` SHA-256 均为 `3D3524BDA02F3CF677FC142D03FB7BB6E5F1602D6FB5C2A3ED559BD37184F062`。回滚点：`D:\Apps\LabelAgent\.local\backups\workbench-self-mask-round15-20261117-073000`。结构化证据见 [第十五轮自车掩码验证](evidence/workbench-stability-20261117/reference-ego-mask-round15.json)。
+
+边界：camera_3 的诊断锚点只是助手目视候选，不是人工真值，所以正式 camera_3 误报尚未被生产门禁消除。下一步需要为 camera_3 建立独立人工参考帧及 ego 真值，或取得独立人工标注数据后再做正式验收。

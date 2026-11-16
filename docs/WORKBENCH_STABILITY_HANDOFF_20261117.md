@@ -221,3 +221,9 @@
 第十轮正式部署后，正式代码根读回帧 115 为 0 个斜坡，帧 95 仍保留 1 个 ROI 真斜坡，IoU 0.943、精确率 1.000。正式 readiness=`ready`，页面、SAM、VLM、安全通道均正常。开发与正式工作流 SHA-256 均为 `06267D4196747CC7B670EA6E908D515FB3AA3B223075F77BC133A10F93D67575`；第十轮回滚点为 `D:\Apps\LabelAgent\.local\backups\workbench-stability-round10-20261117-053500`。
 
 完整证据：[全会话困难负样本结果](evidence/workbench-stability-20261117/slope-full-session-negative-validation.json)。这些结论仍只覆盖一个 150 帧会话；下一道门是未曝光的新序列，而不是继续在本序列上调阈值。
+
+### 批次 A 未标注跨序列候选审查
+
+继续在 `batchA_0920_000_clean_review.mcap` 的 camera_1 上均匀抽取 24 帧（覆盖 0～151），使用冻结后的正式候选路径扫描。24 帧均在全图候选被过滤后触发 ROI 兜底，最终保留斜坡候选 0 个；首帧、中间帧和末帧人工目视为室内平地、人员和托盘场景，未见明显可驶入坡面。
+
+该批次没有 `slope` 人工真值，所以这只能说明抽样中“未出现明显机器误报”，不能计算召回率、精度或泛化能力。24 张审查图和两份逐帧结果保存在本地 `artifacts/batchA-heldout-slope-review24-part*-20261117/`，没有写入真值或训练集。精简证据见 [批次 A 24 帧候选审查](evidence/workbench-stability-20261117/batchA-heldout-slope-review24.json)。

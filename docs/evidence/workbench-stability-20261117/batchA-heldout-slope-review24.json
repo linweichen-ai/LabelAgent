@@ -1,0 +1,21 @@
+{
+  "date": "2026-11-17",
+  "dataset": "batchA_0920_000_clean_review.mcap",
+  "topic": "/capture/camera_1/image",
+  "frame_count": 152,
+  "sample_frames": [0, 7, 13, 20, 26, 33, 39, 46, 53, 59, 66, 72, 79, 85, 92, 99, 105, 112, 118, 125, 131, 138, 144, 151],
+  "sampling": "24 approximately uniform frames spanning the full sequence",
+  "mode": "unlabelled_candidate_review",
+  "result": {
+    "evaluated_frames": 24,
+    "frames_with_slope_candidate": 0,
+    "slope_candidates": 0,
+    "crop_fallback_frames": 24,
+    "mean_seconds": 2.018916666666667
+  },
+  "visual_spot_check": {
+    "frames": [0, 79, 151],
+    "observation": "Indoor floor, people and pallets were visible; no obvious traversable slope was observed."
+  },
+  "safety_boundary": "This dataset has no slope human truth. The result is a review-only candidate scan and is not an accuracy, recall or generalization measurement. No candidate was written as truth or approved for training."
+}

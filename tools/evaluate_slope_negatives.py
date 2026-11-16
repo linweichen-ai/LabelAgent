@@ -16,9 +16,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mcap", required=True)
     parser.add_argument("--state", required=True)
-    parser.add_argument("--sessions", required=True)
+    parser.add_argument("--sessions")
+    parser.add_argument("--topic", help="Image topic for unlabelled candidate mode")
     parser.add_argument("--frames", required=True, help="Comma-separated frame IDs")
-    parser.add_argument("--mode", choices=("negative", "positive"), default="negative")
+    parser.add_argument("--mode", choices=("negative", "positive", "candidate"),
+                        default="negative")
     parser.add_argument("--output", required=True)
     parser.add_argument("--quiet", action="store_true",
                         help="Write per-frame evidence without printing every row")
@@ -26,14 +28,23 @@ def main():
 
     mcap = str(Path(args.mcap).resolve())
     state = json.loads(Path(args.state).read_text(encoding="utf-8"))
-    sessions = json.loads(Path(args.sessions).read_text(encoding="utf-8"))
-    session = sessions[mcap]
+    if args.mode == "candidate":
+        session = {"topic": args.topic or state.get("topic"), "truth": {}}
+        if not session["topic"]:
+            raise ValueError("Candidate mode requires --topic or a topic in state")
+    else:
+        if not args.sessions:
+            raise ValueError("Positive and negative modes require --sessions")
+        sessions = json.loads(Path(args.sessions).read_text(encoding="utf-8"))
+        session = sessions[mcap]
     frames = [int(value.strip()) for value in args.frames.split(",") if value.strip()]
     if not frames or len(set(frames)) != len(frames):
         raise ValueError("Evaluation frames must be unique and nonempty")
     truth = session.get("truth") or {}
     for frame in frames:
         shapes = truth.get(str(frame))
+        if args.mode == "candidate":
+            continue
         if not isinstance(shapes, list):
             raise ValueError(f"Frame {frame} has no human truth")
         has_slope = any(item.get("label") == "slope" for item in shapes)
@@ -80,8 +91,9 @@ def main():
                 width, height)
             row.update(metrics(prediction, expected))
         rows.append(row)
-        if slope_shapes:
-            (output / f"frame-{frame}-false-candidates.jpg").write_bytes(
+        if slope_shapes or args.mode == "candidate":
+            suffix = "review-candidates" if args.mode == "candidate" else "false-candidates"
+            (output / f"frame-{frame}-{suffix}.jpg").write_bytes(
                 candidate_overlay(image, slope_shapes))
         if not args.quiet:
             print(json.dumps(row, ensure_ascii=False), flush=True)
@@ -108,7 +120,9 @@ def main():
     report = {
         "mcap": mcap, "topic": session["topic"], "mode": args.mode,
         "summary": summary, "rows": rows,
-        "evidence_note": ("Human labels were checked for cohort membership and used after generation "
+        "evidence_note": ("Candidate mode is unlabelled and produces review-only outputs; no accuracy "
+                          "claim or truth mutation is allowed." if args.mode == "candidate" else
+                          "Human labels were checked for cohort membership and used after generation "
                           "for positive scoring only; generation used image/model data."),
     }
     (output / "results.json").write_text(json.dumps(report, ensure_ascii=False, indent=2),

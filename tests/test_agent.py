@@ -240,6 +240,37 @@ class WorkflowTests(unittest.TestCase):
         self.assertTrue(any(flag["reason_code"] == "vlm_duplicate_registry_assessment"
                             for flag in result["consistency_flags"]))
 
+    def test_visible_label_discovery_downgrades_shared_vehicle_robot_anchor(self):
+        labels = ["车辆", "ego", "other_robot"]
+        answer = {"assessments": [
+            {"label": "车辆", "evidence": "present", "confidence": 0.9,
+             "reason": "A robot is visible near [700,450]."},
+            {"label": "ego", "evidence": "absent", "confidence": 0.9,
+             "reason": "No ego robot is visible."},
+            {"label": "other_robot", "evidence": "present", "confidence": 0.9,
+             "reason": "Another robot is visible at [700,450]."}], "unknown_candidates": []}
+        with patch.object(workflow, "chat", return_value=answer):
+            result = workflow.discover_visible_labels({}, image_bytes(), labels)
+        self.assertEqual(result["visible_labels"], [])
+        self.assertEqual(result["uncertain_labels"], ["车辆", "other_robot"])
+        flags = [flag for flag in result["consistency_flags"]
+                 if flag["reason_code"] == "vlm_cross_label_entity_conflict"]
+        self.assertEqual({flag["label"] for flag in flags}, {"车辆", "other_robot"})
+        self.assertEqual(flags[0]["conflicting_labels"], ["车辆", "other_robot"])
+
+    def test_visible_label_discovery_keeps_distinct_vehicle_robot_anchors(self):
+        labels = ["车辆", "other_robot"]
+        answer = {"assessments": [
+            {"label": "车辆", "evidence": "present", "confidence": 0.9,
+             "reason": "A vehicle is visible at [300,450]."},
+            {"label": "other_robot", "evidence": "present", "confidence": 0.9,
+             "reason": "A robot is visible at [700,450]."}], "unknown_candidates": []}
+        with patch.object(workflow, "chat", return_value=answer):
+            result = workflow.discover_visible_labels({}, image_bytes(), labels)
+        self.assertEqual(result["visible_labels"], labels)
+        self.assertFalse(any(flag["reason_code"] == "vlm_cross_label_entity_conflict"
+                             for flag in result["consistency_flags"]))
+
     def test_visible_label_discovery_routes_english_vehicle_alias_to_registry_conflict(self):
         answer = {"assessments": [{"label": "车辆", "evidence": "present",
             "confidence": 0.96, "reason": "A vehicle is visible."}],
@@ -849,6 +880,20 @@ class FakeVideo:
 
 
 class ServerTests(unittest.TestCase):
+    def test_visibility_queue_preserves_conflict_even_with_candidate(self):
+        flag = {"label": "other_robot", "reason_code": "vlm_cross_label_entity_conflict",
+                "route": "human_review_required", "conflicting_labels": ["车辆", "other_robot"],
+                "shared_anchor": [700, 450]}
+        discovery = {"uncertain_labels": ["other_robot"], "consistency_flags": [flag]}
+        queue = server.reference_visibility_review_queue(discovery, [shape(label="other_robot")])
+        conflicts = [item for item in queue if item["reason_code"] == flag["reason_code"]]
+        self.assertEqual(len(conflicts), 1)
+        self.assertEqual(len(queue), 1)
+        self.assertTrue(conflicts[0]["candidate_available"])
+        self.assertEqual(conflicts[0]["evidence"], flag)
+        conflicts[0]["evidence"]["shared_anchor"][0] = 0
+        self.assertEqual(flag["shared_anchor"], [700, 450])
+
     def test_point_segment_has_bounded_timeout_and_elapsed_receipt(self):
         old_state = server.state
         server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],

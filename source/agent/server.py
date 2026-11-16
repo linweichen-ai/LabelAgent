@@ -93,7 +93,12 @@ def reference_visibility_review_queue(discovery, candidates):
             seen.add(key)
             queue.append(entry)
 
+    detailed_review_labels = {flag.get("label") for flag in discovery.get("consistency_flags") or []
+                              if isinstance(flag, dict) and flag.get("label")
+                              and flag.get("route") == "human_review_required"}
     for label in discovery.get("uncertain_labels") or []:
+        if label in detailed_review_labels:
+            continue
         append({"label": label, "reason_code": "vlm_visibility_uncertain",
                 "route": "human_review_required", "source": "visible_label_discovery",
                 "candidate_available": label in candidate_labels})
@@ -103,7 +108,14 @@ def reference_visibility_review_queue(discovery, candidates):
                     "route": "human_review_required", "source": "visible_label_discovery",
                     "candidate_available": False})
     for flag in discovery.get("consistency_flags") or []:
-        if not isinstance(flag, dict) or flag.get("reason_code") != "vlm_open_set_output_truncated":
+        if not isinstance(flag, dict):
+            continue
+        if flag.get("route") == "human_review_required" and flag.get("label"):
+            append({"label": flag["label"], "reason_code": flag.get("reason_code"),
+                    "route": "human_review_required", "source": "visible_label_discovery",
+                    "candidate_available": flag["label"] in candidate_labels,
+                    "evidence": copy.deepcopy(flag)})
+        if flag.get("reason_code") != "vlm_open_set_output_truncated":
             continue
         append({"reason_code": "vlm_open_set_output_truncated",
                 "route": "ontology_review_required", "source": "visible_label_discovery",

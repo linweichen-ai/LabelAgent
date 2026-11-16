@@ -485,6 +485,34 @@ def discover_visible_labels(config, image, labels):
             "reason_code": "vlm_missing_registry_assessment",
             "route": "human_review_required",
             "reason": "Missing known-label assessment was conservatively downgraded."})
+    # A shared explicit point is suspicious evidence reuse, not proof of object
+    # identity. Keep both SAM queries and require a human to resolve the class.
+    exclusive_labels = [label for label in ("车辆", "ego", "other_robot")
+                        if label in by_label and by_label[label]["evidence"] == "present"]
+    point_pattern = re.compile(
+        r"(?:\[\s*(\d+(?:\.\d+)?)\s*[,，]\s*(\d+(?:\.\d+)?)\s*\]"
+        r"|\(\s*(\d+(?:\.\d+)?)\s*[,，]\s*(\d+(?:\.\d+)?)\s*\))")
+    anchors = {}
+    for label in exclusive_labels:
+        for match in point_pattern.finditer(by_label[label]["reason"]):
+            values = match.groups()
+            point = (float(values[0] or values[2]), float(values[1] or values[3]))
+            anchors.setdefault(point, set()).add(label)
+    for point, shared_labels in anchors.items():
+        if len(shared_labels) < 2:
+            continue
+        participants = [label for label in exclusive_labels if label in shared_labels]
+        for label in participants:
+            by_label[label]["evidence"] = "uncertain"
+            consistency_flags.append({
+                "label": label, "original_evidence": "present",
+                "normalized_evidence": "uncertain",
+                "reason_code": "vlm_cross_label_entity_conflict",
+                "route": "human_review_required", "conflicting_labels": participants,
+                "shared_anchor": list(point),
+                "reason": "Mutually exclusive labels cite the same explicit point; "
+                          "this may be reused entity evidence and requires human review.",
+                "original_reason": by_label[label]["reason"]})
     unknown = result.get("unknown_candidates", [])
     if not isinstance(unknown, list) or len(unknown) > 5:
         raise ValueError("VLM unknown_candidate 格式无效")

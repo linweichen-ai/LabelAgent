@@ -1259,7 +1259,7 @@ def review(config, image, overlay, description, shapes, labels, history, referen
                 prompt += ("没有图片3或图片4，也没有任何参考原图、参考轮廓或人工真值。"
                            "禁止提及不存在的参考轮廓；禁止 remove，疑似误检保留给人工复核。")
             prompt += "holes列表为空，hole_assessment必须是空数组，禁止编造孔洞编号。"
-        prompt += ("\n每个reason最多一句话且不超过100个英文字符，每轮最多3个有视觉证据的局部操作。仅允许使用candidates中的ID。"
+        prompt += ("\n每个reason最多一句话且不超过100个英文字符，每轮最多4个有视觉证据的局部操作。仅允许使用candidates中的ID。"
                    "所有reason使用英文。无法可靠定位缺陷时保持候选，返回done且operations为空。不要复述所有实例，不要输出额外解释。")
     if duplicate_groups:
         prompt += ("\nExact same-class raster-mask overlap groups: "

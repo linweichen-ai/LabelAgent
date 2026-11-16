@@ -1,0 +1,51 @@
+{
+  "schema_version": "labelagent.vlm-four-operations-ab.v1",
+  "date": "2026-11-17",
+  "dataset": "batchA_0920_000_clean_review.mcap",
+  "topic": "/capture/camera_1/image",
+  "frame": 30,
+  "baseline": {
+    "maximum_operations_per_round": 3,
+    "elapsed_seconds": 201.47,
+    "rounds": 5,
+    "applied_operations": 9,
+    "filled_pixels": 11685,
+    "shape_count": 10,
+    "converged": true,
+    "stop_reason": "done",
+    "final_fingerprint": "cdfcc960b477ba6a84d92dd8ba418a748393c2eda62651d562e083e1cb6e4e7d"
+  },
+  "candidate": {
+    "maximum_operations_per_round": 4,
+    "elapsed_seconds": 158.79965440000524,
+    "rounds": 4,
+    "applied_operations": 9,
+    "filled_pixels": 11685,
+    "shape_count": 10,
+    "converged": true,
+    "stop_reason": "done",
+    "final_fingerprint": "cdfcc960b477ba6a84d92dd8ba418a748393c2eda62651d562e083e1cb6e4e7d",
+    "vlm_elapsed_ms": [63931, 61586, 19930, 8394],
+    "operations_by_round": [4, 4, 1, 0]
+  },
+  "result": {
+    "elapsed_reduction_percent": 21.18,
+    "round_reduction": 1,
+    "final_fingerprint_identical": true,
+    "filled_pixels_identical": true,
+    "shape_count_identical": true,
+    "deployed": true
+  },
+  "validation": {
+    "python": "120/120",
+    "protocol_grammar": "5/5",
+    "web_polling": "9/9",
+    "candidate_and_human_gate": "60/60",
+    "formal_readiness": "ready",
+    "formal_max_operations": 4
+  },
+  "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-vlm-round14-20261117-070000",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false
+}

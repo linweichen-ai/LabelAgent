@@ -72,7 +72,7 @@ def review_schema(labels, shapes, holes, sam_pending=False):
     assessments = {"type": "array", "maxItems": len(holes), "minItems": len(holes),
                    "items": obj({"hole_id": {"type": "string", "enum": hole_ids or ["unused"]},
                                  "semantic": {"type": "string", "enum": ["ground", "non_ground"]}, "reason": reason(100)})}
-    operations = {"type": "array", "maxItems": 3 if tools else 0,
+    operations = {"type": "array", "maxItems": 4 if tools else 0,
                   "items": {"anyOf": tools} if tools else {"type": "object"}}
     properties = {"status": {"type": "string", "enum": ["continue", "done"]}, "reason": reason(120),
                   "hole_assessment": assessments, "operations": operations}

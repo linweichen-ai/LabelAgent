@@ -54,6 +54,15 @@ class ProtocolGrammarTests(unittest.TestCase):
         del value['sam_assessment']
         self.assertFalse(self.accepts(schema, value))
 
+    def test_review_accepts_four_operations_but_rejects_five(self):
+        schema = review_schema(['person'], [{'id': 7}], [])
+        operation = {'operation': 'remove', 'shape_ids': [7], 'reason': 'False candidate.'}
+        value = {'status': 'continue', 'reason': 'Apply bounded edits.',
+                 'hole_assessment': [], 'operations': [operation] * 4}
+        self.assertTrue(self.accepts(schema, value))
+        value['operations'].append(operation)
+        self.assertFalse(self.accepts(schema, value))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -612,6 +612,60 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual({item["reason"] for item in filtered},
                          {"near_duplicate_same_label", "overlaps_warehouse_floor"})
 
+    def test_unreferenced_draft_preserves_floor_deck_ambiguity_and_same_class_dedup(self):
+        originals = [shape(1, "floor"), shape(2, "floor"), shape(3, "cargo_floor")]
+        baseline = copy.deepcopy(originals)
+        kept, filtered = workflow.suppress_near_duplicate_candidates(
+            originals, 40, 40, preserve_class_conflicts=True)
+        self.assertEqual({item["id"] for item in kept}, {1, 3})
+        self.assertEqual([item["reason"] for item in filtered], ["near_duplicate_same_label"])
+        self.assertEqual(originals, baseline)
+
+    def test_class_overlap_flags_only_conflicting_high_iou_pairs(self):
+        cases = [
+            ([shape(1, "ego"), shape(2, "other_robot")], 1),
+            ([shape(1, "车辆"), shape(2, "ego")], 1),
+            ([shape(1, "floor"), shape(2, "cargo_floor")], 1),
+            ([shape(1, "person"), shape(2, "ego")], 0),
+            ([shape(1, "ego"), shape(2, "ego")], 0),
+            ([shape(1, "ego"), shape(2, "other_robot", 23, 35)], 0),
+        ]
+        for shapes, expected in cases:
+            with self.subTest(labels=[item["label"] for item in shapes], expected=expected):
+                baseline = copy.deepcopy(shapes)
+                conflicts = workflow.candidate_class_overlap_conflicts(shapes, 40, 40)
+                self.assertEqual(len(conflicts), expected)
+                self.assertEqual(shapes, baseline)
+                if expected:
+                    self.assertEqual(conflicts[0]["shape_ids"], [1, 2])
+                    self.assertEqual(conflicts[0]["route"], "human_review_required")
+                    self.assertEqual(conflicts[0]["iou"], 1.0)
+
+    def test_overlap_conflict_ids_follow_merged_candidate_ids(self):
+        generated = [shape(1, "ego"), shape(2, "other_robot")]
+        combined, id_map = server.merge_inference_candidates(
+            [shape(1, "pallet")], generated, ["ego", "other_robot"], return_id_map=True)
+        result = {"agent": {}, "applied": [], "review_queue":
+                  workflow.candidate_class_overlap_conflicts(generated, 40, 40)}
+        server.bind_merged_candidate_references(result, id_map)
+        by_id = {item["id"]: item["label"] for item in combined}
+        conflict = result["review_queue"][0]
+        self.assertEqual([by_id[item] for item in conflict["shape_ids"]],
+                         ["ego", "other_robot"])
+        self.assertEqual(conflict["original_shape_ids"], [1, 2])
+
+    def test_unreferenced_pipeline_retains_conflict_despite_model_done(self):
+        with patch.object(workflow, "sam_text", return_value=[sam_result()]), \
+             patch.object(workflow, "chat", return_value={"status": "done", "operations": []}):
+            result = workflow.run({}, image_bytes(), {"description": "draft", "prompts": [
+                {"label": "floor", "text": "floor"},
+                {"label": "cargo_floor", "text": "robot cargo platform"}]},
+                ["floor", "cargo_floor"])
+        self.assertEqual({item["label"] for item in result["shapes"]}, {"floor", "cargo_floor"})
+        self.assertEqual(len(result["review_queue"]), 1)
+        self.assertEqual(result["review_queue"][0]["reason_code"], "candidate_cross_class_overlap")
+        self.assertEqual(result["review_queue"][0]["shape_ids"], [1, 2])
+
     def test_unknown_non_ascii_label_still_requires_an_explicit_mapping(self):
         with self.assertRaisesRegex(ValueError, "缺少简短英文"):
             workflow.restrict_description(

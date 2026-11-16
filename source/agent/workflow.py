@@ -1358,8 +1358,9 @@ def _exact_duplicate_groups(shapes, width, height):
 
 
 def suppress_near_duplicate_candidates(shapes, width, height,
-                                       same_label_iou=0.95, floor_conflict_iou=0.90):
-    """Remove SAM duplicates while preserving the canonical warehouse floor label."""
+                                       same_label_iou=0.95, floor_conflict_iou=0.90,
+                                       preserve_class_conflicts=False):
+    """Remove same-class duplicates; unreferenced drafts retain class ambiguity."""
     from .edit_agent import _rasterize
     masks = {shape["id"]: _rasterize(shape, width, height).astype(bool) for shape in shapes}
     retained, suppressed = [], []
@@ -1389,6 +1390,7 @@ def suppress_near_duplicate_candidates(shapes, width, height,
     for candidate in retained:
         conflict = next((floor for floor in floors
                          if candidate.get("label") == "cargo_floor"
+                         and not preserve_class_conflicts
                          and iou(masks[floor["id"]], masks[candidate["id"]]) >= floor_conflict_iou), None)
         if conflict is not None:
             suppressed.append({"id": candidate["id"], "label": "cargo_floor",
@@ -1398,6 +1400,39 @@ def suppress_near_duplicate_candidates(shapes, width, height,
         else:
             final.append(candidate)
     return final, suppressed
+
+
+def candidate_class_overlap_conflicts(shapes, width, height, threshold=0.90):
+    """Flag ambiguous class pairs without deleting or relabeling either mask."""
+    from .edit_agent import _rasterize
+    robot_labels = {"车辆", "ego", "other_robot"}
+    relevant = [item for item in shapes
+                if item.get("label") in robot_labels | {"floor", "cargo_floor"}]
+    masks = {}
+    conflicts = []
+    for position, left in enumerate(relevant):
+        for right in relevant[position + 1:]:
+            left_label, right_label = left.get("label"), right.get("label")
+            labels = {left_label, right_label}
+            relevant_pair = (left_label != right_label and labels.issubset(robot_labels)) \
+                or labels == {"floor", "cargo_floor"}
+            if not relevant_pair:
+                continue
+            for item in (left, right):
+                if item["id"] not in masks:
+                    masks[item["id"]] = _rasterize(item, width, height).astype(bool)
+            a, b = masks[left["id"]], masks[right["id"]]
+            union = np.logical_or(a, b).sum()
+            overlap = float(np.logical_and(a, b).sum() / union) if union else 0.0
+            if overlap >= threshold:
+                conflicts.append({
+                    "shape_ids": [left["id"], right["id"]],
+                    "labels": [left["label"], right["label"]],
+                    "iou": round(overlap, 4),
+                    "reason": "不同类别候选高度重叠，请核验实体归属；已保留两个候选",
+                    "reason_code": "candidate_cross_class_overlap",
+                    "route": "human_review_required"})
+    return conflicts
 
 
 def _fingerprint(shapes):
@@ -1464,7 +1499,8 @@ class AnnotationAgent:
             self.generated += len(shapes)
             self.progress("generated")
         self.shapes, self.candidate_filters = suppress_near_duplicate_candidates(
-            self.shapes, self.width, self.height)
+            self.shapes, self.width, self.height,
+            preserve_class_conflicts=self.reference is None)
         self.generated = len(self.shapes)
         if self.candidate_filters:
             self.progress("generated", operation="filter_near_duplicates",
@@ -1699,6 +1735,9 @@ class AnnotationAgent:
             self.queue.append({"reason": "SAM 3 点提示结果尚未经过下一轮 GPT 复核，已恢复修改前候选"})
             converged = False
             self.sam_pending = None
+        if self.reference is None:
+            self.queue.extend(candidate_class_overlap_conflicts(
+                self.shapes, self.width, self.height))
         result = {"shapes": self.shapes, "candidates_added": self.generated, "applied": self.applied,
             "review_queue": self.queue, "agent": {"converged": converged,
             "rounds": len(self.audit), "max_rounds": self.max_rounds,

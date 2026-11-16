@@ -80,6 +80,6 @@ class StillImage:
         return dict(self._playback)
 
 
-def open_media(path):
+def open_media(path, index_directory=None):
     path = Path(path)
-    return StillImage(path) if path.suffix.lower() in IMAGE_SUFFIXES else Video(path)
+    return StillImage(path) if path.suffix.lower() in IMAGE_SUFFIXES else Video(path, index_directory)

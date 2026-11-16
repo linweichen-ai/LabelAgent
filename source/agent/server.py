@@ -20,7 +20,7 @@ from flask import Flask, jsonify, request, send_file
 from PIL import Image, ImageDraw
 import numpy as np
 
-from .media import IMAGE_SUFFIXES, SUPPORTED_SUFFIXES, open_media as Video, read_image
+from .media import IMAGE_SUFFIXES, SUPPORTED_SUFFIXES, open_media, read_image
 from .sensors import cloud_snapshot
 from .candidate_import import (prepare_candidate_import, merge_candidate_import,
                                merge_candidate_labels)
@@ -54,6 +54,11 @@ run_stop_event = threading.Event()
 run_task_id = None
 file_sessions_dirty = False
 DEFAULT_REVIEW_ROUNDS = 6
+
+
+def Video(path):
+    """Open local media with a content-invalidated metadata index."""
+    return open_media(path, WORK / "media_index")
 
 
 def _update_run_status_locked(**changes):
@@ -275,28 +280,56 @@ def _read_json(path):
         return json.load(handle)
 
 
-def _write_json(path, value, *, pretty=False, sort_keys=False):
+FAST_JSON_WRITE_LIMIT = 64 * 1024 * 1024
+
+
+def _write_json(path, value, *, pretty=False, sort_keys=False, fast=False):
     # Stream JSON directly to disk. State is deliberately compact because dense
-    # polygon points make pretty-printed workspaces several times larger.
+    # polygon points make pretty-printed workspaces several times larger.  For
+    # bounded workspaces, building one compact string avoids millions of tiny
+    # TextIO writes; large/unknown workspaces retain the low-memory stream path.
     with path.open("w", encoding="utf-8", newline="\n") as handle:
-        json.dump(value, handle, ensure_ascii=False, sort_keys=sort_keys,
-                  indent=2 if pretty else None,
-                  separators=None if pretty else (",", ":"))
+        options = dict(ensure_ascii=False, sort_keys=sort_keys,
+                       indent=2 if pretty else None,
+                       separators=None if pretty else (",", ":"))
+        if fast:
+            handle.write(json.dumps(value, **options))
+        else:
+            json.dump(value, handle, **options)
+
+
+def _fast_json_write_allowed(destination):
+    try:
+        return destination.is_file() and destination.stat().st_size <= FAST_JSON_WRITE_LIMIT
+    except OSError:
+        return False
 
 
 def save():
     global file_sessions_dirty
+    timings = {}
     sessions = state.get("file_sessions", {})
     sessions_path = file_sessions_path()
     if file_sessions_dirty or (sessions and not sessions_path.exists()):
         sessions_temporary = sessions_path.with_suffix(".tmp")
-        _write_json(sessions_temporary, sessions)
+        started = time.perf_counter()
+        _write_json(sessions_temporary, sessions,
+                    fast=_fast_json_write_allowed(sessions_path))
+        timings["sessions_write"] = round((time.perf_counter() - started) * 1000, 3)
+        started = time.perf_counter()
         _commit_work_file(sessions_temporary, sessions_path)
+        timings["sessions_commit"] = round((time.perf_counter() - started) * 1000, 3)
         file_sessions_dirty = False
     temporary = state_path().with_suffix(".tmp")
+    started = time.perf_counter()
     _write_json(temporary, {k: v for k, v in state.items()
-                            if k not in {"video", "file_sessions"}})
+                            if k not in {"video", "file_sessions"}},
+                fast=_fast_json_write_allowed(state_path()))
+    timings["state_write"] = round((time.perf_counter() - started) * 1000, 3)
+    started = time.perf_counter()
     _commit_work_file(temporary, state_path())
+    timings["state_commit"] = round((time.perf_counter() - started) * 1000, 3)
+    return timings
 
 
 def _canonical_json(value):
@@ -1671,7 +1704,9 @@ def file_list():
 
 def activate_file(item):
     global file_sessions_dirty
+    started = time.perf_counter()
     video = Video(item['path'])
+    media_opened = time.perf_counter()
     # Preserve each file's annotations and candidates when switching records.
     sessions = state.setdefault('file_sessions', {})
     fields = ('topic', 'truth', 'truths_by_topic', 'reference_frames', 'candidates', 'candidates_by_topic', 'agent_runs', 'agent_runs_by_topic', 'candidate_revisions', 'candidate_revisions_by_topic')
@@ -1686,8 +1721,18 @@ def activate_file(item):
     state.update(previous)
     if state['topic'] not in video.topics:
         state['topic'] = next(iter(video.topics), None)
-    save()
-    return _get_bootstrap_locked()
+    session_swapped = time.perf_counter()
+    save_timings = save()
+    state_saved = time.perf_counter()
+    payload = _get_bootstrap_locked()
+    payload["load_timings_ms"] = {
+        "media_open": round((media_opened - started) * 1000, 3),
+        "session_swap": round((session_swapped - media_opened) * 1000, 3),
+        "state_save": round((state_saved - session_swapped) * 1000, 3),
+        **save_timings,
+        "bootstrap": round((time.perf_counter() - state_saved) * 1000, 3),
+    }
+    return payload
 
 
 @app.get('/api/files')

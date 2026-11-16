@@ -2,6 +2,7 @@
 import io
 import hashlib
 import json
+import math
 from fractions import Fraction
 import threading
 from bisect import bisect_right
@@ -15,7 +16,9 @@ from .sensors import catalog, message_time
 
 
 class Video:
-    def __init__(self, path):
+    CATALOG_CACHE_VERSION = 1
+
+    def __init__(self, path, index_directory=None):
         self.path = Path(path)
         if not self.path.is_file() or self.path.suffix.lower() != ".mcap":
             raise ValueError("请选择存在的 .mcap 文件")
@@ -26,8 +29,76 @@ class Video:
         self._lock = threading.RLock()
         self._playback = {}
         self._playback_lock = threading.Lock()
-        self.catalog, self.origin_ns, self.duration = catalog(self.path)
+        cached = self._read_catalog_cache(index_directory)
+        if cached is None:
+            self.catalog, self.origin_ns, self.duration = catalog(self.path)
+            self._write_catalog_cache(index_directory)
+        else:
+            self.catalog, self.origin_ns, self.duration = cached
         self.topics = {topic: info for topic, info in self.catalog.items() if info['type'] == 'image'}
+
+    def _catalog_signature(self):
+        stat = self.path.stat()
+        return {
+            "version": self.CATALOG_CACHE_VERSION,
+            "path": str(self.path.resolve()),
+            "size": stat.st_size,
+            "mtime_ns": stat.st_mtime_ns,
+        }
+
+    def _catalog_cache_path(self, index_directory):
+        if index_directory is None:
+            return None
+        key = hashlib.sha256(str(self.path.resolve()).encode()).hexdigest()
+        return Path(index_directory) / f"{key}.json"
+
+    def _read_catalog_cache(self, index_directory):
+        target = self._catalog_cache_path(index_directory)
+        if target is None or not target.is_file() or target.stat().st_size > 1024 * 1024:
+            return None
+        try:
+            payload = json.loads(target.read_text(encoding="utf-8"))
+            if payload.get("signature") != self._catalog_signature():
+                return None
+            cached_catalog = payload.get("catalog")
+            origin_ns = payload.get("origin_ns")
+            duration = payload.get("duration")
+            if (not isinstance(cached_catalog, dict) or isinstance(origin_ns, bool)
+                    or not isinstance(origin_ns, int) or isinstance(duration, bool)
+                    or not isinstance(duration, (int, float))
+                    or not math.isfinite(duration) or duration < 0):
+                return None
+            for topic, info in cached_catalog.items():
+                if (not isinstance(topic, str) or not isinstance(info, dict)
+                        or info.get("type") not in {"image", "pointcloud", "other"}
+                        or isinstance(info.get("count"), bool)
+                        or not isinstance(info.get("count"), int)
+                        or info["count"] < 0):
+                    return None
+            return cached_catalog, origin_ns, float(duration)
+        except (OSError, ValueError, TypeError, json.JSONDecodeError):
+            return None
+
+    def _write_catalog_cache(self, index_directory):
+        target = self._catalog_cache_path(index_directory)
+        if target is None:
+            return
+        try:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            temporary = target.with_suffix(f".{threading.get_ident()}.tmp")
+            temporary.write_text(json.dumps({
+                "signature": self._catalog_signature(),
+                "catalog": self.catalog,
+                "origin_ns": self.origin_ns,
+                "duration": self.duration,
+            }, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+            temporary.replace(target)
+        except OSError:
+            # The index is an optimization only; media loading must still work.
+            try:
+                temporary.unlink(missing_ok=True)
+            except (OSError, UnboundLocalError):
+                pass
 
     @staticmethod
     def _image(data, payload):

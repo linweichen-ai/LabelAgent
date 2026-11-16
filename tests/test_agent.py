@@ -13,7 +13,7 @@ from unittest.mock import patch
 
 from PIL import Image
 
-from source.agent import server, workflow
+from source.agent import mcap_video, server, workflow
 from source.agent.edit_agent import (_hole_regions, _candidate_gap_regions, _shape_from_mask,
                                      _rasterize, _valid_region, apply_operations, valid_shape)
 
@@ -1269,6 +1269,43 @@ class FakeVideo:
 
 
 class ServerTests(unittest.TestCase):
+    def test_fast_and_streaming_json_writes_are_equivalent(self):
+        value = {"中文": [shape(), {"text": "斜坡", "value": 1.25}], "flag": True}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fast, streaming = root / "fast.json", root / "streaming.json"
+            server._write_json(fast, value, fast=True)
+            server._write_json(streaming, value, fast=False)
+            self.assertEqual(fast.read_bytes(), streaming.read_bytes())
+            self.assertEqual(json.loads(fast.read_text(encoding="utf-8")), value)
+            self.assertTrue(server._fast_json_write_allowed(fast))
+            oversized = root / "oversized.json"
+            with oversized.open("wb") as handle:
+                handle.truncate(server.FAST_JSON_WRITE_LIMIT + 1)
+            self.assertFalse(server._fast_json_write_allowed(oversized))
+            self.assertFalse(server._fast_json_write_allowed(root / "missing.json"))
+
+    def test_mcap_catalog_index_reuses_metadata_and_invalidates_on_file_change(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            recording = root / "sample.mcap"
+            recording.write_bytes(b"first-version")
+            metadata = ({"camera": {
+                "type": "image", "schema": "test.Image", "encoding": "protobuf",
+                "count": 3, "offset": 0.0, "log_offset": 0.0,
+            }}, 123, 2.5)
+            with patch.object(mcap_video, "catalog", return_value=metadata) as build:
+                first = mcap_video.Video(recording, root / "index")
+                second = mcap_video.Video(recording, root / "index")
+                self.assertEqual(build.call_count, 1)
+                self.assertEqual(first.catalog, second.catalog)
+                self.assertEqual(second.origin_ns, 123)
+                self.assertEqual(second.duration, 2.5)
+                recording.write_bytes(b"second-version-is-different")
+                third = mcap_video.Video(recording, root / "index")
+                self.assertEqual(build.call_count, 2)
+                self.assertEqual(third.catalog, metadata[0])
+
     def test_run_claim_rejects_concurrent_run_and_reference_draft(self):
         old_state, old_status, old_work = server.state, server.run_status, server.WORK
         old_task, old_stop = server.run_task_id, server.run_stop_event

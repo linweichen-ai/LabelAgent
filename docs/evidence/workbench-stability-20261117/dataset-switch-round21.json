@@ -1,0 +1,90 @@
+{
+  "round": 21,
+  "observed_at": "2026-11-17T10:30:00+08:00",
+  "scope": {
+    "runtime": "D:\\Apps\\LabelAgent",
+    "source_dataset": "SFL_CPD15Y_20261111/batchA_0920_000_clean_review.mcap",
+    "target_dataset": "CVAT_Task3_20261028/CVAT_Task3_original_annotations.mcap",
+    "target_frames": 150,
+    "writes_to_truth_or_candidates": false
+  },
+  "diagnosis": {
+    "old_target_switch_ms": 4194.854,
+    "old_restore_ms": 4173.521,
+    "cached_media_open_ms_before_state_write_fix": 0.653,
+    "old_state_save_ms": 3936.976,
+    "root_cause": "json.dump streamed dense polygon objects through many small TextIO writes",
+    "file_sessions_bytes": 27812933,
+    "active_state_bytes": 3422823
+  },
+  "change": {
+    "media_index": {
+      "location": "local work/media_index",
+      "invalidation": ["resolved path", "file size", "mtime_ns", "cache schema version"],
+      "survives_service_restart": true,
+      "writes_to_source_dataset": false
+    },
+    "state_write": {
+      "fast_limit_bytes": 67108864,
+      "bounded_compact_serialization": true,
+      "fallback_above_limit": "original low-memory streaming writer",
+      "atomic_commit_retained": true,
+      "response_before_commit": false
+    },
+    "timing_receipt": "load_timings_ms is returned by file activation"
+  },
+  "formal_five_cycle_result": {
+    "target_median_ms": 718.76,
+    "target_range_ms": [670.06, 777.78],
+    "restore_median_ms": 695.58,
+    "restore_range_ms": [683.33, 756.83],
+    "target_improvement_percent_vs_old": 82.87,
+    "restore_improvement_percent_vs_old": 83.33,
+    "media_open_range_ms": [0.747, 1.564],
+    "state_restored_exactly_each_cycle": true
+  },
+  "restart_acceptance": {
+    "target_ms": 721.65,
+    "target_media_open_ms": 0.926,
+    "restore_ms": 733.91,
+    "restore_media_open_ms": 0.886,
+    "state_restored_exactly": true
+  },
+  "index_miss_acceptance": {
+    "method": "moved the target index into the rollback directory, then loaded the target and restored the source",
+    "target_ms": 610.31,
+    "target_media_open_ms": 3.737,
+    "restore_ms": 506.54,
+    "old_index_sha256": "8CF15D6354AA54A5F526571D961250BCDAC24CE001D86B51AD96E7452847449F",
+    "rebuilt_index_sha256": "8CF15D6354AA54A5F526571D961250BCDAC24CE001D86B51AD96E7452847449F",
+    "index_readback_matches": true,
+    "note": "The source file was already warm in the operating-system file cache; this is an index-miss test, not a cold-disk benchmark."
+  },
+  "state_identity": {
+    "fields": ["path", "topic", "truth", "candidates", "agent_runs", "reference_frames"],
+    "restored_exactly": true,
+    "machine_candidates_promoted_to_truth": false,
+    "training_set_modified": false
+  },
+  "regression": {
+    "python": "129/129",
+    "web_polling": "10/10",
+    "candidate_and_human_gate": "60/60",
+    "diff_check": "passed"
+  },
+  "deployment": {
+    "runtime_status": "idle",
+    "model_readiness": "ready",
+    "run_readiness": "ready",
+    "runtime_matches_worktree": true,
+    "server_sha256": "0D0B39131F6E3EB09FED350FDCEA65CB4A176DBB5BA584D8D11F5492B1BAF9A1",
+    "mcap_video_sha256": "F33C34C3943BFE35B265468ECE0A13985537BE0CA50A75F344054F21662BD26F",
+    "media_sha256": "97A2DF3322BC3B740509521E19DBB63D47234FE46C0175920A5E3BD9FD6DA1AE",
+    "rollback": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-media-index-round21-20261117-102000"
+  },
+  "limits": {
+    "cold_disk_unseen_dataset_benchmarked": false,
+    "large_state_above_64_mib_uses_fast_path": false,
+    "model_accuracy_changed": false
+  }
+}

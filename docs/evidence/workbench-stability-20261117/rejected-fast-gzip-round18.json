@@ -1,0 +1,32 @@
+{
+  "schema_version": "labelagent.rejected-optimization.v1",
+  "round": 18,
+  "date": "2026-11-17",
+  "candidate": "gzip level 1 for JSON responses >= 16 KiB",
+  "payload": {
+    "endpoint": "/api/topic",
+    "plain_bytes": 1847928,
+    "gzip_bytes": 271598,
+    "transfer_reduction_percent": 85.3,
+    "byte_exact_after_decompression": true,
+    "json_equal_after_decompression": true
+  },
+  "formal_ab": {
+    "plain": {"requests": 30, "mean_ms": 33.852, "median_ms": 30.27, "p95_ms": 57.23, "min_ms": 21.425, "max_ms": 58.177},
+    "gzip": {"requests": 30, "mean_ms": 43.326, "median_ms": 43.143, "p95_ms": 48.275, "min_ms": 32.585, "max_ms": 48.974},
+    "median_regression_ms": 12.873,
+    "median_regression_percent": 42.53
+  },
+  "decision": "rejected_and_reverted",
+  "reason": "The browser and workbench server communicate over localhost. Transfer bytes dropped substantially, but compression CPU increased median response latency, so the candidate conflicts with the smoothness goal.",
+  "rollback_snapshot": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-fast-json-round18-20261117-084000",
+  "formal_readback_after_revert": {
+    "content_encoding": null,
+    "response_bytes": 1847928,
+    "workflow_readiness": "ready",
+    "models_ready": true,
+    "server_sha256": "562DB4C5C8D6FF538002103BD66AA1BBA81FC7B9B61508C4DB4B00634CA42228",
+    "formal_matches_worktree": true
+  },
+  "next_direction": "Reduce or lazily fetch geometry rather than compressing the same large JSON. Any client cache must retain server readback consistency and may not silently reuse stale annotations."
+}

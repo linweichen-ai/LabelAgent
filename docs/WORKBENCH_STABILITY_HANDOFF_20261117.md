@@ -324,3 +324,9 @@ Python 核心回归 122/122、相机切换专项 3/3、轮询 9/9、候选与人
 增加矩阵后轻量摘要为 1,361 字节，仍不含轮廓、候选和 Agent 轨迹。正式热态 50 次读取平均 8.94 ms、中位 6.42 ms、P95 8.68 ms；最大 122.46 ms 是单次离群值。Python 核心与相机专项 125/125、轮询 9/9、候选与人工门禁 60/60，正式 SAM、VLM、流程均 ready，运行状态 idle，正式与开发哈希一致。
 
 回滚点：`D:\Apps\LabelAgent\.local\backups\workbench-camera-readiness-round17-20261117-082000`。完整证据见 [第十七轮逐相机就绪矩阵](evidence/workbench-stability-20261117/camera-readiness-round17.json)。下一步继续减少真正切换相机时 1.85 MB 完整标注层的重复传输与解析，但必须保留服务器读回一致性，不能用浏览器旧缓存冒充当前状态。
+
+## 第十八轮快速压缩实验（已否决并回滚，2026-11-17）
+
+对 `/api/topic` 的 1,847,928 字节响应做 gzip level 1 可压到 271,598 字节，传输量下降 85.3%，解压后字节和 JSON 都完全一致。但正式本机 A/B 各 30 次显示：未压缩中位 30.27 ms，压缩中位 43.14 ms，反而慢 12.87 ms（42.5%）。原因是浏览器与工作台都在本机，压缩 CPU 成本大于网络收益。
+
+该候选已从开发代码和正式服务完全撤回；正式 `Content-Encoding` 为空，服务端哈希恢复为第十七轮版本，SAM、VLM、流程均 ready。实验前回滚快照为 `D:\Apps\LabelAgent\.local\backups\workbench-fast-json-round18-20261117-084000`，结构化负结果见 [第十八轮压缩否决证据](evidence/workbench-stability-20261117/rejected-fast-gzip-round18.json)。下一步只考虑减少/按需读取几何内容，不再压缩同一份大 JSON。

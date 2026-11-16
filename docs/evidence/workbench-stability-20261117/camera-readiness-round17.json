@@ -1,0 +1,59 @@
+{
+  "schema_version": "labelagent.optimization-evidence.v1",
+  "round": 17,
+  "date": "2026-11-17",
+  "change": "per-camera readiness matrix in lightweight guide state",
+  "formal_workspace": {
+    "active_topic": "/capture/camera_1/image",
+    "image_topics": 4,
+    "ready_topics": 1,
+    "topics": {
+      "/capture/camera_0/image": {"count": 152, "code": "reference_missing", "ready": false},
+      "/capture/camera_1/image": {
+        "count": 152,
+        "reference_frame": 0,
+        "truth_present": true,
+        "human_truth_verified": true,
+        "description_ready": true,
+        "code": "ready",
+        "ready": true
+      },
+      "/capture/camera_2/image": {"count": 152, "code": "reference_missing", "ready": false},
+      "/capture/camera_3/image": {"count": 152, "code": "reference_missing", "ready": false}
+    }
+  },
+  "lightweight_summary": {
+    "response_bytes": 1361,
+    "warm_requests": 50,
+    "mean_ms": 8.942,
+    "median_ms": 6.418,
+    "p95_ms": 8.682,
+    "min_ms": 5.938,
+    "max_ms": 122.455,
+    "note": "Measurements include local PowerShell HTTP handling. One 122.455 ms outlier raises the mean; median and p95 represent the steady state."
+  },
+  "ui_behavior": {
+    "shows_ready_count": "相机就绪 1/4",
+    "missing_description_guidance": "open the locked reference and focus the generate-description action",
+    "background_endpoint_contains_geometry": false,
+    "background_endpoint_contains_candidates": false,
+    "background_endpoint_contains_agent_trace": false
+  },
+  "tests": {
+    "python_core_and_topic_selection": {"passed": 125, "failed": 0},
+    "web_polling": {"passed": 9, "failed": 0},
+    "candidate_human_gate": {"passed": 60, "failed": 0},
+    "javascript_syntax": "passed",
+    "diff_check": "passed"
+  },
+  "formal_readback": {
+    "workflow_readiness": "ready",
+    "models_ready": true,
+    "run_status": "idle",
+    "server_sha256": "562DB4C5C8D6FF538002103BD66AA1BBA81FC7B9B61508C4DB4B00634CA42228",
+    "guide_js_sha256": "8F0A01B00C40B7AC2AF80378D5C7C8E3402137D5124F5562335AF863029A20B1",
+    "formal_matches_worktree": true
+  },
+  "rollback": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-camera-readiness-round17-20261117-082000",
+  "evidence_boundary": "Readiness reports existing evidence; it does not create references, truth, descriptions, candidates, or training data. camera_0, camera_2, and camera_3 remain explicitly unprepared."
+}

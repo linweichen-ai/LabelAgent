@@ -2230,6 +2230,11 @@ class ServerTests(unittest.TestCase):
                 self.assertEqual(restored.json["description"], camera0)
                 self.assertEqual(client.get("/api/state").json["description"], camera0)
                 self.assertTrue(client.get("/api/run/readiness").json["ready"])
+                readiness = client.get("/api/state/summary").json["topic_readiness"]
+                self.assertTrue(readiness["camera0"]["ready"])
+                self.assertTrue(readiness["camera1"]["ready"])
+                self.assertEqual(readiness["camera0"]["reference_frame"], 0)
+                self.assertFalse(readiness["camera0"]["human_truth_verified"])
 
                 cache_files = list((server.WORK / "descriptions").glob("*.json"))
                 self.assertEqual(len(cache_files), 2)

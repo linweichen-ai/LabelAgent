@@ -144,6 +144,10 @@
     latest.job = job;
     const loaded = Boolean(state?.loaded);
     const topic = state?.topic || '';
+    const topicReadiness = state?.topic_readiness || {};
+    const currentTopicReadiness = topicReadiness[topic] || null;
+    const readyTopicCount = Object.values(topicReadiness).filter(item => item?.ready).length;
+    const imageTopicCount = Object.keys(topicReadiness).length;
     const frame = Number(byId('frameNumber')?.value || 0);
     const reference = state?.reference_frames?.[topic]?.[0];
     const candidateKeys = objectKeys(state?.candidate_counts);
@@ -182,11 +186,11 @@
 
     setStep('frame', loaded ? 'done' : 'active');
     setStep('reference', !loaded ? 'blocked' : reference !== undefined ? 'done' : 'active');
-    setStep('run', !loaded || reference === undefined ? 'blocked' : hasCandidate || hasTruth ? 'done' : 'active');
+    setStep('run', !loaded || reference === undefined || currentTopicReadiness?.ready === false ? 'blocked' : hasCandidate || hasTruth ? 'done' : 'active');
     setStep('review', !loaded || reference === undefined ? 'blocked' : hasTruth ? 'done' : hasCandidate || hasLegacyTruth ? 'active' : 'blocked');
 
     detail.textContent = loaded
-      ? `${compactTopic(topic)} · 第 ${frame} 帧${currentCandidateCount ? ` · 当前帧候选 ${currentCandidateCount} 个` : ''} · 首次演示建议只处理 1 帧`
+      ? `${compactTopic(topic)} · 第 ${frame} 帧${currentCandidateCount ? ` · 当前帧候选 ${currentCandidateCount} 个` : ''}${imageTopicCount ? ` · 相机就绪 ${readyTopicCount}/${imageTopicCount}` : ''} · 首次演示建议只处理 1 帧`
       : '先加载一段图像或 MCAP 数据，再开始单帧演示。';
 
     if (!loaded) {
@@ -207,6 +211,10 @@
           : '下一步：可直接一键自动起稿，完成后只需检查确认';
       action.textContent = referenceReviewActive ? '继续检查当前候选' : hasLegacyTruth ? '载入历史标注并复核' : hasCandidate ? '复用当前帧候选' : '准备参考帧';
       latest.action = referenceReviewActive ? 'reference_review' : hasCandidate && !hasLegacyTruth ? 'reference_candidate' : 'reference';
+    } else if (currentTopicReadiness && !currentTopicReadiness.description_ready) {
+      title.textContent = '参考帧已锁定，还需生成一次该相机的场景描述';
+      action.textContent = '打开参考帧并生成描述';
+      latest.action = 'description';
     } else if (hasCandidate && !hasTruth) {
       title.textContent = '机器候选已生成，等待人工检查边界和类别';
       action.textContent = '查看候选并复核';
@@ -530,6 +538,13 @@
     else if (latest.action === 'reference') {
       showWorkbench('auto');
       byId('prepareReference')?.click();
+    } else if (latest.action === 'description') {
+      showWorkbench('auto');
+      byId('openReferenceButton')?.click();
+      window.setTimeout(() => {
+        byId('describeButton')?.scrollIntoView({behavior: 'smooth', block: 'center'});
+        byId('describeButton')?.focus({preventScroll: true});
+      }, 260);
     } else if (latest.action === 'next_unprocessed') {
       const input = byId('frameNumber');
       const current = Number(input?.value) || 0;

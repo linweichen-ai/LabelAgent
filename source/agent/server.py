@@ -589,23 +589,26 @@ def _legacy_shape_source_counts(shapes):
     return counts
 
 
-def current_truth_review_status():
+def truth_review_status_for(selected_topic, truth_by_frame, records=None):
     """Derive whether current truth is bound to the current human-review contract.
 
     Legacy imports remain useful as editable drafts, but only a committed v2 review
     whose exact truth hash still matches may be reused directly as a reference.
     """
-    if state.get("video") is None or not state.get("topic"):
+    if state.get("video") is None or not selected_topic:
         return {}
     video_file = str(getattr(state["video"], "path", state.get("video_path", "")))
-    selected_topic = state["topic"]
     transactions = state.get("human_review_transactions", {})
     reviews_by_frame = {}
-    for record in human_review_records(video_file=video_file, topic=selected_topic):
+    source_records = (records if records is not None
+                      else human_review_records(video_file=video_file, topic=selected_topic))
+    for record in source_records:
+        if record.get("file") != video_file or record.get("topic") != selected_topic:
+            continue
         if record.get("decision") in TRUTH_ACCEPT_DECISIONS:
             reviews_by_frame.setdefault(str(record.get("frame")), []).append(record)
     result = {}
-    for frame_key, truth in state.get("truth", {}).items():
+    for frame_key, truth in (truth_by_frame or {}).items():
         truth_hash = _sha256_json(truth)
         records = reviews_by_frame.get(str(frame_key), [])
         record = records[-1] if records else None
@@ -644,6 +647,10 @@ def current_truth_review_status():
             "checks": checks,
         }
     return result
+
+
+def current_truth_review_status():
+    return truth_review_status_for(state.get("topic"), state.get("truth", {}))
 
 
 def _review_status_key(frame):
@@ -972,15 +979,32 @@ def frame_image(index):
     return state["video"].frame(state["topic"], index)
 
 
-def reference_signature(index):
+def selected_auto_labels_for_truth(reference_truth):
+    available = state.get("labels") or list(dict.fromkeys(
+        shape.get("label") for shape in reference_truth if shape.get("label")))
+    reference_only = reference_labels(reference_truth, available)
+    selected = state.get("auto_labels")
+    if not selected:
+        return reference_only
+    if (not isinstance(selected, list) or len(selected) != len(set(selected))
+            or any(label not in available for label in selected)):
+        raise ValueError("自动标注类别与类别列表不一致，请重新选择")
+    return [label for label in available if label in selected]
+
+
+def reference_signature_for(index, topic, reference_truth):
     video_file = str(getattr(state["video"], "path", state.get("video_path", "")))
-    reference = {"file": video_file, "topic": state["topic"], "frame": index,
+    reference = {"file": video_file, "topic": topic, "frame": index,
                  "description_input_version": DESCRIPTION_INPUT_VERSION,
                  "prompt_profile": state.get("config", {}).get("llm_prompt_profile", "full"),
-                 "auto_labels": selected_auto_labels(index),
-                 "truth": state["truth"][str(index)]}
+                 "auto_labels": selected_auto_labels_for_truth(reference_truth),
+                 "truth": reference_truth}
     payload = json.dumps(reference, ensure_ascii=False, sort_keys=True)
     return hashlib.sha256(payload.encode()).hexdigest()
+
+
+def reference_signature(index):
+    return reference_signature_for(index, state["topic"], state["truth"][str(index)])
 
 
 def description_cache_path(signature):
@@ -1036,6 +1060,71 @@ def save_reference_description(description):
     _commit_work_file(legacy_temporary, legacy_path)
 
 
+def topic_truth(topic):
+    if topic == state.get("topic"):
+        return state.get("truth", {})
+    return state.get("truths_by_topic", {}).get(topic, {})
+
+
+def topic_description_ready(topic, reference, truth_by_frame):
+    reference_truth = truth_by_frame.get(str(reference))
+    if not isinstance(reference_truth, list) or not reference_truth:
+        return False
+    try:
+        signature = reference_signature_for(reference, topic, reference_truth)
+        if topic == state.get("topic"):
+            return load_reference_description(reference) is not None
+        path = description_cache_path(signature)
+        if not path.exists():
+            return False
+        saved = _read_json(path)
+        return (isinstance(saved, dict)
+                and saved.get("reference_signature") == signature)
+    except (OSError, ValueError, TypeError, KeyError):
+        return False
+
+
+def topic_readiness_summary():
+    if state.get("video") is None:
+        return {}
+    video_file = str(getattr(state["video"], "path", state.get("video_path", "")))
+    records = human_review_records(video_file=video_file)
+    output = {}
+    for topic, metadata in state["video"].topics.items():
+        catalog = getattr(state["video"], "catalog", {}) or {}
+        kind = (catalog.get(topic) or metadata or {}).get("type")
+        if kind not in (None, "image"):
+            continue
+        references = state.get("reference_frames", {}).get(topic, [])
+        reference = references[0] if references else None
+        truth_by_frame = topic_truth(topic)
+        truth_present = (reference is not None
+                         and bool(truth_by_frame.get(str(reference))))
+        review_status = truth_review_status_for(topic, truth_by_frame, records)
+        human_verified = bool(reference is not None and
+            review_status.get(str(reference), {}).get("reusable_as_reference") is True)
+        description_ready = bool(reference is not None and truth_present
+            and topic_description_ready(topic, reference, truth_by_frame))
+        if reference is None:
+            code = "reference_missing"
+        elif not truth_present:
+            code = "reference_truth_missing"
+        elif not description_ready:
+            code = "description_missing"
+        else:
+            code = "ready"
+        output[topic] = {
+            "count": int((metadata or {}).get("count", 0)),
+            "reference_frame": reference,
+            "truth_present": truth_present,
+            "human_truth_verified": human_verified,
+            "description_ready": description_ready,
+            "ready": code == "ready",
+            "code": code,
+        }
+    return output
+
+
 def overlay(index, labels=None):
     shapes = state["truth"].get(str(index), [])
     if labels is not None:
@@ -1045,16 +1134,7 @@ def overlay(index, labels=None):
 
 def selected_auto_labels(reference):
     """Return an explicit non-empty subset of configured inference labels."""
-    available = state.get("labels") or list(dict.fromkeys(
-        shape.get("label") for shape in state["truth"][str(reference)] if shape.get("label")))
-    reference_only = reference_labels(state["truth"][str(reference)], available)
-    selected = state.get("auto_labels")
-    if not selected:
-        return reference_only
-    if (not isinstance(selected, list) or len(selected) != len(set(selected))
-            or any(label not in available for label in selected)):
-        raise ValueError("自动标注类别与类别列表不一致，请重新选择")
-    return [label for label in available if label in selected]
+    return selected_auto_labels_for_truth(state["truth"][str(reference)])
 
 
 def merge_inference_candidates(existing, generated, selected_labels, *, return_id_map=False):
@@ -1260,6 +1340,7 @@ def get_state_summary():
                 if truth_review_status.get(str(frame), {}).get("reusable_as_reference") is True
             ],
             candidate_counts=candidate_counts,
+            topic_readiness=topic_readiness_summary(),
         )
 
 

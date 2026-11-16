@@ -1,0 +1,82 @@
+{
+  "round": 19,
+  "observed_at": "2026-11-17T09:20:00+08:00",
+  "scope": {
+    "runtime": "D:\\Apps\\LabelAgent",
+    "url": "http://127.0.0.1:8765",
+    "dataset": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap",
+    "topic": "/capture/camera_1/image",
+    "frames": 152
+  },
+  "change": {
+    "summary": "Topic activation and frame navigation now fetch only the selected frame's truth, candidates, agent run, revisions, review proposals, and canonical bindings.",
+    "compact_topic_endpoint": "/api/topic with compact=true and frame",
+    "lazy_frame_endpoint": "/api/frame_state/<frame>",
+    "scope_guard": [
+      "dataset path",
+      "topic",
+      "frame",
+      "request generation"
+    ],
+    "browser_retention": "compact mode retains geometry for the selected frame only"
+  },
+  "formal_ab_20_requests_each": {
+    "full_topic": {
+      "bytes": 1847928,
+      "median_ms": 45.042,
+      "p95_ms": 60.513
+    },
+    "compact_topic_frame_0": {
+      "bytes": 106356,
+      "median_ms": 23.182,
+      "p95_ms": 31.061
+    },
+    "response_body_reduction_percent": 94.24,
+    "median_latency_reduction_percent": 48.53
+  },
+  "formal_frame_state_samples": [
+    {"frame": 0, "bytes": 104850, "elapsed_ms": 7.325, "truth": true, "candidate_sets": 0},
+    {"frame": 1, "bytes": 65160, "elapsed_ms": 29.262, "truth": false, "candidate_sets": 1},
+    {"frame": 50, "bytes": 336, "elapsed_ms": 23.789, "truth": false, "candidate_sets": 0},
+    {"frame": 101, "bytes": 337, "elapsed_ms": 1.851, "truth": false, "candidate_sets": 0},
+    {"frame": 151, "bytes": 337, "elapsed_ms": 1.689, "truth": false, "candidate_sets": 0}
+  ],
+  "browser_acceptance": {
+    "browser": "Microsoft Edge headless",
+    "passed": true,
+    "cold_page_ms": 1266,
+    "enter_annotation_ms": 69,
+    "navigation_sequence": [50, 1, 101, 151, 50],
+    "navigation_elapsed_ms": [103, 90, 217, 219, 172],
+    "page_errors": 0,
+    "console_errors": 0,
+    "failed_requests": 0,
+    "http_errors": 0,
+    "stale_geometry_observed_after_fix": false,
+    "screenshot": "lazy-frame-workbench-round19.png",
+    "raw_receipt": "lazy-frame-browser-round19.json"
+  },
+  "regression": {
+    "python": "126/126",
+    "web_polling": "10/10",
+    "candidate_and_human_gate": "60/60",
+    "javascript_syntax": "passed",
+    "diff_check": "passed"
+  },
+  "deployment": {
+    "runtime_status": "idle",
+    "model_readiness": "ready",
+    "run_readiness": "ready",
+    "server_sha256": "DEA53B25D989FA029EB41D1B6BA9BAEFF35647CB112D30FD5124D1D9CBC99877",
+    "web_app_sha256": "C6764F4D6598FC6E1FB1950854E9374FF89C9726460DDB0C73544E4152E0AF85",
+    "web_index_sha256": "75BA9A62B3D41EA43ABA22829572659BD595DE683E4B617511441CC3BADF9943",
+    "runtime_matches_worktree": true,
+    "rollback": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-lazy-frame-round19-20261117-090000"
+  },
+  "safety_boundary": {
+    "machine_candidates_promoted_to_truth": false,
+    "training_set_modified": false,
+    "human_review_gate_changed": false,
+    "camera3_reference_status": "reference_missing"
+  }
+}

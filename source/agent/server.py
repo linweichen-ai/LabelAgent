@@ -320,25 +320,27 @@ def _candidate_fingerprint_or_none(candidate):
         return None
 
 
+def candidate_review_binding(candidates):
+    if not isinstance(candidates, list) or not candidates:
+        return None
+    return {
+        "candidate_artifact_sha256": _sha256_json(candidates),
+        "candidates": [
+            {
+                "candidate_id": candidate.get("id"),
+                "candidate_sha256": _sha256_json(candidate),
+                "candidate_fingerprint": _candidate_fingerprint_or_none(candidate),
+                "candidate_fingerprint_sha256": _candidate_fingerprint_or_none(candidate),
+            }
+            for candidate in candidates
+        ],
+    }
+
+
 def candidate_review_bindings():
     """Return server-canonical hashes so browsers never reinterpret JSON numbers."""
-    bindings = {}
-    for frame, candidates in state.get("candidates", {}).items():
-        if not isinstance(candidates, list) or not candidates:
-            continue
-        bindings[str(frame)] = {
-            "candidate_artifact_sha256": _sha256_json(candidates),
-            "candidates": [
-                {
-                    "candidate_id": candidate.get("id"),
-                    "candidate_sha256": _sha256_json(candidate),
-                    "candidate_fingerprint": _candidate_fingerprint_or_none(candidate),
-                    "candidate_fingerprint_sha256": _candidate_fingerprint_or_none(candidate),
-                }
-                for candidate in candidates
-            ],
-        }
-    return bindings
+    return {str(frame): binding for frame, candidates in state.get("candidates", {}).items()
+            if (binding := candidate_review_binding(candidates)) is not None}
 
 
 TRUTH_ACCEPT_DECISIONS = {
@@ -1264,6 +1266,52 @@ def candidate_revision_summary():
             for frame, revisions in state.get("candidate_revisions", {}).items()}
 
 
+def selected_frame_payload(index):
+    """Return one frame's mutable layers with their server-canonical bindings."""
+    key = str(index)
+    truth = state.get("truth", {})
+    candidates = state.get("candidates", {})
+    agent_runs = state.get("agent_runs", {})
+    revisions = candidate_revision_summary()
+    review_status = truth_review_status_for(
+        state.get("topic"), {key: truth[key]} if key in truth else {})
+    binding = candidate_review_binding(candidates.get(key))
+    proposals = [copy.deepcopy(item)
+                 for item in state.get("candidate_review_proposals", [])
+                 if (item.get("file") == str(state["video"].path)
+                     and item.get("topic") == state.get("topic")
+                     and item.get("frame") == index)]
+    return {
+        "truth": {key: copy.deepcopy(truth[key])} if key in truth else {},
+        "truth_review_status": review_status,
+        "candidates": {key: copy.deepcopy(candidates[key])} if key in candidates else {},
+        "agent_runs": {key: copy.deepcopy(agent_runs[key])} if key in agent_runs else {},
+        "candidate_revision_summary": {key: copy.deepcopy(revisions[key])}
+            if key in revisions else {},
+        "candidate_review_proposals": proposals,
+        "candidate_review_bindings": {key: binding} if binding is not None else {},
+    }
+
+
+def compact_topic_payload(index, description):
+    payload = selected_frame_payload(index)
+    payload.update({
+        "compact_geometry": True,
+        "path": str(state["video"].path),
+        "topic": state["topic"],
+        "frame": index,
+        "truth_frames": sorted(state.get("truth", {}), key=lambda value: int(value)),
+        "candidate_counts": {
+            str(frame): len(items) if isinstance(items, list) else 0
+            for frame, items in state.get("candidates", {}).items()
+        },
+        "reference_frames": copy.deepcopy(state.get("reference_frames", {})),
+        "description": copy.deepcopy(description),
+        "description_cache_hit": description is not None,
+    })
+    return payload
+
+
 def reference_candidate_event_id(candidate_request_id, candidate_output_sha256):
     """Bind a candidate event to both the stable request and actual model output."""
     return _sha256_json({"event": "reference_draft_candidate.v2",
@@ -1376,6 +1424,27 @@ def _get_state_locked():
 def get_frame(index):
     data = state["video"].frame(request.args.get("topic", state["topic"]), index)
     return send_file(io.BytesIO(data), mimetype="image/png" if data.startswith(b"\x89PNG") else "image/jpeg", max_age=0)
+
+
+@app.get("/api/frame_state/<int:index>")
+def get_frame_state(index):
+    """Read one frame's geometry after a compact topic activation."""
+    with lock:
+        if state.get("video") is None or not state.get("topic"):
+            raise ValueError("请先加载图像数据")
+        requested_topic = request.args.get("topic")
+        requested_path = request.args.get("path")
+        if requested_topic != state["topic"]:
+            raise StaleHumanReviewError("相机已变化，拒绝返回旧帧标注")
+        if requested_path != str(state["video"].path):
+            raise StaleHumanReviewError("数据文件已变化，拒绝返回旧帧标注")
+        count = state["video"].topics[state["topic"]]["count"]
+        if not 0 <= index < count:
+            raise ValueError("帧号无效")
+        payload = selected_frame_payload(index)
+        payload.update(path=str(state["video"].path), topic=state["topic"],
+                       frame=index, compact_geometry=True)
+        return jsonify(payload)
 
 
 @app.get("/api/downstream_projection/<int:index>")
@@ -1903,6 +1972,13 @@ def set_topic():
         description = (load_reference_description(topic_references[0])
                        if topic_references and state.get("truth", {}).get(str(topic_references[0]))
                        else None)
+        if body.get("compact") is True:
+            if type(body.get("frame")) is not int:
+                raise ValueError("按需切换相机必须包含整数 frame")
+            count = state["video"].topics[state["topic"]]["count"]
+            if not 0 <= body["frame"] < count:
+                raise ValueError("帧号无效")
+            return jsonify(compact_topic_payload(body["frame"], description))
         return jsonify(topic=state["topic"], truth=state["truth"],
                        truth_review_status=current_truth_review_status(),
                        candidates=state["candidates"], agent_runs=state["agent_runs"],

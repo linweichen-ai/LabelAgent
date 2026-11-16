@@ -2243,6 +2243,51 @@ class ServerTests(unittest.TestCase):
             finally:
                 server.state, server.WORK = previous_state, previous_work
 
+    def test_compact_topic_switch_loads_only_selected_frame_and_guards_lazy_reads(self):
+        previous_state, previous_work = server.state, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            dense = [shape(index + 1) for index in range(240)]
+            server.state = {
+                "video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                "truth": {"0": [shape()], "2": [shape(2)]},
+                "truths_by_topic": {"camera1": {}}, "reference_frames": {},
+                "config": {}, "candidates": {"1": dense, "2": [shape(3)]},
+                "candidates_by_topic": {}, "agent_runs": {"1": {"rounds": 2}},
+                "agent_runs_by_topic": {}, "candidate_revisions": {},
+                "candidate_revisions_by_topic": {}, "human_review_transactions": {},
+            }
+            try:
+                client = server.app.test_client()
+                full = client.post("/api/topic", json={"topic": "camera0"})
+                compact = client.post("/api/topic", json={
+                    "topic": "camera0", "frame": 0, "compact": True})
+                self.assertEqual(compact.status_code, 200, compact.json)
+                self.assertTrue(compact.json["compact_geometry"])
+                self.assertEqual(compact.json["frame"], 0)
+                self.assertEqual(compact.json["truth"], {"0": [shape()]})
+                self.assertEqual(compact.json["candidates"], {})
+                self.assertEqual(compact.json["truth_frames"], ["0", "2"])
+                self.assertEqual(compact.json["candidate_counts"], {"1": 240, "2": 1})
+                self.assertLess(len(compact.data), len(full.data) * 0.05)
+
+                lazy = client.get("/api/frame_state/1", query_string={
+                    "topic": "camera0", "path": str(FakeVideo.path)})
+                self.assertEqual(lazy.status_code, 200, lazy.json)
+                self.assertEqual(len(lazy.json["candidates"]["1"]), 240)
+                self.assertEqual(lazy.json["agent_runs"], {"1": {"rounds": 2}})
+                binding = lazy.json["candidate_review_bindings"]["1"]
+                self.assertEqual(len(binding["candidates"]), 240)
+
+                stale = client.get("/api/frame_state/1", query_string={
+                    "topic": "camera1", "path": str(FakeVideo.path)})
+                self.assertEqual(stale.status_code, 409)
+                wrong_file = client.get("/api/frame_state/1", query_string={
+                    "topic": "camera0", "path": "/tmp/other.mcap"})
+                self.assertEqual(wrong_file.status_code, 409)
+            finally:
+                server.state, server.WORK = previous_state, previous_work
+
     def test_describe_releases_state_lock_and_rejects_stale_completion(self):
         old_state, old_status, old_work, old_stop = (
             server.state, server.run_status, server.WORK, server.run_stop_event)

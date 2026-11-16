@@ -1,0 +1,102 @@
+{
+  "page_errors": [],
+  "console_errors": [],
+  "failed_requests": [],
+  "http_errors": [],
+  "responses": [
+    {
+      "url": "/api//topic",
+      "status": 200,
+      "bytes": 106356
+    },
+    {
+      "url": "/api//frame_state/50?topic=%2Fcapture%2Fcamera_1%2Fimage&path=D%3A%5CApps%5CLabelAgent%5Cwork%5Cdatasets%5CSFL_CPD15Y_20261111%5CbatchA_0920_000_clean_review.mcap",
+      "status": 200,
+      "bytes": 336
+    },
+    {
+      "url": "/api//frame_state/1?topic=%2Fcapture%2Fcamera_1%2Fimage&path=D%3A%5CApps%5CLabelAgent%5Cwork%5Cdatasets%5CSFL_CPD15Y_20261111%5CbatchA_0920_000_clean_review.mcap",
+      "status": 200,
+      "bytes": 65160
+    },
+    {
+      "url": "/api//frame_state/101?topic=%2Fcapture%2Fcamera_1%2Fimage&path=D%3A%5CApps%5CLabelAgent%5Cwork%5Cdatasets%5CSFL_CPD15Y_20261111%5CbatchA_0920_000_clean_review.mcap",
+      "status": 200,
+      "bytes": 337
+    },
+    {
+      "url": "/api//frame_state/151?topic=%2Fcapture%2Fcamera_1%2Fimage&path=D%3A%5CApps%5CLabelAgent%5Cwork%5Cdatasets%5CSFL_CPD15Y_20261111%5CbatchA_0920_000_clean_review.mcap",
+      "status": 200,
+      "bytes": 337
+    },
+    {
+      "url": "/api//frame_state/50?topic=%2Fcapture%2Fcamera_1%2Fimage&path=D%3A%5CApps%5CLabelAgent%5Cwork%5Cdatasets%5CSFL_CPD15Y_20261111%5CbatchA_0920_000_clean_review.mcap",
+      "status": 200,
+      "bytes": 336
+    }
+  ],
+  "frames": [
+    {
+      "frame": 50,
+      "truth_keys": [],
+      "candidate_keys": [],
+      "selected_count": 0,
+      "candidate_count": 0,
+      "compactGeometryMode": true,
+      "elapsed_ms": 103
+    },
+    {
+      "frame": 1,
+      "truth_keys": [],
+      "candidate_keys": [
+        "1"
+      ],
+      "selected_count": 11,
+      "candidate_count": 11,
+      "compactGeometryMode": true,
+      "elapsed_ms": 90
+    },
+    {
+      "frame": 101,
+      "truth_keys": [],
+      "candidate_keys": [],
+      "selected_count": 0,
+      "candidate_count": 0,
+      "compactGeometryMode": true,
+      "elapsed_ms": 217
+    },
+    {
+      "frame": 151,
+      "truth_keys": [],
+      "candidate_keys": [],
+      "selected_count": 0,
+      "candidate_count": 0,
+      "compactGeometryMode": true,
+      "elapsed_ms": 219
+    },
+    {
+      "frame": 50,
+      "truth_keys": [],
+      "candidate_keys": [],
+      "selected_count": 0,
+      "candidate_count": 0,
+      "compactGeometryMode": true,
+      "elapsed_ms": 172
+    }
+  ],
+  "cold_page_ms": 1266,
+  "enter_annotation_ms": 69,
+  "initial": {
+    "compactGeometryMode": true,
+    "frame": 0,
+    "truth_keys": [
+      "0"
+    ],
+    "candidate_keys": [],
+    "truth_index": 1,
+    "candidate_index": 29,
+    "topic": "/capture/camera_1/image",
+    "path": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap"
+  },
+  "passed": true
+}

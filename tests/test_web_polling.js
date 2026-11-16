@@ -259,3 +259,36 @@ test('参考帧描述失效时预检阻止提交长推理', async () => {
   h.run(section(source('app.js'), 'async function ensureAutoLabelReadiness', "$('runButton').onclick"));
   await assert.rejects(() => h.context.ensureAutoLabelReadiness(), /流程：参考帧 0 的描述已失效/);
 });
+
+test('按需帧标注严格绑定文件相机帧并只替换目标帧', () => {
+  const h = harness();
+  h.run(`let topic='/camera0',loadedDataPath='/data/a.mcap',frameLoadGeneration=1;
+    let shapes={},truthReviewStatus={},candidates={'2':[{'id':'old'}],'3':[{'id':'keep'}]},agentRuns={'2':{'rounds':1}},candidateReviewBindings={'2':{'old':true}},candidateReviewProposals=[
+      {file:'/data/a.mcap',topic:'/camera0',frame:2,proposal_id:'old'},
+      {file:'/data/a.mcap',topic:'/camera0',frame:3,proposal_id:'keep'}];
+    let truthFrameIndex=new Set(),candidateCountIndex={};`);
+  h.run(section(source('app.js'), 'function applyCompactFrameState', 'const viewedFrameStorageKey'));
+  const payload = {
+    compact_geometry: true, path: '/data/a.mcap', topic: '/camera0', frame: 2,
+    truth: {'2': [{label: 'floor'}]},
+    truth_review_status: {'2': {reusable_as_reference: true}},
+    candidates: {}, agent_runs: {}, candidate_review_bindings: {},
+    candidate_review_proposals: [{file: '/data/a.mcap', topic: '/camera0', frame: 2, proposal_id: 'new'}],
+    truth_frames: ['2'], candidate_counts: {'2': 0, '3': 5},
+  };
+  h.context.payload = payload;
+  h.run('applyCompactFrameState(payload,2)');
+  const result = JSON.parse(h.run(`JSON.stringify({shapes,truthReviewStatus,candidates,agentRuns,
+    candidateReviewBindings,candidateReviewProposals,truthFrames:[...truthFrameIndex],candidateCountIndex})`));
+  assert.equal(result.shapes['2'][0].label, 'floor');
+  assert.equal(result.truthReviewStatus['2'].reusable_as_reference, true);
+  assert.equal(result.candidates['2'], undefined);
+  assert.deepEqual(result.candidates['3'], [{id: 'keep'}]);
+  assert.equal(result.agentRuns['2'], undefined);
+  assert.deepEqual(result.truthFrames, ['2']);
+  assert.deepEqual(result.candidateCountIndex, {'2': 0, '3': 5});
+  assert.deepEqual(result.candidateReviewProposals.map(item => item.proposal_id).sort(), ['keep', 'new']);
+  assert.throws(() => h.run(`applyCompactFrameState({...payload,topic:'/camera1'},2)`), /不一致/);
+  assert.throws(() => h.run(`applyCompactFrameState({...payload,path:'/data/b.mcap'},2)`), /不一致/);
+  assert.throws(() => h.run(`applyCompactFrameState({...payload,frame:3},2)`), /不一致/);
+});

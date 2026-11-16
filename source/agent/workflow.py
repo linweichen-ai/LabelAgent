@@ -1569,13 +1569,16 @@ def filter_slope_candidate_geometry(shapes, image_height, minimum_width_height_r
     return retained, suppressed
 
 
-def filter_slope_pallet_conflicts(shapes, width, height, maximum_slope_covered=0.5):
-    """Reject a slope draft when an independently generated pallet covers it."""
+def filter_slope_pallet_conflicts(shapes, width, height, maximum_slope_covered=0.5,
+                                  maximum_pallet_envelope_covered=0.1):
+    """Reject a slope draft covered by a pallet mask or its occlusion envelope."""
     from .edit_agent import _rasterize
-    if not 0.0 < maximum_slope_covered <= 1.0:
+    if (not 0.0 < maximum_slope_covered <= 1.0
+            or not 0.0 < maximum_pallet_envelope_covered <= 1.0):
         raise ValueError("斜坡与托盘冲突阈值无效")
     pallets = [shape for shape in shapes if shape.get("label") == "pallet"]
-    pallet_masks = [(shape, _rasterize(shape, width, height).astype(bool))
+    pallet_masks = [(shape, _rasterize(shape, width, height).astype(bool),
+                     _shape_summary(shape)["bbox"])
                     for shape in pallets]
     retained, suppressed = [], []
     for shape in shapes:
@@ -1584,23 +1587,38 @@ def filter_slope_pallet_conflicts(shapes, width, height, maximum_slope_covered=0
             continue
         slope_mask = _rasterize(shape, width, height).astype(bool)
         slope_area = int(slope_mask.sum())
+        slope_bbox = _shape_summary(shape)["bbox"]
+        slope_bbox_area = ((slope_bbox[2] - slope_bbox[0] + 1)
+                           * (slope_bbox[3] - slope_bbox[1] + 1))
         conflict = None
-        for pallet, pallet_mask in pallet_masks:
+        for pallet, pallet_mask, pallet_bbox in pallet_masks:
             covered = (float(np.logical_and(slope_mask, pallet_mask).sum()) / slope_area
                        if slope_area else 0.0)
-            if covered >= maximum_slope_covered and (conflict is None or covered > conflict[1]):
-                conflict = (pallet, covered)
+            overlap_width = max(0, min(slope_bbox[2], pallet_bbox[2])
+                                - max(slope_bbox[0], pallet_bbox[0]) + 1)
+            overlap_height = max(0, min(slope_bbox[3], pallet_bbox[3])
+                                 - max(slope_bbox[1], pallet_bbox[1]) + 1)
+            envelope_covered = (overlap_width * overlap_height / slope_bbox_area
+                                if slope_bbox_area else 0.0)
+            normalized_conflict = max(
+                covered / maximum_slope_covered,
+                envelope_covered / maximum_pallet_envelope_covered)
+            if (normalized_conflict >= 1.0
+                    and (conflict is None or normalized_conflict > conflict[1])):
+                conflict = (pallet, normalized_conflict, covered, envelope_covered)
         if conflict is None:
             retained.append(shape)
         else:
-            pallet, covered = conflict
+            pallet, _, covered, envelope_covered = conflict
             suppressed.append({
                 "id": shape.get("id"), "label": "slope",
                 "reason": "slope_candidate_overlaps_pallet",
                 "reason_code": "slope_candidate_pallet_conflict",
                 "route": "human_review_required", "pallet_id": pallet.get("id"),
                 "slope_covered_by_pallet": round(covered, 4),
+                "slope_envelope_covered_by_pallet": round(envelope_covered, 4),
                 "maximum_slope_covered": maximum_slope_covered,
+                "maximum_pallet_envelope_covered": maximum_pallet_envelope_covered,
             })
     return retained, suppressed
 

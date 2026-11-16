@@ -20,6 +20,8 @@ def main():
     parser.add_argument("--frames", required=True, help="Comma-separated frame IDs")
     parser.add_argument("--mode", choices=("negative", "positive"), default="negative")
     parser.add_argument("--output", required=True)
+    parser.add_argument("--quiet", action="store_true",
+                        help="Write per-frame evidence without printing every row")
     args = parser.parse_args()
 
     mcap = str(Path(args.mcap).resolve())
@@ -56,6 +58,7 @@ def main():
         }, ["pallet", "slope"], 1, on_progress=events.append)
         agent.generate()
         slope_shapes = [shape for shape in agent.shapes if shape.get("label") == "slope"]
+        pallet_shapes = [shape for shape in agent.shapes if shape.get("label") == "pallet"]
         row = {
             "frame": frame, "seconds": round(time.monotonic() - started, 4),
             "candidate_count": len(slope_shapes),
@@ -65,6 +68,9 @@ def main():
             "candidates": [_shape_summary(shape) | {
                 "source": shape.get("source"), "crop_index": shape.get("crop_index")}
                 for shape in slope_shapes],
+            "pallet_candidates": [_shape_summary(shape) for shape in pallet_shapes],
+            "filter_reason_codes": [item.get("reason_code")
+                                    for item in agent.candidate_filters],
         }
         if args.mode == "positive":
             width, height = Image.open(io.BytesIO(image)).size
@@ -77,7 +83,8 @@ def main():
         if slope_shapes:
             (output / f"frame-{frame}-false-candidates.jpg").write_bytes(
                 candidate_overlay(image, slope_shapes))
-        print(json.dumps(row, ensure_ascii=False), flush=True)
+        if not args.quiet:
+            print(json.dumps(row, ensure_ascii=False), flush=True)
 
     summary = {
         "frames": len(rows),

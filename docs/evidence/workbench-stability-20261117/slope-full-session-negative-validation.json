@@ -1,0 +1,53 @@
+{
+  "date": "2026-11-17",
+  "dataset": "CVAT_Task3_original_annotations.mcap",
+  "topic": "/CVAT/Task3/images",
+  "cohort": {
+    "total_human_labelled_frames": 150,
+    "positive_slope_frames": [74, 77, 80, 83, 86, 95, 97, 99],
+    "no_slope_frames": 142
+  },
+  "full_negative_scan_before_pallet_envelope_guard": {
+    "evaluated_frames": 142,
+    "unique_frames": 142,
+    "frames_with_false_slope": 21,
+    "false_slope_candidates": 25,
+    "false_frames": [1, 3, 5, 7, 9, 11, 13, 15, 17, 21, 23, 25, 109, 111, 113, 115, 117, 119, 121, 123, 134]
+  },
+  "diagnosis": {
+    "visual_pattern": "Uninstalled ramp-like plates resting on pallets; they are not connected traversable slopes.",
+    "color_used": false,
+    "false_candidate_pallet_envelope_coverage": {
+      "minimum": 0.14663524482848914,
+      "maximum": 1.0
+    },
+    "true_slope_pallet_envelope_coverage": {
+      "minimum": 0.0,
+      "maximum": 0.011049723756906077
+    }
+  },
+  "guard": {
+    "rule": "Route a slope candidate to human review when a pallet bbox covers at least 10 percent of the slope bbox.",
+    "threshold": 0.1,
+    "effect": "Suppressive only; it cannot add candidates or mutate human truth."
+  },
+  "final_validation": {
+    "previously_failing_frames_rerun": 21,
+    "previously_failing_candidates_rerun": 25,
+    "remaining_false_frames": 0,
+    "remaining_false_candidates": 0,
+    "unchanged_previous_zero_frames": 121,
+    "derived_full_negative_result": "0 of 142 frames retain a slope candidate",
+    "positive_frames_iou_at_least_0_5": 8,
+    "positive_mean_iou": 0.9727348586253762,
+    "positive_mean_precision": 0.9987619857334739,
+    "positive_mean_recall": 0.9739136545758631
+  },
+  "formal_readback": {
+    "workflow_sha256": "06267D4196747CC7B670EA6E908D515FB3AA3B223075F77BC133A10F93D67575",
+    "frame_115_false_slopes": 0,
+    "frame_95_slope_iou": 0.9433255269320843,
+    "readiness": "ready"
+  },
+  "scope_limit": "All 150 frames are from one labelled session. This closes the known-session negative set but does not prove cross-factory generalization."
+}

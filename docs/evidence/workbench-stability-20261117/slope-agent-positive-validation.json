@@ -10,6 +10,7 @@
   "production_path": {
     "prompts": ["pallet", "traversable surface"],
     "pallet_conflict_guard_enabled": true,
+    "pallet_envelope_conflict_guard_enabled": true,
     "minimum_height_guard_enabled": true,
     "crop_fallback_enabled": true
   },

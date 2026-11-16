@@ -713,6 +713,22 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(suppressed[0]["reason_code"],
                          "slope_candidate_pallet_conflict")
 
+    def test_slope_pallet_conflict_uses_occlusion_envelope_when_masks_are_disjoint(self):
+        pallet_points = [[0, 0], [39, 0], [39, 5], [5, 5], [5, 39], [0, 39]]
+        pallet_part = {"points": pallet_points, "holes": []}
+        pallet = {"id": 1, "label": "pallet", "points": pallet_points,
+                  "holes": [], "parts": [pallet_part], "score": 0.9}
+        slope_points = [[20, 20], [30, 20], [30, 30], [20, 30]]
+        slope_part = {"points": slope_points, "holes": []}
+        slope = {"id": 2, "label": "slope", "points": slope_points,
+                 "holes": [], "parts": [slope_part], "score": 0.8}
+        retained, suppressed = workflow.filter_slope_pallet_conflicts(
+            [pallet, slope], 40, 40)
+        self.assertEqual([item["id"] for item in retained], [1])
+        self.assertEqual([item["id"] for item in suppressed], [2])
+        self.assertEqual(suppressed[0]["slope_covered_by_pallet"], 0.0)
+        self.assertEqual(suppressed[0]["slope_envelope_covered_by_pallet"], 1.0)
+
     def test_robot_and_person_prompts_use_exact_canonical_queries(self):
         labels = ["ego", "other_robot", "person"]
         expected = [

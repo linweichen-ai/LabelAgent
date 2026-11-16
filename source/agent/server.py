@@ -1392,6 +1392,57 @@ def get_state_summary():
         )
 
 
+def _get_bootstrap_locked():
+    """Return enough metadata to open the workbench without all-frame geometry."""
+    recover_pending_human_reviews()
+    video = state.get("video")
+    topic = state.get("topic")
+    reference = state.get("reference_frames", {}).get(topic, []) if topic else []
+    reference_index = reference[0] if reference else None
+    description = (load_reference_description(reference_index)
+                   if video is not None and reference_index is not None else None)
+    auto_labels = (selected_auto_labels(reference_index)
+                   if reference_index is not None else list(state.get("labels", [])))
+    reference_only_labels = (
+        reference_labels(state.get("truth", {}).get(str(reference_index), []),
+                         state.get("labels", []))
+        if reference_index is not None else [])
+    return {
+        "schema_version": "labelagent.workbench-bootstrap.v1",
+        "compact_geometry": True,
+        "loaded": video is not None,
+        "path": str(video.path) if video is not None else "",
+        "catalog": video.catalog if video is not None else {},
+        "duration": video.duration if video is not None else 0,
+        "topics": video.topics if video is not None else {},
+        "topic": topic,
+        "labels": copy.deepcopy(state.get("labels", [])),
+        "auto_labels": auto_labels,
+        "reference_only_labels": reference_only_labels,
+        "reference_frames": copy.deepcopy(state.get("reference_frames", {})),
+        "truth": {},
+        "truth_review_status": {},
+        "truth_frames": sorted(state.get("truth", {}), key=lambda value: int(value)),
+        "candidates": {},
+        "candidate_counts": {
+            str(frame): len(items) if isinstance(items, list) else 0
+            for frame, items in state.get("candidates", {}).items()
+        },
+        "agent_runs": {},
+        "candidate_review_proposals": [],
+        "candidate_review_bindings": {},
+        "config": {key: value for key, value in state.get("config", {}).items()
+                   if key != "llm_key"},
+        "description": description,
+    }
+
+
+@app.get("/api/bootstrap")
+def get_bootstrap():
+    with lock:
+        return jsonify(_get_bootstrap_locked())
+
+
 def _get_state_locked():
     recover_pending_human_reviews()
     description = None
@@ -1636,13 +1687,7 @@ def activate_file(item):
     if state['topic'] not in video.topics:
         state['topic'] = next(iter(video.topics), None)
     save()
-    return dict(path=str(video.path), topics=video.topics, catalog=video.catalog, duration=video.duration,
-                topic=state['topic'], truth=state['truth'],
-                truth_review_status=current_truth_review_status(),
-                candidates=state.get('candidates', {}),
-                agent_runs=state.get('agent_runs', {}),
-                candidate_revision_summary=candidate_revision_summary(),
-                reference_frames=state.get('reference_frames', {}))
+    return _get_bootstrap_locked()
 
 
 @app.get('/api/files')

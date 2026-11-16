@@ -479,6 +479,14 @@
     }
   }
 
+  function adoptFrameState(next) {
+    if (!next) return;
+    state = next;
+    panel.classList.remove('unavailable');
+    render();
+    document.dispatchEvent(new CustomEvent('labelagent:review-state', { detail: { state } }));
+  }
+
   filterButtons.forEach(button => button.addEventListener('click', () => {
     activeFilter = button.dataset.reviewFilter;
     filterButtons.forEach(item => item.classList.toggle('selected', item === button));
@@ -496,8 +504,9 @@
     byId('candidateReviewToggle').setAttribute('aria-expanded', String(!compact));
     localStorage.setItem('labelagentCandidateReviewCompact', compact ? '1' : '0');
   });
-  byId('frameNumber')?.addEventListener('change', () => window.setTimeout(refresh, 180));
-  byId('autoModeButton')?.addEventListener('click', () => window.setTimeout(refresh, 120));
+  document.addEventListener('labelagent:frame-state', event => adoptFrameState(event.detail?.state));
+  byId('frameNumber')?.addEventListener('change', () => window.setTimeout(() => adoptFrameState(window.currentWorkbenchFrameState?.()), 180));
+  byId('autoModeButton')?.addEventListener('click', () => window.setTimeout(() => adoptFrameState(window.currentWorkbenchFrameState?.()), 120));
   window.addEventListener('resize', () => {
     if (selectedIndex === null || !state) return;
     const frame = Number(byId('frameNumber')?.value || 0);
@@ -516,7 +525,9 @@
     byId('candidateReviewToggle').textContent = '展开复核台';
     byId('candidateReviewToggle').setAttribute('aria-expanded', 'false');
   }
-  refresh();
+  window.labelAgentBootstrapReady?.then(() => adoptFrameState(window.currentWorkbenchFrameState?.())).catch(() => {
+    panel.classList.add('unavailable');
+  });
   let reviewPollTimer = null;
   let latestJobStatus = 'idle';
   let latestJobTaskId = null;

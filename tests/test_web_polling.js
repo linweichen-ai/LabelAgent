@@ -66,7 +66,7 @@ test('状态请求隐藏期间完成不重建定时器，恢复后立即轮询�
     latestAgentJob: { status: 'running' },
     refreshAgentProgress() { calls++; return new Promise(resolve => { release = resolve; }); },
   });
-  h.run(section(source('app.js'), 'let runStatusPollTimer=', "fetch('/api/state').then"));
+  h.run(section(source('app.js'), 'let runStatusPollTimer=', 'window.labelAgentBootstrapReady='));
   assert.equal(calls, 1);
   h.context.document.hidden = true;
   await h.emit('visibilitychange');
@@ -114,7 +114,7 @@ test('状态请求尚未完成时隐藏后恢复不会丢失后续轮询', async
     latestAgentJob: { status: 'idle' },
     refreshAgentProgress() { calls++; return new Promise(resolve => { release = resolve; }); },
   });
-  h.run(section(source('app.js'), 'let runStatusPollTimer=', "fetch('/api/state').then"));
+  h.run(section(source('app.js'), 'let runStatusPollTimer=', 'window.labelAgentBootstrapReady='));
   h.context.document.hidden = true;
   await h.emit('visibilitychange');
   h.context.document.hidden = false;

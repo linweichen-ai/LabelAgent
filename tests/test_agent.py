@@ -1660,6 +1660,40 @@ class ServerTests(unittest.TestCase):
             finally:
                 server.state, server.WORK = old_state, old_work
 
+    def test_workbench_bootstrap_preserves_metadata_without_all_frame_geometry(self):
+        old_state, old_work = server.state, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            dense = [shape(index + 1) for index in range(240)]
+            server.state = {
+                "video": FakeVideo(), "topic": "camera0", "labels": ["a", "slope"],
+                "truth": {"0": [shape()], "2": [shape(2)]},
+                "reference_frames": {}, "config": {"llm_model": "test", "llm_key": "secret"},
+                "candidates": {"1": dense, "2": [shape(3)]},
+                "agent_runs": {"1": {"rounds": 2}},
+                "human_review_transactions": {},
+            }
+            try:
+                client = server.app.test_client()
+                full = client.get("/api/state")
+                bootstrap = client.get("/api/bootstrap")
+                self.assertEqual(bootstrap.status_code, 200, bootstrap.json)
+                payload = bootstrap.json
+                self.assertEqual(payload["schema_version"], "labelagent.workbench-bootstrap.v1")
+                self.assertTrue(payload["compact_geometry"])
+                self.assertTrue(payload["loaded"])
+                self.assertEqual(payload["path"], str(FakeVideo.path))
+                self.assertEqual(payload["topics"], FakeVideo.topics)
+                self.assertEqual(payload["truth_frames"], ["0", "2"])
+                self.assertEqual(payload["candidate_counts"], {"1": 240, "2": 1})
+                self.assertEqual(payload["truth"], {})
+                self.assertEqual(payload["candidates"], {})
+                self.assertEqual(payload["agent_runs"], {})
+                self.assertNotIn("llm_key", payload["config"])
+                self.assertLess(len(bootstrap.data), len(full.data) * 0.05)
+            finally:
+                server.state, server.WORK = old_state, old_work
+
     def test_reference_draft_inference_allows_state_reads_and_guards_commit(self):
         old_state, old_status, old_work, old_stop = (server.state, server.run_status,
                                                      server.WORK, server.run_stop_event)

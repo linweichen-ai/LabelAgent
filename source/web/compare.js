@@ -329,8 +329,8 @@
     byId('compareDockToggle').setAttribute('aria-expanded', 'true');
   }
   updateOutputs();
-  fetch('/api/state', { cache: 'no-store' }).then(response => response.ok ? response.json() : null).then(data => {
-    if (data) state = data;
+  window.labelAgentBootstrapReady?.then(() => {
+    state = window.currentWorkbenchFrameState?.() || null;
     render();
   }).catch(() => {
     status.textContent = '暂时无法读取候选与真值；缺少证据时不会显示为可比较。';

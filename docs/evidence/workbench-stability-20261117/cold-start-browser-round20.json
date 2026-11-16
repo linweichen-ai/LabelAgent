@@ -1,0 +1,89 @@
+{
+  "responses": [
+    {
+      "pathname": "/api/bootstrap",
+      "status": 200,
+      "bytes": 3536
+    },
+    {
+      "pathname": "/api/state/summary",
+      "status": 200,
+      "bytes": 1361
+    },
+    {
+      "pathname": "/api/state/summary",
+      "status": 200,
+      "bytes": 1361
+    },
+    {
+      "pathname": "/api/topic",
+      "status": 200,
+      "bytes": 106356
+    },
+    {
+      "pathname": "/api/frame_state/50",
+      "status": 200,
+      "bytes": 336
+    },
+    {
+      "pathname": "/api/frame_state/1",
+      "status": 200,
+      "bytes": 65160
+    },
+    {
+      "pathname": "/api/frame_state/101",
+      "status": 200,
+      "bytes": 337
+    },
+    {
+      "pathname": "/api/frame_state/151",
+      "status": 200,
+      "bytes": 337
+    },
+    {
+      "pathname": "/api/state/summary",
+      "status": 200,
+      "bytes": 1361
+    },
+    {
+      "pathname": "/api/state",
+      "status": 200,
+      "bytes": 1953800
+    }
+  ],
+  "page_errors": [],
+  "console_errors": [],
+  "failed_requests": [],
+  "cold_start_ms": 745,
+  "cold_responses": [
+    {
+      "pathname": "/api/bootstrap",
+      "status": 200,
+      "bytes": 3536
+    },
+    {
+      "pathname": "/api/state/summary",
+      "status": 200,
+      "bytes": 1361
+    },
+    {
+      "pathname": "/api/state/summary",
+      "status": 200,
+      "bytes": 1361
+    }
+  ],
+  "rapid_navigation_ms": 30,
+  "rapid_navigation": {
+    "frame": 151,
+    "truth_keys": [],
+    "candidate_keys": [],
+    "compactGeometryMode": true,
+    "review_context": "/capture/camera_1/image · 第 151 帧 · 0 个候选"
+  },
+  "batch_expand_ms": 196,
+  "batch_full_state_requests": 1,
+  "batch_context": "29 帧候选 · 未知类与冲突优先",
+  "expected_aborted_frame_requests": [],
+  "unexpected_failed_requests": [],
+  "passed": true
+}

@@ -1,0 +1,86 @@
+{
+  "round": 20,
+  "observed_at": "2026-11-17T10:00:00+08:00",
+  "scope": {
+    "runtime": "D:\\Apps\\LabelAgent",
+    "url": "http://127.0.0.1:8765",
+    "dataset": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap",
+    "topic": "/capture/camera_1/image"
+  },
+  "change": {
+    "bootstrap_endpoint": "/api/bootstrap",
+    "bootstrap_schema": "labelagent.workbench-bootstrap.v1",
+    "geometry_in_bootstrap": false,
+    "cold_full_state_requests_before": 3,
+    "cold_full_state_requests_after": 0,
+    "current_frame_review": "fed by scoped frame-state events",
+    "batch_queue": "full state is fetched once only after explicit expansion",
+    "new_file_load": "returns compact bootstrap metadata instead of all-frame geometry"
+  },
+  "formal_api_ab_30_requests_each": {
+    "full_state": {
+      "bytes": 1953800,
+      "median_ms": 142.935,
+      "p95_ms": 166.589,
+      "mean_ms": 145.715
+    },
+    "bootstrap": {
+      "bytes": 3536,
+      "median_ms": 15.075,
+      "p95_ms": 24.14,
+      "mean_ms": 12.462
+    },
+    "response_body_reduction_percent": 99.82,
+    "median_latency_reduction_percent": 89.45
+  },
+  "formal_browser_acceptance": {
+    "browser": "Microsoft Edge headless",
+    "passed": true,
+    "cold_start_ms": 745,
+    "cold_start_full_state_requests": 0,
+    "cold_start_responses": [
+      {"pathname": "/api/bootstrap", "bytes": 3536},
+      {"pathname": "/api/state/summary", "bytes": 1361},
+      {"pathname": "/api/state/summary", "bytes": 1361}
+    ],
+    "rapid_navigation_sequence": [50, 1, 101, 151],
+    "rapid_navigation_ms": 30,
+    "final_frame": 151,
+    "stale_geometry_observed": false,
+    "batch_expand_ms": 196,
+    "batch_expand_full_state_requests": 1,
+    "batch_context": "29 frames with candidates",
+    "page_errors": 0,
+    "console_errors": 0,
+    "unexpected_failed_requests": 0,
+    "receipt": "cold-start-browser-round20.json",
+    "screenshot": "cold-start-workbench-round20.png"
+  },
+  "regression": {
+    "python": "127/127",
+    "web_polling": "10/10",
+    "candidate_and_human_gate": "60/60",
+    "javascript_syntax": "passed",
+    "diff_check": "passed"
+  },
+  "deployment": {
+    "runtime_status": "idle",
+    "model_readiness": "ready",
+    "run_readiness": "ready",
+    "runtime_matches_worktree": true,
+    "server_sha256": "BF34467C4F80A40AADB04BF2999906E10376E04968DD34DC96F0E8BC6FB261D5",
+    "app_sha256": "16239F8659156B4C73F248939DEED5C65C44C6D6F177B4D8B0EDF0321496C240",
+    "index_sha256": "42AF84F4DE4EF8328576B912C8A8F020D954C054D793410AB085CE66CECB553C",
+    "review_sha256": "7DE3F2C8DDC7FBD69867B034AF5131D7D27CCE6EE77CF9950236383445C0C15C",
+    "batch_review_sha256": "4CE98BCADF8669ABC4219CFA20D4E48A53F61B5E609214995E8ACFC916C6F660",
+    "compare_sha256": "3FE2D315FDE1CCB879C43BFD156096D10DE2BB5AEA428F52AB75208D15C86C0D",
+    "rollback": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-cold-start-round20-20261117-094000"
+  },
+  "safety_boundary": {
+    "machine_candidates_promoted_to_truth": false,
+    "training_set_modified": false,
+    "human_review_gate_changed": false,
+    "full_state_still_required_for_batch_evidence": true,
+    "camera3_reference_status": "reference_missing"
+  }
+}

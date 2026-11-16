@@ -198,13 +198,19 @@
   byId('batchPrevious').addEventListener('click', () => navigate(-1));
   byId('batchNext').addEventListener('click', () => navigate(1));
   byId('batchJumpHard').addEventListener('click', jumpHard);
-  byId('batchReviewToggle').addEventListener('click', () => {
+  byId('batchReviewToggle').addEventListener('click', async () => {
     const compact = panel.classList.toggle('compact');
     byId('batchReviewToggle').textContent = compact ? '展开队列' : '收起队列';
     byId('batchReviewToggle').setAttribute('aria-expanded', String(!compact));
     localStorage.setItem('labelagentBatchReviewCompact', compact ? '1' : '0');
+    if (!compact) await refresh();
   });
-  document.addEventListener('labelagent:review-state', event => { state = event.detail?.state || state; render(); });
+  document.addEventListener('labelagent:review-state', event => {
+    const next = event.detail?.state;
+    if (!next || next.compact_geometry === true) return;
+    state = next;
+    render();
+  });
   document.addEventListener('labelagent:review-drafts-changed', render);
   byId('frameNumber')?.addEventListener('change', () => setTimeout(render, 100));
   byId('candidateConfidenceThreshold')?.addEventListener('change', render);
@@ -215,8 +221,8 @@
     if (event.key.toLowerCase() === 'k') { event.preventDefault(); navigate(-1); }
     if (event.key.toLowerCase() === 'h') { event.preventDefault(); jumpHard(); }
   });
-  if (localStorage.getItem('labelagentBatchReviewCompact') === '1') {
-    panel.classList.add('compact'); byId('batchReviewToggle').textContent = '展开队列'; byId('batchReviewToggle').setAttribute('aria-expanded', 'false');
-  }
-  refresh();
+  panel.classList.add('compact');
+  byId('batchReviewToggle').textContent = '展开队列';
+  byId('batchReviewToggle').setAttribute('aria-expanded', 'false');
+  byId('batchReviewContext').textContent = '已按需加载；展开队列时读取全部候选';
 })();

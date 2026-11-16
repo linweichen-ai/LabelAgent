@@ -1176,6 +1176,38 @@ def get_state():
         return _get_state_locked()
 
 
+@app.get("/api/state/summary")
+def get_state_summary():
+    """Return the small, geometry-free state needed by the always-on guide.
+
+    Full candidate polygons and Agent traces remain available from ``/api/state``
+    for explicit review actions.  Keeping them out of the background heartbeat
+    avoids repeatedly parsing megabytes of unchanged JSON in the browser.
+    """
+    with lock:
+        recover_pending_human_reviews()
+        truth_review_status = current_truth_review_status()
+        truth_frames = sorted(state.get("truth", {}), key=lambda value: int(value))
+        candidate_counts = {
+            str(frame): len(items) if isinstance(items, list) else 0
+            for frame, items in state.get("candidates", {}).items()
+        }
+        return jsonify(
+            schema_version="labelagent.state-summary.v1",
+            loaded=state.get("video") is not None,
+            path=str(state["video"].path) if state.get("video") else "",
+            topic=state.get("topic"),
+            labels=state.get("labels", []),
+            reference_frames=state.get("reference_frames", {}),
+            truth_frames=truth_frames,
+            verified_truth_frames=[
+                frame for frame in truth_frames
+                if truth_review_status.get(str(frame), {}).get("reusable_as_reference") is True
+            ],
+            candidate_counts=candidate_counts,
+        )
+
+
 def _get_state_locked():
     recover_pending_human_reviews()
     description = None

@@ -613,6 +613,40 @@ class WorkflowTests(unittest.TestCase):
         expected[2:19, 2:6] = 0
         self.assertEqual(_rasterize(result["shapes"][0], 40, 40).tolist(), expected.tolist())
 
+    def test_multi_prompt_generation_reuses_one_image_request(self):
+        response = {"prompts": {
+            "a": {"results": [sam_result()]},
+            "b": {"results": []},
+        }, "diagnostics": {"image_encoded_once": True, "total_seconds": 0.2}}
+        agent = workflow.AnnotationAgent({}, image_bytes(), {
+            "description": "classes a and b",
+            "prompts": [{"label": "a", "text": "square"},
+                        {"label": "b", "text": "circle"}],
+        }, ["a", "b"], 1)
+        with patch.object(workflow, "sam_request", return_value=response) as request:
+            agent.generate()
+        request.assert_called_once_with({}, "/segment_text_multi", image_bytes(),
+                                        prompts={"a": "square", "b": "circle"})
+        self.assertEqual([item["label"] for item in agent.shapes], ["a"])
+        self.assertEqual(agent.sam_generation["mode"], "multi_prompt")
+        self.assertTrue(agent.sam_generation["diagnostics"]["image_encoded_once"])
+
+    def test_multi_prompt_generation_falls_back_to_sequential_requests(self):
+        agent = workflow.AnnotationAgent({}, image_bytes(), {
+            "description": "classes a and b",
+            "prompts": [{"label": "a", "text": "square"},
+                        {"label": "b", "text": "circle"}],
+        }, ["a", "b"], 1)
+        with patch.object(workflow, "sam_request", side_effect=[
+                ValueError("SAM 3 请求失败：Not Found"),
+                {"results": [sam_result()]}, {"results": []}]) as request:
+            agent.generate()
+        self.assertEqual([call.args[1] for call in request.call_args_list],
+                         ["/segment_text_multi", "/segment_text", "/segment_text"])
+        self.assertEqual(agent.sam_generation["mode"], "sequential_fallback")
+        self.assertIn("Not Found", agent.sam_generation["error"])
+        self.assertEqual([item["label"] for item in agent.shapes], ["a"])
+
     def test_keyword_from_gpt_is_preserved_when_short_and_relevant(self):
         answer = {"description": "标注参考帧里的可见车辆实例。", "prompts": [
             {"label": "车辆", "text": "forklift"},
@@ -1560,6 +1594,37 @@ class ServerTests(unittest.TestCase):
             if reader.ident is not None:
                 reader.join(5)
             server.state = old_state
+
+    def test_state_summary_is_small_and_preserves_guide_decisions(self):
+        old_state, old_work = server.state, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {
+                "video": FakeVideo(), "topic": "camera0", "labels": ["person", "slope"],
+                "truth": {"2": [shape()], "10": [shape()]},
+                "reference_frames": {"camera0": [2]}, "config": {"llm_key": "secret"},
+                "candidates": {"3": [shape(), shape()], "8": []}, "agent_runs": {},
+                "human_review_transactions": {},
+            }
+            try:
+                with patch.object(server, "current_truth_review_status", return_value={
+                        "2": {"reusable_as_reference": True},
+                        "10": {"reusable_as_reference": False}}):
+                    response = server.app.test_client().get("/api/state/summary")
+                self.assertEqual(response.status_code, 200)
+                payload = response.json
+                self.assertEqual(payload["schema_version"], "labelagent.state-summary.v1")
+                self.assertEqual(payload["truth_frames"], ["2", "10"])
+                self.assertEqual(payload["verified_truth_frames"], ["2"])
+                self.assertEqual(payload["candidate_counts"], {"3": 2, "8": 0})
+                self.assertEqual(payload["reference_frames"], {"camera0": [2]})
+                self.assertNotIn("truth", payload)
+                self.assertNotIn("candidates", payload)
+                self.assertNotIn("agent_runs", payload)
+                self.assertNotIn("config", payload)
+                self.assertLess(len(response.data), 1024)
+            finally:
+                server.state, server.WORK = old_state, old_work
 
     def test_reference_draft_inference_allows_state_reads_and_guards_commit(self):
         old_state, old_status, old_work, old_stop = (server.state, server.run_status,

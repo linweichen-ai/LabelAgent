@@ -23,7 +23,7 @@ SAM 3 权重不在仓库中。按[上游说明](https://github.com/facebookresea
 SAM3_URL=http://127.0.0.1:8766 .venv/bin/python -m source.agent.server
 ```
 
-SAM 3 服务按首次请求加载 `source/sam3/weights/sam3.pt`，提供 `/health`、`/segment_points` 和 `/segment_text`。点提示供参考帧交互标注使用；文本提示供自动流程生成候选。可通过 `SAM3_HOST`、`SAM3_PORT` 和工作台的 `SAM3_URL` 指向其他主机；工作台本身通过 HTTP 调用模型服务。
+SAM 3 服务按首次请求加载 `source/sam3/weights/sam3.pt`，提供 `/health`、`/segment_points`、`/segment_text` 和可选的 `/segment_text_multi`。点提示供参考帧交互标注使用；文本提示供自动流程生成候选。多个类别默认优先使用多提示接口，在服务端只编码一次图像；旧服务不支持时自动退回逐类请求，不会丢弃任务。可通过 `SAM3_HOST`、`SAM3_PORT` 和工作台的 `SAM3_URL` 指向其他主机；工作台本身通过 HTTP 调用模型服务。
 
 后端使用 Flask，前端静态资源位于 `source/web`，Python 依赖共用 `autolabel/.venv`。浏览器打开 `http://127.0.0.1:8765`，点击顶部文件夹图标，通过绝对路径或文件选择添加 MCAP，再点击文件行的「加载」。点击顶部齿轮图标配置 OpenAI 兼容的视觉大模型 API。页面下方的操作台随人工或自动标注模式切换，可拖动操作台上边缘的分隔条调整高度，两种模式分别保留本次页面内调整后的高度。点击图像依次添加多边形顶点，闭合后保存真值。自动模式查看参考帧时，在「参考帧准备」中生成真值描述；查看待处理帧时，「自动标注过程」顶部工具栏提供开始自动标注、保存结果、清除结果、下载记录及返回参考帧准备的入口。SAM 3 服务生成候选后，编辑 agent 校验 GPT 操作并调用 OpenCV 处理。候选可在主画面复核，通过「保存结果」保存为真值。
 

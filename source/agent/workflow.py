@@ -124,6 +124,13 @@ def _image_summary(data):
 
 
 def _sam_summary(response):
+    if isinstance(response, dict) and isinstance(response.get("prompts"), dict):
+        return {
+            "prompt_count": len(response["prompts"]),
+            "prompts": {label: _sam_summary(payload)
+                        for label, payload in response["prompts"].items()},
+            "diagnostics": response.get("diagnostics", {}),
+        }
     results = (response.get("results", []) if "results" in response else [response]) \
         if isinstance(response, dict) else response
     if not isinstance(results, list):
@@ -208,6 +215,23 @@ def _sam_request(config, endpoint, image, **prompt):
 
 def sam_text(image, prompt, config):
     return sam_request(config, "/segment_text", image, prompt=prompt).get("results", [])
+
+
+def sam_text_multi(image, prompts, config):
+    """Evaluate several label prompts while the service reuses one image encoding."""
+    if (not isinstance(prompts, dict) or not 2 <= len(prompts) <= 16
+            or any(not isinstance(label, str) or not label.strip()
+                   or not isinstance(prompt, str) or not prompt.strip()
+                   for label, prompt in prompts.items())):
+        raise ValueError("SAM 3 多提示请求须包含 2～16 个有效类别与关键词")
+    response = sam_request(config, "/segment_text_multi", image, prompts=prompts)
+    outputs = response.get("prompts") if isinstance(response, dict) else None
+    if not isinstance(outputs, dict) or set(outputs) != set(prompts):
+        raise ValueError("SAM 3 多提示响应缺少类别结果")
+    for label, payload in outputs.items():
+        if not isinstance(payload, dict) or not isinstance(payload.get("results"), list):
+            raise ValueError(f"SAM 3 多提示响应中的类别 {label} 格式无效")
+    return outputs, response.get("diagnostics", {})
 
 
 def chat(config, instruction, image, extra_images=(), response_schema=None):
@@ -1682,6 +1706,7 @@ class AnnotationAgent:
         self.sam_points_by_shape = {}
         self.sam_fallback = set()
         self.candidate_filters = []
+        self.sam_generation = {"mode": "not_started"}
 
     def progress(self, phase, **details):
         check_cancelled()
@@ -1747,12 +1772,37 @@ class AnnotationAgent:
         return retained, filtered
 
     def generate(self):
-        for item in self.description.get("prompts", []):
+        prompt_items = self.description.get("prompts", [])
+        for item in prompt_items:
             if (not isinstance(item, dict) or item.get("label") not in self.labels or
                     not isinstance(item.get("text"), str) or not item["text"].strip()):
                 raise ValueError("SAM 3 提示缺少有效类别或文本")
+        batched = None
+        if len(prompt_items) > 1 and self.config.get("sam_multi_prompt", True):
+            prompt_map = {item["label"]: item["text"] for item in prompt_items}
+            if len(prompt_map) != len(prompt_items):
+                raise ValueError("SAM 3 多提示类别不能重复")
+            self.progress("generating", operation="sam_multi_prompt",
+                          outcome={"prompt_count": len(prompt_map)})
+            try:
+                batched, diagnostics = sam_text_multi(self.image, prompt_map, self.config)
+                self.sam_generation = {"mode": "multi_prompt", "prompt_count": len(prompt_map),
+                                       "diagnostics": copy.deepcopy(diagnostics)}
+            except RunCancelled:
+                raise
+            except Exception as error:
+                self.sam_generation = {"mode": "sequential_fallback",
+                                       "prompt_count": len(prompt_map),
+                                       "error": str(error)[:500]}
+                self.progress("generating", operation="sam_multi_prompt_fallback",
+                              outcome=copy.deepcopy(self.sam_generation))
+        elif prompt_items:
+            self.sam_generation = {"mode": "sequential", "prompt_count": len(prompt_items)}
+        for item in prompt_items:
             self.progress("generating", prompt=item["text"], label=item["label"])
-            shapes = self.candidates(sam_text(self.image, item["text"], self.config), item["label"])
+            results = (batched[item["label"]]["results"] if batched is not None else
+                       sam_text(self.image, item["text"], self.config))
+            shapes = self.candidates(results, item["label"])
             if item["label"] == "slope" and item["text"] == "traversable surface":
                 shapes, filtered = filter_slope_candidate_geometry(shapes, self.height)
                 self.candidate_filters.extend(filtered)
@@ -2018,7 +2068,8 @@ class AnnotationAgent:
             "review_queue": self.queue, "agent": {"converged": converged,
             "rounds": len(self.audit), "max_rounds": self.max_rounds,
             "stop_reason": stop_reason, "audit": self.audit,
-            "candidate_filters": self.candidate_filters}}
+            "candidate_filters": self.candidate_filters,
+            "sam_generation": copy.deepcopy(self.sam_generation)}}
         self.progress("finished", result=result)
         return result
 

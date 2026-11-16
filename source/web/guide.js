@@ -146,16 +146,16 @@
     const topic = state?.topic || '';
     const frame = Number(byId('frameNumber')?.value || 0);
     const reference = state?.reference_frames?.[topic]?.[0];
-    const candidateKeys = objectKeys(state?.candidates);
-    const truthKeys = objectKeys(state?.truth);
-    const verifiedTruthKeys = truthKeys.filter(key => state?.truth_review_status?.[key]?.reusable_as_reference === true);
-    const legacyTruthKeys = truthKeys.filter(key => state?.truth_review_status?.[key]?.reusable_as_reference !== true);
-    const currentCandidateItems = state?.candidates?.[String(frame)];
-    const currentCandidateCount = Array.isArray(currentCandidateItems) ? currentCandidateItems.length : 0;
+    const candidateKeys = objectKeys(state?.candidate_counts);
+    const truthKeys = (state?.truth_frames || []).map(String);
+    const verifiedTruthSet = new Set((state?.verified_truth_frames || []).map(String));
+    const verifiedTruthKeys = truthKeys.filter(key => verifiedTruthSet.has(key));
+    const legacyTruthKeys = truthKeys.filter(key => !verifiedTruthSet.has(key));
+    const currentCandidateCount = Number(state?.candidate_counts?.[String(frame)] || 0);
     const hasCandidate = currentCandidateCount > 0;
     const referenceReviewActive = hasCandidate && byId('referenceFinalizeGuide')?.hidden === false;
-    const hasStoredAnnotation = Object.prototype.hasOwnProperty.call(state?.truth || {}, String(frame));
-    const hasTruth = hasStoredAnnotation && state?.truth_review_status?.[String(frame)]?.reusable_as_reference === true;
+    const hasStoredAnnotation = truthKeys.includes(String(frame));
+    const hasTruth = hasStoredAnnotation && verifiedTruthSet.has(String(frame));
     const hasLegacyTruth = hasStoredAnnotation && !hasTruth;
     const running = ['running', 'stopping'].includes(job?.status);
     const currentFrameAutoDraftRunning = running && Number(job?.frame) === frame && Number(job?.total || 1) === 1;
@@ -248,14 +248,13 @@
     guideRefreshBusy = true;
     try {
       const [stateResponse, jobResponse] = await Promise.all([
-        fetch('/api/state', { cache: 'no-store' }),
+        fetch('/api/state/summary', { cache: 'no-store' }),
         fetch('/api/run/status', { cache: 'no-store' }),
       ]);
       if (!stateResponse.ok || !jobResponse.ok) throw new Error('status unavailable');
       const state = await stateResponse.json();
       const job = await jobResponse.json();
       latestRunStatus = job.status || 'idle';
-      window.syncWorkbenchCandidateState?.(state);
       render(state, job);
     } catch (_) {
       renderUnavailable();
@@ -352,11 +351,11 @@
   function nextUnprocessedFrame(state, start) {
     const maximum = frameLimit();
     if (!Number.isInteger(maximum) || maximum < 0) return null;
-    const truth = state?.truth || {};
-    const candidates = state?.candidates || {};
+    const truth = new Set((state?.truth_frames || []).map(String));
+    const candidates = new Set(Object.keys(state?.candidate_counts || {}));
     for (let offset = 1; offset <= maximum + 1; offset += 1) {
       const target = (start + offset) % (maximum + 1);
-      if (!Object.hasOwn(truth, String(target)) && !Object.hasOwn(candidates, String(target))) return target;
+      if (!truth.has(String(target)) && !candidates.has(String(target))) return target;
     }
     return null;
   }

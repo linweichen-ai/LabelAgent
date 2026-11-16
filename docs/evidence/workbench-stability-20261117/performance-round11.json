@@ -1,0 +1,53 @@
+{
+  "schema_version": "labelagent.performance-round11.v1",
+  "measured_at": "2026-11-17T05:55:00+08:00",
+  "formal_url": "http://127.0.0.1:8765",
+  "state_polling": {
+    "samples_per_endpoint": 10,
+    "before": {
+      "endpoint": "/api/state",
+      "mean_ms": 207.29,
+      "p95_ms": 245.18,
+      "bytes": 1953800
+    },
+    "after": {
+      "endpoint": "/api/state/summary",
+      "mean_ms": 4.86,
+      "p95_ms": 5.59,
+      "bytes": 636
+    },
+    "byte_reduction_percent": 99.9674,
+    "mean_latency_reduction_percent": 97.6555
+  },
+  "sam_generation": {
+    "dataset": "batchA_0920_000_clean_review.mcap",
+    "topic": "/capture/camera_1/image",
+    "frame": 0,
+    "prompt_count": 8,
+    "sequential_seconds": 3.8344944000054966,
+    "multi_prompt_seconds": 2.8290329999945243,
+    "speedup": 1.3554081553707287,
+    "shape_count": 16,
+    "identical": true,
+    "result_sha256": "ae21ceba5e39f07ed941c24492132f2886f5f38f0b99206a89fc4a566494291c",
+    "multi_prompt_diagnostics": {
+      "image_encoded_once": true,
+      "image_encoding_seconds": 0.03988241800107062,
+      "prompt_inference_total_seconds": 0.7034323066473007,
+      "service_total_seconds": 0.7441133100073785
+    }
+  },
+  "validation": {
+    "python": "119/119",
+    "web_polling": "9/9",
+    "candidate_and_human_gate": "60/60",
+    "formal_ready": true
+  },
+  "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-performance-round11-20261117-055120",
+  "boundaries": [
+    "No model weights were changed.",
+    "No machine candidate was promoted to human truth or training data.",
+    "The new batch has no slope human truth, so this is not a generalization metric.",
+    "VLM review remains the dominant end-to-end latency component."
+  ]
+}

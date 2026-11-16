@@ -597,7 +597,8 @@ def current_truth_review_status():
     """
     if state.get("video") is None or not state.get("topic"):
         return {}
-    video_file, selected_topic = str(state["video"].path), state["topic"]
+    video_file = str(getattr(state["video"], "path", state.get("video_path", "")))
+    selected_topic = state["topic"]
     transactions = state.get("human_review_transactions", {})
     reviews_by_frame = {}
     for record in human_review_records(video_file=video_file, topic=selected_topic):
@@ -972,13 +973,67 @@ def frame_image(index):
 
 
 def reference_signature(index):
-    reference = {"file": str(state["video"].path), "topic": state["topic"], "frame": index,
+    video_file = str(getattr(state["video"], "path", state.get("video_path", "")))
+    reference = {"file": video_file, "topic": state["topic"], "frame": index,
                  "description_input_version": DESCRIPTION_INPUT_VERSION,
                  "prompt_profile": state.get("config", {}).get("llm_prompt_profile", "full"),
                  "auto_labels": selected_auto_labels(index),
                  "truth": state["truth"][str(index)]}
     payload = json.dumps(reference, ensure_ascii=False, sort_keys=True)
     return hashlib.sha256(payload.encode()).hexdigest()
+
+
+def description_cache_path(signature):
+    """Return the content-addressed cache path for one exact reference contract."""
+    if not _valid_sha256(signature):
+        raise ValueError("参考帧描述签名无效")
+    return WORK / "descriptions" / f"{signature}.json"
+
+
+def load_reference_description(reference):
+    """Load only a description bound to the active file/topic/truth contract.
+
+    The legacy ``description.json`` remains readable for existing installations,
+    while the content-addressed cache keeps descriptions for other cameras from
+    being overwritten when an operator switches topics.
+    """
+    signature = reference_signature(reference)
+    paths = (description_cache_path(signature), WORK / "description.json")
+    for path in paths:
+        if not path.exists():
+            continue
+        try:
+            saved = _read_json(path)
+        except (OSError, ValueError, TypeError):
+            continue
+        if (isinstance(saved, dict)
+                and saved.get("reference_signature") == signature):
+            if path == WORK / "description.json" and not paths[0].exists():
+                # One-time migration for existing installations. Cache failure
+                # must never make an otherwise valid legacy description unusable.
+                temporary = paths[0].with_suffix(".tmp")
+                try:
+                    paths[0].parent.mkdir(parents=True, exist_ok=True)
+                    _write_json(temporary, saved, pretty=True)
+                    _commit_work_file(temporary, paths[0])
+                except OSError:
+                    temporary.unlink(missing_ok=True)
+            return saved
+    return None
+
+
+def save_reference_description(description):
+    """Atomically save a reusable per-reference copy plus the legacy active copy."""
+    signature = description.get("reference_signature") if isinstance(description, dict) else None
+    cache_path = description_cache_path(signature)
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    cache_temporary = cache_path.with_suffix(".tmp")
+    _write_json(cache_temporary, description, pretty=True)
+    _commit_work_file(cache_temporary, cache_path)
+    legacy_path = WORK / "description.json"
+    legacy_temporary = legacy_path.with_suffix(".tmp")
+    _write_json(legacy_temporary, description, pretty=True)
+    _commit_work_file(legacy_temporary, legacy_path)
 
 
 def overlay(index, labels=None):
@@ -1212,11 +1267,8 @@ def _get_state_locked():
     recover_pending_human_reviews()
     description = None
     reference = state.get("reference_frames", {}).get(state["topic"], []) if state["topic"] else []
-    path = WORK / "description.json"
-    if state["video"] and reference and path.exists():
-        saved = json.loads(path.read_text(encoding="utf-8"))
-        if saved.get("reference_signature") == reference_signature(reference[0]):
-            description = saved
+    if state["video"] and reference:
+        description = load_reference_description(reference[0])
     reference_index = reference[0] if reference else None
     auto_labels = selected_auto_labels(reference_index) if reference_index is not None else list(state["labels"])
     reference_only_labels = (reference_labels(state["truth"][str(reference_index)], state["labels"])
@@ -1766,12 +1818,18 @@ def set_topic():
             state["agent_runs"] = state["agent_runs_by_topic"].get(state["topic"], {})
             state["candidate_revisions"] = state["candidate_revisions_by_topic"].get(state["topic"], {})
             save()
+        topic_references = state.get("reference_frames", {}).get(state["topic"], [])
+        description = (load_reference_description(topic_references[0])
+                       if topic_references and state.get("truth", {}).get(str(topic_references[0]))
+                       else None)
         return jsonify(topic=state["topic"], truth=state["truth"],
                        truth_review_status=current_truth_review_status(),
                        candidates=state["candidates"], agent_runs=state["agent_runs"],
                        candidate_revision_summary=candidate_revision_summary(),
                        candidate_review_proposals=state.get("candidate_review_proposals", []),
-                       reference_frames=state.get("reference_frames", {}))
+                       reference_frames=state.get("reference_frames", {}),
+                       description=description,
+                       description_cache_hit=description is not None)
 
 
 @app.post("/api/labels")
@@ -2191,13 +2249,19 @@ def run_readiness():
         except (KeyError, ValueError) as error:
             return jsonify(ready=False, code="label_selection_invalid",
                            reference_frame=reference, message=str(error))
-        description_path = WORK / "description.json"
-        if not description_path.exists():
-            return jsonify(ready=False, code="description_missing",
+        expected_description_path = description_cache_path(reference_signature(reference))
+        legacy_description_path = WORK / "description.json"
+        description = load_reference_description(reference)
+        if description is None:
+            stale_description_exists = (expected_description_path.exists()
+                                        or legacy_description_path.exists())
+            return jsonify(ready=False,
+                           code="description_stale" if stale_description_exists else "description_missing",
                            reference_frame=reference,
-                           message=f"请打开参考帧 {reference} 并生成真值描述")
+                           message=(f"参考帧 {reference} 的描述已失效，请重新生成"
+                                    if stale_description_exists else
+                                    f"请打开参考帧 {reference} 并生成真值描述"))
         try:
-            description = _read_json(description_path)
             prompts = description.get("prompts", []) if isinstance(description, dict) else []
             prompt_labels = [item.get("label") for item in prompts if isinstance(item, dict)]
             valid = (isinstance(description, dict) and bool(description.get("description"))
@@ -2275,9 +2339,7 @@ def describe_truth():
                     or reference_signature(index) != signature):
                 raise StaleHumanReviewError("数据、配置、类别或参考真值在描述期间变化，未保存旧描述")
             result["reference_signature"] = signature
-            temporary = (WORK / "description.json").with_suffix(".tmp")
-            _write_json(temporary, result, pretty=True)
-            _commit_work_file(temporary, WORK / "description.json")
+            save_reference_description(result)
         save_description_trace(trace, result)
         update_run_status(status="completed", phase="completed", frame=None,
                           completed=1, total=1)
@@ -2702,8 +2764,7 @@ def run_workflow():
         allowed_labels = selected_auto_labels(reference)
         description = body.get("description")
         if description is None:
-            description_path = WORK / "description.json"
-            description = json.loads(description_path.read_text(encoding="utf-8")) if description_path.exists() else None
+            description = load_reference_description(reference)
         supplied_prompts = description.get("prompts", []) if isinstance(description, dict) else []
         supplied_labels = [item.get("label") for item in supplied_prompts if isinstance(item, dict)]
         if (not isinstance(description, dict) or not description.get("description")

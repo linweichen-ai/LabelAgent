@@ -1,0 +1,54 @@
+{
+  "schema_version": "labelagent.optimization-evidence.v1",
+  "round": 16,
+  "date": "2026-11-17",
+  "change": "content-addressed per-reference description cache",
+  "cache_key_inputs": [
+    "data_file",
+    "camera_topic",
+    "reference_frame",
+    "description_input_version",
+    "prompt_profile",
+    "selected_auto_labels",
+    "human_reference_truth"
+  ],
+  "compatibility": {
+    "legacy_description_json_readable": true,
+    "legacy_description_migrated_on_first_valid_read": true,
+    "new_descriptions_written_to_cache_and_legacy_active_copy": true
+  },
+  "isolation": {
+    "candidate_mutated": false,
+    "human_truth_mutated": false,
+    "training_return_allowed": false,
+    "stale_signature_reuse_allowed": false
+  },
+  "tests": {
+    "python_core": {"passed": 122, "failed": 0},
+    "topic_selection": {"passed": 3, "failed": 0},
+    "web_polling": {"passed": 9, "failed": 0},
+    "candidate_human_gate": {"passed": 60, "failed": 0},
+    "javascript_syntax": "passed",
+    "diff_check": "passed"
+  },
+  "formal_readback": {
+    "url": "http://127.0.0.1:8765",
+    "topic": "/capture/camera_1/image",
+    "description_loaded": true,
+    "description_cache_files": 1,
+    "same_topic_requests": 20,
+    "cache_hits": 20,
+    "server_response_bytes": 1847928,
+    "server_response_elapsed_ms": 31.444,
+    "powershell_request_and_json_decode_mean_ms": 261.307,
+    "powershell_request_and_json_decode_p95_ms": 336.334,
+    "workflow_readiness": "ready",
+    "models_ready": true,
+    "run_status": "idle",
+    "server_sha256": "F6D4AFFAD2B514FAE11A4CB431DFDCFB5D8615BA06F747B5E23D9121D1391B9C",
+    "app_js_sha256": "39E9B5E2AAD78AD872A022F06EEE6627E8C8323C7D9BDEBA35DFAC051B99C213",
+    "formal_matches_worktree": true
+  },
+  "rollback": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-multicamera-cache-round16-20261117-080000",
+  "evidence_boundary": "The two-topic restoration behavior is a deterministic server regression test. The formal workspace currently has a human reference and reusable description only for camera_1, so no missing camera was auto-prepared and no assistant candidate was promoted to truth."
+}

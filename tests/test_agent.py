@@ -2183,6 +2183,8 @@ class ServerTests(unittest.TestCase):
                     self.assertNotEqual(current["reference_signature"], old_signature)
                     self.assertEqual(current["description"], "new rule")
                     self.assertEqual(client.get("/api/state").json["description"], current)
+                    self.assertTrue(server.description_cache_path(
+                        current["reference_signature"]).exists())
                     for _ in range(2):
                         reused = client.post("/api/run", json={"frame": 1, "count": 1})
                         self.assertEqual(reused.status_code, 200, reused.json)
@@ -2192,6 +2194,49 @@ class ServerTests(unittest.TestCase):
                         self.assertEqual(call.kwargs["reference"]["annotations"], [shape()])
             finally:
                 server.state, server.run_status, server.WORK = previous_state, previous_status, previous_work
+
+    def test_descriptions_are_cached_per_topic_and_restored_on_camera_switch(self):
+        previous_state, previous_work = server.state, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {
+                "video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                "truth": {"0": [shape()]},
+                "truths_by_topic": {"camera1": {"0": [shape(left=3)]}},
+                "reference_frames": {"camera0": [0], "camera1": [0]},
+                "config": {}, "candidates": {}, "candidates_by_topic": {},
+                "agent_runs": {}, "agent_runs_by_topic": {},
+                "candidate_revisions": {}, "candidate_revisions_by_topic": {},
+            }
+            try:
+                camera0 = {"description": "camera zero", "prompts": [
+                    {"label": "a", "text": "zero"}],
+                    "reference_signature": server.reference_signature(0)}
+                server.save_reference_description(camera0)
+                client = server.app.test_client()
+
+                switched = client.post("/api/topic", json={"topic": "camera1"})
+                self.assertEqual(switched.status_code, 200, switched.json)
+                self.assertFalse(switched.json["description_cache_hit"])
+                camera1 = {"description": "camera one", "prompts": [
+                    {"label": "a", "text": "one"}],
+                    "reference_signature": server.reference_signature(0)}
+                server.save_reference_description(camera1)
+                self.assertTrue(client.get("/api/run/readiness").json["ready"])
+
+                restored = client.post("/api/topic", json={"topic": "camera0"})
+                self.assertEqual(restored.status_code, 200, restored.json)
+                self.assertTrue(restored.json["description_cache_hit"])
+                self.assertEqual(restored.json["description"], camera0)
+                self.assertEqual(client.get("/api/state").json["description"], camera0)
+                self.assertTrue(client.get("/api/run/readiness").json["ready"])
+
+                cache_files = list((server.WORK / "descriptions").glob("*.json"))
+                self.assertEqual(len(cache_files), 2)
+                self.assertEqual({json.loads(path.read_text())["description"]
+                                  for path in cache_files}, {"camera zero", "camera one"})
+            finally:
+                server.state, server.WORK = previous_state, previous_work
 
     def test_describe_releases_state_lock_and_rejects_stale_completion(self):
         old_state, old_status, old_work, old_stop = (

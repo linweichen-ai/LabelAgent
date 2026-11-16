@@ -258,6 +258,25 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual({flag["label"] for flag in flags}, {"车辆", "other_robot"})
         self.assertEqual(flags[0]["conflicting_labels"], ["车辆", "other_robot"])
 
+    def test_visible_label_discovery_ignores_other_object_and_negated_anchors(self):
+        labels = ["车辆", "other_robot"]
+        answers = [
+            ["A vehicle is visible at [300,450], not the robot at [700,450].",
+             "A robot is visible at [700,450]."],
+            ["A vehicle at [300,450] is left of the robot at [700,450].",
+             "A robot is visible at [700,450]."],
+        ]
+        for reasons in answers:
+            with self.subTest(reasons=reasons):
+                answer = {"assessments": [
+                    {"label": label, "evidence": "present", "confidence": 0.9, "reason": reason}
+                    for label, reason in zip(labels, reasons)], "unknown_candidates": []}
+                with patch.object(workflow, "chat", return_value=answer):
+                    result = workflow.discover_visible_labels({}, image_bytes(), labels)
+                self.assertEqual(result["visible_labels"], labels)
+                self.assertFalse(any(flag["reason_code"] == "vlm_cross_label_entity_conflict"
+                                     for flag in result["consistency_flags"]))
+
     def test_visible_label_discovery_keeps_distinct_vehicle_robot_anchors(self):
         labels = ["车辆", "other_robot"]
         answer = {"assessments": [
@@ -880,6 +899,489 @@ class FakeVideo:
 
 
 class ServerTests(unittest.TestCase):
+    def test_run_claim_rejects_concurrent_run_and_reference_draft(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        old_task, old_stop = server.run_task_id, server.run_stop_event
+        entered, release = threading.Event(), threading.Event()
+        responses = {}
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                "config": {}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            description = {"description": "a only", "prompts": [{"label": "a", "text": "a"}],
+                           "reference_signature": server.reference_signature(0)}
+            def blocked_run(*args, **kwargs):
+                entered.set()
+                self.assertTrue(release.wait(3))
+                return {"shapes": [shape()], "candidates_added": 1, "applied": [],
+                    "review_queue": [], "agent": {"stop_reason": "done", "rounds": 1}}
+            def start_run():
+                responses["run"] = server.app.test_client().post("/api/run", json={
+                    "frame": 1, "count": 1, "description": description})
+            worker = threading.Thread(target=start_run)
+            try:
+                with patch.object(server, "run", side_effect=blocked_run):
+                    worker.start()
+                    self.assertTrue(entered.wait(2))
+                    responses["draft"] = server.app.test_client().post("/api/reference_draft", json={
+                        "frame": 2, "labels": ["a"]})
+                    self.assertEqual(responses["draft"].status_code, 503)
+                    release.set()
+                    worker.join(4)
+                self.assertFalse(worker.is_alive())
+                self.assertEqual(responses["run"].status_code, 200, responses["run"].json)
+                self.assertEqual(server.run_status["status"], "completed")
+            finally:
+                release.set()
+                if worker.ident is not None:
+                    worker.join(4)
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+                server.run_task_id, server.run_stop_event = old_task, old_stop
+
+    def test_run_claim_rejects_concurrent_reference_draft_and_run(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        old_task, old_stop = server.run_task_id, server.run_stop_event
+        entered, release = threading.Event(), threading.Event()
+        responses = {}
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                "truth": {}, "reference_frames": {}, "config": {}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            def blocked_describe(*args, **kwargs):
+                entered.set()
+                self.assertTrue(release.wait(3))
+                return {"description": "a", "prompts": []}
+            result = {"shapes": [shape()], "candidates_added": 1, "applied": [],
+                      "review_queue": [], "agent": {"stop_reason": "done", "rounds": 1}}
+            def start_draft():
+                responses["draft"] = server.app.test_client().post("/api/reference_draft", json={
+                    "frame": 1, "labels": ["a"]})
+            worker = threading.Thread(target=start_draft)
+            try:
+                with patch.object(server, "describe", side_effect=blocked_describe), \
+                     patch.object(server, "run", return_value=result), \
+                     patch.object(server, "audit_high_risk_candidates", return_value=([], [])):
+                    worker.start()
+                    self.assertTrue(entered.wait(2))
+                    responses["run"] = server.app.test_client().post("/api/run", json={"frame": 1})
+                    self.assertEqual(responses["run"].status_code, 503)
+                    for endpoint in ("/api/describe", "/api/segment_points",
+                                     "/api/reference_candidates/audit"):
+                        with self.subTest(endpoint=endpoint):
+                            rejected = server.app.test_client().post(endpoint, json={"frame": 0})
+                            self.assertEqual(rejected.status_code, 503, rejected.json)
+                    release.set()
+                    worker.join(4)
+                self.assertFalse(worker.is_alive())
+                self.assertEqual(responses["draft"].status_code, 200, responses["draft"].json)
+                self.assertEqual(server.run_status["status"], "completed")
+            finally:
+                release.set()
+                if worker.ident is not None:
+                    worker.join(4)
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+                server.run_task_id, server.run_stop_event = old_task, old_stop
+
+    def test_run_claim_keeps_ownership_through_terminal_response_and_error_cleanup(self):
+        old_status, old_task, old_stop = server.run_status, server.run_task_id, server.run_stop_event
+        try:
+            for terminal in ("completed", "failed", "stopped"):
+                with self.subTest(terminal=terminal):
+                    server.run_status = {"status": "idle"}
+                    entered, release = threading.Event(), threading.Event()
+                    errors, task_ids = [], []
+                    @server.run_claimed
+                    def old_task():
+                        task_ids.append(server.run_task_id)
+                        server.update_run_status(status=terminal, phase=terminal)
+                        entered.set()
+                        if not release.wait(3):
+                            raise AssertionError("未释放旧任务收尾")
+                        if terminal == "failed":
+                            raise RuntimeError("旧任务异常")
+                        server.update_run_status(error="旧任务收尾")
+                    @server.run_claimed
+                    def new_task():
+                        task_ids.append(server.run_task_id)
+                        self.assertFalse(server.run_stop_event.is_set())
+                        server.update_run_status(status="completed", phase="completed", error="新任务")
+                    def start_old():
+                        try:
+                            old_task()
+                        except Exception as error:
+                            errors.append(str(error))
+                    worker = threading.Thread(target=start_old)
+                    worker.start()
+                    try:
+                        self.assertTrue(entered.wait(2))
+                        with self.assertRaisesRegex(RuntimeError, "已有推理任务"):
+                            new_task()
+                        self.assertEqual(len(task_ids), 1)
+                    finally:
+                        release.set()
+                        worker.join(4)
+                    self.assertFalse(worker.is_alive())
+                    self.assertEqual(errors, ["旧任务异常"] if terminal == "failed" else [])
+                    new_task()
+                    self.assertNotEqual(task_ids[0], task_ids[1])
+                    self.assertEqual(server.run_status["error"], "新任务")
+                    self.assertEqual(server.run_status["status"], "completed")
+        finally:
+            server.run_status, server.run_task_id, server.run_stop_event = old_status, old_task, old_stop
+
+    def test_run_claim_reserves_before_preparation_and_preserves_stop(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        old_task, old_stop = server.run_task_id, server.run_stop_event
+        entered, release = threading.Event(), threading.Event()
+        responses = []
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                "config": {}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            description = {"description": "a", "prompts": [{"label": "a", "text": "a"}],
+                           "reference_signature": server.reference_signature(0)}
+            original = server.restrict_description
+            def prepare(*args, **kwargs):
+                entered.set()
+                self.assertTrue(release.wait(3))
+                return original(*args, **kwargs)
+            def start():
+                responses.append(server.app.test_client().post("/api/run", json={
+                    "frame": 1, "count": 1, "description": description}))
+            worker = threading.Thread(target=start)
+            try:
+                with patch.object(server, "restrict_description", side_effect=prepare), \
+                     patch.object(server, "run") as inference:
+                    worker.start()
+                    self.assertTrue(entered.wait(2))
+                    task_event = server.run_stop_event
+                    self.assertTrue(server.app.test_client().post("/api/run/stop").json["stopped"])
+                    conflict = server.app.test_client().post("/api/reference_draft", json={
+                        "frame": 2, "labels": ["a"]})
+                    self.assertEqual(conflict.status_code, 503)
+                    self.assertIs(server.run_stop_event, task_event)
+                    self.assertTrue(task_event.is_set())
+                    release.set()
+                    worker.join(4)
+                    inference.assert_not_called()
+                self.assertFalse(worker.is_alive())
+                self.assertTrue(responses[0].json["stopped"])
+                self.assertEqual(server.run_status["status"], "stopped")
+            finally:
+                release.set()
+                if worker.ident is not None:
+                    worker.join(4)
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+                server.run_task_id, server.run_stop_event = old_task, old_stop
+
+    def test_run_model_wait_does_not_block_state_and_cancel_prevents_commit(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        entered, release = threading.Event(), threading.Event()
+        response_box = []
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                "config": {}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            description = {"description": "a only", "prompts": [{"label": "a", "text": "a"}],
+                           "reference_signature": server.reference_signature(0)}
+            def blocked_run(*args, **kwargs):
+                entered.set()
+                self.assertTrue(release.wait(3))
+                return {"shapes": [shape()], "candidates_added": 1, "applied": [],
+                    "review_queue": [], "agent": {"stop_reason": "done", "rounds": 1}}
+            def start_run():
+                with server.app.test_client() as client:
+                    response_box.append(client.post("/api/run", json={"frame": 1, "count": 1,
+                                                                        "description": description}))
+            worker = threading.Thread(target=start_run)
+            try:
+                with patch.object(server, "run", side_effect=blocked_run):
+                    worker.start()
+                    self.assertTrue(entered.wait(2))
+                    self.assertEqual(server.app.test_client().get("/api/state").status_code, 200)
+                    self.assertTrue(server.app.test_client().post("/api/run/stop").json["stopped"])
+                    release.set()
+                    worker.join(4)
+                self.assertFalse(worker.is_alive())
+                self.assertTrue(response_box[0].json["stopped"])
+                self.assertNotIn("1", server.state["candidates"])
+                self.assertNotIn("1", server.state["agent_runs"])
+            finally:
+                release.set()
+                if worker.ident is not None:
+                    worker.join(4)
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_run_rejects_stale_target_and_preserves_completed_frame(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        entered, release = threading.Event(), threading.Event()
+        responses = []
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                "config": {}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            description = {"description": "a only", "prompts": [{"label": "a", "text": "a"}],
+                           "reference_signature": server.reference_signature(0)}
+            calls = []
+            def blocked_run(*args, **kwargs):
+                calls.append(1)
+                if len(calls) == 2:
+                    entered.set()
+                    self.assertTrue(release.wait(3))
+                return {"shapes": [shape()], "candidates_added": 1, "applied": [],
+                    "review_queue": [], "agent": {"stop_reason": "done", "rounds": 1}}
+            def start_run():
+                with server.app.test_client() as client:
+                    responses.append(client.post("/api/run", json={"frame": 1, "count": 3,
+                                                                      "description": description}))
+            worker = threading.Thread(target=start_run)
+            try:
+                with patch.object(server, "run", side_effect=blocked_run):
+                    worker.start()
+                    self.assertTrue(entered.wait(2))
+                    with server.lock:
+                        server.state["candidates"]["2"] = [shape(99)]
+                    release.set()
+                    worker.join(4)
+                self.assertFalse(worker.is_alive())
+                self.assertEqual(responses[0].status_code, 409, responses[0].json)
+                self.assertIn("1", server.state["candidates"])
+                self.assertEqual(server.state["candidates"]["2"], [shape(99)])
+            finally:
+                release.set()
+                if worker.ident is not None:
+                    worker.join(4)
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_run_rejects_concurrent_scope_config_truth_reference_labels_and_run_changes(self):
+        mutations = {
+            "scope": lambda: server.state.update(topic="camera1"),
+            "video": lambda: server.state.update(video=FakeVideo()),
+            "config": lambda: server.state["config"].update(llm_key="new-key"),
+            "labels": lambda: server.state["labels"].append("b"),
+            "auto_labels": lambda: server.state.update(auto_labels=["a"]),
+            "truth": lambda: server.state["truth"].update({"1": [shape(77)]}),
+            "reference_truth": lambda: server.state["truth"]["0"].append(shape(2)),
+            "references": lambda: server.state["reference_frames"].update(camera0=[0, 2]),
+            "candidate": lambda: server.state["candidates"].update({"1": [shape(88)]}),
+            "run": lambda: server.state["agent_runs"].update({"1": {"manual": True}}),
+        }
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        for name, mutate in mutations.items():
+            with self.subTest(change=name), tempfile.TemporaryDirectory() as directory:
+                entered, release = threading.Event(), threading.Event()
+                responses = []
+                server.WORK = Path(directory)
+                server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                    "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                    "config": {"llm_key": "captured-key"}, "candidates": {}, "agent_runs": {}}
+                server.run_status = {"status": "idle"}
+                description = {"description": "a only", "prompts": [{"label": "a", "text": "a"}],
+                               "reference_signature": server.reference_signature(0)}
+                def blocked_run(config, *args, **kwargs):
+                    entered.set()
+                    self.assertTrue(release.wait(4))
+                    callback = workflow._trace_callback.get()
+                    callback({"id": "snapshot", "message": "captured-key"})
+                    self.assertEqual(config["llm_key"], "captured-key")
+                    return {"shapes": [shape()], "candidates_added": 1, "applied": [],
+                        "review_queue": [], "agent": {"stop_reason": "done", "rounds": 1}}
+                def start_run():
+                    with server.app.test_client() as client:
+                        responses.append(client.post("/api/run", json={"frame": 1, "count": 1,
+                                                                          "description": description}))
+                worker = threading.Thread(target=start_run)
+                try:
+                    with patch.object(server, "run", side_effect=blocked_run):
+                        worker.start()
+                        self.assertTrue(entered.wait(2))
+                        with server.lock:
+                            mutate()
+                            expected_candidates = copy.deepcopy(server.state["candidates"])
+                            expected_runs = copy.deepcopy(server.state["agent_runs"])
+                            expected_truth = copy.deepcopy(server.state["truth"])
+                        release.set()
+                        worker.join(5)
+                    self.assertFalse(worker.is_alive())
+                    self.assertEqual(responses[0].status_code, 409, responses[0].json)
+                    self.assertEqual(server.state["candidates"], expected_candidates)
+                    self.assertEqual(server.state["agent_runs"], expected_runs)
+                    self.assertEqual(server.state["truth"], expected_truth)
+                    trace = json.loads((server.WORK / "model_debug.json").read_text())["trace"][0]
+                    self.assertEqual(trace["topic"], "camera0")
+                    self.assertEqual(trace["message"], "[REDACTED]")
+                finally:
+                    release.set()
+                    if worker.ident is not None:
+                        worker.join(5)
+                    server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_state_read_waits_for_atomic_mutation_even_without_pending_reviews(self):
+        old_state = server.state
+        server.state = {"video": None, "topic": None, "labels": [], "truth": {},
+                        "reference_frames": {}, "config": {}, "candidates": {},
+                        "agent_runs": {}, "human_review_transactions": {"done": {"status": "committed"}}}
+        acquired, release, finished = threading.Event(), threading.Event(), threading.Event()
+        responses = []
+        def hold_lock():
+            with server.lock:
+                acquired.set()
+                release.wait(5)
+        def read_state():
+            try:
+                with server.app.test_request_context("/api/state"):
+                    responses.append(server.get_state().status_code)
+            finally:
+                finished.set()
+        holder = threading.Thread(target=hold_lock)
+        reader = threading.Thread(target=read_state)
+        holder.start()
+        try:
+            self.assertTrue(acquired.wait(2))
+            reader.start()
+            self.assertFalse(finished.wait(0.1), "state read escaped the mutation lock")
+            release.set()
+            self.assertTrue(finished.wait(2), "state read did not resume after mutation")
+            self.assertEqual(responses, [200])
+        finally:
+            release.set()
+            holder.join(5)
+            if reader.ident is not None:
+                reader.join(5)
+            server.state = old_state
+
+    def test_reference_draft_inference_allows_state_reads_and_guards_commit(self):
+        old_state, old_status, old_work, old_stop = (server.state, server.run_status,
+                                                     server.WORK, server.run_stop_event)
+        cases = [(stage, "success") for stage in ("discover", "describe", "run", "audit")]
+        cases += [("run", change) for change in ("video", "topic", "config", "labels",
+                  "candidates", "agent_runs", "truth", "reference_frames", "stop")]
+        try:
+            for stage, change in cases:
+                with self.subTest(stage=stage, change=change), tempfile.TemporaryDirectory() as directory:
+                    server.WORK = Path(directory)
+                    server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+                        "truth": {}, "reference_frames": {}, "config": {"llm_model": "test"},
+                        "candidates": {}, "agent_runs": {}}
+                    server.run_status = {"status": "idle"}
+                    server.run_stop_event = threading.Event()
+                    entered, release, read_finished = threading.Event(), threading.Event(), threading.Event()
+                    responses, reads = [], []
+                    discovery = {"visible_labels": ["person"], "uncertain_labels": [],
+                                 "unknown_candidates": []}
+                    description = {"description": "person", "prompts": []}
+                    result = {"shapes": [shape(label="person")], "candidates_added": 1,
+                              "applied": [], "review_queue": [],
+                              "agent": {"stop_reason": "done", "rounds": 1, "audit": []}}
+                    def block(name, value):
+                        def invoke(*args, **kwargs):
+                            if name == stage:
+                                entered.set()
+                                if not release.wait(5):
+                                    raise RuntimeError("测试推理等待超时")
+                            return value
+                        return invoke
+                    def start():
+                        responses.append(server.app.test_client().post("/api/reference_draft", json={
+                            "frame": 1, "auto_detect_visible": True}))
+                    def read_state():
+                        try:
+                            reads.append(server.app.test_client().get("/api/state"))
+                        finally:
+                            read_finished.set()
+                    worker, reader = threading.Thread(target=start), threading.Thread(target=read_state)
+                    try:
+                        with patch.object(server, "discover_reference_labels", side_effect=block("discover", (discovery, 0))), \
+                             patch.object(server, "describe", side_effect=block("describe", description)), \
+                             patch.object(server, "run", side_effect=block("run", result)), \
+                             patch.object(server, "audit_high_risk_candidates", side_effect=block("audit", ([], []))):
+                            worker.start()
+                            self.assertTrue(entered.wait(3), "未进入模拟推理")
+                            reader.start()
+                            self.assertTrue(read_finished.wait(3), "推理期间状态读取被阻塞")
+                            self.assertEqual(reads[0].status_code, 200)
+                            with server.lock:
+                                if change == "video":
+                                    server.state["video"] = FakeVideo()
+                                elif change == "topic":
+                                    server.state["topic"] = "camera1"
+                                elif change == "config":
+                                    server.state["config"]["llm_model"] = "changed"
+                                elif change == "labels":
+                                    server.state["labels"].append("other")
+                                elif change in ("candidates", "agent_runs", "truth"):
+                                    server.state[change]["1"] = {"changed": True} if change == "agent_runs" else [{"changed": True}]
+                                elif change == "reference_frames":
+                                    server.state[change]["camera0"] = [1]
+                            if change == "stop":
+                                self.assertTrue(server.app.test_client().post("/api/run/stop").json["stopped"])
+                            before_candidates = copy.deepcopy(server.state["candidates"])
+                            before_runs = copy.deepcopy(server.state["agent_runs"])
+                            release.set()
+                            worker.join(5)
+                            self.assertFalse(worker.is_alive())
+                        self.assertEqual(len(responses), 1)
+                        if change == "success":
+                            self.assertEqual(responses[0].status_code, 200, responses[0].json)
+                            self.assertIn("1", server.state["candidates"])
+                        else:
+                            self.assertEqual(server.state["candidates"], before_candidates)
+                            self.assertEqual(server.state["agent_runs"], before_runs)
+                            if change == "stop":
+                                self.assertTrue(responses[0].json["stopped"])
+                                self.assertEqual(server.run_status["status"], "stopped")
+                            else:
+                                self.assertEqual(responses[0].status_code, 409, responses[0].json)
+                                self.assertEqual(server.run_status["status"], "failed")
+                    finally:
+                        release.set()
+                        if worker.ident is not None:
+                            worker.join(5)
+                        if reader.ident is not None:
+                            reader.join(5)
+        finally:
+            server.state, server.run_status, server.WORK, server.run_stop_event = (
+                old_state, old_status, old_work, old_stop)
+
+    def test_state_read_recovers_pending_review_under_lock(self):
+        old_state, old_work = server.state, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": None, "topic": None, "labels": [], "truth": {},
+                            "reference_frames": {}, "config": {}, "candidates": {},
+                            "agent_runs": {}, "human_review_transactions": {}}
+            try:
+                transaction = {"status": "state_saved_pending_audit"}
+                server.state["human_review_transactions"]["pending"] = transaction
+                audit_folder = server.WORK / "human_reviews"
+                audit_folder.mkdir()
+                (audit_folder / "record-pending.json").write_text("{}", encoding="utf-8")
+                original_save = server.save
+                def check_save():
+                    self.assertTrue(server.lock._is_owned())
+                    original_save()
+                with patch.object(server, "save", side_effect=check_save) as saved:
+                    response = server.app.test_client().get("/api/state")
+                self.assertEqual(response.status_code, 200)
+                saved.assert_called_once()
+                self.assertEqual(transaction["status"], "committed")
+                self.assertEqual(transaction["audit_file"], "record-pending.json")
+                persisted = json.loads((server.WORK / "state.json").read_text(encoding="utf-8"))
+                self.assertEqual(persisted["human_review_transactions"]["pending"], transaction)
+                (audit_folder / "record-pending.json").unlink()
+                (server.WORK / "state.json").unlink()
+            finally:
+                server.state, server.WORK = old_state, old_work
+
     def test_visibility_queue_preserves_conflict_even_with_candidate(self):
         flag = {"label": "other_robot", "reason_code": "vlm_cross_label_entity_conflict",
                 "route": "human_review_required", "conflicting_labels": ["车辆", "other_robot"],
@@ -924,6 +1426,109 @@ class ServerTests(unittest.TestCase):
         finally:
             server.point_segment_lock.release()
             server.state = old_state
+
+    def test_reference_draft_releases_lock_and_rejects_stale_commits(self):
+        mutations = {
+            "unchanged": None,
+            "candidate": lambda: server.state["candidates"].update({"1": [shape(label="person")]}),
+            "agent_run": lambda: server.state["agent_runs"].update({"1": {"manual": True}}),
+            "topic": lambda: server.state.update(topic="camera1"),
+            "video": lambda: server.state.update(video=FakeVideo()),
+            "config": lambda: server.state["config"].update(llm_model="changed"),
+            "credential": lambda: server.state["config"].update(llm_key="changed-key"),
+            "labels": lambda: server.state["labels"].append("new-label"),
+            "truth": lambda: server.state["truth"].update({"1": [shape(label="person")]}),
+            "reference": lambda: server.state["reference_frames"].update(camera0=[1]),
+            "audit_version": lambda: setattr(server, "_CANDIDATE_AUDIT_LOADED_CODE_SHA256", "changed"),
+            "cancel": lambda: server.app.test_client().post("/api/run/stop"),
+        }
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        old_stop = server.run_stop_event
+        old_protocol = server._CANDIDATE_AUDIT_LOADED_CODE_SHA256
+        try:
+            for stage in ("describe", "audit"):
+                for name, mutate in mutations.items():
+                    with self.subTest(stage=stage, mutation=name), tempfile.TemporaryDirectory() as directory:
+                        server.WORK = Path(directory)
+                        server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+                            "truth": {}, "reference_frames": {}, "config": {"llm_model": "test-vlm"},
+                            "candidates": {}, "agent_runs": {}}
+                        server.run_status = {"status": "idle"}
+                        server.run_stop_event = threading.Event()
+                        server._CANDIDATE_AUDIT_LOADED_CODE_SHA256 = old_protocol
+                        entered, release, finished = (threading.Event() for _ in range(3))
+                        responses, errors = [], []
+                        result = {"shapes": [shape(label="person")], "candidates_added": 1,
+                            "applied": [], "review_queue": [], "agent": {"stop_reason": "done"}}
+                        def block_model(*args, **kwargs):
+                            entered.set()
+                            if not release.wait(5):
+                                raise RuntimeError("测试未释放模型")
+                            return ({"description": "people", "prompts": []}
+                                    if stage == "describe" else ([], []))
+                        def draft():
+                            try:
+                                responses.append(server.app.test_client().post("/api/reference_draft",
+                                    json={"frame": 1, "labels": ["person"]}))
+                            except Exception as error:
+                                errors.append(error)
+                            finally:
+                                finished.set()
+                        worker = threading.Thread(target=draft)
+                        with patch.object(server, "describe", side_effect=(block_model if stage == "describe"
+                                else lambda *args, **kwargs: {"description": "people", "prompts": []})), \
+                             patch.object(server, "run", return_value=result), \
+                             patch.object(server, "audit_high_risk_candidates", side_effect=(block_model
+                                if stage == "audit" else lambda *args, **kwargs: ([], []))):
+                            worker.start()
+                            try:
+                                self.assertTrue(entered.wait(2), "模型未进入阻塞点")
+                                state_done, state_responses = threading.Event(), []
+                                def read_state():
+                                    try:
+                                        state_responses.append(server.app.test_client().get("/api/state"))
+                                    finally:
+                                        state_done.set()
+                                reader = threading.Thread(target=read_state)
+                                reader.start()
+                                self.assertTrue(state_done.wait(2), "模型运行时状态接口被阻塞")
+                                reader.join(2)
+                                self.assertEqual(state_responses[0].status_code, 200)
+                                self.assertEqual(state_responses[0].json["candidates"], {})
+                                self.assertEqual(state_responses[0].json["agent_runs"], {})
+                                duplicate = server.app.test_client().post("/api/reference_draft",
+                                    json={"frame": 1, "labels": ["person"]})
+                                self.assertEqual(duplicate.status_code, 503)
+                                if mutate:
+                                    with server.lock:
+                                        mutate()
+                                expected_candidates = copy.deepcopy(server.state["candidates"])
+                                expected_runs = copy.deepcopy(server.state["agent_runs"])
+                            finally:
+                                release.set()
+                                worker.join(5)
+                            self.assertTrue(finished.is_set(), "草稿线程未退出")
+                            self.assertEqual(errors, [])
+                            response = responses[0]
+                            if name == "unchanged":
+                                self.assertEqual(response.status_code, 200, response.json)
+                                self.assertEqual(server.run_status["status"], "completed")
+                            elif name == "cancel":
+                                self.assertEqual(response.status_code, 200, response.json)
+                                self.assertTrue(response.json["stopped"])
+                                self.assertEqual(server.run_status["status"], "stopped")
+                            else:
+                                self.assertEqual(response.status_code, 409, response.json)
+                                self.assertTrue(response.json["stale_review"])
+                            if name != "unchanged":
+                                self.assertEqual(server.state["candidates"], expected_candidates)
+                                self.assertEqual(server.state["agent_runs"], expected_runs)
+                                self.assertFalse((server.WORK / "state.json").exists())
+                                self.assertEqual(server.state.get("candidate_revisions", {}), {})
+        finally:
+            server.state, server.run_status, server.WORK = old_state, old_status, old_work
+            server.run_stop_event = old_stop
+            server._CANDIDATE_AUDIT_LOADED_CODE_SHA256 = old_protocol
 
     def test_reference_draft_records_candidate_only_provenance(self):
         old_state, old_status, old_work = server.state, server.run_status, server.WORK

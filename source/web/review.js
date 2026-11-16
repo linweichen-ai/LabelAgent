@@ -11,6 +11,9 @@
   const filterButtons = [...panel.querySelectorAll('[data-review-filter]')];
   const draftStorageKey = 'labelagentCandidateReviewDraftsV8';
   let state = null;
+  let refreshBusy = false;
+  let refreshPending = false;
+  let renderSignature = '';
   let activeFilter = 'all';
   let selectedIndex = null;
 
@@ -404,6 +407,11 @@
     const topic = state.topic || '';
     const shapes = state.candidates?.[String(frame)] || [];
     const run = state.agent_runs?.[String(frame)];
+    const imageNode = byId('frameImage');
+    const signature = JSON.stringify([frame, topic, shapes, run, state.labels, activeFilter,
+      labelFilter.value, thresholdSelect.value, readDrafts(), imageNode?.naturalWidth, imageNode?.naturalHeight]);
+    if (signature === renderSignature) return;
+    renderSignature = signature;
     const labels = Array.isArray(state.labels) ? state.labels : [];
     const threshold = Number(thresholdSelect.value || 0.65);
     const drafts = readDrafts();
@@ -445,6 +453,8 @@
   }
 
   async function refresh() {
+    if (refreshBusy) { refreshPending = true; return; }
+    refreshBusy = true;
     try {
       const response = await fetch('/api/state', { cache: 'no-store' });
       if (!response.ok) throw new Error('state unavailable');
@@ -458,7 +468,14 @@
       panel.classList.add('noCandidates');
       stats.replaceChildren();
       context.textContent = '状态不可用';
+      renderSignature = '';
       renderEmpty('暂时无法读取候选状态', '请确认本机服务在线后刷新页面；缺少证据时不会显示为已复核。');
+    } finally {
+      refreshBusy = false;
+      if (refreshPending) {
+        refreshPending = false;
+        if (!document.hidden) await refresh();
+      }
     }
   }
 
@@ -500,7 +517,36 @@
     byId('candidateReviewToggle').setAttribute('aria-expanded', 'false');
   }
   refresh();
-  window.setInterval(() => {
-    if (window.workspaceMode === 'auto' && !document.hidden) refresh();
-  }, 3500);
+  let reviewPollTimer = null;
+  let latestJobStatus = 'idle';
+  function scheduleReviewPoll(delay) {
+    if (reviewPollTimer) clearTimeout(reviewPollTimer);
+    if (document.hidden) return;
+    const interval = ['running', 'stopping'].includes(latestJobStatus) ? 5000 : 30000;
+    reviewPollTimer = window.setTimeout(async () => {
+      reviewPollTimer = null;
+      if (window.workspaceMode === 'auto') await refresh();
+      scheduleReviewPoll();
+    }, delay ?? interval);
+  }
+  document.addEventListener('labelagent:job-status', event => {
+    const previousStatus = latestJobStatus;
+    latestJobStatus = event.detail?.status || 'idle';
+    if (window.workspaceMode !== 'auto') return;
+    if (['running', 'stopping'].includes(latestJobStatus)) {
+      if (!['running', 'stopping'].includes(previousStatus)) scheduleReviewPoll(0);
+    } else {
+      scheduleReviewPoll(0);
+    }
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (reviewPollTimer) clearTimeout(reviewPollTimer);
+      reviewPollTimer = null;
+    } else {
+      refresh();
+      scheduleReviewPoll(30000);
+    }
+  });
+  scheduleReviewPoll();
 })();

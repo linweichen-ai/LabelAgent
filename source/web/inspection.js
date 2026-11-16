@@ -1,7 +1,7 @@
 /* The automatic workspace shows recorded model calls and immutable stage images. */
 const inspectionPanel=$('inspectionPanel');
 const inspectionStages=['输入 GPT','GPT 描述与关键词','SAM 3 分割','GPT 复查输入','GPT 决策输出','Agent 标注结果'];
-let inspectionData={trace:[],steps:[]},inspectionStage=0,inspectionRunFrame=null,inspectionBusy=false,inspectionVersion='',inspectionStageManual=false,inspectionDisclosureScope='';
+let inspectionData={trace:[],steps:[]},inspectionStage=0,inspectionRunFrame=null,inspectionBusy=false,inspectionVersion='',inspectionStageManual=false,inspectionDisclosureScope='',inspectionPollTimer=null,inspectionRefreshPending=false;
 let inspectionReferenceMode=null;
 function configureInspectionStages(isReference){
  if(inspectionReferenceMode===isReference)return;
@@ -89,7 +89,9 @@ function renderInspection(force=false){
  $('clearAutoResult').disabled=!(Object.hasOwn(candidates,String(target))||Object.hasOwn(agentRuns,String(target))||steps.length||calls.length)||['running','stopping'].includes(inspectionData.job?.status);
 }
 async function refreshInspection(){
- if(window.workspaceMode!=='auto'||inspectionBusy)return;inspectionBusy=true;
+ if(window.workspaceMode!=='auto')return;
+ if(inspectionBusy){inspectionRefreshPending=true;return}
+ inspectionBusy=true;
  const requestedTopic=topic,requestedFrame=inspectionRunFrame??frame;
  try{
   const response=await fetch('/api/run/inspection?topic='+encodeURIComponent(topic||'')+'&frame='+requestedFrame,{cache:'no-store'});
@@ -108,7 +110,10 @@ async function refreshInspection(){
   }
   renderInspection();
  }
- catch(error){$('inspectionContext').textContent=error.message}finally{inspectionBusy=false}
+ catch(error){$('inspectionContext').textContent=error.message}finally{
+  inspectionBusy=false;
+  if(inspectionRefreshPending){inspectionRefreshPending=false;if(!document.hidden)await refreshInspection()}
+ }
 }
 window.refreshInspection=refreshInspection;
 async function ensureWorkspaceImage(){
@@ -119,6 +124,22 @@ async function ensureWorkspaceImage(){
  if(!view){await addWindow('image',[topic]);view=[...extraWindows.values()].find(x=>x.type==='image'&&!x.closed&&x.sources[0]===topic)}
  if(view){await activateAnnotation(view);await showFrame(current)}
 }
+function scheduleInspectionPoll(delay=1000){
+ if(inspectionPollTimer)clearTimeout(inspectionPollTimer);
+ if(document.hidden||window.workspaceMode!=='auto')return;
+ inspectionPollTimer=setTimeout(async()=>{
+  inspectionPollTimer=null;
+  try{
+   await refreshInspection();
+  }finally{
+   if(['running','stopping'].includes(inspectionData.job?.status))scheduleInspectionPoll(1000);
+  }
+ },delay);
+}
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden){if(inspectionPollTimer)clearTimeout(inspectionPollTimer);inspectionPollTimer=null}
+ else if(window.workspaceMode==='auto')refreshInspection().finally(()=>scheduleInspectionPoll());
+});
 window.setWorkspaceMode=async(mode,openImage=true)=>{
  const changed=window.workspaceMode!==mode;
  if(changed&&mode==='manual')inspectionRunFrame=null;
@@ -139,7 +160,8 @@ window.setWorkspaceMode=async(mode,openImage=true)=>{
  $('truthSave').textContent=mode==='auto'&&candidates[String(frame)]&&shapes[String(frame)]===undefined?'确认并保存当前帧真值':'保存当前帧真值';
  if(changed){pointMode=false;negativeMode=false;regionMode='';draft=[];resetPrompts();refreshPointTools();refreshShapeList();updateReferenceStatus();draw()}
  if(openImage)await ensureWorkspaceImage();
- if(mode==='auto'){await refreshInspection();renderInspection(true)}
+ if(mode==='auto'){await refreshInspection();renderInspection(true);scheduleInspectionPoll()}
+ else if(inspectionPollTimer){clearTimeout(inspectionPollTimer);inspectionPollTimer=null}
  window.resizeWorkbench();
  requestAnimationFrame(draw);
 };
@@ -263,4 +285,8 @@ $('clearAutoResult').onclick=async()=>{
  finally{button.textContent='清除结果';renderInspection(true)}
 };
 window.setWorkspaceMode('manual',false);
-setInterval(()=>{if(window.workspaceMode==='auto')refreshInspection()},1000);
+document.addEventListener('labelagent:job-status',event=>{
+ if(window.workspaceMode!=='auto')return;
+ if(['running','stopping'].includes(event.detail?.status)){if(!inspectionPollTimer)scheduleInspectionPoll(0);}
+ else {if(inspectionPollTimer)clearTimeout(inspectionPollTimer);inspectionPollTimer=null;refreshInspection();}
+});

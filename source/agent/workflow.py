@@ -494,10 +494,17 @@ def discover_visible_labels(config, image, labels):
         r"|\(\s*(\d+(?:\.\d+)?)\s*[,，]\s*(\d+(?:\.\d+)?)\s*\))")
     anchors = {}
     for label in exclusive_labels:
-        for match in point_pattern.finditer(by_label[label]["reason"]):
-            values = match.groups()
-            point = (float(values[0] or values[2]), float(values[1] or values[3]))
-            anchors.setdefault(point, set()).add(label)
+        reason = by_label[label]["reason"]
+        matches = list(point_pattern.finditer(reason))
+        # Natural-language comparisons may cite another object's location.
+        # Only use a single, unqualified positive point as an entity anchor.
+        if len(matches) != 1 or re.search(
+                r"\b(?:not|no|without|unlike|except|left of|right of|behind|between|rather than)\b"
+                r"|不是|并非|而非|没有|不在|左侧|右侧|后方|之间", reason, re.IGNORECASE):
+            continue
+        values = matches[0].groups()
+        point = (float(values[0] or values[2]), float(values[1] or values[3]))
+        anchors.setdefault(point, set()).add(label)
     for point, shared_labels in anchors.items():
         if len(shared_labels) < 2:
             continue

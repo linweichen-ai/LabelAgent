@@ -12,6 +12,7 @@ import urllib.error
 import base64
 import hashlib
 import marshal
+from functools import wraps
 from datetime import datetime, timezone
 from pathlib import Path
 from werkzeug.utils import secure_filename
@@ -47,8 +48,52 @@ app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024 * 1024
 state = {"video": None, "topic": None, "labels": [], "truth": {}, "reference_frames": {}, "config": {}, "candidates": {}, "candidates_by_topic": {}, "agent_runs": {}, "agent_runs_by_topic": {}, "candidate_revisions": {}, "candidate_revisions_by_topic": {}, "candidate_review_status": {}, "candidate_review_proposals": [], "human_review_transactions": {}, "rejected_candidates": {}}
 lock = threading.RLock()
 run_status_lock = threading.Lock()
+run_claim_lock = threading.Lock()
 run_status = {"status": "idle"}
 run_stop_event = threading.Event()
+run_task_id = None
+
+
+def run_claimed(handler):
+    # 非阻塞占用先于 state/status 锁，直到响应和异常收尾结束才释放。
+    # 终态本身不释放占用，因此旧任务的回调和写盘不会进入下一任务代际。
+    @wraps(handler)
+    def invoke(*args, **kwargs):
+        global run_task_id, run_stop_event
+        if not run_claim_lock.acquire(blocking=False):
+            raise RuntimeError("已有推理任务正在运行，请稍后重试")
+        task_id = uuid.uuid4().hex
+        try:
+            with run_status_lock:
+                if run_status.get("status") in {"running", "stopping"}:
+                    raise RuntimeError("已有自动标注任务正在运行")
+                previous_status = run_status.copy()
+                run_task_id = task_id
+                run_stop_event = threading.Event()
+                run_status.update(status="running", phase="claiming", task_id=task_id,
+                                  started_at=time.time(), events=[], shape_count=0)
+            try:
+                result = handler(*args, **kwargs)
+                with run_status_lock:
+                    if run_task_id == task_id and run_status.get("phase") == "claiming":
+                        run_status.update(status="completed", phase="completed")
+                return result
+            except BaseException as error:
+                with run_status_lock:
+                    if run_task_id == task_id and run_status.get("phase") == "claiming":
+                        run_status.clear()
+                        run_status.update(previous_status)
+                    elif run_task_id == task_id and run_status.get("status") in {"running", "stopping"}:
+                        run_status.update(status="stopped" if run_stop_event.is_set() else "failed",
+                                          phase="stopped" if run_stop_event.is_set() else "failed",
+                                          error=str(error)[:500], frame=None)
+                raise
+        finally:
+            with run_status_lock:
+                if run_task_id == task_id:
+                    run_task_id = None
+            run_claim_lock.release()
+    return invoke
 point_segment_lock = threading.Lock()
 POINT_SEGMENT_TIMEOUT_SECONDS = 180
 REFERENCE_DISCOVERY_RETRY_ERRORS = (
@@ -791,14 +836,14 @@ def save_description_trace(trace, description):
     _commit_work_file(temporary, path)
 
 
-def redact_debug(value):
-    key = state["config"].get("llm_key")
+def redact_debug(value, *, credential=None):
+    key = state["config"].get("llm_key") if credential is None else credential
     if isinstance(value, str):
         return value.replace(key, "[REDACTED]") if key else value
     if isinstance(value, dict):
-        return {name: redact_debug(item) for name, item in value.items()}
+        return {name: redact_debug(item, credential=key or "") for name, item in value.items()}
     if isinstance(value, list):
-        return [redact_debug(item) for item in value]
+        return [redact_debug(item, credential=key or "") for item in value]
     return value
 
 
@@ -1032,7 +1077,11 @@ def candidate_class_audit_version():
 @app.get("/api/state")
 def get_state():
     with lock:
-        recover_pending_human_reviews()
+        return _get_state_locked()
+
+
+def _get_state_locked():
+    recover_pending_human_reviews()
     description = None
     reference = state.get("reference_frames", {}).get(state["topic"], []) if state["topic"] else []
     path = WORK / "description.json"
@@ -1105,6 +1154,7 @@ def get_downstream_projection(index):
 
 
 @app.post("/api/segment_points")
+@run_claimed
 def get_point_segment():
     body = request.get_json()
     with lock:
@@ -1987,6 +2037,7 @@ def model_readiness():
 
 
 @app.post("/api/describe")
+@run_claimed
 def describe_truth():
     body = request.get_json()
     with lock:
@@ -2020,6 +2071,7 @@ def describe_truth():
 
 
 @app.post("/api/reference_candidates/audit")
+@run_claimed
 def audit_reference_candidates():
     """Atomically blind-audit every persisted high-risk candidate in a frame."""
     body = request.get_json() or {}
@@ -2040,9 +2092,6 @@ def audit_reference_candidates():
             raise ValueError("参考帧不能进行机器候选盲审")
         if str(index) in state.get("truth", {}):
             raise ValueError("已有真值的帧不能进行机器候选盲审")
-        with run_status_lock:
-            if run_status.get("status") in {"running", "stopping"}:
-                raise RuntimeError("自动任务运行中，暂不能进行候选盲审")
         key = str(index)
         candidates = copy.deepcopy(state.get("candidates", {}).get(key))
         if not isinstance(candidates, list) or not candidates:
@@ -2059,8 +2108,7 @@ def audit_reference_candidates():
         ids = [item.get("id") for item in candidates if item.get("label") in HIGH_RISK_LABELS]
         if len(ids) != len(set(ids)):
             raise ValueError("高风险候选 ID 重复，拒绝复审")
-        run_stop_event.clear()
-        update_run_status(status="running", phase="candidate_class_audit", frame=index,
+        update_run_status(status="stopping" if run_stop_event.is_set() else "running", phase="candidate_class_audit", frame=index,
                           completed=0, total=len(ids), topic=topic, error=None)
         def check_cancelled():
             if run_stop_event.is_set():
@@ -2145,13 +2193,11 @@ def audit_reference_candidates():
 
 
 @app.post("/api/reference_draft")
+@run_claimed
 def generate_reference_draft():
     """Create a candidate-only SAM -> VLM -> Agent draft without reference truth."""
     body = request.get_json() or {}
     with lock:
-        with run_status_lock:
-            if run_status.get("status") in ("running", "stopping"):
-                raise RuntimeError("已有自动标注任务正在运行")
         if state["video"] is None or state["topic"] is None:
             raise ValueError("请先加载图像消息")
         index = int(body.get("frame", -1))
@@ -2175,172 +2221,203 @@ def generate_reference_draft():
                 raise ValueError(f"参考类别不在当前标签表中：{label}")
             if label not in selected:
                 selected.append(label)
+        video = state["video"]
+        config = copy.deepcopy(state["config"])
+        labels = list(state["labels"])
         target_image = frame_image(index)
         input_sha256 = hashlib.sha256(target_image).hexdigest()
-        file_name, selected_topic = str(state["video"].path), state["topic"]
+        file_name, selected_topic = str(video.path), state["topic"]
+        config_sha256 = _sha256_json(config)
+        existing = copy.deepcopy(state.get("candidates", {}).get(str(index), []))
+        existing_run = copy.deepcopy(state.get("agent_runs", {}).get(str(index), {}))
+        original_candidates_sha256 = _sha256_json(existing)
+        original_run_sha256 = _sha256_json(existing_run)
+        audit_version = candidate_class_audit_version()
+        dataset_split = _frame_dataset_split(index)
+        truth_sha256 = _sha256_json(state.get("truth", {}))
+        references_sha256 = _sha256_json(state.get("reference_frames", {}))
         trace = []
-        update_run_status(status="running", frame=index, completed=0, total=1,
-                          phase="discovering" if auto_detect_visible else "describing", round=0, error=None,
-                          topic=selected_topic, file=file_name,
-                          started_at=time.time(), events=[], shape_count=0)
-        run_stop_event.clear()
+        with run_status_lock:
+            run_status.update(status="running", frame=index, completed=0, total=1,
+                phase="discovering" if auto_detect_visible else "describing", round=0, error=None,
+                topic=selected_topic, file=file_name)
 
-        def on_trace(event):
-            record = redact_debug(event | {"frame": index,
-                "topic": selected_topic, "file": file_name,
-                "purpose": "参考帧机器草稿"})
-            existing = next((position for position, item in enumerate(trace)
-                             if item["id"] == record["id"]), None)
-            if existing is None:
-                trace.append(record)
-            else:
-                trace[existing] = record
+    debug_key = config.get("llm_key")
+    def redact_snapshot(value):
+        if isinstance(value, str):
+            return value.replace(debug_key, "[REDACTED]") if debug_key else value
+        if isinstance(value, dict):
+            return {name: redact_snapshot(item) for name, item in value.items()}
+        if isinstance(value, list):
+            return [redact_snapshot(item) for item in value]
+        return value
+
+    def on_trace(event):
+        record = redact_snapshot(event | {"frame": index,
+            "topic": selected_topic, "file": file_name,
+            "purpose": "参考帧机器草稿"})
+        existing = next((position for position, item in enumerate(trace)
+                         if item["id"] == record["id"]), None)
+        if existing is None:
+            trace.append(record)
+        else:
+            trace[existing] = record
+        with lock:
             save_debug(trace)
 
-        def on_progress(event):
+    def on_progress(event):
+        if run_stop_event.is_set():
+            raise RunCancelled("用户已停止参考帧草稿生成")
+        record = {"time": time.time(), "frame": index,
+                  "phase": event["phase"], "round": event["round"],
+                  "shape_count": len(event["shapes"])}
+        with run_status_lock:
+            run_status.update(phase=event["phase"], round=event["round"],
+                              shape_count=record["shape_count"])
+            run_status["events"] = (run_status.get("events", []) + [record])[-150:]
+
+    try:
+        with cancellation(run_stop_event), trace_calls(on_trace, save_inspection_image):
+            discovery = None
+            discovery_retry_count = 0
+            if auto_detect_visible:
+                discovery, discovery_retry_count = discover_reference_labels(
+                    config, target_image, selected,
+                    lambda error: update_run_status(
+                        phase="discovering_retry", discovery_attempt=2,
+                        error=f"首次类别结构不合规，正在自动重试：{str(error)[:300]}"))
+                selected = discovery.get("candidate_labels") or list(dict.fromkeys(
+                    discovery["visible_labels"] + discovery["uncertain_labels"]))
+                if not selected:
+                    raise ValueError("VLM 未发现可生成候选的已知类别；请改用单类别起稿或点提示 SAM")
+                update_run_status(phase="describing", visible_labels=selected,
+                                  uncertain_labels=discovery["uncertain_labels"],
+                                  unknown_candidate_count=len(discovery["unknown_candidates"]),
+                                  discovery_retry_count=discovery_retry_count, error=None)
+            description = describe(config, target_image, [], selected,
+                                   include_unreferenced=True)
+            prompt_payload = description.get("prompts", [])
+            discovery_sha256 = _sha256_json(discovery) if discovery is not None else None
+            pipeline_config_sha256 = _sha256_json({
+                "description_input_version": DESCRIPTION_INPUT_VERSION,
+                "llm_model": config.get("llm_model"),
+                "llm_prompt_profile": config.get("llm_prompt_profile", "full"),
+                "max_review_rounds": MAX_REVIEW_ROUNDS,
+                "sam_prompts": prompt_payload,
+                "auto_detect_visible": auto_detect_visible,
+                "discovery_sha256": discovery_sha256,
+            })
+            candidate_request_id = _sha256_json({
+                "request": "reference_draft_candidate",
+                "file": file_name,
+                "topic": selected_topic,
+                "frame": index,
+                "input_sha256": input_sha256,
+                "labels": selected,
+                "auto_detect_visible": auto_detect_visible,
+                "discovery_sha256": discovery_sha256,
+                "pipeline_config_sha256": pipeline_config_sha256,
+            })
             if run_stop_event.is_set():
                 raise RunCancelled("用户已停止参考帧草稿生成")
-            record = {"time": time.time(), "frame": index,
-                      "phase": event["phase"], "round": event["round"],
-                      "shape_count": len(event["shapes"])}
-            with run_status_lock:
-                run_status.update(phase=event["phase"], round=event["round"],
-                                  shape_count=record["shape_count"])
-                run_status["events"] = (run_status.get("events", []) + [record])[-150:]
-
-        try:
-            with cancellation(run_stop_event), trace_calls(on_trace, save_inspection_image):
-                discovery = None
-                discovery_retry_count = 0
-                if auto_detect_visible:
-                    discovery, discovery_retry_count = discover_reference_labels(
-                        state["config"], target_image, selected,
-                        lambda error: update_run_status(
-                            phase="discovering_retry", discovery_attempt=2,
-                            error=f"首次类别结构不合规，正在自动重试：{str(error)[:300]}"))
-                    selected = discovery.get("candidate_labels") or list(dict.fromkeys(
-                        discovery["visible_labels"] + discovery["uncertain_labels"]))
-                    if not selected:
-                        raise ValueError("VLM 未发现可生成候选的已知类别；请改用单类别起稿或点提示 SAM")
-                    update_run_status(phase="describing", visible_labels=selected,
-                                      uncertain_labels=discovery["uncertain_labels"],
-                                      unknown_candidate_count=len(discovery["unknown_candidates"]),
-                                      discovery_retry_count=discovery_retry_count, error=None)
-                description = describe(state["config"], target_image, [], selected,
-                                       include_unreferenced=True)
-                prompt_payload = description.get("prompts", [])
-                discovery_sha256 = _sha256_json(discovery) if discovery is not None else None
-                pipeline_config_sha256 = _sha256_json({
-                    "description_input_version": DESCRIPTION_INPUT_VERSION,
-                    "llm_model": state["config"].get("llm_model"),
-                    "llm_prompt_profile": state["config"].get("llm_prompt_profile", "full"),
-                    "max_review_rounds": MAX_REVIEW_ROUNDS,
-                    "sam_prompts": prompt_payload,
-                    "auto_detect_visible": auto_detect_visible,
-                    "discovery_sha256": discovery_sha256,
-                })
-                candidate_request_id = _sha256_json({
-                    "request": "reference_draft_candidate",
-                    "file": file_name,
-                    "topic": selected_topic,
-                    "frame": index,
-                    "input_sha256": input_sha256,
-                    "labels": selected,
-                    "auto_detect_visible": auto_detect_visible,
-                    "discovery_sha256": discovery_sha256,
-                    "pipeline_config_sha256": pipeline_config_sha256,
-                })
-                if run_stop_event.is_set():
-                    raise RunCancelled("用户已停止参考帧草稿生成")
-                update_run_status(phase="generating")
-                result = run(state["config"], target_image, description, selected,
-                             max_rounds=MAX_REVIEW_ROUNDS,
-                             on_progress=on_progress, reference=None)
-            if result["agent"].get("stop_reason") == "error":
-                raise RuntimeError("SAM/VLM/Agent 未能生成有效参考帧草稿")
-            candidate_output_sha256 = _sha256_json(result["shapes"])
-            candidate_event_id = reference_candidate_event_id(
-                candidate_request_id, candidate_output_sha256)
-            for generated_shape in result["shapes"]:
-                generated_shape["candidate_only"] = True
-                generated_shape["human_truth"] = False
-                generated_shape["approved_for_training"] = False
-                generated_shape["provenance"] = {
-                    "kind": "machine_candidate",
-                    "pipeline": "sam_vlm_agent",
-                    "candidate_event_id": candidate_event_id,
-                    "candidate_request_id": candidate_request_id,
-                    "candidate_output_sha256": candidate_output_sha256,
-                    "input_sha256": input_sha256,
-                    "file": file_name,
-                    "topic": selected_topic,
-                    "frame": index,
-                    "labels": selected,
-                    "auto_detect_visible": auto_detect_visible,
-                    "visible_label_discovery": discovery,
-                    "discovery_sha256": discovery_sha256,
-                    "sam_prompts": prompt_payload,
-                    "llm_model": state["config"].get("llm_model"),
-                    "prompt_profile": state["config"].get("llm_prompt_profile", "full"),
-                    "description_input_version": DESCRIPTION_INPUT_VERSION,
-                    "pipeline_config_sha256": pipeline_config_sha256,
-                }
-            existing = copy.deepcopy(state.setdefault("candidates", {}).get(str(index), []))
-            existing_run = copy.deepcopy(state.setdefault("agent_runs", {}).get(str(index), {}))
-            combined, merged_id_map = merge_inference_candidates(
-                existing, result["shapes"], selected, return_id_map=True)
-            bind_merged_candidate_references(result, merged_id_map)
-            candidate_artifact_sha256 = _sha256_json(combined)
-            visibility_review_queue = reference_visibility_review_queue(discovery, combined)
-            def check_audit_cancelled():
-                if run_stop_event.is_set():
-                    raise RunCancelled("用户已停止参考帧草稿生成")
-            audit_version = candidate_class_audit_version()
-            with cancellation(run_stop_event), trace_calls(on_trace, save_inspection_image):
-                class_audits, class_review_queue = audit_high_risk_candidates(
-                    state["config"], target_image, combined, list(state["labels"]),
-                    VISIBLE_LABEL_DEFINITIONS, chat, check_cancelled=check_audit_cancelled,
-                    tolerate_errors=True)
-            if candidate_class_audit_version() != audit_version:
-                raise StaleHumanReviewError("审核配置在参考帧审核期间变化，未保存草稿审核")
-            for audit in class_audits:
-                audit["audit_version"] = audit_version
-                audit["audit_sha256"] = _sha256_json({
-                    key: value for key, value in audit.items() if key != "audit_sha256"})
-            for entry in class_review_queue:
-                entry["audit_sha256"] = next(
-                    audit["audit_sha256"] for audit in class_audits
-                    if audit["candidate_id"] == entry["candidate_id"])
-            visibility_review_queue.extend(class_review_queue)
-            replacement_run = result["agent"] | {
-                "review_queue": result["review_queue"] + visibility_review_queue,
-                "candidate_class_audits": class_audits,
-                "candidate_class_audit_version": audit_version,
-                "candidate_class_audit_status": "complete", "applied": result["applied"],
-                "candidates_added": result["candidates_added"],
-                "reference_draft": True, "candidate_only": True,
-                "human_truth": False, "approved_for_training": False,
-                "dataset_split": _frame_dataset_split(index),
-                "existing_candidates_preserved": True,
+            update_run_status(phase="generating")
+            result = run(config, target_image, description, selected,
+                         max_rounds=MAX_REVIEW_ROUNDS,
+                         on_progress=on_progress, reference=None)
+        if result["agent"].get("stop_reason") == "error":
+            raise RuntimeError("SAM/VLM/Agent 未能生成有效参考帧草稿")
+        candidate_output_sha256 = _sha256_json(result["shapes"])
+        candidate_event_id = reference_candidate_event_id(
+            candidate_request_id, candidate_output_sha256)
+        for generated_shape in result["shapes"]:
+            generated_shape["candidate_only"] = True
+            generated_shape["human_truth"] = False
+            generated_shape["approved_for_training"] = False
+            generated_shape["provenance"] = {
+                "kind": "machine_candidate",
+                "pipeline": "sam_vlm_agent",
                 "candidate_event_id": candidate_event_id,
                 "candidate_request_id": candidate_request_id,
                 "candidate_output_sha256": candidate_output_sha256,
-                "candidate_artifact_sha256": candidate_artifact_sha256,
                 "input_sha256": input_sha256,
-                "pipeline_config_sha256": pipeline_config_sha256,
-                "sam_prompts": prompt_payload,
+                "file": file_name,
+                "topic": selected_topic,
+                "frame": index,
+                "labels": selected,
                 "auto_detect_visible": auto_detect_visible,
                 "visible_label_discovery": discovery,
                 "discovery_sha256": discovery_sha256,
-                "discovery_retry_count": discovery_retry_count,
-                "human_review_required": True}
+                "sam_prompts": prompt_payload,
+                "llm_model": config.get("llm_model"),
+                "prompt_profile": config.get("llm_prompt_profile", "full"),
+                "description_input_version": DESCRIPTION_INPUT_VERSION,
+                "pipeline_config_sha256": pipeline_config_sha256,
+            }
+        combined, merged_id_map = merge_inference_candidates(
+            existing, result["shapes"], selected, return_id_map=True)
+        bind_merged_candidate_references(result, merged_id_map)
+        candidate_artifact_sha256 = _sha256_json(combined)
+        visibility_review_queue = reference_visibility_review_queue(discovery, combined)
+        def check_audit_cancelled():
+            if run_stop_event.is_set():
+                raise RunCancelled("用户已停止参考帧草稿生成")
+        with cancellation(run_stop_event), trace_calls(on_trace, save_inspection_image):
+            class_audits, class_review_queue = audit_high_risk_candidates(
+                config, target_image, combined, labels,
+                VISIBLE_LABEL_DEFINITIONS, chat, check_cancelled=check_audit_cancelled,
+                tolerate_errors=True)
+        for audit in class_audits:
+            audit["audit_version"] = audit_version
+            audit["audit_sha256"] = _sha256_json({
+                key: value for key, value in audit.items() if key != "audit_sha256"})
+        for entry in class_review_queue:
+            entry["audit_sha256"] = next(
+                audit["audit_sha256"] for audit in class_audits
+                if audit["candidate_id"] == entry["candidate_id"])
+        visibility_review_queue.extend(class_review_queue)
+        replacement_run = result["agent"] | {
+            "review_queue": result["review_queue"] + visibility_review_queue,
+            "candidate_class_audits": class_audits,
+            "candidate_class_audit_version": audit_version,
+            "candidate_class_audit_status": "complete", "applied": result["applied"],
+            "candidates_added": result["candidates_added"],
+            "reference_draft": True, "candidate_only": True,
+            "human_truth": False, "approved_for_training": False,
+            "dataset_split": dataset_split,
+            "existing_candidates_preserved": True,
+            "candidate_event_id": candidate_event_id,
+            "candidate_request_id": candidate_request_id,
+            "candidate_output_sha256": candidate_output_sha256,
+            "candidate_artifact_sha256": candidate_artifact_sha256,
+            "input_sha256": input_sha256,
+            "pipeline_config_sha256": pipeline_config_sha256,
+            "sam_prompts": prompt_payload,
+            "auto_detect_visible": auto_detect_visible,
+            "visible_label_discovery": discovery,
+            "discovery_sha256": discovery_sha256,
+            "discovery_retry_count": discovery_retry_count,
+            "human_review_required": True}
+        with lock, run_status_lock:
+            if run_stop_event.is_set():
+                raise RunCancelled("用户已停止参考帧草稿生成")
+            if (state.get("video") is not video
+                    or str(video.path) != file_name or state.get("topic") != selected_topic
+                    or _sha256_json(state.get("config", {})) != config_sha256
+                    or state.get("labels", []) != labels
+                    or candidate_class_audit_version() != audit_version
+                    or _sha256_json(state.get("truth", {})) != truth_sha256
+                    or _sha256_json(state.get("reference_frames", {})) != references_sha256
+                    or _frame_dataset_split(index) != dataset_split
+                    or _sha256_json(state.get("candidates", {}).get(str(index), [])) != original_candidates_sha256
+                    or _sha256_json(state.get("agent_runs", {}).get(str(index), {})) != original_run_sha256):
+                raise StaleHumanReviewError("数据作用域、候选、人工真值或审核配置已变化，未保存旧草稿")
             revision = archive_candidate_revision(
                 index, selected_topic, existing, existing_run, combined, replacement_run,
                 reason="reference_draft_rerun")
             state["candidates"][str(index)] = combined
             state.setdefault("agent_runs", {})[str(index)] = replacement_run
             save()
-            update_run_status(status="completed", phase="completed", frame=None,
+            run_status.update(status="completed", phase="completed", frame=None,
                               completed=1, shape_count=len(combined))
             return jsonify(frame=index, labels=selected, candidates=combined,
                            candidates_added=result["candidates_added"],
@@ -2360,23 +2437,21 @@ def generate_reference_draft():
                            discovery_sha256=discovery_sha256,
                            human_review_required=True,
                            message="SAM/VLM/Agent 草稿已生成；请人工精修并确认")
-        except RunCancelled:
-            update_run_status(status="stopped", phase="stopped", frame=None,
-                              error=None, completed=0)
-            return jsonify(stopped=True, candidate_only=True, human_truth=False)
-        except Exception as error:
-            update_run_status(status="failed", phase="failed", frame=None,
-                              error=str(error)[:500], completed=0)
-            raise
+    except RunCancelled:
+        update_run_status(status="stopped", phase="stopped", frame=None,
+                          error=None, completed=0)
+        return jsonify(stopped=True, candidate_only=True, human_truth=False)
+    except Exception as error:
+        update_run_status(status="failed", phase="failed", frame=None,
+                          error=str(error)[:500], completed=0)
+        raise
 
 
 @app.post("/api/run")
+@run_claimed
 def run_workflow():
     body = request.get_json() or {}
     with lock:
-        with run_status_lock:
-            if run_status.get("status") in ("running", "stopping"):
-                raise RuntimeError("已有自动标注任务正在运行")
         index = int(body["frame"])
         topic_references = state.get("reference_frames", {}).get(state["topic"], [])
         if not topic_references:
@@ -2419,91 +2494,122 @@ def run_workflow():
                   "trace": [], "steps": [], "file": str(state["video"].path),
                   "topic": state["topic"], "reference": reference,
                   "message": "候选已保存到本地；请在工作台逐帧复核并保存真值"}
+        video, topic = state["video"], state["topic"]
+        file_name = str(video.path)
+        config = copy.deepcopy(state.get("config", {}))
+        labels = copy.deepcopy(state.get("labels", []))
+        auto_labels = copy.deepcopy(state.get("auto_labels"))
+        config_sha256 = _sha256_json(config)
+        references = copy.deepcopy(state.get("reference_frames", {}))
+        reference_truth = copy.deepcopy(state["truth"][str(reference)])
+        reference_signature_snapshot = description["reference_signature"]
+        candidates = {str(target): copy.deepcopy(state.get("candidates", {}).get(str(target)))
+                      for target in targets}
+        runs = {str(target): copy.deepcopy(state.get("agent_runs", {}).get(str(target)))
+                for target in targets}
         failed_frames = []
-        update_run_status(status="running", frame=None, completed=0, total=len(targets),
-                          phase="starting", round=0, error=None, topic=state["topic"],
-                          file=str(state["video"].path),
-                          started_at=time.time(), events=[], shape_count=0)
-        run_stop_event.clear()
+        with run_status_lock:
+            run_status.update(status="running", frame=None, completed=0, total=len(targets),
+                              phase="starting", round=0, error=None, topic=topic, file=file_name,
+                              started_at=time.time(), events=[], shape_count=0)
+    trace_frame = reference
+    def on_trace(event):
+        with run_status_lock:
+            phase, round_number = run_status.get("phase"), run_status.get("round", 0)
+        event = redact_debug(event | {"frame": trace_frame, "round": round_number,
+            "phase": phase, "topic": topic, "file": file_name,
+            "purpose": "自动标注"}, credential=config.get("llm_key") or "")
+        trace = output["trace"]
+        existing = next((i for i, item in enumerate(trace) if item["id"] == event["id"]), None)
+        if existing is None:
+            trace.append(event)
+        else:
+            trace[existing] = event
+        save_debug(trace)
+        save_run(output)
+
+    def check_cancelled():
+        if run_stop_event.is_set():
+            raise RunCancelled("用户已停止自动标注")
+
+    try:
         save_run(output)
         save_debug([])
-        trace_frame = reference
-        def on_trace(event):
-            with run_status_lock:
-                phase, round_number = run_status.get("phase"), run_status.get("round", 0)
-            event = redact_debug(event | {"frame": trace_frame, "round": round_number,
-                "phase": phase, "topic": state["topic"], "file": str(state["video"].path),
-                "purpose": "自动标注"})
-            trace = output["trace"]
-            existing = next((i for i, item in enumerate(trace) if item["id"] == event["id"]), None)
-            if existing is None:
-                trace.append(event)
-            else:
-                trace[existing] = event
-            save_debug(trace)
-            save_run(output)
-        try:
-            with cancellation(run_stop_event), trace_calls(on_trace, save_inspection_image):
-                selected_reference = [shape for shape in state["truth"][str(reference)]
-                                      if shape.get("label") in allowed_labels]
-                reference_context = ({"image": frame_image(reference),
-                    "marked_image": overlay(reference, allowed_labels),
-                    "annotations": selected_reference} if selected_reference else None)
-                for target in targets:
-                    trace_frame = target
-                    update_run_status(frame=target, phase="loading", round=0, shape_count=0)
-                    target_image = frame_image(target)
-                    def on_progress(event, target=target):
-                        if run_stop_event.is_set():
-                            raise RunCancelled("用户已停止自动标注")
-                        record = {"time": time.time(), "frame": target,
-                            "phase": event["phase"], "round": event["round"],
-                            "shape_count": len(event["shapes"])}
-                        if event.get("label"):
-                            record["label"] = event["label"]
-                        if event.get("operation"):
-                            record["operation"] = event["operation"]
-                        if event.get("outcome"):
-                            record["outcome"] = event["outcome"]
-                        if event["phase"] == "finished":
-                            record["stop_reason"] = event["result"]["agent"]["stop_reason"]
-                        with run_status_lock:
-                            run_status.update(phase=event["phase"], round=event["round"],
-                                shape_count=record["shape_count"])
-                            run_status["events"] = (run_status.get("events", []) + [record])[-150:]
-                        output["current"] = {"frame": target, "phase": event["phase"],
-                            "round": event["round"], "audit": event["audit"],
-                            "review_queue": event["review_queue"]}
-                        if event["phase"] in ("generated", "edited", "finished"):
-                            output["steps"].append({"id": uuid.uuid4().hex,
-                                "frame": target, "phase": event["phase"], "round": event["round"],
-                                "shape_count": len(event["shapes"]),
-                                "image": save_inspection_image(candidate_overlay(target_image, event["shapes"])),
-                                "outcome": event.get("outcome"),
-                                "result": {"agent": event["result"]["agent"]} if event.get("result") else None})
-                        save_run(output)
-                    if run_stop_event.is_set():
-                        raise RunCancelled("用户已停止自动标注")
-                    result = run(state["config"], target_image, description, allowed_labels,
-                        max_rounds=max_rounds, on_progress=on_progress, reference=reference_context)
-                    if run_stop_event.is_set():
-                        raise RunCancelled("用户已停止自动标注")
-                    existing = state.setdefault("candidates", {}).get(str(target), [])
-                    failed = result["agent"].get("stop_reason") == "error"
-                    if failed:
-                        combined = list(existing)
-                    else:
-                        combined, merged_id_map = merge_inference_candidates(
-                            existing, result["shapes"], allowed_labels, return_id_map=True)
-                        bind_merged_candidate_references(result, merged_id_map)
+        with cancellation(run_stop_event), trace_calls(on_trace, save_inspection_image):
+            check_cancelled()
+            selected_reference = [shape for shape in reference_truth
+                                  if shape.get("label") in allowed_labels]
+            reference_image = video.frame(topic, reference) if selected_reference else None
+            reference_context = ({"image": reference_image,
+                "marked_image": reference_overlay(reference_image, selected_reference),
+                "annotations": selected_reference} if selected_reference else None)
+            for target in targets:
+                trace_frame = target
+                with run_status_lock:
+                    check_cancelled()
+                    run_status.update(frame=target, phase="loading", round=0, shape_count=0)
+                target_image = video.frame(topic, target)
+                def on_progress(event, target=target):
+                    record = {"time": time.time(), "frame": target,
+                        "phase": event["phase"], "round": event["round"],
+                        "shape_count": len(event["shapes"])}
+                    for field in ("label", "operation", "outcome"):
+                        if event.get(field):
+                            record[field] = event[field]
+                    if event["phase"] == "finished":
+                        record["stop_reason"] = event["result"]["agent"]["stop_reason"]
+                    with run_status_lock:
+                        check_cancelled()
+                        run_status.update(phase=event["phase"], round=event["round"],
+                            shape_count=record["shape_count"])
+                        run_status["events"] = (run_status.get("events", []) + [record])[-150:]
+                    output["current"] = {"frame": target, "phase": event["phase"],
+                        "round": event["round"], "audit": event["audit"],
+                        "review_queue": event["review_queue"]}
+                    if event["phase"] in ("generated", "edited", "finished"):
+                        output["steps"].append({"id": uuid.uuid4().hex,
+                            "frame": target, "phase": event["phase"], "round": event["round"],
+                            "shape_count": len(event["shapes"]),
+                            "image": save_inspection_image(candidate_overlay(target_image, event["shapes"])),
+                            "outcome": event.get("outcome"),
+                            "result": {"agent": event["result"]["agent"]} if event.get("result") else None})
+                    save_run(output)
+                check_cancelled()
+                result = run(config, target_image, description, allowed_labels,
+                    max_rounds=max_rounds, on_progress=on_progress, reference=reference_context)
+                check_cancelled()
+                key = str(target)
+                existing = candidates[key] or []
+                failed = result["agent"].get("stop_reason") == "error"
+                if failed:
+                    combined = list(existing)
+                else:
+                    combined, merged_id_map = merge_inference_candidates(
+                        existing, result["shapes"], allowed_labels, return_id_map=True)
+                    bind_merged_candidate_references(result, merged_id_map)
+                replacement_run = result["agent"] | {
+                    "review_queue": result["review_queue"], "applied": result["applied"],
+                    "candidates_added": 0 if failed else result["candidates_added"],
+                    "existing_candidates_preserved": failed}
+                with lock, run_status_lock:
+                    check_cancelled()
+                    if (state.get("video") is not video or str(video.path) != file_name
+                            or state.get("topic") != topic
+                            or _sha256_json(state.get("config", {})) != config_sha256
+                            or state.get("labels", []) != labels
+                            or state.get("auto_labels") != auto_labels
+                            or state.get("reference_frames", {}) != references
+                            or state.get("truth", {}).get(str(reference)) != reference_truth
+                            or key in state.get("truth", {})
+                            or state.get("candidates", {}).get(key) != candidates[key]
+                            or state.get("agent_runs", {}).get(key) != runs[key]
+                            or reference_signature(reference) != reference_signature_snapshot):
+                        raise StaleHumanReviewError("数据作用域、配置、标签、参考真值或目标帧已变化，未保存旧推理结果")
                     if failed:
                         failed_frames.append(target)
                     else:
-                        state["candidates"][str(target)] = combined
-                    state.setdefault("agent_runs", {})[str(target)] = result["agent"] | {
-                        "review_queue": result["review_queue"], "applied": result["applied"],
-                        "candidates_added": 0 if failed else result["candidates_added"],
-                        "existing_candidates_preserved": failed}
+                        state.setdefault("candidates", {})[key] = combined
+                    state.setdefault("agent_runs", {})[key] = replacement_run
                     save()
                     results.append({"frame": target,
                         "candidates_added": 0 if failed else result["candidates_added"],
@@ -2512,31 +2618,35 @@ def run_workflow():
                         "failed": failed, "existing_candidates_preserved": failed})
                     output["current"] = None
                     save_run(output)
-                    update_run_status(completed=len(results), phase="saved")
-        except RunCancelled:
-            output["current"] = None
-            output["message"] = "用户已停止自动标注；已完成帧的候选已保存"
-            save_run(output)
-            update_run_status(status="stopped", phase="stopped", frame=None,
-                              error=None, completed=len(results))
-            return jsonify(output | {"stopped": True})
-        except Exception as error:
-            output["error"] = str(error)[:500]
-            save_run(output)
-            if run_stop_event.is_set():
-                update_run_status(status="stopped", phase="stopped", error="用户已停止自动标注")
-            else:
-                update_run_status(status="failed", phase="failed", error=str(error)[:500])
-            raise
+                    run_status.update(completed=len(results), phase="saved")
         output["failed_frames"] = failed_frames
-        if failed_frames:
-            output["message"] = (f"{len(failed_frames)}/{len(results)} 帧失败；失败帧旧候选已保留，"
-                                 "请查看错误后重试")
-            update_run_status(status="failed", phase="failed", frame=None,
-                              error=output["message"])
-        else:
-            update_run_status(status="completed", phase="completed", frame=None)
+        with run_status_lock:
+            check_cancelled()
+            if failed_frames:
+                output["message"] = (f"{len(failed_frames)}/{len(results)} 帧失败；失败帧旧候选已保留，"
+                                     "请查看错误后重试")
+                run_status.update(status="failed", phase="failed", frame=None,
+                                  error=output["message"])
+            else:
+                run_status.update(status="completed", phase="completed", frame=None)
         return jsonify(output)
+    except RunCancelled:
+        output["current"] = None
+        output["message"] = "用户已停止自动标注；已完成帧的候选已保存"
+        save_run(output)
+        with run_status_lock:
+            run_status.update(status="stopped", phase="stopped", frame=None,
+                              error=None, completed=len(results))
+        return jsonify(output | {"stopped": True})
+    except Exception as error:
+        output["error"] = str(error)[:500]
+        save_run(output)
+        with run_status_lock:
+            if run_stop_event.is_set():
+                run_status.update(status="stopped", phase="stopped", error="用户已停止自动标注")
+            else:
+                run_status.update(status="failed", phase="failed", error=str(error)[:500])
+        raise
 
 
 @app.post("/api/run/stop")

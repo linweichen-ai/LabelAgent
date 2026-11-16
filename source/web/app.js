@@ -534,7 +534,7 @@ function renderRunButton(){
  button.setAttribute('aria-busy',String(pending||running));
  renderAgentProgressPanel(job,elapsed||0);
 }
-function renderAgentProgress(job){latestAgentJob=job;renderRunButton()}
+function renderAgentProgress(job){const changed=latestAgentJob?.status!==job.status||latestAgentJob?.phase!==job.phase||latestAgentJob?.frame!==job.frame;latestAgentJob=job;renderRunButton();if(changed)document.dispatchEvent(new CustomEvent('labelagent:job-status',{detail:job}))}
 async function refreshAgentProgress(){if(progressFetching)return;progressFetching=true;try{const response=await fetch('/api/run/status',{cache:'no-store'});if(response.ok){renderAgentProgress(await response.json());$('runButton').removeAttribute('title')}}catch{$('runButton').title='无法读取 Agent 状态，请检查工作台服务连接'}finally{progressFetching=false}}
 $('runButton').onclick=async()=>{
  const button=$('runButton');
@@ -545,6 +545,7 @@ $('runButton').onclick=async()=>{
  }
  if(runRequestStartedAt!==null)return;
  runRequestStartedAt=Date.now()/1000;renderRunButton();
+ scheduleRunStatusPoll(250);
  try{
   const startFrame=Number($('frameNumber').value),count=Number($('taskCount').value);
   if(!Number.isInteger(startFrame)||startFrame<0||startFrame>=(topics[topic]?.count||0))throw Error('请选择有效的当前帧');
@@ -565,7 +566,28 @@ $('runButton').onclick=async()=>{
  }catch(e){toast(e.message)}
  finally{await refreshAgentProgress();runRequestStartedAt=null;renderRunButton()}
 };
-setInterval(()=>{renderRunButton();refreshAgentProgress()},1000);refreshAgentProgress();
+let runStatusPollTimer=null,runStatusPollDelay=3000,runStatusFetching=false;
+function scheduleRunStatusPoll(delay=runStatusPollDelay){
+ if(runStatusPollTimer)clearTimeout(runStatusPollTimer);
+ runStatusPollTimer=null;
+ if(!document.hidden)runStatusPollTimer=setTimeout(pollRunStatus,delay);
+}
+async function pollRunStatus(){
+ runStatusPollTimer=null;
+ if(document.hidden)return;
+ if(runStatusFetching)return;
+ runStatusFetching=true;
+ try{
+  await refreshAgentProgress();
+  const active=['running','stopping'].includes(latestAgentJob?.status);
+  runStatusPollDelay=active?1000:15000;
+ }finally{
+  runStatusFetching=false;
+  scheduleRunStatusPoll(runStatusPollDelay);
+ }
+}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){if(runStatusPollTimer)clearTimeout(runStatusPollTimer);runStatusPollTimer=null}else if(!runStatusPollTimer)pollRunStatus()});
+pollRunStatus();
 fetch('/api/state').then(r=>r.json()).then(async data=>{labels=data.labels||[];autoLabels=data.auto_labels||labels;referenceOnlyLabels=data.reference_only_labels||[];shapes=data.truth||{};truthReviewStatus=data.truth_review_status||{};candidates=data.candidates||{};agentRuns=data.agent_runs||{};candidateReviewProposals=data.candidate_review_proposals||[];candidateReviewBindings=data.candidate_review_bindings||{};window.referenceFrames=data.reference_frames||{};refreshLabels();refreshAutoLabels();refreshCandidateSummary();$('labelsInput').value=labels.join(',')||$('labelsInput').value;for(let [key,id] of Object.entries({llm_url:'llmUrl',llm_model:'llmModel'}))$(id).value=data.config[key]||'';currentDescription=data.description||null;const savedMode=localStorage.getItem('labelagentWorkspaceMode');await window.setWorkspaceMode?.(savedMode||(Object.keys(candidates).length?'auto':'manual'),false);if(data.loaded)await loadVideo(data)});
 
 // Keep point-prompt mode unmistakable: entering the mode is not an inference request.

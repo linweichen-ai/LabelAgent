@@ -5,6 +5,8 @@
   if (!dialog) return;
 
   let latestState = null;
+  let preparationGeneration = 0;
+  let preparationStateReady = true;
   let draftBusy = false;
   let draftTimer = null;
   let draftStartedAt = 0;
@@ -90,7 +92,7 @@
     const button = byId('referenceRecommendedAction');
     if (!text || !button) return;
     const state = latestState;
-    const loaded = Boolean(state?.loaded && state?.topic);
+    const loaded = preparationStateReady && Boolean(state?.loaded && state?.topic);
     const truthEntries = frameEntries(state?.truth);
     const truthStatus = state?.truth_review_status || {};
     const verified = truthEntries.filter(([frameId]) => truthStatus[frameId]?.reusable_as_reference === true);
@@ -153,15 +155,16 @@
     } else {
       detail.textContent = '切换前会保存当前文件的候选；外部标注仍按历史草稿处理，必须重新人工确认。';
     }
-    button.disabled = sourceSwitchBusy || draftBusy || !registeredSources.length;
+    button.disabled = !preparationStateReady || sourceSwitchBusy || draftBusy || !registeredSources.length;
     button.textContent = sourceSwitchBusy ? '正在安全切换…' : '切换并查看已有标注';
     updateRecommendation();
   }
 
-  async function readAnnotationSources() {
+  async function readAnnotationSources(generation = preparationGeneration) {
     const response = await fetch('/api/files/annotation-sources', {cache: 'no-store'});
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || '无法读取其他已有标注数据');
+    if (generation !== preparationGeneration) return data;
     renderAnnotationSources(data);
     return data;
   }
@@ -198,12 +201,12 @@
     updateRecommendation();
   }
 
-  async function readModelReadiness() {
-    renderReadiness(null);
+  async function readModelReadiness(generation = preparationGeneration) {
+    if (generation === preparationGeneration) renderReadiness(null);
     const response = await fetch('/api/model_readiness', {cache: 'no-store'});
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || '模型就绪检查失败');
-    renderReadiness(data);
+    if (generation === preparationGeneration) renderReadiness(data);
     return data;
   }
 
@@ -259,27 +262,41 @@
   }
 
   async function openDialog() {
+    const generation = ++preparationGeneration;
+    preparationStateReady = false;
+    latestState = null;
+    const dependentButtons = ['useExistingTruth', 'useLegacyTruthDraft', 'useCandidateDraft', 'runReferenceAutoDraft', 'startSamDraft', 'startManualReference', 'loadRegisteredAnnotationSource'];
+    for (const id of dependentButtons) byId(id).disabled = true;
     byId('referencePrepSummary').textContent = '正在检查已有人工标注和机器候选……';
     renderReadiness(null);
     dialog.showModal();
     const [stateResult, readinessResult, sourceResult] = await Promise.allSettled([
-      readState(), readModelReadiness(), readAnnotationSources(),
+      readState().then(state => {
+        if (generation !== preparationGeneration) return state;
+        window.syncWorkbenchCandidateState?.(state);
+        preparationStateReady = true;
+        render(state);
+        return state;
+      }, error => {
+        if (generation === preparationGeneration) {
+          latestState = null;
+          byId('referencePrepSummary').innerHTML = `<strong>状态读取失败，已停止准备。</strong> ${error.message}`;
+          for (const id of dependentButtons) byId(id).disabled = true;
+        }
+        throw error;
+      }), readModelReadiness(generation), readAnnotationSources(generation),
     ]);
-    if (stateResult.status === 'fulfilled') {
-      window.syncWorkbenchCandidateState?.(stateResult.value);
-      render(stateResult.value);
-    }
-    else {
-      latestState = null;
-      byId('referencePrepSummary').innerHTML = `<strong>状态读取失败，已停止准备。</strong> ${stateResult.reason.message}`;
-      for (const id of ['useExistingTruth', 'useLegacyTruthDraft', 'useCandidateDraft', 'runReferenceAutoDraft', 'startSamDraft', 'startManualReference', 'loadRegisteredAnnotationSource']) byId(id).disabled = true;
-    }
+    if (generation !== preparationGeneration) return;
     if (readinessResult.status === 'rejected') {
       renderReadiness({ready: false, sam: {ready: false, error: '就绪检查失败'}, vlm: {ready: false, error: readinessResult.reason.message}});
     }
     if (sourceResult.status === 'rejected') {
       renderAnnotationSources({sources: []});
       byId('registeredAnnotationSource').title = sourceResult.reason.message;
+    }
+    if (stateResult.status === 'rejected' || !preparationStateReady) {
+      preparationStateReady = false;
+      for (const id of dependentButtons) byId(id).disabled = true;
     }
   }
 

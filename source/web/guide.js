@@ -17,6 +17,10 @@
   );
   let latest = { action: 'load', state: null, job: null };
   let autoDraftSubmitting = false;
+  let guidePollTimer = null;
+  let guideRefreshBusy = false;
+  let guideStatusRefreshPending = false;
+  let latestRunStatus = 'idle';
   const tutorial = byId('tutorialCoach');
   const tutorialSteps = [
     {
@@ -240,6 +244,8 @@
   }
 
   async function refreshGuide() {
+    if (guideRefreshBusy) return;
+    guideRefreshBusy = true;
     try {
       const [stateResponse, jobResponse] = await Promise.all([
         fetch('/api/state', { cache: 'no-store' }),
@@ -248,11 +254,28 @@
       if (!stateResponse.ok || !jobResponse.ok) throw new Error('status unavailable');
       const state = await stateResponse.json();
       const job = await jobResponse.json();
+      latestRunStatus = job.status || 'idle';
       window.syncWorkbenchCandidateState?.(state);
       render(state, job);
     } catch (_) {
       renderUnavailable();
+    } finally {
+      guideRefreshBusy = false;
+      if (guideStatusRefreshPending && !document.hidden) {
+        guideStatusRefreshPending = false;
+        refreshGuide();
+      } else {
+        guideStatusRefreshPending = false;
+        scheduleGuidePoll();
+      }
     }
+  }
+
+  function scheduleGuidePoll(delay) {
+    if (guidePollTimer) clearTimeout(guidePollTimer);
+    if (document.hidden) return;
+    const interval = ['running', 'stopping'].includes(latestRunStatus) ? 3000 : 15000;
+    guidePollTimer = window.setTimeout(refreshGuide, delay ?? interval);
   }
 
   function showWorkbench(mode = 'auto') {
@@ -653,10 +676,26 @@
   document.addEventListener('labelagent:candidate-state-synced', refreshGuide);
   document.addEventListener('labelagent:reference-draft-loaded', refreshGuide);
   document.addEventListener('labelagent:reference-draft-cleared', refreshGuide);
+  document.addEventListener('labelagent:job-status', event => {
+    const status = event.detail?.status || 'idle';
+    if (status === latestRunStatus) return;
+    latestRunStatus = status;
+    if (!document.hidden) {
+      if (guideRefreshBusy) guideStatusRefreshPending = true;
+      else refreshGuide();
+    }
+    scheduleGuidePoll();
+  });
   byId('manualModeButton')?.addEventListener('click', () => setTimeout(refreshGuide, 50));
   byId('autoModeButton')?.addEventListener('click', () => setTimeout(refreshGuide, 50));
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) { refreshGuide(); checkUiVersion(); }
+    if (document.hidden) {
+      if (guidePollTimer) clearTimeout(guidePollTimer);
+      guidePollTimer = null;
+    } else {
+      refreshGuide();
+      checkUiVersion();
+    }
   });
   window.addEventListener('focus', () => { refreshGuide(); checkUiVersion(); });
   window.addEventListener('pageshow', refreshGuide);
@@ -667,6 +706,6 @@
   setDarkTheme(recalled('labelagentDarkTheme'), false);
   refreshGuide();
   checkUiVersion();
-  window.setInterval(refreshGuide, 3000);
+  scheduleGuidePoll();
   window.setInterval(checkUiVersion, 30000);
 })();

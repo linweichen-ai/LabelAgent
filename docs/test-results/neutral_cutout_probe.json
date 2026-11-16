@@ -1,0 +1,33 @@
+{
+  "scope": "same_JPEG_bytes_schema_model_neutral_prompt_diagnostic_not_accuracy",
+  "real_local_VLM_requests": 20,
+  "natural_cases": 8,
+  "blank_controls": 2,
+  "same_JPEG_bytes_as_prior": true,
+  "same_output_schema_as_prior": true,
+  "decision_counts": {
+    "reject": 3,
+    "uncertain": 4,
+    "accept": 1
+  },
+  "blank_decision_counts": {
+    "uncertain": 2
+  },
+  "qualitative_pallet_fixture_count": 5,
+  "qualitative_pallet_decisions": {
+    "reject": 1,
+    "uncertain": 3,
+    "accept": 1
+  },
+  "suspected_reflection_decision": "uncertain",
+  "checks": {
+    "blank_controls_never_accept": true,
+    "no_qualitative_pallet_rejected": false,
+    "minimum_qualitative_pallet_accepts": false,
+    "suspect_reflections_not_accepted": true
+  },
+  "all_predeclared_checks_passed": false,
+  "independent_human_truth_added": false,
+  "workbench_modified": false,
+  "adopted": false
+}

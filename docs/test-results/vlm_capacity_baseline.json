@@ -1,0 +1,68 @@
+{
+  "scope": "fresh_2B_baseline_for_same_input_remote_8B_comparison",
+  "fixture_file_sha256": "1cc56360ca80bd17bd175f6037961d7f64ff4f4ed3d692e9a5c8c843099d1737",
+  "targets": 8,
+  "blank_controls": 2,
+  "qualitative_positive_fixtures": 5,
+  "new_real_2B_requests": 20,
+  "model": "Qwen3-VL-2B-Instruct",
+  "quantization": "nf4",
+  "image_token_budget": 256,
+  "temperature": 0,
+  "max_output_tokens": 192,
+  "natural_decisions": {
+    "reject": 3,
+    "uncertain": 4,
+    "accept": 1
+  },
+  "positive_fixture_decisions": {
+    "reject": 1,
+    "uncertain": 3,
+    "accept": 1
+  },
+  "blank_control_decisions": {
+    "uncertain": 2
+  },
+  "suspected_non_pallet_decisions": {
+    "uncertain": 1
+  },
+  "checks": {
+    "fixture_fully_evaluated_with_valid_real_responses": true,
+    "blank_controls_not_accepted": true,
+    "no_qualitative_pallet_rejected": false,
+    "minimum_qualitative_pallet_accepts": false,
+    "suspected_non_pallet_not_accepted": true
+  },
+  "all_frozen_checks_passed": false,
+  "prior_client_payloads_audited_equal": 20,
+  "prior_categories_reproduced": 20,
+  "offline_request_audit_new_model_requests": 0,
+  "human_pixel_truth_added": false,
+  "workbench_modified": false,
+  "real_8B_probe_completed": false,
+  "independent_validation": false,
+  "regression_tests_passed": 187,
+  "allocator_check": {
+    "mode": "real_CUDA_allocator_check_without_model_loading",
+    "torch": "2.10.0+cu128",
+    "GPU_name": "NVIDIA GeForce RTX 5060 Laptop GPU",
+    "fraction": 0.1,
+    "total_bytes": 8546484224,
+    "small_allocation_bytes": 33554432,
+    "oversized_request_bytes": 1073741824,
+    "oversized_request_rejected": true,
+    "global_free_still_exceeds_request": true,
+    "peak_allocator_reserved_bytes": 33554432,
+    "models_loaded_by_this_check": 0,
+    "other_processes_stopped": 0
+  },
+  "actual_owned_process_deadline_check": {
+    "mode": "actual_owned_process_deadline_without_model_or_GPU",
+    "deadline_seconds": 30,
+    "observed_exit_code": 124,
+    "elapsed_seconds": 31.14,
+    "only_created_child_targeted": true,
+    "foreign_processes_stopped": 0,
+    "models_loaded": 0
+  }
+}

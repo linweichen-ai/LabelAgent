@@ -1,0 +1,39 @@
+{
+  "scope": "tuning_only_point_agreement_not_semantic_or_pixel_accuracy",
+  "real_SAM3_requests": 21,
+  "successful_responses": 21,
+  "natural_overlap_hypotheses": 19,
+  "exact_duplicate_geometry_controls": 2,
+  "thresholds": [
+    {
+      "threshold": 0.75,
+      "confirmed": {
+        "natural_overlap_hypothesis": 6,
+        "exact_duplicate_geometry_control": 2
+      },
+      "usefulness_checks_passed": true
+    },
+    {
+      "threshold": 0.85,
+      "confirmed": {
+        "natural_overlap_hypothesis": 4,
+        "exact_duplicate_geometry_control": 2
+      },
+      "usefulness_checks_passed": true
+    },
+    {
+      "threshold": 0.95,
+      "confirmed": {
+        "natural_overlap_hypothesis": 0,
+        "exact_duplicate_geometry_control": 1
+      },
+      "usefulness_checks_passed": false
+    }
+  ],
+  "selected_threshold": 0.85,
+  "selection_rule": "largest predeclared threshold confirming at least 3 natural hypotheses and 1 duplicate control",
+  "point_selection": "maximum distance-transform value in raster-mask intersection",
+  "model_score_used_as_quality_gate": false,
+  "no_prior_mask_supplied": true,
+  "source_and_workbench_unchanged": true
+}

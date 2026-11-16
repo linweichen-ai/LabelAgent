@@ -1,0 +1,176 @@
+{
+  "scope": "same_capture_image_disjoint_examples_qualitative_grounding_diagnostic",
+  "new_real_VLM_requests": 60,
+  "reused_prior_comparison_requests_not_counted_as_new": 20,
+  "model": "Qwen3-VL-2B-Instruct",
+  "quantization": "nf4",
+  "per_image_max_tokens": 256,
+  "target_JPEG_bytes_identical_across_variants": true,
+  "same_output_schema_temperature_and_max_output_tokens": true,
+  "schema_categories": [
+    "pallet",
+    "cargo",
+    "metal",
+    "floor",
+    "person",
+    "empty",
+    "other",
+    "uncertain"
+  ],
+  "temperature": 0,
+  "max_output_tokens": 192,
+  "example_source_frame": 0,
+  "target_frames_disjoint_from_examples": true,
+  "same_physical_objects_may_recur": true,
+  "independent_scene_validation": false,
+  "example_labels": "assistant qualitative prompt fixtures, not human-confirmed truth",
+  "V6_V7_only_target_prompt_changed": true,
+  "V7_V8_both_gallery_balance_and_example_context_changed": true,
+  "single_prompt_v6": "What object is shown by the foreground pixels? Classify it and give one short visual reason.",
+  "context_prompt_v6": "Image 1 shows selected foreground pixels. Images 2 and 3 show their context, with the selection outlined in Image 3. Classify the selected foreground and give one short visual reason.",
+  "single_prompt_v7_v8": "Classify only the foreground in the LAST image of this conversation. It is the only image in the current user message. Earlier images are examples, not the current target. Give one short visual reason.",
+  "context_prompt_v7_v8": "Classify only the selected foreground in Image 6 of this conversation. Images 7 and 8 show its context, with that selection outlined in Image 8. Images 1 through 5 are earlier examples, not the target. Give one short visual reason.",
+  "variants": [
+    {
+      "variant": "neutral_no_examples",
+      "real_local_VLM_requests": 20,
+      "natural_cases": 8,
+      "blank_controls": 2,
+      "natural_decisions": {
+        "reject": 3,
+        "uncertain": 4,
+        "accept": 1
+      },
+      "qualitative_pallet_fixture_decisions": {
+        "reject": 1,
+        "uncertain": 3,
+        "accept": 1
+      },
+      "blank_control_decisions": {
+        "uncertain": 2
+      },
+      "suspected_reflection_decision": "uncertain",
+      "checks": {
+        "blank_controls_never_accept": true,
+        "no_qualitative_pallet_rejected": false,
+        "minimum_qualitative_pallet_accepts": false,
+        "suspect_reflections_not_accepted": true
+      },
+      "all_predeclared_checks_passed": false,
+      "input_images_per_single_request": 1,
+      "input_images_per_context_request": 3,
+      "request_seconds_median": 2.9524999999999997,
+      "prompt_tokens_range": [
+        153,
+        337
+      ],
+      "source_code_sha256": "e6320e732a20afcd59845dd7ddc444b01b25d288c8f9e5fe8297ca7a8ef32b70",
+      "plan_sha256": "714c0bf1ef5470da4819e57031d84bfae292f0a30e8f89a102e3074ba93dbd4e",
+      "adopted": false
+    },
+    {
+      "variant": "fewshot_two_positive_one_negative",
+      "real_local_VLM_requests": 20,
+      "natural_cases": 8,
+      "blank_controls": 2,
+      "natural_decisions": {
+        "accept": 8
+      },
+      "qualitative_pallet_fixture_decisions": {
+        "accept": 5
+      },
+      "blank_control_decisions": {
+        "uncertain": 1,
+        "accept": 1
+      },
+      "suspected_reflection_decision": "accept",
+      "checks": {
+        "blank_controls_never_accept": false,
+        "no_qualitative_pallet_rejected": true,
+        "minimum_qualitative_pallet_accepts": true,
+        "suspect_reflections_not_accepted": false
+      },
+      "all_predeclared_checks_passed": false,
+      "input_images_per_single_request": 6,
+      "input_images_per_context_request": 8,
+      "request_seconds_median": 2.1795,
+      "prompt_tokens_range": [
+        900,
+        1084
+      ],
+      "source_code_sha256": "527118550d75d7c461a4de337169a592783421bd48506f1b1aa331e2aa207734",
+      "plan_sha256": "825257347f37c92b6891a90678fe1f9b86ddbe0a98a239923989dfdbb4a29ca2",
+      "adopted": false
+    },
+    {
+      "variant": "explicit_target_same_gallery",
+      "real_local_VLM_requests": 20,
+      "natural_cases": 8,
+      "blank_controls": 2,
+      "natural_decisions": {
+        "accept": 8
+      },
+      "qualitative_pallet_fixture_decisions": {
+        "accept": 5
+      },
+      "blank_control_decisions": {
+        "uncertain": 2
+      },
+      "suspected_reflection_decision": "accept",
+      "checks": {
+        "blank_controls_never_accept": true,
+        "no_qualitative_pallet_rejected": true,
+        "minimum_qualitative_pallet_accepts": true,
+        "suspect_reflections_not_accepted": false
+      },
+      "all_predeclared_checks_passed": false,
+      "input_images_per_single_request": 6,
+      "input_images_per_context_request": 8,
+      "request_seconds_median": 2.141,
+      "prompt_tokens_range": [
+        921,
+        1098
+      ],
+      "source_code_sha256": "22de8f8f84b7fdb6ac0749a189abc8152d0b100349c19a6288b7c39459db19c8",
+      "plan_sha256": "421dfc3e1a5194da050ebeb04aca1861c55f17dd5f75b55f85b00c2c4b451164",
+      "adopted": false
+    },
+    {
+      "variant": "two_positive_three_negative_single_views",
+      "real_local_VLM_requests": 20,
+      "natural_cases": 8,
+      "blank_controls": 2,
+      "natural_decisions": {
+        "accept": 8
+      },
+      "qualitative_pallet_fixture_decisions": {
+        "accept": 5
+      },
+      "blank_control_decisions": {
+        "uncertain": 1,
+        "accept": 1
+      },
+      "suspected_reflection_decision": "accept",
+      "checks": {
+        "blank_controls_never_accept": false,
+        "no_qualitative_pallet_rejected": true,
+        "minimum_qualitative_pallet_accepts": true,
+        "suspect_reflections_not_accepted": false
+      },
+      "all_predeclared_checks_passed": false,
+      "input_images_per_single_request": 6,
+      "input_images_per_context_request": 8,
+      "request_seconds_median": 2.4059999999999997,
+      "prompt_tokens_range": [
+        1038,
+        1215
+      ],
+      "source_code_sha256": "1eeb531b010c4da9678cfc4dc1c2d0ecaaf656ada1a85c4015962e7b1048f55b",
+      "plan_sha256": "f0ced20e80ada044d777cd506323da5ac00a9a3e8d9add3885c36bcc33b02123",
+      "adopted": false
+    }
+  ],
+  "no_3D_labels_used_for_prediction": true,
+  "no_workbench_or_truth_edits": true,
+  "conclusion": "None passed all frozen checks; no candidate filtering installed."
+}

@@ -1,0 +1,183 @@
+{
+  "created_utc": "2026-11-03T04:20:15.893089+00:00",
+  "archive_sha256": "e39dcb9f1c6592e76f3bd2625e274073470450f365466f8899126580e5d25f09",
+  "reference_source": "labels",
+  "reference_frames": 152,
+  "reference_objects_after_ignore_filter": 4045,
+  "reference_ignored_objects": 74,
+  "reference_is_independent_ground_truth": false,
+  "predictions_reused_from_archive": true,
+  "fresh_3d_model_inference_performed": false,
+  "rotation_convention": "Rz(yaw) Ry(pitch) Rx(roll), radians; assumed from field names",
+  "matching": "same class; maximum cardinality above threshold, then maximum summed IoU",
+  "tracking_identity_evaluated": false,
+  "pixel_accuracy_evaluated": false,
+  "methods": {
+    "ali_label": {
+      "available_prediction_frames": 51,
+      "evaluated_common_frames": 51,
+      "missing_prediction_frames": 101,
+      "orphan_prediction_frames": 0,
+      "frame_coverage": 0.3355263157894737,
+      "ignored_prediction_objects": 25,
+      "metrics": {
+        "Pallet": {
+          "0.25": {
+            "matched": 1079,
+            "predictions": 1079,
+            "references": 1099,
+            "unmatched_predictions": 0,
+            "unmatched_references": 20,
+            "precision_against_reference": 1.0,
+            "recall_against_reference": 0.9818016378525932,
+            "f1_against_reference": 0.9908172635445363,
+            "matched_iou_mean": 0.9999999999930433
+          },
+          "0.5": {
+            "matched": 1079,
+            "predictions": 1079,
+            "references": 1099,
+            "unmatched_predictions": 0,
+            "unmatched_references": 20,
+            "precision_against_reference": 1.0,
+            "recall_against_reference": 0.9818016378525932,
+            "f1_against_reference": 0.9908172635445363,
+            "matched_iou_mean": 0.9999999999930433
+          }
+        },
+        "Pedestrian": {
+          "0.25": {
+            "matched": 255,
+            "predictions": 255,
+            "references": 255,
+            "unmatched_predictions": 0,
+            "unmatched_references": 0,
+            "precision_against_reference": 1.0,
+            "recall_against_reference": 1.0,
+            "f1_against_reference": 1.0,
+            "matched_iou_mean": 0.9999999999976498
+          },
+          "0.5": {
+            "matched": 255,
+            "predictions": 255,
+            "references": 255,
+            "unmatched_predictions": 0,
+            "unmatched_references": 0,
+            "precision_against_reference": 1.0,
+            "recall_against_reference": 1.0,
+            "f1_against_reference": 1.0,
+            "matched_iou_mean": 0.9999999999976498
+          }
+        },
+        "all": {
+          "0.25": {
+            "matched": 1334,
+            "predictions": 1334,
+            "references": 1354,
+            "unmatched_predictions": 0,
+            "unmatched_references": 20,
+            "precision_against_reference": 1.0,
+            "recall_against_reference": 0.9852289512555391,
+            "f1_against_reference": 0.9925595238095238,
+            "matched_iou_mean": 0.999999999993924
+          },
+          "0.5": {
+            "matched": 1334,
+            "predictions": 1334,
+            "references": 1354,
+            "unmatched_predictions": 0,
+            "unmatched_references": 20,
+            "precision_against_reference": 1.0,
+            "recall_against_reference": 0.9852289512555391,
+            "f1_against_reference": 0.9925595238095238,
+            "matched_iou_mean": 0.999999999993924
+          }
+        }
+      },
+      "seconds": 1.36
+    },
+    "wilddet3d-labels": {
+      "available_prediction_frames": 51,
+      "evaluated_common_frames": 51,
+      "missing_prediction_frames": 101,
+      "orphan_prediction_frames": 0,
+      "frame_coverage": 0.3355263157894737,
+      "ignored_prediction_objects": 0,
+      "metrics": {
+        "Pallet": {
+          "0.25": {
+            "matched": 281,
+            "predictions": 1395,
+            "references": 1099,
+            "unmatched_predictions": 1114,
+            "unmatched_references": 818,
+            "precision_against_reference": 0.2014336917562724,
+            "recall_against_reference": 0.2556869881710646,
+            "f1_against_reference": 0.22534081796311148,
+            "matched_iou_mean": 0.38290899239139126
+          },
+          "0.5": {
+            "matched": 34,
+            "predictions": 1395,
+            "references": 1099,
+            "unmatched_predictions": 1361,
+            "unmatched_references": 1065,
+            "precision_against_reference": 0.024372759856630826,
+            "recall_against_reference": 0.030937215650591446,
+            "f1_against_reference": 0.0272654370489174,
+            "matched_iou_mean": 0.5650249207418548
+          }
+        },
+        "Pedestrian": {
+          "0.25": {
+            "matched": 220,
+            "predictions": 277,
+            "references": 255,
+            "unmatched_predictions": 57,
+            "unmatched_references": 35,
+            "precision_against_reference": 0.7942238267148014,
+            "recall_against_reference": 0.8627450980392157,
+            "f1_against_reference": 0.8270676691729323,
+            "matched_iou_mean": 0.45198746783047866
+          },
+          "0.5": {
+            "matched": 72,
+            "predictions": 277,
+            "references": 255,
+            "unmatched_predictions": 205,
+            "unmatched_references": 183,
+            "precision_against_reference": 0.259927797833935,
+            "recall_against_reference": 0.2823529411764706,
+            "f1_against_reference": 0.2706766917293233,
+            "matched_iou_mean": 0.5729715139463255
+          }
+        },
+        "all": {
+          "0.25": {
+            "matched": 501,
+            "predictions": 1672,
+            "references": 1354,
+            "unmatched_predictions": 1171,
+            "unmatched_references": 853,
+            "precision_against_reference": 0.2996411483253589,
+            "recall_against_reference": 0.3700147710487445,
+            "f1_against_reference": 0.33113020489094513,
+            "matched_iou_mean": 0.4132428538616492
+          },
+          "0.5": {
+            "matched": 106,
+            "predictions": 1672,
+            "references": 1354,
+            "unmatched_predictions": 1566,
+            "unmatched_references": 1248,
+            "precision_against_reference": 0.06339712918660287,
+            "recall_against_reference": 0.07828655834564253,
+            "f1_against_reference": 0.07005948446794448,
+            "matched_iou_mean": 0.5704226066920614
+          }
+        }
+      },
+      "seconds": 1.046
+    }
+  }
+}

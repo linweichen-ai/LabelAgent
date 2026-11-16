@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "state_unchanged": true,
+  "page_errors": [],
+  "existing_candidates_visible_in_result_panel": true,
+  "prepare_reference_opens_manual_mode": true,
+  "start_status": 400,
+  "left_open_frame": 76,
+  "saved_demo_truth": false,
+  "reference_frames_present": false,
+  "full_agent_rerun": false
+}

@@ -1,0 +1,80 @@
+{
+  "study": "Target enlargement and class-blind inspection before classification",
+  "observed_utc": "2026-11-06T18:13:33.619461+00:00",
+  "phase": "final_verified",
+  "plan_sha256": "46d83dd7ebd71407eef6d86a20eba1bde384e71d2d261a4212321a1c2dacb4d8",
+  "maximum_new_requests": 47,
+  "method": "Unmarked target-bbox enlargement + original three-span context; class-blind visibility/point/features call precedes both raw category calls. Same original point/corner views.",
+  "cases": 14,
+  "human_confirmed_regions": 6,
+  "old_pallet_regression_regions": 2,
+  "tests_passed": 29,
+  "category_answers_not_supplied_to_model": true,
+  "geometry_points_are_only_consistency_with_proposed_masks": true,
+  "target_bbox_not_guaranteed_single_object": true,
+  "classifier_also_runs_after_empty_or_unclear_inspection": true,
+  "matched_blank_diagnostic": "Exact same source-companion request except second marked JPEG is replaced with its paired clean JPEG, including identical aspect fit and letterbox.",
+  "original_annotations_written": false,
+  "training_performed": false,
+  "new_SAM_calls": 0,
+  "default_enabled": false,
+  "candidate_adopted": false,
+  "independent_validation": false,
+  "status": "complete",
+  "attempted_requests": 45,
+  "responses_received": 45,
+  "initial_successful_responses": 16,
+  "completion_new_responses": 29,
+  "completed_groundings": 14,
+  "completed_classifications": 28,
+  "observed_old_pallet_wrong_or_abstaining_views": 4,
+  "baseline_counts": {
+    "six_correct_views": 12,
+    "six_correct_pairs": 6,
+    "old_pallet_correct_views": 4,
+    "person_correct_views": 2,
+    "plain_blank_abstentions": 4,
+    "marked_blank_abstentions": 0,
+    "suspect_abstentions": 0
+  },
+  "candidate_counts": {
+    "six_correct_views": 10,
+    "six_correct_pairs": 5,
+    "old_pallet_correct_views": 0,
+    "person_correct_views": 2,
+    "plain_blank_abstentions": 0,
+    "marked_blank_abstentions": 0,
+    "suspect_abstentions": 0
+  },
+  "guarded_counts": {
+    "six_correct_views": 10,
+    "six_correct_pairs": 5,
+    "old_pallet_correct_views": 0,
+    "person_correct_views": 0,
+    "plain_blank_abstentions": 0,
+    "marked_blank_abstentions": 0,
+    "suspect_abstentions": 0
+  },
+  "localization_counts": {
+    "positive_geometry_passed": 8,
+    "positive_total": 9,
+    "blank_empty": 0,
+    "blank_total": 4
+  },
+  "matched_blank_counts": {
+    "clean_clean_abstentions": 4,
+    "clean_marked_abstentions": 0,
+    "total": 4
+  },
+  "raw_response_count": 45,
+  "original_annotations_verified": 256,
+  "source_bindings_unchanged": true,
+  "original_state_unchanged": true,
+  "all_joint_checks_passed": false,
+  "c3_semantic_review": {
+    "passed": false,
+    "public_conclusion": "C3 object binding failed. The source-only inspection described a concrete floor, while both classification views described a nearby person instead of the confirmed pallet base. Returning the supplied point inside the proposed mask did not establish correct semantic localization.",
+    "reviewer": "assistant",
+    "human_localization_approval": false
+  }
+}

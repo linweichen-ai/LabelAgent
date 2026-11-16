@@ -1,0 +1,28 @@
+{
+  "checks": [
+    {
+      "frame": 76,
+      "shapes": 11,
+      "integer_ids": true,
+      "labels": [
+        "pallet",
+        "person"
+      ],
+      "truth_frames": 0
+    },
+    {
+      "frame": 151,
+      "shapes": 18,
+      "integer_ids": true,
+      "labels": [
+        "pallet",
+        "person"
+      ],
+      "truth_frames": 0
+    }
+  ],
+  "page_errors": [],
+  "saved_as_truth": false,
+  "refresh_restores_candidates": true,
+  "passed": true
+}

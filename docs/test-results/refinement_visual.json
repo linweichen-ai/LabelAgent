@@ -1,0 +1,119 @@
+{
+  "scope": "qualitative_tuning_controls_not_independent_accuracy",
+  "variants": [
+    {
+      "name": "cutout_review_v3",
+      "plan_sha256": "8f703d5a9f3276d9625776f3326a3c67caaa64bad1ae41761a58256083d39c95",
+      "real_VLM_requests": 20,
+      "cases": 8,
+      "controls": 2,
+      "candidate_decisions": {
+        "accept": 0,
+        "reject": 1,
+        "uncertain": 7
+      },
+      "control_decisions": {
+        "accept": 0,
+        "reject": 0,
+        "uncertain": 2
+      },
+      "qualitative_positive_examples": 5,
+      "checks": {
+        "blank_controls_never_accept": true,
+        "no_qualitative_pallet_rejected": true,
+        "minimum_qualitative_pallet_accepts": false,
+        "suspect_reflections_not_accepted": true
+      },
+      "all_predeclared_checks_passed": false,
+      "single_prompt": "Identify the object represented by the selected real pixels in this cutout. Uniform gray outside the selection is background, not part of the object. Return category and one short visual reason. Use uncertain if the selected pixels do not establish an object identity. Do not invent a complete object from a tiny fragment.",
+      "context_prompt": "Image 1 isolates the selected real pixels on gray background. Image 2 is its original photographic context. Image 3 shows the selection outlined in magenta in that same context. Classify the specific selected object, using Image 1 to locate exactly what is selected. Do not classify a different nearby object. Return category and one short visual reason. Use uncertain if the selected object cannot be identified. Gray background and magenta outlines are not object colors.",
+      "categories": [
+        "pallet",
+        "cargo",
+        "metal",
+        "floor",
+        "person",
+        "empty",
+        "other",
+        "uncertain"
+      ],
+      "adopted": false,
+      "state_unchanged": true,
+      "new_source_image_detail_added": false
+    },
+    {
+      "name": "cutout_zoom_v4",
+      "plan_sha256": "71a71b3577c0ab22b2cfbfb60e1d3f6045ca9187834fbfc417175d6702014c01",
+      "real_VLM_requests": 20,
+      "cases": 8,
+      "controls": 2,
+      "candidate_decisions": {
+        "accept": 0,
+        "reject": 1,
+        "uncertain": 7
+      },
+      "control_decisions": {
+        "accept": 0,
+        "reject": 0,
+        "uncertain": 2
+      },
+      "qualitative_positive_examples": 5,
+      "checks": {
+        "blank_controls_never_accept": true,
+        "no_qualitative_pallet_rejected": true,
+        "minimum_qualitative_pallet_accepts": false,
+        "suspect_reflections_not_accepted": true
+      },
+      "all_predeclared_checks_passed": false,
+      "single_prompt": "Identify the object represented by the selected real pixels in this cutout. Uniform gray outside the selection is background, not part of the object. Return category and one short visual reason. Use uncertain if the selected pixels do not establish an object identity. Do not invent a complete object from a tiny fragment.",
+      "context_prompt": "Image 1 isolates the selected real pixels on gray background. Image 2 is its original photographic context. Image 3 shows the selection outlined in magenta in that same context. Classify the specific selected object, using Image 1 to locate exactly what is selected. Do not classify a different nearby object. Return category and one short visual reason. Use uncertain if the selected object cannot be identified. Gray background and magenta outlines are not object colors.",
+      "categories": [
+        "pallet",
+        "cargo",
+        "metal",
+        "floor",
+        "person",
+        "empty",
+        "other",
+        "uncertain"
+      ],
+      "adopted": false,
+      "state_unchanged": true,
+      "new_source_image_detail_added": false
+    }
+  ],
+  "real_VLM_requests": 40,
+  "real_processor_token_ranges": [
+    {
+      "minimum_setting": 64,
+      "maximum_setting": 256,
+      "actual_vision_tokens_per_image_min": 70,
+      "actual_vision_tokens_per_image_max": 76,
+      "processor_only_GPU_inferences": 0
+    },
+    {
+      "minimum_setting": 256,
+      "maximum_setting": 256,
+      "actual_vision_tokens_per_image_min": 261,
+      "actual_vision_tokens_per_image_max": 296,
+      "processor_only_GPU_inferences": 0
+    },
+    {
+      "minimum_setting": 256,
+      "maximum_setting": 512,
+      "actual_vision_tokens_per_image_min": 261,
+      "actual_vision_tokens_per_image_max": 296,
+      "processor_only_GPU_inferences": 0
+    },
+    {
+      "minimum_setting": 512,
+      "maximum_setting": 512,
+      "actual_vision_tokens_per_image_min": 520,
+      "actual_vision_tokens_per_image_max": 560,
+      "processor_only_GPU_inferences": 0
+    }
+  ],
+  "finding": "Neither isolated pixels nor input upsampling met the predeclared minimum useful acceptance criterion.",
+  "automatic_filtering_enabled": false,
+  "independent_human_pixel_truth_added": false
+}

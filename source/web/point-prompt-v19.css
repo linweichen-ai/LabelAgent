@@ -1,0 +1,69 @@
+/* Make it explicit that entering point-prompt mode does not run SAM yet. */
+.pointPromptCoach.awaitingPoint {
+  border-color: #18a272;
+  box-shadow: 0 0 0 3px rgba(24, 162, 114, .14);
+  animation: pointPromptAttention 1.25s ease-in-out 2;
+}
+.pointPromptCoach:focus {
+  outline: 3px solid rgba(24, 162, 114, .18);
+  outline-offset: 2px;
+}
+.referencePointHint {
+  display: block;
+  flex-basis: 100%;
+  margin-top: 6px;
+  color: #6b7d76;
+  line-height: 1.5;
+}
+.pointPromptCanvasStatus {
+  position: absolute;
+  z-index: 8;
+  left: 50%;
+  top: 12%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: min(88%, 560px);
+  padding: 11px 16px;
+  border: 1px solid rgba(108, 255, 200, .7);
+  border-radius: 999px;
+  background: rgba(10, 34, 29, .9);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .32);
+  color: #ecfff8;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.35;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+}
+.pointPromptCanvasStatus[hidden] { display: none; }
+.pointPromptCanvasStatus i {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #55f3b8;
+  box-shadow: 0 0 0 6px rgba(85, 243, 184, .14);
+}
+.pointPromptCanvasStatus.running i { animation: pointPromptRunning .9s ease-in-out infinite; }
+.pointPromptCanvasStatus.awaitingPoint {
+  border-width: 2px;
+  border-color: #55f3b8;
+  background: rgba(5, 47, 36, .94);
+  box-shadow: 0 0 0 5px rgba(85, 243, 184, .13), 0 14px 38px rgba(0, 0, 0, .38);
+  animation: pointPromptCanvasAttention 1.2s ease-in-out 3;
+}
+.pointPromptCanvasStatus.done { border-color: rgba(91, 190, 255, .72); }
+.pointPromptCanvasStatus.done i { background: #62c3ff; box-shadow: 0 0 0 6px rgba(98, 195, 255, .14); }
+.pointPromptCanvasStatus.error { border-color: rgba(255, 143, 127, .82); }
+.pointPromptCanvasStatus.error i { background: #ff8f7f; box-shadow: 0 0 0 6px rgba(255, 143, 127, .14); }
+@keyframes pointPromptAttention {
+  50% { box-shadow: 0 0 0 7px rgba(24, 162, 114, .08); }
+}
+@keyframes pointPromptRunning {
+  50% { transform: scale(.62); opacity: .58; }
+}
+@keyframes pointPromptCanvasAttention {
+  50% { transform: translateX(-50%) scale(1.035); }
+}

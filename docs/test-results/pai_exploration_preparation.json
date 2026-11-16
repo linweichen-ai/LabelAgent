@@ -1,0 +1,26 @@
+{
+  "status": "prepared_not_cloud_run",
+  "cases_prepared": 60,
+  "source_tuning_images": 20,
+  "timestamp_groups": 5,
+  "human_reviewed_cases": 0,
+  "data_boundary_tests_passed": 10,
+  "review_UI_real_browser_checked": true,
+  "python_syntax_checked": true,
+  "shell_syntax_checked": true,
+  "ZIP_digest_readback_verified": true,
+  "cloud_instance_created": false,
+  "GPU_training_tested": false,
+  "weights_finetuned": false,
+  "source_state_unchanged": true,
+  "default_model_changed": false,
+  "independent_test_available": false,
+  "full_Agent_adapter_implemented": false,
+  "recommended_resources": {
+    "GPUs": 2,
+    "preferred_each_GiB": 80,
+    "alternative_each_GiB": 48,
+    "RAM_GiB": 256,
+    "disk_GiB": 500
+  }
+}

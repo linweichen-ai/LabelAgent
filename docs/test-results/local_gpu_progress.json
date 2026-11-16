@@ -1,0 +1,120 @@
+{
+  "date": "2026-11-03",
+  "phase": "functional_acceptance_complete",
+  "model": "Qwen/Qwen3-VL-2B-Instruct",
+  "model_revision": "89644892e4d85e24eaac8bacfd4f463576704203",
+  "quantization_requested": "NF4",
+  "quantization_executed": true,
+  "gpu": "RTX 5060 Laptop GPU 8GB",
+  "gpu_manager_started": true,
+  "real_sam3_via_manager": true,
+  "sam3_probe_masks": 9,
+  "sam3_probe_seconds_including_startup": 18.391,
+  "regression_tests": 93,
+  "regression_failures": 0,
+  "sam3_environment_dependency_check": "passed",
+  "vlm_environment_dependency_check": "passed",
+  "reference_frame": 0,
+  "target_frames": [
+    76,
+    151
+  ],
+  "reference_kind": "unconfirmed_functional_fixture",
+  "reference_saved_as_truth": false,
+  "real_vlm_probe_passed": true,
+  "full_agent_verified": true,
+  "pixel_accuracy_evaluated": false,
+  "original_annotation_hashes_recorded": true,
+  "workbench_state_backed_up": true,
+  "weights_downloaded": true,
+  "official_weight_sha256_verified": true,
+  "model_memory_bytes": 2141135168,
+  "flash_attention_compiled": false,
+  "local_image_token_budget": 256,
+  "prompt_profile": "compact",
+  "structured_output": "lm-format-enforcer 0.11.3",
+  "structured_parser_invalid_ids_test": "passed",
+  "structured_parser_invented_holes_test": "passed",
+  "workbench_vlm_configured": true,
+  "observed_attempts": [
+    {
+      "attempt": "full_prompt",
+      "result": "review_timeout",
+      "full_agent_verified": false
+    },
+    {
+      "attempt": "compact_initial",
+      "result": "missing_class_prompt",
+      "full_agent_verified": false
+    },
+    {
+      "attempt": "compact_five_images",
+      "result": "truncated_json_and_invented_holes",
+      "full_agent_verified": false
+    },
+    {
+      "attempt": "compact_four_images",
+      "result": "invalid_operation_fields",
+      "full_agent_verified": false
+    },
+    {
+      "attempt": "constrained_chinese",
+      "result": "decoder_tokenization_incompatibility",
+      "full_agent_verified": false
+    },
+    {
+      "attempt": "constrained_english",
+      "result": "two_target_frames_completed",
+      "full_agent_verified": true
+    }
+  ],
+  "functional_acceptance_only": true,
+  "target_frames_completed": 2,
+  "unconfirmed_target_candidates": 29,
+  "multi_round_correction_observed": false,
+  "original_source_files_unchanged": true,
+  "original_sessions_unchanged": true,
+  "browser_display_and_refresh_passed": true,
+  "source_images_unchanged": true,
+  "constrained_output_language": "English",
+  "candidate_session_saved_as_truth": false,
+  "maximum_live_owned_model_workers": 1,
+  "model_worker_sequence": [
+    "qwen",
+    "sam3",
+    "qwen",
+    "sam3",
+    "qwen"
+  ],
+  "vlm_peak_allocated_bytes": 3764695040,
+  "vlm_peak_reserved_bytes": 3839885312,
+  "full_run_seconds_excluding_initial_vlm_activation": 353.876,
+  "candidate_count_comparison": [
+    {
+      "frame": 76,
+      "fixed_prompt_sam3_candidates": {
+        "pallet": 9,
+        "person": 2
+      },
+      "agent_generated_candidates": {
+        "pallet": 9,
+        "person": 2
+      },
+      "vlm_applied_edits": 0
+    },
+    {
+      "frame": 151,
+      "fixed_prompt_sam3_candidates": {
+        "pallet": 17,
+        "person": 4
+      },
+      "agent_generated_candidates": {
+        "pallet": 14,
+        "person": 4
+      },
+      "vlm_applied_edits": 0
+    }
+  ],
+  "comparison_is_pixel_accuracy": false,
+  "count_change_attributed_to_vlm_edits": false
+}

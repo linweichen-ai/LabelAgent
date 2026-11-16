@@ -1,0 +1,57 @@
+{
+  "status": "readiness_verified_full_validation_pending",
+  "observed_utc": "2026-11-04T05:49:24.497163+00:00",
+  "primary_method": "raw_certificate_priority",
+  "primary_frozen": true,
+  "primary_can_be_replaced_by_secondary": false,
+  "new_merge_helper": {
+    "source": "tools/merge_frozen_prediction_exports.py",
+    "sha256": "10dab5384634703aff8e0cc65272cd4e53d86fee5426915364989036bee33cd9",
+    "new_model_requests": 0,
+    "reference_annotation_reads": 0,
+    "original_prefix_preserved": true,
+    "parent_plans_receipts_predictions_rewritten": false,
+    "own_new_plan_and_parent_bound_receipts": true
+  },
+  "regression": {
+    "tests": 313,
+    "passed": true,
+    "new_meaningful_merge_tests": 10,
+    "runtime_encoding": "UTF-8",
+    "initial_default_GBK_run_failed_existing_UTF8_reads": true,
+    "initial_log_retained_locally": true
+  },
+  "actual_integration_probe": {
+    "images": 32,
+    "source_studies": 1,
+    "four_method_predictions_exact": true,
+    "primary_all_groups_and_radii_exact": true,
+    "primary_every_image_metrics_exact": true,
+    "new_model_requests": 0,
+    "metric_reads_reference_separately": true,
+    "full_588_validation": false
+  },
+  "incomplete_full_cohort_probe": {
+    "available_images": 32,
+    "missing_images": 556,
+    "rejected": true,
+    "partial_output_created": false
+  },
+  "preservation": {
+    "source_files": 1023,
+    "previous_sessions": 7,
+    "approved_reference_shapes": 15,
+    "target76_confirmed": false,
+    "all_checks_passed": true
+  },
+  "remaining_collection_snapshot": {
+    "process_identity_verified_live": true,
+    "planned_requests": 5004,
+    "completed_requests": 1368,
+    "completed_images": 152,
+    "planned_images": 556
+  },
+  "full_primary_588_result": null,
+  "adopted_as_default": false,
+  "scope": "Integration preparation and ongoing frozen same-capture validation; no new accuracy result or independent pixel truth"
+}

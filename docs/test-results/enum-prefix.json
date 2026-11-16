@@ -1,0 +1,218 @@
+{
+  "phase": "final_verified",
+  "observed_utc": "2026-11-07T18:36:49.977758+00:00",
+  "status": "complete",
+  "generate_replays_for_new_instrumentation": 1,
+  "maximum_instrumented_generations": 1,
+  "teacher_forced_label_forwards": 108,
+  "maximum_label_forwards": 108,
+  "score_conditions_collected": 36,
+  "score_condition_budget": 36,
+  "cases": 18,
+  "only_conditioning_JSON_prefix_changed": true,
+  "measured_prefix": "{\n  \"category\": \"",
+  "previous_prefix": "{\"category\":\"",
+  "prefix_tokenization_verified_for7_actual_traces": true,
+  "other29_prior_outputs_match_at_text_level_only": true,
+  "same_images_questions_weights_quantization_and_scoring_rule": true,
+  "primary_method": "argmax sum of unmasked log probabilities along one fixed canonical complete label-and-closing-quote token path; exact ties uncertain",
+  "secondary_method": "schema-normalized complete path sum; diagnostic only, never selected post hoc as winner",
+  "original_plan_sha256": "1a54a7fc644593bbf1a4f79942edcf073bf0979351aaf62e811fac2538a81ac6",
+  "helper_source_sha256": "c2905a19bac99a40796a0fe40abe0bd25ba638ac69f6e89a342d8958ee937556",
+  "worker_source_sha256": "db8b5432c090969ad99f83e050e23edbbab12b0549e03f8ecd2420fe58ccb38b",
+  "replay_is_not_new_independent_data": true,
+  "original_annotations_written": false,
+  "new_segmentation_inference": false,
+  "candidate_adopted": false,
+  "default_enabled": false,
+  "full_joint_adoption_checks_passed": false,
+  "fresh_selected_decoder_reason_review_completed": false,
+  "independent_generalization": false,
+  "next_input_candidate_status": "CPU_preflight_only_not_frozen_for_GPU_not_run",
+  "next_input_candidate_new_model_calls": 0,
+  "next_input_candidate_checked_bodies": 36,
+  "next_input_candidate_unique_budget": 37,
+  "next_input_candidate_native_source_proofs": 18,
+  "next_input_helper_source_sha256": "e78aa12f8d42650490b70f9bf6c01105ab49574b599cfc596bd37622c81bcf37",
+  "groups": {
+    "protected_pallet": {
+      "conditions": 4,
+      "original_correct": 4,
+      "recent_prompt_correct": 4,
+      "primary_score_correct": 4,
+      "secondary_score_correct": 4
+    },
+    "person_fixture": {
+      "conditions": 2,
+      "original_correct": 2,
+      "recent_prompt_correct": 2,
+      "primary_score_correct": 2,
+      "secondary_score_correct": 2
+    },
+    "suspected_non_pallet": {
+      "conditions": 2,
+      "original_correct": 0,
+      "recent_prompt_correct": 0,
+      "primary_score_correct": 0,
+      "secondary_score_correct": 0
+    },
+    "blank_control": {
+      "conditions": 4,
+      "original_correct": 4,
+      "recent_prompt_correct": 4,
+      "primary_score_correct": 4,
+      "secondary_score_correct": 4
+    },
+    "marked_blank_control": {
+      "conditions": 4,
+      "original_correct": 4,
+      "recent_prompt_correct": 4,
+      "primary_score_correct": 4,
+      "secondary_score_correct": 4
+    },
+    "confirmed_six": {
+      "conditions": 12,
+      "original_correct": 12,
+      "recent_prompt_correct": 12,
+      "primary_score_correct": 11,
+      "secondary_score_correct": 12
+    },
+    "stress_negative": {
+      "conditions": 8,
+      "original_correct": 6,
+      "recent_prompt_correct": 6,
+      "primary_score_correct": 6,
+      "secondary_score_correct": 6
+    }
+  },
+  "compact_prefix_groups": {
+    "protected_pallet": {
+      "conditions": 4,
+      "original_correct": 4,
+      "recent_prompt_correct": 4,
+      "primary_score_correct": 4,
+      "secondary_score_correct": 4
+    },
+    "person_fixture": {
+      "conditions": 2,
+      "original_correct": 2,
+      "recent_prompt_correct": 2,
+      "primary_score_correct": 2,
+      "secondary_score_correct": 2
+    },
+    "suspected_non_pallet": {
+      "conditions": 2,
+      "original_correct": 0,
+      "recent_prompt_correct": 0,
+      "primary_score_correct": 0,
+      "secondary_score_correct": 0
+    },
+    "blank_control": {
+      "conditions": 4,
+      "original_correct": 4,
+      "recent_prompt_correct": 4,
+      "primary_score_correct": 4,
+      "secondary_score_correct": 4
+    },
+    "marked_blank_control": {
+      "conditions": 4,
+      "original_correct": 4,
+      "recent_prompt_correct": 4,
+      "primary_score_correct": 3,
+      "secondary_score_correct": 3
+    },
+    "confirmed_six": {
+      "conditions": 12,
+      "original_correct": 12,
+      "recent_prompt_correct": 12,
+      "primary_score_correct": 12,
+      "secondary_score_correct": 12
+    },
+    "stress_negative": {
+      "conditions": 8,
+      "original_correct": 6,
+      "recent_prompt_correct": 6,
+      "primary_score_correct": 3,
+      "secondary_score_correct": 3
+    }
+  },
+  "category_diagnostic_gates": {
+    "confirmed_six_12_of_12": false,
+    "old_pallets_4_of_4": true,
+    "person2_of2": true,
+    "plain_blanks4_of4": true,
+    "original_marked4_of4": true,
+    "stress8_of8": false,
+    "suspect_policy2_of2": false,
+    "no_correct_original_lost": false,
+    "strict_stress_gain": false
+  },
+  "all_primary_category_diagnostic_gates_passed": false,
+  "total_new_model_executions": 109,
+  "shared_services_healthy_after_owned_worker_exit": true,
+  "posthoc_closing_alias_audit_new_model_calls": 0,
+  "posthoc_closing_alias_conditions_verified": 72,
+  "posthoc_groups": {
+    "enum_score": {
+      "protected_pallet": {
+        "conditions": 4,
+        "posthoc_alias_correct": 4
+      },
+      "person_fixture": {
+        "conditions": 2,
+        "posthoc_alias_correct": 2
+      },
+      "suspected_non_pallet": {
+        "conditions": 2,
+        "posthoc_alias_correct": 0
+      },
+      "blank_control": {
+        "conditions": 4,
+        "posthoc_alias_correct": 4
+      },
+      "marked_blank_control": {
+        "conditions": 4,
+        "posthoc_alias_correct": 4
+      },
+      "confirmed_six": {
+        "conditions": 12,
+        "posthoc_alias_correct": 12
+      },
+      "stress_negative": {
+        "conditions": 8,
+        "posthoc_alias_correct": 4
+      }
+    },
+    "enum_prefix": {
+      "protected_pallet": {
+        "conditions": 4,
+        "posthoc_alias_correct": 4
+      },
+      "person_fixture": {
+        "conditions": 2,
+        "posthoc_alias_correct": 2
+      },
+      "suspected_non_pallet": {
+        "conditions": 2,
+        "posthoc_alias_correct": 0
+      },
+      "blank_control": {
+        "conditions": 4,
+        "posthoc_alias_correct": 4
+      },
+      "marked_blank_control": {
+        "conditions": 4,
+        "posthoc_alias_correct": 4
+      },
+      "confirmed_six": {
+        "conditions": 12,
+        "posthoc_alias_correct": 12
+      },
+      "stress_negative": {
+        "conditions": 8,
+        "posthoc_alias_correct": 6
+      }
+    }
+  },
+  "primary_results_not_replaced": true
+}

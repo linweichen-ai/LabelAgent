@@ -1,0 +1,220 @@
+{
+  "status": "complete",
+  "observed_utc": "2026-11-04T04:45:59.508715+00:00",
+  "rows": [
+    {
+      "method": "four_crop_control",
+      "pallet_objects_matched": 75,
+      "pallet_reference_objects": 118,
+      "pallet_points_covered": 5179,
+      "pallet_reference_points": 6291,
+      "pallet_candidates": 190,
+      "pallet_union_pixels": 836336,
+      "person_points_covered_by_pallet": 55,
+      "person_reference_points": 11068,
+      "checks": {
+        "strict_instance_gain_over_previous_best": false,
+        "point_coverage_not_below_previous_best": true,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "eligible": false,
+      "raw_coverage_certificates_verified": 0
+    },
+    {
+      "method": "spatial_component_mass_control",
+      "pallet_objects_matched": 78,
+      "pallet_reference_objects": 118,
+      "pallet_points_covered": 5174,
+      "pallet_reference_points": 6291,
+      "pallet_candidates": 196,
+      "pallet_union_pixels": 837675,
+      "person_points_covered_by_pallet": 49,
+      "person_reference_points": 11068,
+      "checks": {
+        "strict_instance_gain_over_previous_best": true,
+        "point_coverage_not_below_previous_best": false,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "eligible": false,
+      "raw_coverage_certificates_verified": 0
+    },
+    {
+      "method": "raw_certificate_priority",
+      "pallet_objects_matched": 78,
+      "pallet_reference_objects": 118,
+      "pallet_points_covered": 5183,
+      "pallet_reference_points": 6291,
+      "pallet_candidates": 197,
+      "pallet_union_pixels": 839443,
+      "person_points_covered_by_pallet": 55,
+      "person_reference_points": 11068,
+      "checks": {
+        "strict_instance_gain_over_previous_best": true,
+        "point_coverage_not_below_previous_best": true,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "eligible": true,
+      "raw_coverage_certificates_verified": 20
+    },
+    {
+      "method": "raw_certificate_components",
+      "pallet_objects_matched": 77,
+      "pallet_reference_objects": 118,
+      "pallet_points_covered": 5183,
+      "pallet_reference_points": 6291,
+      "pallet_candidates": 197,
+      "pallet_union_pixels": 839548,
+      "person_points_covered_by_pallet": 55,
+      "person_reference_points": 11068,
+      "checks": {
+        "strict_instance_gain_over_previous_best": true,
+        "point_coverage_not_below_previous_best": true,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "eligible": true,
+      "raw_coverage_certificates_verified": 20
+    }
+  ],
+  "winner": "raw_certificate_priority",
+  "baseline": {
+    "pallet_objects_matched": 68,
+    "pallet_reference_objects": 118,
+    "pallet_points_covered": 4993,
+    "pallet_reference_points": 6291,
+    "pallet_candidates": 143,
+    "pallet_union_pixels": 784762,
+    "person_points_covered_by_pallet": 49,
+    "person_reference_points": 11068
+  },
+  "previous_best": {
+    "pallet_objects_matched": 75,
+    "pallet_reference_objects": 118,
+    "pallet_points_covered": 5179,
+    "pallet_reference_points": 6291,
+    "pallet_candidates": 190,
+    "pallet_union_pixels": 836336,
+    "person_points_covered_by_pallet": 55,
+    "person_reference_points": 11068
+  },
+  "scored_images_per_method": 20,
+  "metric_version": 2,
+  "metric_sha256": "7648246cb6c821eabc5586d9147c6e1957fafb403ac28d8db77e6cf62e3907c3",
+  "prediction_plan_sha256": "ceed856c5b558760d0e978c48a29e1dfef60effdcbe530eb197f6e32f73575dd",
+  "new_model_requests": 0,
+  "bound_cached_proposals_reused": 579,
+  "frozen_pool_and_anchors_unchanged": true,
+  "predictor_code_unchanged": true,
+  "predictor_reference_files_opened": 0,
+  "spatial_component_control_bytes_and_all_group_metrics_exact": true,
+  "exact_control_count": 2,
+  "legacy_control_objects_exact": true,
+  "legacy_control_bytes_exact": true,
+  "legacy_control_metric_all_radii_exact": true,
+  "adopted": false,
+  "expanded_to_other_images": false,
+  "reference_is_independent_ground_truth": false,
+  "all_predictions_frozen_before_reference_scoring": true,
+  "source_state_and_inputs_preserved": true,
+  "scope": "exploratory_same_capture_tuning_not_independent_2D_accuracy",
+  "tests_passed": 300,
+  "skipped_tests": 0,
+  "raw_feasibility_probe": {
+    "status": "complete",
+    "images": 20,
+    "new_model_requests": 0,
+    "reference_files_opened": 0,
+    "required_new_raw_points": 446,
+    "modes": {
+      "pixel_zero": {
+        "uncoverable_required_points": 12,
+        "images_with_uncoverable_points": 1,
+        "all_old_additions_still_allowed": false
+      },
+      "unrestricted": {
+        "uncoverable_required_points": 0,
+        "images_with_uncoverable_points": 0,
+        "all_old_additions_still_allowed": true
+      },
+      "point_person": {
+        "uncoverable_required_points": 0,
+        "images_with_uncoverable_points": 0,
+        "all_old_additions_still_allowed": true
+      }
+    },
+    "raw_source_files_read": 10,
+    "scope": "raw coverage necessary conditions only; no reference labels or quality scoring"
+  },
+  "original_data_and_approved_reference_preserved": true,
+  "frozen_validation_plan": {
+    "created_utc": "2026-11-04T04:50:12.360050+00:00",
+    "status": "frozen_before_new_SAM_requests",
+    "primary_method": "raw_certificate_priority",
+    "secondary_method": "raw_certificate_components (diagnostic only; cannot replace primary on validation)",
+    "frames": [
+      7,
+      23,
+      38,
+      60,
+      90,
+      113,
+      128,
+      145
+    ],
+    "cameras": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "images": 32,
+    "new_nine_crop_SAM_requests": 288,
+    "old_four_crop_responses_to_reuse": 128,
+    "tuning_plan_sha256": "ceed856c5b558760d0e978c48a29e1dfef60effdcbe530eb197f6e32f73575dd",
+    "tuning_comparison_sha256": "f01ad492a45ed11ae19500fadc78ee5b6eb3c85eb1e793e7c8412bae27f04b2f",
+    "predictor_sha256": "199f8b65e93a3527e47dc9f05cad8227f5d1ea47f141ce89e933cfc4b33d47fc",
+    "helper_sha256": {
+      "raw_coverage_selection.py": "349d86679ba39550f486ef6f69b9eee51c4964feb3b71bb05b1b2a5b8d39b8ad",
+      "spatial_candidate_evidence.py": "0fcf29317b34d3269a19505463198c8401b2ae01f60f068dfe2b443d464a6fc4",
+      "lidar_candidate_evidence.py": "3cd6cc07cc7a12be125a7862f551a0620333984a2f7a9f5193166bc6bd2a3c29",
+      "tiled_candidate_utils.py": "421a5272eb40ce965d2fe87552afdf3555c221ee70030b3c7e7537b746ebe8a7"
+    },
+    "cached_four_crop_plan_sha256": "ce83fd2587b027e0cf442b7f878b1512117f45346c74f90d5b0ba3b6a1ea590d",
+    "baseline_prediction_sha256": "591ebba97aeaca4f58dfcb0eecfd79ec026b4915aa670143d46d9702181b7f92",
+    "metric_sha256": "7648246cb6c821eabc5586d9147c6e1957fafb403ac28d8db77e6cf62e3907c3",
+    "collector_sha256": "0ecb339cb11e7d587c72a8fbf08ac77e0f6ccb410f29b40e18f201dda40f4811",
+    "comparison_requires": {
+      "strict_instance_gain_over_previous_best": true,
+      "point_coverage_not_below_previous_best": true,
+      "person_off_class_not_above_previous_best": true,
+      "original_minimum_absolute_gain": 0.02,
+      "original_maximum_candidate_count_ratio": 1.5,
+      "original_maximum_union_area_ratio": 1.25,
+      "original_person_off_class_increase_limit": 0.005,
+      "all_original_candidates_preserved": true
+    },
+    "scope": "expanded same-capture validation; frames excluded from this tuning cohort but previously used by other historical studies, not independent external accuracy"
+  },
+  "validation_phase_at_tuning_publication": "new_dense_proposals_collected; primary recipe frozen before new requests; final score pending",
+  "validation_new_real_SAM_requests": 288,
+  "current_workbench_default_changed": false
+}

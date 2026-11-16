@@ -1,0 +1,99 @@
+{
+  "status": "complete",
+  "real_CUDA_requests": 28,
+  "cases": 7,
+  "natural_cases": 5,
+  "blank_controls": 2,
+  "model_parameters": "2B",
+  "quantization": "nf4",
+  "image_token_budget": 256,
+  "temperature": 0,
+  "max_tokens": 192,
+  "two_views": "isolated selected pixels; same pixels plus original and outlined local context",
+  "variant_order": "interleaved AB/BA by case; two views per variant",
+  "fixture_roles_are_human_truth": false,
+  "independent_validation": false,
+  "reference_annotation_reads": 0,
+  "full_validation_frames_used": false,
+  "workbench_writes": false,
+  "production_defaults_changed": false,
+  "adopted": false,
+  "plan_unchanged": true,
+  "bindings_unchanged": true,
+  "study_plan_sha256": "e1c0e41d48c64b4d63daebbe28e1b2896629636c1e451267c75e05c487c20932",
+  "variants": {
+    "neutral": {
+      "valid_real_requests": 14,
+      "checks": {
+        "fixture_fully_evaluated_with_valid_real_responses": true,
+        "blank_controls_not_accepted": true,
+        "no_qualitative_pallet_rejected": false,
+        "minimum_qualitative_pallet_accepts": false,
+        "suspected_non_pallet_not_accepted": true,
+        "at_least_two_suspects_paired_as_vehicle": false
+      },
+      "all_frozen_checks_passed": false,
+      "by_role": {
+        "pallet_fixture": {
+          "cases": 2,
+          "paired_decisions": {
+            "reject": 2
+          },
+          "paired_vehicle": 1
+        },
+        "suspected_non_pallet": {
+          "cases": 3,
+          "paired_decisions": {
+            "uncertain": 2,
+            "reject": 1
+          },
+          "paired_vehicle": 0
+        },
+        "blank_control": {
+          "cases": 2,
+          "paired_decisions": {
+            "uncertain": 2
+          },
+          "paired_vehicle": 0
+        }
+      }
+    },
+    "definition": {
+      "valid_real_requests": 14,
+      "checks": {
+        "fixture_fully_evaluated_with_valid_real_responses": true,
+        "blank_controls_not_accepted": false,
+        "no_qualitative_pallet_rejected": true,
+        "minimum_qualitative_pallet_accepts": true,
+        "suspected_non_pallet_not_accepted": true,
+        "at_least_two_suspects_paired_as_vehicle": false
+      },
+      "all_frozen_checks_passed": false,
+      "by_role": {
+        "pallet_fixture": {
+          "cases": 2,
+          "paired_decisions": {
+            "accept": 2
+          },
+          "paired_vehicle": 0
+        },
+        "suspected_non_pallet": {
+          "cases": 3,
+          "paired_decisions": {
+            "uncertain": 2,
+            "reject": 1
+          },
+          "paired_vehicle": 0
+        },
+        "blank_control": {
+          "cases": 2,
+          "paired_decisions": {
+            "uncertain": 1,
+            "accept": 1
+          },
+          "paired_vehicle": 0
+        }
+      }
+    }
+  }
+}

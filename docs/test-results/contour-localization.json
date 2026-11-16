@@ -1,0 +1,119 @@
+{
+  "study": "Complete original contour and deep interior pointer with clean context first",
+  "observed_utc": "2026-11-06T18:26:58.139076+00:00",
+  "phase": "final_verified",
+  "plan_sha256": "fbb62f58edd20dc96ef91f1c6c67e270ced0556e80cbb10c51cc96c709aa5916",
+  "maximum_new_requests": 29,
+  "unchanged_inspections_reused": 14,
+  "unchanged_marker_diagnostics_reused": 4,
+  "source_layout": "Unchanged original three-span clean crop first; same crop with complete proposed-mask contour second. Point view uses deepest interior point; contour-only view uses no arrow.",
+  "classification_ignores_all_prior_model_inspection_fields": true,
+  "guarded_counts_and_localization_counts_are_unused_legacy_diagnostics": true,
+  "combined_contour_pointer_prompt_change_not_single_factor": true,
+  "preceding_tight_first_layout_rejected": true,
+  "preceding_raw_counts": {
+    "six_correct_views": 10,
+    "six_correct_pairs": 5,
+    "old_pallet_correct_views": 0,
+    "person_correct_views": 2,
+    "plain_blank_abstentions": 0,
+    "marked_blank_abstentions": 0,
+    "suspect_abstentions": 0
+  },
+  "preceding_blank_inspections": {
+    "positive_geometry_passed": 8,
+    "positive_total": 9,
+    "blank_empty": 0,
+    "blank_total": 4
+  },
+  "tests_passed": 8,
+  "tests_are_focused": true,
+  "original_annotations_written": false,
+  "new_SAM_calls": 0,
+  "training_performed": false,
+  "candidate_adopted": false,
+  "default_enabled": false,
+  "independent_validation": false,
+  "additional_existing_source_guard_readback": {
+    "posthoc": true,
+    "group_summary": {
+      "positive": {
+        "total": 9,
+        "native_available": 9,
+        "all_raw_categories_preserved": 9
+      },
+      "blank": {
+        "total": 4,
+        "native_unavailable": 4,
+        "letterboxed_unavailable": 2
+      },
+      "marked_blank": {
+        "total": 2,
+        "native_unavailable": 2,
+        "letterboxed_unavailable": 0
+      },
+      "suspect": {
+        "total": 1,
+        "native_available": 1,
+        "existing_suspect_rejection_requirement_unchanged": true
+      }
+    },
+    "new_model_calls": 0,
+    "policy_changed": false,
+    "raw_vlm_improvement": false
+  },
+  "status": "complete",
+  "responses_received": 29,
+  "completed_classifications": 28,
+  "baseline_counts": {
+    "six_correct_views": 12,
+    "six_correct_pairs": 6,
+    "old_pallet_correct_views": 4,
+    "person_correct_views": 2,
+    "plain_blank_abstentions": 4,
+    "marked_blank_abstentions": 0,
+    "suspect_abstentions": 0
+  },
+  "candidate_counts": {
+    "six_correct_views": 12,
+    "six_correct_pairs": 6,
+    "old_pallet_correct_views": 4,
+    "person_correct_views": 2,
+    "plain_blank_abstentions": 4,
+    "marked_blank_abstentions": 1,
+    "suspect_abstentions": 0
+  },
+  "guarded_counts": {
+    "six_correct_views": 12,
+    "six_correct_pairs": 6,
+    "old_pallet_correct_views": 4,
+    "person_correct_views": 0,
+    "plain_blank_abstentions": 4,
+    "marked_blank_abstentions": 1,
+    "suspect_abstentions": 0
+  },
+  "localization_counts": {
+    "positive_geometry_passed": 8,
+    "positive_total": 9,
+    "blank_empty": 0,
+    "blank_total": 4
+  },
+  "matched_blank_counts": {
+    "clean_clean_abstentions": 4,
+    "clean_marked_abstentions": 0,
+    "total": 4
+  },
+  "raw_response_count": 47,
+  "original_annotations_verified": 256,
+  "source_bindings_unchanged": true,
+  "original_state_unchanged": true,
+  "all_joint_checks_passed": false,
+  "c3_semantic_review": {
+    "passed": true,
+    "public_conclusion": "C3 passed assistant visual review for this development case: both raw classification views identified the visible wooden pallet base or edge that the complete contour encloses. The new interior pointer lies on that base, while the nearby person and circular machinery remain outside the contour. This is not new human mask approval or evidence of generalization.",
+    "reviewer": "assistant",
+    "human_localization_approval": false
+  },
+  "new_response_count": 29,
+  "cached_response_count": 18
+}

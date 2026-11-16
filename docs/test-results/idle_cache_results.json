@@ -1,0 +1,131 @@
+{
+  "status": "complete",
+  "new_VLM_requests": 5,
+  "synthetic_SAM_switch_requests": 1,
+  "quality_evaluated": false,
+  "initial_short_request_test": {
+    "status": "complete",
+    "new_VLM_requests": 3,
+    "synthetic_SAM_switch_requests": 1,
+    "quality_evaluated": false,
+    "checks": {
+      "same_payload_and_model": true,
+      "exact_decoded_text_preserved": true,
+      "at_least_one_real_cache_release": false,
+      "all_live_allocations_preserved": true,
+      "all_states_unchanged": true
+    },
+    "all_checks_passed": false,
+    "old_request_seconds": 11.125,
+    "new_request_seconds": [
+      14.344,
+      7.36
+    ],
+    "old_peak_reserved_MiB": 5504.0,
+    "new_cache_receipts": [
+      {
+        "allocated_bytes_after": 2173485568,
+        "allocated_bytes_before": 2173485568,
+        "enabled": true,
+        "performed": false,
+        "released_reserved_bytes": 0,
+        "reserved_bytes_after": 2678063104,
+        "reserved_bytes_before": 2678063104
+      },
+      {
+        "allocated_bytes_after": 2173485568,
+        "allocated_bytes_before": 2173485568,
+        "enabled": true,
+        "performed": false,
+        "released_reserved_bytes": 0,
+        "reserved_bytes_after": 2678063104,
+        "reserved_bytes_before": 2678063104
+      }
+    ],
+    "gpu_global_after_before": {
+      "used_MiB": 7645,
+      "free_MiB": 166
+    },
+    "gpu_global_after_new": [
+      {
+        "used_MiB": 5601,
+        "free_MiB": 2210
+      },
+      {
+        "used_MiB": 5618,
+        "free_MiB": 2193
+      }
+    ],
+    "timing_and_global_gpu_scope": "small sequential snapshots with model reload and other applications; not a general performance benchmark"
+  },
+  "representative_Agent_review_test": {
+    "status": "complete",
+    "new_VLM_requests": 2,
+    "new_SAM3_requests": 0,
+    "rows": [
+      {
+        "index": 1,
+        "seconds": 5.015,
+        "actual_prompt_tokens": 2374,
+        "image_tokens": [
+          238,
+          238,
+          238,
+          238
+        ],
+        "cache_release": {
+          "allocated_bytes_after": 2173485568,
+          "allocated_bytes_before": 2173485568,
+          "enabled": true,
+          "performed": true,
+          "released_reserved_bytes": 1335885824,
+          "reserved_bytes_after": 2246049792,
+          "reserved_bytes_before": 3581935616
+        },
+        "exact_historical_decoded_text": true,
+        "same_historical_parsed_decision": true,
+        "live_allocations_preserved": true
+      },
+      {
+        "index": 2,
+        "seconds": 5.016,
+        "actual_prompt_tokens": 2374,
+        "image_tokens": [
+          238,
+          238,
+          238,
+          238
+        ],
+        "cache_release": {
+          "allocated_bytes_after": 2173485568,
+          "allocated_bytes_before": 2173485568,
+          "enabled": true,
+          "performed": true,
+          "released_reserved_bytes": 1333788672,
+          "reserved_bytes_after": 2246049792,
+          "reserved_bytes_before": 3579838464
+        },
+        "exact_historical_decoded_text": true,
+        "same_historical_parsed_decision": true,
+        "live_allocations_preserved": true
+      }
+    ],
+    "checks": {
+      "all_real_responses": true,
+      "exact_historical_input_images": true,
+      "exact_historical_text_preserved": true,
+      "actual_cache_release_both_requests": true,
+      "live_allocations_preserved": true,
+      "state_unchanged": true
+    },
+    "quality_evaluated": false,
+    "workbench_modified": false,
+    "all_checks_passed": true
+  },
+  "reclaim_threshold_bytes_unchanged": 536870912,
+  "profile": "local-8gb",
+  "enabled_in_live_worker": true,
+  "other_profiles_default_unchanged": true,
+  "initial_summary_sha256": "61bccd672c25d685b05d9816399dd59e951cbbdbd0ff9747c74f05caa42b9446",
+  "representative_summary_sha256": "fd52181a4e75bd27db52baec2b2fbc14ab5ce85ae6f3afaae8fd3d1ab4226a17"
+}

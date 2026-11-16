@@ -2,6 +2,7 @@
 
 # pyre-unsafe
 import logging
+import os
 
 import torch
 
@@ -71,6 +72,27 @@ def connected_components(input_tensor: torch.Tensor):
     assert input_tensor.dim() == 4 and input_tensor.shape[1] == 1, (
         "Input tensor must be (B, H, W) or (B, 1, H, W)."
     )
+
+    # Local Windows option: use the installed OpenCV CPU implementation when
+    # Windows application control rejects a dynamically compiled CUDA launcher.
+    # Preserve 8-connectivity, foreground component areas, shape and device.
+    if os.environ.get("SAM3_CC_BACKEND") == "opencv":
+        import cv2
+        import numpy as np
+
+        binary = input_tensor.detach().ne(0).to(torch.uint8).cpu().numpy()
+        label_batches, count_batches = [], []
+        for plane in binary[:, 0]:
+            _, labels, stats, _ = cv2.connectedComponentsWithStats(
+                np.ascontiguousarray(plane), connectivity=8, ltype=cv2.CV_32S
+            )
+            areas = stats[:, cv2.CC_STAT_AREA].copy()
+            areas[0] = 0
+            label_batches.append(labels)
+            count_batches.append(areas[labels])
+        labels = torch.from_numpy(np.stack(label_batches)[:, None]).to(input_tensor.device)
+        counts = torch.from_numpy(np.stack(count_batches)[:, None]).to(input_tensor.device)
+        return labels, counts
 
     if input_tensor.is_cuda:
         if HAS_CC_TORCH:

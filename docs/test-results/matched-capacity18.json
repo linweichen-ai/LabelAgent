@@ -1,0 +1,136 @@
+{
+  "phase": "final_verified",
+  "observed_utc": "2026-11-07T14:39:11.483411+00:00",
+  "status": "complete",
+  "planned_fresh_candidate_calls": 37,
+  "attempted_candidate_calls": 37,
+  "saved_candidate_responses": 37,
+  "saved_validated_quality_rows": 36,
+  "cached_2b_quality_views": 36,
+  "cases": 18,
+  "quality_views_per_arm": 36,
+  "quantization": "nf4",
+  "image_tokens_per_image": 256,
+  "weight_shards_verified": 4,
+  "lifetime_seconds_per_worker": 900,
+  "allocator_fraction": 0.35,
+  "reserve_mib": 4096,
+  "plan_sha256": "fa094368c89be657cf1c59ace652d778c9a750bec81968f12d3c18f0ea7125b3",
+  "no_2b_receipt_used_as_8b": true,
+  "raw_categories_never_rewritten": true,
+  "candidate_adopted": false,
+  "default_enabled": false,
+  "original_annotations_written": false,
+  "new_SAM_calls": 0,
+  "independent_validation": false,
+  "changes_host_runtime_as_well_as_model_size": true,
+  "groups": {
+    "protected_pallet": {
+      "views": 4,
+      "baseline_correct": 4,
+      "candidate_correct": 4,
+      "baseline_categories": {
+        "pallet": 4
+      },
+      "candidate_categories": {
+        "pallet": 4
+      }
+    },
+    "person_fixture": {
+      "views": 2,
+      "baseline_correct": 2,
+      "candidate_correct": 2,
+      "baseline_categories": {
+        "person": 2
+      },
+      "candidate_categories": {
+        "person": 2
+      }
+    },
+    "suspected_non_pallet": {
+      "views": 2,
+      "baseline_correct": 0,
+      "candidate_correct": 2,
+      "baseline_categories": {
+        "pallet": 2
+      },
+      "candidate_categories": {
+        "uncertain": 2
+      }
+    },
+    "blank_control": {
+      "views": 4,
+      "baseline_correct": 4,
+      "candidate_correct": 4,
+      "baseline_categories": {
+        "uncertain": 4
+      },
+      "candidate_categories": {
+        "uncertain": 4
+      }
+    },
+    "marked_blank_control": {
+      "views": 4,
+      "baseline_correct": 4,
+      "candidate_correct": 4,
+      "baseline_categories": {
+        "uncertain": 4
+      },
+      "candidate_categories": {
+        "uncertain": 4
+      }
+    },
+    "confirmed_six": {
+      "views": 12,
+      "baseline_correct": 12,
+      "candidate_correct": 12,
+      "baseline_categories": {
+        "pallet": 6,
+        "person": 6
+      },
+      "candidate_categories": {
+        "pallet": 6,
+        "person": 6
+      }
+    },
+    "stress_negative": {
+      "views": 8,
+      "baseline_correct": 6,
+      "candidate_correct": 5,
+      "baseline_categories": {
+        "uncertain": 6,
+        "pallet": 1,
+        "person": 1
+      },
+      "candidate_categories": {
+        "uncertain": 5,
+        "person": 3
+      }
+    }
+  },
+  "checks": {
+    "six_targets_12_of_12": true,
+    "old_pallets_4_of_4": true,
+    "person_control_2_of_2": true,
+    "plain_blanks_4_of_4": true,
+    "original_marked_blanks_4_of_4": true,
+    "stress_blanks_8_of_8": false,
+    "suspect_conservative_abstention_2_of_2": true,
+    "strict_stress_gain": false,
+    "no_correct_baseline_view_lost": false,
+    "default_budget_guard_passed": true,
+    "original_annotations_and_references_unchanged": true,
+    "exact_same_requests_and_actual_image_tokens": true,
+    "no_2b_response_reused_as_8b": true,
+    "owned_worker_and_tunnel_released": true
+  },
+  "all_automatic_gates_passed": false,
+  "c3_assistant_semantic_review_passed": true,
+  "human_localization_approval": false,
+  "owned_leases_started": 2,
+  "all_development_joint_checks_passed": false,
+  "accepted_calls_per_lease": [
+    25,
+    12
+  ]
+}

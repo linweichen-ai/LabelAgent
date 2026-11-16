@@ -1,0 +1,39 @@
+{
+  "status": "complete",
+  "diagnostic_only": true,
+  "uses_reference_annotations": true,
+  "usable_predictions_exported": false,
+  "new_model_requests": 0,
+  "images": 20,
+  "totals": {
+    "reference_objects": 118,
+    "baseline_matched": 68,
+    "four_crop_matched": 75,
+    "all_pool_matched_unbounded": 83,
+    "score_baseline_NMS_budget_upper_bound": 82,
+    "with_zero_person_overlap_upper_bound": 82,
+    "preserved_four_unrestricted_upper_bound": 75,
+    "preserved_four_guarded_upper_bound": 75
+  },
+  "relaxed_constraints": [
+    "pairwise NMS among new candidates",
+    "union area cap",
+    "reference-person point cap"
+  ],
+  "fixed_parameters": {
+    "minimum_score": 0.5,
+    "NMS_to_fixed_candidates": 0.8,
+    "addition_ratio": 0.5,
+    "radius_pixels": 3,
+    "minimum_unique_reference_points": 5,
+    "minimum_point_purity": 0.67
+  },
+  "actual_selection_achieved_upper_bound": false,
+  "independent_2D_accuracy_evaluated": false,
+  "reference_controls_reproduced": {
+    "baseline": 68,
+    "four_crop": 75,
+    "unbounded_pool": 83
+  },
+  "private_summary_sha256": "9c1cb7a1109a891425674a623146d4ae6c148201dc90b82ccd73a3d43c77da0a"
+}

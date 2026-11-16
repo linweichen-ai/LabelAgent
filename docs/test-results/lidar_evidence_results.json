@@ -1,0 +1,237 @@
+{
+  "status": "complete_not_adopted",
+  "new_model_requests": 0,
+  "historical_real_SAM3_responses_reused": 260,
+  "images_per_method": 20,
+  "methods": [
+    {
+      "method": "four_crop_control",
+      "pallet_objects_matched": 75,
+      "pallet_reference_objects": 118,
+      "pallet_points_covered": 5179,
+      "pallet_reference_points": 6291,
+      "pallet_candidates": 190,
+      "pallet_union_pixels": 836336,
+      "person_points_covered_by_pallet": 55,
+      "person_reference_points": 11068,
+      "checks": {
+        "strict_instance_gain_over_previous_best": false,
+        "point_coverage_not_below_previous_best": true,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "eligible": false,
+      "proposals_rejected_by_predicted_person": 0
+    },
+    {
+      "method": "multiscale_novelty_control",
+      "pallet_objects_matched": 74,
+      "pallet_reference_objects": 118,
+      "pallet_points_covered": 5158,
+      "pallet_reference_points": 6291,
+      "pallet_candidates": 197,
+      "pallet_union_pixels": 840247,
+      "person_points_covered_by_pallet": 57,
+      "person_reference_points": 11068,
+      "checks": {
+        "strict_instance_gain_over_previous_best": false,
+        "point_coverage_not_below_previous_best": false,
+        "person_off_class_not_above_previous_best": false,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "eligible": false,
+      "proposals_rejected_by_predicted_person": 0
+    },
+    {
+      "method": "lidar_positive_guard",
+      "pallet_objects_matched": 74,
+      "pallet_reference_objects": 118,
+      "pallet_points_covered": 5109,
+      "pallet_reference_points": 6291,
+      "pallet_candidates": 196,
+      "pallet_union_pixels": 856383,
+      "person_points_covered_by_pallet": 49,
+      "person_reference_points": 11068,
+      "checks": {
+        "strict_instance_gain_over_previous_best": false,
+        "point_coverage_not_below_previous_best": false,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "eligible": false,
+      "proposals_rejected_by_predicted_person": 35
+    },
+    {
+      "method": "lidar_penalty_guard",
+      "pallet_objects_matched": 73,
+      "pallet_reference_objects": 118,
+      "pallet_points_covered": 5061,
+      "pallet_reference_points": 6291,
+      "pallet_candidates": 196,
+      "pallet_union_pixels": 817608,
+      "person_points_covered_by_pallet": 49,
+      "person_reference_points": 11068,
+      "checks": {
+        "strict_instance_gain_over_previous_best": false,
+        "point_coverage_not_below_previous_best": false,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "eligible": false,
+      "proposals_rejected_by_predicted_person": 35
+    },
+    {
+      "method": "preserve_four_lidar_penalty_guard",
+      "pallet_objects_matched": 75,
+      "pallet_reference_objects": 118,
+      "pallet_points_covered": 5181,
+      "pallet_reference_points": 6291,
+      "pallet_candidates": 197,
+      "pallet_union_pixels": 838955,
+      "person_points_covered_by_pallet": 55,
+      "person_reference_points": 11068,
+      "checks": {
+        "strict_instance_gain_over_previous_best": false,
+        "point_coverage_not_below_previous_best": true,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "eligible": false,
+      "proposals_rejected_by_predicted_person": 35
+    }
+  ],
+  "winner": null,
+  "previous_best": {
+    "pallet_objects_matched": 75,
+    "pallet_reference_objects": 118,
+    "pallet_points_covered": 5179,
+    "pallet_reference_points": 6291,
+    "pallet_candidates": 190,
+    "pallet_union_pixels": 836336,
+    "person_points_covered_by_pallet": 55,
+    "person_reference_points": 11068
+  },
+  "reference_status": "user selected labels; not independently verified 2D truth",
+  "pixel_accuracy_evaluated": false,
+  "independent_validation": false,
+  "expanded_to_other_images": false,
+  "workbench_default_changed": false,
+  "original_candidates_preserved": true,
+  "raw_sensor_sources_unchanged": true,
+  "predictor_reference_files_opened": 0,
+  "predictor_reference_boundary_enforced": true,
+  "raw_source_read_counts": {
+    "images": 20,
+    "PCDs": 5,
+    "calibration_files": 5
+  },
+  "plane_fits": {
+    "usable": 5,
+    "origin_depth_range": [
+      2.099911296758952,
+      2.1317731439309204
+    ],
+    "sampled_lower_pool_inlier_fraction_range": [
+      0.9121666666666667,
+      0.9746666666666667
+    ],
+    "median_inlier_residual_range": [
+      0.0064095936772821105,
+      0.007287625837038902
+    ],
+    "units": "nominal supplied-calibration metres; not independently certified",
+    "confirmed_ground_truth": false
+  },
+  "raw_height_supported_proposals": 531,
+  "total_proposals": 579,
+  "controls": {
+    "both_prediction_exports_byte_identical": true,
+    "both_full_group_metrics_identical": true,
+    "metric_version": 2,
+    "metric_sha256": "7648246cb6c821eabc5586d9147c6e1957fafb403ac28d8db77e6cf62e3907c3"
+  },
+  "plane_recipe": {
+    "minimum_radius": 0.5,
+    "maximum_radius": 20.0,
+    "minimum_z": -4.0,
+    "maximum_z": -0.15,
+    "lower_quantile": 0.5,
+    "sample_limit": 6000,
+    "trials": 256,
+    "seed": 0,
+    "distance_threshold": 0.04,
+    "maximum_tilt_degrees": 15.0,
+    "minimum_origin_depth": 0.2,
+    "maximum_origin_depth": 4.0,
+    "minimum_pool_points": 100,
+    "minimum_inlier_fraction": 0.55,
+    "minimum_xy_span": 2.0
+  },
+  "point_recipe": {
+    "cell_size": 8,
+    "depth_slack": 0.15,
+    "near": 0.2,
+    "mask_dilation_pixels": 3,
+    "minimum_support_points": 5,
+    "floor_band": 0.04,
+    "low_object_height": [
+      0.04,
+      0.45
+    ],
+    "tall_height": 0.7
+  },
+  "height_rank": {
+    "positive": "novelty*confidence*(1+low_object_fraction)/2; uniform scale preserves ordering",
+    "penalty": "novelty*confidence*(1-0.75*floor_fraction)*(1-0.75*tall_fraction)",
+    "unsupported": "neutral evidence factor 1 before uniform positive-mode scaling; never reject because points are missing",
+    "preserved_seed": "previous four-crop candidates for the residual-budget variant"
+  },
+  "initial_unscored_integration_attempt": {
+    "status": "failed",
+    "completed_images": 1,
+    "reference_files_opened": 0,
+    "reason": "Priority exceeded legacy 0..1 interface; uniformly scaled without changing ordering or model confidence",
+    "counted_as_completed_metric_trial": false
+  },
+  "prediction_plan_sha256": "6af799ab59b5faebf9c4889af32ad2ffeba8d03a39c3b9650a0ab768c63139e0",
+  "private_comparison_sha256": "c2d14bb98216e313ca3081245daa06f05439a652ad6e67269381b816ec93bfb2",
+  "current_preservation": {
+    "previous_sessions_checked": 7,
+    "source_files_checked": 1023,
+    "all_checks_passed": true,
+    "approved_reference_shapes": 15,
+    "checks": {
+      "all_seven_previous_sessions_unchanged": true,
+      "approved_reference_preserved": true,
+      "target76_still_unconfirmed": true,
+      "latest_UI_candidates_and_agent_run_preserved": true,
+      "active_review_session_preserved": true,
+      "labels_and_config_preserved": true,
+      "approved_reference_hash_matches": true,
+      "original_mcap_unchanged": true,
+      "review_mcap_unchanged": true,
+      "dataset_mcap_unchanged": true,
+      "all_original_source_files_unchanged": true
+    }
+  }
+}

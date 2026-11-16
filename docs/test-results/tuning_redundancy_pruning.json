@@ -1,0 +1,148 @@
+{
+  "status": "complete_not_adopted",
+  "observed_utc": "2026-11-04T06:52:02.653811+00:00",
+  "tuning_images": 20,
+  "full_validation_images_used": false,
+  "new_model_requests": 0,
+  "predictor_reference_annotation_reads": 0,
+  "metric_reference_used_separately": true,
+  "visual_packet": {
+    "timestamps": 5,
+    "images": 5,
+    "candidate_cards": 15,
+    "selection": "Maximum membership change camera per tuning timestamp; all new-only candidates in each chosen image",
+    "reviewer": "assistant qualitative visual diagnosis",
+    "human_confirmed_truth_created": false,
+    "potential_findings": [
+      "pallet-truck-part class confusion needing review",
+      "overlapping partial pallet masks needing instance review"
+    ],
+    "false_positive_rate_claimed": false,
+    "images_uploaded": false
+  },
+  "reference_free_geometry": {
+    "status": "complete",
+    "images": 20,
+    "new_selected_candidates": 54,
+    "new_candidates_pixel_iou_at_least_half_with_another_selected": 28,
+    "pairs_involving_new_pixel_iou_at_least_half": 26,
+    "pairs_involving_new_equal_nonempty_raw_point_sets": 2,
+    "pairs_involving_new_raw_point_iou_at_least_point9_and_at_least5_each": 4,
+    "new_candidates_with_zero_raw_points_outside_original_union": 14,
+    "new_candidates_with_zero_exclusive_raw_points": 20,
+    "new_candidates_with_zero_pixels_outside_original_union": 0,
+    "reference_annotation_reads": 0,
+    "new_model_requests": 0,
+    "prediction_exports_unchanged": true,
+    "full_validation_frames_used": false,
+    "algorithm_or_parameters_changed": false
+  },
+  "predeclared_rules": {
+    "prune_no_new_baseline_raw_points": "Remove added candidates only when a nonempty masked raw-point set is fully covered by original SAM pallets",
+    "minimum_raw_union_cover": "Keep the minimum number of existing selected additions that cover the full primary raw-point union; tie by maximum original SAM score, then original order"
+  },
+  "current_primary": {
+    "pallet_objects_matched": 78,
+    "pallet_reference_objects": 118,
+    "pallet_points_covered": 5183,
+    "pallet_reference_points": 6291,
+    "pallet_candidates": 197,
+    "pallet_union_pixels": 839443,
+    "person_points_covered_by_pallet": 55,
+    "person_reference_points": 11068
+  },
+  "rows": [
+    {
+      "method": "prune_no_new_baseline_raw_points",
+      "pallet_objects_matched": 77,
+      "pallet_reference_objects": 118,
+      "pallet_points_covered": 5183,
+      "pallet_reference_points": 6291,
+      "pallet_candidates": 183,
+      "pallet_union_pixels": 837509,
+      "person_points_covered_by_pallet": 55,
+      "person_reference_points": 11068,
+      "original_checks": {
+        "strict_instance_gain_over_previous_four": true,
+        "point_coverage_not_below_previous_four": true,
+        "person_cross_not_above_previous_four": true,
+        "original_two_percentage_point_gain": true,
+        "original_count_cap": true,
+        "original_area_cap": true,
+        "original_person_cross_fraction_cap": true,
+        "all_original_candidates_preserved": true
+      },
+      "current_primary_guards": {
+        "instances_not_below_current_primary": false,
+        "points_not_below_current_primary": true,
+        "person_cross_not_above_current_primary": true,
+        "strictly_fewer_pallet_candidates": true,
+        "raw_point_union_equal_every_image": true
+      },
+      "pallet_points_equal_current_primary_every_image": true,
+      "person_cross_equal_current_primary_every_image": true,
+      "passed_predeclared_diagnostic": false,
+      "adopted": false,
+      "expanded": false
+    },
+    {
+      "method": "minimum_raw_union_cover",
+      "pallet_objects_matched": 77,
+      "pallet_reference_objects": 118,
+      "pallet_points_covered": 5183,
+      "pallet_reference_points": 6291,
+      "pallet_candidates": 178,
+      "pallet_union_pixels": 837363,
+      "person_points_covered_by_pallet": 55,
+      "person_reference_points": 11068,
+      "original_checks": {
+        "strict_instance_gain_over_previous_four": true,
+        "point_coverage_not_below_previous_four": true,
+        "person_cross_not_above_previous_four": true,
+        "original_two_percentage_point_gain": true,
+        "original_count_cap": true,
+        "original_area_cap": true,
+        "original_person_cross_fraction_cap": true,
+        "all_original_candidates_preserved": true
+      },
+      "current_primary_guards": {
+        "instances_not_below_current_primary": false,
+        "points_not_below_current_primary": true,
+        "person_cross_not_above_current_primary": true,
+        "strictly_fewer_pallet_candidates": true,
+        "raw_point_union_equal_every_image": true
+      },
+      "pallet_points_equal_current_primary_every_image": true,
+      "person_cross_equal_current_primary_every_image": true,
+      "passed_predeclared_diagnostic": false,
+      "adopted": false,
+      "expanded": false
+    }
+  ],
+  "posthoc_reference_diagnosis": {
+    "objects_losing_threshold_support_per_variant": 1,
+    "unique_visible_points_in_example": 16,
+    "best_raw_candidate_coverage_before_and_after": 0.8125,
+    "best_purity_qualified_support_before": 0.625,
+    "best_purity_qualified_support_after": 0.0,
+    "prediction_or_filter_selected_from_reference": false
+  },
+  "reproduction": {
+    "cli": "tools/diagnose_raw_redundancy_pruning.py",
+    "objects_exact_for_20_images_and_both_methods": true,
+    "actual_predeclared_experiment_code_sha256": "78154eb1afc2ab98a8a1daf7e5d7df38964f67d2cdc6c59f5e958f28deeba66e",
+    "public_cli_sha256": "2593ed4183a898e61fb8b261c0fe16191af3c9b152415110cb31c874cf374209",
+    "packaging_after_scoring_changes": "CLI paths only; both prediction exports reproduced exactly",
+    "new_cli_metric_runs": 0,
+    "existing_regression_tests": 333,
+    "existing_regression_rerun_this_turn": false
+  },
+  "original_sources_sessions_reference_and_UI_candidates_preserved": true,
+  "full_primary_unchanged": "raw_certificate_priority",
+  "full_collection_complete": true,
+  "remaining_dense_calls_completed": 5004,
+  "remaining_dense_images_completed": 556,
+  "automatic_postprocessor_phase_snapshot": "replay_remaining",
+  "full_primary_passed": null,
+  "scope": "Tuning-only diagnostic failure; no independent pixel accuracy or precision conclusion"
+}

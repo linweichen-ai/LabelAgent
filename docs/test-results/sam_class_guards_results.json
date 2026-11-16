@@ -1,0 +1,299 @@
+{
+  "status": "verified",
+  "observed_utc": "2026-11-04T16:13:21.239147+00:00",
+  "fullframe_only": {
+    "human_correct": 14,
+    "human_wrong": 0,
+    "legacy_pallet_correct": 1,
+    "legacy_pallet_correct_ids": [
+      "card_42"
+    ],
+    "legacy_checks": {
+      "all_cases_have_valid_real_CUDA_responses": true,
+      "all_person_fixtures_agree_person": true,
+      "pallet_fixtures_never_called_person": true,
+      "minimum_pallet_consensus": false,
+      "blank_views_always_uncertain": true,
+      "suspected_non_target_never_accepted": true
+    },
+    "all_quality_checks_passed": false
+  },
+  "fullframe_plus_crop": {
+    "human_correct": 14,
+    "human_wrong": 0,
+    "legacy_pallet_correct": 2,
+    "legacy_pallet_correct_ids": [
+      "card_05",
+      "card_42"
+    ],
+    "legacy_checks": {
+      "all_cases_have_valid_real_CUDA_responses": true,
+      "all_person_fixtures_agree_person": true,
+      "pallet_fixtures_never_called_person": true,
+      "minimum_pallet_consensus": false,
+      "blank_views_always_uncertain": true,
+      "suspected_non_target_never_accepted": true
+    },
+    "all_quality_checks_passed": false
+  },
+  "human_correct_before": 14,
+  "human_wrong_before": 1,
+  "legacy_pallet_correct_before": 4,
+  "minimum_legacy_pallet_required": 3,
+  "all29_original_cases_retained": true,
+  "exact_original_geometry_and_81_JPEGs_bound": true,
+  "fullframe_source_images": 10,
+  "original_class_cache_files": 20,
+  "new_SAM_calls": 54,
+  "new_VLM_calls": 0,
+  "all54_client_payloads_reconstructed": true,
+  "all54_manager_and_server_HTTP200_verified": true,
+  "all58_cached_VLM_quality_responses_unique": true,
+  "all27_support_counts_and58_decisions_reproduced_for_both_methods": true,
+  "all224_full_and231_crop_input_code_state_bindings_unchanged": true,
+  "source_support_diagnostic": [
+    {
+      "case_id": "region_07",
+      "full_supported_classes": [
+        "person"
+      ],
+      "crop_supported_classes": [
+        "person"
+      ]
+    },
+    {
+      "case_id": "region_08",
+      "full_supported_classes": [
+        "pallet"
+      ],
+      "crop_supported_classes": [
+        "pallet"
+      ]
+    },
+    {
+      "case_id": "region_02",
+      "full_supported_classes": [
+        "pallet"
+      ],
+      "crop_supported_classes": [
+        "pallet"
+      ]
+    },
+    {
+      "case_id": "region_19",
+      "full_supported_classes": [
+        "pallet"
+      ],
+      "crop_supported_classes": [
+        "pallet"
+      ]
+    },
+    {
+      "case_id": "region_16",
+      "full_supported_classes": [],
+      "crop_supported_classes": []
+    },
+    {
+      "case_id": "region_11",
+      "full_supported_classes": [
+        "person"
+      ],
+      "crop_supported_classes": [
+        "person"
+      ]
+    },
+    {
+      "case_id": "region_09",
+      "full_supported_classes": [
+        "pallet"
+      ],
+      "crop_supported_classes": [
+        "pallet"
+      ]
+    },
+    {
+      "case_id": "legacy_06",
+      "full_supported_classes": [],
+      "crop_supported_classes": []
+    },
+    {
+      "case_id": "region_01",
+      "full_supported_classes": [
+        "pallet"
+      ],
+      "crop_supported_classes": [
+        "pallet"
+      ]
+    },
+    {
+      "case_id": "region_12",
+      "full_supported_classes": [],
+      "crop_supported_classes": []
+    },
+    {
+      "case_id": "region_03",
+      "full_supported_classes": [
+        "pallet"
+      ],
+      "crop_supported_classes": [
+        "pallet"
+      ]
+    },
+    {
+      "case_id": "region_17",
+      "full_supported_classes": [
+        "person"
+      ],
+      "crop_supported_classes": [
+        "person"
+      ]
+    },
+    {
+      "case_id": "region_13",
+      "full_supported_classes": [
+        "pallet"
+      ],
+      "crop_supported_classes": [
+        "pallet"
+      ]
+    },
+    {
+      "case_id": "region_18",
+      "full_supported_classes": [
+        "person"
+      ],
+      "crop_supported_classes": [
+        "person"
+      ]
+    },
+    {
+      "case_id": "region_15",
+      "full_supported_classes": [
+        "pallet"
+      ],
+      "crop_supported_classes": [
+        "pallet"
+      ]
+    },
+    {
+      "case_id": "legacy_02",
+      "full_supported_classes": [
+        "person"
+      ],
+      "crop_supported_classes": [
+        "person"
+      ]
+    },
+    {
+      "case_id": "region_10",
+      "full_supported_classes": [
+        "pallet"
+      ],
+      "crop_supported_classes": [
+        "pallet"
+      ]
+    },
+    {
+      "case_id": "legacy_08",
+      "full_supported_classes": [],
+      "crop_supported_classes": []
+    },
+    {
+      "case_id": "region_06",
+      "full_supported_classes": [],
+      "crop_supported_classes": []
+    },
+    {
+      "case_id": "legacy_05",
+      "full_supported_classes": [],
+      "crop_supported_classes": [
+        "pallet"
+      ]
+    },
+    {
+      "case_id": "region_14",
+      "full_supported_classes": [
+        "pallet"
+      ],
+      "crop_supported_classes": [
+        "pallet"
+      ]
+    },
+    {
+      "case_id": "region_04",
+      "full_supported_classes": [
+        "person"
+      ],
+      "crop_supported_classes": [
+        "person"
+      ]
+    },
+    {
+      "case_id": "legacy_01",
+      "full_supported_classes": [
+        "person"
+      ],
+      "crop_supported_classes": [
+        "person"
+      ]
+    },
+    {
+      "case_id": "legacy_10",
+      "full_supported_classes": [],
+      "crop_supported_classes": []
+    },
+    {
+      "case_id": "legacy_09",
+      "full_supported_classes": [
+        "pallet"
+      ],
+      "crop_supported_classes": [
+        "pallet"
+      ]
+    },
+    {
+      "case_id": "legacy_07",
+      "full_supported_classes": [],
+      "crop_supported_classes": [
+        "pallet"
+      ]
+    },
+    {
+      "case_id": "region_05",
+      "full_supported_classes": [],
+      "crop_supported_classes": []
+    }
+  ],
+  "new_helper_tests": 8,
+  "new_crop_tests": 4,
+  "checks_run_in_final_targeted_group": 20,
+  "targeted_group_seconds": 0.13,
+  "workbench_writes": false,
+  "adopted": false,
+  "default_enabled": false,
+  "independent_validation": false,
+  "independent_pixel_accuracy": false,
+  "quality_checks": {
+    "fullframe_only": {
+      "human_consensus_strictly_above11": true,
+      "no_previous_correct_human_region_lost": true,
+      "all5_confirmed_people_correct": true,
+      "no_new_opposite_class_view_error": true,
+      "all_original_legacy_checks_passed": false,
+      "all14_card_correct_consensus_retained": true,
+      "wrong_human_consensus_strictly_below1": true
+    },
+    "fullframe_plus_crop": {
+      "human_consensus_strictly_above11": true,
+      "no_previous_correct_human_region_lost": true,
+      "all5_confirmed_people_correct": true,
+      "no_new_opposite_class_view_error": true,
+      "all_original_legacy_checks_passed": false,
+      "all14_card_correct_consensus_retained": true,
+      "zero_wrong_human_consensus": true
+    }
+  },
+  "posthoc_development_study": true,
+  "SAM_support_is_independent_truth": false,
+  "scope": "Complete existing29-case development panel;54 new paired SAM requests,58 cached VLM responses. No automatic class replacement, independent segmentation accuracy, original3D metric change, or new end-to-end Agent acceptance. Both minimum-pallet gates remain failed."
+}

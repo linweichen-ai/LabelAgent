@@ -1,0 +1,13 @@
+{
+  "original_sessions_checked": 6,
+  "original_sessions_unchanged": true,
+  "labels_unchanged": true,
+  "original_source_files_checked": 1023,
+  "original_source_files_unchanged": true,
+  "original_mcap_unchanged": true,
+  "new_session_truth_empty": true,
+  "workbench_vlm_configured": true,
+  "observed_utc": "2026-11-03T19:14:37.534152+00:00",
+  "active_state_sha256": "b94ecf4e0d3abe345eb8c3c28eb74e5319dbf5f79d2d51cc248968b55c33fdc1",
+  "regressions_passed": 138
+}

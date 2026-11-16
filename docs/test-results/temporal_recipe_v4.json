@@ -1,0 +1,98 @@
+{
+  "created_at": "2026-11-04T04:53:27.9543207+08:00",
+  "scope": "frozen_temporal_instance_refinement_inside_existing_target_semantic_union",
+  "frames": [
+    15,
+    45,
+    76,
+    105,
+    135
+  ],
+  "cameras": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "neighbors": [
+    -1,
+    1
+  ],
+  "offline_future_neighbor_allowed": true,
+  "independent_validation": false,
+  "reference_labels_read_for_prediction": false,
+  "source": "real SAM3 original baseline only for neighbor masks",
+  "baseline_sha256": "591ebba97aeaca4f58dfcb0eecfd79ec026b4915aa670143d46d9702181b7f92",
+  "tiled_comparator_sha256": "0537abb3cef82af622ab34458d414dd2727755f5541451f28bac293d165ea329",
+  "metric_sha256": "7648246cb6c821eabc5586d9147c6e1957fafb403ac28d8db77e6cf62e3907c3",
+  "image_flow": {
+    "algorithm": "Farneback",
+    "width": 480,
+    "height": 384,
+    "pyr_scale": 0.5,
+    "levels": 3,
+    "winsize": 21,
+    "iterations": 3,
+    "poly_n": 7,
+    "poly_sigma": 1.5,
+    "gaussian": true
+  },
+  "candidate_checks": {
+    "forward_backward_error_pixels": 1.5,
+    "minimum_consistent_foreground_fraction": 0.9,
+    "minimum_area_pixels_full_resolution": 50,
+    "area_ratio_bounds": [
+      0.5,
+      2.0
+    ],
+    "minimum_inherited_source_score": 0.5,
+    "score_is_target_confidence": false,
+    "minimum_polygon_raster_IoU": 0.98
+  },
+  "variants": [
+    "tiled_plus_semantically_constrained_temporal"
+  ],
+  "selection": {
+    "ranking": "same augment_candidates source-score times novelty ranking; inherited scores are unvalidated on target",
+    "nms_iou": 0.8,
+    "addition_ratio": 0.5,
+    "minimum_addition_budget": 1,
+    "preserve_original_baseline_prefix": true,
+    "preserve_person_candidates_exactly": true
+  },
+  "gates": [
+    "No loss in pallet one-to-one supported observations versus frozen tiled comparator",
+    "No loss in pallet covered projected points versus frozen tiled comparator",
+    "Strict gain in at least one of supported observations or covered points",
+    "No added pallet coverage of person reference points versus tiled comparator",
+    "All original baseline masks and all person masks exactly preserved",
+    "Same per-image candidate addition budget as tiled comparator",
+    "Prediction source never reads 3D reference positions or point clouds"
+  ],
+  "next_if_pass": "Freeze selected variant using tuning only;score exploratory repeat;then run isolated fresh full Agent with actual requests",
+  "next_if_fail": "Preserve failed result;do not expand to588orchange gates post hoc",
+  "workbench_modified": false,
+  "parent_v1_comparison_sha256": "a078e65508fb9d44a021962d825d12a33ab72b3c87a9eacf31ed090145daf2f8",
+  "predicted_person_occlusion_guard": {
+    "enabled": true,
+    "minimum_retained_fraction": 0.5,
+    "minimum_retained_pixels": 50,
+    "minimum_polygon_raster_IoU": 0.98,
+    "forbid_any_exported_person_mask_overlap": true,
+    "applies_only_to_temporal_proposals": true,
+    "uses": "current_target_original_SAM3_person_candidate_union_only",
+    "dilation_radius_pixels": 6,
+    "margin_rationale": "1.5 flow-grid pixels times 4 full-resolution pixels per grid pixel, rounded up"
+  },
+  "parent_v2_comparison_sha256": "a99da5f6cf13454653d3c86c96102d9d1ad885ac029c3f63c973518f77b3ba6c",
+  "parent_v3_comparison_sha256": "56ceae16c818b9f6c350f83de680bd1e26f6652fd3bfd1ea09081440f858eb3a",
+  "target_semantic_support": {
+    "enabled": true,
+    "source": "exact current tiled pallet candidate union; no reference labels",
+    "minimum_retained_fraction": 0.5,
+    "minimum_retained_pixels": 50,
+    "minimum_polygon_raster_IoU": 0.98,
+    "preserve_all_existing_tiled_candidates": true,
+    "preserve_original_per_image_budget": true
+  }
+}

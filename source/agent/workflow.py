@@ -38,6 +38,15 @@ class ModelOutputError(ValueError):
         self.raw_text = raw_text
 
 
+class ReviewProtocolError(ValueError):
+    """The reviewer exhausted correction attempts without a safe tool action."""
+
+    def __init__(self, message, last_error=None, last_result=None):
+        super().__init__(message)
+        self.last_error = str(last_error) if last_error is not None else None
+        self.last_result = copy.deepcopy(last_result)
+
+
 class RunCancelled(Exception):
     """The user terminated this annotation run."""
 
@@ -175,7 +184,7 @@ def _sam_request(config, endpoint, image, **prompt):
     request = urllib.request.Request(url.rstrip("/") + endpoint, data=payload,
         headers={"Content-Type": "application/json"})
     try:
-        with urllib.request.urlopen(request, timeout=600) as response:
+        with urllib.request.urlopen(request, timeout=1200) as response:
             return json.load(response)
     except (TimeoutError, socket.timeout) as error:
         raise ValueError(f"SAM 3 请求超时（{endpoint}）") from error
@@ -193,11 +202,13 @@ def sam_text(image, prompt, config):
     return sam_request(config, "/segment_text", image, prompt=prompt).get("results", [])
 
 
-def chat(config, instruction, image, extra_images=()):
+def chat(config, instruction, image, extra_images=(), response_schema=None):
     record = {"id": uuid.uuid4().hex, "service": "GPT", "status": "running",
               "started_at": time.time(), "input": {"model": config.get("llm_model"),
               "instruction": instruction, "images": [_image_summary(data)
               for data in (image, *extra_images)]}}
+    if response_schema is not None:
+        record["input"]["response_schema"] = response_schema
     review_call = _review_call.get()
     if review_call is not None:
         record.update(review_attempt=review_call["attempt"],
@@ -208,7 +219,8 @@ def chat(config, instruction, image, extra_images=()):
     raw = {}
     _emit_trace(record)
     try:
-        response = _cancellable_call(_chat, config, instruction, image, extra_images, raw)
+        options = {"response_schema": response_schema} if response_schema is not None else {}
+        response = _cancellable_call(_chat, config, instruction, image, extra_images, raw, **options)
         record.update(status="succeeded", output={"raw_text": raw.get("text"),
                                                    "parsed": response})
         return response
@@ -222,7 +234,7 @@ def chat(config, instruction, image, extra_images=()):
         _emit_trace(record)
 
 
-def _chat(config, instruction, image, extra_images=(), raw=None):
+def _chat(config, instruction, image, extra_images=(), raw=None, response_schema=None):
     if not config.get("llm_url") or not config.get("llm_model"):
         raise ValueError("请先配置大模型地址和模型名")
     content = [{"type": "text", "text": instruction}]
@@ -231,14 +243,18 @@ def _chat(config, instruction, image, extra_images=(), raw=None):
             "data:image/jpeg;base64," + base64.b64encode(data).decode()}})
     payload = {"model": config["llm_model"], "temperature": 0,
                "messages": [{"role": "user", "content": content}]}
+    if config.get("llm_prompt_profile") == "compact":
+        payload["max_tokens"] = 768
+    if response_schema is not None:
+        payload["response_format"] = {"type": "json_schema", "json_schema": {"name": "labelagent", "schema": response_schema, "strict": True}}
     request = urllib.request.Request(config["llm_url"].rstrip("/") + "/chat/completions",
         json.dumps(payload).encode(), headers={"Content-Type": "application/json",
         "Authorization": "Bearer " + config.get("llm_key", "")})
     try:
-        with urllib.request.urlopen(request, timeout=300) as response:
+        with urllib.request.urlopen(request, timeout=1200) as response:
             result = json.load(response)
     except (TimeoutError, socket.timeout) as error:
-        raise ValueError("llm_timeout: 大模型请求超过 300 秒") from error
+        raise ValueError("llm_timeout: 大模型请求排队或推理超过 1200 秒") from error
     except urllib.error.HTTPError as error:
         try:
             detail = error.read().decode("utf-8", "replace")[:300]
@@ -271,6 +287,318 @@ def reference_labels(annotations, labels):
     return selected
 
 
+VISIBLE_LABEL_DEFINITIONS = {
+    "车辆": "a physically visible generic vehicle instance; when ego or other_robot is also in the registry, do not reuse the same physical instance as evidence for more than one of these labels",
+    "pallet": "a visible material-handling pallet; stacked cargo alone is not a pallet unless the pallet structure is visible",
+    "person": "a visible human body; do not call a robot, mannequin, reflection, or vehicle a person",
+    "floor": "the warehouse ground surface; exclude robot decks, vehicle bodies, pallets, ramps, and elevated cargo platforms",
+    "slope": "a visibly inclined ramp or transition surface, kept separate from floor for annotation even though downstream policy may union floor and slope as traversable_area",
+    "ego": "visible physical body, hood, chassis, forks, or structure belonging to the camera-carrying host robot; camera viewpoint or camera position alone is never evidence",
+    "other_robot": "a physically visible robot or mobile platform distinct from the camera-carrying ego robot and distinct from any human operator",
+    "cargo_floor": "a visible elevated cargo-carrying deck physically attached to or forming part of a robot/mobile platform; a pallet (including a blue plastic pallet), static raised platform, warehouse ground, or merely saying that a vehicle stands on a floor is never cargo_floor evidence",
+}
+
+
+def visible_label_definitions(labels):
+    """Return only project semantics that apply to the active registry."""
+    return [f"- {label}: {VISIBLE_LABEL_DEFINITIONS[label]}"
+            for label in labels if label in VISIBLE_LABEL_DEFINITIONS]
+
+
+def _complete_json_array(raw_text, key):
+    """Recover one fully closed array without repairing or inventing values."""
+    if not isinstance(raw_text, str):
+        return None
+    marker = json.dumps(str(key))
+    marker_at = raw_text.find(marker)
+    if marker_at < 0:
+        return None
+    colon_at = raw_text.find(":", marker_at + len(marker))
+    start = raw_text.find("[", colon_at + 1) if colon_at >= 0 else -1
+    if start < 0:
+        return None
+    depth, in_string, escaped = 0, False, False
+    for position in range(start, len(raw_text)):
+        character = raw_text[position]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                in_string = False
+            continue
+        if character == '"':
+            in_string = True
+        elif character == "[":
+            depth += 1
+        elif character == "]":
+            depth -= 1
+            if depth == 0:
+                try:
+                    value = json.loads(raw_text[start:position + 1])
+                except json.JSONDecodeError:
+                    return None
+                return value if isinstance(value, list) else None
+    return None
+
+
+def discover_visible_labels(config, image, labels):
+    """Discover visible registry labels without promoting open-set guesses.
+
+    This is deliberately separate from ``describe``: the latter must produce a
+    SAM prompt for every label it receives and therefore cannot truthfully be
+    used as a visibility filter.  Unknown objects remain review-only evidence.
+    """
+    labels = list(dict.fromkeys(labels))
+    if not labels or any(not isinstance(label, str) or not label for label in labels):
+        raise ValueError("自动识别需要非空的当前标签表")
+    from .protocol_schema import visible_label_schema
+    schema = visible_label_schema(labels)
+    definitions = visible_label_definitions(labels)
+    instruction = (
+        "Inspect this factory image and assess every known label below exactly once. "
+        "Use evidence='present' only when at least one instance is visibly supported in the image; "
+        "use 'absent' when it is not visible and 'uncertain' when occlusion or image quality prevents a reliable decision. "
+        "Do not infer an object merely because its label is listed. confidence is a number from 0 to 1 and reason is one short sentence of visual evidence. "
+        "A reason must name visible pixels or a visible physical part, not scene context, camera viewpoint, or an assumed function. "
+        "If 车辆, ego, and other_robot are all available, they are not synonyms: one physical instance must not make multiple labels present; use the most specific project label and identify distinct instances separately. "
+        "pallet and cargo_floor are not synonyms: cargo_floor requires visible physical attachment to a robot/mobile platform, and a pallet or static raised platform must never support cargo_floor='present'. "
+        "If a clearly visible object does not fit any known label, add only an unknown_candidates proposal; "
+        "known labels may be Chinese or English, so do not report a translation or simple synonym of a known label as unknown; "
+        "never rename, merge, or modify the known-label registry. Return only the schema JSON.\n"
+        + "Known labels: " + json.dumps(labels, ensure_ascii=False)
+        + ("\nProject label definitions:\n" + "\n".join(definitions) if definitions else "")
+    )
+    open_set_scan_complete = True
+    recovery_error = None
+    try:
+        result = chat(config, instruction, image, response_schema=schema)
+    except ModelOutputError as error:
+        recovered_assessments = _complete_json_array(error.raw_text, "assessments")
+        if recovered_assessments is None:
+            raise
+        # Never guess or auto-complete a truncated open-set proposal.  A fully
+        # closed known-label array is still useful for candidate generation,
+        # while the missing open-set tail becomes an explicit ontology gate.
+        result = {"assessments": recovered_assessments, "unknown_candidates": []}
+        open_set_scan_complete = False
+        recovery_error = str(error)
+    if not isinstance(result, dict):
+        raise ValueError("VLM 可见类别识别未返回 JSON 对象")
+    assessments = result.get("assessments")
+    if not isinstance(assessments, list) or len(assessments) != len(labels):
+        raise ValueError("VLM 必须逐项判断当前标签表中的每个类别")
+    by_label, consistency_flags = {}, []
+    if not open_set_scan_complete:
+        consistency_flags.append({
+            "normalized_evidence": "open_set_scan_incomplete",
+            "reason_code": "vlm_open_set_output_truncated",
+            "route": "ontology_review_required",
+            "reason": ("Known-label assessments were complete, but the open-set tail was truncated; "
+                       "unknown/new-label review remains required."),
+            "model_error": recovery_error[:300] if recovery_error else None,
+        })
+    def positive_visibility_claim(text):
+        normalized = " ".join(text.casefold().split())
+        negative = ("not visible", "no visible", "isn't visible", "is not visible",
+                    "are not visible", "cannot be seen", "can't be seen", "not seen",
+                    "不可见", "未见", "没有看到", "无法看到")
+        positive = ("is visible", "are visible", "visible in the image", "clearly visible",
+                    "can be seen", "可见", "可以看到", "能看到")
+        negated_visible = re.search(r"\b(?:no|not)\b.{0,80}\bvisible\b", normalized) is not None
+        return (not negated_visible and not any(term in normalized for term in negative)
+                and any(term in normalized for term in positive))
+
+    def cargo_floor_consistency_issue(text):
+        """Reject confident cargo-floor claims that lack robot attachment pixels."""
+        normalized = " ".join(text.casefold().split())
+        pallet_terms = ("pallet", "托盘", "栈板", "卡板")
+        if any(term in normalized for term in pallet_terms):
+            return "cargo_floor_pallet_confusion"
+        attachment_terms = (
+            "attached to a robot", "attached to the robot", "attached to robot",
+            "mounted on a robot", "mounted on the robot", "mounted on robot",
+            "part of a robot", "part of the robot", "part of robot",
+            "integrated with a robot", "integrated with the robot",
+            "robot chassis", "robot body", "robot cargo deck", "robot cargo platform",
+            "mobile robot chassis", "mobile platform chassis", "mobile platform deck",
+            "连接在机器人", "安装在机器人", "机器人底盘", "机器人车体",
+            "机器人货台", "机器人载货平台", "移动平台的货台",
+        )
+        if not any(term in normalized for term in attachment_terms):
+            return "cargo_floor_missing_robot_attachment_evidence"
+        return None
+    for item in assessments:
+        if not isinstance(item, dict):
+            raise ValueError("VLM 类别判断必须是对象")
+        label, evidence, confidence, reason_text = (item.get("label"), item.get("evidence"),
+                                                     item.get("confidence"), item.get("reason"))
+        if label not in labels:
+            consistency_flags.append({"label": str(label),
+                "normalized_evidence": "uncertain",
+                "reason_code": "vlm_unknown_registry_label",
+                "route": "human_review_required",
+                "reason": "VLM returned a label outside the current registry; it was not added to the registry."})
+            continue
+        if evidence not in {"present", "absent", "uncertain"}:
+            raise ValueError(f"类别 {label} 的可见性状态无效")
+        if type(confidence) not in (int, float) or isinstance(confidence, bool) or not 0 <= confidence <= 1:
+            raise ValueError(f"类别 {label} 的置信度无效")
+        if not isinstance(reason_text, str) or not reason_text.strip():
+            raise ValueError(f"类别 {label} 缺少视觉依据")
+        registry_false_claim = ("not present in the list of known labels" in reason_text.casefold()
+                                or "not in the list of known labels" in reason_text.casefold())
+        if evidence == "absent" and (positive_visibility_claim(reason_text) or registry_false_claim):
+            consistency_flags.append({"label": label, "original_evidence": "absent",
+                "normalized_evidence": "uncertain", "reason_code": "vlm_visibility_contradiction",
+                "route": "human_review_required", "reason": reason_text.strip()})
+            evidence = "uncertain"
+        if label == "cargo_floor" and evidence == "present":
+            cargo_floor_issue = cargo_floor_consistency_issue(reason_text)
+            if cargo_floor_issue is not None:
+                consistency_flags.append({"label": label, "original_evidence": "present",
+                    "normalized_evidence": "uncertain", "reason_code": cargo_floor_issue,
+                    "route": "human_review_required", "reason": reason_text.strip()})
+                evidence = "uncertain"
+        assessment = {"label": label, "evidence": evidence,
+                      "confidence": float(confidence), "reason": reason_text.strip()}
+        if label in by_label:
+            by_label[label] = {"label": label, "evidence": "uncertain",
+                "confidence": min(by_label[label]["confidence"], float(confidence)),
+                "reason": "VLM returned this known label more than once; human review is required."}
+            consistency_flags.append({"label": label,
+                "normalized_evidence": "uncertain",
+                "reason_code": "vlm_duplicate_registry_assessment",
+                "route": "human_review_required",
+                "reason": "Duplicate known-label assessment was conservatively downgraded."})
+        else:
+            by_label[label] = assessment
+    for missing_label in labels:
+        if missing_label in by_label:
+            continue
+        by_label[missing_label] = {"label": missing_label, "evidence": "uncertain",
+            "confidence": 0.0,
+            "reason": "VLM did not return a unique assessment for this known label; human review is required."}
+        consistency_flags.append({"label": missing_label,
+            "normalized_evidence": "uncertain",
+            "reason_code": "vlm_missing_registry_assessment",
+            "route": "human_review_required",
+            "reason": "Missing known-label assessment was conservatively downgraded."})
+    # A shared explicit point is suspicious evidence reuse, not proof of object
+    # identity. Keep both SAM queries and require a human to resolve the class.
+    exclusive_labels = [label for label in ("车辆", "ego", "other_robot")
+                        if label in by_label and by_label[label]["evidence"] == "present"]
+    point_pattern = re.compile(
+        r"(?:\[\s*(\d+(?:\.\d+)?)\s*[,，]\s*(\d+(?:\.\d+)?)\s*\]"
+        r"|\(\s*(\d+(?:\.\d+)?)\s*[,，]\s*(\d+(?:\.\d+)?)\s*\))")
+    anchors = {}
+    for label in exclusive_labels:
+        reason = by_label[label]["reason"]
+        matches = list(point_pattern.finditer(reason))
+        # Natural-language comparisons may cite another object's location.
+        # Only use a single, unqualified positive point as an entity anchor.
+        if len(matches) != 1 or re.search(
+                r"\b(?:not|no|without|unlike|except|left of|right of|behind|between|rather than)\b"
+                r"|不是|并非|而非|没有|不在|左侧|右侧|后方|之间", reason, re.IGNORECASE):
+            continue
+        values = matches[0].groups()
+        point = (float(values[0] or values[2]), float(values[1] or values[3]))
+        anchors.setdefault(point, set()).add(label)
+    for point, shared_labels in anchors.items():
+        if len(shared_labels) < 2:
+            continue
+        participants = [label for label in exclusive_labels if label in shared_labels]
+        for label in participants:
+            by_label[label]["evidence"] = "uncertain"
+            consistency_flags.append({
+                "label": label, "original_evidence": "present",
+                "normalized_evidence": "uncertain",
+                "reason_code": "vlm_cross_label_entity_conflict",
+                "route": "human_review_required", "conflicting_labels": participants,
+                "shared_anchor": list(point),
+                "reason": "Mutually exclusive labels cite the same explicit point; "
+                          "this may be reused entity evidence and requires human review.",
+                "original_reason": by_label[label]["reason"]})
+    unknown = result.get("unknown_candidates", [])
+    if not isinstance(unknown, list) or len(unknown) > 5:
+        raise ValueError("VLM unknown_candidate 格式无效")
+    normalized_unknown, registry_conflicts = [], []
+    def alias_forms(value):
+        normalized = re.sub(r"[^a-z0-9\u4e00-\u9fff]+", "", value.casefold())
+        forms = {normalized}
+        if normalized.isascii() and normalized.endswith("s") and len(normalized) > 3:
+            forms.add(normalized[:-1])
+        return forms
+    known_aliases = {}
+    for known_label in labels:
+        known_aliases.setdefault(known_label, set()).update(alias_forms(known_label))
+        fallback = SAM_PROMPT_FALLBACKS.get(known_label)
+        if fallback:
+            known_aliases[known_label].update(alias_forms(fallback))
+    for item in unknown:
+        if not isinstance(item, dict):
+            raise ValueError("VLM unknown_candidate 必须是对象")
+        name, evidence, confidence = item.get("candidate_name"), item.get("evidence"), item.get("confidence")
+        if (not isinstance(name, str) or not name.strip() or not isinstance(evidence, str)
+                or not evidence.strip() or type(confidence) not in (int, float)
+                or isinstance(confidence, bool) or not 0 <= confidence <= 1):
+            raise ValueError("VLM unknown_candidate 缺少名称、证据或有效置信度")
+        candidate = {"candidate_name": name.strip(), "evidence": evidence.strip(),
+                     "confidence": float(confidence), "route": "human_review_required",
+                     "ontology_mutation_allowed": False}
+        name_forms = alias_forms(name)
+        alias_label = next((label for label, forms in known_aliases.items() if name_forms & forms), None)
+        if alias_label is not None:
+            registry_conflicts.append(candidate | {"matching_known_label": alias_label,
+                "reason_code": "known_label_alias_conflict"})
+        else:
+            normalized_unknown.append(candidate)
+    ordered = [by_label[label] for label in labels]
+    visible_labels = [item["label"] for item in ordered if item["evidence"] == "present"]
+    uncertain_labels = [item["label"] for item in ordered if item["evidence"] == "uncertain"]
+    return {"assessments": ordered,
+            "visible_labels": visible_labels,
+            "uncertain_labels": uncertain_labels,
+            "candidate_labels": [label for label in labels if label in set(visible_labels + uncertain_labels)],
+            "consistency_flags": consistency_flags,
+            "unknown_candidates": normalized_unknown,
+            "registry_conflicts": registry_conflicts,
+            "open_set_scan_complete": open_set_scan_complete,
+            "registry_mutated": False}
+
+
+SAM_PROMPT_FALLBACKS = {
+    "车辆": "vehicle",
+    "地面": "floor",
+    "pallet": "pallet",
+    "person": "person",
+    "floor": "floor",
+    "slope": "ramp",
+    "ego": "ego robot",
+    "other_robot": "robot",
+    "cargo_floor": "robot cargo platform",
+}
+
+# These overrides are evidence-backed canonical object queries.  In particular,
+# a real factory frame showed that a compound VLM phrase containing "operator"
+# returned only the near driver, while the canonical "person" query returned all
+# four visible people.  Keep the semantic label unchanged; only stabilize the
+# text query sent to SAM.
+SAM_PROMPT_OVERRIDES = {
+    "pallet": "pallet",
+    "person": "person",
+    "ego": "ego robot",
+    "other_robot": "robot",
+    "cargo_floor": "robot cargo platform",
+}
+
+
+def fallback_sam_prompt(label):
+    return SAM_PROMPT_FALLBACKS.get(label) or (
+        label.replace("_", " ") if label.isascii() else "")
+
+
 def restrict_description(result, labels):
     """Keep the detailed review rule separate from concise SAM keywords."""
     if not isinstance(result, dict) or not isinstance(result.get("description"), str) or \
@@ -283,8 +611,6 @@ def restrict_description(result, labels):
                  and isinstance(item.get("text"), str)}
     prompts = []
     for label in labels:
-        if label not in proposals:
-            raise ValueError(f"类别 {label} 缺少 SAM 3 关键词，请重新生成描述")
         text = proposals.get(label, "").strip()
         # SAM text is an object query, not the detailed annotation rule.
         # If GPT returns a sentence, fall back to the known reference class.
@@ -294,18 +620,82 @@ def restrict_description(result, labels):
         valid = (bool(re.fullmatch(r"[A-Za-z][A-Za-z0-9 -]*", text))
                  and 1 <= len(text.split()) <= 4
                  and not any(word.lower() in bad_words for word in text.split()))
+        if label in SAM_PROMPT_OVERRIDES:
+            text, valid = SAM_PROMPT_OVERRIDES[label], True
         if label == "地面" and valid:
             valid = any(word in text.lower().split() for word in ("floor", "ground"))
         if not valid:
-            text = ({"地面": "floor"}.get(label) or
-                    (label.replace("_", " ") if label.isascii() else ""))
+            text = fallback_sam_prompt(label)
         if not text:
             raise ValueError(f"类别 {label} 缺少简短英文 SAM 3 提示，请重新生成描述")
         prompts.append({"label": label, "text": text})
     return {"description": result["description"].strip(), "prompts": prompts}
 
 
-DESCRIPTION_INPUT_VERSION = 5
+def canonical_unreferenced_description(labels):
+    """Safe prompt fallback for a machine draft with no reference contours.
+
+    The visible-label VLM has already selected the classes in this path.  If
+    its separate prose/prompt reply is truncated, canonical object queries are
+    safer than guessing or pretending that a human reference rule exists.
+    Unknown registry labels still fail closed because they have no fallback.
+    """
+    result = restrict_description({
+        "description": (
+            "Machine draft only: no human-confirmed reference contours were "
+            "supplied. Canonical object prompts are used and every resulting "
+            "mask requires human review."
+        ),
+        "prompts": [],
+    }, labels)
+    result.update({
+        "prompt_source": "deterministic_canonical_fallback",
+        "human_reference_available": False,
+        "candidate_only": True,
+    })
+    return result
+
+
+DESCRIPTION_INPUT_VERSION = 8
+
+COMPACT_REFERENCE_RULES = """Use the supplied reference contours as the task example. Their review status is not inferred.
+Only annotate the listed classes. Inspect original images for appearance and outlined images for geometry.
+Overlay colors are not object colors. Preserve correct visible regions and excluded holes; do not invent occluded regions.
+Instances, positions and counts can differ between frames. Never copy reference coordinates to the target.
+Reference bounding boxes summarize contours, not rectangular segmentation masks.
+Make conservative local edits only when supported by target-image and reference evidence.
+"""
+
+COMPACT_UNREFERENCED_RULES = """No human-confirmed reference image or reference contour was supplied.
+Use only the target original and target candidate overlay. Never claim, quote, compare with, or infer a reference outline, reference mask, reference class, or human truth.
+This is a machine-candidate draft. Preserve every candidate unless a supported non-destructive local repair is possible; removal is forbidden and potential false positives must remain for human review.
+Audit every candidate label against class_definitions before considering geometry edits. A visually unmistakable one-instance semantic mismatch may use reclassify only to another selected class; ambiguous, mixed, partly occluded, or low-confidence candidates must keep their original label for human review.
+In particular, a visible motorized chassis, wheels, sensors, or autonomous mobile base is other_robot when it is distinct from the camera host, not pallet. A static load-bearing pallet remains pallet. Visible foreground structure belonging to the camera host is ego, not other_robot. cargo_floor requires a visibly attached cargo deck and is not a free-standing pallet.
+Only annotate the listed classes. Overlay colors are not object colors. Do not invent occluded regions or missing evidence.
+"""
+
+COMPACT_REVIEW_TOOLS = """Return one JSON object with fields status, reason, hole_assessment, operations.
+Use status "done" and empty operations when no supported edit remains; otherwise status "continue". reason explains visual evidence.
+Every operation needs operation and reason. shape_ids are existing integer IDs; polygon is [[x,y],...] with at least 3 target-image pixel points.
+Tools:
+remove: shape_ids:[id], only for an entirely false-positive instance.
+reclassify: shape_ids:[id], label:allowed class different from that candidate's current label; never submit a no-op reclassification.
+add_region, erase_region: shape_ids:[id], polygon:local repair region.
+merge: shape_ids:[id1,id2,...], label:allowed class, only one real instance.
+split: shape_ids:[id], polygon:region separating instances.
+fill_gap: shape_ids:[id], hole_id:listed ID, polygon:local repair region.
+sam_points: shape_ids:[id], polygon:local region, points:list of objects with numeric x,y and integer label (1 positive, 0 negative), 1-32 points with a positive point.
+Never use sam_text in review or replace an entire correct object to repair its boundary.
+After an edit, choose continue and inspect again. When no supported edit remains choose done with no operations; never needs_review.
+If pending_sam_shape is present, add sam_assessment with boolean improved and string reason explaining the comparison.
+If not improved, the previous geometry is restored and only OpenCV local edits are allowed for that shape.
+For every listed hole return an object with hole_id, semantic ("ground" or "non_ground"), and reason in hole_assessment.
+Only a hole assessed as ground may use fill_gap. A non_ground hole must never use fill_gap.
+Ground holes must be repaired with fill_gap before done. Never fill equipment or infer semantics from geometry alone.
+For floor tasks, include visible floor markings regardless of their color, without filling occluded parts.
+Image 1: target original. Image 2: target candidates with IDs. Image 3: target holes/binary-mask overview.
+If reference_provided, images 4 and 5 are reference original and reference contours.
+"""
 
 # Shared by description generation and every subsequent candidate review.
 REFERENCE_PRINCIPLES = """
@@ -339,8 +729,19 @@ REFERENCE_PRINCIPLES = """
 """
 
 
-def describe(config, image, annotations, labels, marked_image=None):
-    labels = reference_labels(annotations, labels)
+def describe(config, image, annotations, labels, marked_image=None, include_unreferenced=False):
+    if include_unreferenced:
+        labels = list(dict.fromkeys(labels))
+        present = {shape.get("label") for shape in annotations}
+        if not labels:
+            raise ValueError("推理类别不能为空")
+    else:
+        labels = reference_labels(annotations, labels)
+    unreferenced = [label for label in labels if label not in {shape.get("label") for shape in annotations}]
+    extended_note = ("\n允许类别中以下类别没有参考轮廓："
+                     + json.dumps(unreferenced, ensure_ascii=False)
+                     + "。只为它们生成通用英文对象关键词；不得声称参考帧提供了其边界或包含规则。"
+                     if unreferenced else "")
     prompt = (REFERENCE_PRINCIPLES
               + "\n图像 1 是未着色的原始参考帧；图像 2（若提供）只用洋红色轮廓和编号标出参考帧真值。"
               "标注轮廓颜色只是界面标记，绝不是目标物体本身的颜色。"
@@ -355,9 +756,49 @@ def describe(config, image, annotations, labels, marked_image=None):
               "例如 floor、wooden pallet；不得写完整句子、排除项或边界规则。"
               "每个允许类别必须有且只有一个 prompt。"
               f"\n允许类别：{json.dumps(labels, ensure_ascii=False)}"
-              f"\n真值：{json.dumps(annotations, ensure_ascii=False)}")
-    result = chat(config, prompt, image, extra_images=(marked_image,) if marked_image else ())
-    return restrict_description(result, labels)
+              + extended_note
+              + "\n密集轮廓的几何文本可能是边界范围摘要；精确边界以单独的参考轮廓图为准。"
+              f"\n真值：{json.dumps(reference_geometry(annotations), ensure_ascii=False)}")
+    if config.get("llm_prompt_profile") == "compact":
+        prompt = (COMPACT_REFERENCE_RULES
+            + '\n图片1是参考原图，图片2是洋红色参考轮廓。只返回JSON对象，包含description和prompts两个字段。'
+              'description用英文描述每个类别在图中的实际对象、可见边界、实例归属和排除范围，不要复述提示原则。'
+              'prompts是对象数组，每项包含label和text。label必须逐字使用允许类别，每个类别各一项，不能合并类别。'
+              'text为对应类别的1到4个英文关键词，供SAM3分割使用。'
+            + extended_note
+            + '\nInput: ' + json.dumps({"labels": labels, "unreferenced_labels": unreferenced,
+                                        "reference_geometry": reference_geometry(annotations)},
+                                       ensure_ascii=False, separators=(",", ":")))
+    last_error, last_result = None, None
+    for attempt in range(MAX_PROTOCOL_RETRIES + 1):
+        instruction = prompt
+        if attempt:
+            instruction += ("\n上一份输出未通过格式检查，请修正后重新返回完整JSON。错误：" + str(last_error)
+                            + "\n上次输出：" + json.dumps(last_result, ensure_ascii=False)[:4000])
+        try:
+            options = {}
+            if config.get("llm_prompt_profile") == "compact":
+                from .protocol_schema import description_schema
+                options["response_schema"] = description_schema(labels)
+            result = chat(config, instruction, image, extra_images=(marked_image,) if marked_image else (), **options)
+        except ModelOutputError as error:
+            last_error, last_result = error, {"raw_text": error.raw_text}
+            if include_unreferenced and not annotations:
+                try:
+                    return canonical_unreferenced_description(labels)
+                except ValueError:
+                    pass
+            continue
+        try:
+            return restrict_description(result, labels)
+        except ValueError as error:
+            last_error, last_result = error, result
+            if include_unreferenced and not annotations:
+                try:
+                    return canonical_unreferenced_description(labels)
+                except ValueError:
+                    pass
+    raise ValueError(f"参考规范多次未通过协议校验：{last_error}")
 
 
 REPAIR_PRINCIPLES = """
@@ -367,7 +808,7 @@ REPAIR_PRINCIPLES = """
 3. 保留已正确标注的区域，只针对有证据的局部缺陷修复；不得为修复局部边界删除整个候选再重建。remove 仅用于整个实例均为误检；merge、split 仅用于确有参考规范依据的实例归属错误。
 4. 每项操作的 reason 须说明待处理帧的具体缺陷、对应参考真值证据和预期变化；不得仅凭参考帧与当前帧坐标或面积不同认定错误，不得将标线、阴影或颜色变化自动视为排除区域。
 5. 对地面框线逐段检查：如果原图中能确认存在未被物体遮挡的地面框线或标线，必须检查当前候选 mask 是否覆盖其可见部分；发现漏标时使用局部 sam_points 或 add_region 修复，不能返回 done。线条颜色不能作为扣除依据。
-6. polygon 和点提示必须使用当前帧原始像素坐标，修改范围限于需要修复的区域；不得用大范围粗略区域破坏正确边界、孔洞或其他区域。
+6. polygon 和点提示必须使用当前帧原始像素坐标，修改范围限于需要修复的区域；polygon 必须至少包含 3 个不同且能围成非零面积区域的顶点；不得重复提交同一个提示点，也不得在同一坐标给出相互冲突的正负标签；不得用大范围粗略区域破坏正确边界、孔洞或其他区域。
 7. 复查没有“人工复核”出口：每轮只能选择修改候选，或在没有可靠修改依据时保持候选不变并结束。
    不得输出 needs_review 状态或 review 操作；无法可靠判断或准确定位时，不修改候选并返回 done。
 """
@@ -414,7 +855,8 @@ def reference_geometry(annotations):
         for part in shape.get("parts") or [shape]]} for shape in annotations]
 
 
-def _validate_review_result(result, holes, shapes, labels, width, height, sam_comparison=None):
+def _validate_review_result(result, holes, shapes, labels, width, height, sam_comparison=None,
+                            reference_provided=True):
     if not isinstance(result, dict):
         raise ValueError("大模型必须返回 JSON 对象")
     # Validate a copy: traces and correction prompts must retain the actual reply.
@@ -436,7 +878,8 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
     errors = []
     if result["status"] not in ("done", "continue"):
         errors.append("大模型未返回有效的 agent 状态")
-    shape_ids = {item["id"] for item in shapes}
+    shapes_by_id = {item["id"]: item for item in shapes}
+    shape_ids = set(shapes_by_id)
     hole_ids = {item["id"]: item for item in holes}
     for index, operation in enumerate(result["operations"], 1):
         if not isinstance(operation, dict):
@@ -449,6 +892,9 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
                           "填缺口应使用 fill_gap，并提供 shape_ids、完整 hole_id 和 polygon")
         if not isinstance(operation.get("reason"), str) or not operation["reason"].strip():
             errors.append(f"第 {index} 项操作缺少 reason")
+        if not reference_provided and kind == "remove":
+            errors.append(f"第 {index} 项 remove 操作被拒绝：本轮没有人工参考帧，"
+                          "必须保留潜在候选并转人工复核，不能删除整个实例")
         ids = operation.get("shape_ids")
         valid_ids = (isinstance(ids, list) and (len(ids) >= 2 if kind == "merge" else len(ids) == 1)
                      and all(type(shape_id) is int and shape_id in shape_ids for shape_id in ids)
@@ -457,6 +903,10 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
             errors.append(f"第 {index} 项 {kind} 操作必须提供有效的 shape_ids；可用 ID：{sorted(shape_ids)}")
         if kind in ("merge", "reclassify") and operation.get("label") not in labels:
             errors.append(f"第 {index} 项 {kind} 操作缺少有效 label；可用类别：{labels}")
+        if (kind == "reclassify" and valid_ids and operation.get("label") in labels
+                and shapes_by_id[ids[0]].get("label") == operation.get("label")):
+            errors.append(f"第 {index} 项 reclassify 没有变化：候选 {ids[0]} 已经是 "
+                          f"{operation.get('label')}；请检查其他候选，或在无可靠修改时返回 done")
         if kind in ("add_region", "erase_region", "split", "fill_gap", "sam_points"):
             if not _valid_region(operation.get("polygon"), width, height):
                 errors.append(f"第 {index} 项 {kind} 操作缺少有效 polygon："
@@ -477,6 +927,17 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
                        or not 0 <= point[key] < (width if key == "x" else height)
                        for key in ("x", "y")) for point in points):
                 errors.append(f"第 {index} 项 sam_points 操作缺少有效 points")
+            elif points:
+                labels_by_coordinate = {}
+                for point in points:
+                    coordinate = (float(point["x"]), float(point["y"]))
+                    labels_by_coordinate.setdefault(coordinate, set()).add(point["label"])
+                if any(len(point_labels) > 1 for point_labels in labels_by_coordinate.values()):
+                    errors.append(f"第 {index} 项 sam_points 在同一坐标给出了冲突的正负标签")
+                if len(points) > 1 and len(labels_by_coordinate) == 1:
+                    errors.append(f"第 {index} 项 sam_points 只有重复的同一个点，不能视为有效修正")
+                if not any(point["label"] == 1 for point in points):
+                    errors.append(f"第 {index} 项 sam_points 至少需要一个有效正点")
     if holes:
         assessment = result.get("hole_assessment")
         expected = {item["id"] for item in holes}
@@ -501,6 +962,9 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
                   and isinstance(item.get("hole_id"), str)}
         ground = {item["hole_id"] for item in assessment if isinstance(item, dict)
                   and isinstance(item.get("hole_id"), str) and item.get("semantic") == "ground"}
+        if filled - ground:
+            errors.append("GPT 只能修补判定为 ground 的空洞；禁止对 non_ground 使用 fill_gap："
+                          f"{sorted(filled - ground)}")
         if not ground.issubset(filled) and result["status"] == "done":
             errors.append(f"GPT 不能在仍有属于地面的未修补空洞时返回 done：{sorted(ground - filled)}")
         result["hole_assessment"] = assessment
@@ -510,20 +974,97 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
                 or not isinstance(assessment.get("reason"), str) or not assessment["reason"].strip()):
             errors.append('GPT 未评估 SAM 3 点提示结果；必须提供 sam_assessment:'
                           '{"improved":true或false,"reason":"比较依据"}')
+    elif "sam_assessment" in result:
+        errors.append("当前没有待比较的 SAM 3 点提示结果，禁止声明 improved")
     if errors:
         raise ValueError("\n".join(errors))
     return result
 
 
+def _review_exact_overlap(config, image, overlay, group, shapes, labels):
+    """Ask the VLM about one identical-mask group before the general review."""
+    source = Image.open(io.BytesIO(image)).convert("RGB")
+    marked = Image.open(io.BytesIO(overlay)).convert("RGB")
+    by_id = {shape["id"]: shape for shape in shapes}
+    boxes = [by_id[identifier]["bbox"] for identifier in group["shape_ids"]]
+    left, top = min(box[0] for box in boxes), min(box[1] for box in boxes)
+    right, bottom = max(box[2] for box in boxes), max(box[3] for box in boxes)
+    padding = max(32, round(max(right-left, bottom-top)*.15))
+    crop = (max(0,left-padding),max(0,top-padding),
+            min(source.width,right+padding+1),min(source.height,bottom+padding+1))
+    def encode(picture):
+        output = io.BytesIO()
+        picture.crop(crop).save(output,"JPEG",quality=92)
+        return output.getvalue()
+    original_crop = encode(source)
+    presence_schema = {"type":"object","properties":{
+        "evidence":{"type":"string","enum":["present","absent","uncertain"]},
+        "reason":{"type":"string","minLength":1,"maxLength":120}},
+        "required":["evidence","reason"],"additionalProperties":False}
+    presence = chat(config,
+        f"Observe this uncolored photograph crop. Is a {group['label']!r} visibly present?"
+        " Return a JSON object with evidence and reason. evidence is present, absent, or uncertain."
+        " Use only the actual photograph. A blank field or uniform color contains no visible object."
+        " Do not infer an object from the class name in the question. reason is one short English sentence.",
+        original_crop,response_schema=presence_schema)
+    if (not isinstance(presence,dict) or presence.get("evidence") not in {"present","absent","uncertain"}
+            or not isinstance(presence.get("reason"),str) or not presence["reason"].strip()):
+        raise ValueError("重复候选原图检查未返回有效的 evidence 和 reason")
+    if presence["evidence"] != "present":
+        return None
+    schema = {"type":"object","properties":{
+        "decision":{"type":"string","enum":["merge","keep"]},
+        "reason":{"type":"string","minLength":1,"maxLength":180}},
+        "required":["decision","reason"],"additionalProperties":False}
+    instruction = ("Inspect a possible duplicate annotation, using these two crops of the SAME target image."
+        " Image 1 is uncolored; image 2 shows the candidate masks. Overlay colors are not object colors."
+        f" Candidate IDs {group['shape_ids']} all have label {group['label']!r} and pixel-identical masks."
+        " Decide whether these IDs annotate one visible object redundantly or represent separate objects."
+        " Return JSON with decision and reason. decision='merge' only when the same single visible object"
+        " has been annotated more than once. Otherwise, including uncertain cases, decision='keep'."
+        " A merge preserves the entire mask and its class. Do not change any other object."
+        " Give one short English sentence of visible evidence in reason. No coordinates or other fields.")
+    result = chat(config,instruction,original_crop,extra_images=(encode(marked),),response_schema=schema)
+    if not isinstance(result,dict) or result.get("decision") not in {"merge","keep"} or not isinstance(result.get("reason"),str) or not result["reason"].strip():
+        raise ValueError("重复候选复核未返回有效的 decision 和 reason")
+    if result["decision"] == "keep":
+        return None
+    decision = {"status":"continue","reason":result["reason"],"hole_assessment":[],
+                "operations":[{"operation":"merge","shape_ids":group["shape_ids"],
+                               "label":group["label"],"reason":result["reason"]}]}
+    return _validate_review_result(decision,[],shapes,labels,source.width,source.height)
+
+
 def review(config, image, overlay, description, shapes, labels, history, reference=None,
-           sam_comparison=None, hole_image=None, holes=None, gap_images=None):
+           sam_comparison=None, hole_image=None, holes=None, gap_images=None, duplicate_groups=None):
+    # Enabled only by the isolated evaluation tool while quality tests continue.
+    if not config.get("llm_duplicate_review", False):
+        duplicate_groups = None
+    if (config.get("llm_prompt_profile") == "compact" and duplicate_groups
+            and not holes and sam_comparison is None):
+        focused = _review_exact_overlap(config,image,overlay,duplicate_groups[0],shapes,labels)
+        if focused is not None:
+            return focused
     width, height = Image.open(io.BytesIO(image)).size
-    prompt = (TOOLS + REFERENCE_PRINCIPLES + REPAIR_PRINCIPLES
-        + "\n只能标注参考帧真值中已有的类别；即使图中可见其他物体，也不得为其创建标注。"
-        "\n你正在复核当前候选（首轮为 SAM 3 初步分割，后续轮次可能经过 SAM 3 点提示或 OpenCV 修改）。比较原始帧、带候选轮廓/ID 的图像及下列真值标注规范，"
+    class_scope = ("只能标注参考帧真值中已有的类别；即使图中可见其他物体，也不得为其创建标注。"
+                   if reference is not None else
+                   "本次没有人工参考帧，只能标注用户明确选择的类别；输出仍是机器草稿，"
+                   "不得声称已核对人工真值，也不得创建未选择的新类别。")
+    evidence_principles = REFERENCE_PRINCIPLES if reference is not None else (
+        """
+无人工参考帧候选原则：
+1. 本轮只有当前帧原图与机器候选，不存在参考图、参考轮廓或人工真值证据。
+2. 不得声称看到了参考轮廓、参考 mask、参考类别或人工真值；不得用虚构的参考证据修改候选。
+3. 无参考帧时禁止 remove 整个候选；疑似误检也必须保留并路由人工复核，避免删除真实小目标或人员。
+4. 允许有当前帧像素证据的局部边界修复；证据不足时保持候选并返回 done。
+""")
+    rule_name = "参考帧真值标注规范" if reference is not None else "无参考帧机器候选规则"
+    prompt = (TOOLS + evidence_principles + REPAIR_PRINCIPLES
+        + "\n" + class_scope
+        + "\n你正在复核当前候选（首轮为 SAM 3 初步分割，后续轮次可能经过 SAM 3 点提示或 OpenCV 修改）。比较原始帧、带候选轮廓/ID 的图像及下列规则，"
         "找出漏标、误检、边界偏差和类别错误，返回具体的工具操作；必要时多轮重新观察。"
         + f"\n图像尺寸：{width} x {height}"
-        f"\n参考帧真值标注规范：{description.get('description', '')}"
+        f"\n{rule_name}：{description.get('description', '')}"
         f"\nSAM 3 类别关键词：{json.dumps(description['prompts'], ensure_ascii=False)}"
         f"\n类别：{json.dumps(labels, ensure_ascii=False)}"
         f"\n当前候选（ID、类别、框、顶点数）：{json.dumps(shapes, ensure_ascii=False)}"
@@ -568,6 +1109,56 @@ def review(config, image, overlay, description, shapes, labels, history, referen
                    "必须对照未着色原图识别标线，再检查同位置二值图是否为白色；"
                    "黑色或粉色都表示尚未纳入地面，不能声称已完整包含。")
         extra_images += (sheet,)
+    if config.get("llm_prompt_profile") == "compact":
+        floor_task = any(label.strip().lower() in {"地面", "floor", "ground"} for label in labels)
+        if not floor_task and not holes:
+            extra_images = (overlay,)
+            if reference is not None:
+                extra_images += (reference["image"], reference["marked_image"])
+            if sam_comparison is not None:
+                extra_images += (sam_comparison["before_image"],)
+            extra_images += tuple(sheet for sheet, _ in gap_images or [])
+        payload = {"target_size": [width, height], "labels": labels,
+                   "class_definitions": {label: VISIBLE_LABEL_DEFINITIONS[label]
+                                         for label in labels if label in VISIBLE_LABEL_DEFINITIONS},
+                   "rules": description.get("description", ""),
+                   "prompts": description["prompts"], "candidates": shapes, "recent_history": history[-3:],
+                   "holes": hole_report, "reference_provided": reference is not None}
+        if reference is not None:
+            payload["reference_counts"] = {label: sum(shape.get("label") == label for shape in reference["annotations"]) for label in labels}
+            if floor_task:
+                payload["reference_geometry"] = reference_geometry(reference["annotations"])
+        base_image_count = 1 + len(extra_images) - int(sam_comparison is not None) - len(gap_images or [])
+        if sam_comparison is not None:
+            payload["pending_sam_shape"] = sam_comparison["shape_id"]
+            payload["sam_before_image"] = base_image_count + 1
+        if gap_images:
+            first = base_image_count + 1 + int(sam_comparison is not None)
+            payload["gap_details"] = [{"image": first+i, "original_crop_ranges": reports}
+                                      for i, (_, reports) in enumerate(gap_images)]
+        compact_rules = COMPACT_REFERENCE_RULES if reference is not None else COMPACT_UNREFERENCED_RULES
+        prompt = compact_rules + COMPACT_REVIEW_TOOLS + "\nInput: " + json.dumps(
+            payload, ensure_ascii=False, separators=(",", ":"))
+        if not floor_task and not holes:
+            prompt += "\n本轮只标注提供的物体类别，不标注地面。图片1是目标原图，图片2是目标候选；"
+            if reference is not None:
+                prompt += ("图片3、4分别是参考原图和参考轮廓，覆盖此前通用图号说明。"
+                           "reference_counts是参考图的真实标注数量，目标图数量不同完全正常，不能因此修改。")
+            else:
+                prompt += ("没有图片3或图片4，也没有任何参考原图、参考轮廓或人工真值。"
+                           "禁止提及不存在的参考轮廓；禁止 remove，疑似误检保留给人工复核。")
+            prompt += "holes列表为空，hole_assessment必须是空数组，禁止编造孔洞编号。"
+        prompt += ("\nreason最多一句话，每轮最多3个有视觉证据的局部操作。仅允许使用candidates中的ID。"
+                   "所有reason使用英文。无法可靠定位缺陷时保持候选，返回done且operations为空。不要复述所有实例，不要输出额外解释。")
+    if duplicate_groups:
+        prompt += ("\nExact same-class raster-mask overlap groups: "
+                   + json.dumps(duplicate_groups, separators=(",", ":"))
+                   + "\nEach listed group has pixel-identical masks and the same label. This is a geometry observation,"
+                     " not a new reference annotation. Check whether its IDs describe one visible object twice."
+                     " If so, remove one redundant candidate or merge the IDs, preserve the visible mask and other instances,"
+                     " then return continue to inspect the result in the next round."
+                     " Do not infer duplicates from equal boxes or different-frame counts."
+                     " Return a concrete operation only when the target image supports the duplicate interpretation.")
     last_result = None
     last_error = None
     for attempt in range(MAX_PROTOCOL_RETRIES + 1):
@@ -583,14 +1174,19 @@ def review(config, image, overlay, description, shapes, labels, history, referen
         try:
             check_cancelled()
             try:
-                last_result = chat(config, request_prompt, image, extra_images=extra_images)
+                options = {}
+                if config.get("llm_prompt_profile") == "compact":
+                    from .protocol_schema import review_schema
+                    options["response_schema"] = review_schema(labels, shapes, holes, sam_comparison is not None)
+                last_result = chat(config, request_prompt, image, extra_images=extra_images, **options)
             except ModelOutputError as error:
                 last_result = {"raw_text": error.raw_text}
                 last_error = error
             else:
                 try:
                     return _validate_review_result(last_result, holes, shapes, labels, width, height,
-                                                   sam_comparison)
+                                                   sam_comparison,
+                                                   reference_provided=reference is not None)
                 except ValueError as error:
                     last_error = error
             # Update the original call rather than creating a fictitious model
@@ -602,7 +1198,28 @@ def review(config, image, overlay, description, shapes, labels, history, referen
                 _emit_trace(record)
         finally:
             _review_call.reset(token)
-    raise ValueError(f"GPT 协议校验重试 {MAX_PROTOCOL_RETRIES} 次后仍失败：{last_error}")
+    raise ReviewProtocolError(
+        f"GPT 协议校验重试 {MAX_PROTOCOL_RETRIES} 次后仍失败：{last_error}",
+        last_error=last_error, last_result=last_result)
+
+
+def reference_overlay(image, shapes):
+    """Outline the reference without recoloring its real appearance."""
+    result = Image.open(io.BytesIO(image)).convert("RGB")
+    draw = ImageDraw.Draw(result)
+    for number, shape in enumerate(shapes, 1):
+        for part in shape.get("parts") or [shape]:
+            for ring in [part.get("points", []), *(part.get("holes") or [])]:
+                points = [tuple(point) for point in ring]
+                if len(points) >= 3:
+                    draw.line(points+points[:1], fill=(255, 0, 255), width=3)
+        points = shape.get("points", [])
+        if points:
+            draw.text(tuple(points[0]), f"{number} {shape['label']}", fill=(255, 0, 255),
+                      stroke_width=2, stroke_fill=(0, 0, 0))
+    output = io.BytesIO()
+    result.save(output, "JPEG", quality=88)
+    return output.getvalue()
 
 
 def candidate_overlay(image, shapes):
@@ -635,6 +1252,14 @@ def candidate_holes(shapes, labels, width, height):
             holes.extend(_candidate_gap_regions(shape, width, height))
     holes.sort(key=lambda item: (item["bbox"][1], item["bbox"][0], -item["area"]))
     return holes
+
+
+def select_review_gaps(holes, maximum=4):
+    """Keep the largest actionable gaps so one review cannot explode in size."""
+    if type(maximum) is not int or not 1 <= maximum <= 20:
+        raise ValueError("max_review_gaps must be an integer from 1 to 20")
+    selected = sorted(holes, key=lambda item: item["area"], reverse=True)[:maximum]
+    return sorted(selected, key=lambda item: (item["bbox"][1], item["bbox"][0], -item["area"]))
 
 
 def hole_overlay(image, holes, shapes=None):
@@ -718,6 +1343,98 @@ def _shape_summary(shape):
             "bbox": [min(xs), min(ys), max(xs), max(ys)], "vertices": len(points)}
 
 
+def _exact_duplicate_groups(shapes, width, height):
+    """Expose pixel-identical candidate masks as evidence, never apply edits."""
+    from .edit_agent import _rasterize
+    groups = {}
+    for shape in shapes:
+        mask = _rasterize(shape, width, height)
+        if not mask.any():
+            continue
+        key = (shape["label"], hashlib.sha256(mask.tobytes()).digest())
+        group = groups.setdefault(key, {"label": shape["label"], "shape_ids": [], "pixels": int(mask.sum())})
+        group["shape_ids"].append(shape["id"])
+    return [group for group in groups.values() if len(group["shape_ids"]) > 1]
+
+
+def suppress_near_duplicate_candidates(shapes, width, height,
+                                       same_label_iou=0.95, floor_conflict_iou=0.90,
+                                       preserve_class_conflicts=False):
+    """Remove same-class duplicates; unreferenced drafts retain class ambiguity."""
+    from .edit_agent import _rasterize
+    masks = {shape["id"]: _rasterize(shape, width, height).astype(bool) for shape in shapes}
+    retained, suppressed = [], []
+
+    def iou(left, right):
+        intersection = np.logical_and(left, right).sum()
+        union = np.logical_or(left, right).sum()
+        return float(intersection / union) if union else 0.0
+
+    # Prefer the highest-confidence candidate among almost identical same-label masks.
+    ordered = sorted(enumerate(shapes),
+                     key=lambda item: (-(item[1].get("score") or 0.0), item[0]))
+    for _, candidate in ordered:
+        duplicate = next((kept for kept in retained
+                          if kept.get("label") == candidate.get("label")
+                          and iou(masks[kept["id"]], masks[candidate["id"]]) >= same_label_iou), None)
+        if duplicate is not None:
+            suppressed.append({"id": candidate["id"], "label": candidate.get("label"),
+                               "reason": "near_duplicate_same_label",
+                               "kept_id": duplicate["id"],
+                               "iou": round(iou(masks[duplicate["id"]], masks[candidate["id"]]), 4)})
+        else:
+            retained.append(candidate)
+
+    floors = [shape for shape in retained if shape.get("label") == "floor"]
+    final = []
+    for candidate in retained:
+        conflict = next((floor for floor in floors
+                         if candidate.get("label") == "cargo_floor"
+                         and not preserve_class_conflicts
+                         and iou(masks[floor["id"]], masks[candidate["id"]]) >= floor_conflict_iou), None)
+        if conflict is not None:
+            suppressed.append({"id": candidate["id"], "label": "cargo_floor",
+                               "reason": "overlaps_warehouse_floor",
+                               "kept_id": conflict["id"],
+                               "iou": round(iou(masks[conflict["id"]], masks[candidate["id"]]), 4)})
+        else:
+            final.append(candidate)
+    return final, suppressed
+
+
+def candidate_class_overlap_conflicts(shapes, width, height, threshold=0.90):
+    """Flag ambiguous class pairs without deleting or relabeling either mask."""
+    from .edit_agent import _rasterize
+    robot_labels = {"车辆", "ego", "other_robot"}
+    relevant = [item for item in shapes
+                if item.get("label") in robot_labels | {"floor", "cargo_floor"}]
+    masks = {}
+    conflicts = []
+    for position, left in enumerate(relevant):
+        for right in relevant[position + 1:]:
+            left_label, right_label = left.get("label"), right.get("label")
+            labels = {left_label, right_label}
+            relevant_pair = (left_label != right_label and labels.issubset(robot_labels)) \
+                or labels == {"floor", "cargo_floor"}
+            if not relevant_pair:
+                continue
+            for item in (left, right):
+                if item["id"] not in masks:
+                    masks[item["id"]] = _rasterize(item, width, height).astype(bool)
+            a, b = masks[left["id"]], masks[right["id"]]
+            union = np.logical_or(a, b).sum()
+            overlap = float(np.logical_and(a, b).sum() / union) if union else 0.0
+            if overlap >= threshold:
+                conflicts.append({
+                    "shape_ids": [left["id"], right["id"]],
+                    "labels": [left["label"], right["label"]],
+                    "iou": round(overlap, 4),
+                    "reason": "不同类别候选高度重叠，请核验实体归属；已保留两个候选",
+                    "reason_code": "candidate_cross_class_overlap",
+                    "route": "human_review_required"})
+    return conflicts
+
+
 def _fingerprint(shapes):
     geometry = [{key: shape.get(key) for key in ("id", "label", "points", "holes", "parts")}
                 for shape in shapes]
@@ -743,6 +1460,7 @@ class AnnotationAgent:
         self.sam_pending = None
         self.sam_points_by_shape = {}
         self.sam_fallback = set()
+        self.candidate_filters = []
 
     def progress(self, phase, **details):
         check_cancelled()
@@ -780,6 +1498,13 @@ class AnnotationAgent:
             self.shapes.extend(shapes)
             self.generated += len(shapes)
             self.progress("generated")
+        self.shapes, self.candidate_filters = suppress_near_duplicate_candidates(
+            self.shapes, self.width, self.height,
+            preserve_class_conflicts=self.reference is None)
+        self.generated = len(self.shapes)
+        if self.candidate_filters:
+            self.progress("generated", operation="filter_near_duplicates",
+                          outcome={"suppressed": copy.deepcopy(self.candidate_filters)})
 
     def execute(self):
         stop_reason = "max_rounds"
@@ -792,13 +1517,38 @@ class AnnotationAgent:
                 pending = self.sam_pending
                 comparison = ({"shape_id": pending["shape_id"],
                     "before_image": candidate_overlay(self.image, pending["before"])} if pending else None)
-                holes = candidate_holes(self.shapes, self.labels, self.width, self.height)
+                # Gap semantics require a human reference example. For a generic,
+                # unreferenced class batch, review visible candidates conservatively
+                # without inventing reference-backed floor-hole rules.
+                all_holes = (candidate_holes(self.shapes, self.labels, self.width, self.height)
+                             if self.reference is not None else [])
+                holes = select_review_gaps(
+                    all_holes, self.config.get("max_review_gaps", 4)) if all_holes else []
+                if len(all_holes) > len(holes):
+                    self.progress("observing", round=number, operation="limit_review_gaps",
+                                  outcome={"reviewed": len(holes),
+                                           "suppressed_noise": len(all_holes) - len(holes)})
                 gap_images = gap_detail_images(self.image, self.shapes, holes)
-                decision = review(self.config, self.image, candidate_overlay(self.image, self.shapes),
-                    self.description, [_shape_summary(shape) for shape in self.shapes],
-                    self.labels, self.audit, reference=self.reference, sam_comparison=comparison,
-                    hole_image=hole_overlay(self.image, holes, self.shapes), holes=holes,
-                    gap_images=gap_images)
+                try:
+                    decision = review(self.config, self.image, candidate_overlay(self.image, self.shapes),
+                        self.description, [_shape_summary(shape) for shape in self.shapes],
+                        self.labels, self.audit, reference=self.reference, sam_comparison=comparison,
+                        hole_image=hole_overlay(self.image, holes, self.shapes), holes=holes,
+                        gap_images=gap_images,
+                        duplicate_groups=(_exact_duplicate_groups(self.shapes, self.width, self.height)
+                                          if self.config.get("llm_duplicate_review", False) else None))
+                except ReviewProtocolError as error:
+                    stop_reason = "invalid_model_output"
+                    self.queue.append({
+                        "reason": "VLM/Agent 连续返回无效修正；已保留 SAM 候选并转人工复核",
+                        "reason_code": "agent_invalid_model_output",
+                        "route": "human_review_required",
+                        "error": str(error)[:500],
+                        "last_validation_error": error.last_error,
+                    })
+                    self.progress("review_required", round=number,
+                                  outcome={"reason_code": "agent_invalid_model_output"})
+                    break
                 if pending:
                     assessment = decision.get("sam_assessment")
                     if not isinstance(assessment, dict) or type(assessment.get("improved")) is not bool:
@@ -864,9 +1614,22 @@ class AnnotationAgent:
                                             not math.isfinite(point[key]) for key in ("x", "y")) or
                                         not 0 <= point["x"] < self.width or not 0 <= point["y"] < self.height):
                                     raise ValueError("SAM 点提示坐标或类型无效")
+                            coordinate_labels = {}
+                            for point in points:
+                                coordinate = (float(point["x"]), float(point["y"]))
+                                coordinate_labels.setdefault(coordinate, set()).add(point["label"])
+                            if any(len(point_labels) > 1 for point_labels in coordinate_labels.values()):
+                                raise ValueError("SAM 点提示在同一坐标存在冲突的正负标签")
+                            if len(points) > 1 and len(coordinate_labels) == 1:
+                                raise ValueError("SAM 点提示只有重复的同一个点，已拒绝无效几何修正")
+                            if not any(point["label"] == 1 for point in points):
+                                raise ValueError("SAM 点提示至少需要一个有效正点")
                             previous_points = self.sam_points_by_shape.get(ids[0], [])
                             combined = {(point["x"], point["y"]): point for point in previous_points + points}
                             all_points = list(combined.values())
+                            if previous_points and len(all_points) == len({(point["x"], point["y"])
+                                                                         for point in previous_points}):
+                                raise ValueError("SAM 点提示没有新增有效坐标，已拒绝重复修正")
                             if not any(point["label"] == 1 for point in all_points) or len(all_points) > 32:
                                 raise ValueError("SAM 累计提示点须包含正点且不超过 32 个")
                             old_shape = next(shape for shape in self.shapes if shape["id"] == ids[0])
@@ -964,7 +1727,7 @@ class AnnotationAgent:
         except Exception as error:
             stop_reason = "error"
             self.queue.append({"reason": "Agent 调用失败", "error": str(error)[:500]})
-        if not converged and stop_reason != "error":
+        if not converged and stop_reason not in ("error", "invalid_model_output"):
             self.queue.append({"reason": {"max_rounds": "达到最大轮数，最新候选尚未确认",
                 "no_progress": "本轮未产生有效修改", "cycle": "检测到循环修改"}[stop_reason]})
         if self.sam_pending is not None:
@@ -972,10 +1735,14 @@ class AnnotationAgent:
             self.queue.append({"reason": "SAM 3 点提示结果尚未经过下一轮 GPT 复核，已恢复修改前候选"})
             converged = False
             self.sam_pending = None
+        if self.reference is None:
+            self.queue.extend(candidate_class_overlap_conflicts(
+                self.shapes, self.width, self.height))
         result = {"shapes": self.shapes, "candidates_added": self.generated, "applied": self.applied,
             "review_queue": self.queue, "agent": {"converged": converged,
             "rounds": len(self.audit), "max_rounds": self.max_rounds,
-            "stop_reason": stop_reason, "audit": self.audit}}
+            "stop_reason": stop_reason, "audit": self.audit,
+            "candidate_filters": self.candidate_filters}}
         self.progress("finished", result=result)
         return result
 

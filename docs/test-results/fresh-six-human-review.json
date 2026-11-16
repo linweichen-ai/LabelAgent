@@ -1,0 +1,120 @@
+{
+  "schema": "labelagent-six-category-review/1",
+  "status": "awaiting_user_category_confirmation",
+  "created_utc": "2026-11-06T15:56:28.012347+00:00",
+  "records": [
+    {
+      "review_id": "C1",
+      "frame": 30,
+      "camera": 1,
+      "predictions": {
+        "overview": {
+          "baseline": "pallet",
+          "candidate": "pallet"
+        },
+        "linked": {
+          "baseline": "pallet",
+          "candidate": "pallet"
+        }
+      },
+      "human_category": null,
+      "human_status": "awaiting_reply",
+      "scope": "category only; no approval of mask boundary, instance separation, load state or 3D box"
+    },
+    {
+      "review_id": "C2",
+      "frame": 30,
+      "camera": 1,
+      "predictions": {
+        "overview": {
+          "baseline": "person",
+          "candidate": "person"
+        },
+        "linked": {
+          "baseline": "person",
+          "candidate": "uncertain"
+        }
+      },
+      "human_category": null,
+      "human_status": "awaiting_reply",
+      "scope": "category only; no approval of mask boundary, instance separation, load state or 3D box"
+    },
+    {
+      "review_id": "C3",
+      "frame": 57,
+      "camera": 1,
+      "predictions": {
+        "overview": {
+          "baseline": "pallet",
+          "candidate": "pallet"
+        },
+        "linked": {
+          "baseline": "person",
+          "candidate": "uncertain"
+        }
+      },
+      "human_category": null,
+      "human_status": "awaiting_reply",
+      "scope": "category only; no approval of mask boundary, instance separation, load state or 3D box"
+    },
+    {
+      "review_id": "C4",
+      "frame": 57,
+      "camera": 1,
+      "predictions": {
+        "overview": {
+          "baseline": "person",
+          "candidate": "person"
+        },
+        "linked": {
+          "baseline": "person",
+          "candidate": "person"
+        }
+      },
+      "human_category": null,
+      "human_status": "awaiting_reply",
+      "scope": "category only; no approval of mask boundary, instance separation, load state or 3D box"
+    },
+    {
+      "review_id": "C5",
+      "frame": 35,
+      "camera": 1,
+      "predictions": {
+        "overview": {
+          "baseline": "pallet",
+          "candidate": "pallet"
+        },
+        "linked": {
+          "baseline": "pallet",
+          "candidate": "pallet"
+        }
+      },
+      "human_category": null,
+      "human_status": "awaiting_reply",
+      "scope": "category only; no approval of mask boundary, instance separation, load state or 3D box"
+    },
+    {
+      "review_id": "C6",
+      "frame": 35,
+      "camera": 1,
+      "predictions": {
+        "overview": {
+          "baseline": "person",
+          "candidate": "person"
+        },
+        "linked": {
+          "baseline": "person",
+          "candidate": "person"
+        }
+      },
+      "human_category": null,
+      "human_status": "awaiting_reply",
+      "scope": "category only; no approval of mask boundary, instance separation, load state or 3D box"
+    }
+  ],
+  "original_annotations_written": false,
+  "human_truth_written": false,
+  "new_model_calls": 0,
+  "raw_images_geometry_and_private_paths_published": false,
+  "old_pending_reviews_unaffected": true
+}

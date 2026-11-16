@@ -1,6 +1,7 @@
 """Regression tests for bounded editing and persisted agent decisions."""
 import io
 import base64
+import copy
 import json
 import tempfile
 import threading
@@ -14,7 +15,7 @@ from PIL import Image
 
 from source.agent import server, workflow
 from source.agent.edit_agent import (_hole_regions, _candidate_gap_regions, _shape_from_mask,
-                                     _rasterize, apply_operations, valid_shape)
+                                     _rasterize, _valid_region, apply_operations, valid_shape)
 
 
 def image_bytes():
@@ -86,6 +87,9 @@ class EditTests(unittest.TestCase):
         self.assertEqual(updated, [shape()])
         self.assertFalse(applied)
         self.assertTrue(queue)
+        self.assertFalse(_valid_region([[5, 5], [5, 5], [5, 5]], 40, 40))
+        self.assertFalse(_valid_region([[2, 2], [5, 5], [8, 8]], 40, 40))
+        self.assertTrue(_valid_region([[2, 2], [8, 2], [8, 8]], 40, 40))
 
     def test_merge_and_split_preserve_pixels(self):
         original = [shape(), shape(2, left=22, right=35)]
@@ -168,6 +172,137 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(chat.call_args.kwargs["extra_images"], (marked.getvalue(),))
         self.assertIn("轮廓颜色只是界面标记", chat.call_args.args[1])
         self.assertIn("仅依据图像 1", chat.call_args.args[1])
+
+    def test_visible_label_blind_review_keeps_operator_person_and_viewpoint_non_ego(self):
+        labels = ["ego", "other_robot", "person"]
+        answer = {"assessments": [
+            {"label": label, "evidence": "absent", "confidence": 0.9,
+             "reason": "No visible object."} for label in labels], "unknown_candidates": []}
+        with patch.object(workflow, "chat", return_value=answer) as chat:
+            workflow.discover_visible_labels({}, image_bytes(), labels)
+        instruction = chat.call_args.args[1]
+        self.assertIn("distinct from any human operator", instruction)
+        self.assertIn("a visible human body", instruction)
+        self.assertIn("camera viewpoint or camera position alone is never evidence", instruction)
+
+    def test_visible_label_discovery_filters_known_labels_and_routes_unknown_to_review(self):
+        answer = {"assessments": [
+            {"label": "person", "evidence": "present", "confidence": 0.94,
+             "reason": "A standing person is visible."},
+            {"label": "pallet", "evidence": "absent", "confidence": 0.91,
+             "reason": "No pallet is visible."},
+            {"label": "slope", "evidence": "uncertain", "confidence": 0.52,
+             "reason": "The distant surface is partly occluded."}],
+            "unknown_candidates": [{"candidate_name": "rack", "confidence": 0.72,
+                                    "evidence": "A large storage rack is visible."},
+                                   {"candidate_name": "person", "confidence": 0.91,
+                                    "evidence": "A person is visible."}]}
+        with patch.object(workflow, "chat", return_value=answer) as chat:
+            result = workflow.discover_visible_labels({}, image_bytes(), ["person", "pallet", "slope"])
+        self.assertEqual(result["visible_labels"], ["person"])
+        self.assertEqual(result["uncertain_labels"], ["slope"])
+        self.assertEqual(result["candidate_labels"], ["person", "slope"])
+        self.assertEqual(result["consistency_flags"], [])
+        self.assertFalse(result["registry_mutated"])
+        self.assertEqual(result["unknown_candidates"][0]["route"], "human_review_required")
+        self.assertFalse(result["unknown_candidates"][0]["ontology_mutation_allowed"])
+        self.assertEqual(result["registry_conflicts"][0]["matching_known_label"], "person")
+        self.assertEqual(result["registry_conflicts"][0]["reason_code"], "known_label_alias_conflict")
+        self.assertIn("assess every known label", chat.call_args.args[1])
+        self.assertEqual(chat.call_args.kwargs["response_schema"]["properties"]["assessments"]["minItems"], 3)
+
+    def test_visible_label_discovery_routes_contradictory_absent_to_uncertain_candidate(self):
+        answer = {"assessments": [
+            {"label": "person", "evidence": "absent", "confidence": 0.8,
+             "reason": "A person is visible in the image, but the label is not present in the list of known labels."},
+            {"label": "pallet", "evidence": "absent", "confidence": 0.9,
+             "reason": "No pallet is visible."}], "unknown_candidates": []}
+        with patch.object(workflow, "chat", return_value=answer):
+            result = workflow.discover_visible_labels({}, image_bytes(), ["person", "pallet"])
+        self.assertEqual(result["visible_labels"], [])
+        self.assertEqual(result["uncertain_labels"], ["person"])
+        self.assertEqual(result["candidate_labels"], ["person"])
+        self.assertEqual(result["assessments"][0]["evidence"], "uncertain")
+        self.assertEqual(result["consistency_flags"], [{
+            "label": "person", "original_evidence": "absent", "normalized_evidence": "uncertain",
+            "reason_code": "vlm_visibility_contradiction", "route": "human_review_required",
+            "reason": "A person is visible in the image, but the label is not present in the list of known labels."}])
+
+    def test_visible_label_discovery_routes_duplicate_and_missing_registry_labels(self):
+        answer = {"assessments": [
+            {"label": "person", "evidence": "present", "confidence": 0.9, "reason": "visible"},
+            {"label": "person", "evidence": "absent", "confidence": 0.8, "reason": "duplicate"}],
+            "unknown_candidates": []}
+        with patch.object(workflow, "chat", return_value=answer):
+            result = workflow.discover_visible_labels({}, image_bytes(), ["person", "pallet"])
+        self.assertEqual(result["uncertain_labels"], ["person", "pallet"])
+        self.assertEqual(result["visible_labels"], [])
+        self.assertTrue(any(flag["reason_code"] == "vlm_duplicate_registry_assessment"
+                            for flag in result["consistency_flags"]))
+
+    def test_visible_label_discovery_downgrades_shared_vehicle_robot_anchor(self):
+        labels = ["车辆", "ego", "other_robot"]
+        answer = {"assessments": [
+            {"label": "车辆", "evidence": "present", "confidence": 0.9,
+             "reason": "A robot is visible near [700,450]."},
+            {"label": "ego", "evidence": "absent", "confidence": 0.9,
+             "reason": "No ego robot is visible."},
+            {"label": "other_robot", "evidence": "present", "confidence": 0.9,
+             "reason": "Another robot is visible at [700,450]."}], "unknown_candidates": []}
+        with patch.object(workflow, "chat", return_value=answer):
+            result = workflow.discover_visible_labels({}, image_bytes(), labels)
+        self.assertEqual(result["visible_labels"], [])
+        self.assertEqual(result["uncertain_labels"], ["车辆", "other_robot"])
+        flags = [flag for flag in result["consistency_flags"]
+                 if flag["reason_code"] == "vlm_cross_label_entity_conflict"]
+        self.assertEqual({flag["label"] for flag in flags}, {"车辆", "other_robot"})
+        self.assertEqual(flags[0]["conflicting_labels"], ["车辆", "other_robot"])
+
+    def test_visible_label_discovery_ignores_other_object_and_negated_anchors(self):
+        labels = ["车辆", "other_robot"]
+        answers = [
+            ["A vehicle is visible at [300,450], not the robot at [700,450].",
+             "A robot is visible at [700,450]."],
+            ["A vehicle at [300,450] is left of the robot at [700,450].",
+             "A robot is visible at [700,450]."],
+        ]
+        for reasons in answers:
+            with self.subTest(reasons=reasons):
+                answer = {"assessments": [
+                    {"label": label, "evidence": "present", "confidence": 0.9, "reason": reason}
+                    for label, reason in zip(labels, reasons)], "unknown_candidates": []}
+                with patch.object(workflow, "chat", return_value=answer):
+                    result = workflow.discover_visible_labels({}, image_bytes(), labels)
+                self.assertEqual(result["visible_labels"], labels)
+                self.assertFalse(any(flag["reason_code"] == "vlm_cross_label_entity_conflict"
+                                     for flag in result["consistency_flags"]))
+
+    def test_visible_label_discovery_keeps_distinct_vehicle_robot_anchors(self):
+        labels = ["车辆", "other_robot"]
+        answer = {"assessments": [
+            {"label": "车辆", "evidence": "present", "confidence": 0.9,
+             "reason": "A vehicle is visible at [300,450]."},
+            {"label": "other_robot", "evidence": "present", "confidence": 0.9,
+             "reason": "A robot is visible at [700,450]."}], "unknown_candidates": []}
+        with patch.object(workflow, "chat", return_value=answer):
+            result = workflow.discover_visible_labels({}, image_bytes(), labels)
+        self.assertEqual(result["visible_labels"], labels)
+        self.assertFalse(any(flag["reason_code"] == "vlm_cross_label_entity_conflict"
+                             for flag in result["consistency_flags"]))
+
+    def test_visible_label_discovery_routes_english_vehicle_alias_to_registry_conflict(self):
+        answer = {"assessments": [{"label": "车辆", "evidence": "present",
+            "confidence": 0.96, "reason": "A vehicle is visible."}],
+            "unknown_candidates": [{"candidate_name": "vehicle", "confidence": 0.95,
+                                    "evidence": "A vehicle is visible."}]}
+        with patch.object(workflow, "chat", return_value=answer):
+            result = workflow.discover_visible_labels({}, image_bytes(), ["车辆"])
+        self.assertEqual(result["unknown_candidates"], [])
+        self.assertEqual(result["registry_conflicts"], [{
+            "candidate_name": "vehicle", "confidence": 0.95, "evidence": "A vehicle is visible.",
+            "route": "human_review_required", "ontology_mutation_allowed": False,
+            "matching_known_label": "车辆", "reason_code": "known_label_alias_conflict"}])
+        self.assertFalse(result["registry_mutated"])
 
     def test_description_only_uses_reference_truth_label_and_short_prompt(self):
         answer = {"description": "地面边界，不包括障碍物。", "prompts": [
@@ -341,8 +476,11 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(sam.call_count, 1)
         self.assertFalse(result["agent"]["converged"])
         self.assertEqual(result["agent"]["rounds"], 0)
-        self.assertEqual(result["agent"]["stop_reason"], "error")
+        self.assertEqual(result["agent"]["stop_reason"], "invalid_model_output")
         self.assertIn("协议校验重试 2 次后仍失败", result["review_queue"][0]["error"])
+        self.assertEqual(result["review_queue"][0]["reason_code"],
+                         "agent_invalid_model_output")
+        self.assertEqual(result["review_queue"][0]["route"], "human_review_required")
         self.assertEqual(result["shapes"][0]["parts"], shape()["parts"])
         rejected = [event for event in events if event["status"] == "rejected"]
         self.assertEqual([event["review_attempt"] for event in rejected], [1, 2, 3])
@@ -403,12 +541,135 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(_rasterize(result["shapes"][0], 40, 40).tolist(), expected.tolist())
 
     def test_keyword_from_gpt_is_preserved_when_short_and_relevant(self):
-        answer = {"description": "标注参考帧里的可见木托盘实例。", "prompts": [
-            {"label": "pallet", "text": "wooden pallet"},
+        answer = {"description": "标注参考帧里的可见车辆实例。", "prompts": [
+            {"label": "车辆", "text": "forklift"},
             {"label": "person", "text": "worker"}]}
-        result = workflow.restrict_description(answer, ["pallet"])
+        result = workflow.restrict_description(answer, ["车辆"])
         self.assertEqual(result["description"], answer["description"])
-        self.assertEqual(result["prompts"], [{"label": "pallet", "text": "wooden pallet"}])
+        self.assertEqual(result["prompts"], [{"label": "车辆", "text": "forklift"}])
+
+    def test_pallet_prompt_cannot_drift_to_stacked_cargo(self):
+        for text in ("", " stacked boxes ", "wooden pallet", "pallet"):
+            with self.subTest(text=text):
+                answer = {"description": "只标注可见托盘结构，不把堆叠箱体当作托盘。",
+                          "prompts": [{"label": "pallet", "text": text}]}
+                result = workflow.restrict_description(answer, ["pallet"])
+                self.assertEqual(result["description"], answer["description"])
+                self.assertEqual(result["prompts"], [{"label": "pallet", "text": "pallet"}])
+                self.assertEqual(answer["prompts"][0]["text"], text)
+
+    def test_known_workbench_labels_have_stable_sam_prompt_fallbacks(self):
+        labels = ["车辆", "pallet", "person", "floor", "slope", "ego", "other_robot", "cargo_floor"]
+        result = workflow.restrict_description(
+            {"description": "Review every configured class.", "prompts": []}, labels)
+        self.assertEqual(result["prompts"], [
+            {"label": "车辆", "text": "vehicle"},
+            {"label": "pallet", "text": "pallet"},
+            {"label": "person", "text": "person"},
+            {"label": "floor", "text": "floor"},
+            {"label": "slope", "text": "ramp"},
+            {"label": "ego", "text": "ego robot"},
+            {"label": "other_robot", "text": "robot"},
+            {"label": "cargo_floor", "text": "robot cargo platform"},
+        ])
+
+    def test_robot_and_person_prompts_use_exact_canonical_queries(self):
+        labels = ["ego", "other_robot", "person"]
+        expected = [
+            {"label": "ego", "text": "ego robot"},
+            {"label": "other_robot", "text": "robot"},
+            {"label": "person", "text": "person"}]
+        for prompts in ([], [
+                {"label": "ego", "text": "camera viewpoint"},
+                {"label": "other_robot", "text": "human operator"},
+                {"label": "person", "text": "operator"}]):
+            with self.subTest(prompts=prompts):
+                result = workflow.restrict_description(
+                    {"description": "区分相机载体、其他机器人与人员。", "prompts": prompts}, labels)
+                self.assertEqual(result["prompts"], expected)
+
+    def test_cargo_floor_prompt_is_overridden_even_when_gpt_returns_ambiguous_text(self):
+        result = workflow.restrict_description(
+            {"description": "cargo area", "prompts": [{"label": "cargo_floor", "text": "cargo floor"}]},
+            ["cargo_floor"])
+        self.assertEqual(result["prompts"], [
+            {"label": "cargo_floor", "text": "robot cargo platform"}])
+
+    def test_person_prompt_uses_evidence_backed_canonical_query(self):
+        result = workflow.restrict_description(
+            {"description": "people", "prompts": [
+                {"label": "person", "text": "worker operator worker worker"}]},
+            ["person"])
+        self.assertEqual(result["prompts"], [{"label": "person", "text": "person"}])
+
+    def test_candidate_filter_removes_same_label_and_floor_conflicts(self):
+        floor = shape(label="floor", shape_id=1)
+        floor_copy = shape(label="floor", shape_id=2)
+        cargo_copy = shape(label="cargo_floor", shape_id=3)
+        kept, filtered = workflow.suppress_near_duplicate_candidates(
+            [floor, floor_copy, cargo_copy], 40, 40)
+        self.assertEqual([(item["id"], item["label"]) for item in kept], [(1, "floor")])
+        self.assertEqual({item["reason"] for item in filtered},
+                         {"near_duplicate_same_label", "overlaps_warehouse_floor"})
+
+    def test_unreferenced_draft_preserves_floor_deck_ambiguity_and_same_class_dedup(self):
+        originals = [shape(1, "floor"), shape(2, "floor"), shape(3, "cargo_floor")]
+        baseline = copy.deepcopy(originals)
+        kept, filtered = workflow.suppress_near_duplicate_candidates(
+            originals, 40, 40, preserve_class_conflicts=True)
+        self.assertEqual({item["id"] for item in kept}, {1, 3})
+        self.assertEqual([item["reason"] for item in filtered], ["near_duplicate_same_label"])
+        self.assertEqual(originals, baseline)
+
+    def test_class_overlap_flags_only_conflicting_high_iou_pairs(self):
+        cases = [
+            ([shape(1, "ego"), shape(2, "other_robot")], 1),
+            ([shape(1, "车辆"), shape(2, "ego")], 1),
+            ([shape(1, "floor"), shape(2, "cargo_floor")], 1),
+            ([shape(1, "person"), shape(2, "ego")], 0),
+            ([shape(1, "ego"), shape(2, "ego")], 0),
+            ([shape(1, "ego"), shape(2, "other_robot", 23, 35)], 0),
+        ]
+        for shapes, expected in cases:
+            with self.subTest(labels=[item["label"] for item in shapes], expected=expected):
+                baseline = copy.deepcopy(shapes)
+                conflicts = workflow.candidate_class_overlap_conflicts(shapes, 40, 40)
+                self.assertEqual(len(conflicts), expected)
+                self.assertEqual(shapes, baseline)
+                if expected:
+                    self.assertEqual(conflicts[0]["shape_ids"], [1, 2])
+                    self.assertEqual(conflicts[0]["route"], "human_review_required")
+                    self.assertEqual(conflicts[0]["iou"], 1.0)
+
+    def test_overlap_conflict_ids_follow_merged_candidate_ids(self):
+        generated = [shape(1, "ego"), shape(2, "other_robot")]
+        combined, id_map = server.merge_inference_candidates(
+            [shape(1, "pallet")], generated, ["ego", "other_robot"], return_id_map=True)
+        result = {"agent": {}, "applied": [], "review_queue":
+                  workflow.candidate_class_overlap_conflicts(generated, 40, 40)}
+        server.bind_merged_candidate_references(result, id_map)
+        by_id = {item["id"]: item["label"] for item in combined}
+        conflict = result["review_queue"][0]
+        self.assertEqual([by_id[item] for item in conflict["shape_ids"]],
+                         ["ego", "other_robot"])
+        self.assertEqual(conflict["original_shape_ids"], [1, 2])
+
+    def test_unreferenced_pipeline_retains_conflict_despite_model_done(self):
+        with patch.object(workflow, "sam_text", return_value=[sam_result()]), \
+             patch.object(workflow, "chat", return_value={"status": "done", "operations": []}):
+            result = workflow.run({}, image_bytes(), {"description": "draft", "prompts": [
+                {"label": "floor", "text": "floor"},
+                {"label": "cargo_floor", "text": "robot cargo platform"}]},
+                ["floor", "cargo_floor"])
+        self.assertEqual({item["label"] for item in result["shapes"]}, {"floor", "cargo_floor"})
+        self.assertEqual(len(result["review_queue"]), 1)
+        self.assertEqual(result["review_queue"][0]["reason_code"], "candidate_cross_class_overlap")
+        self.assertEqual(result["review_queue"][0]["shape_ids"], [1, 2])
+
+    def test_unknown_non_ascii_label_still_requires_an_explicit_mapping(self):
+        with self.assertRaisesRegex(ValueError, "缺少简短英文"):
+            workflow.restrict_description(
+                {"description": "unknown class", "prompts": []}, ["未知类别"])
 
     def test_gpt_reviews_initial_sam_candidates_against_detailed_rule(self):
         prompts = []
@@ -424,6 +685,19 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("只标注可见目标边界", prompts[0][0])
         self.assertIn('"id": 1', prompts[0][0])
         self.assertEqual(prompts[0][1], 2)
+
+    def test_unreferenced_batch_skips_reference_dependent_floor_gap_analysis(self):
+        decision = {"status": "done", "reason": "No supported edit.",
+                    "hole_assessment": [], "operations": []}
+        with patch.object(workflow, "sam_text", return_value=[sam_result()]), \
+             patch.object(workflow, "candidate_holes") as holes, \
+             patch.object(workflow, "chat", return_value=decision):
+            result = workflow.run({}, image_bytes(),
+                {"description": "generic floor", "prompts": [{"label": "floor", "text": "floor"}]},
+                ["floor"], 2, reference=None)
+        holes.assert_not_called()
+        self.assertTrue(result["agent"]["converged"])
+        self.assertEqual(result["review_queue"], [])
 
     def test_model_trace_records_empty_sam_response_and_bad_gpt_json(self):
         events = []
@@ -442,6 +716,20 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(events[3]["output"]["raw_text"], "invalid json")
         self.assertNotIn("secret-token", json.dumps(events))
         self.assertNotIn("base64", json.dumps(events))
+
+    def test_compact_review_uses_bounded_generation_budget(self):
+        captured = {}
+        def respond(request, timeout):
+            captured.update(json.loads(request.data))
+            return io.BytesIO(b'{"choices":[{"message":{"content":"{\\"status\\":\\"done\\"}"}}]}')
+        token = workflow._review_call.set({"attempt": 1, "feedback": None})
+        try:
+            with patch.object(workflow.urllib.request, "urlopen", side_effect=respond):
+                workflow._chat({"llm_url": "http://example.test", "llm_model": "test",
+                                "llm_prompt_profile": "compact"}, "inspect", image_bytes())
+        finally:
+            workflow._review_call.reset(token)
+        self.assertEqual(captured["max_tokens"], 768)
 
     def test_trace_records_sam_transport_failure_and_restores_context(self):
         events = []
@@ -499,10 +787,15 @@ class WorkflowTests(unittest.TestCase):
                         self.assertEqual(result["shapes"][0]["parts"], shape()["parts"])
                         self.assertEqual(result["shapes"][0]["id"], 1)
                     self.assertFalse(result["agent"]["converged"])
+                    self.assertEqual(result["agent"]["stop_reason"], "invalid_model_output")
                     self.assertEqual(result["agent"]["audit"], [])
                     self.assertEqual(chat.call_count, 3)
                     self.assertEqual(sam.call_count, 1)
                     self.assertIn("协议校验重试 2 次后仍失败", result["review_queue"][0]["error"])
+                    self.assertEqual(result["review_queue"][0]["reason_code"],
+                                     "agent_invalid_model_output")
+                    self.assertEqual(result["review_queue"][0]["route"],
+                                     "human_review_required")
 
     def test_sam_points_refine_existing_mask_locally_and_require_next_gpt_assessment(self):
         edit = {"operation": "sam_points", "shape_ids": [1],
@@ -531,6 +824,31 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(result["shapes"][0]["id"], 1)
         self.assertEqual(len(chat.call_args_list[1].kwargs["extra_images"]), 3)
         self.assertIn("图像 4 是修改前候选", chat.call_args_list[1].args[1])
+
+    def test_duplicate_only_sam_points_and_zero_area_polygon_are_rejected_before_sam(self):
+        invalid = {"status": "continue", "operations": [{"operation": "sam_points",
+            "shape_ids": [1], "polygon": [[10, 10], [10, 10], [10, 10]],
+            "points": [{"x": 10, "y": 10, "label": 1}] * 3,
+            "reason": "repair boundary"}]}
+        with self.assertRaisesRegex(ValueError, "有效 polygon|重复的同一个点"):
+            workflow._validate_review_result(invalid, [], [shape()], ["a"], 40, 40)
+
+    def test_conflicting_and_out_of_bounds_sam_points_are_rejected(self):
+        base = {"status": "continue", "operations": [{"operation": "sam_points",
+            "shape_ids": [1], "polygon": [[0, 0], [20, 0], [20, 20]],
+            "points": [{"x": 5, "y": 5, "label": 1}, {"x": 5, "y": 5, "label": 0}],
+            "reason": "repair boundary"}]}
+        with self.assertRaisesRegex(ValueError, "冲突"):
+            workflow._validate_review_result(base, [], [shape()], ["a"], 40, 40)
+        base["operations"][0]["points"] = [{"x": 40, "y": 5, "label": 1}]
+        with self.assertRaisesRegex(ValueError, "有效 points"):
+            workflow._validate_review_result(base, [], [shape()], ["a"], 40, 40)
+
+    def test_sam_improvement_claim_without_pending_result_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "禁止声明 improved"):
+            workflow._validate_review_result({"status": "done", "operations": [],
+                "sam_assessment": {"improved": True, "reason": "looks better"}},
+                [], [shape()], ["a"], 40, 40)
 
     def test_sam_regression_rolls_back_before_opencv_fallback(self):
         edit = {"operation": "sam_points", "shape_ids": [1],
@@ -635,6 +953,814 @@ class FakeVideo:
 
 
 class ServerTests(unittest.TestCase):
+    def test_run_claim_rejects_concurrent_run_and_reference_draft(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        old_task, old_stop = server.run_task_id, server.run_stop_event
+        entered, release = threading.Event(), threading.Event()
+        responses = {}
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                "config": {}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            description = {"description": "a only", "prompts": [{"label": "a", "text": "a"}],
+                           "reference_signature": server.reference_signature(0)}
+            def blocked_run(*args, **kwargs):
+                entered.set()
+                self.assertTrue(release.wait(3))
+                return {"shapes": [shape()], "candidates_added": 1, "applied": [],
+                    "review_queue": [], "agent": {"stop_reason": "done", "rounds": 1}}
+            def start_run():
+                responses["run"] = server.app.test_client().post("/api/run", json={
+                    "frame": 1, "count": 1, "description": description})
+            worker = threading.Thread(target=start_run)
+            try:
+                with patch.object(server, "run", side_effect=blocked_run):
+                    worker.start()
+                    self.assertTrue(entered.wait(2))
+                    responses["draft"] = server.app.test_client().post("/api/reference_draft", json={
+                        "frame": 2, "labels": ["a"]})
+                    self.assertEqual(responses["draft"].status_code, 503)
+                    release.set()
+                    worker.join(4)
+                self.assertFalse(worker.is_alive())
+                self.assertEqual(responses["run"].status_code, 200, responses["run"].json)
+                self.assertEqual(server.run_status["status"], "completed")
+            finally:
+                release.set()
+                if worker.ident is not None:
+                    worker.join(4)
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+                server.run_task_id, server.run_stop_event = old_task, old_stop
+
+    def test_run_claim_rejects_concurrent_reference_draft_and_run(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        old_task, old_stop = server.run_task_id, server.run_stop_event
+        entered, release = threading.Event(), threading.Event()
+        responses = {}
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                "truth": {}, "reference_frames": {}, "config": {}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            def blocked_describe(*args, **kwargs):
+                entered.set()
+                self.assertTrue(release.wait(3))
+                return {"description": "a", "prompts": []}
+            result = {"shapes": [shape()], "candidates_added": 1, "applied": [],
+                      "review_queue": [], "agent": {"stop_reason": "done", "rounds": 1}}
+            def start_draft():
+                responses["draft"] = server.app.test_client().post("/api/reference_draft", json={
+                    "frame": 1, "labels": ["a"]})
+            worker = threading.Thread(target=start_draft)
+            try:
+                with patch.object(server, "describe", side_effect=blocked_describe), \
+                     patch.object(server, "run", return_value=result), \
+                     patch.object(server, "audit_high_risk_candidates", return_value=([], [])):
+                    worker.start()
+                    self.assertTrue(entered.wait(2))
+                    responses["run"] = server.app.test_client().post("/api/run", json={"frame": 1})
+                    self.assertEqual(responses["run"].status_code, 503)
+                    for endpoint in ("/api/describe", "/api/segment_points",
+                                     "/api/reference_candidates/audit"):
+                        with self.subTest(endpoint=endpoint):
+                            rejected = server.app.test_client().post(endpoint, json={"frame": 0})
+                            self.assertEqual(rejected.status_code, 503, rejected.json)
+                    release.set()
+                    worker.join(4)
+                self.assertFalse(worker.is_alive())
+                self.assertEqual(responses["draft"].status_code, 200, responses["draft"].json)
+                self.assertEqual(server.run_status["status"], "completed")
+            finally:
+                release.set()
+                if worker.ident is not None:
+                    worker.join(4)
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+                server.run_task_id, server.run_stop_event = old_task, old_stop
+
+    def test_run_claim_keeps_ownership_through_terminal_response_and_error_cleanup(self):
+        old_status, old_task, old_stop = server.run_status, server.run_task_id, server.run_stop_event
+        try:
+            for terminal in ("completed", "failed", "stopped"):
+                with self.subTest(terminal=terminal):
+                    server.run_status = {"status": "idle"}
+                    entered, release = threading.Event(), threading.Event()
+                    errors, task_ids = [], []
+                    @server.run_claimed
+                    def old_task():
+                        task_ids.append(server.run_task_id)
+                        server.update_run_status(status=terminal, phase=terminal)
+                        entered.set()
+                        if not release.wait(3):
+                            raise AssertionError("未释放旧任务收尾")
+                        if terminal == "failed":
+                            raise RuntimeError("旧任务异常")
+                        server.update_run_status(error="旧任务收尾")
+                    @server.run_claimed
+                    def new_task():
+                        task_ids.append(server.run_task_id)
+                        self.assertFalse(server.run_stop_event.is_set())
+                        server.update_run_status(status="completed", phase="completed", error="新任务")
+                    def start_old():
+                        try:
+                            old_task()
+                        except Exception as error:
+                            errors.append(str(error))
+                    worker = threading.Thread(target=start_old)
+                    worker.start()
+                    try:
+                        self.assertTrue(entered.wait(2))
+                        with self.assertRaisesRegex(RuntimeError, "已有推理任务"):
+                            new_task()
+                        self.assertEqual(len(task_ids), 1)
+                    finally:
+                        release.set()
+                        worker.join(4)
+                    self.assertFalse(worker.is_alive())
+                    self.assertEqual(errors, ["旧任务异常"] if terminal == "failed" else [])
+                    new_task()
+                    self.assertNotEqual(task_ids[0], task_ids[1])
+                    self.assertEqual(server.run_status["error"], "新任务")
+                    self.assertEqual(server.run_status["status"], "completed")
+        finally:
+            server.run_status, server.run_task_id, server.run_stop_event = old_status, old_task, old_stop
+
+    def test_run_claim_reserves_before_preparation_and_preserves_stop(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        old_task, old_stop = server.run_task_id, server.run_stop_event
+        entered, release = threading.Event(), threading.Event()
+        responses = []
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                "config": {}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            description = {"description": "a", "prompts": [{"label": "a", "text": "a"}],
+                           "reference_signature": server.reference_signature(0)}
+            original = server.restrict_description
+            def prepare(*args, **kwargs):
+                entered.set()
+                self.assertTrue(release.wait(3))
+                return original(*args, **kwargs)
+            def start():
+                responses.append(server.app.test_client().post("/api/run", json={
+                    "frame": 1, "count": 1, "description": description}))
+            worker = threading.Thread(target=start)
+            try:
+                with patch.object(server, "restrict_description", side_effect=prepare), \
+                     patch.object(server, "run") as inference:
+                    worker.start()
+                    self.assertTrue(entered.wait(2))
+                    task_event = server.run_stop_event
+                    self.assertTrue(server.app.test_client().post("/api/run/stop").json["stopped"])
+                    conflict = server.app.test_client().post("/api/reference_draft", json={
+                        "frame": 2, "labels": ["a"]})
+                    self.assertEqual(conflict.status_code, 503)
+                    self.assertIs(server.run_stop_event, task_event)
+                    self.assertTrue(task_event.is_set())
+                    release.set()
+                    worker.join(4)
+                    inference.assert_not_called()
+                self.assertFalse(worker.is_alive())
+                self.assertTrue(responses[0].json["stopped"])
+                self.assertEqual(server.run_status["status"], "stopped")
+            finally:
+                release.set()
+                if worker.ident is not None:
+                    worker.join(4)
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+                server.run_task_id, server.run_stop_event = old_task, old_stop
+
+    def test_run_model_wait_does_not_block_state_and_cancel_prevents_commit(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        entered, release = threading.Event(), threading.Event()
+        response_box = []
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                "config": {}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            description = {"description": "a only", "prompts": [{"label": "a", "text": "a"}],
+                           "reference_signature": server.reference_signature(0)}
+            def blocked_run(*args, **kwargs):
+                entered.set()
+                self.assertTrue(release.wait(3))
+                return {"shapes": [shape()], "candidates_added": 1, "applied": [],
+                    "review_queue": [], "agent": {"stop_reason": "done", "rounds": 1}}
+            def start_run():
+                with server.app.test_client() as client:
+                    response_box.append(client.post("/api/run", json={"frame": 1, "count": 1,
+                                                                        "description": description}))
+            worker = threading.Thread(target=start_run)
+            try:
+                with patch.object(server, "run", side_effect=blocked_run):
+                    worker.start()
+                    self.assertTrue(entered.wait(2))
+                    self.assertEqual(server.app.test_client().get("/api/state").status_code, 200)
+                    self.assertTrue(server.app.test_client().post("/api/run/stop").json["stopped"])
+                    release.set()
+                    worker.join(4)
+                self.assertFalse(worker.is_alive())
+                self.assertTrue(response_box[0].json["stopped"])
+                self.assertNotIn("1", server.state["candidates"])
+                self.assertNotIn("1", server.state["agent_runs"])
+            finally:
+                release.set()
+                if worker.ident is not None:
+                    worker.join(4)
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_run_rejects_stale_target_and_preserves_completed_frame(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        entered, release = threading.Event(), threading.Event()
+        responses = []
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                "config": {}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            description = {"description": "a only", "prompts": [{"label": "a", "text": "a"}],
+                           "reference_signature": server.reference_signature(0)}
+            calls = []
+            def blocked_run(*args, **kwargs):
+                calls.append(1)
+                if len(calls) == 2:
+                    entered.set()
+                    self.assertTrue(release.wait(3))
+                return {"shapes": [shape()], "candidates_added": 1, "applied": [],
+                    "review_queue": [], "agent": {"stop_reason": "done", "rounds": 1}}
+            def start_run():
+                with server.app.test_client() as client:
+                    responses.append(client.post("/api/run", json={"frame": 1, "count": 3,
+                                                                      "description": description}))
+            worker = threading.Thread(target=start_run)
+            try:
+                with patch.object(server, "run", side_effect=blocked_run):
+                    worker.start()
+                    self.assertTrue(entered.wait(2))
+                    with server.lock:
+                        server.state["candidates"]["2"] = [shape(99)]
+                    release.set()
+                    worker.join(4)
+                self.assertFalse(worker.is_alive())
+                self.assertEqual(responses[0].status_code, 409, responses[0].json)
+                self.assertIn("1", server.state["candidates"])
+                self.assertEqual(server.state["candidates"]["2"], [shape(99)])
+            finally:
+                release.set()
+                if worker.ident is not None:
+                    worker.join(4)
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_run_rejects_concurrent_scope_config_truth_reference_labels_and_run_changes(self):
+        mutations = {
+            "scope": lambda: server.state.update(topic="camera1"),
+            "video": lambda: server.state.update(video=FakeVideo()),
+            "config": lambda: server.state["config"].update(llm_key="new-key"),
+            "labels": lambda: server.state["labels"].append("b"),
+            "auto_labels": lambda: server.state.update(auto_labels=["a"]),
+            "truth": lambda: server.state["truth"].update({"1": [shape(77)]}),
+            "reference_truth": lambda: server.state["truth"]["0"].append(shape(2)),
+            "references": lambda: server.state["reference_frames"].update(camera0=[0, 2]),
+            "candidate": lambda: server.state["candidates"].update({"1": [shape(88)]}),
+            "run": lambda: server.state["agent_runs"].update({"1": {"manual": True}}),
+        }
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        for name, mutate in mutations.items():
+            with self.subTest(change=name), tempfile.TemporaryDirectory() as directory:
+                entered, release = threading.Event(), threading.Event()
+                responses = []
+                server.WORK = Path(directory)
+                server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                    "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                    "config": {"llm_key": "captured-key"}, "candidates": {}, "agent_runs": {}}
+                server.run_status = {"status": "idle"}
+                description = {"description": "a only", "prompts": [{"label": "a", "text": "a"}],
+                               "reference_signature": server.reference_signature(0)}
+                def blocked_run(config, *args, **kwargs):
+                    entered.set()
+                    self.assertTrue(release.wait(4))
+                    callback = workflow._trace_callback.get()
+                    callback({"id": "snapshot", "message": "captured-key"})
+                    self.assertEqual(config["llm_key"], "captured-key")
+                    return {"shapes": [shape()], "candidates_added": 1, "applied": [],
+                        "review_queue": [], "agent": {"stop_reason": "done", "rounds": 1}}
+                def start_run():
+                    with server.app.test_client() as client:
+                        responses.append(client.post("/api/run", json={"frame": 1, "count": 1,
+                                                                          "description": description}))
+                worker = threading.Thread(target=start_run)
+                try:
+                    with patch.object(server, "run", side_effect=blocked_run):
+                        worker.start()
+                        self.assertTrue(entered.wait(2))
+                        with server.lock:
+                            mutate()
+                            expected_candidates = copy.deepcopy(server.state["candidates"])
+                            expected_runs = copy.deepcopy(server.state["agent_runs"])
+                            expected_truth = copy.deepcopy(server.state["truth"])
+                        release.set()
+                        worker.join(5)
+                    self.assertFalse(worker.is_alive())
+                    self.assertEqual(responses[0].status_code, 409, responses[0].json)
+                    self.assertEqual(server.state["candidates"], expected_candidates)
+                    self.assertEqual(server.state["agent_runs"], expected_runs)
+                    self.assertEqual(server.state["truth"], expected_truth)
+                    trace = json.loads((server.WORK / "model_debug.json").read_text())["trace"][0]
+                    self.assertEqual(trace["topic"], "camera0")
+                    self.assertEqual(trace["message"], "[REDACTED]")
+                finally:
+                    release.set()
+                    if worker.ident is not None:
+                        worker.join(5)
+                    server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_state_read_waits_for_atomic_mutation_even_without_pending_reviews(self):
+        old_state = server.state
+        server.state = {"video": None, "topic": None, "labels": [], "truth": {},
+                        "reference_frames": {}, "config": {}, "candidates": {},
+                        "agent_runs": {}, "human_review_transactions": {"done": {"status": "committed"}}}
+        acquired, release, finished = threading.Event(), threading.Event(), threading.Event()
+        responses = []
+        def hold_lock():
+            with server.lock:
+                acquired.set()
+                release.wait(5)
+        def read_state():
+            try:
+                with server.app.test_request_context("/api/state"):
+                    responses.append(server.get_state().status_code)
+            finally:
+                finished.set()
+        holder = threading.Thread(target=hold_lock)
+        reader = threading.Thread(target=read_state)
+        holder.start()
+        try:
+            self.assertTrue(acquired.wait(2))
+            reader.start()
+            self.assertFalse(finished.wait(0.1), "state read escaped the mutation lock")
+            release.set()
+            self.assertTrue(finished.wait(2), "state read did not resume after mutation")
+            self.assertEqual(responses, [200])
+        finally:
+            release.set()
+            holder.join(5)
+            if reader.ident is not None:
+                reader.join(5)
+            server.state = old_state
+
+    def test_reference_draft_inference_allows_state_reads_and_guards_commit(self):
+        old_state, old_status, old_work, old_stop = (server.state, server.run_status,
+                                                     server.WORK, server.run_stop_event)
+        cases = [(stage, "success") for stage in ("discover", "describe", "run", "audit")]
+        cases += [("run", change) for change in ("video", "topic", "config", "labels",
+                  "candidates", "agent_runs", "truth", "reference_frames", "stop")]
+        try:
+            for stage, change in cases:
+                with self.subTest(stage=stage, change=change), tempfile.TemporaryDirectory() as directory:
+                    server.WORK = Path(directory)
+                    server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+                        "truth": {}, "reference_frames": {}, "config": {"llm_model": "test"},
+                        "candidates": {}, "agent_runs": {}}
+                    server.run_status = {"status": "idle"}
+                    server.run_stop_event = threading.Event()
+                    entered, release, read_finished = threading.Event(), threading.Event(), threading.Event()
+                    responses, reads = [], []
+                    discovery = {"visible_labels": ["person"], "uncertain_labels": [],
+                                 "unknown_candidates": []}
+                    description = {"description": "person", "prompts": []}
+                    result = {"shapes": [shape(label="person")], "candidates_added": 1,
+                              "applied": [], "review_queue": [],
+                              "agent": {"stop_reason": "done", "rounds": 1, "audit": []}}
+                    def block(name, value):
+                        def invoke(*args, **kwargs):
+                            if name == stage:
+                                entered.set()
+                                if not release.wait(5):
+                                    raise RuntimeError("测试推理等待超时")
+                            return value
+                        return invoke
+                    def start():
+                        responses.append(server.app.test_client().post("/api/reference_draft", json={
+                            "frame": 1, "auto_detect_visible": True}))
+                    def read_state():
+                        try:
+                            reads.append(server.app.test_client().get("/api/state"))
+                        finally:
+                            read_finished.set()
+                    worker, reader = threading.Thread(target=start), threading.Thread(target=read_state)
+                    try:
+                        with patch.object(server, "discover_reference_labels", side_effect=block("discover", (discovery, 0))), \
+                             patch.object(server, "describe", side_effect=block("describe", description)), \
+                             patch.object(server, "run", side_effect=block("run", result)), \
+                             patch.object(server, "audit_high_risk_candidates", side_effect=block("audit", ([], []))):
+                            worker.start()
+                            self.assertTrue(entered.wait(3), "未进入模拟推理")
+                            reader.start()
+                            self.assertTrue(read_finished.wait(3), "推理期间状态读取被阻塞")
+                            self.assertEqual(reads[0].status_code, 200)
+                            with server.lock:
+                                if change == "video":
+                                    server.state["video"] = FakeVideo()
+                                elif change == "topic":
+                                    server.state["topic"] = "camera1"
+                                elif change == "config":
+                                    server.state["config"]["llm_model"] = "changed"
+                                elif change == "labels":
+                                    server.state["labels"].append("other")
+                                elif change in ("candidates", "agent_runs", "truth"):
+                                    server.state[change]["1"] = {"changed": True} if change == "agent_runs" else [{"changed": True}]
+                                elif change == "reference_frames":
+                                    server.state[change]["camera0"] = [1]
+                            if change == "stop":
+                                self.assertTrue(server.app.test_client().post("/api/run/stop").json["stopped"])
+                            before_candidates = copy.deepcopy(server.state["candidates"])
+                            before_runs = copy.deepcopy(server.state["agent_runs"])
+                            release.set()
+                            worker.join(5)
+                            self.assertFalse(worker.is_alive())
+                        self.assertEqual(len(responses), 1)
+                        if change == "success":
+                            self.assertEqual(responses[0].status_code, 200, responses[0].json)
+                            self.assertIn("1", server.state["candidates"])
+                        else:
+                            self.assertEqual(server.state["candidates"], before_candidates)
+                            self.assertEqual(server.state["agent_runs"], before_runs)
+                            if change == "stop":
+                                self.assertTrue(responses[0].json["stopped"])
+                                self.assertEqual(server.run_status["status"], "stopped")
+                            else:
+                                self.assertEqual(responses[0].status_code, 409, responses[0].json)
+                                self.assertEqual(server.run_status["status"], "failed")
+                    finally:
+                        release.set()
+                        if worker.ident is not None:
+                            worker.join(5)
+                        if reader.ident is not None:
+                            reader.join(5)
+        finally:
+            server.state, server.run_status, server.WORK, server.run_stop_event = (
+                old_state, old_status, old_work, old_stop)
+
+    def test_state_read_recovers_pending_review_under_lock(self):
+        old_state, old_work = server.state, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": None, "topic": None, "labels": [], "truth": {},
+                            "reference_frames": {}, "config": {}, "candidates": {},
+                            "agent_runs": {}, "human_review_transactions": {}}
+            try:
+                transaction = {"status": "state_saved_pending_audit"}
+                server.state["human_review_transactions"]["pending"] = transaction
+                audit_folder = server.WORK / "human_reviews"
+                audit_folder.mkdir()
+                (audit_folder / "record-pending.json").write_text("{}", encoding="utf-8")
+                original_save = server.save
+                def check_save():
+                    self.assertTrue(server.lock._is_owned())
+                    original_save()
+                with patch.object(server, "save", side_effect=check_save) as saved:
+                    response = server.app.test_client().get("/api/state")
+                self.assertEqual(response.status_code, 200)
+                saved.assert_called_once()
+                self.assertEqual(transaction["status"], "committed")
+                self.assertEqual(transaction["audit_file"], "record-pending.json")
+                persisted = json.loads((server.WORK / "state.json").read_text(encoding="utf-8"))
+                self.assertEqual(persisted["human_review_transactions"]["pending"], transaction)
+                (audit_folder / "record-pending.json").unlink()
+                (server.WORK / "state.json").unlink()
+            finally:
+                server.state, server.WORK = old_state, old_work
+
+    def test_visibility_queue_preserves_conflict_even_with_candidate(self):
+        flag = {"label": "other_robot", "reason_code": "vlm_cross_label_entity_conflict",
+                "route": "human_review_required", "conflicting_labels": ["车辆", "other_robot"],
+                "shared_anchor": [700, 450]}
+        discovery = {"uncertain_labels": ["other_robot"], "consistency_flags": [flag]}
+        queue = server.reference_visibility_review_queue(discovery, [shape(label="other_robot")])
+        conflicts = [item for item in queue if item["reason_code"] == flag["reason_code"]]
+        self.assertEqual(len(conflicts), 1)
+        self.assertEqual(len(queue), 1)
+        self.assertTrue(conflicts[0]["candidate_available"])
+        self.assertEqual(conflicts[0]["evidence"], flag)
+        conflicts[0]["evidence"]["shared_anchor"][0] = 0
+        self.assertEqual(flag["shared_anchor"], [700, 450])
+
+    def test_point_segment_has_bounded_timeout_and_elapsed_receipt(self):
+        old_state = server.state
+        server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+            "truth": {}, "reference_frames": {}, "config": {}, "candidates": {}, "agent_runs": {}}
+        payload = {"points": [[1, 1], [2, 1], [2, 2]], "holes": [],
+                   "parts": [{"points": [[1, 1], [2, 1], [2, 2]], "holes": []}]}
+        try:
+            with patch.object(server.urllib.request, "urlopen",
+                              return_value=io.BytesIO(json.dumps(payload).encode())) as opened:
+                response = server.app.test_client().post("/api/segment_points", json={
+                    "frame": 1, "points": [{"x": 1, "y": 1, "label": 1}]})
+            self.assertEqual(response.status_code, 200, response.json)
+            self.assertGreaterEqual(response.json["inference_elapsed_seconds"], 0)
+            self.assertEqual(opened.call_args.kwargs["timeout"], 180)
+        finally:
+            server.state = old_state
+
+    def test_point_segment_rejects_duplicate_concurrent_request(self):
+        old_state = server.state
+        server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+            "truth": {}, "reference_frames": {}, "config": {}, "candidates": {}, "agent_runs": {}}
+        self.assertTrue(server.point_segment_lock.acquire(blocking=False))
+        try:
+            response = server.app.test_client().post("/api/segment_points", json={
+                "frame": 1, "points": [{"x": 1, "y": 1, "label": 1}]})
+            self.assertEqual(response.status_code, 503, response.json)
+            self.assertIn("请勿重复点击", response.json["error"])
+        finally:
+            server.point_segment_lock.release()
+            server.state = old_state
+
+    def test_reference_draft_releases_lock_and_rejects_stale_commits(self):
+        mutations = {
+            "unchanged": None,
+            "candidate": lambda: server.state["candidates"].update({"1": [shape(label="person")]}),
+            "agent_run": lambda: server.state["agent_runs"].update({"1": {"manual": True}}),
+            "topic": lambda: server.state.update(topic="camera1"),
+            "video": lambda: server.state.update(video=FakeVideo()),
+            "config": lambda: server.state["config"].update(llm_model="changed"),
+            "credential": lambda: server.state["config"].update(llm_key="changed-key"),
+            "labels": lambda: server.state["labels"].append("new-label"),
+            "truth": lambda: server.state["truth"].update({"1": [shape(label="person")]}),
+            "reference": lambda: server.state["reference_frames"].update(camera0=[1]),
+            "audit_version": lambda: setattr(server, "_CANDIDATE_AUDIT_LOADED_CODE_SHA256", "changed"),
+            "cancel": lambda: server.app.test_client().post("/api/run/stop"),
+        }
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        old_stop = server.run_stop_event
+        old_protocol = server._CANDIDATE_AUDIT_LOADED_CODE_SHA256
+        try:
+            for stage in ("describe", "audit"):
+                for name, mutate in mutations.items():
+                    with self.subTest(stage=stage, mutation=name), tempfile.TemporaryDirectory() as directory:
+                        server.WORK = Path(directory)
+                        server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+                            "truth": {}, "reference_frames": {}, "config": {"llm_model": "test-vlm"},
+                            "candidates": {}, "agent_runs": {}}
+                        server.run_status = {"status": "idle"}
+                        server.run_stop_event = threading.Event()
+                        server._CANDIDATE_AUDIT_LOADED_CODE_SHA256 = old_protocol
+                        entered, release, finished = (threading.Event() for _ in range(3))
+                        responses, errors = [], []
+                        result = {"shapes": [shape(label="person")], "candidates_added": 1,
+                            "applied": [], "review_queue": [], "agent": {"stop_reason": "done"}}
+                        def block_model(*args, **kwargs):
+                            entered.set()
+                            if not release.wait(5):
+                                raise RuntimeError("测试未释放模型")
+                            return ({"description": "people", "prompts": []}
+                                    if stage == "describe" else ([], []))
+                        def draft():
+                            try:
+                                responses.append(server.app.test_client().post("/api/reference_draft",
+                                    json={"frame": 1, "labels": ["person"]}))
+                            except Exception as error:
+                                errors.append(error)
+                            finally:
+                                finished.set()
+                        worker = threading.Thread(target=draft)
+                        with patch.object(server, "describe", side_effect=(block_model if stage == "describe"
+                                else lambda *args, **kwargs: {"description": "people", "prompts": []})), \
+                             patch.object(server, "run", return_value=result), \
+                             patch.object(server, "audit_high_risk_candidates", side_effect=(block_model
+                                if stage == "audit" else lambda *args, **kwargs: ([], []))):
+                            worker.start()
+                            try:
+                                self.assertTrue(entered.wait(2), "模型未进入阻塞点")
+                                state_done, state_responses = threading.Event(), []
+                                def read_state():
+                                    try:
+                                        state_responses.append(server.app.test_client().get("/api/state"))
+                                    finally:
+                                        state_done.set()
+                                reader = threading.Thread(target=read_state)
+                                reader.start()
+                                self.assertTrue(state_done.wait(2), "模型运行时状态接口被阻塞")
+                                reader.join(2)
+                                self.assertEqual(state_responses[0].status_code, 200)
+                                self.assertEqual(state_responses[0].json["candidates"], {})
+                                self.assertEqual(state_responses[0].json["agent_runs"], {})
+                                duplicate = server.app.test_client().post("/api/reference_draft",
+                                    json={"frame": 1, "labels": ["person"]})
+                                self.assertEqual(duplicate.status_code, 503)
+                                if mutate:
+                                    with server.lock:
+                                        mutate()
+                                expected_candidates = copy.deepcopy(server.state["candidates"])
+                                expected_runs = copy.deepcopy(server.state["agent_runs"])
+                            finally:
+                                release.set()
+                                worker.join(5)
+                            self.assertTrue(finished.is_set(), "草稿线程未退出")
+                            self.assertEqual(errors, [])
+                            response = responses[0]
+                            if name == "unchanged":
+                                self.assertEqual(response.status_code, 200, response.json)
+                                self.assertEqual(server.run_status["status"], "completed")
+                            elif name == "cancel":
+                                self.assertEqual(response.status_code, 200, response.json)
+                                self.assertTrue(response.json["stopped"])
+                                self.assertEqual(server.run_status["status"], "stopped")
+                            else:
+                                self.assertEqual(response.status_code, 409, response.json)
+                                self.assertTrue(response.json["stale_review"])
+                            if name != "unchanged":
+                                self.assertEqual(server.state["candidates"], expected_candidates)
+                                self.assertEqual(server.state["agent_runs"], expected_runs)
+                                self.assertFalse((server.WORK / "state.json").exists())
+                                self.assertEqual(server.state.get("candidate_revisions", {}), {})
+        finally:
+            server.state, server.run_status, server.WORK = old_state, old_status, old_work
+            server.run_stop_event = old_stop
+            server._CANDIDATE_AUDIT_LOADED_CODE_SHA256 = old_protocol
+
+    def test_reference_draft_records_candidate_only_provenance(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+                "truth": {}, "reference_frames": {}, "config": {"llm_model": "test-vlm"},
+                "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            generated = shape(label="person")
+            result = {"shapes": [generated], "candidates_added": 1, "applied": [],
+                "review_queue": [], "agent": {"converged": False, "rounds": 1,
+                "max_rounds": 100, "stop_reason": "no_progress", "audit": []}}
+            try:
+                with patch.object(server, "describe", return_value={"description": "people",
+                        "prompts": [{"label": "person", "text": "person"}]}), \
+                     patch.object(server, "run", return_value=result):
+                    response = server.app.test_client().post("/api/reference_draft", json={
+                        "frame": 1, "labels": ["person"]})
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertTrue(response.json["candidate_only"])
+                self.assertFalse(response.json["human_truth"])
+                self.assertFalse(response.json["approved_for_training"])
+                self.assertEqual(len(response.json["input_sha256"]), 64)
+                self.assertEqual(len(response.json["candidate_event_id"]), 64)
+                self.assertEqual(len(response.json["candidate_request_id"]), 64)
+                self.assertEqual(len(response.json["candidate_output_sha256"]), 64)
+                self.assertEqual(len(response.json["candidate_artifact_sha256"]), 64)
+                candidate = server.state["candidates"]["1"][0]
+                self.assertTrue(candidate["candidate_only"])
+                self.assertFalse(candidate["human_truth"])
+                self.assertFalse(candidate["approved_for_training"])
+                self.assertEqual(candidate["provenance"]["pipeline"], "sam_vlm_agent")
+                self.assertEqual(candidate["provenance"]["candidate_request_id"],
+                                 response.json["candidate_request_id"])
+                self.assertEqual(candidate["provenance"]["candidate_output_sha256"],
+                                 response.json["candidate_output_sha256"])
+                self.assertEqual(candidate["provenance"]["sam_prompts"], [
+                    {"label": "person", "text": "person"}])
+                self.assertEqual(server.state["truth"], {})
+                self.assertEqual(server.state["reference_frames"], {})
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_reference_draft_rerun_archives_prior_candidates_and_audit_append_only(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            prior_candidate = shape(label="person", left=2, right=12)
+            prior_candidates = [prior_candidate]
+            prior_sha = server._sha256_json(prior_candidates)
+            prior_run = {"candidate_event_id": "a" * 64,
+                         "candidate_artifact_sha256": prior_sha,
+                         "stop_reason": "done", "rounds": 1, "audit": [{"round": 1}]}
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+                "truth": {}, "reference_frames": {}, "config": {"llm_model": "test-vlm"},
+                "candidates": {"1": copy.deepcopy(prior_candidates)},
+                "agent_runs": {"1": copy.deepcopy(prior_run)}, "candidate_revisions": {}}
+            server.run_status = {"status": "idle"}
+            generated = shape(label="person", left=4, right=18)
+            result = {"shapes": [generated], "candidates_added": 1, "applied": [],
+                "review_queue": [], "agent": {"converged": False, "rounds": 1,
+                "max_rounds": 100, "stop_reason": "no_progress", "audit": []}}
+            try:
+                with patch.object(server, "describe", return_value={"description": "people",
+                        "prompts": [{"label": "person", "text": "person"}]}), \
+                     patch.object(server, "run", return_value=result):
+                    response = server.app.test_client().post("/api/reference_draft", json={
+                        "frame": 1, "labels": ["person"]})
+                self.assertEqual(response.status_code, 200, response.json)
+                revisions = server.state["candidate_revisions"]["1"]
+                self.assertEqual(len(revisions), 1)
+                revision = revisions[0]
+                self.assertEqual(response.json["prior_candidate_revision_id"], revision["revision_id"])
+                self.assertEqual(response.json["candidate_revision_count"], 1)
+                self.assertEqual(revision["prior_candidates"], prior_candidates)
+                self.assertEqual(revision["prior_agent_run"], prior_run)
+                self.assertEqual(revision["prior_candidate_artifact_sha256"], prior_sha)
+                self.assertTrue(revision["prior_artifact_integrity_match"])
+                self.assertTrue(revision["candidate_only"])
+                self.assertFalse(revision["human_truth"])
+                self.assertFalse(revision["approved_for_training"])
+                self.assertNotEqual(response.json["candidate_event_id"],
+                                    prior_run["candidate_event_id"])
+                self.assertEqual(server.state["truth"], {})
+                state_response = server.app.test_client().get("/api/state")
+                summary = state_response.json["candidate_revision_summary"]["1"][0]
+                self.assertEqual(summary["revision_id"], revision["revision_id"])
+                self.assertNotIn("prior_candidates", summary)
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_reference_candidate_event_id_changes_with_output_not_stable_request(self):
+        request_id = "a" * 64
+        first = server.reference_candidate_event_id(request_id, "b" * 64)
+        replay = server.reference_candidate_event_id(request_id, "b" * 64)
+        changed = server.reference_candidate_event_id(request_id, "c" * 64)
+        self.assertEqual(first, replay)
+        self.assertNotEqual(first, changed)
+        self.assertEqual(len(first), 64)
+
+    def test_reference_draft_auto_discovers_visible_labels_before_sam(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0",
+                "labels": ["person", "pallet", "slope"], "truth": {}, "reference_frames": {},
+                "config": {"llm_model": "test-vlm"}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            discovery = {"assessments": [
+                    {"label": "person", "evidence": "present", "confidence": .95, "reason": "visible"},
+                    {"label": "pallet", "evidence": "absent", "confidence": .91, "reason": "absent"},
+                    {"label": "slope", "evidence": "uncertain", "confidence": .51, "reason": "occluded"}],
+                "visible_labels": ["person"], "uncertain_labels": ["slope"],
+                "unknown_candidates": [{"candidate_name": "rack", "evidence": "visible rack",
+                    "confidence": .7, "route": "human_review_required",
+                    "ontology_mutation_allowed": False}], "registry_mutated": False}
+            generated = shape(label="person")
+            result = {"shapes": [generated], "candidates_added": 1, "applied": [],
+                "review_queue": [], "agent": {"stop_reason": "done", "rounds": 1, "audit": []}}
+            try:
+                with patch.object(server, "discover_visible_labels", return_value=discovery) as discover_mock, \
+                     patch.object(server, "describe", return_value={"description": "person",
+                        "prompts": [{"label": "person", "text": "person"}]}) as describe_mock, \
+                     patch.object(server, "run", return_value=result) as run_mock:
+                    response = server.app.test_client().post("/api/reference_draft", json={
+                        "frame": 1, "auto_detect_visible": True})
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertTrue(response.json["auto_detect_visible"])
+                self.assertEqual(response.json["labels"], ["person", "slope"])
+                self.assertTrue(response.json["human_review_required"])
+                self.assertEqual(response.json["visible_label_discovery"]["uncertain_labels"], ["slope"])
+                self.assertFalse(response.json["visible_label_discovery"]["unknown_candidates"][0]
+                                 ["ontology_mutation_allowed"])
+                discover_mock.assert_called_once()
+                self.assertEqual(discover_mock.call_args.args[2], ["person", "pallet", "slope"])
+                self.assertEqual(describe_mock.call_args.args[3], ["person", "slope"])
+                self.assertEqual(run_mock.call_args.args[3], ["person", "slope"])
+                queue = server.state["agent_runs"]["1"]["review_queue"]
+                self.assertIn({
+                    "label": "slope", "reason_code": "vlm_visibility_uncertain",
+                    "route": "human_review_required", "source": "visible_label_discovery",
+                    "candidate_available": False}, queue)
+                self.assertTrue(any(item["reason_code"] == "vlm_unknown_candidate" for item in queue))
+                class_review = next(item for item in queue
+                                    if item.get("source") == "candidate_class_audit")
+                self.assertEqual(class_review["shape_ids"], [generated["id"]])
+                self.assertEqual(class_review["candidate_artifact_sha256"],
+                                 response.json["candidate_artifact_sha256"])
+                self.assertEqual(server.state["truth"], {})
+                self.assertEqual(server.state["reference_frames"], {})
+                self.assertTrue(server.state["candidates"]["1"][0]["candidate_only"])
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_reference_draft_auto_detection_without_visible_known_label_fails_closed(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+                "truth": {}, "reference_frames": {}, "config": {}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            discovery = {"assessments": [{"label": "person", "evidence": "absent",
+                "confidence": .9, "reason": "absent"}], "visible_labels": [], "uncertain_labels": [],
+                "unknown_candidates": [], "registry_mutated": False}
+            try:
+                with patch.object(server, "discover_visible_labels", return_value=discovery), \
+                     patch.object(server, "describe") as describe_mock, patch.object(server, "run") as run_mock:
+                    response = server.app.test_client().post("/api/reference_draft", json={
+                        "frame": 1, "auto_detect_visible": True})
+                self.assertEqual(response.status_code, 400, response.json)
+                self.assertIn("未发现可生成候选的已知类别", response.json["error"])
+                describe_mock.assert_not_called(); run_mock.assert_not_called()
+                self.assertEqual(server.state["candidates"], {})
+                self.assertEqual(server.state["truth"], {})
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
     def test_stop_endpoint_terminates_active_run_without_saving_partial_frame(self):
         old_state, old_status, old_work, old_stop = server.state, server.run_status, server.WORK, server.run_stop_event
         entered = threading.Event()
@@ -969,6 +2095,56 @@ class ServerTests(unittest.TestCase):
                 self.assertEqual(json.loads(path.read_text()), {"previous": True})
             finally:
                 server.state = previous
+
+    def test_auto_labels_can_run_unreferenced_classes_as_a_separate_batch(self):
+        previous = server.state
+        with tempfile.TemporaryDirectory() as directory, patch.object(server, "WORK", Path(directory)):
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a", "b"],
+                "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                "config": {}, "candidates": {}, "agent_runs": {}}
+            try:
+                before = server.reference_signature(0)
+                client = server.app.test_client()
+                response = client.post("/api/auto_labels", json={"labels": ["a", "b"]})
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertEqual(response.json["labels"], ["a", "b"])
+                self.assertNotEqual(before, server.reference_signature(0))
+                state = client.get("/api/state").json
+                self.assertEqual(state["auto_labels"], ["a", "b"])
+                self.assertEqual(state["reference_only_labels"], ["a"])
+                separate = client.post("/api/auto_labels", json={"labels": ["b"]})
+                self.assertEqual(separate.status_code, 200, separate.json)
+                self.assertEqual(separate.json["labels"], ["b"])
+            finally:
+                server.state = previous
+
+    def test_separate_class_batch_preserves_other_class_candidates(self):
+        existing = [{"label": "pallet", "points": [[0, 0], [2, 0], [2, 2]]},
+                    {"label": "floor", "points": [[0, 0], [3, 0], [3, 3]]}]
+        generated = [{"label": "floor", "points": [[1, 1], [4, 1], [4, 4]]},
+                     {"label": "ego", "points": [[2, 2], [5, 2], [5, 5]]}]
+        merged = server.merge_inference_candidates(existing, generated, ["floor", "ego"])
+        self.assertEqual([shape["label"] for shape in merged], ["pallet", "floor", "ego"])
+        self.assertEqual(merged[1:], generated)
+
+    def test_describe_can_generate_prompts_for_unreferenced_selected_classes(self):
+        response = {"description": "Reference class a; class b has no reference contour.",
+                    "prompts": [{"label": "a", "text": "class a"},
+                                {"label": "b", "text": "class b"}]}
+        with patch.object(workflow, "chat", return_value=response) as chat:
+            result = workflow.describe({}, b"image", [shape()], ["a", "b"],
+                                       include_unreferenced=True)
+        self.assertEqual([item["label"] for item in result["prompts"]], ["a", "b"])
+        self.assertIn('"b"', chat.call_args.args[1])
+        self.assertIn("没有参考轮廓", chat.call_args.args[1])
+
+    def test_describe_can_use_only_unreferenced_selected_classes(self):
+        response = {"description": "Class b uses a generic object rule.",
+                    "prompts": [{"label": "b", "text": "class b"}]}
+        with patch.object(workflow, "chat", return_value=response) as chat:
+            result = workflow.describe({}, b"image", [], ["b"], include_unreferenced=True)
+        self.assertEqual(result["prompts"], [{"label": "b", "text": "class b"}])
+        self.assertIn('"b"', chat.call_args.args[1])
 
     def test_one_frame_starts_at_current_frame_and_uses_reference(self):
         old_state, old_status, old_work = server.state, server.run_status, server.WORK

@@ -127,9 +127,18 @@ def _candidate_gap_regions(shape, width, height):
 def _valid_region(points, width, height):
     if not isinstance(points, list) or not 3 <= len(points) <= 2000:
         return False
-    return all(isinstance(point, list) and len(point) == 2 and
+    if not all(isinstance(point, list) and len(point) == 2 and
                all(isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value) for value in point) and
-               0 <= point[0] < width and 0 <= point[1] < height for point in points)
+               0 <= point[0] < width and 0 <= point[1] < height for point in points):
+        return False
+    # A list with three entries is not necessarily a polygon: model output can
+    # repeat the same vertex or return a collinear line.  OpenCV silently accepts
+    # both, which previously made an invalid local repair look successfully
+    # applied.  Require three distinct vertices and at least half a pixel of
+    # geometric area before any edit is allowed to reach the rasterizer.
+    if len({(float(point[0]), float(point[1])) for point in points}) < 3:
+        return False
+    return abs(float(cv2.contourArea(np.asarray(points, dtype=np.float32)))) >= 0.5
 
 
 def valid_shape(shape, width, height):

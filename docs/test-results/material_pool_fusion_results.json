@@ -1,0 +1,170 @@
+{
+  "status": "complete_no_additional_instance_gain_not_expanded",
+  "observed_utc": "2026-11-04T10:13:36.725791+00:00",
+  "tests_passed": 368,
+  "tests_skipped": 0,
+  "images": 20,
+  "added_pool_rasters": 261,
+  "source_counts": {
+    "wooden": {
+      "added": 98,
+      "duplicate": 0,
+      "low_score": 0,
+      "non_pallet": 39
+    },
+    "plastic": {
+      "added": 57,
+      "duplicate": 0,
+      "low_score": 0,
+      "non_pallet": 39
+    },
+    "pallet_base": {
+      "added": 106,
+      "duplicate": 0,
+      "low_score": 0,
+      "non_pallet": 39
+    }
+  },
+  "original_pool_prefixes_exact": true,
+  "old_four_selected_prefixes_exact": true,
+  "all_prediction_reference_files_opened": 0,
+  "all_prediction_approved_reference_files_opened": 0,
+  "new_model_calls": 0,
+  "minimum_extra_raw3_points": 1,
+  "source_order": [
+    "wooden",
+    "plastic",
+    "pallet_base"
+  ],
+  "primary_matched": 77,
+  "current_accepted_matched": 77,
+  "reference_objects": 118,
+  "pallet_points_covered": 5179,
+  "person_cross_class_points": 55,
+  "pallet_candidates": 214,
+  "union_pixels": 836921,
+  "selected_from_new_material_sources": 3,
+  "all_classes_all_radii_point_counts_exact_every_image": true,
+  "per_image_vs_current": {
+    "better": 0,
+    "same": 20,
+    "worse": 0
+  },
+  "original_gate_rows": [
+    {
+      "method": "pallet_baseline",
+      "pallet_objects_matched": 68,
+      "pallet_reference_objects": 118,
+      "pallet_points_covered": 4993,
+      "pallet_reference_points": 6291,
+      "pallet_candidates": 143,
+      "pallet_union_pixels": 784762,
+      "person_points_covered_by_pallet": 49,
+      "person_reference_points": 11068,
+      "checks": {
+        "strict_instance_gain_over_previous_best": false,
+        "point_coverage_not_below_previous_best": false,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": false,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "passed_numeric_and_preservation_gates": false,
+      "raw_point_coverage_nonregression_every_image": false,
+      "eligible": false
+    },
+    {
+      "method": "four_crop_control",
+      "pallet_objects_matched": 75,
+      "pallet_reference_objects": 118,
+      "pallet_points_covered": 5179,
+      "pallet_reference_points": 6291,
+      "pallet_candidates": 190,
+      "pallet_union_pixels": 836336,
+      "person_points_covered_by_pallet": 55,
+      "person_reference_points": 11068,
+      "checks": {
+        "strict_instance_gain_over_previous_best": false,
+        "point_coverage_not_below_previous_best": true,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "passed_numeric_and_preservation_gates": false,
+      "raw_point_coverage_nonregression_every_image": true,
+      "eligible": false
+    },
+    {
+      "method": "global_all_radii_additions",
+      "pallet_objects_matched": 77,
+      "pallet_reference_objects": 118,
+      "pallet_points_covered": 5179,
+      "pallet_reference_points": 6291,
+      "pallet_candidates": 214,
+      "pallet_union_pixels": 836921,
+      "person_points_covered_by_pallet": 55,
+      "person_reference_points": 11068,
+      "checks": {
+        "strict_instance_gain_over_previous_best": true,
+        "point_coverage_not_below_previous_best": true,
+        "person_off_class_not_above_previous_best": true,
+        "original_minimum_two_percentage_point_gain": true,
+        "original_count_ratio_limit": true,
+        "original_union_area_limit": true,
+        "original_person_cross_class_limit": true,
+        "all_original_candidates_preserved": true
+      },
+      "passed_numeric_and_preservation_gates": true,
+      "raw_point_coverage_nonregression_every_image": true,
+      "eligible": true
+    }
+  ],
+  "qualifies_for_full_expansion": false,
+  "relaxed_ceiling": {
+    "status": "complete",
+    "images": 20,
+    "extra_candidates_in_relaxed_pool": 39,
+    "pallet_candidates": 229,
+    "current_accepted_3px_matches": 77,
+    "optimistic_upper_3px_matches": 77,
+    "possible_extra_3px_matches_above_current": 0,
+    "radii": {
+      "0": {
+        "objects": 75,
+        "reference_objects": 118,
+        "points": 4712,
+        "person_cross": 34
+      },
+      "3": {
+        "objects": 77,
+        "reference_objects": 118,
+        "points": 5179,
+        "person_cross": 55
+      },
+      "6": {
+        "objects": 79,
+        "reference_objects": 118,
+        "points": 5520,
+        "person_cross": 98
+      }
+    },
+    "all_classes_all_radii_point_counts_exact_vs_four_crop": true,
+    "input_bindings_unchanged": true,
+    "new_model_calls": 0,
+    "prediction_exports_created": false,
+    "adoptable_algorithm": false,
+    "reference_informed_diagnostic": true,
+    "scope": "Relaxed candidate matching ceiling; not an achieved method or independent accuracy"
+  },
+  "full_588_repeated": false,
+  "best_full_588_matched_unchanged": 2298,
+  "default_enabled": false,
+  "independent_accuracy_measured": false,
+  "fusion_plan_sha256": "f5a776c79205f66d82cf8ef8c97384f5fd6f69795133913d2fb4f42280316b1b",
+  "experiment_plan_sha256": "7b08a4babd72d01337e2b5fd3739c214b6b2cfc28c32ce7144e57449155c60ec"
+}

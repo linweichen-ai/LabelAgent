@@ -1,0 +1,866 @@
+{
+  "status": "complete_verified_positive_gain_but_safety_failed_not_enabled",
+  "observed_utc": "2026-11-04T15:29:28.294568+00:00",
+  "new_real_CUDA_calls": 59,
+  "quality_calls": 58,
+  "default_restore_guard_calls": 1,
+  "baseline_quality_responses_reused": 58,
+  "all29_cases_retained": true,
+  "all59_full_payload_bindings_verified": true,
+  "all58_actual_card_encodings_match256_768": true,
+  "default_restore_guard_actual_tokens": [
+    238
+  ],
+  "guard_full_request_identical_to_old_default_request": true,
+  "human_correct_before": 11,
+  "human_correct_after": 14,
+  "human_regions": 19,
+  "human_gained_regions": [
+    "region_09",
+    "region_10",
+    "region_13"
+  ],
+  "human_lost_regions": [],
+  "human_wrong_non_uncertain_consensus_regions": [
+    "region_06"
+  ],
+  "human_uncertain_consensus": 4,
+  "new_opposite_class_view_errors": [
+    {
+      "case_id": "region_06",
+      "view": "overview"
+    },
+    {
+      "case_id": "region_05",
+      "view": "linked"
+    }
+  ],
+  "human_correct_by_view": {
+    "overview": 16,
+    "linked": 14
+  },
+  "legacy_group_consensus": {
+    "blank_control": {
+      "pallet": 2
+    },
+    "pallet_fixture": {
+      "pallet": 4,
+      "uncertain": 1
+    },
+    "person_fixture": {
+      "person": 2
+    },
+    "suspected_non_pallet": {
+      "person": 1
+    }
+  },
+  "legacy_checks": {
+    "all_cases_have_valid_real_CUDA_responses": true,
+    "all_person_fixtures_agree_person": true,
+    "pallet_fixtures_never_called_person": false,
+    "minimum_pallet_consensus": true,
+    "blank_views_always_uncertain": false,
+    "suspected_non_target_never_accepted": false
+  },
+  "baseline_legacy_checks": {
+    "all_cases_have_valid_real_CUDA_responses": true,
+    "all_person_fixtures_agree_person": true,
+    "pallet_fixtures_never_called_person": false,
+    "minimum_pallet_consensus": false,
+    "blank_views_always_uncertain": false,
+    "suspected_non_target_never_accepted": false
+  },
+  "source_statistics": [
+    {
+      "case_id": "region_07",
+      "spatial_channel_ranges": [
+        185,
+        172,
+        171
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "region_08",
+      "spatial_channel_ranges": [
+        174,
+        162,
+        158
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "region_02",
+      "spatial_channel_ranges": [
+        141,
+        135,
+        138
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "region_19",
+      "spatial_channel_ranges": [
+        178,
+        171,
+        181
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "legacy_04",
+      "spatial_channel_ranges": [
+        0,
+        0,
+        0
+      ],
+      "exactly_uniform_source": true
+    },
+    {
+      "case_id": "region_16",
+      "spatial_channel_ranges": [
+        140,
+        147,
+        139
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "region_11",
+      "spatial_channel_ranges": [
+        254,
+        255,
+        254
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "region_09",
+      "spatial_channel_ranges": [
+        111,
+        105,
+        103
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "legacy_06",
+      "spatial_channel_ranges": [
+        146,
+        140,
+        147
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "region_01",
+      "spatial_channel_ranges": [
+        170,
+        166,
+        167
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "region_12",
+      "spatial_channel_ranges": [
+        165,
+        157,
+        157
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "region_03",
+      "spatial_channel_ranges": [
+        148,
+        135,
+        133
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "region_17",
+      "spatial_channel_ranges": [
+        181,
+        173,
+        172
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "region_13",
+      "spatial_channel_ranges": [
+        146,
+        148,
+        136
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "region_18",
+      "spatial_channel_ranges": [
+        184,
+        174,
+        177
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "region_15",
+      "spatial_channel_ranges": [
+        168,
+        152,
+        153
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "legacy_02",
+      "spatial_channel_ranges": [
+        243,
+        215,
+        207
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "region_10",
+      "spatial_channel_ranges": [
+        171,
+        164,
+        131
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "legacy_08",
+      "spatial_channel_ranges": [
+        143,
+        120,
+        135
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "region_06",
+      "spatial_channel_ranges": [
+        141,
+        136,
+        136
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "legacy_05",
+      "spatial_channel_ranges": [
+        134,
+        132,
+        136
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "region_14",
+      "spatial_channel_ranges": [
+        155,
+        155,
+        160
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "region_04",
+      "spatial_channel_ranges": [
+        188,
+        187,
+        189
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "legacy_01",
+      "spatial_channel_ranges": [
+        255,
+        255,
+        253
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "legacy_10",
+      "spatial_channel_ranges": [
+        175,
+        173,
+        175
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "legacy_09",
+      "spatial_channel_ranges": [
+        178,
+        165,
+        180
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "legacy_03",
+      "spatial_channel_ranges": [
+        0,
+        0,
+        0
+      ],
+      "exactly_uniform_source": true
+    },
+    {
+      "case_id": "legacy_07",
+      "spatial_channel_ranges": [
+        103,
+        103,
+        107
+      ],
+      "exactly_uniform_source": false
+    },
+    {
+      "case_id": "region_05",
+      "spatial_channel_ranges": [
+        139,
+        136,
+        136
+      ],
+      "exactly_uniform_source": false
+    }
+  ],
+  "A1": {
+    "overview": "uncertain",
+    "linked": "person",
+    "consensus": "uncertain",
+    "human_category_preserved": "pallet_visible_part"
+  },
+  "case_view_categories": [
+    {
+      "case_id": "region_07",
+      "view": "overview",
+      "category": "person",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "region_07",
+      "view": "linked",
+      "category": "person",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_08",
+      "view": "linked",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_08",
+      "view": "overview",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "region_02",
+      "view": "overview",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "region_02",
+      "view": "linked",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_19",
+      "view": "linked",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_19",
+      "view": "overview",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "legacy_04",
+      "view": "overview",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "legacy_04",
+      "view": "linked",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_16",
+      "view": "linked",
+      "category": "person",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_16",
+      "view": "overview",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "region_11",
+      "view": "overview",
+      "category": "person",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "region_11",
+      "view": "linked",
+      "category": "person",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_09",
+      "view": "linked",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_09",
+      "view": "overview",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "legacy_06",
+      "view": "overview",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "legacy_06",
+      "view": "linked",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_01",
+      "view": "linked",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_01",
+      "view": "overview",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "region_12",
+      "view": "overview",
+      "category": "uncertain",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "region_12",
+      "view": "linked",
+      "category": "person",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_03",
+      "view": "linked",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_03",
+      "view": "overview",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "region_17",
+      "view": "overview",
+      "category": "person",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "region_17",
+      "view": "linked",
+      "category": "person",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_13",
+      "view": "linked",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_13",
+      "view": "overview",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "region_18",
+      "view": "overview",
+      "category": "person",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "region_18",
+      "view": "linked",
+      "category": "person",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_15",
+      "view": "linked",
+      "category": "person",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_15",
+      "view": "overview",
+      "category": "uncertain",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "legacy_02",
+      "view": "overview",
+      "category": "person",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "legacy_02",
+      "view": "linked",
+      "category": "person",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_10",
+      "view": "linked",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_10",
+      "view": "overview",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "legacy_08",
+      "view": "overview",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "legacy_08",
+      "view": "linked",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_06",
+      "view": "linked",
+      "category": "person",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_06",
+      "view": "overview",
+      "category": "person",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "legacy_05",
+      "view": "overview",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "legacy_05",
+      "view": "linked",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_14",
+      "view": "linked",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "region_14",
+      "view": "overview",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "region_04",
+      "view": "overview",
+      "category": "person",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "region_04",
+      "view": "linked",
+      "category": "person",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "legacy_01",
+      "view": "linked",
+      "category": "person",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "legacy_01",
+      "view": "overview",
+      "category": "person",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "legacy_10",
+      "view": "overview",
+      "category": "person",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "legacy_10",
+      "view": "linked",
+      "category": "person",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "legacy_09",
+      "view": "linked",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "legacy_09",
+      "view": "overview",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "legacy_03",
+      "view": "overview",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "legacy_03",
+      "view": "linked",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "legacy_07",
+      "view": "linked",
+      "category": "person",
+      "actual_image_token_counts": [
+        768
+      ]
+    },
+    {
+      "case_id": "legacy_07",
+      "view": "overview",
+      "category": "uncertain",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "region_05",
+      "view": "overview",
+      "category": "pallet",
+      "actual_image_token_counts": [
+        256
+      ]
+    },
+    {
+      "case_id": "region_05",
+      "view": "linked",
+      "category": "person",
+      "actual_image_token_counts": [
+        768
+      ]
+    }
+  ],
+  "checks": {
+    "all59_new_responses_valid_real_CUDA": true,
+    "human_consensus_strictly_above11": true,
+    "no_previous_correct_human_region_lost": true,
+    "all5_confirmed_people_correct": true,
+    "no_new_opposite_class_view_error": false,
+    "all_original_legacy_checks_passed": false,
+    "default_budget_restored_measured_guard": true,
+    "state_unchanged": true,
+    "input_code_source_bindings_unchanged": true,
+    "plan_unchanged": true
+  },
+  "all_predeclared_checks_passed": false,
+  "peak_allocated_bytes_max": 2493554688,
+  "source_bindings_unchanged": true,
+  "model_weights_or_annotations_changed": false,
+  "independent_pixel_accuracy_measured": false,
+  "adopted": false,
+  "workbench_writes": false,
+  "new_SAM_calls": 0,
+  "summary_sha256": "3a80661938788c78c145eae93bf6f3581e9281c27079c97b0dbbb969dcfab15e",
+  "plan_sha256": "d17ef8a6edf084d73eb4d0b15d86086f82876fe16d37f7b1f8492c6231d3cfad",
+  "verification_script_sha256": "e52360547b7cfc85675f4fddb8c6680bd7f2d06682a7f3e03a48d9fd670c8e9f",
+  "scope": "Combined layout, context, prompts and measured token intervention on reused category fixtures; not independent segmentation accuracy",
+  "targeted_tests_passed": 4,
+  "layout": {
+    "overview_size": [
+      512,
+      512
+    ],
+    "linked_size": [
+      1536,
+      512
+    ],
+    "linked_panels": [
+      "selected pixels",
+      "source scene",
+      "selection outline"
+    ],
+    "display_resized": true,
+    "class_or_case_ID_rendered": false
+  },
+  "image_token_budgets": {
+    "overview": 256,
+    "linked": 768
+  },
+  "source_spatial_uniform_cases": [
+    "legacy_04",
+    "legacy_03"
+  ],
+  "baseline_cache_current_hash_readback": true,
+  "unique_evaluated_response_IDs": 117,
+  "workbench_state_unchanged": true,
+  "default_image_token_budget_restored": 256,
+  "legacy_six_category_review_requested": true,
+  "legacy_roles_changed_in_this_trial": false,
+  "original_3D_scores_or_thresholds_changed": false,
+  "verification_sha256": "c490c045870a97958068999b8cb41ba09582b973e82f16ff79f9a254145c67a4"
+}

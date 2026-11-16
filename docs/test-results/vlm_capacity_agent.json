@@ -1,0 +1,175 @@
+{
+  "scope": "isolated_production_Agent_functional_attempt_with_real_8B_not_converged",
+  "model": "Qwen3-VL-8B-Instruct NF4",
+  "topic_camera": 1,
+  "reference_frame": 0,
+  "reference_kind": "unconfirmed_functional_fixture",
+  "prompt_profile": "compact",
+  "frames": [
+    {
+      "frame": 76,
+      "seconds": 32.906,
+      "loop_completed": false,
+      "successful_vlm_calls": 1,
+      "successful_sam_calls": 2,
+      "rounds": 1,
+      "converged": false,
+      "stop_reason": "no_progress",
+      "generated_candidates": 11,
+      "remaining_candidates": 11,
+      "applied_edits": 0,
+      "multi_round_correction_observed": false,
+      "pixel_accuracy_evaluated": false,
+      "candidates_confirmed_as_truth": false
+    },
+    {
+      "frame": 151,
+      "seconds": 36.938,
+      "loop_completed": false,
+      "successful_vlm_calls": 1,
+      "successful_sam_calls": 2,
+      "rounds": 1,
+      "converged": false,
+      "stop_reason": "no_progress",
+      "generated_candidates": 21,
+      "remaining_candidates": 21,
+      "applied_edits": 0,
+      "multi_round_correction_observed": false,
+      "pixel_accuracy_evaluated": false,
+      "candidates_confirmed_as_truth": false
+    }
+  ],
+  "status": "incomplete",
+  "full_agent_verified": false,
+  "successful_real_VLM_calls_including_description": 3,
+  "successful_real_SAM3_calls": 4,
+  "no_change_reclassification_targets": 4,
+  "actual_applied_edits": 0,
+  "failure": "model requested person->person reclassification; no_progress guard correctly refused to count this as editing or convergence",
+  "total_seconds": 96.831,
+  "metric_version": 2,
+  "scoring_parameters": {
+    "radii_pixels": [
+      0,
+      3,
+      6
+    ],
+    "zbuffer_cell_pixels": 8,
+    "depth_slack_m": 0.15,
+    "near_plane_m": 0.2,
+    "minimum_unique_object_points": 5,
+    "reference_point_inside_box_tolerance_m": 0,
+    "one_to_one_object_support_threshold": 0.5,
+    "minimum_object_point_purity": 0.67,
+    "tuning_frames": [
+      15,
+      45,
+      76,
+      105,
+      135
+    ]
+  },
+  "baseline_sparse_reference": {
+    "pallet": {
+      "candidates": 26,
+      "reference_points": 694,
+      "reference_objects": 22,
+      "radii": {
+        "0": {
+          "covered_projected_points": 460,
+          "points_covered_by_other_class": 0,
+          "objects_matched_at_support_threshold": 9
+        },
+        "3": {
+          "covered_projected_points": 526,
+          "points_covered_by_other_class": 0,
+          "objects_matched_at_support_threshold": 10
+        },
+        "6": {
+          "covered_projected_points": 572,
+          "points_covered_by_other_class": 1,
+          "objects_matched_at_support_threshold": 10
+        }
+      }
+    },
+    "person": {
+      "candidates": 6,
+      "reference_points": 2466,
+      "reference_objects": 6,
+      "radii": {
+        "0": {
+          "covered_projected_points": 2251,
+          "points_covered_by_other_class": 1,
+          "objects_matched_at_support_threshold": 6
+        },
+        "3": {
+          "covered_projected_points": 2301,
+          "points_covered_by_other_class": 3,
+          "objects_matched_at_support_threshold": 6
+        },
+        "6": {
+          "covered_projected_points": 2319,
+          "points_covered_by_other_class": 5,
+          "objects_matched_at_support_threshold": 6
+        }
+      }
+    }
+  },
+  "agent_sparse_reference": {
+    "pallet": {
+      "candidates": 26,
+      "reference_points": 694,
+      "reference_objects": 22,
+      "radii": {
+        "0": {
+          "covered_projected_points": 460,
+          "points_covered_by_other_class": 0,
+          "objects_matched_at_support_threshold": 9
+        },
+        "3": {
+          "covered_projected_points": 526,
+          "points_covered_by_other_class": 0,
+          "objects_matched_at_support_threshold": 10
+        },
+        "6": {
+          "covered_projected_points": 572,
+          "points_covered_by_other_class": 1,
+          "objects_matched_at_support_threshold": 10
+        }
+      }
+    },
+    "person": {
+      "candidates": 6,
+      "reference_points": 2466,
+      "reference_objects": 6,
+      "radii": {
+        "0": {
+          "covered_projected_points": 2251,
+          "points_covered_by_other_class": 1,
+          "objects_matched_at_support_threshold": 6
+        },
+        "3": {
+          "covered_projected_points": 2301,
+          "points_covered_by_other_class": 3,
+          "objects_matched_at_support_threshold": 6
+        },
+        "6": {
+          "covered_projected_points": 2319,
+          "points_covered_by_other_class": 5,
+          "objects_matched_at_support_threshold": 6
+        }
+      }
+    }
+  },
+  "all_reported_metrics_equal_to_baseline": true,
+  "geometry_equal_to_fixed_prompt_baseline_per_frame": {
+    "76": true,
+    "151": true
+  },
+  "source_images_unchanged": true,
+  "workbench_modified": false,
+  "pixel_accuracy_evaluated": false,
+  "independent_validation": false,
+  "candidates_saved_as_truth": false,
+  "quality_filter_adopted": false
+}

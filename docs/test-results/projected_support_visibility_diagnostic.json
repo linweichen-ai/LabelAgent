@@ -1,0 +1,72 @@
+{
+  "scope": "qualitative_suspect_region_visibility_sensitivity_not_a_new_selection",
+  "frame": 76,
+  "camera": 3,
+  "frozen_validation_score_changed": false,
+  "results": [
+    {
+      "cell_size": 4,
+      "method": "pallet_baseline",
+      "reference_points": 70,
+      "reference_object_observations": 2,
+      "covered_points": 38,
+      "matched_objects": 1
+    },
+    {
+      "cell_size": 4,
+      "method": "tiles_s50_b50",
+      "reference_points": 70,
+      "reference_object_observations": 2,
+      "covered_points": 59,
+      "matched_objects": 2
+    },
+    {
+      "cell_size": 8,
+      "method": "pallet_baseline",
+      "reference_points": 61,
+      "reference_object_observations": 2,
+      "covered_points": 35,
+      "matched_objects": 1
+    },
+    {
+      "cell_size": 8,
+      "method": "tiles_s50_b50",
+      "reference_points": 61,
+      "reference_object_observations": 2,
+      "covered_points": 53,
+      "matched_objects": 2
+    },
+    {
+      "cell_size": 16,
+      "method": "pallet_baseline",
+      "reference_points": 40,
+      "reference_object_observations": 2,
+      "covered_points": 23,
+      "matched_objects": 1
+    },
+    {
+      "cell_size": 16,
+      "method": "tiles_s50_b50",
+      "reference_points": 40,
+      "reference_object_observations": 2,
+      "covered_points": 36,
+      "matched_objects": 2
+    },
+    {
+      "cell_size": 32,
+      "method": "pallet_baseline",
+      "reference_points": 12,
+      "reference_object_observations": 1,
+      "covered_points": 12,
+      "matched_objects": 1
+    },
+    {
+      "cell_size": 32,
+      "method": "tiles_s50_b50",
+      "reference_points": 12,
+      "reference_object_observations": 1,
+      "covered_points": 12,
+      "matched_objects": 1
+    }
+  ]
+}

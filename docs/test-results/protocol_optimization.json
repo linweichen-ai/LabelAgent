@@ -1,0 +1,295 @@
+{
+  "updated_utc": "2026-11-03T16:04:59.807433+00:00",
+  "scope": "local_runtime_performance",
+  "reference_kind": "unconfirmed_functional_fixture",
+  "model": "Qwen3-VL-2B-Instruct",
+  "quantization": "nf4",
+  "comparison": {
+    "production_prompt_unchanged": true,
+    "input_images_identical": true,
+    "prompt_sha256": "2ea7824fe35473e7991f1807101ef663a4661f21cc7e6e6286882de0a86d222d",
+    "input_image_sha256": [
+      "3d0b716d9ef4613e60c793962f6c9e1f6388b55b10c9b32673244efe9ce33c3a",
+      "121c5a42cb68eae5e952df4d8a07b50aff4b2d8cf0a2cafd740db9886629a104"
+    ],
+    "context_budget": 16384,
+    "per_image_token_budget": 256,
+    "max_completion_tokens": 768,
+    "initial_activation_excluded": true,
+    "reverse_order_retested": true,
+    "uncontrolled_background_load": true
+  },
+  "description_runs": [
+    {
+      "run_order": "legacy_then_native",
+      "variant": "legacy_regex",
+      "seconds": 184.063,
+      "description_characters": 700,
+      "prompts": [
+        {
+          "label": "pallet",
+          "text": "pallets pallets pallets pallets"
+        },
+        {
+          "label": "person",
+          "text": "person person person person"
+        }
+      ],
+      "inference_stats": {
+        "completion_tokens": 188,
+        "input_images": 2,
+        "peak_allocated_bytes": 2799064064,
+        "peak_reserved_bytes": 2858418176,
+        "prompt_tokens": 1516,
+        "structured_output": true
+      }
+    },
+    {
+      "run_order": "legacy_then_native",
+      "variant": "native_length",
+      "seconds": 15.297,
+      "description_characters": 700,
+      "prompts": [
+        {
+          "label": "pallet",
+          "text": "pallet"
+        },
+        {
+          "label": "person",
+          "text": "person"
+        }
+      ],
+      "inference_stats": {
+        "completion_tokens": 195,
+        "input_images": 2,
+        "peak_allocated_bytes": 2800823296,
+        "peak_reserved_bytes": 2860515328,
+        "prompt_tokens": 1516,
+        "structured_output": true
+      }
+    },
+    {
+      "run_order": "native_repeats",
+      "variant": "native_length",
+      "seconds": 17.704,
+      "description_characters": 700,
+      "prompts": [
+        {
+          "label": "pallet",
+          "text": "pallet"
+        },
+        {
+          "label": "person",
+          "text": "person"
+        }
+      ],
+      "inference_stats": {
+        "completion_tokens": 195,
+        "constraint_setup_seconds": 0.0,
+        "generation_seconds": 17.328,
+        "input_images": 2,
+        "peak_allocated_bytes": 2796211712,
+        "peak_reserved_bytes": 4093640704,
+        "preprocess_seconds": 0.063,
+        "prompt_tokens": 1516,
+        "structured_output": true
+      }
+    },
+    {
+      "run_order": "native_repeats",
+      "variant": "native_length",
+      "seconds": 15.984,
+      "description_characters": 700,
+      "prompts": [
+        {
+          "label": "pallet",
+          "text": "pallet"
+        },
+        {
+          "label": "person",
+          "text": "person"
+        }
+      ],
+      "inference_stats": {
+        "completion_tokens": 195,
+        "constraint_setup_seconds": 0.0,
+        "generation_seconds": 15.625,
+        "input_images": 2,
+        "peak_allocated_bytes": 2796211712,
+        "peak_reserved_bytes": 4093640704,
+        "preprocess_seconds": 0.047,
+        "prompt_tokens": 1516,
+        "structured_output": true
+      }
+    },
+    {
+      "run_order": "native_then_legacy",
+      "variant": "native_length",
+      "seconds": 15.797,
+      "description_characters": 700,
+      "prompts": [
+        {
+          "label": "pallet",
+          "text": "pallet"
+        },
+        {
+          "label": "person",
+          "text": "person"
+        }
+      ],
+      "inference_stats": {
+        "completion_tokens": 195,
+        "constraint_setup_seconds": 0.0,
+        "generation_seconds": 15.453,
+        "input_images": 2,
+        "peak_allocated_bytes": 2796211712,
+        "peak_reserved_bytes": 4093640704,
+        "preprocess_seconds": 0.078,
+        "prompt_tokens": 1516,
+        "structured_output": true
+      }
+    },
+    {
+      "run_order": "native_then_legacy",
+      "variant": "legacy_regex",
+      "seconds": 177.61,
+      "description_characters": 700,
+      "prompts": [
+        {
+          "label": "pallet",
+          "text": "pallets pallets pallets pallets"
+        },
+        {
+          "label": "person",
+          "text": "person person person person"
+        }
+      ],
+      "inference_stats": {
+        "completion_tokens": 188,
+        "constraint_setup_seconds": 0.0,
+        "generation_seconds": 177.328,
+        "input_images": 2,
+        "peak_allocated_bytes": 2796211712,
+        "peak_reserved_bytes": 4093640704,
+        "preprocess_seconds": 0.047,
+        "prompt_tokens": 1516,
+        "structured_output": true
+      }
+    }
+  ],
+  "description_seconds": {
+    "legacy_samples": 2,
+    "native_samples": 4,
+    "legacy_median": 180.837,
+    "native_median": 15.89,
+    "median_reduction_percent": 91.21
+  },
+  "full_agent": {
+    "old_seconds_excluding_initial_activation": 353.876,
+    "new_seconds_excluding_initial_activation": 100.037,
+    "before_frames": [
+      {
+        "frame": 76,
+        "seconds": 88.844,
+        "loop_completed": true,
+        "successful_vlm_calls": 1,
+        "successful_sam_calls": 2,
+        "rounds": 1,
+        "converged": true,
+        "stop_reason": "done",
+        "generated_candidates": 11,
+        "remaining_candidates": 11,
+        "applied_edits": 0,
+        "multi_round_correction_observed": false,
+        "pixel_accuracy_evaluated": false,
+        "candidates_confirmed_as_truth": false
+      },
+      {
+        "frame": 151,
+        "seconds": 84.016,
+        "loop_completed": true,
+        "successful_vlm_calls": 1,
+        "successful_sam_calls": 2,
+        "rounds": 1,
+        "converged": true,
+        "stop_reason": "done",
+        "generated_candidates": 18,
+        "remaining_candidates": 18,
+        "applied_edits": 0,
+        "multi_round_correction_observed": false,
+        "pixel_accuracy_evaluated": false,
+        "candidates_confirmed_as_truth": false
+      }
+    ],
+    "after_frames": [
+      {
+        "frame": 76,
+        "seconds": 42.891,
+        "loop_completed": true,
+        "successful_vlm_calls": 1,
+        "successful_sam_calls": 2,
+        "rounds": 1,
+        "converged": true,
+        "stop_reason": "done",
+        "generated_candidates": 11,
+        "remaining_candidates": 11,
+        "applied_edits": 0,
+        "multi_round_correction_observed": false,
+        "pixel_accuracy_evaluated": false,
+        "candidates_confirmed_as_truth": false
+      },
+      {
+        "frame": 151,
+        "seconds": 40.375,
+        "loop_completed": true,
+        "successful_vlm_calls": 1,
+        "successful_sam_calls": 2,
+        "rounds": 1,
+        "converged": true,
+        "stop_reason": "done",
+        "generated_candidates": 21,
+        "remaining_candidates": 21,
+        "applied_edits": 0,
+        "multi_round_correction_observed": false,
+        "pixel_accuracy_evaluated": false,
+        "candidates_confirmed_as_truth": false
+      }
+    ],
+    "same_generation_prompts_between_full_runs": false,
+    "generation_matches_fixed_prompt_baseline": [
+      {
+        "frame": 76,
+        "shapes": 11,
+        "matches_fixed_prompt_baseline": true
+      },
+      {
+        "frame": 151,
+        "shapes": 21,
+        "matches_fixed_prompt_baseline": true
+      }
+    ],
+    "production_candidate_session_replaced": false
+  },
+  "validation": {
+    "regressions_passed": 97,
+    "actual_decoding_grammar_tests": 4,
+    "browser_passed": true,
+    "saved_state_sha256_unchanged": true,
+    "original_sessions_checked": 6,
+    "original_sessions_unchanged": true,
+    "labels_unchanged": true,
+    "original_source_files_checked": 1023,
+    "original_source_files_unchanged": true,
+    "original_mcap_unchanged": true,
+    "new_session_truth_empty": true,
+    "workbench_vlm_configured": true
+  },
+  "remaining": {
+    "description_reaches_character_limit": true,
+    "review_reasons_can_be_truncated": true,
+    "visual_decisions_not_independently_validated": true,
+    "actual_multi_round_correction_observed": false
+  },
+  "pixel_accuracy_evaluated": false,
+  "accuracy_improvement_claimed": false
+}

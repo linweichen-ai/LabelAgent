@@ -1,0 +1,194 @@
+{
+  "phase": "final_verified",
+  "observed_utc": "2026-11-07T16:07:44.512227+00:00",
+  "status": "failed",
+  "saved_new_responses": 37,
+  "maximum_new_requests": 37,
+  "cases": 18,
+  "quality_views_per_arm": 36,
+  "baseline_cached_quality_views": 36,
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "result": {
+        "type": "string",
+        "pattern": "[ -~]{1,100} :: (pallet|person|uncertain)"
+      }
+    },
+    "required": [
+      "result"
+    ],
+    "additionalProperties": false
+  },
+  "new_return_sentence": "First describe the selected physical surface actually visible in clean image 2. Then give its class. Return one JSON field named result containing \"short visible-structure description :: class\". The class suffix must be pallet, person or uncertain. The description must precede the explicit class suffix.",
+  "original_plan_sha256": "30127610fa4937b192fa85d60236a67fb96240a28fe5658c20c3748e4e2caaaa",
+  "active_plan_sha256": "30127610fa4937b192fa85d60236a67fb96240a28fe5658c20c3748e4e2caaaa",
+  "token_paths_verified": 12,
+  "all_class_suffixes_reachable": true,
+  "decoder_tests_passed": 6,
+  "expected_prompt_encoding_by_view": {
+    "overview": {
+      "prompt_tokens": 853,
+      "image_grid_thw": [
+        [
+          1,
+          32,
+          32
+        ],
+        [
+          1,
+          32,
+          32
+        ]
+      ],
+      "actual_image_token_counts": [
+        256,
+        256
+      ]
+    },
+    "linked": {
+      "prompt_tokens": 841,
+      "image_grid_thw": [
+        [
+          1,
+          32,
+          32
+        ],
+        [
+          1,
+          32,
+          32
+        ]
+      ],
+      "actual_image_token_counts": [
+        256,
+        256
+      ]
+    }
+  },
+  "helper_source_sha256": "04b551d0091edf4814d642dfee8d4c8b9460a198d44a0e6709ee7f2a1c534e17",
+  "evaluator_source_sha256": "943488250b8ef4776657881efef2ed4cd819522b980090df1f69eff36f321d15",
+  "raw_model_label_not_rewritten": true,
+  "original_annotations_written": false,
+  "new_segmentation_inference": false,
+  "candidate_adopted": false,
+  "default_enabled": false,
+  "full_project_validation_passed": false,
+  "independent_generalization": false,
+  "internal_reasoning_or_attention_not_measured": true,
+  "groups": {
+    "protected_pallet": {
+      "views": 4,
+      "baseline_correct": 4,
+      "candidate_correct": 1,
+      "baseline_categories": {
+        "pallet": 4
+      },
+      "candidate_categories": {
+        "uncertain": 3,
+        "pallet": 1
+      }
+    },
+    "person_fixture": {
+      "views": 2,
+      "baseline_correct": 2,
+      "candidate_correct": 2,
+      "baseline_categories": {
+        "person": 2
+      },
+      "candidate_categories": {
+        "person": 2
+      }
+    },
+    "suspected_non_pallet": {
+      "views": 2,
+      "baseline_correct": 0,
+      "candidate_correct": 0,
+      "baseline_categories": {
+        "pallet": 2
+      },
+      "candidate_categories": {
+        "pallet": 2
+      }
+    },
+    "blank_control": {
+      "views": 4,
+      "baseline_correct": 4,
+      "candidate_correct": 4,
+      "baseline_categories": {
+        "uncertain": 4
+      },
+      "candidate_categories": {
+        "uncertain": 4
+      }
+    },
+    "marked_blank_control": {
+      "views": 4,
+      "baseline_correct": 4,
+      "candidate_correct": 3,
+      "baseline_categories": {
+        "uncertain": 4
+      },
+      "candidate_categories": {
+        "uncertain": 3,
+        "person": 1
+      }
+    },
+    "confirmed_six": {
+      "views": 12,
+      "baseline_correct": 12,
+      "candidate_correct": 12,
+      "baseline_categories": {
+        "pallet": 6,
+        "person": 6
+      },
+      "candidate_categories": {
+        "pallet": 6,
+        "person": 6
+      }
+    },
+    "stress_negative": {
+      "views": 8,
+      "baseline_correct": 6,
+      "candidate_correct": 4,
+      "baseline_categories": {
+        "uncertain": 6,
+        "pallet": 1,
+        "person": 1
+      },
+      "candidate_categories": {
+        "uncertain": 4,
+        "person": 4
+      }
+    }
+  },
+  "checks": {
+    "confirmed_six_12_of_12": true,
+    "old_pallets_4_of_4": false,
+    "person_control_2_of_2": true,
+    "plain_blanks_4_of_4": true,
+    "original_marked_blanks_4_of_4": false,
+    "stress_blanks_8_of_8": false,
+    "suspect_conservative_abstention_2_of_2": false,
+    "no_correct_baseline_view_lost": false,
+    "strict_stress_gain": false,
+    "default_budget_guard_passed": true,
+    "output_protocol_only_intervention": true,
+    "explicit_class_suffix_preserved": true,
+    "description_precedes_explicit_suffix": true,
+    "actual_prompt_encoding_matches_cpu_audit": true,
+    "unchanged_JPEGs_geometry_and_image_tokens": true,
+    "originals_and_references_unchanged": true,
+    "no_successful_request_repeated": true
+  },
+  "all_automatic_gates_passed": false,
+  "accepted_new_calls_per_part": [
+    37
+  ],
+  "inference_records_complete": true,
+  "execution_logging_failure_preserved": true,
+  "original_execution_summary_status": "failed",
+  "c3_assistant_semantic_review_passed": true,
+  "human_localization_approval": false,
+  "all_VLM_development_joint_checks_passed": false
+}

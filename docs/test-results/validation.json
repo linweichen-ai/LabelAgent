@@ -1,0 +1,10 @@
+{
+  "regression_tests_passed": 63,
+  "candidate_browser_passed": true,
+  "candidate_refresh_restored": true,
+  "candidate_truth_frames": 0,
+  "multi_camera_and_lidar_browser_passed": true,
+  "image_first_middle_last_decodes": 12,
+  "pointcloud_first_middle_last_decodes": 3,
+  "full_agent_verified": false
+}

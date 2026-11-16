@@ -1,0 +1,292 @@
+{
+  "scope": "fresh_SAM3_then_cached_real_focus_proposal_then_new_real_VLM_review_known_class_flip_recovery",
+  "model": "Qwen3-VL-2B-Instruct NF4",
+  "reference_kind": "unconfirmed_functional_fixture",
+  "description_generation": "prior_real_8B_description_reused",
+  "frames": [
+    76,
+    151
+  ],
+  "fresh_SAM3_requests": 8,
+  "fresh_fullscene_VLM_reviews": 4,
+  "prior_focus_source_total_requests": 20,
+  "unique_prior_focus_responses_supporting_matched_people": 4,
+  "new_requests_for_cache_lookups": 0,
+  "natural_cases_preserved": 2,
+  "known_class_flips_recovered_then_observed": 2,
+  "known_class_flip_cases": 2,
+  "previous_plain_and_schema_only_2B_recoveries": 0,
+  "actual_applied_class_edits": 2,
+  "operations_from_cached_category_adapter_not_new_freeform_tool_decisions": true,
+  "fresh_freeform_VLM_class_correction_observed": false,
+  "all_per_round_focus_pixel_bindings_matched": true,
+  "cases": [
+    {
+      "frame": 76,
+      "kind": "natural",
+      "seconds": 41.406,
+      "fresh_SAM3_requests": 2,
+      "fresh_VLM_reviews": 1,
+      "cached_focus_lookups": 1,
+      "cached_focus_matches": 1,
+      "cached_class_operations_returned": 0,
+      "fresh_seed_candidates": 11,
+      "remaining_candidates": 11,
+      "seed_geometry_and_classes_restored": true,
+      "actual_edit_operations": 0,
+      "rounds": 1,
+      "converged": true,
+      "stop_reason": "done",
+      "source_images_unchanged": true,
+      "known_flip_recovered_then_observed": false
+    },
+    {
+      "frame": 76,
+      "kind": "class_flip_control",
+      "seconds": 39.5,
+      "fresh_SAM3_requests": 2,
+      "fresh_VLM_reviews": 1,
+      "cached_focus_lookups": 2,
+      "cached_focus_matches": 2,
+      "cached_class_operations_returned": 1,
+      "fresh_seed_candidates": 11,
+      "remaining_candidates": 11,
+      "seed_geometry_and_classes_restored": true,
+      "actual_edit_operations": 1,
+      "rounds": 2,
+      "converged": true,
+      "stop_reason": "done",
+      "source_images_unchanged": true,
+      "known_flip_recovered_then_observed": true
+    },
+    {
+      "frame": 151,
+      "kind": "natural",
+      "seconds": 39.734,
+      "fresh_SAM3_requests": 2,
+      "fresh_VLM_reviews": 1,
+      "cached_focus_lookups": 1,
+      "cached_focus_matches": 1,
+      "cached_class_operations_returned": 0,
+      "fresh_seed_candidates": 21,
+      "remaining_candidates": 21,
+      "seed_geometry_and_classes_restored": true,
+      "actual_edit_operations": 0,
+      "rounds": 1,
+      "converged": true,
+      "stop_reason": "done",
+      "source_images_unchanged": true,
+      "known_flip_recovered_then_observed": false
+    },
+    {
+      "frame": 151,
+      "kind": "class_flip_control",
+      "seconds": 39.969,
+      "fresh_SAM3_requests": 2,
+      "fresh_VLM_reviews": 1,
+      "cached_focus_lookups": 2,
+      "cached_focus_matches": 2,
+      "cached_class_operations_returned": 1,
+      "fresh_seed_candidates": 21,
+      "remaining_candidates": 21,
+      "seed_geometry_and_classes_restored": true,
+      "actual_edit_operations": 1,
+      "rounds": 2,
+      "converged": true,
+      "stop_reason": "done",
+      "source_images_unchanged": true,
+      "known_flip_recovered_then_observed": true
+    }
+  ],
+  "functional_checks": {
+    "four_real_fresh_generation_and_review_runs": true,
+    "both_natural_seeds_preserved_and_converged": true,
+    "both_known_flips_recovered_and_observed": true,
+    "all_focus_lookups_match_current_pixels": true
+  },
+  "functional_checks_passed": true,
+  "source_focus_panel_all_checks_passed": false,
+  "general_quality_adoption_allowed": false,
+  "natural_metrics_improved": false,
+  "metric_version": 2,
+  "metric_parameters": {
+    "radii_pixels": [
+      0,
+      3,
+      6
+    ],
+    "zbuffer_cell_pixels": 8,
+    "depth_slack_m": 0.15,
+    "near_plane_m": 0.2,
+    "minimum_unique_object_points": 5,
+    "reference_point_inside_box_tolerance_m": 0,
+    "one_to_one_object_support_threshold": 0.5,
+    "minimum_object_point_purity": 0.67,
+    "tuning_frames": [
+      15,
+      45,
+      76,
+      105,
+      135
+    ]
+  },
+  "sparse_reference": {
+    "natural_after": {
+      "pallet": {
+        "candidates": 26,
+        "reference_points": 694,
+        "reference_objects": 22,
+        "radii": {
+          "0": {
+            "covered_projected_points": 460,
+            "points_covered_by_other_class": 0,
+            "objects_matched_at_support_threshold": 9
+          },
+          "3": {
+            "covered_projected_points": 526,
+            "points_covered_by_other_class": 0,
+            "objects_matched_at_support_threshold": 10
+          },
+          "6": {
+            "covered_projected_points": 572,
+            "points_covered_by_other_class": 1,
+            "objects_matched_at_support_threshold": 10
+          }
+        }
+      },
+      "person": {
+        "candidates": 6,
+        "reference_points": 2466,
+        "reference_objects": 6,
+        "radii": {
+          "0": {
+            "covered_projected_points": 2251,
+            "points_covered_by_other_class": 1,
+            "objects_matched_at_support_threshold": 6
+          },
+          "3": {
+            "covered_projected_points": 2301,
+            "points_covered_by_other_class": 3,
+            "objects_matched_at_support_threshold": 6
+          },
+          "6": {
+            "covered_projected_points": 2319,
+            "points_covered_by_other_class": 5,
+            "objects_matched_at_support_threshold": 6
+          }
+        }
+      }
+    },
+    "control_before": {
+      "pallet": {
+        "candidates": 28,
+        "reference_points": 694,
+        "reference_objects": 22,
+        "radii": {
+          "0": {
+            "covered_projected_points": 460,
+            "points_covered_by_other_class": 0,
+            "objects_matched_at_support_threshold": 9
+          },
+          "3": {
+            "covered_projected_points": 526,
+            "points_covered_by_other_class": 0,
+            "objects_matched_at_support_threshold": 10
+          },
+          "6": {
+            "covered_projected_points": 572,
+            "points_covered_by_other_class": 1,
+            "objects_matched_at_support_threshold": 10
+          }
+        }
+      },
+      "person": {
+        "candidates": 4,
+        "reference_points": 2466,
+        "reference_objects": 6,
+        "radii": {
+          "0": {
+            "covered_projected_points": 745,
+            "points_covered_by_other_class": 1507,
+            "objects_matched_at_support_threshold": 4
+          },
+          "3": {
+            "covered_projected_points": 772,
+            "points_covered_by_other_class": 1532,
+            "objects_matched_at_support_threshold": 4
+          },
+          "6": {
+            "covered_projected_points": 786,
+            "points_covered_by_other_class": 1538,
+            "objects_matched_at_support_threshold": 4
+          }
+        }
+      }
+    },
+    "control_after": {
+      "pallet": {
+        "candidates": 26,
+        "reference_points": 694,
+        "reference_objects": 22,
+        "radii": {
+          "0": {
+            "covered_projected_points": 460,
+            "points_covered_by_other_class": 0,
+            "objects_matched_at_support_threshold": 9
+          },
+          "3": {
+            "covered_projected_points": 526,
+            "points_covered_by_other_class": 0,
+            "objects_matched_at_support_threshold": 10
+          },
+          "6": {
+            "covered_projected_points": 572,
+            "points_covered_by_other_class": 1,
+            "objects_matched_at_support_threshold": 10
+          }
+        }
+      },
+      "person": {
+        "candidates": 6,
+        "reference_points": 2466,
+        "reference_objects": 6,
+        "radii": {
+          "0": {
+            "covered_projected_points": 2251,
+            "points_covered_by_other_class": 1,
+            "objects_matched_at_support_threshold": 6
+          },
+          "3": {
+            "covered_projected_points": 2301,
+            "points_covered_by_other_class": 3,
+            "objects_matched_at_support_threshold": 6
+          },
+          "6": {
+            "covered_projected_points": 2319,
+            "points_covered_by_other_class": 5,
+            "objects_matched_at_support_threshold": 6
+          }
+        }
+      }
+    }
+  },
+  "natural_and_repaired_metrics_equal_to_original_at_all_radii": true,
+  "source_inputs_cached_responses_plan_and_workflow_unchanged": true,
+  "preservation": {
+    "original_sessions_checked": 6,
+    "original_sessions_unchanged": true,
+    "labels_unchanged": true,
+    "original_source_files_checked": 1023,
+    "original_source_files_unchanged": true,
+    "original_mcap_unchanged": true,
+    "new_session_truth_empty": true,
+    "workbench_vlm_configured": true
+  },
+  "saved_workbench_state_unchanged": true,
+  "regression_tests_passed": 203,
+  "quality_filter_adopted": false,
+  "workbench_modified": false,
+  "candidates_saved_as_truth": false,
+  "pixel_accuracy_evaluated": false,
+  "independent_validation": false
+}

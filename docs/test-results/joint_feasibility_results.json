@@ -1,0 +1,88 @@
+{
+  "status": "complete",
+  "diagnostic_only": true,
+  "uses_reference_annotations": true,
+  "usable_predictions_exported": false,
+  "images": 20,
+  "new_model_requests": 0,
+  "control_counts": {
+    "baseline": {
+      "matched": 68,
+      "points": 4993,
+      "person_points": 49,
+      "candidates": 143,
+      "union_pixels": 784762
+    },
+    "previous_four": {
+      "matched": 75,
+      "points": 5179,
+      "person_points": 55,
+      "candidates": 190,
+      "union_pixels": 836336
+    },
+    "spatial_mass": {
+      "matched": 78,
+      "points": 5174,
+      "person_points": 49,
+      "candidates": 196,
+      "union_pixels": 837675
+    },
+    "all_pool": {
+      "matched": 83,
+      "points": 5299,
+      "person_points": 75,
+      "candidates": 722,
+      "union_pixels": 910781
+    }
+  },
+  "solver": {
+    "variables": 620,
+    "constraints": 1019,
+    "objects": 118,
+    "new_candidates": 238,
+    "new_reference_point_variables": 241,
+    "new_person_point_variables": 0,
+    "fixed_points": 4993,
+    "fixed_person_points": 49,
+    "minimum_points": 5179,
+    "maximum_person_points": 55,
+    "time_limit_seconds": 30.0,
+    "solver_status": 0,
+    "solver_message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+    "optimality_proven": true,
+    "infeasibility_proven": false,
+    "incumbent": {
+      "matched": 82,
+      "points": 5199,
+      "person_points": 49,
+      "candidates": 166
+    },
+    "matching_upper_bound": 82,
+    "elapsed_seconds": 0.047,
+    "mip_gap": 0.0
+  },
+  "internal_reference_chosen_witness_union_pixels": 824318,
+  "internal_reference_chosen_witness_passes_all_numeric_gates": true,
+  "actual_prediction_or_quality_improvement": false,
+  "plan_sha256": "b2fc7f60105cb6424dca78d05ba3c63387724103a8c652e49e0775b92016a17e",
+  "source_state_unchanged": true,
+  "frozen_inputs_unchanged": true,
+  "code_unchanged": true,
+  "scope": "reference-informed feasibility only; no selected IDs or shapes are written; not an achieved model score",
+  "tests_passed": 288,
+  "skipped_tests": 0,
+  "new_solver_tests": 7,
+  "entire_pool_union_area_within_original_cap": true,
+  "all_subsets_therefore_within_area_cap": true,
+  "area_cap_pixels": 980952.5,
+  "area_existence_reason": "Mask unions are monotone under candidate removal; entire pool is already below original cap.",
+  "source_files_preserved": 1023,
+  "previous_sessions_preserved": 7,
+  "approved_reference_shapes_preserved": 15,
+  "target76_still_unconfirmed": true,
+  "candidate_ids_exported": false,
+  "model_adopted": false,
+  "witness_candidate_count_is_minimized": false,
+  "solver_version": "SciPy 1.17.1 / bundled HiGHS",
+  "next_step": "Develop reference-free candidate selection; diagnostic assignments are not available as predictions."
+}

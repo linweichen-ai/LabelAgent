@@ -1,0 +1,48 @@
+{
+  "scope": "prediction_geometry_diagnosis_not_ground_truth_or_accuracy",
+  "source_code_sha256": "8637645dada10c5003458103557ef8717ae8b4d30bf64a624e56152e10429ec9",
+  "original_candidate_export_sha256": "97fb80e73123e72b2bdee5385dca06ebc77e90f6085c1aff46d6302ac1e929c9",
+  "images_each": 20,
+  "reads_3D_reference": false,
+  "new_model_requests": 0,
+  "workbench_modified": false,
+  "caveat": "Contained fragments can still represent useful instance separation; containment is not proof of a false detection.",
+  "rows": [
+    {
+      "method": "old_four",
+      "added_pallet_candidates": 47,
+      "median_fraction_inside_original_prediction_union": 0.6928598413298074,
+      "added_masks_at_least_95_percent_inside_original_union": 14,
+      "added_masks_at_least_50_percent_inside_original_union": 27,
+      "new_mask_union_pixels": 51574,
+      "candidate_export_sha256": "0537abb3cef82af622ab34458d414dd2727755f5541451f28bac293d165ea329"
+    },
+    {
+      "method": "confidence",
+      "added_pallet_candidates": 54,
+      "median_fraction_inside_original_prediction_union": 0.9560687147487721,
+      "added_masks_at_least_95_percent_inside_original_union": 29,
+      "added_masks_at_least_50_percent_inside_original_union": 46,
+      "new_mask_union_pixels": 16414,
+      "candidate_export_sha256": "6ef4a39cec881086f947445a848df5130d4b3c8ae8e2abc692be7b86162908a1"
+    },
+    {
+      "method": "novel_consensus_guard",
+      "added_pallet_candidates": 53,
+      "median_fraction_inside_original_prediction_union": 0.40646940822467403,
+      "added_masks_at_least_95_percent_inside_original_union": 8,
+      "added_masks_at_least_50_percent_inside_original_union": 25,
+      "new_mask_union_pixels": 47185,
+      "candidate_export_sha256": "b425892409e5ba2033c4f9584df98d3776d12dcc59ebc82302ac1284cdfd10eb"
+    },
+    {
+      "method": "preserve_four_novel_consensus_guard",
+      "added_pallet_candidates": 54,
+      "median_fraction_inside_original_prediction_union": 0.8975270820551532,
+      "added_masks_at_least_95_percent_inside_original_union": 18,
+      "added_masks_at_least_50_percent_inside_original_union": 32,
+      "new_mask_union_pixels": 54221,
+      "candidate_export_sha256": "4ad78adeaddd8528c714b6e440943ef34ab913101f6dba7737f5744ac11b19a7"
+    }
+  ]
+}

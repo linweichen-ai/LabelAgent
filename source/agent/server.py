@@ -2893,12 +2893,16 @@ def get_run_status():
     with run_status_lock:
         snapshot = copy.deepcopy(run_status)
     observed_at = time.time()
+    terminal = snapshot.get("status") in ("completed", "failed", "stopped")
+    elapsed_until = snapshot.get("updated_at") if terminal else observed_at
+    if not isinstance(elapsed_until, (int, float)):
+        elapsed_until = observed_at
     started_at = snapshot.get("started_at")
     phase_started_at = snapshot.get("phase_started_at") or started_at
     snapshot.update(
         observed_at=observed_at,
-        elapsed_seconds=max(0.0, observed_at - started_at) if started_at else 0.0,
-        phase_elapsed_seconds=max(0.0, observed_at - phase_started_at)
+        elapsed_seconds=max(0.0, elapsed_until - started_at) if started_at else 0.0,
+        phase_elapsed_seconds=max(0.0, elapsed_until - phase_started_at)
         if phase_started_at else 0.0,
         progress_contract_version=2,
     )

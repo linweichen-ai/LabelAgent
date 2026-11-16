@@ -984,6 +984,7 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
                     errors.append(f"第 {index} 项 sam_points 只有重复的同一个点，不能视为有效修正")
                 if not any(point["label"] == 1 for point in points):
                     errors.append(f"第 {index} 项 sam_points 至少需要一个有效正点")
+    actionable_ground = set()
     if holes:
         assessment = result.get("hole_assessment")
         expected = {item["id"] for item in holes}
@@ -991,16 +992,43 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
             errors.append("GPT 未逐一判断当前候选的内部空洞；必须为清单中的每个完整 hole_id "
                           "输出含 semantic 和 reason 的判断")
             assessment = []
-        observed = {item["hole_id"] for item in assessment
-                    if isinstance(item, dict) and isinstance(item.get("hole_id"), str)}
-        if (len(assessment) != len(expected) or any(not isinstance(item, dict) for item in assessment)
-                or observed != expected or any(item.get("semantic") not in ("ground", "non_ground")
-                                       or not isinstance(item.get("reason"), str)
-                                       or not item["reason"].strip()
-                                       for item in assessment if isinstance(item, dict))):
+        observed_items = [item.get("hole_id") for item in assessment
+                          if isinstance(item, dict) and isinstance(item.get("hole_id"), str)]
+        observed = set(observed_items)
+        malformed = (any(not isinstance(item, dict) for item in assessment)
+                     or len(observed_items) != len(assessment)
+                     or len(observed_items) != len(observed)
+                     or any(item.get("semantic") not in ("ground", "non_ground")
+                            or not isinstance(item.get("reason"), str)
+                            or not item["reason"].strip()
+                            for item in assessment if isinstance(item, dict)))
+        missing = expected - observed
+        unknown = observed - expected
+        # A local VLM can occasionally omit one region while returning an
+        # otherwise valid structured decision.  Never guess that the omitted
+        # area is ground: preserve it unchanged, make the repair auditable and
+        # route it to human review.  Unknown/duplicate/malformed IDs remain a
+        # hard protocol error, as do attempts to fill an omitted region.
+        if (assessment and missing and not unknown and not malformed
+                and observed.issubset(expected)):
+            repairs = result.setdefault("protocol_repairs", [])
+            for hole_id in sorted(missing):
+                assessment.append({
+                    "hole_id": hole_id,
+                    "semantic": "non_ground",
+                    "reason": "Model omitted this region; preserved for human review",
+                })
+                repairs.append({
+                    "reason_code": "vlm_hole_assessment_omitted",
+                    "hole_id": hole_id,
+                    "route": "human_review_required",
+                })
+            observed = expected
+            missing = set()
+        if (len(assessment) != len(expected) or malformed or observed != expected):
             errors.append("GPT 空洞判断必须覆盖全部 hole_id，并包含语义和依据；"
-                          f"缺失 ID：{sorted(expected - observed)}；"
-                          f"无效 ID：{sorted(observed - expected)}。"
+                          f"缺失 ID：{sorted(missing)}；"
+                          f"无效 ID：{sorted(unknown)}。"
                           "每个完整 ID 恰好一次，禁止用 #5 或图片编号替代完整 hole_id；"
                           "semantic 必须为 ground/non_ground，reason 必须为非空字符串")
         filled = {item.get("hole_id") for item in result["operations"]
@@ -1008,6 +1036,7 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
                   and isinstance(item.get("hole_id"), str)}
         ground = {item["hole_id"] for item in assessment if isinstance(item, dict)
                   and isinstance(item.get("hole_id"), str) and item.get("semantic") == "ground"}
+        actionable_ground = ground - filled
         if filled - ground:
             errors.append("GPT 只能修补判定为 ground 的空洞；禁止对 non_ground 使用 fill_gap："
                           f"{sorted(filled - ground)}")
@@ -1024,6 +1053,17 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
         errors.append("当前没有待比较的 SAM 3 点提示结果，禁止声明 improved")
     if errors:
         raise ValueError("\n".join(errors))
+    # Some local models emit `continue` even after returning no operation and
+    # no ground gap left to repair.  Treat that self-contradictory tail as a
+    # completed review instead of producing a false no-progress failure.
+    if (result["status"] == "continue" and not result["operations"]
+            and not actionable_ground and sam_comparison is None):
+        result["status"] = "done"
+        result.setdefault("protocol_normalizations", []).append({
+            "reason_code": "empty_continue_normalized_to_done",
+            "from": "continue",
+            "to": "done",
+        })
     return result
 
 
@@ -1194,7 +1234,7 @@ def review(config, image, overlay, description, shapes, labels, history, referen
                 prompt += ("没有图片3或图片4，也没有任何参考原图、参考轮廓或人工真值。"
                            "禁止提及不存在的参考轮廓；禁止 remove，疑似误检保留给人工复核。")
             prompt += "holes列表为空，hole_assessment必须是空数组，禁止编造孔洞编号。"
-        prompt += ("\nreason最多一句话，每轮最多3个有视觉证据的局部操作。仅允许使用candidates中的ID。"
+        prompt += ("\n每个reason最多一句话且不超过100个英文字符，每轮最多3个有视觉证据的局部操作。仅允许使用candidates中的ID。"
                    "所有reason使用英文。无法可靠定位缺陷时保持候选，返回done且operations为空。不要复述所有实例，不要输出额外解释。")
     if duplicate_groups:
         prompt += ("\nExact same-class raster-mask overlap groups: "
@@ -1635,6 +1675,11 @@ class AnnotationAgent:
                         decision["sam_rollback"] = {"shape_id": pending["shape_id"],
                             "reason": assessment.get("reason", "未改进")}
                     self.sam_pending = None
+                for repair in decision.get("protocol_repairs", []):
+                    self.queue.append({
+                        "reason": "VLM 漏答该缺口；系统未修改此区域，已转人工复核",
+                        **copy.deepcopy(repair),
+                    })
                 before = _fingerprint(self.shapes)
                 entry = {"round": number, "decision": decision, "tool_results": [],
                     "before_shape_count": len(self.shapes), "before_fingerprint": before}
@@ -1783,7 +1828,7 @@ class AnnotationAgent:
                 # A 'done' sent with edits cannot validate their result. Observe again.
                 if decision["status"] == "done" and not decision["operations"]:
                     converged = not self.queue
-                    stop_reason = "done" if converged else "error"
+                    stop_reason = "done" if converged else "review_required"
                     break
                 # A proposed SAM edit must be assessed even if it revisits an
                 # earlier geometry. Failed/no-change prompts get one fresh
@@ -1802,7 +1847,7 @@ class AnnotationAgent:
         except Exception as error:
             stop_reason = "error"
             self.queue.append({"reason": "Agent 调用失败", "error": str(error)[:500]})
-        if not converged and stop_reason not in ("error", "invalid_model_output"):
+        if not converged and stop_reason not in ("error", "invalid_model_output", "review_required"):
             self.queue.append({"reason": {"max_rounds": "达到最大轮数，最新候选尚未确认",
                 "no_progress": "本轮未产生有效修改", "cycle": "检测到循环修改"}[stop_reason]})
         if self.sam_pending is not None:

@@ -12,8 +12,8 @@ def bounded_text(limit):
     return {"type": "string", "minLength": 1, "maxLength": limit}
 
 
-def reason():
-    return bounded_text(180)
+def reason(limit=180):
+    return bounded_text(limit)
 
 
 def description_schema(labels):
@@ -57,7 +57,7 @@ def review_schema(labels, shapes, holes, sam_pending=False):
                "items": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2}}
     def operation(names, extra=None, shape_ids=one):
         return obj({"operation": {"type": "string", "enum": names}, "shape_ids": shape_ids,
-                    **(extra or {}), "reason": reason()})
+                    **(extra or {}), "reason": reason(120)})
     tools = []
     if ids:
         tools = [operation(["remove"]), operation(["reclassify"], {"label": {"type": "string", "enum": labels}}),
@@ -71,11 +71,11 @@ def review_schema(labels, shapes, holes, sam_pending=False):
             tools.append(operation(["fill_gap"], {"polygon": polygon, "hole_id": {"type": "string", "enum": hole_ids}}))
     assessments = {"type": "array", "maxItems": len(holes), "minItems": len(holes),
                    "items": obj({"hole_id": {"type": "string", "enum": hole_ids or ["unused"]},
-                                 "semantic": {"type": "string", "enum": ["ground", "non_ground"]}, "reason": reason()})}
+                                 "semantic": {"type": "string", "enum": ["ground", "non_ground"]}, "reason": reason(100)})}
     operations = {"type": "array", "maxItems": 3 if tools else 0,
                   "items": {"anyOf": tools} if tools else {"type": "object"}}
-    properties = {"status": {"type": "string", "enum": ["continue", "done"]}, "reason": reason(),
+    properties = {"status": {"type": "string", "enum": ["continue", "done"]}, "reason": reason(120),
                   "hole_assessment": assessments, "operations": operations}
     if sam_pending:
-        properties["sam_assessment"] = obj({"improved": {"type": "boolean"}, "reason": reason()})
+        properties["sam_assessment"] = obj({"improved": {"type": "boolean"}, "reason": reason(120)})
     return obj(properties)

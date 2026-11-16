@@ -413,6 +413,79 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("GPT 空洞判断必须覆盖全部 hole_id", chat.call_args.args[1])
         self.assertIn('"hole_id": "#5"', chat.call_args.args[1])
 
+    def test_omitted_hole_is_preserved_and_routed_to_human_review(self):
+        holes = [
+            {"id": "1:hole:1:1:2:2", "shape_id": 1},
+            {"id": "1:hole:3:3:4:4", "shape_id": 1},
+        ]
+        decision = workflow._validate_review_result({
+            "status": "done",
+            "reason": "Only one region was clear",
+            "hole_assessment": [{"hole_id": holes[0]["id"],
+                                 "semantic": "non_ground", "reason": "Visible obstacle"}],
+            "operations": [],
+        }, holes, [shape()], ["a"], 40, 40)
+        repaired = {item["hole_id"]: item for item in decision["hole_assessment"]}
+        self.assertEqual(repaired[holes[1]["id"]]["semantic"], "non_ground")
+        self.assertEqual(decision["protocol_repairs"], [{
+            "reason_code": "vlm_hole_assessment_omitted",
+            "hole_id": holes[1]["id"], "route": "human_review_required"}])
+
+    def test_omitted_hole_cannot_be_filled_and_unknown_ids_still_fail(self):
+        holes = [
+            {"id": "1:hole:1:1:2:2", "shape_id": 1},
+            {"id": "1:hole:3:3:4:4", "shape_id": 1},
+        ]
+        fill = {"operation": "fill_gap", "shape_ids": [1],
+                "hole_id": holes[1]["id"],
+                "polygon": [[3, 3], [4, 3], [4, 4]], "reason": "Fill floor"}
+        partial = {"status": "continue", "reason": "Partial answer",
+                   "hole_assessment": [{"hole_id": holes[0]["id"],
+                                        "semantic": "non_ground", "reason": "Obstacle"}],
+                   "operations": [fill]}
+        with self.assertRaisesRegex(ValueError, "只能修补判定为 ground"):
+            workflow._validate_review_result(partial, holes, [shape()], ["a"], 40, 40)
+        unknown = copy.deepcopy(partial)
+        unknown["operations"] = []
+        unknown["hole_assessment"].append(
+            {"hole_id": "unknown", "semantic": "non_ground", "reason": "Unknown"})
+        with self.assertRaisesRegex(ValueError, "无效 ID"):
+            workflow._validate_review_result(unknown, holes, [shape()], ["a"], 40, 40)
+
+    def test_omitted_hole_repair_finishes_as_review_required_without_discarding_candidates(self):
+        decision = {"status": "done", "reason": "One region was omitted",
+                    "hole_assessment": [], "operations": [],
+                    "protocol_repairs": [{
+                        "reason_code": "vlm_hole_assessment_omitted",
+                        "hole_id": "1:hole:3:3:4:4",
+                        "route": "human_review_required"}]}
+        with patch.object(workflow, "sam_text", return_value=[sam_result()]), \
+             patch.object(workflow, "review", return_value=decision):
+            result = workflow.run({}, image_bytes(), {"description": "class a",
+                "prompts": [{"label": "a", "text": "square"}]}, ["a"], 2)
+        self.assertEqual(result["agent"]["stop_reason"], "review_required")
+        self.assertFalse(result["agent"]["converged"])
+        self.assertEqual(len(result["shapes"]), 1)
+        self.assertEqual(result["review_queue"][0]["reason_code"],
+                         "vlm_hole_assessment_omitted")
+
+    def test_empty_continue_is_normalized_to_done_but_unfilled_ground_is_not(self):
+        empty = workflow._validate_review_result(
+            {"status": "continue", "reason": "No edit remains", "operations": []},
+            [], [shape()], ["a"], 40, 40)
+        self.assertEqual(empty["status"], "done")
+        self.assertEqual(empty["protocol_normalizations"][0]["reason_code"],
+                         "empty_continue_normalized_to_done")
+        hole = {"id": "1:hole:1:1:2:2", "shape_id": 1}
+        pending = workflow._validate_review_result({
+            "status": "continue", "reason": "Ground remains",
+            "hole_assessment": [{"hole_id": hole["id"], "semantic": "ground",
+                                 "reason": "Visible ground"}],
+            "operations": [],
+        }, [hole], [shape()], ["a"], 40, 40)
+        self.assertEqual(pending["status"], "continue")
+        self.assertNotIn("protocol_normalizations", pending)
+
     def test_review_retries_unknown_operation_and_missing_tool_fields(self):
         operation = {"operation": "add_region", "shape_ids": [1],
                      "polygon": [[16, 2], [25, 2], [25, 18], [16, 18]], "reason": "repair floor"}
@@ -736,6 +809,17 @@ class WorkflowTests(unittest.TestCase):
             {"llm_prompt_profile": "compact"}, 4), 1536)
         self.assertEqual(workflow.compact_review_token_budget(
             {"llm_prompt_profile": "compact", "llm_max_tokens": 1024}, 4), 1024)
+
+        from source.agent.protocol_schema import review_schema
+        schema = review_schema(["floor"], [shape(label="floor")], [{
+            "id": "1:hole:1:1:2:2", "area": 4, "bbox": [1, 1, 2, 2]}])
+        properties = schema["properties"]
+        self.assertEqual(properties["reason"]["maxLength"], 120)
+        self.assertEqual(properties["hole_assessment"]["items"]["properties"]
+                         ["reason"]["maxLength"], 100)
+        operation_variants = properties["operations"]["items"]["anyOf"]
+        self.assertTrue(all(item["properties"]["reason"]["maxLength"] == 120
+                            for item in operation_variants))
 
     def test_review_gap_selection_excludes_open_image_border_artifacts(self):
         mask = np.zeros((20, 30), dtype=np.uint8)
@@ -2492,6 +2576,12 @@ class ServerTests(unittest.TestCase):
                 server.update_run_status(shape_count=2)
             self.assertEqual(server.run_status["status_sequence"], 2)
             self.assertEqual(server.run_status["phase_started_at"], 100.0)
+            server.run_status.update(status="completed", updated_at=105.0)
+            with patch.object(server.time, "time", return_value=999.0):
+                completed = server.app.test_client().get("/api/run/status").json
+            self.assertEqual(completed["elapsed_seconds"], 15.0)
+            self.assertEqual(completed["phase_elapsed_seconds"], 5.0)
+            self.assertEqual(completed["observed_at"], 999.0)
         finally:
             server.run_status = old_status
 

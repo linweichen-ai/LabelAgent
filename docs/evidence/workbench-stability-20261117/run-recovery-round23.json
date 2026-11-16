@@ -1,0 +1,86 @@
+{
+  "round": 23,
+  "observed_at": "2026-11-17T07:46:12+08:00",
+  "scope": {
+    "runtime": "D:\\Apps\\LabelAgent",
+    "dataset": "SFL_CPD15Y_20261111/batchA_0920_000_clean_review.mcap",
+    "topic": "/capture/camera_1/image",
+    "recovered_frame": 30,
+    "recovered_candidate_count": 10,
+    "writes_to_truth_candidates_or_training": false
+  },
+  "problem": {
+    "before": "per-frame candidates survived a refresh or service restart, but the browser lost the completed response and had no bounded result recovery path",
+    "risk": "operators could think the run was lost or start duplicate inference"
+  },
+  "change": {
+    "durable_receipt": "last_run_summary.json is atomically updated with every full last_run.json save",
+    "bounded_fields": ["task_id", "scope", "status", "counts", "current frame", "per-frame remaining counts", "failed frames", "message"],
+    "excluded_fields": ["description", "model trace", "inspection steps", "candidate geometry", "agent audit"],
+    "restart_migration": "a bounded legacy last_run.json is converted once to a stable legacy task receipt",
+    "browser_recovery": "after bootstrap, a matching unhandled result opens its first saved candidate through compact frame geometry",
+    "scope_guards": ["task id", "data file", "image topic"],
+    "repeat_guard": "the same task id is handled at most once per page lifetime"
+  },
+  "formal_readback": {
+    "legacy_last_run_bytes": 244941,
+    "summary_file_bytes": 558,
+    "summary_reduction_percent": 99.77,
+    "status_response_bytes": 291,
+    "result_response_bytes": 628,
+    "status_30_call_median_ms": 1.479,
+    "status_30_call_p95_ms": 1.748,
+    "result_30_call_median_ms": 1.528,
+    "result_30_call_p95_ms": 1.995,
+    "legacy_task_id": "legacy-05c709a27c0de10d048fddea",
+    "result_status": "completed",
+    "result_completed": 1,
+    "result_total": 1
+  },
+  "formal_browser_acceptance": {
+    "service_restarted_before_test": true,
+    "end_to_end_recovery_ms": 2038,
+    "recovered_frame": 30,
+    "recovered_candidate_count": 10,
+    "compact_geometry": true,
+    "full_state_requests": 0,
+    "result_requests": 1,
+    "page_errors": 0,
+    "console_errors": 0,
+    "failed_requests": 0,
+    "screenshot": "run-recovery-after-restart-round23.png",
+    "browser_receipt": "run-recovery-browser-round23.json"
+  },
+  "state_identity": {
+    "state_sha256_before_and_after": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+    "file_sessions_sha256_before_and_after": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "last_run_sha256_before_and_after": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "machine_candidates_promoted_to_truth": false,
+    "training_set_modified": false
+  },
+  "regression": {
+    "python": "131/131",
+    "web_polling": "12/12",
+    "candidate_and_human_gate": "60/60",
+    "javascript_syntax": "passed",
+    "diff_check": "passed"
+  },
+  "deployment": {
+    "runtime_status": "idle",
+    "model_readiness": "ready",
+    "run_readiness": "ready",
+    "runtime_matches_worktree": true,
+    "server_sha256": "0A18EBF54A3820BF3E4D6293E27FE041C66F3EAE9AD69087F97C179535BD34D2",
+    "app_sha256": "252DB441A6CD7C7374ADB25C40589692322E93A4516F69B91B3B8E84EA08E318",
+    "index_sha256": "A23B03F041934D3ACD6CE66DAC13B3BF63B91FF8AF605F0AA273D3C7E03657F7",
+    "rollback": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-run-recovery-round23-20261117-120000"
+  },
+  "limits": {
+    "new_long_inference_started": false,
+    "new_process_crash_injected": false,
+    "legacy_completed_result_used_for_formal_restart_acceptance": true,
+    "failed_frame_selective_retry_implemented": false,
+    "model_accuracy_changed": false,
+    "camera3_reference_status": "reference_missing"
+  }
+}

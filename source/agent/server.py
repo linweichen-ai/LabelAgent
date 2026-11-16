@@ -48,6 +48,7 @@ app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024 * 1024
 state = {"video": None, "topic": None, "labels": [], "truth": {}, "reference_frames": {}, "config": {}, "candidates": {}, "candidates_by_topic": {}, "agent_runs": {}, "agent_runs_by_topic": {}, "candidate_revisions": {}, "candidate_revisions_by_topic": {}, "candidate_review_status": {}, "candidate_review_proposals": [], "human_review_transactions": {}, "rejected_candidates": {}}
 lock = threading.RLock()
 run_status_lock = threading.Lock()
+run_summary_lock = threading.Lock()
 run_claim_lock = threading.Lock()
 run_status = {"status": "idle"}
 run_stop_event = threading.Event()
@@ -899,11 +900,80 @@ def update_run_status(**changes):
         _update_run_status_locked(**changes)
 
 
+RUN_SUMMARY_SCHEMA = "labelagent.run-summary.v1"
+
+
+def run_summary(output):
+    frames = []
+    for item in output.get("frames", []):
+        if not isinstance(item, dict):
+            continue
+        frames.append({key: copy.deepcopy(item.get(key)) for key in (
+            "frame", "candidates_added", "remaining", "failed",
+            "existing_candidates_preserved") if key in item})
+    current = output.get("current")
+    if isinstance(current, dict):
+        current = {key: copy.deepcopy(current.get(key)) for key in (
+            "frame", "phase", "round", "retry_attempt") if key in current}
+    else:
+        current = None
+    failed = output.get("failed_frames")
+    if not isinstance(failed, list):
+        failed = [item.get("frame") for item in frames if item.get("failed")]
+    task_id = output.get("task_id")
+    if not task_id:
+        task_id = "legacy-" + _sha256_json({
+            "file": output.get("file"), "topic": output.get("topic"),
+            "reference": output.get("reference"), "frames": frames,
+        })[:24]
+    inferred_status = "running" if current else "completed" if frames else "idle"
+    return {
+        "schema_version": RUN_SUMMARY_SCHEMA,
+        "task_id": task_id,
+        "file": output.get("file"),
+        "topic": output.get("topic"),
+        "reference": output.get("reference"),
+        "status": output.get("status", inferred_status),
+        "total": int(output.get("total") or len(output.get("targets", [])) or len(frames)),
+        "completed": len(frames),
+        "current": current,
+        "frames": frames,
+        "failed_frames": [int(item) for item in failed if isinstance(item, int)],
+        "message": str(output.get("message") or "")[:500],
+        "error": str(output.get("error") or "")[:500],
+        "updated_at": time.time(),
+    }
+
+
+def load_run_summary():
+    path = WORK / "last_run_summary.json"
+    with run_summary_lock:
+        try:
+            if path.is_file() and path.stat().st_size <= 1024 * 1024:
+                value = json.loads(path.read_text(encoding="utf-8"))
+                if value.get("schema_version") == RUN_SUMMARY_SCHEMA:
+                    return value
+            legacy = WORK / "last_run.json"
+            if not legacy.is_file() or legacy.stat().st_size > FAST_JSON_WRITE_LIMIT:
+                return None
+            value = run_summary(json.loads(legacy.read_text(encoding="utf-8")))
+            temporary = path.with_suffix(f".{threading.get_ident()}.tmp")
+            _write_json(temporary, value, fast=True)
+            _commit_work_file(temporary, path)
+            return value
+        except (OSError, ValueError, TypeError, json.JSONDecodeError):
+            return None
+
+
 def save_run(output):
     path = WORK / "last_run.json"
     temporary = path.with_suffix(".tmp")
     temporary.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
     _commit_work_file(temporary, path)
+    summary_path = WORK / "last_run_summary.json"
+    summary_temporary = summary_path.with_suffix(".tmp")
+    _write_json(summary_temporary, run_summary(output), fast=True)
+    _commit_work_file(summary_temporary, summary_path)
 
 
 def save_debug(trace):
@@ -2389,9 +2459,12 @@ def clear_auto_result(index):
                     remaining_frames = len(record["frames"])
                     if (record.get("current") or {}).get("frame") == index:
                         record["current"] = None
-            temporary = path.with_suffix(".tmp")
-            temporary.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
-            _commit_work_file(temporary, path)
+            if filename == "last_run.json":
+                save_run(record)
+            else:
+                temporary = path.with_suffix(".tmp")
+                temporary.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
+                _commit_work_file(temporary, path)
         with run_status_lock:
             if belongs(run_status):
                 run_status["events"] = [event for event in run_status.get("events", [])
@@ -3042,6 +3115,8 @@ def run_workflow():
         output = {"description": description, "frames": results, "current": None,
                   "trace": [], "steps": [], "file": str(state["video"].path),
                   "topic": state["topic"], "reference": reference,
+                   "task_id": run_task_id, "status": "running",
+                   "total": len(targets), "targets": targets,
                   "message": "候选已保存到本地；请在工作台逐帧复核并保存真值"}
         video, topic = state["video"], state["topic"]
         file_name = str(video.path)
@@ -3208,13 +3283,17 @@ def run_workflow():
             if failed_frames:
                 output["message"] = (f"{len(failed_frames)}/{len(results)} 帧失败；失败帧旧候选已保留，"
                                      "请查看错误后重试")
+                output["status"] = "failed"
                 _update_run_status_locked(status="failed", phase="failed", frame=None,
                                           error=output["message"])
             else:
+                output["status"] = "completed"
                 _update_run_status_locked(status="completed", phase="completed", frame=None)
+        save_run(output)
         return jsonify(output)
     except RunCancelled:
         output["current"] = None
+        output["status"] = "stopped"
         output["message"] = "用户已停止自动标注；已完成帧的候选已保存"
         save_run(output)
         with run_status_lock:
@@ -3222,6 +3301,7 @@ def run_workflow():
                                       error=None, completed=len(results))
         return jsonify(output | {"stopped": True})
     except Exception as error:
+        output["status"] = "failed"
         output["error"] = str(error)[:500]
         save_run(output)
         with run_status_lock:
@@ -3264,7 +3344,41 @@ def get_run_status():
         if phase_started_at else 0.0,
         progress_contract_version=2,
     )
+    if snapshot.get("status") not in ("running", "stopping"):
+        summary = load_run_summary()
+        with lock:
+            selected_file = str(state["video"].path) if state.get("video") else ""
+            selected_topic = state.get("topic")
+        same_scope = (summary and summary.get("file") == selected_file
+                      and summary.get("topic") == selected_topic)
+        same_task = (not snapshot.get("task_id")
+                     or summary and summary.get("task_id") == snapshot.get("task_id"))
+        if same_scope and same_task and summary.get("frames"):
+            snapshot.update(
+                result_available=True,
+                result_task_id=summary.get("task_id"),
+                result_status=summary.get("status"),
+                result_completed=summary.get("completed", 0),
+                result_total=summary.get("total", 0),
+                failed_frames=summary.get("failed_frames", []),
+            )
     return jsonify(snapshot)
+
+
+@app.get("/api/run/result")
+def get_run_result():
+    summary = load_run_summary()
+    if summary is None:
+        return jsonify(error="没有可恢复的运行结果"), 404
+    requested_task = request.args.get("task_id")
+    if requested_task and requested_task != summary.get("task_id"):
+        raise StaleHumanReviewError("请求的任务已被更新结果替代")
+    with lock:
+        selected_file = str(state["video"].path) if state.get("video") else ""
+        selected_topic = state.get("topic")
+    if summary.get("file") != selected_file or summary.get("topic") != selected_topic:
+        raise StaleHumanReviewError("运行结果不属于当前数据文件和图像源")
+    return jsonify(summary)
 
 
 @app.get("/api/run/debug")

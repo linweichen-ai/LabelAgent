@@ -1,4 +1,4 @@
-const $=id=>document.getElementById(id);let candidates={},agentRuns={},candidateReviewProposals=[],candidateReviewBindings={},truthReviewStatus={},topics={},topic='',frame=0,shapes={},draft=[],playing=null,labels=[],autoLabels=[],referenceOnlyLabels=[],imageWidth=0,imageHeight=0,loading=false,frameLoadGeneration=0,playback=null,playGeneration=0,presentedTime=0,catalog={},recordDuration=0,clockTime=0,clockAnchor=0,clockBase=0,rate=1,tickHandle=null,extraWindows=new Map(),windowSerial=0,annotationMode=false,annotationView=null,pointMode=false,negativeMode=false,promptPoints=[],segmentBusy=false,pointPromptStartedAt=0,pointPromptTimer=null,pointPromptNotice='',pointPromptAutoRunOnce=false,pointPromptGeneratedPointCount=0,pointPromptRequiresRefinement=false,generatedShapeFrame=null,generatedShapeTopic='',generatedShapeIndex=-1,regionMode='',selectedShapeIndex=-1,zoomScale=1,referencePreparationIntent=null,referenceFinalizeBusy=false,referenceFinalizeNotice='',referenceReviewSolo=false,referenceReviewFocused=false,referenceReviewOriginalOnly=false,referenceOriginalSweepVisited=false,referenceOpenSetReviewed=false,referenceReviewedShapeKeys=new Set(),referenceDismissedMissingLabels=new Set(),candidateStateSignature='',loadedDataPath='',restoringFrameNavigation=false,compactGeometryMode=false,truthFrameIndex=new Set(),candidateCountIndex={},workbenchConfig={};
+const $=id=>document.getElementById(id);let candidates={},agentRuns={},candidateReviewProposals=[],candidateReviewBindings={},truthReviewStatus={},topics={},topic='',frame=0,shapes={},draft=[],playing=null,labels=[],autoLabels=[],referenceOnlyLabels=[],imageWidth=0,imageHeight=0,loading=false,frameLoadGeneration=0,playback=null,playGeneration=0,presentedTime=0,catalog={},recordDuration=0,clockTime=0,clockAnchor=0,clockBase=0,rate=1,tickHandle=null,extraWindows=new Map(),windowSerial=0,annotationMode=false,annotationView=null,pointMode=false,negativeMode=false,promptPoints=[],segmentBusy=false,pointPromptStartedAt=0,pointPromptTimer=null,pointPromptNotice='',pointPromptAutoRunOnce=false,pointPromptGeneratedPointCount=0,pointPromptRequiresRefinement=false,generatedShapeFrame=null,generatedShapeTopic='',generatedShapeIndex=-1,regionMode='',selectedShapeIndex=-1,zoomScale=1,referencePreparationIntent=null,referenceFinalizeBusy=false,referenceFinalizeNotice='',referenceReviewSolo=false,referenceReviewFocused=false,referenceReviewOriginalOnly=false,referenceOriginalSweepVisited=false,referenceOpenSetReviewed=false,referenceReviewedShapeKeys=new Set(),referenceDismissedMissingLabels=new Set(),candidateStateSignature='',loadedDataPath='',restoringFrameNavigation=false,compactGeometryMode=false,truthFrameIndex=new Set(),candidateCountIndex={},workbenchConfig={},runResultHandled=new Set(),bootstrapComplete=false;
 async function api(path,body){const response=await fetch('/api/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const raw=await response.text();let data;try{data=JSON.parse(raw)}catch{throw Error(`接口 ${path} 返回非 JSON 响应（HTTP ${response.status}），请重启标注服务`)}if(!response.ok)throw Error(data.error||`请求失败（HTTP ${response.status}）`);return data}
 function applyCompactFrameState(data,target,expectedTopic=topic,expectedPath=loadedDataPath){
  if(!data?.compact_geometry||data.topic!==expectedTopic||data.path!==expectedPath||Number(data.frame)!==Number(target))throw Error('按需标注层与当前文件、相机或帧不一致，已拒绝显示');
@@ -510,6 +510,22 @@ $('downloadDebug').onclick=async()=>{
  }catch(error){toast(error.message)}finally{button.disabled=false}
 };
 let latestAgentJob={status:'idle'},runRequestStartedAt=null,runRequestPhase='preflight',runStatusFailureCount=0;
+function pendingRunResult(job=latestAgentJob){const id=job?.result_task_id||job?.task_id;return !!(job?.result_available&&id&&!runResultHandled.has(id))}
+function markRunResultHandled(taskId){if(taskId)runResultHandled.add(taskId)}
+async function recoverRunResult(job=latestAgentJob){
+ const taskId=job?.result_task_id||job?.task_id;if(!taskId||runResultHandled.has(taskId))return false;
+ const response=await fetch('/api/run/result?task_id='+encodeURIComponent(taskId),{cache:'no-store'}),data=await response.json();
+ if(!response.ok)throw Error(data.error||'无法恢复上次运行结果');
+ if(data.file!==loadedDataPath||data.topic!==topic)throw Error('上次结果不属于当前数据文件和图像源');
+ for(const item of data.frames||[])if(Number.isInteger(item.frame))candidateCountIndex[String(item.frame)]=Math.max(0,Number(item.remaining)||0);
+ refreshCandidateSummary();
+ const first=(data.frames||[]).find(item=>!item.failed&&item.remaining>0)||(data.frames||[]).find(item=>item.remaining>0);
+ if(first)await openCandidateFrame(first.frame,data.topic);
+ markRunResultHandled(taskId);latestAgentJob.result_available=false;renderRunButton();
+ const failed=data.failed_frames||[];
+ toast(first?(failed.length?`已恢复 ${data.completed} 帧结果，其中 ${failed.length} 帧失败；旧候选已保留`:`已恢复 ${data.completed} 帧结果，请继续人工复核`):'上次任务没有可显示的候选');
+ return true;
+}
 function formatAgentDuration(seconds){
  const value=Math.max(0,Math.floor(seconds||0)),hours=Math.floor(value/3600),minutes=Math.floor(value%3600/60),rest=value%60;
  if(hours)return `${hours} 小时 ${minutes} 分`;
@@ -567,8 +583,9 @@ function renderRunButton(){
  const job=pending?{status:'running',phase:runRequestPhase,started_at:runRequestStartedAt,phase_started_at:runRequestStartedAt,phase_elapsed_seconds:Math.max(0,Date.now()/1000-runRequestStartedAt),frame:Number($('frameNumber').value),total:Number($('taskCount').value),completed:0,shape_count:0}:latestAgentJob;
  const stopping=job.status==='stopping',running=job.status==='running'||stopping;
  const elapsed=job.started_at?Math.max(0,Math.floor((running?Date.now()/1000:(job.events?.at(-1)?.time||job.started_at))-job.started_at)):null;
- button.disabled=pending||stopping;
- button.textContent=(pending?'启动中…':stopping?'正在停止…':running?'停止自动标注':'开始自动标注')+(running&&!pending?` · 第 ${job.round||0}/${Math.max(1,Number(job.max_rounds)||6)} 轮`: '')+(elapsed===null?'':` · ${elapsed} 秒`);
+  const recoverable=pendingRunResult(job);
+  button.disabled=pending||stopping;
+  button.textContent=(pending?'启动中…':stopping?'正在停止…':running?'停止自动标注':recoverable?'查看上次结果':'开始自动标注')+(running&&!pending?` · 第 ${job.round||0}/${Math.max(1,Number(job.max_rounds)||6)} 轮`: '')+(elapsed===null?'':` · ${elapsed} 秒`);
  button.setAttribute('aria-busy',String(pending||running));
  renderAgentProgressPanel(job,elapsed||0);
 }
@@ -579,7 +596,7 @@ async function fetchAgentStatus(){
  catch(error){if(error?.name==='AbortError')throw Error('状态读取超过 8 秒');throw error}
  finally{if(timer)clearTimeout(timer)}
 }
-async function refreshAgentProgress(){if(progressFetching)return;progressFetching=true;try{const response=await fetchAgentStatus();if(!response.ok)throw Error(`HTTP ${response.status}`);runStatusConnectionMessage='';renderAgentProgress(await response.json());runStatusFailureCount=0;$('runButton').removeAttribute('title')}catch(error){runStatusFailureCount++;runStatusConnectionMessage=runStatusFailureCount>=3?`连续无法读取推理状态：${error.message}；后台任务不会重复提交`:`暂时无法读取推理状态：${error.message}，正在自动恢复`;$('runButton').title=runStatusConnectionMessage;renderRunButton()}finally{progressFetching=false}}
+async function refreshAgentProgress(){if(progressFetching)return;progressFetching=true;try{const response=await fetchAgentStatus();if(!response.ok)throw Error(`HTTP ${response.status}`);runStatusConnectionMessage='';const job=await response.json();renderAgentProgress(job);runStatusFailureCount=0;$('runButton').removeAttribute('title');if(bootstrapComplete&&runRequestStartedAt===null&&pendingRunResult(job))await recoverRunResult(job)}catch(error){runStatusFailureCount++;runStatusConnectionMessage=runStatusFailureCount>=3?`连续无法读取推理状态：${error.message}；后台任务不会重复提交`:`暂时无法读取推理状态：${error.message}，正在自动恢复`;$('runButton').title=runStatusConnectionMessage;renderRunButton()}finally{progressFetching=false}}
 async function ensureAutoLabelReadiness(){
  const [response,workflowResponse]=await Promise.all([
   fetch('/api/model_readiness',{cache:'no-store'}),
@@ -602,6 +619,11 @@ $('runButton').onclick=async()=>{
   try{await api('run/stop',{});toast('已请求停止自动标注')}catch(e){toast(e.message);button.disabled=false;renderRunButton()}
   return;
  }
+  if(pendingRunResult()){
+   button.disabled=true;button.textContent='正在恢复结果…';
+   try{await recoverRunResult()}catch(e){toast(e.message)}finally{button.disabled=false;renderRunButton()}
+   return;
+  }
  if(runRequestStartedAt!==null)return;
  try{
   const startFrame=Number($('frameNumber').value),count=Number($('taskCount').value);
@@ -613,6 +635,7 @@ $('runButton').onclick=async()=>{
   const jobTopic=topic;
   stopPlayback();
   const data=await api('run',{frame:startFrame,count,max_rounds:6});
+   markRunResultHandled(data.task_id);latestAgentJob.result_available=false;
   if(data.description)currentDescription=data.description;
   if(data.stopped){toast('自动标注已停止；已完成帧的候选已保存');return}
   if(!data.frames?.length)throw Error('没有实际处理任何帧。参考帧和已有真值会跳过，请增大处理帧数。');
@@ -648,7 +671,7 @@ async function pollRunStatus(){
 }
 document.addEventListener('visibilitychange',()=>{if(document.hidden){if(runStatusPollTimer)clearTimeout(runStatusPollTimer);runStatusPollTimer=null}else if(!runStatusPollTimer)pollRunStatus()});
 pollRunStatus();
-window.labelAgentBootstrapReady=fetch('/api/bootstrap').then(r=>r.json()).then(async data=>{labels=data.labels||[];autoLabels=data.auto_labels||labels;referenceOnlyLabels=data.reference_only_labels||[];shapes=data.truth||{};truthReviewStatus=data.truth_review_status||{};candidates=data.candidates||{};agentRuns=data.agent_runs||{};candidateReviewProposals=data.candidate_review_proposals||[];candidateReviewBindings=data.candidate_review_bindings||{};truthFrameIndex=new Set((data.truth_frames||Object.keys(shapes)).map(String));candidateCountIndex=data.candidate_counts&&typeof data.candidate_counts==='object'?{...data.candidate_counts}:Object.fromEntries(Object.entries(candidates).map(([name,items])=>[name,Array.isArray(items)?items.length:0]));compactGeometryMode=data.compact_geometry===true;workbenchConfig=data.config||{};window.referenceFrames=data.reference_frames||{};refreshLabels();refreshAutoLabels();refreshCandidateSummary();$('labelsInput').value=labels.join(',')||$('labelsInput').value;for(let [key,id] of Object.entries({llm_url:'llmUrl',llm_model:'llmModel'}))$(id).value=data.config[key]||'';currentDescription=data.description||null;const savedMode=localStorage.getItem('labelagentWorkspaceMode'),hasCandidates=Object.values(candidateCountIndex).some(value=>Number(value)>0);await window.setWorkspaceMode?.(savedMode||(hasCandidates?'auto':'manual'),false);if(data.loaded)await loadVideo(data);publishWorkbenchFrameState();return data});
+window.labelAgentBootstrapReady=fetch('/api/bootstrap').then(r=>r.json()).then(async data=>{labels=data.labels||[];autoLabels=data.auto_labels||labels;referenceOnlyLabels=data.reference_only_labels||[];shapes=data.truth||{};truthReviewStatus=data.truth_review_status||{};candidates=data.candidates||{};agentRuns=data.agent_runs||{};candidateReviewProposals=data.candidate_review_proposals||[];candidateReviewBindings=data.candidate_review_bindings||{};truthFrameIndex=new Set((data.truth_frames||Object.keys(shapes)).map(String));candidateCountIndex=data.candidate_counts&&typeof data.candidate_counts==='object'?{...data.candidate_counts}:Object.fromEntries(Object.entries(candidates).map(([name,items])=>[name,Array.isArray(items)?items.length:0]));compactGeometryMode=data.compact_geometry===true;workbenchConfig=data.config||{};window.referenceFrames=data.reference_frames||{};refreshLabels();refreshAutoLabels();refreshCandidateSummary();$('labelsInput').value=labels.join(',')||$('labelsInput').value;for(let [key,id] of Object.entries({llm_url:'llmUrl',llm_model:'llmModel'}))$(id).value=data.config[key]||'';currentDescription=data.description||null;const savedMode=localStorage.getItem('labelagentWorkspaceMode'),hasCandidates=Object.values(candidateCountIndex).some(value=>Number(value)>0);await window.setWorkspaceMode?.(savedMode||(hasCandidates?'auto':'manual'),false);if(data.loaded)await loadVideo(data);publishWorkbenchFrameState();bootstrapComplete=true;setTimeout(refreshAgentProgress,0);return data});
 
 // Keep point-prompt mode unmistakable: entering the mode is not an inference request.
 // The existing coach owns the inference state; this presentation layer mirrors it on

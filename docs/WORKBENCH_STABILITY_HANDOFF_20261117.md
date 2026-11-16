@@ -386,3 +386,15 @@ Python 回归 127/127、轮询 10/10、候选与人工门禁 60/60，JavaScript 
 回归为 Python 130/130、轮询与进度 11/11、候选与人工门禁 60/60。正式 SAM、VLM、流程均 ready，运行 idle；回滚点为 `D:\Apps\LabelAgent\.local\backups\workbench-instant-still-round22-20261117-110000`。截图见 [第二十二轮即时单帧工作台](evidence/workbench-stability-20261117/instant-still-before-play-round22.png)，结构化证据见 [第二十二轮实测](evidence/workbench-stability-20261117/instant-still-round22.json)。
 
 边界：本轮只改善交互与媒体准备，不改变模型精度。camera_3 仍为 `reference_missing`；单次浏览器时延不等于所有机器和所有新数据的统计分布，后续继续做批量任务恢复、失败帧重试和第二套独立数据冷启动验收。
+
+## 第二十三轮刷新/重启后的运行结果恢复（2026-11-17）
+
+候选此前已经逐帧原子保存，但浏览器刷新或服务重启会丢失原始长请求的响应。用户容易误以为结果丢失，再次点击推理，造成重复计算。现在每次写完整运行记录时，同步原子写一份轻量回执，只包含任务 ID、文件/相机作用域、状态、帧计数、每帧剩余候选数和失败帧；不包含描述、模型调用轨迹、检查图、候选几何或 Agent 审计。
+
+服务重启后，如果当前文件和相机与回执严格匹配，页面会自动恢复尚未在本页处理的最近结果，并通过按需帧接口打开首个候选；任务 ID 在同一页面只处理一次。旧版 `last_run.json` 可一次性迁移为稳定的 legacy 任务 ID。错误任务 ID、错误文件或错误相机均返回 409，不会误开其他数据的结果。
+
+正式重启后，从 244,941 字节旧运行记录迁移出 558 字节回执，减少 99.77%。状态和结果接口各 30 次热态中位为 1.48/1.53 ms。真实 Edge 冷页面在 2.04 秒内自动打开第 30 帧及其 10 个候选，使用 compact geometry，完整 `/api/state` 请求为 0；页面、控制台和网络失败均为 0。
+
+恢复前后正式 `state.json`、`file_sessions.json` 和 `last_run.json` SHA-256 完全一致；没有重新推理，没有保存或提升任何候选，也没有修改训练集。Python 131/131、轮询与恢复 12/12、候选与人工门禁 60/60 通过，正式 SAM、VLM、流程均 ready，运行 idle。回滚点为 `D:\Apps\LabelAgent\.local\backups\workbench-run-recovery-round23-20261117-120000`。截图见 [第二十三轮自动恢复结果](evidence/workbench-stability-20261117/run-recovery-after-restart-round23.png)，结构化证据见 [第二十三轮实测](evidence/workbench-stability-20261117/run-recovery-round23.json)。
+
+边界：本轮正式验收复用了已有完成任务，没有注入真实进程崩溃，也未启动新的长推理。下一轮继续实现失败帧的精确重试，确保已成功帧不会被重复计算。

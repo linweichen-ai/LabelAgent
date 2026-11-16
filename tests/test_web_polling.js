@@ -189,6 +189,25 @@ test('空闲状态明确显示待开始而不是误导性的零进度', () => {
   assert.equal(element('runProgressBar').attributes['aria-valuenow'], '0');
 });
 
+test('刷新后有持久化结果时按钮先恢复结果且不会重复恢复', () => {
+  const button = {disabled:false,textContent:'',attributes:{},
+    setAttribute(name,value){this.attributes[name]=value}};
+  const h = harness({
+    $: id => id === 'runButton' ? button : {value:'0'},
+    latestAgentJob:{status:'idle',result_available:true,result_task_id:'task-1',
+      result_completed:2,result_total:2},
+    runRequestStartedAt:null,runRequestPhase:'preflight',runResultHandled:new Set(),
+    renderAgentProgressPanel() {},
+  });
+  const text = source('app.js');
+  h.run(section(text, 'function pendingRunResult', 'function formatAgentDuration'));
+  h.run(section(text, 'function renderRunButton', 'function renderAgentProgress'));
+  h.run('renderRunButton()');
+  assert.equal(button.textContent, '查看上次结果');
+  h.run("markRunResultHandled('task-1');renderRunButton()");
+  assert.equal(button.textContent, '开始自动标注');
+});
+
 test('瞬时故障重试时同一任务进度不倒退，新任务重新计数', () => {
   const elements = new Map();
   function element(id) {

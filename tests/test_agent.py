@@ -1274,6 +1274,55 @@ class FakeVideo:
 
 
 class ServerTests(unittest.TestCase):
+    def test_run_summary_is_bounded_scoped_and_recoverable_after_idle_restart(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0"}
+            server.run_status = {"status": "idle"}
+            output = {
+                "task_id": "task-123", "status": "failed", "file": str(FakeVideo.path),
+                "topic": "camera0", "reference": 0, "total": 2,
+                "frames": [
+                    {"frame": 1, "remaining": 3, "candidates_added": 2,
+                     "failed": False, "agent": {"large": "x" * 10000}},
+                    {"frame": 2, "remaining": 1, "candidates_added": 0,
+                     "failed": True, "existing_candidates_preserved": True,
+                     "review_queue": [{"reason": "large" * 1000}]},
+                ],
+                "failed_frames": [2], "message": "1/2 帧失败",
+                "description": {"large": "y" * 10000}, "trace": [{"large": "z" * 10000}],
+                "steps": [{"image": "huge" * 10000}], "current": None,
+            }
+            try:
+                server.save_run(output)
+                summary_path = server.WORK / "last_run_summary.json"
+                self.assertTrue(summary_path.is_file())
+                self.assertLess(summary_path.stat().st_size, 2048)
+                summary = json.loads(summary_path.read_text(encoding="utf-8"))
+                self.assertEqual(summary["task_id"], "task-123")
+                self.assertEqual(summary["failed_frames"], [2])
+                self.assertNotIn("trace", summary)
+                self.assertNotIn("agent", summary["frames"][0])
+                summary_path.unlink()
+                migrated = server.load_run_summary()
+                self.assertEqual(migrated["task_id"], "task-123")
+                self.assertTrue(summary_path.is_file())
+                client = server.app.test_client()
+                recovered = client.get("/api/run/result?task_id=task-123")
+                self.assertEqual(recovered.status_code, 200, recovered.json)
+                status = client.get("/api/run/status").json
+                self.assertTrue(status["result_available"])
+                self.assertEqual(status["result_task_id"], "task-123")
+                self.assertEqual(status["failed_frames"], [2])
+                stale = client.get("/api/run/result?task_id=other-task")
+                self.assertEqual(stale.status_code, 409, stale.json)
+                server.state["topic"] = "camera1"
+                wrong_scope = client.get("/api/run/result?task_id=task-123")
+                self.assertEqual(wrong_scope.status_code, 409, wrong_scope.json)
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
     def test_timeline_endpoint_returns_exact_times_without_starting_playback(self):
         old_state, old_work = server.state, server.WORK
         with tempfile.TemporaryDirectory() as directory:

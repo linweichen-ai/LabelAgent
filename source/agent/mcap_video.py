@@ -181,20 +181,85 @@ class Video:
         position = bisect_right([frame for frame, _ in frames], index) - 1
         return frames[position]
 
+    def _playback_paths(self, topic, directory):
+        stat = self.path.stat()
+        key = hashlib.sha256(
+            f"v1:{self.path.resolve()}:{stat.st_size}:{stat.st_mtime_ns}:{topic}".encode()
+        ).hexdigest()
+        directory = Path(directory)
+        directory.mkdir(parents=True, exist_ok=True)
+        return key, directory / (key + ".mp4"), directory / (key + ".json")
+
+    def _read_timeline_manifest(self, manifest, topic):
+        if not manifest.is_file() or manifest.stat().st_size > 16 * 1024 * 1024:
+            return None
+        try:
+            metadata = json.loads(manifest.read_text(encoding="utf-8"))
+            times = metadata.get("times")
+            if (not isinstance(times, list) or len(times) != self.topics[topic]["count"]
+                    or any(isinstance(value, bool) or not isinstance(value, (int, float))
+                           or not math.isfinite(value) or value < 0 for value in times)
+                    or any(second <= first for first, second in zip(times, times[1:]))):
+                return None
+            return metadata
+        except (OSError, ValueError, TypeError, json.JSONDecodeError):
+            return None
+
+    @staticmethod
+    def _write_timeline_manifest(manifest, metadata):
+        temporary = manifest.with_suffix(f".{threading.get_ident()}.tmp")
+        temporary.write_text(json.dumps(metadata, separators=(",", ":")), encoding="utf-8")
+        temporary.replace(manifest)
+
+    def timeline(self, topic, directory):
+        """Return exact frame times without waiting for MP4 encoding."""
+        if topic not in self.topics:
+            raise ValueError("无效的相机话题")
+        key, target, manifest = self._playback_paths(topic, directory)
+        metadata = self._read_timeline_manifest(manifest, topic)
+        if metadata is None:
+            times = []
+            factory = DecoderFactory()
+            base = None
+            previous = -1
+            fallback_count = 0
+            with self.path.open("rb") as stream:
+                for schema, channel, message in make_reader(stream).iter_messages(topics=[topic]):
+                    decoder = factory.decoder_for(channel.message_encoding, schema)
+                    data = decoder(message.data) if decoder else None
+                    ns = message_time(data, message)
+                    if not ns:
+                        ns = message.log_time
+                        fallback_count += 1
+                    if base is None:
+                        base = ns
+                    seconds = (ns - base) / 1e9
+                    if seconds <= previous:
+                        raise ValueError("相机时间戳未严格递增，无法准确对齐")
+                    times.append(seconds)
+                    previous = seconds
+            metadata = {
+                "times": times,
+                "fps": (len(times) - 1) / times[-1] if len(times) > 1 and times[-1] else 0,
+                "duration": times[-1] if times else 0,
+                "count": len(times),
+                "timestamp_source": "log_time" if fallback_count == len(times) else "capture",
+                "progress": 1,
+            }
+            self._write_timeline_manifest(manifest, metadata)
+        return dict(metadata, status="ready", playback_ready=target.is_file(),
+                    url=f"/api/media/{key}.mp4" if target.is_file() else None)
+
     def playback(self, topic, directory):
         """Prepare a timestamped browser video once, without blocking frame requests."""
         if topic not in self.topics:
             raise ValueError("无效的相机话题")
         with self._playback_lock:
             if topic not in self._playback:
-                stat = self.path.stat()
-                key = hashlib.sha256(f"v1:{self.path.resolve()}:{stat.st_size}:{stat.st_mtime_ns}:{topic}".encode()).hexdigest()
-                directory = Path(directory)
-                directory.mkdir(parents=True, exist_ok=True)
-                target = directory / (key + ".mp4")
-                manifest = directory / (key + ".json")
-                if target.exists() and manifest.exists():
-                    self._playback[topic] = dict(json.loads(manifest.read_text()), status="ready", url=f"/api/media/{key}.mp4")
+                key, target, manifest = self._playback_paths(topic, directory)
+                metadata = self._read_timeline_manifest(manifest, topic) if target.exists() else None
+                if metadata is not None:
+                    self._playback[topic] = dict(metadata, status="ready", url=f"/api/media/{key}.mp4")
                 else:
                     self._playback[topic] = {"status": "preparing", "progress": 0}
                     threading.Thread(target=self._prepare_playback, args=(topic, target, manifest), daemon=True).start()
@@ -271,7 +336,7 @@ class Video:
             metadata = {"times": times, "fps": (len(times)-1)/times[-1] if len(times)>1 and times[-1] else 0,
                         "duration": times[-1] if times else 0, "count": len(times),
                         "timestamp_source": "log_time" if fallback_count == len(times) else "capture", "progress": 1}
-            manifest.write_text(json.dumps(metadata))
+            self._write_timeline_manifest(manifest, metadata)
             self._playback[topic] = dict(metadata, status="ready", url=f"/api/media/{target.name}")
         except Exception as error:
             self._playback[topic] = {"status": "error", "error": str(error)}

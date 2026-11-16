@@ -1,0 +1,84 @@
+{
+  "round": 22,
+  "observed_at": "2026-11-17T07:37:24+08:00",
+  "scope": {
+    "runtime": "D:\\Apps\\LabelAgent",
+    "dataset": "SFL_CPD15Y_20261111/batchA_0920_000_clean_review.mcap",
+    "topic": "/capture/camera_3/image",
+    "frames": 152,
+    "topic_had_cached_mp4_before_acceptance": false,
+    "writes_to_truth_candidates_or_training": false
+  },
+  "diagnosis": {
+    "old_behavior": "opening an image window or entering annotation waited for full MP4 encoding",
+    "pre_change_camera2_playback_ms": 7095,
+    "pre_change_camera2_playback_polls": 18,
+    "root_cause": "still-image annotation was coupled to playback-video preparation"
+  },
+  "change": {
+    "timeline_api": "extracts and atomically caches exact frame timestamps without encoding MP4",
+    "still_image_path": "sensor window, annotation entry, frame navigation and timeline scrubbing use decoded still frames",
+    "playback_path": "MP4 is prepared only after the user explicitly clicks play",
+    "stop_behavior": "stopping playback returns every image window to a sharp still frame",
+    "idle_progress_copy": "待开始 replaces misleading idle 0% while aria-valuenow remains 0",
+    "cache_invalidation": ["resolved source path", "file size", "mtime_ns", "topic", "cache protocol version"]
+  },
+  "formal_browser_acceptance": {
+    "window_still_ready_ms": 368,
+    "annotation_ready_ms": 62,
+    "frame_101_ready_ms": 336,
+    "playback_requests_before_explicit_play": 0,
+    "mp4_created_before_explicit_play": false,
+    "explicit_play_ready_ms": 8184,
+    "explicit_play_poll_count": 21,
+    "mp4_created_after_explicit_play": true,
+    "stop_returned_to_still": true,
+    "page_errors": 0,
+    "console_errors": 0,
+    "unexpected_failed_requests": 0,
+    "screenshot": "instant-still-before-play-round22.png",
+    "browser_receipt": "instant-still-browser-round22.json"
+  },
+  "hot_read_benchmark_30_calls": {
+    "timeline_camera3": {"median_ms": 8.574, "mean_ms": 10.979, "p95_ms": 22.944, "bytes": 1877},
+    "frame101_camera3": {"median_ms": 13.857, "mean_ms": 21.866, "p95_ms": 25.168, "bytes": 232853}
+  },
+  "state_identity": {
+    "state_sha256_before_and_after": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+    "file_sessions_sha256_before_and_after": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "browser_acceptance_intermediate_state_preserved_at": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-instant-still-round22-20261117-110000\\state-after-browser-acceptance.json",
+    "machine_candidates_promoted_to_truth": false,
+    "training_set_modified": false
+  },
+  "regression": {
+    "python": "130/130",
+    "web_polling": "11/11",
+    "candidate_and_human_gate": "60/60",
+    "javascript_syntax": "passed",
+    "diff_check": "passed"
+  },
+  "deployment": {
+    "runtime_status": "idle",
+    "model_readiness": "ready",
+    "run_readiness": "ready",
+    "runtime_matches_worktree": true,
+    "mcap_video_sha256": "3F44F7683CB1D6FC658828E2BD3C7DB9527A615B082F516AEC24069B7CE29BFC",
+    "media_sha256": "D356E29F401427F922A52ED7E8FCB38408768BC6CF3038CDF8CE3932DAA8F7C3",
+    "server_sha256": "5EB1ED102A4CA5251FBDB26FFCB1A5045EE9AACD9C0CF2AEE0477CFF6710BDB0",
+    "app_sha256": "2E6E829D66610D04DDBCE6D69EEA5E46B4E81EFC8686E441CB3433FE8A8A51C5",
+    "index_sha256": "AF4F3E0AF20F5CF12E1C8BE0A0678371B8DBB29AA18BA9D6F978B053C5A389DE",
+    "rollback": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-instant-still-round22-20261117-110000"
+  },
+  "derived_cache": {
+    "camera3_mp4_bytes": 27383067,
+    "retained_for_future_playback": true,
+    "source_dataset_modified": false
+  },
+  "limits": {
+    "browser_timing_runs": 1,
+    "tested_datasets_this_round": 1,
+    "model_accuracy_changed": false,
+    "cross_dataset_accuracy_claimed": false,
+    "camera3_reference_status": "reference_missing"
+  }
+}

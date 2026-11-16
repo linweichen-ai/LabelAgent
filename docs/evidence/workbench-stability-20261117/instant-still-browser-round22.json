@@ -1,0 +1,179 @@
+{
+  "topic": "/capture/camera_3/image",
+  "playback_file": "D:\\Apps\\LabelAgent\\work\\playback\\212b9853219e0a30db7365d172e8c5012c03e34da880af54326367563b9e4d98.mp4",
+  "playback_existed_before": false,
+  "requests": [
+    {
+      "pathname": "/api/timeline",
+      "status": 200,
+      "at": 1794871984253
+    },
+    {
+      "pathname": "/api/frame/0",
+      "status": 200,
+      "at": 1794871984321
+    },
+    {
+      "pathname": "/api/topic",
+      "status": 200,
+      "at": 1794871984376
+    },
+    {
+      "pathname": "/api/frame/0",
+      "status": 200,
+      "at": 1794871984379
+    },
+    {
+      "pathname": "/api/frame/101",
+      "status": 200,
+      "at": 1794871984719
+    },
+    {
+      "pathname": "/api/playback",
+      "status": 200,
+      "at": 1794871984820
+    },
+    {
+      "pathname": "/api/playback",
+      "status": 200,
+      "at": 1794871985228
+    },
+    {
+      "pathname": "/api/playback",
+      "status": 200,
+      "at": 1794871985636
+    },
+    {
+      "pathname": "/api/playback",
+      "status": 200,
+      "at": 1794871986042
+    },
+    {
+      "pathname": "/api/playback",
+      "status": 200,
+      "at": 1794871986448
+    },
+    {
+      "pathname": "/api/playback",
+      "status": 200,
+      "at": 1794871986854
+    },
+    {
+      "pathname": "/api/playback",
+      "status": 200,
+      "at": 1794871987262
+    },
+    {
+      "pathname": "/api/playback",
+      "status": 200,
+      "at": 1794871987667
+    },
+    {
+      "pathname": "/api/playback",
+      "status": 200,
+      "at": 1794871988075
+    },
+    {
+      "pathname": "/api/playback",
+      "status": 200,
+      "at": 1794871988489
+    },
+    {
+      "pathname": "/api/playback",
+      "status": 200,
+      "at": 1794871988903
+    },
+    {
+      "pathname": "/api/playback",
+      "status": 200,
+      "at": 1794871989311
+    },
+    {
+      "pathname": "/api/playback",
+      "status": 200,
+      "at": 1794871989716
+    },
+    {
+      "pathname": "/api/playback",
+      "status": 200,
+      "at": 1794871990122
+    },
+    {
+      "pathname": "/api/playback",
+      "status": 200,
+      "at": 1794871990530
+    },
+    {
+      "pathname": "/api/playback",
+      "status": 200,
+      "at": 1794871990934
+    },
+    {
+      "pathname": "/api/playback",
+      "status": 200,
+      "at": 1794871991339
+    },
+    {
+      "pathname": "/api/playback",
+      "status": 200,
+      "at": 1794871991747
+    },
+    {
+      "pathname": "/api/playback",
+      "status": 200,
+      "at": 1794871992155
+    },
+    {
+      "pathname": "/api/playback",
+      "status": 200,
+      "at": 1794871992563
+    },
+    {
+      "pathname": "/api/playback",
+      "status": 200,
+      "at": 1794871992971
+    },
+    {
+      "pathname": "/api/frame/101",
+      "status": 200,
+      "at": 1794871993080
+    },
+    {
+      "pathname": "/api/frame/101",
+      "status": 200,
+      "at": 1794871993082
+    }
+  ],
+  "page_errors": [],
+  "console_errors": [],
+  "failed_requests": [],
+  "window_still_ready_ms": 368,
+  "after_window": {
+    "status": "1 个图像源 · 单帧已就绪 · 点击播放时才准备视频",
+    "image_hidden": false,
+    "image_width": 1920,
+    "video_hidden": true,
+    "playback_ready": false,
+    "count": 152
+  },
+  "annotation_ready_ms": 62,
+  "annotation": {
+    "topic": "/capture/camera_3/image",
+    "frame": 0,
+    "annotationMode": true,
+    "compactGeometryMode": true,
+    "image_width": 1920,
+    "image_hidden": false,
+    "playback_hidden": true
+  },
+  "frame_101_ready_ms": 336,
+  "explicit_play_ready_ms": 8184,
+  "playback_requests_after_click": 21,
+  "playback_existed_after_click": true,
+  "after_stop": {
+    "image_hidden": false,
+    "playback_hidden": true
+  },
+  "unexpected_failed_requests": [],
+  "passed": true
+}

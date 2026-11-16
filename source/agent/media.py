@@ -50,6 +50,13 @@ class StillImage:
         with self._lock:
             return self._preview(directory)
 
+    def timeline(self, topic, directory):
+        if topic not in self.topics:
+            raise ValueError("无效的图片")
+        return dict(status="ready", times=[0], fps=0, duration=0, count=1,
+                    timestamp_source="still", progress=1, playback_ready=True,
+                    url=self._preview(directory)["url"])
+
     def _preview(self, directory):
         if self._playback is None:
             # Only the viewing preview is padded for H.264; annotation uses the

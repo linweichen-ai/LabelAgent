@@ -1646,6 +1646,24 @@ def get_playback():
     return jsonify(data)
 
 
+@app.get("/api/timeline")
+def get_timeline():
+    with lock:
+        if state["video"] is None:
+            raise ValueError("请先打开 MCAP")
+        video = state["video"]
+        topic = request.args.get("topic", state["topic"])
+        source_path = str(video.path)
+    data = video.timeline(topic, WORK / "playback")
+    with lock:
+        if state.get("video") is not video or str(state["video"].path) != source_path:
+            raise StaleHumanReviewError("时间轴生成期间数据文件已变化")
+        data["offset"] = video.catalog[topic].get("offset", 0)
+        data["path"] = source_path
+        data["topic"] = topic
+    return jsonify(data)
+
+
 @app.get("/api/cloud")
 def get_cloud():
     if state["video"] is None:

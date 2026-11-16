@@ -167,6 +167,28 @@ test('VLM 类别识别阶段显示非零进度并保持运行动画', () => {
   assert.ok(element('runProgressBar').classList.values.has('longPhase'));
 });
 
+test('空闲状态明确显示待开始而不是误导性的零进度', () => {
+  const elements = new Map();
+  function element(id) {
+    if (!elements.has(id)) elements.set(id, {
+      textContent: '', className: '', style: {}, attributes: {},
+      classList: { toggle() {} },
+      setAttribute(name, value) { this.attributes[name] = value; },
+      children: id === 'runProgressStages' ? Array.from({length: 5}, () => ({
+        classList: { toggle() {} },
+      })) : [],
+    });
+    return elements.get(id);
+  }
+  const h = harness({ $: element });
+  const text = source('app.js');
+  h.run(section(text, ' const agentPhase=', "$('downloadDebug').onclick"));
+  h.run(section(text, 'function formatAgentDuration', 'function renderRunButton'));
+  h.run("renderAgentProgressPanel({status:'idle',events:[]},0)");
+  assert.equal(element('runProgressPercent').textContent, '待开始');
+  assert.equal(element('runProgressBar').attributes['aria-valuenow'], '0');
+});
+
 test('瞬时故障重试时同一任务进度不倒退，新任务重新计数', () => {
   const elements = new Map();
   function element(id) {

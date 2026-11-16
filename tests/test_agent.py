@@ -1267,8 +1267,28 @@ class FakeVideo:
     def frame(self, topic, index):
         return image_bytes()
 
+    def timeline(self, topic, directory):
+        return {"status": "ready", "times": [0.0, 0.5, 1.0], "fps": 2,
+                "duration": 1.0, "count": 3, "timestamp_source": "capture",
+                "progress": 1, "playback_ready": False, "url": None}
+
 
 class ServerTests(unittest.TestCase):
+    def test_timeline_endpoint_returns_exact_times_without_starting_playback(self):
+        old_state, old_work = server.state, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0"}
+            try:
+                response = server.app.test_client().get("/api/timeline?topic=camera1")
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertEqual(response.json["times"], [0.0, 0.5, 1.0])
+                self.assertEqual(response.json["topic"], "camera1")
+                self.assertEqual(response.json["offset"], 0)
+                self.assertFalse(response.json["playback_ready"])
+            finally:
+                server.state, server.WORK = old_state, old_work
+
     def test_fast_and_streaming_json_writes_are_equivalent(self):
         value = {"中文": [shape(), {"text": "斜坡", "value": 1.25}], "flag": True}
         with tempfile.TemporaryDirectory() as directory:

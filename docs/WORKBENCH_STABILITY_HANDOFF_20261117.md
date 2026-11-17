@@ -602,3 +602,9 @@ Python 核心、图片、候选和 VLM 组件回归 174/174，网页交互 84/84
 逐图人工可见性复核支持主要类别，但发现 Camera 0 末帧和 Camera 3 首帧存在 `车辆` 与 `other_robot` 可能指向同一台叉车的重复语义风险。它被记录为后续真值评测项，未自动修正、未写入人工真值或训练集。可见斜坡只证明模型能在一个视角里叫出 ramp，不代表斜坡像素边界或可通行区域质量通过。
 
 回归为 Python 核心/图片/候选/VLM/基准 177/177、网页交互 84/84、基准单测 3/3。正式 SAM、VLM、页面 ready，任务 idle；六份正式状态/历史哈希保持不变。完整证据见 [第四十三轮八视角基线](evidence/workbench-stability-20261117/eight-view-discovery-round43.json)。
+
+## 第四十四轮缺席类别固定短语实验（否决，2026-11-17）
+
+尝试只把 `absent` 类别的依据约束为固定短语 `not visible`，`present/uncertain` 仍保留视觉依据，类别表、置信度和开放集尾部均不减少。八图请求 8/8 成功，总耗时 189.080→163.109 秒（观测下降 13.74%），中位 24.3365→20.105 秒；但 completion token 只下降 3.17%，且只有 4/8 的可见类别集合与基线一致。
+
+语义回退不可接受：Camera 1 首帧由 `pallet/person/floor/ego` 退化为只确认 `floor`，其余 7 类全部不确定；另外三帧新增 `车辆` 误报风险，其中一帧还新增 `cargo_floor` 不确定。该实验未部署，开发代码和测试已经恢复第四十三轮，相关 Python 回归 162 项通过、5 项按既有条件跳过；正式工作台 ready/idle，六份状态/历史哈希未变。完整否决证据见 [第四十四轮短语实验](evidence/workbench-stability-20261117/rejected-fixed-absence-round44.json)。

@@ -1,0 +1,72 @@
+{
+  "schema_version": "labelagent.rejected_fixed_absence_round44.v1",
+  "date": "2026-11-17",
+  "status": "rejected_not_deployed",
+  "hypothesis": "Constrain absent-label reasons to the fixed phrase 'not visible' while retaining visual reasons for present and uncertain labels, all registry entries, confidences and the open-set tail.",
+  "paired_evaluation": {
+    "cohort": "Round 43 Capture_20261103 four-camera x two-frame benchmark",
+    "image_count": 8,
+    "request_success_count": 8,
+    "baseline_total_ms": 189080,
+    "trial_total_ms": 163109,
+    "observed_total_latency_change_percent": -13.74,
+    "baseline_median_ms": 24336.5,
+    "trial_median_ms": 20105.0,
+    "baseline_completion_tokens": 2837,
+    "trial_completion_tokens": 2747,
+    "completion_token_change_percent": -3.17,
+    "exact_visible_label_set_matches": 4,
+    "exact_visible_label_set_mismatches": 4,
+    "raw_trial_artifact_sha256": "CE0C977ED2C94D0294FAB2053CA5E652758D687A6C62BFCFA43C0FEEB01E11F3"
+  },
+  "semantic_regressions": [
+    {
+      "position": 3,
+      "baseline_visible": ["pallet", "person", "floor", "ego"],
+      "trial_visible": ["floor"],
+      "trial_uncertain": ["车辆", "pallet", "person", "slope", "ego", "other_robot", "cargo_floor"],
+      "assessment": "severe instability"
+    },
+    {
+      "position": 4,
+      "baseline_visible": ["pallet", "person", "floor", "ego"],
+      "trial_visible": ["车辆", "pallet", "person", "floor", "ego", "other_robot"],
+      "assessment": "generic vehicle and other_robot overcall risk increased"
+    },
+    {
+      "position": 6,
+      "baseline_visible": ["person", "floor", "ego", "other_robot"],
+      "trial_visible": ["车辆", "person", "floor", "ego", "other_robot"],
+      "assessment": "added generic vehicle overcall"
+    },
+    {
+      "position": 8,
+      "baseline_visible": ["pallet", "floor", "ego", "other_robot"],
+      "trial_visible": ["车辆", "pallet", "floor", "ego", "other_robot"],
+      "trial_uncertain": ["cargo_floor"],
+      "assessment": "added generic vehicle and cargo-floor uncertainty"
+    }
+  ],
+  "decision": {
+    "accepted": false,
+    "reason": "A 13.74% observed latency reduction does not justify changing half of the eight paired category sets or creating a severe seven-label uncertainty collapse.",
+    "source_restored_to_round43": true,
+    "formal_runtime_modified": false,
+    "formal_candidate_modified": false,
+    "human_truth_modified": false,
+    "training_data_modified": false
+  },
+  "validation_after_restore": {
+    "focused_python": "162 passed, 5 skipped",
+    "formal_model_readiness": true,
+    "formal_run_status": "idle",
+    "formal_state_hashes_unchanged": {
+      "state.json": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+      "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+      "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+      "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+      "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+      "model_debug.json": "EFDF22CD6BD803C958E3ACB39D46054D294544FE48324A12B4AFE1502B3BBB9A"
+    }
+  }
+}

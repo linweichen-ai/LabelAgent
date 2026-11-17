@@ -1,0 +1,129 @@
+{
+  "schema_version": "labelagent.managed_fast_route_round47.v1",
+  "recorded_on": "2026-11-17",
+  "decision": "accepted_and_deployed",
+  "goal": "Use the shared 5090 only for bounded small-image requests, retain the verified 4090 as primary and automatic fallback, and never route full-resolution source images to the 5090 candidate.",
+  "routing_policy": {
+    "primary": "factory-4090 BF16 VLM",
+    "optional_fast": "factory-5090 NF4 VLM",
+    "source_image_max_pixels": 327680,
+    "source_image_max_long_edge": 640,
+    "derived_evidence_max_pixels": 1310720,
+    "derived_evidence_max_long_edge": 1280,
+    "fast_timeout_seconds": 60,
+    "fast_busy_retries": 0,
+    "fallback_reasons": [
+      "fast_busy",
+      "fast_timeout",
+      "fast_unavailable",
+      "fast_http_unavailable"
+    ]
+  },
+  "isolation_acceptance": {
+    "fast_available": [
+      {
+        "input": "1104/003 camera_0 640x512",
+        "elapsed_ms": 42068.002,
+        "candidate_counts": {"pallet": 13, "person": 2, "floor": 1},
+        "review_queue_count": 2,
+        "overlay_sha256": "C99BD0C91BFFAFA91EABAB356E33825E6A498C0252056FC9B551D4D75554C374",
+        "matches_round46_overlay": true,
+        "all_vlm_calls_used_fast_route": true
+      },
+      {
+        "input": "1104/004 camera_0 640x512",
+        "elapsed_ms": 31802.023,
+        "candidate_counts": {"pallet": 12, "floor": 1},
+        "review_queue_count": 1,
+        "overlay_sha256": "18E11015827E2AE55B73E9C7B4D56D06C61513A9222F0C5BFA47612B9F6799C8",
+        "matches_round46_overlay": true,
+        "all_vlm_calls_used_fast_route": true
+      }
+    ],
+    "fast_offline": {
+      "input": "1104/003 camera_0 640x512",
+      "elapsed_ms": 59153.225,
+      "route": "primary_fallback",
+      "reason": "fast_unavailable",
+      "candidate_counts": {"pallet": 13, "person": 2, "floor": 1},
+      "review_queue_count": 4,
+      "overlay_sha256": "C99BD0C91BFFAFA91EABAB356E33825E6A498C0252056FC9B551D4D75554C374",
+      "matches_round40_primary_overlay_and_review_queue": true
+    },
+    "fast_busy": {
+      "method": "transport unit test with HTTP 503 Local VLM is busy",
+      "wait_before_fallback": false,
+      "primary_fallback_succeeded": true
+    }
+  },
+  "formal_readback": {
+    "workbench_url": "http://127.0.0.1:8765",
+    "overall_ready": true,
+    "sam_ready": true,
+    "primary_vlm_ready": true,
+    "fast_vlm_ready": true,
+    "run_status": "idle",
+    "small_image_probe": {
+      "size": [640, 512],
+      "route": "small_image_fast",
+      "elapsed_ms": 16566,
+      "success": true,
+      "open_set_scan_complete": true
+    },
+    "large_image_probe": {
+      "size": [1920, 1536],
+      "route": "primary",
+      "elapsed_ms": 23987,
+      "success": true
+    },
+    "ui_endpoints_ms": {
+      "state_summary": {"samples": 20, "median": 30.691, "p95": 40.229, "maximum": 68.228},
+      "run_status": {"samples": 20, "median": 15.075, "p95": 16.082, "maximum": 24.242},
+      "model_readiness": {"samples": 5, "median": 82.036, "p95": 82.056, "maximum": 199.049}
+    }
+  },
+  "safety_boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "training_data_modified": false,
+    "oss_modified": false,
+    "other_gpu_processes_stopped": false,
+    "full_resolution_5090_route_enabled": false
+  },
+  "formal_state_integrity": {
+    "prechange_state_sha256": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+    "postchange_state_sha256": "D551E7554FFEE39B71B94EE9888794F042A0C0238601773FE90696817AE56F5A",
+    "reconstructed_after_removing_only_llm_fast_fields_sha256": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+    "non_config_state_changed": false,
+    "file_sessions_sha256": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files_sha256": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run_sha256": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary_sha256": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "model_debug_sha256": "EFDF22CD6BD803C958E3ACB39D46054D294544FE48324A12B4AFE1502B3BBB9A"
+  },
+  "tests": {
+    "python_core": {"passed": 167, "failed": 0},
+    "web": {"passed": 78, "failed": 0},
+    "diff_check": "passed"
+  },
+  "deployment": {
+    "workflow_sha256": "905211E703F0D2FCF87D049EA3F74D07DECCCCF7F6FE94B90D38807CF13BBE08",
+    "server_sha256": "60BC323F1FD14F031EE9DAD18D041BD8AC007DD7A15E7F3ED0072A67B96941DF",
+    "local_manager_sha256": "95D150C717242900C9544AE165980FF9BC674DC2ABF4AC07A3FB78BCE3D4030E",
+    "rollback": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-fast-route-round47-20261117",
+    "rollback_manifest_sha256": "5EF6B9A4910E6D0F11DE7BAD7C186206B7EE01A8D2FD83990FBEB0A992FA955E"
+  },
+  "artifact_hashes": {
+    "fast_available_summary": "A7DF9958CF76E8F18ADBDD4FBF533CFC6E7359C398464ACDCB2399FB98563C2B",
+    "fast_offline_summary": "9B4B998AC2484FFF4A8BBD23E3210E62D7E35992C235FE165B8B4F42C99714FB",
+    "formal_small_probe": "5E3CF45EC81E9FC11CCD1AF4DE9C16A4F3D8F9FF782CA3B1B9C8030D845DC2E2",
+    "formal_large_probe": "942DD6F97269A84913CBFCC35AB7B1AE7666A8CE49E6EDC39983FD6B7E4151A6"
+  },
+  "known_limitations": [
+    "The 5090 service is shared and may be busy; the route is an acceleration only and never a readiness gate.",
+    "The two 1104 images do not have independent pixel-level human truth and contain no visible slope.",
+    "The first stricter policy routed a generated 1280-wide diagnostic composite to the primary model; masks stayed identical but review status changed. It was rejected in favor of gating the source image at 640 while separately bounding generated evidence images.",
+    "This acceptance proves compatibility, deterministic candidate masks on the tested pair, and failover behavior; it is not a cross-dataset accuracy claim."
+  ]
+}

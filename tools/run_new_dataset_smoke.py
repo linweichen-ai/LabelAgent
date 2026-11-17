@@ -38,6 +38,10 @@ def parse_args() -> argparse.Namespace:
                         help="Explicit VLM endpoint override; source state is never changed.")
     parser.add_argument("--llm-model",
                         help="Explicit VLM model-id override; source state is never changed.")
+    parser.add_argument("--llm-fast-url",
+                        help="Optional small-image VLM endpoint; source state is never changed.")
+    parser.add_argument("--llm-fast-model",
+                        help="Optional small-image VLM model-id; source state is never changed.")
     return parser.parse_args()
 
 
@@ -54,7 +58,8 @@ def elapsed_ms(started: float) -> float:
 
 
 def model_config(source: dict, llm_url: str | None = None,
-                 llm_model: str | None = None) -> dict:
+                 llm_model: str | None = None, llm_fast_url: str | None = None,
+                 llm_fast_model: str | None = None) -> dict:
     config = dict(source or {})
     if llm_url:
         parsed = urlsplit(llm_url)
@@ -66,6 +71,16 @@ def model_config(source: dict, llm_url: str | None = None,
         if not llm_model.strip():
             raise ValueError("llm-model must not be blank")
         config["llm_model"] = llm_model.strip()
+    if llm_fast_url:
+        parsed = urlsplit(llm_fast_url)
+        if (parsed.scheme not in {"http", "https"} or not parsed.hostname
+                or parsed.username is not None or parsed.password is not None):
+            raise ValueError("llm-fast-url must be an HTTP(S) endpoint without credentials")
+        config["llm_fast_url"] = llm_fast_url.rstrip("/")
+    if llm_fast_model:
+        if not llm_fast_model.strip():
+            raise ValueError("llm-fast-model must not be blank")
+        config["llm_fast_model"] = llm_fast_model.strip()
     return config
 
 
@@ -115,6 +130,8 @@ def summarize_model_trace(trace: object) -> list[dict]:
             "status": record.get("status"),
             "elapsed_ms": record.get("elapsed_ms"),
             "busy_retry_count": output.get("busy_retry_count", 0),
+            "model_route": output.get("model_route"),
+            "fast_fallback_reason": output.get("fast_fallback_reason"),
             "finish_reason": output.get("finish_reason"),
             "raw_text_chars": len(raw_text) if isinstance(raw_text, str) else None,
             "parsed_json_chars": (len(json.dumps(parsed, ensure_ascii=False,
@@ -143,7 +160,8 @@ def main() -> int:
 
     source_state = json.loads(source_state_path.read_text(encoding="utf-8"))
     config = model_config(source_state.get("config") or {},
-                          args.llm_url, args.llm_model)
+                          args.llm_url, args.llm_model,
+                          args.llm_fast_url, args.llm_fast_model)
     labels = list(source_state.get("labels") or [])
     required_config = ("llm_url", "llm_model", "sam3_url")
     missing = [key for key in required_config if not config.get(key)]
@@ -160,7 +178,11 @@ def main() -> int:
         checked_json(client.post("/api/labels", json={"labels": labels}), "set labels")
         checked_json(client.post("/api/config", json={
             key: value for key, value in config.items()
-            if key in {"llm_url", "llm_model", "llm_key", "llm_prompt_profile", "sam3_url"}
+            if key in {"llm_url", "llm_model", "llm_key", "llm_prompt_profile", "sam3_url",
+                       "llm_fast_url", "llm_fast_model", "llm_fast_key",
+                       "llm_fast_max_pixels", "llm_fast_max_long_edge",
+                       "llm_fast_max_extra_pixels", "llm_fast_max_extra_long_edge",
+                       "llm_fast_timeout_seconds"}
         }), "set model config")
 
         started = time.perf_counter()

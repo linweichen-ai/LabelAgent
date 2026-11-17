@@ -78,12 +78,16 @@ def request_metadata(trace: list[dict]) -> dict:
             metadata = output.get("local_vlm")
             return {
                 "elapsed_ms": event.get("elapsed_ms"),
+                "model_route": output.get("model_route"),
+                "fast_fallback_reason": output.get("fast_fallback_reason"),
                 "raw_text_chars": (len(output.get("raw_text"))
                                    if isinstance(output.get("raw_text"), str)
                                    else None),
                 "local_vlm": metadata if isinstance(metadata, dict) else None,
             }
-    return {"elapsed_ms": None, "raw_text_chars": None, "local_vlm": None}
+    return {"elapsed_ms": None, "model_route": None,
+            "fast_fallback_reason": None, "raw_text_chars": None,
+            "local_vlm": None}
 
 
 def median(values: list[float]) -> float | None:

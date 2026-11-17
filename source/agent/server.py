@@ -9,6 +9,7 @@ import time
 import uuid
 import urllib.request
 import urllib.error
+from urllib.parse import urlsplit
 import base64
 import hashlib
 import marshal
@@ -1478,7 +1479,7 @@ def candidate_class_audit_version():
         "schema_version": "labelagent.candidate_class_audit_version.v1",
         "config_sha256": _sha256_json({
             key: value for key, value in state.get("config", {}).items()
-            if key != "llm_key"}),
+            if key not in {"llm_key", "llm_fast_key"}}),
         "protocol_sha256": _CANDIDATE_AUDIT_LOADED_CODE_SHA256,
         "labels_sha256": _sha256_json({"labels": state.get("labels", []),
                                        "definitions": VISIBLE_LABEL_DEFINITIONS}),
@@ -2596,13 +2597,54 @@ def set_reference_frame():
 
 @app.post("/api/config")
 def set_config():
-    body = request.get_json()
+    body = request.get_json() or {}
+    if not isinstance(body, dict):
+        raise ValueError("配置必须是 JSON 对象")
     if "llm_prompt_profile" in body and body["llm_prompt_profile"] not in ("full", "compact"):
         raise ValueError("Unknown model prompt profile")
+    fast_string_keys = {"llm_fast_url", "llm_fast_model", "llm_fast_key"}
+    fast_integer_limits = {
+        "llm_fast_max_pixels": (1024, 16_777_216),
+        "llm_fast_max_long_edge": (32, 8192),
+        "llm_fast_max_extra_pixels": (1024, 33_554_432),
+        "llm_fast_max_extra_long_edge": (32, 16384),
+        "llm_fast_timeout_seconds": (10, 300),
+    }
+    fast_updates = {}
+    for key in fast_string_keys:
+        if key not in body:
+            continue
+        value = body[key]
+        if value in (None, ""):
+            fast_updates[key] = None
+            continue
+        if not isinstance(value, str) or len(value) > (4096 if key.endswith("key") else 500):
+            raise ValueError(f"Invalid {key}")
+        if key == "llm_fast_url":
+            parsed = urlsplit(value)
+            if (parsed.scheme not in {"http", "https"} or not parsed.hostname
+                    or parsed.username is not None or parsed.password is not None):
+                raise ValueError("快速 VLM 地址必须是无内嵌凭据的 HTTP(S) 地址")
+        fast_updates[key] = value
+    for key, (minimum, maximum) in fast_integer_limits.items():
+        if key not in body:
+            continue
+        value = body[key]
+        if value in (None, ""):
+            fast_updates[key] = None
+        elif type(value) is not int or not minimum <= value <= maximum:
+            raise ValueError(f"Invalid {key}")
+        else:
+            fast_updates[key] = value
     with lock:
         for key in ("llm_url", "llm_model", "llm_key", "llm_prompt_profile", "sam3_url"):
             if key in body and body[key]:
                 state["config"][key] = body[key]
+        for key, value in fast_updates.items():
+            if value is None:
+                state["config"].pop(key, None)
+            else:
+                state["config"][key] = value
         save()
         return jsonify(saved=True)
 
@@ -2616,6 +2658,8 @@ def model_readiness():
                or "http://127.0.0.1:8766").rstrip("/")
     llm_url = str(config.get("llm_url") or "").rstrip("/")
     configured_model = str(config.get("llm_model") or "").strip()
+    fast_url = str(config.get("llm_fast_url") or "").rstrip("/")
+    fast_model = str(config.get("llm_fast_model") or "").strip()
     def probe_sam():
         result = {"ready": False, "status": "unavailable", "model_loaded": False,
                   "on_demand": False}
@@ -2629,34 +2673,52 @@ def model_readiness():
             result["error"] = str(error)
         return result
 
-    def probe_vlm():
-        result = {"ready": False, "status": "unavailable", "model": configured_model,
+    def probe_vlm(url, model):
+        result = {"ready": False, "status": "unavailable", "model": model,
                   "registered_models": []}
-        if not llm_url:
+        if not url:
             result["error"] = "尚未配置 VLM 地址"
             return result
-        if not configured_model:
+        if not model:
             result["error"] = "尚未配置 VLM 模型名"
             return result
         try:
-            listing = _fetch_readiness_json(llm_url + "/models")
+            listing = _fetch_readiness_json(url + "/models")
             entries = listing.get("data") if isinstance(listing.get("data"), list) else []
             models = sorted({str(item.get("id")) for item in entries
                              if isinstance(item, dict) and item.get("id")})
             result.update(status="ok", registered_models=models,
-                          ready=configured_model in models)
+                          ready=model in models)
             if not result["ready"]:
-                result["error"] = (f"配置模型 {configured_model} 未在服务中登记"
+                result["error"] = (f"配置模型 {model} 未在服务中登记"
                                    if models else "VLM 服务没有返回可用模型")
         except RuntimeError as error:
             result["error"] = str(error)
         return result
 
-    with ThreadPoolExecutor(max_workers=2, thread_name_prefix="readiness") as executor:
+    fast_configured = bool(fast_url or fast_model)
+    with ThreadPoolExecutor(max_workers=3, thread_name_prefix="readiness") as executor:
         sam_future = executor.submit(probe_sam)
-        vlm_future = executor.submit(probe_vlm)
+        vlm_future = executor.submit(probe_vlm, llm_url, configured_model)
+        fast_future = (executor.submit(probe_vlm, fast_url, fast_model)
+                       if fast_configured else None)
         sam, vlm = sam_future.result(), vlm_future.result()
+        fast_vlm = (fast_future.result() if fast_future is not None else {
+            "configured": False, "ready": False, "status": "disabled",
+            "model": "", "registered_models": []})
+    fast_vlm["configured"] = fast_configured
+    fast_vlm["acceleration_only"] = True
+    def positive_config_int(key, default):
+        value = config.get(key)
+        return value if type(value) is int and value > 0 else default
+    fast_vlm["max_pixels"] = positive_config_int("llm_fast_max_pixels", 640 * 512)
+    fast_vlm["max_long_edge"] = positive_config_int("llm_fast_max_long_edge", 640)
+    fast_vlm["max_extra_pixels"] = positive_config_int(
+        "llm_fast_max_extra_pixels", fast_vlm["max_pixels"] * 4)
+    fast_vlm["max_extra_long_edge"] = positive_config_int(
+        "llm_fast_max_extra_long_edge", fast_vlm["max_long_edge"] * 2)
     return jsonify(ready=sam["ready"] and vlm["ready"], sam=sam, vlm=vlm,
+                   fast_vlm=fast_vlm,
                    checked_at=datetime.now(timezone.utc).isoformat(),
                    elapsed_ms=round((time.perf_counter() - started) * 1000, 3))
 
@@ -3097,6 +3159,18 @@ def generate_reference_draft():
                 "description_input_version": DESCRIPTION_INPUT_VERSION,
                 "llm_model": config.get("llm_model"),
                 "llm_prompt_profile": config.get("llm_prompt_profile", "full"),
+                "llm_fast_policy": {
+                    "enabled": bool(config.get("llm_fast_url")
+                                    and config.get("llm_fast_model")),
+                    "model": config.get("llm_fast_model"),
+                    "max_pixels": config.get("llm_fast_max_pixels", 640 * 512),
+                    "max_long_edge": config.get("llm_fast_max_long_edge", 640),
+                    "max_extra_pixels": config.get(
+                        "llm_fast_max_extra_pixels", 4 * 640 * 512),
+                    "max_extra_long_edge": config.get(
+                        "llm_fast_max_extra_long_edge", 1280),
+                    "timeout_seconds": config.get("llm_fast_timeout_seconds", 60),
+                },
                 "max_review_rounds": max_rounds,
                 "sam_prompts": prompt_payload,
                 "auto_detect_visible": auto_detect_visible,

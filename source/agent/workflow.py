@@ -258,6 +258,8 @@ def chat(config, instruction, image, extra_images=(), response_schema=None):
         record.update(status="succeeded", output={"raw_text": raw.get("text"),
                                                    "finish_reason": raw.get("finish_reason"),
                                                    "busy_retry_count": raw.get("busy_retry_count", 0),
+                                                   "model_route": raw.get("model_route"),
+                                                   "fast_fallback_reason": raw.get("fast_fallback_reason"),
                                                    "local_vlm": raw.get("local_vlm"),
                                                    "parsed": response})
         return response
@@ -266,11 +268,55 @@ def chat(config, instruction, image, extra_images=(), response_schema=None):
         if raw:
             record["output"] = {"raw_text": raw.get("text"),
                                 "finish_reason": raw.get("finish_reason"),
-                                "busy_retry_count": raw.get("busy_retry_count", 0)}
+                                "busy_retry_count": raw.get("busy_retry_count", 0),
+                                "model_route": raw.get("model_route"),
+                                "fast_fallback_reason": raw.get("fast_fallback_reason")}
         raise
     finally:
         record["elapsed_ms"] = round((time.time() - record["started_at"]) * 1000)
         _emit_trace(record)
+
+
+def _positive_int(value, default):
+    if type(value) is not int or value < 1:
+        return default
+    return value
+
+
+def select_vlm_route(config, image, extra_images=()):
+    """Select the optional small-image accelerator without changing source state.
+
+    The accelerator is deliberately opt-in and eligible only when every image
+    in the request is within both configured bounds.  Any undecodable image is
+    sent to the primary route so the established transport keeps ownership of
+    the resulting validation error.
+    """
+    fast_url = str(config.get("llm_fast_url") or "").strip()
+    fast_model = str(config.get("llm_fast_model") or "").strip()
+    if not fast_url or not fast_model:
+        return config, "primary"
+    max_pixels = _positive_int(config.get("llm_fast_max_pixels"), 640 * 512)
+    max_long_edge = _positive_int(config.get("llm_fast_max_long_edge"), 640)
+    max_extra_pixels = _positive_int(
+        config.get("llm_fast_max_extra_pixels"), max_pixels * 4)
+    max_extra_long_edge = _positive_int(
+        config.get("llm_fast_max_extra_long_edge"), max_long_edge * 2)
+    for position, data in enumerate((image, *extra_images)):
+        try:
+            with Image.open(io.BytesIO(data)) as decoded:
+                width, height = decoded.size
+        except (OSError, TypeError, ValueError):
+            return config, "primary"
+        pixel_limit = max_pixels if position == 0 else max_extra_pixels
+        edge_limit = max_long_edge if position == 0 else max_extra_long_edge
+        if width * height > pixel_limit or max(width, height) > edge_limit:
+            return config, "primary"
+    fast = dict(config)
+    fast["llm_url"] = fast_url
+    fast["llm_model"] = fast_model
+    fast["llm_key"] = config.get("llm_fast_key", "")
+    fast["llm_busy_retries"] = 0
+    return fast, "small_image_fast"
 
 
 def _chat(config, instruction, image, extra_images=(), raw=None, response_schema=None):
@@ -280,49 +326,98 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
     for data in (image, *extra_images):
         content.append({"type": "image_url", "image_url": {"url":
             "data:image/jpeg;base64," + base64.b64encode(data).decode()}})
-    payload = {"model": config["llm_model"], "temperature": 0,
-               "messages": [{"role": "user", "content": content}]}
-    if config.get("llm_prompt_profile") == "compact":
-        payload["max_tokens"] = int(config.get("llm_max_tokens") or 768)
-    if response_schema is not None:
-        payload["response_format"] = {"type": "json_schema", "json_schema": {"name": "labelagent", "schema": response_schema, "strict": True}}
-    request = urllib.request.Request(config["llm_url"].rstrip("/") + "/chat/completions",
-        json.dumps(payload).encode(), headers={"Content-Type": "application/json",
-        "Authorization": "Bearer " + config.get("llm_key", "")})
-    busy_retry_limit = max(0, min(8, int(config.get("llm_busy_retries", 5))))
+    selected_config, selected_route = select_vlm_route(
+        config, image, extra_images=extra_images)
+    routes = [(selected_config, selected_route)]
+    if selected_route == "small_image_fast":
+        routes.append((config, "primary_fallback"))
     busy_retry_count = 0
-    for busy_attempt in range(busy_retry_limit + 1):
-        try:
-            with urllib.request.urlopen(request, timeout=1200) as response:
-                result = json.load(response)
-            break
-        except (TimeoutError, socket.timeout) as error:
-            raise ValueError("llm_timeout: 大模型请求排队或推理超过 1200 秒") from error
-        except urllib.error.HTTPError as error:
+    fast_fallback_reason = None
+    result = None
+    final_route = selected_route
+    for route_config, route_name in routes:
+        if raw is not None:
+            raw["model_route"] = route_name
+            if fast_fallback_reason is not None:
+                raw["fast_fallback_reason"] = fast_fallback_reason
+        payload = {"model": route_config["llm_model"], "temperature": 0,
+                   "messages": [{"role": "user", "content": content}]}
+        if route_config.get("llm_prompt_profile") == "compact":
+            payload["max_tokens"] = int(route_config.get("llm_max_tokens") or 768)
+        if response_schema is not None:
+            payload["response_format"] = {"type": "json_schema", "json_schema": {"name": "labelagent", "schema": response_schema, "strict": True}}
+        request = urllib.request.Request(
+            route_config["llm_url"].rstrip("/") + "/chat/completions",
+            json.dumps(payload).encode(), headers={"Content-Type": "application/json",
+            "Authorization": "Bearer " + route_config.get("llm_key", "")})
+        busy_retry_limit = max(0, min(8, int(route_config.get("llm_busy_retries", 5))))
+        timeout_seconds = (max(10, min(300, _positive_int(
+            config.get("llm_fast_timeout_seconds"), 60)))
+            if route_name == "small_image_fast" else 1200)
+        route_failed = False
+        for busy_attempt in range(busy_retry_limit + 1):
             try:
-                detail = error.read().decode("utf-8", "replace")[:300]
-            except Exception:
-                detail = str(error.reason)
-            local_busy = (error.code == 503 and
-                          ("local vlm is busy" in detail.lower()
-                           or '"busy"' in detail.lower()))
-            if local_busy and busy_attempt < busy_retry_limit:
-                busy_retry_count += 1
-                retry_seconds = min(30, 5 * (2 ** busy_attempt))
-                review_call = _review_call.get()
-                trace_record = review_call.get("record") if review_call else None
-                if trace_record is not None:
-                    trace_record.update(status="waiting", busy_retry_count=busy_retry_count,
-                                        retry_in_seconds=retry_seconds,
-                                        error="Local VLM is busy; waiting for the shared model slot")
-                    _emit_trace(trace_record)
-                _wait_cancellable(retry_seconds)
-                continue
-            raise ValueError(f"大模型请求失败（HTTP {error.code}）：{detail}") from error
-        except urllib.error.URLError as error:
-            raise ValueError(f"大模型请求失败：{error.reason}") from error
+                with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
+                    result = json.load(response)
+                final_route = route_name
+                break
+            except (TimeoutError, socket.timeout) as error:
+                if route_name == "small_image_fast":
+                    fast_fallback_reason = "fast_timeout"
+                    if raw is not None:
+                        raw["fast_fallback_reason"] = fast_fallback_reason
+                    route_failed = True
+                    break
+                raise ValueError("llm_timeout: 大模型请求排队或推理超过 1200 秒") from error
+            except urllib.error.HTTPError as error:
+                try:
+                    detail = error.read().decode("utf-8", "replace")[:300]
+                except Exception:
+                    detail = str(error.reason)
+                local_busy = (error.code == 503 and
+                              ("local vlm is busy" in detail.lower()
+                               or '"busy"' in detail.lower()))
+                if route_name == "small_image_fast" and (
+                        local_busy or error.code in (408, 429)
+                        or 500 <= error.code <= 599):
+                    fast_fallback_reason = ("fast_busy" if local_busy or error.code == 429
+                                            else "fast_http_unavailable")
+                    if raw is not None:
+                        raw["fast_fallback_reason"] = fast_fallback_reason
+                    route_failed = True
+                    break
+                if local_busy and busy_attempt < busy_retry_limit:
+                    busy_retry_count += 1
+                    retry_seconds = min(30, 5 * (2 ** busy_attempt))
+                    review_call = _review_call.get()
+                    trace_record = review_call.get("record") if review_call else None
+                    if trace_record is not None:
+                        trace_record.update(status="waiting", busy_retry_count=busy_retry_count,
+                                            retry_in_seconds=retry_seconds,
+                                            error="Local VLM is busy; waiting for the shared model slot")
+                        _emit_trace(trace_record)
+                    _wait_cancellable(retry_seconds)
+                    continue
+                raise ValueError(f"大模型请求失败（HTTP {error.code}）：{detail}") from error
+            except urllib.error.URLError as error:
+                if route_name == "small_image_fast":
+                    fast_fallback_reason = "fast_unavailable"
+                    if raw is not None:
+                        raw["fast_fallback_reason"] = fast_fallback_reason
+                    route_failed = True
+                    break
+                raise ValueError(f"大模型请求失败：{error.reason}") from error
+        if result is not None:
+            break
+        if not route_failed:
+            break
+    if result is None:
+        raise ValueError("大模型请求失败：快速通道和主通道均未返回结果")
     if raw is not None:
         raw["busy_retry_count"] = busy_retry_count
+        raw["model_route"] = final_route
+        if fast_fallback_reason is not None:
+            raw["fast_fallback_reason"] = fast_fallback_reason
         metadata = result.get("local_vlm")
         if isinstance(metadata, dict):
             # The local service already returns request-bound timing and image

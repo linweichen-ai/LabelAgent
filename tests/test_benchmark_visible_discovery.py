@@ -22,6 +22,7 @@ class VisibleDiscoveryBenchmarkTests(unittest.TestCase):
                  {"service": "SAM 3", "status": "succeeded", "elapsed_ms": 1,
                   "output": {}}]
         self.assertEqual(request_metadata(trace), {"elapsed_ms": 10,
+            "model_route": None, "fast_fallback_reason": None,
             "raw_text_chars": 2, "local_vlm": {"quantization": "none"}})
 
     def test_consistency_flags_exclude_model_prose(self):

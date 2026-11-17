@@ -277,12 +277,18 @@ class CandidateClassAuditTests(unittest.TestCase):
                 save.assert_not_called()
 
     def test_audit_version_tracks_model_config_protocol_and_registry(self):
-        state = {"config": {"llm_model": "model-a", "llm_key": "private"}, "labels": self.labels}
+        state = {"config": {"llm_model": "model-a", "llm_key": "private",
+                            "llm_fast_key": "fast-private"}, "labels": self.labels}
         with patch.object(server, "state", state):
             first = server.candidate_class_audit_version()
             state["config"]["llm_key"] = "rotated"
             self.assertEqual(first, server.candidate_class_audit_version())
-            for key in ("llm_model", "llm_prompt_profile", "llm_url"):
+            state["config"]["llm_fast_key"] = "fast-rotated"
+            self.assertEqual(first, server.candidate_class_audit_version())
+            for key in ("llm_model", "llm_prompt_profile", "llm_url",
+                        "llm_fast_url", "llm_fast_model",
+                        "llm_fast_max_pixels", "llm_fast_max_long_edge",
+                        "llm_fast_max_extra_pixels", "llm_fast_max_extra_long_edge"):
                 original = copy.deepcopy(state["config"])
                 state["config"][key] = "changed"
                 self.assertNotEqual(first, server.candidate_class_audit_version())

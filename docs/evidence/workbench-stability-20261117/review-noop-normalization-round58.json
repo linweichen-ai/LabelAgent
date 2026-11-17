@@ -1,0 +1,94 @@
+{
+  "schema_version": "labelagent.workbench_round58.v1",
+  "recorded_at": "2026-11-17T14:32:00+08:00",
+  "goal_status": "active",
+  "objective": "remove provably empty Agent review retries without weakening geometry, class-change, hole, or human-review gates",
+  "diagnosis": {
+    "paired_image": "010/camera_1/1789899951882467655.png",
+    "candidate_count": 16,
+    "before_wall_seconds": 21.124,
+    "before_model_requests": 2,
+    "before_first_generation_seconds": 12.855,
+    "before_retry_generation_seconds": 6.47,
+    "first_rejection": "the model attempted split and reclassify on the same mixed candidate",
+    "second_rejection_after_prompt_clarification": "the model attempted to reclassify floor to floor",
+    "interpretation": "The retry protected real edits, but a reclassification to the candidate's existing label is mathematically incapable of changing class or geometry."
+  },
+  "accepted_change": {
+    "prompt_guard": [
+      "use each candidate ID in at most one operation per round",
+      "never split and reclassify the same ID in one response",
+      "never reclassify a mixed-semantics candidate wholesale"
+    ],
+    "deterministic_normalization": "Drop only a reclassify operation whose single existing shape ID already has the requested label.",
+    "normalization_reason_code": "no_op_reclassify_dropped",
+    "empty_tail_behavior": "If no real operation remains and no ground hole or pending SAM comparison exists, normalize continue to done with the existing empty-continue rule.",
+    "unchanged_gates": [
+      "different-class reclassification validation",
+      "polygon and point geometry validation",
+      "hole coverage and ground-only fill validation",
+      "unreferenced high-risk reclassification routing",
+      "post-edit re-observation"
+    ]
+  },
+  "cold_paired_acceptance": {
+    "same_image": "010/camera_1/1789899951882467655.png",
+    "wall_seconds": 11.348,
+    "model_requests": 1,
+    "cache_hit": false,
+    "generation_seconds": 9.971,
+    "candidate_count": 16,
+    "candidate_shape_sha256": "004aa2d8caac6f35f057e6a4e9fa8f966e0667fa65547187a98e5128ac67ee30",
+    "stop_reason": "done",
+    "agent_rounds": 1,
+    "review_queue_count": 0,
+    "normalizations": ["no_op_reclassify_dropped", "empty_continue_normalized_to_done"],
+    "observed_wall_reduction_percent": 46.28
+  },
+  "real_edit_regression_guard": {
+    "image": "010/camera_2/1789899951882467655.png",
+    "cache_hit": false,
+    "wall_seconds": 10.143,
+    "generation_seconds": 8.988,
+    "model_requests": 1,
+    "operation": "add_region",
+    "applied_count": 1,
+    "normalizations": [],
+    "stop_reason": "max_rounds",
+    "interpretation": "A real geometry operation was preserved and still requires another observation before acceptance; only the exact no-op class change is removed."
+  },
+  "verification": {
+    "targeted_agent_tests": {"passed": 156, "failed": 0, "subtests_passed": 83},
+    "project_python": {"passed": 722, "failed": 0, "subtests_passed": 171},
+    "web": {"passed": 78, "failed": 0},
+    "formal_workbench_ready": true,
+    "formal_sam_ready": true,
+    "formal_vlm_ready": true,
+    "formal_run_status": "idle",
+    "workflow_sha256": "0e47d3e9ed144f1eaa8694b2324245db63317d8ae2304e152c37e848c32eb1ea",
+    "formal_and_5090_source_hashes_match": true,
+    "fast_5090_route": "disabled while non-owned workloads remain active"
+  },
+  "state_isolation": {
+    "formal_state_sha256": "54A5EE6AC1794AE3D769B3FEFA3CADD79DA7F2D5DFF892F0B8B4F0A259238FF5",
+    "file_sessions_sha256": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files_sha256": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run_sha256": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary_sha256": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "model_debug_sha256": "EFDF22CD6BD803C958E3ACB39D46054D294544FE48324A12B4AFE1502B3BBB9A",
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "oss_modified": false
+  },
+  "rollback": {
+    "windows": "D:/Apps/LabelAgent/.local/backups/review-noop-normalization-round58-20261117",
+    "remote_5090": "/home/clw/projects/labelagent-5090/app/work/backups/review-noop-normalization-round58-20261117",
+    "remote_vlm": "unchanged from round57"
+  },
+  "limits": [
+    "The 46.28 percent result is a same-image cold engineering comparison, not a workload-wide latency distribution.",
+    "Real edits are not auto-accepted: the camera_2 add_region operation remained subject to the next Agent observation.",
+    "No-op normalization improves latency and reliability but does not establish segmentation accuracy on a new factory dataset."
+  ]
+}

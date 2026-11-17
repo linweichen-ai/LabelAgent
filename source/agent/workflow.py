@@ -1037,6 +1037,7 @@ COMPACT_UNREFERENCED_RULES = """No human-confirmed reference image or reference 
 Use only the target original and target candidate overlay. Never claim, quote, compare with, or infer a reference outline, reference mask, reference class, or human truth.
 This is a machine-candidate draft. Preserve every candidate unless a supported non-destructive local repair is possible; removal is forbidden and potential false positives must remain for human review.
 Audit every candidate label against class_definitions before considering geometry edits. A visually unmistakable one-instance semantic mismatch may use reclassify only to another selected class; ambiguous, mixed, partly occluded, or low-confidence candidates must keep their original label for human review.
+Use each candidate ID in at most one operation per round. Never both split and reclassify the same ID in one response. A candidate containing mixed semantics must not be reclassified wholesale; use only a precise local non-destructive repair when its boundary is visually clear, otherwise keep it unchanged for human review.
 In particular, a visible motorized chassis, wheels, sensors, or autonomous mobile base is other_robot when it is distinct from the camera host, not pallet. A static load-bearing pallet remains pallet. Visible foreground structure belonging to the camera host is ego, not other_robot. cargo_floor requires a visibly attached cargo deck and is not a free-standing pallet.
 Only annotate the listed classes. Overlay colors are not object colors. Do not invent occluded regions or missing evidence.
 """
@@ -1248,6 +1249,20 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
     shapes_by_id = {item["id"]: item for item in shapes}
     shape_ids = set(shapes_by_id)
     hole_ids = {item["id"]: item for item in holes}
+    retained_operations = []
+    for operation in result["operations"]:
+        ids = operation.get("shape_ids") if isinstance(operation, dict) else None
+        if (isinstance(operation, dict) and operation.get("operation") == "reclassify"
+                and isinstance(ids, list) and len(ids) == 1 and ids[0] in shapes_by_id
+                and operation.get("label") == shapes_by_id[ids[0]].get("label")):
+            result.setdefault("protocol_normalizations", []).append({
+                "reason_code": "no_op_reclassify_dropped",
+                "shape_id": ids[0],
+                "label": operation.get("label"),
+            })
+            continue
+        retained_operations.append(operation)
+    result["operations"] = retained_operations
     for index, operation in enumerate(result["operations"], 1):
         if not isinstance(operation, dict):
             errors.append(f"第 {index} 项操作必须是 JSON 对象")
@@ -1270,10 +1285,6 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
             errors.append(f"第 {index} 项 {kind} 操作必须提供有效的 shape_ids；可用 ID：{sorted(shape_ids)}")
         if kind in ("merge", "reclassify") and operation.get("label") not in labels:
             errors.append(f"第 {index} 项 {kind} 操作缺少有效 label；可用类别：{labels}")
-        if (kind == "reclassify" and valid_ids and operation.get("label") in labels
-                and shapes_by_id[ids[0]].get("label") == operation.get("label")):
-            errors.append(f"第 {index} 项 reclassify 没有变化：候选 {ids[0]} 已经是 "
-                          f"{operation.get('label')}；请检查其他候选，或在无可靠修改时返回 done")
         if kind in ("add_region", "erase_region", "split", "fill_gap", "sam_points"):
             if not _valid_region(operation.get("polygon"), width, height):
                 errors.append(f"第 {index} 项 {kind} 操作缺少有效 polygon："

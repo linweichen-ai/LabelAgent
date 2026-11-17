@@ -224,6 +224,12 @@ class EditTests(unittest.TestCase):
 
 
 class WorkflowTests(unittest.TestCase):
+    def test_unreferenced_review_forbids_conflicting_same_candidate_operations(self):
+        rules = workflow.COMPACT_UNREFERENCED_RULES
+        self.assertIn("each candidate ID in at most one operation", rules)
+        self.assertIn("Never both split and reclassify the same ID", rules)
+        self.assertIn("mixed semantics must not be reclassified wholesale", rules)
+
     def test_local_gap_evidence_shows_original_binary_and_bounded_image_count(self):
         mask = np.ones((100, 100), dtype=np.uint8)
         mask[5:95, 48:52] = 0
@@ -646,6 +652,19 @@ class WorkflowTests(unittest.TestCase):
         }, [hole], [shape()], ["a"], 40, 40)
         self.assertEqual(pending["status"], "continue")
         self.assertNotIn("protocol_normalizations", pending)
+
+    def test_no_op_reclassify_is_dropped_without_a_model_retry(self):
+        decision = workflow._validate_review_result({
+            "status": "continue",
+            "reason": "Keep the existing class",
+            "operations": [{"operation": "reclassify", "shape_ids": [1],
+                            "label": "a", "reason": "Candidate already matches"}],
+        }, [], [shape()], ["a"], 40, 40, reference_provided=False)
+        self.assertEqual(decision["status"], "done")
+        self.assertEqual(decision["operations"], [])
+        self.assertEqual(
+            [item["reason_code"] for item in decision["protocol_normalizations"]],
+            ["no_op_reclassify_dropped", "empty_continue_normalized_to_done"])
 
     def test_review_retries_unknown_operation_and_missing_tool_fields(self):
         operation = {"operation": "add_region", "shape_ids": [1],

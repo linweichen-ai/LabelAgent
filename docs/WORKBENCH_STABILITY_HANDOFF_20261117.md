@@ -759,3 +759,15 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 回归为项目 Python 720/720（另有 171 个子测）、网页 78/78。工作台、SAM、VLM ready，任务 idle；六份正式状态、候选和历史文件哈希全部不变，未写候选、人工真值、训练集或 OSS。Windows、4090、5090 回滚点均为 `multi-image-cache-guard-round57-20261117`；完整证据见 [第五十七轮结构化证据](evidence/workbench-stability-20261117/multi-image-cache-guard-round57.json)。
 
 边界：79.97% 是同一输入上“故障路径对修复路径”的工程对照，不是总体性能分布。多图复核为了稳定性使用 dynamic；后续若继续加速，应优先减少协议重试、复用多图请求结果或采用可控的专用推理服务，不能重新把未预热的多图 CUDA graph 放回 Web 工作线程。
+
+## 第五十八轮零变化复核归一化（2026-11-17）
+
+第五十七轮修复崩溃后，同一张 `010/camera_1` 困难图仍会发两次 Agent 请求：第一份响应先对同一候选同时提出 split 和 reclassify，安全校验拒绝；补充“每个 ID 每轮最多一个操作、混合语义候选不得整体改类”后，模型不再给出冲突操作，但改为把已经是 floor 的候选再次 reclassify 成 floor。这个操作既不会改变类别，也不会改变任何像素，继续用第二次模型请求纠正只增加延迟。
+
+正式归一化只删除严格可证明的零变化：`reclassify` 必须只有一个存在的 shape ID，且目标类别逐字等于当前类别。删除后若没有其他真实操作、ground 空洞或待比较的 SAM 修改，就沿用既有 empty-continue 规则收敛为 done。异类改名、polygon、点提示、空洞覆盖、无参考高风险改类和编辑后再观察门禁均未放松；同时提示明确禁止同一 ID 在一轮中既 split 又 reclassify，混合候选无法精确局部分离时必须原样保留给人工复核。
+
+清空服务缓存后做正式冷复验：同一图从 21.124 秒、两次模型请求变为 11.348 秒、一次请求，观测下降 46.28%；16 个候选保留，1 轮 `done`，0 条复核队列，记录 `no_op_reclassify_dropped` 与 `empty_continue_normalized_to_done`。另一张从未缓存的 `010/camera_2` 仍保留并执行真实 `add_region`，10.143 秒后按规则停在 `max_rounds` 等待下一轮观察，没有被零变化归一化误吞。
+
+回归为项目 Python 722/722（另有 171 个子测）、网页 78/78。正式工作台、SAM、VLM ready，任务 idle；正式与 5090 工作流哈希均为 `0e47d3e9...eb1ea`，5090 快速路由仍因非本流程负载保持 disabled。六份状态、候选和历史文件哈希不变，未写候选、人工真值、训练集或 OSS。回滚点为 `D:\Apps\LabelAgent\.local\backups\review-noop-normalization-round58-20261117` 和 5090 对应备份，完整证据见 [第五十八轮结构化证据](evidence/workbench-stability-20261117/review-noop-normalization-round58.json)。
+
+边界：46.28% 是同一张困难图的冷启动工程对照，不是总体延迟分布。真正的几何编辑仍会要求下一轮复查，因此不能为了追求秒数把所有 `continue` 都直接改成 `done`；本轮只处理数学上不可能产生变化的严格零操作。

@@ -1064,3 +1064,13 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 因此这个严格受约束的紧凑协议同样否决，不进入正式代码或缓存，也不再继续删减语义证据。下一步保留完整结构化协议，把优化重点收回到执行引擎、硬件和已验证的提前预取/精确复用；5090 只在外部任务自然释放后恢复。完整回归为 Python 757/757、网页 89/89；正式任务 idle，六份状态哈希完全不变。复现工具为 `tools/evaluate_compact_visible_discovery.py`，结构化证据见 [第八十七轮紧凑协议否决记录](evidence/workbench-stability-20261117/rejected-compact-discovery-round87.json)。
 
 边界：两张图足以否决这个确切协议，因为两张都未通过预设语义门禁；不能把 67.412% 写成可用生产收益。本轮没有修改模型权重、SAM3、VLM 后训练、人工真值、训练批准或 OSS。
+
+## 第八十八轮完整语义短键 wire schema 实验（否决，2026-11-17）
+
+第八十七轮删除视觉理由后 0/2 失败，本轮不再删除任何语义字段：八个类别仍分别输出 evidence、confidence 和 reason，开放集 `unknown_candidates` 结构也完全保留；只把类别键换成 `l0`～`l7`，把三个重复字段名缩成 `e/c/r`，随后由工具确定性展开回正式 JSON 再比较。
+
+两图候选合计 24.951 秒，相比完整协议 32.063 秒下降 22.181%；completion 从每图 322 token 降到 256、253 token。开放集尾部 2/2 一致，但完整 JSON 0/2 一致，已知类别状态只有 1/2 一致；正式第 32 帧仍把 `other_robot` 从 present 改成 absent。即使语义字段全部保留，仅改变 wire 表达也会改变生成路径和最终判断。
+
+因此短键 wire schema 同样否决，不部署、不进入正式缓存。至此输出层的无约束、删减语义和无损短键三条路线都已被实测否决；后续停止继续改写输出协议，保留当前完整结构化路径，优化只放在执行引擎、硬件、精确缓存和预取调度。完整回归为 Python 759/759、网页 89/89，正式任务 idle，六份状态哈希未变。复现工具为 `tools/evaluate_wire_visible_discovery.py`，结构化证据见 [第八十八轮短键协议否决记录](evidence/workbench-stability-20261117/rejected-wire-discovery-round88.json)。
+
+边界：两张图足以否决这个确切编码，因为预设门禁要求逐图完整一致；22.181% 不能写成生产收益。本轮没有修改模型权重、SAM3、VLM 后训练、人工真值、训练批准或 OSS。

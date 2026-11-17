@@ -1,0 +1,70 @@
+{
+  "schema_version": "labelagent.optimization_experiment.v1",
+  "round": 88,
+  "date": "2026-11-17",
+  "objective": "Test a lossless short-key wire schema that retains evidence, confidence, reasons and the open-set tail.",
+  "protocol": {
+    "read_only": true,
+    "sample_count": 2,
+    "baseline": "round 86 full production structured responses",
+    "semantic_fields_removed": false,
+    "known_label_wire_ids": "l0 through l7",
+    "assessment_wire_fields": {"e": "evidence", "c": "confidence", "r": "reason"},
+    "unknown_candidates_schema_unchanged": true,
+    "same_image_bytes": true,
+    "same_primary_4090_model": true,
+    "same_temperature": 0,
+    "same_384_token_limit": true,
+    "cache_hits": 0,
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "source_state_modified": false
+  },
+  "latency": {
+    "full_protocol_baseline_total_ms": 32062.534,
+    "wire_candidate_total_ms": 24950.591,
+    "observed_total_reduction_percent": 22.181,
+    "candidate_per_image_ms": [12702.516, 12248.075],
+    "baseline_completion_tokens": [322, 322],
+    "candidate_completion_tokens": [256, 253]
+  },
+  "semantic_gate": {
+    "full_json_exact_matches": 0,
+    "known_state_exact_matches": 1,
+    "unknown_tail_exact_matches": 2,
+    "sample_count": 2,
+    "failure": {
+      "sample": "formal frame 32",
+      "label": "other_robot",
+      "baseline": "present",
+      "candidate": "absent"
+    },
+    "reason_text_exactness": "0/2 full JSON matches; shortened wire keys changed generated visual reasons even where state decisions matched."
+  },
+  "decision": {
+    "status": "rejected",
+    "wire_schema_allowed_in_production": false,
+    "candidate_results_may_populate_production_cache": false,
+    "reason": "The wire encoding retained all declared fields but still changed a known-label decision and failed the full semantic equality gate."
+  },
+  "next_direction": {
+    "stop_output_schema_reencoding": true,
+    "preserve_current_full_protocol": true,
+    "preferred_optimization_layer": "model execution engine, hardware route, exact caching and prefetch scheduling"
+  },
+  "verification": {
+    "tool": "tools/evaluate_wire_visible_discovery.py",
+    "tool_sha256": "4E42A7A138C9FD931B532DF214A88567FED69C2242ACB69038C6A4E66BAAE59C",
+    "raw_artifact": "artifacts/round86-format-ablation/wire-result.json",
+    "python_tests": {"passed": 759, "failed": 0},
+    "web_tests": {"passed": 89, "failed": 0},
+    "formal_workbench_status": "idle",
+    "formal_state_hashes_unchanged": true
+  },
+  "limits": [
+    "Two samples are enough to reject this exact wire schema because the semantic gate requires every sample to match.",
+    "The 22.181 percent observation is not a deployable gain or a population latency estimate.",
+    "No model weights, SAM3, VLM post-training, truth, training approval or OSS object changed."
+  ]
+}

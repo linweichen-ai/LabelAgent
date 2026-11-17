@@ -1198,3 +1198,17 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\cache-observability-roun
 四项针对性测试全部通过：机器预标注不能授权训练；完整双导出才能打开隔离训练门；单边导出或缺复核人继续拦截；即使其余字段完整，任一文件名或内容哈希泄漏也继续拦截。真实 96 图包审计无结构或隔离错误，但结果为 `blocked_waiting_for_human_review`：0/96 已签核、两份人工 COCO 均不存在、`training_authorized=false`。权威环境完整回归为 Python 780/780、网页 95/95；一次误用系统 Python 3.14 的全量命令因项目依赖缺失产生导入错误，已明确排除，不能写成产品回退。结构化证据见 [第一百轮训练数据门禁](evidence/workbench-stability-20261117/training-data-gate-round100.json)。
 
 复现命令使用 `tools/audit_training_data_gate.py` 的 `--manifest`、`--validation`、`--creation-receipt`、`--checklist` 与 `--output` 参数；真正准备开训时再增加 `--train-human-coco`、`--test-human-coco` 和 `--require-ready`。本轮只读现有清单和收据，没有登录修改 CVAT、没有写候选/人工真值/训练集、没有安装训练依赖、没有启动 GPU 训练，也没有修改正式工作台。创建收据的任务状态是 11 月 11 日读回证据；本轮结论针对当前本地训练输入门禁，不冒充 CVAT 的新鲜在线进度。
+
+## 第一百零一轮 train72 教师候选与可恢复采集（2026-11-18）
+
+SAM 掩码微调仍等待人工像素真值，但 VLM 蒸馏可以独立准备机器教师候选。本轮新增 `tools/collect_vlm_teacher_candidates.py`：只接受冻结清单中的 train72，代码级拒绝 test24 文件名或内容哈希泄漏；图片从 4090 服务器已有源路径经 SSH 只读流入，不在仅余约 0.8 GiB 的 Windows C 盘复制第二份数据。每条记录绑定源 PNG、网页等价重编码、正式 state、8B 模型配置和完整提示/schema 合约，保存原始解析对象与经生产保护规则归一化的训练目标，同时始终写明 `machine_teacher_output`、`human_truth=false`、`training_authorized=false` 与 `requires_acceptance_gate=true`。
+
+先导 9 张覆盖 000–008 每个序列各一张，9/9 成功且均无一致性冲突；随后完整采集 72/72 源图哈希通过。70 条满足蒸馏候选条件，2 条进入复核队列，均来自序列 004：`camera_3` 的 “visible elevated deck attached to forklift chassis” 与第二时刻 `camera_2` 的 “yellow elevated deck attached to ego robot” 被现有 `cargo_floor_missing_robot_attachment_evidence` 保护规则从 present 降为 uncertain。它们没有被丢弃或强行纳入训练；这更像保护词表覆盖不足，但在完成视觉复核和回归门禁前不直接放宽产品规则。
+
+完整 72 条中，8B 报告 slope present 8 张、pallet present 68 张、person present 60 张、floor 与 ego present 各 72 张；没有 unknown candidate。completion token 为 308–344，中位 325.5；教师回执中的生成时间为 13.549–18.274 秒，中位 14.795 秒。这是教师分布，不是人工精度或类别真实频率。
+
+第一次完整采集耗时 1008.529 秒。增强记录时发现 72 张正序重放会超过 64 条精确缓存并形成循环淘汰，因此没有继续无效计算；采集器增加 fail-closed 断点续传、行级绑定读回和逆序恢复。增强版保留 11 条已落盘行，新处理 61 条，其中 53 条命中精确缓存，只重算 8 条，总耗时 171.969 秒。两版 72/72 文件名、源哈希、目标哈希和候选决策完全一致，增强版还保存了 72/72 原始解析对象。
+
+新增独立审计器 `tools/audit_vlm_teacher_candidates.py`，重新核对 train72 精确覆盖、test24 缺席、源/目标/合约/state/模型哈希、候选边界及汇总计数，真实集合结果 `passed`、errors 为空。针对性测试 7/7，完整回归 Python 787/787、网页 95/95；正式页面、SAM、8B 均正常，六份正式状态哈希不变。结构化记录见 [第一百零一轮 train72 教师候选](evidence/workbench-stability-20261117/vlm-teacher-train72-round101.json)。原始逐图候选只保存在未跟踪 `artifacts/round101-teacher-train72-v2/`，不进入代码仓库或人工真值。
+
+边界：70 条可以作为 2B 隔离蒸馏实验的机器教师候选，但不是独立真值；两条 cargo_floor 仍需单独裁决。下一步应先生成严格区分 `teacher_candidate` 与未来 `human_verified` 的训练 JSONL，再在独立环境安装 PEFT，做一个可回滚的小步 LoRA 冒烟训练；生产 8B 与 test24 在训练期间保持冻结。

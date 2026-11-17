@@ -1,0 +1,106 @@
+{
+  "schema_version": "labelagent.vlm-teacher-train72-round101.v1",
+  "round": 101,
+  "date": "2026-11-18",
+  "objective": "Create an audited train72-only Qwen3-VL-8B teacher-candidate collection for isolated Qwen3-VL-2B distillation without promoting machine output to human truth or allowing test24 leakage.",
+  "frozen_inputs": {
+    "annotation_pack_manifest_sha256": "cfd84f0ca41bf2f9522b20062f10442f5e7c5f5c595ae3c445aafb2d688dd05a",
+    "formal_state_sha256": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "teacher_model": "labelagent-vlm8b",
+    "teacher_model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+    "request_contract_sha256": "948707da63ba014342d3ee02d80edff67367d3b681a3607f6e1b1caa23d3fe26",
+    "train_sequences": ["000", "001", "002", "003", "004", "005", "006", "007", "008"],
+    "test_sequences_excluded": ["010", "011", "012"]
+  },
+  "collection": {
+    "images": 72,
+    "source_hashes_verified": 72,
+    "unique_source_hashes": 72,
+    "unique_target_hashes_observed": 72,
+    "test24_included": false,
+    "candidate_kind": "machine_teacher_output",
+    "human_truth": false,
+    "training_authorized": false,
+    "requires_acceptance_gate": true,
+    "distillation_candidates": 70,
+    "review_required": 2,
+    "unknown_candidate_count": 0,
+    "completion_tokens": {
+      "min": 308,
+      "median": 325.5,
+      "max": 344
+    },
+    "generation_seconds_from_teacher_receipts": {
+      "min": 13.549,
+      "median": 14.795,
+      "max": 18.274
+    }
+  },
+  "known_label_evidence_counts": {
+    "车辆": {"present": 11, "absent": 61, "uncertain": 0},
+    "pallet": {"present": 68, "absent": 4, "uncertain": 0},
+    "person": {"present": 60, "absent": 12, "uncertain": 0},
+    "floor": {"present": 72, "absent": 0, "uncertain": 0},
+    "slope": {"present": 8, "absent": 64, "uncertain": 0},
+    "ego": {"present": 72, "absent": 0, "uncertain": 0},
+    "other_robot": {"present": 36, "absent": 36, "uncertain": 0},
+    "cargo_floor": {"present": 2, "absent": 68, "uncertain": 2}
+  },
+  "review_queue": [
+    {
+      "file_name": "004_1789898294082381197_camera_3.png",
+      "reason_code": "cargo_floor_missing_robot_attachment_evidence",
+      "original_evidence": "present",
+      "normalized_evidence": "uncertain",
+      "reason": "visible elevated deck attached to forklift chassis"
+    },
+    {
+      "file_name": "004_1789898396982491905_camera_2.png",
+      "reason_code": "cargo_floor_missing_robot_attachment_evidence",
+      "original_evidence": "present",
+      "normalized_evidence": "uncertain",
+      "reason": "yellow elevated deck attached to ego robot"
+    }
+  ],
+  "resume_and_cache_efficiency": {
+    "first_complete_collection_seconds": 1008.529,
+    "enhanced_replay_seconds": 171.969,
+    "enhanced_replay_resumed_rows": 11,
+    "enhanced_replay_new_rows": 61,
+    "enhanced_replay_exact_cache_hits": 53,
+    "enhanced_replay_coalesced_requests": 0,
+    "processing_order": "reverse",
+    "reason": "Forward replay over 72 rows would thrash a 64-entry LRU. Reverse resume reused the still-resident tail and preserved partial local rows.",
+    "target_sha256_equal_between_collections": "72/72",
+    "candidate_decision_equal_between_collections": "72/72",
+    "source_sha256_equal_between_collections": "72/72",
+    "raw_parsed_teacher_objects_preserved": "72/72"
+  },
+  "independent_audit": {
+    "status": "passed",
+    "train72_exact_coverage": true,
+    "errors": [],
+    "audit_summary_sha256": "3c369241947965844473738809e284f32e384eb08c2c38f6b998038a8fc67182",
+    "collection_summary_sha256": "b6706ae01ffc15ea471408cde12ca8a323f87f81307a85d9675c393f72c03031",
+    "collection_contract_file_sha256": "162f660a0af90e9192158bb0be79ff75d4836edcba15170baba5cf0b0b2d270e"
+  },
+  "implementation": {
+    "collector": "tools/collect_vlm_teacher_candidates.py",
+    "collector_sha256": "a2e940f61706d0712625a804ece3ffd1d7c43909159ad0475f14396735637352",
+    "auditor": "tools/audit_vlm_teacher_candidates.py",
+    "auditor_sha256": "2eb13c48651153981dc6e2b9594f814ec39a423456e77f65916823d8efa8ac27"
+  },
+  "verification": {
+    "targeted_tests": "7/7",
+    "python_regression": "787/787",
+    "web_regression": "95/95",
+    "formal_services_healthy_after_collection": true,
+    "formal_state_hashes_unchanged": true
+  },
+  "boundaries": [
+    "These records are machine teacher candidates, not independent labels or human truth.",
+    "The two cargo_floor review rows remain excluded until their guard wording or visual evidence is adjudicated.",
+    "The collection is not yet a training run and does not prove that Qwen3-VL-2B improves after distillation.",
+    "test24 remains evaluation-only and is absent from every teacher row."
+  ]
+}

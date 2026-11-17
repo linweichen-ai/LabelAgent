@@ -3190,7 +3190,37 @@ def refine_reference_candidates():
         truth_sha = _sha256_json(state.get("truth", {}))
         references_sha = _sha256_json(state.get("reference_frames", {}))
         run_sha = _sha256_json(previous_run)
-        description = canonical_unreferenced_description(draft_labels)
+        review_reference = previous_run.get("review_reference_frame")
+        if review_reference is None:
+            description = canonical_unreferenced_description(draft_labels)
+            reference_context = None
+        else:
+            if type(review_reference) is not int:
+                raise StaleHumanReviewError("候选参考帧记录无效，请重新生成草稿")
+            if review_reference not in state.get("reference_frames", {}).get(topic, []):
+                raise StaleHumanReviewError("候选绑定的参考帧已变化，请重新生成草稿")
+            reference_truth = copy.deepcopy(state.get("truth", {}).get(str(review_reference)))
+            if not isinstance(reference_truth, list) or not reference_truth:
+                raise StaleHumanReviewError("候选绑定的参考真值已缺失，请重新生成草稿")
+            if previous_run.get("review_reference_signature") != reference_signature(review_reference):
+                raise StaleHumanReviewError("候选绑定的参考真值已变化，请重新生成草稿")
+            current_labels = selected_auto_labels(review_reference)
+            if current_labels != draft_labels:
+                raise StaleHumanReviewError("候选绑定的自动标注类别已变化，请重新生成草稿")
+            description = load_reference_description(review_reference)
+            if (not isinstance(description, dict)
+                    or description.get("reference_signature") != reference_signature(review_reference)
+                    or _sha256_json(description) != previous_run.get("review_description_sha256")):
+                raise StaleHumanReviewError("候选绑定的参考描述已变化，请重新生成草稿")
+            description = restrict_description(description, draft_labels)
+            reference_annotations = [shape for shape in reference_truth
+                                     if shape.get("label") in draft_labels]
+            reference_image = video.frame(topic, review_reference)
+            reference_context = {
+                "image": reference_image,
+                "marked_image": reference_overlay(reference_image, reference_annotations),
+                "annotations": reference_annotations,
+            }
         max_rounds = previous_run.get("max_rounds", 1)
         if type(max_rounds) is not int or not 1 <= max_rounds <= MAX_REVIEW_ROUNDS:
             raise ValueError("候选精修轮数记录无效")
@@ -3224,7 +3254,8 @@ def refine_reference_candidates():
         with cancellation(run_stop_event), trace_calls(on_trace, save_inspection_image):
             result = review_existing(
                 config, image_bytes, description, draft_labels, candidates,
-                max_rounds=max_rounds, on_progress=on_progress, reference=None,
+                max_rounds=max_rounds, on_progress=on_progress,
+                reference=reference_context,
                 candidate_filters=previous_run.get("candidate_filters"),
                 sam_generation=previous_run.get("sam_generation"))
         if result["agent"].get("stop_reason") == "error":
@@ -3975,6 +4006,7 @@ def run_workflow():
         if not state["truth"].get(str(reference)):
             raise ValueError("请先保存参考帧真值")
         max_rounds = requested_review_rounds(body)
+        defer_agent_review = body.get("defer_agent_review") is True
         results = []
         requested_frames = body.get("frames")
         if requested_frames is not None:
@@ -4027,7 +4059,10 @@ def run_workflow():
                    "task_id": run_task_id, "status": "running",
                    "total": len(targets), "targets": targets,
                    "requested_frames": requested_frames,
-                  "message": "候选已保存到本地；请在工作台逐帧复核并保存真值"}
+                   "agent_review_deferred": defer_agent_review,
+                  "message": ("初始机器候选已保存；Agent 将在后台继续精修，请人工复核后保存真值"
+                              if defer_agent_review else
+                              "候选已保存到本地；请在工作台逐帧复核并保存真值")}
         video, topic = state["video"], state["topic"]
         file_name = str(video.path)
         config = copy.deepcopy(state.get("config", {}))
@@ -4115,8 +4150,9 @@ def run_workflow():
                     save_run(output)
                 check_cancelled()
                 transient_retry_errors = []
+                runner = generate_only if defer_agent_review else run
                 while True:
-                    result = run(config, target_image, description, allowed_labels,
+                    result = runner(config, target_image, description, allowed_labels,
                         max_rounds=max_rounds, on_progress=on_progress, reference=reference_context)
                     retry_reason = transient_run_failure(result)
                     if retry_reason is None or transient_retry_errors:
@@ -4155,10 +4191,29 @@ def run_workflow():
                     combined, merged_id_map = merge_inference_candidates(
                         existing, result["shapes"], allowed_labels, return_id_map=True)
                     bind_merged_candidate_references(result, merged_id_map)
+                candidate_artifact_sha256 = _sha256_json(combined)
+                input_sha256 = hashlib.sha256(target_image).hexdigest()
                 replacement_run = result["agent"] | {
                     "review_queue": result["review_queue"], "applied": result["applied"],
                     "candidates_added": 0 if failed else result["candidates_added"],
-                    "existing_candidates_preserved": failed}
+                    "existing_candidates_preserved": failed,
+                    "agent_review_status": ("pending" if defer_agent_review and not failed
+                                            else "complete"),
+                    "agent_review_deferred": bool(defer_agent_review and not failed),
+                    "draft_labels": copy.deepcopy(allowed_labels),
+                    "candidate_artifact_sha256": candidate_artifact_sha256,
+                    "input_sha256": input_sha256,
+                    "human_review_required": True,
+                }
+                if defer_agent_review and not failed:
+                    replacement_run.update(
+                        review_reference_frame=reference,
+                        review_reference_signature=reference_signature_snapshot,
+                        review_description_sha256=_sha256_json(description),
+                        candidate_class_audit_status="blocked_on_agent_review",
+                        candidate_class_audit_deferred=True,
+                        candidate_class_audits=[],
+                    )
                 with lock, run_status_lock:
                     check_cancelled()
                     if (state.get("video") is not video or str(video.path) != file_name
@@ -4183,7 +4238,11 @@ def run_workflow():
                         "candidates_added": 0 if failed else result["candidates_added"],
                         "remaining": len(combined), "applied": result["applied"],
                         "review_queue": result["review_queue"], "agent": result["agent"],
-                        "failed": failed, "existing_candidates_preserved": failed})
+                        "failed": failed, "existing_candidates_preserved": failed,
+                        "agent_review_status": replacement_run["agent_review_status"],
+                        "agent_review_deferred": replacement_run["agent_review_deferred"],
+                        "candidate_artifact_sha256": candidate_artifact_sha256,
+                        "input_sha256": input_sha256})
                     output["current"] = None
                     save_run(output)
                     _update_run_status_locked(completed=len(results), phase="saved")

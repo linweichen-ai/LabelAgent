@@ -343,6 +343,14 @@ test('VLM 类别识别阶段显示非零进度并保持运行动画', () => {
   assert.ok(element('runProgressBar').classList.values.has('longPhase'));
 });
 
+test('后台 Agent 精修显示明确阶段而不是看似卡在百分之一', () => {
+  const text = source('app.js');
+  const phases = section(text, 'const agentPhase=', 'let progressTaskId');
+  assert.match(phases, /agent_refining:'VLM 后台精修候选'/);
+  assert.match(phases, /agent_refining:2/);
+  assert.match(phases, /agent_refining:0\.58/);
+});
+
 test('空闲状态明确显示待开始而不是误导性的零进度', () => {
   const elements = new Map();
   function element(id) {
@@ -513,9 +521,25 @@ test('参考帧描述失效时预检阻止提交长推理', async () => {
 
 test('完成与失败帧重试均复用轻量帧计数且不回读完整状态', () => {
   const handler = section(source('app.js'), "$('runButton').onclick", 'let runStatusPollTimer');
-  assert.ok(handler.includes('{frames:requestedFrames,max_rounds:6}'));
+  assert.ok(handler.includes('{frames:requestedFrames,max_rounds:6,defer_agent_review:true}'));
   assert.ok(handler.includes('candidateCountIndex[String(item.frame)]'));
   assert.equal(handler.includes("fetch('/api/state')"), false);
+});
+
+test('主自动标注先返回机器候选并用绑定读回完成后台精修', () => {
+  const app = source('app.js');
+  const refinement = section(app, 'async function refineDeferredRunFrames', 'function invalidateChangedCandidateAudits');
+  const handler = section(app, "$('runButton').onclick", 'let runStatusPollTimer');
+  assert.match(handler, /defer_agent_review:true/);
+  assert.match(handler, /void refineDeferredRunFrames\(data\.frames,jobTopic,jobFile\)/);
+  assert.match(handler, /初始机器候选已打开，可立即检查/);
+  assert.match(refinement, /readCompactFrameStateSnapshot\(target,sourceTopic,sourcePath\)/);
+  assert.match(refinement, /expected_candidate_artifact_sha256:artifact/);
+  assert.match(refinement, /expected_frame_sha256:imageHash/);
+  assert.match(refinement, /candidate_only!==true/);
+  assert.match(refinement, /human_truth!==false/);
+  assert.match(refinement, /approved_for_training!==false/);
+  assert.equal(refinement.includes("fetch('/api/state')"), false);
 });
 
 test('启动前并行检查模型、参考流程与首个请求帧的数据兼容性', async () => {

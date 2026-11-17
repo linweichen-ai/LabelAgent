@@ -239,6 +239,59 @@ class CandidateClassAuditTests(unittest.TestCase):
         self.assertEqual(state["agent_runs"]["0"]["candidate_class_audit_status"], "pending")
         review.assert_called_once()
 
+    def test_deferred_agent_refinement_restores_bound_reference_context(self):
+        candidate = copy.deepcopy(self.candidate)
+        artifact = server._sha256_json([candidate])
+        image_hash = hashlib.sha256(self.image).hexdigest()
+        video = SimpleNamespace(path=Path("test.png"), topics={"camera": {"count": 2}},
+                                frame=lambda topic, frame: self.image)
+        state = {"video": video, "topic": "camera", "labels": self.labels,
+                 "auto_labels": ["ego"], "truth": {"0": [copy.deepcopy(candidate)]},
+                 "config": {}, "reference_frames": {"camera": [0]},
+                 "candidates": {"1": [copy.deepcopy(candidate)]},
+                 "agent_runs": {}, "candidate_review_status": {},
+                 "candidate_revisions": {}}
+        with patch.object(server, "state", state):
+            signature = server.reference_signature(0)
+            description = {"description": "reference ego", "prompts": [
+                {"label": "ego", "text": "robot chassis"}],
+                "reference_signature": signature}
+            state["agent_runs"]["1"] = {
+                "agent_review_status": "pending", "agent_review_deferred": True,
+                "candidate_class_audit_status": "blocked_on_agent_review",
+                "candidate_artifact_sha256": artifact, "draft_labels": ["ego"],
+                "max_rounds": 1, "candidate_filters": [],
+                "sam_generation": {"mode": "multi_prompt"}, "review_queue": [],
+                "candidate_class_audits": [], "input_sha256": image_hash,
+                "review_reference_frame": 0,
+                "review_reference_signature": signature,
+                "review_description_sha256": server._sha256_json(description),
+            }
+            result = {"shapes": [copy.deepcopy(candidate)],
+                      "agent": {"converged": True, "rounds": 1,
+                                "max_rounds": 1, "stop_reason": "done", "audit": [],
+                                "candidate_filters": [],
+                                "sam_generation": {"mode": "multi_prompt"}},
+                      "review_queue": [], "applied": [], "candidates_added": 1}
+            with patch.object(server, "run_status", {"status": "idle"}), \
+                 patch.object(server, "frame_image", return_value=self.image), \
+                 patch.object(server, "load_reference_description", return_value=description), \
+                 patch.object(server, "review_existing", return_value=result) as review, \
+                 patch.object(server, "save"), \
+                 patch.object(server, "archive_candidate_revision", return_value=None):
+                response = server.app.test_client().post("/api/reference_candidates/refine", json={
+                    "frame": 1, "topic": "camera",
+                    "expected_candidate_artifact_sha256": artifact,
+                    "expected_frame_sha256": image_hash})
+        self.assertEqual(response.status_code, 200, response.json)
+        self.assertFalse(response.json["human_truth"])
+        supplied = review.call_args
+        self.assertEqual(supplied.args[2]["description"], "reference ego")
+        self.assertEqual(supplied.args[3], ["ego"])
+        self.assertEqual(supplied.kwargs["reference"]["annotations"], [candidate])
+        self.assertEqual(state["truth"], {"0": [candidate]})
+        self.assertEqual(state["reference_frames"], {"camera": [0]})
+
     def test_deferred_agent_refinement_never_overwrites_a_changed_candidate(self):
         candidate = copy.deepcopy(self.candidate)
         artifact = server._sha256_json([candidate])

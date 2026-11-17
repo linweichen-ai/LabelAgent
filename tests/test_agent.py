@@ -3719,6 +3719,51 @@ class ServerTests(unittest.TestCase):
             finally:
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work
 
+    def test_main_run_can_publish_reference_bound_candidates_before_agent_review(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                "config": {}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            description = {"description": "a only", "prompts": [{"label": "a", "text": "a"}],
+                           "reference_signature": server.reference_signature(0)}
+            observed = []
+            def fake_generate(config, image, supplied, labels, max_rounds,
+                              on_progress, reference):
+                observed.append((supplied, labels, reference))
+                return {"shapes": [shape()], "candidates_added": 1, "applied": [],
+                    "review_queue": [], "agent": {"converged": False, "rounds": 0,
+                    "max_rounds": max_rounds, "stop_reason": "review_deferred", "audit": [],
+                    "candidate_filters": [], "sam_generation": {"mode": "multi_prompt"}}}
+            try:
+                with patch.object(server, "generate_only", side_effect=fake_generate) as generate, \
+                     patch.object(server, "run") as run:
+                    response = server.app.test_client().post("/api/run", json={
+                        "frame": 1, "count": 1, "max_rounds": 2,
+                        "description": description, "defer_agent_review": True})
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertTrue(response.json["agent_review_deferred"])
+                self.assertEqual(response.json["frames"][0]["agent_review_status"], "pending")
+                self.assertTrue(response.json["frames"][0]["agent_review_deferred"])
+                self.assertRegex(response.json["frames"][0]["candidate_artifact_sha256"], r"^[0-9a-f]{64}$")
+                self.assertRegex(response.json["frames"][0]["input_sha256"], r"^[0-9a-f]{64}$")
+                generate.assert_called_once()
+                run.assert_not_called()
+                self.assertEqual(len(observed), 1)
+                self.assertIsNotNone(observed[0][2])
+                persisted = server.state["agent_runs"]["1"]
+                self.assertEqual(persisted["agent_review_status"], "pending")
+                self.assertEqual(persisted["review_reference_frame"], 0)
+                self.assertEqual(persisted["review_reference_signature"],
+                                 server.reference_signature(0))
+                self.assertEqual(persisted["review_description_sha256"],
+                                 server._sha256_json(description))
+                self.assertEqual(server.state["truth"], {"0": [shape()]})
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
     def test_run_defaults_to_six_review_rounds_and_rejects_out_of_range(self):
         old_state, old_status, old_work = server.state, server.run_status, server.WORK
         with tempfile.TemporaryDirectory() as directory:

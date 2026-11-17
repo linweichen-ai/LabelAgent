@@ -77,10 +77,23 @@ function integer(name, fallback) {
         && Number((document.getElementById("frameTotal")?.textContent || "").replace(/\D/g, "")) > 0,
     topic, { timeout: 30000 });
 
-    await page.locator("#frameNumber").evaluate(async (input, expected) => {
-      input.value = String(expected);
-      await input.onchange({ target: input });
-    }, frame);
+    let frameSelected = false;
+    for (let attempt = 0; attempt < 3 && !frameSelected; attempt += 1) {
+      await page.locator("#frameNumber").fill(String(frame));
+      await page.locator("#frameNumber").dispatchEvent("change");
+      try {
+        await page.waitForFunction(expected => {
+          const input = document.getElementById("frameNumber");
+          const image = document.getElementById("frameImage");
+          if (Number(input?.value) !== expected || !image?.complete || !image.src) return false;
+          return new URL(image.src).pathname === `/api/frame/${expected}`;
+        }, frame, { timeout: 15000 });
+        await page.waitForTimeout(300);
+        frameSelected = Number(await page.locator("#frameNumber").inputValue()) === frame;
+      } catch (error) {
+        if (attempt === 2) throw error;
+      }
+    }
     assert.equal(Number(await page.locator("#frameNumber").inputValue()), frame);
     await page.locator("#taskCount").fill(String(count));
 
@@ -130,9 +143,25 @@ function integer(name, fallback) {
     const readiness = await page.locator("#runReadinessDialog [data-readiness]").allTextContents();
     assert.equal(await page.locator("#runReadinessConfirm").isEnabled(), true);
 
-    const runResponsePromise = page.waitForResponse(item =>
-      new URL(item.url()).pathname === "/api/run" && item.request().method() === "POST",
-    { timeout: 300000 });
+    await page.locator("#toast").evaluate(element => {
+      element.textContent = "";
+      element.style.display = "none";
+    });
+    const runRequestPromise = page.waitForRequest(item =>
+      new URL(item.url()).pathname === "/api/run" && item.method() === "POST",
+    { timeout: 60000 }).then(runRequest => ({ runRequest }));
+    const preflightFailurePromise = page.waitForFunction(() => {
+      const button = document.getElementById("runButton");
+      const toast = document.getElementById("toast");
+      return button?.getAttribute("aria-busy") === "false"
+        && toast?.style.display === "block" && Boolean(toast.textContent?.trim())
+        ? toast.textContent.trim() : false;
+    }, null, { timeout: 60000 }).then(async handle => ({ preflightFailure: await handle.jsonValue() }))
+      .catch(() => null);
+    const refinementResponsePromise = page.waitForResponse(item =>
+      new URL(item.url()).pathname === "/api/reference_candidates/refine"
+        && item.request().method() === "POST",
+    { timeout: 300000 }).catch(() => null);
     const runStarted = Date.now();
     await page.locator("#runReadinessConfirm").click();
     await page.waitForFunction(() => {
@@ -142,14 +171,36 @@ function integer(name, fallback) {
     }, null, { timeout: 30000 });
     const firstNonzeroProgressMs = Date.now() - runStarted;
 
-    const runResponse = await runResponsePromise;
+    const runOutcome = await Promise.race([runRequestPromise, preflightFailurePromise]);
+    assert(runOutcome, "automatic-label preflight produced no request or explicit failure");
+    assert(!runOutcome.preflightFailure,
+      `automatic-label preflight rejected the run: ${runOutcome.preflightFailure}`);
+    const runResponse = await runOutcome.runRequest.response();
+    assert(runResponse, "automatic-label request ended without an HTTP response");
     const runPayload = await runResponse.json();
+    const runResponseMs = Date.now() - runStarted;
     assert.equal(runResponse.status(), 200);
+    await page.waitForFunction(requestedFrame => {
+      const state = window.currentWorkbenchFrameState();
+      return Array.isArray(state.candidates?.[String(requestedFrame)])
+        && state.candidates[String(requestedFrame)].length > 0;
+    }, frame, { timeout: 30000 });
+    const candidateVisibleMs = Date.now() - runStarted;
+    let refinementResponse = null;
+    if (runPayload.agent_review_deferred === true) {
+      refinementResponse = await refinementResponsePromise;
+      assert(refinementResponse, "deferred run did not submit Agent refinement");
+      assert.equal(refinementResponse.status(), 200);
+      await page.waitForFunction(requestedFrame => {
+        const state = window.currentWorkbenchFrameState();
+        return state.agent_runs?.[String(requestedFrame)]?.agent_review_status === "complete";
+      }, frame, { timeout: 30000 });
+    }
     await page.waitForFunction(() => {
       const value = document.getElementById("runProgressState")?.textContent || "";
       return value.includes("完成") || value.includes("失败") || value.includes("停止");
     }, null, { timeout: 30000 });
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(300);
 
     const final = await page.evaluate(() => {
       const state = window.currentWorkbenchFrameState();
@@ -189,7 +240,11 @@ function integer(name, fallback) {
       count,
       readiness,
       first_nonzero_progress_ms: firstNonzeroProgressMs,
-      run_response_ms: Date.now() - runStarted,
+      run_response_ms: runResponseMs,
+      candidate_visible_ms: candidateVisibleMs,
+      agent_review_deferred: runPayload.agent_review_deferred === true,
+      refinement_response_status: refinementResponse?.status() ?? null,
+      background_complete_ms: Date.now() - runStarted,
       total_ms: Date.now() - started,
       run_task_id: runPayload.task_id,
       run_stopped: runPayload.stopped === true,

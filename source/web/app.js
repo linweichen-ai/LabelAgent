@@ -289,6 +289,38 @@ async function refineReferenceCandidateSnapshot(target,items){
   candidates[key]=JSON.parse(JSON.stringify(result.candidates));agentRuns[key]=JSON.parse(JSON.stringify(result.agent));candidateReviewBindings=readback.candidate_review_bindings||{};entry.pending=false;return {candidates:candidates[key],agent:agentRuns[key],mutated:result.candidate_mutated===true};
  }finally{entry.pending=false}
 }
+let deferredRunRefinementActive=false;
+async function refineDeferredRunFrames(rows,sourceTopic,sourcePath){
+ const pending=(rows||[]).filter(item=>item?.agent_review_status==='pending'&&item?.agent_review_deferred===true&&Number(item.remaining)>0);
+ if(!pending.length)return {completed:0,failed:0};
+ deferredRunRefinementActive=true;renderRunButton();let completed=0,failed=0;
+ try{
+  for(const row of pending){
+   if(topic!==sourceTopic||loadedDataPath!==sourcePath)break;
+   const target=Number(row.frame),key=String(target);
+   try{
+    const fresh=await readCompactFrameStateSnapshot(target,sourceTopic,sourcePath),items=fresh.candidates?.[key],run=fresh.agent_runs?.[key],binding=fresh.candidate_review_bindings?.[key],artifact=binding?.candidate_artifact_sha256;
+    if(!Array.isArray(items)||!items.length||run?.agent_review_status!=='pending'||!artifact)throw Error('初始候选服务器绑定已变化');
+    const initialSnapshot=candidateAuditFullSnapshot(items),imageResponse=await fetch(`/api/frame/${target}?topic=${encodeURIComponent(sourceTopic)}`,{cache:'no-store'});
+    if(!imageResponse.ok)throw Error('无法读取后台精修原图');
+    const imageHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',await imageResponse.arrayBuffer())),value=>value.toString(16).padStart(2,'0')).join('');
+    if(topic!==sourceTopic||loadedDataPath!==sourcePath)break;
+    const result=await api('reference_candidates/refine',{frame:target,topic:sourceTopic,expected_candidate_artifact_sha256:artifact,expected_frame_sha256:imageHash});
+    if(result.stopped)throw Error('后台精修已停止');
+    if(result.frame!==target||result.topic!==sourceTopic||result.candidate_only!==true||result.human_truth!==false||result.approved_for_training!==false||result.input_sha256!==imageHash||result.initial_candidate_artifact_sha256!==artifact||!Array.isArray(result.candidates)||!result.candidates.length||result.agent?.agent_review_status!=='complete'||result.agent?.candidate_artifact_sha256!==result.candidate_artifact_sha256)throw Error('后台精修响应绑定不一致');
+    const readback=await readCompactFrameStateSnapshot(target,sourceTopic,sourcePath);
+    if(candidateAuditFullSnapshot(readback.candidates?.[key])!==candidateAuditFullSnapshot(result.candidates)||candidateAuditFullSnapshot(readback.agent_runs?.[key])!==candidateAuditFullSnapshot(result.agent)||readback.candidate_review_bindings?.[key]?.candidate_artifact_sha256!==result.candidate_artifact_sha256)throw Error('后台精修服务器读回不一致');
+    if(topic===sourceTopic&&loadedDataPath===sourcePath){
+     const localSnapshot=candidateAuditFullSnapshot(candidates[key]);
+     if(!candidates[key]||localSnapshot===initialSnapshot){candidates[key]=JSON.parse(JSON.stringify(result.candidates));agentRuns[key]=JSON.parse(JSON.stringify(result.agent));candidateReviewBindings=readback.candidate_review_bindings||candidateReviewBindings;candidateCountIndex[key]=result.candidates.length;if(frame===target){refreshCandidateSummary();refreshShapeList();updateReferenceStatus();draw()}}
+    }
+    completed++;
+   }catch(error){failed++;if(topic===sourceTopic&&loadedDataPath===sourcePath)toast(`帧 ${row.frame} 的 Agent 后台精修未采用：${error.message}；初始机器候选已保留`)}
+  }
+  if(topic===sourceTopic&&loadedDataPath===sourcePath&&completed)toast(`Agent 已在后台完成 ${completed} 帧精修；候选仍需人工确认${failed?`，${failed} 帧保留初始候选`:''}`);
+  return {completed,failed};
+ }finally{deferredRunRefinementActive=false;await refreshAgentProgress();renderRunButton()}
+}
 function invalidateChangedCandidateAudits(items,target=frame){
  const scope=candidateAuditScope(target),entry=candidateAuditSnapshots.get(scope);if(!entry||entry.snapshot===candidateAuditSnapshot(items))return false;
  entry.stale=true;entry.snapshot=candidateAuditSnapshot(items);entry.generation++;
@@ -538,10 +570,10 @@ $('doneFilesButton').onclick=()=>$('fileManager').close();
 $('configSave').onclick=async()=>{try{await api('config',{llm_url:$('llmUrl').value,llm_model:$('llmModel').value,llm_key:$('llmKey').value});$('config').close();toast('配置已保存')}catch(e){toast(e.message)}};
 let currentDescription=null;
 $('describeButton').onclick=async()=>{const button=$('describeButton');if(button.disabled)return;button.disabled=true;button.textContent='生成中…';toast('正在生成真值描述…');try{currentDescription=await api('describe',{frame});toast('描述已生成')}catch(e){toast(e.message)}finally{button.disabled=false;button.textContent='生成真值描述'}};
- const agentPhase={preflight:'检查模型与数据是否就绪',submitting:'请求已提交，等待后台确认',claiming:'后台已接收任务',starting:'准备任务',discovering:'VLM 识别当前帧可见类别',discovering_retry:'VLM 正在重试标签识别',describing:'VLM 生成真值描述',loading:'读取图像',generating:'SAM 3 生成候选',generated:'候选已生成',observing:'VLM 观察图像和候选',vlm_waiting:'VLM 正忙，任务正在排队等待',editing:'执行标注工具',edited:'工具执行结束',finished:'本帧结束',retrying:'服务短暂异常，正在自动重试本帧',saved:'候选已保存',completed:'本次处理结束',stopping:'正在停止',stopped:'已停止',failed:'运行失败'};
+ const agentPhase={preflight:'检查模型与数据是否就绪',submitting:'请求已提交，等待后台确认',claiming:'后台已接收任务',starting:'准备任务',discovering:'VLM 识别当前帧可见类别',discovering_retry:'VLM 正在重试标签识别',describing:'VLM 生成真值描述',loading:'读取图像',generating:'SAM 3 生成候选',generated:'候选已生成',observing:'VLM 观察图像和候选',agent_refining:'VLM 后台精修候选',vlm_waiting:'VLM 正忙，任务正在排队等待',editing:'执行标注工具',edited:'工具执行结束',finished:'本帧结束',retrying:'服务短暂异常，正在自动重试本帧',saved:'候选已保存',completed:'本次处理结束',stopping:'正在停止',stopped:'已停止',failed:'运行失败'};
 const agentStop={done:'Agent 流程已结束（不代表正确）',needs_review:'旧记录：请求人工复核',max_rounds:'达到最大复查轮数',no_progress:'没有有效修改',cycle:'检测到循环修改',error:'模型或工具调用失败'};
- const agentProgressStage={preflight:0,submitting:0,claiming:0,starting:0,discovering:0,discovering_retry:0,describing:0,loading:0,generating:1,generated:1,observing:2,vlm_waiting:2,editing:3,edited:3,finished:4,retrying:1,saved:4,completed:4,stopping:4,stopped:4,failed:4};
- const agentProgressWeight={preflight:0.01,submitting:0.02,claiming:0.03,starting:0.04,discovering:0.06,discovering_retry:0.08,describing:0.10,loading:0.12,generating:0.22,generated:0.38,observing:0.58,vlm_waiting:0.58,editing:0.74,edited:0.86,finished:0.94,retrying:0.18,saved:1};
+ const agentProgressStage={preflight:0,submitting:0,claiming:0,starting:0,discovering:0,discovering_retry:0,describing:0,loading:0,generating:1,generated:1,observing:2,agent_refining:2,vlm_waiting:2,editing:3,edited:3,finished:4,retrying:1,saved:4,completed:4,stopping:4,stopped:4,failed:4};
+ const agentProgressWeight={preflight:0.01,submitting:0.02,claiming:0.03,starting:0.04,discovering:0.06,discovering_retry:0.08,describing:0.10,loading:0.12,generating:0.22,generated:0.38,observing:0.58,agent_refining:0.58,vlm_waiting:0.58,editing:0.74,edited:0.86,finished:0.94,retrying:0.18,saved:1};
 let progressTaskId=null,progressHighWater=0,runStatusConnectionMessage='';
 let progressFetching=false;
 $('downloadDebug').onclick=async()=>{
@@ -630,9 +662,10 @@ function renderRunButton(){
  const stopping=job.status==='stopping',running=job.status==='running'||stopping;
  const elapsed=job.started_at?Math.max(0,Math.floor((running?Date.now()/1000:(job.events?.at(-1)?.time||job.started_at))-job.started_at)):null;
   const recoverable=pendingRunResult(job),retryable=pendingRetry();
-  button.disabled=pending||stopping;
-  button.textContent=(pending?'启动中…':stopping?'正在停止…':running?'停止自动标注':recoverable?'查看上次结果':retryable?(retryMode==='resume'?`继续 ${retryFrames.length} 个未完成帧`:`重试 ${retryFrames.length} 个失败帧`):'开始自动标注')+(running&&!pending?` · 第 ${job.round||0}/${Math.max(1,Number(job.max_rounds)||6)} 轮`: '')+(elapsed===null?'':` · ${elapsed} 秒`);
- button.setAttribute('aria-busy',String(pending||running));
+  const launchingRefinement=typeof deferredRunRefinementActive!=='undefined'&&deferredRunRefinementActive&&!running;
+  button.disabled=pending||stopping||launchingRefinement;
+  button.textContent=(pending?'启动中…':stopping?'正在停止…':running?'停止自动标注':launchingRefinement?'正在启动后台精修…':recoverable?'查看上次结果':retryable?(retryMode==='resume'?`继续 ${retryFrames.length} 个未完成帧`:`重试 ${retryFrames.length} 个失败帧`):'开始自动标注')+(running&&!pending?` · 第 ${job.round||0}/${Math.max(1,Number(job.max_rounds)||6)} 轮`: '')+(elapsed===null?'':` · ${elapsed} 秒`);
+ button.setAttribute('aria-busy',String(pending||running||launchingRefinement));
  renderAgentProgressPanel(job,elapsed||0);
 }
 function renderAgentProgress(job){const changed=latestAgentJob?.status!==job.status||latestAgentJob?.phase!==job.phase||latestAgentJob?.frame!==job.frame;latestAgentJob=job;renderRunButton();if(changed)document.dispatchEvent(new CustomEvent('labelagent:job-status',{detail:job}))}
@@ -685,7 +718,7 @@ $('runButton').onclick=async()=>{
   runRequestPhase='submitting';renderRunButton();
    const jobTopic=topic,jobFile=loadedDataPath;
   stopPlayback();
-   const data=await api('run',requestedFrames?{frames:requestedFrames,max_rounds:6}:{frame:startFrame,count,max_rounds:6});
+   const data=await api('run',requestedFrames?{frames:requestedFrames,max_rounds:6,defer_agent_review:true}:{frame:startFrame,count,max_rounds:6,defer_agent_review:true});
    markRunResultHandled(data.task_id);latestAgentJob.result_available=false;
   if(data.description)currentDescription=data.description;
    for(const item of data.frames||[])if(Number.isInteger(item.frame))candidateCountIndex[String(item.frame)]=Math.max(0,Number(item.remaining)||0);
@@ -697,7 +730,8 @@ $('runButton').onclick=async()=>{
   const first=data.frames.find(item=>!item.failed&&item.remaining>0)||data.frames.find(item=>item.remaining>0);
   if(first){
    await openCandidateFrame(first.frame,jobTopic);
-   toast(failed.length?`${failed.length} 帧失败，旧候选已保留；已打开结果，请先查看错误`:'已打开候选，请检查后点击“保存结果”');
+   if(data.agent_review_deferred)void refineDeferredRunFrames(data.frames,jobTopic,jobFile);
+   toast(failed.length?`${failed.length} 帧失败，旧候选已保留；已打开结果，请先查看错误`:data.agent_review_deferred?'初始机器候选已打开，可立即检查；Agent 正在后台精修，不会自动写成人工真值':'已打开候选，请检查后点击“保存结果”');
   }else toast('处理结束，但没有可显示的候选，请查看自动标注过程');
  }catch(e){toast(e.message)}
   finally{await refreshAgentProgress();runRequestStartedAt=null;runRequestFrame=null;runRequestCount=null;renderRunButton()}

@@ -1,0 +1,179 @@
+{
+  "schema_version": "labelagent.deferred-main-agent-round132.v1",
+  "date": "2026-11-18",
+  "objective": "Make the primary automatic-label button publish guarded machine candidates before the unchanged Agent refinement finishes, while preserving reference binding, candidate/truth isolation, and final review semantics.",
+  "implementation": {
+    "main_run_flag": "defer_agent_review=true",
+    "initial_stage": "generate_only with the existing reference context and candidate guards",
+    "background_stage": "/api/reference_candidates/refine",
+    "reference_restore": [
+      "reference frame id",
+      "reference signature",
+      "reference-description SHA-256",
+      "selected auto-label list",
+      "reference truth and marked reference image"
+    ],
+    "compare_and_swap_gates": [
+      "file and topic",
+      "frame image SHA-256",
+      "candidate artifact SHA-256",
+      "configuration and label registry",
+      "truth and reference-frame snapshots",
+      "persisted Agent run SHA-256"
+    ],
+    "candidate_boundary": {
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    }
+  },
+  "same_frame_api_ab": {
+    "frame": 32,
+    "source": "batchA_0920_000_clean_review.mcap /capture/camera_1/image",
+    "synchronous_baseline": {
+      "elapsed_seconds": 62.561,
+      "candidate_count": 10,
+      "agent_rounds": 2,
+      "stop_reason": "done",
+      "gpt_elapsed_ms": [31239, 23345],
+      "gpt_cache_hits": [false, false]
+    },
+    "deferred_candidate_stage": {
+      "elapsed_seconds": 2.785,
+      "candidate_count": 10,
+      "agent_review_status": "pending",
+      "time_to_candidate_reduction_percent": 95.548
+    },
+    "deferred_refinement_stage": {
+      "elapsed_seconds": 2.678,
+      "cache_note": "Both Agent responses were exact-cache hits because the synchronous arm ran first; this timing is not a cold-background latency claim.",
+      "agent_rounds": 2,
+      "stop_reason": "done",
+      "candidate_count": 10,
+      "final_geometry_sha256": "d7682ee702d267fe419794bf7d0a16c80ceed03f437068f427ab7c4ea63eaeac"
+    },
+    "semantic_equivalence": {
+      "final_geometry_sha256_equal": true,
+      "agent_audit_sha256_equal": true,
+      "applied_operations_sha256_equal": true,
+      "review_queue_sha256_equal": true,
+      "full_candidate_sha256_equal": false,
+      "full_candidate_difference_reason": "Deferred candidates retain explicit staged-review provenance; geometry and Agent decisions are byte-identical after normalization."
+    }
+  },
+  "real_browser_acceptance": {
+    "frame": 33,
+    "page_status": 200,
+    "first_nonzero_progress_ms": 31,
+    "initial_run_response_ms": 6006,
+    "candidate_visible_ms": 6055,
+    "agent_review_deferred": true,
+    "background_complete_ms": 183705,
+    "background_agent_rounds": 6,
+    "background_stop_reason": "no_progress",
+    "background_gpt_elapsed_ms": [38643, 36761, 36982, 31273, 18587, 9444],
+    "background_gpt_cache_hits": [false, false, false, false, false, false],
+    "candidate_count": 11,
+    "candidate_counts_by_label": {
+      "floor": 1,
+      "pallet": 8,
+      "person": 1,
+      "车辆": 1
+    },
+    "truth_unchanged": true,
+    "reference_frames_unchanged": true,
+    "page_errors": 0,
+    "result_sha256": "4150c9c461c2b8c5285e5e1c3cd05d58fa1ea36d8bcc45ce05681a09e285d8ab",
+    "screenshot_sha256": "15d3116e5f99270955b9c357588a7da6a3eed47519323ce7b14a237ebd4fb5db",
+    "untracked_artifacts": [
+      "artifacts/round132-browser-deferred-main/result.json",
+      "artifacts/round132-browser-deferred-main/screenshot.png"
+    ]
+  },
+  "verification": {
+    "python_tests": 852,
+    "python_failures": 0,
+    "web_tests": 99,
+    "web_failures": 0,
+    "browser_script_syntax": "passed",
+    "formal_state_sha256_before_after": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "isolated_port_released": true,
+    "formal_workbench_http_status": 200,
+    "sam_health_http_status": 200,
+    "vlm_health_http_status": 200
+  },
+  "deployment": {
+    "backup": {
+      "path": "D:\\Apps\\LabelAgent\\.local\\backups\\deferred-main-agent-round132-20261118",
+      "manifest": "backup_manifest.json",
+      "source_agent_sha256": "54d3a34a5bdcb8b609f9b1416661f72981256c11ca9f941cd3adcb35009bddb3",
+      "source_web_sha256": "9edbee8764630e010dbfcf7a75af051885849785fadba82cb35bed14126d2401",
+      "state_sha256": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21"
+    },
+    "runtime_readback": {
+      "source_agent_sha256": "52cbb15a936bcae543d168a6c7c1976c4863c7481d22949a11fb0d4b3c6afb9b",
+      "source_web_sha256": "833f07ffb9e0b0d63e87f4eb2a64f4f96366c978bb0b67fb7044ed81972870c4",
+      "served_app_sha256": "833f07ffb9e0b0d63e87f4eb2a64f4f96366c978bb0b67fb7044ed81972870c4",
+      "served_app_has_deferred_flag": true,
+      "served_app_has_background_stage": true,
+      "formal_state_sha256_before_after": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+      "workbench_http_status": 200,
+      "sam_http_status": 200,
+      "vlm_http_status": 200
+    },
+    "acceptance_diagnostics": [
+      {
+        "snapshot": "formal-state clone",
+        "outcome": "preflight_rejected_description_stale",
+        "api_run_submitted": false,
+        "candidate_written": false,
+        "truth_written": false,
+        "harness_issue": "The harness waited for /api/run instead of reporting the explicit preflight rejection."
+      },
+      {
+        "snapshot": "verified round-132 clone",
+        "frame": 34,
+        "outcome": "initial_candidates_published_before_harness_request-listener_error",
+        "initial_elapsed_seconds": 3.655,
+        "candidate_count": 8,
+        "agent_review_status": "pending",
+        "truth_written": false,
+        "background_refinement_submitted": false
+      },
+      {
+        "snapshot": "verified round-132 clone",
+        "frame": 35,
+        "outcome": "passed",
+        "first_nonzero_progress_ms": 23,
+        "initial_run_response_ms": 4332,
+        "candidate_visible_ms": 4376,
+        "background_complete_ms": 111372,
+        "candidate_count": 8,
+        "candidate_counts_by_label": {
+          "floor": 1,
+          "pallet": 6,
+          "person": 1
+        },
+        "truth_unchanged": true,
+        "reference_frames_unchanged": true,
+        "page_errors": 0,
+        "result_sha256": "8db757af088d46fc7639949d39a83963f4e203f53163f6b75e10b17a30094efb",
+        "screenshot_sha256": "5bccf17244e8ef99c03619ecddb2befef72d7f423eed1fc48634813a14e8f9f8"
+      }
+    ],
+    "browser_harness_hardening": {
+      "stable_frame_selection_retries": 3,
+      "preflight_rejection_timeout_seconds": 60,
+      "targeted_tests": 2,
+      "targeted_failures": 0
+    },
+    "isolated_port_released": true
+  },
+  "decision": {
+    "status": "deployed_and_formal_readback_verified",
+    "reason": "The same-frame initial candidate became available 95.548% earlier, deployed files were read back byte-identically, and a post-deployment browser run completed the staged workflow without touching formal state, truth, or reference frames.",
+    "total_compute_reduction_claimed": false,
+    "quality_improvement_claimed": false,
+    "remaining_issue": "Cold background Agent refinement can still take several minutes on edit-heavy frames; this change removes operator blocking but does not reduce that compute."
+  }
+}

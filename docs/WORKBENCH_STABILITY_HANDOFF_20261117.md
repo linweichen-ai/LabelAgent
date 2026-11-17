@@ -1034,3 +1034,13 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 新增可执行时钟测试验证了三秒前不请求、繁忙后低频重试、空闲后只请求 `source+1`、取消后不再发送；版本控制工作树完整回归为 Python 750/750、网页 89/89。正式页面加载 `reference-prep.js?v=117`，[真实页面截图](evidence/workbench-stability-20261117/adjacent-frame-prefetch-round84.png)正常，SAM、主 VLM 与安全通道 ready，任务 idle，5090 快速通道仍未启用或不可用。真实预取前后六份正式状态文件哈希完全不变，结果保持 `candidate_only=true`、`human_truth=false`、`approved_for_training=false`。回滚点为 `D:\Apps\LabelAgent\.local\backups\adjacent-prefetch-round84-20261117`，结构化证据见 [第八十四轮相邻帧预取验收](evidence/workbench-stability-20261117/adjacent-frame-prefetch-round84.json)。
 
 正式运行目录还保留一套历史测试镜像，直接在其中运行全套测试会混入旧接口断言；本轮发现后停止该非权威长测试，并把临时覆盖的两个测试文件逐字节恢复。正式源码哈希、工作台接口与页面验收正常；权威完整测试来自版本控制工作树。边界：本轮没有改变模型权重、提示协议或候选语义，也没有进行 SAM3 微调、VLM 后训练、人工真值写入、训练批准或 OSS 写入。下一步应继续寻找能够保持单图语义一致性的首帧 VLM 延迟优化，同时重新探测 5090 快速通道的可用条件。
+
+## 第八十五轮可选 5090 快速失败与主工作台启动提速（2026-11-17）
+
+第八十四轮重启时，正式入口会先等待可选 5090 通道 20 秒，哪怕主 4090、SAM 和页面都已经可以工作。现场只读诊断确认 `factory-5090` 的 SSH 正常，但远端 18878 没有监听，隧道日志明确为 connection refused；两张卡仍有外部 `pqr3d` 任务，分别使用约 17.4 GiB 和 20.5 GiB 显存，另有本用户既有 SAM 进程。没有停止、修改或抢占任何外部进程，也没有启动新的常驻 GPU 服务。
+
+本轮把正式管理入口纳入版本控制为 `tools/manage_remote_workbench.py`，并把可选通道默认等待从 20 秒缩短到 3 秒。该值允许用 `LABELAGENT_FAST_ROUTE_WAIT_SECONDS` 调整，但被约束在 1～20 秒；5090 已经就绪时通常首轮检查即可启用，拒绝连接或超时则立即保留已验证 4090 路由。真实热模型启动在 9.919 秒完成，页面、SAM3、主 Qwen 和安全通道均 ready，任务 idle；快速路由仍明确 disabled，而不是让页面继续等待或启动后才报错。
+
+新增三项管理器测试覆盖默认值、非法值安全回退、上下界和正式启动调用点；完整回归为 Python 753/753、网页 89/89。正式管理脚本与版本控制文件 SHA-256 均为 `89FD6F7B...2D03CE96D`，六份正式状态文件哈希完全不变。回滚点为 `D:\Apps\LabelAgent\.local\backups\fast-route-startup-round85-20261117`，结构化证据见 [第八十五轮启动提速验收](evidence/workbench-stability-20261117/optional-fast-startup-round85.json)。
+
+边界：9.919 秒是一次远端模型已热启动时的真实启动，不是多次 P50/P95；本轮改善工作台可用时间，不降低第一张新图约 15～17 秒的 VLM 生成。下一步继续在 4090 单图语义路径上分析生成端开销，5090 则只在外部任务自然释放、端口重新就绪后恢复条件加速。

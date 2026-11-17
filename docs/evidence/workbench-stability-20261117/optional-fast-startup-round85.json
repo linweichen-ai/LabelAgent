@@ -1,0 +1,67 @@
+{
+  "schema_version": "labelagent.optimization_acceptance.v1",
+  "round": 85,
+  "date": "2026-11-17",
+  "objective": "Do not make the primary 4090 workbench wait twenty seconds for an optional 5090 service that is not listening.",
+  "diagnosis": {
+    "factory_5090_ssh_reachable": true,
+    "remote_port_18878_listening": false,
+    "local_tunnel_error": "remote connection refused",
+    "gpu_snapshot": [
+      {"index": 0, "memory_used_mib": 24581, "memory_free_mib": 7531, "utilization_percent": 62, "temperature_c": 67},
+      {"index": 1, "memory_used_mib": 20532, "memory_free_mib": 11580, "utilization_percent": 81, "temperature_c": 63}
+    ],
+    "compute_processes": [
+      {"pid": 14696, "owner_scope": "clw LabelAgent SAM", "memory_mib": 7182},
+      {"pid": 1921875, "owner_scope": "external pqr3d", "memory_mib": 17368},
+      {"pid": 1921876, "owner_scope": "external pqr3d", "memory_mib": 20502}
+    ],
+    "external_process_stopped_or_modified": false,
+    "new_persistent_gpu_process_started": false
+  },
+  "implementation": {
+    "canonical_manager": "tools/manage_remote_workbench.py",
+    "formal_manager": "D:/Apps/LabelAgent/.local/manage_remote.py",
+    "previous_optional_wait_seconds": 20,
+    "default_optional_wait_seconds": 3,
+    "minimum_optional_wait_seconds": 1,
+    "maximum_optional_wait_seconds": 20,
+    "override_environment_variable": "LABELAGENT_FAST_ROUTE_WAIT_SECONDS",
+    "behavior": "A ready 5090 endpoint still enables the small-image fast route; timeout or refusal immediately keeps the verified 4090 primary route."
+  },
+  "acceptance": {
+    "measured_start_seconds": 9.919,
+    "expected_optional_wait_saved_seconds": 17,
+    "primary_4090_ready": true,
+    "sam3_ready": true,
+    "workbench_ready": true,
+    "workbench_status": "idle",
+    "fast_5090_route": "disabled_or_unavailable",
+    "formal_state_hashes_unchanged": true,
+    "python_tests": {"passed": 753, "failed": 0},
+    "web_tests": {"passed": 89, "failed": 0}
+  },
+  "formal_state_hashes": {
+    "state.json": "A01D57E013255DA55C6D76DB8F47BACF7EF872CFAA35371C4EBB03A213158E21",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "model_debug.json": "2D3BE581405142DEB66FE62DC24F8EFEAAC6D5C471FAE61CCBC150819F432B6E"
+  },
+  "deployment": {
+    "manager_sha256": "89FD6F7BC08F2DD2E1CFD4A67F45E56B15F35829FDF46F8AE8844282D03CE96D",
+    "canonical_and_formal_hash_match": true,
+    "backup": "D:/Apps/LabelAgent/.local/backups/fast-route-startup-round85-20261117",
+    "backup_sha256": "9FE6BB0B51511BDEC56B9B312899DA00D7E10C997BB6E66046BCFD2718C3BE9E"
+  },
+  "decision": {
+    "status": "accepted_and_deployed",
+    "reason": "The unavailable optional accelerator no longer holds the primary interface startup for twenty seconds, while a healthy endpoint remains eligible and the verified 4090 fallback is unchanged."
+  },
+  "limits": [
+    "The 9.919 second result is one real warm-model workbench start, not a startup latency distribution.",
+    "This round improves workbench availability; it does not reduce first-image VLM inference latency.",
+    "No SAM3 fine-tuning, VLM post-training, candidate write, truth write, training approval or OSS write occurred."
+  ]
+}

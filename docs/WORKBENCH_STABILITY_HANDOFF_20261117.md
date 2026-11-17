@@ -1226,3 +1226,19 @@ SAM 掩码微调仍等待人工像素真值，但 VLM 蒸馏可以独立准备�
 训练命令无论成功失败都会调用原 `start_remote_services.sh` 恢复正式服务。完成后页面 HTTP 200、SAM loaded、8B VLM loaded、inflight 0，8B 配置 SHA-256 仍为 `5cd45286...8f3661`；六份正式状态哈希完全未变。完整回归为 Python 793/793（另含 179 个 subtests）、网页 95/95；针对性测试 6/6。复现脚本为 `tools/build_vlm_distillation_dataset.py`、`tools/train_qwen3vl_lora.py`、`tools/run_remote_qwen3vl_lora_smoke.sh` 与 `tools/audit_qwen3vl_lora_smoke.py`，结构化证据见 [第一百零二轮 LoRA 冒烟验收](evidence/workbench-stability-20261117/qwen3vl2b-lora-smoke-round102.json)。
 
 边界：这只证明数据隔离、训练执行、权重更新、备份和正式服务恢复均可复现，不是效果提升证据。适配器没有部署，test24 没有参与训练，SAM3 也没有微调。下一轮必须先建立基础 2B 与 LoRA 在 dev8 上的同输入比较，再决定是否扩到完整 62 条的多 epoch 训练；只有内部开发指标改善后，才允许一次性读取 test24 做外部评测，仍不得把 test24 用于调参。
+
+## 第一百零三轮生产提示顺序纠错、一轮 LoRA 与 dev8 真实生成门禁（通过但未部署，2026-11-18）
+
+在准备真实生成评测时，重新对照 `source/agent/workflow.py::_chat` 发现生产请求的内容顺序是“文字 instruction 在前，图像在后”，而第一百零二轮 collator 写成“图像在前，文字在后”。因此第一百零二轮仍能证明隔离训练、权重更新和服务恢复链路可运行，但其质量数字不能作为生产对齐证据；`smoke-v1` 和随后同错误顺序的 `train1epoch-v1` 均保留为否决证据，不部署、不删除。collator 已改成 `text_then_image`，新增回归直接检查 chat template 的 content 顺序和监督 token 掩码。
+
+正确顺序的 CPU dry-run 再次通过 `[1,1126]` 输入、202 个监督 token 和 `[1,32,40]` 图像网格。先做 8 样本两步 smoke，dev8 平均 NLL 从基础 0.9733 降到 0.5300、token 准确率 83.16%→89.59%，8/8 样本改善；因此才扩大到 train62、梯度累积 2、31 个优化步的一轮训练。正确顺序的一轮训练器耗时 29.531 秒，平均训练 loss 0.229722、峰值显存 6,666,108,416 字节；适配器 SHA-256 为 `112cafc4...29a814ef`。独立 safetensors 审计再次通过：392 个张量全部有限，196/196 LoRA A 与 196/196 LoRA B 均非零。
+
+一轮适配器在从未训练的序列 008 共 8 张、1,633 个监督 token 上，平均 NLL 为 0.122398，相对基础 2B 下降 87.42%；token 准确率从 83.16% 提升到 96.20%，8/8 样本 NLL 都下降。随后没有停在 teacher forcing，而是用正式文字→图像顺序、完整 8 类提示、冻结 JSON schema、384 completion 上限和 238 图像 token 做真实结构化生成。基础 2B 8/8 都在上限内留下未闭合 JSON，一次成功率 0%；一轮 LoRA 为 8/8 一次成功，completion 中位 201、最大 207，生成中位 15.492 秒、最大 15.871 秒。
+
+LoRA 的 64 个类别 evidence 中 60 个与 8B 机器教师一致，整体 93.75%，unknown 数量 8/8 一致。三个可追溯 bad case 共四项差异：`008_1789899740482474075_camera_2` 的 `车辆`、`008_1789899740482474075_camera_3` 的 `slope`，以及 `008_1789899770782473075_camera_2` 的 `车辆/other_robot`；其中 slope 为 7/8 教师一致。这里的教师一致率不是人工准确率，slope 也不是像素分割质量。
+
+一次恢复中，评测 CUDA 进程刚退出时上下文尚未释放，现有空闲 GPU 保护正确拒绝 8B 启动；原启动脚本只尝试一次，tmux 随即退出。没有绕过保护或停止其他进程，而是在 GPU1 读回空闲后重跑原脚本。两个受控训练/评测 wrapper 现会在健康等待期内仅当自有 VLM session 已消失时有限重试原启动脚本。最终页面 200、SAM loaded、8B VLM loaded、inflight 0，8B 配置哈希仍为 `5cd45286...8f3661`，六份正式状态哈希完全未变。
+
+正确适配器、配置、训练/审计收据、teacher-forcing 与逐图生成结果已经二次备份到未跟踪 `artifacts/round103-qwen3vl2b-lora-production-order/`，本地与远端适配器哈希一致。完整回归为 Python 800/800（另含 179 个 subtests）、网页 95/95；结构化记录见 [第一百零三轮生产顺序 LoRA 门禁](evidence/workbench-stability-20261117/qwen3vl2b-lora-production-order-round103.json)。
+
+边界：当前候选证明 2B 可在内部 dev8 上从 0/8 提升到 8/8 一次合法生成，并较好复现 8B 教师，但 dynamic-cache 生成中位约 15.49 秒，与现有 8B 正式中位基本相当，不能宣称速度提升。test24、1104 新批次与人工真值均未用于选择，候选也未部署。下一步先在隔离目录合并 LoRA，验证合并前后 dev8 语义完全一致，再测 production static-cache 路径能否真正降低延迟；只有这个门通过，才执行一次冻结的外部评测。

@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from tools.train_qwen3vl_lora import load_jsonl, verify_manifest
+from tools.train_qwen3vl_lora import OneImageCollator, load_jsonl, verify_manifest
 
 
 def write_fixture(root: Path):
@@ -48,6 +48,37 @@ class Qwen3VlLoraBoundaryTests(unittest.TestCase):
             train.write_text(json.dumps(row) + "\n", encoding="utf-8")
             with self.assertRaises(ValueError):
                 load_jsonl(train)
+
+    def test_collator_matches_production_text_then_image_order(self):
+        import torch
+        from PIL import Image
+
+        class Processor:
+            def __init__(self):
+                self.messages = []
+
+            def apply_chat_template(self, messages, **_):
+                self.messages.append(messages)
+                return "full" if len(messages) == 2 else "prompt"
+
+            def __call__(self, *, text, images, **_):
+                del images
+                ids = [1, 2, 3, 4] if text == ["full"] else [1, 2]
+                return {"input_ids": torch.tensor([ids])}
+
+        with tempfile.TemporaryDirectory() as directory:
+            image_path = Path(directory) / "image.png"
+            Image.new("RGB", (8, 8), (1, 2, 3)).save(image_path)
+            row = {
+                "image_path": str(image_path),
+                "image_sha256": hashlib.sha256(image_path.read_bytes()).hexdigest(),
+                "instruction": "inspect", "target": "{}",
+            }
+            processor = Processor()
+            batch = OneImageCollator(processor)([row])
+            content = processor.messages[0][0]["content"]
+            self.assertEqual([item["type"] for item in content], ["text", "image"])
+            self.assertEqual(batch["labels"].tolist(), [[-100, -100, 3, 4]])
 
 
 if __name__ == "__main__":

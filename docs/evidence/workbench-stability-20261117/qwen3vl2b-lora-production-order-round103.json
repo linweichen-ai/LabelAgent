@@ -1,0 +1,135 @@
+{
+  "schema_version": "labelagent.qwen3vl2b-lora-production-order-round.v1",
+  "round": 103,
+  "created_at": "2026-11-18T01:16:00+08:00",
+  "status": "internal_dev_generation_gate_passed_not_deployed",
+  "objective": "Correct the Qwen production prompt order, retrain a one-epoch train62 LoRA, and compare real structured dev8 generations against the frozen 2B base and audited 8B machine teacher.",
+  "prompt_order_correction": {
+    "production_order": "text_then_image",
+    "source_of_truth": "source/agent/workflow.py::_chat appends image inputs after the instruction text",
+    "rejected_adapter_runs": [
+      "/home/clw/projects/sfl-cpd15y/qwen3vl2b-lora-round102/smoke-v1",
+      "/home/clw/projects/sfl-cpd15y/qwen3vl2b-lora-round102/train1epoch-v1"
+    ],
+    "reason": "The earlier collator used image_then_text. Its execution and weight-update proof remains valid, but its quality metrics are not production-aligned.",
+    "regression_test_added": true
+  },
+  "boundaries": {
+    "track": "teacher_distillation",
+    "human_truth": false,
+    "production_training_approved": false,
+    "production_deployed": false,
+    "test24_used_for_training": false,
+    "test24_used_for_evaluation": false,
+    "train_sequences": "000-007",
+    "internal_dev_sequence": "008",
+    "review_only_samples_excluded": 2
+  },
+  "corrected_dry_run": {
+    "status": "passed",
+    "prompt_order": "text_then_image",
+    "input_shape": [1, 1126],
+    "supervised_tokens": 202,
+    "image_grid_thw": [[1, 32, 40]],
+    "receipt_sha256": "51e651b868b7c6a9c84d10fc9a106a4c14595fef92da6a11ebbef3e8e3306f46"
+  },
+  "training": {
+    "remote_path": "/home/clw/projects/sfl-cpd15y/qwen3vl2b-lora-round102/train1epoch-production-order-v1",
+    "prompt_order": "text_then_image",
+    "samples": 62,
+    "steps": 31,
+    "effective_epochs": 1.0,
+    "gradient_accumulation_steps": 2,
+    "learning_rate": 0.0002,
+    "train_loss": 0.2297221184257538,
+    "trainer_runtime_seconds": 29.5311,
+    "receipt_elapsed_seconds": 32.496,
+    "peak_cuda_memory_bytes": 6666108416,
+    "adapter_bytes": 34922600,
+    "adapter_sha256": "112cafc481d7d1d4c7e9103f09fc964798881448a3efe3fa277400b929a814ef",
+    "receipt_sha256": "d27534f43e1f4e203305293e5a925b9cc62f4bbd53b9c528e5fc762ff0d77810",
+    "audit_sha256": "aaf16f697b04038108941f91535716efd03e90280019cbfc8b02b4979a52b8ba",
+    "adapter_audit": {
+      "status": "passed",
+      "tensor_count": 392,
+      "all_finite": true,
+      "lora_a_nonzero": "196/196",
+      "lora_b_nonzero": "196/196"
+    }
+  },
+  "teacher_forcing_dev8": {
+    "result_sha256": "45bbd16b88e354d66baa7dc93fd78dcd68cd4d826a91062b1ca7e3825bf816ae",
+    "samples": 8,
+    "supervised_tokens": 1633,
+    "base_mean_nll": 0.9732524840217095,
+    "adapter_mean_nll": 0.12239814438587379,
+    "relative_nll_change": -0.87423803545808,
+    "base_token_accuracy": 0.8315982853643601,
+    "adapter_token_accuracy": 0.9620330679730558,
+    "token_accuracy_delta": 0.13043478260869568,
+    "per_sample_nll_improved": "8/8"
+  },
+  "structured_generation_dev8": {
+    "result_sha256": "6edd2141b83860c3b8fd22b8a89d5fc6cc9842f5a6c6d3d822b303f29ea95aef",
+    "contract_sha256": "948707da63ba014342d3ee02d80edff67367d3b681a3607f6e1b1caa23d3fe26",
+    "generation_cache_implementation": "dynamic",
+    "base_one_pass_success": "0/8",
+    "adapter_one_pass_success": "8/8",
+    "adapter_teacher_evidence_matches": "60/64",
+    "adapter_teacher_evidence_accuracy": 0.9375,
+    "adapter_unknown_count_matches": "8/8",
+    "adapter_generation_seconds_median": 15.4915,
+    "adapter_generation_seconds_max": 15.871,
+    "adapter_completion_tokens_median": 201.0,
+    "adapter_completion_tokens_max": 207,
+    "adapter_actual_image_tokens": 238,
+    "slope_teacher_matches": "7/8",
+    "bad_cases": [
+      {
+        "sample_id": "008_1789899740482474075_camera_2",
+        "labels": ["车辆"]
+      },
+      {
+        "sample_id": "008_1789899740482474075_camera_3",
+        "labels": ["slope"]
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_2",
+        "labels": ["车辆", "other_robot"]
+      }
+    ]
+  },
+  "backup_and_rollback": {
+    "local_untracked_backup": "artifacts/round103-qwen3vl2b-lora-production-order",
+    "local_adapter_sha256_matches_remote": true,
+    "local_adapter_config_sha256": "bbde6e64cb89dbaa0fde0081879e5e2ab162921c155fe317ccb964fc1f897fe1",
+    "formal_source_or_weights_changed": false,
+    "formal_restore_command": "bash /home/clw/labelagent_remote_20261110/start_remote_services.sh",
+    "restore_retry_fix": "If CUDA teardown transiently triggers the existing idle-GPU guard, wait for the owned tmux session to exit and retry the unchanged start script within the bounded health loop.",
+    "restored_health_sha256": "891bd60d9f7d376056e9c6441d633f5d7877dc5070ba320b88840ff9ff711221"
+  },
+  "restored_production": {
+    "page_http_status": 200,
+    "sam_model_loaded": true,
+    "vlm_status": "ok",
+    "vlm_model_loaded": true,
+    "vlm_model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+    "exact_requests_inflight": 0,
+    "formal_state_hashes_unchanged": true
+  },
+  "verification": {
+    "python_tests": "800/800 with 179 subtests",
+    "web_tests": "95/95",
+    "targeted_generation_and_training_tests": "10/10",
+    "python_compile": "passed",
+    "shell_syntax": "passed",
+    "git_diff_check": "passed"
+  },
+  "limits": [
+    "The 93.75% evidence agreement is against an audited 8B machine teacher, not human truth.",
+    "Slope agreement is 7/8 against the same machine teacher and is not pixel segmentation quality.",
+    "Dynamic-cache median generation is approximately equal to the current 8B production median, so no speed win is claimed yet.",
+    "No test24 or 1104 external dataset was used in model selection, and the adapter remains undeployed."
+  ],
+  "next_gate": "Merge the adapter into an isolated 2B checkpoint, verify exact dev8 semantic parity, then test the production static-cache path before any frozen external evaluation."
+}

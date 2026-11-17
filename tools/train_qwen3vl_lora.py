@@ -58,8 +58,10 @@ class OneImageCollator:
             raise ValueError("training image hash differs")
         with Image.open(image_path) as source:
             image = ImageOps.exif_transpose(source).convert("RGB")
+        # Match source/agent/workflow.py::_chat exactly: production sends the
+        # instruction first and appends image inputs after it.
         user = {"role": "user", "content": [
-            {"type": "image"}, {"type": "text", "text": row["instruction"]}]}
+            {"type": "text", "text": row["instruction"]}, {"type": "image"}]}
         assistant = {"role": "assistant", "content": [
             {"type": "text", "text": row["target"]}]}
         prompt_text = self.processor.apply_chat_template(
@@ -112,6 +114,7 @@ def main() -> int:
     if args.dry_run:
         result = {
             "status": "dry_run_passed", "samples": len(rows),
+            "prompt_order": "text_then_image",
             "input_shape": list(first_batch["input_ids"].shape),
             "supervised_tokens": int((first_batch["labels"] != -100).sum()),
             "image_grid_thw": first_batch.get("image_grid_thw").tolist(),
@@ -173,6 +176,7 @@ def main() -> int:
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "status": "smoke_complete" if args.max_steps <= 2 else "training_complete",
         "track": "teacher_distillation",
+        "prompt_order": "text_then_image",
         "human_truth": False,
         "production_deployed": False,
         "test24_used_for_training": False,

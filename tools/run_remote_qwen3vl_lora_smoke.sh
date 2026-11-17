@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -ne 2 ]]; then
-  echo "usage: $0 PROJECT_ROOT OUTPUT_NAME" >&2
+if [[ $# -lt 2 || $# -gt 4 ]]; then
+  echo "usage: $0 PROJECT_ROOT OUTPUT_NAME [MAX_SAMPLES] [MAX_STEPS]" >&2
   exit 64
 fi
 
 PROJECT_ROOT=$1
 OUTPUT_NAME=$2
+MAX_SAMPLES=${3:-8}
+MAX_STEPS=${4:-2}
 SERVICE_ROOT=/home/clw/labelagent_remote_20261110
 VLM_SESSION=labelagent-vlm-20261110
 GPU_UUID=GPU-f8597845-b2fa-5ca1-6918-816853753818
@@ -23,6 +25,12 @@ esac
 if [[ ! "$OUTPUT_NAME" =~ ^[A-Za-z0-9._-]+$ ]]; then
   echo "unsafe output name" >&2
   exit 66
+fi
+if [[ ! "$MAX_SAMPLES" =~ ^[0-9]+$ || ! "$MAX_STEPS" =~ ^[0-9]+$ \
+      || "$MAX_SAMPLES" -lt 1 || "$MAX_SAMPLES" -gt 62 \
+      || "$MAX_STEPS" -lt 1 || "$MAX_STEPS" -gt 100 ]]; then
+  echo "unsafe training bounds" >&2
+  exit 75
 fi
 if [[ -e "$OUTPUT_DIR" ]]; then
   echo "training output already exists: $OUTPUT_DIR" >&2
@@ -82,8 +90,8 @@ env \
     --model-dir "$MODEL_DIR" \
     --dataset-dir dataset \
     --output "$OUTPUT_NAME" \
-    --max-samples 8 \
-    --max-steps 2 \
+    --max-samples "$MAX_SAMPLES" \
+    --max-steps "$MAX_STEPS" \
     --gradient-accumulation-steps 2 \
     --learning-rate 2e-4
 echo "training_command_completed=true"
@@ -94,6 +102,9 @@ for _ in $(seq 1 180); do
   if curl -fsS http://127.0.0.1:18878/health >"$PROJECT_ROOT/${OUTPUT_NAME}-restored-health.json" 2>/dev/null; then
     echo "owned_vlm_restored=true"
     exit 0
+  fi
+  if ! tmux has-session -t "$VLM_SESSION" 2>/dev/null; then
+    restore_service
   fi
   sleep 1
 done

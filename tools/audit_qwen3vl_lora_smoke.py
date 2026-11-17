@@ -13,7 +13,8 @@ def file_sha256(path: str | Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def audit(output_dir: Path, dataset_dir: Path) -> dict:
+def audit(output_dir: Path, dataset_dir: Path, expected_status: str,
+          expected_steps: int) -> dict:
     receipt_path = output_dir / "run_receipt.json"
     adapter_dir = output_dir / "adapter"
     adapter_path = adapter_dir / "adapter_model.safetensors"
@@ -25,8 +26,9 @@ def audit(output_dir: Path, dataset_dir: Path) -> dict:
     config = json.loads(config_path.read_text(encoding="utf-8"))
 
     boundaries = {
-        "status": receipt.get("status") == "smoke_complete",
+        "status": receipt.get("status") == expected_status,
         "teacher_distillation": receipt.get("track") == "teacher_distillation",
+        "production_prompt_order": receipt.get("prompt_order") == "text_then_image",
         "human_truth_false": receipt.get("human_truth") is False,
         "production_deployed_false": receipt.get("production_deployed") is False,
         "test24_training_false": receipt.get("test24_used_for_training") is False,
@@ -35,7 +37,7 @@ def audit(output_dir: Path, dataset_dir: Path) -> dict:
         "manifest_not_production_approved": manifest.get("production_training_approved") is False,
         "manifest_hash_matches": receipt.get("dataset_manifest_sha256") == file_sha256(manifest_path),
         "train_hash_matches": receipt.get("train_jsonl_sha256") == file_sha256(train_path),
-        "two_steps": receipt.get("steps") == 2,
+        "expected_steps": receipt.get("steps") == expected_steps,
         "finite_loss": isinstance(receipt.get("train_loss"), (int, float))
         and math.isfinite(receipt["train_loss"]),
         "lora_rank_8": config.get("r") == 8,
@@ -87,8 +89,14 @@ def main() -> int:
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--dataset-dir", required=True, type=Path)
     parser.add_argument("--write", type=Path)
+    parser.add_argument("--expected-status", choices=["smoke_complete", "training_complete"],
+                        default="smoke_complete")
+    parser.add_argument("--expected-steps", type=int, default=2)
     args = parser.parse_args()
-    result = audit(args.output_dir.resolve(), args.dataset_dir.resolve())
+    if not 1 <= args.expected_steps <= 100:
+        raise ValueError("unsafe expected step count")
+    result = audit(args.output_dir.resolve(), args.dataset_dir.resolve(),
+                   args.expected_status, args.expected_steps)
     payload = json.dumps(result, ensure_ascii=False, indent=2) + "\n"
     if args.write:
         args.write.write_text(payload, encoding="utf-8")

@@ -2341,6 +2341,55 @@ def _fingerprint(shapes):
     return hashlib.sha256(json.dumps(geometry, sort_keys=True).encode()).hexdigest()
 
 
+def repeated_no_change_after_repairs(audit, minimum_rounds=3):
+    """Find an exact no-change edit repeated while useful gap repairs finish.
+
+    This is deliberately narrow: the current round must contain only applied
+    ``fill_gap`` repairs plus no-change operations, and the same no-change edit
+    (ignoring prose reason only) must occur in each of the last three rounds.
+    The caller separately verifies that no review gap remains before stopping.
+    """
+    if len(audit) < minimum_rounds:
+        return None
+
+    def results(entry):
+        decision = entry.get("decision") if isinstance(entry, dict) else None
+        operations = decision.get("operations") if isinstance(decision, dict) else None
+        outcomes = entry.get("tool_results") if isinstance(entry, dict) else None
+        if not isinstance(operations, list) or not isinstance(outcomes, list):
+            return []
+        return [(operations[index], outcome) for index, outcome in enumerate(outcomes)
+                if index < len(operations) and isinstance(operations[index], dict)
+                and isinstance(outcome, dict)]
+
+    current = results(audit[-1])
+    if not current:
+        return None
+    applied = [operation for operation, outcome in current
+               if outcome.get("status") == "applied"]
+    if (not applied or any(operation.get("operation") != "fill_gap" for operation in applied)
+            or any(outcome.get("status") not in {"applied", "no_change"}
+                   for _, outcome in current)):
+        return None
+
+    def key(operation):
+        identity = {name: copy.deepcopy(value) for name, value in operation.items()
+                    if name != "reason"}
+        return json.dumps(identity, ensure_ascii=False, sort_keys=True,
+                          separators=(",", ":"))
+
+    current_no_change = {key(operation): operation for operation, outcome in current
+                         if outcome.get("status") == "no_change"}
+    for operation_key, operation in current_no_change.items():
+        if all(any(outcome.get("status") == "no_change"
+                   and key(candidate) == operation_key
+                   for candidate, outcome in results(entry))
+               for entry in audit[-minimum_rounds:]):
+            return {name: copy.deepcopy(value) for name, value in operation.items()
+                    if name != "reason"}
+    return None
+
+
 class AnnotationAgent:
     """Observe, choose tools, execute, and inspect again within a fixed budget."""
 
@@ -2701,6 +2750,18 @@ class AnnotationAgent:
                 if after == before:
                     stop_reason = "no_progress"
                     break
+                repeated = repeated_no_change_after_repairs(self.audit)
+                if repeated is not None and self.reference is not None:
+                    remaining_holes = candidate_holes(
+                        self.shapes, self.labels, self.width, self.height)
+                    if not remaining_holes:
+                        entry["early_stop"] = {
+                            "reason_code": "repeated_no_change_after_repairs",
+                            "operation": repeated,
+                            "consecutive_rounds": 3,
+                        }
+                        stop_reason = "repeated_no_change_after_repairs"
+                        break
                 if after != before and after in seen:
                     stop_reason = "cycle"
                     break
@@ -2712,7 +2773,9 @@ class AnnotationAgent:
             self.queue.append({"reason": "Agent 调用失败", "error": str(error)[:500]})
         if not converged and stop_reason not in ("error", "invalid_model_output", "review_required"):
             self.queue.append({"reason": {"max_rounds": "达到最大轮数，最新候选尚未确认",
-                "no_progress": "本轮未产生有效修改", "cycle": "检测到循环修改"}[stop_reason]})
+                "no_progress": "本轮未产生有效修改", "cycle": "检测到循环修改",
+                "repeated_no_change_after_repairs":
+                    "缺口修补已完成，但同一无效操作连续重复；已停止自动重试并转人工复核"}[stop_reason]})
         if self.sam_pending is not None:
             self.shapes = copy.deepcopy(self.sam_pending["before"])
             self.queue.append({"reason": "SAM 3 点提示结果尚未经过下一轮 GPT 复核，已恢复修改前候选"})

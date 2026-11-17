@@ -1,0 +1,102 @@
+{
+  "schema_version": "labelagent.repeated_no_change_stop_round136.v1",
+  "recorded_at": "2026-11-18T06:02:00+08:00",
+  "decision": "accepted_and_deployed",
+  "objective": "Remove a final pure-confirmation Agent call only after useful floor-gap repairs have completed and one exact no-change edit has repeated for three consecutive rounds.",
+  "rejected_prompt_compaction": {
+    "decision": "rejected_not_deployed",
+    "round_2": {
+      "old_instruction_chars": 11126,
+      "new_instruction_chars": 9668,
+      "old_history_chars": 2208,
+      "new_history_chars": 631,
+      "elapsed_ms": 37266,
+      "result": "The same reclassify/add_region requests still repeated while valid gap repairs remained."
+    },
+    "round_6": {
+      "old_instruction_chars": 13061,
+      "new_instruction_chars": 9626,
+      "old_history_chars": 5060,
+      "new_history_chars": 1506,
+      "elapsed_ms": 23984,
+      "archived_baseline_elapsed_ms": 9444,
+      "result": "The model emitted four duplicate add_region operations instead of one; prompt compaction made the terminal replay slower."
+    },
+    "cleanup": "All prompt-compaction source and test changes were removed before the accepted implementation."
+  },
+  "accepted_guard": {
+    "minimum_consecutive_rounds": 3,
+    "same_operation_identity": "Exact operation payload after removing prose reason only; operation, shape IDs, label, hole ID, polygon and points remain bound.",
+    "current_round_requirements": [
+      "At least one operation applied successfully",
+      "Every applied operation is fill_gap",
+      "Every other operation status is no_change",
+      "A human reference is present",
+      "A fresh post-edit candidate_holes scan returns zero residual holes or gaps"
+    ],
+    "result_boundary": "The run remains non-converged and routes to human review; it is never promoted to truth or training approval."
+  },
+  "archived_real_frame_replay": {
+    "source": "D:\\Apps\\LabelAgent\\.local\\isolated-round132-browser-deferred-20261118\\state.json",
+    "frame": 33,
+    "original_background_elapsed_ms": 183705,
+    "original_rounds": 6,
+    "original_stop_reason": "no_progress",
+    "guard_pattern_first_seen_round": 4,
+    "round_4_stops": false,
+    "round_4_reason": "Residual floor holes still existed, so useful repairs continued.",
+    "guard_stop_round": 5,
+    "round_5_residual_holes": 0,
+    "round_5_after_fingerprint": "18bdb93a6dd99c8b3a676d95d018f7ad6020b4684547271a34f81c33d478d632",
+    "original_round_6_after_fingerprint": "18bdb93a6dd99c8b3a676d95d018f7ad6020b4684547271a34f81c33d478d632",
+    "eliminated_round_6_elapsed_ms": 9444,
+    "counterfactual_background_elapsed_ms": 174261,
+    "counterfactual_reduction_percent": 5.141,
+    "timing_boundary": "The saved call is established by deterministic replay of an archived real run, not a fresh end-to-end online A/B."
+  },
+  "bounded_state_scan": {
+    "state_files": 55,
+    "files_with_pattern": 4,
+    "unique_underlying_case": "All four matches are isolated snapshots of the same frame-33 run and exact repeated add_region operation; no second distinct case was affected."
+  },
+  "regression": {
+    "focused_tests": {
+      "passed": 2,
+      "failed": 0
+    },
+    "python": {
+      "passed": 858,
+      "failed": 0
+    },
+    "web": {
+      "passed": 99,
+      "failed": 0
+    },
+    "git_diff_check": "passed"
+  },
+  "deployment": {
+    "backup_path": "D:\\Apps\\LabelAgent\\.local\\backups\\repeated-no-change-stop-round136-20261118",
+    "backup_workflow_sha256": "ac659745ad28584f2b40275dcdcb380970a7a04aba684e70267090fe243f7da3",
+    "runtime_workflow_sha256": "d08b66c50bbb2bd38648fa723642a8254515c76ad2d488a4ef85634190efe3b3",
+    "worktree_workflow_sha256": "d08b66c50bbb2bd38648fa723642a8254515c76ad2d488a4ef85634190efe3b3",
+    "formal_state_sha256_before_and_after": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "lifecycle": "Only the authoritative managed local workbench was restarted; the existing SAM/VLM tunnel and remote model processes were preserved.",
+    "formal_http": {
+      "workbench_root": 200,
+      "state_summary": 200,
+      "model_readiness": 200,
+      "run_status": 200,
+      "sam_health": 200,
+      "vlm_health": 200
+    },
+    "run_status": "idle",
+    "vlm_exact_requests_inflight": 0,
+    "optional_5090_route": "disabled_or_unavailable"
+  },
+  "boundaries": [
+    "No model weight was changed.",
+    "No candidate, human truth, reference frame or training approval was changed.",
+    "No OSS object was written.",
+    "This removes one demonstrated redundant Agent call; it does not establish segmentation-quality improvement or a general P50/P95 gain."
+  ]
+}

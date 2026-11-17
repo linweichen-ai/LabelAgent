@@ -1850,6 +1850,63 @@ class WorkflowTests(unittest.TestCase):
         self.assertTrue(any("停止重复重试" in item["reason"]
                             for item in result["review_queue"]))
 
+    def test_repeated_no_change_after_repairs_requires_exact_three_round_streak(self):
+        repeated = {"operation": "add_region", "shape_ids": [9],
+            "polygon": [[1, 1], [8, 1], [8, 8]], "reason": "same region"}
+        audit = []
+        for number in range(1, 4):
+            repair = {"operation": "fill_gap", "shape_ids": [11],
+                "hole_id": f"hole-{number}", "polygon": [[2, 2], [4, 2], [4, 4]],
+                "reason": "visible floor"}
+            audit.append({"round": number,
+                "decision": {"status": "continue",
+                    "operations": [copy.deepcopy(repeated), repair]},
+                "tool_results": [{"status": "no_change"}, {"status": "applied"}]})
+        self.assertEqual(workflow.repeated_no_change_after_repairs(audit),
+            {"operation": "add_region", "shape_ids": [9],
+             "polygon": [[1, 1], [8, 1], [8, 8]]})
+        self.assertIsNone(workflow.repeated_no_change_after_repairs(audit[:2]))
+        changed = copy.deepcopy(audit)
+        changed[1]["decision"]["operations"][0]["polygon"][0] = [0, 0]
+        self.assertIsNone(workflow.repeated_no_change_after_repairs(changed))
+        no_repair = copy.deepcopy(audit)
+        no_repair[-1]["decision"]["operations"] = [repeated]
+        no_repair[-1]["tool_results"] = [{"status": "no_change"}]
+        self.assertIsNone(workflow.repeated_no_change_after_repairs(no_repair))
+
+    def test_review_stops_after_third_repeated_no_change_when_last_gap_is_repaired(self):
+        mask = np.ones((40, 40), dtype=np.uint8)
+        for left in (6, 17, 28):
+            mask[20:25, left:left + 5] = 0
+        floor = _shape_from_mask(mask, "floor", 1)
+        repeated = {"operation": "add_region", "shape_ids": [1],
+            "polygon": [[1, 1], [4, 1], [4, 4], [1, 4]],
+            "reason": "Already included region."}
+
+        def decision(*args, **kwargs):
+            hole = kwargs["holes"][0]
+            x1, y1, x2, y2 = hole["bbox"]
+            repair = {"operation": "fill_gap", "shape_ids": [1],
+                "hole_id": hole["id"],
+                "polygon": [[x1, y1], [x2, y1], [x2, y2], [x1, y2]],
+                "reason": "Visible floor gap."}
+            return {"status": "continue", "reason": "Repair one visible gap.",
+                    "operations": [copy.deepcopy(repeated), repair]}
+
+        with patch.object(workflow, "review", side_effect=decision) as review_mock:
+            result = workflow.review_existing({}, image_bytes(),
+                {"description": "floor", "prompts": []}, ["floor"], [floor],
+                max_rounds=6, reference={})
+        self.assertEqual(review_mock.call_count, 3)
+        self.assertEqual(result["agent"]["rounds"], 3)
+        self.assertEqual(result["agent"]["stop_reason"],
+                         "repeated_no_change_after_repairs")
+        self.assertEqual(result["agent"]["audit"][-1]["early_stop"]["reason_code"],
+                         "repeated_no_change_after_repairs")
+        self.assertFalse(result["agent"]["converged"])
+        self.assertTrue(result["review_queue"])
+        self.assertEqual(workflow.candidate_holes(result["shapes"], ["floor"], 40, 40), [])
+
 
 class FakeVideo:
     path = Path("/tmp/test.mcap")

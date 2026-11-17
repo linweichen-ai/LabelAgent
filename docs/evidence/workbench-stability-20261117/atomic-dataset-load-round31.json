@@ -1,0 +1,70 @@
+{
+  "round": 31,
+  "recorded_at": "2026-11-17T16:40:00+08:00",
+  "objective": "Keep the current workspace intact when a newly loaded dataset has no usable or decodable image stream.",
+  "behavior": {
+    "transaction_order": [
+      "open media metadata",
+      "select the restored topic when valid, otherwise the first image topic",
+      "decode and verify frame zero",
+      "only then archive the old session and activate the new dataset"
+    ],
+    "success_feedback": "file manager shows the verified first-frame resolution",
+    "failure_feedback": "explicit compatibility error and current dataset remains active",
+    "gpu_required": false,
+    "model_work_started": false,
+    "writes_truth_candidates_or_training_data": false
+  },
+  "different_format_dataset_acceptance": {
+    "path": "D:\\Apps\\LabelAgent\\work\\datasets\\CVAT_Task3_20261028\\CVAT_Task3_original_annotations.mcap",
+    "size_bytes": 67332849,
+    "topic": "/CVAT/Task3/images",
+    "schema": "LabelAgent.CompressedImage",
+    "frame_count": 150,
+    "decoded_first_frame": [640, 480],
+    "encoded_bytes": 71335,
+    "isolated_total_load_ms": 20.314,
+    "media_open_ms": 3.896,
+    "data_probe_ms": 15.671,
+    "state_save_ms": 0.712,
+    "ready": true
+  },
+  "rejection_acceptance": {
+    "input": "synthetic indexed MCAP containing only an odometry topic",
+    "error": "该文件没有可用的图像话题，当前数据保持不变",
+    "previous_active_path_preserved": true,
+    "previous_state_sha256_preserved": true,
+    "old_session_not_archived_on_failure": true
+  },
+  "formal_runtime_acceptance": {
+    "url": "http://127.0.0.1:8765",
+    "asset_version": 143,
+    "server_sha256": "C9E4E9ABFE9FC0D263E821F2E544395BEFAC527EB7B5168BA89870742D2124E0",
+    "app_js_sha256": "ACA002CE2E5FE180804237B25790A34932C149F949858384F99E5B216FC4C80B",
+    "index_html_sha256": "4F3586055C5471256F679F2C73A857E21DAE58CF3FA8A7261031B280D8FB711E",
+    "sam3": "ready",
+    "vlm": "ready",
+    "workbench": "ready",
+    "run": "idle"
+  },
+  "runtime_state_readback": {
+    "state.json": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "unchanged_after_deploy_and_isolated_acceptance": true
+  },
+  "regression": {
+    "python_core_and_image_import": "139/139",
+    "web_polling_upload_recovery_and_dataset_load": "18/18",
+    "candidate_and_human_review_gates": "98/98",
+    "javascript_syntax": "passed"
+  },
+  "rollback": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-atomic-load-round31-20261117-164000",
+  "limitations": [
+    "The 67 MB CVAT file is a materially different one-topic compressed-image container, but it may still originate from related factory imagery; this is format and workflow compatibility evidence, not independent semantic generalization evidence.",
+    "Only the selected topic's first frame is probed at activation. Later isolated corruption remains covered by per-frame failures and exact retry.",
+    "No formal workspace dataset was switched during acceptance; the real CVAT load ran in an isolated temporary work directory."
+  ]
+}

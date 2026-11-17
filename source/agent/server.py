@@ -1097,6 +1097,20 @@ def frame_image(index):
     return state["video"].frame(state["topic"], index)
 
 
+def decoded_frame_metadata(video, topic, index):
+    """Decode one frame through the production media path and verify pixels."""
+    payload = video.frame(topic, index)
+    with Image.open(io.BytesIO(payload)) as decoded:
+        width, height = decoded.size
+        decoded.verify()
+    if width < 1 or height < 1:
+        raise ValueError("图像尺寸为空")
+    return {
+        "frame": index, "width": width, "height": height,
+        "encoded_bytes": len(payload), "cache_warmed": True,
+    }
+
+
 def selected_auto_labels_for_truth(reference_truth):
     available = state.get("labels") or list(dict.fromkeys(
         shape.get("label") for shape in reference_truth if shape.get("label")))
@@ -1808,6 +1822,20 @@ def activate_file(item):
     started = time.perf_counter()
     video = Video(item['path'])
     media_opened = time.perf_counter()
+    if not video.topics:
+        raise ValueError('该文件没有可用的图像话题，当前数据保持不变')
+    saved_sessions = state.get('file_sessions')
+    saved_session = (saved_sessions.get(item['path'], {})
+                     if isinstance(saved_sessions, dict) else {})
+    probe_topic = (saved_session.get('topic')
+                   if saved_session.get('topic') in video.topics
+                   else next(iter(video.topics)))
+    probe_started = time.perf_counter()
+    try:
+        compatibility = decoded_frame_metadata(video, probe_topic, 0)
+    except Exception as error:
+        raise ValueError(f'文件首帧兼容检查失败，当前数据保持不变：{str(error)[:300]}')
+    probe_finished = time.perf_counter()
     # Preserve each file's annotations and candidates when switching records.
     sessions = state.setdefault('file_sessions', {})
     fields = ('topic', 'truth', 'truths_by_topic', 'reference_frames', 'candidates', 'candidates_by_topic', 'agent_runs', 'agent_runs_by_topic', 'candidate_revisions', 'candidate_revisions_by_topic')
@@ -1826,9 +1854,16 @@ def activate_file(item):
     save_timings = save()
     state_saved = time.perf_counter()
     payload = _get_bootstrap_locked()
+    payload["data_compatibility"] = {
+        **compatibility, "ready": True, "code": "ready",
+        "topic": probe_topic,
+        "elapsed_ms": round((probe_finished - probe_started) * 1000, 3),
+        "scope": "selected_topic_first_frame",
+    }
     payload["load_timings_ms"] = {
         "media_open": round((media_opened - started) * 1000, 3),
-        "session_swap": round((session_swapped - media_opened) * 1000, 3),
+        "data_probe": round((probe_finished - probe_started) * 1000, 3),
+        "session_swap": round((session_swapped - probe_finished) * 1000, 3),
         "state_save": round((state_saved - session_swapped) * 1000, 3),
         **save_timings,
         "bootstrap": round((time.perf_counter() - state_saved) * 1000, 3),
@@ -2710,12 +2745,7 @@ def run_data_readiness():
 
     started = time.perf_counter()
     try:
-        payload = video.frame(topic, probe_frame)
-        with Image.open(io.BytesIO(payload)) as decoded:
-            width, height = decoded.size
-            decoded.verify()
-        if width < 1 or height < 1:
-            raise ValueError("图像尺寸为空")
+        metadata = decoded_frame_metadata(video, topic, probe_frame)
     except Exception as error:
         return jsonify(ready=False, code="frame_decode_failed",
                        frame=probe_frame,
@@ -2728,7 +2758,8 @@ def run_data_readiness():
                            message="检查期间图像源已变化，请重新开始")
     return jsonify(ready=True, code="ready", path=source_path, topic=topic,
                    frame=probe_frame, frame_count=frame_count,
-                   width=width, height=height, encoded_bytes=len(payload),
+                   width=metadata["width"], height=metadata["height"],
+                   encoded_bytes=metadata["encoded_bytes"],
                    elapsed_ms=elapsed_ms, cache_warmed=True,
                    scope="first_requested_frame")
 

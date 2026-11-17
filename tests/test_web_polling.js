@@ -379,6 +379,14 @@ test('多文件新数据集使用一次批量上传请求', () => {
   assert.equal(handler.includes("fetch('/api/upload'"), false);
 });
 
+test('加载新数据后明确显示首帧兼容检查结果', () => {
+  const handler = section(source('app.js'), 'function renderFiles', 'async function refreshFiles');
+  assert.ok(handler.includes('data.data_compatibility?.ready'));
+  assert.ok(handler.includes('首帧兼容检查通过'));
+  assert.ok(handler.includes('data.data_compatibility.width'));
+  assert.ok(handler.includes('data.data_compatibility.height'));
+});
+
 test('大文件上传显示实时进度并可在传输阶段取消', async () => {
   const elements = new Map();
   function element(id) {

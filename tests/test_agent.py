@@ -3222,6 +3222,46 @@ class ServerTests(unittest.TestCase):
         finally:
             server.state = old_state
 
+    def test_file_activation_probes_first_frame_before_mutating_current_dataset(self):
+        old_state, old_work, old_dirty = server.state, server.WORK, server.file_sessions_dirty
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            current = FakeVideo()
+            current.path = Path(directory) / "current.mcap"
+            server.state = {
+                "video": current, "video_path": str(current.path), "topic": "camera0",
+                "labels": ["a"], "truth": {"0": [shape()]}, "truths_by_topic": {},
+                "reference_frames": {"camera0": [0]}, "config": {}, "candidates": {},
+                "candidates_by_topic": {}, "agent_runs": {}, "agent_runs_by_topic": {},
+                "candidate_revisions": {}, "candidate_revisions_by_topic": {},
+                "file_sessions": {},
+            }
+            bad = FakeVideo()
+            bad.path = Path(directory) / "bad.mcap"
+            bad.frame = lambda topic, index: (_ for _ in ()).throw(
+                ValueError("damaged payload"))
+            try:
+                with patch.object(server, "Video", return_value=bad):
+                    with self.assertRaisesRegex(ValueError, "damaged payload"):
+                        server.activate_file({"path": str(bad.path)})
+                self.assertIs(server.state["video"], current)
+                self.assertEqual(server.state["truth"], {"0": [shape()]})
+                self.assertEqual(server.state["file_sessions"], {})
+                self.assertFalse(server.state_path().exists())
+
+                good = FakeVideo()
+                good.path = Path(directory) / "good.mcap"
+                with patch.object(server, "Video", return_value=good):
+                    loaded = server.activate_file({"path": str(good.path)})
+                self.assertTrue(loaded["data_compatibility"]["ready"])
+                self.assertEqual(loaded["data_compatibility"]["frame"], 0)
+                self.assertEqual(loaded["data_compatibility"]["width"], 40)
+                self.assertIn("data_probe", loaded["load_timings_ms"])
+                self.assertIs(server.state["video"], good)
+            finally:
+                server.state, server.WORK = old_state, old_work
+                server.file_sessions_dirty = old_dirty
+
 
 if __name__ == "__main__":
     unittest.main()

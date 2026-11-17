@@ -1,0 +1,77 @@
+{
+  "round": 27,
+  "recorded_at": "2026-11-17T14:00:00+08:00",
+  "objective": "Make first-time ingestion of a new multi-image dataset faster and atomic.",
+  "dataset": {
+    "files": 40,
+    "formats": ["PNG", "JPEG"],
+    "dimensions": "97x65",
+    "names": "Chinese names with numeric suffixes",
+    "workspace": "isolated temporary directory",
+    "production_uploads_modified": false
+  },
+  "benchmark": {
+    "repetitions": 8,
+    "sequential": {
+      "median_ms": 116.931,
+      "p95_ms": 120.468,
+      "http_requests": 40,
+      "library_commits": 40,
+      "registered_files": 40
+    },
+    "batch": {
+      "median_ms": 34.998,
+      "p95_ms": 41.226,
+      "http_requests": 1,
+      "library_commits": 1,
+      "registered_files": 40
+    },
+    "speedup": 3.34,
+    "median_latency_reduction_percent": 70.07
+  },
+  "safety": {
+    "maximum_files_per_batch": 100,
+    "supported_formats_unchanged": ["JPG", "JPEG", "PNG", "MCAP"],
+    "each_image_decoded_before_registration": true,
+    "single_atomic_library_commit": true,
+    "mixed_batch_with_one_corrupt_image": "HTTP 400; all new uploads removed; library unchanged",
+    "legacy_single_upload_endpoint_preserved": true
+  },
+  "formal_runtime_acceptance": {
+    "url": "http://127.0.0.1:8765",
+    "deployed_source_matches": {
+      "server.py": "A1E38BDF138FDAEE6DE354685B7E70C06D3EC9D5103B24033AAD9B0E3FA771C5",
+      "app.js": "CD081FE2368EF218DECE441CC62CB16E13EF098C9A751E716DD14CC2A7669C43",
+      "index.html": "5E3982D9EA5F94EAC85974FC3F1BD44EA47B03658E24DE14374E520FE95CDADE"
+    },
+    "empty_batch_http": 400,
+    "existing_result_recovery_ms": 915,
+    "full_state_requests": 0,
+    "page_errors": 0,
+    "console_errors": 0,
+    "failed_requests": 0,
+    "sam3": "ready",
+    "vlm": "ready",
+    "run": "idle"
+  },
+  "runtime_state_readback": {
+    "state.json": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "unchanged_after_deploy_and_acceptance": true
+  },
+  "regression": {
+    "python": "137/137",
+    "web_polling_and_recovery": "15/15",
+    "candidate_and_human_review_gates": "60/60"
+  },
+  "rollback": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-batch-upload-round27-20261117-140000",
+  "evidence": ["batch-upload-browser-round27.json"],
+  "limitations": [
+    "The benchmark uses small synthetic images and isolates application overhead; transfer time for large files still depends on disk and network speed.",
+    "Production data and the formal file library were not modified during acceptance.",
+    "Dataset ingestion speed does not establish model accuracy on the new images."
+  ]
+}

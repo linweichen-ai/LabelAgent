@@ -42,6 +42,34 @@ class ImageImportTests(unittest.TestCase):
     def upload(self, data, name):
         return self.client.post("/api/upload", data={"file": (io.BytesIO(data), name)})
 
+    def upload_batch(self, items):
+        return self.client.post("/api/uploads", data={
+            "files": [(io.BytesIO(data), name) for data, name in items]})
+
+    def test_batch_upload_registers_new_image_dataset_with_one_library_commit(self):
+        items = [(photograph("PNG" if index % 2 == 0 else "JPEG"),
+                  f"新数据集_{index:02d}.{'png' if index % 2 == 0 else 'jpg'}")
+                 for index in range(24)]
+        with patch.object(server, "write_library", wraps=server.write_library) as write:
+            response = self.upload_batch(items)
+        self.assertEqual(response.status_code, 200, response.json)
+        self.assertEqual(len(response.json["added"]), 24)
+        self.assertEqual(len(response.json["files"]), 24)
+        self.assertEqual(write.call_count, 1)
+        self.assertEqual(len(json.loads((self.root / "files.json").read_text())), 24)
+        first, last = response.json["added"][0], response.json["added"][-1]
+        self.assertEqual(self.client.post(f"/api/files/{first['id']}/load").status_code, 200)
+        loaded = self.client.post(f"/api/files/{last['id']}/load")
+        self.assertEqual(loaded.status_code, 200, loaded.json)
+        self.assertEqual(loaded.json["path"], last["path"])
+
+    def test_batch_upload_is_atomic_when_one_image_is_corrupt(self):
+        response = self.upload_batch([
+            (photograph(), "good.png"), (b"not an image", "bad.png")])
+        self.assertEqual(response.status_code, 400, response.json)
+        self.assertFalse((self.root / "files.json").exists())
+        self.assertEqual(list((self.root / "uploads").iterdir()), [])
+
     def test_chinese_upload_original_pixels_odd_size_preview_and_persistence(self):
         result = self.upload(photograph(), "自己的图片.PNG")
         self.assertEqual(result.status_code, 200)

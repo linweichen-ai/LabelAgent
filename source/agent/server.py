@@ -2122,24 +2122,56 @@ def open_video():
         return jsonify(**activate_file(register_file(request.get_json()['path'])))
 
 
+MAX_BATCH_UPLOADS = 100
+
+
+def register_uploaded_files(uploaded_files):
+    uploaded_files = list(uploaded_files)
+    if not 1 <= len(uploaded_files) <= MAX_BATCH_UPLOADS:
+        raise ValueError(f"每批请选择 1～{MAX_BATCH_UPLOADS} 个文件")
+    destination = WORK / "uploads"
+    destination.mkdir(exist_ok=True)
+    prepared = []
+    saved_paths = []
+    try:
+        for uploaded in uploaded_files:
+            suffix = Path(uploaded.filename or "").suffix.lower()
+            if not uploaded.filename or suffix not in SUPPORTED_SUFFIXES:
+                raise ValueError("请选择 JPG、JPEG、PNG 图片或 MCAP 文件")
+            filename = (secure_filename(Path(uploaded.filename).stem) or "image") + suffix
+            path = (destination / f"{uuid.uuid4().hex}-{filename}").resolve()
+            uploaded.save(path)
+            saved_paths.append(path)
+            if suffix in IMAGE_SUFFIXES:
+                read_image(path)
+            prepared.append((path, uploaded.filename))
+        with lock:
+            files = read_library()
+            items = []
+            for path, original_name in prepared:
+                item = dict(id=uuid.uuid4().hex, path=str(path), name=original_name,
+                            size=path.stat().st_size)
+                files.append(item)
+                items.append(item)
+            write_library(files)
+            return items, file_list()
+    except Exception:
+        for path in saved_paths:
+            path.unlink(missing_ok=True)
+        raise
+
+
 @app.post("/api/upload")
 def upload_video():
     uploaded = request.files.get("file")
-    if uploaded is None or not uploaded.filename or Path(uploaded.filename).suffix.lower() not in SUPPORTED_SUFFIXES:
-        raise ValueError("请选择 JPG、JPEG、PNG 图片或 MCAP 文件")
-    destination = WORK / "uploads"
-    destination.mkdir(exist_ok=True)
-    suffix = Path(uploaded.filename).suffix.lower()
-    filename = (secure_filename(Path(uploaded.filename).stem) or "image") + suffix
-    path = destination / f"{uuid.uuid4().hex}-{filename}"
-    uploaded.save(path)
-    try:
-        with lock:
-            item = register_file(path, uploaded.filename)
-            return jsonify(file=item, files=file_list())
-    except Exception:
-        path.unlink(missing_ok=True)
-        raise
+    items, files = register_uploaded_files([uploaded] if uploaded is not None else [])
+    return jsonify(file=items[0], files=files)
+
+
+@app.post("/api/uploads")
+def upload_videos():
+    items, files = register_uploaded_files(request.files.getlist("files"))
+    return jsonify(added=items, files=files)
 
 
 @app.post("/api/topic")

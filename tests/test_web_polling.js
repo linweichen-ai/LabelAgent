@@ -342,6 +342,13 @@ test('完成与失败帧重试均复用轻量帧计数且不回读完整状态',
   assert.equal(handler.includes("fetch('/api/state')"), false);
 });
 
+test('多文件新数据集使用一次批量上传请求', () => {
+  const handler = section(source('app.js'), "$('chooseButton').onclick", "$('openButton').onclick");
+  assert.ok(handler.includes("form.append('files',file,file.name)"));
+  assert.equal((handler.match(/fetch\('\/api\/uploads'/g) || []).length, 1);
+  assert.equal(handler.includes("fetch('/api/upload'"), false);
+});
+
 test('按需帧标注严格绑定文件相机帧并只替换目标帧', () => {
   const h = harness();
   h.run(`let topic='/camera0',loadedDataPath='/data/a.mcap',frameLoadGeneration=1;

@@ -32,8 +32,16 @@ def file_record(path: Path) -> dict:
     return {"path": str(path), "bytes": path.stat().st_size, "sha256": digest(path)}
 
 
-def freeze(data_root: Path, dataset: str, sequence: str, count: int) -> dict:
+def freeze(
+    data_root: Path,
+    dataset: str,
+    sequence: str,
+    count: int,
+    selection_method: str = "caller-provided dataset and sequence; exact four-camera/LiDAR intersection; evenly spaced including endpoints",
+) -> dict:
     data_root = data_root.resolve()
+    if not selection_method.strip() or len(selection_method) > 500:
+        raise ValueError("Selection method must be a nonempty bounded description")
     cameras = {
         camera: {path.stem for path in (data_root / "cameras_640x512" / f"camera_{camera}").glob("*.png")}
         for camera in range(4)
@@ -62,7 +70,7 @@ def freeze(data_root: Path, dataset: str, sequence: str, count: int) -> dict:
         "dataset": dataset,
         "sequence": sequence,
         "selection": {
-            "method": "first nonempty sequence chosen by directory order; exact four-camera/LiDAR intersection; evenly spaced including endpoints",
+            "method": selection_method,
             "population_frames": len(common),
             "selected_frames": count,
             "indices": [index * (len(common) - 1) // (count - 1) for index in range(count)],
@@ -87,6 +95,10 @@ def parse_args():
     parser.add_argument("--dataset", required=True)
     parser.add_argument("--sequence", required=True)
     parser.add_argument("--count", type=int, default=8)
+    parser.add_argument(
+        "--selection-method",
+        default="caller-provided dataset and sequence; exact four-camera/LiDAR intersection; evenly spaced including endpoints",
+    )
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
     if not 4 <= args.count <= 64:
@@ -98,7 +110,13 @@ def parse_args():
 
 if __name__ == "__main__":
     arguments = parse_args()
-    manifest = freeze(arguments.data_root, arguments.dataset, arguments.sequence, arguments.count)
+    manifest = freeze(
+        arguments.data_root,
+        arguments.dataset,
+        arguments.sequence,
+        arguments.count,
+        selection_method=arguments.selection_method,
+    )
     arguments.output.parent.mkdir(parents=True, exist_ok=True)
     arguments.output.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(manifest["selection"], ensure_ascii=False, separators=(",", ":")), flush=True)

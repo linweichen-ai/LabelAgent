@@ -34,7 +34,7 @@ from tools.slope_lidar_geometry import (
     component_camera_hints,
     fit_support_plane,
     read_xyz_pcd,
-    select_traversable_components,
+    select_ground_connected_ramp_components,
     tilted_planar_samples,
 )
 
@@ -224,7 +224,14 @@ def evaluate(args) -> dict:
             samples = tilted_planar_samples(points, support)
             tilted_count = len(samples["selected_points"])
             all_components = cluster_tilted_samples(samples, support)
-            selected = select_traversable_components(all_components, args.maximum_median_tilt)
+            selected = select_ground_connected_ramp_components(
+                all_components,
+                maximum_median_tilt_degrees=args.maximum_median_tilt,
+                maximum_minimum_height=args.maximum_minimum_height,
+                minimum_median_height=args.minimum_median_height,
+                minimum_height_span=args.minimum_height_span,
+                maximum_satellite_distance=args.maximum_satellite_distance,
+            )
         frame_rows.append({
             "frame_id": frame_id,
             "raw_xyz_points": len(points),
@@ -323,6 +330,10 @@ def evaluate(args) -> dict:
         "selection_reads_visual_or_semantic_review": False,
         "fixed_parameters": {
             "maximum_component_median_tilt_degrees": args.maximum_median_tilt,
+            "maximum_component_minimum_height_metres": args.maximum_minimum_height,
+            "minimum_component_median_height_metres": args.minimum_median_height,
+            "minimum_component_height_span_metres": args.minimum_height_span,
+            "maximum_grounded_satellite_distance_metres": args.maximum_satellite_distance,
             "maximum_hints_per_view": args.maximum_hints,
             "maximum_points_per_hint": args.maximum_points_per_hint,
             "negative_ring_margin_pixels": args.negative_margin,
@@ -363,6 +374,10 @@ def parse_args():
     parser.add_argument("--timeout", type=float, default=90)
     parser.add_argument("--maximum-hints", type=int, default=6)
     parser.add_argument("--maximum-median-tilt", type=float, default=10.0)
+    parser.add_argument("--maximum-minimum-height", type=float, default=0.05)
+    parser.add_argument("--minimum-median-height", type=float, default=0.02)
+    parser.add_argument("--minimum-height-span", type=float, default=0.10)
+    parser.add_argument("--maximum-satellite-distance", type=float, default=1.5)
     parser.add_argument("--maximum-points-per-hint", type=int, default=5)
     parser.add_argument("--negative-margin", type=int, default=80)
     args = parser.parse_args()
@@ -372,6 +387,14 @@ def parse_args():
         parser.error("--maximum-hints must be between 1 and 20")
     if not 5.0 <= args.maximum_median_tilt <= 20.0:
         parser.error("--maximum-median-tilt must be between 5 and 20")
+    if not 0.0 <= args.maximum_minimum_height <= 0.20:
+        parser.error("--maximum-minimum-height must be between 0 and 0.20")
+    if not 0.0 <= args.minimum_median_height <= 0.20:
+        parser.error("--minimum-median-height must be between 0 and 0.20")
+    if not 0.03 <= args.minimum_height_span <= 0.50:
+        parser.error("--minimum-height-span must be between 0.03 and 0.50")
+    if not 0.2 <= args.maximum_satellite_distance <= 3.0:
+        parser.error("--maximum-satellite-distance must be between 0.2 and 3.0")
     if not 1 <= args.maximum_points_per_hint <= 8:
         parser.error("--maximum-points-per-hint must be between 1 and 8")
     if not 8 <= args.negative_margin <= 128:

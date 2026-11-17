@@ -117,6 +117,28 @@ class SlopeLidarGeometryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             geometry.select_traversable_components(components, 25)
 
+    def test_ground_connected_ramp_gate_rejects_elevated_and_low_rise_surfaces(self):
+        components = [
+            {"median_tilt_degrees": 7.0, "minimum_height": -0.01, "median_height": 0.07, "height_span": 0.13,
+             "centroid": np.array([0.0, 0.0, 0.0]), "name": "ramp"},
+            {"median_tilt_degrees": 7.0, "minimum_height": 0.24, "median_height": 0.30, "height_span": 0.13,
+             "centroid": np.array([0.2, 0.0, 0.0]), "name": "elevated"},
+            {"median_tilt_degrees": 7.0, "minimum_height": 0.00, "median_height": 0.04, "height_span": 0.07,
+             "centroid": np.array([0.8, 0.0, 0.0]), "name": "ramp_satellite"},
+            {"median_tilt_degrees": 7.0, "minimum_height": 0.00, "median_height": 0.00, "height_span": 0.13,
+             "centroid": np.array([0.5, 0.0, 0.0]), "name": "ground_noise"},
+            {"median_tilt_degrees": 7.0, "minimum_height": 0.00, "median_height": 0.04, "height_span": 0.07,
+             "centroid": np.array([2.0, 0.0, 0.0]), "name": "floor_edge"},
+            {"median_tilt_degrees": 12.0, "minimum_height": 0.00, "median_height": 0.07, "height_span": 0.13,
+             "centroid": np.array([0.2, 0.0, 0.0]), "name": "steep"},
+        ]
+        selected = geometry.select_ground_connected_ramp_components(components)
+        self.assertEqual([row["name"] for row in selected], ["ramp", "ramp_satellite"])
+        with self.assertRaisesRegex(ValueError, "height bounds"):
+            geometry.select_ground_connected_ramp_components([
+                {"median_tilt_degrees": 7.0, "height_span": 0.13}
+            ])
+
     def test_representative_pixels_are_deterministic_and_in_component(self):
         pixels = np.array([[10, 10], [11, 10], [30, 10], [10, 30], [30, 30]], dtype=np.int32)
         first = geometry._representative_pixels(pixels, 3)
@@ -199,6 +221,28 @@ class SlopeLidarGeometryTests(unittest.TestCase):
         self.assertEqual(manifest["selection"]["population_frames"], 4)
         self.assertEqual(manifest["selection"]["frame_ids"], ["1", "2", "3", "4"])
         self.assertFalse(manifest["boundaries"]["labels_read"])
+        self.assertIn("caller-provided", manifest["selection"]["method"])
+
+    def test_external_freeze_records_predeclared_sequence_selection_method(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            for camera in range(4):
+                directory = root / "cameras_640x512" / f"camera_{camera}"
+                directory.mkdir(parents=True)
+                for frame in ("1", "2", "3", "4"):
+                    (directory / f"{frame}.png").write_bytes(f"{camera}-{frame}".encode())
+            lidar = root / "lidar"
+            lidar.mkdir()
+            for frame in ("1", "2", "3", "4"):
+                (lidar / f"{frame}.pcd").write_bytes(frame.encode())
+            calibration = root / "calib_640x512"
+            calibration.mkdir()
+            for name in [*(f"camera{camera}_calib.yaml" for camera in range(4)), "lidar2camera.yaml"]:
+                (calibration / name).write_text(name, encoding="utf-8")
+            manifest = freeze(root, "dataset", "002", 4, "second nonempty sequence by directory order")
+        self.assertEqual(manifest["selection"]["method"], "second nonempty sequence by directory order")
+        with self.assertRaisesRegex(ValueError, "nonempty bounded"):
+            freeze(Path("."), "dataset", "002", 4, "")
 
     def test_external_manifest_verifier_rehashes_every_bound_source(self):
         with tempfile.TemporaryDirectory() as temporary:

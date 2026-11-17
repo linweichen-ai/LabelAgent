@@ -357,7 +357,9 @@ def cluster_tilted_samples(samples: dict, support: dict, recipe: dict | None = N
             "major_span": major,
             "minor_span": minor,
             "height_span": height_span,
+            "minimum_height": float(np.min(heights)),
             "median_height": float(np.median(heights)),
+            "maximum_height": float(np.max(heights)),
             "median_tilt_degrees": float(np.median(samples["tilt_degrees"][indices])),
             "median_planarity": float(np.median(samples["planarity"][indices])),
             "score": score,
@@ -375,6 +377,71 @@ def select_traversable_components(components: list[dict], maximum_median_tilt_de
     if not 5.0 <= maximum_median_tilt_degrees <= 20.0:
         raise ValueError("Traversable tilt limit must be between 5 and 20 degrees")
     return [row for row in components if row["median_tilt_degrees"] <= maximum_median_tilt_degrees]
+
+
+def select_ground_connected_ramp_components(
+    components: list[dict],
+    maximum_median_tilt_degrees: float = 10.0,
+    maximum_minimum_height: float = 0.05,
+    minimum_median_height: float = 0.02,
+    minimum_height_span: float = 0.10,
+    maximum_satellite_distance: float = 1.5,
+) -> list[dict]:
+    """Keep shallow components that start near support and rise materially.
+
+    This rejects elevated cargo/equipment faces and tiny floor-edge fragments.
+    The values are physical candidate gates and remain subject to independent
+    validation; they are not image semantics or human truth.
+    """
+    if not 5.0 <= maximum_median_tilt_degrees <= 20.0:
+        raise ValueError("Traversable tilt limit must be between 5 and 20 degrees")
+    if not 0.0 <= maximum_minimum_height <= 0.20:
+        raise ValueError("Ground connection height must be between 0 and 0.20 metres")
+    if not 0.0 <= minimum_median_height <= 0.20:
+        raise ValueError("Ramp median height must be between 0 and 0.20 metres")
+    if not 0.03 <= minimum_height_span <= 0.50:
+        raise ValueError("Ramp rise must be between 0.03 and 0.50 metres")
+    if not 0.2 <= maximum_satellite_distance <= 3.0:
+        raise ValueError("Ramp satellite distance must be between 0.2 and 3.0 metres")
+    shallow_grounded = []
+    for row in components:
+        minimum = row.get("minimum_height")
+        median = row.get("median_height")
+        span = row.get("height_span")
+        if (
+            not isinstance(minimum, (int, float))
+            or not isinstance(median, (int, float))
+            or not isinstance(span, (int, float))
+        ):
+            raise ValueError("Ground-connected selection requires component height bounds")
+        if (
+            row["median_tilt_degrees"] <= maximum_median_tilt_degrees
+            and minimum <= maximum_minimum_height
+        ):
+            shallow_grounded.append(row)
+    anchors = [
+        row
+        for row in shallow_grounded
+        if row["height_span"] >= minimum_height_span and row["median_height"] >= minimum_median_height
+    ]
+    if not anchors:
+        return []
+    for row in shallow_grounded:
+        centroid = np.asarray(row.get("centroid"), dtype=float)
+        if centroid.shape != (3,) or not np.isfinite(centroid).all():
+            raise ValueError("Ground-connected selection requires finite component centroids")
+    anchor_centroids = [np.asarray(row["centroid"], dtype=float) for row in anchors]
+    anchor_ids = {id(row) for row in anchors}
+    return [
+        row
+        for row in shallow_grounded
+        if id(row) in anchor_ids
+        or (
+            row["height_span"] < minimum_height_span
+            and min(np.linalg.norm(np.asarray(row["centroid"], dtype=float) - center) for center in anchor_centroids)
+            <= maximum_satellite_distance
+        )
+    ]
 
 
 def _representative_pixels(pixels: np.ndarray, maximum_points: int = 3) -> np.ndarray:

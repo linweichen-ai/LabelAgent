@@ -1431,7 +1431,9 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
         if kind in ("add_region", "erase_region", "split", "fill_gap", "sam_points"):
             if not _valid_region(operation.get("polygon"), width, height):
                 errors.append(f"第 {index} 项 {kind} 操作缺少有效 polygon："
-                              f"需要 3～2000 个 [x,y] 顶点，0≤x<{width}，0≤y<{height}")
+                              f"需要至少 3 个彼此不同且不共线、能围成非零面积的 [x,y] 顶点，"
+                              f"不得重复同一坐标，0≤x<{width}，0≤y<{height}；"
+                              "若无法可靠给出局部区域，请删除该操作；没有其他可靠修改时返回 done 和空 operations")
         if kind == "fill_gap":
             hole_id = operation.get("hole_id")
             if not isinstance(hole_id, str) or hole_id not in hole_ids:
@@ -1540,6 +1542,53 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
             "to": "done",
         })
     return result
+
+
+_POLYGON_OPERATIONS = {"add_region", "erase_region", "split", "fill_gap", "sam_points"}
+
+
+def _degenerate_polygon_only(result, width, height, holes, shapes, labels,
+                             sam_comparison=None, reference_provided=True):
+    """Return true only when every requested edit is a zero-area polygon.
+
+    Missing fields, out-of-bounds coordinates, mixed tool requests and malformed
+    JSON keep the full protocol retry budget.  The bounded early-stop path is
+    reserved for a repeated, structurally valid list of degenerate polygons.
+    """
+    operations = result.get("operations") if isinstance(result, dict) else None
+    if not isinstance(operations, list) or not operations:
+        return False
+    repaired = copy.deepcopy(result)
+    for operation in repaired["operations"]:
+        if not isinstance(operation, dict) or operation.get("operation") not in _POLYGON_OPERATIONS:
+            return False
+        points = operation.get("polygon")
+        if not isinstance(points, list) or not 3 <= len(points) <= 2000:
+            return False
+        if not all(isinstance(point, list) and len(point) == 2 and all(
+                isinstance(value, (int, float)) and not isinstance(value, bool)
+                and math.isfinite(value) for value in point)
+                and 0 <= point[0] < width and 0 <= point[1] < height
+                for point in points):
+            return False
+        unique = {(float(point[0]), float(point[1])) for point in points}
+        if len(unique) >= 3 and abs(float(cv2.contourArea(
+                np.asarray(points, dtype=np.float32)))) >= 0.5:
+            return False
+        if width < 2 or height < 2:
+            return False
+        operation["polygon"] = [[0, 0], [1, 0], [0, 1]]
+    # A repaired synthetic triangle must make the whole response valid. This
+    # keeps missing IDs, reasons, assessments, point prompts and other protocol
+    # errors on the normal three-attempt path instead of hiding them behind the
+    # repeated-polygon shortcut.
+    try:
+        _validate_review_result(repaired, holes, shapes, labels, width, height,
+                                sam_comparison,
+                                reference_provided=reference_provided)
+    except ValueError:
+        return False
+    return True
 
 
 def _review_exact_overlap(config, image, overlay, group, shapes, labels):
@@ -1722,6 +1771,9 @@ def review(config, image, overlay, description, shapes, labels, history, referen
                      " Return a concrete operation only when the target image supports the duplicate interpretation.")
     last_result = None
     last_error = None
+    previous_degenerate_error = None
+    repeated_degenerate_stop = False
+    attempts_used = 0
     base_review_tokens = compact_review_token_budget(config, len(holes))
     retry_max_tokens = None
     for attempt in range(MAX_PROTOCOL_RETRIES + 1):
@@ -1729,9 +1781,14 @@ def review(config, image, overlay, description, shapes, labels, history, referen
             correction = ("\n上一份输出未通过 Agent 协议校验。请保留其中正确的视觉判断，只修正协议错误，"
                 "重新输出完整 JSON，不要解释。\n校验错误：" + str(last_error)
                 + "\n上一份输出：" + json.dumps(last_result, ensure_ascii=False)[:12000])
+            if previous_degenerate_error is not None:
+                correction += ("\n这是退化多边形的唯一一次协议纠错机会：每个 polygon 必须改成至少 3 个"
+                               "不同且不共线的当前帧坐标；无法可靠定位时删除该操作，"
+                               "没有其他可靠修改就返回 done 和空 operations。")
             request_prompt = prompt + correction
         else:
             request_prompt = prompt
+        attempts_used = attempt + 1
         call_state = {"attempt": attempt + 1, "feedback": str(last_error) if attempt else None}
         token = _review_call.set(call_state)
         try:
@@ -1761,10 +1818,23 @@ def review(config, image, overlay, description, shapes, labels, history, referen
             # Update the original call rather than creating a fictitious model
             # request. Transport/configuration failures bypass this retry path.
             record = call_state.get("record")
+            current_degenerate_error = (str(last_error)
+                if _degenerate_polygon_only(
+                    last_result, width, height, holes, shapes, labels,
+                    sam_comparison, reference_provided=reference is not None)
+                else None)
+            repeated_degenerate_stop = (attempt > 0
+                and current_degenerate_error is not None
+                and current_degenerate_error == previous_degenerate_error)
             if record is not None:
                 record.update(status="rejected", error=str(last_error),
-                              retrying=attempt < MAX_PROTOCOL_RETRIES)
+                              retrying=attempt < MAX_PROTOCOL_RETRIES and not repeated_degenerate_stop)
+                if repeated_degenerate_stop:
+                    record["protocol_retry_stop_reason"] = "repeated_degenerate_polygon"
                 _emit_trace(record)
+            if repeated_degenerate_stop:
+                break
+            previous_degenerate_error = current_degenerate_error
             finish_reason = (record or {}).get("output", {}).get("finish_reason")
             if (finish_reason == "length"
                     or isinstance(last_error, ModelOutputError)
@@ -1773,8 +1843,11 @@ def review(config, image, overlay, description, shapes, labels, history, referen
                 retry_max_tokens = min(2048, max(1536, current_budget * 2))
         finally:
             _review_call.reset(token)
+    message = (f"GPT 连续 {attempts_used} 次返回相同的退化多边形，已提前停止无进展重试：{last_error}"
+               if repeated_degenerate_stop else
+               f"GPT 协议校验重试 {MAX_PROTOCOL_RETRIES} 次后仍失败：{last_error}")
     raise ReviewProtocolError(
-        f"GPT 协议校验重试 {MAX_PROTOCOL_RETRIES} 次后仍失败：{last_error}",
+        message,
         last_error=last_error, last_result=last_result)
 
 

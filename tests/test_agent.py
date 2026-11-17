@@ -612,6 +612,21 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("GPT 空洞判断必须覆盖全部 hole_id", chat.call_args.args[1])
         self.assertIn('"hole_id": "#5"', chat.call_args.args[1])
 
+    def test_degenerate_polygon_retry_feedback_requires_distinct_non_collinear_vertices(self):
+        invalid = {"status": "continue", "reason": "Repair boundary", "operations": [{
+            "operation": "add_region", "shape_ids": [1],
+            "polygon": [[3, 4], [3, 4], [3, 4]], "reason": "Repair local edge"}]}
+        valid = {"status": "done", "reason": "No reliable local repair remains", "operations": []}
+        with patch.object(workflow, "chat", side_effect=[invalid, valid]) as chat:
+            decision = workflow.review({}, image_bytes(), image_bytes(),
+                {"description": "a", "prompts": []}, [shape()], ["a"], [])
+        self.assertEqual(decision, valid)
+        self.assertEqual(chat.call_count, 2)
+        correction = chat.call_args.args[1]
+        self.assertIn("至少 3 个彼此不同且不共线", correction)
+        self.assertIn("不得重复同一坐标", correction)
+        self.assertIn("返回 done 和空 operations", correction)
+
     def test_omitted_hole_is_preserved_and_routed_to_human_review(self):
         holes = [
             {"id": "1:hole:1:1:2:2", "shape_id": 1},
@@ -774,6 +789,44 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(rejected[-1]["output"]["parsed"], invalid)
         self.assertIn("operations", rejected[-1]["error"])
         self.assertIsNone(workflow._review_call.get())
+
+    def test_repeated_degenerate_polygons_stop_after_one_correction(self):
+        events = []
+        invalid = {"status": "continue", "reason": "Repair boundary", "operations": [{
+            "operation": "add_region", "shape_ids": [1],
+            "polygon": [[3, 4], [3, 4], [3, 4]], "reason": "Repair local edge"}]}
+        with workflow.trace_calls(events.append), \
+             patch.object(workflow, "sam_text", return_value=[sam_result()]), \
+             patch.object(workflow, "_chat", return_value=invalid) as chat:
+            result = workflow.run({}, image_bytes(), {"description": "a",
+                "prompts": [{"label": "a", "text": "square"}]}, ["a"])
+        self.assertEqual(chat.call_count, 2)
+        self.assertEqual(result["agent"]["stop_reason"], "invalid_model_output")
+        self.assertEqual(result["agent"]["rounds"], 0)
+        self.assertEqual(result["shapes"][0]["parts"], shape()["parts"])
+        self.assertIn("连续 2 次返回相同的退化多边形", result["review_queue"][0]["error"])
+        rejected = [event for event in events if event["status"] == "rejected"]
+        self.assertEqual([event["review_attempt"] for event in rejected], [1, 2])
+        self.assertEqual([event["retrying"] for event in rejected], [True, False])
+        self.assertEqual(rejected[-1]["protocol_retry_stop_reason"],
+                         "repeated_degenerate_polygon")
+        self.assertIn("唯一一次协议纠错机会", chat.call_args_list[1].args[1])
+
+    def test_degenerate_polygon_with_other_protocol_error_keeps_full_retry_budget(self):
+        events = []
+        invalid = {"status": "continue", "operations": [{
+            "operation": "add_region", "shape_ids": [999],
+            "polygon": [[3, 4], [3, 4], [3, 4]]}]}
+        with workflow.trace_calls(events.append), \
+             patch.object(workflow, "sam_text", return_value=[sam_result()]), \
+             patch.object(workflow, "_chat", return_value=invalid) as chat:
+            result = workflow.run({}, image_bytes(), {"description": "a",
+                "prompts": [{"label": "a", "text": "square"}]}, ["a"])
+        self.assertEqual(chat.call_count, 3)
+        self.assertEqual(result["agent"]["stop_reason"], "invalid_model_output")
+        rejected = [event for event in events if event["status"] == "rejected"]
+        self.assertEqual([event["retrying"] for event in rejected], [True, True, False])
+        self.assertNotIn("protocol_retry_stop_reason", rejected[-1])
 
     def test_missing_sam_assessment_is_sent_back_for_correction(self):
         with patch.object(workflow, "chat", side_effect=[

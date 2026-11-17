@@ -1,0 +1,145 @@
+{
+  "schema_version": "labelagent.agent_degenerate_retry_round134.v1",
+  "recorded_at": "2026-11-18T05:33:58.2921903+08:00",
+  "scope": "Repeated zero-area polygon protocol failures only",
+  "decision": "accepted_and_deployed",
+  "baseline": {
+    "frame": 35,
+    "initial_candidate_count": 8,
+    "candidate_counts_by_label": {
+      "pallet": 6,
+      "person": 1,
+      "floor": 1
+    },
+    "background_elapsed_ms": 111372,
+    "protocol_attempt_elapsed_ms": [
+      35421,
+      35097,
+      35176
+    ],
+    "validation_error_sha256": "81d5613303855d885947bb6ae7755ce9ea17ebe64f41206e1c4974c60fbbb383",
+    "final_two_raw_responses_identical": true
+  },
+  "rejected_candidate_v1": {
+    "change": "JSON schema uniqueItems plus clearer polygon feedback",
+    "decision": "rejected_not_deployed",
+    "refinement_elapsed_ms": 104963,
+    "protocol_attempt_elapsed_ms": [
+      34987,
+      35322,
+      33863
+    ],
+    "attempt_count": 3,
+    "candidate_mutated": false,
+    "reason": "The structured decoder still emitted repeated zero-area coordinates and the third call remained pure waste."
+  },
+  "accepted_candidate_v2": {
+    "policy": "After one correction opportunity, stop only when every requested edit is a structurally valid in-bounds polygon operation, all polygons remain zero-area, all non-polygon protocol fields validate, and the exact validation error repeats.",
+    "generic_protocol_retry_budget_preserved": 3,
+    "initial_run": {
+      "elapsed_ms": 3070,
+      "candidate_count": 8,
+      "candidate_artifact_sha256": "40e2abfcb2ff345630a3cd2d21f89f1f4c5215d568b5ec1b1d1844005f68dc4b",
+      "input_sha256": "eca2af23add3a84e12e831c2f5b99cc79df852d2835421fe7064666081c26945",
+      "agent_review_status": "pending"
+    },
+    "refinement": {
+      "elapsed_ms": 34580,
+      "attempt_count": 2,
+      "attempts": [
+        {
+          "attempt": 1,
+          "elapsed_ms": 615,
+          "cache_hit": true,
+          "generation_seconds_from_cached_metadata": 33.95,
+          "retrying": true,
+          "raw_sha256": "e02fb681f06642a44f3ff8af3f5586e89a82b10f43896ea6bfba7d373165d915"
+        },
+        {
+          "attempt": 2,
+          "elapsed_ms": 33124,
+          "cache_hit": false,
+          "generation_seconds": 32.024,
+          "retrying": false,
+          "protocol_retry_stop_reason": "repeated_degenerate_polygon",
+          "raw_sha256": "ccb7cba53a5328e2c933360970187dc2a3d966d7de5c891c936e068271310824"
+        }
+      ],
+      "validation_error_sha256": "81d5613303855d885947bb6ae7755ce9ea17ebe64f41206e1c4974c60fbbb383",
+      "stop_reason": "invalid_model_output",
+      "rounds": 0,
+      "candidate_mutated": false,
+      "candidate_count": 8,
+      "candidate_counts_by_label": {
+        "pallet": 6,
+        "person": 1,
+        "floor": 1
+      },
+      "final_candidate_artifact_sha256": "141e8e3c70e3bfaadbacd75011fb1c2000a901e7c701bfa41e4c3ef713836179",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "truth_created_for_frame_35": false,
+      "reference_frames": [
+        55
+      ]
+    },
+    "measured_warm_first_call_speedup_vs_v1": {
+      "from_ms": 104963,
+      "to_ms": 34580,
+      "saved_ms": 70383,
+      "reduction_percent": 67.054
+    },
+    "cold_boundary": "The first v2 request was an exact cache hit, so 34.58 seconds is not claimed as a fully cold total. The second request was cold; eliminating the third request is supported by the prior measured 33.863 second third call."
+  },
+  "regression": {
+    "focused_tests": {
+      "passed": 5,
+      "failed": 0
+    },
+    "python": {
+      "passed": 855,
+      "failed": 0
+    },
+    "web": {
+      "passed": 99,
+      "failed": 0
+    },
+    "git_diff_check": "passed"
+  },
+  "deployment": {
+    "runtime_workflow_sha256": "22024549ff72388062c47e2c29db46521a9867b9442fc856b2afa67312546208",
+    "worktree_workflow_sha256": "22024549ff72388062c47e2c29db46521a9867b9442fc856b2afa67312546208",
+    "backup_path": "D:\\Apps\\LabelAgent\\.local\\backups\\degenerate-polygon-early-stop-round134-20261118\\workflow.py",
+    "backup_workflow_sha256": "7c661cded4344144efd2da24b3cfe13d70b5236cddf1133dcf4f225c1100b046",
+    "formal_state_sha256_before_and_after": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "formal_http": {
+      "workbench_root": 200,
+      "state_summary": 200,
+      "model_readiness": 200,
+      "run_status": 200,
+      "sam_health": 200,
+      "vlm_health": 200
+    },
+    "model_readiness": {
+      "ready": true,
+      "sam_ready": true,
+      "vlm_ready": true,
+      "vlm_model": "labelagent-vlm8b"
+    },
+    "run_status": "idle"
+  },
+  "artifacts": {
+    "isolated_work_dir": "D:\\Apps\\LabelAgent\\.local\\isolated-round134-degenerate-stop-v2-20261118",
+    "isolated_state_sha256": "bd193e19f0a62108b46b18a72099fe0a7162a93aa2f3371fa48dfc5f74c1621f",
+    "isolated_model_debug_sha256": "011fd391b06bbea60eac2be3853c7ac7820ae25cb0fd1ff61e83c7197e966a8c",
+    "isolated_last_run_sha256": "9f89fbfa37b1eabf0cf702b0b77ba95219acba4efe3f21c368d5684719f33fbe",
+    "isolated_port_released": true
+  },
+  "boundaries": [
+    "This reduces repeated protocol-failure latency; it does not improve segmentation accuracy.",
+    "No SAM or VLM weights were trained or modified.",
+    "No candidate was promoted to human truth or approved for training.",
+    "Independent slope-positive pixel truth remains an open acceptance requirement."
+  ]
+}

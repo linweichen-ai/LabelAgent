@@ -1074,3 +1074,11 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 因此短键 wire schema 同样否决，不部署、不进入正式缓存。至此输出层的无约束、删减语义和无损短键三条路线都已被实测否决；后续停止继续改写输出协议，保留当前完整结构化路径，优化只放在执行引擎、硬件、精确缓存和预取调度。完整回归为 Python 759/759、网页 89/89，正式任务 idle，六份状态哈希未变。复现工具为 `tools/evaluate_wire_visible_discovery.py`，结构化证据见 [第八十八轮短键协议否决记录](evidence/workbench-stability-20261117/rejected-wire-discovery-round88.json)。
 
 边界：两张图足以否决这个确切编码，因为预设门禁要求逐图完整一致；22.181% 不能写成生产收益。本轮没有修改模型权重、SAM3、VLM 后训练、人工真值、训练批准或 OSS。
+
+## 第八十九轮 4090 VLM 执行栈只读审计（2026-11-17）
+
+输出协议三条压缩路线全部否决后，本轮转向不改变语义的执行层。正式主 VLM 为 Qwen3-VL-8B-Instruct、BF16、PyTorch 2.10.0+cu128、Transformers 4.57.6，GPU 为 compute capability 8.9 的 RTX 4090；加载参数明确使用 `attn_implementation="sdpa"`、256 图像 token、16384 context、单图 static generation cache 和启动预热。
+
+独立 `flash_attn`、xFormers 和 vLLM 当前都未安装，但 PyTorch 自身的 flash SDP、memory-efficient SDP 与 math SDP 后端均处于 enabled。因此不能把“未安装 flash-attn 包”等同于“当前没有使用 FlashAttention”，实际选中的 SDPA 内核仍需测量。直接安装新包或重启生产模型缺乏证据，本轮没有执行。
+
+下一步先用完全相同的长 JSON 内容隔离测量 response-format 的逐 token 开销，再确认 SDPA 实际内核；只有在相同完整输出和同模型下出现稳定收益，才考虑隔离安装或引擎切换。正式模型未重启、未安装依赖、未启动或停止 GPU 进程，任务 idle，六份状态哈希不变。结构化记录见 [第八十九轮执行栈审计](evidence/workbench-stability-20261117/execution-stack-round89.json)。

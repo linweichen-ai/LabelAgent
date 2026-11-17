@@ -1,0 +1,64 @@
+{
+  "schema_version": "labelagent.execution_stack_audit.v1",
+  "round": 89,
+  "date": "2026-11-17",
+  "objective": "Identify execution-layer acceleration options without changing the validated semantic protocol or restarting the live model.",
+  "remote_primary_vlm": {
+    "host": "factory-4090",
+    "gpu": "NVIDIA GeForce RTX 4090",
+    "compute_capability": [8, 9],
+    "torch": "2.10.0+cu128",
+    "cuda_runtime": "12.8",
+    "transformers": "4.57.6",
+    "flash_attn_package_installed": false,
+    "xformers_installed": false,
+    "vllm_installed": false,
+    "torch_flash_sdp_enabled": true,
+    "torch_memory_efficient_sdp_enabled": true,
+    "torch_math_sdp_enabled": true
+  },
+  "deployed_model_configuration": {
+    "model": "Qwen3-VL-8B-Instruct",
+    "quantization": "none",
+    "dtype": "bfloat16",
+    "attention_implementation_requested": "sdpa",
+    "maximum_image_tokens": 256,
+    "context_budget": 16384,
+    "generation_cache_implementation": "static",
+    "startup_prewarm": true
+  },
+  "observed_service_command": [
+    "--quantization none",
+    "--max-image-tokens 256",
+    "--context-budget 16384",
+    "--generation-cache-implementation static",
+    "--startup-prewarm"
+  ],
+  "interpretation": {
+    "flash_attention_absence_is_not_proven": "PyTorch SDPA has the flash backend enabled even though the separate flash-attn package is absent.",
+    "actual_selected_sdpa_kernel": "not yet measured",
+    "safe_next_measurement": "Benchmark identical long JSON content with and without response_format, then profile the selected SDPA kernel before considering any package installation or model restart.",
+    "production_change_authorized_by_this_audit": false
+  },
+  "safety": {
+    "model_restarted": false,
+    "dependency_installed": false,
+    "gpu_process_started_or_stopped": false,
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "oss_modified": false,
+    "formal_workbench_status": "idle",
+    "formal_state_hashes_unchanged": true
+  },
+  "latest_regression": {
+    "python_tests": {"passed": 759, "failed": 0},
+    "web_tests": {"passed": 89, "failed": 0}
+  },
+  "decision": {
+    "status": "diagnostic_complete",
+    "install_flash_attn_now": false,
+    "switch_to_vllm_now": false,
+    "reason": "The current stack may already use PyTorch flash SDPA, while actual kernel selection and structured-decoder overhead remain unmeasured. Changing the live engine before those measurements would be speculative."
+  }
+}

@@ -955,3 +955,13 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 结果全部保持 `candidate_only=true`、`human_truth=false`、`approved_for_training=false`，开放类别扫描完整；六份正式状态文件哈希完全未变。代表图为 [003 候选叠加](evidence/workbench-stability-20261117/newdata-003-round76-overlay.jpg) 和 [004 候选叠加](evidence/workbench-stability-20261117/newdata-004-round76-overlay.jpg)，结构化证据见 [第七十六轮新批次隔离回归](evidence/workbench-stability-20261117/newdata-generation-budget-round76.json)。
 
 边界：这两张图片没有人工像素真值，因此只证明新批次兼容性和候选流程稳定，不能证明跨数据集精度；画面中也没有已确认真实斜坡。两张图均未保留 slope 候选，但不能把两个样本写成斜坡误检率结论。
+
+## 第七十七轮高风险类别复核延迟实验（两条路线均否决，2026-11-17）
+
+第七十六轮 003 图的完整闭环中，两个 person 高风险候选分别需要 9.682 和 8.660 秒盲审。本轮保持候选 14、15 和原始图片冻结，在完全隔离、只写本地 `artifacts/` 的工具中验证两条减负路线。
+
+第一条路线把原始裁剪与青色候选裁剪拼成单张 JPEG 卡片。总耗时从 18.342 秒降至 12.974 秒，观测下降 29.27%，但两个候选的有限语义核心 0/2 一致：明确人物被改成“不确定混合目标”，小模糊候选由 conflict 改成 uncertain。该路线还发生了 JPEG 重编码，并非真正无损证据复用，因此按语义门禁否决。
+
+第二条路线严格保留生产双图字节、顺序、完整提示和 schema，只把最大完成预算从 768 降到 384。两个候选的有限语义核心 2/2 一致，但实际仍自然结束在 123、127 个 token；总耗时为 20.161 秒，比 18.342 秒基线慢 9.92%。这证明上限并非当前复核延迟的约束，继续缩小不会带来可靠收益，也予以否决。
+
+两条路线均未部署。正式页面 HTTP 200、任务 idle，VLM `ok` 且无在途请求；六份正式状态文件哈希完全未变。复现实验工具为 `tools/evaluate_single_image_class_audit.py`，结构化证据见 [第七十七轮复核延迟否决记录](evidence/workbench-stability-20261117/rejected-class-audit-latency-round77.json)。下一步不再修改复核证据表达或无效 token 上限，转向修复本机管理入口的错误诊断，并寻找可保持逐候选视觉绑定的调度与硬件执行优化。

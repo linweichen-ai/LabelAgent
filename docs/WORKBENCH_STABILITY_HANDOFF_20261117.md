@@ -1110,3 +1110,11 @@ cuDNN attention 在隔离算子上看似更快：static prefill 中位从 0.2180
 一张预热诊断图八类状态和开放集一致，端到端快 1.705%，但一条视觉理由发生同义改写。随后两张 AB/BA 先导图的八类状态与开放集仍为 2/2 一致，完整 JSON 为 0/2 一致；更关键的是基线中位 14.964 秒，cuDNN 中位 15.531 秒，候选反而慢 3.788%。因此没有扩大到 test24，也没有部署。单层算子提速不能代替整模型端到端证据。
 
 正式 4090 VLM 已恢复 SHA-256 `70cfc4d...c3694`，回滚副本位于 `/home/clw/labelagent_remote_20261110/backups/cudnn-sdpa-round92-20261117`。本轮不安装依赖、不修改模型权重、不写候选、人工真值或训练数据。后续不再强制 attention 后端，执行层优化转向服务级调度与跨帧精确复用，因为这些路径已有真实端到端收益并且不改变模型数值。复现工具为 `tools/benchmark_sdpa_backends.py`，结构化记录见 [第九十二轮 cuDNN 否决记录](evidence/workbench-stability-20261117/rejected-cudnn-sdpa-round92.json)。
+
+## 第九十三轮精确响应缓存扩容（已部署，2026-11-17）
+
+相邻帧预取已经只处理 `source+1`、模型忙时立即让路、同请求在途合并，因此继续扩大预取窗口会增加前台竞争。本轮转向延长已验证结果的复用窗口：VLM 的精确响应 LRU 从 32 条增加到 64 条。缓存键仍是完整确定性请求体的 SHA-256，包含原图字节、模型、提示、schema 和生成参数；缓存只保存已通过协议的响应与有限统计，不保存额外图片副本，也不跨配置或跨图误命中。
+
+新增两条契约验证覆盖“命中刷新最近使用顺序”和“只淘汰最久未使用项”，容量仍被原有 0～256 边界限制。正式 4090 `/health` 已读回 capacity 64、模型 ok、inflight 0；Windows 与远端服务文件 SHA-256 均为 `DABD3A47...D90C4`。一次未缓存的真实生产类别发现为 15.912 秒，紧接着完全相同的请求为 0.181 秒且 `cache_hit=true`，两次内容 SHA-256、894 prompt token 和 322 completion token 完全一致，观测等待下降 98.863%。
+
+六份正式状态文件哈希未变，候选、人工真值、训练批准和 OSS 均未修改。Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\response-cache-64-round93-20261117`，远端回滚点为 `/home/clw/labelagent_remote_20261110/backups/response-cache-64-round93-20261117`。复现工具为 `tools/verify_vlm_exact_replay.py`，结构化记录见 [第九十三轮缓存扩容验收](evidence/workbench-stability-20261117/response-cache-64-round93.json)。边界：扩容改善近期回看和预取复用，不减少第一张冷图约 16 秒的计算。

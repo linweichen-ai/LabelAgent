@@ -191,8 +191,32 @@ class LocalVLMContractTests(unittest.TestCase):
         self.assertEqual(second.json["local_vlm"]["response_cache_entries"], 1)
         self.assertEqual(first.json["choices"], second.json["choices"])
         health = self.client.get("/health").json
-        self.assertEqual(health["response_cache_capacity"], 32)
+        self.assertEqual(health["response_cache_capacity"], 64)
         self.assertEqual(health["response_cache_entries"], 1)
+
+    def test_response_cache_is_bounded_lru_and_refreshes_exact_hits(self):
+        backend = ContractBackend()
+        client = MODULE.create_app(backend, response_cache_entries=2).test_client()
+        bodies = [{"model": backend.model_id, "messages": messages(),
+                   "max_tokens": value} for value in (10, 11, 12)]
+
+        self.assertFalse(client.post(
+            "/v1/chat/completions", json=bodies[0]).json["local_vlm"]["cache_hit"])
+        self.assertFalse(client.post(
+            "/v1/chat/completions", json=bodies[1]).json["local_vlm"]["cache_hit"])
+        self.assertTrue(client.post(
+            "/v1/chat/completions", json=bodies[0]).json["local_vlm"]["cache_hit"])
+        self.assertFalse(client.post(
+            "/v1/chat/completions", json=bodies[2]).json["local_vlm"]["cache_hit"])
+        self.assertTrue(client.post(
+            "/v1/chat/completions", json=bodies[0]).json["local_vlm"]["cache_hit"])
+        self.assertFalse(client.post(
+            "/v1/chat/completions", json=bodies[1]).json["local_vlm"]["cache_hit"])
+
+        self.assertEqual(backend.generate_calls, 4)
+        health = client.get("/health").json
+        self.assertEqual(health["response_cache_capacity"], 2)
+        self.assertEqual(health["response_cache_entries"], 2)
 
     def test_cache_key_includes_generation_contract(self):
         body = {"model": self.backend.model_id, "messages": messages()}

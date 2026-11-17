@@ -1,0 +1,52 @@
+{
+  "schema_version": "labelagent.response-cache-capacity.v1",
+  "round": 93,
+  "date": "2026-11-17",
+  "accepted_change": "Increase the exact validated VLM response LRU from 32 to 64 entries.",
+  "invariants": {
+    "cache_key": "SHA-256 of the complete deterministic request body, including embedded image bytes, model, prompt, schema and generation contract",
+    "cache_policy": "bounded LRU",
+    "model_output_changed": false,
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "oss_modified": false
+  },
+  "contract_verification": {
+    "capacity_bounds_preserved": "0..256",
+    "two_entry_lru_test": {
+      "exact_hit_refreshes_recency": true,
+      "least_recent_entry_evicted": true,
+      "cache_remains_bounded": true
+    }
+  },
+  "formal_readback": {
+    "health_status": "ok",
+    "response_cache_capacity": 64,
+    "exact_requests_inflight": 0,
+    "server_sha256": "dabd3a471d79733fcd6efae363c0abbe627aafb0dfac6daa7a15643852cd90c4"
+  },
+  "real_exact_replay": {
+    "image_sha256": "34e5094d24db487b3fcd5c458ac810cde5d58293f89fe0b92a2933c72a146812",
+    "cold": {
+      "wall_ms": 15911.752,
+      "cache_hit": false,
+      "prompt_tokens": 894,
+      "completion_tokens": 322
+    },
+    "repeat": {
+      "wall_ms": 180.884,
+      "cache_hit": true,
+      "prompt_tokens": 894,
+      "completion_tokens": 322
+    },
+    "content_sha256_equal": true,
+    "usage_equal": true,
+    "observed_repeat_wait_reduction_pct": 98.863
+  },
+  "rollback": {
+    "windows": "D:/Apps/LabelAgent/.local/backups/response-cache-64-round93-20261117",
+    "remote_4090": "/home/clw/labelagent_remote_20261110/backups/response-cache-64-round93-20261117"
+  },
+  "boundary": "The larger cache extends exact replay retention for recent frames and reviews. It does not reduce the first cold inference and does not claim a population-level latency improvement."
+}

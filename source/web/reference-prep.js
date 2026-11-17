@@ -117,7 +117,7 @@
           ? discoveryPrefetch.samReady
             ? '当前图片的 VLM 类别识别与整图 SAM 已预备；缓存仍有效时，正式运行会直接复用，再继续几何过滤与 Agent。'
             : '当前图片的 VLM 类别识别已预备；SAM 当时忙碌或不可预热，正式运行会直接复用类别结果后继续分割。'
-          : '无需再点图片；系统会自动执行 VLM 识别 → SAM 分割 → Agent 修正 → VLM 复核，通常约 1～3 分钟。';
+          : '无需再点图片；新图首批机器候选通常约 15～25 秒出现，随后 Agent 与高风险复核会在后台继续。';
     }
   }
 
@@ -541,7 +541,9 @@
       if (phase === 'auditing' && Number(status.audit_total || 0) > 0) details.push(`高风险复核 ${status.audit_completed || 0}/${status.audit_total}`);
       if (status.error) details.push(`原因：${status.error}`);
       else if (elapsed >= 90 && unchanged >= 60) details.push('该阶段仍在计算，并非没有点击；可用下方“停止生成”安全取消');
-      else details.push('首次加载模型通常需要 30～90 秒');
+      else details.push(phase === 'discovering'
+        ? '新图类别识别通常约 15～25 秒；完成后会立即显示首批候选'
+        : '首批候选生成后即可先检查，复杂帧的后台精修可能继续数十秒');
       byId('referenceDraftProgressDetail').textContent = `${details.join(' · ')}。`;
     } catch (_) {
       draftProgressFailures += 1;
@@ -581,8 +583,8 @@
     draftProgressFailures = 0;
     setDraftBusy(true, autoDetectVisible ? '请求已提交 · VLM 正在识别可见类别…' : '请求已提交 · 正在启动 SAM 与 VLM…');
     byId('referenceDraftProgressDetail').textContent = autoDetectVisible
-      ? '后台已开始：先识别当前帧可见类别，再依次运行 SAM、Agent 与高风险候选复核；当前 640×512 流程通常约 30～90 秒，请不要重复点击。'
-      : '后台已确认开始一键起稿；将依次运行 SAM、VLM 与 Agent，当前 640×512 流程通常约 20～60 秒，请不要重复点击。';
+      ? '后台已开始：新图首批机器候选通常约 15～25 秒出现；出现后可立即检查，Agent 与高风险复核会继续后台运行，请不要重复点击。'
+      : '后台已确认开始一键起稿；首批候选生成后会立即显示，Agent 与高风险复核会继续后台运行，请不要重复点击。';
     draftTimer = setInterval(updateDraftProgress, 1000);
     await updateDraftProgress();
     try {

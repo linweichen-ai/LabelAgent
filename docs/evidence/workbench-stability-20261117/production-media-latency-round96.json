@@ -1,0 +1,86 @@
+{
+  "schema_version": "labelagent.production-media-latency-round96.v1",
+  "round": 96,
+  "date": "2026-11-17",
+  "objective": "Determine whether the observed 33-second browser result is a reproducible production-media VLM latency and improve operator-facing progress guidance without changing model semantics.",
+  "sample": {
+    "image_count": 9,
+    "batch_a_images": 7,
+    "batch_b_1104_images": 2,
+    "unique_source_sha256_count": 9,
+    "production_media_path": "StillImage EXIF transpose, RGB conversion and deterministic PNG encoding",
+    "production_contract": "formal label registry, compact production prompt, strict JSON schema, 256 image-token service, 384 completion budget",
+    "cache_hits": 0,
+    "coalesced_requests": 0
+  },
+  "production_media_latency": {
+    "wall_min_ms": 14551.195,
+    "wall_p50_ms": 15505.992,
+    "wall_p95_ms": 16364.517,
+    "wall_max_ms": 16409.932,
+    "generation_p50_seconds": 15.206,
+    "generation_p95_seconds": 16.118,
+    "over_25_seconds": 0,
+    "over_twice_median": 0,
+    "all_primary_route": true,
+    "all_stop_finish": true,
+    "prompt_tokens_each": 894,
+    "completion_token_range": [315, 347],
+    "actual_image_tokens_each": 238
+  },
+  "media_encoding_control": {
+    "source_file_and_production_bytes_differ": true,
+    "example_004_source_bytes": 444794,
+    "example_004_production_bytes": 413212,
+    "source_byte_benchmark_p50_ms": 15487.118,
+    "production_media_benchmark_p50_ms": 15505.992,
+    "normalized_discovery_sha256_equal": "9/9",
+    "interpretation": "Production PNG normalization changes the exact request and cache key, but did not cause semantic drift or a 30-second latency class on this sample."
+  },
+  "diagnosis": {
+    "round95_004_browser_ms": 33018,
+    "round95_003_browser_ms": 16593,
+    "round96_reproduced_30_second_vlm_tail": false,
+    "sam_generation_seconds_004": 0.408,
+    "sam_generation_seconds_003": 0.554,
+    "startup_prewarm_is_synchronous_before_ready": true,
+    "decision": "Reject a heavier production-shaped startup prewarm. Treat 33.018 seconds as one observed browser outlier, not a proven recurring compile cost. Preserve the current model protocol and collect phase-bound browser observations if it recurs."
+  },
+  "accepted_changes": {
+    "read_only_benchmark_tool": "tools/benchmark_visible_discovery_latency.py",
+    "benchmark_tool_sha256": "5189D9B9C1BD9E5494F18CCA6E29CB34B9AA4A66A1EFAE442A156F9281927190",
+    "browser_acceptance_instrumentation": "Record every prefetch response wall time and bounded phase receipt even when the test does not wait for dwell prefetch.",
+    "browser_tool_sha256": "7C1B5F216DDD03A496471EA716ECC2F7A3C87ADF1525C40753CE9763C4046B65",
+    "operator_guidance": "Separate the measured 15-25 second first-candidate expectation from later Agent and high-risk background review.",
+    "served_asset_version": 118
+  },
+  "verification": {
+    "python": "776/776",
+    "web": "95/95",
+    "javascript_syntax": "passed",
+    "formal_page_status": 200,
+    "sam_status": "ok",
+    "vlm_status": "ok",
+    "vlm_inflight_after": 0,
+    "served_guidance_readback": true,
+    "worktree_and_deployed_reference_prep_sha256": "6DCB5A1F5D31CD0F964CCE9E18595191D0BC8918E9147B699F8613F3AEF87E1B",
+    "worktree_and_deployed_index_sha256": "CE795A78AF17622507AD28FD8AE7BD45912BB7887795C6617041B2E6C790B189",
+    "benchmark_receipt_sha256": "7553747DFB08DFC03FB07A2D8443702F7DE5BABB29F88A2A656F5940ACAF947A"
+  },
+  "formal_state_sha256_unchanged": {
+    "state.json": "A01D57E013255DA55C6D76DB8F47BACF7EF872CFAA35371C4EBB03A213158E21",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "model_debug.json": "2D3BE581405142DEB66FE62DC24F8EFEAAC6D5C471FAE61CCBC150819F432B6E"
+  },
+  "isolation": {
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "oss_modified": false
+  },
+  "rollback": "D:/Apps/LabelAgent/.local/backups/latency-guidance-round96-20261117",
+  "boundary": "This round improves measurement fidelity and progress clarity. It does not reduce the approximately 15.5-second cold VLM generation itself and does not prove model accuracy or new-dataset generalization."
+}

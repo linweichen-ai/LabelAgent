@@ -65,7 +65,7 @@ test('参考起稿公开高风险复核与安全保存阶段', () => {
   assert.match(text, /auditing: 'VLM 正在复核高风险候选'/);
   assert.match(text, /committing: '正在安全保存机器候选'/);
   assert.match(text, /高风险复核 \$\{status\.audit_completed \|\| 0\}\/\$\{status\.audit_total\}/);
-  assert.match(text, /当前 640×512 流程通常约 30～90 秒/);
+  assert.match(text, /新图首批机器候选通常约 15～25 秒出现/);
 });
 
 test('参考起稿先展示候选并在后台完成高风险类别复核', () => {

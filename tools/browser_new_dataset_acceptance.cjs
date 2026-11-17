@@ -31,8 +31,38 @@ function required(name) {
     const page = await browser.newPage({ viewport: { width: 1600, height: 1050 } });
     const pageErrors = [];
     const requests = [];
+    const requestStartedAt = new WeakMap();
+    const prefetchObservations = [];
+    const prefetchObservationPromises = [];
     page.on("pageerror", error => pageErrors.push(error.message));
-    page.on("request", request => requests.push(new URL(request.url()).pathname));
+    page.on("request", request => {
+      requests.push(new URL(request.url()).pathname);
+      requestStartedAt.set(request, Date.now());
+    });
+    page.on("response", response => {
+      if (new URL(response.url()).pathname !== "/api/reference_discovery/prefetch") return;
+      const task = (async () => {
+        const request = response.request();
+        const requestAt = requestStartedAt.get(request) || Date.now();
+        let payload = null;
+        try { payload = await response.json(); } catch (_) { /* diagnostic only */ }
+        prefetchObservations.push({
+          status: response.status(),
+          wall_ms: Date.now() - requestAt,
+          prefetched: payload?.prefetched,
+          code: payload?.code,
+          input_sha256: payload?.input_sha256,
+          discovery_sha256: payload?.discovery_sha256,
+          discovery_elapsed_ms: payload?.discovery_elapsed_ms,
+          total_elapsed_ms: payload?.elapsed_ms,
+          sam_prefetched: payload?.sam_prefetch?.prefetched === true,
+          candidate_only: payload?.candidate_only,
+          human_truth: payload?.human_truth,
+          approved_for_training: payload?.approved_for_training,
+        });
+      })();
+      prefetchObservationPromises.push(task);
+    });
 
     const started = Date.now();
     const response = await page.goto(base, { waitUntil: "networkidle" });
@@ -135,6 +165,7 @@ function required(name) {
     }, null, { timeout: 60000 });
     const backgroundCompleteMs = Date.now() - draftStarted;
     const finalState = await page.evaluate(() => window.currentWorkbenchFrameState());
+    await Promise.allSettled(prefetchObservationPromises);
     const progressSamples = await page.evaluate(() => window.__labelAgentAcceptanceProgress);
     const visibleProgress = progressSamples.filter(item => !item.hidden);
     assert(visibleProgress.length > 0);
@@ -153,6 +184,7 @@ function required(name) {
       load_status: loadStatus,
       dwell_prefetch_waited: waitForDwellPrefetch,
       dwell_prefetch_ms: dwellPrefetchMs,
+      prefetch_observations: prefetchObservations,
       dwell_prefetch: dwellPrefetchPayload && {
         prefetched: dwellPrefetchPayload.prefetched,
         input_sha256: dwellPrefetchPayload.input_sha256,

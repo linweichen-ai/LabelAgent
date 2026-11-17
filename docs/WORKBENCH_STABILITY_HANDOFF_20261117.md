@@ -1144,3 +1144,15 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\cache-observability-roun
 最终完整回归为 Python 776/776、网页 95/95。正式页面 HTTP 200，六份正式状态文件哈希完全不变；服务 SHA-256 为 `0F3F6957...2F58B36`，管理器为 `1141A07A...5AF46B`。服务回滚点为 `D:\Apps\LabelAgent\.local\backups\inference-thread-affinity-round95-20261117` 和 `/home/clw/labelagent_remote_20261110/backups/inference-thread-affinity-round95-20261117`，管理器回滚点为 `D:\Apps\LabelAgent\.local\backups\isolated-tunnel-fix-round95-20261117`。图像见 [004 浏览器结果](evidence/workbench-stability-20261117/newdata-browser-004-round95.png) 与 [003 浏览器结果](evidence/workbench-stability-20261117/newdata-browser-003-round95.png)，完整记录见 [第九十五轮并发与浏览器验收](evidence/workbench-stability-20261117/inference-thread-affinity-round95.json)。边界：并发崩溃已修复，但重启后首个静态生产形状仍有约 33 秒的一次性编译成本，常态新图可见类别约 16 秒仍是下一步的主要速度瓶颈；本轮不证明模型精度或跨数据集泛化。
 
 四个 Round95 隔离进程均已按进程身份停止，WorkBuddy 原有的两个隔离会话保持不动。宿主安全策略拒绝递归删除四个临时工作副本，因此 `D:\Apps\LabelAgent\.local\isolated-round95-browser-newdata*` 共约 4.06 MiB 暂时保留；它们不属于正式状态，截图与结构化结果已经另存。没有把未执行的清理写成完成。
+
+## 第九十六轮正式媒体路径延迟复核与进度提示校准（2026-11-17）
+
+第九十五轮在服务重启后的 004 浏览器流程中观测到 33.018 秒候选可见时间，当时暂记为可能的一次性生产形态编译成本。本轮没有沿着这个假设直接增加更重预热，而是先用正式标签表、完整生产提示、严格 JSON schema、256 图像 token 和 384 完成预算建立只读冷图基准。第一版直接读取源 PNG 字节后，又发现网页的正式 `StillImage` 路径会做 EXIF 方向校正、RGB 转换和确定性 PNG 重编码；因此源字节结果只保留为预实验，最终九张全部重新走网页等价媒体路径。
+
+最终样本包含批次 A 七张跨相机图片和 1104 批次 003/004 两张图片，九张源文件 SHA-256 均不同，九次请求均为冷请求、无缓存命中、无同请求合并。正式媒体路径耗时最短 14.551 秒、P50 15.506 秒、P95 16.365 秒、最长 16.410 秒；没有请求超过 25 秒，也没有超过两倍中位数。生成阶段 P50 为 15.206 秒、P95 为 16.118 秒，提示均为 894 token、完成为 315～347 token、实际图像均为 238 token。源文件字节与正式 PNG 字节虽然不同，但两组九张归一化发现结果 SHA-256 为 9/9 相同。
+
+这组网页等价输入没有复现 30 秒级 VLM 长尾；004/003 的 SAM 多提示阶段又分别只有 0.408/0.554 秒，启动预热则在服务 ready 前同步完成。因此本轮否决“增加生产形态启动预热”，并修正上一轮边界：33.018 秒是一次已记录但尚未复现的浏览器长尾，不能继续写成已经确认的一次性编译成本。浏览器验收工具现在会记录所有预取请求的墙钟耗时和有限阶段回执，即使测试不主动等待停留预取；若长尾再现，可以直接区分预取、VLM、SAM和页面读回。
+
+前端原来仍提示“1～3 分钟”或“30～90 秒”，容易把首批候选和后台精修混在一起。本轮改为明确说明新图首批机器候选通常约 15～25 秒出现，出现后即可开始检查，Agent 与高风险复核会继续后台运行。正式页面已读回 `reference-prep.js?v=118` 和新文案；工作树与部署文件哈希一致。完整回归为 Python 776/776、网页 95/95，SAM/VLM 均为 ok、VLM 无在途请求，六份正式状态文件哈希全部不变。回滚点为 `D:\Apps\LabelAgent\.local\backups\latency-guidance-round96-20261117`，结构化证据见 [第九十六轮正式媒体延迟复核](evidence/workbench-stability-20261117/production-media-latency-round96.json)。
+
+边界：本轮提高了测量可信度和操作者对进度的理解，没有降低冷图约 15.5 秒的 VLM 计算本身，也没有证明模型精度或跨数据集泛化。下一步仍保留完整输出协议，优先寻找不改变语义的硬件或执行引擎路径；当前 5090 快速通道不可用时，不中断其他工作负载。

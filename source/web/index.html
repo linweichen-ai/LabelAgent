@@ -491,7 +491,7 @@
   </div>
   <div id="referenceDraftProgress" class="referenceDraftProgress" hidden aria-live="polite" tabindex="-1">
     <span class="referenceDraftSpinner" aria-hidden="true"></span>
-    <div><strong id="referenceDraftProgressTitle">正在启动 SAM 与 VLM…</strong><small id="referenceDraftProgressDetail">首次按需加载模型可能需要 30～90 秒，请不要重复点击。</small></div>
+    <div><strong id="referenceDraftProgressTitle">正在启动 SAM 与 VLM…</strong><small id="referenceDraftProgressDetail">新图首批机器候选通常约 15～25 秒出现；后台精修会继续，请不要重复点击。</small></div>
     <b id="referenceDraftElapsed">0 秒</b>
   </div>
   <ol class="referencePrepSteps" aria-label="参考帧准备步骤">
@@ -558,7 +558,7 @@
         <div class="referenceActionChoice fullPipelineChoice" data-reference-action="full_pipeline">
           <span>整帧自动 · 点击后立即开始</span>
           <button id="runReferenceAutoDraft" type="button" class="primary" aria-describedby="fullPipelineHint">立即运行整帧 SAM + VLM 全流程</button>
-          <small id="fullPipelineHint">无需再点图片；系统会自动执行 VLM 识别 → SAM 分割 → Agent 修正 → VLM 复核，通常约 1～3 分钟。</small>
+          <small id="fullPipelineHint">无需再点图片；新图首批机器候选通常约 15～25 秒出现，随后 Agent 与高风险复核会在后台继续。</small>
         </div>
         <button id="useCandidateDraft" type="button" class="primary">载入候选并精修</button>
         <div class="referenceActionChoice pointPromptChoice" data-reference-action="single_object_point">
@@ -588,6 +588,6 @@
   </div>
 </dialog>
 <div id="toast" role="status"></div>
-<script src="/pointcloud.js?v=64"></script><script src="/app.js?v=143"></script><script src="/inspection.js?v=104"></script><script src="/guide.js?v=112"></script><script src="/review.js?v=67"></script><script src="/batch-review.js?v=65"></script><script src="/compare.js?v=65"></script><script src="/human-review.js?v=97"></script><script src="/reference-prep.js?v=117"></script>
+<script src="/pointcloud.js?v=64"></script><script src="/app.js?v=143"></script><script src="/inspection.js?v=104"></script><script src="/guide.js?v=112"></script><script src="/review.js?v=67"></script><script src="/batch-review.js?v=65"></script><script src="/compare.js?v=65"></script><script src="/human-review.js?v=97"></script><script src="/reference-prep.js?v=118"></script>
 </body>
 </html>

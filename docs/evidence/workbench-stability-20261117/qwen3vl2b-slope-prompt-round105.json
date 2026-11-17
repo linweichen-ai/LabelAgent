@@ -1,0 +1,112 @@
+{
+  "schema_version": "labelagent.qwen3vl2b-slope-prompt-round.v1",
+  "round": 105,
+  "created_at": "2026-11-18T02:18:00+08:00",
+  "status": "prompt_variant_rejected_not_deployed",
+  "objective": "Use only internal dev8 to test whether geometry-based partial and edge slope guidance can recover 2B slope recall without test24 tuning or production changes.",
+  "boundaries": {
+    "split": "dev8",
+    "source_sequence": "008",
+    "test24_read_or_used_in_round": false,
+    "human_truth": false,
+    "assistant_review_is_human_truth": false,
+    "production_training_approved": false,
+    "production_deployed": false,
+    "sam3_fine_tuned": false,
+    "formal_source_or_weights_changed": false
+  },
+  "dev8_visual_review": {
+    "review_kind": "assistant_visual_review_candidate",
+    "reviewed_images": 8,
+    "assistant_visible_slope_candidates": 4,
+    "review_sha256": "73cc973c5e31afccf2123e9ea7894aca14d328a363a3d82d4ff3c354147fb2f4",
+    "visible_samples": [
+      {"sample_id": "008_1789899740482474075_camera_2", "view": "partial ramp at lower-right edge"},
+      {"sample_id": "008_1789899740482474075_camera_3", "view": "large ramp partly occluded by carried cargo"},
+      {"sample_id": "008_1789899770782473075_camera_1", "view": "partial ramp at right edge"},
+      {"sample_id": "008_1789899770782473075_camera_2", "view": "large ramp beside container"}
+    ]
+  },
+  "baseline_two_epoch_static": {
+    "result_sha256": "77bf0434b267f3f97e1ce9bd1ee65122386bbd83126e46b9c288200c090e8b34",
+    "score_sha256": "4495dd9f1296415e64193da8e3bf30dfdb0fd8a560b08492635174d0991dff49",
+    "true_positive_candidates": 1,
+    "false_positive_candidates": 0,
+    "false_negative_candidates": 3,
+    "true_negative_candidates": 4,
+    "precision_on_assistant_review": 1.0,
+    "recall_on_assistant_review": 0.25,
+    "teacher_evidence_accuracy_all_labels": 0.9375,
+    "generation_seconds_median": 6.7585
+  },
+  "prompt_variant": {
+    "name": "geometry_partial_edge_slope_v1",
+    "principles": [
+      "judge slope from geometry rather than color",
+      "count a visible partial fragment at an image edge or behind an occluder",
+      "do not relabel ordinary level floor as slope",
+      "keep slope independently reported even though downstream traversability unions floor and slope"
+    ],
+    "dataset_manifest_sha256": "789a986913b8f1fa4be5f09f5732f91c10a86ca13613cc79212c8d5ad0a63e3e",
+    "dev_jsonl_sha256": "265720146696ce4529a7527fada6d2336a8ff7ef8e1151c68ff8076022cc73a2",
+    "slope_guidance_sha256": "a4c52e4be9efdf5bec54291c512b2b50958e55f14854ab5a333a400d80cf4273",
+    "source_image_bytes_copied": 0,
+    "result_sha256": "c09dbf16097758ec180aa37b035a54f5a2e29ea9e0fe650e6cac4c6bef38bb9b",
+    "score_sha256": "9b475701b279898263bb069bce446ff15da9e39c15c5b8a48cc3177688743784",
+    "one_pass_success": "8/8",
+    "teacher_evidence_matches_all_labels": "56/64",
+    "teacher_evidence_accuracy_all_labels": 0.875,
+    "generation_seconds_median": 6.6715,
+    "generation_seconds_max": 7.246,
+    "true_positive_candidates": 3,
+    "false_positive_candidates": 3,
+    "false_negative_candidates": 1,
+    "true_negative_candidates": 1,
+    "precision_on_assistant_review": 0.5,
+    "recall_on_assistant_review": 0.75,
+    "false_positive_samples": [
+      "008_1789899740482474075_camera_0",
+      "008_1789899740482474075_camera_1",
+      "008_1789899770782473075_camera_3"
+    ],
+    "remaining_false_negative_sample": "008_1789899740482474075_camera_2"
+  },
+  "decision": {
+    "recall_improved": true,
+    "precision_regressed": true,
+    "overall_teacher_agreement_regressed": true,
+    "accepted": false,
+    "production_deployment": "rejected",
+    "reason": "The broad prompt raised bounded assistant-review recall from 25% to 75%, but precision fell from 100% to 50%, three level-floor views became slope positives, and overall frozen-teacher agreement fell from 93.75% to 87.5%."
+  },
+  "existing_slope_safety_context": {
+    "floor_visible_adds_slope_recall_probe": true,
+    "sam_prompt_uses_color": false,
+    "sam_prompt": "traversable surface",
+    "downstream_traversability_mapping": "floor union slope",
+    "interpretation": "VLM slope absence does not by itself suppress the existing SAM slope recall probe when floor is visible."
+  },
+  "factory_5090_snapshot": {
+    "connected": true,
+    "fast_vlm_service_available": false,
+    "gpu0": {"name": "NVIDIA GeForce RTX 5090", "memory_total_mib": 32607, "memory_used_mib": 24581, "utilization_percent": 99},
+    "gpu1": {"name": "NVIDIA GeForce RTX 5090", "memory_total_mib": 32607, "memory_used_mib": 20532, "utilization_percent": 100},
+    "owned_sam3_gpu0_memory_mib": 7182,
+    "foreign_root_pqr3d_gpu0_memory_mib": 17368,
+    "foreign_root_pqr3d_gpu1_memory_mib": 20502,
+    "foreign_process_stopped": false,
+    "new_vlm_started": false,
+    "decision": "Do not place the 2B service on either saturated 5090 or stop the root PQR3D training."
+  },
+  "restore_and_verification": {
+    "restored_health_sha256": "9551a453addb63095a61758ecead26f85973eb52f9db7cb01eb5460b45538203",
+    "formal_8b_restored": true,
+    "python_tests": "813/813",
+    "web_tests": "89/89",
+    "targeted_tests": "3/3",
+    "python_compile": "passed",
+    "shell_syntax": "passed",
+    "git_diff_check": "passed"
+  },
+  "next_gate": "Keep the original prompt and existing floor-triggered SAM slope probe. Improve localization through geometry or multi-view evidence rather than a globally more permissive VLM prompt; wait for non-interfering 5090 capacity before starting a resident fast 2B service."
+}

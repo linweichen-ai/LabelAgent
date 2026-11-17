@@ -1156,3 +1156,13 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\cache-observability-roun
 前端原来仍提示“1～3 分钟”或“30～90 秒”，容易把首批候选和后台精修混在一起。本轮改为明确说明新图首批机器候选通常约 15～25 秒出现，出现后即可开始检查，Agent 与高风险复核会继续后台运行。正式页面已读回 `reference-prep.js?v=118` 和新文案；工作树与部署文件哈希一致。完整回归为 Python 776/776、网页 95/95，SAM/VLM 均为 ok、VLM 无在途请求，六份正式状态文件哈希全部不变。回滚点为 `D:\Apps\LabelAgent\.local\backups\latency-guidance-round96-20261117`，结构化证据见 [第九十六轮正式媒体延迟复核](evidence/workbench-stability-20261117/production-media-latency-round96.json)。
 
 边界：本轮提高了测量可信度和操作者对进度的理解，没有降低冷图约 15.5 秒的 VLM 计算本身，也没有证明模型精度或跨数据集泛化。下一步仍保留完整输出协议，优先寻找不改变语义的硬件或执行引擎路径；当前 5090 快速通道不可用时，不中断其他工作负载。
+
+## 第九十七轮结构化贪心选择器与缓存掩码实验（均否决，2026-11-17）
+
+第九十轮已经确认，相同 202 个 completion token 下，严格结构化解码比无约束路径多约 2.949 秒。本轮保持生产 tokenizer、真实 schema、目标 JSON、529 个 prompt token、202 个 completion token 和 151,669 词表不变，只替换 Transformers 每步生成整词表约束掩码的实现。隔离工具只加载 tokenizer 和 LM Format Enforcer，不加载模型权重、不连接工作台，也不修改正式服务。
+
+第一种实现从 schema 允许集合中直接选择贪心最大值，再把该 token 作为唯一可选项；带 CPU 读回的版本中位从 2,188.995 ms 变为 2,346.840 ms，慢 7.211%。把 winner 全程保留在 GPU 后，中位仍从 2,192.124 ms 变为 2,306.381 ms，慢 5.212%。第三种实现缓存重复 JSON 状态的布尔掩码；202 步中有 69 个唯一允许集合、133 次复用，但八轮旋转顺序实测中位仍从 2,443.822 ms 变为 2,495.767 ms，慢 2.126%。三种实现每一步选择的 token 都与基线完全一致，因此否决原因是确定的无收益，而不是语义漂移。
+
+三种候选均未部署，正式路径继续使用 Transformers `PrefixConstrainedLogitsProcessor`；没有重启或修改正式 VLM、没有加载第二份模型，也没有写候选、人工真值、训练集或 OSS。复现工具为 `tools/benchmark_greedy_schema_logits_processor.py`，结构化记录见 [第九十七轮结构化处理器否决记录](evidence/workbench-stability-20261117/rejected-greedy-schema-processor-round97.json)。正式页面 HTTP 200、SAM/VLM 均为 ok、VLM 在途请求为 0，六份正式状态哈希保持不变。
+
+边界：这是 tokenizer 与 logits 层的隔离微基准，不是整模型时延或精度评测；但候选在加入模型计算前已经更慢，足以否决这三种确切实现。下一轮不再重复缓存掩码或贪心 winner 路线，继续寻找更小执行模型、已验证硬件路径或能够通过冻结语义门禁的后训练方案。

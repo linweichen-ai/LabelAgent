@@ -1,0 +1,77 @@
+{
+  "schema_version": "labelagent.rejected-greedy-schema-processor-round97.v1",
+  "round": 97,
+  "date": "2026-11-17",
+  "objective": "Reduce the per-token cost of strict JSON schema decoding without changing the production schema, target token sequence or model weights.",
+  "scope": {
+    "device": "NVIDIA GeForce RTX 4090",
+    "production_tokenizer": "Qwen3-VL-8B-Instruct",
+    "prompt_tokens": 529,
+    "completion_tokens": 202,
+    "vocab_size": 151669,
+    "repetitions_per_candidate": 8,
+    "model_weights_loaded": false,
+    "production_service_modified": false
+  },
+  "candidates": [
+    {
+      "name": "greedy_allowed_winner_with_host_readback",
+      "baseline_median_ms": 2188.995,
+      "candidate_median_ms": 2346.84,
+      "saved_ms": -157.845,
+      "saved_pct": -7.211,
+      "all_chosen_tokens_equal": true,
+      "decision": "rejected"
+    },
+    {
+      "name": "greedy_allowed_winner_device_resident",
+      "baseline_median_ms": 2192.124,
+      "candidate_median_ms": 2306.381,
+      "saved_ms": -114.257,
+      "saved_pct": -5.212,
+      "all_chosen_tokens_equal": true,
+      "decision": "rejected"
+    },
+    {
+      "name": "cached_boolean_schema_mask",
+      "baseline_median_ms": 2443.822,
+      "baseline_p95_ms": 2695.821,
+      "candidate_median_ms": 2495.767,
+      "candidate_p95_ms": 2737.551,
+      "saved_ms": -51.945,
+      "saved_pct": -2.126,
+      "unique_allowed_token_sets": 69,
+      "reused_allowed_token_sets": 133,
+      "all_chosen_tokens_equal": true,
+      "decision": "rejected"
+    }
+  ],
+  "final_decision": "Keep the existing Transformers PrefixConstrainedLogitsProcessor. All candidates reproduced the exact greedy token choices but were slower, so none is eligible for a production model restart or deployment.",
+  "reproduction": {
+    "tool": "tools/benchmark_greedy_schema_logits_processor.py",
+    "remote_directory": "/home/clw/labelagent_remote_20261110/tmp/round97-greedy-schema",
+    "final_raw_result": "result-v3.json"
+  },
+  "verification": {
+    "python_compile": "passed",
+    "python_tests": "776/776",
+    "web_tests": "95/95",
+    "evidence_json_readback": "passed"
+  },
+  "formal_runtime_after": {
+    "page_status": 200,
+    "sam_status": "ok",
+    "vlm_status": "ok",
+    "vlm_inflight": 0,
+    "quantization": "none",
+    "production_source_changed": false
+  },
+  "isolation": {
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "oss_modified": false,
+    "non_owned_gpu_process_modified": false
+  },
+  "boundary": "This is a tokenizer-and-logits microbenchmark, not a full-model latency or accuracy result. It is sufficient to reject these exact processor implementations because all three are slower before model execution is included."
+}

@@ -945,3 +945,13 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 新工作流已部署到正式页面，源码 SHA-256 为 `AA8D064B...51507`，回滚点为 `D:\Apps\LabelAgent\.local\backups\discovery-budget-round75-20261117`。正式第 140 帧只读验收返回同一发现哈希，页面 HTTP 200、任务 idle，SAM/VLM ready；VLM 仍为 256 图像 token、结构化解码 ready。六份正式状态文件哈希完全未变，结果保持 `candidate_only=true`、`human_truth=false`、`approved_for_training=false`。结构化证据见 [第七十五轮生成预算与安全回退验收](evidence/workbench-stability-20261117/discovery-generation-budget-round75.json)。
 
 边界：约 4.1% 是同一文件 24 帧的工程延迟结果，不代表新数据集总体收益；这不是 SAM 微调或 VLM 后训练。5090 可选加速通道仍未启用或不可用，当前生产继续使用已验证的 4090 主通道。
+
+## 第七十六轮 1104 新批次隔离回归（2026-11-17）
+
+第七十五轮部署后，使用 1104 批次两个问题包各一张既有 640×512 图片做独立隔离回归。测试工具只读取正式状态中的标签表和模型连接设置，把上传、候选与运行记录全部写入临时目录，结束后临时工作台已自动删除。003、004 的兼容性探针分别为 0.271 和 0.225 毫秒，均为 ready；批量上传只发起一次请求。
+
+两次冷类别识别都实际使用 384 完成预算和 256 图像预算，分别在 315、335 个完成 token 正常 `stop`，没有触发回退。003 用 16.698 秒识别出 pallet、person、floor、ego，最终保留 16 个候选（floor 1、pallet 13、person 2）；004 用 16.552 秒识别出 pallet、floor、ego，最终保留 13 个候选（floor 1、pallet 12）。两张图的候选数、类别计数和可见类别集合均与第六十一轮独立新数据验证一致；完整端到端分别为 44.913 和 27.872 秒，但单次运行受缓存和模型随机性影响，因此不与旧轮次做速度增益声明。
+
+结果全部保持 `candidate_only=true`、`human_truth=false`、`approved_for_training=false`，开放类别扫描完整；六份正式状态文件哈希完全未变。代表图为 [003 候选叠加](evidence/workbench-stability-20261117/newdata-003-round76-overlay.jpg) 和 [004 候选叠加](evidence/workbench-stability-20261117/newdata-004-round76-overlay.jpg)，结构化证据见 [第七十六轮新批次隔离回归](evidence/workbench-stability-20261117/newdata-generation-budget-round76.json)。
+
+边界：这两张图片没有人工像素真值，因此只证明新批次兼容性和候选流程稳定，不能证明跨数据集精度；画面中也没有已确认真实斜坡。两张图均未保留 slope 候选，但不能把两个样本写成斜坡误检率结论。

@@ -35,9 +35,10 @@ MAX_PROTOCOL_RETRIES = 2
 class ModelOutputError(ValueError):
     """A model response that can be corrected without repeating tool execution."""
 
-    def __init__(self, message, raw_text):
+    def __init__(self, message, raw_text, finish_reason=None):
         super().__init__(message)
         self.raw_text = raw_text
+        self.finish_reason = finish_reason
 
 
 class ReviewProtocolError(ValueError):
@@ -574,9 +575,13 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
     try:
         result = json.loads(content)
     except json.JSONDecodeError as error:
-        raise ModelOutputError(f"大模型未返回有效 JSON：{error}", content[:20000]) from error
+        raise ModelOutputError(
+            f"大模型未返回有效 JSON：{error}", content[:20000],
+            finish_reason=choice.get("finish_reason")) from error
     if not isinstance(result, dict):
-        raise ModelOutputError("大模型必须返回 JSON 对象", content[:20000])
+        raise ModelOutputError(
+            "大模型必须返回 JSON 对象", content[:20000],
+            finish_reason=choice.get("finish_reason"))
     return result
 
 
@@ -590,7 +595,19 @@ def compact_review_token_budget(config, hole_count):
 
 
 def compact_discovery_token_budget(config, label_count):
-    """Bound registry discovery output without starving larger registries."""
+    """Use the validated short budget only for small compact registries."""
+    if config.get("llm_prompt_profile") != "compact":
+        return None
+    if config.get("llm_max_tokens") is not None:
+        return int(config["llm_max_tokens"])
+    label_count = min(20, max(1, int(label_count)))
+    if label_count <= 8:
+        return 384
+    return min(1024, 384 + 32 * label_count)
+
+
+def compact_discovery_fallback_budget(config, label_count):
+    """Return the former full budget used after a short response truncates."""
     if config.get("llm_prompt_profile") != "compact":
         return None
     if config.get("llm_max_tokens") is not None:
@@ -733,21 +750,37 @@ def discover_visible_labels(config, image, labels):
     )
     open_set_scan_complete = True
     recovery_error = None
+    request_config = config
+    token_budget = compact_discovery_token_budget(config, len(labels))
+    fallback_budget = compact_discovery_fallback_budget(config, len(labels))
+    if token_budget is not None and token_budget != config.get("llm_max_tokens"):
+        request_config = copy.deepcopy(config)
+        request_config["llm_max_tokens"] = token_budget
+    output_error = None
     try:
-        request_config = config
-        token_budget = compact_discovery_token_budget(config, len(labels))
-        if token_budget is not None and token_budget != config.get("llm_max_tokens"):
-            request_config = copy.deepcopy(config)
-            request_config["llm_max_tokens"] = token_budget
         result = chat(request_config, instruction, image, response_schema=schema)
     except ModelOutputError as error:
+        output_error = error
+        truncated = (error.finish_reason == "length"
+                     or "unterminated string" in str(error).lower())
+        if (truncated and fallback_budget is not None and token_budget is not None
+                and fallback_budget > token_budget):
+            retry_config = copy.deepcopy(config)
+            retry_config["llm_max_tokens"] = fallback_budget
+            try:
+                result = chat(retry_config, instruction, image, response_schema=schema)
+                output_error = None
+            except ModelOutputError as retry_error:
+                output_error = retry_error
+    if output_error is not None:
+        error = output_error
         recovered_assessments = _complete_json_object(error.raw_text, "assessments")
         if recovered_assessments is None:
             # Defensive compatibility for an in-flight response from the older
             # array contract during a rolling local upgrade.
             recovered_assessments = _complete_json_array(error.raw_text, "assessments")
         if recovered_assessments is None:
-            raise
+            raise error
         # Never guess or auto-complete a truncated open-set proposal.  A fully
         # closed known-label array is still useful for candidate generation,
         # while the missing open-set tail becomes an explicit ontology gate.

@@ -369,14 +369,46 @@ class WorkflowTests(unittest.TestCase):
         config = {"llm_prompt_profile": "compact"}
         with patch.object(workflow, "chat", return_value=answer) as chat:
             workflow.discover_visible_labels(config, image_bytes(), labels)
-        self.assertEqual(chat.call_args.args[0]["llm_max_tokens"], 640)
+        self.assertEqual(chat.call_args.args[0]["llm_max_tokens"], 384)
         self.assertNotIn("llm_max_tokens", config)
         self.assertIn("at most 10 words", chat.call_args.args[1])
         self.assertIn("no indentation or extra whitespace", chat.call_args.args[1])
-        self.assertEqual(workflow.compact_discovery_token_budget(config, 8), 640)
+        self.assertEqual(workflow.compact_discovery_token_budget(config, 8), 384)
         self.assertEqual(workflow.compact_discovery_token_budget(config, 20), 1024)
+        self.assertEqual(workflow.compact_discovery_fallback_budget(config, 8), 640)
+        self.assertEqual(workflow.compact_discovery_fallback_budget(config, 20), 1024)
         self.assertEqual(workflow.compact_discovery_token_budget(
             {**config, "llm_max_tokens": 704}, 8), 704)
+
+    def test_visible_label_discovery_retries_full_budget_after_short_truncation(self):
+        labels = ["车辆", "pallet", "person", "floor", "slope", "ego",
+                  "other_robot", "cargo_floor"]
+        answer = {"assessments": {
+            label: {"evidence": "absent", "confidence": 0.9,
+                    "reason": "No visible instance."} for label in labels},
+            "unknown_candidates": []}
+        truncated = workflow.ModelOutputError(
+            "大模型未返回有效 JSON：unterminated string",
+            '{"assessments":{', finish_reason="length")
+        with patch.object(workflow, "chat", side_effect=[truncated, answer]) as chat:
+            result = workflow.discover_visible_labels(
+                {"llm_prompt_profile": "compact"}, image_bytes(), labels)
+        self.assertEqual(chat.call_count, 2)
+        self.assertEqual(chat.call_args_list[0].args[0]["llm_max_tokens"], 384)
+        self.assertEqual(chat.call_args_list[1].args[0]["llm_max_tokens"], 640)
+        self.assertEqual(result["visible_labels"], [])
+        self.assertTrue(result["open_set_scan_complete"])
+
+    def test_visible_label_discovery_does_not_retry_non_truncation_error(self):
+        labels = ["pallet", "floor"]
+        invalid = workflow.ModelOutputError(
+            "大模型未返回有效 JSON", '{"not_assessments":true}',
+            finish_reason="stop")
+        with patch.object(workflow, "chat", side_effect=invalid) as chat:
+            with self.assertRaises(workflow.ModelOutputError):
+                workflow.discover_visible_labels(
+                    {"llm_prompt_profile": "compact"}, image_bytes(), labels)
+        self.assertEqual(chat.call_count, 1)
 
     def test_visible_label_discovery_routes_contradictory_absent_to_uncertain_candidate(self):
         answer = {"assessments": [
@@ -1211,6 +1243,18 @@ class WorkflowTests(unittest.TestCase):
             {"llm_prompt_profile": "compact"}, 4), 1536)
         self.assertEqual(workflow.compact_review_token_budget(
             {"llm_prompt_profile": "compact", "llm_max_tokens": 1024}, 4), 1024)
+
+    def test_chat_preserves_length_finish_reason_on_invalid_json(self):
+        response = io.BytesIO(
+            b'{"choices":[{"finish_reason":"length","message":{"content":'
+            b'"{\\"assessments\\":{\\"floor\\":{\\"evidence\\":\\"visible\\""}}]}')
+        with patch.object(workflow.urllib.request, "urlopen", return_value=response):
+            with self.assertRaises(workflow.ModelOutputError) as caught:
+                workflow._chat(
+                    {"llm_url": "http://example.test", "llm_model": "test"},
+                    "inspect", image_bytes())
+        self.assertEqual(caught.exception.finish_reason, "length")
+        self.assertIn('"assessments"', caught.exception.raw_text)
 
         from source.agent.protocol_schema import review_schema
         schema = review_schema(["floor"], [shape(label="floor")], [{

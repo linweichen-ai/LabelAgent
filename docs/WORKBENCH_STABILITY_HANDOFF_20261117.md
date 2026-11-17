@@ -933,3 +933,15 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 实验后原 256-token 服务已重新加载并完成结构化解码预热，健康读回为 `status=ok`、`model_loaded=true`、`structured_decoder_ready=true`，实际示例图像编码恢复为 238 token；正式页面 HTTP 200，SAM/VLM ready、任务 idle。六份正式状态哈希与实验前完全一致。结构化证据见 [第七十四轮 192-token 否决与恢复](evidence/workbench-stability-20261117/rejected-vlm-image-token-192-round74.json)，逐帧复现工具为 `tools/benchmark_reference_discovery.py`。
 
 边界：该实验只说明“在这一组十二帧和当前完整协议下，192-token 的小幅速度收益不足以通过严格语义一致性门禁”，不代表所有更低分辨率方案必然无效。生产继续保留 256-token。下一步应转向不改变视觉输入的延迟优化，例如减少结构化生成尾部开销、进一步复用确定性发现结果，或在 5090 VLM 真正可用时做同协议硬件对照。
+
+## 第七十五轮小标签表结构化生成预算与安全回退（2026-11-17）
+
+第七十四轮证明降低图像 token 会造成完整语义结果漂移，本轮因此不再改变图像。生产继续使用 256 图像 token、同一 Qwen3-VL-8B 权重、完整提示、完整标签定义和完整 JSON schema；只在 compact 模式且标签表不超过 8 类、配置未显式覆盖时，把首次结构化完成预算从 640 降到 384。若模型明确以 `finish_reason=length` 截断，或 JSON 以未闭合字符串结束，工作流自动用原 640 预算重试一次；大标签表和显式配置保持原行为。
+
+第 128–151 帧两组独立配对共 24 帧中，384 候选与原 640 基线的输入 SHA-256 和完整归一化发现 SHA-256 均为 24/24 一致。合并 P50 从 15.877 秒降至 15.227 秒，P95 从 17.018 秒降至 16.324 秒，分别改善 4.098% 和 4.080%；配对中位差为 -750.216 毫秒，18 帧更快、6 帧更慢。该结果保留所有较慢样本，没有剔除尾部。正式配置的隔离第 140 帧另验证了默认分支和完整结果绑定；该请求命中精确缓存，因此只作为集成证据，不计入冷延迟。
+
+底层测试确认真实 HTTP `finish_reason` 会传入协议错误，384 截断会按 384→640 重试一次，非截断错误不会重复请求，调用方配置不会被修改。完整回归为 Python 745/745、171 个子测和网页 92/92。首次未设置 UTF-8 的 Windows 测试出现 15 个中文乱码失败；统一 `PYTHONUTF8=1` 后全部通过，确认是测试启动编码而非产品回归。
+
+新工作流已部署到正式页面，源码 SHA-256 为 `AA8D064B...51507`，回滚点为 `D:\Apps\LabelAgent\.local\backups\discovery-budget-round75-20261117`。正式第 140 帧只读验收返回同一发现哈希，页面 HTTP 200、任务 idle，SAM/VLM ready；VLM 仍为 256 图像 token、结构化解码 ready。六份正式状态文件哈希完全未变，结果保持 `candidate_only=true`、`human_truth=false`、`approved_for_training=false`。结构化证据见 [第七十五轮生成预算与安全回退验收](evidence/workbench-stability-20261117/discovery-generation-budget-round75.json)。
+
+边界：约 4.1% 是同一文件 24 帧的工程延迟结果，不代表新数据集总体收益；这不是 SAM 微调或 VLM 后训练。5090 可选加速通道仍未启用或不可用，当前生产继续使用已验证的 4090 主通道。

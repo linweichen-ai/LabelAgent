@@ -1,0 +1,29 @@
+{
+  "schema_version": "labelagent.rejected_compact_discovery_definitions_round38.v1",
+  "date": "2026-11-17",
+  "status": "rejected_not_deployed",
+  "hypothesis": "Shorter per-label input definitions may reduce VLM discovery prefill latency without changing semantics.",
+  "sample": "1104/003 camera_0 1793759959809514987",
+  "comparison": {
+    "incumbent_total_ms": 74092.92,
+    "candidate_total_ms": 74039.907,
+    "total_difference_ms": -53.013,
+    "incumbent_discovery_ms": 32029,
+    "candidate_discovery_ms": 32427,
+    "discovery_difference_ms": 398,
+    "candidate_counts_equal": true,
+    "candidate_counts": {"pallet": 13, "person": 2, "floor": 1, "ego": 0},
+    "open_set_scan_complete": true,
+    "independent_person_audits_preserved": true,
+    "tiny_blurred_person_route": "human_review_required"
+  },
+  "decision": "Reject. The total 0.05-second difference is noise and the targeted discovery phase was 0.398 seconds slower. Retain full project definitions because no measurable speed benefit justified reducing semantic detail.",
+  "formal_runtime_changed": false,
+  "formal_state_changed": false,
+  "targeted_regression": "154/154",
+  "artifacts": {
+    "summary_sha256": "2F08AC5AE98BE088A2BCE905F2DFCDBDBEA7A30AC038C503FBF9221BF3121C4F",
+    "candidate_sha256": "534AB08E892480AD9DF00B1A66A14258F0DD6FB5565865CC9C3136BB522741C1",
+    "overlay_sha256": "C99BD0C91BFFAFA91EABAB356E33825E6A498C0252056FC9B551D4D75554C374"
+  }
+}

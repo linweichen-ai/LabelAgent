@@ -552,3 +552,9 @@ Python 核心与图片接入 144/144、候选复核 Python 28/28、网页进度/
 Python 核心、图片和候选回归 160/160，网页交互 84/84，Python/JavaScript 语法检查通过。正式 `protocol_schema.py`、`workflow.py` 与工作树哈希一致，SAM、VLM、页面 ready，任务 idle；六份正式状态/历史文件哈希未变。回滚点为 `D:\Apps\LabelAgent\.local\backups\workbench-compact-json-round37-20261117-201500`，证据见 [第三十七轮紧凑发现输出](evidence/workbench-stability-20261117/compact-discovery-json-round37.json)。
 
 边界：本轮是两张真实新批次图的单次观测，不是延迟分布；004 没有观测到速度改善。两张图仍无人工像素真值和可见斜坡，不新增总体精度或斜坡质量结论。
+
+## 第三十八轮精简类别定义实验（否决，2026-11-17）
+
+尝试把类别发现输入中的完整项目定义缩成只保留互斥边界的短句，希望减少 VLM 输入预填充。003 候选、开放集扫描和两个人物独立审核保持一致，但类别发现从 32.029 秒变为 32.427 秒，反而慢 0.398 秒；完整耗时仅相差 0.053 秒，属于其他调用波动，无法证明收益。
+
+该实验未部署，开发代码已恢复第三十七轮完整定义。原因很明确：没有可测速度收益时，不应减少车辆/ego/other_robot、pallet/cargo_floor、floor/slope 的语义细节。正式服务、状态、候选、真值和训练集均未改变。证据见 [第三十八轮否决记录](evidence/workbench-stability-20261117/rejected-compact-definitions-round38.json)。

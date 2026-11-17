@@ -484,9 +484,19 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
                 "actual_image_token_counts", "image_grid_thw", "prompt_tokens",
                 "completion_tokens", "preprocess_seconds",
                 "constraint_setup_seconds", "generation_seconds", "seconds",
+                "cache_hit", "cache_key_sha256", "response_cache_entries",
             }
             raw["local_vlm"] = {key: copy.deepcopy(value)
                                 for key, value in metadata.items() if key in allowed}
+            if type(raw["local_vlm"].get("cache_hit")) is not bool:
+                raw["local_vlm"].pop("cache_hit", None)
+            cache_key = raw["local_vlm"].get("cache_key_sha256")
+            if (not isinstance(cache_key, str) or len(cache_key) != 64
+                    or any(character not in "0123456789abcdef" for character in cache_key)):
+                raw["local_vlm"].pop("cache_key_sha256", None)
+            cache_entries = raw["local_vlm"].get("response_cache_entries")
+            if (type(cache_entries) is not int or not 0 <= cache_entries <= 256):
+                raw["local_vlm"].pop("response_cache_entries", None)
             stats = metadata.get("inference_stats")
             if isinstance(stats, dict):
                 stat_keys = {

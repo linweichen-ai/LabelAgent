@@ -1340,6 +1340,9 @@ class WorkflowTests(unittest.TestCase):
                 "completion_tokens": 120,
                 "generation_seconds": 12.5,
                 "seconds": 12.7,
+                "cache_hit": True,
+                "cache_key_sha256": "a" * 64,
+                "response_cache_entries": 2,
                 "inference_stats": {"prompt_tokens": 900,
                     "completion_tokens": 120, "generation_seconds": 12.5,
                     "peak_allocated_bytes": 123456789},
@@ -1359,6 +1362,9 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(raw["local_vlm"]["actual_image_token_counts"], [252])
         self.assertEqual(raw["local_vlm"]["generation_seconds"], 12.5)
         self.assertEqual(raw["local_vlm"]["seconds"], 12.7)
+        self.assertTrue(raw["local_vlm"]["cache_hit"])
+        self.assertEqual(raw["local_vlm"]["cache_key_sha256"], "a" * 64)
+        self.assertEqual(raw["local_vlm"]["response_cache_entries"], 2)
         self.assertEqual(raw["local_vlm"]["inference_stats"], {
             "prompt_tokens": 900, "completion_tokens": 120,
             "generation_seconds": 12.5})

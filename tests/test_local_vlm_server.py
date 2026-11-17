@@ -18,6 +18,7 @@ class ContractBackend:
     backend_name = "contract_test_double"
 
     def generate(self, messages, images, max_tokens, response_schema=None):
+        self.generate_calls = getattr(self, "generate_calls", 0) + 1
         self.received_schema = response_schema
         self.sizes = [image.size for image in images]
         return '{"protocol_test":true}', 20, 5
@@ -85,6 +86,29 @@ class LocalVLMContractTests(unittest.TestCase):
         data = messages()
         data[0]["content"][1]["image_url"] = "bad"
         self.assertEqual(self.client.post("/v1/chat/completions", json={"model": self.backend.model_id, "messages": data}).status_code, 400)
+
+    def test_exact_replay_uses_bounded_response_cache(self):
+        body = {"model": self.backend.model_id, "messages": messages()}
+        first = self.client.post("/v1/chat/completions", json=body)
+        second = self.client.post("/v1/chat/completions", json=body)
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(self.backend.generate_calls, 1)
+        self.assertFalse(first.json["local_vlm"]["cache_hit"])
+        self.assertTrue(second.json["local_vlm"]["cache_hit"])
+        self.assertEqual(second.json["local_vlm"]["response_cache_entries"], 1)
+        self.assertEqual(first.json["choices"], second.json["choices"])
+        health = self.client.get("/health").json
+        self.assertEqual(health["response_cache_capacity"], 32)
+        self.assertEqual(health["response_cache_entries"], 1)
+
+    def test_cache_key_includes_generation_contract(self):
+        body = {"model": self.backend.model_id, "messages": messages()}
+        self.client.post("/v1/chat/completions", json=body)
+        changed = self.client.post("/v1/chat/completions", json={**body, "max_tokens": 17})
+        self.assertEqual(changed.status_code, 200)
+        self.assertEqual(self.backend.generate_calls, 2)
+        self.assertFalse(changed.json["local_vlm"]["cache_hit"])
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ Contract tests use an explicitly named test double, not real inference.
 """
 import argparse
 import base64
+from collections import OrderedDict
 from contextlib import contextmanager
 from copy import deepcopy
 import hashlib
@@ -285,13 +286,56 @@ class TransformersBackend:
         return content, prompt_tokens, int(generated.shape[-1])
 
 
-def create_app(backend):
+def create_app(backend, response_cache_entries=32):
+    if (type(response_cache_entries) is not int
+            or not 0 <= response_cache_entries <= 256):
+        raise ValueError("response_cache_entries must be between 0 and 256")
     app = Flask(__name__)
     app.config["MAX_CONTENT_LENGTH"] = 64 * 1024 * 1024
     inference_lock = threading.Lock()
+    response_cache = OrderedDict()
+    response_cache_lock = threading.Lock()
+
+    def response_cache_key(body):
+        payload = json.dumps(body, ensure_ascii=False, sort_keys=True,
+                             separators=(",", ":")).encode("utf-8")
+        return hashlib.sha256(payload).hexdigest()
+
+    def cached_response(key):
+        if not response_cache_entries:
+            return None
+        with response_cache_lock:
+            item = response_cache.get(key)
+            if item is None:
+                return None
+            response_cache.move_to_end(key)
+            result = deepcopy(item)
+            result.setdefault("local_vlm", {})["response_cache_entries"] = len(response_cache)
+            return result
+
+    def remember_response(key, item):
+        if not response_cache_entries:
+            return 0
+        with response_cache_lock:
+            response_cache[key] = deepcopy(item)
+            response_cache.move_to_end(key)
+            while len(response_cache) > response_cache_entries:
+                response_cache.popitem(last=False)
+            return len(response_cache)
+
+    def completion_response(content, prompt_tokens, completion_tokens, local_vlm):
+        return jsonify(id="chatcmpl-" + uuid.uuid4().hex, object="chat.completion",
+            created=int(time.time()), model=backend.model_id,
+            choices=[{"index": 0, "message": {"role": "assistant", "content": content},
+                "finish_reason": "length" if completion_tokens >= local_vlm["max_tokens"] else "stop"}],
+            usage={"prompt_tokens": prompt_tokens, "completion_tokens": completion_tokens,
+                   "total_tokens": prompt_tokens + completion_tokens},
+            local_vlm={key: value for key, value in local_vlm.items() if key != "max_tokens"})
 
     @app.get("/health")
     def health():
+        with response_cache_lock:
+            cached_entries = len(response_cache)
         return jsonify(status="ok", model_loaded=backend.model_loaded,
                        model=backend.model_id, backend=backend.backend_name,
                        quantization=getattr(backend, "quantization", "test_double"),
@@ -304,6 +348,8 @@ def create_app(backend):
                        structured_decoder_ready=hasattr(backend,"format_tokenizer_data"),
                        supports_single_image_budget_override=getattr(backend,'allow_single_image_budget_override',False),
                        idle_cache_release=getattr(backend,'idle_cache_release',False),
+                       response_cache_capacity=response_cache_entries,
+                       response_cache_entries=cached_entries,
                        last_cache_release=getattr(backend,'last_cache_release',None),
                        last_inference_stats=getattr(backend, "last_inference_stats", None))
 
@@ -324,6 +370,12 @@ def create_app(backend):
         if body.get("temperature", 0) != 0:
             raise ValueError("This deterministic service accepts temperature 0")
         messages, images = decode_messages(body.get("messages"))
+        cache_key = response_cache_key(body)
+        cached = cached_response(cache_key)
+        if cached is not None:
+            cached["local_vlm"].update(cache_hit=True, cache_key_sha256=cache_key,
+                                       seconds=0.0)
+            return completion_response(**cached)
         image_budget=None
         if 'image_token_budget' in body:
             image_budget=checked_single_image_budget(body['image_token_budget'],backend,len(images))
@@ -353,12 +405,7 @@ def create_app(backend):
             backend.last_cache_release=cache_release
         finally:
             inference_lock.release()
-        return jsonify(id="chatcmpl-" + uuid.uuid4().hex, object="chat.completion", created=int(time.time()),
-            model=backend.model_id, choices=[{"index": 0, "message": {"role": "assistant", "content": content},
-                "finish_reason": "length" if completion_tokens >= max_tokens else "stop"}],
-            usage={"prompt_tokens": prompt_tokens, "completion_tokens": completion_tokens,
-                   "total_tokens": prompt_tokens + completion_tokens},
-            local_vlm={"backend": backend.backend_name, "image_count": len(images),
+        local_vlm={"backend": backend.backend_name, "image_count": len(images),
                        "quantization":getattr(backend,'quantization','test_double'),
                        "model_config_sha256":getattr(backend,'model_config_sha256',None),
                        "requested_image_token_budget":image_budget,
@@ -367,7 +414,14 @@ def create_app(backend):
                        "image_grid_thw":request_stats.get('image_grid_thw'),
                        "inference_stats":request_stats,
                        "cache_release":cache_release,
-                       "seconds": round(time.monotonic() - start, 3)})
+                       "seconds": round(time.monotonic() - start, 3),
+                       "cache_hit":False, "cache_key_sha256":cache_key,
+                       "max_tokens":max_tokens}
+        cache_entries = remember_response(cache_key, {
+            "content": content, "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens, "local_vlm": local_vlm})
+        local_vlm["response_cache_entries"] = cache_entries
+        return completion_response(content, prompt_tokens, completion_tokens, local_vlm)
 
     @app.errorhandler(ValueError)
     def invalid(error):

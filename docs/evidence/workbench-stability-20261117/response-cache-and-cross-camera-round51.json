@@ -1,0 +1,117 @@
+{
+  "schema_version": "labelagent.workbench_round51.v1",
+  "recorded_at": "2026-11-17T13:08:00+08:00",
+  "goal_status": "active",
+  "safety": {
+    "oss_read_only": true,
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "non_owned_gpu_processes_stopped": 0,
+    "test24_evaluation_only": true
+  },
+  "calibration_readback": {
+    "directory": "datasets/sfl-cpd15y/20260920_cs-heli_Dev_000001/011/bevannotation_data/calib_640x512",
+    "remote_bytes": 2536,
+    "files": [
+      {"name": "camera0_calib.yaml", "bytes": 385, "sha256": "7434c0154a3e1989afca104405450c0ba2729d420f3f3c6a5741a3f7c1f0dcea"},
+      {"name": "camera1_calib.yaml", "bytes": 381, "sha256": "8733efc8eeaf3dafcdc996fcfb7e1f353e1a4fdf21759dddde8a289f23a9dcaa"},
+      {"name": "camera2_calib.yaml", "bytes": 385, "sha256": "66a61e9395c906d8e6f87232a1c58b03c4f14eac9efe827e2ef3048671365bca"},
+      {"name": "camera3_calib.yaml", "bytes": 385, "sha256": "24e5b2064a834d7000985c38773fd408b4b7e435827fe616d61d609190a828e5"},
+      {"name": "lidar2camera.yaml", "bytes": 1000, "sha256": "afe7203f3afe90f0ae14af4019dfbe6ddda6994745694501da25df9efd5843ea"}
+    ],
+    "all_local_hashes_match_remote": true
+  },
+  "slope_diagnostics": {
+    "frame_id": "1789900388815700364",
+    "source_camera": "camera_2",
+    "target_camera": "camera_1",
+    "target_interpretation": "partial view of the same yellow container ramp; not a flat negative",
+    "text_prompt_trial": {
+      "prompts": ["ramp", "loading ramp", "inclined ramp surface", "warehouse loading ramp", "sloped traversable surface", "inclined plane", "dock ramp", "container ramp"],
+      "cameras": ["camera_2", "camera_1"],
+      "raw_sam_candidates_each": 0,
+      "decision": "rejected; semantic prompt variants do not provide an automatic source mask"
+    },
+    "multicamera_vlm_point_trial": {
+      "fast_5090": "all four tested cases returned visible=false and [-1,-1]",
+      "primary_4090": "all four tested cases returned visible=false and [-1,-1]",
+      "decision": "rejected; no reliable point seed"
+    },
+    "plane_projection_trial": {
+      "assistant_visual_source_polygon": [[147, 218], [319, 218], [319, 306], [147, 306]],
+      "human_truth": false,
+      "plane_heights_lidar_m": [-0.5, -1.0, -1.5],
+      "target_visible_edge_range_px": {"x": [539.18, 649.31], "y": [242.04, 337.98]},
+      "interpretation": "projection reaches the partial-ramp area at the camera_1 right boundary",
+      "accepted_for_production": false,
+      "blocker": "the source polygon is assistant-selected and SAM/VLM produced no automatic source mask; the constant-plane height is also uncertain",
+      "overlay_sha256": "66b39d26997fcf8c5750bbe5765a143aeaf8c5fb3a5ca4a0f5fbb93045ccf934"
+    },
+    "oss_listing_note": "The currently configured prefix returned zero objects and contradicted phase-one facts; no remote LiDAR absence claim was made and no credentials were changed."
+  },
+  "response_cache": {
+    "implementation": "process-local bounded exact-request LRU cache",
+    "capacity": 32,
+    "key": "SHA-256 of the complete deterministic request body, including model, messages, embedded image bytes, schema and generation parameters",
+    "successful_responses_only": true,
+    "resets_on_service_restart": true,
+    "cold_run": {
+      "artifact": "artifacts/workbench-stability-20261117/vlm-cache-final-cold-round51.json",
+      "elapsed_ms": 26750,
+      "cache_hit": false,
+      "cache_key_sha256": "86c3b288efefbdd6e7d5b18028817e4f567c42a3cad9634a2f2ecdf533fdcb04",
+      "semantic_sha256": "670a732b9aa1a3b334ff03ded345291ad0459391aa31432fdc8b3cec69f22802",
+      "artifact_sha256": "f63761b94ef6f4d2c7c46dc86e13ff189ae347b66074b84d8262c5a234277e1d"
+    },
+    "warm_replay": {
+      "artifact": "artifacts/workbench-stability-20261117/vlm-cache-final-warm-round51.json",
+      "elapsed_ms": 522,
+      "cache_hit": true,
+      "response_cache_entries": 1,
+      "cache_key_sha256": "86c3b288efefbdd6e7d5b18028817e4f567c42a3cad9634a2f2ecdf533fdcb04",
+      "semantic_sha256": "670a732b9aa1a3b334ff03ded345291ad0459391aa31432fdc8b3cec69f22802",
+      "artifact_sha256": "175321ffa669830762be471a0642aedaad00518d8992527e44dd19126cf9d712"
+    },
+    "observed_latency_reduction_percent": 98.05,
+    "semantic_output_exact_match": true,
+    "new_image_isolation": {
+      "artifact": "artifacts/workbench-stability-20261117/vlm-cache-new-image-round51.json",
+      "elapsed_ms": 20579,
+      "service_cache_entries_after_request": 2,
+      "interpretation": "a different image performed real inference and created a distinct cache entry"
+    }
+  },
+  "runtime": {
+    "workbench_url": "http://127.0.0.1:8765",
+    "sam_ready": true,
+    "primary_4090_vlm_ready": true,
+    "fast_5090_vlm": "disabled while the selected GPU contains non-owned compute work",
+    "fast_route_behavior": "removed from active configuration so requests go directly to the ready 4090 route instead of waiting on an unavailable accelerator",
+    "formal_state_sha256": "54A5EE6AC1794AE3D769B3FEFA3CADD79DA7F2D5DFF892F0B8B4F0A259238FF5",
+    "unchanged_history_hashes": {
+      "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+      "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+      "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+      "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+      "model_debug.json": "EFDF22CD6BD803C958E3ACB39D46054D294544FE48324A12B4AFE1502B3BBB9A"
+    }
+  },
+  "code": {
+    "local_vlm_server_sha256": "7efb0264d2f494480cd1398966c10c38b84808f83d7038d159e878597c7dcc52",
+    "workflow_sha256": "96a77fb54cfbacd0c6e039bceba86148e4006bf92ac663178b2306b074eb6e9b",
+    "formal_matches_worktree": true,
+    "remote_4090_matches_worktree": true,
+    "remote_5090_source_matches_worktree_but_service_is_not_running": true
+  },
+  "verification": {
+    "python_tests": {"passed": 160, "failed": 0, "python_utf8": true},
+    "web_tests": {"passed": 78, "failed": 0},
+    "formal_readiness": "SAM and primary VLM ready; fast VLM explicitly disabled; workbench ready"
+  },
+  "rollback": {
+    "windows": "D:/Apps/LabelAgent/.local/backups/vlm-response-cache-round51-20261117",
+    "remote_4090": "/home/clw/labelagent_remote_20261110/backups/vlm-response-cache-round51-20261117",
+    "remote_5090": "/home/clw/projects/labelagent-5090/app/work/backups/vlm-response-cache-round51-20261117"
+  }
+}

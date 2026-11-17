@@ -47,6 +47,8 @@
     }
   ],
   "final_decision": "Keep the existing Transformers PrefixConstrainedLogitsProcessor. All candidates reproduced the exact greedy token choices but were slower, so none is eligible for a production model restart or deployment.",
+  "superseded_by": "rejected-cached-schema-mask-round98.json",
+  "supersession_note": "Round 98 removed an extra per-token host synchronization from the microbenchmark and therefore supersedes the isolated timing interpretation. Its nine-image full-model test still rejected the cached-mask production candidate because it was slower on every paired image.",
   "reproduction": {
     "tool": "tools/benchmark_greedy_schema_logits_processor.py",
     "remote_directory": "/home/clw/labelagent_remote_20261110/tmp/round97-greedy-schema",
@@ -73,5 +75,5 @@
     "oss_modified": false,
     "non_owned_gpu_process_modified": false
   },
-  "boundary": "This is a tokenizer-and-logits microbenchmark, not a full-model latency or accuracy result. It is sufficient to reject these exact processor implementations because all three are slower before model execution is included."
+  "boundary": "This is a tokenizer-and-logits microbenchmark, not a full-model latency or accuracy result. Its original performance interpretation is superseded by round 98; retain it only as an audit record of the first measurement and do not use it alone for a deployment decision."
 }

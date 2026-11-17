@@ -1,0 +1,93 @@
+{
+  "schema_version": "labelagent.rejected-cached-schema-mask-round98.v1",
+  "round": 98,
+  "date": "2026-11-17",
+  "objective": "Retest exact JSON schema-mask reuse without the round-97 microbenchmark synchronization artifact, then require a frozen nine-image full-model gate before deployment.",
+  "corrected_microbenchmark": {
+    "device": "NVIDIA GeForce RTX 4090",
+    "prompt_tokens": 529,
+    "completion_tokens": 202,
+    "vocab_size": 151669,
+    "independent_runs": 2,
+    "total_repetitions": 16,
+    "all_chosen_tokens_equal": true,
+    "baseline_median_ms": 2780.077,
+    "cached_mask_median_ms": 2662.399,
+    "cached_mask_paired_saved_median_ms": 103.492,
+    "cached_mask_wins": "11/16",
+    "direct_allowed_argmax_median_ms": 2700.116,
+    "direct_allowed_argmax_paired_saved_median_ms": 56.005,
+    "direct_allowed_argmax_wins": "12/16",
+    "interpretation": "The corrected microbenchmark justified a full-model candidate test but was not itself an acceptance result."
+  },
+  "full_model_gate": {
+    "model": "Qwen3-VL-8B-Instruct",
+    "route": "factory-4090 primary BF16 static cache",
+    "images": 9,
+    "batch_a_images": 7,
+    "batch_b_images": 2,
+    "cache_hits": 0,
+    "coalesced_requests": 0,
+    "discovery_sha256_equal": "9/9",
+    "completion_tokens_equal": "9/9",
+    "candidate_faster_images": 0,
+    "candidate_slower_images": 9,
+    "paired_median_regression_ms": 1358.451,
+    "baseline": {
+      "wall_p50_ms": 15505.992,
+      "wall_p95_ms": 16364.517,
+      "generation_p50_seconds": 15.206,
+      "generation_p95_seconds": 16.118
+    },
+    "cached_mask_candidate": {
+      "wall_p50_ms": 16995.763,
+      "wall_p95_ms": 18476.182,
+      "generation_p50_seconds": 16.471,
+      "generation_p95_seconds": 18.121
+    },
+    "p50_regression_pct": 9.608,
+    "p95_regression_pct": 12.906,
+    "decision": "rejected"
+  },
+  "runtime_control": {
+    "candidate_source_sha256": "434893604668eff23934fdbe035cfb65fea41708fbe0ba9e60abddefad076964",
+    "restored_source_sha256": "0f3f69577325468464caa7530374f85dd2aa1782bf66317bdfa5ed6eb2f58b36",
+    "backup": "/home/clw/labelagent_remote_20261110/backups/cached-schema-mask-round98-20261117/local_vlm_server.py",
+    "candidate_startup_safety_rejection": "The first restart was rejected while the prior CUDA context was still visible; no external process was stopped. The same candidate was started only after GPU1 read back fully free.",
+    "restored_health": {
+      "status": "ok",
+      "model_loaded": true,
+      "inflight": 0,
+      "quantization": "none",
+      "generation_cache_implementation": "static",
+      "candidate_flag_present": false
+    }
+  },
+  "reproduction": {
+    "corrected_microbenchmark_tool": "tools/benchmark_greedy_schema_logits_processor.py",
+    "remote_results": [
+      "/home/clw/labelagent_remote_20261110/tmp/round97-greedy-schema/result-v4.json",
+      "/home/clw/labelagent_remote_20261110/tmp/round97-greedy-schema/result-v5.json"
+    ],
+    "baseline_receipt": "artifacts/round96-production-prewarm/visible-discovery-latency-9-production-media.json",
+    "candidate_receipt": "artifacts/round98-cached-schema-mask/candidate-production-media-9.json"
+  },
+  "verification": {
+    "python_tests": "776/776",
+    "web_tests": "95/95",
+    "benchmark_python_compile": "passed",
+    "evidence_json_readback": "passed",
+    "formal_page_status": 200,
+    "formal_sam_status": "ok",
+    "formal_vlm_status": "ok",
+    "formal_state_hashes_unchanged": true
+  },
+  "isolation": {
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "oss_modified": false,
+    "non_owned_gpu_process_modified": false
+  },
+  "final_decision": "Do not deploy cached schema masks or direct allowed-token selection. Keep the restored stock Transformers prefix constraint and retain the existing prefetch and exact-response cache optimizations."
+}

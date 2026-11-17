@@ -1,11 +1,13 @@
-"""Compare Transformers prefix masking with an exact greedy schema selector.
+"""Compare exact schema masking and direct allowed-token greedy selection.
 
 This is a decoder microbenchmark: it loads the production tokenizer and LM
 Format Enforcer parser but never loads model weights.  For deterministic,
 single-row, single-beam generation, selecting the maximum-scoring allowed token
 is mathematically equivalent to masking every disallowed vocabulary entry and
-then taking a global argmax.  Every step must choose the same target token in
-both implementations or the candidate is rejected.
+then taking a global argmax. Winners stay on the GPU until timing ends so the
+benchmark does not introduce a per-token host synchronization that production
+generation does not require. Every step must choose the same target token in
+all implementations or the candidate is rejected.
 """
 
 from __future__ import annotations
@@ -121,30 +123,58 @@ def run_mode(mode, tokenizer_data, schema, prefixes, score_rows, completion,
     )
 
     callback = build_callback(tokenizer_data, schema)
+    direct = mode == "direct_allowed_argmax"
     if mode == "transformers_prefix_mask":
         processor = PrefixConstrainedLogitsProcessor(callback, num_beams=1)
     elif mode == "cached_schema_mask":
         processor = CachedSchemaMaskLogitsProcessor(callback, torch_module)
-    else:
+    elif mode == "greedy_schema_selector":
         processor = GreedySchemaLogitsProcessor(callback, torch_module)
-    chosen = []
+    elif direct:
+        processor = None
+    else:
+        raise ValueError(f"unknown benchmark mode: {mode}")
+    chosen_tensors = []
+    allowed_tensor_cache = {}
+    cache_hits = 0
+    cache_misses = 0
     torch_module.cuda.synchronize()
     started = time.perf_counter()
     for prefix, base_scores in zip(prefixes, score_rows):
         scores = base_scores.clone()
-        processed = processor(prefix.unsqueeze(0), scores)
-        chosen.append(int(torch_module.argmax(processed, dim=-1).item()))
+        if direct:
+            allowed = callback(0, prefix)
+            if not allowed:
+                raise ValueError("schema parser returned no allowed tokens")
+            key = tuple(sorted(set(int(token) for token in allowed)))
+            allowed_tensor = allowed_tensor_cache.get(key)
+            if allowed_tensor is None:
+                allowed_tensor = torch_module.tensor(
+                    key, dtype=torch_module.long, device=scores.device)
+                allowed_tensor_cache[key] = allowed_tensor
+                cache_misses += 1
+            else:
+                cache_hits += 1
+            allowed_scores = scores[0].index_select(0, allowed_tensor)
+            chosen_tensors.append(
+                allowed_tensor[torch_module.argmax(allowed_scores)])
+        else:
+            processed = processor(prefix.unsqueeze(0), scores)
+            chosen_tensors.append(torch_module.argmax(processed, dim=-1)[0])
     torch_module.cuda.synchronize()
     elapsed_ms = (time.perf_counter() - started) * 1000
+    chosen = torch_module.stack(chosen_tensors).detach().cpu().tolist()
     return {
         "elapsed_ms": round(elapsed_ms, 3),
         "chosen": chosen,
         "target_equal": chosen == completion,
-        "mask_cache_hits": getattr(processor, "cache_hits", None),
-        "mask_cache_misses": getattr(processor, "cache_misses", None),
-        "mask_cache_entries": len(
+        "mask_cache_hits": (cache_hits if direct
+                            else getattr(processor, "cache_hits", None)),
+        "mask_cache_misses": (cache_misses if direct
+                              else getattr(processor, "cache_misses", None)),
+        "mask_cache_entries": (len(allowed_tensor_cache) if direct else len(
             getattr(processor, "allowed_mask_cache",
-                    getattr(processor, "allowed_tensor_cache", {}))),
+                    getattr(processor, "allowed_tensor_cache", {})))),
     }
 
 
@@ -204,7 +234,7 @@ def main() -> int:
     rows = []
     for repetition in range(args.repetitions):
         modes = ["transformers_prefix_mask", "cached_schema_mask",
-                 "greedy_schema_selector"]
+                 "greedy_schema_selector", "direct_allowed_argmax"]
         shift = repetition % len(modes)
         order = modes[shift:] + modes[:shift]
         records = {}
@@ -215,18 +245,21 @@ def main() -> int:
         baseline = records["transformers_prefix_mask"]
         cached_mask = records["cached_schema_mask"]
         candidate = records["greedy_schema_selector"]
+        direct = records["direct_allowed_argmax"]
         row = {
             "repetition": repetition + 1,
             "order": order,
             **records,
             "chosen_tokens_equal": (baseline["chosen"]
                                      == cached_mask["chosen"]
-                                     == candidate["chosen"]),
+                                     == candidate["chosen"]
+                                     == direct["chosen"]),
             "accepted": (baseline["target_equal"]
                          and cached_mask["target_equal"]
                          and candidate["target_equal"]
+                         and direct["target_equal"]
                          and baseline["chosen"] == cached_mask["chosen"]
-                         == candidate["chosen"]),
+                         == candidate["chosen"] == direct["chosen"]),
         }
         rows.append(row)
         print(json.dumps({
@@ -234,6 +267,7 @@ def main() -> int:
             "baseline_ms": baseline["elapsed_ms"],
             "cached_mask_ms": cached_mask["elapsed_ms"],
             "greedy_ms": candidate["elapsed_ms"],
+            "direct_ms": direct["elapsed_ms"],
             "accepted": row["accepted"],
         }), flush=True)
 
@@ -244,13 +278,16 @@ def main() -> int:
                      for row in valid]
     greedy_values = [row["greedy_schema_selector"]["elapsed_ms"]
                      for row in valid]
+    direct_values = [row["direct_allowed_argmax"]["elapsed_ms"]
+                     for row in valid]
     baseline_median = statistics.median(baseline_values) if valid else None
     cached_median = statistics.median(cached_values) if valid else None
     greedy_median = statistics.median(greedy_values) if valid else None
+    direct_median = statistics.median(direct_values) if valid else None
     cached_saved_ms = (baseline_median - cached_median
                        if baseline_median is not None else None)
     result = {
-        "schema_version": "labelagent.greedy-schema-logits-processor.v1",
+        "schema_version": "labelagent.greedy-schema-logits-processor.v2",
         "read_only": True,
         "device": torch.cuda.get_device_name(0),
         "prompt_tokens": args.prompt_tokens,
@@ -276,6 +313,16 @@ def main() -> int:
                                  if greedy_median is not None else None),
             "greedy_p95_ms": (round(percentile(greedy_values, 95), 3)
                               if valid else None),
+            "direct_median_ms": (round(direct_median, 3)
+                                 if direct_median is not None else None),
+            "direct_p95_ms": (round(percentile(direct_values, 95), 3)
+                              if valid else None),
+            "direct_saved_ms": (round(baseline_median - direct_median, 3)
+                                if valid else None),
+            "direct_saved_pct": (
+                round((baseline_median - direct_median)
+                      / baseline_median * 100, 3)
+                if valid and baseline_median else None),
             "all_chosen_tokens_equal": len(valid) == len(rows),
             "model_loaded": False,
             "production_service_modified": False,

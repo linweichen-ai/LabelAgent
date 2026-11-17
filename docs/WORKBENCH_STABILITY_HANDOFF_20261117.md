@@ -1166,3 +1166,13 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\cache-observability-roun
 三种候选均未部署，正式路径继续使用 Transformers `PrefixConstrainedLogitsProcessor`；没有重启或修改正式 VLM、没有加载第二份模型，也没有写候选、人工真值、训练集或 OSS。复现工具为 `tools/benchmark_greedy_schema_logits_processor.py`，结构化记录见 [第九十七轮结构化处理器否决记录](evidence/workbench-stability-20261117/rejected-greedy-schema-processor-round97.json)。正式页面 HTTP 200、SAM/VLM 均为 ok、VLM 在途请求为 0，六份正式状态哈希保持不变。
 
 边界：这是 tokenizer 与 logits 层的隔离微基准，不是整模型时延或精度评测；但候选在加入模型计算前已经更慢，足以否决这三种确切实现。下一轮不再重复缓存掩码或贪心 winner 路线，继续寻找更小执行模型、已验证硬件路径或能够通过冻结语义门禁的后训练方案。
+
+## 第九十八轮结构化微基准纠错与九图真实模型门禁（候选否决，2026-11-17）
+
+复核第九十七轮工具时发现，它在每个 token 的计时区间内调用 `.item()`，给所有模式额外加入了逐步 CPU/GPU 同步，可能掩盖实际生成循环中的异步差异。本轮没有维护原结论，而是修正工具：所有模式都把 winner 保留在 GPU，计时结束后才一次性读回；同时加入真正绕过全词表掩码的直接允许集合 argmax。两次独立运行共 16 轮、每轮旋转四种模式顺序，所有 token 仍完全一致。缓存掩码相对基线配对中位节省 103.492 ms、胜出 11/16；直接 argmax 配对中位节省 56.005 ms、胜出 12/16。微基准只达到“允许进入真实模型门禁”，没有作为部署依据。
+
+候选随后以显式开关短暂运行在正式 4090 VLM 端口，源文件事先备份，人工真值和工作台状态完全不参与。第一次启动时旧 CUDA 上下文尚未完全释放，既有安全检查拒绝启动且没有停止任何外部进程；GPU1 读回空闲后才重新启动候选。使用第九十六轮完全相同的九张冻结生产媒体输入，候选 9/9 discovery SHA-256、completion token、主路由和 stop finish 均与基线一致，但速度 9/9 变慢：P50 从 15.506 秒升到 16.996 秒，P95 从 16.365 秒升到 18.476 秒，配对中位慢 1.358 秒。
+
+因此缓存掩码和直接允许集合路线均不部署。远端服务已从 `/home/clw/labelagent_remote_20261110/backups/cached-schema-mask-round98-20261117/local_vlm_server.py` 恢复，源码 SHA-256 回到 `0f3f6957...2f58b36`；原 BF16 static-cache 启动命令恢复，健康页为 ok、模型 loaded、inflight 0，候选开关不存在。候选产品代码与两项临时测试已从工作树撤回，只保留纠正后的只读微基准和结构化否决证据。完整记录见 [第九十八轮真实模型否决记录](evidence/workbench-stability-20261117/rejected-cached-schema-mask-round98.json)。
+
+边界：该结果说明“减少约束处理器分配”在隔离算子上可能更快，但在当前 Qwen3-VL-8B、static KV cache 和真实图片生成中反而稳定变慢；后续不再围绕同一 Transformers logits mask 做局部改写。冷图速度优化转向更小模型、蒸馏/后训练和未来可用的独立硬件路线，并继续用九图语义哈希门禁阻止速度换语义。

@@ -975,3 +975,13 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 完整回归为 Python 746/746、网页 92/92。正式 `server.py` 与验证工作树 SHA-256 均为 `A71AD119...30EB0`，回滚点为 `D:\Apps\LabelAgent\.local\backups\persistent-audit-reuse-round78-20261117`。正式页面 HTTP 200、任务 idle、SAM/主 VLM ready，5090 快速通道仍保持 disabled；六份正式状态哈希完全未变。结构化证据见 [第七十八轮持久审核复用](evidence/workbench-stability-20261117/persistent-class-audit-reuse-round78.json)。
 
 管理入口复核同时确认：正式 Start/Stop 脚本本来就使用项目 `.venv`，其中 `psutil 7.2.2` 正常；系统 Python 手工调用缺包是诊断方式错误，不是用户入口故障，因此没有污染系统 Python。边界：本轮只让完全相同的已审核候选在恢复时秒回，不缩短新候选第一次盲审，也没有进行 SAM3 微调、VLM 后训练或任何真值/训练/OSS 写入。
+
+## 第七十九轮新数据集真实浏览器闭环验收（2026-11-17）
+
+前几轮已经分别验证了后端接口、候选复用和新批次兼容性，本轮进一步用真实 Edge/Playwright 页面操作验证用户实际路径：上传 1104/003 问题包的一张 640×512 图片、加载、打开参考帧准备、点击页面上的一键起稿、等待候选出现，再等待后台 Agent 精修和高风险类别复核完成。整个验收运行在 `127.0.0.1:18779` 的隔离工作副本中，没有触碰正式工作台状态；测试结束后隔离端口已关闭。临时工作副本的精确绝对路径已核对，但主机安全策略拒绝递归删除，因此它暂留在未跟踪的 `artifacts/round79-browser-newdata/work`，不会进入提交或正式运行目录。
+
+页面 HTTP 200，上传 42 毫秒、加载 108 毫秒，1.442 秒出现 16 个候选，1.890 秒后台复核完成，浏览器脚本总计 3.179 秒。候选为 floor 1、pallet 13、person 2；上传、起稿、精修和类别复核各只请求一次，页面错误为 0。页面进度标题从“VLM 正在识别可见类别”切换到“等待后台确认本轮任务”，随后结果出现；计时显示一直为 0 秒，是因为候选路径不足 2 秒，并非进度卡死。最终仍是 `candidate_only=true`、`human_truth=false`、`approved_for_training=false`，没有建立真值帧或参考帧。
+
+本轮速度来自同一图片的真实页面重复路径，远端 VLM/SAM 精确缓存已经温热；Agent 模型 trace 明确为 `cache_hit=true`。因此它只证明“页面上传到结果展示和后台复核这条链路现在可以顺畅跑通”，不能冒充新图第一次推理速度。此前跨 24 帧实测的冷 VLM 类别识别仍约 15–17 秒，是下一步的主要速度瓶颈。正式六份状态文件哈希与测试前完全一致。页面截图见 [第七十九轮新数据集浏览器结果](evidence/workbench-stability-20261117/newdata-browser-round79.png)，结构化证据见 [第七十九轮真实浏览器验收](evidence/workbench-stability-20261117/newdata-browser-flow-round79.json)，复现工具为 `tools/browser_new_dataset_acceptance.cjs`。
+
+边界：这张图片仍没有人工像素真值，所以本轮不能给出分割精度或斜坡误检率；没有进行 SAM3 微调或 VLM 后训练。当前结论是工作台交互闭环已通过真实页面验收，模型对全新未缓存图片的首次识别速度和跨数据集精度仍需继续优化与独立验证。

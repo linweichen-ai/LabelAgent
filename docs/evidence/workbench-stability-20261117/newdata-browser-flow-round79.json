@@ -1,0 +1,100 @@
+{
+  "schema_version": "labelagent.newdata-browser-flow-round79.v1",
+  "recorded_at": "2026-11-17",
+  "scope": {
+    "kind": "isolated_real-browser_acceptance",
+    "base_url": "http://127.0.0.1:18779",
+    "input": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261104_smoke\\003-1793759959809514987.png",
+    "input_bytes": 471700,
+    "input_batch": "20261104 / problem package 003",
+    "formal_workbench_writes": false
+  },
+  "result": {
+    "page_status": 200,
+    "upload_ms": 42,
+    "load_ms": 108,
+    "load_status": "已加载 003-1793759959809514987.png · 首帧兼容检查通过（640×512）",
+    "candidate_visible_ms": 1442,
+    "background_complete_ms": 1890,
+    "total_ms": 3179,
+    "candidate_count": 16,
+    "candidate_counts_by_label": {
+      "floor": 1,
+      "pallet": 13,
+      "person": 2
+    },
+    "agent_review_status": "complete",
+    "candidate_class_audit_status": "complete",
+    "page_errors": []
+  },
+  "candidate_boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "truth_frame_created": false,
+    "reference_frame_created": false,
+    "agent_review_deferred": true,
+    "candidate_class_audit_deferred": true
+  },
+  "progress_observation": {
+    "samples": [
+      {
+        "at_ms": 950,
+        "hidden": true,
+        "title": "正在启动 SAM 与 VLM…",
+        "elapsed": "0 秒"
+      },
+      {
+        "at_ms": 1530,
+        "hidden": false,
+        "title": "请求已提交 · VLM 正在识别可见类别…",
+        "elapsed": "0 秒"
+      },
+      {
+        "at_ms": 1536,
+        "hidden": false,
+        "title": "请求已提交 · 等待后台确认本轮任务",
+        "elapsed": "0 秒"
+      },
+      {
+        "at_ms": 2529,
+        "hidden": true,
+        "title": "请求已提交 · 等待后台确认本轮任务",
+        "elapsed": "0 秒"
+      }
+    ],
+    "interpretation": "The elapsed label remained 0 seconds because this exact repeat path completed in under two seconds. The phase title changed and candidates appeared, so this was not a stuck-at-zero run."
+  },
+  "request_counts": {
+    "upload": 1,
+    "reference_draft": 1,
+    "reference_candidates_refine": 1,
+    "reference_candidates_audit": 1,
+    "run_status_poll": 7
+  },
+  "cache_boundary": {
+    "exact_remote_caches_were_warm": true,
+    "agent_trace_local_vlm_cache_hit": true,
+    "cold_or_unseen_image_latency_claim": false,
+    "note": "The timing is a real browser workflow acceptance on an exact repeated image, not a cold first-inference benchmark. Cold VLM discovery remains approximately 15-17 seconds in the current measured batch."
+  },
+  "artifacts": {
+    "raw_result_sha256": "67F9E1B5DB4F8D2DA10742B81CBCA75F3D23365FDB36C4FA65AFC103DCF77ADF",
+    "screenshot": "newdata-browser-round79.png",
+    "screenshot_sha256": "559D918055390006EC961A8802C7707BC2B7A85A492F6BFDE2004FDBE9D5F873"
+  },
+  "formal_state_sha256_after": {
+    "state.json": "A01D57E013255DA55C6D76DB8F47BACF7EF872CFAA35371C4EBB03A213158E21",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "model_debug.json": "2D3BE581405142DEB66FE62DC24F8EFEAAC6D5C471FAE61CCBC150819F432B6E"
+  },
+  "cleanup": {
+    "isolated_port_18779_closed": true,
+    "temporary_work_copy_removed_after_evidence_capture": false,
+    "temporary_work_copy_retained_path": "artifacts/round79-browser-newdata/work",
+    "note": "The exact isolated directory was resolved and verified, but recursive removal was blocked by the host safety policy. It is untracked and not part of the commit."
+  }
+}

@@ -55,75 +55,29 @@ HIGH_RISK_LABELS = frozenset({"ego", "person", "other_robot"})
 
 def audit_high_risk_candidates(config, image_bytes, candidates, labels, class_definitions,
                                chat, *, check_cancelled=lambda: None,
-                               tolerate_errors=False, candidate_ids=None,
-                               batch_candidates=False):
+                               tolerate_errors=False, candidate_ids=None):
     """共享盲审流程；仅在明确允许时将失败转为人工复核证据。"""
     artifact_sha = _sha256(_canonical_bytes(candidates))
     audits, queue = [], []
-    selected = [candidate for candidate in candidates
-                if candidate.get("label") in HIGH_RISK_LABELS
-                and (candidate_ids is None or candidate.get("id") in candidate_ids)]
-    pending = []
-    if batch_candidates and len(selected) > 1:
+    for candidate in candidates:
+        if (candidate.get("label") not in HIGH_RISK_LABELS
+                or candidate_ids is not None and candidate.get("id") not in candidate_ids):
+            continue
         check_cancelled()
         try:
-            pending = audit_candidate_classes_blind_batch(
-                config, image_bytes, selected, labels, class_definitions, chat)
+            result = audit_candidate_class_blind(
+                config, image_bytes, candidate, labels, class_definitions, chat)
             check_cancelled()
         except Exception as error:
             check_cancelled()
             if not tolerate_errors:
                 raise
-            batch_error = str(error)[:300]
-            fallback_allowed = (isinstance(error, CandidateClassProtocolError)
-                                or "大模型未返回有效 JSON" in str(error))
-            if fallback_allowed:
-                for candidate in selected:
-                    check_cancelled()
-                    try:
-                        result = audit_candidate_class_blind(
-                            config, image_bytes, candidate, labels, class_definitions, chat)
-                        result["batch_fallback_reason"] = batch_error
-                        result["batch_fallback_used"] = True
-                    except Exception as fallback_error:
-                        result = {
-                            "schema_version": "labelagent.blind_candidate_class_audit.v1",
-                            "candidate_id": candidate.get("id"),
-                            "candidate_sha256": candidate_fingerprint(candidate),
-                            "route": "human_review_required", "candidate_mutated": False,
-                            "human_truth": False, "error": str(fallback_error)[:300],
-                            "batch_fallback_reason": batch_error,
-                            "batch_fallback_used": True}
-                    pending.append(result)
-            else:
-                pending = [{
-                    "schema_version": "labelagent.blind_candidate_class_audit.v1",
-                    "candidate_id": candidate.get("id"),
-                    "candidate_sha256": candidate_fingerprint(candidate),
-                    "route": "human_review_required", "candidate_mutated": False,
-                    "human_truth": False, "error": batch_error}
-                    for candidate in selected]
-    else:
-        for candidate in selected:
-            check_cancelled()
-            try:
-                result = audit_candidate_class_blind(
-                    config, image_bytes, candidate, labels, class_definitions, chat)
-                check_cancelled()
-            except Exception as error:
-                check_cancelled()
-                if not tolerate_errors:
-                    raise
-                result = {
-                    "schema_version": "labelagent.blind_candidate_class_audit.v1",
-                    "candidate_id": candidate.get("id"),
-                    "candidate_sha256": candidate_fingerprint(candidate),
-                    "route": "human_review_required", "candidate_mutated": False,
-                    "human_truth": False, "error": str(error)[:300]}
-            pending.append(result)
-    by_id = {candidate["id"]: candidate for candidate in selected}
-    for result in pending:
-        candidate = by_id[result["candidate_id"]]
+            result = {
+                "schema_version": "labelagent.blind_candidate_class_audit.v1",
+                "candidate_id": candidate.get("id"),
+                "candidate_sha256": candidate_fingerprint(candidate),
+                "route": "human_review_required", "candidate_mutated": False,
+                "human_truth": False, "error": str(error)[:300]}
         result["candidate_artifact_sha256"] = artifact_sha
         result["audit_sha256"] = _sha256(_canonical_bytes({
             key: value for key, value in result.items() if key != "audit_sha256"}))
@@ -189,8 +143,8 @@ def blind_candidate_class_schema(labels: list[str]) -> dict:
         "candidate_supported": {"type": "boolean"},
         "confidence": {"type": "number", "minimum": 0, "maximum": 1},
         "reason_code": {"type": "string", "enum": ["visible_known_label", "insufficient_visual_evidence", "mixed_or_multiple_objects", "ontology_conflict"]},
-        "visible_cues": {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 100}, "maxItems": 3},
-        "reason": {"type": "string", "minLength": 1, "maxLength": 180},
+        "visible_cues": {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 100}, "maxItems": 5},
+        "reason": {"type": "string", "minLength": 1, "maxLength": 300},
     }
     return {"type": "object", "properties": properties, "required": sorted(properties), "additionalProperties": False}
 
@@ -216,83 +170,6 @@ def build_blind_candidate_class_prompt(candidate_id, labels, class_definitions):
                                             if isinstance(class_definitions.get(label), str)}}, ensure_ascii=False))
 
 
-def blind_candidate_class_batch_schema(labels: list[str], candidate_ids: list[int]) -> dict:
-    if (not candidate_ids or len(set(candidate_ids)) != len(candidate_ids)
-            or any(type(value) is not int for value in candidate_ids)):
-        raise ValueError("批量盲审候选 ID 必须是不重复整数")
-    decision = blind_candidate_class_schema(labels)
-    properties = {"candidate_id": {"type": "integer", "enum": candidate_ids},
-                  **decision["properties"]}
-    item = {"type": "object", "properties": properties,
-            "required": list(properties), "additionalProperties": False}
-    return {"type": "object", "properties": {
-        "decisions": {"type": "array", "items": item,
-                      "minItems": len(candidate_ids), "maxItems": len(candidate_ids)}},
-        "required": ["decisions"], "additionalProperties": False}
-
-
-def build_blind_candidate_class_batch_prompt(candidate_ids, labels, class_definitions):
-    return (
-        "Independently classify each highlighted machine candidate. Images are paired in the "
-        "candidate_id order below: first an uncolored crop, then the same crop with only that "
-        "candidate mask highlighted in cyan. Cyan is not an object color. No current class is "
-        "provided. Return exactly one decision per candidate_id and never combine candidates. "
-        "For known_label, observed_label must be an allowed label, candidate_supported must be true, "
-        "and reason_code must be visible_known_label. For uncertain or conflict, observed_label must "
-        "be null, candidate_supported must be false, and reason_code must not be visible_known_label. "
-        "For person require visible human anatomy; for ego require visible host robot body, chassis, "
-        "or forks; for other_robot require a distinct robot or mobile platform. Tiny, blurred, "
-        "occluded, mixed, or weak evidence is uncertain. This is candidate-only evidence, never "
-        "human truth. Return only the strict JSON object.\nInput: "
-        + json.dumps({"candidate_ids": candidate_ids, "allowed_labels": labels,
-                      "class_definitions": {label: class_definitions[label] for label in labels
-                                            if isinstance(class_definitions.get(label), str)}},
-                     ensure_ascii=False))
-
-
-def validate_blind_candidate_class_batch(value, labels, candidate_ids, *,
-                                         return_repairs=False):
-    if not isinstance(value, dict) or set(value) != {"decisions"}:
-        raise CandidateClassProtocolError("批量盲审输出字段不合规")
-    decisions = value["decisions"]
-    if not isinstance(decisions, list) or len(decisions) != len(candidate_ids):
-        raise CandidateClassProtocolError("批量盲审必须逐候选返回结果")
-    by_id, repairs = {}, {}
-    for item in decisions:
-        if not isinstance(item, dict) or type(item.get("candidate_id")) is not int:
-            raise CandidateClassProtocolError("批量盲审候选 ID 不合规")
-        candidate_id = item["candidate_id"]
-        if candidate_id not in candidate_ids or candidate_id in by_id:
-            raise CandidateClassProtocolError("批量盲审候选 ID 缺失、重复或越界")
-        decision = {key: value for key, value in item.items() if key != "candidate_id"}
-        try:
-            decision = validate_blind_candidate_class_decision(decision, labels)
-        except CandidateClassProtocolError:
-            # A local model may attach a best-guess label to an explicitly
-            # uncertain decision.  Only remove contradictory claims; never
-            # upgrade uncertainty or invent positive evidence.
-            if decision.get("classification") not in {"uncertain", "conflict"}:
-                raise
-            changed = []
-            if decision.get("observed_label") is not None:
-                decision["observed_label"] = None
-                changed.append("observed_label_cleared")
-            if decision.get("candidate_supported") is not False:
-                decision["candidate_supported"] = False
-                changed.append("candidate_supported_downgraded")
-            if decision.get("reason_code") == "visible_known_label":
-                decision["reason_code"] = "insufficient_visual_evidence"
-                changed.append("reason_code_downgraded")
-            decision = validate_blind_candidate_class_decision(decision, labels)
-            if changed:
-                repairs[candidate_id] = changed
-        by_id[candidate_id] = decision
-    if set(by_id) != set(candidate_ids):
-        raise CandidateClassProtocolError("批量盲审未覆盖全部候选")
-    ordered = [by_id[candidate_id] for candidate_id in candidate_ids]
-    return (ordered, repairs) if return_repairs else ordered
-
-
 def validate_blind_candidate_class_decision(value, labels):
     schema = blind_candidate_class_schema(labels)
     if not isinstance(value, dict) or set(value) != set(schema["required"]):
@@ -305,9 +182,9 @@ def validate_blind_candidate_class_decision(value, labels):
             or not isinstance(confidence, (int, float)) or not 0 <= confidence <= 1):
         raise CandidateClassProtocolError("盲审支持标记或置信度不合规")
     cues = value["visible_cues"]
-    if (not isinstance(cues, list) or len(cues) > 3
+    if (not isinstance(cues, list) or len(cues) > 5
             or any(not isinstance(cue, str) or not cue.strip() or len(cue) > 100 for cue in cues)
-            or not isinstance(value["reason"], str) or not value["reason"].strip() or len(value["reason"]) > 180):
+            or not isinstance(value["reason"], str) or not value["reason"].strip() or len(value["reason"]) > 300):
         raise CandidateClassProtocolError("盲审可见证据或原因不合规")
     normalized_cues = [" ".join(cue.casefold().split()) for cue in cues]
     if len(set(normalized_cues)) != len(normalized_cues):
@@ -322,16 +199,24 @@ def validate_blind_candidate_class_decision(value, labels):
     return value
 
 
-def _candidate_audit_result(image_bytes, candidate, evidence, prompt, decision,
-                            minimum_confidence, candidate_artifact_sha256=None,
-                            batch_candidate_ids=None):
+def audit_candidate_class_blind(config: dict, image_bytes: bytes, candidate: dict,
+                                labels: list[str], class_definitions: dict[str, str],
+                                chat: Callable, minimum_confidence: float = 0.90,
+                                candidate_artifact_sha256: str | None = None) -> dict:
+    fingerprint = candidate_fingerprint(candidate)
+    if candidate["label"] not in labels:
+        raise ValueError("候选类别不在注册表中")
+    evidence = prepare_candidate_evidence(image_bytes, candidate)
+    prompt = build_blind_candidate_class_prompt(candidate["id"], labels, class_definitions)
+    decision = validate_blind_candidate_class_decision(chat(
+        config, prompt, evidence["original"], extra_images=(evidence["marked"],),
+        response_schema=blind_candidate_class_schema(labels)), labels)
     matches = (decision["classification"] == "known_label"
                and decision["observed_label"] == candidate["label"]
                and decision["confidence"] >= minimum_confidence)
     result = {
         "schema_version": "labelagent.blind_candidate_class_audit.v1",
-        "candidate_id": candidate["id"],
-        "candidate_sha256": candidate_fingerprint(candidate),
+        "candidate_id": candidate["id"], "candidate_sha256": fingerprint,
         "candidate_artifact_sha256": candidate_artifact_sha256,
         "bound_current_label": candidate["label"], "source_image_sha256": _sha256(image_bytes),
         "crop": {"box_xyxy": evidence["crop_box_xyxy"], "source_size": evidence["source_size"],
@@ -343,60 +228,5 @@ def _candidate_audit_result(image_bytes, candidate, evidence, prompt, decision,
         "operation_proposal": None, "candidate_mutated": False, "human_truth": False,
         "approved_for_training": False, "approved_for_deployment": False,
     }
-    if batch_candidate_ids is not None:
-        result["batch_candidate_ids"] = list(batch_candidate_ids)
-        result["batch_size"] = len(batch_candidate_ids)
     result["audit_sha256"] = _sha256(_canonical_bytes(result))
     return result
-
-
-def audit_candidate_classes_blind_batch(config: dict, image_bytes: bytes,
-                                        candidates: list[dict], labels: list[str],
-                                        class_definitions: dict[str, str], chat: Callable,
-                                        minimum_confidence: float = 0.90) -> list[dict]:
-    """Audit multiple candidates in one request while retaining per-candidate binding."""
-    if len(candidates) < 2:
-        raise ValueError("批量盲审至少需要两个候选")
-    candidate_ids = [candidate.get("id") for candidate in candidates]
-    if len(set(candidate_ids)) != len(candidate_ids):
-        raise ValueError("批量盲审候选 ID 重复")
-    if any(candidate.get("label") not in labels for candidate in candidates):
-        raise ValueError("候选类别不在注册表中")
-    evidence = [prepare_candidate_evidence(image_bytes, candidate)
-                for candidate in candidates]
-    prompt = build_blind_candidate_class_batch_prompt(
-        candidate_ids, labels, class_definitions)
-    images = []
-    for item in evidence:
-        images.extend((item["original"], item["marked"]))
-    raw = chat(config, prompt, images[0], extra_images=tuple(images[1:]),
-               response_schema=blind_candidate_class_batch_schema(labels, candidate_ids))
-    decisions, repairs = validate_blind_candidate_class_batch(
-        raw, labels, candidate_ids, return_repairs=True)
-    results = [_candidate_audit_result(
-        image_bytes, candidate, item, prompt, decision, minimum_confidence,
-        batch_candidate_ids=candidate_ids)
-        for candidate, item, decision in zip(candidates, evidence, decisions)]
-    for result in results:
-        if result["candidate_id"] in repairs:
-            result["protocol_repairs"] = repairs[result["candidate_id"]]
-            result["protocol_repair_policy"] = "conservative_uncertainty_downgrade_only"
-            result["audit_sha256"] = _sha256(_canonical_bytes({
-                key: value for key, value in result.items() if key != "audit_sha256"}))
-    return results
-
-
-def audit_candidate_class_blind(config: dict, image_bytes: bytes, candidate: dict,
-                                labels: list[str], class_definitions: dict[str, str],
-                                chat: Callable, minimum_confidence: float = 0.90,
-                                candidate_artifact_sha256: str | None = None) -> dict:
-    if candidate["label"] not in labels:
-        raise ValueError("候选类别不在注册表中")
-    evidence = prepare_candidate_evidence(image_bytes, candidate)
-    prompt = build_blind_candidate_class_prompt(candidate["id"], labels, class_definitions)
-    decision = validate_blind_candidate_class_decision(chat(
-        config, prompt, evidence["original"], extra_images=(evidence["marked"],),
-        response_schema=blind_candidate_class_schema(labels)), labels)
-    return _candidate_audit_result(
-        image_bytes, candidate, evidence, prompt, decision, minimum_confidence,
-        candidate_artifact_sha256=candidate_artifact_sha256)

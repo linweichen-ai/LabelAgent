@@ -20,13 +20,11 @@
       "truncated_open_set_route": "ontology_review_required"
     },
     "high_risk_candidate_audit": {
-      "batch_enabled_for_reference_draft": true,
-      "per_candidate_id_binding": true,
+      "mode": "independent_single_candidate_calls",
       "current_label_hidden_from_model": true,
       "candidate_mutation_allowed": false,
       "human_truth": false,
-      "batch_protocol_failure_fallback": "bound single-candidate audits",
-      "conservative_repair": "uncertain/conflict fields may only be downgraded; known-label promotion is forbidden"
+      "batching_rejected_after_visual_review": true
     },
     "smoke_tool": {
       "call_level_timing_saved": true,
@@ -37,29 +35,25 @@
   "accepted_measurements": {
     "sample_003": {
       "baseline_elapsed_ms": 97180.022,
-      "optimized_elapsed_ms": 76855.15,
-      "total_reduction_percent": 20.91,
+      "optimized_elapsed_ms": 78624.434,
+      "total_reduction_percent": 19.10,
       "baseline_model_calls": 5,
-      "optimized_model_calls": 4,
+      "optimized_model_calls": 5,
       "baseline_discovery_ms": 56051,
-      "optimized_discovery_ms": 36571,
-      "discovery_reduction_percent": 34.75,
+      "optimized_discovery_ms": 36667,
+      "discovery_reduction_percent": 34.58,
       "sequential_blind_audits_ms": 31413,
-      "batched_blind_audit_ms": 29676,
-      "blind_audit_reduction_percent": 5.53,
       "candidate_counts": {"pallet": 13, "person": 2, "floor": 1, "ego": 0},
       "candidate_count_unchanged": true,
       "agent_rounds": 1,
       "applied_operations": 0,
       "blind_audits": [
         {"candidate_id": 14, "observed_label": "person", "confidence": 1.0, "route": "candidate_preserved"},
-        {"candidate_id": 15, "observed_label": "person", "confidence": 1.0, "route": "candidate_preserved"}
+        {"candidate_id": 15, "observed_label": null, "confidence": 0.1, "route": "human_review_required"}
       ],
-      "batch_protocol_repairs": 0,
-      "batch_fallback_used": false,
       "open_set_scan_complete": true,
-      "summary_sha256": "617102C81002C894F0C47D89093BED1B406FDCD0B6ADCDE1ABD57148842BAA58",
-      "candidate_sha256": "5AEFF6D943FB0D011789EAB335E207EE43E81CC537A92738F1F6FA06E44AC639",
+      "summary_sha256": "7491F7886DD5469BC15BDC16ECA8FDD5EA2262B259A6B994907165E640B83B7E",
+      "candidate_sha256": "62A31A7D827F3D75ADFD885C5DA60A677032B767FD02ABB7FEA19123E8B2C602",
       "overlay_sha256": "C99BD0C91BFFAFA91EABAB356E33825E6A498C0252056FC9B551D4D75554C374"
     },
     "sample_004": {
@@ -86,10 +80,15 @@
       "name": "nested mutually-exclusive anyOf batch schema",
       "elapsed_ms": 50367.685,
       "reason": "The local model emitted truncated JSON after 2.913 seconds; both audits failed closed. The attractive latency is not a valid result and was rejected."
+    },
+    {
+      "name": "valid batch protocol after retry",
+      "elapsed_ms": 76855.15,
+      "reason": "The batch call marked both person candidates as supported at confidence 1.0, while the independent audit conservatively routed the tiny blurred second candidate to human review at confidence 0.1. The 1.769-second gain did not justify weaker review discrimination and batching was removed."
     }
   ],
   "validation": {
-    "python_core_image_candidate": "164/164",
+    "python_core_image_candidate": "160/160",
     "web_interaction": "84/84",
     "python_compile": "passed",
     "javascript_syntax": "passed",

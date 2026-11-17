@@ -63,8 +63,7 @@ def model_call_kind(record: dict) -> str:
     instruction = str((record.get("input") or {}).get("instruction") or "")
     if instruction.startswith("Inspect this factory image and assess every known label"):
         return "visible_label_discovery"
-    if (instruction.startswith("Independently classify exactly one highlighted machine candidate")
-            or instruction.startswith("Independently classify each highlighted machine candidate")):
+    if instruction.startswith("Independently classify exactly one highlighted machine candidate"):
         return "candidate_class_blind_audit"
     if (instruction.startswith("No human-confirmed reference image")
             or instruction.startswith("Use the supplied reference contours")

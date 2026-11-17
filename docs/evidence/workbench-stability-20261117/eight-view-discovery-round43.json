@@ -1,0 +1,68 @@
+{
+  "schema_version": "labelagent.eight_view_discovery_round43.v1",
+  "date": "2026-11-17",
+  "objective": "Exercise read-only visible-label discovery across four cameras and two separated frames from Capture_20261103, while retaining request-level latency evidence and strict truth isolation.",
+  "benchmark": {
+    "source": "Capture_20261103 cameras 0-3, first and last selected frame",
+    "image_count": 8,
+    "resolution": "1920x1536",
+    "success_count": 8,
+    "failure_count": 0,
+    "open_set_scan_complete_count": 8,
+    "uncertain_label_count": 0,
+    "unknown_candidate_count": 0,
+    "actual_image_tokens_each": 238,
+    "elapsed_ms": {
+      "minimum": 19787.0,
+      "median_recomputed": 24336.5,
+      "maximum": 25354.0
+    },
+    "raw_artifact_sha256": "BDCA973817850606F285427B36D4FF271B400F68096C92DE31F03313456A2E1D",
+    "raw_artifact_note": "The raw artifact was written before the even-sized median implementation was corrected and therefore contains the upper-middle value 24350.0. The immutable run rows recompute to the exact median 24336.5; the benchmark code and regression test now use the exact definition."
+  },
+  "visual_review": {
+    "review_type": "assistant visible-content review, not human annotation truth",
+    "images_reviewed": 8,
+    "major_visible_categories_supported": true,
+    "notes": [
+      "The camera-0 first frame visibly contains a ramp, floor, foreground ego platform/person and other robots; the reported major categories are supported.",
+      "Camera-1 frames visibly contain pallets, people, floor and ego structure; the reported categories are supported.",
+      "Camera-2 frames visibly contain people, floor, ego structure, pallets in the first frame and another forklift in the last frame; the reported categories are supported.",
+      "Camera-3 last frame visibly contains a loaded pallet, floor, ego structure and another forklift; the reported categories are supported.",
+      "Camera-0 last and camera-3 first report both generic vehicle and other_robot. The visible forklift may be the same physical object under two labels, so this is retained as a semantic overcall risk rather than accepted as truth."
+    ],
+    "slope_limit": "The exercise confirms that a visible ramp can be named in one camera view. It does not measure slope mask IoU, boundary quality or traversable-area union quality."
+  },
+  "tooling": {
+    "tool": "tools/benchmark_visible_discovery.py",
+    "read_only": true,
+    "writes_candidates": false,
+    "writes_human_truth": false,
+    "writes_training_data": false,
+    "writes_source_state": false,
+    "stores_prompts_or_model_long_prose": false,
+    "median_regression": "passed"
+  },
+  "validation": {
+    "python_core_image_candidate_vlm_and_benchmark": "177/177",
+    "web_interaction": "84/84",
+    "benchmark_unit_tests": "3/3",
+    "python_compile": "passed",
+    "formal_model_readiness": "ready",
+    "formal_run_status": "idle",
+    "formal_state_hashes_unchanged": {
+      "state.json": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+      "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+      "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+      "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+      "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+      "model_debug.json": "EFDF22CD6BD803C958E3ACB39D46054D294544FE48324A12B4AFE1502B3BBB9A"
+    }
+  },
+  "boundaries": [
+    "Eight successful service requests prove bounded runtime compatibility, not eight correct annotations.",
+    "There is no independent per-view human category truth in this benchmark.",
+    "No model, prompt, schema, candidate, truth or training behavior changed in this round.",
+    "The generic-vehicle versus other-robot overlap remains an observed generalization risk for a later truth-backed gate."
+  ]
+}

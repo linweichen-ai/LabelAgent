@@ -1142,6 +1142,43 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(events[0]["status"], "waiting")
         self.assertEqual(events[0]["retry_in_seconds"], 5)
 
+    def test_local_vlm_request_stats_are_preserved_without_unbounded_fields(self):
+        response = {
+            "local_vlm": {
+                "backend": "transformers_local_cuda",
+                "image_count": 1,
+                "effective_image_token_budget": 256,
+                "actual_image_token_counts": [252],
+                "image_grid_thw": [[1, 28, 36]],
+                "prompt_tokens": 900,
+                "completion_tokens": 120,
+                "generation_seconds": 12.5,
+                "seconds": 12.7,
+                "inference_stats": {"prompt_tokens": 900,
+                    "completion_tokens": 120, "generation_seconds": 12.5,
+                    "peak_allocated_bytes": 123456789},
+                "cache_release": {"large": "not copied"},
+            },
+            "usage": {"prompt_tokens": 900, "completion_tokens": 120,
+                      "total_tokens": 1020},
+            "choices": [{"finish_reason": "stop", "message": {
+                "content": "{\"status\":\"done\"}"}}],
+        }
+        raw = {}
+        with patch.object(workflow.urllib.request, "urlopen",
+                          return_value=io.BytesIO(json.dumps(response).encode())):
+            result = workflow._chat({"llm_url": "http://example.test",
+                "llm_model": "test"}, "inspect", image_bytes(), raw=raw)
+        self.assertEqual(result, {"status": "done"})
+        self.assertEqual(raw["local_vlm"]["actual_image_token_counts"], [252])
+        self.assertEqual(raw["local_vlm"]["generation_seconds"], 12.5)
+        self.assertEqual(raw["local_vlm"]["seconds"], 12.7)
+        self.assertEqual(raw["local_vlm"]["inference_stats"], {
+            "prompt_tokens": 900, "completion_tokens": 120,
+            "generation_seconds": 12.5})
+        self.assertEqual(raw["local_vlm"]["usage"]["total_tokens"], 1020)
+        self.assertNotIn("cache_release", raw["local_vlm"])
+
     def test_trace_records_sam_transport_failure_and_restores_context(self):
         events = []
         with workflow.trace_calls(events.append), \

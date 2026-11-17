@@ -258,6 +258,7 @@ def chat(config, instruction, image, extra_images=(), response_schema=None):
         record.update(status="succeeded", output={"raw_text": raw.get("text"),
                                                    "finish_reason": raw.get("finish_reason"),
                                                    "busy_retry_count": raw.get("busy_retry_count", 0),
+                                                   "local_vlm": raw.get("local_vlm"),
                                                    "parsed": response})
         return response
     except Exception as error:
@@ -322,6 +323,39 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
             raise ValueError(f"大模型请求失败：{error.reason}") from error
     if raw is not None:
         raw["busy_retry_count"] = busy_retry_count
+        metadata = result.get("local_vlm")
+        if isinstance(metadata, dict):
+            # The local service already returns request-bound timing and image
+            # encoding attestations. Preserve that bounded metadata in the
+            # trace so latency experiments do not need a racy /health read.
+            allowed = {
+                "backend", "quantization", "model_config_sha256", "image_count",
+                "requested_image_token_budget", "effective_image_token_budget",
+                "actual_image_token_counts", "image_grid_thw", "prompt_tokens",
+                "completion_tokens", "preprocess_seconds",
+                "constraint_setup_seconds", "generation_seconds", "seconds",
+            }
+            raw["local_vlm"] = {key: copy.deepcopy(value)
+                                for key, value in metadata.items() if key in allowed}
+            stats = metadata.get("inference_stats")
+            if isinstance(stats, dict):
+                stat_keys = {
+                    "prompt_tokens", "completion_tokens", "preprocess_seconds",
+                    "constraint_setup_seconds", "generation_seconds",
+                    "actual_image_token_counts", "image_grid_thw",
+                    "effective_image_token_budget", "structured_output",
+                }
+                raw["local_vlm"]["inference_stats"] = {
+                    key: copy.deepcopy(value) for key, value in stats.items()
+                    if key in stat_keys
+                }
+            usage = result.get("usage")
+            if isinstance(usage, dict):
+                raw["local_vlm"]["usage"] = {
+                    key: usage.get(key) for key in
+                    ("prompt_tokens", "completion_tokens", "total_tokens")
+                    if type(usage.get(key)) is int
+                }
     choice = result["choices"][0]
     content = choice["message"]["content"]
     if isinstance(content, list):

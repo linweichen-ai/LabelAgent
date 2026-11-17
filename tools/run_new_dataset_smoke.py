@@ -83,6 +83,7 @@ def summarize_model_trace(trace: object) -> list[dict]:
         if not isinstance(record, dict):
             continue
         output = record.get("output") or {}
+        local_vlm = output.get("local_vlm")
         raw_text = output.get("raw_text")
         parsed = output.get("parsed")
         images = (record.get("input") or {}).get("images") or []
@@ -100,6 +101,7 @@ def summarize_model_trace(trace: object) -> list[dict]:
                                   if isinstance(parsed, (dict, list)) else None),
             "image_count": len(images) if isinstance(images, list) else None,
             "max_tokens": (record.get("input") or {}).get("max_tokens"),
+            "local_vlm": local_vlm if isinstance(local_vlm, dict) else None,
         })
     return summary
 

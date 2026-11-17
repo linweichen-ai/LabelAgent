@@ -1,0 +1,107 @@
+{
+  "schema_version": "labelagent.vlm_request_observability_round39.v1",
+  "date": "2026-11-17",
+  "objective": "Expose request-bound VLM image encoding and generation timing, then test output-side latency ideas without weakening image detail or candidate review gates.",
+  "accepted_change": {
+    "behavior_change": false,
+    "trace_addition": "bounded local_vlm request metadata",
+    "captured_fields": [
+      "actual_image_token_counts",
+      "image_grid_thw",
+      "prompt_tokens",
+      "completion_tokens",
+      "preprocess_seconds",
+      "constraint_setup_seconds",
+      "generation_seconds",
+      "effective_image_token_budget"
+    ],
+    "excluded": ["prompts", "model prose outside the existing bounded debug trace", "GPU allocator dumps", "credentials"]
+  },
+  "baseline_measurement": {
+    "sample": "1104/003 camera_0 frame 1793759959809514987",
+    "discovery_elapsed_ms": 31969,
+    "service_seconds": 31.723,
+    "preprocess_seconds": 0.027,
+    "constraint_setup_seconds": 0.001,
+    "generation_seconds": 31.659,
+    "prompt_tokens": 871,
+    "completion_tokens": 355,
+    "actual_image_token_counts": [238],
+    "effective_image_token_budget": 256,
+    "raw_text_chars": 1182,
+    "visible_labels": ["pallet", "person", "floor", "ego"],
+    "unknown_candidate_count": 0
+  },
+  "isolated_full_pipeline_readback": {
+    "sample": "1104/003 camera_0 frame 1793759959809514987",
+    "elapsed_ms": 73525.975,
+    "candidate_counts": {"pallet": 13, "person": 2, "floor": 1},
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "summary": "artifacts/round39-003-observability/summary.json"
+  },
+  "rejected_trials": [
+    {
+      "name": "label-keyed short wire schema",
+      "elapsed_ms": 31245,
+      "service_seconds": 31.015,
+      "completion_tokens": 333,
+      "raw_text_chars": 943,
+      "reason": "Only a sub-second observed gain, while one foreground robot was simultaneously marked as vehicle and ego and a meaningless 'none' open-set candidate was produced. The schema and normalization were removed."
+    },
+    {
+      "name": "decoder max_consecutive_whitespaces=1 cold call",
+      "elapsed_ms": 45134,
+      "service_seconds": 44.878,
+      "constraint_setup_seconds": 6.383,
+      "generation_seconds": 38.388,
+      "completion_tokens": 355,
+      "raw_text_chars": 1182,
+      "reason": "No output-token or character reduction; cold constrained-decoder setup was slower."
+    },
+    {
+      "name": "decoder max_consecutive_whitespaces=1 warm call",
+      "elapsed_ms": 36864,
+      "service_seconds": 36.632,
+      "constraint_setup_seconds": 0.001,
+      "generation_seconds": 36.543,
+      "completion_tokens": 355,
+      "raw_text_chars": 1182,
+      "reason": "Warm-cache call still emitted the same output size and was slower than the 31.723-second original-service baseline. The remote service was restored."
+    }
+  ],
+  "remote_service": {
+    "original_sha256": "e9ce3daa64f1e4a0c0523e4503fce99b3d2ec96032395d7aa19d506cc96c9b7f",
+    "rejected_trial_sha256": "904714dcf1adf6e0666203f64492430c0d7eda1e9445c29fd85b3087452a0530",
+    "restored_original": true,
+    "backup": "/home/clw/labelagent_remote_20261110/backups/structured-json-round39-20261117-205000",
+    "health_after_restore": "ready"
+  },
+  "validation": {
+    "targeted_python": "161/161",
+    "web_interaction": "84/84",
+    "extended_discovery_note": "A broader 689-test discovery run exposed 19 failures outside the established gate, including Windows GBK/UTF-8 reads and legacy assertions. These were not counted as passing and were not used to accept this change."
+  },
+  "formal_deployment": {
+    "status": "ready_idle",
+    "workflow_sha256": "0D78C0E66A4885FB9E6E3F6BE999C0CD1DB38257760473D67F769228923F6970",
+    "smoke_tool_sha256": "4829319113DE6A23D5EACC45559FE00AB95B524C50C707E0DC2BCFCA95A231BD",
+    "formal_code_matches_worktree": true,
+    "rollback": "D:/Apps/LabelAgent/.local/backups/workbench-vlm-observability-round39-20261117-213000",
+    "formal_state_hashes_unchanged": {
+      "state.json": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+      "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+      "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+      "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+      "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+      "model_debug.json": "EFDF22CD6BD803C958E3ACB39D46054D294544FE48324A12B4AFE1502B3BBB9A"
+    }
+  },
+  "boundaries": [
+    "The accepted code adds request-bound observability only; it does not change inference semantics.",
+    "The timing values are repeated observations on one real image, not a latency distribution.",
+    "No image-token reduction was deployed because open-set and tiny-object recall have not been independently validated.",
+    "All generated annotations remain machine candidates, not human truth or training approval."
+  ]
+}

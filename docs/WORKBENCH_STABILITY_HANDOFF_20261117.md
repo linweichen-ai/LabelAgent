@@ -1100,3 +1100,13 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 扩大门禁后第一张就失败：`车辆` 从基线 absent 变为 forced-order present，尽管 `other_robot` 同时仍为 present；第二张八类状态相同，但解释文本变化且候选从 15.819 秒变慢到 16.096 秒。门禁要求逐图完整语义稳定，因此在 2/8 时提前停止，不把先导集 3.043% 写成生产收益。临时诊断代码没有保留在产品文件，远端 VLM 已恢复为 SHA-256 `70cfc4d...c3694`，备份位于 `/home/clw/labelagent_remote_20261110/backups/forced-field-order-round91-20261117`。页面 HTTP 200、VLM ok、inflight 0，六份正式状态哈希完全未变。
 
 本轮结论是继续保留完整、非强制顺序的生产协议；不再优化 LMFE 前缀回读或字段顺序。下一步转向与 JSON 语言无关的执行层，例如实际 SDPA 内核与安全的推理后端对照，同时保留现有预取和精确缓存作为已验证的交互加速。复现微基准为 `tools/benchmark_incremental_prefix_callback.py`，结构化证据见 [第九十一轮候选否决记录](evidence/workbench-stability-20261117/rejected-structured-decoder-candidates-round91.json)。
+
+## 第九十二轮实际 SDPA 内核与 cuDNN 候选（否决，2026-11-17）
+
+本轮在不加载第二份模型的隔离进程中，按正式 Qwen3-VL 文本层 32 头、128 head-dim、529 prompt token、384 最大生成 token 构造 BF16 张量。PyTorch 2.10 在 static cache 的四维 mask 下实际选择 `EFFICIENT_ATTENTION`；同一形状强制 Flash 会明确报不支持非空 mask。无 mask 的 dynamic prefill/decode 则实际选择 `FLASH_ATTENTION`，说明当前环境本身已有可用的 PyTorch Flash SDPA，并非缺少独立 `flash-attn` 包。
+
+cuDNN attention 在隔离算子上看似更快：static prefill 中位从 0.218007 ms 降到 0.130959 ms，decode 从 0.100738 ms 降到 0.050968 ms。因为历史真实三图已经证明预热 static 比当时 dynamic 快 31.16%，本轮没有仅凭内核名字切换缓存；而是临时增加默认关闭的 cuDNN 诊断上下文，备份并短暂重启正式 VLM 后做真实同图比较。
+
+一张预热诊断图八类状态和开放集一致，端到端快 1.705%，但一条视觉理由发生同义改写。随后两张 AB/BA 先导图的八类状态与开放集仍为 2/2 一致，完整 JSON 为 0/2 一致；更关键的是基线中位 14.964 秒，cuDNN 中位 15.531 秒，候选反而慢 3.788%。因此没有扩大到 test24，也没有部署。单层算子提速不能代替整模型端到端证据。
+
+正式 4090 VLM 已恢复 SHA-256 `70cfc4d...c3694`，回滚副本位于 `/home/clw/labelagent_remote_20261110/backups/cudnn-sdpa-round92-20261117`。本轮不安装依赖、不修改模型权重、不写候选、人工真值或训练数据。后续不再强制 attention 后端，执行层优化转向服务级调度与跨帧精确复用，因为这些路径已有真实端到端收益并且不改变模型数值。复现工具为 `tools/benchmark_sdpa_backends.py`，结构化记录见 [第九十二轮 cuDNN 否决记录](evidence/workbench-stability-20261117/rejected-cudnn-sdpa-round92.json)。

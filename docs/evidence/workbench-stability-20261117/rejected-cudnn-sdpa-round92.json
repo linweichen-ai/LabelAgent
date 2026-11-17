@@ -1,0 +1,71 @@
+{
+  "schema_version": "labelagent.cudnn-sdpa-evaluation.v1",
+  "round": 92,
+  "date": "2026-11-17",
+  "read_only_evaluation": true,
+  "execution_stack": {
+    "device": "NVIDIA GeForce RTX 4090",
+    "torch": "2.10.0+cu128",
+    "dtype": "bfloat16",
+    "attention_heads": 32,
+    "head_dim": 128,
+    "prompt_tokens": 529,
+    "max_new_tokens": 384,
+    "static_cache_length": 913
+  },
+  "synthetic_kernel_profile": {
+    "prefill_static_mask": {
+      "selected_backend": "EFFICIENT_ATTENTION",
+      "default_median_ms": 0.218007,
+      "forced_cudnn_median_ms": 0.130959,
+      "forced_flash_supported": false
+    },
+    "decode_static_mask": {
+      "selected_backend": "EFFICIENT_ATTENTION",
+      "default_median_ms": 0.100738,
+      "forced_cudnn_median_ms": 0.050968,
+      "forced_flash_supported": false
+    },
+    "prefill_dynamic_causal": {
+      "selected_backend": "FLASH_ATTENTION",
+      "default_median_ms": 0.059312,
+      "forced_flash_median_ms": 0.059234
+    },
+    "decode_dynamic_nomask": {
+      "selected_backend": "FLASH_ATTENTION",
+      "default_median_ms": 0.043955,
+      "forced_flash_median_ms": 0.04413
+    }
+  },
+  "real_model": {
+    "diagnostic_warmup": {
+      "baseline_ms": 18523.46,
+      "cudnn_ms": 18207.585,
+      "saved_pct": 1.705,
+      "full_json_equal": false,
+      "known_states_equal": true,
+      "unknown_candidates_equal": true,
+      "difference": "one evidence reason used a synonymous foreground phrase"
+    },
+    "two_image_ab_ba": {
+      "cache_hit_count": 0,
+      "baseline_median_ms": 14963.659,
+      "cudnn_median_ms": 15530.528,
+      "saved_ms": -566.869,
+      "saved_pct": -3.788,
+      "full_json_equal_count": 0,
+      "known_states_equal_count": 2,
+      "unknown_candidates_equal_count": 2
+    },
+    "decision": "rejected_no_end_to_end_speed_gain"
+  },
+  "production_restore": {
+    "remote_server_sha256": "70cfc4d5146b71fc59ed40c8af59e2ee7fd3dc27b52ee71d4d5eed14871c3694",
+    "backup_directory": "/home/clw/labelagent_remote_20261110/backups/cudnn-sdpa-round92-20261117",
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "source_state_modified": false
+  },
+  "boundary": "A faster isolated attention operator did not improve full-model generation. Kernel microbenchmarks are not production latency evidence."
+}

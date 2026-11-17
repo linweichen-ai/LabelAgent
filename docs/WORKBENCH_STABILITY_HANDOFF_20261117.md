@@ -923,3 +923,13 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 十二帧预取前后隔离状态哈希逐帧不变；起稿结果全部保持 `candidate_only=true`、`human_truth=false`、`approved_for_training=false`。正式六份状态文件哈希与测试前一致，没有正式候选、人工真值或训练批准写入。结果将当前主要瓶颈明确定位到冷 VLM，而不是 SAM：继续削减 SAM 已不足以明显改变 18–21 秒的提前准备尾延迟。结构化证据见 [第七十三轮十二帧预取延迟基线](evidence/workbench-stability-20261117/reference-prefetch-batch-round73.json)，复现工具为 `tools/benchmark_reference_prefetch_batch.py`。
 
 边界：这是同一文件十二帧的工程延迟基线，不是跨数据集总体分布；预取仍只是前移计算。下一步只对图像 token 预算做单变量实验，保持完整生产提示和 JSON schema 不变；若类别、可见性、未知目标或一致性门禁任一退化，候选方案即否决且不部署。
+
+## 第七十四轮 VLM 192 图像 token 单变量实验（否决并恢复，2026-11-17）
+
+第七十三轮将冷 VLM 定位为主要瓶颈。本轮没有缩短提示、删除类别或放松 schema，而是保持同一 Qwen3-VL-8B 权重、完整生产指令、完整结构化输出和同一批第 128–139 帧，只把远程 VLM 的图像预算从 256 临时降到 192。逐请求覆盖在正式 BF16 服务中按安全设计不可用，因此实验在模型空闲且无在途请求时只重启 `clw` 自己的 `labelagent-vlm-20261110` 会话；SAM、正式状态以及其他 GPU 进程均未停止。256 基线完整发现哈希先被保存，192 候选跑完后立即恢复 256。
+
+192-token 的冷发现 P50 为 14.748 秒、P95 为 16.020 秒，相比同帧 256-token 的 15.928 秒和 18.511 秒分别下降 7.413% 和 13.459%；12 帧中 9 帧更快、3 帧更慢。可见类别、疑似类别和后续 SAM 类别集合在 12/12 帧相同，但完整归一化发现 JSON 的 SHA-256 为 0/12 相同，即置信度、理由、开放类别或一致性细节至少有一处发生变化。仅看最终类别名会掩盖这种语义漂移，因此按预设的完整结果门禁否决 192-token 候选，没有部署到工作流配置。
+
+实验后原 256-token 服务已重新加载并完成结构化解码预热，健康读回为 `status=ok`、`model_loaded=true`、`structured_decoder_ready=true`，实际示例图像编码恢复为 238 token；正式页面 HTTP 200，SAM/VLM ready、任务 idle。六份正式状态哈希与实验前完全一致。结构化证据见 [第七十四轮 192-token 否决与恢复](evidence/workbench-stability-20261117/rejected-vlm-image-token-192-round74.json)，逐帧复现工具为 `tools/benchmark_reference_discovery.py`。
+
+边界：该实验只说明“在这一组十二帧和当前完整协议下，192-token 的小幅速度收益不足以通过严格语义一致性门禁”，不代表所有更低分辨率方案必然无效。生产继续保留 256-token。下一步应转向不改变视觉输入的延迟优化，例如减少结构化生成尾部开销、进一步复用确定性发现结果，或在 5090 VLM 真正可用时做同协议硬件对照。

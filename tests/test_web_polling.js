@@ -112,6 +112,14 @@ test('保存真值和锁定参考帧只读回目标帧且保留强绑定校验',
   assert.match(save, /review\?\.truth_sha256!==expectedTruthHash/);
 });
 
+test('单帧候选复核恢复轮询只读当前帧而不是整套状态', () => {
+  const review = source('review.js');
+  const refresh = review.slice(review.indexOf('async function refresh()'), review.indexOf('function adoptFrameState'));
+  assert.match(refresh, /window\.currentWorkbenchFrameState\?\.\(\)/);
+  assert.match(refresh, /window\.readCompactFrameStateSnapshot\(frame, current\.topic, current\.path\)/);
+  assert.doesNotMatch(refresh, /fetch\('\/api\/state'/);
+});
+
 test('状态请求隐藏期间完成不重建定时器，恢复后立即轮询且保持单链', async () => {
   let calls = 0, release;
   const h = harness({

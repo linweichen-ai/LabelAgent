@@ -456,9 +456,14 @@
     if (refreshBusy) { refreshPending = true; return; }
     refreshBusy = true;
     try {
-      const response = await fetch('/api/state', { cache: 'no-store' });
-      if (!response.ok) throw new Error('state unavailable');
-      state = await response.json();
+      const current = window.currentWorkbenchFrameState?.();
+      const frame = Number(byId('frameNumber')?.value || 0);
+      if (!current) throw new Error('workbench state unavailable');
+      if (current.path && current.topic) {
+        if (typeof window.readCompactFrameStateSnapshot !== 'function') throw new Error('frame state unavailable');
+        const frameState = await window.readCompactFrameStateSnapshot(frame, current.topic, current.path);
+        state = {...current, ...frameState, labels: current.labels || [], config: current.config || {}};
+      } else state = current;
       panel.classList.remove('unavailable');
       render();
       document.dispatchEvent(new CustomEvent('labelagent:review-state', { detail: { state } }));

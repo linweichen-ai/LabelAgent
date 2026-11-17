@@ -865,3 +865,11 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 完整回归为 Python 731/731、网页 89/89；正式页面、SAM、VLM ready，任务 idle，六份正式状态哈希完全未变。回滚点为 `D:\Apps\LabelAgent\.local\backups\truth-reference-readback-round67-20261117`，结构化证据见 [第六十七轮真值与参考帧单帧读回验收](evidence/workbench-stability-20261117/truth-reference-readback-round67.json)。
 
 边界：本轮减少的是人工操作完成后的验证读回，不缩减人工复核事务、真值持久化或哈希校验；也不改变模型推理时间。
+
+## 第六十八轮单帧候选复核恢复轮询轻量化（2026-11-17）
+
+单帧候选复核台平时会直接接收当前工作台的帧状态，但页面从后台恢复、重新显示或执行低频容错轮询时，旧代码仍下载完整 `/api/state`。本轮把恢复路径改成“当前工作台元数据 + `/api/frame_state/<current-frame>`”：风险排序、轮廓面积、重复/跨类重叠、低置信、未知类别、Agent 冲突和本地复核草稿逻辑都保持原样，只是不再加载无关帧。
+
+正式候选第 1 帧有 11 个轮廓，单帧响应 65,559 字节、中位 8.88 ms；完整状态为 1,953,991 字节、中位 198.29 ms，体积减少 96.6449%。正式页面读回确认 `review.js` 使用单帧快照且不再包含完整状态请求。完整回归为 Python 731/731、网页 90/90；正式页面、SAM、VLM ready，任务 idle，六份正式状态哈希不变。回滚点为 `D:\Apps\LabelAgent\.local\backups\single-review-readback-round68-20261117`，结构化证据见 [第六十八轮单帧复核轻量读回验收](evidence/workbench-stability-20261117/single-review-readback-round68.json)。
+
+边界：本轮改善的是复核台后台恢复与重新显示时的传输和解析开销，不改变任何候选结论、人工复核策略或模型耗时。批量队列仍需要进一步改造成帧级风险索引。

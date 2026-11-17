@@ -568,8 +568,28 @@ $('openFilesDialog').onclick=()=>{$('fileManager').showModal();refreshFiles()};
 $('closeFilesDialog').onclick=()=>$('fileManager').close();
 $('doneFilesButton').onclick=()=>$('fileManager').close();
 $('configSave').onclick=async()=>{try{await api('config',{llm_url:$('llmUrl').value,llm_model:$('llmModel').value,llm_key:$('llmKey').value});$('config').close();toast('配置已保存')}catch(e){toast(e.message)}};
-let currentDescription=null;
-$('describeButton').onclick=async()=>{const button=$('describeButton');if(button.disabled)return;button.disabled=true;button.textContent='生成中…';toast('正在生成真值描述…');try{currentDescription=await api('describe',{frame});toast('描述已生成')}catch(e){toast(e.message)}finally{button.disabled=false;button.textContent='生成真值描述'}};
+let currentDescription=null,descriptionRequest=null;
+async function regenerateReferenceDescription(targetFrame=frame){
+ const selectedFrame=Number(targetFrame),targetTopic=topic,targetPath=loadedDataPath;
+ if(!Number.isInteger(selectedFrame)||selectedFrame<0)throw Error('参考帧号无效，无法生成场景描述');
+ const requestKey=`${targetPath}|${targetTopic}|${selectedFrame}`;
+ if(descriptionRequest){
+  if(descriptionRequest.key===requestKey)return descriptionRequest.promise;
+  throw Error('正在为另一个参考帧生成描述，请等待当前请求完成');
+ }
+ const promise=(async()=>{
+  const result=await api('describe',{frame:selectedFrame});
+  if(result?.stopped||result?.description_saved===false)throw Error('场景描述生成已停止，尚未保存');
+  if(topic!==targetTopic||loadedDataPath!==targetPath)throw Error('场景描述已生成，但当前文件或相机已经切换；请在当前数据上重新检查');
+  currentDescription=result;
+  if(typeof CustomEvent==='function')document.dispatchEvent(new CustomEvent('labelagent:description-ready',{detail:{frame:selectedFrame,topic:targetTopic,path:targetPath}}));
+  return result;
+ })();
+ descriptionRequest={key:requestKey,promise};
+ try{return await promise}finally{if(descriptionRequest?.promise===promise)descriptionRequest=null}
+}
+window.regenerateReferenceDescription=regenerateReferenceDescription;
+$('describeButton').onclick=async()=>{const button=$('describeButton');if(button.disabled)return;button.disabled=true;button.textContent='生成中…';toast('正在生成真值描述…');try{await regenerateReferenceDescription(frame);toast('描述已生成，可以开始自动标注')}catch(e){toast(e.message)}finally{button.disabled=false;button.textContent='生成真值描述'}};
  const agentPhase={preflight:'检查模型与数据是否就绪',submitting:'请求已提交，等待后台确认',claiming:'后台已接收任务',starting:'准备任务',discovering:'VLM 识别当前帧可见类别',discovering_retry:'VLM 正在重试标签识别',describing:'VLM 生成真值描述',loading:'读取图像',generating:'SAM 3 生成候选',generated:'候选已生成',observing:'VLM 观察图像和候选',agent_refining:'VLM 后台精修候选',vlm_waiting:'VLM 正忙，任务正在排队等待',editing:'执行标注工具',edited:'工具执行结束',finished:'本帧结束',retrying:'服务短暂异常，正在自动重试本帧',saved:'候选已保存',completed:'本次处理结束',stopping:'正在停止',stopped:'已停止',failed:'运行失败'};
 const agentStop={done:'Agent 流程已结束（不代表正确）',needs_review:'旧记录：请求人工复核',max_rounds:'达到最大复查轮数',no_progress:'没有有效修改',cycle:'检测到循环修改',error:'模型或工具调用失败'};
  const agentProgressStage={preflight:0,submitting:0,claiming:0,starting:0,discovering:0,discovering_retry:0,describing:0,loading:0,generating:1,generated:1,observing:2,agent_refining:2,vlm_waiting:2,editing:3,edited:3,finished:4,retrying:1,saved:4,completed:4,stopping:4,stopped:4,failed:4};
@@ -686,12 +706,24 @@ async function ensureAutoLabelReadiness(requestedFrames,startFrame,count){
  if(!response.ok)throw Error(`模型就绪检查失败（HTTP ${response.status}）`);
  if(!workflowResponse.ok)throw Error(`标注流程检查失败（HTTP ${workflowResponse.status}）`);
  if(!dataResponse.ok)throw Error(`数据兼容检查失败（HTTP ${dataResponse.status}）`);
- const readiness=await response.json(),workflow=await workflowResponse.json(),data=await dataResponse.json();
+  const readiness=await response.json();let workflow=await workflowResponse.json();const data=await dataResponse.json();
  const failures=[];
  if(!readiness.sam?.ready)failures.push(`SAM：${readiness.sam?.error||readiness.sam?.status||'未就绪'}`);
  if(!readiness.vlm?.ready)failures.push(`VLM：${readiness.vlm?.error||readiness.vlm?.status||'未就绪'}`);
- if(!workflow.ready)failures.push(`流程：${workflow.message||'参考数据未就绪'}`);
  if(!data.ready)failures.push(`数据：${data.message||'当前帧无法读取'}`);
+  const descriptionRecoverable=!workflow.ready&&['description_missing','description_stale'].includes(workflow.code);
+  if(descriptionRecoverable&&!failures.length){
+   if(!Number.isInteger(workflow.reference_frame))throw Error('尚未启动推理。参考描述需要更新，但服务没有返回有效参考帧');
+   runRequestPhase='describing';renderRunButton();toast('参考描述需要更新，正在自动生成；完成后会继续推理');
+   try{
+    await window.regenerateReferenceDescription(workflow.reference_frame);
+    const refreshed=await fetch('/api/run/readiness',{cache:'no-store'});
+    if(!refreshed.ok)throw Error(`重新检查失败（HTTP ${refreshed.status}）`);
+    workflow=await refreshed.json();
+   }catch(error){throw Error(`尚未启动推理。参考描述自动生成失败：${error.message}`)}
+   finally{runRequestPhase='preflight';renderRunButton()}
+  }
+  if(!workflow.ready)failures.push(`流程：${workflow.message||'参考数据未就绪'}`);
  if(failures.length)throw Error(`尚未启动推理。${failures.join('；')}`);
  return {models:readiness,workflow,data};
 }

@@ -1209,22 +1209,28 @@ def topic_truth(topic):
     return state.get("truths_by_topic", {}).get(topic, {})
 
 
-def topic_description_ready(topic, reference, truth_by_frame):
+def topic_description_status(topic, reference, truth_by_frame):
     reference_truth = truth_by_frame.get(str(reference))
     if not isinstance(reference_truth, list) or not reference_truth:
-        return False
+        return "description_missing"
     try:
         signature = reference_signature_for(reference, topic, reference_truth)
         if topic == state.get("topic"):
-            return load_reference_description(reference) is not None
+            if load_reference_description(reference) is not None:
+                return "ready"
+            stale_exists = (description_cache_path(signature).exists()
+                            or (WORK / "description.json").exists())
+            return "description_stale" if stale_exists else "description_missing"
         path = description_cache_path(signature)
         if not path.exists():
-            return False
+            return "description_missing"
         saved = _read_json(path)
-        return (isinstance(saved, dict)
-                and saved.get("reference_signature") == signature)
+        if (isinstance(saved, dict)
+                and saved.get("reference_signature") == signature):
+            return "ready"
+        return "description_stale"
     except (OSError, ValueError, TypeError, KeyError):
-        return False
+        return "description_missing"
 
 
 def topic_readiness_summary():
@@ -1246,14 +1252,15 @@ def topic_readiness_summary():
         review_status = truth_review_status_for(topic, truth_by_frame, records)
         human_verified = bool(reference is not None and
             review_status.get(str(reference), {}).get("reusable_as_reference") is True)
-        description_ready = bool(reference is not None and truth_present
-            and topic_description_ready(topic, reference, truth_by_frame))
+        description_code = (topic_description_status(topic, reference, truth_by_frame)
+                            if reference is not None and truth_present else None)
+        description_ready = description_code == "ready"
         if reference is None:
             code = "reference_missing"
         elif not truth_present:
             code = "reference_truth_missing"
         elif not description_ready:
-            code = "description_missing"
+            code = description_code or "description_missing"
         else:
             code = "ready"
         output[topic] = {

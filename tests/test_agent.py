@@ -4270,6 +4270,9 @@ class ServerTests(unittest.TestCase):
                 stale = client.get("/api/run/readiness").json
                 self.assertFalse(stale["ready"])
                 self.assertEqual(stale["code"], "description_stale")
+                summary_stale = client.get("/api/state/summary").json["topic_readiness"]["camera0"]
+                self.assertFalse(summary_stale["description_ready"])
+                self.assertEqual(summary_stale["code"], "description_stale")
                 (server.WORK / "description.json").write_text(json.dumps({
                     "description": "current", "prompts": [{"label": "a", "text": "a"}],
                     "reference_signature": server.reference_signature(0)}), encoding="utf-8")
@@ -4277,6 +4280,9 @@ class ServerTests(unittest.TestCase):
                 self.assertTrue(ready["ready"])
                 self.assertEqual(ready["reference_frame"], 0)
                 self.assertEqual(ready["labels"], ["a"])
+                summary_ready = client.get("/api/state/summary").json["topic_readiness"]["camera0"]
+                self.assertTrue(summary_ready["description_ready"])
+                self.assertEqual(summary_ready["code"], "ready")
             finally:
                 server.state, server.WORK = old_state, old_work
 

@@ -505,18 +505,72 @@ test('模型未就绪时预检明确失败且不伪装为推理已启动', async
   assert.equal(calls, 3);
 });
 
-test('参考帧描述失效时预检阻止提交长推理', async () => {
-  let calls = 0;
+test('参考帧描述失效时预检自动生成并重新检查后继续', async () => {
+  const calls = [];
+  let generated = 0;
   const h = harness({
-    async fetch() {
-      calls++;
-      return calls === 1
-        ? {ok: true, async json() { return {ready: true, sam: {ready: true}, vlm: {ready: true}}; }}
-        : {ok: true, async json() { return {ready: false, message: '参考帧 0 的描述已失效，请重新生成'}; }};
+    runRequestPhase: 'preflight', renderRunButton() {}, toast() {},
+    async regenerateReferenceDescription(frame) { generated++; assert.equal(frame, 0); },
+    async fetch(url) {
+      calls.push(url);
+      if (url === '/api/model_readiness') return {ok:true, async json(){return {sam:{ready:true},vlm:{ready:true}};}};
+      if (url === '/api/run/data-readiness') return {ok:true, async json(){return {ready:true};}};
+      const readinessCalls = calls.filter(item => item === '/api/run/readiness').length;
+      return {ok:true, async json(){return readinessCalls === 1
+        ? {ready:false,code:'description_stale',reference_frame:0,message:'参考帧 0 的描述已失效，请重新生成'}
+        : {ready:true,code:'ready',reference_frame:0};}};
     },
   });
   h.run(section(source('app.js'), 'async function ensureAutoLabelReadiness', "$('runButton').onclick"));
-  await assert.rejects(() => h.context.ensureAutoLabelReadiness(), /流程：参考帧 0 的描述已失效/);
+  const result = await h.context.ensureAutoLabelReadiness(null,1,1);
+  assert.equal(result.workflow.ready, true);
+  assert.equal(generated, 1);
+  assert.equal(calls.filter(item => item === '/api/run/readiness').length, 2);
+  assert.equal(h.context.runRequestPhase, 'preflight');
+});
+
+test('参考描述自动生成失败时保持未启动且不重复提交', async () => {
+  let generated = 0;
+  const h = harness({
+    runRequestPhase:'preflight', renderRunButton() {}, toast() {},
+    async regenerateReferenceDescription(){generated++;throw new Error('VLM 暂时繁忙');},
+    async fetch(url){return {ok:true,async json(){
+      if(url==='/api/model_readiness')return {sam:{ready:true},vlm:{ready:true}};
+      if(url==='/api/run/data-readiness')return {ready:true};
+      return {ready:false,code:'description_missing',reference_frame:55,message:'请生成描述'};
+    }};},
+  });
+  h.run(section(source('app.js'), 'async function ensureAutoLabelReadiness', "$('runButton').onclick"));
+  await assert.rejects(() => h.context.ensureAutoLabelReadiness(null,1,1), /尚未启动推理.*VLM 暂时繁忙/);
+  assert.equal(generated,1);
+  assert.equal(h.context.runRequestPhase,'preflight');
+});
+
+test('非描述类流程错误不会误触发描述生成', async () => {
+  let generated = 0;
+  const h = harness({
+    runRequestPhase:'preflight', renderRunButton() {}, toast() {},
+    async regenerateReferenceDescription(){generated++;},
+    async fetch(url){return {ok:true,async json(){
+      if(url==='/api/model_readiness')return {sam:{ready:true},vlm:{ready:true}};
+      if(url==='/api/run/data-readiness')return {ready:true};
+      return {ready:false,code:'reference_truth_missing',message:'参考帧尚无人工真值'};
+    }};},
+  });
+  h.run(section(source('app.js'), 'async function ensureAutoLabelReadiness', "$('runButton').onclick"));
+  await assert.rejects(() => h.context.ensureAutoLabelReadiness(null,1,1), /参考帧尚无人工真值/);
+  assert.equal(generated,0);
+});
+
+test('运行前弹窗展示参考描述并提供一键恢复入口', () => {
+  const index = source('index.html');
+  const guide = source('guide.js');
+  const app = source('app.js');
+  assert.match(index,/data-readiness="description"/);
+  assert.match(guide,/生成描述并继续/);
+  assert.match(guide,/window\.regenerateReferenceDescription\(checks\.description\.referenceFrame\)/);
+  assert.match(app,/descriptionRequest=\{key:requestKey,promise\}/);
+  assert.match(app,/参考描述需要更新，正在自动生成；完成后会继续推理/);
 });
 
 test('完成与失败帧重试均复用轻量帧计数且不回读完整状态', () => {

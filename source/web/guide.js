@@ -388,11 +388,23 @@
     const frame = Number(byId('frameNumber')?.value);
     const count = Number(byId('taskCount')?.value);
     const maximum = frameLimit();
+    const topicStatus = state.topic_readiness?.[topic] || {};
+    const referenceFrame = state.reference_frames?.[topic]?.[0];
+    const hasReference = Number.isInteger(referenceFrame);
+    const descriptionReady = hasReference && topicStatus.description_ready === true;
+    const descriptionFail = topicStatus.code === 'description_stale'
+      ? `帧 ${referenceFrame} 的描述已过期`
+      : hasReference ? `帧 ${referenceFrame} 尚未生成描述` : '需先准备人工参考帧';
     return {
       data: { ok: Boolean(state.loaded && topic), pass: '数据已载入', fail: '尚未载入数据' },
       reference: {
-        ok: Boolean(state.reference_frames?.[topic]?.length),
+        ok: hasReference,
         pass: '参考帧已准备', fail: '缺少人工参考帧',
+      },
+      description: {
+        ok: descriptionReady,
+        pass: `帧 ${referenceFrame} 的描述可用`, fail: descriptionFail,
+        referenceFrame,
       },
       frame: {
         ok: Number.isInteger(frame) && frame >= 0 && frame <= maximum,
@@ -428,7 +440,9 @@
       ? `检查通过：将从第 ${byId('frameNumber')?.value || 0} 帧开始处理 ${byId('taskCount')?.value || 1} 帧。`
       : `还有 ${Object.keys(checks).length - passed} 项未就绪，请先补齐后再运行。`;
     byId('runReadinessConfirm').disabled = !ready;
-    byId('runReadinessPrepare').hidden = checks.reference.ok;
+    const prepare = byId('runReadinessPrepare');
+    prepare.hidden = checks.reference.ok && checks.description.ok;
+    prepare.textContent = checks.reference.ok ? '生成描述并继续' : '去准备参考帧';
     if (!readinessDialog.open) readinessDialog.showModal();
   }
 
@@ -539,12 +553,23 @@
       showWorkbench('auto');
       byId('prepareReference')?.click();
     } else if (latest.action === 'description') {
-      showWorkbench('auto');
-      byId('openReferenceButton')?.click();
-      window.setTimeout(() => {
-        byId('describeButton')?.scrollIntoView({behavior: 'smooth', block: 'center'});
-        byId('describeButton')?.focus({preventScroll: true});
-      }, 260);
+      const reference = latest.state?.reference_frames?.[latest.state?.topic]?.[0];
+      if (!Number.isInteger(reference) || typeof window.regenerateReferenceDescription !== 'function') {
+        showWorkbench('auto');
+        byId('openReferenceButton')?.click();
+        window.labelAgentToast?.('无法自动定位参考帧，已打开参考帧页面');
+      } else {
+        action.disabled = true;
+        action.textContent = '正在生成参考描述…';
+        try {
+          await window.regenerateReferenceDescription(reference);
+          window.labelAgentToast?.('参考描述已更新，可以开始自动标注');
+        } catch (error) {
+          window.labelAgentToast?.(error.message);
+        } finally {
+          await refreshGuide();
+        }
+      }
     } else if (latest.action === 'next_unprocessed') {
       const input = byId('frameNumber');
       const current = Number(input?.value) || 0;
@@ -605,9 +630,31 @@
   byId('runButton')?.addEventListener('click', openRunReadiness, true);
   byId('runReadinessClose')?.addEventListener('click', closeRunReadiness);
   byId('runReadinessCancel')?.addEventListener('click', closeRunReadiness);
-  byId('runReadinessPrepare')?.addEventListener('click', () => {
-    closeRunReadiness();
-    byId('prepareReference')?.click();
+  byId('runReadinessPrepare')?.addEventListener('click', async () => {
+    const button = byId('runReadinessPrepare');
+    const checks = runReadiness();
+    if (!checks.reference.ok) {
+      closeRunReadiness();
+      byId('prepareReference')?.click();
+      return;
+    }
+    if (button.disabled) return;
+    button.disabled = true;
+    button.textContent = '正在生成描述…';
+    try {
+      if (typeof window.regenerateReferenceDescription !== 'function') throw new Error('描述生成组件尚未加载，请强制刷新页面后重试');
+      await window.regenerateReferenceDescription(checks.description.referenceFrame);
+      await refreshGuide();
+      closeRunReadiness();
+      allowRunOnce = true;
+      byId('runButton')?.click();
+    } catch (error) {
+      window.labelAgentToast?.(error.message);
+    } finally {
+      button.disabled = false;
+      const current = runReadiness();
+      button.textContent = current.reference.ok ? '生成描述并继续' : '去准备参考帧';
+    }
   });
   byId('runReadinessConfirm')?.addEventListener('click', () => {
     closeRunReadiness();

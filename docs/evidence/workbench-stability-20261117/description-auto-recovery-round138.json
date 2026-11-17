@@ -1,0 +1,138 @@
+{
+  "schema_version": "labelagent.description_auto_recovery_round138.v1",
+  "recorded_at": "2026-11-18T06:46:44+08:00",
+  "decision": "accepted_and_deployed",
+  "objective": "Turn a missing or stale reference description from a confusing preflight failure into a visible, single-flight, recoverable step that automatically rechecks every gate and then continues candidate-only inference.",
+  "behavior": {
+    "readiness_dialog_checks": [
+      "loaded image data",
+      "human reference frame",
+      "reference scene description",
+      "current frame range",
+      "requested frame count"
+    ],
+    "recoverable_codes": [
+      "description_missing",
+      "description_stale"
+    ],
+    "automatic_continuation": "After a successful description request, /api/run/readiness is fetched again. Inference is submitted only when the refreshed workflow gate is ready.",
+    "single_flight": "Concurrent requests for the same file, topic and reference frame share one promise; a different reference request is rejected while the first is active.",
+    "status_consistency": "The compact state summary now distinguishes description_stale from description_missing using the same active reference contract as the run readiness endpoint."
+  },
+  "safety_contract": {
+    "auto_repair_requires": [
+      "SAM ready",
+      "primary VLM ready",
+      "first requested frame decodable",
+      "workflow failure limited to description_missing or description_stale",
+      "integer reference_frame returned by the server"
+    ],
+    "not_auto_repaired": [
+      "missing reference frame",
+      "missing reference truth",
+      "invalid label selection",
+      "unreadable requested data",
+      "unready SAM or VLM",
+      "any unknown workflow code"
+    ],
+    "backend_binding": "The existing /api/describe endpoint rechecks file, topic, configuration, labels, selected labels, reference frames, reference truth and reference signature before atomically saving a derived description.",
+    "candidate_boundary": "Inference output remains candidate_only and cannot become human truth or training approval without the existing explicit human gate."
+  },
+  "regression": {
+    "python_utf8": {
+      "passed": 862,
+      "failed": 0,
+      "command_scope": "tests/ via unittest discovery with PYTHONUTF8=1"
+    },
+    "web": {
+      "passed": 94,
+      "failed": 0
+    },
+    "targeted_cases": [
+      "stale description regenerates once and readiness is rechecked",
+      "description generation failure remains not started",
+      "non-description workflow failure never calls describe",
+      "compact summary reports stale and ready consistently",
+      "readiness dialog exposes the fifth description gate"
+    ],
+    "syntax": {
+      "server_py_compile": "passed",
+      "app_js_node_check": "passed",
+      "guide_js_node_check": "passed",
+      "browser_acceptance_js_node_check": "passed",
+      "git_diff_check": "passed"
+    },
+    "environment_note": "An initial full Python run without PYTHONUTF8 reproduced the known Windows GBK decoding failures in unrelated UTF-8 fixtures. The canonical project environment reran the same 862 tests cleanly; no test or fixture was weakened."
+  },
+  "isolated_browser_acceptance": {
+    "work_dir": "D:\\Apps\\LabelAgent\\.local\\isolated-round138-description-recovery-20261118",
+    "port": 8798,
+    "frame": 34,
+    "topic": "/capture/camera_1/image",
+    "initial_gate": "description_stale",
+    "describing_visible_ms": 19,
+    "description_response_ms": 1284,
+    "run_response_ms": 4725,
+    "candidate_visible_ms": 4754,
+    "describe_post_count": 1,
+    "run_post_count": 1,
+    "candidate_count": 8,
+    "truth_unchanged": true,
+    "reference_frames_unchanged": true,
+    "page_errors": [],
+    "readiness_after_recovery": "ready",
+    "deferred_refinement_started": true,
+    "deferred_refinement_stop_status": 200,
+    "timing_boundary": "The description request reused an exact model response cache. The 1.284 second duration is not a cold VLM latency claim; the hard evidence is the visible recovery state, one describe request, one run request, successful recheck, candidate visibility and unchanged truth."
+  },
+  "deployment": {
+    "backup_path": "D:\\Apps\\LabelAgent\\.local\\backups\\description-auto-recovery-round138-20261118",
+    "backup_state_sha256": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "formal_state_sha256_before_and_after": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "runtime_hashes": {
+      "source/agent/server.py": "67ebed711b0329f7dd36096a972decbafd976da4c9e9dda94083a16519eecb6a",
+      "source/web/app.js": "f3347efdbbc48c1968c4cc4673571e5ea09daed2b30fc3e85663622e4fde4904",
+      "source/web/guide.js": "1887269dec6f933acb66db535dbf24d941c62430a61872f945a44807e194734c",
+      "source/web/index.html": "3504c82ff897d4790968fd268f5679dabe40ba0801990ec6adcaee8465278030"
+    },
+    "lifecycle": "Only the managed local workbench was restarted. The verified 4090 tunnel and remote SAM/VLM processes remained hot; the optional 5090 route remained unavailable and the primary route was used.",
+    "formal_http": {
+      "workbench_root": 200,
+      "state_summary": 200,
+      "model_readiness": 200,
+      "run_readiness": 200,
+      "run_status": 200
+    },
+    "run_status": "idle",
+    "model_ready": true,
+    "ui_version": 138
+  },
+  "formal_browser_gate": {
+    "frame": 34,
+    "description_row": "frame 55 description expired",
+    "confirm_enabled": false,
+    "recovery_button": "生成描述并继续",
+    "describe_post_count": 0,
+    "run_post_count": 0,
+    "formal_state_mutation_requested": false,
+    "page_errors": []
+  },
+  "artifacts": {
+    "isolated_result": {
+      "path": "artifacts/round138-description-recovery/result-frame34.json",
+      "sha256": "24fe10c1c2e2765a5c7c5a2aa13ca5ef62c037e7be6cc50308133fe80b3b06e7"
+    },
+    "isolated_screenshot": {
+      "path": "artifacts/round138-description-recovery/screenshot-frame34.png",
+      "sha256": "5250ae8217a75e4f0484714316380fc09aed6616051a9e096c2318fa16208266"
+    },
+    "formal_gate_result": {
+      "path": "artifacts/round138-formal-gate/result-frame34.json",
+      "sha256": "1fd9f726c00da53cf3d40c1ffae5a179aa8da2d433fe212f7957d9f810db5aae"
+    },
+    "formal_gate_screenshot": {
+      "path": "artifacts/round138-formal-gate/screenshot-frame34.png",
+      "sha256": "a6480927ad885e8fd98bdaa0b5fbf3d005cc3f757fc11ed350e3f89c9c9ba1b8"
+    }
+  }
+}

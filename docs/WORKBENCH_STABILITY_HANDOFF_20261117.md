@@ -1176,3 +1176,15 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\cache-observability-roun
 因此缓存掩码和直接允许集合路线均不部署。远端服务已从 `/home/clw/labelagent_remote_20261110/backups/cached-schema-mask-round98-20261117/local_vlm_server.py` 恢复，源码 SHA-256 回到 `0f3f6957...2f58b36`；原 BF16 static-cache 启动命令恢复，健康页为 ok、模型 loaded、inflight 0，候选开关不存在。候选产品代码与两项临时测试已从工作树撤回，只保留纠正后的只读微基准和结构化否决证据。完整记录见 [第九十八轮真实模型否决记录](evidence/workbench-stability-20261117/rejected-cached-schema-mask-round98.json)。
 
 边界：该结果说明“减少约束处理器分配”在隔离算子上可能更快，但在当前 Qwen3-VL-8B、static KV cache 和真实图片生成中反而稳定变慢；后续不再围绕同一 Transformers logits mask 做局部改写。冷图速度优化转向更小模型、蒸馏/后训练和未来可用的独立硬件路线，并继续用九图语义哈希门禁阻止速度换语义。
+
+## 第九十九轮官方 Qwen3-VL-2B 冻结门禁与后训练方向（零样本替换否决，2026-11-17）
+
+服务器原来只缓存 8B 模型。核对 Qwen 官方仓库后，本轮把 Apache-2.0 的 `Qwen3-VL-2B-Instruct` 下载到独立模型目录；没有安装新包，复用现有 Hugging Face Hub 0.36.2、Transformers 4.57.6 和 Accelerate 1.15.0。4,255,140,312 字节权重下载约 1,055 秒，SHA-256 为 `7de1838c...34977a0`；配置确认 `qwen3_vl / Qwen3VLForConditionalGeneration`、28 层、hidden size 2048，processor 和 151,669 词 tokenizer 均可完全离线加载。下载后磁盘仍约有 105 GiB 可用。
+
+为避免同时占用显存，本轮先停止同一 GPU 上的正式 8B，再用完全相同端口、BF16、256 图像 token、static cache、完整提示和严格 schema 启动 2B；API 模型名暂用原别名，只为保持 `state.json` 不变。2B 权重占用约 4.26 GB，但首次启动预热 8 个 completion token 即耗时 40.442 秒。随后跑第九十六轮完全相同的九张冻结生产媒体图片：只有 1/9 的可见标签列表与 8B 一致，discovery SHA-256 为 0/9 相同，completion token 为 0/9 相同。2B 常见漂移是额外报告 `车辆`、`other_robot`、`cargo_floor`，或把类别改为 uncertain。
+
+单次生成层面，2B P50 13.418 秒，确实比 8B 的 15.206 秒快约 11.8%；但输出增长到 381～491 token，前八张全部触发一次协议重试，服务日志记录 17 次 POST 才完成九张。最终端到端 P50 从 15.506 秒恶化为 27.483 秒，P95 从 16.365 秒恶化为 28.643 秒，8/9 超过 25 秒。因此 2B 零训练直接替换明确否决，但其较低显存和单次生成速度使它成为后续蒸馏/LoRA 的合理底座：训练目标必须同时约束类别语义、开放集尾部和紧凑一次成功输出。
+
+门禁结束后已恢复正式 8B 原命令，健康页读回配置 SHA-256 `5cd45286...8f3661`、model loaded、inflight 0；页面 200、SAM ok，六份正式状态哈希全部不变。2B 权重保留在 `/home/clw/labelagent_vlm_20261104/models/Qwen3-VL-2B-Instruct` 供隔离后训练，不进入正式路由。完整结构化记录见 [第九十九轮 2B 冻结门禁](evidence/workbench-stability-20261117/qwen3vl2b-frozen-gate-round99.json)。
+
+边界：九张已足够否决零样本生产替换，但不能证明 2B 经过领域后训练后的上限。下一步应从 train72/人工真值与 8B 已验证输出构造受审计的蒸馏样本，test24 继续只评测；在独立训练环境安装 PEFT 前先冻结数据清单、目标 schema、错误样本和验收门禁。

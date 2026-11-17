@@ -1,0 +1,93 @@
+{
+  "schema_version": "labelagent.qwen3vl2b-frozen-gate-round99.v1",
+  "round": 99,
+  "date": "2026-11-17",
+  "objective": "Determine whether the official Qwen3-VL-2B-Instruct can replace the 8B visible-label discovery model without training, and whether it is a plausible post-training base.",
+  "official_model": {
+    "repository": "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct",
+    "license": "Apache-2.0",
+    "local_directory": "/home/clw/labelagent_vlm_20261104/models/Qwen3-VL-2B-Instruct",
+    "downloaded_files": 10,
+    "download_seconds": 1055,
+    "weight_bytes": 4255140312,
+    "weight_sha256": "7de1838c87a5349b016c26a1c3f7d2bc400a3d485f95ef39a7059ffd734977a0",
+    "config_sha256": "bec4b3d446efa05807365c9e1cec03ac590836879d02f3a6da879971154bdd3b",
+    "preprocessor_config_sha256": "27225450ac9c6529872ee1924fcb0962ff5634834f817040f444118116f4e516",
+    "model_type": "qwen3_vl",
+    "architecture": "Qwen3VLForConditionalGeneration",
+    "text_layers": 28,
+    "text_hidden_size": 2048,
+    "tokenizer_vocab": 151669,
+    "offline_processor_load": "passed"
+  },
+  "runtime": {
+    "device": "NVIDIA GeForce RTX 4090",
+    "dtype": "bfloat16",
+    "image_tokens": 256,
+    "generation_cache": "static",
+    "model_memory_bytes": 4255064384,
+    "startup_prewarm_seconds": 40.442,
+    "startup_prewarm_completion_tokens": 8,
+    "api_model_alias": "labelagent-vlm8b",
+    "alias_reason": "Exercise the frozen workbench request contract without modifying state.json."
+  },
+  "frozen_nine_image_gate": {
+    "images": 9,
+    "batch_a_images": 7,
+    "batch_b_images": 2,
+    "baseline_discovery_sha256_equal": "0/9",
+    "baseline_visible_label_lists_equal": "1/9",
+    "baseline_completion_tokens_equal": "0/9",
+    "http_requests": 17,
+    "images_requiring_protocol_retry": 8,
+    "cache_hits": 0,
+    "coalesced_requests": 0,
+    "all_primary_route": true,
+    "all_stop_finish": true,
+    "baseline_8b": {
+      "wall_p50_ms": 15505.992,
+      "wall_p95_ms": 16364.517,
+      "generation_p50_seconds": 15.206,
+      "generation_p95_seconds": 16.118,
+      "completion_token_range": [315, 347]
+    },
+    "candidate_2b": {
+      "wall_p50_ms": 27483.139,
+      "wall_p95_ms": 28643.482,
+      "wall_max_ms": 28852.036,
+      "generation_p50_seconds": 13.418,
+      "generation_p95_seconds": 15.407,
+      "completion_token_range": [381, 491],
+      "requests_over_25_seconds": 8
+    },
+    "interpretation": "A single 2B generation attempt is somewhat faster, but zero-shot semantic drift, longer completions and protocol retries make the end-to-end path much slower."
+  },
+  "decision": {
+    "zero_shot_production_replacement": "rejected",
+    "post_training_base": "candidate",
+    "reason": "The 2B model has enough execution headroom to be worth distillation or LoRA study, but it must first learn the exact class semantics and compact protocol. It may not enter production from this zero-shot result."
+  },
+  "restoration": {
+    "formal_model": "Qwen3-VL-8B-Instruct",
+    "formal_model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+    "formal_source_sha256": "0f3f69577325468464caa7530374f85dd2aa1782bf66317bdfa5ed6eb2f58b36",
+    "formal_health": "ok",
+    "formal_model_loaded": true,
+    "formal_inflight": 0,
+    "formal_page_status": 200,
+    "formal_sam_status": "ok",
+    "formal_state_hashes_unchanged": true
+  },
+  "reproduction": {
+    "baseline_receipt": "artifacts/round96-production-prewarm/visible-discovery-latency-9-production-media.json",
+    "candidate_receipt": "artifacts/round99-qwen3vl2b/candidate-production-media-9.json",
+    "candidate_log": "/home/clw/labelagent_remote_20261110/logs/vlm-2b-round99.log"
+  },
+  "isolation": {
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "oss_modified": false,
+    "non_owned_gpu_process_modified": false
+  }
+}

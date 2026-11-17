@@ -1,0 +1,100 @@
+{
+  "round": 49,
+  "date": "2026-11-17",
+  "status": "accepted_and_deployed",
+  "objective": "validate 640x512 held-out data, keep slope recall without flat-floor false positives, and expose per-image benchmark progress",
+  "data_boundaries": {
+    "heldout_split": "test24 subsets from sequences 010, 011 and 012",
+    "evaluation_only": true,
+    "training_return_allowed": false,
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "oss_modified": false,
+    "source_manifest_sha256": "cfd84f0ca41bf2f9522b20062f10442f5e7c5f5c595ae3c445aafb2d688dd05a",
+    "heldout_file_count": 12,
+    "heldout_bytes": 5205249,
+    "heldout_hash_matches": 12
+  },
+  "heldout_640x512_baseline": {
+    "success": 12,
+    "failure": 0,
+    "route_counts": {"small_image_fast": 12},
+    "elapsed_ms": {"minimum": 15953, "median": 16494.5, "maximum": 17237},
+    "open_set_complete": 12,
+    "registry_mutated": 0,
+    "visually_reviewed_flat_floor_false_slope": 1,
+    "artifact_sha256": "f656075dfd65224653555b7aa7b2c0eb3c0144cf2d34d1233d6d4708d8dce506"
+  },
+  "rejected_strict_slope_definition": {
+    "reason": "removed the held-out flat-floor false slope but suppressed seven of eight human-labelled slope positives",
+    "heldout_false_slope_after": 0,
+    "human_slope_positive_visible": 1,
+    "human_slope_positive_total": 8,
+    "deployed": false,
+    "heldout_artifact_sha256": "4c67f97573566ed67c4d7a4530addbeb054461bf48168c5bfead104e3914fca7",
+    "positive_artifact_sha256": "c94f42076cd2f3b620c8b3a1293092237068dad587d7873ab765e8f9e06b80a3"
+  },
+  "primary_vs_fast_slope_discovery": {
+    "fast": {"visible": 5, "total": 8, "median_ms": 16211},
+    "primary": {"visible": 6, "total": 8, "median_ms": 19043.5},
+    "union_visible": 6,
+    "primary_median_slowdown": 1.175,
+    "decision": "do not rerun every slope-risk image on primary; keep an independent SAM recall probe when floor is visible",
+    "fast_artifact_sha256": "e58e730fd34503dc759509b802f0d384a570177d4951cf40750d006758d9fcad",
+    "primary_artifact_sha256": "c568aca190956e9673bc0ac0e461429c6148498081e17fb882e4b8f2f535d503"
+  },
+  "accepted_slope_recall_probe": {
+    "policy": "when floor is visible or uncertain and slope is absent, add slope to SAM candidate generation only; do not alter VLM visibility, human truth, or training approval",
+    "positive": {
+      "frame": 74,
+      "vlm_fast_visible": false,
+      "vlm_primary_visible": false,
+      "probe_slope_candidates": 1,
+      "seconds": 11.09,
+      "summary_sha256": "faad6be4448abc507a3d15ad324e2138a516c0b9c141811afd46f75af3995327",
+      "overlay_sha256": "172f2def5dc1da29e7a1782d3ddae495900ed8a186826cc1d4a0e7777712a850"
+    },
+    "negative": {
+      "sequence": "011",
+      "camera": "camera_1",
+      "scenario": "flat indoor floor with a thin board at lower right",
+      "probe_slope_candidates": 0,
+      "seconds": 8.784,
+      "summary_sha256": "51115e07d35a176f4ae0a1f53bc21269191741dccfadf800fe3674aa80993210",
+      "overlay_sha256": "89922750a3426509a76d3ff99b290c6963536ca40df21be9238257e6b3dc4183"
+    }
+  },
+  "progress_and_ab_tools": {
+    "per_image_progress": ["processed", "total", "current", "success_count", "failure_count", "model_route", "elapsed_seconds", "eta_seconds"],
+    "primary_only_flag": "--disable-fast-route",
+    "source_state_modified": false
+  },
+  "tests": {
+    "targeted_python": {"passed": 158, "failed": 0},
+    "web": {"passed": 78, "failed": 0},
+    "broad_historical_discovery": {
+      "status": "not_used_as_acceptance_gate",
+      "reason": "contains missing optional lmformatenforcer dependency plus four pre-existing protocol/serialization assertions unrelated to this round"
+    }
+  },
+  "deployment": {
+    "rollback": "D:/Apps/LabelAgent/.local/backups/workbench-slope-recall-round49-20261117",
+    "workflow_sha256": "7662634912AA679AC4D802CC90BBED45E5DEA99DAD1E49E0F7891A96D3AE155B",
+    "server_sha256": "806BACA592DC8D748B936B5E844CDD27B028BBF9265C784C941A60D55172420B",
+    "benchmark_sha256": "37104BB99CCCA5AAB18FA5150417841886FB0EC55DB0AB2B554C968121F4927A",
+    "run_ready": true,
+    "model_ready": true,
+    "sam": "ok",
+    "vlm": "ok",
+    "fast_vlm": "ok",
+    "run_status": "idle",
+    "state_sha256": "64F3394F766A77FBE8EBDFACFB1C2EA326149DAFAD0C2B80A43D75DD45A5230B",
+    "state_unchanged": true,
+    "history_hashes_unchanged": true
+  },
+  "limits": [
+    "The 12 held-out images are a bounded sample, not a full test24 accuracy estimate.",
+    "Preannotations are not human truth.",
+    "The positive probe demonstrates candidate recovery on one missed human-labelled frame; the existing eight-frame pixel metrics remain development-sequence evidence, not cross-factory generalization."
+  ]
+}

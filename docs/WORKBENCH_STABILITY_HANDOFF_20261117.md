@@ -648,3 +648,20 @@ Python 核心、图片、候选和 VLM 组件回归 174/174，网页交互 84/84
 正式部署读回 SAM、主 VLM、快速 VLM、页面均 ready，任务 idle，60 秒冷却配置可见。Python 169/169、网页 78/78。正式状态只比原始状态多八个 `llm_fast_*` 配置字段；移除这些字段后重算哈希仍精确恢复 `8F73D496...E3652`，其他五份文件库和运行历史哈希不变。回滚点 `D:\Apps\LabelAgent\.local\backups\workbench-fast-circuit-round48-20261117`，完整证据见 [第四十八轮快速通道熔断](evidence/workbench-stability-20261117/fast-route-circuit-round48.json)。
 
 边界：第一次半开连接仍可能等待最多 60 秒才回退，熔断解决的是同一故障在后续调用中反复等待；本轮是可靠性和尾延迟优化，不是精度或分割质量提升。熔断状态只保存在当前工作台进程，重启后重新开始健康探测。
+
+## 第四十九轮 test24 留出集、斜坡召回探针与实时进度（2026-11-17）
+
+从阶段二明确隔离的 test24 中固定取 010、011、012 各一个帧的四路 640×512 图像，共 12 张、5,205,249 字节；12/12 本地哈希与服务器清单一致，只读评测且禁止训练回流。首次类别发现 12/12 成功、全部走 5090，耗时 15.953～17.237 秒，中位 16.4945 秒，无 503、超时或注册表修改。但目视发现 011/camera_1 的平整室内地面与右下角薄板被错误报成 `slope`。
+
+直接收紧 slope 文字定义虽把 12 张中的假坡降到 0，却在 8 个有人类 slope 真值的正样本中只保留 1/8，因此明确否决并恢复原提示。恢复后 5090 发现 5/8，4090 发现 6/8；4090 中位 19.0435 秒，比 5090 的 16.211 秒慢 17.5%，且两者都漏第 74、95 帧，所以没有采用“每张疑似坡都重跑 4090”。
+
+接受的方案是独立斜坡召回探针：当 `floor` 可见或不确定、但 VLM 没选 `slope` 时，仅把 `slope` 加入 SAM 候选生成；不改变 VLM 可见结论，不写人工真值，不批准训练。第 74 帧被两个 VLM 路由同时漏掉，探针在 11.09 秒补回 1 个 slope 候选；011/camera_1 困难负样本完整闭环 8.784 秒，最终 `person 5 + pallet 8 + floor 1`、slope 仍为 0。下游既有几何、floor 覆盖和托盘冲突守门继续负责压制假坡。
+
+批量只读评测现按每张图实时输出完成数、总数、当前文件、成功/失败、实际模型路由、已用时间和 ETA；另加 `--disable-fast-route` 做不改源状态的 4090/5090 A/B，评测不会再表现为长时间停在 0。目标 Python 回归 158/158、页面回归 78/78。正式部署后 run_ready/model_ready 均为 true，SAM、主 VLM、快速 VLM 均 ok，任务 idle；六份正式状态与历史哈希全部不变。回滚点为 `D:\Apps\LabelAgent\.local\backups\workbench-slope-recall-round49-20261117`。
+
+- [第四十九轮结构化证据](evidence/workbench-stability-20261117/slope-recall-and-progress-round49.json)
+- [真坡召回探针叠加图](evidence/workbench-stability-20261117/slope-recall-probe-positive-round49.jpg)
+- [平地困难负样本叠加图](evidence/workbench-stability-20261117/slope-recall-probe-negative-round49.jpg)
+- [test24 子集只读清单](evidence/workbench-stability-20261117/heldout-test12-manifest-round49.json)
+
+边界：12 张只是 test24 的固定子集，不是完整 test24 精度报告；预标注不是人工真值。本轮证明召回探针能在一个 VLM 双路漏检正样本上补回候选，并在一个新平地负样本上保持 0 假坡，不等于已经完成跨厂区总体斜坡泛化验收。

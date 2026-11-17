@@ -837,6 +837,29 @@ def discover_visible_labels(config, image, labels):
             "registry_mutated": False}
 
 
+def candidate_labels_with_recall_probes(discovery, labels):
+    """Add bounded high-value probes without promoting visibility truth.
+
+    Low, distant ramps are often described as ordinary floor in a single
+    camera image.  If floor is visible or uncertain, preserve one independent
+    slope SAM probe so downstream geometry and conflict guards can decide
+    whether a machine candidate exists.  The probe is not VLM truth, human
+    truth, or training approval.
+    """
+    registry = list(dict.fromkeys(labels or []))
+    visible = list((discovery or {}).get("visible_labels") or [])
+    uncertain = list((discovery or {}).get("uncertain_labels") or [])
+    selected = list((discovery or {}).get("candidate_labels")
+                    or [label for label in registry
+                        if label in set(visible + uncertain)])
+    probes = []
+    if ("slope" in registry and "slope" not in selected
+            and "floor" in set(visible + uncertain)):
+        probes.append("slope")
+    selected_set = set(selected + probes)
+    return [label for label in registry if label in selected_set], probes
+
+
 SAM_PROMPT_FALLBACKS = {
     "车辆": "vehicle",
     "地面": "floor",

@@ -2,7 +2,7 @@ import unittest
 
 from tools.benchmark_visible_discovery import (
     bounded_assessments, bounded_consistency_flags, bounded_unknown, median,
-    model_config, request_metadata)
+    model_config, progress_payload, request_metadata)
 
 
 class VisibleDiscoveryBenchmarkTests(unittest.TestCase):
@@ -44,6 +44,15 @@ class VisibleDiscoveryBenchmarkTests(unittest.TestCase):
         self.assertEqual(median([3, 1, 2]), 2.0)
         self.assertIsNone(median([]))
 
+    def test_progress_payload_reports_incremental_eta_without_paths(self):
+        rows = [{"failure": None, "model_route": "small_image_fast"},
+                {"failure": {"type": "TimeoutError"}, "model_route": None}]
+        self.assertEqual(progress_payload(2, 5, rows, 20.0, "frame-2.png"), {
+            "event": "progress", "processed": 2, "total": 5,
+            "current": "frame-2.png", "success_count": 1,
+            "failure_count": 1, "model_route": None,
+            "elapsed_seconds": 20.0, "eta_seconds": 30.0})
+
     def test_model_override_is_in_memory_and_rejects_credentials(self):
         source = {"llm_url": "http://old/v1", "llm_model": "old"}
         updated = model_config(source, "http://127.0.0.1:38868/v1", "new",
@@ -58,6 +67,16 @@ class VisibleDiscoveryBenchmarkTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             model_config(source, None, None,
                          "http://user:secret@127.0.0.1/v1", None)
+
+    def test_primary_only_benchmark_strips_fast_route_in_memory(self):
+        source = {"llm_url": "http://primary/v1", "llm_model": "primary",
+                  "llm_fast_url": "http://fast/v1", "llm_fast_model": "fast",
+                  "llm_fast_key": "private", "llm_fast_timeout_seconds": 30}
+        selected = model_config(source, disable_fast_route=True)
+        self.assertEqual(selected, {"llm_url": "http://primary/v1",
+                                    "llm_model": "primary"})
+        self.assertIn("llm_fast_url", source)
+        self.assertIn("llm_fast_key", source)
 
 
 if __name__ == "__main__":

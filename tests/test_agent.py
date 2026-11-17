@@ -293,6 +293,29 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(discovery_schema["properties"]["assessments"]["items"]
                          ["properties"]["reason"]["maxLength"], 72)
 
+    def test_floor_visibility_adds_auditable_slope_recall_probe(self):
+        registry = ["pallet", "floor", "slope", "ego"]
+        discovery = {"visible_labels": ["floor", "ego"],
+                     "uncertain_labels": [],
+                     "candidate_labels": ["floor", "ego"]}
+        selected, probes = workflow.candidate_labels_with_recall_probes(
+            discovery, registry)
+        self.assertEqual(selected, ["floor", "slope", "ego"])
+        self.assertEqual(probes, ["slope"])
+        self.assertNotIn("slope", discovery["visible_labels"])
+        self.assertEqual(discovery["candidate_labels"], ["floor", "ego"])
+
+    def test_slope_recall_probe_neither_expands_without_floor_nor_duplicates(self):
+        registry = ["floor", "slope", "ego"]
+        selected, probes = workflow.candidate_labels_with_recall_probes({
+            "visible_labels": ["ego"], "uncertain_labels": [],
+            "candidate_labels": ["ego"]}, registry)
+        self.assertEqual((selected, probes), (["ego"], []))
+        selected, probes = workflow.candidate_labels_with_recall_probes({
+            "visible_labels": ["floor", "slope"], "uncertain_labels": [],
+            "candidate_labels": ["floor", "slope"]}, registry)
+        self.assertEqual((selected, probes), (["floor", "slope"], []))
+
     def test_visible_label_discovery_uses_registry_sized_compact_budget(self):
         labels = ["车辆", "pallet", "person", "floor", "slope", "ego",
                   "other_robot", "cargo_floor"]

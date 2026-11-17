@@ -1,0 +1,30 @@
+{
+  "schema_version": "labelagent.heldout_evaluation_manifest.v1",
+  "created_date": "2026-11-17",
+  "dataset": "SFL-CPD15-Y/20260920_cs-heli_Dev_000001",
+  "split": "test",
+  "evaluation_only": true,
+  "training_return_allowed": false,
+  "candidate_write_allowed": false,
+  "human_truth_write_allowed": false,
+  "selection": "first test24 frame from each of sequences 010, 011 and 012; all four cameras",
+  "source_manifest": {
+    "path": "outputs/sfl_cpd15y_stage2_20261110/task2/optimization/sam3_annotation_pack_96_manifest.json",
+    "sha256": "cfd84f0ca41bf2f9522b20062f10442f5e7c5f5c595ae3c445aafb2d688dd05a"
+  },
+  "local_root": "C:/Users/seer/Documents/ChatGPT/Seer2clw/datasets/sfl-cpd15y/20260920_cs-heli_Dev_000001",
+  "files": [
+    {"sequence":"010","frame_id":"1789899951882467655","camera":"camera_0","relative_path":"010/bevannotation_data/cameras_640x512/camera_0/1789899951882467655.png","sha256":"723aa08fe8e9b64f1736bb10f622371eb80be4f7abb67d63f3511c2b0142c548"},
+    {"sequence":"010","frame_id":"1789899951882467655","camera":"camera_1","relative_path":"010/bevannotation_data/cameras_640x512/camera_1/1789899951882467655.png","sha256":"ab0b950a82d3530a5aace8d500c1eac4ae97f66ddc3d5b9ecff87892512d3990"},
+    {"sequence":"010","frame_id":"1789899951882467655","camera":"camera_2","relative_path":"010/bevannotation_data/cameras_640x512/camera_2/1789899951882467655.png","sha256":"3f70ab649fb35bc9efd4bc59e8e2ad9a24b5fff6192343d768f84c0cff8ec9a0"},
+    {"sequence":"010","frame_id":"1789899951882467655","camera":"camera_3","relative_path":"010/bevannotation_data/cameras_640x512/camera_3/1789899951882467655.png","sha256":"1b98aba4387168b7d52a5779e9c16091c5fbef95d06b03cc1d5366b463942464"},
+    {"sequence":"011","frame_id":"1789900388815700364","camera":"camera_0","relative_path":"011/bevannotation_data/cameras_640x512/camera_0/1789900388815700364.png","sha256":"ed93e978810637b9615b932c2870c9eb2652b721ceafe44ed100bb71f04643e7"},
+    {"sequence":"011","frame_id":"1789900388815700364","camera":"camera_1","relative_path":"011/bevannotation_data/cameras_640x512/camera_1/1789900388815700364.png","sha256":"452a0b1135b58ad3a09af127ece1684bc3054eb1cecf43547eaf796bfec49a47"},
+    {"sequence":"011","frame_id":"1789900388815700364","camera":"camera_2","relative_path":"011/bevannotation_data/cameras_640x512/camera_2/1789900388815700364.png","sha256":"3b67c20cba671c63e1f1a9a9c1f29d75c2c0bb9e10720c7fc675354bbc79de2a"},
+    {"sequence":"011","frame_id":"1789900388815700364","camera":"camera_3","relative_path":"011/bevannotation_data/cameras_640x512/camera_3/1789900388815700364.png","sha256":"23fa33fe324a5cb0ce799bcf8bb8997b671218bf700da404e134b318dc3df931"},
+    {"sequence":"012","frame_id":"1789900488815784655","camera":"camera_0","relative_path":"012/bevannotation_data/cameras_640x512/camera_0/1789900488815784655.png","sha256":"90a4403617a5c040f35c5fc4f7edb533f40f5e1be25abf0c593b0676fb3fa317"},
+    {"sequence":"012","frame_id":"1789900488815784655","camera":"camera_1","relative_path":"012/bevannotation_data/cameras_640x512/camera_1/1789900488815784655.png","sha256":"37e3826206c1cb33cd6bbc4281af9a960cdc369eb4805f1c5488b0748b908c29"},
+    {"sequence":"012","frame_id":"1789900488815784655","camera":"camera_2","relative_path":"012/bevannotation_data/cameras_640x512/camera_2/1789900488815784655.png","sha256":"ec66fa5bcec0f3ec7b92657c564d0ce01c998f7a124d826233aebda61ce75beb"},
+    {"sequence":"012","frame_id":"1789900488815784655","camera":"camera_3","relative_path":"012/bevannotation_data/cameras_640x512/camera_3/1789900488815784655.png","sha256":"4a26c2843e8fdeee03184d9b7083c8135411c02850eccafb65059e95beca433f"}
+  ]
+}

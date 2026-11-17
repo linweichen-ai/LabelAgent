@@ -27,7 +27,8 @@ from .sensors import cloud_snapshot
 from .candidate_import import (prepare_candidate_import, merge_candidate_import,
                                merge_candidate_labels)
 from .workflow import (DESCRIPTION_INPUT_VERSION, MAX_REVIEW_ROUNDS, RunCancelled,
-                       cancellation, canonical_unreferenced_description, describe,
+                       cancellation, candidate_labels_with_recall_probes,
+                       canonical_unreferenced_description, describe,
                        discover_visible_labels, reference_labels, restrict_description,
                        run, trace_calls, candidate_overlay, reference_overlay, chat,
                        VISIBLE_LABEL_DEFINITIONS)
@@ -3136,8 +3137,9 @@ def generate_reference_draft():
                     lambda error: update_run_status(
                         phase="discovering_retry", discovery_attempt=2,
                         error=f"首次类别结构不合规，正在自动重试：{str(error)[:300]}"))
-                selected = discovery.get("candidate_labels") or list(dict.fromkeys(
-                    discovery["visible_labels"] + discovery["uncertain_labels"]))
+                selected, recall_probes = candidate_labels_with_recall_probes(
+                    discovery, labels)
+                discovery["recall_probe_labels"] = recall_probes
                 if not selected:
                     raise ValueError("VLM 未发现可生成候选的已知类别；请改用单类别起稿或点提示 SAM")
                 update_run_status(phase="describing", visible_labels=selected,

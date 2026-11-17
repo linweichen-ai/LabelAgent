@@ -39,6 +39,8 @@ def parse_args() -> argparse.Namespace:
                         help="Optional small-image endpoint override; never saved to source state")
     parser.add_argument("--llm-fast-model",
                         help="Optional small-image model-id override; never saved to source state")
+    parser.add_argument("--disable-fast-route", action="store_true",
+                        help="Benchmark the primary endpoint only; source state is never modified")
     return parser.parse_args()
 
 
@@ -104,10 +106,36 @@ def median(values: list[float]) -> float | None:
     return (ordered[middle - 1] + ordered[middle]) / 2
 
 
+def progress_payload(position: int, total: int, rows: list[dict],
+                     elapsed_seconds: float, current_name: str) -> dict:
+    """Return a bounded per-image progress event with a simple ETA."""
+    completed = max(1, int(position))
+    remaining = max(0, int(total) - completed)
+    eta_seconds = (float(elapsed_seconds) / completed) * remaining
+    failures = sum(1 for row in rows if row.get("failure") is not None)
+    current = rows[-1] if rows else {}
+    return {
+        "event": "progress",
+        "processed": completed,
+        "total": int(total),
+        "current": current_name,
+        "success_count": len(rows) - failures,
+        "failure_count": failures,
+        "model_route": current.get("model_route"),
+        "elapsed_seconds": round(float(elapsed_seconds), 1),
+        "eta_seconds": round(eta_seconds, 1),
+    }
+
+
 def model_config(source: dict, llm_url: str | None = None,
                  llm_model: str | None = None, llm_fast_url: str | None = None,
-                 llm_fast_model: str | None = None) -> dict:
+                 llm_fast_model: str | None = None,
+                 disable_fast_route: bool = False) -> dict:
     config = dict(source or {})
+    if disable_fast_route:
+        for key in tuple(config):
+            if key.startswith("llm_fast_"):
+                config.pop(key, None)
     if llm_url:
         parsed = urlsplit(llm_url)
         if (parsed.scheme not in {"http", "https"} or not parsed.hostname
@@ -144,7 +172,8 @@ def main() -> int:
 
     state = json.loads(state_path.read_text(encoding="utf-8"))
     config = model_config(state.get("config") or {}, args.llm_url, args.llm_model,
-                          args.llm_fast_url, args.llm_fast_model)
+                          args.llm_fast_url, args.llm_fast_model,
+                          args.disable_fast_route)
     labels = list(state.get("labels") or [])
     if not config.get("llm_url") or not config.get("llm_model") or not labels:
         raise ValueError("source state lacks VLM settings or label registry")
@@ -152,6 +181,7 @@ def main() -> int:
     from agent.workflow import discover_visible_labels, trace_calls
 
     rows = []
+    benchmark_started = time.perf_counter()
     for position, image_path in enumerate(images, 1):
         trace = []
         started = time.perf_counter()
@@ -182,6 +212,10 @@ def main() -> int:
             "registry_mutated": result.get("registry_mutated"),
             "failure": failure,
         })
+        print(json.dumps(progress_payload(
+            position, len(images), rows,
+            time.perf_counter() - benchmark_started, image_path.name),
+            ensure_ascii=False), flush=True)
 
     successful = [row for row in rows if row["failure"] is None]
     elapsed = sorted(float(row["elapsed_ms"]) for row in successful

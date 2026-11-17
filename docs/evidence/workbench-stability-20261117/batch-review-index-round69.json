@@ -1,0 +1,97 @@
+{
+  "schema_version": "labelagent.workbench_round69_batch_review_index.v1",
+  "date": "2026-11-17",
+  "objective": "build the cross-frame review queue from risk metadata without downloading every polygon",
+  "implementation": {
+    "endpoint": "/api/review/index",
+    "included_per_candidate": [
+      "candidate id",
+      "label",
+      "confidence when present",
+      "dataset split",
+      "browser review seed bound to full candidate content"
+    ],
+    "included_per_frame": [
+      "minimal Agent conflict and QC status",
+      "minimal persistent remediation status"
+    ],
+    "excluded": [
+      "polygon points",
+      "parts",
+      "holes",
+      "Agent image traces",
+      "model credentials"
+    ],
+    "stale_protection": [
+      "review seed changes when candidate content changes",
+      "overlapping refreshes use a generation guard",
+      "compact frame events refresh the index only while the queue is expanded"
+    ]
+  },
+  "formal_runtime_measurement": {
+    "candidate_frames": 29,
+    "candidates": 335,
+    "full_state": {"bytes": 1953991, "median_ms_over_5": 189.29},
+    "review_index": {
+      "bytes": 26775,
+      "median_ms_over_5": 136.84,
+      "byte_reduction_percent": 98.6297,
+      "geometry_present": false
+    },
+    "browser_acceptance": {
+      "queue_items": 29,
+      "expand_elapsed_ms": 168,
+      "requests": ["/api/review/index"],
+      "full_state_requested": false,
+      "page_errors": []
+    },
+    "browser_seed_readback": {
+      "checked_candidates": 335,
+      "mismatches": 0,
+      "candidate_frames": 29
+    }
+  },
+  "tests": {
+    "python": {"tests": 732, "failures": 0, "encoding": "PYTHONUTF8=1"},
+    "web": {"tests": 91, "failures": 0},
+    "coverage": [
+      "browser FNV seed parity including Chinese labels and integral floats",
+      "geometry and private status fields are absent",
+      "batch queue never fetches /api/state",
+      "stale refresh responses cannot overwrite a newer queue"
+    ]
+  },
+  "deployment": {
+    "formal_ready": true,
+    "sam_ready": true,
+    "vlm_ready": true,
+    "formal_run_status": "idle",
+    "backup": "D:/Apps/LabelAgent/.local/backups/batch-review-index-round69-20261117",
+    "source_sha256": {
+      "source/agent/server.py": "8bc0af4b56d1579f09f59a27bf49f5679342680bde7f4afefa7866624b309c74",
+      "source/agent/workflow.py": "32b098943fb8e089cb2b22eeebc2c672302bf9aa456e413105d4b79351fd8a57",
+      "source/web/app.js": "9edbee8764630e010dbfcf7a75af051885849785fadba82cb35bed14126d2401",
+      "source/web/reference-prep.js": "f45c2746c1f396ba0ebe592247ffcda7ea40305cd1f1e8991e997d0934029dae",
+      "source/web/review.js": "271c0bd4fd3351b896cc9a61827d4f1bcce3373c7aaddb9c63212ac7a15553cf",
+      "source/web/batch-review.js": "9480bdd7942b73438a62cbee1bcb81a71ce4325108c9d03d2bd4a19fa44c9fb9"
+    },
+    "formal_state_sha256_unchanged": {
+      "state.json": "54a5ee6ac1794ae3d769b3fefa3cadd79da7f2d5dff892f0b8b4f0a259238ff5",
+      "file_sessions.json": "251a47963ebd2931ee033408e9fe39a94f74539bff0a339c58429ace409088cc",
+      "files.json": "0d8487cd72b3d29612f67ec351ced54f993e98527d44c7df59af6e29196be214",
+      "last_run.json": "2133da6186935d485fe2b2296fe2248ba6cc1183743357ab4c1d8c873d3cffdf",
+      "last_run_summary.json": "920c0d0e6dc37abfe109c13b24b88d9fdcd463e7c55d65bd7ca224534b203ce2",
+      "model_debug.json": "efdf22cd6bd803c958e3acb39d46054d294544fe48324a12b4afe1502b3bbb9a"
+    }
+  },
+  "isolation": {
+    "human_truth_modified": false,
+    "training_approval_modified": false,
+    "oss_modified": false
+  },
+  "boundaries": [
+    "The response body and browser parsing burden are dramatically smaller, but first-generation server time remains about 137 ms because review seeds are derived from full candidate content.",
+    "The index is for review ordering only; selecting a frame still loads that frame's full geometry.",
+    "No model accuracy or inference-latency claim is made."
+  ]
+}

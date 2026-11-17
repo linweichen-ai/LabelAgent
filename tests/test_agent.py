@@ -2399,6 +2399,48 @@ class ServerTests(unittest.TestCase):
             finally:
                 server.state, server.WORK = old_state, old_work
 
+    def test_batch_review_index_preserves_browser_seed_without_geometry(self):
+        old_state, old_work = server.state, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            points = [[1.0, 2], [3.5, 4], [5, 6]]
+            candidate = {"id": 1, "label": "斜坡", "score": 0.75,
+                         "points": points, "holes": [],
+                         "parts": [{"points": points, "holes": []}],
+                         "dataset_split": "test24"}
+            server.state = {
+                "video": FakeVideo(), "topic": "camera0", "labels": ["斜坡"],
+                "truth": {}, "reference_frames": {},
+                "config": {"dataset_split": "test24", "llm_key": "secret"},
+                "candidates": {"3": [candidate], "4": []},
+                "agent_runs": {"3": {"review_queue": [{"label": "斜坡"}],
+                                      "stop_reason": "needs_review", "split": "test24"}},
+                "candidate_review_status": {
+                    "camera0:3": {"frame": 3, "topic": "camera0",
+                                  "remediation_required": True, "private": "hidden"}},
+                "human_review_transactions": {},
+            }
+            try:
+                response = server.app.test_client().get("/api/review/index")
+                self.assertEqual(response.status_code, 200, response.json)
+                payload = response.json
+                self.assertEqual(payload["schema_version"], "labelagent.batch-review-index.v1")
+                self.assertTrue(payload["compact_geometry"])
+                summary = payload["candidates"]["3"][0]
+                self.assertEqual(summary["review_seed"], "877258d2")
+                self.assertEqual(summary["dataset_split"], "test24")
+                self.assertNotIn("points", summary)
+                self.assertNotIn("parts", summary)
+                self.assertNotIn("holes", summary)
+                self.assertEqual(payload["agent_runs"]["3"]["review_queue"], [{}])
+                self.assertEqual(payload["candidate_review_status"]["camera0:3"], {
+                    "frame": 3, "topic": "camera0", "remediation_required": True})
+                self.assertNotIn("llm_key", response.get_data(as_text=True))
+                self.assertNotIn("private", response.get_data(as_text=True))
+                self.assertLess(len(response.data), 2048)
+            finally:
+                server.state, server.WORK = old_state, old_work
+
     def test_reference_frame_rejects_stale_file_and_topic_scope(self):
         old_state, old_work = server.state, server.WORK
         with tempfile.TemporaryDirectory() as directory:

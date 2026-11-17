@@ -120,6 +120,16 @@ test('单帧候选复核恢复轮询只读当前帧而不是整套状态', () =>
   assert.doesNotMatch(refresh, /fetch\('\/api\/state'/);
 });
 
+test('批量复核队列使用无几何风险索引并复用候选内容种子', () => {
+  const batch = source('batch-review.js');
+  assert.match(batch, /fetch\('\/api\/review\/index'/);
+  assert.match(batch, /labelagent\.batch-review-index\.v1/);
+  assert.match(batch, /shape\?\.review_seed/);
+  assert.doesNotMatch(batch, /fetch\('\/api\/state'/);
+  assert.match(batch, /只读取帧级风险索引/);
+  assert.match(batch, /next\.compact_geometry === true[\s\S]*!panel\.classList\.contains\('compact'\)[\s\S]*refresh\(\)/);
+});
+
 test('状态请求隐藏期间完成不重建定时器，恢复后立即轮询且保持单链', async () => {
   let calls = 0, release;
   const h = harness({

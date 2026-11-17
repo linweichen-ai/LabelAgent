@@ -1543,6 +1543,84 @@ def _reference_frame_index(record):
     return result
 
 
+def _js_json_value(value):
+    """Normalize JSON numbers to the representation used by JSON.stringify."""
+    if isinstance(value, float) and math.isfinite(value) and value.is_integer():
+        return int(value)
+    if isinstance(value, list):
+        return [_js_json_value(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _js_json_value(item) for key, item in value.items()}
+    return value
+
+
+def _candidate_browser_seed(candidate):
+    """Reproduce the browser's FNV-1a review key without exposing geometry."""
+    fields = ("id", "label", "score", "points", "parts", "holes")
+    payload = {key: candidate[key] for key in fields if key in candidate}
+    text = json.dumps(_js_json_value(payload), ensure_ascii=False, sort_keys=True,
+                      separators=(",", ":"))
+    result = 2166136261
+    encoded = text.encode("utf-16-le")
+    for index in range(0, len(encoded), 2):
+        result ^= encoded[index] | (encoded[index + 1] << 8)
+        result = (result * 16777619) & 0xffffffff
+    return f"{result:08x}"
+
+
+def _batch_review_candidate(candidate):
+    fields = ("id", "label", "score", "dataset_split", "split")
+    result = {key: copy.deepcopy(candidate[key]) for key in fields if key in candidate}
+    result["review_seed"] = _candidate_browser_seed(candidate)
+    return result
+
+
+def _batch_review_run(run):
+    if not isinstance(run, dict):
+        return None
+    fields = ("dataset_split", "split", "failed", "error", "quality_failure",
+              "qc_failed", "stop_reason", "converged")
+    result = {key: copy.deepcopy(run[key]) for key in fields if key in run}
+    result["review_queue"] = [{} for _ in (run.get("review_queue") or [])]
+    return result
+
+
+@app.get("/api/review/index")
+def get_batch_review_index():
+    """Return cross-frame risk metadata without any polygon geometry."""
+    with lock:
+        video = state.get("video")
+        candidates = {
+            str(frame): [_batch_review_candidate(candidate) for candidate in items]
+            for frame, items in state.get("candidates", {}).items()
+            if isinstance(items, list) and items
+        }
+        runs = {
+            frame: summary for frame in candidates
+            if (summary := _batch_review_run(state.get("agent_runs", {}).get(frame))) is not None
+        }
+        statuses = {
+            key: {
+                field: copy.deepcopy(value[field])
+                for field in ("frame", "topic", "remediation_required") if field in value
+            }
+            for key, value in state.get("candidate_review_status", {}).items()
+            if isinstance(value, dict)
+        }
+        return jsonify(
+            schema_version="labelagent.batch-review-index.v1",
+            compact_geometry=True,
+            loaded=video is not None,
+            path=str(video.path) if video is not None else "",
+            topic=state.get("topic"),
+            labels=copy.deepcopy(state.get("labels", [])),
+            config={"dataset_split": state.get("config", {}).get("dataset_split")},
+            candidates=candidates,
+            agent_runs=runs,
+            candidate_review_status=statuses,
+        )
+
+
 @app.get("/api/reference-preparation")
 def get_reference_preparation():
     """Return the geometry-free index used by the reference preparation dialog.

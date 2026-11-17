@@ -8,6 +8,7 @@
   let state = null;
   let activeFilter = 'all';
   let visibleQueue = [];
+  let refreshGeneration = 0;
 
   function drafts() {
     try { return JSON.parse(sessionStorage.getItem(draftStorageKey) || '{}'); } catch (_) { return {}; }
@@ -18,6 +19,7 @@
     return Object.fromEntries(Object.keys(value).sort().map(key => [key, stable(value[key])]));
   }
   function seed(shape) {
+    if (/^[0-9a-f]{8}$/.test(String(shape?.review_seed || ''))) return shape.review_seed;
     const payload = JSON.stringify(stable({id: shape?.id, label: shape?.label, score: shape?.score,
       points: shape?.points, parts: shape?.parts, holes: shape?.holes}));
     let hash = 2166136261;
@@ -178,13 +180,20 @@
     byId('batchJumpHard').disabled = !hardFrames;
   }
   async function refresh() {
+    const generation = ++refreshGeneration;
     try {
-      const response = await fetch('/api/state', {cache: 'no-store'});
-      if (!response.ok) throw new Error('state unavailable');
-      state = await response.json();
+      const response = await fetch('/api/review/index', {cache: 'no-store'});
+      if (!response.ok) throw new Error('review index unavailable');
+      const next = await response.json();
+      if (generation !== refreshGeneration) return;
+      if (next.schema_version !== 'labelagent.batch-review-index.v1' || next.compact_geometry !== true) {
+        throw new Error('review index incompatible');
+      }
+      state = next;
       panel.classList.remove('unavailable');
       render();
     } catch (_) {
+      if (generation !== refreshGeneration) return;
       state = null; panel.classList.add('unavailable');
       byId('batchReviewContext').textContent = '状态不可用';
       queueHost.innerHTML = '<div class="batchReviewEmpty">缺少实时证据，批量队列已停止。</div>';
@@ -207,7 +216,11 @@
   });
   document.addEventListener('labelagent:review-state', event => {
     const next = event.detail?.state;
-    if (!next || next.compact_geometry === true) return;
+    if (!next) return;
+    if (next.compact_geometry === true) {
+      if (!panel.classList.contains('compact')) refresh();
+      return;
+    }
     state = next;
     render();
   });
@@ -224,5 +237,5 @@
   panel.classList.add('compact');
   byId('batchReviewToggle').textContent = '展开队列';
   byId('batchReviewToggle').setAttribute('aria-expanded', 'false');
-  byId('batchReviewContext').textContent = '已按需加载；展开队列时读取全部候选';
+  byId('batchReviewContext').textContent = '已按需加载；展开队列时只读取帧级风险索引';
 })();

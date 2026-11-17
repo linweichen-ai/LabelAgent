@@ -1,0 +1,121 @@
+{
+  "schema_version": "labelagent.qwen3vl2b-lora-round.v1",
+  "round": 102,
+  "created_at": "2026-11-18T00:43:55+08:00",
+  "status": "isolated_smoke_passed_not_deployed",
+  "objective": "Build a leakage-safe train72 teacher-distillation split and prove that Qwen3-VL-2B LoRA can train and restore the production 8B service without changing workbench state.",
+  "data": {
+    "track": "teacher_distillation",
+    "candidate_kind": "machine_teacher_output",
+    "human_truth": false,
+    "production_training_approved": false,
+    "requires_acceptance_gate": true,
+    "test24_included": false,
+    "train_sequences": "000-007",
+    "internal_dev_sequence": "008",
+    "train_samples": 62,
+    "dev_samples": 8,
+    "review_only_samples": 2,
+    "review_only_reason": "cargo_floor_missing_robot_attachment_evidence",
+    "source_image_bytes_copied": 0,
+    "train_jsonl_sha256": "a79c20980dd3dc656b1f4b78bfaebe2c68458d1ab48408dddb9fe932d634462c",
+    "dev_jsonl_sha256": "6d085b4c263841ae7006f6ae68e3e35bf3dfa23b3ccabb1583098906c16048c6",
+    "manifest_sha256": "e3e6d34f42569b02e290f5d3e9cb31b1026be3c838a55a9efe704a6b3240821e"
+  },
+  "dry_run": {
+    "status": "passed",
+    "samples": 8,
+    "input_shape": [1, 1126],
+    "supervised_tokens": 202,
+    "image_grid_thw": [[1, 32, 40]],
+    "training_started": false,
+    "receipt_sha256": "5d5b0fea1b710cd5af1b1c88bfd642ea1d864095b396cc91e7313121bd11dd34"
+  },
+  "environment": {
+    "host": "factory-4090",
+    "base_model": "/home/clw/labelagent_vlm_20261104/models/Qwen3-VL-2B-Instruct",
+    "base_model_config_sha256": "bec4b3d446efa05807365c9e1cec03ac590836879d022f3a6da879971154bdd3b",
+    "torch": "2.10.0+cu128",
+    "transformers": "4.57.6",
+    "accelerate": "1.15.0",
+    "peft": "0.18.0",
+    "peft_install_scope": "/home/clw/projects/sfl-cpd15y/qwen3vl2b-lora-round102/venv",
+    "formal_vlm_environment_modified": false,
+    "gpu0_unknown_workload_stopped": false,
+    "gpu1_owned_vlm_was_only_stopped_service": true
+  },
+  "training": {
+    "status": "smoke_complete",
+    "samples_loaded": 8,
+    "steps": 2,
+    "gradient_accumulation_steps": 2,
+    "learning_rate": 0.0002,
+    "train_loss": 0.8101494312286377,
+    "trainer_runtime_seconds": 4.5084,
+    "receipt_elapsed_seconds": 10.431,
+    "peak_cuda_memory_bytes": 6639853056,
+    "trainable_parameters": 8716288,
+    "total_parameters": 2136248320,
+    "trainable_percent": 0.4080184835440853,
+    "adapter_bytes": 34922600,
+    "adapter_sha256": "9c21f69dfc89c1e238d8f3cd80a1283a31666d4c69c3ec027f0459598ebb7b0c",
+    "receipt_sha256": "bf7356900c332465fab0f2dfc1ebab2366f714863c8459cda3b43f96b2cf2b16",
+    "production_deployed": false,
+    "test24_used_for_training": false
+  },
+  "independent_adapter_audit": {
+    "status": "passed",
+    "tensor_count": 392,
+    "lora_a_tensors": 196,
+    "nonzero_lora_a_tensors": 196,
+    "lora_b_tensors": 196,
+    "nonzero_lora_b_tensors": 196,
+    "all_finite": true,
+    "audit_sha256": "1ade07a4cccae2db949c8b34de01427a0417f98f39246b571127706d3c8c4d4a"
+  },
+  "backup_and_rollback": {
+    "remote_artifact": "/home/clw/projects/sfl-cpd15y/qwen3vl2b-lora-round102/smoke-v1",
+    "local_untracked_backup": "artifacts/round102-qwen3vl2b-lora-smoke",
+    "local_adapter_sha256_matches_remote": true,
+    "production_source_or_weights_changed": false,
+    "production_restore_command": "bash /home/clw/labelagent_remote_20261110/start_remote_services.sh",
+    "production_restore_health_sha256": "4676652ba71e614a8c29978504c8cca7663474d58d5122b8b808dfe44b9b5804"
+  },
+  "restored_production": {
+    "page_http_status": 200,
+    "sam_model_loaded": true,
+    "vlm_status": "ok",
+    "vlm_model": "labelagent-vlm8b",
+    "vlm_model_loaded": true,
+    "vlm_model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+    "exact_requests_inflight": 0,
+    "startup_prewarm_seconds": 12.19,
+    "formal_state_hashes_unchanged": true
+  },
+  "formal_state_sha256": {
+    "state.json": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "file_sessions.json": "251a47963ebd2931ee033408e9fe39a94f74539bff0a339c58429ace409088cc",
+    "files.json": "0d8487cd72b3d29612f67ec351ced54f993e98527d44c7df59af6e29196be214",
+    "last_run.json": "2133da6186935d485fe2b2296fe2248ba6cc1183743357ab4c1d8c873d3cffdf",
+    "last_run_summary.json": "920c0d0e6dc37abfe109c13b24b88d9fdcd463e7c55d65bd7ca224534b203ce2",
+    "model_debug.json": "2d3be581405142deb66fe62dc24f8efeaac6d5c471fae61ccbc150819f432b6e"
+  },
+  "verification": {
+    "targeted_tests": "6/6",
+    "python_regression": "793/793 with 179 subtests",
+    "web_regression": "95/95",
+    "python_compile": "passed",
+    "shell_syntax": "passed",
+    "git_diff_check": "passed"
+  },
+  "attempt_notes": [
+    "The first inline remote wrapper was rejected before mutation because PowerShell expanded shell substitutions locally; the owned VLM remained healthy and no training started.",
+    "The isolated venv could not inherit packages from another venv, so PEFT remained project-local and was overlaid onto the unchanged formal Python environment through PYTHONPATH."
+  ],
+  "limits": [
+    "This is a two-step execution and weight-update proof, not an accuracy result.",
+    "The training targets are audited 8B machine-teacher candidates, not human truth.",
+    "The adapter has not been evaluated on dev8 or external test24 and is not eligible for production deployment.",
+    "SAM3 weights were not fine-tuned or changed in this round."
+  ]
+}

@@ -1212,3 +1212,17 @@ SAM 掩码微调仍等待人工像素真值，但 VLM 蒸馏可以独立准备�
 新增独立审计器 `tools/audit_vlm_teacher_candidates.py`，重新核对 train72 精确覆盖、test24 缺席、源/目标/合约/state/模型哈希、候选边界及汇总计数，真实集合结果 `passed`、errors 为空。针对性测试 7/7，完整回归 Python 787/787、网页 95/95；正式页面、SAM、8B 均正常，六份正式状态哈希不变。结构化记录见 [第一百零一轮 train72 教师候选](evidence/workbench-stability-20261117/vlm-teacher-train72-round101.json)。原始逐图候选只保存在未跟踪 `artifacts/round101-teacher-train72-v2/`，不进入代码仓库或人工真值。
 
 边界：70 条可以作为 2B 隔离蒸馏实验的机器教师候选，但不是独立真值；两条 cargo_floor 仍需单独裁决。下一步应先生成严格区分 `teacher_candidate` 与未来 `human_verified` 的训练 JSONL，再在独立环境安装 PEFT，做一个可回滚的小步 LoRA 冒烟训练；生产 8B 与 test24 在训练期间保持冻结。
+
+## 第一百零二轮 Qwen3-VL-2B LoRA 隔离冒烟训练（通过但未部署，2026-11-18）
+
+本轮先把第一百零一轮 70 条可用机器教师候选固定为严格训练输入：序列 000–007 共 62 条作为训练，序列 008 共 8 条作为内部开发集；两条 `cargo_floor_missing_robot_attachment_evidence` 继续留在复核区。test24 的 010–012 完全不进入 JSONL，所有记录仍明确写成 `machine_teacher_output`、`human_truth=false`、`production_training_approved=false` 和 `requires_acceptance_gate=true`。构建器第一次用真实数据验收时因教师采集器与训练构建器的 JSON 键排序哈希规则不一致而主动停止；统一哈希合约并加入逆序键回归后，真实集合生成 62/8/2，未复制图像字节。
+
+远端 dry-run 在不加载模型和不占 GPU 的前提下通过真实图片哈希、Qwen chat template、图像网格和监督掩码：首批形状为 `[1,1126]`、202 个监督 token、图像网格 `[1,32,40]`。训练依赖只在 `/home/clw/projects/sfl-cpd15y/qwen3vl2b-lora-round102/venv` 安装 PEFT 0.18.0；正式 VLM Python 的 PyTorch 2.10.0、Transformers 4.57.6 和 Accelerate 1.15.0 未被修改。新 venv 无法直接继承另一个 venv 的 PyTorch，因此最终用项目级 `PYTHONPATH` 叠加 PEFT；导入组合已单独验证。
+
+实际两步 LoRA 冒烟只短暂停止 GPU1 上归属 `clw` 且命令严格匹配的正式 8B 服务，GPU0 未知任务和 SAM3 均未触碰。8 张随机训练样本、梯度累积 2、学习率 `2e-4`；训练器耗时 4.508 秒，最终 loss 0.810149，峰值显存 6,639,853,056 字节。LoRA rank 8 覆盖 q/k/v/o 与 gate/up/down 投影，可训练参数 8,716,288，占 2,136,248,320 总参数的 0.408%。适配器为 34,922,600 字节，SHA-256 `9c21f69d...8ebb7b0c`。
+
+独立审计没有加载基础模型，直接检查 safetensors：392 个张量全部有限，196 个 LoRA A 与 196 个 LoRA B 全部非零，证明两步训练确实更新权重。远端原件位于 `/home/clw/projects/sfl-cpd15y/qwen3vl2b-lora-round102/smoke-v1`，适配器、配置、收据、审计和恢复健康页已复制到未跟踪的 `artifacts/round102-qwen3vl2b-lora-smoke/`，本地与远端适配器哈希一致。
+
+训练命令无论成功失败都会调用原 `start_remote_services.sh` 恢复正式服务。完成后页面 HTTP 200、SAM loaded、8B VLM loaded、inflight 0，8B 配置 SHA-256 仍为 `5cd45286...8f3661`；六份正式状态哈希完全未变。完整回归为 Python 793/793（另含 179 个 subtests）、网页 95/95；针对性测试 6/6。复现脚本为 `tools/build_vlm_distillation_dataset.py`、`tools/train_qwen3vl_lora.py`、`tools/run_remote_qwen3vl_lora_smoke.sh` 与 `tools/audit_qwen3vl_lora_smoke.py`，结构化证据见 [第一百零二轮 LoRA 冒烟验收](evidence/workbench-stability-20261117/qwen3vl2b-lora-smoke-round102.json)。
+
+边界：这只证明数据隔离、训练执行、权重更新、备份和正式服务恢复均可复现，不是效果提升证据。适配器没有部署，test24 没有参与训练，SAM3 也没有微调。下一轮必须先建立基础 2B 与 LoRA 在 dev8 上的同输入比较，再决定是否扩到完整 62 条的多 epoch 训练；只有内部开发指标改善后，才允许一次性读取 test24 做外部评测，仍不得把 test24 用于调参。

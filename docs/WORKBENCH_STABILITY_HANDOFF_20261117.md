@@ -703,3 +703,13 @@ Python 回归 160/160、网页回归 78/78。正式 `workflow.py`、本地/远�
 Python 回归 160/160、网页回归 78/78。Windows、4090、5090 三处 `local_vlm_server.py` SHA-256 均为 `f2cfc45f...2f31d6`；4090 主路由 ready，5090 因非本流程计算继续保持 disabled，没有抢占。正式 state 与五份候选/历史文件哈希未变，候选、人工真值、训练集和 OSS 均未修改。回滚点分别位于 Windows、4090、5090 的 `vlm-cache-predecode-round52-20261117` 目录，结构化证据见 [第五十二轮解码前缓存命中](evidence/workbench-stability-20261117/predecode-cache-hit-round52.json)。
 
 边界：0.228 秒是完全相同请求的热重放，不是新数据首帧耗时；新数据泛化仍由完整推理与独立评测负责，缓存不会让未见图片绕过模型。
+
+## 第五十三轮完全相同并发请求合并（2026-11-17）
+
+缓存只能加速已经完成过的请求；两个完全相同的冷请求若同时到达，旧行为仍可能让第二路先收到 `Local VLM is busy`。本轮加入严格 single-flight：只有完整请求 SHA-256 完全一致时，第二路才等待第一路的成功结果；图片、提示、schema、模型或生成参数任一不同，仍保持原 busy 与客户端回退，不共享结果。等待上限 90 秒，失败结果不进缓存，服务健康状态会显示当前合并中的精确请求数。
+
+正式 4090 上同时发起两条相同的 011/camera_1 冷请求：两路分别在 26.572 和 26.574 秒成功，0 次 HTTP 503；第一路 `cache_hit=false/coalesced=false`，第二路 `cache_hit=true/coalesced=true`，等待 26.197 秒。服务只留下 1 条缓存，最后一次真实生成 26.044 秒；两路缓存键和有限语义 SHA-256 完全一致，证明一次 GPU 生成同时服务了两个调用方。单测还验证改变 `max_tokens` 的并发请求不会被合并，仍返回原有 busy。
+
+Python 回归 162/162、网页回归 78/78。Windows、4090、5090 的 VLM 服务 SHA-256 均为 `f69b44b6...fed0cad`，正式 workflow 为 `97e32aae...819f7f1`；4090 主路由和 SAM ready，5090 继续安全 disabled。state 与五份候选/历史文件哈希不变，未修改候选、人工真值、训练集或 OSS。回滚点分别位于三端的 `vlm-singleflight-round53-20261117`，结构化证据见 [第五十三轮并发合并](evidence/workbench-stability-20261117/exact-request-singleflight-round53.json)。
+
+边界：并发合并减少重复 GPU 工作和相同请求的 busy 报错，不缩短第一个新请求自身约 26 秒的模型生成时间；首次新图延迟仍是下一阶段的主要优化对象。

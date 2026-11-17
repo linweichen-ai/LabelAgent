@@ -286,15 +286,19 @@ class TransformersBackend:
         return content, prompt_tokens, int(generated.shape[-1])
 
 
-def create_app(backend, response_cache_entries=32):
+def create_app(backend, response_cache_entries=32, coalesce_timeout_seconds=90):
     if (type(response_cache_entries) is not int
             or not 0 <= response_cache_entries <= 256):
         raise ValueError("response_cache_entries must be between 0 and 256")
+    if (type(coalesce_timeout_seconds) is not int
+            or not 1 <= coalesce_timeout_seconds <= 300):
+        raise ValueError("coalesce_timeout_seconds must be between 1 and 300")
     app = Flask(__name__)
     app.config["MAX_CONTENT_LENGTH"] = 64 * 1024 * 1024
     inference_lock = threading.Lock()
     response_cache = OrderedDict()
     response_cache_lock = threading.Lock()
+    inflight_requests = {}
 
     def response_cache_key(body):
         payload = json.dumps(body, ensure_ascii=False, sort_keys=True,
@@ -323,6 +327,28 @@ def create_app(backend, response_cache_entries=32):
                 response_cache.popitem(last=False)
             return len(response_cache)
 
+    def claim_request(key):
+        """Return a cached result, lead one request, or follow its exact twin."""
+        with response_cache_lock:
+            item = response_cache.get(key)
+            if item is not None:
+                response_cache.move_to_end(key)
+                result = deepcopy(item)
+                result.setdefault("local_vlm", {})["response_cache_entries"] = len(response_cache)
+                return "cached", result
+            event = inflight_requests.get(key)
+            if event is not None:
+                return "follower", event
+            event = threading.Event()
+            inflight_requests[key] = event
+            return "leader", event
+
+    def finish_request(key, event):
+        with response_cache_lock:
+            if inflight_requests.get(key) is event:
+                inflight_requests.pop(key, None)
+            event.set()
+
     def completion_response(content, prompt_tokens, completion_tokens, local_vlm):
         return jsonify(id="chatcmpl-" + uuid.uuid4().hex, object="chat.completion",
             created=int(time.time()), model=backend.model_id,
@@ -336,6 +362,7 @@ def create_app(backend, response_cache_entries=32):
     def health():
         with response_cache_lock:
             cached_entries = len(response_cache)
+            inflight_count = len(inflight_requests)
         return jsonify(status="ok", model_loaded=backend.model_loaded,
                        model=backend.model_id, backend=backend.backend_name,
                        quantization=getattr(backend, "quantization", "test_double"),
@@ -350,6 +377,8 @@ def create_app(backend, response_cache_entries=32):
                        idle_cache_release=getattr(backend,'idle_cache_release',False),
                        response_cache_capacity=response_cache_entries,
                        response_cache_entries=cached_entries,
+                       exact_requests_inflight=inflight_count,
+                       coalesce_timeout_seconds=coalesce_timeout_seconds,
                        last_cache_release=getattr(backend,'last_cache_release',None),
                        last_inference_stats=getattr(backend, "last_inference_stats", None))
 
@@ -370,61 +399,80 @@ def create_app(backend, response_cache_entries=32):
         if body.get("temperature", 0) != 0:
             raise ValueError("This deterministic service accepts temperature 0")
         cache_key = response_cache_key(body)
-        cached = cached_response(cache_key)
-        if cached is not None:
+        request_role, claimed = claim_request(cache_key)
+        if request_role == "cached":
+            claimed["local_vlm"].update(cache_hit=True, cache_key_sha256=cache_key,
+                                         coalesced=False, seconds=0.0)
+            return completion_response(**claimed)
+        if request_role == "follower":
+            wait_started = time.monotonic()
+            if not claimed.wait(coalesce_timeout_seconds):
+                return jsonify(error={"message":
+                    "Timed out waiting for an identical Local VLM request"}), 503
+            cached = cached_response(cache_key)
+            if cached is None:
+                return jsonify(error={"message":
+                    "The identical Local VLM request did not produce a reusable result"}), 503
             cached["local_vlm"].update(cache_hit=True, cache_key_sha256=cache_key,
-                                       seconds=0.0)
+                coalesced=True,
+                coalesced_wait_seconds=round(time.monotonic() - wait_started, 3),
+                seconds=0.0)
             return completion_response(**cached)
-        # A hit is bound to the exact already-validated request, including the
-        # embedded image bytes.  Skip repeated base64/PIL decoding on replay;
-        # every cache miss still traverses the complete media validation path.
-        messages, images = decode_messages(body.get("messages"))
-        image_budget=None
-        if 'image_token_budget' in body:
-            image_budget=checked_single_image_budget(body['image_token_budget'],backend,len(images))
-        if not inference_lock.acquire(blocking=False):
-            return jsonify(error={"message": "Local VLM is busy"}), 503
-        start = time.monotonic()
         try:
-            options = {}
-            if image_budget is not None:options['image_token_budget']=image_budget
-            if "response_format" in body:
-                format_spec = body["response_format"]
-                if not isinstance(format_spec, dict) or format_spec.get("type") != "json_schema":
-                    raise ValueError("Only json_schema response format is supported")
-                wrapper = format_spec.get("json_schema")
-                if not isinstance(wrapper, dict) or not isinstance(wrapper.get("schema"), dict):
-                    raise ValueError("response_format must contain a JSON schema")
-                options["response_schema"] = wrapper["schema"]
-            content, prompt_tokens, completion_tokens = backend.generate(messages, images, max_tokens, **options)
-            # Snapshot while this request still owns the inference lock.
-            request_stats=deepcopy(getattr(backend,'last_inference_stats',None) or {})
-            # generate() has returned, so temporary tensors no longer occupy
-            # live Python locals. The lock still excludes a new inference.
+            # A hit is bound to the exact already-validated request, including
+            # its embedded image bytes. Every leader still traverses complete
+            # media validation before it can populate the cache.
+            messages, images = decode_messages(body.get("messages"))
+            image_budget=None
+            if 'image_token_budget' in body:
+                image_budget=checked_single_image_budget(
+                    body['image_token_budget'],backend,len(images))
+            if not inference_lock.acquire(blocking=False):
+                return jsonify(error={"message": "Local VLM is busy"}), 503
+            start = time.monotonic()
             try:
-                cache_release=trim_idle_cuda_cache(getattr(backend,'torch',None),getattr(backend,'idle_cache_release',False))
-            except RuntimeError as error:
-                cache_release={'enabled':True,'performed':False,'error_type':type(error).__name__}
-            backend.last_cache_release=cache_release
+                options = {}
+                if image_budget is not None:options['image_token_budget']=image_budget
+                if "response_format" in body:
+                    format_spec = body["response_format"]
+                    if not isinstance(format_spec, dict) or format_spec.get("type") != "json_schema":
+                        raise ValueError("Only json_schema response format is supported")
+                    wrapper = format_spec.get("json_schema")
+                    if not isinstance(wrapper, dict) or not isinstance(wrapper.get("schema"), dict):
+                        raise ValueError("response_format must contain a JSON schema")
+                    options["response_schema"] = wrapper["schema"]
+                content, prompt_tokens, completion_tokens = backend.generate(
+                    messages, images, max_tokens, **options)
+                # Snapshot while this request still owns the inference lock.
+                request_stats=deepcopy(getattr(backend,'last_inference_stats',None) or {})
+                # generate() has returned, so temporary tensors no longer occupy
+                # live Python locals. The lock still excludes a new inference.
+                try:
+                    cache_release=trim_idle_cuda_cache(getattr(backend,'torch',None),getattr(backend,'idle_cache_release',False))
+                except RuntimeError as error:
+                    cache_release={'enabled':True,'performed':False,'error_type':type(error).__name__}
+                backend.last_cache_release=cache_release
+            finally:
+                inference_lock.release()
+            local_vlm={"backend": backend.backend_name, "image_count": len(images),
+                           "quantization":getattr(backend,'quantization','test_double'),
+                           "model_config_sha256":getattr(backend,'model_config_sha256',None),
+                           "requested_image_token_budget":image_budget,
+                           "effective_image_token_budget":request_stats.get('effective_image_token_budget',getattr(backend,'image_token_budget',None)),
+                           "actual_image_token_counts":request_stats.get('actual_image_token_counts'),
+                           "image_grid_thw":request_stats.get('image_grid_thw'),
+                           "inference_stats":request_stats,
+                           "cache_release":cache_release,
+                           "seconds": round(time.monotonic() - start, 3),
+                           "cache_hit":False, "cache_key_sha256":cache_key,
+                           "coalesced":False, "max_tokens":max_tokens}
+            cache_entries = remember_response(cache_key, {
+                "content": content, "prompt_tokens": prompt_tokens,
+                "completion_tokens": completion_tokens, "local_vlm": local_vlm})
+            local_vlm["response_cache_entries"] = cache_entries
+            return completion_response(content, prompt_tokens, completion_tokens, local_vlm)
         finally:
-            inference_lock.release()
-        local_vlm={"backend": backend.backend_name, "image_count": len(images),
-                       "quantization":getattr(backend,'quantization','test_double'),
-                       "model_config_sha256":getattr(backend,'model_config_sha256',None),
-                       "requested_image_token_budget":image_budget,
-                       "effective_image_token_budget":request_stats.get('effective_image_token_budget',getattr(backend,'image_token_budget',None)),
-                       "actual_image_token_counts":request_stats.get('actual_image_token_counts'),
-                       "image_grid_thw":request_stats.get('image_grid_thw'),
-                       "inference_stats":request_stats,
-                       "cache_release":cache_release,
-                       "seconds": round(time.monotonic() - start, 3),
-                       "cache_hit":False, "cache_key_sha256":cache_key,
-                       "max_tokens":max_tokens}
-        cache_entries = remember_response(cache_key, {
-            "content": content, "prompt_tokens": prompt_tokens,
-            "completion_tokens": completion_tokens, "local_vlm": local_vlm})
-        local_vlm["response_cache_entries"] = cache_entries
-        return completion_response(content, prompt_tokens, completion_tokens, local_vlm)
+            finish_request(cache_key, claimed)
 
     @app.errorhandler(ValueError)
     def invalid(error):

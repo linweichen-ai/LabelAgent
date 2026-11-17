@@ -485,6 +485,7 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
                 "completion_tokens", "preprocess_seconds",
                 "constraint_setup_seconds", "generation_seconds", "seconds",
                 "cache_hit", "cache_key_sha256", "response_cache_entries",
+                "coalesced", "coalesced_wait_seconds",
             }
             raw["local_vlm"] = {key: copy.deepcopy(value)
                                 for key, value in metadata.items() if key in allowed}
@@ -497,6 +498,12 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
             cache_entries = raw["local_vlm"].get("response_cache_entries")
             if (type(cache_entries) is not int or not 0 <= cache_entries <= 256):
                 raw["local_vlm"].pop("response_cache_entries", None)
+            if type(raw["local_vlm"].get("coalesced")) is not bool:
+                raw["local_vlm"].pop("coalesced", None)
+            coalesced_wait = raw["local_vlm"].get("coalesced_wait_seconds")
+            if (type(coalesced_wait) not in (int, float)
+                    or isinstance(coalesced_wait, bool) or not 0 <= coalesced_wait <= 300):
+                raw["local_vlm"].pop("coalesced_wait_seconds", None)
             stats = metadata.get("inference_stats")
             if isinstance(stats, dict):
                 stat_keys = {

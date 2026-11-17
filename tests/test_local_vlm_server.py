@@ -2,6 +2,7 @@ import base64
 import importlib.util
 import io
 from pathlib import Path
+import threading
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -22,6 +23,18 @@ class ContractBackend:
         self.received_schema = response_schema
         self.sizes = [image.size for image in images]
         return '{"protocol_test":true}', 20, 5
+
+
+class BlockingBackend(ContractBackend):
+    def __init__(self):
+        self.started = threading.Event()
+        self.release = threading.Event()
+
+    def generate(self, messages, images, max_tokens, response_schema=None):
+        self.started.set()
+        if not self.release.wait(2):
+            raise RuntimeError("test backend release timed out")
+        return super().generate(messages, images, max_tokens, response_schema)
 
 
 def messages(count=1):
@@ -111,6 +124,49 @@ class LocalVLMContractTests(unittest.TestCase):
         self.assertEqual(changed.status_code, 200)
         self.assertEqual(self.backend.generate_calls, 2)
         self.assertFalse(changed.json["local_vlm"]["cache_hit"])
+
+    def test_identical_inflight_requests_share_one_generation(self):
+        backend = BlockingBackend()
+        app = MODULE.create_app(backend, coalesce_timeout_seconds=2)
+        body = {"model": backend.model_id, "messages": messages()}
+        replies = []
+        def post():
+            with app.test_client() as client:
+                replies.append(client.post("/v1/chat/completions", json=body))
+        first = threading.Thread(target=post)
+        second = threading.Thread(target=post)
+        first.start()
+        self.assertTrue(backend.started.wait(1))
+        second.start()
+        backend.release.set()
+        first.join(2)
+        second.join(2)
+        self.assertEqual([reply.status_code for reply in replies], [200, 200])
+        self.assertEqual(backend.generate_calls, 1)
+        metadata = [reply.json["local_vlm"] for reply in replies]
+        self.assertEqual(sum(item["cache_hit"] for item in metadata), 1)
+        self.assertEqual(sum(item.get("coalesced", False) for item in metadata), 1)
+
+    def test_different_inflight_request_keeps_busy_backpressure(self):
+        backend = BlockingBackend()
+        app = MODULE.create_app(backend, coalesce_timeout_seconds=2)
+        body = {"model": backend.model_id, "messages": messages()}
+        holder = []
+        def post_first():
+            with app.test_client() as client:
+                holder.append(client.post("/v1/chat/completions", json=body))
+        first = threading.Thread(target=post_first)
+        first.start()
+        self.assertTrue(backend.started.wait(1))
+        with app.test_client() as client:
+            different = client.post("/v1/chat/completions",
+                                    json={**body, "max_tokens": 17})
+        self.assertEqual(different.status_code, 503)
+        self.assertEqual(different.json["error"]["message"], "Local VLM is busy")
+        backend.release.set()
+        first.join(2)
+        self.assertEqual(holder[0].status_code, 200)
+        self.assertEqual(backend.generate_calls, 1)
 
 
 if __name__ == "__main__":

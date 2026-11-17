@@ -1,0 +1,63 @@
+{
+  "schema_version": "labelagent.workbench_round53.v1",
+  "recorded_at": "2026-11-17T13:19:00+08:00",
+  "goal_status": "active",
+  "change": {
+    "name": "exact-request single-flight",
+    "description": "Concurrent requests with the same complete request SHA-256 share one model generation; the follower waits for and reuses the successful leader result.",
+    "different_request_behavior": "unchanged non-blocking busy response and existing client fallback",
+    "coalesce_timeout_seconds": 90,
+    "cache_capacity": 32
+  },
+  "safety": {
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "oss_modified": false,
+    "non_owned_gpu_processes_stopped": 0,
+    "exact_identity_required": true
+  },
+  "real_concurrent_benchmark": {
+    "image": "011/camera_1/1789900388815700364.png",
+    "requests_started_concurrently": 2,
+    "successful_requests": 2,
+    "http_503": 0,
+    "leader": {
+      "elapsed_ms": 26572,
+      "cache_hit": false,
+      "coalesced": false,
+      "artifact_sha256": "6eda628dfa2506e47a972938b1066bace355591a03a0d2064059f816cdd7e400"
+    },
+    "follower": {
+      "elapsed_ms": 26574,
+      "cache_hit": true,
+      "coalesced": true,
+      "coalesced_wait_seconds": 26.197,
+      "artifact_sha256": "61f572d866e46a4df4f3d9c22eb6e9ded95c2682dd1db99783ec1063fea9e5a0"
+    },
+    "shared_cache_key_sha256": "86c3b288efefbdd6e7d5b18028817e4f567c42a3cad9634a2f2ecdf533fdcb04",
+    "shared_semantic_sha256": "670a732b9aa1a3b334ff03ded345291ad0459391aa31432fdc8b3cec69f22802",
+    "service_generation_seconds": 26.044,
+    "service_cache_entries_after": 1,
+    "service_exact_requests_inflight_after": 0,
+    "interpretation": "One GPU generation served both identical concurrent callers."
+  },
+  "verification": {
+    "unit_identical_concurrency": "two identical callers succeed with one backend generation",
+    "unit_distinct_concurrency": "a changed max_tokens contract remains distinct and receives Local VLM is busy while the first request runs",
+    "python_tests": {"passed": 162, "failed": 0, "python_utf8": true},
+    "web_tests": {"passed": 78, "failed": 0},
+    "formal_readiness": "SAM and primary 4090 VLM ready; fast 5090 route explicitly disabled",
+    "formal_state_sha256": "54A5EE6AC1794AE3D769B3FEFA3CADD79DA7F2D5DFF892F0B8B4F0A259238FF5",
+    "formal_history_hashes_unchanged": true,
+    "local_vlm_server_sha256": "f69b44b638663f67f5b0dd6f2d8a2f44dec7510b1a29f68031a872db3fed0cad",
+    "workflow_sha256": "97e32aae742308daab5113e35144826055e96755907572e313f2381df819f7f1",
+    "windows_4090_and_5090_source_hashes_match": true
+  },
+  "rollback": {
+    "windows": "D:/Apps/LabelAgent/.local/backups/vlm-singleflight-round53-20261117",
+    "remote_4090": "/home/clw/labelagent_remote_20261110/backups/vlm-singleflight-round53-20261117",
+    "remote_5090": "/home/clw/projects/labelagent-5090/app/work/backups/vlm-singleflight-round53-20261117"
+  },
+  "boundary": "Only byte-for-byte equivalent deterministic requests coalesce. Different images, prompts, schemas, models or generation parameters never share an in-flight result."
+}

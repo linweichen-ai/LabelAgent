@@ -1,0 +1,64 @@
+{
+  "round": 26,
+  "recorded_at": "2026-11-17T13:30:00+08:00",
+  "objective": "Reduce repeated run-record and model-trace disk I/O during long inference without changing JSON meaning or atomic commit behavior.",
+  "benchmark_protocol": {
+    "source": "read-only copy of the formal last_run.json decoded once",
+    "writes": "temporary file followed by atomic replace in a temporary directory",
+    "formal_record_repetitions": 80,
+    "scaled_record_repetitions": 20,
+    "scaled_payload": "16 copies of the decoded formal record inside a synthetic container",
+    "production_files_modified_by_benchmark": false
+  },
+  "results": {
+    "formal_245kb_record": {
+      "pretty": {"median_ms": 4.375, "p95_ms": 4.851, "bytes": 240033},
+      "compact": {"median_ms": 1.615, "p95_ms": 1.753, "bytes": 147571},
+      "median_latency_reduction_percent": 63.09,
+      "byte_reduction_percent": 38.52,
+      "semantic_equal": true
+    },
+    "scaled_4mb_record": {
+      "pretty": {"median_ms": 63.495, "p95_ms": 64.894, "bytes": 4154754},
+      "compact": {"median_ms": 13.675, "p95_ms": 13.935, "bytes": 2361162},
+      "median_latency_reduction_percent": 78.46,
+      "byte_reduction_percent": 43.17,
+      "semantic_equal": true
+    }
+  },
+  "implementation": {
+    "last_run": "compact UTF-8 JSON through the existing bounded fast/streaming writer",
+    "model_debug": "compact UTF-8 JSON through the same writer",
+    "candidate_clear_debug_rewrite": "compact UTF-8 JSON through the same writer",
+    "atomic_replace_preserved": true,
+    "large_file_fallback_preserved": true,
+    "summary_contract_unchanged": true
+  },
+  "formal_runtime_acceptance": {
+    "server_sha256": "A356D629A741320642C6F9C81AABB566296F7C726AB4F3035023C96C722A4F38",
+    "deployed_source_matches": true,
+    "sam3": "ready",
+    "vlm": "ready",
+    "workbench": "ready",
+    "run": "idle"
+  },
+  "runtime_state_readback": {
+    "state.json": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "model_debug.json": "EFDF22CD6BD803C958E3ACB39D46054D294544FE48324A12B4AFE1502B3BBB9A",
+    "unchanged_after_deploy": true
+  },
+  "regression": {
+    "python": "135/135",
+    "web_polling_and_recovery": "14/14",
+    "candidate_and_human_review_gates": "60/60"
+  },
+  "rollback": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-compact-run-io-round26-20261117-133000",
+  "limitations": [
+    "The measured latency is local atomic JSON write time, not full GPU inference latency.",
+    "Formal runtime records were intentionally left byte-identical during deployment acceptance; compact serialization will apply on the next legitimate run/debug write.",
+    "Model outputs, candidate identity, human truth and training-return policy are unchanged."
+  ]
+}

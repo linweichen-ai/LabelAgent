@@ -1389,6 +1389,28 @@ class ServerTests(unittest.TestCase):
             finally:
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work
 
+    def test_run_and_debug_records_use_compact_atomic_json_without_semantic_loss(self):
+        old_work = server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            output = {"status": "running", "file": "中文.mcap", "topic": "相机",
+                      "targets": [1, 2], "frames": [{"frame": 1, "remaining": 3}],
+                      "trace": [{"message": "斜坡", "values": list(range(100))}]}
+            trace = [{"service": "GPT", "message": "人工复核", "round": 2}]
+            try:
+                server.save_run(output)
+                server.save_debug(trace)
+                run_bytes = (server.WORK / "last_run.json").read_bytes()
+                debug_bytes = (server.WORK / "model_debug.json").read_bytes()
+                self.assertNotIn(b"\n  ", run_bytes)
+                self.assertNotIn(b"\n  ", debug_bytes)
+                self.assertEqual(json.loads(run_bytes.decode("utf-8")), output)
+                self.assertEqual(json.loads(debug_bytes.decode("utf-8")), {"trace": trace})
+                self.assertFalse((server.WORK / "last_run.tmp").exists())
+                self.assertFalse((server.WORK / "model_debug.tmp").exists())
+            finally:
+                server.WORK = old_work
+
     def test_timeline_endpoint_returns_exact_times_without_starting_playback(self):
         old_state, old_work = server.state, server.WORK
         with tempfile.TemporaryDirectory() as directory:

@@ -981,7 +981,7 @@ def load_run_summary():
 def save_run(output):
     path = WORK / "last_run.json"
     temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
+    _write_json(temporary, output, fast=_fast_json_write_allowed(path))
     _commit_work_file(temporary, path)
     summary_path = WORK / "last_run_summary.json"
     summary_temporary = summary_path.with_suffix(".tmp")
@@ -992,7 +992,7 @@ def save_run(output):
 def save_debug(trace):
     path = WORK / "model_debug.json"
     temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps({"trace": trace}, ensure_ascii=False, indent=2), encoding="utf-8")
+    _write_json(temporary, {"trace": trace}, fast=_fast_json_write_allowed(path))
     _commit_work_file(temporary, path)
 
 
@@ -2476,7 +2476,7 @@ def clear_auto_result(index):
                 save_run(record)
             else:
                 temporary = path.with_suffix(".tmp")
-                temporary.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
+                _write_json(temporary, record, fast=_fast_json_write_allowed(path))
                 _commit_work_file(temporary, path)
         with run_status_lock:
             if belongs(run_status):

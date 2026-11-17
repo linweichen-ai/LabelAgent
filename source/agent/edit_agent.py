@@ -4,6 +4,11 @@ import numpy as np
 import math
 
 
+GLOBAL_TRAVERSABLE_LABELS = frozenset({"floor", "slope"})
+INSTANCE_LABELS = frozenset({"车辆", "pallet", "person", "ego", "other_robot", "cargo_floor"})
+MAX_GLOBAL_TO_INSTANCE_RECLASSIFY_RATIO = 0.35
+
+
 def _rasterize(shape, width, height):
     canvas = np.zeros((height, width), dtype=np.uint8)
     for part in shape.get("parts") or [shape]:
@@ -280,6 +285,27 @@ def apply_operations(shapes, operations, labels, width, height, next_id=None, ga
         elif kind == "reclassify":
             if item.get("label") not in labels:
                 review_queue.append({**item, "reason": "目标类别不存在"})
+                continue
+            source_label = current[shape_id].get("label")
+            target_label = item["label"]
+            area_ratio = (float(np.count_nonzero(_rasterize(current[shape_id], width, height)))
+                          / float(width * height))
+            # A broad traversable-surface mask often includes a foreground
+            # chassis or person as a small subregion. Reclassifying the whole
+            # mask would destroy valid floor/slope geometry. Keep the original
+            # candidate and route the semantic conflict to human review.
+            if (source_label in GLOBAL_TRAVERSABLE_LABELS
+                    and target_label in INSTANCE_LABELS
+                    and area_ratio > MAX_GLOBAL_TO_INSTANCE_RECLASSIFY_RATIO):
+                review_queue.append({
+                    **item,
+                    "reason": "大面积可通行区域不能整体改为实例类别；已保留原候选并转人工复核",
+                    "reason_code": "global_surface_reclassify_requires_human_review",
+                    "source_label": source_label,
+                    "target_label": target_label,
+                    "area_ratio": round(area_ratio, 6),
+                    "maximum_automatic_area_ratio": MAX_GLOBAL_TO_INSTANCE_RECLASSIFY_RATIO,
+                })
                 continue
             current[shape_id] = {**current[shape_id], "label": item["label"]}
         else:

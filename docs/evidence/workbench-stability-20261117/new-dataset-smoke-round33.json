@@ -1,0 +1,81 @@
+{
+  "round": 33,
+  "recorded_at": "2026-11-17",
+  "objective": "Validate an independent 1104 image sample end to end, then prevent broad traversable-surface candidates from being destroyed by an unsafe instance reclassification.",
+  "data_source": {
+    "batch": "20261104_cs-seer_Dev_P2605901028248",
+    "oss_access": "read-only",
+    "download_scope": "one 640x512 PNG from each of directories 003 and 004; no raw MCAP and no recursive download",
+    "images": [
+      {"directory": "003", "object": "bevpending_data/cameras_640x512/camera_0/1793759959809514987.png", "bytes": 471700, "sha256": "B610375B59E67FA8BDE8059F7347867585F1EB2CD9224E23D8CFE6E1C36623E5"},
+      {"directory": "004", "object": "bevpending_data/cameras_640x512/camera_0/1793760662042842987.png", "bytes": 444794, "sha256": "6F02428B05F0463FC925503FAAB998133B2F2C4D3ADE58AE28514C76A2011C7B"}
+    ]
+  },
+  "isolated_smoke": {
+    "tool": "tools/run_new_dataset_smoke.py",
+    "workspace": "temporary and removed after completion",
+    "source_state_access": "read-only model settings and label registry",
+    "formal_file_library_modified": false,
+    "formal_truth_modified": false,
+    "formal_candidates_modified": false,
+    "training_data_modified": false,
+    "runs": [
+      {"directory": "003", "load_elapsed_ms": 37.706, "inference_elapsed_ms": 137435.076, "candidate_count": 16, "candidate_counts_by_label": {"floor": 1, "pallet": 13, "person": 2}, "visible_labels": ["pallet", "person", "floor", "ego"], "candidate_only": true, "human_truth": false, "approved_for_training": false},
+      {"directory": "004", "load_elapsed_ms": 39.308, "inference_elapsed_ms": 111474.403, "candidate_count": 13, "candidate_counts_by_label": {"ego": 1, "pallet": 12}, "visible_labels": ["floor", "ego"], "candidate_only": true, "human_truth": false, "approved_for_training": false}
+    ]
+  },
+  "observed_failure": {
+    "image": "004",
+    "sam_candidate_before_agent": "a broad floor mask covering 45.6113 percent of the image",
+    "agent_operation": "reclassify the entire floor candidate to ego because foreground host chassis was visible",
+    "post_audit": "blind high-risk audit detected a class conflict but did not restore the original floor label",
+    "user_visible_effect": "the correct broad floor candidate was displayed as ego"
+  },
+  "fix": {
+    "policy": "when a floor or slope candidate exceeds 35 percent of the frame, automatic reclassification to a registered instance class is rejected",
+    "failure_route": "preserve the original candidate and append global_surface_reclassify_requires_human_review",
+    "small_candidate_behavior": "small candidates remain eligible for supported reclassification",
+    "human_truth_or_training_promotion": false
+  },
+  "same_image_after_fix": {
+    "directory": "004",
+    "inference_elapsed_ms": 85092.506,
+    "candidate_count": 13,
+    "candidate_counts_by_label": {"floor": 1, "pallet": 12},
+    "incorrect_ego_candidate_count": 0,
+    "agent_rounds_before": 2,
+    "agent_rounds_after": 1,
+    "high_risk_blind_audits_before": 1,
+    "high_risk_blind_audits_after": 0,
+    "observed_latency_reduction_percent": 23.67,
+    "note": "The model is stochastic; this is a same-image observed run, not a latency distribution or accuracy benchmark."
+  },
+  "regression": {
+    "python_core_and_image_import": "142/142",
+    "candidate_and_review_python": "28/28",
+    "web_polling_recovery_upload_and_candidate_gates": "84/84",
+    "new_guard_unit_cases": "large global surface rejected; small candidate reclassification preserved"
+  },
+  "formal_runtime_acceptance": {
+    "url": "http://127.0.0.1:8765",
+    "edit_agent_sha256": "5B73AF6F3B73746CC57A9DE488D041DD81222FCD697DB3D0D5823E27B15BBC1C",
+    "sam3": "ready",
+    "vlm": "ready",
+    "workflow": "ready",
+    "run": "idle"
+  },
+  "runtime_state_readback": {
+    "state.json": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "unchanged_after_deploy": true
+  },
+  "rollback": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-new-dataset-guard-round33-20261117-181000",
+  "limitations": [
+    "The two 1104 images come from bevpending_data and have no human pixel truth, so this proves compatibility and one concrete semantic correction, not cross-dataset accuracy.",
+    "No slope is visible in these two samples; slope quality is not newly validated in this round.",
+    "The remaining end-to-end latency is dominated by VLM discovery and review, not image loading."
+  ]
+}

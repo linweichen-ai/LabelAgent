@@ -143,6 +143,30 @@ class EditTests(unittest.TestCase):
                 self.assertFalse(applied)
                 self.assertTrue(queue)
 
+    def test_large_traversable_surface_is_not_reclassified_as_instance(self):
+        large_floor = shape(label="floor", left=1, right=38)
+        large_floor["points"] = [[1, 1], [38, 1], [38, 38], [1, 38]]
+        large_floor["parts"] = [{"points": large_floor["points"], "holes": []}]
+        updated, applied, queue = apply_operations([large_floor], [{
+            "operation": "reclassify", "shape_ids": [1], "label": "ego",
+            "reason": "Foreground chassis is visible",
+        }], ["floor", "ego"], 40, 40)
+        self.assertEqual(updated[0]["label"], "floor")
+        self.assertFalse(applied)
+        self.assertEqual(queue[0]["reason_code"],
+                         "global_surface_reclassify_requires_human_review")
+        self.assertGreater(queue[0]["area_ratio"], 0.35)
+
+    def test_small_surface_candidate_can_still_be_reclassified(self):
+        candidate = shape(label="floor", left=2, right=12)
+        updated, applied, queue = apply_operations([candidate], [{
+            "operation": "reclassify", "shape_ids": [1], "label": "ego",
+            "reason": "The entire small candidate is host chassis",
+        }], ["floor", "ego"], 40, 40)
+        self.assertEqual(updated[0]["label"], "ego")
+        self.assertTrue(applied)
+        self.assertFalse(queue)
+
 
 class WorkflowTests(unittest.TestCase):
     def test_local_gap_evidence_shows_original_binary_and_bounded_image_count(self):

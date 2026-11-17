@@ -59,6 +59,14 @@ GPT 每轮复查输出会先由 Agent 校验状态、操作名、候选 ID、操
 
 四路相机、二进制 PCD 和三维标注采集包的转换、SAM3 全量基线及已有三维框对比，见 [导入与复现说明](docs/capture-comparison.md)。工作台也支持 JPG、JPEG、PNG 图片导入。
 
+新图片批次可先用 `tools/run_new_dataset_smoke.py` 做隔离验收。它从现有 `state.json` 只读复用模型连接和标签表，在临时工作区完成批量上传、首帧检查、VLM 可见类别识别、SAM/Agent 候选及结果叠加图；临时工作区结束后删除，结果始终保持机器候选，不写入正式文件库、人工真值或训练集。示例：
+
+```bash
+python tools/run_new_dataset_smoke.py image-a.png image-b.png \
+  --source-state /path/to/work/state.json \
+  --output-dir /path/to/smoke-output --max-rounds 2
+```
+
 本轮数据和测试进度见 [进度记录](docs/progress/dataset-comparison.md)。原始数据、逐对象标注和权重保留在本地。
 
 本机约束解码的后续优化见 [实测对照](docs/test-results/protocol-optimization.md)：相同参考输入的规范生成中位数从约 181 秒降至 16 秒，两帧完整功能重测约 100 秒。97 项回归通过；像素准确率和自然错误的多轮修正效果仍待验证。

@@ -1,0 +1,168 @@
+{
+  "schema_version": "labelagent.workbench-evidence.v1",
+  "rounds": [129, 130, 131],
+  "status": "isolated_browser_new_image_and_primary_run_passed_latency_still_optimization_target",
+  "runtime_management_diagnosis": {
+    "legacy_manager_status_was_not_authoritative": true,
+    "legacy_manager_observation": "The obsolete local single-GPU manager reported managed=false because its processes.json points to stopped processes from an older deployment.",
+    "authoritative_manager": "D:/Apps/LabelAgent/.local/manage_remote.py",
+    "authoritative_manager_source_sha256": "1141a07ab01e0ac6d18fa1bb90c24ffbeb94373467b6432eb8550d7e305af46b",
+    "runtime_copy_sha256": "1141a07ab01e0ac6d18fa1bb90c24ffbeb94373467b6432eb8550d7e305af46b",
+    "authoritative_status": {
+      "secure_tunnel": "healthy",
+      "remote_sam3": "healthy",
+      "remote_qwen": "healthy",
+      "workbench": "healthy",
+      "optional_5090_route": "disabled_or_unavailable"
+    }
+  },
+  "round129_overlay_diagnostic": {
+    "accepted_as_raw_new_dataset_evidence": false,
+    "reason": "The input was an evaluation visual carrying a NO GEOMETRY HINT header, so it was retained only as a browser-flow diagnostic rather than represented as untouched production imagery.",
+    "page_status": 200,
+    "upload_ms": 29,
+    "load_ms": 97,
+    "candidate_visible_ms": 35328,
+    "background_complete_ms": 39874,
+    "candidate_count": 1,
+    "candidate_counts_by_label": {
+      "floor": 1
+    },
+    "page_errors": 0,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "result_sha256": "be111517a28b6487c1b0c29998af9d778c4945c18393dc03dcfd3aa2cdbd1ed6",
+    "screenshot_sha256": "379b4edc4e4257413fe278d9e8905da66b38e5ebe5c8d0230c4314e34547b4c0"
+  },
+  "round130_raw_new_image": {
+    "dataset": "20260904_hz-yozea-elec_Dev_P2605901028248",
+    "sequence": "015",
+    "frame_id": "1788577088751299896",
+    "camera": "camera_2",
+    "source_path": "/mnt/EIC-02/shared/robot_data/SFL-CPD15-Y/20260904_hz-yozea-elec_Dev_P2605901028248/015/bevannotation_data/cameras_640x512/camera_2/1788577088751299896.png",
+    "source_and_local_sha256": "fe2011c3e85b88e5260c8224c4d48cc74f32786bee4f3b3fceea5d1547027837",
+    "bytes": 504795,
+    "dimensions": [640, 512],
+    "mode": "RGB",
+    "page_status": 200,
+    "upload_ms": 40,
+    "load_ms": 114,
+    "compatibility_check": "passed_640x512",
+    "candidate_visible_ms": 17736,
+    "background_complete_ms": 23807,
+    "total_ms": 25254,
+    "candidate_count": 1,
+    "candidate_counts_by_label": {
+      "floor": 1
+    },
+    "final_agent_review_status": "complete",
+    "final_candidate_class_audit_status": "complete",
+    "truth_frame_created": false,
+    "reference_frame_created": false,
+    "page_errors": 0,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "result_sha256": "a1057e4d7ee5db55247832126042c698e429f0db2f23065a707e56fbe7646a56",
+    "screenshot_sha256": "879e9422fb66ac0f17be50a9ac4a2e79b97b78b6f38d47969abc70bfe6868e28"
+  },
+  "round131_primary_run": {
+    "scope": "isolated copy of the formal workbench state and human-review receipts",
+    "formal_state_sha256_before_and_after": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "snapshot_state_sha256_before": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "isolated_state_sha256_after": "3f6c4435ab0df7cf124c72ddf8e43137817099495a34e1a107cf6d26d523a116",
+    "copied_human_review_receipts": 3,
+    "copied_pending_human_reviews": 0,
+    "reference_frame": 55,
+    "reference_truth_verified": true,
+    "reference_description_generation_seconds": 28.859,
+    "reference_description_prompt_count": 8,
+    "reference_description_signature": "589fd19336a0bdad16c0719069480d05b3877a070e4a4cd0e15e4aeed691765b",
+    "reference_description_sha256": "186e74801351b131661b0b4e07475793409df0bf58defe24a5aafdf078aea2f8",
+    "topic": "/capture/camera_1/image",
+    "frame": 31,
+    "count": 1,
+    "four_readiness_checks_passed": true,
+    "first_nonzero_progress_ms": 43,
+    "progress_sequence_percent": [1, 2, 22, 38, 58, 94, 100],
+    "run_response_ms": 40615,
+    "total_ms": 41580,
+    "run_stopped": false,
+    "failed_frames": [],
+    "candidate_count": 11,
+    "candidate_counts_by_label": {
+      "floor": 1,
+      "pallet": 8,
+      "person": 2
+    },
+    "truth_unchanged": true,
+    "reference_frames_unchanged": true,
+    "final_progress_state": "completed_100_percent",
+    "page_errors": 0,
+    "browser_result_sha256": "1cf2b77e54b79435052c2ec0a1f65f879180d9f606762746dcfb6be13ccf5841",
+    "screenshot_sha256": "00f55b815b2555727527675fe4c302e53dac9181caace232b1ed4d6efb94acb7",
+    "browser_tool_sha256": "1bfd59fe4a26f2960f6f6452488e7a1b821ca4db0d0816d0c824a9485e9413c5"
+  },
+  "automation_failures_before_success": [
+    {
+      "stage": "browser_test_preparation",
+      "failure": "The first script assumed currentWorkbenchFrameState exposed a frame field; it does not.",
+      "main_run_requests_sent": 0
+    },
+    {
+      "stage": "browser_test_preparation",
+      "failure": "Synthetic Tab did not invoke the page frame-change handler in headless Edge.",
+      "main_run_requests_sent": 0
+    },
+    {
+      "stage": "browser_test_preparation",
+      "failure": "Without entering an image annotation window, frame 31 was correctly clamped to frame 0.",
+      "main_run_requests_sent": 0
+    },
+    {
+      "stage": "browser_test_preparation",
+      "failure": "An invalid test-only XPath selector was rejected.",
+      "main_run_requests_sent": 0
+    },
+    {
+      "stage": "browser_test_preparation",
+      "failure": "The page had already restored the annotation canvas; adding a duplicate window produced a strict selector ambiguity.",
+      "main_run_requests_sent": 0
+    }
+  ],
+  "post_run_health": {
+    "isolated_port_released": true,
+    "formal_workbench_http": 200,
+    "formal_workbench_idle": true,
+    "sam_health_http": 200,
+    "sam_model_loaded": true,
+    "sam_in_flight": 0,
+    "vlm_health_http": 200,
+    "vlm_model_loaded": true,
+    "vlm_exact_requests_inflight": 0
+  },
+  "validation": {
+    "evidence_json_parse": "passed",
+    "browser_tool_node_check": "passed",
+    "python_unittest": "850/850 passed",
+    "web_node_test": "95/95 passed",
+    "git_diff_check": "passed"
+  },
+  "boundaries": {
+    "formal_workbench_modified": false,
+    "formal_truth_modified": false,
+    "formal_candidates_modified": false,
+    "training_data_modified": false,
+    "oss_modified": false,
+    "candidate_accuracy_claimed": false,
+    "human_pixel_truth_for_new_outputs": false,
+    "production_deployment_changed": false
+  },
+  "limitations": [
+    "The raw new-image draft and the primary-run candidates are functional workflow evidence, not an independent segmentation-accuracy evaluation.",
+    "The primary run reused a copied verified reference and wrote only to an isolated state snapshot.",
+    "The main run no longer appears stuck at zero: progress became nonzero in 43 ms and reached 100 percent, but 40.6 seconds for one frame remains a latency optimization target.",
+    "The generated candidates require human review before any truth or training use."
+  ]
+}

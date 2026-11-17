@@ -20,8 +20,14 @@
   let discoveryPrefetch = {key: '', status: 'idle', completedAt: 0, samReady: false};
   let frameDwellPrefetchTimer = null;
   let frameDwellPrefetchGeneration = 0;
+  let adjacentPrefetchTimer = null;
+  let adjacentPrefetchGeneration = 0;
+  let adjacentPrefetchSourceFrame = null;
   const DISCOVERY_PREFETCH_REUSE_MS = 5 * 60 * 1000;
   const FRAME_DWELL_PREFETCH_MS = 1200;
+  const ADJACENT_PREFETCH_DELAY_MS = 3000;
+  const ADJACENT_PREFETCH_RETRY_MS = 5000;
+  const ADJACENT_PREFETCH_MAX_ATTEMPTS = 12;
   const clone = value => JSON.parse(JSON.stringify(value));
   const currentFrame = () => Number.parseInt(byId('frameNumber')?.value || '0', 10) || 0;
 
@@ -316,6 +322,62 @@
     }, FRAME_DWELL_PREFETCH_MS);
   }
 
+  function cancelAdjacentFramePrefetch() {
+    adjacentPrefetchGeneration += 1;
+    if (adjacentPrefetchTimer) clearTimeout(adjacentPrefetchTimer);
+    adjacentPrefetchTimer = null;
+    adjacentPrefetchSourceFrame = null;
+  }
+
+  function scheduleAdjacentFramePrefetch(state, sourceFrame) {
+    cancelAdjacentFramePrefetch();
+    const generation = adjacentPrefetchGeneration;
+    const nextFrame = Number(sourceFrame) + 1;
+    adjacentPrefetchSourceFrame = Number(sourceFrame);
+    const frameCount = Number(state?.frame_count || 0);
+    const sourceKey = discoveryPrefetchKey(state, sourceFrame);
+    if (!sourceKey || !Number.isInteger(nextFrame) || nextFrame >= frameCount
+        || hasTruthFrame(state, nextFrame)
+        || currentFrameCandidate(state, nextFrame)) return;
+
+    const stillRelevant = () => generation === adjacentPrefetchGeneration
+      && currentFrame() === Number(sourceFrame)
+      && discoveryPrefetchKey(window.currentWorkbenchFrameState?.(), sourceFrame) === sourceKey;
+
+    const attempt = async remaining => {
+      adjacentPrefetchTimer = null;
+      if (!stillRelevant()) return;
+      try {
+        const statusResponse = await fetch('/api/run/status', {cache: 'no-store'});
+        const status = await statusResponse.json();
+        if (!statusResponse.ok || status.status !== 'idle') {
+          if (remaining > 1 && stillRelevant()) {
+            adjacentPrefetchTimer = setTimeout(
+              () => void attempt(remaining - 1), ADJACENT_PREFETCH_RETRY_MS);
+          }
+          return;
+        }
+        const response = await fetch('/api/reference_discovery/prefetch', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({frame: nextFrame, expected_path: state.path,
+            expected_topic: state.topic}),
+        });
+        const result = await response.json();
+        if ((!response.ok || result.prefetched !== true)
+            && remaining > 1 && stillRelevant()
+            && ['active_workflow', 'vlm_busy', 'sam_busy'].includes(result.code)) {
+          adjacentPrefetchTimer = setTimeout(
+            () => void attempt(remaining - 1), ADJACENT_PREFETCH_RETRY_MS);
+        }
+      } catch (_) {
+        // Speculation must never interrupt annotation or surface as a failure.
+      }
+    };
+    adjacentPrefetchTimer = setTimeout(
+      () => void attempt(ADJACENT_PREFETCH_MAX_ATTEMPTS),
+      ADJACENT_PREFETCH_DELAY_MS);
+  }
+
   function render(state) {
     latestState = state;
     const loaded = Boolean(state?.loaded && state?.topic);
@@ -550,6 +612,7 @@
       setDraftBusy(false);
       dialog.close();
       await window.prepareReferenceCandidateDraft?.(frameId, clone(persistedCandidates), clone(readback.agent_runs?.[String(frameId)] || {}));
+      scheduleAdjacentFramePrefetch(fresh, frameId);
       const visibleLabels = Array.isArray(result.labels) ? result.labels : [];
       const labelSynced = visibleLabels.length === 1 && syncEditorLabel(visibleLabels[0]);
       const uncertain = result.visible_label_discovery?.uncertain_labels || [];
@@ -722,6 +785,10 @@
   dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
   document.addEventListener('labelagent:frame-state', event => {
     const state = event.detail?.state;
+    if (adjacentPrefetchSourceFrame !== null
+        && currentFrame() !== adjacentPrefetchSourceFrame) {
+      cancelAdjacentFramePrefetch();
+    }
     if (state) scheduleFrameDwellPrefetch(state);
   });
   window.openReferencePreparation = openDialog;

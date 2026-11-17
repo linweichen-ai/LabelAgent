@@ -130,6 +130,82 @@ test('图片稳定停留后提前预取但跳过真值候选和快速导航', ()
   assert.match(prep, /document\.addEventListener\('labelagent:frame-state'/);
 });
 
+test('当前候选返回后只在空闲时预备紧邻下一帧且切帧立即取消', () => {
+  const prep = source('reference-prep.js');
+  const adjacent = prep.slice(prep.indexOf('function cancelAdjacentFramePrefetch'),
+    prep.indexOf('\n  function render(state)'));
+  assert.match(prep, /const ADJACENT_PREFETCH_DELAY_MS = 3000/);
+  assert.match(prep, /const ADJACENT_PREFETCH_MAX_ATTEMPTS = 12/);
+  assert.match(adjacent, /const nextFrame = Number\(sourceFrame\) \+ 1/);
+  assert.match(adjacent, /nextFrame >= frameCount/);
+  assert.match(adjacent, /hasTruthFrame\(state, nextFrame\)/);
+  assert.match(adjacent, /currentFrameCandidate\(state, nextFrame\)/);
+  assert.match(adjacent, /fetch\('\/api\/run\/status'/);
+  assert.match(adjacent, /status\.status !== 'idle'/);
+  assert.match(adjacent, /frame: nextFrame, expected_path: state\.path/);
+  assert.match(adjacent, /\['active_workflow', 'vlm_busy', 'sam_busy'\]/);
+  assert.match(prep, /scheduleAdjacentFramePrefetch\(fresh, frameId\)/);
+  assert.match(prep, /currentFrame\(\) !== adjacentPrefetchSourceFrame[\s\S]*cancelAdjacentFramePrefetch\(\)/);
+});
+
+test('相邻帧预取在繁忙时低频重试、空闲后只请求下一帧且取消后不再发送', async () => {
+  const prep = source('reference-prep.js');
+  const adjacent = prep.slice(prep.indexOf('function cancelAdjacentFramePrefetch'),
+    prep.indexOf('\n  function render(state)'));
+  const calls = [];
+  let statusReads = 0;
+  const h = harness({
+    frameValue: 30,
+    async fetch(url, options = {}) {
+      calls.push({url, options});
+      if (url === '/api/run/status') {
+        statusReads += 1;
+        return {ok: true, async json() {
+          return {status: statusReads === 1 ? 'running' : 'idle'};
+        }};
+      }
+      return {ok: true, async json() { return {prefetched: true}; }};
+    },
+  });
+  h.context.currentWorkbenchFrameState = () => ({
+    path: 'dataset.mcap', topic: '/camera', labels: ['floor'],
+  });
+  h.run(`
+    let adjacentPrefetchTimer = null;
+    let adjacentPrefetchGeneration = 0;
+    let adjacentPrefetchSourceFrame = null;
+    const ADJACENT_PREFETCH_DELAY_MS = 3000;
+    const ADJACENT_PREFETCH_RETRY_MS = 5000;
+    const ADJACENT_PREFETCH_MAX_ATTEMPTS = 12;
+    const currentFrame = () => frameValue;
+    const discoveryPrefetchKey = (state, frame) => state
+      ? [state.path, state.topic, (state.labels || []).join(','), frame].join('|') : '';
+    const hasTruthFrame = (state, frame) => Boolean(state.truth_index?.[String(frame)]);
+    const currentFrameCandidate = (state, frame) => state.candidate_index?.[String(frame)] || null;
+    ${adjacent}
+  `);
+  const state = {path: 'dataset.mcap', topic: '/camera', labels: ['floor'],
+    frame_count: 40, truth_index: {}, candidate_index: {}};
+  h.context.state = state;
+  h.run('scheduleAdjacentFramePrefetch(state, 30)');
+  await h.advance(2999);
+  assert.equal(calls.length, 0);
+  await h.advance(1);
+  assert.deepEqual(calls.map(item => item.url), ['/api/run/status']);
+  await h.advance(4999);
+  assert.equal(calls.length, 1);
+  await h.advance(1);
+  assert.deepEqual(calls.map(item => item.url), [
+    '/api/run/status', '/api/run/status', '/api/reference_discovery/prefetch']);
+  assert.deepEqual(JSON.parse(calls[2].options.body), {
+    frame: 31, expected_path: 'dataset.mcap', expected_topic: '/camera'});
+
+  calls.length = 0;
+  h.run('scheduleAdjacentFramePrefetch(state, 30); frameValue = 31; cancelAdjacentFramePrefetch()');
+  await h.advance(3000);
+  assert.equal(calls.length, 0);
+});
+
 test('保存真值和锁定参考帧只读回目标帧且保留强绑定校验', () => {
   const app = source('app.js');
   const lock = app.slice(app.indexOf('async function lockReferenceFrame'), app.indexOf("$('referenceButton').onclick"));

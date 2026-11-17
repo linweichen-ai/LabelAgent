@@ -2466,6 +2466,7 @@ class ServerTests(unittest.TestCase):
                 payload = response.json
                 self.assertEqual(payload["schema_version"], "labelagent.reference-preparation.v1")
                 self.assertTrue(payload["compact_geometry"])
+                self.assertEqual(payload["frame_count"], 3)
                 self.assertEqual(payload["truth_index"], {
                     "2": {"count": 1, "labels": ["floor"]},
                     "10": {"count": 1, "labels": ["pallet"]}})

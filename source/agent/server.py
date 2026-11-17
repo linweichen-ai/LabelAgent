@@ -1717,6 +1717,8 @@ def get_reference_preparation():
         recover_pending_human_reviews()
         video = state.get("video")
         topic = state.get("topic")
+        frame_count = (video.topics.get(topic, {}).get("count", 0)
+                       if video is not None and topic else 0)
         truth_status = current_truth_review_status()
         compact_status = {
             str(frame): {
@@ -1733,6 +1735,7 @@ def get_reference_preparation():
             loaded=video is not None,
             path=str(video.path) if video is not None else "",
             topic=topic,
+            frame_count=frame_count,
             labels=copy.deepcopy(state.get("labels", [])),
             reference_frames=copy.deepcopy(state.get("reference_frames", {})),
             truth_index=_reference_frame_index(state.get("truth", {})),

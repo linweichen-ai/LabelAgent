@@ -578,3 +578,11 @@ Python 核心、图片和候选回归 160/160，网页交互 84/84，Python/Java
 远端启动脚本已持久化为 `--quantization none`，`bash -n` 通过，正式工作台 ready/idle，六份状态/历史哈希未变。NF4 原脚本和 BF16 新脚本均备份在 `/home/clw/labelagent_remote_20261110/backups/bf16-round40-20261117-220000`。完整证据见 [第四十轮 BF16 对照](evidence/workbench-stability-20261117/bf16-runtime-round40.json)。
 
 边界：这是两张配对新批次图和一张跨来源图，不是总体延迟分布或跨数据集精度证明；第三张图虽有可见斜坡，但只验证类别可见性，不是斜坡像素分割验收。BF16 仅在专卡保留当前显存余量时接受，未来卡上出现其他计算任务时应回滚 NF4，而不是抢占或终止他人进程。
+
+## 第四十一轮首请求结构化解码缓存预热（2026-11-17）
+
+BF16 首次结构化请求仍会在用户点击后花约 6 秒建立 lm-format-enforcer 的 tokenizer 约束缓存。现在服务在启动时一次性建立该 CPU 缓存，只有模型和缓存都完成后才将 `model_loaded=true`，`/health` 同时返回 `structured_decoder_ready=true`；后续请求复用同一对象，不重复构建。模型、权重、图像、提示、schema 和候选门禁均未改变。
+
+003 的首个 BF16 请求在改动前约束建立 6.000 秒、服务总耗时 31.281 秒；重启并预热后，真正第一条用户请求的约束建立为 0.001 秒、服务总耗时 20.157 秒，类别仍是 pallet/person/floor/ego，开放集为空。可以直接归因的是首请求移除了 5.999 秒约束建立；总耗时 35.56% 的观测下降还包含生成从 25.164 到 20.036 秒的随机波动，不能全部归功于预热。
+
+Python 核心、图片、候选和 VLM 组件回归 174/174，网页交互 84/84。正式远端和本地工具哈希一致，工作台 ready/idle，六份状态/历史哈希未变。远端回滚点 `/home/clw/labelagent_remote_20261110/backups/decoder-prewarm-round41-20261117-223000`，本地回滚点 `D:\Apps\LabelAgent\.local\backups\workbench-decoder-prewarm-round41-20261117-223000`，完整证据见 [第四十一轮解码缓存预热](evidence/workbench-stability-20261117/decoder-prewarm-round41.json)。

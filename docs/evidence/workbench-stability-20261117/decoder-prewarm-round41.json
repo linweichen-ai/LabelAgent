@@ -1,0 +1,71 @@
+{
+  "schema_version": "labelagent.decoder_prewarm_round41.v1",
+  "date": "2026-11-17",
+  "objective": "Move the one-time structured-decoder tokenizer cache build from the first user inference into VLM service startup.",
+  "change": {
+    "model_or_weights_changed": false,
+    "prompt_or_schema_changed": false,
+    "image_budget_changed": false,
+    "quantization": "none_bf16",
+    "startup_behavior": "Build lm-format-enforcer tokenizer data before model_loaded becomes true.",
+    "health_attestation": "structured_decoder_ready"
+  },
+  "before": {
+    "sample": "1104/003 first BF16 request after restart",
+    "service_seconds": 31.281,
+    "preprocess_seconds": 0.074,
+    "constraint_setup_seconds": 6.0,
+    "generation_seconds": 25.164,
+    "completion_tokens": 357,
+    "visible_labels": ["pallet", "person", "floor", "ego"],
+    "unknown_candidate_count": 0
+  },
+  "after": {
+    "sample": "1104/003 first request after prewarmed BF16 restart",
+    "client_elapsed_ms": 20403,
+    "service_seconds": 20.157,
+    "preprocess_seconds": 0.065,
+    "constraint_setup_seconds": 0.001,
+    "generation_seconds": 20.036,
+    "completion_tokens": 357,
+    "visible_labels": ["pallet", "person", "floor", "ego"],
+    "unknown_candidate_count": 0,
+    "structured_decoder_ready_before_request": true
+  },
+  "interpretation": {
+    "one_time_setup_seconds_removed_from_first_request": 5.999,
+    "observed_service_reduction_percent": 35.56,
+    "causal_limit": "Only the 5.999-second constraint-setup reduction is directly attributable; generation also varied from 25.164 to 20.036 seconds in this single observation."
+  },
+  "deployment": {
+    "remote_source_sha256_before": "e9ce3daa64f1e4a0c0523e4503fce99b3d2ec96032395d7aa19d506cc96c9b7f",
+    "remote_source_sha256_after": "31e7b096ae624b093d513372b63efbdb08c5ddf0c3efe828f2225df88a1550d6",
+    "remote_rollback": "/home/clw/labelagent_remote_20261110/backups/decoder-prewarm-round41-20261117-223000",
+    "local_rollback": "D:/Apps/LabelAgent/.local/backups/workbench-decoder-prewarm-round41-20261117-223000",
+    "formal_source_matches_worktree": true,
+    "formal_status": "ready_idle",
+    "health_quantization": "none",
+    "health_structured_decoder_ready": true,
+    "formal_state_hashes_unchanged": {
+      "state.json": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+      "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+      "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+      "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+      "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+      "model_debug.json": "EFDF22CD6BD803C958E3ACB39D46054D294544FE48324A12B4AFE1502B3BBB9A"
+    }
+  },
+  "validation": {
+    "python_core_image_candidate_and_vlm_components": "174/174",
+    "web_interaction": "84/84",
+    "cache_exactly_once_unit_test": "passed",
+    "candidate_only": true,
+    "human_truth_modified": false,
+    "training_data_modified": false
+  },
+  "boundaries": [
+    "This optimization shifts a deterministic CPU setup cost to startup; it does not prove model-quality improvement.",
+    "The total latency comparison is one cold-start pair and includes normal generation variance.",
+    "Service readiness now includes decoder-cache readiness, but external tunnel or GPU failures remain possible and are still handled by existing preflight checks."
+  ]
+}

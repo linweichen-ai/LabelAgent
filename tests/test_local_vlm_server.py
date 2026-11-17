@@ -2,7 +2,9 @@ import base64
 import importlib.util
 import io
 from pathlib import Path
+from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 from PIL import Image
 
 SPEC = importlib.util.spec_from_file_location("local_vlm_server", Path(__file__).resolve().parents[1] / "tools/local_vlm_server.py")
@@ -32,6 +34,15 @@ def messages(count=1):
 
 
 class LocalVLMContractTests(unittest.TestCase):
+    def test_structured_decoder_tokenizer_cache_builds_exactly_once(self):
+        backend = SimpleNamespace(processor=SimpleNamespace(
+            tokenizer=object()))
+        with patch.object(MODULE, "build_format_tokenizer_data",
+                          return_value="cached") as build:
+            self.assertEqual(MODULE.ensure_format_tokenizer_data(backend), "cached")
+            self.assertEqual(MODULE.ensure_format_tokenizer_data(backend), "cached")
+        build.assert_called_once_with(backend.processor.tokenizer)
+
     def test_structured_format_is_forwarded_to_backend(self):
         schema = {"type": "object", "properties": {"status": {"enum": ["done", "continue"]}}}
         result = self.client.post("/v1/chat/completions", json={"model": self.backend.model_id,

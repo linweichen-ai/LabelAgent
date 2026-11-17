@@ -162,6 +162,19 @@ def actual_image_encoding(inputs,processor,image_count):
     return rows,[math.prod(row)//(merge**2) for row in rows]
 
 
+def build_format_tokenizer_data(tokenizer):
+    from lmformatenforcer.integrations.transformers import build_token_enforcer_tokenizer_data
+    return build_token_enforcer_tokenizer_data(tokenizer)
+
+
+def ensure_format_tokenizer_data(backend):
+    """Build the CPU-side structured-decoder cache exactly once."""
+    if not hasattr(backend, "format_tokenizer_data"):
+        backend.format_tokenizer_data = build_format_tokenizer_data(
+            backend.processor.tokenizer)
+    return backend.format_tokenizer_data
+
+
 def trim_idle_cuda_cache(torch_module,enabled):
     """Release large unused allocator blocks, while keeping the live model."""
     if not enabled:
@@ -222,6 +235,9 @@ class TransformersBackend:
         self.model.eval()
         self.quantization = quantization
         self.model_memory_bytes = self.model.get_memory_footprint()
+        # Pay the tokenizer-constraint setup cost before /health reports the
+        # service ready, rather than stalling the first user inference.
+        ensure_format_tokenizer_data(self)
         self.last_inference_stats = None
         self.model_loaded = True
 
@@ -245,12 +261,10 @@ class TransformersBackend:
         options = {}
         if response_schema is not None:
             from lmformatenforcer import JsonSchemaParser
-            from lmformatenforcer.integrations.transformers import (build_transformers_prefix_allowed_tokens_fn,
-                                                                  build_token_enforcer_tokenizer_data)
-            if not hasattr(self, "format_tokenizer_data"):
-                self.format_tokenizer_data = build_token_enforcer_tokenizer_data(self.processor.tokenizer)
+            from lmformatenforcer.integrations.transformers import build_transformers_prefix_allowed_tokens_fn
             parser = JsonSchemaParser(response_schema)
-            options["prefix_allowed_tokens_fn"] = build_transformers_prefix_allowed_tokens_fn(self.format_tokenizer_data, parser)
+            options["prefix_allowed_tokens_fn"] = build_transformers_prefix_allowed_tokens_fn(
+                ensure_format_tokenizer_data(self), parser)
         constraint_setup_seconds = time.monotonic() - constraint_started
         generation_started = time.monotonic()
         with self.torch.inference_mode():
@@ -287,6 +301,7 @@ def create_app(backend):
                        probe_lifetime_seconds=getattr(backend,"probe_lifetime_seconds",None),
                        probe_reserved_free_mib=getattr(backend,"probe_reserved_free_mib",None),
                        image_token_budget=getattr(backend, "image_token_budget", None),
+                       structured_decoder_ready=hasattr(backend,"format_tokenizer_data"),
                        supports_single_image_budget_override=getattr(backend,'allow_single_image_budget_override',False),
                        idle_cache_release=getattr(backend,'idle_cache_release',False),
                        last_cache_release=getattr(backend,'last_cache_release',None),

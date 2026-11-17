@@ -61,7 +61,18 @@
     "service_ready_seconds_after_restart": 22.283,
     "health_reports_last_user_inference_as_null_until_first_request": true,
     "first_new_formal_source_image_elapsed_seconds": 14.813,
-    "first_new_formal_source_image_generation_seconds": 14.576
+    "first_new_formal_source_image_generation_seconds": 14.576,
+    "persistent_start_script_readback": {
+      "service_ready_seconds": 28.381,
+      "prewarm_generation_seconds": 10.698,
+      "prewarm_total_seconds": 10.751,
+      "cache_implementation": "static",
+      "first_unseen_image_sha256": "1d5d348ee4b138c1a133a05685d677673a3f05353271d26b1ff42074f1003587",
+      "first_unseen_image_elapsed_seconds": 14.797,
+      "first_unseen_image_generation_seconds": 14.559,
+      "consistency_flags": [],
+      "open_set_scan_complete": true
+    }
   },
   "memory": {
     "static_user_request_peak_allocated_bytes": 18003552768,

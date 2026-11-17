@@ -713,3 +713,11 @@ Python 回归 160/160、网页回归 78/78。Windows、4090、5090 三处 `local
 Python 回归 162/162、网页回归 78/78。Windows、4090、5090 的 VLM 服务 SHA-256 均为 `f69b44b6...fed0cad`，正式 workflow 为 `97e32aae...819f7f1`；4090 主路由和 SAM ready，5090 继续安全 disabled。state 与五份候选/历史文件哈希不变，未修改候选、人工真值、训练集或 OSS。回滚点分别位于三端的 `vlm-singleflight-round53-20261117`，结构化证据见 [第五十三轮并发合并](evidence/workbench-stability-20261117/exact-request-singleflight-round53.json)。
 
 边界：并发合并减少重复 GPU 工作和相同请求的 busy 报错，不缩短第一个新请求自身约 26 秒的模型生成时间；首次新图延迟仍是下一阶段的主要优化对象。
+
+## 第五十四轮可见类别理由长度减负实验（否决，2026-11-17）
+
+保持完整图片、8 类定义、开放集扫描和 4090 BF16 路由不变，只缩短结构化输出中视觉理由的最大长度。48 字符版本把 011/camera_1 从 26.044 秒降到 18.914 秒、completion 从 367 降到 354，但把原本不存在的 `other_robot` 判为 present，因此立即否决。
+
+更保守的 60 字符版本在 011/camera_1、010/camera_0、010/camera_3 三图上可见类别均与正式基线一致，但 completion 总量只从 1081 降到 1077（-0.37%）。三图墙钟时间观测下降 17.21%，其中 camera_3 仅相差 0.020 秒，说明变化主要来自生成波动，不能归因于字段上限，也不足以补偿 48 字符版已经暴露的语义风险。
+
+两种版本均未部署，正式 schema 继续保留 72/96 字符上限；SAM、主 VLM 和页面 ready，state 与五份候选/历史文件哈希未变。结构化否决证据见 [第五十四轮理由长度实验](evidence/workbench-stability-20261117/rejected-short-reason-round54.json)。下一步继续寻找不改变输出语义的模型执行层或可用 5090 路由优化。

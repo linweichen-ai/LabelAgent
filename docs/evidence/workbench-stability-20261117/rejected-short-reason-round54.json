@@ -1,0 +1,68 @@
+{
+  "schema_version": "labelagent.workbench_round54.v1",
+  "recorded_at": "2026-11-17T13:25:00+08:00",
+  "goal_status": "active",
+  "experiment": "Reduce only the JSON-schema maximum length of known-label reasons and unknown evidence while preserving the image, complete label definitions, open-set scan and inference route.",
+  "safety": {
+    "read_only": true,
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "source_state_modified": false,
+    "formal_code_modified": false
+  },
+  "reason_48": {
+    "image": "011/camera_1/1789900388815700364.png",
+    "baseline_visible": ["pallet", "person", "floor", "ego"],
+    "probe_visible": ["pallet", "person", "floor", "ego", "other_robot"],
+    "baseline_completion_tokens": 367,
+    "probe_completion_tokens": 354,
+    "baseline_generation_seconds": 26.044,
+    "probe_generation_seconds": 18.914,
+    "decision": "rejected",
+    "reason": "The shorter contract introduced an other_robot false-positive risk."
+  },
+  "reason_60": {
+    "images": [
+      {
+        "name": "011/camera_1/1789900388815700364.png",
+        "baseline_elapsed_ms": 26572,
+        "probe_elapsed_ms": 19756,
+        "baseline_completion_tokens": 367,
+        "probe_completion_tokens": 364,
+        "visible_labels_match": true
+      },
+      {
+        "name": "010/camera_0/1789899951882467655.png",
+        "baseline_elapsed_ms": 24324,
+        "probe_elapsed_ms": 19183,
+        "baseline_completion_tokens": 361,
+        "probe_completion_tokens": 360,
+        "visible_labels_match": true
+      },
+      {
+        "name": "010/camera_3/1789899951882467655.png",
+        "baseline_elapsed_ms": 18713,
+        "probe_elapsed_ms": 18693,
+        "baseline_completion_tokens": 353,
+        "probe_completion_tokens": 353,
+        "visible_labels_match": true
+      }
+    ],
+    "baseline_completion_tokens_total": 1081,
+    "probe_completion_tokens_total": 1077,
+    "completion_token_reduction_percent": 0.37,
+    "observed_elapsed_reduction_percent": 17.21,
+    "decision": "rejected",
+    "reason": "The token reduction was only 0.37 percent and one paired image showed essentially no latency change, so the observed wall-time difference cannot be attributed to the shorter limit. The more aggressive 48-character variant already demonstrated semantic risk."
+  },
+  "runtime": {
+    "sam_ready": true,
+    "primary_vlm_ready": true,
+    "fast_5090_route": "disabled",
+    "formal_state_sha256": "54A5EE6AC1794AE3D769B3FEFA3CADD79DA7F2D5DFF892F0B8B4F0A259238FF5",
+    "formal_history_hashes_unchanged": true,
+    "deployed_commit": "421379ac1a02284dbc01b1220c8cfc17a4682242"
+  },
+  "conclusion": "Keep the existing 72/96-character contracts. Do not trade label stability for an unproven first-run speedup."
+}

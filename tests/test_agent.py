@@ -1384,6 +1384,9 @@ class WorkflowTests(unittest.TestCase):
                 "coalesced_wait_seconds": 4.2,
                 "inference_stats": {"prompt_tokens": 900,
                     "completion_tokens": 120, "generation_seconds": 12.5,
+                    "generation_cache_implementation": "dynamic",
+                    "configured_generation_cache_implementation": "static",
+                    "generation_cache_fallback_reason": "multi_image_static_cache_guard",
                     "peak_allocated_bytes": 123456789},
                 "cache_release": {"large": "not copied"},
             },
@@ -1408,7 +1411,10 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(raw["local_vlm"]["coalesced_wait_seconds"], 4.2)
         self.assertEqual(raw["local_vlm"]["inference_stats"], {
             "prompt_tokens": 900, "completion_tokens": 120,
-            "generation_seconds": 12.5})
+            "generation_seconds": 12.5,
+            "generation_cache_implementation": "dynamic",
+            "configured_generation_cache_implementation": "static",
+            "generation_cache_fallback_reason": "multi_image_static_cache_guard"})
         self.assertEqual(raw["local_vlm"]["usage"]["total_tokens"], 1020)
         self.assertNotIn("cache_release", raw["local_vlm"])
 

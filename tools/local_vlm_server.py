@@ -211,6 +211,21 @@ def checked_startup_prewarm(enabled, cache_implementation, quantization,
     return enabled
 
 
+def request_generation_cache_implementation(configured, image_count):
+    """Keep the compiled static path on its prewarmed single-image shape.
+
+    Transformers may compile a new CUDA-graph variant when a static cache sees
+    a different number of vision inputs. Flask serves that request on a worker
+    thread, where the CUDA-graph tree's thread-local state is unavailable. A
+    multi-image Agent review must therefore use the stable dynamic cache rather
+    than failing after an expensive just-in-time compile. The fast, prewarmed
+    single-image discovery path remains unchanged.
+    """
+    if configured == "static" and image_count != 1:
+        return "dynamic", "multi_image_static_cache_guard"
+    return configured, None
+
+
 class TransformersBackend:
     backend_name = "transformers_local_cuda"
 
@@ -317,8 +332,10 @@ class TransformersBackend:
         preprocess_seconds = time.monotonic() - started
         constraint_started = time.monotonic()
         options = {}
-        if self.generation_cache_implementation is not None:
-            options["cache_implementation"] = self.generation_cache_implementation
+        effective_cache, cache_fallback_reason = request_generation_cache_implementation(
+            self.generation_cache_implementation, len(images))
+        if effective_cache is not None:
+            options["cache_implementation"] = effective_cache
         if response_schema is not None:
             from lmformatenforcer import JsonSchemaParser
             from lmformatenforcer.integrations.transformers import build_transformers_prefix_allowed_tokens_fn
@@ -339,7 +356,9 @@ class TransformersBackend:
                                      "preprocess_seconds": round(preprocess_seconds, 3),
                                      "constraint_setup_seconds": round(constraint_setup_seconds, 3),
                                      "generation_seconds": round(generation_seconds, 3),
-                                     "generation_cache_implementation": self.generation_cache_implementation,
+                                     "generation_cache_implementation": effective_cache,
+                                     "configured_generation_cache_implementation": self.generation_cache_implementation,
+                                     "generation_cache_fallback_reason": cache_fallback_reason,
                                      "structured_output": response_schema is not None}
         self.last_inference_stats.update(image_grid_thw=image_grids,actual_image_token_counts=image_counts,
             effective_image_token_budget=self.image_token_budget if image_token_budget is None else image_token_budget)

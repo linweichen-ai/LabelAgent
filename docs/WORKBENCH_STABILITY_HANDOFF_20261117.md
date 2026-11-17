@@ -747,3 +747,15 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 正式页面 HTTP 200，SAM、主 VLM ready，快速 5090 因非本流程负载继续 disabled，任务 idle。state、file_sessions、files、last_run、摘要和 model_debug 六份哈希与运行前完全一致；本轮未写候选、人工真值、训练集或 OSS。完整摘要见 [第五十六轮结构化证据](evidence/workbench-stability-20261117/test24-keyed-static-round56.json)，逐图原始结果只保留在本地未跟踪 `artifacts/` 中。
 
 边界：24 张数据验证了当前工作台不会卡 0、不会因为类别协议漏项，并给出新图首跑延迟分布；它不是跨厂区总体精度验收。下一轮优先把两张坡板视角作为只读困难样本，核对召回探针及多视角/时序补偿，同时保持 floor 与 slope 在下游统一为可通行区域。
+
+## 第五十七轮多图 Agent 复核 static 缓存故障修复（2026-11-17）
+
+第五十六轮验证的是单图类别发现，但完整候选流程还会把原图、候选叠加图和空洞图一起交给 Agent。只读完整候选复现发现：SAM 在 0.753 秒内已经生成 20 个候选，随后 static cache 为新的多图输入形态即时编译，最终在 PyTorch CUDA graph 的线程局部状态上触发 `AssertionError`；用户需要等待 73.256 秒才看到失败。这是真实的“看似已经开始、长时间不动、最后失败”根因之一，不能由 `/health` 或单图 test24 验收发现。
+
+正式修复按请求形态选择缓存：服务仍配置为 static，单图类别发现继续走已经预热的 static；只要是多图 Agent 复核，就在生成前明确切到稳定的 dynamic，并把配置缓存、实际缓存和 `multi_image_static_cache_guard` 原因写进请求级有限统计。相同图片和相同 20 个候选重新运行后，0.811 秒进入观察，14.673 秒完成，`stop_reason=done`、1 轮收敛、0 条人工复核队列，候选几何哈希与失败前完全相同；最后一次多图生成 3.524 秒。相对原故障路径墙钟时间观测下降 79.97%，更重要的是由失败变为可用结果。
+
+单图加速没有被连带关闭：重启后的另一张未缓存图 14.945 秒成功，其中生成 14.548 秒，统计明确显示 effective cache 仍为 static、无降级、0 个不确定和一致性告警。正式部署、4090 与 5090 代码哈希一致；5090 上两个非本流程 `pqr3d` 任务仍让双卡利用率为 98%，因此只同步代码，不启动加速服务，也没有停止或修改外部进程。
+
+回归为项目 Python 720/720（另有 171 个子测）、网页 78/78。工作台、SAM、VLM ready，任务 idle；六份正式状态、候选和历史文件哈希全部不变，未写候选、人工真值、训练集或 OSS。Windows、4090、5090 回滚点均为 `multi-image-cache-guard-round57-20261117`；完整证据见 [第五十七轮结构化证据](evidence/workbench-stability-20261117/multi-image-cache-guard-round57.json)。
+
+边界：79.97% 是同一输入上“故障路径对修复路径”的工程对照，不是总体性能分布。多图复核为了稳定性使用 dynamic；后续若继续加速，应优先减少协议重试、复用多图请求结果或采用可控的专用推理服务，不能重新把未预热的多图 CUDA graph 放回 Web 工作线程。

@@ -511,6 +511,9 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
                     "constraint_setup_seconds", "generation_seconds",
                     "actual_image_token_counts", "image_grid_thw",
                     "effective_image_token_budget", "structured_output",
+                    "generation_cache_implementation",
+                    "configured_generation_cache_implementation",
+                    "generation_cache_fallback_reason",
                 }
                 raw["local_vlm"]["inference_stats"] = {
                     key: copy.deepcopy(value) for key, value in stats.items()

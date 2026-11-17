@@ -56,6 +56,20 @@ class LocalVLMContractTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 MODULE.checked_generation_cache_implementation(value)
 
+    def test_static_cache_is_guarded_for_multi_image_agent_review(self):
+        self.assertEqual(
+            MODULE.request_generation_cache_implementation("static", 1),
+            ("static", None))
+        self.assertEqual(
+            MODULE.request_generation_cache_implementation("static", 3),
+            ("dynamic", "multi_image_static_cache_guard"))
+        self.assertEqual(
+            MODULE.request_generation_cache_implementation("dynamic", 3),
+            ("dynamic", None))
+        self.assertEqual(
+            MODULE.request_generation_cache_implementation(None, 2),
+            (None, None))
+
     def test_startup_prewarm_is_restricted_to_exclusive_bf16_static_mode(self):
         self.assertFalse(MODULE.checked_startup_prewarm(
             False, None, "none", None))

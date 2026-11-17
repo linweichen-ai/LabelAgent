@@ -1,0 +1,93 @@
+{
+  "schema_version": "labelagent.workbench_round57.v1",
+  "recorded_at": "2026-11-17T14:25:00+08:00",
+  "goal_status": "active",
+  "objective": "preserve the prewarmed static-cache speed for single-image discovery while preventing compiled static-cache failure during multi-image Agent review",
+  "failure_reproduction": {
+    "mode": "read-only direct candidate generation with one original image plus two review images",
+    "sam_candidate_count": 20,
+    "sam_ready_seconds": 0.753,
+    "wall_seconds": 73.256,
+    "stop_reason": "error",
+    "review_queue_count": 1,
+    "server_http_status": 500,
+    "exception": "AssertionError in torch._inductor.cudagraph_trees.get_obj while compiling a new multi-image static-cache shape",
+    "candidate_shape_sha256": "a4c80dcc2b63cf681fd3fcb672263c1872e8e36d2eadeb1827c6abe9647af1e7",
+    "interpretation": "Single-image discovery acceptance did not exercise the later multi-image Agent review shape. The user could therefore see candidates generated quickly but wait more than a minute before failure."
+  },
+  "accepted_change": {
+    "configured_cache": "static",
+    "single_image_effective_cache": "static",
+    "multi_image_effective_cache": "dynamic",
+    "fallback_reason": "multi_image_static_cache_guard",
+    "policy": "Select the stable dynamic cache before generation whenever a static-configured request contains anything other than one image; retain the prewarmed static path for one-image discovery.",
+    "trace_visibility": "Configured cache, effective cache, and bounded fallback reason are retained in request-bound inference statistics."
+  },
+  "multi_image_acceptance": {
+    "same_input_and_candidate_geometry": true,
+    "sam_candidate_count": 20,
+    "sam_ready_seconds": 0.811,
+    "wall_seconds": 14.673,
+    "stop_reason": "done",
+    "agent_rounds": 1,
+    "review_queue_count": 0,
+    "input_images": 3,
+    "prompt_tokens": 2847,
+    "completion_tokens_last_request": 42,
+    "generation_seconds_last_request": 3.524,
+    "configured_cache": "static",
+    "effective_cache": "dynamic",
+    "fallback_reason": "multi_image_static_cache_guard",
+    "candidate_shape_sha256": "a4c80dcc2b63cf681fd3fcb672263c1872e8e36d2eadeb1827c6abe9647af1e7",
+    "observed_wall_reduction_percent": 79.97
+  },
+  "single_image_regression_guard": {
+    "success": 1,
+    "failure": 0,
+    "wall_seconds": 14.945,
+    "reported_elapsed_seconds": 14.941,
+    "generation_seconds": 14.548,
+    "input_images": 1,
+    "effective_cache": "static",
+    "fallback_reason": null,
+    "uncertain_labels": [],
+    "consistency_flags": [],
+    "open_set_scan_complete": true,
+    "raw_artifact_sha256": "7B746898E77C4B32D223E337FCBD40D7C093F3AB1269A9FCD2093905BA380AAA"
+  },
+  "verification": {
+    "targeted_python": {"passed": 168, "failed": 0, "subtests_passed": 83},
+    "project_python": {"passed": 720, "failed": 0, "subtests_passed": 171},
+    "web": {"passed": 78, "failed": 0},
+    "formal_workbench_ready": true,
+    "formal_sam_ready": true,
+    "formal_vlm_ready": true,
+    "formal_run_status": "idle",
+    "fast_5090_route": "disabled because non-owned pqr3d workloads currently keep both GPUs at 98 percent utilization",
+    "local_vlm_server_sha256": "5335807ebd8d22b28cc5b39aca923abf394935664118f88ec87e3d381573916d",
+    "workflow_sha256": "593d3d981c90861584b811467b65b078b74bc0aaeb51a529c12523755eea3746",
+    "formal_and_remote_source_hashes_match": true
+  },
+  "state_isolation": {
+    "formal_state_sha256": "54A5EE6AC1794AE3D769B3FEFA3CADD79DA7F2D5DFF892F0B8B4F0A259238FF5",
+    "file_sessions_sha256": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files_sha256": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run_sha256": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary_sha256": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "model_debug_sha256": "EFDF22CD6BD803C958E3ACB39D46054D294544FE48324A12B4AFE1502B3BBB9A",
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "oss_modified": false
+  },
+  "rollback": {
+    "windows": "D:/Apps/LabelAgent/.local/backups/multi-image-cache-guard-round57-20261117",
+    "remote_4090": "/home/clw/labelagent_remote_20261110/backups/multi-image-cache-guard-round57-20261117",
+    "remote_5090": "/home/clw/projects/labelagent-5090/app/work/backups/multi-image-cache-guard-round57-20261117"
+  },
+  "limits": [
+    "The 79.97 percent wall-time reduction is one same-input engineering reproduction against a failing compiled path, not a population latency benchmark.",
+    "Dynamic cache is deliberately used for multi-image review stability; further multi-image speed work must not re-enable unprewarmed CUDA-graph variants on Flask worker threads.",
+    "The 5090 fast route remains disabled until non-owned workloads release the GPUs; no external process was stopped or modified."
+  ]
+}

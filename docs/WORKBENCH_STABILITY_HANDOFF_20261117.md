@@ -781,3 +781,11 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 完整回归为 Python 723/723（另有 171 个子测）和网页 79/79。三个修改文件已部署到 Windows 正式工作台且与工作树哈希一致，页面、SAM 和主 VLM ready，任务 idle；Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\audit-progress-round59-20261117`。5090 快速路由继续因非本流程负载保持 disabled；其休眠仓库是较旧的加速专用运行时，不具备当前工作台复核模块，因此本轮没有强行覆盖该环境，也没有停止或修改任何外部进程。结构化证据见 [第五十九轮高风险复核进度验收](evidence/workbench-stability-20261117/audit-progress-round59.json)。
 
 边界：本轮解决的是“健康计算却像卡住”的交互问题，没有把 42.5 秒包装成模型速度提升。当前主要首跑耗时仍来自单图可见类别发现、Agent 观察以及逐个高风险盲审；下一轮应在保持盲审安全门禁的前提下，验证能否把同帧多个高风险候选合并成一次结构化 VLM 复核，并用独立新数据集做真值支持的泛化验收。
+
+## 第六十轮同帧高风险候选批量复核实验（否决，2026-11-17）
+
+按第五十九轮计划，用第 32 帧两个 person 高风险候选做了“单次 4 图、一次结构化返回两个决定”的隔离原型。真实冷生成耗时 17.117 秒，预处理 0.081 秒、输出 267 token；上一轮两个独立请求的完整复核阶段约 18.8 秒，因此批量化没有得到足以部署的速度收益。
+
+更关键的是语义门禁没有通过。模型把两个结果都写成 `classification=uncertain`，却同时声明非空 `observed_label`、`candidate_supported=true` 和 `reason_code=visible_known_label`；其中候选 8 在独立盲审中由可见脚部和小腿支持 person，批量请求却改判为 floor。严格校验在任何候选、审核记录或训练标记写入前拒绝了整批结果。原型代码已全部撤回，正式工作台继续使用逐候选、证据与 ID 一一绑定的安全路径。
+
+完整否决记录见 [第六十轮批量复核否决证据](evidence/workbench-stability-20261117/rejected-batch-class-audit-round60.json)。边界：本轮是一次有明确负结果的工程实验，不能因为调用次数从二降到一就宣称更快或更好；后续速度优化应保持单候选视觉证据不变，转向缓存、调度或可用的独立加速路由。

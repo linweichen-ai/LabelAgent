@@ -1,0 +1,49 @@
+{
+  "schema_version": "labelagent.workbench_round60_rejected_batch_audit.v1",
+  "date": "2026-11-17",
+  "objective": "Test whether two high-risk candidate audits can be merged into one structured four-image VLM request without changing safety or semantic decisions.",
+  "status": "rejected_not_deployed",
+  "input": {
+    "isolated_state": "D:/Apps/LabelAgent/.local/isolated-round59-acceptance-v2-20261117",
+    "frame": 32,
+    "candidate_ids": [9, 8],
+    "bound_labels": ["person", "person"],
+    "images": 4,
+    "image_layout": "uncolored crop and cyan-mask crop for each candidate"
+  },
+  "performance": {
+    "batch_generation_seconds": 17.117,
+    "batch_preprocess_seconds": 0.081,
+    "batch_completion_tokens": 267,
+    "batch_prompt_tokens": 1215,
+    "effective_cache": "dynamic",
+    "baseline_sequential_audit_phase_seconds_approx": 18.8,
+    "conclusion": "No material speed advantage over the existing two-request path."
+  },
+  "semantic_failure": {
+    "protocol_error": "uncertain/conflict cannot claim a known class",
+    "candidate_9": {
+      "classification": "uncertain",
+      "observed_label": "person",
+      "candidate_supported": true,
+      "reason_code": "visible_known_label"
+    },
+    "candidate_8": {
+      "classification": "uncertain",
+      "observed_label": "floor",
+      "candidate_supported": true,
+      "reason_code": "visible_known_label",
+      "prior_individual_audit_observation": "person with visible human foot and lower leg"
+    },
+    "safety_result": "The strict validator rejected the entire batch before any audit record or candidate mutation could be published."
+  },
+  "deployment_decision": {
+    "batch_code_reverted": true,
+    "formal_runtime_changed": false,
+    "formal_state_changed": false,
+    "candidate_changed": false,
+    "human_truth_changed": false,
+    "training_approval_changed": false,
+    "next_direction": "Keep one-candidate blind evidence binding and optimize execution/caching or route availability without merging visual semantics."
+  }
+}

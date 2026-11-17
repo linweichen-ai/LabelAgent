@@ -1,0 +1,98 @@
+{
+  "schema_version": "labelagent.workbench_round56.v1",
+  "recorded_at": "2026-11-17T14:15:00+08:00",
+  "goal_status": "active",
+  "objective": "run the complete evaluation-only test24 set through the deployed keyed-schema static-cache route and verify progress, latency, registry integrity, and state isolation",
+  "data_boundary": {
+    "split": "test24",
+    "evaluation_only": true,
+    "training_return_allowed": false,
+    "image_count": 24,
+    "unique_image_sha256_count": 24,
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "source_state_modified": false,
+    "oss_modified": false
+  },
+  "result": {
+    "success": 24,
+    "failure": 0,
+    "http_503": 0,
+    "stuck_at_zero": 0,
+    "route_counts": {"primary": 24},
+    "cache_hits": 0,
+    "coalesced_requests": 0,
+    "elapsed_ms": {
+      "minimum": 13615,
+      "median": 14745.5,
+      "maximum": 16281
+    },
+    "generation_seconds": {
+      "minimum": 13.355,
+      "median": 14.462,
+      "mean": 14.434,
+      "maximum": 15.964
+    },
+    "completion_tokens": {"minimum": 315, "maximum": 347},
+    "cache_implementation": "static",
+    "startup_prewarm": true
+  },
+  "new_dataset_contract": {
+    "registry_labels": ["车辆", "pallet", "person", "floor", "slope", "ego", "other_robot", "cargo_floor"],
+    "uncertain_runs": 0,
+    "consistency_flagged_runs": 0,
+    "open_set_incomplete_runs": 0,
+    "registry_mutated_runs": 0,
+    "duplicate_or_missing_known_label_runs": 0,
+    "interpretation": "All current registry labels were returned exactly once for every image. The schema is generated from the active registry rather than a fixed eight-class constant."
+  },
+  "slope_observation": {
+    "current_vlm_visible_count": 3,
+    "current_visible_image_sha256": [
+      "aaa8be3c13d1e9a93a1759dddceeb104a796c3b4d43dce3d5b8dd031cf719e4f",
+      "c744f199eb0af269e4b7661acb4fdac1ffb5378b941a878388bd6439444b76a0",
+      "17a688104a27a3a147370305c0870a1b71b21b616612f3f5136fdcbec0ceae0c"
+    ],
+    "historical_round50_visible_count": 5,
+    "historically_visible_but_currently_absent": [
+      {
+        "image_sha256": "452a0b1135b58ad3a09af127ece1684bc3054eb1cecf43547eaf796bfec49a47",
+        "frame": "011/camera_1/1789900388815700364.png",
+        "current_floor_visible": true
+      },
+      {
+        "image_sha256": "527a3c61891e1720fe4c44fbaab37b95f1a6fb8fde0df9f3610e5676eca68581",
+        "frame": "012/camera_2/1789900594415795363.png",
+        "current_floor_visible": true
+      }
+    ],
+    "safety_net": "Because floor remains visible, the deployed slope recall policy still adds slope to SAM candidate generation without changing VLM visibility, human truth, or training approval.",
+    "decision": "Do not call slope accuracy accepted. Treat the two changed responses as a recall diagnostic for the next round; keep the independent recall probe and downstream geometry guards enabled."
+  },
+  "formal_readback": {
+    "root_http_status": 200,
+    "model_readiness_ready": true,
+    "sam_ready": true,
+    "vlm_ready": true,
+    "fast_vlm_status": "disabled",
+    "run_status": "idle",
+    "formal_state_sha256": "54A5EE6AC1794AE3D769B3FEFA3CADD79DA7F2D5DFF892F0B8B4F0A259238FF5",
+    "file_sessions_sha256": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files_sha256": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run_sha256": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary_sha256": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "model_debug_sha256": "EFDF22CD6BD803C958E3ACB39D46054D294544FE48324A12B4AFE1502B3BBB9A"
+  },
+  "raw_artifact": {
+    "path": "artifacts/workbench-stability-20261117/test24-keyed-static-round56.json",
+    "sha256": "C3EE62CEE1104C2A9D4DF48D99C9E0F290D33DD2E79CF2B7BA08BE43925ACED3",
+    "tracked": false,
+    "reason": "The raw per-image benchmark remains a local evaluation artifact; this bounded summary is the tracked evidence."
+  },
+  "limits": [
+    "The 24-image run proves stable execution and registry completeness on this held-out set, not cross-factory segmentation accuracy.",
+    "Round50 used a different model route and output protocol, so its latency is not an apples-to-apples speed baseline.",
+    "The test24 set has no human pixel masks for slope; the change from five to three VLM-visible slope views is a diagnostic, not a measured precision or recall score."
+  ]
+}

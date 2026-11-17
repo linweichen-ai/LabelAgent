@@ -17,6 +17,7 @@ from pathlib import Path
 import sys
 import tempfile
 import time
+import urllib.request
 from urllib.parse import urlsplit
 
 
@@ -45,6 +46,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--verify-audit-reuse", action="store_true",
         help="After inference, repeat the exact persisted class audit and require a server cache hit.")
+    parser.add_argument(
+        "--capture-vlm-cache-stats", action="store_true",
+        help="Capture bounded Local VLM cache counters before and after the isolated flow.")
     return parser.parse_args()
 
 
@@ -58,6 +62,44 @@ def sha256(path: Path) -> str:
 
 def elapsed_ms(started: float) -> float:
     return round((time.perf_counter() - started) * 1000, 3)
+
+
+def vlm_health_url(llm_url: str) -> str:
+    parsed = urlsplit(llm_url.rstrip("/"))
+    path = parsed.path.rstrip("/")
+    if path.endswith("/v1"):
+        path = path[:-len("/v1")]
+    return parsed._replace(path=path + "/health", query="", fragment="").geturl()
+
+
+def bounded_vlm_health(llm_url: str) -> dict:
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    with opener.open(vlm_health_url(llm_url), timeout=10) as response:
+        payload = json.load(response)
+    stats = payload.get("response_cache_stats")
+    if not isinstance(stats, dict) or not all(
+            isinstance(key, str) and type(value) is int and value >= 0
+            for key, value in stats.items()):
+        raise RuntimeError("Local VLM health lacks bounded cache counters")
+    return {
+        "status": payload.get("status"),
+        "model_loaded": payload.get("model_loaded"),
+        "response_cache_capacity": payload.get("response_cache_capacity"),
+        "response_cache_entries": payload.get("response_cache_entries"),
+        "exact_requests_inflight": payload.get("exact_requests_inflight"),
+        "response_cache_stats": dict(sorted(stats.items())),
+    }
+
+
+def cache_stat_delta(before: dict, after: dict) -> dict:
+    before_stats = before.get("response_cache_stats") or {}
+    after_stats = after.get("response_cache_stats") or {}
+    names = set(before_stats) | set(after_stats)
+    delta = {name: after_stats.get(name, 0) - before_stats.get(name, 0)
+             for name in sorted(names)}
+    if any(type(value) is not int or value < 0 for value in delta.values()):
+        raise RuntimeError("Local VLM cache counters moved backwards")
+    return delta
 
 
 def model_config(source: dict, llm_url: str | None = None,
@@ -170,6 +212,8 @@ def main() -> int:
     missing = [key for key in required_config if not config.get(key)]
     if missing or not labels:
         raise ValueError(f"source state lacks required settings: {missing or ['labels']}")
+    vlm_health_before = (bounded_vlm_health(config["llm_url"])
+                         if args.capture_vlm_cache_stats else None)
 
     with tempfile.TemporaryDirectory(prefix="labelagent-new-data-") as temporary:
         isolated_work = Path(temporary).resolve()
@@ -298,6 +342,16 @@ def main() -> int:
                 "overlay_sha256": sha256(overlay_path),
             })
 
+        vlm_cache_observability = None
+        if vlm_health_before is not None:
+            vlm_health_after = bounded_vlm_health(config["llm_url"])
+            vlm_cache_observability = {
+                "content_free": True,
+                "health_url": vlm_health_url(config["llm_url"]),
+                "before": vlm_health_before,
+                "after": vlm_health_after,
+                "delta": cache_stat_delta(vlm_health_before, vlm_health_after),
+            }
         summary = {
             "schema_version": "labelagent.new_dataset_smoke.v1",
             "isolated_workspace": True,
@@ -312,6 +366,7 @@ def main() -> int:
             "prompt_profile": config.get("llm_prompt_profile"),
             "max_rounds": args.max_rounds,
             "batch_upload_elapsed_ms": upload_ms,
+            "vlm_cache_observability": vlm_cache_observability,
             "runs": runs,
         }
         summary_path = output_dir / "summary.json"

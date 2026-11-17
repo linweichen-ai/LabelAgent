@@ -1,9 +1,27 @@
 import unittest
 
-from tools.run_new_dataset_smoke import model_config, summarize_model_trace
+from tools.run_new_dataset_smoke import (
+    cache_stat_delta,
+    model_config,
+    summarize_model_trace,
+    vlm_health_url,
+)
 
 
 class NewDatasetSmokeTests(unittest.TestCase):
+    def test_vlm_health_url_and_monotonic_content_free_delta(self):
+        self.assertEqual(vlm_health_url("http://127.0.0.1:28868/v1"),
+                         "http://127.0.0.1:28868/health")
+        self.assertEqual(cache_stat_delta(
+            {"response_cache_stats": {"hits": 4, "misses": 5}},
+            {"response_cache_stats": {"hits": 6, "misses": 6,
+                                        "evictions": 1}}),
+            {"evictions": 1, "hits": 2, "misses": 1})
+        with self.assertRaises(RuntimeError):
+            cache_stat_delta(
+                {"response_cache_stats": {"hits": 4}},
+                {"response_cache_stats": {"hits": 3}})
+
     def test_model_override_is_in_memory_and_rejects_credentials(self):
         source = {"llm_url": "http://old/v1", "llm_model": "old",
                   "sam3_url": "http://sam"}

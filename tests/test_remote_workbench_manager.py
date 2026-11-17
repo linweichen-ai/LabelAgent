@@ -1,5 +1,7 @@
 import importlib.util
 from pathlib import Path
+import json
+import tempfile
 import unittest
 
 
@@ -28,6 +30,32 @@ class RemoteWorkbenchManagerTests(unittest.TestCase):
         self.assertIn(
             'optional_fast_wait_seconds(), "5090 可选加速通道")', source)
         self.assertNotIn('20, "5090 可选加速通道")', source)
+
+    def test_isolated_acceptance_uses_the_verified_primary_tunnels(self):
+        self.assertEqual(MODULE.isolate_model_config(), {
+            "llm_url": f"http://127.0.0.1:{MODULE.VLM_PORT}/v1",
+            "llm_model": "labelagent-vlm8b",
+            "sam3_url": f"http://127.0.0.1:{MODULE.SAM_PORT}",
+        })
+        source = PATH.read_text(encoding="utf-8")
+        self.assertNotIn(
+            'SAM3_URL="http://127.0.0.1:18766"', source)
+        self.assertNotIn(
+            '"llm_url": "http://127.0.0.1:18878/v1"', source)
+
+    def test_isolated_acceptance_copies_only_a_valid_label_registry(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            state = Path(temporary) / "state.json"
+            state.write_text(json.dumps({
+                "labels": ["floor", "slope", "person"],
+                "truth": {"0": ["must not be copied"]},
+            }), encoding="utf-8")
+            self.assertEqual(MODULE.isolate_labels(state),
+                             ["floor", "slope", "person"])
+            for labels in ([], ["floor", "floor"], ["floor", ""]):
+                state.write_text(json.dumps({"labels": labels}), encoding="utf-8")
+                with self.assertRaises(RuntimeError):
+                    MODULE.isolate_labels(state)
 
 
 if __name__ == "__main__":

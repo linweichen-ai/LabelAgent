@@ -1128,3 +1128,19 @@ cuDNN attention 在隔离算子上看似更快：static prefill 中位从 0.2180
 正式 4090 重启后计数全零。用一张真实 640×512 图像执行完整生产类别发现，冷请求为 15.680 秒，紧接着精确重复为 0.166 秒，内容 SHA-256 和 894/322 token 用量完全一致；计数恰好增加 misses=1、stores=1、hits=1，其余为 0。页面 HTTP 200、VLM ok、inflight 0，Windows 与远端服务 SHA-256 均为 `0DE0C6E2...30C55BF`，六份正式状态文件哈希全部未变。
 
 Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\cache-observability-round94-20261117`，远端回滚点为 `/home/clw/labelagent_remote_20261110/backups/cache-observability-round94-20261117`。复现结果在未提交的 `artifacts/round94-cache-observability/result.json`，结构化验收见 [第九十四轮缓存观测验收](evidence/workbench-stability-20261117/cache-observability-round94.json)。边界：本轮让真实工作流中的复用、淘汰和拥塞可测，不降低冷图约 16 秒的生成，也不证明新数据集泛化；后续缓存分区、容量或预取调整必须先收集真实计数证据。
+
+## 第九十五轮并发推理线程固定与新数据浏览器复验（已部署，2026-11-17）
+
+第九十四轮计数上线后，先在完全隔离的新数据工具中跑 1104/003：完整同步流程 44.002 秒，包含四个不同的 VLM 请求，计数只增加 misses=4、stores=4，没有 busy、合并或淘汰。这证明继续扩大缓存不能缩短新图首跑；耗时来自可见类别、Agent 和两项独立人物盲审依次执行。
+
+真实浏览器验收随后暴露两项管理器缺陷：隔离模式还检查旧端口 18766/18878，而正式安全通道已经是 28766/28868；新建隔离工作区也没有标签表，导致页面没有提交起稿。管理器现统一使用正式端口常量，并只从正式 `work/state.json` 读取标签列表写入隔离环境，不复制真值、候选或其他状态；空、重复和非法标签会立即停止，而不是猜测。
+
+修复管理器后，004 的首次浏览器并发又复现了用户曾见过的失败：停留预取与按钮点击提交相同请求，跟随者正确等待，但主请求在 PyTorch Inductor CUDA Graph 内触发线程局部状态断言并返回 500，跟随者因无可复用结果返回 503；计数为 misses=2、coalesced=1、stores=0、coalesce_reuse_failures=1。远端堆栈证明这不是图片或提示错误，而是 Flask 工作线程与编译后 GPU 图的线程边界问题。
+
+正式修复让启动预热、普通生成和受限批处理全部进入同一个单工作线程，Flask 仍可并发响应健康检查与合并跟随者。真实同时请求 004 后，主请求 16.162 秒、跟随者 16.163 秒，只执行一次 GPU 生成；两份内容和 token 完全一致，计数严格为 misses=2、stores=1、coalesced=1，复用失败、busy 和超时均为 0。
+
+随后两张 1104 新图完成真实浏览器验收。服务重启后的首个静态生产形状 004 在 33.018 秒显示 `12 pallet + 1 floor`，37.799 秒完成后台 Agent；不重启模型的另一张未缓存 003 在 16.593 秒显示 `13 pallet + 2 person + 1 floor`，39.595 秒完成 Agent 与两项人物盲审。两次页面都持续显示非零秒数和实际阶段，无页面错误；预取与点击各合并一次，最终累计 misses=8、stores=6、coalesced=2，复用失败、busy、超时和淘汰全部为 0。机器候选没有变成人工真值或训练批准。
+
+最终完整回归为 Python 776/776、网页 95/95。正式页面 HTTP 200，六份正式状态文件哈希完全不变；服务 SHA-256 为 `0F3F6957...2F58B36`，管理器为 `1141A07A...5AF46B`。服务回滚点为 `D:\Apps\LabelAgent\.local\backups\inference-thread-affinity-round95-20261117` 和 `/home/clw/labelagent_remote_20261110/backups/inference-thread-affinity-round95-20261117`，管理器回滚点为 `D:\Apps\LabelAgent\.local\backups\isolated-tunnel-fix-round95-20261117`。图像见 [004 浏览器结果](evidence/workbench-stability-20261117/newdata-browser-004-round95.png) 与 [003 浏览器结果](evidence/workbench-stability-20261117/newdata-browser-003-round95.png)，完整记录见 [第九十五轮并发与浏览器验收](evidence/workbench-stability-20261117/inference-thread-affinity-round95.json)。边界：并发崩溃已修复，但重启后首个静态生产形状仍有约 33 秒的一次性编译成本，常态新图可见类别约 16 秒仍是下一步的主要速度瓶颈；本轮不证明模型精度或跨数据集泛化。
+
+四个 Round95 隔离进程均已按进程身份停止，WorkBuddy 原有的两个隔离会话保持不动。宿主安全策略拒绝递归删除四个临时工作副本，因此 `D:\Apps\LabelAgent\.local\isolated-round95-browser-newdata*` 共约 4.06 MiB 暂时保留；它们不属于正式状态，截图与结构化结果已经另存。没有把未执行的清理写成完成。

@@ -46,6 +46,23 @@ class BlockingBackend(ContractBackend):
         return super().generate(messages, images, max_tokens, response_schema)
 
 
+class ThreadAffinityBackend(ContractBackend):
+    startup_prewarm_enabled = True
+    startup_prewarm = None
+    model_loaded = False
+
+    def __init__(self):
+        self.inference_threads = []
+
+    def _run_startup_prewarm(self):
+        self.inference_threads.append(threading.get_ident())
+        return {"performed": True}
+
+    def generate(self, messages, images, max_tokens, response_schema=None):
+        self.inference_threads.append(threading.get_ident())
+        return super().generate(messages, images, max_tokens, response_schema)
+
+
 def messages(count=1):
     parts = [{"type": "text", "text": "Return JSON"}]
     for index in range(count):
@@ -57,6 +74,24 @@ def messages(count=1):
 
 
 class LocalVLMContractTests(unittest.TestCase):
+    def test_prewarm_and_requests_share_one_inference_thread(self):
+        backend = ThreadAffinityBackend()
+        app = MODULE.create_app(backend)
+        client = app.test_client()
+        first = client.post("/v1/chat/completions", json={
+            "model": backend.model_id, "messages": messages(),
+            "max_tokens": 10})
+        second = client.post("/v1/chat/completions", json={
+            "model": backend.model_id, "messages": messages(),
+            "max_tokens": 11})
+
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(second.status_code, 200)
+        self.assertTrue(backend.model_loaded)
+        self.assertEqual(backend.startup_prewarm, {"performed": True})
+        self.assertEqual(len(backend.inference_threads), 3)
+        self.assertEqual(len(set(backend.inference_threads)), 1)
+
     def test_generation_cache_implementation_is_explicit_and_bounded(self):
         self.assertIsNone(MODULE.checked_generation_cache_implementation(None))
         self.assertEqual(MODULE.checked_generation_cache_implementation("dynamic"), "dynamic")

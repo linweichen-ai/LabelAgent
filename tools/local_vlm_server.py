@@ -6,6 +6,7 @@ Contract tests use an explicitly named test double, not real inference.
 import argparse
 import base64
 from collections import OrderedDict
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from copy import deepcopy
 import hashlib
@@ -279,11 +280,11 @@ class TransformersBackend:
         # service ready, rather than stalling the first user inference.
         ensure_format_tokenizer_data(self)
         self.last_inference_stats = None
-        self.startup_prewarm = (self._run_startup_prewarm()
-                                if self.startup_prewarm_enabled else None)
-        # Startup work is operational evidence, not a user inference.
-        self.last_inference_stats = None
-        self.model_loaded = True
+        # The Flask server is threaded, while compiled CUDA graphs retain
+        # thread-local state.  create_app() performs any prewarm and every
+        # later model call on one dedicated inference thread.
+        self.startup_prewarm = None
+        self.model_loaded = not self.startup_prewarm_enabled
 
     def _run_startup_prewarm(self):
         """Compile the static decode path before the service reports ready."""
@@ -480,6 +481,9 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
     response_cache = OrderedDict()
     response_cache_lock = threading.Lock()
     inflight_requests = {}
+    inference_executor = ThreadPoolExecutor(
+        max_workers=1, thread_name_prefix="labelagent-vlm-inference")
+    app.extensions["vlm_inference_executor"] = inference_executor
     response_cache_stats = {
         "hits": 0,
         "misses": 0,
@@ -490,6 +494,31 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
         "coalesce_reuse_failures": 0,
         "busy_rejections": 0,
     }
+
+    def execute_backend_call(callable_, *args, **kwargs):
+        """Keep compiled CUDA graph setup and execution on one OS thread."""
+        def run():
+            result = callable_(*args, **kwargs)
+            request_stats = deepcopy(
+                getattr(backend, "last_inference_stats", None) or {})
+            try:
+                cache_release = trim_idle_cuda_cache(
+                    getattr(backend, "torch", None),
+                    getattr(backend, "idle_cache_release", False))
+            except RuntimeError as error:
+                cache_release = {"enabled": True, "performed": False,
+                                 "error_type": type(error).__name__}
+            backend.last_cache_release = cache_release
+            return result, request_stats, cache_release
+        return inference_executor.submit(run).result()
+
+    if (getattr(backend, "startup_prewarm_enabled", False)
+            and getattr(backend, "startup_prewarm", None) is None):
+        backend.startup_prewarm = inference_executor.submit(
+            backend._run_startup_prewarm).result()
+        # Startup work is operational evidence, not a user inference.
+        backend.last_inference_stats = None
+        backend.model_loaded = True
 
     def response_cache_key(body):
         payload = json.dumps(body, ensure_ascii=False, sort_keys=True,
@@ -649,17 +678,9 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
                     if not isinstance(wrapper, dict) or not isinstance(wrapper.get("schema"), dict):
                         raise ValueError("response_format must contain a JSON schema")
                     options["response_schema"] = wrapper["schema"]
-                content, prompt_tokens, completion_tokens = backend.generate(
-                    messages, images, max_tokens, **options)
-                # Snapshot while this request still owns the inference lock.
-                request_stats=deepcopy(getattr(backend,'last_inference_stats',None) or {})
-                # generate() has returned, so temporary tensors no longer occupy
-                # live Python locals. The lock still excludes a new inference.
-                try:
-                    cache_release=trim_idle_cuda_cache(getattr(backend,'torch',None),getattr(backend,'idle_cache_release',False))
-                except RuntimeError as error:
-                    cache_release={'enabled':True,'performed':False,'error_type':type(error).__name__}
-                backend.last_cache_release=cache_release
+                generated, request_stats, cache_release = execute_backend_call(
+                    backend.generate, messages, images, max_tokens, **options)
+                content, prompt_tokens, completion_tokens = generated
             finally:
                 inference_lock.release()
             local_vlm={"backend": backend.backend_name, "image_count": len(images),
@@ -734,19 +755,10 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
             return jsonify(error={"message": "Local VLM is busy"}), 503
         started = time.monotonic()
         try:
-            rows = backend.generate_batch(
-                decoded, max_tokens, response_schema=schema)
-            request_stats = deepcopy(
-                getattr(backend, "last_inference_stats", None) or {})
-            try:
-                cache_release = trim_idle_cuda_cache(
-                    getattr(backend, "torch", None),
-                    getattr(backend, "idle_cache_release", False))
-            except RuntimeError as error:
-                cache_release = {
-                    "enabled": True, "performed": False,
-                    "error_type": type(error).__name__}
-            backend.last_cache_release = cache_release
+            result, request_stats, cache_release = execute_backend_call(
+                backend.generate_batch, decoded, max_tokens,
+                response_schema=schema)
+            rows = result
         finally:
             inference_lock.release()
         elapsed = round(time.monotonic() - started, 3)

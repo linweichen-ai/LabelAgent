@@ -293,6 +293,30 @@ def isolate_executables():
     return allowed
 
 
+def isolate_model_config():
+    """Bind isolated acceptance to the same verified tunnels as the workbench."""
+    return {
+        "llm_url": f"http://127.0.0.1:{VLM_PORT}/v1",
+        "llm_model": "labelagent-vlm8b",
+        "sam3_url": f"http://127.0.0.1:{SAM_PORT}",
+    }
+
+
+def isolate_labels(state_path=None):
+    """Read the authoritative label registry without copying workbench state."""
+    path = Path(state_path) if state_path is not None else ROOT / "work" / "state.json"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise RuntimeError("正式标签表不可读取，隔离验收不会使用猜测标签") from error
+    labels = payload.get("labels") if isinstance(payload, dict) else None
+    if (not isinstance(labels, list) or not labels
+            or any(not isinstance(label, str) or not label.strip() for label in labels)
+            or len(set(labels)) != len(labels)):
+        raise RuntimeError("正式标签表为空或无效，隔离验收已停止")
+    return list(labels)
+
+
 def isolate_identity(proc, token):
     command = proc.cmdline()
     exe = Path(proc.exe()).resolve()
@@ -423,7 +447,8 @@ def isolate(action, port, work, open_browser=False):
                 sock.bind(("127.0.0.1", port))
             except OSError as error:
                 raise RuntimeError(f"隔离端口 {port} 不可用；不会停止端口占用者") from error
-    for model_port, endpoint in ((18766, "/health"), (18878, "/v1/models")):
+    for model_port, endpoint in ((SAM_PORT, "/health"),
+                                 (VLM_PORT, "/v1/models")):
         if not request_ok(model_port, endpoint):
             raise RuntimeError(f"现有远端通道 {model_port} 不可用；请先准备通道，隔离模式不会启动模型或隧道")
 
@@ -436,7 +461,8 @@ def isolate(action, port, work, open_browser=False):
             environment = os.environ.copy()
             environment.update(
                 PYTHONUTF8="1", PYTHONUNBUFFERED="1", LABELAGENT_WORK_DIR=str(work),
-                AUTOLABEL_PORT=str(port), SAM3_URL="http://127.0.0.1:18766",
+                AUTOLABEL_PORT=str(port),
+                SAM3_URL=f"http://127.0.0.1:{SAM_PORT}",
                 NO_PROXY="127.0.0.1,localhost")
             token = uuid.uuid4().hex
             with (log_dir / f"isolated_workbench_{port}.log").open("ab") as output:
@@ -464,9 +490,8 @@ def isolate(action, port, work, open_browser=False):
             if time.monotonic() >= deadline:
                 raise RuntimeError("等待隔离工作台超时")
             time.sleep(1)
-        post_json(port, "/api/config", {
-            "llm_url": "http://127.0.0.1:18878/v1", "llm_model": "labelagent-vlm8b",
-            "sam3_url": "http://127.0.0.1:18766"})
+        post_json(port, "/api/config", isolate_model_config())
+        post_json(port, "/api/labels", {"labels": isolate_labels()})
         print(f"隔离工作台已启动：http://127.0.0.1:{port}")
         if open_browser:
             webbrowser.open(f"http://127.0.0.1:{port}")

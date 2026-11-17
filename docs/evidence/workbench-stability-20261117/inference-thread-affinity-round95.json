@@ -1,0 +1,147 @@
+{
+  "schema_version": "labelagent.inference-thread-affinity.v1",
+  "round": 95,
+  "date": "2026-11-17",
+  "accepted_changes": [
+    "Run startup prewarm, single requests and bounded batches on one dedicated inference thread.",
+    "Use the verified 28766/28868 tunnels for isolated browser acceptance.",
+    "Copy only the authoritative label registry into a fresh isolated workbench.",
+    "Capture content-free VLM cache counter deltas in new-dataset smoke tests."
+  ],
+  "diagnosis": {
+    "isolated_direct_003": {
+      "inference_elapsed_ms": 44002.406,
+      "vlm_unique_requests": 4,
+      "cache_delta": {
+        "hits": 0,
+        "misses": 4,
+        "stores": 4,
+        "evictions": 0,
+        "coalesced": 0,
+        "coalesce_reuse_failures": 0,
+        "busy_rejections": 0
+      },
+      "interpretation": "The full synchronous flow was dominated by four distinct sequential VLM calls, not cache eviction or contention."
+    },
+    "isolated_manager_failures_found": [
+      "The isolated manager still checked obsolete local ports 18766/18878 instead of the verified tunnels 28766/28868.",
+      "A fresh isolated workbench had an empty label registry, so the browser never submitted reference_draft."
+    ],
+    "concurrent_failure_before_fix": {
+      "input_batch": "20261104 / 004",
+      "leader_status": 500,
+      "leader_error": "PyTorch inductor cudagraph thread-local assertion",
+      "follower_status": 503,
+      "follower_error": "The identical Local VLM request did not produce a reusable result",
+      "cache_delta": {
+        "misses": 2,
+        "stores": 0,
+        "coalesced": 1,
+        "coalesce_reuse_failures": 1
+      }
+    }
+  },
+  "implementation": {
+    "inference_executor_workers": 1,
+    "startup_prewarm_on_executor": true,
+    "single_generation_on_executor": true,
+    "batch_generation_on_executor": true,
+    "flask_remains_threaded": true,
+    "exact_request_coalescing_preserved": true,
+    "isolated_labels_source": "formal work/state.json labels only",
+    "formal_truth_or_candidates_copied": false
+  },
+  "real_concurrent_acceptance": {
+    "input_batch": "20261104 / 004",
+    "leader_wall_ms": 16162.17,
+    "follower_wall_ms": 16163.403,
+    "one_gpu_generation": true,
+    "content_sha256_equal": true,
+    "usage_equal": true,
+    "cache_delta": {
+      "hits": 0,
+      "misses": 2,
+      "stores": 1,
+      "evictions": 0,
+      "coalesced": 1,
+      "coalesce_timeouts": 0,
+      "coalesce_reuse_failures": 0,
+      "busy_rejections": 0
+    },
+    "raw_result_sha256": "3af210b4a884e40c8120ead037dfc2186ab50e5a7762574adb3bbda9bf74cb07"
+  },
+  "real_browser_acceptance": {
+    "004_first_shape_after_restart": {
+      "page_status": 200,
+      "candidate_visible_ms": 33018,
+      "background_complete_ms": 37799,
+      "candidate_count": 13,
+      "candidate_counts_by_label": {
+        "floor": 1,
+        "pallet": 12
+      },
+      "page_errors": 0,
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "raw_result_sha256": "3c473652172c533663fb99ac71af1a60139765eeed176d47b809c71c1bfbdaa7",
+      "screenshot": "newdata-browser-004-round95.png",
+      "screenshot_sha256": "b4fdce5796319998888ad0b5dfb874f9afaf06ef6d9c322ef331cbc8277fa7a5"
+    },
+    "003_steady_state_unseen_image": {
+      "page_status": 200,
+      "candidate_visible_ms": 16593,
+      "background_complete_ms": 39595,
+      "candidate_count": 16,
+      "candidate_counts_by_label": {
+        "floor": 1,
+        "pallet": 13,
+        "person": 2
+      },
+      "page_errors": 0,
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "raw_result_sha256": "33bbe1fffda083b16e98c3341bb60dd8025c11ca8c9da2e45c98a7a136e93b5d",
+      "screenshot": "newdata-browser-003-round95.png",
+      "screenshot_sha256": "4201164e083f6f1590d2ad359791b3eebf8f9c205bc100d1271d18a05ea1cdf9"
+    },
+    "combined_cache_stats": {
+      "hits": 0,
+      "misses": 8,
+      "stores": 6,
+      "evictions": 0,
+      "coalesced": 2,
+      "coalesce_timeouts": 0,
+      "coalesce_reuse_failures": 0,
+      "busy_rejections": 0
+    }
+  },
+  "tests": {
+    "python": "776/776",
+    "web": "95/95"
+  },
+  "formal_deployment": {
+    "page_status": 200,
+    "server_sha256": "0f3f69577325468464caa7530374f85dd2aa1782bf66317bdfa5ed6eb2f58b36",
+    "manager_sha256": "1141a07ab01e0ac6d18fa1bb90c24ffbeb94373467b6432eb8550d7e305af46b",
+    "all_six_expected_state_sha256_values_preserved": true,
+    "candidate_written_to_formal_state": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "oss_modified": false
+  },
+  "rollback": {
+    "windows_server": "D:/Apps/LabelAgent/.local/backups/inference-thread-affinity-round95-20261117",
+    "remote_server": "/home/clw/labelagent_remote_20261110/backups/inference-thread-affinity-round95-20261117",
+    "windows_manager": "D:/Apps/LabelAgent/.local/backups/isolated-tunnel-fix-round95-20261117"
+  },
+  "cleanup": {
+    "all_round95_isolated_processes_stopped": true,
+    "other_recorded_workbuddy_processes_untouched": true,
+    "temporary_work_copies_removed": false,
+    "temporary_work_copy_bytes": 4255440,
+    "reason": "The host safety policy rejected recursive removal; the four explicit isolated directories remain under D:/Apps/LabelAgent/.local and contain no formal state."
+  },
+  "boundary": "The concurrency crash is fixed and two real browser flows pass. The first static production shape after a service restart took 33.0 seconds; the next unseen image returned candidates in 16.6 seconds. This does not prove model accuracy or new-dataset generalization, and the remaining cold-generation latency is still the main speed bottleneck."
+}

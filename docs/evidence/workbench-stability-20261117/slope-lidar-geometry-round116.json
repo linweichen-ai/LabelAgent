@@ -1,0 +1,128 @@
+{
+  "schema_version": "labelagent.slope-lidar-geometry-round116.v1",
+  "created_date": "2026-11-18",
+  "status": "bounded_dev_candidate_passed_not_deployed",
+  "dataset": {
+    "split": "dev8",
+    "source_sequence": "008",
+    "synchronized_frames": [
+      "1789899740482474075",
+      "1789899770782473075"
+    ],
+    "camera_views": 8,
+    "assistant_visible_slope_candidates": 4,
+    "assistant_negative_views": 4,
+    "human_truth": false,
+    "human_confirmed": false,
+    "test24_used": false
+  },
+  "boundaries": {
+    "candidate_only": true,
+    "production_deployed": false,
+    "training_authorized": false,
+    "sam3_finetuned": false,
+    "color_dependent_rule": false,
+    "labels_read_by_predictor": false,
+    "oss_writes": 0,
+    "new_gpu_training_jobs": 0
+  },
+  "sources": {
+    "reuse_reason": "The minimal local dataset intentionally omitted LiDAR. Two previously downloaded PCDs were reused only after receipt, size, ETag-MD5 and SHA-256 validation.",
+    "pcd": [
+      {
+        "frame_id": "1789899740482474075",
+        "bytes": 2338530,
+        "sha256": "0cda5107cfb3b99d913b496c0cd72041b83974deb7287b96179b716d5500a0b7",
+        "etag": "C2C0FDB666DFAC952620EA238D699082",
+        "etag_md5_match": true
+      },
+      {
+        "frame_id": "1789899770782473075",
+        "bytes": 2337802,
+        "sha256": "c51e77ead3169ec0dddd7a03e5f8cb0494ec33c483431a83a0538fcc7e961097",
+        "etag": "017820F08E48CD2F618DF0319DF971D6",
+        "etag_md5_match": true
+      }
+    ]
+  },
+  "method": {
+    "summary": "Fit a deterministic dominant support plane, voxelize label-free raw points, find locally planar components tilted from the support plane, retain shallow traversable components, project through supplied 640x512 PINHOLE calibration, then choose SAM masks using geometry-only containment and spill metrics.",
+    "maximum_component_median_tilt_degrees": 10.0,
+    "maximum_positive_points_per_component": 5,
+    "sam_policies": [
+      "component_center_ring_negatives",
+      "all_positive"
+    ],
+    "negative_ring_margin_pixels": 80,
+    "selection_reads_assistant_points": false
+  },
+  "diagnostic_iterations": {
+    "broad_geometry": {
+      "positive_views_with_hints": "4/4",
+      "negative_views_with_hints": "3/4",
+      "decision": "rejected_mobile_equipment_top_surfaces"
+    },
+    "shallow_traversable_gate": {
+      "positive_views_with_hints": "4/4",
+      "negative_views_with_hints": "0/4",
+      "assistant_points_within_32px": "4/4",
+      "generated_component_hints": 6,
+      "decision": "passed_bounded_geometry_gate"
+    },
+    "all_positive_sam": {
+      "assistant_positive_points_covered": "2/4",
+      "assistant_negative_sets_clear": "2/4",
+      "warnings": 4,
+      "decision": "rejected_oversegmentation"
+    },
+    "ring_only_sam": {
+      "assistant_positive_points_covered": "2/4",
+      "assistant_negative_sets_clear": "4/4",
+      "warnings": 0,
+      "decision": "insufficient_alone"
+    }
+  },
+  "final_cascade": {
+    "positive_views_with_geometry_hints": "4/4",
+    "negative_views_with_geometry_hints": "0/4",
+    "sam_candidates_returned": "4/4",
+    "assistant_positive_points_covered": "4/4",
+    "assistant_negative_sets_clear": "4/4",
+    "selected_ring_policy": 2,
+    "selected_all_positive_policy": 2,
+    "selected_masks_with_warnings": 2,
+    "sam_attempts": 8,
+    "sam_total_elapsed_seconds": 1.2136,
+    "assistant_visual_review": "4/4 masks visually follow the visible ramp regions in the bounded contact sheet",
+    "visual_review_is_human_truth": false,
+    "decision": "retain_as_candidate_for_new_unseen_and_human_truth_gates"
+  },
+  "artifacts": {
+    "geometry_report_sha256": "e8af132b477b285b0a83fd621a6738c73b86ba4dab3a41025bfc5bae563cc16e",
+    "sam_results_sha256": "a593f08608b2de64eb617dc1f0a55e3956bd83ca6b851d8ade944d3faf8b0a46",
+    "contact_sheet_sha256": "6eca75f0a2a6519524697cbf22d5d2f1467b482a0b3256ed9450f5659d0bd718",
+    "local_untracked_directory": "artifacts/round116-slope-lidar-v1",
+    "remote_directory": "/home/clw/projects/sfl-cpd15y/artifacts/round116-slope-lidar-v1"
+  },
+  "implementation": {
+    "tools/slope_lidar_geometry.py": "92b543bf73bbc665cdf0a677aa377d802fab073379420f33f7ebc78b92dcda96",
+    "tools/evaluate_slope_lidar_geometry.py": "59d84ffba705ad73fd5e5ed1933265bccc534889fad3abe88d5da364f24c75ac",
+    "tools/evaluate_slope_lidar_sam.py": "ce097acb642cec656638f7115712ea1bb9a370edf05fe13c1dc18f2b10fff1d0",
+    "tests/test_slope_lidar_geometry.py": "27636f8fe62246c158ab96e6b3826f66746f8a9e68828394b11884693319b198"
+  },
+  "regression": {
+    "targeted_unittest": "11/11 passed",
+    "python_unittest": "845/845 passed",
+    "web_node_test": "89/89 passed",
+    "git_diff_check": "passed",
+    "page_http_status": 200,
+    "sam_status": "ok",
+    "sam_model_loaded": true,
+    "sam_inflight": 0,
+    "vlm_status": "ok",
+    "vlm_model_loaded": true,
+    "vlm_exact_requests_inflight": 0,
+    "formal_vlm_model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+  },
+  "conclusion": "Calibrated LiDAR geometry closes the bounded dev8 automatic localization gap that text prompts and VLM point generation did not close. The result is still assistant-candidate evidence on two synchronized frames, not human truth, pixel IoU, new-dataset generalization or production acceptance. The next required gate is a frozen unseen sequence with independently reviewed ramp and hard-negative masks."
+}

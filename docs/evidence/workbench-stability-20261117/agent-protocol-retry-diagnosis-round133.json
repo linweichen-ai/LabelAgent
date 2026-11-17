@@ -1,0 +1,62 @@
+{
+  "schema_version": "labelagent.agent-protocol-retry-diagnosis-round133.v1",
+  "date": "2026-11-18",
+  "objective": "Explain the post-deployment cold Agent refinement long tail without changing production retry policy from one observed frame.",
+  "frame35": {
+    "background_complete_ms": 111372,
+    "agent_rounds": 0,
+    "stop_reason": "invalid_model_output",
+    "candidate_mutated": false,
+    "candidate_count": 8,
+    "protocol_attempts": [
+      {
+        "attempt": 1,
+        "elapsed_ms": 35421,
+        "status": "rejected",
+        "validation_error_sha256": "762d3f5e7d015b01328b832209d2315027382c4230668485a1e677ecd5b3bbeb",
+        "raw_output_sha256": "e02fb681f06642a44f3ff8af3f5586e89a82b10f43896ea6bfba7d373165d915"
+      },
+      {
+        "attempt": 2,
+        "elapsed_ms": 35097,
+        "status": "rejected",
+        "validation_error_sha256": "762d3f5e7d015b01328b832209d2315027382c4230668485a1e677ecd5b3bbeb",
+        "raw_output_sha256": "0060de73aa58dff547bd5952d0c7c6514f0244d346c828e627fddd5a2bf716c7"
+      },
+      {
+        "attempt": 3,
+        "elapsed_ms": 35176,
+        "status": "rejected",
+        "validation_error_sha256": "762d3f5e7d015b01328b832209d2315027382c4230668485a1e677ecd5b3bbeb",
+        "raw_output_sha256": "0060de73aa58dff547bd5952d0c7c6514f0244d346c828e627fddd5a2bf716c7"
+      }
+    ],
+    "validation_failure": "Four add_region operations used polygons whose vertices all collapsed to the same coordinate; no invalid edit was applied.",
+    "last_attempt_model_stats": {
+      "images": 6,
+      "prompt_tokens": 5007,
+      "completion_tokens": 588,
+      "generation_seconds": 33.988,
+      "preprocess_seconds": 0.217,
+      "generation_cache_implementation": "dynamic",
+      "generation_cache_fallback_reason": "multi_image_static_cache_guard"
+    }
+  },
+  "bounded_history_scan": {
+    "model_debug_files": 32,
+    "review_calls": 44,
+    "retry_sequences": 2,
+    "retry_sequences_recovered": 0,
+    "retry_sequences_failed": 2,
+    "exact_repeated_rejection_pairs": 2,
+    "exact_repeat_then_later_success": 0,
+    "scope_note": "This is the locally retained debug corpus, not a statistically complete production population."
+  },
+  "decision": {
+    "status": "diagnosis_only_no_production_policy_change",
+    "reason": "The long tail is dominated by repeated protocol-invalid generations, but only two retained retry sequences exist. A global retry reduction is not justified yet.",
+    "next_experiment": "Run an isolated A/B for degenerate-polygon-specific schema or validation feedback and a bounded early-stop rule; require unchanged accepted edits and preserved human-review fallback before deployment.",
+    "truth_or_training_changed": false,
+    "production_runtime_changed": false
+  }
+}

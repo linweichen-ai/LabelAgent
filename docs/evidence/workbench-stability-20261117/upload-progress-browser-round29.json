@@ -1,0 +1,13 @@
+{
+  "page_errors": [],
+  "console_errors": [],
+  "failed_requests": [],
+  "controls": {
+    "cancel_exists": true,
+    "cancel_hidden": true,
+    "multiple": true,
+    "accept": ".mcap,.jpg,.jpeg,.png",
+    "app_src": "/app.js?v=141"
+  },
+  "passed": true
+}

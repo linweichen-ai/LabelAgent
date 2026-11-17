@@ -1,0 +1,62 @@
+{
+  "round": 29,
+  "recorded_at": "2026-11-17T15:00:00+08:00",
+  "objective": "Keep large new-dataset uploads visibly responsive and cancellable during transfer.",
+  "behavior": {
+    "transport": "XMLHttpRequest multipart batch upload",
+    "progress": "computable upload bytes shown as an integer percentage",
+    "post_transfer_state": "explicitly says that server validation and file-list commit are in progress",
+    "cancel_scope": "transfer phase only",
+    "cancel_result": "request aborted, file list refreshed, atomic backend batch contract retained",
+    "network_error": "explicit retry message; incomplete batch is not registered",
+    "duplicate_submit_prevented": true
+  },
+  "automated_acceptance": {
+    "progress_event": {"loaded": 50, "total": 100, "display": "正在上传 1 个文件 · 50%"},
+    "cancel_error": "已取消上传；未完成批次不会写入文件列表",
+    "batch_endpoint": "/api/uploads",
+    "formal_browser": {
+      "cancel_control_present": true,
+      "cancel_control_initially_hidden": true,
+      "multiple_selection": true,
+      "accepted_extensions": ".mcap,.jpg,.jpeg,.png",
+      "app_version": 141,
+      "page_errors": 0,
+      "console_errors": 0,
+      "failed_requests": 0
+    }
+  },
+  "formal_runtime_acceptance": {
+    "url": "http://127.0.0.1:8765",
+    "app_js_sha256": "BE0E376D2D7ECC3FA54F822250BF46A3F7A43ACD89649B8A8607C788B96F9571",
+    "index_html_sha256": "6ECD4561FBA6197D4674143150BFA7B7369F37CA6F90D12F86CD49428A18DCFF",
+    "deployed_source_matches": true,
+    "sam3": "ready",
+    "vlm": "ready",
+    "workbench": "ready",
+    "run": "idle"
+  },
+  "runtime_state_readback": {
+    "state.json": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "unchanged_after_deploy_and_browser_acceptance": true
+  },
+  "regression": {
+    "python": "138/138",
+    "web_polling_upload_and_recovery": "16/16",
+    "candidate_and_human_review_gates": "60/60"
+  },
+  "rollback": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-upload-progress-round29-20261117-150000",
+  "evidence": [
+    "upload-progress-browser-round29.json",
+    "upload-progress-controls-round29.png"
+  ],
+  "limitations": [
+    "Cancellation is offered while bytes are still transferring; after the browser reports 100%, the control is hidden because server-side atomic validation may already be running.",
+    "No test data was uploaded into the formal file library during browser acceptance.",
+    "This is interaction reliability, not new-dataset model accuracy evidence."
+  ]
+}

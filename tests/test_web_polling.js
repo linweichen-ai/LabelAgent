@@ -343,10 +343,38 @@ test('完成与失败帧重试均复用轻量帧计数且不回读完整状态',
 });
 
 test('多文件新数据集使用一次批量上传请求', () => {
-  const handler = section(source('app.js'), "$('chooseButton').onclick", "$('openButton').onclick");
-  assert.ok(handler.includes("form.append('files',file,file.name)"));
-  assert.equal((handler.match(/fetch\('\/api\/uploads'/g) || []).length, 1);
+  const text = source('app.js');
+  const uploader = section(text, 'function setFileUploadControls', 'function renderFiles');
+  const handler = section(text, "$('chooseButton').onclick", "$('openButton').onclick");
+  assert.ok(uploader.includes("form.append('files',file,file.name)"));
+  assert.ok(uploader.includes("xhr.open('POST','/api/uploads')"));
+  assert.ok(uploader.includes('xhr.upload.onprogress'));
+  assert.ok(handler.includes("$('cancelUploadButton').onclick=()=>fileUploadRequest?.abort()"));
   assert.equal(handler.includes("fetch('/api/upload'"), false);
+});
+
+test('大文件上传显示实时进度并可在传输阶段取消', async () => {
+  const elements = new Map();
+  function element(id) {
+    if (!elements.has(id)) elements.set(id, {disabled:false,hidden:true,textContent:''});
+    return elements.get(id);
+  }
+  class FakeFormData { append() {} }
+  class FakeXHR {
+    static last = null;
+    constructor() { this.upload={};FakeXHR.last=this; }
+    open(method,url) { this.method=method;this.url=url; }
+    send() { this.sent=true; }
+    abort() { this.onabort(); }
+  }
+  const h = harness({$:element,FormData:FakeFormData,XMLHttpRequest:FakeXHR});
+  h.run(section(source('app.js'), 'let fileManagerBusy=', 'function renderFiles'));
+  const pending = h.run("uploadFilesWithProgress([{name:'large.mcap'}])");
+  FakeXHR.last.upload.onprogress({lengthComputable:true,loaded:50,total:100});
+  assert.equal(element('fileManagerStatus').textContent, '正在上传 1 个文件 · 50%');
+  assert.equal(FakeXHR.last.url, '/api/uploads');
+  FakeXHR.last.abort();
+  await assert.rejects(pending, /已取消上传/);
 });
 
 test('按需帧标注严格绑定文件相机帧并只替换目标帧', () => {

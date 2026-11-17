@@ -1,0 +1,102 @@
+{
+  "schema_version": "labelagent.bf16_runtime_round40.v1",
+  "date": "2026-11-17",
+  "objective": "Reduce real new-dataset inference latency by replacing NF4 execution with BF16 on an otherwise idle dedicated 24 GB RTX 4090, without changing weights, prompts, schemas, image detail, or review gates.",
+  "runtime_change": {
+    "model": "Qwen3-VL-8B-Instruct",
+    "weights_changed": false,
+    "before_quantization": "nf4",
+    "after_quantization": "none_bf16",
+    "image_token_budget": 256,
+    "context_budget": 16384,
+    "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+    "prompt_or_schema_changed": false,
+    "candidate_review_changed": false
+  },
+  "resource_readback": {
+    "gpu": "RTX 4090 24 GB dedicated to LabelAgent VLM at test time",
+    "model_memory_bytes": 17534247720,
+    "gpu_used_mib_after_full_inference": 18075,
+    "gpu_free_mib_after_full_inference": 6007,
+    "other_user_processes_stopped": false,
+    "oom_observed": false
+  },
+  "measurements": {
+    "sample_003": {
+      "nf4_elapsed_ms": 74092.92,
+      "bf16_elapsed_ms": 52553.049,
+      "reduction_percent": 29.07,
+      "nf4_discovery_ms": 32029,
+      "bf16_discovery_ms": 23951,
+      "discovery_reduction_percent": 25.22,
+      "candidate_counts": {"pallet": 13, "person": 2, "floor": 1},
+      "overlay_sha256": "C99BD0C91BFFAFA91EABAB356E33825E6A498C0252056FC9B551D4D75554C374",
+      "overlay_matches_nf4": true,
+      "near_person": {"observed_label": "person", "confidence": 1.0, "route": "candidate_preserved"},
+      "tiny_blurred_candidate": {"observed_label": null, "route": "human_review_required"},
+      "open_set_scan_complete": true,
+      "summary_sha256": "8236841ADEB025B00EE41AE864D6AC15978FFC7388CD8AD32CFF383F155D656D"
+    },
+    "sample_004": {
+      "nf4_elapsed_ms": 47529.392,
+      "bf16_elapsed_ms": 32205.023,
+      "reduction_percent": 32.24,
+      "nf4_discovery_ms": 33240,
+      "bf16_discovery_ms": 24147,
+      "discovery_reduction_percent": 27.36,
+      "candidate_counts": {"pallet": 12, "floor": 1},
+      "ego_candidate_count": 0,
+      "overlay_sha256": "18E11015827E2AE55B73E9C7B4D56D06C61513A9222F0C5BFA47612B9F6799C8",
+      "overlay_matches_nf4": true,
+      "open_set_scan_complete": true,
+      "summary_sha256": "F109E98F6417484C96C2D9F72BD81503EC6FCD274095485DD7E09512C01826EA"
+    },
+    "two_sample_aggregate": {
+      "nf4_elapsed_ms": 121622.312,
+      "bf16_elapsed_ms": 84758.072,
+      "reduction_percent": 30.31,
+      "nf4_discovery_ms": 65269,
+      "bf16_discovery_ms": 48098,
+      "discovery_reduction_percent": 26.31
+    }
+  },
+  "cross_dataset_visibility_check": {
+    "source": "Capture_20261103 camera_0 frame 1789897506782450197",
+    "bf16_elapsed_ms": 24090,
+    "actual_image_token_counts": [238],
+    "visible_labels": ["person", "floor", "slope", "ego", "other_robot"],
+    "unknown_candidate_count": 0,
+    "visual_readback": "The camera view visibly contains a foreground human, gray floor, yellow ramp, host controls, and two distant robots; no pallet structure is visible in this view.",
+    "note": "Scene-level 3D labels include pallets outside this camera view and are not treated as per-view truth."
+  },
+  "deployment": {
+    "formal_status": "ready_idle",
+    "health_quantization": "none",
+    "startup_script_sha256_before": "10a3485ed7dde84632c32bd6650d4bad8a315250f1a85206ced7c8d865121337",
+    "startup_script_sha256_after": "98543530ad728b483964087ec0cb7053e490cc56f46f55e6461fcd6a813f841c",
+    "startup_script_syntax": "passed",
+    "rollback": "/home/clw/labelagent_remote_20261110/backups/bf16-round40-20261117-220000",
+    "formal_state_hashes_unchanged": {
+      "state.json": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+      "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+      "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+      "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+      "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+      "model_debug.json": "EFDF22CD6BD803C958E3ACB39D46054D294544FE48324A12B4AFE1502B3BBB9A"
+    }
+  },
+  "validation": {
+    "python_core_image_candidate": "161/161",
+    "web_interaction": "84/84",
+    "candidate_only": true,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "oss_writes": false
+  },
+  "boundaries": [
+    "Two paired images and one cross-dataset visibility check are not a latency distribution or generalization proof.",
+    "The tested images contain no human pixel-level truth; unchanged overlay hashes establish deterministic candidate equality for the paired samples, not global accuracy.",
+    "The cross-dataset image contains a visible ramp, but this is a visibility check rather than pixel-level slope segmentation validation.",
+    "BF16 is accepted only while the dedicated GPU retains the measured headroom; NF4 remains the rollback for shared-memory conditions."
+  ]
+}

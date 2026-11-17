@@ -1082,3 +1082,11 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 独立 `flash_attn`、xFormers 和 vLLM 当前都未安装，但 PyTorch 自身的 flash SDP、memory-efficient SDP 与 math SDP 后端均处于 enabled。因此不能把“未安装 flash-attn 包”等同于“当前没有使用 FlashAttention”，实际选中的 SDPA 内核仍需测量。直接安装新包或重启生产模型缺乏证据，本轮没有执行。
 
 下一步先用完全相同的长 JSON 内容隔离测量 response-format 的逐 token 开销，再确认 SDPA 实际内核；只有在相同完整输出和同模型下出现稳定收益，才考虑隔离安装或引擎切换。正式模型未重启、未安装依赖、未启动或停止 GPU 进程，任务 idle，六份状态哈希不变。结构化记录见 [第八十九轮执行栈审计](evidence/workbench-stability-20261117/execution-stack-round89.json)。
+
+## 第九十轮同输出结构化解码开销隔离（2026-11-17）
+
+为排除“无约束请求只是因为输出更短才更快”的混杂因素，本轮把图片、提示、目标 JSON、模型、温度、token 上限和最终输出内容全部固定，只切换 `response_format`。两次实验采用 AB/BA 反转顺序；四个请求都没有命中缓存，结构化与非结构化请求都逐值复现同一目标 JSON，prompt 都是 529 token，completion 都是 202 token，因此两组结果可直接比较。
+
+结构化请求中位 8.808 秒，非结构化请求中位 5.859 秒；在输出长度与内容完全相同时，结构化解码额外增加 2.949 秒，相对非结构化路径慢 50.334%。两次配对方向一致：9.358 对 5.913 秒、8.258 对 5.805 秒。`constraint_setup_seconds` 只有约 0.001 秒，主要差异发生在逐 token 生成阶段，而不是 schema 初始化阶段。
+
+这项结果只定位了工程瓶颈，不授权关闭结构约束；前面三轮已经证明无约束、删字段和短键编码都会造成语义漂移。正式协议、模型权重和服务均未修改，也没有写候选、人工真值或训练数据。权威工作树完整回归为 Python 761/761、网页 95/95。下一步停止改写输出协议，在隔离环境确认实际 SDPA 内核并比较不改变输出内容的结构化解码实现；任何依赖安装或生产重启都必须先有独立收益和回滚证据。复现工具为 `tools/benchmark_structured_decoder_overhead.py`，结构化记录见 [第九十轮结构化解码开销证据](evidence/workbench-stability-20261117/structured-decoder-overhead-round90.json)。

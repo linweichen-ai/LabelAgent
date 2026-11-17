@@ -1,0 +1,44 @@
+{
+  "schema_version": "labelagent.structured-decoder-overhead-evidence.v1",
+  "round": 90,
+  "date": "2026-11-17",
+  "read_only": true,
+  "hypothesis": "Measure structured-decoder per-token overhead while holding image, prompt, target JSON, model, sampling, token budget and completion length constant.",
+  "binding": {
+    "image_sha256": "34e5094d24db487b3fcd5c458ac810cde5d58293f89fe0b92a2933c72a146812",
+    "target_sha256": "5475edaf62efaf4b5245a4078ea92fc95116a9592a43d21a768d0ffa12bd7b05",
+    "completion_tokens_per_variant": 202,
+    "prompt_tokens_per_variant": 529,
+    "exact_target_value": true,
+    "cache_hit": false
+  },
+  "trials": [
+    {
+      "order": ["structured", "unconstrained"],
+      "structured_ms": 9357.73,
+      "unconstrained_ms": 5912.637,
+      "valid_identical_output": true
+    },
+    {
+      "order": ["unconstrained", "structured"],
+      "structured_ms": 8258.412,
+      "unconstrained_ms": 5805.384,
+      "valid_identical_output": true
+    }
+  ],
+  "summary": {
+    "valid_identical_output_count": 2,
+    "structured_median_ms": 8808.071,
+    "unconstrained_median_ms": 5859.011,
+    "structured_overhead_ms": 2949.06,
+    "structured_overhead_pct": 50.334,
+    "decision": "Keep the full production protocol. Stop output-schema rewrites and investigate the structured decoding engine and actual attention kernel in isolation before any production restart or dependency install."
+  },
+  "isolation": {
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "source_state_modified": false,
+    "production_runtime_modified": false
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "schema_version": "labelagent.training-data-gate.v1",
+  "created_utc": "2026-11-17T15:48:57.283334+00:00",
+  "status": "blocked_waiting_for_human_review",
+  "training_authorized": false,
+  "test_split_policy": "evaluation_only_never_train",
+  "machine_preannotations_are_ground_truth": false,
+  "split_isolation": {
+    "file_name_overlap": [],
+    "source_sha256_overlap": []
+  },
+  "splits": {
+    "train": {
+      "manifest_images": 72,
+      "sequences": ["000", "001", "002", "003", "004", "005", "006", "007", "008"],
+      "cvat_task_id": 445,
+      "cvat_job_ids": [435],
+      "machine_preannotations": 685
+    },
+    "test": {
+      "manifest_images": 24,
+      "sequences": ["010", "011", "012"],
+      "cvat_task_id": 446,
+      "cvat_job_ids": [436],
+      "machine_preannotations": 226
+    }
+  },
+  "checklist": {
+    "rows": 96,
+    "approved": 0,
+    "approved_with_reviewer": 0,
+    "pending_or_invalid": 96
+  },
+  "human_exports": {
+    "present": {
+      "train": false,
+      "test": false
+    },
+    "summaries": {}
+  },
+  "blockers": [
+    "all 96 checklist rows require approved status and a reviewer",
+    "both human-verified train and test COCO exports are required"
+  ],
+  "integrity_errors": [],
+  "input_sha256": {
+    "manifest": "cfd84f0ca41bf2f9522b20062f10442f5e7c5f5c595ae3c445aafb2d688dd05a",
+    "validation": "eac8a42c26745237dc70e3cb451825698a034a3f8f73f3d15ad2480a992cbb38",
+    "creation_receipt": "103b9df0f699755cf32d9fe479aa66963eea25bdb0397f40c5ebcaf53d360a97",
+    "checklist": "5e0d013a5bff906572ea5e3b205fb22638de365a5776bba77f07e13fcffa64f6"
+  },
+  "audit_code_sha256": "9bfb77d7279d07636e846540b298991978ee94d3f4671e5c4b795844ad715172",
+  "verification": {
+    "targeted_training_gate_tests": "4/4",
+    "python_regression": "780/780",
+    "web_regression": "95/95",
+    "system_python_attempt_excluded": "The first broad command used system Python 3.14 and failed imports because project dependencies were absent; the authoritative rerun used the formal LabelAgent virtual environment."
+  },
+  "scope_note": "This is the current local training gate. The task creation receipt was independently read back when Tasks 445 and 446 were created; this round does not claim a fresh authenticated CVAT progress readback."
+}

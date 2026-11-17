@@ -1188,3 +1188,13 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\cache-observability-roun
 门禁结束后已恢复正式 8B 原命令，健康页读回配置 SHA-256 `5cd45286...8f3661`、model loaded、inflight 0；页面 200、SAM ok，六份正式状态哈希全部不变。2B 权重保留在 `/home/clw/labelagent_vlm_20261104/models/Qwen3-VL-2B-Instruct` 供隔离后训练，不进入正式路由。完整结构化记录见 [第九十九轮 2B 冻结门禁](evidence/workbench-stability-20261117/qwen3vl2b-frozen-gate-round99.json)。
 
 边界：九张已足够否决零样本生产替换，但不能证明 2B 经过领域后训练后的上限。下一步应从 train72/人工真值与 8B 已验证输出构造受审计的蒸馏样本，test24 继续只评测；在独立训练环境安装 PEFT 前先冻结数据清单、目标 schema、错误样本和验收门禁。
+
+## 第一百轮训练数据硬门禁与 CVAT 任务复核（2026-11-17）
+
+本轮先纠正“96 图任务是否存在”的状态：创建收据和独立回读均证明 CVAT 2.61 已有 train Task 445 / Job 435 与 test Task 446 / Job 436，分别包含 72/24 张图和 685/226 个机器预标注；创建时 train/test 文件名交集为 0，状态为待人工复核。当前本地仍没有人工导出的 `train/_annotations.coco.json` 与 `test/_annotations.coco.json`，96 行复核清单也全部为 `pending`。因此准确说法是“CVAT 任务和预标注已上线，但人工精修导出尚未进入本地训练门禁”，而不是任务未创建。
+
+新增 `tools/audit_training_data_gate.py`，把这条边界变成可执行的 fail-closed 门禁。工具固定核对 96=72+24、训练序列 000–008、留出序列 010–012、图片文件名与内容哈希零交集、CVAT task/job 和 mask 标签、机器预标注非真值、96 行逐图签核，以及两份 COCO 的 `human_verified`、复核人、全图覆盖、类别、实例引用和分割字段。只有两份人工导出同时完整且 96 行均为 `approved` 并带复核人时，才返回 `ready_for_isolated_training`；test24 即使有人工真值也永久保持 `evaluation_only_never_train`。
+
+四项针对性测试全部通过：机器预标注不能授权训练；完整双导出才能打开隔离训练门；单边导出或缺复核人继续拦截；即使其余字段完整，任一文件名或内容哈希泄漏也继续拦截。真实 96 图包审计无结构或隔离错误，但结果为 `blocked_waiting_for_human_review`：0/96 已签核、两份人工 COCO 均不存在、`training_authorized=false`。权威环境完整回归为 Python 780/780、网页 95/95；一次误用系统 Python 3.14 的全量命令因项目依赖缺失产生导入错误，已明确排除，不能写成产品回退。结构化证据见 [第一百轮训练数据门禁](evidence/workbench-stability-20261117/training-data-gate-round100.json)。
+
+复现命令使用 `tools/audit_training_data_gate.py` 的 `--manifest`、`--validation`、`--creation-receipt`、`--checklist` 与 `--output` 参数；真正准备开训时再增加 `--train-human-coco`、`--test-human-coco` 和 `--require-ready`。本轮只读现有清单和收据，没有登录修改 CVAT、没有写候选/人工真值/训练集、没有安装训练依赖、没有启动 GPU 训练，也没有修改正式工作台。创建收据的任务状态是 11 月 11 日读回证据；本轮结论针对当前本地训练输入门禁，不冒充 CVAT 的新鲜在线进度。

@@ -827,6 +827,38 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("Not Found", agent.sam_generation["error"])
         self.assertEqual([item["label"] for item in agent.shapes], ["a"])
 
+    def test_generate_only_returns_guarded_candidates_without_agent_call(self):
+        with patch.object(workflow, "sam_request", return_value={"results": [sam_result()]}) as sam, \
+             patch.object(workflow, "chat") as chat:
+            result = workflow.generate_only({}, image_bytes(),
+                {"description": "class a", "prompts": [{"label": "a", "text": "square"}]},
+                ["a"], max_rounds=3)
+        sam.assert_called_once()
+        chat.assert_not_called()
+        self.assertEqual(result["agent"]["stop_reason"], "review_deferred")
+        self.assertEqual(result["agent"]["rounds"], 0)
+        self.assertEqual(result["agent"]["max_rounds"], 3)
+        self.assertEqual(result["shapes"][0]["label"], "a")
+
+    def test_review_existing_runs_agent_without_regenerating_sam(self):
+        existing = shape(label="a")
+        with patch.object(workflow, "sam_request") as sam, \
+             patch.object(workflow, "chat", return_value={
+                 "status": "done", "reason": "candidate is supported",
+                 "hole_assessment": [], "operations": []}) as chat:
+            result = workflow.review_existing({}, image_bytes(),
+                {"description": "class a", "prompts": [{"label": "a", "text": "square"}]},
+                ["a"], [existing], max_rounds=2,
+                candidate_filters=[{"reason_code": "kept"}],
+                sam_generation={"mode": "multi_prompt"})
+        sam.assert_not_called()
+        chat.assert_called_once()
+        self.assertEqual(result["agent"]["stop_reason"], "done")
+        self.assertEqual(result["agent"]["rounds"], 1)
+        self.assertEqual(result["shapes"], [existing])
+        self.assertEqual(result["agent"]["candidate_filters"], [{"reason_code": "kept"}])
+        self.assertEqual(result["agent"]["sam_generation"], {"mode": "multi_prompt"})
+
     def test_keyword_from_gpt_is_preserved_when_short_and_relevant(self):
         answer = {"description": "标注参考帧里的可见车辆实例。", "prompts": [
             {"label": "车辆", "text": "forklift"},

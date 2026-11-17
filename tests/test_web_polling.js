@@ -72,9 +72,12 @@ test('参考起稿先展示候选并在后台完成高风险类别复核', () =>
   const prep = source('reference-prep.js');
   const app = source('app.js');
   assert.match(prep, /defer_class_audit: true/);
-  assert.match(prep, /高风险类别正在后台复核，可先检查轮廓/);
-  assert.match(app, /candidate_class_audit_status==='pending'/);
-  assert.match(app, /auditReferenceCandidateSnapshot\(target,candidate\)\.then/);
+  assert.match(prep, /defer_agent_review: true/);
+  assert.match(prep, /Agent 正在后台精修，可先检查轮廓/);
+  assert.match(app, /agent_review_status==='pending'/);
+  assert.match(app, /refineReferenceCandidateSnapshot\(target,candidate\)\.then/);
+  assert.match(app, /系统没有覆盖当前人工草稿/);
+  assert.match(app, /finishAudit\(result\.candidates\)/);
   assert.match(app, /结果不会自动变成人工真值/);
 });
 

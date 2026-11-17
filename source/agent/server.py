@@ -30,7 +30,8 @@ from .workflow import (DESCRIPTION_INPUT_VERSION, MAX_REVIEW_ROUNDS, RunCancelle
                        cancellation, candidate_labels_with_recall_probes,
                        canonical_unreferenced_description, describe,
                        discover_visible_labels, reference_labels, restrict_description,
-                       run, trace_calls, candidate_overlay, reference_overlay, chat,
+                       generate_only, review_existing, run, trace_calls,
+                       candidate_overlay, reference_overlay, chat,
                        VISIBLE_LABEL_DEFINITIONS)
 from .candidate_class_audit import (audit_candidate_class_blind, candidate_fingerprint,
                                     audit_high_risk_candidates, HIGH_RISK_LABELS)
@@ -2916,6 +2917,201 @@ def describe_truth():
         return jsonify(stopped=True, description_saved=False)
 
 
+@app.post("/api/reference_candidates/refine")
+@run_claimed
+def refine_reference_candidates():
+    """Finish deferred Agent review and replace an untouched machine draft."""
+    body = request.get_json() or {}
+    if type(body.get("frame")) is not int or not isinstance(body.get("topic"), str):
+        raise ValueError("候选精修必须包含整数 frame 和 topic")
+    index, topic = body["frame"], body["topic"]
+    expected_artifact = body.get("expected_candidate_artifact_sha256")
+    expected_frame = body.get("expected_frame_sha256")
+    with lock:
+        video = state.get("video")
+        if video is None or state.get("topic") is None:
+            raise ValueError("请先加载候选对应的数据")
+        if topic != state["topic"]:
+            raise StaleHumanReviewError("当前 topic 已变化，请重新读取候选")
+        if not 0 <= index < video.topics[topic]["count"]:
+            raise ValueError("候选精修帧号无效")
+        if index in state.get("reference_frames", {}).get(topic, []):
+            raise ValueError("参考帧不能进行机器候选精修")
+        if str(index) in state.get("truth", {}):
+            raise ValueError("已有真值的帧不能进行机器候选精修")
+        key = str(index)
+        candidates = copy.deepcopy(state.get("candidates", {}).get(key))
+        if not isinstance(candidates, list) or not candidates:
+            raise StaleHumanReviewError("当前帧没有持久候选")
+        artifact_sha = _sha256_json(candidates)
+        if not _valid_sha256(expected_artifact) or expected_artifact != artifact_sha:
+            raise StaleHumanReviewError("候选已变化，请重新读取当前候选")
+        if expected_frame is not None and not _valid_sha256(expected_frame):
+            raise ValueError("expected_frame_sha256 必须是有效 SHA-256")
+        image_bytes = frame_image(index)
+        input_sha = hashlib.sha256(image_bytes).hexdigest()
+        if expected_frame is not None and expected_frame != input_sha:
+            raise StaleHumanReviewError("帧图像已变化，请重新读取后精修")
+        previous_run = copy.deepcopy(state.get("agent_runs", {}).get(key, {}))
+        if previous_run.get("agent_review_status") != "pending":
+            raise StaleHumanReviewError("当前候选没有待完成的 Agent 精修")
+        draft_labels = previous_run.get("draft_labels")
+        registry = list(state.get("labels", []))
+        if (not isinstance(draft_labels, list) or not draft_labels
+                or any(label not in registry for label in draft_labels)
+                or any(shape.get("label") not in draft_labels for shape in candidates)):
+            raise StaleHumanReviewError("候选类别或标签表已变化，请重新生成草稿")
+        config = copy.deepcopy(state.get("config", {}))
+        config_sha = _sha256_json(config)
+        truth_sha = _sha256_json(state.get("truth", {}))
+        references_sha = _sha256_json(state.get("reference_frames", {}))
+        run_sha = _sha256_json(previous_run)
+        description = canonical_unreferenced_description(draft_labels)
+        max_rounds = previous_run.get("max_rounds", 1)
+        if type(max_rounds) is not int or not 1 <= max_rounds <= MAX_REVIEW_ROUNDS:
+            raise ValueError("候选精修轮数记录无效")
+        update_run_status(status="running", phase="agent_refining", frame=index,
+                          completed=0, total=1, topic=topic, shape_count=len(candidates),
+                          round=0, error=None)
+
+    trace = []
+    debug_key = config.get("llm_key")
+    def on_trace(event):
+        record = redact_debug(event | {"frame": index, "topic": topic,
+            "file": str(video.path), "purpose": "后台 Agent 候选精修"},
+            credential=debug_key or "")
+        existing = next((position for position, item in enumerate(trace)
+                         if item["id"] == record["id"]), None)
+        if existing is None:
+            trace.append(record)
+        else:
+            trace[existing] = record
+        save_debug(trace)
+
+    def on_progress(event):
+        if run_stop_event.is_set():
+            raise RunCancelled("用户已停止候选精修")
+        update_run_status(phase=("agent_refining" if event["phase"] == "observing"
+                                 else event["phase"]),
+                          round=event["round"], shape_count=len(event["shapes"]),
+                          error=None)
+
+    try:
+        with cancellation(run_stop_event), trace_calls(on_trace, save_inspection_image):
+            result = review_existing(
+                config, image_bytes, description, draft_labels, candidates,
+                max_rounds=max_rounds, on_progress=on_progress, reference=None,
+                candidate_filters=previous_run.get("candidate_filters"),
+                sam_generation=previous_run.get("sam_generation"))
+        if result["agent"].get("stop_reason") == "error":
+            raise RuntimeError("Agent 未能完成候选精修；已保留初始机器候选")
+        if run_stop_event.is_set():
+            raise RunCancelled("用户已停止候选精修")
+        refined = result["shapes"]
+        initial_geometry_sha = _sha256_json([
+            {name: item.get(name) for name in ("id", "label", "points", "holes", "parts")}
+            for item in candidates])
+        refined_geometry_sha = _sha256_json([
+            {name: item.get(name) for name in ("id", "label", "points", "holes", "parts")}
+            for item in refined])
+        fallback_provenance = copy.deepcopy(candidates[0].get("provenance", {}))
+        for item in refined:
+            item["candidate_only"] = True
+            item["human_truth"] = False
+            item["approved_for_training"] = False
+            provenance = copy.deepcopy(item.get("provenance") or fallback_provenance)
+            provenance["kind"] = "machine_candidate"
+            provenance["pipeline"] = "sam_vlm_agent"
+            provenance["agent_review_status"] = "complete"
+            item["provenance"] = provenance
+        refined_sha = _sha256_json(refined)
+        geometry_mutated = refined_geometry_sha != initial_geometry_sha
+        preserved_queue = [item for item in previous_run.get("review_queue", [])
+                           if item.get("source") == "visible_label_discovery"]
+        replacement_run = copy.deepcopy(previous_run)
+        for name in ("converged", "rounds", "max_rounds", "stop_reason", "audit",
+                     "candidate_filters", "sam_generation"):
+            replacement_run[name] = copy.deepcopy(result["agent"].get(name))
+        replacement_run["review_queue"] = result["review_queue"] + preserved_queue
+        replacement_run["applied"] = result["applied"]
+        replacement_run["agent_review_status"] = "complete"
+        replacement_run["agent_review_deferred"] = False
+        replacement_run["agent_refinement"] = {
+            "initial_candidate_artifact_sha256": artifact_sha,
+            "refined_candidate_artifact_sha256": refined_sha,
+            "initial_geometry_sha256": initial_geometry_sha,
+            "refined_geometry_sha256": refined_geometry_sha,
+            "input_sha256": input_sha,
+            "candidate_mutated": geometry_mutated,
+        }
+        replacement_run["candidate_artifact_sha256"] = refined_sha
+        replacement_run["candidate_class_audit_status"] = (
+            "pending" if any(item.get("label") in HIGH_RISK_LABELS for item in refined)
+            else "complete")
+        replacement_run["candidate_class_audit_deferred"] = (
+            replacement_run["candidate_class_audit_status"] == "pending")
+        replacement_run["candidate_class_audit_total"] = sum(
+            item.get("label") in HIGH_RISK_LABELS for item in refined)
+        replacement_run["candidate_class_audits"] = []
+        replacement_run["human_review_required"] = True
+
+        with lock, run_status_lock:
+            if (run_stop_event.is_set() or state.get("video") is not video
+                    or state.get("topic") != topic
+                    or _sha256_json(state.get("config", {})) != config_sha
+                    or list(state.get("labels", [])) != registry
+                    or _sha256_json(state.get("truth", {})) != truth_sha
+                    or _sha256_json(state.get("reference_frames", {})) != references_sha
+                    or hashlib.sha256(frame_image(index)).hexdigest() != input_sha
+                    or _sha256_json(state.get("candidates", {}).get(key)) != artifact_sha
+                    or _sha256_json(state.get("agent_runs", {}).get(key, {})) != run_sha):
+                raise StaleHumanReviewError(
+                    "候选、帧、标签或人工状态在精修期间变化，未采用后台结果")
+            previous_revisions = copy.deepcopy(state.get("candidate_revisions", {}).get(key))
+            previous_review_status = copy.deepcopy(
+                state.get("candidate_review_status", {}).get(key))
+            try:
+                archive_candidate_revision(
+                    index, topic, candidates, previous_run, refined, replacement_run,
+                    reason="deferred_agent_refinement")
+                state["candidates"][key] = refined
+                state.setdefault("agent_runs", {})[key] = replacement_run
+                state.setdefault("candidate_review_status", {})[key] = {}
+                save()
+            except Exception:
+                state["candidates"][key] = candidates
+                state.setdefault("agent_runs", {})[key] = previous_run
+                if previous_revisions is None:
+                    state.setdefault("candidate_revisions", {}).pop(key, None)
+                else:
+                    state.setdefault("candidate_revisions", {})[key] = previous_revisions
+                if previous_review_status is None:
+                    state.setdefault("candidate_review_status", {}).pop(key, None)
+                else:
+                    state.setdefault("candidate_review_status", {})[key] = previous_review_status
+                raise
+            _update_run_status_locked(status="completed", phase="completed", frame=None,
+                                      completed=1, total=1, shape_count=len(refined))
+            bindings = candidate_review_bindings()
+            return jsonify(frame=index, topic=topic, candidates=refined,
+                           agent=replacement_run, binding=bindings.get(key),
+                           candidate_review_bindings=bindings,
+                           input_sha256=input_sha,
+                           initial_candidate_artifact_sha256=artifact_sha,
+                           candidate_artifact_sha256=refined_sha,
+                           candidate_mutated=geometry_mutated,
+                           candidate_only=True, human_truth=False,
+                           approved_for_training=False)
+    except RunCancelled:
+        update_run_status(status="stopped", phase="stopped", frame=None, completed=0)
+        return jsonify(stopped=True, candidate_only=True, candidate_mutated=False,
+                       human_truth=False)
+    except Exception as error:
+        update_run_status(status="failed", phase="failed", frame=None,
+                          completed=0, error=str(error)[:300])
+        raise
+
+
 @app.post("/api/reference_candidates/audit")
 @run_claimed
 def audit_reference_candidates():
@@ -3059,6 +3255,7 @@ def generate_reference_draft():
             raise ValueError("该帧已有历史标注，请先载入历史标注并完成人工复核")
         auto_detect_visible = body.get("auto_detect_visible") is True
         defer_class_audit = body.get("defer_class_audit") is True
+        defer_agent_review = body.get("defer_agent_review") is True
         max_rounds = requested_review_rounds(body)
         requested = list(state.get("labels", [])) if auto_detect_visible else body.get("labels")
         if not isinstance(requested, list) or not requested:
@@ -3078,6 +3275,8 @@ def generate_reference_draft():
         config_sha256 = _sha256_json(config)
         existing = copy.deepcopy(state.get("candidates", {}).get(str(index), []))
         existing_run = copy.deepcopy(state.get("agent_runs", {}).get(str(index), {}))
+        if defer_agent_review and existing:
+            raise ValueError("已有机器候选时不能启动后台 Agent 精修；请先直接载入现有候选")
         original_candidates_sha256 = _sha256_json(existing)
         original_run_sha256 = _sha256_json(existing_run)
         audit_version = candidate_class_audit_version()
@@ -3182,6 +3381,7 @@ def generate_reference_draft():
                 "sam_prompts": prompt_payload,
                 "auto_detect_visible": auto_detect_visible,
                 "defer_class_audit": defer_class_audit,
+                "defer_agent_review": defer_agent_review,
                 "discovery_sha256": discovery_sha256,
                 "description_source": description_source,
             })
@@ -3199,9 +3399,10 @@ def generate_reference_draft():
             if run_stop_event.is_set():
                 raise RunCancelled("用户已停止参考帧草稿生成")
             update_run_status(phase="generating")
-            result = run(config, target_image, description, selected,
-                         max_rounds=max_rounds,
-                         on_progress=on_progress, reference=None)
+            runner = generate_only if defer_agent_review else run
+            result = runner(config, target_image, description, selected,
+                            max_rounds=max_rounds,
+                            on_progress=on_progress, reference=None)
         if result["agent"].get("stop_reason") == "error":
             raise RuntimeError("SAM/VLM/Agent 未能生成有效参考帧草稿")
         candidate_output_sha256 = _sha256_json(result["shapes"])
@@ -3214,6 +3415,7 @@ def generate_reference_draft():
             generated_shape["provenance"] = {
                 "kind": "machine_candidate",
                 "pipeline": "sam_vlm_agent",
+                "agent_review_status": ("pending" if defer_agent_review else "complete"),
                 "candidate_event_id": candidate_event_id,
                 "candidate_request_id": candidate_request_id,
                 "candidate_output_sha256": candidate_output_sha256,
@@ -3240,7 +3442,7 @@ def generate_reference_draft():
         audit_total = sum(candidate.get("label") in HIGH_RISK_LABELS
                           for candidate in combined)
         class_audits, class_review_queue = [], []
-        if audit_total and not defer_class_audit:
+        if audit_total and not defer_class_audit and not defer_agent_review:
             update_run_status(phase="auditing", audit_completed=0,
                               audit_total=audit_total, audit_candidate_id=None,
                               shape_count=len(combined), error=None)
@@ -3271,9 +3473,14 @@ def generate_reference_draft():
             "candidate_class_audits": class_audits,
             "candidate_class_audit_version": audit_version,
             "candidate_class_audit_status": (
+                "blocked_on_agent_review" if defer_agent_review and audit_total else
                 "pending" if defer_class_audit and audit_total else "complete"),
-            "candidate_class_audit_deferred": bool(defer_class_audit and audit_total),
+            "candidate_class_audit_deferred": bool(
+                audit_total and (defer_class_audit or defer_agent_review)),
             "candidate_class_audit_total": audit_total,
+            "agent_review_status": "pending" if defer_agent_review else "complete",
+            "agent_review_deferred": defer_agent_review,
+            "draft_labels": selected,
             "applied": result["applied"],
             "candidates_added": result["candidates_added"],
             "reference_draft": True, "candidate_only": True,
@@ -3335,10 +3542,15 @@ def generate_reference_draft():
                            description_source=description_source,
                            visible_label_discovery=discovery,
                            discovery_sha256=discovery_sha256,
-                           candidate_class_audit_deferred=bool(defer_class_audit and audit_total),
+                           agent_review_deferred=defer_agent_review,
+                           agent_review_status=("pending" if defer_agent_review else "complete"),
+                           candidate_class_audit_deferred=bool(
+                               audit_total and (defer_class_audit or defer_agent_review)),
                            candidate_class_audit_total=audit_total,
                            human_review_required=True,
-                           message=("SAM/VLM/Agent 草稿已生成；高风险类别复核将在后台继续"
+                           message=("SAM 初始草稿已生成；Agent 精修与高风险复核将在后台继续"
+                                    if defer_agent_review else
+                                    "SAM/VLM/Agent 草稿已生成；高风险类别复核将在后台继续"
                                     if defer_class_audit and audit_total else
                                     "SAM/VLM/Agent 草稿已生成；请人工精修并确认"))
     except RunCancelled:

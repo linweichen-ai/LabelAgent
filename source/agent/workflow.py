@@ -2233,11 +2233,12 @@ class AnnotationAgent:
             self.progress("generated", operation="filter_candidates",
                           outcome={"suppressed": copy.deepcopy(self.candidate_filters)})
 
-    def execute(self):
+    def execute(self, *, skip_generation=False):
         stop_reason = "max_rounds"
         converged = False
         try:
-            self.generate()
+            if not skip_generation:
+                self.generate()
             seen = {_fingerprint(self.shapes)}
             for number in range(1, self.max_rounds + 1):
                 self.progress("observing", round=number)
@@ -2485,3 +2486,60 @@ class AnnotationAgent:
 def run(config, image, description, labels, max_rounds=100, on_progress=None, reference=None):
     return AnnotationAgent(config, image, description, labels, max_rounds, on_progress,
                            reference=reference).execute()
+
+
+def generate_only(config, image, description, labels, max_rounds=100, on_progress=None,
+                  reference=None):
+    """Generate guarded SAM candidates without waiting for the VLM review loop.
+
+    The returned shapes are still machine candidates.  This entry point exists
+    so the workbench can display useful contours while the normal Agent review
+    continues through :func:`review_existing`; it never promotes truth or skips
+    the review gate silently.
+    """
+    agent = AnnotationAgent(config, image, description, labels, max_rounds, on_progress,
+                            reference=reference)
+    agent.generate()
+    result = {
+        "shapes": agent.shapes,
+        "candidates_added": agent.generated,
+        "applied": [],
+        "review_queue": copy.deepcopy(agent.queue),
+        "agent": {
+            "converged": False,
+            "rounds": 0,
+            "max_rounds": agent.max_rounds,
+            "stop_reason": "review_deferred",
+            "audit": [],
+            "candidate_filters": copy.deepcopy(agent.candidate_filters),
+            "sam_generation": copy.deepcopy(agent.sam_generation),
+        },
+    }
+    agent.progress("review_deferred", result=result)
+    return result
+
+
+def review_existing(config, image, description, labels, shapes, max_rounds=100,
+                    on_progress=None, reference=None, candidate_filters=None,
+                    sam_generation=None):
+    """Run the unchanged Agent review loop against an atomically bound draft."""
+    agent = AnnotationAgent(config, image, description, labels, max_rounds, on_progress,
+                            reference=reference)
+    candidate_shapes = copy.deepcopy(shapes)
+    if (not candidate_shapes
+            or any(not isinstance(shape, dict)
+                   or shape.get("label") not in labels
+                   or type(shape.get("id")) is not int
+                   or not valid_shape(shape, agent.width, agent.height)
+                   for shape in candidate_shapes)):
+        raise ValueError("待精修机器候选包含无效类别、ID 或轮廓")
+    candidate_ids = [shape["id"] for shape in candidate_shapes]
+    if len(candidate_ids) != len(set(candidate_ids)):
+        raise ValueError("待精修机器候选 ID 重复")
+    agent.shapes = candidate_shapes
+    agent.next_id = max(candidate_ids) + 1
+    agent.generated = len(candidate_shapes)
+    agent.candidate_filters = copy.deepcopy(candidate_filters or [])
+    agent.sam_generation = copy.deepcopy(
+        sam_generation or {"mode": "persisted_machine_candidate"})
+    return agent.execute(skip_generation=True)

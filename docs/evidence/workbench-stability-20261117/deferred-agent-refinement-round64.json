@@ -1,0 +1,117 @@
+{
+  "schema_version": "labelagent.workbench_round64_deferred_agent_refinement.v1",
+  "date": "2026-11-17",
+  "goal": "show guarded SAM candidates before the unchanged Agent review and class-audit stages finish",
+  "implementation": {
+    "initial_endpoint": "/api/reference_draft",
+    "initial_request_flags": {
+      "defer_agent_review": true,
+      "defer_class_audit": true
+    },
+    "refinement_endpoint": "/api/reference_candidates/refine",
+    "audit_endpoint": "/api/reference_candidates/audit",
+    "commit_gate": [
+      "file and topic",
+      "frame and source-image sha256",
+      "candidate-artifact sha256",
+      "agent-run sha256",
+      "configuration and label registry",
+      "truth and reference-frame snapshots"
+    ],
+    "browser_overwrite_policy": "replace the visible draft only when the operator has not changed the initial candidate snapshot",
+    "candidate_truth_boundary": {
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    }
+  },
+  "real_isolated_acceptance": {
+    "work_dir": "D:/Apps/LabelAgent/.local/isolated-round64-deferred-agent-20261117",
+    "source": "batchA_0920_000_clean_review.mcap /capture/camera_1/image frame 34",
+    "initial_candidate": {
+      "elapsed_seconds": 16.422,
+      "candidate_count": 8,
+      "labels": ["pallet", "person", "floor", "slope", "ego", "other_robot"],
+      "agent_review_status": "pending",
+      "candidate_class_audit_status": "blocked_on_agent_review",
+      "candidate_artifact_sha256": "317d8add6571bc2b1cdcf515ee6b0018be4b2cbe75a9e707506cc9d439b46632",
+      "input_sha256": "cc8448627fd42c0d966f93d4ebdba92df7e6d518dd866d00b211f5d0a0a51894"
+    },
+    "agent_refinement": {
+      "elapsed_seconds": 16.443,
+      "candidate_count": 8,
+      "geometry_mutated": false,
+      "rounds": 1,
+      "stop_reason": "done",
+      "agent_review_status": "complete",
+      "candidate_class_audit_status": "pending",
+      "candidate_artifact_sha256": "4cda6d9a191be6c385f0674de8e57f8e7101b293a442f476c453dbe62d58d15e"
+    },
+    "high_risk_class_audit": {
+      "elapsed_seconds": 12.107,
+      "audit_count": 1,
+      "candidate_class_audit_status": "complete",
+      "candidate_artifact_sha256_unchanged": true
+    },
+    "latency": {
+      "same_frame_initial_plus_agent_seconds": 32.865,
+      "time_to_editable_candidate_seconds": 16.422,
+      "operator_wait_removed_seconds": 16.443,
+      "observed_time_to_candidate_reduction_percent": 50.03,
+      "note": "This is a same-frame staged engineering measurement, not a dataset-wide latency distribution."
+    },
+    "stale_replay": {
+      "http_status": 409,
+      "stale_review": true,
+      "final_artifact_unchanged": true,
+      "candidate_count_unchanged": true,
+      "truth_written": false,
+      "candidate_revision_count": 1
+    }
+  },
+  "tests": {
+    "python": {"tests": 729, "failures": 0, "encoding": "PYTHONUTF8=1"},
+    "web": {"tests": 86, "failures": 0},
+    "new_coverage": [
+      "generate without Agent call",
+      "review persisted candidates without rerunning SAM",
+      "candidate-first endpoint contract",
+      "atomic refinement commit",
+      "concurrent candidate change rejects stale refinement",
+      "browser does not overwrite an operator-edited draft"
+    ]
+  },
+  "deployment": {
+    "formal_url": "http://127.0.0.1:8765",
+    "formal_ready": true,
+    "formal_run_status": "idle",
+    "backup": "D:/Apps/LabelAgent/.local/backups/deferred-agent-refinement-round64-20261117",
+    "source_sha256": {
+      "source/agent/server.py": "0fe88afa1632cada1f09e029709b69e19968279d054922db2c5e8cc342e314f1",
+      "source/agent/workflow.py": "32b098943fb8e089cb2b22eeebc2c672302bf9aa456e413105d4b79351fd8a57",
+      "source/web/app.js": "614d8734ba008271e377398be17c0efc0888e4b6a3f3cf6671446683ad1be45f",
+      "source/web/reference-prep.js": "7ddab6f419c8b68f3e2e3611f0cbbfa143f87e500799720cbe5b06cf74068ede"
+    },
+    "formal_state_sha256_unchanged": {
+      "state.json": "54a5ee6ac1794ae3d769b3fefa3cadd79da7f2d5dff892f0b8b4f0a259238ff5",
+      "file_sessions.json": "251a47963ebd2931ee033408e9fe39a94f74539bff0a339c58429ace409088cc",
+      "files.json": "0d8487cd72b3d29612f67ec351ced54f993e98527d44c7df59af6e29196be214",
+      "last_run.json": "2133da6186935d485fe2b2296fe2248ba6cc1183743357ab4c1d8c873d3cffdf",
+      "last_run_summary.json": "920c0d0e6dc37abfe109c13b24b88d9fdcd463e7c55d65bd7ca224534b203ce2",
+      "model_debug.json": "efdf22cd6bd803c958e3acb39d46054d294544fe48324a12b4afe1502b3bbb9a"
+    }
+  },
+  "gpu_route": {
+    "factory_5090_snapshot": [
+      {"gpu": 0, "utilization_percent": 60, "memory_used_mib": 23753, "memory_total_mib": 32607},
+      {"gpu": 1, "utilization_percent": 33, "memory_used_mib": 20532, "memory_total_mib": 32607}
+    ],
+    "action": "kept disabled; no external process was stopped"
+  },
+  "limitations": [
+    "The latency result is one real cold frame and must not be presented as a full-dataset percentile.",
+    "Agent and high-risk class audit compute are preserved; only operator blocking is reduced.",
+    "Initial contours remain machine candidates and still require explicit human confirmation.",
+    "This engineering acceptance does not add independent cross-factory semantic-quality evidence."
+  ]
+}

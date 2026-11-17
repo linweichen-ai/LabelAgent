@@ -350,7 +350,7 @@
       }
       const unchanged = Math.max(0, Math.round((Date.now() - draftPhaseChangedAt) / 1000));
       const phaseNames = {discovering: 'VLM 正在识别当前帧可见类别', discovering_retry: 'VLM 首次标签列表不完整 · 正在自动重试', describing: 'VLM 正在理解类别并生成提示词', generating: 'SAM 正在生成初始轮廓',
-        observing: 'VLM 正在检查候选', editing: 'Agent 正在修正候选', edited: 'Agent 已完成一轮修正',
+        observing: 'VLM 正在检查候选', editing: 'Agent 正在修正候选', edited: 'Agent 已完成一轮修正', review_deferred: '初始候选已生成', agent_refining: 'Agent 正在后台精修候选',
         finished: 'Agent 候选已生成', auditing: 'VLM 正在复核高风险候选', committing: '正在安全保存机器候选', completed: '草稿生成完成', stopping: '正在安全停止',
         stopped: '草稿生成已停止', failed: '草稿生成失败'};
       const phase = status.phase || status.status || '准备中';
@@ -405,8 +405,8 @@
       const response = await fetch('/api/reference_draft', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(autoDetectVisible
-          ? {frame: frameId, auto_detect_visible: true, defer_class_audit: true}
-          : {frame: frameId, labels: [label], defer_class_audit: true}),
+          ? {frame: frameId, auto_detect_visible: true, defer_agent_review: true, defer_class_audit: true}
+          : {frame: frameId, labels: [label], defer_agent_review: true, defer_class_audit: true}),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || '参考帧机器草稿生成失败');
@@ -437,7 +437,7 @@
       const reviewHint = [...(uncertain.length ? [`${uncertain.length} 类不确定`] : []),
         ...(unknown.length ? [`${unknown.length} 个疑似新类`] : []),
         ...(conflicts.length ? [`${conflicts.length} 个标签别名冲突`] : [])].join('、');
-      window.labelAgentToast?.(`已生成 ${result.candidates.length} 个机器草稿${visibleLabels.length ? `（${visibleLabels.join('、')}）` : ''}；${labelSynced ? '编辑类别已同步，' : ''}${reviewHint ? `${reviewHint}已送人工复核，` : ''}${result.candidate_class_audit_deferred ? '高风险类别正在后台复核，可先检查轮廓；' : ''}请精修后人工确认`);
+      window.labelAgentToast?.(`已生成 ${result.candidates.length} 个机器草稿${visibleLabels.length ? `（${visibleLabels.join('、')}）` : ''}；${labelSynced ? '编辑类别已同步，' : ''}${reviewHint ? `${reviewHint}已送人工复核，` : ''}${result.agent_review_deferred ? 'Agent 正在后台精修，可先检查轮廓；' : result.candidate_class_audit_deferred ? '高风险类别正在后台复核，可先检查轮廓；' : ''}请精修后人工确认`);
     } catch (error) {
       setDraftBusy(false);
       const progress = byId('referenceDraftProgress');

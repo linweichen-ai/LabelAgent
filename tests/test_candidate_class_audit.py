@@ -125,6 +125,121 @@ class CandidateClassAuditTests(unittest.TestCase):
         self.assertEqual(state["agent_runs"]["0"]["candidate_class_audit_status"], "pending")
         chat.assert_not_called()
 
+    def test_reference_endpoint_can_publish_guarded_sam_before_agent_review(self):
+        state = {"video": SimpleNamespace(path=Path("test.png"), topics={"camera": {"count": 1}}),
+                 "topic": "camera", "labels": self.labels, "truth": {}, "config": {},
+                 "reference_frames": {}, "candidates": {}, "agent_runs": {}}
+        result = {"shapes": [copy.deepcopy(self.candidate)],
+                  "agent": {"stop_reason": "review_deferred", "max_rounds": 1,
+                            "candidate_filters": [], "sam_generation": {"mode": "multi_prompt"}},
+                  "review_queue": [], "applied": [], "candidates_added": 1}
+        with patch.object(server, "state", state), patch.object(server, "run_status", {"status": "idle"}), \
+             patch.object(server, "frame_image", return_value=self.image), \
+             patch.object(server, "describe", return_value={"prompts": [{"label": "ego", "text": "ego robot"}]}), \
+             patch.object(server, "generate_only", return_value=result) as generate, \
+             patch.object(server, "run") as run, patch.object(server, "chat") as chat, \
+             patch.object(server, "save"), patch.object(server, "archive_candidate_revision", return_value=None):
+            response = server.app.test_client().post("/api/reference_draft", json={
+                "frame": 0, "labels": ["ego"], "defer_agent_review": True,
+                "defer_class_audit": True})
+        self.assertEqual(response.status_code, 200, response.json)
+        self.assertTrue(response.json["agent_review_deferred"])
+        self.assertEqual(response.json["agent_review_status"], "pending")
+        self.assertEqual(response.json["agent"]["agent_review_status"], "pending")
+        self.assertEqual(response.json["agent"]["candidate_class_audit_status"],
+                         "blocked_on_agent_review")
+        self.assertTrue(response.json["candidate_only"])
+        self.assertFalse(response.json["human_truth"])
+        self.assertFalse(response.json["approved_for_training"])
+        self.assertEqual(state["truth"], {})
+        generate.assert_called_once()
+        run.assert_not_called()
+        chat.assert_not_called()
+
+    def test_deferred_agent_refinement_is_compare_and_swap_and_never_truth(self):
+        candidate = copy.deepcopy(self.candidate)
+        artifact = server._sha256_json([candidate])
+        image_hash = hashlib.sha256(self.image).hexdigest()
+        prior_run = {"agent_review_status": "pending", "agent_review_deferred": True,
+                     "candidate_class_audit_status": "blocked_on_agent_review",
+                     "candidate_artifact_sha256": artifact, "draft_labels": ["ego"],
+                     "max_rounds": 1, "candidate_filters": [],
+                     "sam_generation": {"mode": "multi_prompt"}, "review_queue": [],
+                     "candidate_class_audits": [], "input_sha256": image_hash}
+        state = {"video": SimpleNamespace(path=Path("test.png"), topics={"camera": {"count": 1}}),
+                 "topic": "camera", "labels": self.labels, "truth": {}, "config": {},
+                 "reference_frames": {}, "candidates": {"0": [copy.deepcopy(candidate)]},
+                 "agent_runs": {"0": copy.deepcopy(prior_run)},
+                 "candidate_review_status": {}, "candidate_revisions": {}}
+        refined = copy.deepcopy(candidate)
+        refined["points"][0][0] = 9
+        result = {"shapes": [refined], "agent": {"converged": True, "rounds": 1,
+                  "max_rounds": 1, "stop_reason": "done", "audit": [{"round": 1}],
+                  "candidate_filters": [], "sam_generation": {"mode": "multi_prompt"}},
+                  "review_queue": [], "applied": [], "candidates_added": 1}
+        with patch.object(server, "state", state), patch.object(server, "run_status", {"status": "idle"}), \
+             patch.object(server, "frame_image", return_value=self.image), \
+             patch.object(server, "review_existing", return_value=result) as review, \
+             patch.object(server, "save"), patch.object(server, "archive_candidate_revision", return_value=None):
+            response = server.app.test_client().post("/api/reference_candidates/refine", json={
+                "frame": 0, "topic": "camera",
+                "expected_candidate_artifact_sha256": artifact,
+                "expected_frame_sha256": image_hash})
+        self.assertEqual(response.status_code, 200, response.json)
+        self.assertTrue(response.json["candidate_mutated"])
+        self.assertTrue(response.json["candidate_only"])
+        self.assertFalse(response.json["human_truth"])
+        self.assertFalse(response.json["approved_for_training"])
+        self.assertEqual(state["truth"], {})
+        self.assertEqual(state["reference_frames"], {})
+        self.assertEqual(state["candidates"]["0"][0]["points"], refined["points"])
+        self.assertTrue(state["candidates"]["0"][0]["candidate_only"])
+        self.assertFalse(state["candidates"]["0"][0]["human_truth"])
+        self.assertFalse(state["candidates"]["0"][0]["approved_for_training"])
+        self.assertEqual(state["candidates"]["0"][0]["provenance"]["agent_review_status"],
+                         "complete")
+        self.assertEqual(state["agent_runs"]["0"]["agent_review_status"], "complete")
+        self.assertEqual(state["agent_runs"]["0"]["candidate_class_audit_status"], "pending")
+        review.assert_called_once()
+
+    def test_deferred_agent_refinement_never_overwrites_a_changed_candidate(self):
+        candidate = copy.deepcopy(self.candidate)
+        artifact = server._sha256_json([candidate])
+        image_hash = hashlib.sha256(self.image).hexdigest()
+        prior_run = {"agent_review_status": "pending", "agent_review_deferred": True,
+                     "candidate_artifact_sha256": artifact, "draft_labels": ["ego"],
+                     "max_rounds": 1, "candidate_filters": [],
+                     "sam_generation": {"mode": "multi_prompt"}, "review_queue": []}
+        state = {"video": SimpleNamespace(path=Path("test.png"), topics={"camera": {"count": 1}}),
+                 "topic": "camera", "labels": self.labels, "truth": {}, "config": {},
+                 "reference_frames": {}, "candidates": {"0": [copy.deepcopy(candidate)]},
+                 "agent_runs": {"0": copy.deepcopy(prior_run)},
+                 "candidate_review_status": {}, "candidate_revisions": {}}
+        result = {"shapes": [copy.deepcopy(candidate)],
+                  "agent": {"converged": True, "rounds": 1, "max_rounds": 1,
+                            "stop_reason": "done", "audit": [], "candidate_filters": [],
+                            "sam_generation": {"mode": "multi_prompt"}},
+                  "review_queue": [], "applied": [], "candidates_added": 1}
+        def change_candidate(*_args, **_kwargs):
+            state["candidates"]["0"][0]["score"] = .1
+            return result
+        with patch.object(server, "state", state), patch.object(server, "run_status", {"status": "idle"}), \
+             patch.object(server, "frame_image", return_value=self.image), \
+             patch.object(server, "review_existing", side_effect=change_candidate), \
+             patch.object(server, "save") as save, \
+             patch.object(server, "archive_candidate_revision") as archive:
+            response = server.app.test_client().post("/api/reference_candidates/refine", json={
+                "frame": 0, "topic": "camera",
+                "expected_candidate_artifact_sha256": artifact,
+                "expected_frame_sha256": image_hash})
+        self.assertEqual(response.status_code, 409, response.json)
+        self.assertTrue(response.json["stale_review"])
+        self.assertEqual(state["candidates"]["0"][0]["score"], .1)
+        self.assertEqual(state["agent_runs"]["0"], prior_run)
+        self.assertEqual(state["truth"], {})
+        save.assert_not_called()
+        archive.assert_not_called()
+
     def test_merge_keeps_existing_ids_and_renumbers_collisions_without_mutation(self):
         existing = [{"id": 3, "label": "floor"}]
         generated = [{"id": 3, "label": "ego"}, {"id": 4, "label": "person"}]

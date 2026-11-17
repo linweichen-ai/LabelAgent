@@ -167,6 +167,34 @@ class EditTests(unittest.TestCase):
         self.assertTrue(applied)
         self.assertFalse(queue)
 
+    def test_large_floor_erase_is_preserved_for_human_review(self):
+        large_floor = shape(label="floor", left=1, right=38)
+        large_floor["points"] = [[1, 1], [38, 1], [38, 38], [1, 38]]
+        large_floor["parts"] = [{"points": large_floor["points"], "holes": []}]
+        updated, applied, queue = apply_operations([large_floor], [{
+            "operation": "erase_region", "shape_ids": [1],
+            "polygon": [[0, 0], [39, 0], [39, 20], [0, 20]],
+            "reason": "remove a suspected foreground object",
+        }], ["floor"], 40, 40)
+        self.assertEqual(updated, [large_floor])
+        self.assertFalse(applied)
+        self.assertEqual(queue[0]["reason_code"],
+                         "global_surface_large_erase_requires_human_review")
+        self.assertGreater(queue[0]["removed_fraction"], 0.25)
+
+    def test_small_floor_erase_remains_available(self):
+        large_floor = shape(label="floor", left=1, right=38)
+        large_floor["points"] = [[1, 1], [38, 1], [38, 38], [1, 38]]
+        large_floor["parts"] = [{"points": large_floor["points"], "holes": []}]
+        updated, applied, queue = apply_operations([large_floor], [{
+            "operation": "erase_region", "shape_ids": [1],
+            "polygon": [[1, 1], [5, 1], [5, 5], [1, 5]],
+            "reason": "remove a bounded local foreground object",
+        }], ["floor"], 40, 40)
+        self.assertNotEqual(updated, [large_floor])
+        self.assertTrue(applied)
+        self.assertFalse(queue)
+
 
 class WorkflowTests(unittest.TestCase):
     def test_local_gap_evidence_shows_original_binary_and_bounded_image_count(self):
@@ -1970,8 +1998,11 @@ class ServerTests(unittest.TestCase):
                             return value
                         return invoke
                     def start():
-                        responses.append(server.app.test_client().post("/api/reference_draft", json={
-                            "frame": 1, "auto_detect_visible": True}))
+                        body = ({"frame": 1, "labels": ["person"]}
+                                if stage == "describe"
+                                else {"frame": 1, "auto_detect_visible": True})
+                        responses.append(server.app.test_client().post(
+                            "/api/reference_draft", json=body))
                     def read_state():
                         try:
                             reads.append(server.app.test_client().get("/api/state"))
@@ -2344,8 +2375,12 @@ class ServerTests(unittest.TestCase):
                                  ["ontology_mutation_allowed"])
                 discover_mock.assert_called_once()
                 self.assertEqual(discover_mock.call_args.args[2], ["person", "pallet", "slope"])
-                self.assertEqual(describe_mock.call_args.args[3], ["person", "slope"])
+                describe_mock.assert_not_called()
                 self.assertEqual(run_mock.call_args.args[3], ["person", "slope"])
+                self.assertEqual(run_mock.call_args.args[2]["prompt_source"],
+                                 "deterministic_canonical_fallback")
+                self.assertEqual(response.json["description_source"],
+                                 "deterministic_after_visible_label_discovery")
                 queue = server.state["agent_runs"]["1"]["review_queue"]
                 self.assertIn({
                     "label": "slope", "reason_code": "vlm_visibility_uncertain",

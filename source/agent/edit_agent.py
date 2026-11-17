@@ -7,6 +7,7 @@ import math
 GLOBAL_TRAVERSABLE_LABELS = frozenset({"floor", "slope"})
 INSTANCE_LABELS = frozenset({"车辆", "pallet", "person", "ego", "other_robot", "cargo_floor"})
 MAX_GLOBAL_TO_INSTANCE_RECLASSIFY_RATIO = 0.35
+MAX_GLOBAL_SURFACE_ERASE_FRACTION = 0.25
 
 
 def _rasterize(shape, width, height):
@@ -319,6 +320,22 @@ def apply_operations(shapes, operations, labels, width, height, next_id=None, ga
             if kind == "add_region":
                 mask = cv2.bitwise_or(mask, region)
             else:
+                original_pixels = int(np.count_nonzero(mask))
+                removed_pixels = int(np.count_nonzero((mask != 0) & (region != 0)))
+                removed_fraction = (removed_pixels / original_pixels
+                                    if original_pixels else 0.0)
+                if (current[shape_id].get("label") in GLOBAL_TRAVERSABLE_LABELS
+                        and removed_fraction > MAX_GLOBAL_SURFACE_ERASE_FRACTION):
+                    review_queue.append({
+                        **item,
+                        "reason": "单次修改会擦除过多可通行区域；已保留原候选并转人工复核",
+                        "reason_code": "global_surface_large_erase_requires_human_review",
+                        "removed_pixels": removed_pixels,
+                        "original_pixels": original_pixels,
+                        "removed_fraction": round(removed_fraction, 6),
+                        "maximum_automatic_fraction": MAX_GLOBAL_SURFACE_ERASE_FRACTION,
+                    })
+                    continue
                 mask[region != 0] = 0
             updated = _shape_from_mask(mask, current[shape_id]["label"], shape_id)
             if updated is None:

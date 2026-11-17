@@ -1,0 +1,76 @@
+{
+  "round": 34,
+  "recorded_at": "2026-11-17",
+  "objective": "Reduce new-dataset auto-draft latency without weakening ontology review or allowing destructive global-surface edits.",
+  "optimization": {
+    "scope": "reference_draft with auto_detect_visible=true and no human reference geometry",
+    "removed_call": "a second VLM request for generic unreferenced description and SAM keywords",
+    "replacement": "deterministic canonical prompts for the bounded known-label set returned by visible-label discovery",
+    "description_source": "deterministic_after_visible_label_discovery",
+    "unknown_label_behavior": "unchanged; unknown candidates and registry conflicts remain human-review-only",
+    "explicit_label_behavior": "unchanged; manual explicit-label drafts retain the VLM unreferenced-description path"
+  },
+  "rejected_intermediate": {
+    "inference_elapsed_ms": 75600.161,
+    "observed_problem": "Agent proposed an erase_region that removed 43.182 percent of the broad floor candidate",
+    "decision": "not accepted for deployment because visible floor geometry regressed"
+  },
+  "additional_safety_guard": {
+    "policy": "an automatic erase_region may remove at most 25 percent of an existing floor or slope candidate",
+    "failure_route": "preserve original candidate and add global_surface_large_erase_requires_human_review",
+    "bounded_local_erase": "still allowed",
+    "human_truth_or_training_promotion": false
+  },
+  "same_image_final_run": {
+    "source": "1104 directory 004, camera_0, 640x512",
+    "input_sha256": "6F02428B05F0463FC925503FAAB998133B2F2C4D3ADE58AE28514C76A2011C7B",
+    "inference_elapsed_ms": 62093.507,
+    "candidate_count": 13,
+    "candidate_counts_by_label": {"floor": 1, "pallet": 12},
+    "incorrect_ego_candidate_count": 0,
+    "agent_rounds": 1,
+    "applied_operations": 0,
+    "high_risk_blind_audits": 0,
+    "blocked_erase_fraction": 0.43182,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false
+  },
+  "observed_latency_comparison": {
+    "initial_before_round33_ms": 111474.403,
+    "round33_surface_reclassify_guard_ms": 85092.506,
+    "round34_final_ms": 62093.507,
+    "reduction_from_round33_percent": 27.03,
+    "reduction_from_initial_percent": 44.30,
+    "warning": "single same-image runs with stochastic models; not a latency distribution"
+  },
+  "regression": {
+    "python_core_and_image_import": "144/144",
+    "candidate_and_review_python": "28/28",
+    "web_polling_recovery_upload_and_candidate_gates": "84/84",
+    "guard_cases": "large erase rejected, bounded local erase allowed, large surface reclassification rejected, small reclassification allowed"
+  },
+  "formal_runtime_acceptance": {
+    "url": "http://127.0.0.1:8765",
+    "server_sha256": "4A10A15B5612D043586CAB026B463143EC4114A8CDAA52B893C180416A563A75",
+    "edit_agent_sha256": "77329D92672DD192EF2E4F54CC7056A90D0B58A9794A60EB0D1DF7B940C85B66",
+    "sam3": "ready",
+    "vlm": "ready",
+    "workflow": "ready",
+    "run": "idle"
+  },
+  "runtime_state_readback": {
+    "state.json": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "unchanged_after_deploy": true
+  },
+  "rollback": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-canonical-auto-draft-round34-20261117-184000",
+  "limitations": [
+    "The source image has no human pixel truth; semantic labels and visual preservation were checked, but cross-dataset IoU is not established.",
+    "No slope is visible in this sample, so slope quality has no new evidence.",
+    "A single image A/B cannot establish a stable latency distribution."
+  ]
+}

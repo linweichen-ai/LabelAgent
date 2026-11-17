@@ -26,7 +26,8 @@ from .sensors import cloud_snapshot
 from .candidate_import import (prepare_candidate_import, merge_candidate_import,
                                merge_candidate_labels)
 from .workflow import (DESCRIPTION_INPUT_VERSION, MAX_REVIEW_ROUNDS, RunCancelled,
-                       cancellation, describe, discover_visible_labels, reference_labels, restrict_description,
+                       cancellation, canonical_unreferenced_description, describe,
+                       discover_visible_labels, reference_labels, restrict_description,
                        run, trace_calls, candidate_overlay, reference_overlay, chat,
                        VISIBLE_LABEL_DEFINITIONS)
 from .candidate_class_audit import (audit_candidate_class_blind, candidate_fingerprint,
@@ -3078,8 +3079,18 @@ def generate_reference_draft():
                                   uncertain_labels=discovery["uncertain_labels"],
                                   unknown_candidate_count=len(discovery["unknown_candidates"]),
                                   discovery_retry_count=discovery_retry_count, error=None)
-            description = describe(config, target_image, [], selected,
-                                   include_unreferenced=True)
+            if auto_detect_visible:
+                # Discovery already selected a bounded set of known registry
+                # labels. With no human reference geometry, a second VLM call
+                # cannot add trustworthy annotation rules; use the same
+                # deterministic object prompts that are the fail-safe fallback
+                # for malformed unreferenced descriptions.
+                description = canonical_unreferenced_description(selected)
+                description_source = "deterministic_after_visible_label_discovery"
+            else:
+                description = describe(config, target_image, [], selected,
+                                       include_unreferenced=True)
+                description_source = "vlm_unreferenced_description"
             prompt_payload = description.get("prompts", [])
             discovery_sha256 = _sha256_json(discovery) if discovery is not None else None
             pipeline_config_sha256 = _sha256_json({
@@ -3090,6 +3101,7 @@ def generate_reference_draft():
                 "sam_prompts": prompt_payload,
                 "auto_detect_visible": auto_detect_visible,
                 "discovery_sha256": discovery_sha256,
+                "description_source": description_source,
             })
             candidate_request_id = _sha256_json({
                 "request": "reference_draft_candidate",
@@ -3135,6 +3147,7 @@ def generate_reference_draft():
                 "llm_model": config.get("llm_model"),
                 "prompt_profile": config.get("llm_prompt_profile", "full"),
                 "description_input_version": DESCRIPTION_INPUT_VERSION,
+                "description_source": description_source,
                 "pipeline_config_sha256": pipeline_config_sha256,
             }
         combined, merged_id_map = merge_inference_candidates(
@@ -3178,6 +3191,7 @@ def generate_reference_draft():
             "sam_prompts": prompt_payload,
             "auto_detect_visible": auto_detect_visible,
             "visible_label_discovery": discovery,
+            "description_source": description_source,
             "discovery_sha256": discovery_sha256,
             "discovery_retry_count": discovery_retry_count,
             "human_review_required": True}
@@ -3217,6 +3231,7 @@ def generate_reference_draft():
                            prior_candidate_revision_id=(revision.get("revision_id") if revision else None),
                            candidate_revision_count=len(state.get("candidate_revisions", {}).get(str(index), [])),
                            auto_detect_visible=auto_detect_visible,
+                           description_source=description_source,
                            visible_label_discovery=discovery,
                            discovery_sha256=discovery_sha256,
                            human_review_required=True,

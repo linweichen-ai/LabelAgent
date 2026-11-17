@@ -3235,14 +3235,24 @@ def generate_reference_draft():
         bind_merged_candidate_references(result, merged_id_map)
         candidate_artifact_sha256 = _sha256_json(combined)
         visibility_review_queue = reference_visibility_review_queue(discovery, combined)
+        audit_total = sum(candidate.get("label") in HIGH_RISK_LABELS
+                          for candidate in combined)
+        update_run_status(phase="auditing", audit_completed=0,
+                          audit_total=audit_total, audit_candidate_id=None,
+                          shape_count=len(combined), error=None)
         def check_audit_cancelled():
             if run_stop_event.is_set():
                 raise RunCancelled("用户已停止参考帧草稿生成")
+        def on_audit_progress(completed, total, candidate, audit):
+            update_run_status(
+                phase="auditing", audit_completed=completed, audit_total=total,
+                audit_candidate_id=candidate.get("id"),
+                audit_route=audit.get("route"), shape_count=len(combined), error=None)
         with cancellation(run_stop_event), trace_calls(on_trace, save_inspection_image):
             class_audits, class_review_queue = audit_high_risk_candidates(
                 config, target_image, combined, labels,
                 VISIBLE_LABEL_DEFINITIONS, chat, check_cancelled=check_audit_cancelled,
-                tolerate_errors=True)
+                tolerate_errors=True, on_progress=on_audit_progress)
         for audit in class_audits:
             audit["audit_version"] = audit_version
             audit["audit_sha256"] = _sha256_json({
@@ -3275,6 +3285,9 @@ def generate_reference_draft():
             "discovery_sha256": discovery_sha256,
             "discovery_retry_count": discovery_retry_count,
             "human_review_required": True}
+        update_run_status(phase="committing", audit_completed=len(class_audits),
+                          audit_total=audit_total, audit_candidate_id=None,
+                          shape_count=len(combined), error=None)
         with lock, run_status_lock:
             if run_stop_event.is_set():
                 raise RunCancelled("用户已停止参考帧草稿生成")

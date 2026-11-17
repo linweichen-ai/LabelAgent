@@ -771,3 +771,13 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 回归为项目 Python 722/722（另有 171 个子测）、网页 78/78。正式工作台、SAM、VLM ready，任务 idle；正式与 5090 工作流哈希均为 `0e47d3e9...eb1ea`，5090 快速路由仍因非本流程负载保持 disabled。六份状态、候选和历史文件哈希不变，未写候选、人工真值、训练集或 OSS。回滚点为 `D:\Apps\LabelAgent\.local\backups\review-noop-normalization-round58-20261117` 和 5090 对应备份，完整证据见 [第五十八轮结构化证据](evidence/workbench-stability-20261117/review-noop-normalization-round58.json)。
 
 边界：46.28% 是同一张困难图的冷启动工程对照，不是总体延迟分布。真正的几何编辑仍会要求下一轮复查，因此不能为了追求秒数把所有 `continue` 都直接改成 `done`；本轮只处理数学上不可能产生变化的严格零操作。
+
+## 第五十九轮高风险复核进度可见与真实页面闭环验收（2026-11-17）
+
+本轮先用独立工作目录复现了一个用户可感知但单接口测试看不到的问题：一键起稿中 Agent 约 26.5 秒已经生成候选，接口却到 45.309 秒才返回；中间约 18.8 秒其实正在逐个执行人物、宿主和其他机器人等高风险类别盲审，但公开状态仍停留在 `finished`，页面看起来像又卡住了。现在后端把这段过程拆成 `auditing` 和 `committing`，逐项公开 `audit_completed/audit_total`、候选 ID 与复核路线；页面对应显示“VLM 正在复核高风险候选 1/2”和“正在安全保存机器候选”，不再用“正在整理候选”掩盖长计算。640×512 流程的首屏预期也按实测改成自动识别 30～90 秒、手选类别 20～60 秒。
+
+修改后在第二份完全隔离的正式状态副本上调用真实 `/api/reference_draft`：第 32 帧 42.483 秒成功返回，生成 10 个候选；运行中明确读到 `phase=auditing`、`1/2`，终态为 `completed`、`2/2`。候选产物哈希为 `3b965b46...b6dbc86`，并继续明确标记 `candidate_only=true`、`human_truth=false`、`approved_for_training=false`、需要人工复核。隔离副本发生预期变化，但正式 `state.json` 仍为 `54A5EE6A...238FF5`，其余五份正式文件哈希也完全不变。
+
+完整回归为 Python 723/723（另有 171 个子测）和网页 79/79。三个修改文件已部署到 Windows 正式工作台且与工作树哈希一致，页面、SAM 和主 VLM ready，任务 idle；Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\audit-progress-round59-20261117`。5090 快速路由继续因非本流程负载保持 disabled；其休眠仓库是较旧的加速专用运行时，不具备当前工作台复核模块，因此本轮没有强行覆盖该环境，也没有停止或修改任何外部进程。结构化证据见 [第五十九轮高风险复核进度验收](evidence/workbench-stability-20261117/audit-progress-round59.json)。
+
+边界：本轮解决的是“健康计算却像卡住”的交互问题，没有把 42.5 秒包装成模型速度提升。当前主要首跑耗时仍来自单图可见类别发现、Agent 观察以及逐个高风险盲审；下一轮应在保持盲审安全门禁的前提下，验证能否把同帧多个高风险候选合并成一次结构化 VLM 复核，并用独立新数据集做真值支持的泛化验收。

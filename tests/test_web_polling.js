@@ -60,6 +60,14 @@ function harness(extra = {}) {
   };
 }
 
+test('参考起稿公开高风险复核与安全保存阶段', () => {
+  const text = source('reference-prep.js');
+  assert.match(text, /auditing: 'VLM 正在复核高风险候选'/);
+  assert.match(text, /committing: '正在安全保存机器候选'/);
+  assert.match(text, /高风险复核 \$\{status\.audit_completed \|\| 0\}\/\$\{status\.audit_total\}/);
+  assert.match(text, /当前 640×512 流程通常约 30～90 秒/);
+});
+
 test('状态请求隐藏期间完成不重建定时器，恢复后立即轮询且保持单链', async () => {
   let calls = 0, release;
   const h = harness({

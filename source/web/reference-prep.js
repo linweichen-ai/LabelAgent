@@ -351,11 +351,12 @@
       const unchanged = Math.max(0, Math.round((Date.now() - draftPhaseChangedAt) / 1000));
       const phaseNames = {discovering: 'VLM 正在识别当前帧可见类别', discovering_retry: 'VLM 首次标签列表不完整 · 正在自动重试', describing: 'VLM 正在理解类别并生成提示词', generating: 'SAM 正在生成初始轮廓',
         observing: 'VLM 正在检查候选', editing: 'Agent 正在修正候选', edited: 'Agent 已完成一轮修正',
-        finished: '正在整理候选', completed: '草稿生成完成', stopping: '正在安全停止',
+        finished: 'Agent 候选已生成', auditing: 'VLM 正在复核高风险候选', committing: '正在安全保存机器候选', completed: '草稿生成完成', stopping: '正在安全停止',
         stopped: '草稿生成已停止', failed: '草稿生成失败'};
       const phase = status.phase || status.status || '准备中';
       byId('referenceDraftProgressTitle').textContent = phaseNames[phase] || 'SAM + VLM + Agent 正在运行';
       const details = [`当前阶段：${phase}`, `第 ${status.round || 0} 轮`, `${status.shape_count || 0} 个候选`];
+      if (phase === 'auditing' && Number(status.audit_total || 0) > 0) details.push(`高风险复核 ${status.audit_completed || 0}/${status.audit_total}`);
       if (status.error) details.push(`原因：${status.error}`);
       else if (elapsed >= 90 && unchanged >= 60) details.push('该阶段仍在计算，并非没有点击；可用下方“停止生成”安全取消');
       else details.push('首次加载模型通常需要 30～90 秒');
@@ -396,8 +397,8 @@
     draftProgressFailures = 0;
     setDraftBusy(true, autoDetectVisible ? '请求已提交 · VLM 正在识别可见类别…' : '请求已提交 · 正在启动 SAM 与 VLM…');
     byId('referenceDraftProgressDetail').textContent = autoDetectVisible
-      ? '后台已开始：先识别当前帧可见类别，再依次运行 SAM、Agent 与 VLM 复核；首次通常约 2～3 分钟，请不要重复点击。'
-      : '后台已确认开始一键起稿；将依次运行 SAM、VLM 与 Agent，通常约 1～2 分钟，请不要重复点击。';
+      ? '后台已开始：先识别当前帧可见类别，再依次运行 SAM、Agent 与高风险候选复核；当前 640×512 流程通常约 30～90 秒，请不要重复点击。'
+      : '后台已确认开始一键起稿；将依次运行 SAM、VLM 与 Agent，当前 640×512 流程通常约 20～60 秒，请不要重复点击。';
     draftTimer = setInterval(updateDraftProgress, 1000);
     await updateDraftProgress();
     try {

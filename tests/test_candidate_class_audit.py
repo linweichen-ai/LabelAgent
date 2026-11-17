@@ -55,6 +55,17 @@ class CandidateClassAuditTests(unittest.TestCase):
         with self.assertRaises(audit.CandidateClassProtocolError):
             audit.validate_blind_candidate_class_decision({}, self.labels)
 
+    def test_high_risk_batch_reports_bounded_progress(self):
+        progress = []
+        audits, queue = audit.audit_high_risk_candidates(
+            {}, self.image, [self.candidate, {**self.candidate, "id": 8, "label": "pallet"}],
+            self.labels + ["pallet"], {}, lambda *args, **kwargs: self.decision(),
+            on_progress=lambda completed, total, candidate, result:
+                progress.append((completed, total, candidate["id"], result["route"])))
+        self.assertEqual(len(audits), 1)
+        self.assertEqual(queue, [])
+        self.assertEqual(progress, [(1, 1, 7, "candidate_preserved")])
+
     def test_holes_and_invalid_coordinates(self):
         self.candidate["holes"] = [[[15, 15], [25, 15], [25, 25], [15, 25]]]
         evidence = audit.prepare_candidate_evidence(self.image, self.candidate)

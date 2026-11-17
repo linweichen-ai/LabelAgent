@@ -1,0 +1,94 @@
+{
+  "schema_version": "labelagent.workbench_round59.v1",
+  "date": "2026-11-17",
+  "objective": "Expose post-Agent high-risk candidate audit and safe-commit progress so a healthy reference-draft request never appears frozen after candidate generation.",
+  "problem_reproduction": {
+    "isolated_work_dir": "D:/Apps/LabelAgent/.local/isolated-round59-20261117",
+    "frame": 31,
+    "endpoint_elapsed_seconds": 45.309,
+    "agent_finished_at_approx_seconds": 26.5,
+    "remaining_silent_seconds": 18.8,
+    "root_cause": "Two sequential high-risk class audits ran after the Agent had finished while the public phase remained finished."
+  },
+  "implementation": {
+    "backend_phases": ["auditing", "committing"],
+    "audit_progress_fields": ["audit_completed", "audit_total", "audit_candidate_id", "audit_route"],
+    "frontend_labels": {
+      "finished": "Agent 候选已生成",
+      "auditing": "VLM 正在复核高风险候选",
+      "committing": "正在安全保存机器候选"
+    },
+    "eta_copy": {
+      "auto_detect_640x512": "30-90 seconds",
+      "manual_label_640x512": "20-60 seconds"
+    }
+  },
+  "acceptance": {
+    "isolated_work_dir": "D:/Apps/LabelAgent/.local/isolated-round59-acceptance-v2-20261117",
+    "source_state_sha256_before": "54A5EE6AC1794AE3D769B3FEFA3CADD79DA7F2D5DFF892F0B8B4F0A259238FF5",
+    "frame": 32,
+    "endpoint_status": 200,
+    "endpoint_elapsed_seconds": 42.483,
+    "run_elapsed_seconds": 42.40789580345154,
+    "live_audit_snapshot": {
+      "status": "running",
+      "phase": "auditing",
+      "audit_completed": 1,
+      "audit_total": 2,
+      "shape_count": 10,
+      "elapsed_seconds": 41.760231256484985
+    },
+    "terminal_snapshot": {
+      "status": "completed",
+      "phase": "completed",
+      "audit_completed": 2,
+      "audit_total": 2,
+      "candidate_count": 10
+    },
+    "candidate_artifact_sha256": "3b965b461683a930b688d800d715bd084e42e79e4bb1437cd69e29ac7b6dbc86",
+    "isolation_state_sha256_after": "DC647F5875F4580357C6B381B34E660B9689484C4E42ABE589CB7AEED2718465",
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "human_review_required": true
+  },
+  "tests": {
+    "python": {
+      "passed": 723,
+      "subtests_passed": 171,
+      "failed": 0,
+      "elapsed_seconds": 14.96
+    },
+    "web": {
+      "passed": 79,
+      "failed": 0
+    }
+  },
+  "deployment": {
+    "formal_url": "http://127.0.0.1:8765",
+    "formal_status": "ready and idle",
+    "windows_backup": "D:/Apps/LabelAgent/.local/backups/audit-progress-round59-20261117",
+    "fast_5090_route": "disabled while non-owned workloads remain active",
+    "remote_5090_workbench_deployment": "not applicable: the dormant 5090 checkout is an older acceleration-only runtime and does not contain the current workbench audit module; it was not overwritten",
+    "source_hashes": {
+      "source/agent/server.py": "90291C56D512FCBA892FCF6E0AA64A98D7C4F32AB4DDC86F3DB98F80D564AFDF",
+      "source/agent/candidate_class_audit.py": "972457AB24C8149BD8DF44A64B5691C13B9196CE178F8A1278988394AA5B19C4",
+      "source/web/reference-prep.js": "E1BEAF4995E65532277E97F9224DD3C8615EAA33EC9A9892F6F0AAA0B9DEA8D6"
+    },
+    "formal_matches_worktree": true
+  },
+  "formal_state_hashes_after": {
+    "state.json": "54A5EE6AC1794AE3D769B3FEFA3CADD79DA7F2D5DFF892F0B8B4F0A259238FF5",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "model_debug.json": "EFDF22CD6BD803C958E3ACB39D46054D294544FE48324A12B4AFE1502B3BBB9A"
+  },
+  "boundaries": [
+    "This round improves truthful progress visibility; it does not claim a lower model latency distribution.",
+    "The acceptance run used an isolated state copy and wrote no formal candidate, human truth, training approval, or OSS object.",
+    "The committing phase is intentionally short and may complete between one-second UI polls; the long audit phase is now continuously visible.",
+    "Cross-dataset semantic accuracy still requires truth-backed evaluation on an independent new dataset."
+  ]
+}

@@ -55,14 +55,15 @@ HIGH_RISK_LABELS = frozenset({"ego", "person", "other_robot"})
 
 def audit_high_risk_candidates(config, image_bytes, candidates, labels, class_definitions,
                                chat, *, check_cancelled=lambda: None,
-                               tolerate_errors=False, candidate_ids=None):
+                               tolerate_errors=False, candidate_ids=None,
+                               on_progress=None):
     """共享盲审流程；仅在明确允许时将失败转为人工复核证据。"""
     artifact_sha = _sha256(_canonical_bytes(candidates))
     audits, queue = [], []
-    for candidate in candidates:
-        if (candidate.get("label") not in HIGH_RISK_LABELS
-                or candidate_ids is not None and candidate.get("id") not in candidate_ids):
-            continue
+    targets = [candidate for candidate in candidates
+               if candidate.get("label") in HIGH_RISK_LABELS
+               and (candidate_ids is None or candidate.get("id") in candidate_ids)]
+    for position, candidate in enumerate(targets, 1):
         check_cancelled()
         try:
             result = audit_candidate_class_blind(
@@ -94,6 +95,9 @@ def audit_high_risk_candidates(config, image_bytes, candidates, labels, class_de
                 "classification": result.get("decision", {}).get("classification"),
                 "reason": result.get("decision", {}).get("reason", "候选类别盲审失败，请人工检查"),
                 **({"error": result["error"]} if result.get("error") else {})})
+        if on_progress is not None:
+            on_progress(position, len(targets), candidate, result)
+        check_cancelled()
     return audits, queue
 
 

@@ -1,0 +1,99 @@
+{
+  "round": 70,
+  "checked_at": "2026-11-17T16:34:04.0592119+08:00",
+  "status": "accepted_and_deployed",
+  "scope": "Cache the geometry-free batch-review index between durable state changes.",
+  "implementation": {
+    "endpoint": "/api/review/index",
+    "cache_hit_condition": "Current video, topic, labels, config, candidates, agent runs and review-status containers retain the same identity.",
+    "invalidation": [
+      "Every successful durable save",
+      "Every state load",
+      "Any replacement of an indexed state container"
+    ],
+    "candidate_truth_training_isolation_changed": false
+  },
+  "tests": {
+    "targeted_cache_test": "passed",
+    "targeted_assertions": [
+      "Two consecutive reads compute each candidate browser seed once",
+      "A durable save clears the cache",
+      "The next read rebuilds the same payload and seed"
+    ],
+    "python": {
+      "passed": 732,
+      "failed": 0,
+      "command": "D:\\Apps\\LabelAgent\\.venv\\Scripts\\python.exe -X utf8 -m unittest discover -s tests"
+    },
+    "web": {
+      "passed": 91,
+      "failed": 0
+    },
+    "environment_note": "An initial full-test invocation used the Windows GBK default and failed while decoding UTF-8 fixtures. The authoritative rerun used the project's UTF-8 execution mode and passed in full."
+  },
+  "formal_benchmark": {
+    "url": "http://127.0.0.1:8765",
+    "candidate_frames": 29,
+    "candidates": 335,
+    "review_index_bytes": 26775,
+    "full_state_bytes": 1953991,
+    "payload_reduction_percent": 98.6297,
+    "cold_build_ms": 184.25,
+    "warm_samples_ms": [
+      25.409,
+      16.27,
+      2.085,
+      2.09,
+      2.003,
+      1.767,
+      1.598,
+      1.777,
+      1.648,
+      16.512
+    ],
+    "warm_median_ms": 2.044,
+    "previous_round_uncached_median_ms": 136.84,
+    "warm_median_reduction_percent": 98.5063,
+    "full_state_median_ms": 185.428,
+    "geometry_present": false
+  },
+  "browser_acceptance": {
+    "queue_frames": 29,
+    "elapsed_ms": 55,
+    "previous_round_elapsed_ms": 168,
+    "observed_reduction_percent": 67.2619,
+    "requests_after_toggle": [
+      "/api/review/index"
+    ],
+    "full_state_requested": false,
+    "page_errors": []
+  },
+  "candidate_seed_acceptance": {
+    "checked": 335,
+    "mismatches": 0,
+    "candidate_frames": 29
+  },
+  "deployment": {
+    "worktree_server_sha256": "9F2EDBA82837AF7EC0DF3B9E677E435286C4F0280010444FA31D7FBE13C98D7A",
+    "formal_server_sha256": "9F2EDBA82837AF7EC0DF3B9E677E435286C4F0280010444FA31D7FBE13C98D7A",
+    "previous_server_sha256": "8BC0AF4B56D1579F09F59A27BF49F5679342680BDE7F4AFEFA7866624B309C74",
+    "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\batch-review-cache-round70-20261117",
+    "sam_ready": true,
+    "vlm_ready": true,
+    "run_ready": true,
+    "run_status": "idle"
+  },
+  "formal_state_sha256_unchanged": {
+    "state.json": "54A5EE6AC1794AE3D769B3FEFA3CADD79DA7F2D5DFF892F0B8B4F0A259238FF5",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "model_debug.json": "EFDF22CD6BD803C958E3ACB39D46054D294544FE48324A12B4AFE1502B3BBB9A"
+  },
+  "boundaries": [
+    "The cold request still computes all browser seeds once; the acceleration applies to repeated reads until the next durable state change.",
+    "The browser timing is a local engineering measurement, not a wide-area network benchmark.",
+    "This round changes neither SAM/VLM outputs nor model accuracy."
+  ]
+}

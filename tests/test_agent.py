@@ -2401,8 +2401,10 @@ class ServerTests(unittest.TestCase):
 
     def test_batch_review_index_preserves_browser_seed_without_geometry(self):
         old_state, old_work = server.state, server.WORK
+        old_cache = server.batch_review_index_cache
         with tempfile.TemporaryDirectory() as directory:
             server.WORK = Path(directory)
+            server.batch_review_index_cache = None
             points = [[1.0, 2], [3.5, 4], [5, 6]]
             candidate = {"id": 1, "label": "斜坡", "score": 0.75,
                          "points": points, "holes": [],
@@ -2421,7 +2423,18 @@ class ServerTests(unittest.TestCase):
                 "human_review_transactions": {},
             }
             try:
-                response = server.app.test_client().get("/api/review/index")
+                client = server.app.test_client()
+                with patch.object(server, "_candidate_browser_seed",
+                                  wraps=server._candidate_browser_seed) as browser_seed:
+                    response = client.get("/api/review/index")
+                    warm_response = client.get("/api/review/index")
+                    self.assertEqual(browser_seed.call_count, 1)
+                    self.assertEqual(warm_response.data, response.data)
+                    server.save()
+                    self.assertIsNone(server.batch_review_index_cache)
+                    refreshed_response = client.get("/api/review/index")
+                    self.assertEqual(browser_seed.call_count, 2)
+                    self.assertEqual(refreshed_response.data, response.data)
                 self.assertEqual(response.status_code, 200, response.json)
                 payload = response.json
                 self.assertEqual(payload["schema_version"], "labelagent.batch-review-index.v1")
@@ -2440,6 +2453,7 @@ class ServerTests(unittest.TestCase):
                 self.assertLess(len(response.data), 2048)
             finally:
                 server.state, server.WORK = old_state, old_work
+                server.batch_review_index_cache = old_cache
 
     def test_reference_frame_rejects_stale_file_and_topic_scope(self):
         old_state, old_work = server.state, server.WORK

@@ -59,6 +59,7 @@ run_status = {"status": "idle"}
 run_stop_event = threading.Event()
 run_task_id = None
 file_sessions_dirty = False
+batch_review_index_cache = None
 DEFAULT_REVIEW_ROUNDS = 6
 
 
@@ -312,7 +313,7 @@ def _fast_json_write_allowed(destination):
 
 
 def save():
-    global file_sessions_dirty
+    global file_sessions_dirty, batch_review_index_cache
     timings = {}
     sessions = state.get("file_sessions", {})
     sessions_path = file_sessions_path()
@@ -335,6 +336,7 @@ def save():
     started = time.perf_counter()
     _commit_work_file(temporary, state_path())
     timings["state_commit"] = round((time.perf_counter() - started) * 1000, 3)
+    batch_review_index_cache = None
     return timings
 
 
@@ -1057,7 +1059,8 @@ def redact_debug(value, *, credential=None):
 
 
 def load():
-    global file_sessions_dirty
+    global file_sessions_dirty, batch_review_index_cache
+    batch_review_index_cache = None
     file_sessions_dirty = False
     legacy_sessions = None
     if state_path().exists():
@@ -1588,37 +1591,43 @@ def _batch_review_run(run):
 @app.get("/api/review/index")
 def get_batch_review_index():
     """Return cross-frame risk metadata without any polygon geometry."""
+    global batch_review_index_cache
     with lock:
         video = state.get("video")
-        candidates = {
-            str(frame): [_batch_review_candidate(candidate) for candidate in items]
-            for frame, items in state.get("candidates", {}).items()
-            if isinstance(items, list) and items
-        }
-        runs = {
-            frame: summary for frame in candidates
-            if (summary := _batch_review_run(state.get("agent_runs", {}).get(frame))) is not None
-        }
-        statuses = {
-            key: {
-                field: copy.deepcopy(value[field])
-                for field in ("frame", "topic", "remediation_required") if field in value
+        cache_key = (id(video), state.get("topic"), id(state.get("labels")),
+                     id(state.get("config")), id(state.get("candidates")),
+                     id(state.get("agent_runs")), id(state.get("candidate_review_status")))
+        if not batch_review_index_cache or batch_review_index_cache["key"] != cache_key:
+            candidates = {
+                str(frame): [_batch_review_candidate(candidate) for candidate in items]
+                for frame, items in state.get("candidates", {}).items()
+                if isinstance(items, list) and items
             }
-            for key, value in state.get("candidate_review_status", {}).items()
-            if isinstance(value, dict)
-        }
-        return jsonify(
-            schema_version="labelagent.batch-review-index.v1",
-            compact_geometry=True,
-            loaded=video is not None,
-            path=str(video.path) if video is not None else "",
-            topic=state.get("topic"),
-            labels=copy.deepcopy(state.get("labels", [])),
-            config={"dataset_split": state.get("config", {}).get("dataset_split")},
-            candidates=candidates,
-            agent_runs=runs,
-            candidate_review_status=statuses,
-        )
+            runs = {
+                frame: summary for frame in candidates
+                if (summary := _batch_review_run(state.get("agent_runs", {}).get(frame))) is not None
+            }
+            statuses = {
+                key: {
+                    field: copy.deepcopy(value[field])
+                    for field in ("frame", "topic", "remediation_required") if field in value
+                }
+                for key, value in state.get("candidate_review_status", {}).items()
+                if isinstance(value, dict)
+            }
+            batch_review_index_cache = {"key": cache_key, "payload": {
+                "schema_version": "labelagent.batch-review-index.v1",
+                "compact_geometry": True,
+                "loaded": video is not None,
+                "path": str(video.path) if video is not None else "",
+                "topic": state.get("topic"),
+                "labels": copy.deepcopy(state.get("labels", [])),
+                "config": {"dataset_split": state.get("config", {}).get("dataset_split")},
+                "candidates": candidates,
+                "agent_runs": runs,
+                "candidate_review_status": statuses,
+            }}
+        return jsonify(batch_review_index_cache["payload"])
 
 
 @app.get("/api/reference-preparation")

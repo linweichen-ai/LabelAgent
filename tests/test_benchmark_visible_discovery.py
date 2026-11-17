@@ -2,7 +2,7 @@ import unittest
 
 from tools.benchmark_visible_discovery import (
     bounded_assessments, bounded_consistency_flags, bounded_unknown, median,
-    request_metadata)
+    model_config, request_metadata)
 
 
 class VisibleDiscoveryBenchmarkTests(unittest.TestCase):
@@ -42,6 +42,15 @@ class VisibleDiscoveryBenchmarkTests(unittest.TestCase):
         self.assertEqual(median([4, 1, 3, 2]), 2.5)
         self.assertEqual(median([3, 1, 2]), 2.0)
         self.assertIsNone(median([]))
+
+    def test_model_override_is_in_memory_and_rejects_credentials(self):
+        source = {"llm_url": "http://old/v1", "llm_model": "old"}
+        updated = model_config(source, "http://127.0.0.1:38868/v1", "new")
+        self.assertEqual(updated["llm_url"], "http://127.0.0.1:38868/v1")
+        self.assertEqual(updated["llm_model"], "new")
+        self.assertEqual(source, {"llm_url": "http://old/v1", "llm_model": "old"})
+        with self.assertRaises(ValueError):
+            model_config(source, "http://user:secret@127.0.0.1/v1", None)
 
 
 if __name__ == "__main__":

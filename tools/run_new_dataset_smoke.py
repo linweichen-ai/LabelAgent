@@ -17,6 +17,7 @@ from pathlib import Path
 import sys
 import tempfile
 import time
+from urllib.parse import urlsplit
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -33,6 +34,10 @@ def parse_args() -> argparse.Namespace:
                         help="Existing state.json used only for model settings and labels.")
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--max-rounds", type=int, default=2)
+    parser.add_argument("--llm-url",
+                        help="Explicit VLM endpoint override; source state is never changed.")
+    parser.add_argument("--llm-model",
+                        help="Explicit VLM model-id override; source state is never changed.")
     return parser.parse_args()
 
 
@@ -46,6 +51,22 @@ def sha256(path: Path) -> str:
 
 def elapsed_ms(started: float) -> float:
     return round((time.perf_counter() - started) * 1000, 3)
+
+
+def model_config(source: dict, llm_url: str | None = None,
+                 llm_model: str | None = None) -> dict:
+    config = dict(source or {})
+    if llm_url:
+        parsed = urlsplit(llm_url)
+        if (parsed.scheme not in {"http", "https"} or not parsed.hostname
+                or parsed.username is not None or parsed.password is not None):
+            raise ValueError("llm-url must be an HTTP(S) endpoint without credentials")
+        config["llm_url"] = llm_url.rstrip("/")
+    if llm_model:
+        if not llm_model.strip():
+            raise ValueError("llm-model must not be blank")
+        config["llm_model"] = llm_model.strip()
+    return config
 
 
 def checked_json(response, operation: str) -> dict:
@@ -121,7 +142,8 @@ def main() -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     source_state = json.loads(source_state_path.read_text(encoding="utf-8"))
-    config = dict(source_state.get("config") or {})
+    config = model_config(source_state.get("config") or {},
+                          args.llm_url, args.llm_model)
     labels = list(source_state.get("labels") or [])
     required_config = ("llm_url", "llm_model", "sam3_url")
     missing = [key for key in required_config if not config.get(key)]

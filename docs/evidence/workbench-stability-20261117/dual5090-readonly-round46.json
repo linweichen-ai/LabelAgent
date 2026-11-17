@@ -1,0 +1,120 @@
+{
+  "schema_version": "labelagent.dual5090_readonly_round46.v1",
+  "date": "2026-11-17",
+  "status": "conditional_candidate_not_formally_routed",
+  "environment": {
+    "host_alias": "factory-5090",
+    "gpus": ["NVIDIA GeForce RTX 5090 32607 MiB", "NVIDIA GeForce RTX 5090 32607 MiB"],
+    "existing_labelagent_root": "/home/clw/projects/labelagent-5090",
+    "existing_vlm": {
+      "model": "Qwen3-VL-8B-Instruct",
+      "model_id": "labelagent-vlm8b",
+      "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+      "quantization": "nf4",
+      "image_token_budget": 512,
+      "model_memory_bytes": 7115596584,
+      "health": "ok"
+    },
+    "initial_gpu_state": {
+      "gpu0_used_mib": 23753,
+      "gpu0_free_mib": 8359,
+      "gpu0_utilization_percent": 98,
+      "gpu1_used_mib": 28187,
+      "gpu1_free_mib": 3925,
+      "gpu1_utilization_percent": 1
+    },
+    "coexisting_workloads": "LabelAgent SAM/VLM and pqr3d processes were already present on both GPUs.",
+    "other_processes_stopped": false,
+    "new_model_process_started": false,
+    "remote_service_modified": false
+  },
+  "capture_1920x1536": {
+    "cohort": "Capture_20261103 four cameras x two frames",
+    "image_count": 8,
+    "request_success_count": 8,
+    "actual_image_tokens_4090": 238,
+    "actual_image_tokens_5090": 500,
+    "total_ms_4090": 189080,
+    "total_ms_5090": 140421,
+    "total_change_percent": -25.73,
+    "median_ms_4090": 24336.5,
+    "median_ms_5090": 17538.0,
+    "median_change_percent": -27.94,
+    "exact_visible_label_set_matches": 3,
+    "exact_visible_label_set_mismatches": 5,
+    "decision": "Do not route full-resolution formal work to this 5090 NF4/512-token service. Speed passed but semantic stability failed.",
+    "artifacts_sha256": {
+      "first_two": "97E2B606E79F99DDE11E1FF23055B5742FD6A5B4E098DCC75BE6F733835D9EA1",
+      "remaining_six": "B73D932C4CB8CB3EAEFAA5621AB7D54696D6416F971E432694A0975FD21041CB"
+    }
+  },
+  "sfl_1104_640x512_discovery": {
+    "samples": ["003-1793759959809514987.png", "004-1793760662042842987.png"],
+    "request_success_count": 2,
+    "actual_image_tokens_4090": 238,
+    "actual_image_tokens_5090": 320,
+    "elapsed_ms": [
+      {"sample": "003", "gpu4090": 24047, "gpu5090": 16715, "change_percent": -30.49},
+      {"sample": "004", "gpu4090": 23896, "gpu5090": 16390, "change_percent": -31.41}
+    ],
+    "exact_visible_label_set_matches": 2,
+    "uncertain_or_flagged_views": 0,
+    "artifacts_sha256": {
+      "gpu4090": "ED77A95A301AACCF360402783E0393BA0E8073BB289FB4DEA8B871E9BAEBFD77",
+      "gpu5090": "5B3977855608F3EE53D660D46710F2D8C8F35C084056D11FB88BD652130C05C2"
+    }
+  },
+  "sfl_1104_640x512_full_candidate_pipeline": {
+    "isolated_workspace": true,
+    "sample_003": {
+      "gpu4090_round40_ms": 52553.049,
+      "gpu5090_ms": 42660.3,
+      "change_percent": -18.82,
+      "candidate_counts": {"pallet": 13, "person": 2, "floor": 1},
+      "overlay_sha256": "C99BD0C91BFFAFA91EABAB356E33825E6A498C0252056FC9B551D4D75554C374",
+      "overlay_matches_4090": true,
+      "review_queue_count": 2
+    },
+    "sample_004": {
+      "gpu4090_round40_ms": 32205.023,
+      "gpu5090_ms": 31639.046,
+      "change_percent": -1.76,
+      "candidate_counts": {"pallet": 12, "floor": 1},
+      "overlay_sha256": "18E11015827E2AE55B73E9C7B4D56D06C61513A9222F0C5BFA47612B9F6799C8",
+      "overlay_matches_4090": true,
+      "review_queue_count": 1
+    },
+    "aggregate_ms_4090": 84758.072,
+    "aggregate_ms_5090": 74299.346,
+    "aggregate_change_percent": -12.34,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "summary_sha256": "9E9C17708D1DE763319D8A15325512B6D329D894E9BE65B083B3431CB1835F12"
+  },
+  "decision": {
+    "formal_workbench_switched": false,
+    "reason": "The 5090 service is a strong candidate for 640x512 new-data jobs, but is not semantically interchangeable for the tested 1920x1536 cohort and is currently sharing heavily occupied GPUs.",
+    "next_gate": "Add a managed optional 5090 channel with primary-4090 fallback, route only bounded 640x512 jobs, and expand the truth-backed 640x512 cohort before enabling it in the UI."
+  },
+  "accepted_tooling": {
+    "benchmark_visible_discovery_sha256": "E9436E2746652AD45E6EDB797B9D1AD117A79F6447F70413A81D6F1151C48A9E",
+    "run_new_dataset_smoke_sha256": "99F981F011B6A9A682A51158937DDD7245DD44325C6F9E9E330CEC21AB218461",
+    "behavior": "Both tools accept explicit in-memory VLM endpoint/model overrides, reject embedded URL credentials, and never mutate source state.",
+    "rollback": "D:/Apps/LabelAgent/.local/backups/workbench-endpoint-override-round46-20261117-112240"
+  },
+  "validation": {
+    "python": "181/181",
+    "web": "84/84",
+    "formal_4090_workbench": "ready_idle",
+    "temporary_5090_tunnel_closed": true,
+    "formal_state_hashes_unchanged": {
+      "state.json": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+      "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+      "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+      "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+      "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+      "model_debug.json": "EFDF22CD6BD803C958E3ACB39D46054D294544FE48324A12B4AFE1502B3BBB9A"
+    }
+  }
+}

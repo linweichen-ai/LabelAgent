@@ -1149,6 +1149,8 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(events[0]["retry_in_seconds"], 5)
 
     def test_small_image_fast_route_is_bounded_and_does_not_mutate_config(self):
+        workflow._reset_fast_route_circuits()
+        self.addCleanup(workflow._reset_fast_route_circuits)
         config = {"llm_url": "http://primary/v1", "llm_model": "primary",
                   "llm_key": "primary-key", "llm_fast_url": "http://fast/v1",
                   "llm_fast_model": "fast", "llm_fast_key": "fast-key",
@@ -1180,6 +1182,8 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(route, "primary")
 
     def test_small_image_fast_busy_falls_back_to_primary_without_waiting(self):
+        workflow._reset_fast_route_circuits()
+        self.addCleanup(workflow._reset_fast_route_circuits)
         busy = workflow.urllib.error.HTTPError(
             "http://fast/v1/chat/completions", 503, "Service Unavailable", None,
             io.BytesIO(b'{"error":{"message":"Local VLM is busy"}}'))
@@ -1209,6 +1213,8 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(raw["busy_retry_count"], 0)
 
     def test_small_image_fast_timeout_falls_back_with_bounded_timeout(self):
+        workflow._reset_fast_route_circuits()
+        self.addCleanup(workflow._reset_fast_route_circuits)
         success = io.BytesIO(
             b'{"choices":[{"finish_reason":"stop","message":{"content":"{\\"status\\":\\"done\\"}"}}]}')
         raw = {}
@@ -1225,7 +1231,66 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(raw["model_route"], "primary_fallback")
         self.assertEqual(raw["fast_fallback_reason"], "fast_timeout")
 
+    def test_fast_failure_opens_circuit_and_skips_repeated_failed_attempt(self):
+        workflow._reset_fast_route_circuits()
+        self.addCleanup(workflow._reset_fast_route_circuits)
+        responses = [
+            workflow.urllib.error.URLError("offline"),
+            io.BytesIO(b'{"choices":[{"finish_reason":"stop","message":{"content":"{\\"status\\":\\"done\\"}"}}]}'),
+            io.BytesIO(b'{"choices":[{"finish_reason":"stop","message":{"content":"{\\"status\\":\\"done\\"}"}}]}'),
+        ]
+        requests = []
+        def respond(request, timeout):
+            requests.append(request.full_url)
+            item = responses.pop(0)
+            if isinstance(item, Exception):
+                raise item
+            return item
+        config = {"llm_url": "http://primary/v1", "llm_model": "primary",
+                  "llm_fast_url": "http://circuit-fast/v1",
+                  "llm_fast_model": "fast", "llm_fast_cooldown_seconds": 60}
+        first, second = {}, {}
+        with patch.object(workflow.urllib.request, "urlopen", side_effect=respond):
+            self.assertEqual(workflow._chat(
+                config, "inspect", image_bytes(), raw=first), {"status": "done"})
+            self.assertEqual(workflow._chat(
+                config, "inspect", image_bytes(), raw=second), {"status": "done"})
+        self.assertEqual(requests, [
+            "http://circuit-fast/v1/chat/completions",
+            "http://primary/v1/chat/completions",
+            "http://primary/v1/chat/completions",
+        ])
+        self.assertEqual(first["model_route"], "primary_fallback")
+        self.assertEqual(first["fast_fallback_reason"], "fast_unavailable")
+        self.assertEqual(second["model_route"], "primary")
+        self.assertEqual(second["fast_fallback_reason"], "fast_circuit_open")
+
+    def test_fast_circuit_expires_and_allows_a_recovery_probe(self):
+        workflow._reset_fast_route_circuits()
+        self.addCleanup(workflow._reset_fast_route_circuits)
+        config = {"llm_url": "http://primary/v1", "llm_model": "primary",
+                  "llm_fast_url": "http://recover-fast/v1",
+                  "llm_fast_model": "fast", "llm_fast_cooldown_seconds": 60}
+        with patch.object(workflow.time, "monotonic", return_value=100):
+            workflow._open_fast_route_circuit(config, "fast_unavailable")
+            self.assertEqual(workflow._fast_route_circuit_reason(config),
+                             "fast_circuit_open")
+        success = io.BytesIO(
+            b'{"choices":[{"finish_reason":"stop","message":{"content":"{\\"status\\":\\"done\\"}"}}]}')
+        raw = {}
+        with patch.object(workflow.time, "monotonic", return_value=161), \
+             patch.object(workflow.urllib.request, "urlopen", return_value=success) as request:
+            result = workflow._chat(config, "inspect", image_bytes(), raw=raw)
+            self.assertIsNone(workflow._fast_route_circuit_reason(config))
+        self.assertEqual(result, {"status": "done"})
+        self.assertEqual(request.call_args.args[0].full_url,
+                         "http://recover-fast/v1/chat/completions")
+        self.assertEqual(raw["model_route"], "small_image_fast")
+        self.assertNotIn("fast_fallback_reason", raw)
+
     def test_large_image_never_contacts_fast_route(self):
+        workflow._reset_fast_route_circuits()
+        self.addCleanup(workflow._reset_fast_route_circuits)
         success = io.BytesIO(
             b'{"choices":[{"finish_reason":"stop","message":{"content":"{\\"status\\":\\"done\\"}"}}]}')
         raw = {}
@@ -1553,6 +1618,7 @@ class ServerTests(unittest.TestCase):
             self.assertFalse(result["fast_vlm"]["ready"])
             self.assertEqual(result["fast_vlm"]["max_pixels"], 327680)
             self.assertEqual(result["fast_vlm"]["max_long_edge"], 640)
+            self.assertEqual(result["fast_vlm"]["cooldown_seconds"], 60)
         finally:
             server.state = old_state
 
@@ -1568,7 +1634,8 @@ class ServerTests(unittest.TestCase):
                     "llm_fast_max_long_edge": 640,
                     "llm_fast_max_extra_pixels": 1310720,
                     "llm_fast_max_extra_long_edge": 1280,
-                    "llm_fast_timeout_seconds": 30})
+                    "llm_fast_timeout_seconds": 30,
+                    "llm_fast_cooldown_seconds": 60})
                 self.assertEqual(saved.status_code, 200, saved.json)
                 self.assertEqual(server.state["config"]["llm_fast_timeout_seconds"], 30)
                 rejected = client.post("/api/config", json={

@@ -35,6 +35,10 @@ def parse_args() -> argparse.Namespace:
                         help="Explicit model endpoint override; never saved to source state")
     parser.add_argument("--llm-model",
                         help="Explicit model-id override; never saved to source state")
+    parser.add_argument("--llm-fast-url",
+                        help="Optional small-image endpoint override; never saved to source state")
+    parser.add_argument("--llm-fast-model",
+                        help="Optional small-image model-id override; never saved to source state")
     return parser.parse_args()
 
 
@@ -101,7 +105,8 @@ def median(values: list[float]) -> float | None:
 
 
 def model_config(source: dict, llm_url: str | None = None,
-                 llm_model: str | None = None) -> dict:
+                 llm_model: str | None = None, llm_fast_url: str | None = None,
+                 llm_fast_model: str | None = None) -> dict:
     config = dict(source or {})
     if llm_url:
         parsed = urlsplit(llm_url)
@@ -113,6 +118,16 @@ def model_config(source: dict, llm_url: str | None = None,
         if not llm_model.strip():
             raise ValueError("llm-model must not be blank")
         config["llm_model"] = llm_model.strip()
+    if llm_fast_url:
+        parsed = urlsplit(llm_fast_url)
+        if (parsed.scheme not in {"http", "https"} or not parsed.hostname
+                or parsed.username is not None or parsed.password is not None):
+            raise ValueError("llm-fast-url must be an HTTP(S) endpoint without credentials")
+        config["llm_fast_url"] = llm_fast_url.rstrip("/")
+    if llm_fast_model:
+        if not llm_fast_model.strip():
+            raise ValueError("llm-fast-model must not be blank")
+        config["llm_fast_model"] = llm_fast_model.strip()
     return config
 
 
@@ -128,7 +143,8 @@ def main() -> int:
             raise FileNotFoundError(image)
 
     state = json.loads(state_path.read_text(encoding="utf-8"))
-    config = model_config(state.get("config") or {}, args.llm_url, args.llm_model)
+    config = model_config(state.get("config") or {}, args.llm_url, args.llm_model,
+                          args.llm_fast_url, args.llm_fast_model)
     labels = list(state.get("labels") or [])
     if not config.get("llm_url") or not config.get("llm_model") or not labels:
         raise ValueError("source state lacks VLM settings or label registry")

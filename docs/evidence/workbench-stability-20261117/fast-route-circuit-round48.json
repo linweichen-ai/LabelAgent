@@ -1,0 +1,83 @@
+{
+  "schema_version": "labelagent.fast_route_circuit_round48.v1",
+  "recorded_on": "2026-11-17",
+  "decision": "accepted_and_deployed",
+  "problem": "A half-open or repeatedly failing optional 5090 route could make every VLM call in one job pay the same failure timeout before falling back to the primary 4090.",
+  "solution": {
+    "scope": "process-local and endpoint-model specific",
+    "default_cooldown_seconds": 60,
+    "busy_cooldown_seconds": 15,
+    "behavior": "The first bounded transport failure falls back to 4090 and opens a temporary circuit. Calls during the cooldown skip the optional endpoint and use 4090 directly. A later successful fast request closes the circuit.",
+    "candidate_truth_or_training_behavior_changed": false
+  },
+  "live_acceptance": {
+    "input": "1104/003 camera_0 640x512 repeated twice in one read-only process",
+    "fast_endpoint": "unused local HTTP port",
+    "first_call": {
+      "model_route": "primary_fallback",
+      "fast_fallback_reason": "fast_unavailable",
+      "elapsed_ms": 26352,
+      "success": true,
+      "visible_labels": ["pallet", "person", "floor", "ego"],
+      "open_set_scan_complete": true
+    },
+    "second_call": {
+      "model_route": "primary",
+      "fast_fallback_reason": "fast_circuit_open",
+      "elapsed_ms": 19211,
+      "success": true,
+      "visible_labels": ["pallet", "person", "floor", "ego"],
+      "open_set_scan_complete": true
+    },
+    "failed_fast_transport_attempts": 1,
+    "second_call_skipped_failed_fast_transport": true,
+    "second_call_observed_reduction_percent": 27.1,
+    "artifact_sha256": "A034A1F8D36D827826C5D0AD739CF5E92ED5A98F883E747252DDCB1C50629C9E"
+  },
+  "formal_readback": {
+    "workbench_url": "http://127.0.0.1:8765",
+    "overall_ready": true,
+    "sam_ready": true,
+    "primary_vlm_ready": true,
+    "fast_vlm_ready": true,
+    "configured_cooldown_seconds": 60,
+    "run_status": "idle"
+  },
+  "tests": {
+    "python_core": {"passed": 169, "failed": 0},
+    "web": {"passed": 78, "failed": 0},
+    "diff_check": "passed"
+  },
+  "formal_state_integrity": {
+    "current_state_sha256": "64F3394F766A77FBE8EBDFACFB1C2EA326149DAFAD0C2B80A43D75DD45A5230B",
+    "reconstructed_after_removing_only_llm_fast_fields_sha256": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+    "non_config_state_changed": false,
+    "file_sessions_sha256": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files_sha256": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run_sha256": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary_sha256": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "model_debug_sha256": "EFDF22CD6BD803C958E3ACB39D46054D294544FE48324A12B4AFE1502B3BBB9A"
+  },
+  "deployment": {
+    "workflow_sha256": "F760AF416AA1536B97FAB6A8DA6118AEC3A00BF15105F2BF60C5E70414D1C4A5",
+    "server_sha256": "87549553368046EFF34FFC625427193540992F8CEA4DF364718AAFAFAE4F1A2F",
+    "smoke_tool_sha256": "FAD53D09DEE8EB8FF15A1F6FDBC857CB8E2A19CCF55FE81C8CCE6C392411CFDD",
+    "benchmark_tool_sha256": "AD86ABFA8D846550A414BDDC220C84B56C29C1D7BBC0050CA8FF3D29EC06C4CB",
+    "local_manager_sha256": "9FE6BB0B51511BDEC56B9B312899DA00D7E10C997BB6E66046BCFD2718C3BE9E",
+    "rollback": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-fast-circuit-round48-20261117",
+    "rollback_manifest_sha256": "18AB77172AC14A856DE4BC137EB64D671DBC0AF5779B7D2BD67428AC09C9781B"
+  },
+  "safety_boundaries": {
+    "read_only_acceptance": true,
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "oss_modified": false,
+    "other_gpu_processes_stopped": false
+  },
+  "known_limitations": [
+    "A single first failure can still pay up to the configured 60-second fast-route timeout before fallback; the circuit prevents repetition within the cooldown.",
+    "This is a reliability and latency-tail improvement, not an accuracy or segmentation-quality result.",
+    "The circuit state is process-local and resets when the workbench restarts."
+  ]
+}

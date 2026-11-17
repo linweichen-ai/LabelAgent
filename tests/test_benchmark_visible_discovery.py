@@ -46,12 +46,18 @@ class VisibleDiscoveryBenchmarkTests(unittest.TestCase):
 
     def test_model_override_is_in_memory_and_rejects_credentials(self):
         source = {"llm_url": "http://old/v1", "llm_model": "old"}
-        updated = model_config(source, "http://127.0.0.1:38868/v1", "new")
+        updated = model_config(source, "http://127.0.0.1:38868/v1", "new",
+                               "http://127.0.0.1:38869/v1", "fast")
         self.assertEqual(updated["llm_url"], "http://127.0.0.1:38868/v1")
         self.assertEqual(updated["llm_model"], "new")
+        self.assertEqual(updated["llm_fast_url"], "http://127.0.0.1:38869/v1")
+        self.assertEqual(updated["llm_fast_model"], "fast")
         self.assertEqual(source, {"llm_url": "http://old/v1", "llm_model": "old"})
         with self.assertRaises(ValueError):
             model_config(source, "http://user:secret@127.0.0.1/v1", None)
+        with self.assertRaises(ValueError):
+            model_config(source, None, None,
+                         "http://user:secret@127.0.0.1/v1", None)
 
 
 if __name__ == "__main__":

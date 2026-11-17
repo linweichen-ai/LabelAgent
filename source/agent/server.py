@@ -2609,6 +2609,7 @@ def set_config():
         "llm_fast_max_extra_pixels": (1024, 33_554_432),
         "llm_fast_max_extra_long_edge": (32, 16384),
         "llm_fast_timeout_seconds": (10, 300),
+        "llm_fast_cooldown_seconds": (10, 300),
     }
     fast_updates = {}
     for key in fast_string_keys:
@@ -2717,6 +2718,8 @@ def model_readiness():
         "llm_fast_max_extra_pixels", fast_vlm["max_pixels"] * 4)
     fast_vlm["max_extra_long_edge"] = positive_config_int(
         "llm_fast_max_extra_long_edge", fast_vlm["max_long_edge"] * 2)
+    fast_vlm["cooldown_seconds"] = positive_config_int(
+        "llm_fast_cooldown_seconds", 60)
     return jsonify(ready=sam["ready"] and vlm["ready"], sam=sam, vlm=vlm,
                    fast_vlm=fast_vlm,
                    checked_at=datetime.now(timezone.utc).isoformat(),
@@ -3170,6 +3173,7 @@ def generate_reference_draft():
                     "max_extra_long_edge": config.get(
                         "llm_fast_max_extra_long_edge", 1280),
                     "timeout_seconds": config.get("llm_fast_timeout_seconds", 60),
+                    "cooldown_seconds": config.get("llm_fast_cooldown_seconds", 60),
                 },
                 "max_review_rounds": max_rounds,
                 "sam_prompts": prompt_payload,

@@ -26,6 +26,8 @@ _trace_callback = ContextVar("model_trace_callback", default=None)
 _trace_asset = ContextVar("model_trace_asset", default=None)
 _review_call = ContextVar("review_call", default=None)
 _cancel_event = ContextVar("workflow_cancel_event", default=None)
+_fast_route_lock = threading.Lock()
+_fast_route_circuits = {}
 MAX_REVIEW_ROUNDS = 100
 MAX_PROTOCOL_RETRIES = 2
 
@@ -283,6 +285,51 @@ def _positive_int(value, default):
     return value
 
 
+def _fast_route_key(config):
+    return (str(config.get("llm_fast_url") or "").rstrip("/"),
+            str(config.get("llm_fast_model") or "").strip())
+
+
+def _fast_route_circuit_reason(config):
+    key = _fast_route_key(config)
+    if not all(key):
+        return None
+    now = time.monotonic()
+    with _fast_route_lock:
+        state = _fast_route_circuits.get(key)
+        if not state:
+            return None
+        if state["disabled_until"] <= now:
+            _fast_route_circuits.pop(key, None)
+            return None
+        return "fast_circuit_open"
+
+
+def _open_fast_route_circuit(config, reason):
+    key = _fast_route_key(config)
+    if not all(key):
+        return
+    configured = max(10, min(300, _positive_int(
+        config.get("llm_fast_cooldown_seconds"), 60)))
+    cooldown = min(15, configured) if reason == "fast_busy" else configured
+    with _fast_route_lock:
+        _fast_route_circuits[key] = {
+            "disabled_until": time.monotonic() + cooldown,
+            "trigger": reason,
+        }
+
+
+def _close_fast_route_circuit(config):
+    with _fast_route_lock:
+        _fast_route_circuits.pop(_fast_route_key(config), None)
+
+
+def _reset_fast_route_circuits():
+    """Clear process-local fast-route health state for isolated tests."""
+    with _fast_route_lock:
+        _fast_route_circuits.clear()
+
+
 def select_vlm_route(config, image, extra_images=()):
     """Select the optional small-image accelerator without changing source state.
 
@@ -326,13 +373,16 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
     for data in (image, *extra_images):
         content.append({"type": "image_url", "image_url": {"url":
             "data:image/jpeg;base64," + base64.b64encode(data).decode()}})
-    selected_config, selected_route = select_vlm_route(
-        config, image, extra_images=extra_images)
+    fast_fallback_reason = _fast_route_circuit_reason(config)
+    if fast_fallback_reason is None:
+        selected_config, selected_route = select_vlm_route(
+            config, image, extra_images=extra_images)
+    else:
+        selected_config, selected_route = config, "primary"
     routes = [(selected_config, selected_route)]
     if selected_route == "small_image_fast":
         routes.append((config, "primary_fallback"))
     busy_retry_count = 0
-    fast_fallback_reason = None
     result = None
     final_route = selected_route
     for route_config, route_name in routes:
@@ -360,12 +410,15 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
                 with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
                     result = json.load(response)
                 final_route = route_name
+                if route_name == "small_image_fast":
+                    _close_fast_route_circuit(config)
                 break
             except (TimeoutError, socket.timeout) as error:
                 if route_name == "small_image_fast":
                     fast_fallback_reason = "fast_timeout"
                     if raw is not None:
                         raw["fast_fallback_reason"] = fast_fallback_reason
+                    _open_fast_route_circuit(config, fast_fallback_reason)
                     route_failed = True
                     break
                 raise ValueError("llm_timeout: 大模型请求排队或推理超过 1200 秒") from error
@@ -384,6 +437,7 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
                                             else "fast_http_unavailable")
                     if raw is not None:
                         raw["fast_fallback_reason"] = fast_fallback_reason
+                    _open_fast_route_circuit(config, fast_fallback_reason)
                     route_failed = True
                     break
                 if local_busy and busy_attempt < busy_retry_limit:
@@ -404,6 +458,7 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
                     fast_fallback_reason = "fast_unavailable"
                     if raw is not None:
                         raw["fast_fallback_reason"] = fast_fallback_reason
+                    _open_fast_route_circuit(config, fast_fallback_reason)
                     route_failed = True
                     break
                 raise ValueError(f"大模型请求失败：{error.reason}") from error

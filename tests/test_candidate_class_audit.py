@@ -288,7 +288,8 @@ class CandidateClassAuditTests(unittest.TestCase):
             for key in ("llm_model", "llm_prompt_profile", "llm_url",
                         "llm_fast_url", "llm_fast_model",
                         "llm_fast_max_pixels", "llm_fast_max_long_edge",
-                        "llm_fast_max_extra_pixels", "llm_fast_max_extra_long_edge"):
+                        "llm_fast_max_extra_pixels", "llm_fast_max_extra_long_edge",
+                        "llm_fast_cooldown_seconds"):
                 original = copy.deepcopy(state["config"])
                 state["config"][key] = "changed"
                 self.assertNotEqual(first, server.candidate_class_audit_version())

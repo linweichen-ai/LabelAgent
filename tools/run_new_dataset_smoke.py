@@ -182,7 +182,7 @@ def main() -> int:
                        "llm_fast_url", "llm_fast_model", "llm_fast_key",
                        "llm_fast_max_pixels", "llm_fast_max_long_edge",
                        "llm_fast_max_extra_pixels", "llm_fast_max_extra_long_edge",
-                       "llm_fast_timeout_seconds"}
+                       "llm_fast_timeout_seconds", "llm_fast_cooldown_seconds"}
         }), "set model config")
 
         started = time.perf_counter()

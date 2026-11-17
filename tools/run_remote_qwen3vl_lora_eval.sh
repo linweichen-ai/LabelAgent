@@ -39,10 +39,32 @@ case "$VLM_COMMAND" in
   *"/home/clw/labelagent_vlm_20261104/venv/bin/python -u local_vlm_server.py"*"--port 18878"*) ;;
   *) echo "owned VLM command differs" >&2; exit 72 ;;
 esac
+HEALTH_JSON=$(curl -fsS http://127.0.0.1:18878/health)
+INFLIGHT=$(printf '%s' "$HEALTH_JSON" | "$PYTHON" -c \
+  'import json,sys; print(json.load(sys.stdin).get("exact_requests_inflight", -1))')
+[[ "$INFLIGHT" == 0 ]] || { echo "owned VLM has in-flight requests: $INFLIGHT" >&2; exit 76; }
 
 RESTORE_LOG="$PROJECT_ROOT/${OUTPUT_NAME}-restore.log"
 restore_service() { bash "$SERVICE_ROOT/start_remote_services.sh" >>"$RESTORE_LOG" 2>&1 || true; }
-trap restore_service EXIT
+restore_and_wait() {
+  restore_service
+  for _ in $(seq 1 240); do
+    if curl -fsS http://127.0.0.1:18878/health \
+        >"$PROJECT_ROOT/${OUTPUT_NAME}-restored-health.json" 2>/dev/null; then
+      return 0
+    fi
+    if ! tmux has-session -t "$VLM_SESSION" 2>/dev/null; then restore_service; fi
+    sleep 1
+  done
+  return 1
+}
+cleanup() {
+  status=$?
+  trap - EXIT
+  restore_and_wait || exit 74
+  exit "$status"
+}
+trap cleanup EXIT
 tmux kill-session -t "$VLM_SESSION"
 for _ in $(seq 1 30); do kill -0 "$VLM_PID" 2>/dev/null || break; sleep 1; done
 kill -0 "$VLM_PID" 2>/dev/null && { echo "owned VLM did not stop" >&2; exit 73; }
@@ -54,17 +76,6 @@ env PYTHONPATH="$PEFT_OVERLAY:$PROJECT_ROOT" CUDA_VISIBLE_DEVICES="$GPU_UUID" \
     --model-dir "$MODEL_DIR" --adapter-dir "$ADAPTER_DIR" \
     --dataset-dir dataset --output "$OUTPUT_NAME"
 
-restore_service
+restore_and_wait
 trap - EXIT
-for _ in $(seq 1 180); do
-  if curl -fsS http://127.0.0.1:18878/health >"$PROJECT_ROOT/${OUTPUT_NAME}-restored-health.json" 2>/dev/null; then
-    echo "owned_vlm_restored=true"
-    exit 0
-  fi
-  if ! tmux has-session -t "$VLM_SESSION" 2>/dev/null; then
-    restore_service
-  fi
-  sleep 1
-done
-echo "owned VLM restore timed out" >&2
-exit 74
+echo "owned_vlm_restored=true"

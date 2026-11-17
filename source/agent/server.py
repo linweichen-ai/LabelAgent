@@ -3162,7 +3162,7 @@ def generate_reference_draft():
             class_audits, class_review_queue = audit_high_risk_candidates(
                 config, target_image, combined, labels,
                 VISIBLE_LABEL_DEFINITIONS, chat, check_cancelled=check_audit_cancelled,
-                tolerate_errors=True)
+                tolerate_errors=True, batch_candidates=True)
         for audit in class_audits:
             audit["audit_version"] = audit_version
             audit["audit_sha256"] = _sha256_json({

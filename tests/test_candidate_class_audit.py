@@ -44,6 +44,73 @@ class CandidateClassAuditTests(unittest.TestCase):
         changed["points"][0][0] += 1
         self.assertNotEqual(result["candidate_sha256"], audit.candidate_fingerprint(changed))
 
+    def test_batch_blind_audit_uses_one_call_and_keeps_per_candidate_binding(self):
+        second = copy.deepcopy(self.candidate) | {"id": 8, "label": "person"}
+        candidates = [copy.deepcopy(self.candidate), second]
+        original = copy.deepcopy(candidates)
+        def chat(config, prompt, image, **kwargs):
+            self.assertIn('"candidate_ids": [7, 8]', prompt)
+            self.assertNotIn('"label": "ego"', prompt)
+            self.assertEqual(len(kwargs["extra_images"]), 3)
+            # Deliberately return reversed order; binding must follow candidate_id.
+            return {"decisions": [
+                {"candidate_id": 8, **self.decision("person")},
+                {"candidate_id": 7, **self.decision("ego")}]}
+        results = audit.audit_candidate_classes_blind_batch(
+            {}, self.image, candidates, self.labels, {}, chat)
+        self.assertEqual(candidates, original)
+        self.assertEqual([item["candidate_id"] for item in results], [7, 8])
+        self.assertEqual([item["decision"]["observed_label"] for item in results],
+                         ["ego", "person"])
+        self.assertTrue(all(item["route"] == "candidate_preserved" for item in results))
+        self.assertTrue(all(item["batch_candidate_ids"] == [7, 8] for item in results))
+        self.assertTrue(all(item["batch_size"] == 2 for item in results))
+
+    def test_batch_blind_audit_rejects_duplicate_or_missing_candidate_decisions(self):
+        candidate_ids = [7, 8]
+        duplicate = {"decisions": [
+            {"candidate_id": 7, **self.decision("ego")},
+            {"candidate_id": 7, **self.decision("person")} ]}
+        with self.assertRaises(audit.CandidateClassProtocolError):
+            audit.validate_blind_candidate_class_batch(duplicate, self.labels, candidate_ids)
+        missing = {"decisions": [{"candidate_id": 7, **self.decision("ego")}]}
+        with self.assertRaises(audit.CandidateClassProtocolError):
+            audit.validate_blind_candidate_class_batch(missing, self.labels, candidate_ids)
+
+    def test_batch_blind_audit_only_repairs_uncertainty_by_downgrading(self):
+        value = {"decisions": [{"candidate_id": 7, **self.decision("ego")},
+                               {"candidate_id": 8, **self.decision("person") | {
+                                   "classification": "uncertain",
+                                   "candidate_supported": True,
+                                   "reason_code": "visible_known_label"}}]}
+        decisions, repairs = audit.validate_blind_candidate_class_batch(
+            value, self.labels, [7, 8], return_repairs=True)
+        self.assertEqual(decisions[0]["classification"], "known_label")
+        self.assertEqual(decisions[1]["classification"], "uncertain")
+        self.assertIsNone(decisions[1]["observed_label"])
+        self.assertFalse(decisions[1]["candidate_supported"])
+        self.assertEqual(decisions[1]["reason_code"], "insufficient_visual_evidence")
+        self.assertEqual(set(repairs[8]), {"observed_label_cleared",
+                                          "candidate_supported_downgraded",
+                                          "reason_code_downgraded"})
+
+    def test_batch_blind_audit_protocol_failure_falls_back_to_bound_single_calls(self):
+        second = copy.deepcopy(self.candidate) | {"id": 8, "label": "person"}
+        candidates = [copy.deepcopy(self.candidate), second]
+        responses = iter([{"decisions": []}, self.decision("ego"), self.decision("person")])
+        calls = []
+        def chat(*args, **kwargs):
+            calls.append(kwargs["response_schema"])
+            return next(responses)
+        results, queue = audit.audit_high_risk_candidates(
+            {}, self.image, candidates, self.labels, {}, chat,
+            tolerate_errors=True, batch_candidates=True)
+        self.assertEqual(len(calls), 3)
+        self.assertEqual(queue, [])
+        self.assertEqual([item["candidate_id"] for item in results], [7, 8])
+        self.assertTrue(all(item["batch_fallback_used"] for item in results))
+        self.assertTrue(all(item["route"] == "candidate_preserved" for item in results))
+
     def test_review_routes_and_protocol(self):
         for decision, route in [(self.decision(), "candidate_preserved"),
                                 (self.decision(confidence=.4), "human_review_required"),

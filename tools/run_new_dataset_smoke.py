@@ -58,6 +58,53 @@ def checked_json(response, operation: str) -> dict:
     return payload
 
 
+def model_call_kind(record: dict) -> str:
+    """Name a model call from its bounded prompt without changing the pipeline."""
+    instruction = str((record.get("input") or {}).get("instruction") or "")
+    if instruction.startswith("Inspect this factory image and assess every known label"):
+        return "visible_label_discovery"
+    if (instruction.startswith("Independently classify exactly one highlighted machine candidate")
+            or instruction.startswith("Independently classify each highlighted machine candidate")):
+        return "candidate_class_blind_audit"
+    if (instruction.startswith("No human-confirmed reference image")
+            or instruction.startswith("Use the supplied reference contours")
+            or "Annotation audit" in instruction or "candidate masks" in instruction):
+        return "agent_review"
+    if instruction.startswith("Describe only the annotated objects"):
+        return "reference_description"
+    return "other_vlm_call"
+
+
+def summarize_model_trace(trace: object) -> list[dict]:
+    """Keep timing and protocol evidence while excluding prompts and model prose."""
+    if not isinstance(trace, list):
+        return []
+    summary = []
+    for position, record in enumerate(trace, 1):
+        if not isinstance(record, dict):
+            continue
+        output = record.get("output") or {}
+        raw_text = output.get("raw_text")
+        parsed = output.get("parsed")
+        images = (record.get("input") or {}).get("images") or []
+        summary.append({
+            "sequence": position,
+            "kind": model_call_kind(record),
+            "service": record.get("service"),
+            "status": record.get("status"),
+            "elapsed_ms": record.get("elapsed_ms"),
+            "busy_retry_count": output.get("busy_retry_count", 0),
+            "finish_reason": output.get("finish_reason"),
+            "raw_text_chars": len(raw_text) if isinstance(raw_text, str) else None,
+            "parsed_json_chars": (len(json.dumps(parsed, ensure_ascii=False,
+                                                   separators=(",", ":")))
+                                  if isinstance(parsed, (dict, list)) else None),
+            "image_count": len(images) if isinstance(images, list) else None,
+            "max_tokens": (record.get("input") or {}).get("max_tokens"),
+        })
+    return summary
+
+
 def main() -> int:
     args = parse_args()
     images = [path.expanduser().resolve() for path in args.images]
@@ -121,6 +168,10 @@ def main() -> int:
             inference_ms = elapsed_ms(infer_started)
             candidates = response.get("candidates") or []
             discovery = response.get("visible_label_discovery") or {}
+            debug_path = isolated_work / "model_debug.json"
+            debug = (json.loads(debug_path.read_text(encoding="utf-8"))
+                     if debug_path.is_file() else {})
+            call_timings = summarize_model_trace(debug.get("trace"))
             counts = dict(sorted(Counter(
                 shape.get("label", "<missing>") for shape in candidates
                 if isinstance(shape, dict)).items()))
@@ -139,6 +190,10 @@ def main() -> int:
                 "load_timings_ms": loaded.get("load_timings_ms"),
                 "compatibility": compatibility,
                 "inference_elapsed_ms": inference_ms,
+                "model_call_count": len(call_timings),
+                "model_call_elapsed_ms": round(sum(
+                    call.get("elapsed_ms") or 0 for call in call_timings), 3),
+                "model_call_timings": call_timings,
                 "candidate_count": len(candidates),
                 "candidate_counts_by_label": counts,
                 "visible_labels": discovery.get("visible_labels", []),

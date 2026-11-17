@@ -1,0 +1,113 @@
+{
+  "schema_version": "labelagent.workbench_vlm_latency_round36.v1",
+  "date": "2026-11-17",
+  "objective": "Reduce new-dataset candidate inference latency without weakening candidate, truth, training, ontology, or high-risk-class gates.",
+  "scope": {
+    "dataset": "SFL-CPD15-Y/20261104 pending-data camera_0 samples",
+    "samples": ["003-1793759959809514987", "004-1793760662042842987"],
+    "isolated_candidate_only_workspace": true,
+    "oss_writes": false,
+    "formal_truth_modified": false,
+    "formal_candidates_modified": false,
+    "training_data_modified": false
+  },
+  "accepted_changes": {
+    "visible_label_discovery": {
+      "reason_max_chars": 96,
+      "prompt_reason_limit_words": 12,
+      "compact_token_budget_for_8_labels": 640,
+      "unknown_candidate_channel_preserved": true,
+      "truncated_open_set_route": "ontology_review_required"
+    },
+    "high_risk_candidate_audit": {
+      "batch_enabled_for_reference_draft": true,
+      "per_candidate_id_binding": true,
+      "current_label_hidden_from_model": true,
+      "candidate_mutation_allowed": false,
+      "human_truth": false,
+      "batch_protocol_failure_fallback": "bound single-candidate audits",
+      "conservative_repair": "uncertain/conflict fields may only be downgraded; known-label promotion is forbidden"
+    },
+    "smoke_tool": {
+      "call_level_timing_saved": true,
+      "prompt_or_model_prose_saved_in_summary": false,
+      "temporary_workspace_removed": true
+    }
+  },
+  "accepted_measurements": {
+    "sample_003": {
+      "baseline_elapsed_ms": 97180.022,
+      "optimized_elapsed_ms": 76855.15,
+      "total_reduction_percent": 20.91,
+      "baseline_model_calls": 5,
+      "optimized_model_calls": 4,
+      "baseline_discovery_ms": 56051,
+      "optimized_discovery_ms": 36571,
+      "discovery_reduction_percent": 34.75,
+      "sequential_blind_audits_ms": 31413,
+      "batched_blind_audit_ms": 29676,
+      "blind_audit_reduction_percent": 5.53,
+      "candidate_counts": {"pallet": 13, "person": 2, "floor": 1, "ego": 0},
+      "candidate_count_unchanged": true,
+      "agent_rounds": 1,
+      "applied_operations": 0,
+      "blind_audits": [
+        {"candidate_id": 14, "observed_label": "person", "confidence": 1.0, "route": "candidate_preserved"},
+        {"candidate_id": 15, "observed_label": "person", "confidence": 1.0, "route": "candidate_preserved"}
+      ],
+      "batch_protocol_repairs": 0,
+      "batch_fallback_used": false,
+      "open_set_scan_complete": true,
+      "summary_sha256": "617102C81002C894F0C47D89093BED1B406FDCD0B6ADCDE1ABD57148842BAA58",
+      "candidate_sha256": "5AEFF6D943FB0D011789EAB335E207EE43E81CC537A92738F1F6FA06E44AC639",
+      "overlay_sha256": "C99BD0C91BFFAFA91EABAB356E33825E6A498C0252056FC9B551D4D75554C374"
+    },
+    "sample_004": {
+      "previous_round_elapsed_ms": 62094,
+      "optimized_elapsed_ms": 47397.286,
+      "total_reduction_percent": 23.67,
+      "candidate_counts": {"pallet": 12, "floor": 1, "ego": 0},
+      "agent_rounds": 1,
+      "applied_operations": 0,
+      "blind_audit_count": 0,
+      "open_set_scan_complete": true,
+      "summary_sha256": "FD68B2759A146E9BF6766FCF03A6C19BEDC4C642AA60CC0A73DC0F7097F39D65",
+      "candidate_sha256": "6C536B19D26221E81D266A1B11568021ABF1BB9B9DD6FAAB7D7EF829DCE03285",
+      "overlay_sha256": "18E11015827E2AE55B73E9C7B4D56D06C61513A9222F0C5BFA47612B9F6799C8"
+    }
+  },
+  "rejected_trials": [
+    {
+      "name": "simple batch schema before conservative validation",
+      "elapsed_ms": 72925.983,
+      "reason": "The model returned internally contradictory uncertain decisions; both audit records failed protocol validation. Safe but not accepted."
+    },
+    {
+      "name": "nested mutually-exclusive anyOf batch schema",
+      "elapsed_ms": 50367.685,
+      "reason": "The local model emitted truncated JSON after 2.913 seconds; both audits failed closed. The attractive latency is not a valid result and was rejected."
+    }
+  ],
+  "validation": {
+    "python_core_image_candidate": "164/164",
+    "web_interaction": "84/84",
+    "python_compile": "passed",
+    "javascript_syntax": "passed",
+    "formal_status": "ready_idle",
+    "rollback": "D:/Apps/LabelAgent/.local/backups/workbench-vlm-latency-round36-20261117-193000",
+    "formal_code_matches_worktree": true,
+    "formal_state_hashes_unchanged": {
+      "state.json": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+      "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+      "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+      "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+      "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+      "model_debug.json": "EFDF22CD6BD803C958E3ACB39D46054D294544FE48324A12B4AFE1502B3BBB9A"
+    }
+  },
+  "limitations": [
+    "These are single-run observations on two real new-batch images, not a latency distribution.",
+    "The samples have no human pixel-level truth and contain no visible slope; no new slope-quality claim is made.",
+    "Candidate-only output remains separate from human truth, training approval, and deployment approval."
+  ]
+}

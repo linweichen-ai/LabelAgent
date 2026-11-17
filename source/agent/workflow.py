@@ -348,6 +348,15 @@ def compact_review_token_budget(config, hole_count):
     return min(1536, 768 + 192 * min(4, max(0, int(hole_count))))
 
 
+def compact_discovery_token_budget(config, label_count):
+    """Bound registry discovery output without starving larger registries."""
+    if config.get("llm_prompt_profile") != "compact":
+        return None
+    if config.get("llm_max_tokens") is not None:
+        return int(config["llm_max_tokens"])
+    return min(1024, 384 + 32 * min(20, max(1, int(label_count))))
+
+
 def reference_labels(annotations, labels):
     """Only categories actually annotated on the reference frame may propagate."""
     present = {shape.get("label") for shape in annotations}
@@ -430,7 +439,8 @@ def discover_visible_labels(config, image, labels):
         "Inspect this factory image and assess every known label below exactly once. "
         "Use evidence='present' only when at least one instance is visibly supported in the image; "
         "use 'absent' when it is not visible and 'uncertain' when occlusion or image quality prevents a reliable decision. "
-        "Do not infer an object merely because its label is listed. confidence is a number from 0 to 1 and reason is one short sentence of visual evidence. "
+        "Do not infer an object merely because its label is listed. confidence is a number from 0 to 1. "
+        "Each reason must be one visual clause of at most 12 words; do not list multiple exclusions or repeat the definition. "
         "A reason must name visible pixels or a visible physical part, not scene context, camera viewpoint, or an assumed function. "
         "If 车辆, ego, and other_robot are all available, they are not synonyms: one physical instance must not make multiple labels present; use the most specific project label and identify distinct instances separately. "
         "pallet and cargo_floor are not synonyms: cargo_floor requires visible physical attachment to a robot/mobile platform, and a pallet or static raised platform must never support cargo_floor='present'. "
@@ -443,7 +453,12 @@ def discover_visible_labels(config, image, labels):
     open_set_scan_complete = True
     recovery_error = None
     try:
-        result = chat(config, instruction, image, response_schema=schema)
+        request_config = config
+        token_budget = compact_discovery_token_budget(config, len(labels))
+        if token_budget is not None and token_budget != config.get("llm_max_tokens"):
+            request_config = copy.deepcopy(config)
+            request_config["llm_max_tokens"] = token_budget
+        result = chat(request_config, instruction, image, response_schema=schema)
     except ModelOutputError as error:
         recovered_assessments = _complete_json_array(error.raw_text, "assessments")
         if recovered_assessments is None:

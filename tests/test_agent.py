@@ -282,7 +282,28 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(result["registry_conflicts"][0]["matching_known_label"], "person")
         self.assertEqual(result["registry_conflicts"][0]["reason_code"], "known_label_alias_conflict")
         self.assertIn("assess every known label", chat.call_args.args[1])
-        self.assertEqual(chat.call_args.kwargs["response_schema"]["properties"]["assessments"]["minItems"], 3)
+        discovery_schema = chat.call_args.kwargs["response_schema"]
+        self.assertEqual(discovery_schema["properties"]["assessments"]["minItems"], 3)
+        self.assertEqual(discovery_schema["properties"]["assessments"]["items"]
+                         ["properties"]["reason"]["maxLength"], 96)
+
+    def test_visible_label_discovery_uses_registry_sized_compact_budget(self):
+        labels = ["车辆", "pallet", "person", "floor", "slope", "ego",
+                  "other_robot", "cargo_floor"]
+        answer = {"assessments": [
+            {"label": label, "evidence": "absent", "confidence": 0.9,
+             "reason": "No visible instance."} for label in labels],
+            "unknown_candidates": []}
+        config = {"llm_prompt_profile": "compact"}
+        with patch.object(workflow, "chat", return_value=answer) as chat:
+            workflow.discover_visible_labels(config, image_bytes(), labels)
+        self.assertEqual(chat.call_args.args[0]["llm_max_tokens"], 640)
+        self.assertNotIn("llm_max_tokens", config)
+        self.assertIn("at most 12 words", chat.call_args.args[1])
+        self.assertEqual(workflow.compact_discovery_token_budget(config, 8), 640)
+        self.assertEqual(workflow.compact_discovery_token_budget(config, 20), 1024)
+        self.assertEqual(workflow.compact_discovery_token_budget(
+            {**config, "llm_max_tokens": 704}, 8), 704)
 
     def test_visible_label_discovery_routes_contradictory_absent_to_uncertain_candidate(self):
         answer = {"assessments": [

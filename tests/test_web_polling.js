@@ -100,7 +100,7 @@ test('参考准备弹窗只读取轻量目录并在选帧后按需读取几何',
   assert.match(prep, /state\?\.candidate_index \|\| state\?\.candidates/);
 });
 
-test('参考准备弹窗只为当前空白帧预取同一份可见类别请求', () => {
+test('参考准备弹窗为当前空白帧预取可见类别并显示SAM预热状态', () => {
   const prep = source('reference-prep.js');
   const prefetch = prep.slice(prep.indexOf('async function maybePrefetchVisibleDiscovery'),
     prep.indexOf('\n  function render(state)'));
@@ -109,8 +109,10 @@ test('参考准备弹窗只为当前空白帧预取同一份可见类别请求',
   assert.match(prefetch, /expected_path: state\.path/);
   assert.match(prefetch, /expected_topic: state\.topic/);
   assert.match(prefetch, /data\.schema_version === 'labelagent\.reference-discovery-prefetch\.v1'/);
+  assert.match(prefetch, /samReady: data\.sam_prefetch\?\.prefetched === true/);
   assert.match(prep, /void maybePrefetchVisibleDiscovery\(generation\)/);
-  assert.match(prep, /现在直接运行也会合并同一请求，不会重复推理/);
+  assert.match(prep, /正在后台预备当前图片的 VLM 类别识别/);
+  assert.match(prep, /当前图片的 VLM 类别识别与整图 SAM 已预备/);
 });
 
 test('保存真值和锁定参考帧只读回目标帧且保留强绑定校验', () => {

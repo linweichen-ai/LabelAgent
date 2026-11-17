@@ -827,6 +827,45 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("Not Found", agent.sam_generation["error"])
         self.assertEqual([item["label"] for item in agent.shapes], ["a"])
 
+    def test_multi_prompt_prefetch_accepts_ready_and_busy_contracts(self):
+        ready = {"prompts": {
+            "a": {"results": [sam_result()]},
+            "b": {"results": []},
+        }, "diagnostics": {"response_cache": {"hit": False}}}
+        with patch.object(workflow, "sam_request", return_value=ready) as request:
+            result = workflow.sam_text_multi_prefetch(
+                image_bytes(), {"a": "square", "b": "circle"}, {})
+        request.assert_called_once_with(
+            {}, "/prefetch_text_multi", image_bytes(),
+            prompts={"a": "square", "b": "circle"})
+        self.assertTrue(result["prefetched"])
+        with patch.object(workflow, "sam_request", return_value={
+                "prefetched": False, "code": "sam_busy"}):
+            busy = workflow.sam_text_multi_prefetch(
+                image_bytes(), {"a": "square", "b": "circle"}, {})
+        self.assertFalse(busy["prefetched"])
+        self.assertEqual(busy["code"], "sam_busy")
+
+    def test_multi_prompt_prefetch_rejects_incomplete_success(self):
+        with patch.object(workflow, "sam_request", return_value={
+                "prompts": {"a": {"results": []}}}):
+            with self.assertRaisesRegex(ValueError, "缺少类别结果"):
+                workflow.sam_text_multi_prefetch(
+                    image_bytes(), {"a": "square", "b": "circle"}, {})
+
+    def test_single_prompt_prefetch_accepts_ready_and_busy_contracts(self):
+        ready = {"results": [sam_result()],
+                 "diagnostics": {"response_cache": {"hit": False}}}
+        with patch.object(workflow, "sam_request", return_value=ready) as request:
+            result = workflow.sam_text_prefetch(image_bytes(), "square", {})
+        request.assert_called_once_with(
+            {}, "/prefetch_text", image_bytes(), prompt="square")
+        self.assertTrue(result["prefetched"])
+        with patch.object(workflow, "sam_request", return_value={
+                "prefetched": False, "code": "sam_busy"}):
+            busy = workflow.sam_text_prefetch(image_bytes(), "square", {})
+        self.assertEqual(busy["code"], "sam_busy")
+
     def test_generate_only_returns_guarded_candidates_without_agent_call(self):
         with patch.object(workflow, "sam_request", return_value={"results": [sam_result()]}) as sam, \
              patch.object(workflow, "chat") as chat:
@@ -2906,8 +2945,18 @@ class ServerTests(unittest.TestCase):
             discovery = {"visible_labels": ["person"], "uncertain_labels": ["slope"],
                          "unknown_candidates": []}
             try:
+                warmed = {"prefetched": True, "prompts": {
+                    "person": {"results": []}, "slope": {"results": []}},
+                    "diagnostics": {"response_cache": {"hit": False,
+                        "coalesced": False, "entries": 1}}}
+                roi_warmed = {"prefetched": True, "results": [],
+                              "diagnostics": {"response_cache": {"hit": False}}}
                 with patch.object(server, "discover_reference_labels",
                                   return_value=(discovery, 0)) as discover_mock, \
+                     patch.object(server, "sam_text_multi_prefetch",
+                                  return_value=warmed) as sam_prefetch_mock, \
+                     patch.object(server, "sam_text_prefetch",
+                                  return_value=roi_warmed) as roi_prefetch_mock, \
                      patch.object(server, "save") as save_mock:
                     response = server.app.test_client().post(
                         "/api/reference_discovery/prefetch", json={
@@ -2922,12 +2971,23 @@ class ServerTests(unittest.TestCase):
                 self.assertFalse(response.json["approved_for_training"])
                 self.assertEqual(response.json["visible_labels"], ["person"])
                 self.assertEqual(response.json["uncertain_labels"], ["slope"])
+                self.assertTrue(response.json["sam_prefetch"]["prefetched"])
+                self.assertEqual(response.json["sam_prefetch"]["selected_labels"],
+                                 ["person", "slope"])
+                self.assertEqual(response.json["sam_prefetch"]["cache_hit"], False)
+                self.assertEqual(
+                    response.json["sam_prefetch"]["slope_roi_prefetch"]["completed"], 4)
                 self.assertEqual(len(response.json["input_sha256"]), 64)
                 self.assertEqual(len(response.json["discovery_sha256"]), 64)
                 request_config, _, request_labels = discover_mock.call_args.args[:3]
                 self.assertEqual(request_config["llm_busy_retries"], 0)
                 self.assertEqual(request_labels, ["person", "slope"])
                 self.assertEqual(server.state["config"]["llm_busy_retries"], 5)
+                sam_args = sam_prefetch_mock.call_args.args
+                self.assertEqual(sam_args[1], {"person": "person",
+                                               "slope": "traversable surface"})
+                self.assertEqual(sam_args[2]["llm_busy_retries"], 0)
+                self.assertEqual(roi_prefetch_mock.call_count, 4)
                 save_mock.assert_not_called()
                 self.assertEqual(server.state["truth"], {})
                 self.assertEqual(server.state["candidates"], {})
@@ -2949,7 +3009,8 @@ class ServerTests(unittest.TestCase):
             server.run_status = {"status": "idle"}
             try:
                 with patch.object(server, "discover_reference_labels", side_effect=ValueError(
-                        "大模型请求失败（HTTP 503）：Local VLM is busy")):
+                        "大模型请求失败（HTTP 503）：Local VLM is busy")), \
+                     patch.object(server, "sam_text_multi_prefetch") as sam_prefetch_mock:
                     response = server.app.test_client().post(
                         "/api/reference_discovery/prefetch", json={
                             "frame": 1, "expected_path": str(FakeVideo.path),
@@ -2957,6 +3018,7 @@ class ServerTests(unittest.TestCase):
                 self.assertEqual(response.status_code, 202, response.json)
                 self.assertFalse(response.json["prefetched"])
                 self.assertEqual(response.json["code"], "vlm_busy")
+                sam_prefetch_mock.assert_not_called()
                 self.assertEqual(server.state["truth"], {})
                 self.assertEqual(server.state["candidates"], {})
             finally:

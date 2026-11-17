@@ -219,6 +219,18 @@ def sam_text(image, prompt, config):
     return sam_request(config, "/segment_text", image, prompt=prompt).get("results", [])
 
 
+def sam_text_prefetch(image, prompt, config):
+    if not isinstance(prompt, str) or not prompt.strip():
+        raise ValueError("SAM 3 单提示预热需要有效关键词")
+    response = sam_request(config, "/prefetch_text", image, prompt=prompt.strip())
+    if (isinstance(response, dict) and response.get("prefetched") is False
+            and response.get("code") == "sam_busy"):
+        return response
+    if not isinstance(response, dict) or not isinstance(response.get("results"), list):
+        raise ValueError("SAM 3 单提示预热响应格式无效")
+    return response | {"prefetched": True}
+
+
 def sam_text_multi(image, prompts, config):
     """Evaluate several label prompts while the service reuses one image encoding."""
     if (not isinstance(prompts, dict) or not 2 <= len(prompts) <= 16
@@ -234,6 +246,31 @@ def sam_text_multi(image, prompts, config):
         if not isinstance(payload, dict) or not isinstance(payload.get("results"), list):
             raise ValueError(f"SAM 3 多提示响应中的类别 {label} 格式无效")
     return outputs, response.get("diagnostics", {})
+
+
+def sam_text_multi_prefetch(image, prompts, config):
+    """Warm the exact multi-prompt response without falling back or queuing.
+
+    The remote service owns the busy policy. A 202-style ``sam_busy`` payload
+    is returned to the caller as an ordinary optional-prewarm result; malformed
+    successful responses still fail closed and are never presented as warm.
+    """
+    if (not isinstance(prompts, dict) or not 2 <= len(prompts) <= 16
+            or any(not isinstance(label, str) or not label.strip()
+                   or not isinstance(prompt, str) or not prompt.strip()
+                   for label, prompt in prompts.items())):
+        raise ValueError("SAM 3 预热请求须包含 2～16 个有效类别与关键词")
+    response = sam_request(config, "/prefetch_text_multi", image, prompts=prompts)
+    if (isinstance(response, dict) and response.get("prefetched") is False
+            and response.get("code") == "sam_busy"):
+        return response
+    outputs = response.get("prompts") if isinstance(response, dict) else None
+    if not isinstance(outputs, dict) or set(outputs) != set(prompts):
+        raise ValueError("SAM 3 预热响应缺少类别结果")
+    for label, payload in outputs.items():
+        if not isinstance(payload, dict) or not isinstance(payload.get("results"), list):
+            raise ValueError(f"SAM 3 预热响应中的类别 {label} 格式无效")
+    return response | {"prefetched": True}
 
 
 def chat(config, instruction, image, extra_images=(), response_schema=None):
@@ -1900,6 +1937,24 @@ def filter_slope_candidate_geometry(shapes, image_height, minimum_width_height_r
     return retained, suppressed
 
 
+def slope_overlap_crop_images(image):
+    """Build the exact deterministic overlap crops used by slope fallback."""
+    source = Image.open(io.BytesIO(image)).convert("RGB")
+    bounds = ((0.0, 0.0, 0.55, 0.55), (0.45, 0.0, 1.0, 0.55),
+              (0.0, 0.45, 0.55, 1.0), (0.45, 0.45, 1.0, 1.0))
+    crops = []
+    for left_f, top_f, right_f, bottom_f in bounds:
+        left, top = round(source.width * left_f), round(source.height * top_f)
+        right, bottom = round(source.width * right_f), round(source.height * bottom_f)
+        crop = source.crop((left, top, right, bottom))
+        encoded = io.BytesIO()
+        crop.save(encoded, "JPEG", quality=95)
+        crops.append({"image": encoded.getvalue(),
+                      "bbox": [left, top, right, bottom],
+                      "width": crop.width, "height": crop.height})
+    return crops
+
+
 def filter_slope_pallet_conflicts(shapes, width, height, maximum_slope_covered=0.5,
                                   maximum_pallet_envelope_covered=0.1):
     """Reject a slope draft covered by a pallet mask or its occlusion envelope."""
@@ -2138,29 +2193,23 @@ class AnnotationAgent:
     def slope_crop_fallback(self):
         """Run fixed overlapping crops only when full-frame slope proposals all fail guards."""
         from .edit_agent import _rasterize, _shape_from_mask
-        source = Image.open(io.BytesIO(self.image)).convert("RGB")
-        bounds = ((0.0, 0.0, 0.55, 0.55), (0.45, 0.0, 1.0, 0.55),
-                  (0.0, 0.45, 0.55, 1.0), (0.45, 0.45, 1.0, 1.0))
         retained, filtered = [], []
-        for crop_index, (left_f, top_f, right_f, bottom_f) in enumerate(bounds):
-            left, top = round(self.width * left_f), round(self.height * top_f)
-            right, bottom = round(self.width * right_f), round(self.height * bottom_f)
-            crop = source.crop((left, top, right, bottom))
-            encoded = io.BytesIO()
-            crop.save(encoded, "JPEG", quality=95)
+        for crop_index, crop in enumerate(slope_overlap_crop_images(self.image)):
+            left, top, right, bottom = crop["bbox"]
             crop_shapes = self.candidates(
-                sam_text(encoded.getvalue(), "traversable surface", self.config), "slope")
-            if any(not valid_shape(shape, crop.width, crop.height) for shape in crop_shapes):
+                sam_text(crop["image"], "traversable surface", self.config), "slope")
+            if any(not valid_shape(shape, crop["width"], crop["height"])
+                   for shape in crop_shapes):
                 raise ValueError("SAM 3 裁剪斜坡候选超出裁剪图像范围")
             crop_shapes, crop_filtered = filter_slope_candidate_geometry(
-                crop_shapes, crop.height)
-            crop_box = [left, top, right, bottom]
+                crop_shapes, crop["height"])
+            crop_box = crop["bbox"]
             for item in crop_filtered:
                 item["crop_index"] = crop_index
                 item["crop_bbox"] = crop_box
             filtered.extend(crop_filtered)
             for shape in crop_shapes:
-                crop_mask = _rasterize(shape, crop.width, crop.height)
+                crop_mask = _rasterize(shape, crop["width"], crop["height"])
                 full_mask = np.zeros((self.height, self.width), dtype=np.uint8)
                 full_mask[top:bottom, left:right] = crop_mask
                 mapped = _shape_from_mask(full_mask, "slope", shape["id"])

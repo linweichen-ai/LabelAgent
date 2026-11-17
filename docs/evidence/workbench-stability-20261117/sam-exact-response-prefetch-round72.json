@@ -1,0 +1,117 @@
+{
+  "round": 72,
+  "checked_at": "2026-11-17T17:20:00+08:00",
+  "status": "accepted_and_deployed",
+  "objective": "Warm exact SAM multi-prompt and deterministic slope ROI responses after visible-label discovery without adding GPU-resident cache state or weakening annotation gates.",
+  "implementation": {
+    "remote_service_version": "labelagent.remote-sam3.v2-exact-response-cache",
+    "cache_storage": "bounded CPU JSON",
+    "cache_max_entries": 24,
+    "cache_max_bytes": 134217728,
+    "key_binding": [
+      "service implementation version",
+      "endpoint kind",
+      "exact decoded image bytes",
+      "ordered label-to-prompt mapping or exact single prompt"
+    ],
+    "foreground_policy": "Exact repeats hit the cache; identical in-flight requests coalesce; other foreground work keeps normal serialized model access.",
+    "speculative_policy": "Prefetch returns HTTP 202 sam_busy instead of queuing behind unrelated SAM work.",
+    "gpu_tensor_cache_added": false
+  },
+  "remote_contract_test": {
+    "status": "pass",
+    "exact_repeat_computations": 1,
+    "coalesced_computations": 1,
+    "busy_prefetch_status": 202,
+    "multi_prefetch_then_foreground_computations": 1,
+    "single_prefetch_then_foreground_computations": 1,
+    "different_prompt_was_cache_miss": true
+  },
+  "remote_live_acceptance": {
+    "image_bytes": 314762,
+    "image_sha256": "ac68a02568b9c5078d040670211da5f4062e9b8551f0fd874dfa065eb2cdd3c7",
+    "cold_start_and_multi_seconds": 42.510038,
+    "exact_multi_repeat_seconds": 0.167119,
+    "exact_multi_latency_reduction_percent": 99.607,
+    "exact_multi_core_sha256": "18e8876d07a6c32acd56edfd11ae7fa64f554c773a75b5a32f4a6542d485c19b",
+    "changed_prompt_cache_hit": false,
+    "concurrent_exact_request_coalesced": true,
+    "single_prefetch_seconds": 0.441163,
+    "single_foreground_seconds": 0.496302,
+    "single_foreground_cache_hit": true,
+    "single_core_sha256": "a2c13db6fdc25e2a4f8ce24d19565d8d0908c931638638bfda4b977f1bf6a034"
+  },
+  "isolated_end_to_end_acceptance": {
+    "work_dir": "artifacts/round72-isolated-work-roi-1712",
+    "frame": 148,
+    "state_before_sha256": "A01D57E013255DA55C6D76DB8F47BACF7EF872CFAA35371C4EBB03A213158E21",
+    "state_after_prefetch_sha256": "A01D57E013255DA55C6D76DB8F47BACF7EF872CFAA35371C4EBB03A213158E21",
+    "prefetch_state_unchanged": true,
+    "prefetch_wall_ms": 3356.606,
+    "discovery_elapsed_ms": 480.307,
+    "full_frame_sam_prefetch_ms": 1130.95,
+    "slope_roi_prefetch_ms": 1332.504,
+    "slope_roi_prefetched": 4,
+    "draft_wall_ms": 1742.199,
+    "prior_multi_only_draft_wall_ms": 3054.813,
+    "draft_latency_reduction_from_multi_only_percent": 42.969,
+    "round71_draft_wall_ms": 3299.827,
+    "draft_latency_reduction_from_round71_percent": 47.203,
+    "draft_candidate_count": 22,
+    "full_frame_cache_hit": true,
+    "slope_roi_cache_hits": 4,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false
+  },
+  "formal_read_only_acceptance": {
+    "frame": 149,
+    "wall_ms": 2891.182,
+    "discovery_elapsed_ms": 148.935,
+    "full_frame_sam_prefetch_ms": 1257.462,
+    "slope_roi_prefetch_ms": 1046.448,
+    "slope_roi_prefetched": 4,
+    "candidate_written": false,
+    "human_truth_written": false,
+    "training_approval_written": false,
+    "all_six_state_files_unchanged": true,
+    "frontend_asset": "reference-prep.js?v=115"
+  },
+  "tests": {
+    "python_passed": 742,
+    "python_subtests_passed": 171,
+    "python_failed": 0,
+    "web_passed": 26,
+    "web_failed": 0,
+    "note": "The accepted Python scope is pytest tests/. An unscoped repository-wide pytest also collects vendored upstream SAM3 tests that require matplotlib and a matching torchvision build; those are not part of the workbench suite."
+  },
+  "deployment": {
+    "local_backup": "D:\\Apps\\LabelAgent\\.local\\backups\\sam-response-prefetch-round72-20261117",
+    "remote_backup": "/home/clw/labelagent_remote_20261110/backups/sam-cache-round72-20261117",
+    "workbench_server_sha256": "50560D9057E53F0ABEDF767AA49D0B617C735C089485B5721A03C10687A619D3",
+    "workflow_sha256": "2936B602BCA420A56092B3CB831E64F55D8907EE5204582BD62E3802848300CF",
+    "reference_prep_sha256": "93FD4B6B72DDD2AA0E9E76D7EE46534D44937B3C3CD75D7D05E875BBEF45EF14",
+    "index_sha256": "3D988C4B2BF933DA07665E501F1F7D1838FB8025B405F319B83D1EFBA9A6C6B9",
+    "remote_server_sha256": "48372AFFBD00E4030470FF0587CF63F158E07110676EFA60277E2D6741116555",
+    "remote_cache_sha256": "F32CA0E9B0E63E9A16BB99A72EEDAFE3F020EC69EAB43DE91E7CB7DDEE4A007A",
+    "sam_ready": true,
+    "vlm_ready": true,
+    "run_status": "idle"
+  },
+  "formal_state_sha256_unchanged_from_deployment_baseline": {
+    "state.json": "A01D57E013255DA55C6D76DB8F47BACF7EF872CFAA35371C4EBB03A213158E21",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "model_debug.json": "2D3BE581405142DEB66FE62DC24F8EFEAAC6D5C471FAE61CCBC150819F432B6E"
+  },
+  "concurrent_state_note": "Before deployment another interaction added verified truth frame 55 and changed the reference frame to 55. Round 72 adopted that newer state as its deployment baseline and did not restore the older state.",
+  "boundaries": [
+    "The 42.51 second first call includes on-demand model loading and is not a steady-state inference benchmark.",
+    "The 1.742 second click-to-candidate result is one engineering frame with completed VLM and SAM prefetch, not a population P50 or P95.",
+    "Prefetch moves deterministic work earlier; it does not reduce total cold GPU compute.",
+    "A cache hit is accepted only for exact image bytes and exact ordered prompts; changed prompts miss.",
+    "No SAM fine-tuning, VLM post-training, human-truth write, training approval, or OSS write occurred."
+  ]
+}

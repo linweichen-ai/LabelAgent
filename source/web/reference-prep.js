@@ -17,7 +17,7 @@
   let registeredSources = [];
   let sourceSwitchBusy = false;
   let recommendationTargetId = '';
-  let discoveryPrefetch = {key: '', status: 'idle', completedAt: 0};
+  let discoveryPrefetch = {key: '', status: 'idle', completedAt: 0, samReady: false};
   const DISCOVERY_PREFETCH_REUSE_MS = 5 * 60 * 1000;
   const clone = value => JSON.parse(JSON.stringify(value));
   const currentFrame = () => Number.parseInt(byId('frameNumber')?.value || '0', 10) || 0;
@@ -103,9 +103,11 @@
     } else {
       button.textContent = '立即运行整帧 SAM + VLM 全流程';
       hint.textContent = prefetchStatus === 'warming'
-        ? '正在后台预备当前图片的 VLM 类别识别；现在直接运行也会合并同一请求，不会重复推理。'
+        ? '正在后台预备当前图片的 VLM 类别识别，随后会在空闲时预备整图 SAM；现在直接运行也会合并相同请求。'
         : prefetchStatus === 'ready'
-          ? '当前图片的 VLM 类别识别已预备；缓存仍有效时，正式运行会直接复用，再继续 SAM 与 Agent。'
+          ? discoveryPrefetch.samReady
+            ? '当前图片的 VLM 类别识别与整图 SAM 已预备；缓存仍有效时，正式运行会直接复用，再继续几何过滤与 Agent。'
+            : '当前图片的 VLM 类别识别已预备；SAM 当时忙碌或不可预热，正式运行会直接复用类别结果后继续分割。'
           : '无需再点图片；系统会自动执行 VLM 识别 → SAM 分割 → Agent 修正 → VLM 复核，通常约 1～3 分钟。';
     }
   }
@@ -248,7 +250,7 @@
     if (discoveryPrefetch.key === key && discoveryPrefetch.status === 'warming') return;
     if (discoveryPrefetch.key === key && discoveryPrefetch.status === 'ready'
         && Date.now() - discoveryPrefetch.completedAt < DISCOVERY_PREFETCH_REUSE_MS) return;
-    discoveryPrefetch = {key, status: 'warming', completedAt: 0};
+    discoveryPrefetch = {key, status: 'warming', completedAt: 0, samReady: false};
     updateAutoDraftAction();
     try {
       const response = await fetch('/api/reference_discovery/prefetch', {
@@ -261,11 +263,12 @@
       discoveryPrefetch = response.ok && data.prefetched === true
         && data.schema_version === 'labelagent.reference-discovery-prefetch.v1'
         && data.input_sha256 && data.discovery_sha256
-        ? {key, status: 'ready', completedAt: Date.now()}
-        : {key, status: 'idle', completedAt: 0};
+        ? {key, status: 'ready', completedAt: Date.now(),
+          samReady: data.sam_prefetch?.prefetched === true}
+        : {key, status: 'idle', completedAt: 0, samReady: false};
     } catch (_) {
       if (generation === preparationGeneration && discoveryPrefetch.key === key) {
-        discoveryPrefetch = {key, status: 'idle', completedAt: 0};
+        discoveryPrefetch = {key, status: 'idle', completedAt: 0, samReady: false};
       }
     } finally {
       if (generation === preparationGeneration) updateAutoDraftAction();

@@ -32,6 +32,8 @@ from .workflow import (DESCRIPTION_INPUT_VERSION, MAX_REVIEW_ROUNDS, RunCancelle
                        discover_visible_labels, reference_labels, restrict_description,
                        generate_only, review_existing, run, trace_calls,
                        candidate_overlay, reference_overlay, chat,
+                       sam_text_multi_prefetch, sam_text_prefetch,
+                       slope_overlap_crop_images,
                        VISIBLE_LABEL_DEFINITIONS)
 from .candidate_class_audit import (audit_candidate_class_blind, candidate_fingerprint,
                                     audit_high_risk_candidates, HIGH_RISK_LABELS)
@@ -3430,6 +3432,84 @@ def prefetch_reference_discovery():
         if "Local VLM is busy" in message or "HTTP 503" in message:
             return jsonify(prefetched=False, code="vlm_busy"), 202
         raise
+    discovery_elapsed_ms = round((time.perf_counter() - started) * 1000, 3)
+    selected, recall_probes = candidate_labels_with_recall_probes(discovery, labels)
+    sam_prefetch = {
+        "prefetched": False,
+        "code": "not_applicable",
+        "selected_labels": selected,
+        "recall_probe_labels": recall_probes,
+    }
+    if len(selected) > 1 and config.get("sam_multi_prompt", True):
+        description = canonical_unreferenced_description(selected)
+        prompt_map = {item["label"]: item["text"]
+                      for item in description.get("prompts", [])}
+        sam_started = time.perf_counter()
+        warmed = None
+        try:
+            warmed = sam_text_multi_prefetch(target_image, prompt_map, config)
+            sam_elapsed_ms = round((time.perf_counter() - sam_started) * 1000, 3)
+            cache = ((warmed.get("diagnostics") or {}).get("response_cache")
+                     if isinstance(warmed, dict) else None) or {}
+            if warmed.get("prefetched") is False:
+                sam_prefetch.update(code=warmed.get("code", "not_prefetched"),
+                                    elapsed_ms=sam_elapsed_ms)
+            else:
+                sam_prefetch.update(
+                    prefetched=True,
+                    code="ready",
+                    elapsed_ms=sam_elapsed_ms,
+                    prompt_sha256=_sha256_json(prompt_map),
+                    response_sha256=_sha256_json(warmed.get("prompts")),
+                    cache_hit=cache.get("hit"),
+                    coalesced=cache.get("coalesced"),
+                    cache_entries=cache.get("entries"),
+                )
+        except Exception as error:
+            # VLM discovery is still useful when an older SAM service lacks
+            # speculative prefetch or a transient transport error occurs.
+            sam_prefetch.update(code="sam_prefetch_unavailable",
+                                error=str(error)[:300],
+                                elapsed_ms=round((time.perf_counter() - sam_started) * 1000, 3))
+        slope_payload = ((warmed.get("prompts") or {}).get("slope")
+                         if isinstance(warmed, dict) else None)
+        if (sam_prefetch.get("prefetched") is True and "slope" in selected
+                and isinstance(slope_payload, dict)
+                and slope_payload.get("results") == []):
+            roi_items = []
+            roi_started = time.perf_counter()
+            for crop_index, crop in enumerate(slope_overlap_crop_images(target_image)):
+                try:
+                    roi_warm = sam_text_prefetch(
+                        crop["image"], "traversable surface", config)
+                    roi_cache = ((roi_warm.get("diagnostics") or {}).get("response_cache")
+                                 if isinstance(roi_warm, dict) else None) or {}
+                    roi_items.append({
+                        "crop_index": crop_index,
+                        "bbox": crop["bbox"],
+                        "prefetched": roi_warm.get("prefetched") is True,
+                        "code": roi_warm.get("code", "ready"),
+                        "cache_hit": roi_cache.get("hit"),
+                        "response_sha256": (_sha256_json(roi_warm.get("results"))
+                                            if isinstance(roi_warm.get("results"), list)
+                                            else None),
+                    })
+                    if roi_warm.get("prefetched") is False:
+                        break
+                except Exception as error:
+                    roi_items.append({"crop_index": crop_index,
+                                      "bbox": crop["bbox"],
+                                      "prefetched": False,
+                                      "code": "sam_prefetch_unavailable",
+                                      "error": str(error)[:300]})
+                    break
+            sam_prefetch["slope_roi_prefetch"] = {
+                "reason": "full_frame_slope_empty",
+                "requested": 4,
+                "completed": sum(item.get("prefetched") is True for item in roi_items),
+                "elapsed_ms": round((time.perf_counter() - roi_started) * 1000, 3),
+                "items": roi_items,
+            }
     elapsed_ms = round((time.perf_counter() - started) * 1000, 3)
     with lock:
         if (state.get("video") is not video or str(video.path) != file_name
@@ -3449,6 +3529,8 @@ def prefetch_reference_discovery():
         visible_labels=discovery.get("visible_labels", []),
         uncertain_labels=discovery.get("uncertain_labels", []),
         retry_count=retry_count,
+        discovery_elapsed_ms=discovery_elapsed_ms,
+        sam_prefetch=sam_prefetch,
         elapsed_ms=elapsed_ms,
         candidate_only=True,
         human_truth=False,

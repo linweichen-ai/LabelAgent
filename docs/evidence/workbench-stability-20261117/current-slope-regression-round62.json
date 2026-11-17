@@ -1,0 +1,77 @@
+{
+  "schema_version": "labelagent.workbench_round62_current_slope_regression.v1",
+  "date": "2026-11-17",
+  "objective": "Re-run the current deployed SAM slope path against all available human-labelled positive and negative frames after the workbench performance changes.",
+  "dataset": {
+    "name": "CVAT_Task3_original_annotations.mcap",
+    "topic": "/CVAT/Task3/images",
+    "frames": 150,
+    "human_slope_positive_frames": [74, 77, 80, 83, 86, 95, 97, 99],
+    "human_no_slope_frames": 142,
+    "split_role": "development regression only"
+  },
+  "current_positive_result": {
+    "frames": 8,
+    "frames_iou_at_least_0_5": 8,
+    "mean_slope_iou": 0.9727348586253763,
+    "mean_slope_precision": 0.998761985733474,
+    "mean_slope_recall": 0.9739136545758631,
+    "full_frame_frames": 7,
+    "roi_fallback_frames": 1,
+    "false_positive_accepted": 0,
+    "hard_frame_95": {
+      "route": "overlap_crop_fallback",
+      "iou": 0.9433255269320843,
+      "precision": 1.0,
+      "recall": 0.9433255269320843
+    }
+  },
+  "current_traversable_union_result": {
+    "definition": "floor UNION slope",
+    "mean_iou": 0.973772532830151,
+    "mean_precision": 0.9808246789583878,
+    "mean_recall": 0.9926833243454206
+  },
+  "current_negative_result": {
+    "frames": 142,
+    "frames_with_false_candidate": 0,
+    "false_candidates": 0,
+    "crop_fallback_frames": 65,
+    "mean_seconds_per_frame": 0.6037464788732394
+  },
+  "comparison_to_previous_accepted_development_result": {
+    "previous_mean_slope_iou": 0.9727348586253762,
+    "previous_mean_slope_precision": 0.9987619857334739,
+    "previous_mean_slope_recall": 0.9739136545758631,
+    "previous_negative_false_frames": 0,
+    "regression_observed": false
+  },
+  "visual_evidence": [
+    {
+      "frame": 74,
+      "file": "slope-frame74-current-round62.jpg",
+      "sha256": "5D26D83280E40055069303181B063FFA84FCBD001B77972C1C82B96ABCA933E4",
+      "route": "full_frame"
+    },
+    {
+      "frame": 95,
+      "file": "slope-frame95-current-round62.jpg",
+      "sha256": "FFE7C11AB8AFCDA647FE66352B7741181B60A43478454F432BB95921A1E60D50",
+      "route": "overlap_crop_fallback"
+    }
+  ],
+  "formal_readback": {
+    "workflow_sha256": "0E47D3E9ED144F1EAA8694B2324245DB63317D8AE2304E152C37E848C32EB1EA",
+    "state_sha256": "54A5EE6AC1794AE3D769B3FEFA3CADD79DA7F2D5DFF892F0B8B4F0A259238FF5",
+    "models_ready": true,
+    "workbench_status": "idle",
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "oss_modified": false
+  },
+  "boundaries": [
+    "The 150 frames belong to one previously used human-labelled development session and do not establish cross-factory generalization.",
+    "test24 remains evaluation-only and was not used in this regression run.",
+    "The reported metrics are current-model read-only regressions, not evidence of a newly trained or fine-tuned SAM checkpoint."
+  ]
+}

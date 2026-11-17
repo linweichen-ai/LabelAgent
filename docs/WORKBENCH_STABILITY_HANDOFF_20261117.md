@@ -799,3 +799,13 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 隔离状态从正式副本 `54A5EE6A...238FF5` 变化为独立的 `112EE5D3...07D928`，正式状态始终保持 `54A5EE6A...238FF5`；未写正式候选、人工真值、训练集或 OSS。完整数据见 [第六十一轮新数据双样本验收](evidence/workbench-stability-20261117/newdata-003-004-round61.json)。
 
 边界：这证明两张独立批次 B 图片可以顺畅走通导入、加载、推理、候选保存和文件隔离，不等于完整 1104 批次的语义精度通过。两张图尚无人工像素真值，不能报告 slope IoU；下一步应把 train/test 隔离的人审结果作为独立验收集，统计候选 precision/recall 与可通行区域质量。
+
+## 第六十二轮当前正式斜坡能力全量人工回归（2026-11-17）
+
+平台连续优化后，重新把当前正式 SAM 路径送过 CVAT Task3 全部 150 帧人工标注：8 个 slope 正样本全部达到 IoU≥0.5，平均 slope IoU 0.972735、precision 0.998762、recall 0.973914；其中 7 帧由整图候选直接通过，最困难的第 95 帧经既有 ROI 回退得到 IoU 0.943326。按照用户口径把 slope 与 floor 合并为可通行区域后，平均 IoU 0.973773、precision 0.980825、recall 0.992683。
+
+同一人工会话其余 142 个无斜坡帧也用当前生产候选路径全部重扫：0 个帧保留假坡、0 个假坡候选；其中 65 帧实际触发过 ROI 回退，但仍由几何和托盘冲突门禁正确压制。正负结果与此前接受的开发集结果逐数一致，说明第五十一至六十一轮的缓存、协议和工作台性能改动没有造成斜坡回退。
+
+代表图已保存为 [第 74 帧整图斜坡结果](evidence/workbench-stability-20261117/slope-frame74-current-round62.jpg) 和 [第 95 帧 ROI 回退结果](evidence/workbench-stability-20261117/slope-frame95-current-round62.jpg)，完整数值见 [第六十二轮结构化证据](evidence/workbench-stability-20261117/current-slope-regression-round62.json)。正式 state 哈希仍为 `54A5EE6A...238FF5`，工作台 ready/idle，未修改人工真值、训练集或 OSS。
+
+边界：这 150 帧来自同一已使用的人工开发会话，因此只能证明当前版本没有回退，不能当作跨厂区泛化结论；test24 仍严格只评测且未参与本轮。当前结果也不是 SAM 微调产物，而是基础 SAM 配合提示、几何过滤和 ROI 回退的正式推理效果。

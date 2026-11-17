@@ -855,3 +855,13 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 同时为参考帧提交补上文件与相机的乐观绑定：若读取目录后切换了数据文件或 topic，旧提交返回 HTTP 409，且不修改参考帧。完整回归为 Python 731/731、网页 88/88；正式页面、SAM、VLM ready，任务 idle，六份正式状态哈希不变。回滚点为 `D:\Apps\LabelAgent\.local\backups\reference-preparation-index-round66-20261117`，结构化证据见 [第六十六轮参考准备轻量目录验收](evidence/workbench-stability-20261117/reference-preparation-index-round66.json)。
 
 边界：本轮显著改善大数据集下的界面响应和内存/传输负担，不改变 SAM/VLM 语义精度。真正选中一个复杂帧后仍必须读取该帧全部轮廓；候选、人工真值和训练批准继续严格隔离。
+
+## 第六十七轮真值保存与参考帧锁定单帧读回（2026-11-17）
+
+参考准备弹窗已经轻量化，但人工完成检查后，“保存真值”和“锁定参考帧”仍各自读取完整 `/api/state` 来做最终确认。在当前正式状态上，这意味着每一步都额外传输 1,953,991 字节并解析所有无关帧。本轮将两条最终读回都切换到 `/api/frame_state/<frame>`，只合并目标帧的真值和人工回执；文件、topic、帧、真值全文、真值 SHA-256、人工可复用资格和参考帧服务器绑定仍全部强制核对。
+
+正式数据中人工真值第 0 帧有 19 个轮廓，单帧响应为 105,249 字节、中位 12.15 ms；完整状态为 1,953,991 字节、中位 146.68 ms，体积减少 94.6136%。这意味着人工点击“保存并锁定”后不再因为其他 29 个候选帧而重复传输和解析近 2 MB 状态。正式页面源码读回确认两条路径都使用单帧接口，相关代码中不再存在完整状态请求。
+
+完整回归为 Python 731/731、网页 89/89；正式页面、SAM、VLM ready，任务 idle，六份正式状态哈希完全未变。回滚点为 `D:\Apps\LabelAgent\.local\backups\truth-reference-readback-round67-20261117`，结构化证据见 [第六十七轮真值与参考帧单帧读回验收](evidence/workbench-stability-20261117/truth-reference-readback-round67.json)。
+
+边界：本轮减少的是人工操作完成后的验证读回，不缩减人工复核事务、真值持久化或哈希校验；也不改变模型推理时间。

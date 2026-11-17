@@ -100,6 +100,18 @@ test('参考准备弹窗只读取轻量目录并在选帧后按需读取几何',
   assert.match(prep, /state\?\.candidate_index \|\| state\?\.candidates/);
 });
 
+test('保存真值和锁定参考帧只读回目标帧且保留强绑定校验', () => {
+  const app = source('app.js');
+  const lock = app.slice(app.indexOf('async function lockReferenceFrame'), app.indexOf("$('referenceButton').onclick"));
+  const save = app.slice(app.indexOf('async function saveCurrentTruth'), app.indexOf("$('truthSave').onclick"));
+  assert.match(lock, /readCompactFrameStateSnapshot\(target,targetTopic,targetPath\)/);
+  assert.match(save, /readCompactFrameStateSnapshot\(targetFrame,targetTopic,targetPath\)/);
+  assert.doesNotMatch(lock, /fetch\('\/api\/state'/);
+  assert.doesNotMatch(save, /fetch\('\/api\/state'/);
+  assert.match(lock, /review\?\.truth_sha256!==expectedHash/);
+  assert.match(save, /review\?\.truth_sha256!==expectedTruthHash/);
+});
+
 test('状态请求隐藏期间完成不重建定时器，恢复后立即轮询且保持单链', async () => {
   let calls = 0, release;
   const h = harness({

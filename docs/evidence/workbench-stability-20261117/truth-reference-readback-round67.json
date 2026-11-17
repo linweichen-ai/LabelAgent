@@ -1,0 +1,79 @@
+{
+  "schema_version": "labelagent.workbench_round67_truth_reference_readback.v1",
+  "date": "2026-11-17",
+  "objective": "remove full-workspace state reads from human-truth save verification and reference-frame locking",
+  "implementation": {
+    "readback_endpoint": "/api/frame_state/<frame>",
+    "replaced_reads": [
+      "post-human-review truth verification",
+      "post-reference-frame lock verification"
+    ],
+    "preserved_guards": [
+      "file path",
+      "topic",
+      "frame",
+      "canonical truth geometry",
+      "human-review truth SHA-256",
+      "reusable-as-reference eligibility",
+      "reference-frame server binding"
+    ],
+    "local_update_scope": "only the selected frame is merged into browser truth and review state"
+  },
+  "formal_runtime_measurement": {
+    "full_state": {
+      "bytes": 1953991,
+      "median_ms_over_5": 146.68
+    },
+    "truth_frame_0": {
+      "shape_count": 19,
+      "bytes": 105249,
+      "median_ms_over_5": 12.15,
+      "byte_reduction_percent": 94.6136
+    },
+    "served_app": {
+      "bytes": 149205,
+      "uses_compact_truth_save_readback": true,
+      "uses_compact_reference_lock_readback": true,
+      "uses_full_state_for_these_paths": false
+    }
+  },
+  "tests": {
+    "python": {"tests": 731, "failures": 0, "encoding": "PYTHONUTF8=1"},
+    "web": {"tests": 89, "failures": 0},
+    "coverage": [
+      "truth-save delayed and stale response matrix",
+      "reference-lock frame, file, geometry and hash mismatch matrix",
+      "static assertion that both paths avoid /api/state",
+      "truth and review SHA-256 bindings remain mandatory"
+    ]
+  },
+  "deployment": {
+    "formal_url": "http://127.0.0.1:8765",
+    "formal_ready": true,
+    "sam_ready": true,
+    "vlm_ready": true,
+    "formal_run_status": "idle",
+    "backup": "D:/Apps/LabelAgent/.local/backups/truth-reference-readback-round67-20261117",
+    "source_sha256": {
+      "source/agent/server.py": "c83bdf8e690b9781ad4501d7fe706d3721452bc1610b30bc480008da723b6cdf",
+      "source/agent/workflow.py": "32b098943fb8e089cb2b22eeebc2c672302bf9aa456e413105d4b79351fd8a57",
+      "source/web/app.js": "9edbee8764630e010dbfcf7a75af051885849785fadba82cb35bed14126d2401",
+      "source/web/reference-prep.js": "f45c2746c1f396ba0ebe592247ffcda7ea40305cd1f1e8991e997d0934029dae"
+    },
+    "formal_state_sha256_unchanged": {
+      "state.json": "54a5ee6ac1794ae3d769b3fefa3cadd79da7f2d5dff892f0b8b4f0a259238ff5",
+      "file_sessions.json": "251a47963ebd2931ee033408e9fe39a94f74539bff0a339c58429ace409088cc",
+      "files.json": "0d8487cd72b3d29612f67ec351ced54f993e98527d44c7df59af6e29196be214",
+      "last_run.json": "2133da6186935d485fe2b2296fe2248ba6cc1183743357ab4c1d8c873d3cffdf",
+      "last_run_summary.json": "920c0d0e6dc37abfe109c13b24b88d9fdcd463e7c55d65bd7ca224534b203ce2",
+      "model_debug.json": "efdf22cd6bd803c958e3acb39d46054d294544fe48324a12b4afe1502b3bbb9a"
+    }
+  },
+  "isolation": {
+    "candidate_only_preserved": true,
+    "human_truth_content_modified_by_acceptance": false,
+    "training_approval_modified": false,
+    "oss_modified": false
+  },
+  "boundary": "The measured reduction covers verification readback after the user action; the human review transaction itself remains fully durable and unchanged."
+}

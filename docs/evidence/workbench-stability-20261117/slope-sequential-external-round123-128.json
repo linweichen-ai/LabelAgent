@@ -1,0 +1,185 @@
+{
+  "schema_version": "labelagent.workbench-evidence.v1",
+  "rounds": [123, 124, 125, 126, 127, 128],
+  "status": "sequential_negative_coverage_extended_positive_external_gate_still_missing_candidate_not_deployed",
+  "dataset": "20260904_hz-yozea-elec_Dev_P2605901028248",
+  "selection_policy": "Continue in numeric sequence order after sequence 006. For each readable nonempty sequence, freeze eight evenly spaced frames from the exact four-camera/LiDAR intersection, including endpoints, before image or model inspection. Record unreadable and empty sequences without changing permissions or silently replacing them.",
+  "final_candidate_physical_gates": {
+    "maximum_component_median_tilt_degrees": 10.0,
+    "maximum_component_minimum_height_metres": 0.05,
+    "minimum_anchor_median_height_metres": 0.02,
+    "minimum_anchor_height_span_metres": 0.10,
+    "maximum_grounded_satellite_distance_metres": 1.5,
+    "satellites_cannot_become_anchors": true
+  },
+  "readable_negative_slices": [
+    {
+      "round": 123,
+      "sequence": "007",
+      "population_frames": 476,
+      "selected_indices": [0, 67, 135, 203, 271, 339, 407, 475],
+      "manifest_sha256": "2b4da4d8ddb034ae914cc41d0efec93a3797e0c44558835cf38c20920a0e639c",
+      "results_sha256": "efd88fc449e41f32a7064233fdaa4202c18f7cd428a972667e2399e35c07e83b",
+      "contact_sheet_sha256": "2c1bad226f07a2cd8d73d305f25820ee2f10ea4785ebaaecc6cf80a9f37c0d32",
+      "frozen_frames": 8,
+      "frozen_views": 32,
+      "support_planes_usable": 7,
+      "views_with_geometry_hints": 0,
+      "views_sent_to_sam": 0,
+      "sam_attempts": 0,
+      "assistant_visible_ramp_views": 0
+    },
+    {
+      "round": 126,
+      "sequence": "013",
+      "population_frames": 420,
+      "selected_indices": [0, 59, 119, 179, 239, 299, 359, 419],
+      "manifest_sha256": "461751b2cf9c87cae0337370675e18db7a94be6e19aa848f0142437864b408b1",
+      "results_sha256": "3ce1bd71730661045ce8ffb13d38302221943984c9aea4818cb04f804c7276ac",
+      "contact_sheet_sha256": "267094379360a8117204fea485036e8d209ae6862a331931254de6fb7509c987",
+      "frozen_frames": 8,
+      "frozen_views": 32,
+      "support_planes_usable": 8,
+      "views_with_geometry_hints": 0,
+      "views_sent_to_sam": 0,
+      "sam_attempts": 0,
+      "assistant_visible_ramp_views": 0
+    },
+    {
+      "round": 127,
+      "sequence": "014",
+      "population_frames": 435,
+      "selected_indices": [0, 62, 124, 186, 248, 310, 372, 434],
+      "manifest_sha256": "31ff3ed16defa6abc4b331bddb632780e548f2d03eb380f83256180ad6af9289",
+      "results_sha256": "d380bc5998a306d2456bfbee94edc50985cc6970d46009ce1d3e0e8ca875d25c",
+      "contact_sheet_sha256": "fa0fc723be3b1a5c083d53228042bef0fdc34653163b421064c0fe4eeb477ae3",
+      "frozen_frames": 8,
+      "frozen_views": 32,
+      "support_planes_usable": 7,
+      "views_with_geometry_hints": 0,
+      "views_sent_to_sam": 0,
+      "sam_attempts": 0,
+      "assistant_visible_ramp_views": 0
+    },
+    {
+      "round": 128,
+      "sequence": "015",
+      "population_frames": 435,
+      "selected_indices": [0, 62, 124, 186, 248, 310, 372, 434],
+      "manifest_sha256": "140e417bf53273ae1da67da19324a8160369227d7ed6167a74e0949425fbc095",
+      "results_sha256": "376e582e063b61bde57cf5372b5dd87c9120b925f4c5a8dccac2994c0bd5093d",
+      "contact_sheet_sha256": "59fd7ee013bca65d2a9043d051da62b357d740d257d4cbef51168ddf6a91354a",
+      "frozen_frames": 8,
+      "frozen_views": 32,
+      "support_planes_usable": 6,
+      "views_with_geometry_hints": 0,
+      "views_sent_to_sam": 0,
+      "sam_attempts": 0,
+      "assistant_visible_ramp_views": 0
+    }
+  ],
+  "unreadable_sequences": [
+    {
+      "round": 124,
+      "sequence": "008",
+      "pcd_files": 446,
+      "camera_files_per_camera": 446,
+      "first_unreadable_pcd": "1788515548051711733.pcd",
+      "mode": "0600",
+      "owner_uid": 1004,
+      "group_gid": 1000,
+      "current_user_readable": false,
+      "freeze_attempted": true,
+      "manifest_created": false,
+      "model_called": false
+    },
+    {
+      "round": 125,
+      "sequence": "009",
+      "pcd_files": 455,
+      "camera_files_per_camera": 455,
+      "first_unreadable_pcd": "1788515830718579024.pcd",
+      "mode": "0600",
+      "owner_uid": 1004,
+      "group_gid": 1000,
+      "current_user_readable": false,
+      "freeze_attempted": true,
+      "manifest_created": false,
+      "model_called": false
+    },
+    {
+      "round": 125,
+      "sequence": "010",
+      "pcd_files": 107,
+      "camera_files_per_camera": 107,
+      "first_unreadable_pcd": "1788516164551754732.pcd",
+      "mode": "0600",
+      "owner_uid": 1004,
+      "group_gid": 1000,
+      "current_user_readable": false,
+      "freeze_attempted": false,
+      "manifest_created": false,
+      "model_called": false,
+      "reason_not_attempted": "Readability preflight was added after the same permission failure on sequences 008 and 009; sequence 010 was recorded rather than blindly repeated."
+    }
+  ],
+  "empty_sequences": [
+    {
+      "sequence": "011",
+      "pcd_files": 0,
+      "camera_files_per_camera": 0
+    },
+    {
+      "sequence": "012",
+      "pcd_files": 0,
+      "camera_files_per_camera": 0
+    }
+  ],
+  "aggregate_readable_slice": {
+    "sequences": ["007", "013", "014", "015"],
+    "frozen_frames": 32,
+    "frozen_views": 128,
+    "support_planes_usable": 28,
+    "views_with_geometry_hints": 0,
+    "views_sent_to_sam": 0,
+    "sam_attempts": 0,
+    "assistant_visible_ramp_views": 0
+  },
+  "source_sha256": {
+    "slope_lidar_geometry.py": "f1aacba43a5945b890dbc784ce4639801b860f648dae153c31f70a197f4c41e4",
+    "evaluate_slope_lidar_external.py": "b2a24db0fc1c2ce5d644a612a96ca49b120b6d23a36aecfb25ccdb2ab4deebb9",
+    "freeze_slope_geometry_external.py": "6fe961a445385055feb1990b3cec1178d8e92bb87cceac4317c3a990396ee047"
+  },
+  "validation": {
+    "json_parse": "passed",
+    "git_diff_check": "passed",
+    "python_unittest": "850/850 passed",
+    "web_node_test": "95/95 passed",
+    "workbench_http": 200,
+    "workbench_ui_version": 137,
+    "sam_health_http": 200,
+    "sam_model_loaded": true,
+    "sam_in_flight": 0,
+    "vlm_health_http": 200,
+    "vlm_model_loaded": true,
+    "vlm_exact_requests_inflight": 0
+  },
+  "boundaries": {
+    "labels_read": false,
+    "human_truth": false,
+    "human_confirmed": false,
+    "pixel_iou_available": false,
+    "training_authorized": false,
+    "production_deployed": false,
+    "permissions_changed": false,
+    "color_rule_used": false,
+    "test24_used": false
+  },
+  "limitations": [
+    "All four readable contact sheets were reviewed as negative slices by the assistant; that review is not independent human truth.",
+    "Zero triggers across 128 negative views extends false-positive evidence but does not establish positive recall.",
+    "Sequences 008 through 010 cannot be evaluated by the current user because their PCD files are mode 0600 and owned by uid 1004; no permissions were changed or bypassed.",
+    "The final fixed rule still has no newly encountered positive ramp after sequence 001 was exposed, so the candidate remains undeployed.",
+    "A human-confirmed positive ramp set with pixel truth is still required for recall, boundary IoU, and production acceptance."
+  ]
+}

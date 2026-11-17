@@ -1786,12 +1786,12 @@ def register_file(path, name=None):
     path = Path(path).expanduser().resolve()
     if not path.is_file() or path.suffix.lower() not in SUPPORTED_SUFFIXES:
         raise ValueError('请选择存在的 JPG、PNG 图片或 MCAP 文件')
-    if path.suffix.lower() in IMAGE_SUFFIXES:
-        read_image(path)
     files = read_library()
     existing = next((item for item in files if item['path'] == str(path)), None)
     if existing:
         return existing
+    if path.suffix.lower() in IMAGE_SUFFIXES:
+        read_image(path)
     item = dict(id=uuid.uuid4().hex, path=str(path), name=name or path.name, size=path.stat().st_size)
     files.append(item)
     write_library(files)

@@ -70,6 +70,17 @@ class ImageImportTests(unittest.TestCase):
         self.assertFalse((self.root / "files.json").exists())
         self.assertEqual(list((self.root / "uploads").iterdir()), [])
 
+    def test_registered_current_image_file_list_does_not_redecode_pixels(self):
+        item = self.upload(photograph(), "large-current.png").json["file"]
+        loaded = self.client.post(f"/api/files/{item['id']}/load")
+        self.assertEqual(loaded.status_code, 200, loaded.json)
+        with patch.object(server, "read_image",
+                          side_effect=AssertionError("registered image was decoded again")):
+            for _ in range(10):
+                response = self.client.get("/api/files")
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertEqual(len(response.json["files"]), 1)
+
     def test_chinese_upload_original_pixels_odd_size_preview_and_persistence(self):
         result = self.upload(photograph(), "自己的图片.PNG")
         self.assertEqual(result.status_code, 200)

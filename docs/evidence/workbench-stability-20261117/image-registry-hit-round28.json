@@ -1,0 +1,47 @@
+{
+  "round": 28,
+  "recorded_at": "2026-11-17T14:30:00+08:00",
+  "objective": "Avoid decoding an already registered image every time the workbench refreshes its file list.",
+  "benchmark": {
+    "image": {"width": 1920, "height": 1536, "format": "JPEG", "bytes": 46710},
+    "repetitions": 50,
+    "old_existing_file_check": {"median_ms": 13.55, "p95_ms": 15.517},
+    "new_registry_hit": {"median_ms": 0.474, "p95_ms": 0.882},
+    "speedup": 28.59,
+    "median_latency_reduction_percent": 96.5
+  },
+  "behavior": {
+    "first_registration_decodes_and_validates_image": true,
+    "file_list_refresh_uses_existing_registry_entry": true,
+    "explicit_load_decodes_and_validates_image": true,
+    "missing_or_unsupported_path_rejected_before_registry_lookup": true,
+    "annotation_and_training_state_changed": false
+  },
+  "formal_runtime_acceptance": {
+    "server_sha256": "2B3996E9260EF83555DB5A10E6F1D968F036C459143CFF8361554167F60CC88B",
+    "deployed_source_matches": true,
+    "sam3": "ready",
+    "vlm": "ready",
+    "workbench": "ready",
+    "run": "idle"
+  },
+  "runtime_state_readback": {
+    "state.json": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "unchanged_after_deploy": true
+  },
+  "regression": {
+    "python": "138/138",
+    "web_polling_and_recovery": "15/15",
+    "candidate_and_human_review_gates": "60/60"
+  },
+  "rollback": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-image-registry-round28-20261117-143000",
+  "limitations": [
+    "The benchmark image has simple pixels and a small compressed file, but decode cost still covers all 1920x1536 pixels.",
+    "The formal workspace currently has an MCAP loaded, so image-specific latency was measured in an isolated work directory rather than by changing production data.",
+    "This optimization affects file-list responsiveness, not model inference accuracy."
+  ]
+}

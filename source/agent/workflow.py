@@ -1366,8 +1366,76 @@ def reference_geometry(annotations):
         for part in shape.get("parts") or [shape]]} for shape in annotations]
 
 
+def _gap_bbox_polygon(hole, width, height):
+    """Return a valid rectangle covering one trusted raster gap bounding box."""
+    bbox = hole.get("bbox") if isinstance(hole, dict) else None
+    if (not isinstance(bbox, list) or len(bbox) != 4
+            or any(type(value) not in (int, float) or not math.isfinite(value)
+                   for value in bbox)):
+        return None
+    x1, y1, x2, y2 = [int(round(value)) for value in bbox]
+    left, right = max(0, min(x1, x2)), min(width - 1, max(x1, x2))
+    top, bottom = max(0, min(y1, y2)), min(height - 1, max(y1, y2))
+    # One-pixel-wide morphology gaps are still valid masks. Expand only the
+    # rectangle used to address them; apply_operations clips the edit back to
+    # the exact reviewed gap mask before changing any candidate pixel.
+    if left == right:
+        if right < width - 1:
+            right += 1
+        elif left > 0:
+            left -= 1
+    if top == bottom:
+        if bottom < height - 1:
+            bottom += 1
+        elif top > 0:
+            top -= 1
+    polygon = [[left, top], [right, top], [right, bottom], [left, bottom]]
+    return polygon if _valid_region(polygon, width, height) else None
+
+
+def _synthesize_explicit_ground_fills(result, holes, explicit_ground, width, height):
+    """Complete only exact gaps the model explicitly assessed as ground.
+
+    The semantic decision remains the model's. Geometry is deterministic and
+    bounded by the exact raster gap mask inside ``apply_operations``. Omitted,
+    malformed, conflicting and non-ground assessments never reach this path.
+    """
+    operations = result.get("operations")
+    if not isinstance(operations, list) or not explicit_ground:
+        return
+    filled = {item.get("hole_id") for item in operations
+              if isinstance(item, dict) and item.get("operation") == "fill_gap"}
+    pending = [hole for hole in holes
+               if hole.get("id") in explicit_ground and hole.get("id") not in filled]
+    # Preserve the global protocol ceiling. The normal review path selects at
+    # most four gaps, but fail closed if a caller ever provides a larger set.
+    if len(operations) + len(pending) > 32:
+        return
+    synthesized = []
+    for hole in pending:
+        polygon = _gap_bbox_polygon(hole, width, height)
+        if polygon is None or type(hole.get("shape_id")) is not int:
+            continue
+        operations.append({
+            "operation": "fill_gap",
+            "shape_ids": [hole["shape_id"]],
+            "hole_id": hole["id"],
+            "polygon": polygon,
+            "reason": "Explicit ground assessment; fill is clipped to the reviewed gap mask",
+        })
+        synthesized.append({
+            "reason_code": "explicit_ground_fill_synthesized",
+            "hole_id": hole["id"],
+            "shape_id": hole["shape_id"],
+            "source": "vlm_hole_assessment",
+            "geometry_guard": "exact_gap_mask_intersection",
+        })
+    if synthesized:
+        result.setdefault("protocol_normalizations", []).extend(synthesized)
+
+
 def _validate_review_result(result, holes, shapes, labels, width, height, sam_comparison=None,
-                            reference_provided=True):
+                            reference_provided=True, synthesize_ground_fills=False):
     if not isinstance(result, dict):
         raise ValueError("大模型必须返回 JSON 对象")
     # Validate a copy: traces and correction prompts must retain the actual reply.
@@ -1499,6 +1567,10 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
                             or not isinstance(item.get("reason"), str)
                             or not item["reason"].strip()
                             for item in assessment if isinstance(item, dict)))
+        explicit_ground = {item["hole_id"] for item in assessment
+                           if isinstance(item, dict)
+                           and isinstance(item.get("hole_id"), str)
+                           and item.get("semantic") == "ground"}
         missing = expected - observed
         unknown = observed - expected
         # A local VLM can occasionally omit one region while returning an
@@ -1528,6 +1600,10 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
                           f"无效 ID：{sorted(unknown)}。"
                           "每个完整 ID 恰好一次，禁止用 #5 或图片编号替代完整 hole_id；"
                           "semantic 必须为 ground/non_ground，reason 必须为非空字符串")
+        if (synthesize_ground_fills and reference_provided and not errors
+                and not malformed and not unknown):
+            _synthesize_explicit_ground_fills(
+                result, holes, explicit_ground, width, height)
         filled = {item.get("hole_id") for item in result["operations"]
                   if isinstance(item, dict) and item.get("operation") == "fill_gap"
                   and isinstance(item.get("hole_id"), str)}
@@ -1830,9 +1906,11 @@ def review(config, image, overlay, description, shapes, labels, history, referen
                 last_error = error
             else:
                 try:
-                    return _validate_review_result(last_result, holes, shapes, labels, width, height,
-                                                   sam_comparison,
-                                                   reference_provided=reference is not None)
+                    return _validate_review_result(
+                        last_result, holes, shapes, labels, width, height,
+                        sam_comparison, reference_provided=reference is not None,
+                        synthesize_ground_fills=bool(
+                            config.get("agent_synthesize_ground_fills", True)))
                 except ValueError as error:
                     last_error = error
             # Update the original call rather than creating a fictitious model

@@ -735,6 +735,90 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(pending["status"], "continue")
         self.assertNotIn("protocol_normalizations", pending)
 
+    def test_explicit_ground_assessments_can_fill_every_exact_gap_once(self):
+        floor = {
+            "id": 1, "label": "floor",
+            "points": [[2, 2], [36, 2], [36, 36], [2, 36]],
+            "holes": [
+                [[8, 8], [13, 8], [13, 13], [8, 13]],
+                [[22, 20], [28, 20], [28, 27], [22, 27]],
+            ],
+            "parts": [{
+                "points": [[2, 2], [36, 2], [36, 36], [2, 36]],
+                "holes": [
+                    [[8, 8], [13, 8], [13, 13], [8, 13]],
+                    [[22, 20], [28, 20], [28, 27], [22, 27]],
+                ],
+            }],
+        }
+        holes = [item for item in workflow.candidate_holes([floor], ["floor"], 40, 40)
+                 if item["kind"] == "hole"]
+        explicit = {
+            "operation": "fill_gap", "shape_ids": [1],
+            "hole_id": holes[0]["id"],
+            "polygon": [[7, 7], [14, 7], [14, 14], [7, 14]],
+            "reason": "Visible floor",
+        }
+        decision = workflow._validate_review_result({
+            "status": "continue", "reason": "Both gaps are visible floor",
+            "hole_assessment": [{"hole_id": hole["id"], "semantic": "ground",
+                                 "reason": "Visible floor in target and reference"}
+                                for hole in holes],
+            "operations": [explicit],
+        }, holes, [floor], ["floor"], 40, 40,
+            synthesize_ground_fills=True)
+        self.assertEqual(len(decision["operations"]), 2)
+        self.assertEqual({item["hole_id"] for item in decision["operations"]},
+                         {item["id"] for item in holes})
+        normalizations = [item for item in decision["protocol_normalizations"]
+                          if item["reason_code"] == "explicit_ground_fill_synthesized"]
+        self.assertEqual([item["hole_id"] for item in normalizations], [holes[1]["id"]])
+        updated, applied, queue = apply_operations(
+            [floor], decision["operations"], ["floor"], 40, 40, gap_regions=holes)
+        self.assertEqual(queue, [])
+        self.assertEqual(len(applied), 2)
+        self.assertEqual([item for item in workflow.candidate_holes(
+            updated, ["floor"], 40, 40) if item["kind"] == "hole"], [])
+
+    def test_ground_fill_synthesis_never_promotes_omitted_or_non_ground_gaps(self):
+        holes = [
+            {"id": "1:hole:4:4:8:8", "shape_id": 1,
+             "bbox": [4, 4, 8, 8]},
+            {"id": "1:hole:12:12:16:16", "shape_id": 1,
+             "bbox": [12, 12, 16, 16]},
+        ]
+        decision = workflow._validate_review_result({
+            "status": "continue", "reason": "Only the first gap is verified floor",
+            "hole_assessment": [{"hole_id": holes[0]["id"], "semantic": "ground",
+                                 "reason": "Visible ground"}],
+            "operations": [],
+        }, holes, [shape()], ["a"], 40, 40,
+            synthesize_ground_fills=True)
+        self.assertEqual([item["hole_id"] for item in decision["operations"]],
+                         [holes[0]["id"]])
+        self.assertEqual(decision["protocol_repairs"], [{
+            "reason_code": "vlm_hole_assessment_omitted",
+            "hole_id": holes[1]["id"], "route": "human_review_required"}])
+        repaired = {item["hole_id"]: item for item in decision["hole_assessment"]}
+        self.assertEqual(repaired[holes[1]["id"]]["semantic"], "non_ground")
+
+    def test_ground_fill_synthesis_requires_reference_and_explicit_opt_in(self):
+        hole = {"id": "1:hole:4:4:8:8", "shape_id": 1,
+                "bbox": [4, 4, 8, 8]}
+        payload = {
+            "status": "continue", "reason": "Visible ground",
+            "hole_assessment": [{"hole_id": hole["id"], "semantic": "ground",
+                                 "reason": "Visible ground"}],
+            "operations": [],
+        }
+        default = workflow._validate_review_result(
+            payload, [hole], [shape()], ["a"], 40, 40)
+        unreferenced = workflow._validate_review_result(
+            payload, [hole], [shape()], ["a"], 40, 40,
+            reference_provided=False, synthesize_ground_fills=True)
+        self.assertEqual(default["operations"], [])
+        self.assertEqual(unreferenced["operations"], [])
+
     def test_no_op_reclassify_is_dropped_without_a_model_retry(self):
         decision = workflow._validate_review_result({
             "status": "continue",

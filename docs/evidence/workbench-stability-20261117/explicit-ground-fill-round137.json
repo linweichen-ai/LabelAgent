@@ -1,0 +1,131 @@
+{
+  "schema_version": "labelagent.explicit_ground_fill_round137.v1",
+  "recorded_at": "2026-11-18T06:31:00+08:00",
+  "decision": "accepted_and_deployed",
+  "objective": "Complete every exact gap that the VLM explicitly assessed as ground in the same review round, reducing redundant Agent observations without broadening semantic authority.",
+  "safety_contract": {
+    "semantic_authority": "Only an explicit ground assessment from the current VLM response is eligible.",
+    "geometry_authority": "A deterministic bounding rectangle addresses the gap, then apply_operations intersects it with the exact current hole_id raster mask before any pixel is added.",
+    "never_synthesized": [
+      "non_ground assessments",
+      "omitted assessments conservatively repaired as non_ground",
+      "malformed or conflicting assessments",
+      "unknown hole IDs",
+      "reviews without a human reference",
+      "gaps when the feature is explicitly disabled"
+    ],
+    "audit_reason_code": "explicit_ground_fill_synthesized",
+    "rollback_switch": "agent_synthesize_ground_fills=false",
+    "candidate_boundary": "The result remains a machine candidate and follows the existing convergence or human-review gate."
+  },
+  "archived_frame_33_replay": {
+    "source": "D:\\Apps\\LabelAgent\\.local\\isolated-round132-browser-deferred-20261118\\state.json",
+    "initial_candidate_count": 11,
+    "initial_fingerprint": "e3ef5668bd63b7bcf687f25e9b266f716ebdf6cc376afc543c290079eda8f87e",
+    "archived_baseline": {
+      "rounds": 6,
+      "stop_reason": "no_progress",
+      "background_elapsed_ms": 183705
+    },
+    "candidate": {
+      "rounds": 4,
+      "gpt_calls": 4,
+      "stop_reason": "no_progress",
+      "converged": false,
+      "elapsed_ms": 68103,
+      "synthesized_ground_fills": 4,
+      "final_fingerprint": "18bdb93a6dd99c8b3a676d95d018f7ad6020b4684547271a34f81c33d478d632"
+    },
+    "final_geometry_matches": true,
+    "hard_result": "Two GPT review calls were eliminated while preserving the archived final geometry and human-review boundary.",
+    "timing_boundary": "The first candidate call was an exact-cache hit, so elapsed time is not a cold matched A/B."
+  },
+  "fresh_frame_29_same_input_ab": {
+    "source": "D:\\Apps\\LabelAgent\\.local\\isolated-round131-main-run-20261118\\state.json",
+    "initial_candidate_count": 10,
+    "initial_fingerprint": "1ba01dbb11609cd4f67fe9a39e6226d9a4dcf804095ab4655698f7773a9ddf41",
+    "baseline": {
+      "rounds": 4,
+      "gpt_calls": 4,
+      "stop_reason": "done",
+      "elapsed_ms": 103187
+    },
+    "candidate": {
+      "rounds": 3,
+      "gpt_calls": 3,
+      "stop_reason": "done",
+      "elapsed_ms": 48084,
+      "synthesized_ground_fills": 2
+    },
+    "final_geometry_matches": true,
+    "hard_result": "One GPT review call was eliminated on a second real frame with identical final geometry and the same done outcome.",
+    "timing_boundary": "The candidate ran second and its first call hit the exact cache; call reduction and geometry equality are stronger evidence than elapsed-time reduction."
+  },
+  "fresh_frame_34_neutral_ab": {
+    "initial_candidate_count": 8,
+    "baseline_rounds": 1,
+    "candidate_rounds": 1,
+    "baseline_stop_reason": "done",
+    "candidate_stop_reason": "done",
+    "final_geometry_matches": true,
+    "gpt_call_reduction": 0,
+    "result": "The feature was neutral when no explicit unfilled ground gap was available."
+  },
+  "failed_closed_reconstruction": {
+    "frames": [29, 30],
+    "result": "Fresh SAM drafts did not match the archived initial fingerprints, so historical replay stopped before any GPT request and was not reported as an A/B."
+  },
+  "bounded_archive_scan": {
+    "state_files": 56,
+    "failed_files": 0,
+    "unique_agent_runs": 66,
+    "unique_runs_with_explicit_ground_without_fill_gap": 5,
+    "known_frames": [29, 30, 33],
+    "boundary": "This is a read-only structural scan of archived decisions, not a replay of image semantics."
+  },
+  "regression": {
+    "targeted_ground_fill_tests": {
+      "passed": 3,
+      "failed": 0
+    },
+    "python": {
+      "passed": 862,
+      "subtests_passed": 179,
+      "failed": 0
+    },
+    "web": {
+      "passed": 99,
+      "failed": 0
+    },
+    "python_compile": "passed",
+    "git_diff_check": "passed",
+    "collection_boundary": "A repository-root pytest invocation incorrectly collected an optional SAM3 qualitative example and stopped because matplotlib was absent; the project test scope is tests/, which passed in full without installing unrelated dependencies."
+  },
+  "deployment": {
+    "backup_path": "D:\\Apps\\LabelAgent\\.local\\backups\\explicit-ground-fill-round137-20261118",
+    "backup_workflow_sha256": "d08b66c50bbb2bd38648fa723642a8254515c76ad2d488a4ef85634190efe3b3",
+    "runtime_workflow_sha256": "55180de5964f7265f6e4506e42d97e05c20e4132540ca1d6303104a4f7d5dc1a",
+    "worktree_workflow_sha256": "55180de5964f7265f6e4506e42d97e05c20e4132540ca1d6303104a4f7d5dc1a",
+    "formal_state_sha256_before_and_after": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "lifecycle": "Only the managed local workbench process was restarted; the 4090 model tunnel and remote SAM/VLM processes remained hot.",
+    "formal_http": {
+      "workbench_root": 200,
+      "state_summary": 200,
+      "model_readiness": 200,
+      "run_status": 200,
+      "sam_health": 200,
+      "vlm_health": 200
+    },
+    "run_status": "idle",
+    "model_ready": true,
+    "vlm_exact_requests_inflight": 0,
+    "optional_5090_route": "disabled_or_unavailable"
+  },
+  "boundaries": [
+    "No SAM or VLM weight was changed.",
+    "No candidate was promoted to human truth or training approval.",
+    "No reference annotation or formal state was changed.",
+    "No OSS object was written.",
+    "The demonstrated call reductions apply to exact reviewed ground gaps; they are not a general P50/P95 claim or a segmentation-accuracy improvement claim."
+  ]
+}

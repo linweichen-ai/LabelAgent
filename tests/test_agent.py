@@ -645,6 +645,41 @@ class WorkflowTests(unittest.TestCase):
             "reason_code": "vlm_hole_assessment_omitted",
             "hole_id": holes[1]["id"], "route": "human_review_required"}])
 
+    def test_exact_duplicate_hole_assessment_is_dropped_before_safe_omission_repair(self):
+        holes = [
+            {"id": "1:hole:1:1:2:2", "shape_id": 1},
+            {"id": "1:hole:3:3:4:4", "shape_id": 1},
+        ]
+        repeated = {"hole_id": holes[0]["id"], "semantic": "non_ground",
+                    "reason": "Visible obstacle"}
+        decision = workflow._validate_review_result({
+            "status": "done",
+            "reason": "One assessment was repeated",
+            "hole_assessment": [repeated, copy.deepcopy(repeated)],
+            "operations": [],
+        }, holes, [shape()], ["a"], 40, 40)
+        self.assertEqual(decision["protocol_normalizations"], [{
+            "reason_code": "duplicate_hole_assessment_dropped",
+            "hole_id": holes[0]["id"],
+        }])
+        self.assertEqual(decision["protocol_repairs"], [{
+            "reason_code": "vlm_hole_assessment_omitted",
+            "hole_id": holes[1]["id"], "route": "human_review_required"}])
+        self.assertEqual({item["hole_id"] for item in decision["hole_assessment"]},
+                         {item["id"] for item in holes})
+
+    def test_conflicting_duplicate_hole_assessment_remains_protocol_error(self):
+        hole = {"id": "1:hole:1:1:2:2", "shape_id": 1}
+        assessment = [
+            {"hole_id": hole["id"], "semantic": "ground", "reason": "Floor"},
+            {"hole_id": hole["id"], "semantic": "non_ground", "reason": "Obstacle"},
+        ]
+        with self.assertRaisesRegex(ValueError, "恰好一次"):
+            workflow._validate_review_result({
+                "status": "done", "reason": "Conflicting duplicate",
+                "hole_assessment": assessment, "operations": [],
+            }, [hole], [shape()], ["a"], 40, 40)
+
     def test_omitted_hole_cannot_be_filled_and_unknown_ids_still_fail(self):
         holes = [
             {"id": "1:hole:1:1:2:2", "shape_id": 1},

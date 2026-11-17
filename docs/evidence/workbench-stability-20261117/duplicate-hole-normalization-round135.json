@@ -1,0 +1,108 @@
+{
+  "schema_version": "labelagent.duplicate_hole_normalization_round135.v1",
+  "recorded_at": "2026-11-18T05:40:00+08:00",
+  "decision": "accepted_and_deployed",
+  "bounded_trace_scan": {
+    "root": "D:\\Apps\\LabelAgent\\.local",
+    "model_debug_files": 34,
+    "gpt_calls": 69,
+    "statuses": {
+      "succeeded": 57,
+      "rejected": 11,
+      "failed": 1
+    },
+    "rejected_or_failed_by_kind": {
+      "polygon": 8,
+      "hole_assessment": 3,
+      "other": 1
+    }
+  },
+  "historical_real_response": {
+    "source": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-stability-round4-20261117-034454\\model_debug.json",
+    "frame": 29,
+    "purpose": "自动标注",
+    "problem": "One hole assessment was repeated exactly while another expected hole ID was omitted.",
+    "protocol_attempt_elapsed_ms": [
+      58061,
+      58496,
+      58503
+    ],
+    "validation_error_sha256": "26fa97d1852634e659c175d00943283cac229ba3cbcbf4672572d49740a8d87d",
+    "final_two_raw_responses_identical": true
+  },
+  "policy": {
+    "normalized": "Drop only a byte-equivalent JSON object repeated for the same hole_id before applying the existing conservative missing-hole repair.",
+    "still_rejected": [
+      "Conflicting semantic values for the same hole_id",
+      "Different reasons or other non-identical duplicate objects",
+      "Unknown hole IDs",
+      "Malformed assessments",
+      "Invalid or unsupported operations"
+    ],
+    "missing_hole_behavior_unchanged": "The omitted hole is preserved as non_ground and routed to human review; it is not filled automatically."
+  },
+  "runtime_replay": {
+    "accepted_first_rejected_response": true,
+    "status": "continue",
+    "valid_operations_preserved": 2,
+    "assessment_count_after_normalization_and_repair": 4,
+    "normalization": {
+      "reason_code": "duplicate_hole_assessment_dropped",
+      "hole_id": "10:gap:81:560:100:585"
+    },
+    "repair": {
+      "reason_code": "vlm_hole_assessment_omitted",
+      "hole_id": "10:hole:1127:547:1286:633",
+      "route": "human_review_required"
+    },
+    "avoided_historical_retry_ms": 116999,
+    "timing_boundary": "This is deterministic replay against an archived real response, not a fresh online latency measurement."
+  },
+  "regression": {
+    "focused_tests": {
+      "passed": 5,
+      "failed": 0
+    },
+    "python": {
+      "passed": 857,
+      "failed": 0
+    },
+    "web": {
+      "passed": 99,
+      "failed": 0
+    }
+  },
+  "deployment": {
+    "runtime_workflow_sha256": "ac659745ad28584f2b40275dcdcb380970a7a04aba684e70267090fe243f7da3",
+    "worktree_workflow_sha256": "ac659745ad28584f2b40275dcdcb380970a7a04aba684e70267090fe243f7da3",
+    "backup_path": "D:\\Apps\\LabelAgent\\.local\\backups\\duplicate-hole-normalization-round135-20261118\\workflow.py",
+    "backup_workflow_sha256": "22024549ff72388062c47e2c29db46521a9867b9442fc856b2afa67312546208",
+    "formal_state_sha256_before_and_after": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "formal_http": {
+      "workbench_root": 200,
+      "state": 200,
+      "model_readiness": 200,
+      "run_status": 200,
+      "sam_health": 200,
+      "vlm_health": 200
+    }
+  },
+  "lifecycle_reconciliation": {
+    "finding": "The authoritative remote manager still owned the 4090 tunnel, but its previous workbench PID was stale while a temporary controlled session served port 8765.",
+    "action": "Stopped only the idle workbench through the authoritative manager functions, preserved the model tunnel, then restarted the workbench through manage_remote.py.",
+    "result": {
+      "tunnel_managed": true,
+      "workbench_managed": true,
+      "remote_sam_ready": true,
+      "remote_vlm_ready": true,
+      "workbench_ready": true,
+      "optional_5090_route": "not_enabled_or_unavailable"
+    }
+  },
+  "boundaries": [
+    "No model weights were changed.",
+    "No candidate was promoted to human truth or training approval.",
+    "No OSS object was written.",
+    "The replay demonstrates protocol robustness and avoided repeated requests, not segmentation-quality improvement."
+  ]
+}

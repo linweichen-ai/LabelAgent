@@ -1469,6 +1469,26 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
             errors.append("GPT 未逐一判断当前候选的内部空洞；必须为清单中的每个完整 hole_id "
                           "输出含 semantic 和 reason 的判断")
             assessment = []
+        # Some local-model responses repeat one assessment byte-for-byte while
+        # omitting another ID. An exact duplicate adds no semantic information,
+        # so remove it before the existing conservative missing-ID repair. Any
+        # disagreement for the same ID remains malformed and keeps the normal
+        # protocol retry path.
+        unique_assessment = []
+        assessment_by_id = {}
+        for item in assessment:
+            hole_id = item.get("hole_id") if isinstance(item, dict) else None
+            previous = assessment_by_id.get(hole_id) if isinstance(hole_id, str) else None
+            if previous is not None and item == previous:
+                result.setdefault("protocol_normalizations", []).append({
+                    "reason_code": "duplicate_hole_assessment_dropped",
+                    "hole_id": hole_id,
+                })
+                continue
+            unique_assessment.append(item)
+            if isinstance(hole_id, str) and previous is None:
+                assessment_by_id[hole_id] = item
+        assessment = unique_assessment
         observed_items = [item.get("hole_id") for item in assessment
                           if isinstance(item, dict) and isinstance(item.get("hole_id"), str)]
         observed = set(observed_items)

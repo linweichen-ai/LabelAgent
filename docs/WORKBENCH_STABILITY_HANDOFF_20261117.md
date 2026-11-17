@@ -1400,3 +1400,17 @@ test24 已经在上一轮曝光，本轮没有再次读取它做调参，而是�
 部署前旧 `workflow.py` 已备份到 `D:\Apps\LabelAgent\.local\backups\degenerate-polygon-early-stop-round134-20261118`，旧文件 SHA-256 为 `7c661cde...0b046`。运行目录与工作树新文件 SHA-256 均为 `22024549...6208`；正式状态文件部署前后均为 `a01d57e0...58e21`。工作台首页、状态摘要、模型就绪、运行状态、SAM 和 VLM 六项在线检查均 HTTP 200，工作台 idle，SAM/VLM ready。结构化证据见 [第一百三十四轮退化多边形重试优化](evidence/workbench-stability-20261117/agent-degenerate-retry-round134.json)。
 
 边界：本轮改善的是重复协议失败造成的后台长尾，不是分割精度，也没有修改 SAM/VLM 权重。下一步继续收集其他长尾类型并做请求级归因；斜坡方向仍需独立、人工确认的正样本像素真值，不能用负样本零触发或助手目视替代。
+
+## 第一百三十五轮重复空洞判断归一化与权威生命周期恢复（已部署，2026-11-18）
+
+对 `D:\Apps\LabelAgent\.local` 中 34 份有界 `model_debug.json` 重新统计，共得到 69 次 GPT 调用：57 次成功、11 次协议拒绝、1 次失败。除上一轮已经处理的 8 次退化多边形拒绝外，下一类明确长尾是 3 次空洞判断拒绝。历史第 29 帧中，模型把同一个 `hole_id`、相同 semantic 和相同 reason 的对象完整重复，同时漏掉另一个 ID；三次协议尝试分别耗时 58.061、58.496、58.503 秒，最后两份原始回复完全相同。
+
+本轮只归一化“同一 `hole_id` 且整个 JSON 对象完全相同”的重复项。相同 ID 但 semantic 或 reason 不一致、未知 ID、格式错误以及其他工具错误仍走原严格重试。去重后继续使用既有安全策略：漏掉的区域保守记为 `non_ground`、保持不填并转人工复核，不能自动晋升为真值。
+
+旧真实响应通过当前运行目录离线重放：第一份原本被拒绝的回复现在保留 2 项有效 `fill_gap` 操作，4 个区域最终全部有记录；重复项记为 `duplicate_hole_assessment_dropped`，漏项记为 `vlm_hole_assessment_omitted / human_review_required`。这表明同类响应可避免后两次共 116.999 秒的重复请求，但该数字是历史真实响应的确定性重放差值，不是新在线计时。冲突重复的反例继续被拒绝。
+
+5 项定向测试、Python 857/857 和网页 99/99 全部通过。旧运行文件备份在 `D:\Apps\LabelAgent\.local\backups\duplicate-hole-normalization-round135-20261118`；运行目录与工作树新 `workflow.py` SHA-256 均为 `ac659745...f7da3`。正式状态 SHA-256 前后仍为 `a01d57e0...58e21`，工作台、状态、模型就绪、运行状态、SAM 与 VLM 均 HTTP 200。
+
+部署时同时纠正生命周期记录：4090 安全通道一直由权威 `manage_remote.py` 托管，但旧工作台 PID 已失效，端口由临时受控会话承载。本轮在确认工作台 idle 后，仅通过权威管理函数停止该工作台、保留模型通道，再由 `manage_remote.py start --no-browser` 重建并登记工作台。当前安全通道、远端 SAM3、远端 Qwen 和标注页面均正常；5090 可选加速通道仍未启用或不可用。结构化证据见 [第一百三十五轮空洞归一化与生命周期记录](evidence/workbench-stability-20261117/duplicate-hole-normalization-round135.json)。
+
+边界：本轮提升协议鲁棒性和可恢复性，没有训练模型、没有改变像素语义，也没有写入人工真值、训练集或 OSS。下一轮应优先分析大量成功但耗时 50～75 秒的六图 VLM 请求，避免继续围绕已经稀少的失败重试做局部优化。

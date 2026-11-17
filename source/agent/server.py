@@ -2662,6 +2662,77 @@ def run_readiness():
                        description_ready=True)
 
 
+@app.post("/api/run/data-readiness")
+def run_data_readiness():
+    """Decode the first requested frame before any model work is submitted.
+
+    Catalog metadata alone cannot prove that a camera payload is decodable.  A
+    bounded one-frame probe catches unsupported encodings and damaged sources
+    early, while also warming the normal frame cache for the upcoming run.
+    """
+    body = request.get_json(silent=True) or {}
+    with lock:
+        video = state.get("video")
+        topic = state.get("topic")
+        if video is None or not topic:
+            return jsonify(ready=False, code="data_missing",
+                           message="请先加载图像或 MCAP 数据")
+        topic_metadata = video.topics.get(topic)
+        if not isinstance(topic_metadata, dict):
+            return jsonify(ready=False, code="topic_missing",
+                           message="当前相机话题已不存在，请重新加载数据")
+        frame_count = topic_metadata.get("count")
+        if (isinstance(frame_count, bool) or not isinstance(frame_count, int)
+                or frame_count < 1):
+            return jsonify(ready=False, code="empty_topic",
+                           message="当前相机话题没有可读取的图像帧")
+        requested_frames = body.get("frames")
+        if requested_frames is not None:
+            if (not isinstance(requested_frames, list) or not requested_frames
+                    or len(requested_frames) > 100
+                    or any(isinstance(item, bool) or not isinstance(item, int)
+                           for item in requested_frames)):
+                return jsonify(ready=False, code="frame_request_invalid",
+                               message="待检查帧须为 1～100 个整数帧号")
+            probe_frame = requested_frames[0]
+        else:
+            probe_frame = body.get("frame")
+            count = body.get("count", 1)
+            if (isinstance(probe_frame, bool) or not isinstance(probe_frame, int)
+                    or isinstance(count, bool) or not isinstance(count, int)
+                    or not 1 <= count <= 100):
+                return jsonify(ready=False, code="frame_request_invalid",
+                               message="当前帧和处理帧数无效")
+        if not 0 <= probe_frame < frame_count:
+            return jsonify(ready=False, code="frame_out_of_range",
+                           message=f"帧 {probe_frame} 超出当前图像源范围（共 {frame_count} 帧）")
+        source_path = str(video.path)
+
+    started = time.perf_counter()
+    try:
+        payload = video.frame(topic, probe_frame)
+        with Image.open(io.BytesIO(payload)) as decoded:
+            width, height = decoded.size
+            decoded.verify()
+        if width < 1 or height < 1:
+            raise ValueError("图像尺寸为空")
+    except Exception as error:
+        return jsonify(ready=False, code="frame_decode_failed",
+                       frame=probe_frame,
+                       message=f"帧 {probe_frame} 无法解码：{str(error)[:300]}")
+    elapsed_ms = round((time.perf_counter() - started) * 1000, 3)
+    with lock:
+        current = state.get("video")
+        if current is not video or state.get("topic") != topic:
+            return jsonify(ready=False, code="data_changed",
+                           message="检查期间图像源已变化，请重新开始")
+    return jsonify(ready=True, code="ready", path=source_path, topic=topic,
+                   frame=probe_frame, frame_count=frame_count,
+                   width=width, height=height, encoded_bytes=len(payload),
+                   elapsed_ms=elapsed_ms, cache_warmed=True,
+                   scope="first_requested_frame")
+
+
 @app.post("/api/describe")
 @run_claimed
 def describe_truth():

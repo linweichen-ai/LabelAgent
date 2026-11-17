@@ -318,7 +318,7 @@ test('模型未就绪时预检明确失败且不伪装为推理已启动', async
   });
   h.run(section(source('app.js'), 'async function ensureAutoLabelReadiness', "$('runButton').onclick"));
   await assert.rejects(() => h.context.ensureAutoLabelReadiness(), /尚未启动推理.*VLM：服务未连接/);
-  assert.equal(calls, 2);
+  assert.equal(calls, 3);
 });
 
 test('参考帧描述失效时预检阻止提交长推理', async () => {
@@ -340,6 +340,32 @@ test('完成与失败帧重试均复用轻量帧计数且不回读完整状态',
   assert.ok(handler.includes('{frames:requestedFrames,max_rounds:6}'));
   assert.ok(handler.includes('candidateCountIndex[String(item.frame)]'));
   assert.equal(handler.includes("fetch('/api/state')"), false);
+});
+
+test('启动前并行检查模型、参考流程与首个请求帧的数据兼容性', async () => {
+  const calls = [];
+  const h = harness({
+    fetch: async (url, options = {}) => {
+      calls.push({url, options});
+      if (url === '/api/model_readiness') return {ok:true, async json(){return {sam:{ready:true},vlm:{ready:true}};}};
+      if (url === '/api/run/readiness') return {ok:true, async json(){return {ready:true};}};
+      return {ok:true, async json(){return {ready:true,frame:7,width:640,height:512};}};
+    },
+  });
+  h.run(section(source('app.js'), 'async function ensureAutoLabelReadiness', "$('runButton').onclick"));
+  const result = await h.context.ensureAutoLabelReadiness(null,7,4);
+  assert.equal(result.data.frame, 7);
+  const dataCall = calls.find(item => item.url === '/api/run/data-readiness');
+  assert.deepEqual(JSON.parse(dataCall.options.body), {frame:7,count:4});
+
+  h.context.fetch = async url => ({ok:true, async json(){
+    return url === '/api/run/data-readiness'
+      ? {ready:false,message:'帧 7 无法解码'}
+      : url === '/api/model_readiness'
+        ? {sam:{ready:true},vlm:{ready:true}}
+        : {ready:true};
+  }});
+  await assert.rejects(() => h.context.ensureAutoLabelReadiness([7,9],7,2), /数据：帧 7 无法解码/);
 });
 
 test('多文件新数据集使用一次批量上传请求', () => {

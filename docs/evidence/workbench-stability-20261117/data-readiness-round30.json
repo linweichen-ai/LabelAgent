@@ -1,0 +1,67 @@
+{
+  "round": 30,
+  "recorded_at": "2026-11-17T16:00:00+08:00",
+  "objective": "Reject incompatible new data before model submission and warm the first requested frame without scanning the full dataset.",
+  "behavior": {
+    "endpoint": "POST /api/run/data-readiness",
+    "automatic_scope": "first requested frame only",
+    "checks": [
+      "active image source and topic exist",
+      "topic frame count is a positive integer",
+      "requested frame is in range",
+      "encoded payload decodes as an image",
+      "decoded width and height are positive",
+      "source and topic remain unchanged during the probe"
+    ],
+    "model_work_started": false,
+    "gpu_required": false,
+    "writes_truth_candidates_or_training_data": false,
+    "cache_warmed_for_run": true
+  },
+  "formal_runtime_probe": {
+    "source": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap",
+    "topic": "/capture/camera_1/image",
+    "frame": 101,
+    "frame_count": 152,
+    "decoded_size": [1920, 1536],
+    "encoded_bytes": 337969,
+    "cold_endpoint_elapsed_ms": 366.049,
+    "cold_client_wall_ms": 439.579,
+    "warm_endpoint_elapsed_ms": 0.075,
+    "warm_client_wall_ms": 5.657,
+    "cold_to_warm_endpoint_speedup": 4880.65,
+    "ready": true
+  },
+  "formal_runtime_acceptance": {
+    "url": "http://127.0.0.1:8765",
+    "asset_version": 142,
+    "server_sha256": "8C45C492777F9C74378C1F7B2EDAA34041225818E78C7031F37DAB3D87987A41",
+    "app_js_sha256": "C699E1BFAF3C2DDC9EB5B27F0E159472ED7E3C4D9A2D761D0642A09C0EC97FBC",
+    "index_html_sha256": "A20771ED3F3DD4E1A52AA4D6030FAAFDFC707706846A992C5F05D33FAAC974E0",
+    "sam3": "ready",
+    "vlm": "ready",
+    "workbench": "ready",
+    "run": "idle"
+  },
+  "runtime_state_readback": {
+    "state.json": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "unchanged_after_deploy_and_probe": true
+  },
+  "regression": {
+    "python_core_and_image_import": "138/138",
+    "web_polling_upload_recovery_and_preflight": "17/17",
+    "candidate_and_human_review_gates": "98/98",
+    "javascript_syntax": "passed"
+  },
+  "rollback": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-data-preflight-round30-20261117-160000",
+  "limitations": [
+    "The automatic gate probes the first requested frame, not every frame, so later isolated corruption can still fail during the run and use the existing per-frame retry path.",
+    "The formal runtime source is a 0920 working copy. No independent local 1104 package was found, so this round proves compatibility handling and responsiveness, not cross-dataset model accuracy.",
+    "A successful decode does not validate semantic labels, slope quality, or generalization.",
+    "No candidate was promoted to human truth or training data."
+  ]
+}

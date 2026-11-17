@@ -611,20 +611,24 @@ async function fetchAgentStatus(){
  finally{if(timer)clearTimeout(timer)}
 }
 async function refreshAgentProgress(){if(progressFetching)return;progressFetching=true;try{const response=await fetchAgentStatus();if(!response.ok)throw Error(`HTTP ${response.status}`);runStatusConnectionMessage='';const job=await response.json();renderAgentProgress(job);runStatusFailureCount=0;$('runButton').removeAttribute('title');if(bootstrapComplete&&runRequestStartedAt===null&&pendingRunResult(job))await recoverRunResult(job)}catch(error){runStatusFailureCount++;runStatusConnectionMessage=runStatusFailureCount>=3?`连续无法读取推理状态：${error.message}；后台任务不会重复提交`:`暂时无法读取推理状态：${error.message}，正在自动恢复`;$('runButton').title=runStatusConnectionMessage;renderRunButton()}finally{progressFetching=false}}
-async function ensureAutoLabelReadiness(){
- const [response,workflowResponse]=await Promise.all([
+async function ensureAutoLabelReadiness(requestedFrames,startFrame,count){
+ const [response,workflowResponse,dataResponse]=await Promise.all([
   fetch('/api/model_readiness',{cache:'no-store'}),
   fetch('/api/run/readiness',{cache:'no-store'}),
+  fetch('/api/run/data-readiness',{method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify(requestedFrames?{frames:requestedFrames}:{frame:startFrame,count})}),
  ]);
  if(!response.ok)throw Error(`模型就绪检查失败（HTTP ${response.status}）`);
  if(!workflowResponse.ok)throw Error(`标注流程检查失败（HTTP ${workflowResponse.status}）`);
- const readiness=await response.json(),workflow=await workflowResponse.json();
+ if(!dataResponse.ok)throw Error(`数据兼容检查失败（HTTP ${dataResponse.status}）`);
+ const readiness=await response.json(),workflow=await workflowResponse.json(),data=await dataResponse.json();
  const failures=[];
  if(!readiness.sam?.ready)failures.push(`SAM：${readiness.sam?.error||readiness.sam?.status||'未就绪'}`);
  if(!readiness.vlm?.ready)failures.push(`VLM：${readiness.vlm?.error||readiness.vlm?.status||'未就绪'}`);
  if(!workflow.ready)failures.push(`流程：${workflow.message||'参考数据未就绪'}`);
+ if(!data.ready)failures.push(`数据：${data.message||'当前帧无法读取'}`);
  if(failures.length)throw Error(`尚未启动推理。${failures.join('；')}`);
- return {models:readiness,workflow};
+ return {models:readiness,workflow,data};
 }
 $('runButton').onclick=async()=>{
  const button=$('runButton');
@@ -645,7 +649,7 @@ $('runButton').onclick=async()=>{
   if(!Number.isInteger(startFrame)||startFrame<0||startFrame>=(topics[topic]?.count||0))throw Error('请选择有效的当前帧');
   if(!Number.isInteger(count)||count<1||count>100)throw Error('处理帧数须为 1～100');
    runRequestStartedAt=Date.now()/1000;runRequestPhase='preflight';runRequestFrame=startFrame;runRequestCount=count;renderRunButton();scheduleRunStatusPoll(250);
-  await ensureAutoLabelReadiness();
+  await ensureAutoLabelReadiness(requestedFrames,startFrame,count);
   runRequestPhase='submitting';renderRunButton();
    const jobTopic=topic,jobFile=loadedDataPath;
   stopPlayback();

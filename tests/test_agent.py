@@ -3185,6 +3185,43 @@ class ServerTests(unittest.TestCase):
             finally:
                 server.state, server.WORK = old_state, old_work
 
+    def test_run_data_readiness_decodes_one_requested_frame_and_reports_failures(self):
+        old_state = server.state
+        video = FakeVideo()
+        calls = []
+        original_frame = video.frame
+
+        def tracked_frame(topic, index):
+            calls.append((topic, index))
+            return original_frame(topic, index)
+
+        video.frame = tracked_frame
+        server.state = {"video": video, "topic": "camera0"}
+        try:
+            client = server.app.test_client()
+            ready = client.post("/api/run/data-readiness", json={
+                "frames": [2, 1]}).json
+            self.assertTrue(ready["ready"])
+            self.assertEqual(ready["frame"], 2)
+            self.assertEqual((ready["width"], ready["height"]), (40, 40))
+            self.assertEqual(ready["scope"], "first_requested_frame")
+            self.assertEqual(calls, [("camera0", 2)])
+
+            video.frame = lambda topic, index: (_ for _ in ()).throw(
+                ValueError("unsupported encoding"))
+            failed = client.post("/api/run/data-readiness", json={
+                "frame": 1, "count": 3}).json
+            self.assertFalse(failed["ready"])
+            self.assertEqual(failed["code"], "frame_decode_failed")
+            self.assertIn("unsupported encoding", failed["message"])
+
+            invalid = client.post("/api/run/data-readiness", json={
+                "frame": 3, "count": 1}).json
+            self.assertFalse(invalid["ready"])
+            self.assertEqual(invalid["code"], "frame_out_of_range")
+        finally:
+            server.state = old_state
+
 
 if __name__ == "__main__":
     unittest.main()

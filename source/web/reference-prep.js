@@ -17,6 +17,8 @@
   let registeredSources = [];
   let sourceSwitchBusy = false;
   let recommendationTargetId = '';
+  let discoveryPrefetch = {key: '', status: 'idle', completedAt: 0};
+  const DISCOVERY_PREFETCH_REUSE_MS = 5 * 60 * 1000;
   const clone = value => JSON.parse(JSON.stringify(value));
   const currentFrame = () => Number.parseInt(byId('frameNumber')?.value || '0', 10) || 0;
 
@@ -90,6 +92,8 @@
     const hint = byId('fullPipelineHint');
     if (!button || !hint) return;
     const existing = currentFrameCandidate();
+    const prefetchStatus = discoveryPrefetch.key === discoveryPrefetchKey()
+      ? discoveryPrefetch.status : 'idle';
     if (draftBusy) {
       button.textContent = '全流程已开始 · 无需再点图片';
       hint.textContent = '本轮请求已经提交；请查看上方实时阶段和计时，不要重复点击。';
@@ -98,7 +102,11 @@
       hint.textContent = '将复用已有轮廓并轻量复审高风险候选类别，不重新分割；审核通过绑定校验后载入，仍须逐个人工检查。';
     } else {
       button.textContent = '立即运行整帧 SAM + VLM 全流程';
-      hint.textContent = '无需再点图片；系统会自动执行 VLM 识别 → SAM 分割 → Agent 修正 → VLM 复核，通常约 1～3 分钟。';
+      hint.textContent = prefetchStatus === 'warming'
+        ? '正在后台预备当前图片的 VLM 类别识别；现在直接运行也会合并同一请求，不会重复推理。'
+        : prefetchStatus === 'ready'
+          ? '当前图片的 VLM 类别识别已预备；缓存仍有效时，正式运行会直接复用，再继续 SAM 与 Agent。'
+          : '无需再点图片；系统会自动执行 VLM 识别 → SAM 分割 → Agent 修正 → VLM 复核，通常约 1～3 分钟。';
     }
   }
 
@@ -225,6 +233,45 @@
     return data;
   }
 
+  function discoveryPrefetchKey(state = latestState, frameId = currentFrame()) {
+    if (!state?.loaded || !state?.path || !state?.topic || !(state.labels || []).length) return '';
+    return JSON.stringify([state.path, state.topic, Number(frameId), state.labels]);
+  }
+
+  async function maybePrefetchVisibleDiscovery(generation = preparationGeneration) {
+    const state = latestState;
+    const frameId = currentFrame();
+    const key = discoveryPrefetchKey(state, frameId);
+    if (generation !== preparationGeneration || !preparationStateReady || !modelReadiness?.ready
+        || byId('referenceAutoLabel')?.value !== AUTO_VISIBLE_LABELS || !key
+        || hasTruthFrame(state, frameId) || currentFrameCandidate(state, frameId)) return;
+    if (discoveryPrefetch.key === key && discoveryPrefetch.status === 'warming') return;
+    if (discoveryPrefetch.key === key && discoveryPrefetch.status === 'ready'
+        && Date.now() - discoveryPrefetch.completedAt < DISCOVERY_PREFETCH_REUSE_MS) return;
+    discoveryPrefetch = {key, status: 'warming', completedAt: 0};
+    updateAutoDraftAction();
+    try {
+      const response = await fetch('/api/reference_discovery/prefetch', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({frame: frameId, expected_path: state.path,
+          expected_topic: state.topic}),
+      });
+      const data = await response.json();
+      if (generation !== preparationGeneration || discoveryPrefetch.key !== key) return;
+      discoveryPrefetch = response.ok && data.prefetched === true
+        && data.schema_version === 'labelagent.reference-discovery-prefetch.v1'
+        && data.input_sha256 && data.discovery_sha256
+        ? {key, status: 'ready', completedAt: Date.now()}
+        : {key, status: 'idle', completedAt: 0};
+    } catch (_) {
+      if (generation === preparationGeneration && discoveryPrefetch.key === key) {
+        discoveryPrefetch = {key, status: 'idle', completedAt: 0};
+      }
+    } finally {
+      if (generation === preparationGeneration) updateAutoDraftAction();
+    }
+  }
+
   function render(state) {
     latestState = state;
     const loaded = Boolean(state?.loaded && state?.topic);
@@ -325,6 +372,8 @@
       preparationStateReady = false;
       for (const id of dependentButtons) byId(id).disabled = true;
     }
+    if (stateResult.status === 'fulfilled' && readinessResult.status === 'fulfilled'
+        && preparationStateReady) void maybePrefetchVisibleDiscovery(generation);
   }
 
   function setDraftBusy(busy, title = '') {
@@ -608,7 +657,12 @@
   byId('registeredAnnotationSource').addEventListener('change', () => renderAnnotationSources({sources: registeredSources}));
   byId('runReferenceAutoDraft').addEventListener('click', safely(runAutoDraft));
   byId('startSamDraft').addEventListener('click', safely(startSam));
-  byId('referenceAutoLabel').addEventListener('change', updateModelButtons);
+  byId('referenceAutoLabel').addEventListener('change', () => {
+    updateModelButtons();
+    if (byId('referenceAutoLabel').value === AUTO_VISIBLE_LABELS) {
+      void maybePrefetchVisibleDiscovery(preparationGeneration);
+    }
+  });
   byId('refreshReferenceReadiness').addEventListener('click', safely(readModelReadiness));
   byId('startManualReference').addEventListener('click', safely(startManual));
   byId('referencePrepClose').addEventListener('click', () => { if (!draftBusy) dialog.close(); });

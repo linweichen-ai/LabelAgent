@@ -2894,6 +2894,74 @@ class ServerTests(unittest.TestCase):
         self.assertNotEqual(first, changed)
         self.assertEqual(len(first), 64)
 
+    def test_reference_discovery_prefetch_warms_exact_request_without_state_writes(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0",
+                "labels": ["person", "slope"], "truth": {}, "reference_frames": {},
+                "config": {"llm_model": "test-vlm", "llm_busy_retries": 5},
+                "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            discovery = {"visible_labels": ["person"], "uncertain_labels": ["slope"],
+                         "unknown_candidates": []}
+            try:
+                with patch.object(server, "discover_reference_labels",
+                                  return_value=(discovery, 0)) as discover_mock, \
+                     patch.object(server, "save") as save_mock:
+                    response = server.app.test_client().post(
+                        "/api/reference_discovery/prefetch", json={
+                            "frame": 1, "expected_path": str(FakeVideo.path),
+                            "expected_topic": "camera0"})
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertEqual(response.json["schema_version"],
+                                 "labelagent.reference-discovery-prefetch.v1")
+                self.assertTrue(response.json["prefetched"])
+                self.assertTrue(response.json["candidate_only"])
+                self.assertFalse(response.json["human_truth"])
+                self.assertFalse(response.json["approved_for_training"])
+                self.assertEqual(response.json["visible_labels"], ["person"])
+                self.assertEqual(response.json["uncertain_labels"], ["slope"])
+                self.assertEqual(len(response.json["input_sha256"]), 64)
+                self.assertEqual(len(response.json["discovery_sha256"]), 64)
+                request_config, _, request_labels = discover_mock.call_args.args[:3]
+                self.assertEqual(request_config["llm_busy_retries"], 0)
+                self.assertEqual(request_labels, ["person", "slope"])
+                self.assertEqual(server.state["config"]["llm_busy_retries"], 5)
+                save_mock.assert_not_called()
+                self.assertEqual(server.state["truth"], {})
+                self.assertEqual(server.state["candidates"], {})
+                stale = server.app.test_client().post(
+                    "/api/reference_discovery/prefetch", json={
+                        "frame": 1, "expected_path": "C:/stale.mcap",
+                        "expected_topic": "camera0"})
+                self.assertEqual(stale.status_code, 409)
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_reference_discovery_prefetch_does_not_queue_behind_busy_vlm(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+                "truth": {}, "reference_frames": {}, "config": {},
+                "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            try:
+                with patch.object(server, "discover_reference_labels", side_effect=ValueError(
+                        "大模型请求失败（HTTP 503）：Local VLM is busy")):
+                    response = server.app.test_client().post(
+                        "/api/reference_discovery/prefetch", json={
+                            "frame": 1, "expected_path": str(FakeVideo.path),
+                            "expected_topic": "camera0"})
+                self.assertEqual(response.status_code, 202, response.json)
+                self.assertFalse(response.json["prefetched"])
+                self.assertEqual(response.json["code"], "vlm_busy")
+                self.assertEqual(server.state["truth"], {})
+                self.assertEqual(server.state["candidates"], {})
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
     def test_reference_draft_auto_discovers_visible_labels_before_sam(self):
         old_state, old_status, old_work = server.state, server.run_status, server.WORK
         with tempfile.TemporaryDirectory() as directory:

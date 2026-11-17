@@ -3379,6 +3379,83 @@ def audit_reference_candidates():
                        approved_for_training=False)
 
 
+@app.post("/api/reference_discovery/prefetch")
+def prefetch_reference_discovery():
+    """Warm the exact deterministic visible-label request without writing state.
+
+    The local VLM owns an exact-request cache and coalesces an identical request
+    already in flight.  This endpoint only starts that same validated request
+    after the operator opens the reference-preparation dialog.  It never claims
+    a workflow task, writes candidates, or waits behind an unrelated busy model.
+    """
+    body = request.get_json() or {}
+    if run_claim_lock.locked():
+        return jsonify(prefetched=False, code="active_workflow"), 202
+    with run_status_lock:
+        if run_status.get("status") in {"running", "stopping"}:
+            return jsonify(prefetched=False, code="active_workflow"), 202
+    with lock:
+        if state.get("video") is None or state.get("topic") is None:
+            raise ValueError("请先加载图像消息")
+        expected_path = body.get("expected_path")
+        expected_topic = body.get("expected_topic")
+        video = state["video"]
+        selected_topic = state["topic"]
+        file_name = str(video.path)
+        if expected_path != file_name or expected_topic != selected_topic:
+            raise StaleHumanReviewError("数据文件或相机已变化，未启动旧帧预取")
+        index = int(body.get("frame", -1))
+        count = video.topics[selected_topic]["count"]
+        if not 0 <= index < count:
+            raise ValueError("帧号无效")
+        key = str(index)
+        if key in state.get("truth", {}) or state.get("candidates", {}).get(key):
+            return jsonify(prefetched=False, code="existing_annotation"), 200
+        labels = list(state.get("labels", []))
+        if not labels:
+            raise ValueError("当前标签表为空，无法预取可见类别")
+        config = copy.deepcopy(state.get("config", {}))
+        config_sha256 = _sha256_json(config)
+        target_image = frame_image(index)
+        input_sha256 = hashlib.sha256(target_image).hexdigest()
+    # Speculation must yield immediately when the shared model is serving an
+    # unrelated request.  This option only changes HTTP busy retry behaviour;
+    # it is not part of the deterministic VLM request body or cache key.
+    config["llm_busy_retries"] = 0
+    started = time.perf_counter()
+    try:
+        discovery, retry_count = discover_reference_labels(config, target_image, labels)
+    except ValueError as error:
+        message = str(error)
+        if "Local VLM is busy" in message or "HTTP 503" in message:
+            return jsonify(prefetched=False, code="vlm_busy"), 202
+        raise
+    elapsed_ms = round((time.perf_counter() - started) * 1000, 3)
+    with lock:
+        if (state.get("video") is not video or str(video.path) != file_name
+                or state.get("topic") != selected_topic
+                or state.get("labels", []) != labels
+                or _sha256_json(state.get("config", {})) != config_sha256):
+            raise StaleHumanReviewError("预取期间数据作用域或模型配置已变化，未采用旧结果")
+    return jsonify(
+        schema_version="labelagent.reference-discovery-prefetch.v1",
+        prefetched=True,
+        file=file_name,
+        topic=selected_topic,
+        frame=index,
+        input_sha256=input_sha256,
+        labels=labels,
+        discovery_sha256=_sha256_json(discovery),
+        visible_labels=discovery.get("visible_labels", []),
+        uncertain_labels=discovery.get("uncertain_labels", []),
+        retry_count=retry_count,
+        elapsed_ms=elapsed_ms,
+        candidate_only=True,
+        human_truth=False,
+        approved_for_training=False,
+    )
+
+
 @app.post("/api/reference_draft")
 @run_claimed
 def generate_reference_draft():

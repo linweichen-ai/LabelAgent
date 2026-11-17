@@ -1,0 +1,125 @@
+{
+  "round": 71,
+  "checked_at": "2026-11-17T16:48:54.5556850+08:00",
+  "status": "accepted_and_deployed",
+  "objective": "Move exact visible-label VLM work ahead of the explicit run click without duplicating inference or changing annotation state.",
+  "trigger": {
+    "operator_intent_required": "The reference-preparation dialog must be opened.",
+    "conditions": [
+      "The current frame has no truth.",
+      "The current frame has no machine candidates.",
+      "Automatic visible-label discovery is selected.",
+      "SAM and VLM readiness checks pass.",
+      "No workflow task is running or stopping."
+    ],
+    "unrelated_vlm_busy_policy": "Return HTTP 202 immediately with code vlm_busy; do not enter the normal busy retry queue."
+  },
+  "binding_and_isolation": {
+    "browser_request_fields": [
+      "frame",
+      "expected_path",
+      "expected_topic"
+    ],
+    "server_binding": [
+      "video object and path",
+      "topic",
+      "frame image SHA-256",
+      "complete label registry",
+      "complete model configuration SHA-256"
+    ],
+    "reuse_mechanism": "The existing Local VLM exact-request cache hashes the complete deterministic request body, including image bytes, model, schema and generation parameters. Identical in-flight requests are coalesced.",
+    "candidate_written_by_prefetch": false,
+    "human_truth_written_by_prefetch": false,
+    "training_approval_written_by_prefetch": false,
+    "workflow_lock_claimed_by_prefetch": false
+  },
+  "isolated_cold_then_warm_acceptance": {
+    "work_dir": "artifacts/round71-isolated-work-1635",
+    "initial_state_sha256": "54A5EE6AC1794AE3D769B3FEFA3CADD79DA7F2D5DFF892F0B8B4F0A259238FF5",
+    "frame": 151,
+    "cold_prefetch_wall_ms": 14556.239,
+    "cold_prefetch_endpoint_ms": 14156.554,
+    "cold_generation_seconds": 13.94,
+    "cold_completion_tokens": 323,
+    "draft_after_completed_prefetch_wall_ms": 3299.827,
+    "draft_candidate_count": 22,
+    "draft_vlm_cache_hit": true,
+    "draft_vlm_reported_seconds": 0.0,
+    "draft_sam_calls": 5,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false
+  },
+  "isolated_inflight_coalescing_acceptance": {
+    "frame": 150,
+    "prefetch_started_seconds_before_draft": 5,
+    "prefetch_wall_ms": 14051.751,
+    "draft_wall_ms": 12358.924,
+    "draft_candidate_count": 21,
+    "same_input_sha256": true,
+    "draft_vlm_cache_hit": true,
+    "draft_vlm_coalesced": true,
+    "coalesced_wait_seconds": 8.87,
+    "draft_vlm_reported_seconds": 0.0,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false
+  },
+  "formal_browser_acceptance": {
+    "url": "http://127.0.0.1:8765",
+    "frame": 148,
+    "prefetch_requests": 1,
+    "wall_ms": 19904,
+    "endpoint_ms": 19716.304,
+    "warming_message_visible": true,
+    "ready_message_visible": true,
+    "candidate_state_unchanged": true,
+    "truth_state_unchanged": true,
+    "page_errors": [],
+    "frontend_asset": "reference-prep.js?v=114"
+  },
+  "tests": {
+    "targeted_server": {
+      "passed": 2,
+      "failed": 0,
+      "coverage": [
+        "Prefetch uses zero busy retries and leaves server configuration unchanged.",
+        "Prefetch makes no save call and leaves truth/candidates empty.",
+        "Stale file/topic scope is rejected.",
+        "An unrelated busy VLM returns 202 instead of queuing."
+      ]
+    },
+    "python": {
+      "passed": 734,
+      "failed": 0
+    },
+    "web": {
+      "passed": 92,
+      "failed": 0
+    }
+  },
+  "deployment": {
+    "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\vlm-discovery-prefetch-round71-20261117",
+    "server_sha256": "2D70CCA82CEDB35FC3A82E39D264A1452C86E5FA043DD3BF8404762D0BA6666B",
+    "reference_prep_sha256": "4CF69009DB17A44AE3F23475FBC6D44A162AB020E37DFD069AB3FD8D539409A7",
+    "index_sha256": "F2841DAE66690C978598D3CCE332190DBBB3A530D54AE83E9EFBCAEDAC99E7CE",
+    "sam_ready": true,
+    "vlm_ready": true,
+    "run_status": "idle"
+  },
+  "formal_state_sha256_unchanged": {
+    "state.json": "54A5EE6AC1794AE3D769B3FEFA3CADD79DA7F2D5DFF892F0B8B4F0A259238FF5",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "model_debug.json": "EFDF22CD6BD803C958E3ACB39D46054D294544FE48324A12B4AFE1502B3BBB9A"
+  },
+  "boundaries": [
+    "Prefetch moves deterministic work earlier; it does not reduce cold VLM compute or change model accuracy.",
+    "If the operator clicks immediately, the exact requests coalesce but the user still waits for the remaining cold inference time.",
+    "The 3.30-second click-to-candidate result applies when prefetch had already completed and the bounded Local VLM cache entry had not been evicted.",
+    "The measured frames are engineering examples from one development file, not a population P50/P95 benchmark.",
+    "No SAM fine-tuning or VLM post-training occurred in this round."
+  ]
+}

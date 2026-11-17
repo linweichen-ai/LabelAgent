@@ -586,3 +586,9 @@ BF16 首次结构化请求仍会在用户点击后花约 6 秒建立 lm-format-e
 003 的首个 BF16 请求在改动前约束建立 6.000 秒、服务总耗时 31.281 秒；重启并预热后，真正第一条用户请求的约束建立为 0.001 秒、服务总耗时 20.157 秒，类别仍是 pallet/person/floor/ego，开放集为空。可以直接归因的是首请求移除了 5.999 秒约束建立；总耗时 35.56% 的观测下降还包含生成从 25.164 到 20.036 秒的随机波动，不能全部归功于预热。
 
 Python 核心、图片、候选和 VLM 组件回归 174/174，网页交互 84/84。正式远端和本地工具哈希一致，工作台 ready/idle，六份状态/历史哈希未变。远端回滚点 `/home/clw/labelagent_remote_20261110/backups/decoder-prewarm-round41-20261117-223000`，本地回滚点 `D:\Apps\LabelAgent\.local\backups\workbench-decoder-prewarm-round41-20261117-223000`，完整证据见 [第四十一轮解码缓存预热](evidence/workbench-stability-20261117/decoder-prewarm-round41.json)。
+
+## 第四十二轮格式空白 token 封禁实验（否决，2026-11-17）
+
+尝试在不改 schema 和文本语义的前提下，封禁 Qwen tokenizer 中换行、制表符和 2～64 个空格的独立排版 token，同时保留正常单空格。组件测试 14/14，但真实 Transformers 前缀约束生成仍输出换行和多空格缩进；003 completion 仅从 357 变为 351，服务耗时 20.076 秒，与第四十一轮预热 BF16 基本相同。
+
+该机制未可靠生效，因此即使本次类别语义正确也不保留。开发代码已回到第四十一轮，远端恢复 SHA-256 `31e7b096...550d6`，BF16 与 decoder-ready 健康状态正常。实验前后文件备份在 `/home/clw/labelagent_remote_20261110/backups/compact-token-round42-20261117-230000`，证据见 [第四十二轮否决记录](evidence/workbench-stability-20261117/rejected-format-token-round42.json)。

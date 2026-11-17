@@ -1,0 +1,34 @@
+{
+  "schema_version": "labelagent.rejected_format_token_round42.v1",
+  "date": "2026-11-17",
+  "objective": "Remove formatting-only JSON tokens without changing the schema, semantic fields, image budget, or model.",
+  "trial": {
+    "blocked_token_kinds": ["newline", "carriage-return newline", "tab", "multi-space tokens from 2 to 64 spaces"],
+    "single_word_space_preserved": true,
+    "blocked_token_count": 66,
+    "component_tests": "14/14",
+    "sample": "1104/003 camera_0 frame 1793759959809514987"
+  },
+  "result": {
+    "elapsed_ms": 20354,
+    "service_seconds": 20.076,
+    "completion_tokens": 351,
+    "raw_text_chars": 1124,
+    "output_still_contained_newlines": true,
+    "output_still_contained_multi_space_indentation": true,
+    "visible_labels": ["pallet", "person", "floor", "ego"],
+    "unknown_candidate_count": 0
+  },
+  "decision": {
+    "accepted": false,
+    "reason": "The prefix-constrained Transformers generation path still emitted the supposedly blocked formatting tokens. Token count and latency were effectively unchanged from the prewarmed BF16 runtime, so the mechanism did not reliably take effect.",
+    "code_reverted": true,
+    "remote_restored_sha256": "31e7b096ae624b093d513372b63efbdb08c5ddf0c3efe828f2225df88a1550d6",
+    "remote_backup": "/home/clw/labelagent_remote_20261110/backups/compact-token-round42-20261117-230000",
+    "formal_health_after_restore": "bf16_ready_decoder_ready"
+  },
+  "boundaries": [
+    "The semantic result stayed valid, but a nonfunctional optimization is not retained merely because it did not break this sample.",
+    "No candidate, human truth, training data, or OSS object was changed."
+  ]
+}

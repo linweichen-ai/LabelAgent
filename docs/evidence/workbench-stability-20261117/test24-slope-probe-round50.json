@@ -1,0 +1,74 @@
+{
+  "round": 50,
+  "date": "2026-11-17",
+  "status": "accepted_and_deployed",
+  "objective": "complete test24 read-only discovery, correct the partial-ramp review, validate slope recall probes on clearer positives and negatives, and disambiguate live progress",
+  "data_boundary": {
+    "split": "test24",
+    "evaluation_only": true,
+    "training_return_allowed": false,
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "oss_modified": false,
+    "image_count": 24,
+    "source_manifest_sha256": "cfd84f0ca41bf2f9522b20062f10442f5e7c5f5c595ae3c445aafb2d688dd05a",
+    "second_half_download": {"files": 12, "bytes": 5267524, "hash_matches": 12}
+  },
+  "complete_test24_discovery": {
+    "success": 24,
+    "failure": 0,
+    "route_counts": {"small_image_fast": 24},
+    "fallback_count": 0,
+    "open_set_incomplete": 0,
+    "registry_mutated": 0,
+    "elapsed_ms": {"minimum": 13991, "median": 16516.5, "maximum": 18095},
+    "slope_visible_count": 5,
+    "slope_visible_by_camera": {"camera_0": 0, "camera_1": 1, "camera_2": 2, "camera_3": 2},
+    "assistant_visual_review": {
+      "status": "supportive_not_human_truth",
+      "finding": "all five VLM slope-visible frames show a full or partial yellow container ramp",
+      "human_pixel_truth_available": false
+    },
+    "second_half_artifact_sha256": "409e4ad9a2f793ea98814ea16044b49f61fc074792ce98fb29640686ea00116a"
+  },
+  "round49_correction": {
+    "frame": "011/camera_1/1789900388815700364",
+    "previous_assistant_interpretation": "flat-floor negative with a thin board",
+    "corrected_interpretation": "partial view of the same yellow container ramp visible in adjacent cameras",
+    "confirmed_negative": false,
+    "human_pixel_truth_available": false
+  },
+  "three_gate_probe": {
+    "policy": "floor visibility may add slope to SAM candidate generation without changing VLM visibility or truth",
+    "flat_negative_camera0": {"vlm_slope_visible": false, "probe_slope_candidates": 0, "seconds": 13.354},
+    "flat_negative_camera1": {"vlm_slope_visible": false, "probe_slope_candidates": 0, "seconds": 7.09},
+    "visible_ramp_camera3": {"vlm_slope_visible": false, "probe_slope_candidates": 2, "seconds": 6.622},
+    "visual_review_is_human_truth": false,
+    "summary_sha256": "17dae90bd9a2177cf89af9f73ce1cf598de9db1d34a31b6e863fce164c556acb",
+    "flat_overlay_sha256": "c2721d1471551e0f4fcd17ff8959717c55c7a4c33fc1ec3cae6932c9f002a46c",
+    "ramp_overlay_sha256": "cb07b3755f53f0623523569daff7084495229ef85318010aa68771c0f91d8695"
+  },
+  "progress_ui": {
+    "before": "frame filename only, ambiguous across four cameras",
+    "after": "sequence/camera/frame filename, for example 010/camera_3/frame.png",
+    "absolute_paths_exposed": false,
+    "benchmark_sha256": "3877F7BFB8F27D5242F3E805006DB86BE93FAEE9CFF09F5605AC493D2660D41B"
+  },
+  "tests": {
+    "targeted_python": {"passed": 159, "failed": 0},
+    "web": {"passed": 78, "failed": 0}
+  },
+  "deployment": {
+    "rollback": "D:/Apps/LabelAgent/.local/backups/workbench-test24-progress-round50-20261117",
+    "formal_matches_development": true,
+    "workbench_restart_required": false,
+    "run_ready": true,
+    "state_sha256": "64F3394F766A77FBE8EBDFACFB1C2EA326149DAFAD0C2B80A43D75DD45A5230B",
+    "state_unchanged": true
+  },
+  "limits": [
+    "The test24 images do not include human pixel masks for slope, so assistant visual review cannot establish precision or recall.",
+    "The recall probe produced two slope candidates on one visible ramp view; those candidates remain review-only and may include duplicate or adjacent traversable surfaces.",
+    "Partial-ramp recall remains a known hard case."
+  ]
+}

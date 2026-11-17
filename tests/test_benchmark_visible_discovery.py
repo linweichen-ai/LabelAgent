@@ -1,8 +1,9 @@
 import unittest
+from pathlib import Path
 
 from tools.benchmark_visible_discovery import (
-    bounded_assessments, bounded_consistency_flags, bounded_unknown, median,
-    model_config, progress_payload, request_metadata)
+    bounded_assessments, bounded_consistency_flags, bounded_image_name,
+    bounded_unknown, median, model_config, progress_payload, request_metadata)
 
 
 class VisibleDiscoveryBenchmarkTests(unittest.TestCase):
@@ -52,6 +53,12 @@ class VisibleDiscoveryBenchmarkTests(unittest.TestCase):
             "current": "frame-2.png", "success_count": 1,
             "failure_count": 1, "model_route": None,
             "elapsed_seconds": 20.0, "eta_seconds": 30.0})
+
+    def test_bounded_image_name_disambiguates_sequence_and_camera(self):
+        path = Path("dataset/010/bevannotation_data/cameras_640x512/camera_3/frame.png")
+        self.assertEqual(bounded_image_name(path), "010/camera_3/frame.png")
+        self.assertEqual(bounded_image_name(Path("standalone.png")),
+                         "standalone.png")
 
     def test_model_override_is_in_memory_and_rejects_credentials(self):
         source = {"llm_url": "http://old/v1", "llm_model": "old"}

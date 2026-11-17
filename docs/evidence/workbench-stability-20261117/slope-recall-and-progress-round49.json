@@ -2,7 +2,7 @@
   "round": 49,
   "date": "2026-11-17",
   "status": "accepted_and_deployed",
-  "objective": "validate 640x512 held-out data, keep slope recall without flat-floor false positives, and expose per-image benchmark progress",
+  "objective": "validate 640x512 held-out data, preserve slope recall, and expose per-image benchmark progress",
   "data_boundaries": {
     "heldout_split": "test24 subsets from sequences 010, 011 and 012",
     "evaluation_only": true,
@@ -22,12 +22,17 @@
     "elapsed_ms": {"minimum": 15953, "median": 16494.5, "maximum": 17237},
     "open_set_complete": 12,
     "registry_mutated": 0,
-    "visually_reviewed_flat_floor_false_slope": 1,
+    "initial_assistant_review_false_slope": 1,
+    "later_context_review": {
+      "status": "corrected_in_round50",
+      "finding": "the lower-right yellow region is a partial view of the container ramp; this frame is not a confirmed flat-floor negative",
+      "human_pixel_truth_available": false
+    },
     "artifact_sha256": "f656075dfd65224653555b7aa7b2c0eb3c0144cf2d34d1233d6d4708d8dce506"
   },
   "rejected_strict_slope_definition": {
-    "reason": "removed the held-out flat-floor false slope but suppressed seven of eight human-labelled slope positives",
-    "heldout_false_slope_after": 0,
+    "reason": "removed the held-out slope response but suppressed seven of eight human-labelled slope positives",
+    "heldout_slope_visible_after": 0,
     "human_slope_positive_visible": 1,
     "human_slope_positive_total": 8,
     "deployed": false,
@@ -54,10 +59,12 @@
       "summary_sha256": "faad6be4448abc507a3d15ad324e2138a516c0b9c141811afd46f75af3995327",
       "overlay_sha256": "172f2def5dc1da29e7a1782d3ddae495900ed8a186826cc1d4a0e7777712a850"
     },
-    "negative": {
+    "partial_ramp_view": {
       "sequence": "011",
       "camera": "camera_1",
-      "scenario": "flat indoor floor with a thin board at lower right",
+      "scenario": "partial yellow container ramp at lower right; initially misclassified by assistant as a flat-floor negative",
+      "confirmed_negative": false,
+      "human_pixel_truth_available": false,
       "probe_slope_candidates": 0,
       "seconds": 8.784,
       "summary_sha256": "51115e07d35a176f4ae0a1f53bc21269191741dccfadf800fe3674aa80993210",
@@ -95,6 +102,7 @@
   "limits": [
     "The 12 held-out images are a bounded sample, not a full test24 accuracy estimate.",
     "Preannotations are not human truth.",
-    "The positive probe demonstrates candidate recovery on one missed human-labelled frame; the existing eight-frame pixel metrics remain development-sequence evidence, not cross-factory generalization."
+    "The positive probe demonstrates candidate recovery on one missed human-labelled frame; the existing eight-frame pixel metrics remain development-sequence evidence, not cross-factory generalization.",
+    "The initial assistant-only flat-floor interpretation of 011/camera_1 was corrected after adjacent camera context exposed the container ramp."
   ]
 }

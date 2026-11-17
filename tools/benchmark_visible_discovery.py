@@ -12,6 +12,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import re
 import sys
 import time
 from urllib.parse import urlsplit
@@ -127,6 +128,15 @@ def progress_payload(position: int, total: int, rows: list[dict],
     }
 
 
+def bounded_image_name(path: Path) -> str:
+    """Identify common sequence/camera layouts without exposing a full path."""
+    parts = path.parts
+    if (len(parts) >= 5 and re.fullmatch(r"\d{3}", parts[-5])
+            and re.fullmatch(r"camera_\d+", parts[-2])):
+        return "/".join((parts[-5], parts[-2], parts[-1]))
+    return path.name
+
+
 def model_config(source: dict, llm_url: str | None = None,
                  llm_model: str | None = None, llm_fast_url: str | None = None,
                  llm_fast_model: str | None = None,
@@ -214,7 +224,8 @@ def main() -> int:
         })
         print(json.dumps(progress_payload(
             position, len(images), rows,
-            time.perf_counter() - benchmark_started, image_path.name),
+            time.perf_counter() - benchmark_started,
+            bounded_image_name(image_path)),
             ensure_ascii=False), flush=True)
 
     successful = [row for row in rows if row["failure"] is None]

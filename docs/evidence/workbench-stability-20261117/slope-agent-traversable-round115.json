@@ -1,0 +1,68 @@
+{
+  "schema_version": "labelagent.slope-agent-traversable-round115.v1",
+  "created_date": "2026-11-18",
+  "status": "two_candidates_rejected_no_production_change",
+  "dataset": {
+    "split": "dev8",
+    "source_sequence": "008",
+    "samples": 8,
+    "assistant_visible_slope_candidates": 4,
+    "human_truth": false,
+    "human_confirmed": false,
+    "test24_used": false
+  },
+  "boundaries": {
+    "candidate_only": true,
+    "production_deployed": false,
+    "training_authorized": false,
+    "color_dependent_rule": false,
+    "sam3_finetuned": false
+  },
+  "round114": {
+    "method": "synchronized-sibling recall probe plus VLM mask verification and one alternate-cell retry",
+    "tool": "tools/evaluate_slope_grid_agent_retry.py",
+    "tool_sha256": "c0d8dec3ba57a60ef5e67dab293736a58d35e3b43b3d4543fb974f7087fb3e06",
+    "result_sha256": "ac5de684f697e01bd70cab6206cc1e3d0f4c31e107fb89e646cc491988cb564c",
+    "assistant_presence_after_verification": {"tp": 1, "fp": 0, "fn": 3, "tn": 4, "precision": 1.0, "recall": 0.25},
+    "sibling_probe_edge_recovery": "0_of_2",
+    "retry_masks_generated": 2,
+    "vlm_elapsed_seconds": 34.735,
+    "sam_elapsed_seconds": 0.64,
+    "visual_review": {
+      "wrong_floor_mask_rejected": true,
+      "correct_full_ramp_mask_false_rejected_as_flat_pallet": true,
+      "accepted_retry_covered_reviewed_ramp_point": false,
+      "accepted_retry_was_complete_ramp_mask": false
+    },
+    "decision": "rejected_no_recall_gain_and_verifier_false_rejection"
+  },
+  "round115": {
+    "method": "production floor union slope traversable-area evaluation",
+    "tool": "tools/evaluate_traversable_union_static.py",
+    "tool_sha256": "19b52a1867f44a6455ec7f08bb6218a421bbf81e57bb593aa365c480852d69f0",
+    "result_sha256": "8eee433a61b32cefe6029ece2ea2a09bcabab06f25dc4a15bfca974e4ec12394",
+    "images_with_floor_candidates": 8,
+    "images_with_slope_candidates": 1,
+    "assistant_ramp_points": 4,
+    "ramp_points_covered_by_floor": 0,
+    "ramp_points_covered_by_slope": 1,
+    "ramp_points_covered_by_traversable_union": 1,
+    "elapsed_seconds": 11.844,
+    "decision": "business_union_mapping_retained_but_does_not_close_visual_ramp_gaps"
+  },
+  "regression": {
+    "python_unittest": "834/834 passed",
+    "web_node_test": "95/95 passed",
+    "git_diff_check": "passed",
+    "page_http_status": 200,
+    "sam_status": "ok",
+    "sam_model_loaded": true,
+    "sam_inflight": 0,
+    "vlm_status": "ok",
+    "vlm_model_loaded": true,
+    "vlm_exact_requests_inflight": 0,
+    "formal_vlm_model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+  },
+  "conclusion": "The existing floor-union-slope policy is the correct business label mapping, but it does not recover three edge or occluded ramp regions. Sibling prompting and a semantic VLM mask verifier also fail to improve the bounded dev8 gate. Further text prompting is deprioritized; the next candidate should use sensor, temporal or calibrated multiview geometry for spatial hints, then reuse the already validated SAM point path.",
+  "evidence_boundary": "All counts use bounded assistant points and visual review rather than independent human truth or pixel IoU."
+}

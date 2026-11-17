@@ -1,0 +1,58 @@
+{
+  "schema_version": "labelagent.workbench_round52.v1",
+  "recorded_at": "2026-11-17T13:13:00+08:00",
+  "goal_status": "active",
+  "change": {
+    "name": "pre-decode exact-request cache lookup",
+    "description": "Validate the deterministic request envelope, hash the complete request and return an exact successful replay before repeated base64 and PIL image decoding.",
+    "cache_miss_behavior": "unchanged full media validation and model inference",
+    "cache_hit_binding": "complete canonical request body SHA-256",
+    "capacity": 32,
+    "successful_responses_only": true,
+    "service_restart_clears_cache": true
+  },
+  "safety": {
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "oss_modified": false,
+    "non_owned_gpu_processes_stopped": 0,
+    "test24_evaluation_only": true
+  },
+  "real_benchmark": {
+    "image": "011/camera_1/1789900388815700364.png",
+    "cold": {
+      "elapsed_ms": 26730,
+      "cache_hit": false,
+      "semantic_sha256": "670a732b9aa1a3b334ff03ded345291ad0459391aa31432fdc8b3cec69f22802",
+      "artifact_sha256": "77664f4549376cb46742fbe7bb9de28359370c337c1320ad8e1dce148e243994"
+    },
+    "warm": {
+      "elapsed_ms": 228,
+      "cache_hit": true,
+      "cache_key_sha256": "86c3b288efefbdd6e7d5b18028817e4f567c42a3cad9634a2f2ecdf533fdcb04",
+      "response_cache_entries": 1,
+      "semantic_sha256": "670a732b9aa1a3b334ff03ded345291ad0459391aa31432fdc8b3cec69f22802",
+      "artifact_sha256": "5af3447d8cf5cf914d00e04a91d3f11935deb6e84fe7d26f03f43f56d8c4c41f"
+    },
+    "cold_to_warm_reduction_percent": 99.15,
+    "warm_latency_reduction_vs_round51_percent": 56.32,
+    "semantic_output_exact_match": true
+  },
+  "verification": {
+    "unit_contract": "an exact replay succeeds while decode_messages is patched to raise, proving the hit bypasses repeated media decoding",
+    "python_tests": {"passed": 160, "failed": 0, "python_utf8": true},
+    "web_tests": {"passed": 78, "failed": 0},
+    "formal_readiness": "SAM and primary 4090 VLM ready; fast 5090 route explicitly disabled",
+    "formal_state_sha256": "54A5EE6AC1794AE3D769B3FEFA3CADD79DA7F2D5DFF892F0B8B4F0A259238FF5",
+    "formal_history_hashes_unchanged": true,
+    "local_vlm_server_sha256": "f2cfc45f92d1f91e5d15374d39f2bcded7b9143d93576b10edf1670c142f31d6",
+    "windows_4090_and_5090_source_hashes_match": true
+  },
+  "rollback": {
+    "windows": "D:/Apps/LabelAgent/.local/backups/vlm-cache-predecode-round52-20261117",
+    "remote_4090": "/home/clw/labelagent_remote_20261110/backups/vlm-cache-predecode-round52-20261117",
+    "remote_5090": "/home/clw/projects/labelagent-5090/app/work/backups/vlm-cache-predecode-round52-20261117"
+  },
+  "boundary": "This improves exact replay, retry and refresh latency. A new image or any changed prompt, schema, model or generation parameter still takes the full validation and inference path."
+}

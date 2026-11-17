@@ -369,13 +369,16 @@ def create_app(backend, response_cache_entries=32):
             raise ValueError("max_tokens must be between 1 and 4096")
         if body.get("temperature", 0) != 0:
             raise ValueError("This deterministic service accepts temperature 0")
-        messages, images = decode_messages(body.get("messages"))
         cache_key = response_cache_key(body)
         cached = cached_response(cache_key)
         if cached is not None:
             cached["local_vlm"].update(cache_hit=True, cache_key_sha256=cache_key,
                                        seconds=0.0)
             return completion_response(**cached)
+        # A hit is bound to the exact already-validated request, including the
+        # embedded image bytes.  Skip repeated base64/PIL decoding on replay;
+        # every cache miss still traverses the complete media validation path.
+        messages, images = decode_messages(body.get("messages"))
         image_budget=None
         if 'image_token_budget' in body:
             image_budget=checked_single_image_budget(body['image_token_budget'],backend,len(images))

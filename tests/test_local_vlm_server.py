@@ -90,7 +90,9 @@ class LocalVLMContractTests(unittest.TestCase):
     def test_exact_replay_uses_bounded_response_cache(self):
         body = {"model": self.backend.model_id, "messages": messages()}
         first = self.client.post("/v1/chat/completions", json=body)
-        second = self.client.post("/v1/chat/completions", json=body)
+        with patch.object(MODULE, "decode_messages",
+                          side_effect=AssertionError("cache hit decoded media again")):
+            second = self.client.post("/v1/chat/completions", json=body)
         self.assertEqual(first.status_code, 200)
         self.assertEqual(second.status_code, 200)
         self.assertEqual(self.backend.generate_calls, 1)

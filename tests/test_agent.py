@@ -3017,6 +3017,12 @@ class ServerTests(unittest.TestCase):
                 self.assertEqual(lazy.json["agent_runs"], {"1": {"rounds": 2}})
                 binding = lazy.json["candidate_review_bindings"]["1"]
                 self.assertEqual(len(binding["candidates"]), 240)
+                audit_version = lazy.json["candidate_class_audit_version"]
+                self.assertEqual(audit_version["schema_version"],
+                                 "labelagent.candidate_class_audit_version.v1")
+                self.assertEqual(len(audit_version["config_sha256"]), 64)
+                self.assertEqual(len(audit_version["protocol_sha256"]), 64)
+                self.assertEqual(len(audit_version["labels_sha256"]), 64)
 
                 stale = client.get("/api/frame_state/1", query_string={
                     "topic": "camera1", "path": str(FakeVideo.path)})

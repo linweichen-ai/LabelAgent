@@ -10,12 +10,18 @@ function applyCompactFrameState(data,target,expectedTopic=topic,expectedPath=loa
  if(data.candidate_counts&&typeof data.candidate_counts==='object')candidateCountIndex={...data.candidate_counts};
  return data;
 }
-async function fetchCompactFrameState(target,generation=frameLoadGeneration){
- const expectedTopic=topic,expectedPath=loadedDataPath,response=await fetch(`/api/frame_state/${target}?topic=${encodeURIComponent(expectedTopic)}&path=${encodeURIComponent(expectedPath)}`,{cache:'no-store'}),data=await response.json();
+async function readCompactFrameStateSnapshot(target,expectedTopic=topic,expectedPath=loadedDataPath){
+ const response=await fetch(`/api/frame_state/${target}?topic=${encodeURIComponent(expectedTopic)}&path=${encodeURIComponent(expectedPath)}`,{cache:'no-store'}),data=await response.json();
  if(!response.ok)throw Error(data.error||'按需读取当前帧标注失败');
+ if(!data?.compact_geometry||data.topic!==expectedTopic||data.path!==expectedPath||Number(data.frame)!==Number(target))throw Error('按需标注层与当前文件、相机或帧不一致，已拒绝显示');
+ return data;
+}
+async function fetchCompactFrameState(target,generation=frameLoadGeneration){
+ const expectedTopic=topic,expectedPath=loadedDataPath,data=await readCompactFrameStateSnapshot(target,expectedTopic,expectedPath);
  if(generation!==frameLoadGeneration||topic!==expectedTopic||loadedDataPath!==expectedPath)throw Error('读取期间文件、相机或帧已变化，已丢弃旧标注层');
  applyCompactFrameState(data,target,expectedTopic,expectedPath);return data;
 }
+window.fetchCompactFrameState=fetchCompactFrameState;
 window.currentWorkbenchFrameState=()=>({compact_geometry:compactGeometryMode,path:loadedDataPath,topic,labels:[...labels],config:{...workbenchConfig},truth:shapes,truth_review_status:truthReviewStatus,truth_frames:[...truthFrameIndex],candidates,agent_runs:agentRuns,candidate_counts:{...candidateCountIndex},candidate_review_proposals:candidateReviewProposals,candidate_review_bindings:candidateReviewBindings,reference_frames:window.referenceFrames||{}});
 function publishWorkbenchFrameState(){document.dispatchEvent(new CustomEvent('labelagent:frame-state',{detail:{state:window.currentWorkbenchFrameState()}}))}
 const viewedFrameStorageKey='labelagentViewedFrameV105';
@@ -239,9 +245,9 @@ async function auditReferenceCandidateSnapshot(target,items){
  const entry={snapshot:candidateAuditSnapshot(items),generation:(candidateAuditSnapshots.get(scope)?.generation||0)+1,pending:true,stale:false};candidateAuditSnapshots.set(scope,entry);const generation=entry.generation;
  const assertCurrent=()=>{if(topic!==sourceTopic||loadedDataPath!==sourcePath||candidateAuditSnapshots.get(scope)!==entry||entry.generation!==generation||entry.stale||candidateAuditFullSnapshot(candidates[key])!==snapshot)throw Error('候选或数据作用域已变化，复审结果已过期')};
  try{
-  const stateResponse=await fetch('/api/state',{cache:'no-store'}),fresh=await stateResponse.json();assertCurrent();
+   const fresh=await readCompactFrameStateSnapshot(target,sourceTopic,sourcePath);assertCurrent();
   const binding=fresh.candidate_review_bindings?.[key],artifact=binding?.candidate_artifact_sha256;
-  if(!stateResponse.ok||fresh.topic!==sourceTopic||fresh.path!==sourcePath||candidateAuditFullSnapshot(fresh.candidates?.[key])!==snapshot||!artifact)throw Error('候选服务器绑定不一致，已拒绝复审');
+   if(candidateAuditFullSnapshot(fresh.candidates?.[key])!==snapshot||!artifact)throw Error('候选服务器绑定不一致，已拒绝复审');
   const imageResponse=await fetch(`/api/frame/${target}?topic=${encodeURIComponent(sourceTopic)}`,{cache:'no-store'});if(!imageResponse.ok)throw Error('无法读取复审原图');
   const imageHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',await imageResponse.arrayBuffer())),value=>value.toString(16).padStart(2,'0')).join('');assertCurrent();
   const version=fresh.candidate_class_audit_version,validBinding=value=>value?.candidate_artifact_sha256===artifact&&Array.isArray(value?.candidates)&&value.candidates.length===(binding.candidates||[]).length&&(binding.candidates||[]).every(expected=>{const matches=value.candidates.filter(item=>item.candidate_id===expected.candidate_id);return matches.length===1&&(matches[0].candidate_fingerprint_sha256||matches[0].candidate_fingerprint)===(expected.candidate_fingerprint_sha256||expected.candidate_fingerprint)&&matches[0].candidate_sha256===expected.candidate_sha256});
@@ -257,9 +263,9 @@ async function auditReferenceCandidateSnapshot(target,items){
    if(result.frame!==Number(target)||result.topic!==sourceTopic||result.candidate_only!==true||result.human_truth!==false||result.input_sha256!==imageHash||result.candidate_artifact_sha256!==artifact||candidateAuditFullSnapshot(result.candidates)!==snapshot||!validBinding(result.binding)||!validateAudits(result.agent))throw Error('复审响应绑定不一致，已拒绝采用');
    resultAgent=result.agent;
   }
-  const readbackResponse=await fetch('/api/state',{cache:'no-store'}),readback=await readbackResponse.json();assertCurrent();
+   const readback=await readCompactFrameStateSnapshot(target,sourceTopic,sourcePath);assertCurrent();
   const readbackRun=readback.agent_runs?.[key];
-  if(!readbackResponse.ok||readback.topic!==sourceTopic||readback.path!==sourcePath||candidateAuditFullSnapshot(readback.candidates?.[key])!==snapshot||!validBinding(readback.candidate_review_bindings?.[key])||candidateAuditFullSnapshot(readback.candidate_class_audit_version)!==candidateAuditFullSnapshot(version)||!validateAudits(readbackRun)||candidateAuditFullSnapshot(readbackRun)!==candidateAuditFullSnapshot(resultAgent))throw Error('复审服务器读回不一致，已拒绝采用');
+   if(candidateAuditFullSnapshot(readback.candidates?.[key])!==snapshot||!validBinding(readback.candidate_review_bindings?.[key])||candidateAuditFullSnapshot(readback.candidate_class_audit_version)!==candidateAuditFullSnapshot(version)||!validateAudits(readbackRun)||candidateAuditFullSnapshot(readbackRun)!==candidateAuditFullSnapshot(resultAgent))throw Error('复审服务器读回不一致，已拒绝采用');
   candidateReviewBindings=readback.candidate_review_bindings;entry.imageHash=imageHash;entry.artifact=artifact;entry.bindingSnapshot=candidateAuditFullSnapshot(readback.candidate_review_bindings?.[key]);entry.stale=false;return readbackRun;
  }catch(error){entry.stale=true;throw error}finally{entry.pending=false}
 }
@@ -269,16 +275,16 @@ async function refineReferenceCandidateSnapshot(target,items){
  const entry={pending:true,snapshot,generation:(candidateRefinementSnapshots.get(scope)?.generation||0)+1};candidateRefinementSnapshots.set(scope,entry);const generation=entry.generation;
  const assertClientCurrent=()=>{if(topic!==sourceTopic||loadedDataPath!==sourcePath||candidateRefinementSnapshots.get(scope)!==entry||entry.generation!==generation||candidateAuditFullSnapshot(candidates[key])!==snapshot)throw Error('候选或数据作用域已变化，后台精修结果已过期')};
  try{
-  const stateResponse=await fetch('/api/state',{cache:'no-store'}),fresh=await stateResponse.json();assertClientCurrent();
+  const fresh=await readCompactFrameStateSnapshot(target,sourceTopic,sourcePath);assertClientCurrent();
   const binding=fresh.candidate_review_bindings?.[key],artifact=binding?.candidate_artifact_sha256;
-  if(!stateResponse.ok||fresh.topic!==sourceTopic||fresh.path!==sourcePath||candidateAuditFullSnapshot(fresh.candidates?.[key])!==snapshot||fresh.agent_runs?.[key]?.agent_review_status!=='pending'||!artifact)throw Error('候选服务器绑定不一致，已拒绝后台精修');
+  if(candidateAuditFullSnapshot(fresh.candidates?.[key])!==snapshot||fresh.agent_runs?.[key]?.agent_review_status!=='pending'||!artifact)throw Error('候选服务器绑定不一致，已拒绝后台精修');
   const imageResponse=await fetch(`/api/frame/${target}?topic=${encodeURIComponent(sourceTopic)}`,{cache:'no-store'});if(!imageResponse.ok)throw Error('无法读取精修原图');
   const imageHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',await imageResponse.arrayBuffer())),value=>value.toString(16).padStart(2,'0')).join('');assertClientCurrent();
   const result=await api('reference_candidates/refine',{frame:Number(target),topic:sourceTopic,expected_candidate_artifact_sha256:artifact,expected_frame_sha256:imageHash});assertClientCurrent();
   if(result.stopped)throw Error('后台 Agent 精修已停止，初始候选保持不变');
   if(result.frame!==Number(target)||result.topic!==sourceTopic||result.candidate_only!==true||result.human_truth!==false||result.approved_for_training!==false||result.input_sha256!==imageHash||result.initial_candidate_artifact_sha256!==artifact||!Array.isArray(result.candidates)||!result.candidates.length||result.agent?.agent_review_status!=='complete'||result.agent?.candidate_artifact_sha256!==result.candidate_artifact_sha256)throw Error('后台精修响应绑定不一致，已拒绝采用');
-  const readbackResponse=await fetch('/api/state',{cache:'no-store'}),readback=await readbackResponse.json();
-  if(!readbackResponse.ok||topic!==sourceTopic||loadedDataPath!==sourcePath||readback.topic!==sourceTopic||readback.path!==sourcePath||candidateAuditFullSnapshot(readback.candidates?.[key])!==candidateAuditFullSnapshot(result.candidates)||candidateAuditFullSnapshot(readback.agent_runs?.[key])!==candidateAuditFullSnapshot(result.agent)||readback.candidate_review_bindings?.[key]?.candidate_artifact_sha256!==result.candidate_artifact_sha256)throw Error('后台精修服务器读回不一致，已停止采用');
+  const readback=await readCompactFrameStateSnapshot(target,sourceTopic,sourcePath);
+  if(topic!==sourceTopic||loadedDataPath!==sourcePath||candidateAuditFullSnapshot(readback.candidates?.[key])!==candidateAuditFullSnapshot(result.candidates)||candidateAuditFullSnapshot(readback.agent_runs?.[key])!==candidateAuditFullSnapshot(result.agent)||readback.candidate_review_bindings?.[key]?.candidate_artifact_sha256!==result.candidate_artifact_sha256)throw Error('后台精修服务器读回不一致，已停止采用');
   candidates[key]=JSON.parse(JSON.stringify(result.candidates));agentRuns[key]=JSON.parse(JSON.stringify(result.agent));candidateReviewBindings=readback.candidate_review_bindings||{};entry.pending=false;return {candidates:candidates[key],agent:agentRuns[key],mutated:result.candidate_mutated===true};
  }finally{entry.pending=false}
 }

@@ -81,6 +81,16 @@ test('参考起稿先展示候选并在后台完成高风险类别复核', () =>
   assert.match(app, /结果不会自动变成人工真值/);
 });
 
+test('候选生成、Agent 精修和类别复核只读回当前帧绑定', () => {
+  const prep = source('reference-prep.js');
+  const app = source('app.js');
+  assert.match(app, /function readCompactFrameStateSnapshot/);
+  assert.match(app, /\/api\/frame_state\/\$\{target\}/);
+  assert.doesNotMatch(app.slice(app.indexOf('async function auditReferenceCandidateSnapshot'), app.indexOf('function invalidateChangedCandidateAudits')), /fetch\('\/api\/state'/);
+  assert.doesNotMatch(app.slice(app.indexOf('async function refineReferenceCandidateSnapshot'), app.indexOf('function invalidateChangedCandidateAudits')), /fetch\('\/api\/state'/);
+  assert.match(prep, /window\.fetchCompactFrameState\?\.\(frameId\)/);
+});
+
 test('状态请求隐藏期间完成不重建定时器，恢复后立即轮询且保持单链', async () => {
   let calls = 0, release;
   const h = harness({

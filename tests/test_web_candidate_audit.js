@@ -10,6 +10,10 @@ function context() {
   const start = source.indexOf('const candidateAuditSnapshots=');
   const end = source.indexOf('function referenceReviewScope', start);
   const scope = vm.createContext({frame: 3, topic: '/camera', loadedDataPath: 'file-a',
+    readCompactFrameStateSnapshot: async target => {
+      const response = await scope.fetch(`/api/frame_state/${target}`);
+      return response.json();
+    },
     agentRuns: {'3': {candidate_class_audits: [{candidate_id: 1}], review_queue: [
       {source: 'candidate_class_audit'}, {source: 'geometry'}]}},
     referenceReviewedShapeKeys: new Set(['checked']), referenceOriginalSweepVisited: true,

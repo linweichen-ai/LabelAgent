@@ -413,7 +413,8 @@
       if (result.stopped) throw new Error('已停止生成，未写入人工真值');
       if (!result.candidate_only || result.human_truth !== false) throw new Error('服务器未明确返回 candidate_only，已停止采用');
       if (!Array.isArray(result.candidates) || !result.candidates.length) throw new Error('SAM/VLM 没有生成可精修轮廓');
-      const readback = await readState();
+      const readback = await window.fetchCompactFrameState?.(frameId);
+      if (!readback) throw new Error('单帧候选读回接口不可用，已停止载入');
       const persistedCandidates = readback.candidates?.[String(frameId)];
       const canonical = value => Array.isArray(value) ? '[' + value.map(canonical).join(',') + ']'
         : value && typeof value === 'object' ? '{' + Object.keys(value).sort().map(key => JSON.stringify(key) + ':' + canonical(value[key])).join(',') + '}' : JSON.stringify(value);
@@ -424,8 +425,6 @@
           || readback.candidate_review_bindings?.[String(frameId)]?.candidate_artifact_sha256 !== result.candidate_artifact_sha256) {
         throw new Error('服务器读回的候选内容或数据绑定与本次结果不一致，已停止载入');
       }
-      window.syncWorkbenchCandidateState?.(readback);
-      render(readback);
       setDraftBusy(false);
       dialog.close();
       await window.prepareReferenceCandidateDraft?.(frameId, clone(persistedCandidates), clone(readback.agent_runs?.[String(frameId)] || {}));

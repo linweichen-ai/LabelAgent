@@ -1425,6 +1425,7 @@ def selected_frame_payload(index):
             if key in revisions else {},
         "candidate_review_proposals": proposals,
         "candidate_review_bindings": {key: binding} if binding is not None else {},
+        "candidate_class_audit_version": candidate_class_audit_version(),
     }
 
 

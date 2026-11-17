@@ -1,0 +1,87 @@
+{
+  "schema_version": "labelagent.workbench_round65_single_frame_readback.v1",
+  "date": "2026-11-17",
+  "objective": "remove full-workspace JSON transfers from candidate generation, deferred Agent refinement and class-audit readback",
+  "implementation": {
+    "readback_endpoint": "/api/frame_state/<frame>",
+    "scope_guards": ["file path", "topic", "frame"],
+    "returned_bindings": [
+      "current-frame candidates",
+      "current-frame Agent run",
+      "candidate artifact and per-candidate fingerprints",
+      "candidate class-audit version",
+      "current-frame candidate revision summary"
+    ],
+    "replaced_full_state_reads": [
+      "post-reference-draft canonical readback",
+      "pre/post deferred Agent refinement readback",
+      "pre/post high-risk class-audit readback"
+    ],
+    "safety": "all prior artifact, image, audit-version and browser-scope checks remain enabled"
+  },
+  "formal_runtime_measurement": {
+    "full_state": {"bytes": 1953991, "elapsed_ms": 235.66},
+    "empty_frame_35": {"bytes": 684, "elapsed_ms": 6.31, "byte_reduction_percent": 99.96},
+    "largest_candidate_frame": {
+      "frame": 7,
+      "candidate_count": 17,
+      "bytes": 82236,
+      "byte_reduction_percent": 95.79
+    },
+    "candidate_class_audit_version_present": true,
+    "served_app_uses_compact_snapshot": true,
+    "served_reference_prep_uses_compact_postdraft_readback": true
+  },
+  "rejected_discovery_protocol_experiment": {
+    "deployed": false,
+    "purpose": "reduce visible-label discovery generation tokens",
+    "grouped_status_samples": [
+      {"sample": "frame35", "baseline_seconds": 14.5, "grouped_seconds": 10.234, "candidate_labels_match": true},
+      {"sample": "frame74", "baseline_seconds": 13.844, "grouped_seconds": 10.25, "candidate_labels_match": false,
+       "failure": "generic vehicle and ego were both marked present from the same red chassis and controls"},
+      {"sample": "frame95", "baseline_seconds": 14.0, "grouped_seconds": 8.656, "candidate_labels_match": true},
+      {"sample": "batchB003", "baseline_seconds": 13.422, "grouped_seconds": 8.562, "candidate_labels_match": true},
+      {"sample": "batchB004", "baseline_seconds": 14.672, "grouped_seconds": 8.5, "candidate_labels_match": true}
+    ],
+    "other_rejections": [
+      "grouped-list output omitted the generic vehicle label, so exact registry coverage failed",
+      "conditional absent-or-object schema marked vehicle, cargo_floor and slope present without valid evidence"
+    ],
+    "decision": "retain the current keyed full-evidence discovery protocol; do not trade ontology safety for latency"
+  },
+  "tests": {
+    "python": {"tests": 729, "failures": 0, "encoding": "PYTHONUTF8=1"},
+    "web": {"tests": 87, "failures": 0},
+    "coverage": [
+      "single-frame endpoint includes class-audit version hashes",
+      "draft, refinement and audit paths do not fetch full state",
+      "candidate and manual-review stale guards remain active"
+    ]
+  },
+  "deployment": {
+    "formal_url": "http://127.0.0.1:8765",
+    "formal_ready": true,
+    "formal_run_status": "idle",
+    "backup": "D:/Apps/LabelAgent/.local/backups/single-frame-readback-round65-20261117",
+    "source_sha256": {
+      "source/agent/server.py": "091136bb10acf82be7942b33ab2fce6305fac16311bed4503e9f782db03bad35",
+      "source/agent/workflow.py": "32b098943fb8e089cb2b22eeebc2c672302bf9aa456e413105d4b79351fd8a57",
+      "source/web/app.js": "7facc1e84f7548758a17a7a515765d93ed8e4b85d9523126b17b0f25084ea0e2",
+      "source/web/reference-prep.js": "5e9c0f67f4c671fd5addb6a22e354cb28ac4a1b6a89d0ac133aee2bae0573a6d"
+    },
+    "formal_state_sha256_unchanged": {
+      "state.json": "54a5ee6ac1794ae3d769b3fefa3cadd79da7f2d5dff892f0b8b4f0a259238ff5",
+      "file_sessions.json": "251a47963ebd2931ee033408e9fe39a94f74539bff0a339c58429ace409088cc",
+      "files.json": "0d8487cd72b3d29612f67ec351ced54f993e98527d44c7df59af6e29196be214",
+      "last_run.json": "2133da6186935d485fe2b2296fe2248ba6cc1183743357ab4c1d8c873d3cffdf",
+      "last_run_summary.json": "920c0d0e6dc37abfe109c13b24b88d9fdcd463e7c55d65bd7ca224534b203ce2",
+      "model_debug.json": "efdf22cd6bd803c958e3acb39d46054d294544fe48324a12b4afe1502b3bbb9a"
+    }
+  },
+  "boundaries": [
+    "Byte and endpoint-time reductions are measured on the current formal local state, not a wide-area network benchmark.",
+    "A frame with more geometry still transfers its own polygons, but never unrelated frames.",
+    "The faster discovery prompt remains rejected and was never deployed.",
+    "Candidates, human truth and training approval remain isolated."
+  ]
+}

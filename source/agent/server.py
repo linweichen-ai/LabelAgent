@@ -3058,6 +3058,7 @@ def generate_reference_draft():
                 raise ValueError("该帧已有已核验人工真值，请直接复用或另选未标注帧")
             raise ValueError("该帧已有历史标注，请先载入历史标注并完成人工复核")
         auto_detect_visible = body.get("auto_detect_visible") is True
+        defer_class_audit = body.get("defer_class_audit") is True
         max_rounds = requested_review_rounds(body)
         requested = list(state.get("labels", [])) if auto_detect_visible else body.get("labels")
         if not isinstance(requested, list) or not requested:
@@ -3180,6 +3181,7 @@ def generate_reference_draft():
                 "max_review_rounds": max_rounds,
                 "sam_prompts": prompt_payload,
                 "auto_detect_visible": auto_detect_visible,
+                "defer_class_audit": defer_class_audit,
                 "discovery_sha256": discovery_sha256,
                 "description_source": description_source,
             })
@@ -3237,22 +3239,24 @@ def generate_reference_draft():
         visibility_review_queue = reference_visibility_review_queue(discovery, combined)
         audit_total = sum(candidate.get("label") in HIGH_RISK_LABELS
                           for candidate in combined)
-        update_run_status(phase="auditing", audit_completed=0,
-                          audit_total=audit_total, audit_candidate_id=None,
-                          shape_count=len(combined), error=None)
-        def check_audit_cancelled():
-            if run_stop_event.is_set():
-                raise RunCancelled("用户已停止参考帧草稿生成")
-        def on_audit_progress(completed, total, candidate, audit):
-            update_run_status(
-                phase="auditing", audit_completed=completed, audit_total=total,
-                audit_candidate_id=candidate.get("id"),
-                audit_route=audit.get("route"), shape_count=len(combined), error=None)
-        with cancellation(run_stop_event), trace_calls(on_trace, save_inspection_image):
-            class_audits, class_review_queue = audit_high_risk_candidates(
-                config, target_image, combined, labels,
-                VISIBLE_LABEL_DEFINITIONS, chat, check_cancelled=check_audit_cancelled,
-                tolerate_errors=True, on_progress=on_audit_progress)
+        class_audits, class_review_queue = [], []
+        if audit_total and not defer_class_audit:
+            update_run_status(phase="auditing", audit_completed=0,
+                              audit_total=audit_total, audit_candidate_id=None,
+                              shape_count=len(combined), error=None)
+            def check_audit_cancelled():
+                if run_stop_event.is_set():
+                    raise RunCancelled("用户已停止参考帧草稿生成")
+            def on_audit_progress(completed, total, candidate, audit):
+                update_run_status(
+                    phase="auditing", audit_completed=completed, audit_total=total,
+                    audit_candidate_id=candidate.get("id"),
+                    audit_route=audit.get("route"), shape_count=len(combined), error=None)
+            with cancellation(run_stop_event), trace_calls(on_trace, save_inspection_image):
+                class_audits, class_review_queue = audit_high_risk_candidates(
+                    config, target_image, combined, labels,
+                    VISIBLE_LABEL_DEFINITIONS, chat, check_cancelled=check_audit_cancelled,
+                    tolerate_errors=True, on_progress=on_audit_progress)
         for audit in class_audits:
             audit["audit_version"] = audit_version
             audit["audit_sha256"] = _sha256_json({
@@ -3266,7 +3270,11 @@ def generate_reference_draft():
             "review_queue": result["review_queue"] + visibility_review_queue,
             "candidate_class_audits": class_audits,
             "candidate_class_audit_version": audit_version,
-            "candidate_class_audit_status": "complete", "applied": result["applied"],
+            "candidate_class_audit_status": (
+                "pending" if defer_class_audit and audit_total else "complete"),
+            "candidate_class_audit_deferred": bool(defer_class_audit and audit_total),
+            "candidate_class_audit_total": audit_total,
+            "applied": result["applied"],
             "candidates_added": result["candidates_added"],
             "reference_draft": True, "candidate_only": True,
             "human_truth": False, "approved_for_training": False,
@@ -3327,8 +3335,12 @@ def generate_reference_draft():
                            description_source=description_source,
                            visible_label_discovery=discovery,
                            discovery_sha256=discovery_sha256,
+                           candidate_class_audit_deferred=bool(defer_class_audit and audit_total),
+                           candidate_class_audit_total=audit_total,
                            human_review_required=True,
-                           message="SAM/VLM/Agent 草稿已生成；请人工精修并确认")
+                           message=("SAM/VLM/Agent 草稿已生成；高风险类别复核将在后台继续"
+                                    if defer_class_audit and audit_total else
+                                    "SAM/VLM/Agent 草稿已生成；请人工精修并确认"))
     except RunCancelled:
         update_run_status(status="stopped", phase="stopped", frame=None,
                           error=None, completed=0)

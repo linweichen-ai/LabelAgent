@@ -100,6 +100,31 @@ class CandidateClassAuditTests(unittest.TestCase):
                 self.assertEqual(entry["candidate_artifact_sha256"], server._sha256_json(payload["candidates"]))
                 self.assertEqual(payload["candidate_artifact_sha256"], entry["candidate_artifact_sha256"])
 
+    def test_reference_endpoint_can_publish_candidate_before_deferred_class_audit(self):
+        state = {"video": SimpleNamespace(path=Path("test.png"), topics={"camera": {"count": 1}}),
+                 "topic": "camera", "labels": self.labels, "truth": {}, "config": {},
+                 "reference_frames": {}, "candidates": {}, "agent_runs": {}}
+        result = {"shapes": [copy.deepcopy(self.candidate)], "agent": {"stop_reason": "done"},
+                  "review_queue": [], "applied": [], "candidates_added": 1}
+        with patch.object(server, "state", state), patch.object(server, "run_status", {"status": "idle"}), \
+             patch.object(server, "frame_image", return_value=self.image), \
+             patch.object(server, "describe", return_value={"prompts": [{"label": "ego", "text": "ego robot"}]}), \
+             patch.object(server, "run", return_value=result), patch.object(server, "chat") as chat, \
+             patch.object(server, "save"), patch.object(server, "archive_candidate_revision", return_value=None):
+            response = server.app.test_client().post("/api/reference_draft", json={
+                "frame": 0, "labels": ["ego"], "defer_class_audit": True})
+        self.assertEqual(response.status_code, 200, response.json)
+        self.assertTrue(response.json["candidate_class_audit_deferred"])
+        self.assertEqual(response.json["candidate_class_audit_total"], 1)
+        self.assertEqual(response.json["agent"]["candidate_class_audit_status"], "pending")
+        self.assertEqual(response.json["agent"]["candidate_class_audits"], [])
+        self.assertTrue(response.json["candidate_only"])
+        self.assertFalse(response.json["human_truth"])
+        self.assertFalse(response.json["approved_for_training"])
+        self.assertEqual(state["candidates"]["0"], response.json["candidates"])
+        self.assertEqual(state["agent_runs"]["0"]["candidate_class_audit_status"], "pending")
+        chat.assert_not_called()
+
     def test_merge_keeps_existing_ids_and_renumbers_collisions_without_mutation(self):
         existing = [{"id": 3, "label": "floor"}]
         generated = [{"id": 3, "label": "ego"}, {"id": 4, "label": "person"}]

@@ -809,3 +809,13 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 代表图已保存为 [第 74 帧整图斜坡结果](evidence/workbench-stability-20261117/slope-frame74-current-round62.jpg) 和 [第 95 帧 ROI 回退结果](evidence/workbench-stability-20261117/slope-frame95-current-round62.jpg)，完整数值见 [第六十二轮结构化证据](evidence/workbench-stability-20261117/current-slope-regression-round62.json)。正式 state 哈希仍为 `54A5EE6A...238FF5`，工作台 ready/idle，未修改人工真值、训练集或 OSS。
 
 边界：这 150 帧来自同一已使用的人工开发会话，因此只能证明当前版本没有回退，不能当作跨厂区泛化结论；test24 仍严格只评测且未参与本轮。当前结果也不是 SAM 微调产物，而是基础 SAM 配合提示、几何过滤和 ROI 回退的正式推理效果。
+
+## 第六十三轮候选先显示、高风险复核后台继续（2026-11-17）
+
+高风险类别盲审只产生绑定证据和人工复核队列，从不修改候选几何、人工真值或训练批准；旧页面却要求用户等它全部完成后才能看到候选。本轮保持默认 API 同步行为不变，只让正式页面显式发送 `defer_class_audit=true`：服务器先原子保存候选并标记 `candidate_class_audit_status=pending`，页面立即进入人工编辑；随后沿用既有 `/api/reference_candidates/audit`，按文件、topic、帧、原图哈希、候选产物哈希、每个候选指纹和审核版本完成后台复核。若用户此时修改候选，旧复核响应会被现有 stale 门禁拒绝采用。
+
+真实隔离第 33 帧在 33.335 秒返回 11 个可编辑候选和 2 项待复核记录；随后两项盲审用 21.494 秒完成，候选产物哈希在前后都为 `403b2520...ed2b0`。同一条完整计算路径共 54.829 秒，但用户不再等待最后 21.494 秒才开始检查，time-to-candidate 观测下降 39.2%。页面明确提示“高风险类别正在后台复核，可先检查轮廓”，复核完成后再刷新门禁；任何阶段都保持 `candidate_only=true`、`human_truth=false`、`approved_for_training=false`。
+
+完整回归为 Python 724/724（另有 171 个子测）和网页 80/80。正式工作台已部署且 ready/idle，三份源码与工作树哈希一致，六份正式状态文件哈希不变；回滚点为 `D:\Apps\LabelAgent\.local\backups\deferred-class-audit-round63-20261117`。结构化证据见 [第六十三轮候选先显示验收](evidence/workbench-stability-20261117/deferred-class-audit-round63.json)。
+
+边界：这是交互等待时间优化，不是总 GPU 计算量下降；后台复核仍完整执行，且程序化调用者除非显式 opt-in，否则继续保持原同步语义。

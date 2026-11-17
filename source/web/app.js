@@ -416,14 +416,16 @@ window.prepareReferenceCandidateDraft=async(target,candidate,runMetadata=null)=>
  if(shapes[key]!==undefined)throw Error(truthIsVerified(target)?'该帧已有已核验人工真值，请直接复用已有标注':'该帧已有历史标注，请从参考帧助手载入并复核');
  if(!Array.isArray(candidate)||!candidate.length)throw Error('该帧没有可精修的机器候选');
  if(Array.isArray(candidates[key])&&candidateAuditFullSnapshot(candidates[key])!==candidateAuditFullSnapshot(candidate))throw Error('候选集合与当前服务器快照不一致，已拒绝载入');
- const auditedRun=await auditReferenceCandidateSnapshot(target,candidate);
+ const auditPending=runMetadata?.candidate_class_audit_status==='pending';
+ const auditedRun=auditPending?runMetadata:await auditReferenceCandidateSnapshot(target,candidate);
  manualDrafts[key]=JSON.parse(JSON.stringify(candidate));agentRuns[key]=JSON.parse(JSON.stringify(auditedRun));const proposalCount=await applyCandidateReviewProposals(target,manualDrafts[key],agentRuns[key]||{});
  await window.setWorkspaceMode?.('manual',false);
  await openFrameForReferencePreparation(target);
  selectedShapeIndex=-1;pointMode=false;negativeMode=false;regionMode='';draft=[];resetPrompts();$('polygonButton').classList.add('selected');refreshPointTools();beginReferenceFinalize('machine_candidate',target);const initialRisk=selectInitialReferenceReviewTarget(manualDrafts[key],agentRuns[key]);refreshShapeList();draw();
  document.dispatchEvent(new CustomEvent('labelagent:reference-draft-loaded',{detail:{frame:target,source:'machine_candidate',candidate_count:candidate.length}}));
  requestAnimationFrame(()=>{$('referenceFinalizeGuide')?.scrollIntoView({behavior:'smooth',block:'center'});$('referenceReviewApproveNext')?.focus({preventScroll:true})});
- toast(initialRisk?`已载入 ${candidate.length} 个候选${proposalCount?`，其中 ${proposalCount} 个有隔离模型改类建议`:''}，并定位到第一条高风险轮廓；检查通过后点“检查通过并下一个”`:`已载入 ${candidate.length} 个候选，并选中第一条；请逐个检查后再保存真值`);
+ toast(auditPending?`已载入 ${candidate.length} 个候选，可立即检查轮廓；高风险类别正在后台复核，结果不会自动变成人工真值`:initialRisk?`已载入 ${candidate.length} 个候选${proposalCount?`，其中 ${proposalCount} 个有隔离模型改类建议`:''}，并定位到第一条高风险轮廓；检查通过后点“检查通过并下一个”`:`已载入 ${candidate.length} 个候选，并选中第一条；请逐个检查后再保存真值`);
+ if(auditPending)auditReferenceCandidateSnapshot(target,candidate).then(result=>{if(candidateAuditFullSnapshot(manualDrafts[key])!==candidateAuditFullSnapshot(candidate))return;agentRuns[key]=JSON.parse(JSON.stringify(result));updateReferenceFinalizeGuide();refreshShapeList();toast('高风险类别后台复核已完成；候选仍需人工逐个确认')}).catch(error=>{updateReferenceFinalizeGuide();toast(`高风险类别后台复核未采用：${error.message}；候选仍保留给人工检查`)})
 };
 window.prepareReferenceLegacyTruthDraft=async(target,legacyTruth,provenance={})=>{
  const key=String(target);

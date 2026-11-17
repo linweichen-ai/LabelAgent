@@ -1,0 +1,77 @@
+{
+  "schema_version": "labelagent.workbench_round63_deferred_class_audit.v1",
+  "date": "2026-11-17",
+  "objective": "Let the operator start inspecting immutable machine candidates while high-risk class evidence continues asynchronously, without weakening truth or training gates.",
+  "design": {
+    "default_api_behavior_unchanged": true,
+    "ui_opt_in_field": "defer_class_audit=true",
+    "candidate_publish_status": "pending",
+    "followup_endpoint": "/api/reference_candidates/audit",
+    "candidate_mutation_by_audit": false,
+    "human_truth_written_by_audit": false,
+    "training_approval_written_by_audit": false,
+    "stale_candidate_protection": "existing file/topic/frame/image/artifact/fingerprint/version readback gates"
+  },
+  "acceptance": {
+    "isolated_work_dir": "D:/Apps/LabelAgent/.local/isolated-round63-deferred-audit-20261117",
+    "frame": 33,
+    "candidate_ready": {
+      "elapsed_seconds": 33.335,
+      "candidate_count": 11,
+      "candidate_artifact_sha256": "403b252060c8ed503023d4722b26106c5e06ec795ddf1fbeb39b8b5071bed2b0",
+      "audit_status": "pending",
+      "audit_total": 2,
+      "audit_records": 0,
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    "background_audit": {
+      "elapsed_seconds": 21.494,
+      "image_sha256": "a8dea7949973030a337c3671839e3201e58671ca8dd1f46065b575140f73101f",
+      "audit_status": "complete",
+      "audit_records": 2,
+      "candidate_artifact_sha256": "403b252060c8ed503023d4722b26106c5e06ec795ddf1fbeb39b8b5071bed2b0",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    "same_run_compute_seconds": 54.829,
+    "time_to_editable_candidate_seconds": 33.335,
+    "operator_wait_removed_seconds": 21.494,
+    "time_to_candidate_reduction_percent": 39.2,
+    "candidate_hash_unchanged_after_audit": true,
+    "isolated_state_sha256_after": "D30D2BC67033D143768D22DB32A96024EF9614126A61D454446A08D40F759260"
+  },
+  "tests": {
+    "python_passed": 724,
+    "python_subtests_passed": 171,
+    "web_passed": 80,
+    "failures": 0
+  },
+  "deployment": {
+    "formal_url": "http://127.0.0.1:8765",
+    "models_ready": true,
+    "workbench_status": "idle",
+    "backup": "D:/Apps/LabelAgent/.local/backups/deferred-class-audit-round63-20261117",
+    "source_hashes": {
+      "source/agent/server.py": "D1E0E1B2C3883AA6C547EE2BF44FDB6AFB54D5F28A53C5514E69BF3B0ED5E8FC",
+      "source/web/app.js": "BEA428F252722DBAF5F3057D7142826867D12ADF443B7B2D5EE1E13BD29A308E",
+      "source/web/reference-prep.js": "E411ED7B6317D8DC4A0F52E3C44C7030921A05FAB5B21333B4D112D85A2359F0"
+    },
+    "formal_matches_worktree": true
+  },
+  "formal_state_hashes_after": {
+    "state.json": "54A5EE6AC1794AE3D769B3FEFA3CADD79DA7F2D5DFF892F0B8B4F0A259238FF5",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "model_debug.json": "EFDF22CD6BD803C958E3ACB39D46054D294544FE48324A12B4AFE1502B3BBB9A"
+  },
+  "boundaries": [
+    "The optimization reduces time to an editable candidate, not total model compute time.",
+    "The UI explicitly labels the audit as pending and never presents it as human truth or training approval.",
+    "Programmatic callers retain synchronous behavior unless they explicitly opt in to defer_class_audit."
+  ]
+}

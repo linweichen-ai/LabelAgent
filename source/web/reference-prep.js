@@ -405,8 +405,8 @@
       const response = await fetch('/api/reference_draft', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(autoDetectVisible
-          ? {frame: frameId, auto_detect_visible: true}
-          : {frame: frameId, labels: [label]}),
+          ? {frame: frameId, auto_detect_visible: true, defer_class_audit: true}
+          : {frame: frameId, labels: [label], defer_class_audit: true}),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || '参考帧机器草稿生成失败');
@@ -437,7 +437,7 @@
       const reviewHint = [...(uncertain.length ? [`${uncertain.length} 类不确定`] : []),
         ...(unknown.length ? [`${unknown.length} 个疑似新类`] : []),
         ...(conflicts.length ? [`${conflicts.length} 个标签别名冲突`] : [])].join('、');
-      window.labelAgentToast?.(`已生成 ${result.candidates.length} 个机器草稿${visibleLabels.length ? `（${visibleLabels.join('、')}）` : ''}；${labelSynced ? '编辑类别已同步，' : ''}${reviewHint ? `${reviewHint}已送人工复核，` : ''}请精修后人工确认`);
+      window.labelAgentToast?.(`已生成 ${result.candidates.length} 个机器草稿${visibleLabels.length ? `（${visibleLabels.join('、')}）` : ''}；${labelSynced ? '编辑类别已同步，' : ''}${reviewHint ? `${reviewHint}已送人工复核，` : ''}${result.candidate_class_audit_deferred ? '高风险类别正在后台复核，可先检查轮廓；' : ''}请精修后人工确认`);
     } catch (error) {
       setDraftBusy(false);
       const progress = byId('referenceDraftProgress');

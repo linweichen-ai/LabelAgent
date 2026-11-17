@@ -68,6 +68,16 @@ test('参考起稿公开高风险复核与安全保存阶段', () => {
   assert.match(text, /当前 640×512 流程通常约 30～90 秒/);
 });
 
+test('参考起稿先展示候选并在后台完成高风险类别复核', () => {
+  const prep = source('reference-prep.js');
+  const app = source('app.js');
+  assert.match(prep, /defer_class_audit: true/);
+  assert.match(prep, /高风险类别正在后台复核，可先检查轮廓/);
+  assert.match(app, /candidate_class_audit_status==='pending'/);
+  assert.match(app, /auditReferenceCandidateSnapshot\(target,candidate\)\.then/);
+  assert.match(app, /结果不会自动变成人工真值/);
+});
+
 test('状态请求隐藏期间完成不重建定时器，恢复后立即轮询且保持单链', async () => {
   let calls = 0, release;
   const h = harness({

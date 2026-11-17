@@ -1,0 +1,144 @@
+{
+  "schema_version": "labelagent.workbench_evidence.v1",
+  "round": 139,
+  "date": "2026-11-18",
+  "objective": "Bound the real VLM latency distribution and reject semantic-risk shortcuts before changing the stable workbench.",
+  "status": "audit_passed_candidates_rejected_no_deploy",
+  "stable_baseline": {
+    "commit": "9475374759bceac1c2a92ab64539e49077be2ae5",
+    "formal_state_sha256": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "runtime_changed": false,
+    "formal_state_changed": false,
+    "model_weights_changed": false,
+    "sam_finetuned": false,
+    "vlm_post_training_performed_this_round": false
+  },
+  "bounded_trace_audit": {
+    "tool": "tools/audit_vlm_latency_traces.py",
+    "files_scanned": 36,
+    "invalid_files": 0,
+    "unique_calls_with_local_metadata": 37,
+    "duplicate_copies_dropped": 2,
+    "uncached_calls": 34,
+    "single_generation_calls_at_or_above_50_seconds": 0,
+    "generation_seconds": {
+      "min": 3.818,
+      "median": 15.233,
+      "p90": 34.110,
+      "p95": 35.138,
+      "max": 37.365
+    },
+    "preprocess_seconds": {
+      "median": 0.200,
+      "p95": 0.344,
+      "max": 0.406
+    },
+    "completion_tokens": {
+      "median": 312.5,
+      "p95": 601.25,
+      "max": 614
+    },
+    "six_image_calls": {
+      "count": 15,
+      "generation_seconds_median": 33.910,
+      "generation_seconds_p95": 35.994,
+      "generation_seconds_max": 37.365,
+      "completion_tokens_median": 588,
+      "prompt_tokens_median": 5032
+    },
+    "background_agent_calls": {
+      "count": 19,
+      "generation_seconds_median": 32.024,
+      "generation_seconds_p95": 35.603,
+      "generation_seconds_max": 37.365,
+      "completion_tokens_median": 544
+    },
+    "content_boundary": "The report stores bounded counts and timings only. It does not copy prompts, raw model text, images, credentials or full state."
+  },
+  "corrected_diagnosis": {
+    "prior_claim": "Many successful six-image requests take 50 to 75 seconds.",
+    "current_evidence": "No retained uncached generation reached 50 seconds. Minute-scale user waits are aggregates of several roughly 30 to 37 second Agent generations, retries or review rounds.",
+    "dominant_cost": "Multi-image structured generation length and repeated rounds, not image preprocessing."
+  },
+  "rejected_experiments": [
+    {
+      "candidate": "short_wire_schema",
+      "sample": "frame 33 first Agent call",
+      "baseline_generation_seconds": 37.365,
+      "candidate_generation_seconds": 36.321,
+      "baseline_completion_tokens": 614,
+      "candidate_completion_tokens": 567,
+      "observed_time_change_percent": -2.79,
+      "gate": "failed",
+      "reason": "Canonical validation rejected one add_region and two fill_gap operations because the candidate emitted two-point zero-area polygons; operation intent also changed.",
+      "artifact": "artifacts/round139-vlm-latency/wire-eval-frame33-call1.json"
+    },
+    {
+      "candidate": "hole_only_semantics_with_deterministic_fill",
+      "positive_sample": {
+        "frame": 33,
+        "baseline_generation_seconds": 37.365,
+        "candidate_generation_seconds": 14.945,
+        "baseline_completion_tokens": 614,
+        "candidate_completion_tokens": 245,
+        "hole_semantics_equal": true,
+        "synthesized_fills": 4
+      },
+      "counterexample": {
+        "frame": 32,
+        "baseline_open_gap_semantics": "non_ground",
+        "unconstrained_candidate_open_gap_semantics": "ground",
+        "kind_aware_candidate_lost_one_enclosed_ground_hole": true,
+        "defer_open_candidate_lost_both_enclosed_ground_holes": true
+      },
+      "gate": "failed",
+      "reason": "The simplification removed scene-dependent reasoning and changed whether equipment-edge gaps and enclosed floor markings were traversable.",
+      "artifacts": [
+        "artifacts/round139-vlm-latency/synth-hole-only-frame33-call1.json",
+        "artifacts/round139-vlm-latency/synth-hole-only-frame32.json",
+        "artifacts/round139-vlm-latency/synth-hole-only-kind-aware-frame32.json",
+        "artifacts/round139-vlm-latency/synth-hole-defer-open-frame32.json"
+      ]
+    },
+    {
+      "candidate": "reason_length_cap_60",
+      "samples": [31, 32, 33],
+      "operation_intent_equal": "0/3",
+      "hole_semantics_equal": "2/3",
+      "gate": "failed",
+      "reason": "All three samples changed requested operations and frame 32 also changed enclosed-hole semantics. Faster output cannot pass the semantic-preservation gate.",
+      "artifacts": [
+        "artifacts/round139-vlm-latency/reason60-frame31.json",
+        "artifacts/round139-vlm-latency/reason60-frame32.json",
+        "artifacts/round139-vlm-latency/reason60-frame33.json"
+      ]
+    }
+  ],
+  "historical_route_review": {
+    "already_rejected": [
+      "unconstrained generation",
+      "field deletion",
+      "short-key wire schema",
+      "forced JSON field order",
+      "incremental LMFE prefix callback",
+      "forced cuDNN attention",
+      "custom greedy structured selector",
+      "cached constraint masks",
+      "short visible-discovery reasons"
+    ],
+    "retained_direction": "Do not rewrite semantic output for speed. Continue with compute-only scheduling, exact reuse and evidence-bound elimination of redundant rounds."
+  },
+  "verification": {
+    "targeted_tests": "3/3 passed",
+    "python_unittest": "865/865 passed",
+    "web_node_test": "94/94 passed",
+    "python_compile": "passed",
+    "git_diff_check": "passed"
+  },
+  "decision": {
+    "deploy": false,
+    "restart_runtime": false,
+    "accept_any_experiment": false,
+    "next_action": "Freeze this audit, then evaluate compute-only service scheduling or round-level reuse without changing prompts, schemas, image evidence or candidate/truth boundaries."
+  }
+}

@@ -480,6 +480,16 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
     response_cache = OrderedDict()
     response_cache_lock = threading.Lock()
     inflight_requests = {}
+    response_cache_stats = {
+        "hits": 0,
+        "misses": 0,
+        "stores": 0,
+        "evictions": 0,
+        "coalesced": 0,
+        "coalesce_timeouts": 0,
+        "coalesce_reuse_failures": 0,
+        "busy_rejections": 0,
+    }
 
     def response_cache_key(body):
         payload = json.dumps(body, ensure_ascii=False, sort_keys=True,
@@ -504,8 +514,10 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
         with response_cache_lock:
             response_cache[key] = deepcopy(item)
             response_cache.move_to_end(key)
+            response_cache_stats["stores"] += 1
             while len(response_cache) > response_cache_entries:
                 response_cache.popitem(last=False)
+                response_cache_stats["evictions"] += 1
             return len(response_cache)
 
     def claim_request(key):
@@ -513,16 +525,23 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
         with response_cache_lock:
             item = response_cache.get(key)
             if item is not None:
+                response_cache_stats["hits"] += 1
                 response_cache.move_to_end(key)
                 result = deepcopy(item)
                 result.setdefault("local_vlm", {})["response_cache_entries"] = len(response_cache)
                 return "cached", result
+            response_cache_stats["misses"] += 1
             event = inflight_requests.get(key)
             if event is not None:
+                response_cache_stats["coalesced"] += 1
                 return "follower", event
             event = threading.Event()
             inflight_requests[key] = event
             return "leader", event
+
+    def increment_cache_stat(name):
+        with response_cache_lock:
+            response_cache_stats[name] += 1
 
     def finish_request(key, event):
         with response_cache_lock:
@@ -544,6 +563,7 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
         with response_cache_lock:
             cached_entries = len(response_cache)
             inflight_count = len(inflight_requests)
+            cache_stats = dict(response_cache_stats)
         return jsonify(status="ok", model_loaded=backend.model_loaded,
                        model=backend.model_id, backend=backend.backend_name,
                        quantization=getattr(backend, "quantization", "test_double"),
@@ -558,6 +578,7 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
                        idle_cache_release=getattr(backend,'idle_cache_release',False),
                        response_cache_capacity=response_cache_entries,
                        response_cache_entries=cached_entries,
+                       response_cache_stats=cache_stats,
                        exact_requests_inflight=inflight_count,
                        coalesce_timeout_seconds=coalesce_timeout_seconds,
                        generation_cache_implementation=getattr(
@@ -591,10 +612,12 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
         if request_role == "follower":
             wait_started = time.monotonic()
             if not claimed.wait(coalesce_timeout_seconds):
+                increment_cache_stat("coalesce_timeouts")
                 return jsonify(error={"message":
                     "Timed out waiting for an identical Local VLM request"}), 503
             cached = cached_response(cache_key)
             if cached is None:
+                increment_cache_stat("coalesce_reuse_failures")
                 return jsonify(error={"message":
                     "The identical Local VLM request did not produce a reusable result"}), 503
             cached["local_vlm"].update(cache_hit=True, cache_key_sha256=cache_key,
@@ -612,6 +635,7 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
                 image_budget=checked_single_image_budget(
                     body['image_token_budget'],backend,len(images))
             if not inference_lock.acquire(blocking=False):
+                increment_cache_stat("busy_rejections")
                 return jsonify(error={"message": "Local VLM is busy"}), 503
             start = time.monotonic()
             try:

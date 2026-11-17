@@ -33,6 +33,16 @@ class ExactReplayVerifierTests(unittest.TestCase):
         self.assertEqual(record["cache_entries"], 9)
         self.assertEqual(record["usage"]["completion_tokens"], 4)
 
+    def test_cache_stat_delta_is_explicit_and_tolerates_new_counters(self):
+        before = {"response_cache_stats": {
+            "hits": 2, "misses": 3, "stores": 3}}
+        after = {"response_cache_stats": {
+            "hits": 3, "misses": 4, "stores": 4, "evictions": 1}}
+
+        self.assertEqual(MODULE.cache_stat_delta(before, after), {
+            "evictions": 1, "hits": 1, "misses": 1, "stores": 1,
+        })
+
 
 if __name__ == "__main__":
     unittest.main()

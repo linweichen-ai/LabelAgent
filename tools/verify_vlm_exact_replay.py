@@ -26,6 +26,19 @@ def health_url(endpoint: str) -> str:
     return endpoint[:-len(marker)] + "/health"
 
 
+def read_health(endpoint: str) -> dict:
+    with urllib.request.urlopen(health_url(endpoint), timeout=10) as response:
+        return json.load(response)
+
+
+def cache_stat_delta(before: dict, after: dict) -> dict:
+    before_stats = before.get("response_cache_stats") or {}
+    after_stats = after.get("response_cache_stats") or {}
+    names = set(before_stats) | set(after_stats)
+    return {name: after_stats.get(name, 0) - before_stats.get(name, 0)
+            for name in sorted(names)}
+
+
 def record(response: dict, wall_ms: float) -> dict:
     local = response.get("local_vlm") or {}
     content = response["choices"][0]["message"]["content"]
@@ -80,12 +93,13 @@ def main() -> int:
             "name": "labelagent", "schema": contract["response_schema"],
             "strict": True}},
     }
+    health_before = read_health(endpoint)
     first_response, first_ms = request_json(
         endpoint, body, request_config.get("llm_key", ""))
     second_response, second_ms = request_json(
         endpoint, body, request_config.get("llm_key", ""))
-    with urllib.request.urlopen(health_url(endpoint), timeout=10) as response:
-        health = json.load(response)
+    health_after = read_health(endpoint)
+    stats_delta = cache_stat_delta(health_before, health_after)
     first = record(first_response, first_ms)
     second = record(second_response, second_ms)
     result = {
@@ -101,12 +115,30 @@ def main() -> int:
             "content_sha256_equal": (
                 first["content_sha256"] == second["content_sha256"]),
             "usage_equal": first["usage"] == second["usage"],
-            "capacity": health.get("response_cache_capacity"),
+            "capacity": health_after.get("response_cache_capacity"),
+            "cache_stats_exposed": isinstance(
+                health_after.get("response_cache_stats"), dict),
+            "expected_cache_stat_delta": all([
+                stats_delta.get("misses") == 1,
+                stats_delta.get("hits") == 1,
+                stats_delta.get("stores") == 1,
+                stats_delta.get("coalesced") == 0,
+                stats_delta.get("busy_rejections") == 0,
+            ]),
             "source_state_modified": file_sha256(state_path) != state_before,
             "candidate_written": False,
             "human_truth_modified": False,
             "training_data_modified": False,
         },
+        "health_before": {
+            "response_cache_entries": health_before.get("response_cache_entries"),
+            "response_cache_stats": health_before.get("response_cache_stats"),
+        },
+        "health_after": {
+            "response_cache_entries": health_after.get("response_cache_entries"),
+            "response_cache_stats": health_after.get("response_cache_stats"),
+        },
+        "response_cache_stats_delta": stats_delta,
     }
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n",
@@ -118,6 +150,8 @@ def main() -> int:
         result["acceptance"]["content_sha256_equal"],
         result["acceptance"]["usage_equal"],
         result["acceptance"]["capacity"] == 64,
+        result["acceptance"]["cache_stats_exposed"],
+        result["acceptance"]["expected_cache_stat_delta"],
         not result["acceptance"]["source_state_modified"],
     ]) else 2
 

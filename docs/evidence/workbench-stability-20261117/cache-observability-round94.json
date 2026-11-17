@@ -1,0 +1,69 @@
+{
+  "schema_version": "labelagent.cache-observability.v1",
+  "round": 94,
+  "date": "2026-11-17",
+  "accepted_change": "Expose process-lifetime exact-response cache counters without recording request content.",
+  "counter_contract": {
+    "hits": "requests served immediately from an exact validated response",
+    "misses": "requests whose exact response was absent when they arrived, including coalesced followers",
+    "stores": "validated leader responses inserted into the bounded cache",
+    "evictions": "least-recently-used entries removed because the cache was full",
+    "coalesced": "cache misses that waited for an identical in-flight leader",
+    "coalesce_timeouts": "identical followers that exceeded the bounded wait",
+    "coalesce_reuse_failures": "identical followers whose leader produced no reusable response",
+    "busy_rejections": "different uncached requests rejected while inference was occupied"
+  },
+  "privacy_and_isolation": {
+    "process_lifetime_only": true,
+    "resets_on_restart": true,
+    "records_prompt_or_image_content": false,
+    "model_output_changed": false,
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "oss_modified": false
+  },
+  "tests": {
+    "python": "771/771",
+    "web": "95/95",
+    "lru_contract": "hits=2 misses=4 stores=4 evictions=2",
+    "coalescing_contract": "hits=0 misses=2 stores=1 coalesced=1",
+    "busy_contract": "misses=2 stores=1 busy_rejections=1"
+  },
+  "formal_deployment": {
+    "page_status": 200,
+    "health_status": "ok",
+    "model_loaded": true,
+    "exact_requests_inflight": 0,
+    "response_cache_capacity": 64,
+    "server_sha256": "0de0c6e26c743c8ac3208c184bc5ef14d2cebca3def8fd22c283a1a1130c55bf",
+    "windows_and_remote_hash_equal": true
+  },
+  "real_exact_replay": {
+    "image_sha256": "34e5094d24db487b3fcd5c458ac810cde5d58293f89fe0b92a2933c72a146812",
+    "cold_wall_ms": 15679.683,
+    "repeat_wall_ms": 165.534,
+    "observed_repeat_wait_reduction_pct": 98.944,
+    "content_sha256_equal": true,
+    "usage_equal": true,
+    "stats_delta": {
+      "hits": 1,
+      "misses": 1,
+      "stores": 1,
+      "evictions": 0,
+      "coalesced": 0,
+      "coalesce_timeouts": 0,
+      "coalesce_reuse_failures": 0,
+      "busy_rejections": 0
+    }
+  },
+  "formal_state": {
+    "all_six_expected_sha256_values_preserved": true
+  },
+  "rollback": {
+    "windows": "D:/Apps/LabelAgent/.local/backups/cache-observability-round94-20261117",
+    "remote_4090": "/home/clw/labelagent_remote_20261110/backups/cache-observability-round94-20261117",
+    "previous_server_sha256": "dabd3a471d79733fcd6efae363c0abbe627aafb0dfac6daa7a15643852cd90c4"
+  },
+  "boundary": "This round makes cache and contention behavior measurable. It does not reduce cold inference latency or prove new-dataset generalization. Cache policy changes require measured eviction and contention evidence from real workflows."
+}

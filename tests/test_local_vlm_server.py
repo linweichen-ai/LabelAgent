@@ -193,6 +193,11 @@ class LocalVLMContractTests(unittest.TestCase):
         health = self.client.get("/health").json
         self.assertEqual(health["response_cache_capacity"], 64)
         self.assertEqual(health["response_cache_entries"], 1)
+        self.assertEqual(health["response_cache_stats"], {
+            "hits": 1, "misses": 1, "stores": 1, "evictions": 0,
+            "coalesced": 0, "coalesce_timeouts": 0,
+            "coalesce_reuse_failures": 0, "busy_rejections": 0,
+        })
 
     def test_response_cache_is_bounded_lru_and_refreshes_exact_hits(self):
         backend = ContractBackend()
@@ -217,6 +222,11 @@ class LocalVLMContractTests(unittest.TestCase):
         health = client.get("/health").json
         self.assertEqual(health["response_cache_capacity"], 2)
         self.assertEqual(health["response_cache_entries"], 2)
+        self.assertEqual(health["response_cache_stats"], {
+            "hits": 2, "misses": 4, "stores": 4, "evictions": 2,
+            "coalesced": 0, "coalesce_timeouts": 0,
+            "coalesce_reuse_failures": 0, "busy_rejections": 0,
+        })
 
     def test_cache_key_includes_generation_contract(self):
         body = {"model": self.backend.model_id, "messages": messages()}
@@ -247,6 +257,12 @@ class LocalVLMContractTests(unittest.TestCase):
         metadata = [reply.json["local_vlm"] for reply in replies]
         self.assertEqual(sum(item["cache_hit"] for item in metadata), 1)
         self.assertEqual(sum(item.get("coalesced", False) for item in metadata), 1)
+        health = app.test_client().get("/health").json
+        self.assertEqual(health["response_cache_stats"], {
+            "hits": 0, "misses": 2, "stores": 1, "evictions": 0,
+            "coalesced": 1, "coalesce_timeouts": 0,
+            "coalesce_reuse_failures": 0, "busy_rejections": 0,
+        })
 
     def test_different_inflight_request_keeps_busy_backpressure(self):
         backend = BlockingBackend()
@@ -268,6 +284,10 @@ class LocalVLMContractTests(unittest.TestCase):
         first.join(2)
         self.assertEqual(holder[0].status_code, 200)
         self.assertEqual(backend.generate_calls, 1)
+        health = app.test_client().get("/health").json
+        self.assertEqual(health["response_cache_stats"]["misses"], 2)
+        self.assertEqual(health["response_cache_stats"]["busy_rejections"], 1)
+        self.assertEqual(health["response_cache_stats"]["stores"], 1)
 
 
 if __name__ == "__main__":

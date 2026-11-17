@@ -1118,3 +1118,13 @@ cuDNN attention 在隔离算子上看似更快：static prefill 中位从 0.2180
 新增两条契约验证覆盖“命中刷新最近使用顺序”和“只淘汰最久未使用项”，容量仍被原有 0～256 边界限制。正式 4090 `/health` 已读回 capacity 64、模型 ok、inflight 0；Windows 与远端服务文件 SHA-256 均为 `DABD3A47...D90C4`。一次未缓存的真实生产类别发现为 15.912 秒，紧接着完全相同的请求为 0.181 秒且 `cache_hit=true`，两次内容 SHA-256、894 prompt token 和 322 completion token 完全一致，观测等待下降 98.863%。
 
 六份正式状态文件哈希未变，候选、人工真值、训练批准和 OSS 均未修改。Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\response-cache-64-round93-20261117`，远端回滚点为 `/home/clw/labelagent_remote_20261110/backups/response-cache-64-round93-20261117`。复现工具为 `tools/verify_vlm_exact_replay.py`，结构化记录见 [第九十三轮缓存扩容验收](evidence/workbench-stability-20261117/response-cache-64-round93.json)。边界：扩容改善近期回看和预取复用，不减少第一张冷图约 16 秒的计算。
+
+## 第九十四轮精确缓存与拥塞计数（已部署，2026-11-17）
+
+第九十三轮把精确响应缓存扩展为 64 条，但继续扩大容量或调整预取前缺少真实命中、淘汰和竞争证据。本轮在进程内新增八个单调计数：立即命中、到达时未命中、有效写入、LRU 淘汰、同请求合并、合并超时、合并后无可复用结果、不同请求 busy 拒绝。计数只存在内存，服务重启清零；健康页不暴露请求体、提示、图片、类别或缓存键。
+
+契约测试明确了口径：两条容量的 LRU 序列得到 hits=2、misses=4、stores=4、evictions=2；相同在途请求得到 misses=2、stores=1、coalesced=1；不同在途请求得到 misses=2、stores=1、busy_rejections=1。完整回归为 Python 771/771、网页 95/95。
+
+正式 4090 重启后计数全零。用一张真实 640×512 图像执行完整生产类别发现，冷请求为 15.680 秒，紧接着精确重复为 0.166 秒，内容 SHA-256 和 894/322 token 用量完全一致；计数恰好增加 misses=1、stores=1、hits=1，其余为 0。页面 HTTP 200、VLM ok、inflight 0，Windows 与远端服务 SHA-256 均为 `0DE0C6E2...30C55BF`，六份正式状态文件哈希全部未变。
+
+Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\cache-observability-round94-20261117`，远端回滚点为 `/home/clw/labelagent_remote_20261110/backups/cache-observability-round94-20261117`。复现结果在未提交的 `artifacts/round94-cache-observability/result.json`，结构化验收见 [第九十四轮缓存观测验收](evidence/workbench-stability-20261117/cache-observability-round94.json)。边界：本轮让真实工作流中的复用、淘汰和拥塞可测，不降低冷图约 16 秒的生成，也不证明新数据集泛化；后续缓存分区、容量或预取调整必须先收集真实计数证据。

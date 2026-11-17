@@ -1,0 +1,126 @@
+{
+  "schema_version": "labelagent.frame-dwell-prefetch-round80.v1",
+  "recorded_at": "2026-11-17",
+  "status": "accepted_and_deployed",
+  "objective": "Start the exact, state-safe VLM and SAM prefetch after a blank frame remains visible, so operator inspection time can cover cold model work instead of waiting until the auto-draft dialog opens.",
+  "cold_bottleneck_profile": {
+    "formal_frame": 127,
+    "input_sha256": "a62b3198779915ffcd2b87471e422cfabd6e4e890ca37a9fd2746df14a9bc8c0",
+    "discovery_elapsed_ms": 15907.523,
+    "preprocess_seconds": 0.074,
+    "constraint_setup_seconds": 0.002,
+    "generation_seconds": 15.573,
+    "prompt_tokens": 894,
+    "completion_tokens": 323,
+    "image_tokens": 238,
+    "cache_implementation": "static",
+    "state_sha256_before": "A01D57E013255DA55C6D76DB8F47BACF7EF872CFAA35371C4EBB03A213158E21",
+    "state_sha256_after": "A01D57E013255DA55C6D76DB8F47BACF7EF872CFAA35371C4EBB03A213158E21",
+    "interpretation": "Cold latency is dominated by VLM generation; image preprocessing, upload, state save, and SAM are not the primary first-result bottleneck."
+  },
+  "change": {
+    "frame_dwell_ms": 1200,
+    "trigger": "labelagent:frame-state after the current frame and its compact annotation state are loaded",
+    "rapid_navigation_behavior": "A newer frame event cancels the prior timer and invalidates any stale completion.",
+    "skip_conditions": [
+      "current frame already has human truth",
+      "current frame already has machine candidates",
+      "the operator explicitly selected a single-label mode",
+      "file path, topic, labels, or current-frame binding is missing",
+      "SAM or VLM readiness is false"
+    ],
+    "server_safety": "The existing prefetch endpoint still refuses active workflows and busy unrelated model work. Prefetch does not save candidates, human truth, references, or training approval.",
+    "exact_request_reuse": "Opening the dialog or clicking during the same in-flight request reuses or coalesces the existing exact discovery request."
+  },
+  "integration_issue_found_and_fixed": {
+    "first_attempt": "The lightweight frame-state event did not include an explicit loaded=true field, so the speculative prefetch was safely skipped and no model request was made.",
+    "fix": "Treat a non-empty bound path plus topic as loaded for the lightweight event while retaining all exact path, topic, frame, and label bindings.",
+    "data_modified_by_failed_attempt": false
+  },
+  "browser_acceptance": {
+    "input": "formal camera_1 frame 126 exported as a standalone 1920x1536 image",
+    "input_bytes": 325107,
+    "input_file_sha256": "454E5720A16B103FF69FACCEF9705FD41E37F6791ECB16A1255DE13512DCC423",
+    "page_status": 200,
+    "upload_ms": 47,
+    "load_ms": 404,
+    "dwell_to_prefetch_complete_ms": 20889,
+    "cold_discovery_elapsed_ms": 16724.981,
+    "sam_prefetched": true,
+    "click_to_candidates_ms": 3518,
+    "background_agent_and_audit_complete_ms": 41156,
+    "candidate_count": 21,
+    "candidate_counts_by_label": {
+      "floor": 1,
+      "pallet": 17,
+      "person": 3
+    },
+    "prefetch_endpoint_requests": 1,
+    "draft_endpoint_requests": 1,
+    "page_errors": [],
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "truth_frame_created": false,
+    "reference_frame_created": false,
+    "initial_blank_state_asserted_after_prefetch": true,
+    "raw_result_sha256": "EF697C53F554DE1EA32F355A7E65EEC22E472EA9BBBCCFAAA3D9198B0BAB8AE4",
+    "screenshot": "frame-dwell-prefetch-round80.png",
+    "screenshot_sha256": "6BF859A7A11BD7555A0193C41B1725E96DA83BCC8AD923C9F1060F31E6EF61B7"
+  },
+  "warm_repeat_control": {
+    "input": "1104 problem package 004 exact repeated image",
+    "dwell_to_prefetch_complete_ms": 1896,
+    "discovery_elapsed_ms": 164.093,
+    "click_to_candidates_ms": 797,
+    "background_complete_ms": 1156,
+    "candidate_count": 13,
+    "page_errors": [],
+    "note": "This control validates UI scheduling and exact reuse only; it is not a cold-latency result."
+  },
+  "tests": {
+    "javascript_syntax": "passed",
+    "web": "87 passed, 0 failed",
+    "new_guards": [
+      "rapid frame navigation cancels the dwell timer",
+      "truth and existing candidates suppress speculative work",
+      "readiness is checked before prefetch",
+      "frame, path, topic, and labels remain bound",
+      "only one exact prefetch request is issued"
+    ],
+    "python": "No Python product source changed in this round; the latest full product run remains 746 passed from round 78."
+  },
+  "deployment": {
+    "formal_reference_prep_sha256_before": "93FD4B6B72DDD2AA0E9E76D7EE46534D44937B3C3CD75D7D05E875BBEF45EF14",
+    "formal_reference_prep_sha256_after": "166860703E63B118D15A179FBC918A0C8E8E084533A9941846B8C3E7A333ED98",
+    "formal_index_sha256_before": "3D988C4B2BF933DA07665E501F1F7D1838FB8025B405F319B83D1EFBA9A6C6B9",
+    "formal_index_sha256_after": "151D57B0C166F89912527F4140618AEAFC5DB093674CCB2731DD659ED7B258AF",
+    "served_reference_prep_sha256": "166860703E63B118D15A179FBC918A0C8E8E084533A9941846B8C3E7A333ED98",
+    "browser_asset_version": 116,
+    "rollback_directory": "D:/Apps/LabelAgent/.local/backups/frame-dwell-prefetch-round80-20261117",
+    "formal_page_status": 200,
+    "formal_run_status": "idle",
+    "sam_status": "ok",
+    "primary_vlm_status": "ok",
+    "fast_5090_status": "disabled"
+  },
+  "gpu_boundary": {
+    "factory_5090_gpu0": "100 percent utilization, 24581 MiB used, non-owned pqr3d workload present",
+    "factory_5090_gpu1": "100 percent utilization, 20532 MiB used, non-owned pqr3d workload present",
+    "action": "No process was stopped or modified; the optional fast route remains disabled."
+  },
+  "formal_state_sha256_unchanged": {
+    "state.json": "A01D57E013255DA55C6D76DB8F47BACF7EF872CFAA35371C4EBB03A213158E21",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "model_debug.json": "2D3BE581405142DEB66FE62DC24F8EFEAAC6D5C471FAE61CCBC150819F432B6E"
+  },
+  "boundaries": [
+    "This change hides part of the same cold computation behind frame inspection time; it does not reduce total cold VLM compute.",
+    "The 3.518-second click-to-candidate result is one 1920x1536 engineering frame after completed prefetch, not a cross-dataset P50 or P95.",
+    "The 41.156-second background time includes fresh Agent refinement and high-risk candidate audit after candidates were already visible.",
+    "No SAM3 fine-tuning, VLM post-training, model-weight change, human truth write, training approval, OSS write, or non-owned GPU process interruption occurred."
+  ]
+}

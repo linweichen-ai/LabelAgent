@@ -102,7 +102,7 @@ test('参考准备弹窗只读取轻量目录并在选帧后按需读取几何',
 
 test('参考准备弹窗为当前空白帧预取可见类别并显示SAM预热状态', () => {
   const prep = source('reference-prep.js');
-  const prefetch = prep.slice(prep.indexOf('async function maybePrefetchVisibleDiscovery'),
+  const prefetch = prep.slice(prep.indexOf('async function prefetchVisibleDiscovery'),
     prep.indexOf('\n  function render(state)'));
   assert.match(prefetch, /hasTruthFrame\(state, frameId\) \|\| currentFrameCandidate\(state, frameId\)/);
   assert.match(prefetch, /fetch\('\/api\/reference_discovery\/prefetch'/);
@@ -113,6 +113,21 @@ test('参考准备弹窗为当前空白帧预取可见类别并显示SAM预热�
   assert.match(prep, /void maybePrefetchVisibleDiscovery\(generation\)/);
   assert.match(prep, /正在后台预备当前图片的 VLM 类别识别/);
   assert.match(prep, /当前图片的 VLM 类别识别与整图 SAM 已预备/);
+});
+
+test('图片稳定停留后提前预取但跳过真值候选和快速导航', () => {
+  const prep = source('reference-prep.js');
+  const dwell = prep.slice(prep.indexOf('function scheduleFrameDwellPrefetch'),
+    prep.indexOf('\n  function render(state)'));
+  assert.match(prep, /const FRAME_DWELL_PREFETCH_MS = 1200/);
+  assert.match(prep, /state\?\.loaded === true \|\| Boolean\(state\?\.path && state\?\.topic\)/);
+  assert.match(dwell, /clearTimeout\(frameDwellPrefetchTimer\)/);
+  assert.match(dwell, /hasTruthFrame\(state, frameId\) \|\| currentFrameCandidate\(state, frameId\)/);
+  assert.match(dwell, /fetch\('\/api\/model_readiness'/);
+  assert.match(dwell, /generation !== frameDwellPrefetchGeneration \|\| currentFrame\(\) !== frameId/);
+  assert.match(dwell, /await prefetchVisibleDiscovery\(state, frameId, key/);
+  assert.match(prep, /discoveryPrefetch = \{key, status: 'idle', completedAt: 0, samReady: false\}/);
+  assert.match(prep, /document\.addEventListener\('labelagent:frame-state'/);
 });
 
 test('保存真值和锁定参考帧只读回目标帧且保留强绑定校验', () => {

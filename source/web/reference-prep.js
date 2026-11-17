@@ -18,7 +18,10 @@
   let sourceSwitchBusy = false;
   let recommendationTargetId = '';
   let discoveryPrefetch = {key: '', status: 'idle', completedAt: 0, samReady: false};
+  let frameDwellPrefetchTimer = null;
+  let frameDwellPrefetchGeneration = 0;
   const DISCOVERY_PREFETCH_REUSE_MS = 5 * 60 * 1000;
+  const FRAME_DWELL_PREFETCH_MS = 1200;
   const clone = value => JSON.parse(JSON.stringify(value));
   const currentFrame = () => Number.parseInt(byId('frameNumber')?.value || '0', 10) || 0;
 
@@ -236,17 +239,12 @@
   }
 
   function discoveryPrefetchKey(state = latestState, frameId = currentFrame()) {
-    if (!state?.loaded || !state?.path || !state?.topic || !(state.labels || []).length) return '';
+    const loaded = state?.loaded === true || Boolean(state?.path && state?.topic);
+    if (!loaded || !state?.path || !state?.topic || !(state.labels || []).length) return '';
     return JSON.stringify([state.path, state.topic, Number(frameId), state.labels]);
   }
 
-  async function maybePrefetchVisibleDiscovery(generation = preparationGeneration) {
-    const state = latestState;
-    const frameId = currentFrame();
-    const key = discoveryPrefetchKey(state, frameId);
-    if (generation !== preparationGeneration || !preparationStateReady || !modelReadiness?.ready
-        || byId('referenceAutoLabel')?.value !== AUTO_VISIBLE_LABELS || !key
-        || hasTruthFrame(state, frameId) || currentFrameCandidate(state, frameId)) return;
+  async function prefetchVisibleDiscovery(state, frameId, key, stillCurrent) {
     if (discoveryPrefetch.key === key && discoveryPrefetch.status === 'warming') return;
     if (discoveryPrefetch.key === key && discoveryPrefetch.status === 'ready'
         && Date.now() - discoveryPrefetch.completedAt < DISCOVERY_PREFETCH_REUSE_MS) return;
@@ -259,7 +257,12 @@
           expected_topic: state.topic}),
       });
       const data = await response.json();
-      if (generation !== preparationGeneration || discoveryPrefetch.key !== key) return;
+      if (!stillCurrent() || discoveryPrefetch.key !== key) {
+        if (discoveryPrefetch.key === key) {
+          discoveryPrefetch = {key, status: 'idle', completedAt: 0, samReady: false};
+        }
+        return;
+      }
       discoveryPrefetch = response.ok && data.prefetched === true
         && data.schema_version === 'labelagent.reference-discovery-prefetch.v1'
         && data.input_sha256 && data.discovery_sha256
@@ -267,12 +270,50 @@
           samReady: data.sam_prefetch?.prefetched === true}
         : {key, status: 'idle', completedAt: 0, samReady: false};
     } catch (_) {
-      if (generation === preparationGeneration && discoveryPrefetch.key === key) {
+      if (discoveryPrefetch.key === key) {
         discoveryPrefetch = {key, status: 'idle', completedAt: 0, samReady: false};
       }
     } finally {
-      if (generation === preparationGeneration) updateAutoDraftAction();
+      if (stillCurrent()) updateAutoDraftAction();
     }
+  }
+
+  async function maybePrefetchVisibleDiscovery(generation = preparationGeneration) {
+    const state = latestState;
+    const frameId = currentFrame();
+    const key = discoveryPrefetchKey(state, frameId);
+    if (generation !== preparationGeneration || !preparationStateReady || !modelReadiness?.ready
+        || byId('referenceAutoLabel')?.value !== AUTO_VISIBLE_LABELS || !key
+        || hasTruthFrame(state, frameId) || currentFrameCandidate(state, frameId)) return;
+    return prefetchVisibleDiscovery(state, frameId, key,
+      () => generation === preparationGeneration);
+  }
+
+  function scheduleFrameDwellPrefetch(state) {
+    const generation = ++frameDwellPrefetchGeneration;
+    if (frameDwellPrefetchTimer) clearTimeout(frameDwellPrefetchTimer);
+    frameDwellPrefetchTimer = null;
+    const frameId = currentFrame();
+    const key = discoveryPrefetchKey(state, frameId);
+    const selectedMode = byId('referenceAutoLabel')?.value;
+    if (!key || (selectedMode && selectedMode !== AUTO_VISIBLE_LABELS)
+        || hasTruthFrame(state, frameId) || currentFrameCandidate(state, frameId)) return;
+    frameDwellPrefetchTimer = setTimeout(async () => {
+      frameDwellPrefetchTimer = null;
+      if (generation !== frameDwellPrefetchGeneration || currentFrame() !== frameId) return;
+      try {
+        const response = await fetch('/api/model_readiness', {cache: 'no-store'});
+        const readiness = await response.json();
+        if (generation !== frameDwellPrefetchGeneration || currentFrame() !== frameId
+            || !response.ok || !readiness?.ready) return;
+        modelReadiness = readiness;
+        await prefetchVisibleDiscovery(state, frameId, key,
+          () => currentFrame() === frameId
+            && discoveryPrefetchKey(window.currentWorkbenchFrameState?.(), frameId) === key);
+      } catch (_) {
+        // Speculative work must never block normal navigation or manual review.
+      }
+    }, FRAME_DWELL_PREFETCH_MS);
   }
 
   function render(state) {
@@ -679,6 +720,10 @@
   });
   dialog.addEventListener('cancel', event => { event.preventDefault(); if (!draftBusy) dialog.close(); });
   dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+  document.addEventListener('labelagent:frame-state', event => {
+    const state = event.detail?.state;
+    if (state) scheduleFrameDwellPrefetch(state);
+  });
   window.openReferencePreparation = openDialog;
   window.loadCurrentFrameCandidateForReference = frameId => useCandidateFrame(Number(frameId));
   window.startReferenceAutoDraft = safely(startAutoDraftFromGuide);

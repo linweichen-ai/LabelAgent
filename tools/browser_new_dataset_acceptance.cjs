@@ -21,6 +21,7 @@ function required(name) {
   const image = path.resolve(required("IMAGE"));
   const outputJson = path.resolve(required("OUTPUT_JSON"));
   const screenshot = path.resolve(required("SCREENSHOT"));
+  const waitForDwellPrefetch = process.env.WAIT_FOR_DWELL_PREFETCH === "1";
   assert(fs.statSync(image).isFile());
   fs.mkdirSync(path.dirname(outputJson), { recursive: true });
   fs.mkdirSync(path.dirname(screenshot), { recursive: true });
@@ -47,6 +48,11 @@ function required(name) {
     const uploadMs = Date.now() - uploadStarted;
     const row = page.locator(".fileRow").filter({ hasText: path.basename(image) });
     await row.waitFor({ state: "visible" });
+    const dwellPrefetchPromise = waitForDwellPrefetch
+      ? page.waitForResponse(item =>
+        new URL(item.url()).pathname === "/api/reference_discovery/prefetch",
+      { timeout: 120000 })
+      : null;
     const loadStarted = Date.now();
     await row.getByRole("button", { name: "加载", exact: true }).click();
     await page.waitForFunction(() =>
@@ -54,6 +60,18 @@ function required(name) {
     const loadMs = Date.now() - loadStarted;
     const loadStatus = await page.locator("#fileManagerStatus").innerText();
     await page.locator("#closeFilesDialog").click();
+    let dwellPrefetchMs = null;
+    let dwellPrefetchPayload = null;
+    if (dwellPrefetchPromise) {
+      const dwellPrefetchResponse = await dwellPrefetchPromise;
+      dwellPrefetchMs = Date.now() - loadStarted;
+      dwellPrefetchPayload = await dwellPrefetchResponse.json();
+      assert.equal(dwellPrefetchResponse.status(), 200);
+      assert.equal(dwellPrefetchPayload.prefetched, true);
+      assert.equal(dwellPrefetchPayload.candidate_only, true);
+      assert.equal(dwellPrefetchPayload.human_truth, false);
+      assert.equal(dwellPrefetchPayload.approved_for_training, false);
+    }
 
     await page.evaluate(() => {
       window.__labelAgentAcceptanceProgress = [];
@@ -133,6 +151,18 @@ function required(name) {
       upload_ms: uploadMs,
       load_ms: loadMs,
       load_status: loadStatus,
+      dwell_prefetch_waited: waitForDwellPrefetch,
+      dwell_prefetch_ms: dwellPrefetchMs,
+      dwell_prefetch: dwellPrefetchPayload && {
+        prefetched: dwellPrefetchPayload.prefetched,
+        input_sha256: dwellPrefetchPayload.input_sha256,
+        discovery_sha256: dwellPrefetchPayload.discovery_sha256,
+        discovery_elapsed_ms: dwellPrefetchPayload.discovery_elapsed_ms,
+        candidate_only: dwellPrefetchPayload.candidate_only,
+        human_truth: dwellPrefetchPayload.human_truth,
+        approved_for_training: dwellPrefetchPayload.approved_for_training,
+        sam_prefetched: dwellPrefetchPayload.sam_prefetch?.prefetched === true,
+      },
       candidate_visible_ms: candidateVisibleMs,
       background_complete_ms: backgroundCompleteMs,
       candidate_count: candidates.length,

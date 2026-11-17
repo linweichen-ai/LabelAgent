@@ -920,6 +920,18 @@ def run_summary(output):
     failed = output.get("failed_frames")
     if not isinstance(failed, list):
         failed = [item.get("frame") for item in frames if item.get("failed")]
+    targets = output.get("targets")
+    if not isinstance(targets, list):
+        targets = []
+    targets = list(dict.fromkeys(
+        item for item in targets
+        if isinstance(item, int) and not isinstance(item, bool)
+    ))[:100]
+    completed_frames = {
+        item.get("frame") for item in frames
+        if isinstance(item.get("frame"), int) and not isinstance(item.get("frame"), bool)
+    }
+    pending_frames = [item for item in targets if item not in completed_frames]
     task_id = output.get("task_id")
     if not task_id:
         task_id = "legacy-" + _sha256_json({
@@ -938,6 +950,7 @@ def run_summary(output):
         "completed": len(frames),
         "current": current,
         "frames": frames,
+        "pending_frames": pending_frames,
         "failed_frames": [int(item) for item in failed if isinstance(item, int)],
         "message": str(output.get("message") or "")[:500],
         "error": str(output.get("error") or "")[:500],
@@ -3371,7 +3384,9 @@ def get_run_status():
                       and summary.get("topic") == selected_topic)
         same_task = (not snapshot.get("task_id")
                      or summary and summary.get("task_id") == snapshot.get("task_id"))
-        if same_scope and same_task and summary.get("frames"):
+        resumable_interruption = (summary and summary.get("status") == "running"
+                                  and summary.get("pending_frames"))
+        if same_scope and same_task and (summary.get("frames") or resumable_interruption):
             snapshot.update(
                 result_available=True,
                 result_task_id=summary.get("task_id"),
@@ -3379,6 +3394,8 @@ def get_run_status():
                 result_completed=summary.get("completed", 0),
                 result_total=summary.get("total", 0),
                 failed_frames=summary.get("failed_frames", []),
+                pending_frames=summary.get("pending_frames", []),
+                result_interrupted=bool(resumable_interruption),
             )
     return jsonify(snapshot)
 

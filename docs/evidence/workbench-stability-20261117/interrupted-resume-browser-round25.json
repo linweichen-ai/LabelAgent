@@ -1,0 +1,49 @@
+{
+  "page_errors": [],
+  "console_errors": [],
+  "failed_requests": [],
+  "responses": [
+    {
+      "pathname": "/api/run/status",
+      "status": 200
+    },
+    {
+      "pathname": "/api/bootstrap",
+      "status": 200
+    },
+    {
+      "pathname": "/api/run/status",
+      "status": 200
+    },
+    {
+      "pathname": "/api/run/status",
+      "status": 200
+    },
+    {
+      "pathname": "/api/run/result",
+      "status": 200
+    },
+    {
+      "pathname": "/api/run/status",
+      "status": 200
+    },
+    {
+      "pathname": "/api/run/status",
+      "status": 200
+    }
+  ],
+  "recovery_ms": 938,
+  "recovered": {
+    "frame": 30,
+    "topic": "/capture/camera_1/image",
+    "annotationMode": true,
+    "compactGeometryMode": true,
+    "candidate_count": 10,
+    "button": "开始自动标注",
+    "result_available": false,
+    "handled": [
+      "legacy-05c709a27c0de10d048fddea"
+    ]
+  },
+  "passed": true
+}

@@ -412,3 +412,15 @@ Python 回归 127/127、轮询 10/10、候选与人工门禁 60/60，JavaScript 
 正式部署后，三份运行文件与工作树 SHA-256 一致；`state.json`、`file_sessions.json`、`last_run.json`、`last_run_summary.json` 与部署前逐字节一致。SAM、VLM 与页面均 ready，任务 idle。回滚点为 `D:\Apps\LabelAgent\.local\backups\workbench-failed-retry-round24-20261117-123000`。截图见 [第二十四轮恢复后的正式工作台](evidence/workbench-stability-20261117/failed-retry-after-restart-round24.png)，结构化证据见 [第二十四轮实测](evidence/workbench-stability-20261117/failed-retry-round24.json)。
 
 边界：本轮改善失败恢复、重复计算和页面完成态延迟，不改变模型精度。精确重试在隔离的确定性工作流中做了端到端验证；正式运行环境只验证了参数门禁、页面恢复和状态不变，没有为了验收人为制造一次长 GPU 失败任务。机器候选仍未自动升级为人工真值或训练集，camera_3 仍为 `reference_missing`。
+
+## 第二十五轮长批次中断续跑（2026-11-17）
+
+运行回执原本会在每个帧保存后原子更新，但服务在批次中途异常退出时，回执状态仍是 running，页面只能看到已经完成的结果，无法区分哪些帧尚未完成。现在轻量回执同时保存有界目标帧列表，并按“目标帧减去已写入逐帧回执”计算待续跑帧；最多 100 个整数帧，顺序与原任务一致。
+
+服务重启后，如果正式任务状态已经空闲、回执仍为 running，且文件和相机作用域完全匹配，页面会先恢复已经保存的候选，再显示“继续 N 个未完成帧”。继续请求复用第二十四轮的精确帧接口，因此已完成帧不会被重新提交；参考帧和已有人工真值仍由服务端再次跳过。正常完成、人工停止和其他文件/相机的回执不会被误判为中断续跑。
+
+隔离确定性验收模拟目标帧 `[1, 2]`、帧 1 已保存、帧 2 正在观察时进程中断：重启态正确报告 completed=1、pending=`[2]`、`result_interrupted=true`；前端恢复示例把已保存帧 1 排除，只形成 `[2, 3]` 的未完成队列并显示“继续 2 个未完成帧”。已有完成任务的正式 Edge 兼容验收仍在 938 ms 内打开第 30 帧和 10 个候选，完整状态请求、页面错误、控制台错误和失败请求均为 0。
+
+Python 回归 134/134、轮询与恢复 14/14、候选与人工门禁 60/60。正式三份运行文件与工作树哈希一致，四份正式状态/历史文件与部署前逐字节一致；SAM、VLM ready，任务 idle。回滚点为 `D:\Apps\LabelAgent\.local\backups\workbench-interrupted-resume-round25-20261117-130000`。截图见 [第二十五轮正式兼容验收](evidence/workbench-stability-20261117/interrupted-resume-after-restart-round25.png)，结构化证据见 [第二十五轮实测](evidence/workbench-stability-20261117/interrupted-resume-round25.json)。
+
+边界：正式状态没有被人为改写成中断态；中断续跑合同在临时工作目录和浏览器逻辑中确定性验证，正式环境验证的是旧完成回执兼容性与状态不变。没有启动新的长 GPU 推理，也没有改变模型精度、候选身份或训练回流权限。

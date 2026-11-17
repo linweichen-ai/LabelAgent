@@ -1,0 +1,70 @@
+{
+  "round": 25,
+  "recorded_at": "2026-11-17T13:00:00+08:00",
+  "objective": "Recover an interrupted long batch without rerunning frames that were already saved.",
+  "contract": {
+    "summary_schema": "labelagent.run-summary.v1",
+    "completed_source": "bounded per-frame run receipts",
+    "pending_definition": "ordered target frames minus frames with saved run receipts",
+    "maximum_persisted_targets": 100,
+    "resume_scope": "exact active file and topic",
+    "resume_request": "POST /api/run with frames=[pending...]",
+    "truth_and_reference_skip_preserved": true
+  },
+  "deterministic_interruption_acceptance": {
+    "task_id": "interrupted-123",
+    "targets": [1, 2],
+    "saved_frames": [1],
+    "current_when_interrupted": 2,
+    "pending_frames": [2],
+    "result_available_after_idle_restart": true,
+    "result_interrupted": true,
+    "completed_frame_excluded_from_resume": true,
+    "frontend_button": "继续 2 个未完成帧",
+    "frontend_union_example": {
+      "saved": [1],
+      "pending": [2, 3],
+      "resume_queue": [2, 3]
+    }
+  },
+  "formal_runtime_acceptance": {
+    "url": "http://127.0.0.1:8765",
+    "deployed_source_matches": {
+      "server.py": "CFE205FCC6422E6738F720BE88AA85196946EE22CC7CFBCB6A57376456973768",
+      "app.js": "24CA438556E14477CF455E34527251C8F60C41C60A0C734731A9162E0004F70C",
+      "index.html": "3FFDA806A52869DF9B142920301AF50717010BE4F56A5B1D4965722E24447A07"
+    },
+    "existing_completed_result_recovery_ms": 938,
+    "recovered_frame": 30,
+    "recovered_candidates": 10,
+    "full_state_requests": 0,
+    "page_errors": 0,
+    "console_errors": 0,
+    "failed_requests": 0,
+    "sam3": "ready",
+    "vlm": "ready",
+    "run": "idle"
+  },
+  "runtime_state_readback": {
+    "state.json": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "unchanged_after_deploy_and_acceptance": true
+  },
+  "regression": {
+    "python": "134/134",
+    "web_polling_and_recovery": "14/14",
+    "candidate_and_human_review_gates": "60/60"
+  },
+  "rollback": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-interrupted-resume-round25-20261117-130000",
+  "evidence": [
+    "interrupted-resume-browser-round25.json",
+    "interrupted-resume-after-restart-round25.png"
+  ],
+  "limitations": [
+    "The interrupted state was injected only into an isolated temporary work directory and deterministic browser harness; production state was not fabricated or overwritten.",
+    "The formal runtime acceptance reused a completed result to verify backward compatibility and page health.",
+    "No long GPU inference was started and model accuracy was not changed."
+  ]
+}

@@ -197,7 +197,7 @@ test('刷新后有持久化结果时按钮先恢复结果且不会重复恢复',
     latestAgentJob:{status:'idle',result_available:true,result_task_id:'task-1',
       result_completed:2,result_total:2},
     runRequestStartedAt:null,runRequestPhase:'preflight',runResultHandled:new Set(),
-    retryFailedFrames:[],retryFailedScope:null,loadedDataPath:'/data.mcap',topic:'camera0',
+    retryFrames:[],retryScope:null,retryMode:'',loadedDataPath:'/data.mcap',topic:'camera0',
     renderAgentProgressPanel() {},
   });
   const text = source('app.js');
@@ -207,8 +207,39 @@ test('刷新后有持久化结果时按钮先恢复结果且不会重复恢复',
   assert.equal(button.textContent, '查看上次结果');
   h.run("markRunResultHandled('task-1');renderRunButton()");
   assert.equal(button.textContent, '开始自动标注');
-  h.run("retryFailedFrames=[3,7];retryFailedScope={file:'/data.mcap',topic:'camera0'};renderRunButton()");
+  h.run("retryFrames=[3,7];retryScope={file:'/data.mcap',topic:'camera0'};retryMode='failed';renderRunButton()");
   assert.equal(button.textContent, '重试 2 个失败帧');
+  h.run("retryMode='resume';renderRunButton()");
+  assert.equal(button.textContent, '继续 2 个未完成帧');
+});
+
+test('中断回执恢复已完成结果并只排队未完成帧', async () => {
+  const button = {disabled:false,textContent:'',attributes:{},
+    setAttribute(name,value){this.attributes[name]=value}};
+  let opened = null, notice = '';
+  const h = harness({
+    $: id => id === 'runButton' ? button : {value:'0'},
+    latestAgentJob:{status:'idle',result_available:true,result_task_id:'interrupted-1'},
+    runRequestStartedAt:null,runRequestPhase:'preflight',runRequestFrame:null,runRequestCount:null,
+    runResultHandled:new Set(),retryFrames:[],retryScope:null,retryMode:'',
+    loadedDataPath:'/data.mcap',topic:'camera0',candidateCountIndex:{},
+    async fetch() { return {ok:true,async json(){return {
+      task_id:'interrupted-1',status:'running',file:'/data.mcap',topic:'camera0',
+      completed:1,frames:[{frame:1,remaining:2,failed:false}],pending_frames:[2,3],failed_frames:[]
+    }}}},
+    refreshCandidateSummary() {},
+    async openCandidateFrame(frame,topic) { opened={frame,topic}; },
+    toast(message) { notice=message; },
+    renderAgentProgressPanel() {},
+  });
+  const text = source('app.js');
+  h.run(section(text, 'function pendingRunResult', 'function formatAgentDuration'));
+  h.run(section(text, 'function renderRunButton', 'function renderAgentProgress'));
+  assert.equal(await h.run('recoverRunResult(latestAgentJob)'), true);
+  assert.deepEqual(opened, {frame:1,topic:'camera0'});
+  assert.equal(h.run('retryFrames.join(",")'), '2,3');
+  assert.equal(button.textContent, '继续 2 个未完成帧');
+  assert.ok(notice.includes('已完成帧不会重跑'));
 });
 
 test('瞬时故障重试时同一任务进度不倒退，新任务重新计数', () => {

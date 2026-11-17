@@ -1317,7 +1317,7 @@ class ServerTests(unittest.TestCase):
             server.run_status = {"status": "idle"}
             output = {
                 "task_id": "task-123", "status": "failed", "file": str(FakeVideo.path),
-                "topic": "camera0", "reference": 0, "total": 2,
+                "topic": "camera0", "reference": 0, "total": 2, "targets": [1, 2],
                 "frames": [
                     {"frame": 1, "remaining": 3, "candidates_added": 2,
                      "failed": False, "agent": {"large": "x" * 10000}},
@@ -1337,6 +1337,7 @@ class ServerTests(unittest.TestCase):
                 summary = json.loads(summary_path.read_text(encoding="utf-8"))
                 self.assertEqual(summary["task_id"], "task-123")
                 self.assertEqual(summary["failed_frames"], [2])
+                self.assertEqual(summary["pending_frames"], [])
                 self.assertNotIn("trace", summary)
                 self.assertNotIn("agent", summary["frames"][0])
                 summary_path.unlink()
@@ -1355,6 +1356,36 @@ class ServerTests(unittest.TestCase):
                 server.state["topic"] = "camera1"
                 wrong_scope = client.get("/api/run/result?task_id=task-123")
                 self.assertEqual(wrong_scope.status_code, 409, wrong_scope.json)
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_interrupted_run_summary_exposes_only_unfinished_frames_for_resume(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0"}
+            server.run_status = {"status": "idle"}
+            output = {
+                "task_id": "interrupted-123", "status": "running",
+                "file": str(FakeVideo.path), "topic": "camera0", "reference": 0,
+                "total": 2, "targets": [1, 2],
+                "frames": [{"frame": 1, "remaining": 2, "failed": False}],
+                "current": {"frame": 2, "phase": "observing", "round": 1},
+            }
+            try:
+                server.save_run(output)
+                summary = server.load_run_summary()
+                self.assertEqual(summary["pending_frames"], [2])
+                self.assertEqual(summary["completed"], 1)
+                client = server.app.test_client()
+                status = client.get("/api/run/status").json
+                self.assertTrue(status["result_available"])
+                self.assertTrue(status["result_interrupted"])
+                self.assertEqual(status["pending_frames"], [2])
+                recovered = client.get(
+                    "/api/run/result?task_id=interrupted-123").json
+                self.assertEqual(recovered["pending_frames"], [2])
+                self.assertEqual([item["frame"] for item in recovered["frames"]], [1])
             finally:
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work
 

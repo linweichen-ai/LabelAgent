@@ -122,7 +122,10 @@ def camera_parameters(intrinsic: dict, extrinsic: dict) -> dict:
     width, height = int(intrinsic["image_width"]), int(intrinsic["image_height"])
     params = intrinsic["projection_parameters"]
     vector = np.array([params[key] for key in ("fx", "fy", "cx", "cy")], dtype=float)
-    transform = np.array(extrinsic["transform:"], dtype=float).reshape(4, 4)
+    transform_keys = [key for key in ("transform:", "transform") if key in extrinsic]
+    if len(transform_keys) != 1:
+        raise ValueError("Extrinsic must contain exactly one supported transform field")
+    transform = np.array(extrinsic[transform_keys[0]], dtype=float).reshape(4, 4)
     if width <= 0 or height <= 0 or not np.isfinite(vector).all() or (vector[:2] <= 0).any():
         raise ValueError("Invalid camera parameters")
     rotation = transform[:3, :3]

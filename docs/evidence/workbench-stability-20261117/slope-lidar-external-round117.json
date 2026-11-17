@@ -1,0 +1,56 @@
+{
+  "schema_version": "labelagent.workbench-evidence.v1",
+  "round": 117,
+  "status": "external_candidate_gate_passed_by_assistant_review_not_human_truth",
+  "dataset": "20260904_hz-yozea-elec_Dev_P2605901028248",
+  "sequence": "001",
+  "selection": {
+    "population_frames": 467,
+    "frozen_frames": 8,
+    "frozen_views": 32,
+    "method": "first nonempty sequence by directory order; exact four-camera/LiDAR intersection; evenly spaced including endpoints",
+    "frozen_before_visual_or_model_inspection": true,
+    "manifest_sha256": "74068a1c00d656b2486236b825c22ce3d23600ac2978fe8c72891f7dc44e3aea",
+    "verified_bound_sources": 45
+  },
+  "runtime": {
+    "formal_sam_loopback_url": "http://127.0.0.1:18766",
+    "sam_attempts": 4,
+    "sam_attempt_failures": 0,
+    "sam_elapsed_seconds": 0.57,
+    "support_planes_usable": 7,
+    "support_planes_total": 8,
+    "views_with_geometry_hints": 2,
+    "selected_masks_geometry_gate_passed": 2,
+    "selected_masks_with_warnings": 1
+  },
+  "post_prediction_assistant_review": {
+    "reviewed_views": 32,
+    "visible_slope_candidate_views": 2,
+    "visible_slope_candidate_views_with_acceptable_mask": 2,
+    "no_visible_slope_candidate_views": 30,
+    "no_visible_slope_candidate_views_with_geometry_hint": 0,
+    "assistant_view_recall": 1.0,
+    "assistant_view_false_positive_rate": 0.0
+  },
+  "boundaries": {
+    "labels_read": false,
+    "human_truth": false,
+    "human_confirmed": false,
+    "pixel_iou_available": false,
+    "training_authorized": false,
+    "production_deployed": false,
+    "color_rule_used": false
+  },
+  "artifacts": {
+    "results_sha256": "ec11c13e32da8f8eb9992e203e07edfb3a285a6e843d168997b60a0e318b9e42",
+    "contact_sheet_sha256": "c99b9055685f48219688eb44b236958c280d62f6173356faabc1810b99b1f212",
+    "local_directory": "artifacts/round117-slope-external-hz001"
+  },
+  "limitations": [
+    "The two positive views show the same physical low portable ramp.",
+    "The slice is frozen and cross-factory but remains small.",
+    "Assistant visual review is not independent human annotation or pixel truth.",
+    "One of eight frames did not pass the deterministic support-plane fit gate."
+  ]
+}

@@ -14,6 +14,8 @@ from tools.evaluate_slope_lidar_sam import (
     prompt_points,
     ring_constrained_points,
 )
+from tools.freeze_slope_geometry_external import evenly_spaced, freeze
+from tools.evaluate_slope_lidar_external import verify_manifest
 from tools.evaluate_projected_support import camera_parameters as existing_camera_parameters
 from tools.evaluate_projected_support import project_visible as existing_project_visible
 
@@ -50,6 +52,31 @@ class SlopeLidarGeometryTests(unittest.TestCase):
         b_source, b_pixels = existing_project_visible(points, second, cell_size=4, depth_slack=0.1)
         np.testing.assert_array_equal(a_source, b_source)
         np.testing.assert_array_equal(a_pixels, b_pixels)
+
+    def test_camera_parameters_accepts_both_observed_transform_spellings(self):
+        intrinsic = {
+            "model_type": "PINHOLE",
+            "image_width": 640,
+            "image_height": 512,
+            "projection_parameters": {"fx": 400, "fy": 400, "cx": 320, "cy": 256},
+            "distortion_parameters": {"k1": 0, "k2": 0, "p1": 0, "p2": 0},
+        }
+        legacy = geometry.camera_parameters(
+            intrinsic, {"calibrated": True, "transform:": np.eye(4).ravel().tolist()}
+        )
+        external = geometry.camera_parameters(
+            intrinsic, {"calibrated": True, "transform": np.eye(4).ravel().tolist()}
+        )
+        np.testing.assert_array_equal(legacy["transform"], external["transform"])
+        with self.assertRaisesRegex(ValueError, "exactly one"):
+            geometry.camera_parameters(
+                intrinsic,
+                {
+                    "calibrated": True,
+                    "transform:": np.eye(4).ravel().tolist(),
+                    "transform": np.eye(4).ravel().tolist(),
+                },
+            )
 
     def test_tilted_samples_find_synthetic_ramp_not_flat_floor(self):
         xs = np.linspace(0.6, 2.5, 40)
@@ -150,6 +177,54 @@ class SlopeLidarGeometryTests(unittest.TestCase):
         first = {"metrics": local_metrics, "warnings": []}
         second = {"metrics": spilled_metrics, "warnings": []}
         self.assertGreater(geometry_attempt_rank(first), geometry_attempt_rank(second))
+
+    def test_external_freeze_uses_exact_intersection_and_even_endpoints(self):
+        self.assertEqual(evenly_spaced([str(value) for value in range(10)], 4), ["0", "3", "6", "9"])
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            for camera in range(4):
+                directory = root / "cameras_640x512" / f"camera_{camera}"
+                directory.mkdir(parents=True)
+                for frame in ("1", "2", "3", "4"):
+                    (directory / f"{frame}.png").write_bytes(f"{camera}-{frame}".encode())
+            lidar = root / "lidar"
+            lidar.mkdir()
+            for frame in ("1", "2", "3", "4", "5"):
+                (lidar / f"{frame}.pcd").write_bytes(frame.encode())
+            calibration = root / "calib_640x512"
+            calibration.mkdir()
+            for name in [*(f"camera{camera}_calib.yaml" for camera in range(4)), "lidar2camera.yaml"]:
+                (calibration / name).write_text(name, encoding="utf-8")
+            manifest = freeze(root, "dataset", "001", 4)
+        self.assertEqual(manifest["selection"]["population_frames"], 4)
+        self.assertEqual(manifest["selection"]["frame_ids"], ["1", "2", "3", "4"])
+        self.assertFalse(manifest["boundaries"]["labels_read"])
+
+    def test_external_manifest_verifier_rehashes_every_bound_source(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            for camera in range(4):
+                directory = root / "cameras_640x512" / f"camera_{camera}"
+                directory.mkdir(parents=True)
+                for frame in ("1", "2", "3", "4"):
+                    (directory / f"{frame}.png").write_bytes(f"{camera}-{frame}".encode())
+            lidar = root / "lidar"
+            lidar.mkdir()
+            for frame in ("1", "2", "3", "4"):
+                (lidar / f"{frame}.pcd").write_bytes(frame.encode())
+            calibration = root / "calib_640x512"
+            calibration.mkdir()
+            for name in [*(f"camera{camera}_calib.yaml" for camera in range(4)), "lidar2camera.yaml"]:
+                (calibration / name).write_text(name, encoding="utf-8")
+            manifest = freeze(root, "dataset", "001", 4)
+            manifest_path = root / "manifest.json"
+            import json
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            _, verified = verify_manifest(manifest_path)
+            self.assertEqual(len(verified), 25)
+            (lidar / "2.pcd").write_bytes(b"changed")
+            with self.assertRaisesRegex(ValueError, "changed after selection"):
+                verify_manifest(manifest_path)
 
 
 if __name__ == "__main__":

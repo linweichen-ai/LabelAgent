@@ -1044,3 +1044,13 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 新增三项管理器测试覆盖默认值、非法值安全回退、上下界和正式启动调用点；完整回归为 Python 753/753、网页 89/89。正式管理脚本与版本控制文件 SHA-256 均为 `89FD6F7B...2D03CE96D`，六份正式状态文件哈希完全不变。回滚点为 `D:\Apps\LabelAgent\.local\backups\fast-route-startup-round85-20261117`，结构化证据见 [第八十五轮启动提速验收](evidence/workbench-stability-20261117/optional-fast-startup-round85.json)。
 
 边界：9.919 秒是一次远端模型已热启动时的真实启动，不是多次 P50/P95；本轮改善工作台可用时间，不降低第一张新图约 15～17 秒的 VLM 生成。下一步继续在 4090 单图语义路径上分析生成端开销，5090 则只在外部任务自然释放、端口重新就绪后恢复条件加速。
+
+## 第八十六轮可见类别无约束 JSON 诊断（否决，2026-11-17）
+
+为分清首帧约 15～17 秒究竟来自图像理解还是结构化输出，本轮对一张 640×512 标注数据图和一张 1920×1536 正式工作台帧做严格 A/B。两组请求保持原图字节、完整生产提示、4090 BF16 模型、温度 0 和 384 token 上限相同，只在诊断候选中移除 `response_format`；请求顺序采用 AB/BA，四次请求均为冷请求、0 次缓存命中。
+
+速度差异很大：正式结构化协议两图合计 32.063 秒、中位 16.031 秒，每图 322 completion token；无约束请求合计 4.526 秒、中位 2.263 秒，每图只有 65 token，观测总耗时下降 85.885%。但这不是可部署结果：两张图虽然都返回合法 JSON，却都绕过生产 schema，输出扁平的“类别→状态”字典，缺少 assessments 包装、置信度、视觉理由和开放集 `unknown_candidates` 尾部。把扁平字典仅用于诊断后，一张图的八类状态一致，另一张把 `车辆` 从 absent 改成 present，同时把 `other_robot` 从 present 改成 absent，正好触发互斥车辆类别漂移。
+
+因此“直接关闭结构约束”明确否决，结果禁止进入正式缓存。它同时给出一个值得继续验证的新方向：使用仍受约束的紧凑 evidence-vector 和显式开放集尾部，只在互斥类、uncertain、新类别或一致性门禁触发时扩展完整视觉证据或回退现有协议。这个方向必须在更大固定样本上同时通过类别和开放集门禁后才允许部署。完整回归为 Python 755/755、网页 89/89；正式任务 idle，六份正式状态哈希不变。复现工具为 `tools/evaluate_visible_discovery_format_ablation.py`，结构化证据见 [第八十六轮无约束诊断否决记录](evidence/workbench-stability-20261117/rejected-unconstrained-discovery-round86.json)。
+
+边界：两张图足以否决无约束生产替换，但不能估计总体延迟分布，也不能证明下一版紧凑受约束协议一定有效。本轮没有修改模型权重、SAM3、VLM 后训练、人工真值、训练批准或 OSS。

@@ -1,0 +1,77 @@
+{
+  "schema_version": "labelagent.optimization_experiment.v1",
+  "round": 86,
+  "date": "2026-11-17",
+  "objective": "Measure whether the JSON schema constraint, rather than model generation itself, is the dominant visible-label discovery latency.",
+  "protocol": {
+    "read_only": true,
+    "sample_count": 2,
+    "samples": [
+      "one 640x512 annotated-dataset image",
+      "one 1920x1536 formal-workbench frame"
+    ],
+    "same_image_bytes": true,
+    "same_full_production_instruction": true,
+    "same_primary_4090_model": true,
+    "same_temperature": 0,
+    "same_384_token_limit": true,
+    "only_difference": "omit response_format for the unconstrained diagnostic",
+    "request_order": "alternating AB/BA",
+    "cache_hits": 0,
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "source_state_modified": false
+  },
+  "latency": {
+    "structured_total_ms": 32062.534,
+    "unconstrained_total_ms": 4525.585,
+    "structured_median_ms": 16031.267,
+    "unconstrained_median_ms": 2262.793,
+    "observed_total_reduction_percent": 85.885,
+    "structured_completion_tokens_per_image": [322, 322],
+    "unconstrained_completion_tokens_per_image": [65, 65]
+  },
+  "semantic_gate": {
+    "unconstrained_valid_json_objects": 2,
+    "unconstrained_production_protocol_valid": 0,
+    "full_json_equal": 0,
+    "diagnostic_flat_evidence_vector_equal": 1,
+    "sample_count": 2,
+    "failures": [
+      {
+        "sample": "formal frame 32",
+        "structured_vehicle": "absent",
+        "unconstrained_vehicle": "present",
+        "structured_other_robot": "present",
+        "unconstrained_other_robot": "absent",
+        "reason": "The unconstrained response swapped mutually exclusive vehicle classes."
+      }
+    ],
+    "protocol_failure": "Both unconstrained outputs returned a flat label-to-state object and omitted the required assessments envelope, confidence, visual reasons and open-set unknown_candidates tail."
+  },
+  "decision": {
+    "status": "rejected",
+    "remove_response_format_in_production": false,
+    "unconstrained_results_may_populate_production_cache": false,
+    "reason": "The speed opportunity is large, but the output protocol is invalid and one of two images changed mutually exclusive class decisions."
+  },
+  "next_candidate": {
+    "description": "A constrained compact evidence-vector schema with an explicit open-set tail, followed by full evidence expansion or primary-protocol fallback whenever class exclusivity, uncertainty, ontology novelty or consistency guards require it.",
+    "deployment_allowed": false,
+    "required_gate": "First reproduce known-label decisions and unknown-label behavior on a larger fixed cohort; any drift keeps the existing full protocol."
+  },
+  "verification": {
+    "tool": "tools/evaluate_visible_discovery_format_ablation.py",
+    "tool_sha256": "54BF6D89A167C436D18563238D87C67B11436F16AD555DF54CB05A6127E9E20C",
+    "raw_artifact": "artifacts/round86-format-ablation/result.json",
+    "python_tests": {"passed": 755, "failed": 0},
+    "web_tests": {"passed": 89, "failed": 0},
+    "formal_workbench_status": "idle"
+  },
+  "limits": [
+    "Two images are sufficient to reject direct unconstrained deployment, not to estimate a general speed distribution.",
+    "The result identifies a token-output opportunity but does not prove a compact protocol can preserve semantics.",
+    "No SAM3 fine-tuning, VLM post-training, model-weight change, truth write, training approval or OSS write occurred."
+  ]
+}

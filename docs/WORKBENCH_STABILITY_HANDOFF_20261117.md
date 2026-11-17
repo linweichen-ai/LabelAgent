@@ -1054,3 +1054,13 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 因此“直接关闭结构约束”明确否决，结果禁止进入正式缓存。它同时给出一个值得继续验证的新方向：使用仍受约束的紧凑 evidence-vector 和显式开放集尾部，只在互斥类、uncertain、新类别或一致性门禁触发时扩展完整视觉证据或回退现有协议。这个方向必须在更大固定样本上同时通过类别和开放集门禁后才允许部署。完整回归为 Python 755/755、网页 89/89；正式任务 idle，六份正式状态哈希不变。复现工具为 `tools/evaluate_visible_discovery_format_ablation.py`，结构化证据见 [第八十六轮无约束诊断否决记录](evidence/workbench-stability-20261117/rejected-unconstrained-discovery-round86.json)。
 
 边界：两张图足以否决无约束生产替换，但不能估计总体延迟分布，也不能证明下一版紧凑受约束协议一定有效。本轮没有修改模型权重、SAM3、VLM 后训练、人工真值、训练批准或 OSS。
+
+## 第八十七轮受约束紧凑 evidence-vector 实验（否决，2026-11-17）
+
+第八十六轮发现无约束短输出很快但协议和语义不安全，本轮验证更保守的方案：继续使用严格 JSON schema，要求八个已知标签全部出现并只能取 present/absent/uncertain，同时保留必需的开放集 `unknown_candidates` 尾部；只去掉已知标签的置信度与长视觉理由。图片、标签定义、4090 BF16、温度和 384 token 上限均与完整协议基线一致。
+
+候选两图合计 10.448 秒，相比完整协议 32.063 秒下降 67.412%，每图 completion 为 144 和 81 token。但语义门禁 0/2：640×512 图漏掉 `other_robot`，并把已经存在于标签表的 `cargo_floor` 再次作为 unknown candidate 提出；正式第 32 帧再次把 `车辆` 从 absent 改成 present、把 `other_robot` 从 present 改成 absent。开放集尾部也只有 1/2 与基线一致。
+
+因此这个严格受约束的紧凑协议同样否决，不进入正式代码或缓存，也不再继续删减语义证据。下一步保留完整结构化协议，把优化重点收回到执行引擎、硬件和已验证的提前预取/精确复用；5090 只在外部任务自然释放后恢复。完整回归为 Python 757/757、网页 89/89；正式任务 idle，六份状态哈希完全不变。复现工具为 `tools/evaluate_compact_visible_discovery.py`，结构化证据见 [第八十七轮紧凑协议否决记录](evidence/workbench-stability-20261117/rejected-compact-discovery-round87.json)。
+
+边界：两张图足以否决这个确切协议，因为两张都未通过预设语义门禁；不能把 67.412% 写成可用生产收益。本轮没有修改模型权重、SAM3、VLM 后训练、人工真值、训练批准或 OSS。

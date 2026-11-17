@@ -6,6 +6,7 @@ import math
 
 GLOBAL_TRAVERSABLE_LABELS = frozenset({"floor", "slope"})
 INSTANCE_LABELS = frozenset({"车辆", "pallet", "person", "ego", "other_robot", "cargo_floor"})
+HIGH_RISK_INSTANCE_LABELS = frozenset({"person", "ego", "other_robot"})
 MAX_GLOBAL_TO_INSTANCE_RECLASSIFY_RATIO = 0.35
 MAX_GLOBAL_SURFACE_ERASE_FRACTION = 0.25
 
@@ -175,7 +176,8 @@ def _next_id(current, next_id):
     return max([next_id or 1, *(value + 1 for value in used)])
 
 
-def apply_operations(shapes, operations, labels, width, height, next_id=None, gap_regions=None):
+def apply_operations(shapes, operations, labels, width, height, next_id=None, gap_regions=None,
+                     allow_high_risk_reclassify=True):
     """Apply a small allowlist of LLM actions; return edited shapes and errors."""
     current = {shape["id"]: shape for shape in shapes}
     # All polygons in a decision address the same observation. Keep those
@@ -289,6 +291,17 @@ def apply_operations(shapes, operations, labels, width, height, next_id=None, ga
                 continue
             source_label = current[shape_id].get("label")
             target_label = item["label"]
+            if (not allow_high_risk_reclassify
+                    and source_label != target_label
+                    and ({source_label, target_label} & HIGH_RISK_INSTANCE_LABELS)):
+                review_queue.append({
+                    **item,
+                    "reason": "无人工参考的新数据不能自动互改人物、宿主或其他机器人类别；已保留原候选并转人工复核",
+                    "reason_code": "unreferenced_high_risk_reclassify_requires_human_review",
+                    "source_label": source_label,
+                    "target_label": target_label,
+                })
+                continue
             area_ratio = (float(np.count_nonzero(_rasterize(current[shape_id], width, height)))
                           / float(width * height))
             # A broad traversable-surface mask often includes a foreground

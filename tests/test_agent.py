@@ -195,6 +195,27 @@ class EditTests(unittest.TestCase):
         self.assertTrue(applied)
         self.assertFalse(queue)
 
+    def test_unreferenced_high_risk_reclassification_requires_human_review(self):
+        person = shape(label="person")
+        updated, applied, queue = apply_operations([person], [{
+            "operation": "reclassify", "shape_ids": [1], "label": "ego",
+            "reason": "foreground host structure",
+        }], ["person", "ego"], 40, 40, allow_high_risk_reclassify=False)
+        self.assertEqual(updated, [person])
+        self.assertFalse(applied)
+        self.assertEqual(queue[0]["reason_code"],
+                         "unreferenced_high_risk_reclassify_requires_human_review")
+
+    def test_reference_backed_high_risk_reclassification_remains_available(self):
+        person = shape(label="person")
+        updated, applied, queue = apply_operations([person], [{
+            "operation": "reclassify", "shape_ids": [1], "label": "ego",
+            "reason": "human reference identifies host chassis",
+        }], ["person", "ego"], 40, 40, allow_high_risk_reclassify=True)
+        self.assertEqual(updated[0]["label"], "ego")
+        self.assertTrue(applied)
+        self.assertFalse(queue)
+
 
 class WorkflowTests(unittest.TestCase):
     def test_local_gap_evidence_shows_original_binary_and_bounded_image_count(self):

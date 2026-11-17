@@ -1,0 +1,28 @@
+{
+  "round": 35,
+  "source": "1104 directory 003 camera_0 640x512",
+  "input_sha256": "B610375B59E67FA8BDE8059F7347867585F1EB2CD9224E23D8CFE6E1C36623E5",
+  "observed_failure": "an unreferenced person candidate was automatically reclassified to ego; independent blind audit then identified person with confidence 1.0",
+  "fix": {
+    "policy": "without human reference geometry, cross-class reclassification involving person, ego, or other_robot is preserved for human review",
+    "reference_backed_reclassification": "still allowed",
+    "reason_code": "unreferenced_high_risk_reclassify_requires_human_review"
+  },
+  "final_run": {
+    "inference_elapsed_ms": 97161.233,
+    "candidate_counts_by_label": {"floor": 1, "pallet": 13, "person": 2},
+    "ego": 0,
+    "rounds": 1,
+    "applied_operations": 0,
+    "blind_audits": 2,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "reduction_from_initial_percent": 29.30
+  },
+  "regression": "146/146 Python core and image-import tests",
+  "formal_runtime": {"sam3": "ready", "vlm": "ready", "workflow": "ready", "run": "idle"},
+  "formal_state_unchanged": true,
+  "rollback": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-high-risk-class-guard-round35-20261117-190000",
+  "limitations": ["No human pixel truth and no slope in this image.", "Single-image timings are observations, not a latency distribution."]
+}

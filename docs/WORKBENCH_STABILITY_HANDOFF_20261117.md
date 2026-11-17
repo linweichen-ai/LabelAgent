@@ -524,3 +524,9 @@ Python 核心与图片接入 140/140、网页交互 18/18、候选与人工门�
 Python 核心与图片接入 144/144、候选复核 Python 28/28、网页进度/恢复/上传/候选门禁 84/84。正式服务与工作树哈希一致，SAM、VLM、流程 ready，任务 idle；五份正式状态/历史文件哈希未变。回滚点 `D:\Apps\LabelAgent\.local\backups\workbench-canonical-auto-draft-round34-20261117-184000`，证据见 [第三十四轮确定性自动草稿](evidence/workbench-stability-20261117/canonical-auto-draft-round34.json)。
 
 边界：该图片没有人工像素真值，也没有斜坡；本轮只证明同一真实新数据上的结果未退化并减少一次冗余 VLM 调用，不宣称跨数据集总体精度或斜坡质量。
+
+## 第三十五轮 003 跨样本复验与高风险类别改类保护（2026-11-17）
+
+用另一张 1104/003 真实图复验后，确定性提示将耗时从最初 137.435 秒降至 111.867 秒，但暴露出第二类错误：Agent 把近处真实 `person` 改为 `ego`，随后独立盲审又以 1.00 置信度识别为 `person`。现在没有人工参考几何时，任何涉及 `person/ego/other_robot` 的跨类修改都只进入人工复核并保留原候选；有人工参考帧时仍允许有证据改类。
+
+最终同图结果为 `13 pallet + 2 person + 1 floor`，错误 `ego` 为 0，1 轮结束且没有自动改类；耗时 97.161 秒，较最初下降 29.30%。Python 核心与图片接入 146/146；正式 SAM、VLM、流程 ready，任务 idle，正式状态/历史哈希未变。回滚点 `D:\Apps\LabelAgent\.local\backups\workbench-high-risk-class-guard-round35-20261117-190000`，证据见 [第三十五轮高风险类别保护](evidence/workbench-stability-20261117/high-risk-class-guard-round35.json)。

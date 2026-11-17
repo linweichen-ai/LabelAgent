@@ -1,0 +1,91 @@
+{
+  "schema_version": "labelagent.slope-cascade-diagnostics-round112.v1",
+  "created_date": "2026-11-18",
+  "status": "candidate_diagnostics_complete_no_production_change",
+  "dataset": {
+    "split": "dev8",
+    "source_sequence": "008",
+    "samples": 8,
+    "assistant_visible_slope_candidates": 4,
+    "human_truth": false,
+    "human_confirmed": false,
+    "test24_used_for_tuning": false
+  },
+  "boundaries": {
+    "candidate_only": true,
+    "production_deployed": false,
+    "training_authorized": false,
+    "color_dependent_rule": false,
+    "sam3_finetuned": false
+  },
+  "rounds": [
+    {
+      "round": 106,
+      "method": "production_text_sam_with_overlap_crop_fallback",
+      "result_sha256": "2769ebbed22255fd654ff973d7dd160222fe5c404c59db169d94a6d93e18f997",
+      "assistant_presence": {"tp": 1, "fp": 0, "fn": 3, "tn": 4, "precision": 1.0, "recall": 0.25},
+      "elapsed_seconds": 13.797,
+      "decision": "retain_existing_production_behavior_but_not_sufficient_for_dev8_edges"
+    },
+    {
+      "round": 107,
+      "method": "six_color_independent_full_frame_text_prompts",
+      "result_sha256": "1e8527e9f8b27a561e1b94689ac9e1c6a2407300dd98dca77917c87bddba4348",
+      "best_assistant_presence": {"tp": 1, "fp": 0, "fn": 3, "tn": 4, "precision": 1.0, "recall": 0.25},
+      "decision": "rejected_no_recall_gain"
+    },
+    {
+      "round": 108,
+      "method": "four_by_four_dense_crop_text_sam",
+      "result_sha256": "9c8a9de87adc0285abfa89d3a4f1bd333cc755e9c34dc002b254d56d533b5dc7",
+      "assistant_presence": {"tp": 1, "fp": 1, "fn": 3, "tn": 3, "precision": 0.5, "recall": 0.25},
+      "false_positive_visual_review": "fork carriage horizontal beam",
+      "decision": "rejected_more_latency_and_new_false_positive"
+    },
+    {
+      "round": 109,
+      "method": "assistant_candidate_points_to_sam",
+      "point_file_sha256": "9da0dd65c72bb5cd2895c5500e6fb950ea8a494b1e2a4190034b7abe9e6b9e26",
+      "result_sha256": "15afc376cae9ee87ee70f021897b34dd00b31c340b974f6e7223f47e92b72024",
+      "sam_candidates_returned": 4,
+      "assistant_visual_mask_fit": "4_of_4_visible_ramp_regions",
+      "warnings": 0,
+      "elapsed_seconds": 2.75,
+      "decision": "point_prompt_segmentability_passed_candidate_only"
+    },
+    {
+      "round": 110,
+      "method": "single_image_vlm_pixel_point_to_sam",
+      "result_sha256": "4ffd5df1aa61b7549d659c3e0a82b6083ecc099e1c54a364b6881e733b85bdac",
+      "assistant_presence": {"tp": 2, "fp": 0, "fn": 2, "tn": 4, "precision": 1.0, "recall": 0.5},
+      "assistant_visual_mask_fit": "0_of_2",
+      "failure": "both predicted pixel points landed on ego or ordinary floor",
+      "decision": "rejected_coordinate_grounding_failure"
+    },
+    {
+      "round": 111,
+      "method": "single_image_eight_by_eight_grid_vlm_to_sam",
+      "result_sha256": "f20496783b8dd197d2da3f1795d27eb9a6769b09bc31d478a5710373551bb0cc",
+      "assistant_presence": {"tp": 2, "fp": 0, "fn": 2, "tn": 4, "precision": 1.0, "recall": 0.5},
+      "assistant_visual_mask_fit": "1_of_2",
+      "failure": "one selected grid cell was ordinary floor beside the ramp",
+      "decision": "rejected_not_reliable_enough"
+    },
+    {
+      "round": 112,
+      "method": "original_plus_grid_dual_image_vlm_to_sam",
+      "completed_samples_before_failure": 3,
+      "failure": "structured JSON truncated with an unterminated string",
+      "last_inference": {
+        "input_images": 2,
+        "generation_cache_implementation": "dynamic",
+        "generation_cache_fallback_reason": "multi_image_static_cache_guard",
+        "completion_tokens": 768,
+        "generation_seconds": 60.694
+      },
+      "decision": "rejected_latency_and_non_resumable_output_failure"
+    }
+  ],
+  "conclusion": "SAM can segment all four reviewed visible ramps from valid points, including edge-truncated and occluded cases. Automatic spatial grounding remains the blocker. Text synonym and dense-crop expansion do not solve it; raw pixel and single-grid VLM localization are not reliable enough, and dual-image grounding is too slow and truncated. Production configuration and weights remain unchanged.",
+  "next_gate": "Build a resumable candidate localization workflow with bounded mask verification or geometry and multiview evidence; require no false-positive regression and independent human truth before deployment."
+}

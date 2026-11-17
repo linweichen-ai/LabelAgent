@@ -1,0 +1,43 @@
+{
+  "schema_version": "labelagent.slope-assistant-point-candidates.v1",
+  "status": "assistant_candidate_only",
+  "split": "dev8",
+  "source_sequence": "008",
+  "human_truth": false,
+  "human_confirmed": false,
+  "training_authorized": false,
+  "color_rule_used": false,
+  "purpose": "Validate whether SAM point prompting can segment visually localized partial or occluded ramps. Points are assistant-selected diagnostics, not labels.",
+  "items": [
+    {
+      "sample_id": "008_1789899740482474075_camera_2",
+      "points": [
+        {"x": 594, "y": 406, "label": 1},
+        {"x": 520, "y": 397, "label": 0}
+      ]
+    },
+    {
+      "sample_id": "008_1789899740482474075_camera_3",
+      "points": [
+        {"x": 218, "y": 307, "label": 1},
+        {"x": 104, "y": 304, "label": 0},
+        {"x": 355, "y": 245, "label": 0}
+      ]
+    },
+    {
+      "sample_id": "008_1789899770782473075_camera_1",
+      "points": [
+        {"x": 614, "y": 386, "label": 1},
+        {"x": 525, "y": 390, "label": 0}
+      ]
+    },
+    {
+      "sample_id": "008_1789899770782473075_camera_2",
+      "points": [
+        {"x": 292, "y": 303, "label": 1},
+        {"x": 160, "y": 337, "label": 0},
+        {"x": 430, "y": 220, "label": 0}
+      ]
+    }
+  ]
+}

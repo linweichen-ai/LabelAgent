@@ -1,0 +1,60 @@
+{
+  "schema_version": "labelagent.slope-grid-resume-round113.v1",
+  "created_date": "2026-11-18",
+  "status": "passed_candidate_evaluator_resilience_not_deployed",
+  "scope": "dev8 sequence 008 assistant-review candidates",
+  "boundaries": {
+    "human_truth": false,
+    "human_confirmed": false,
+    "candidate_only": true,
+    "production_deployed": false,
+    "training_authorized": false,
+    "test24_used": false
+  },
+  "implementation": {
+    "tool": "tools/evaluate_slope_vlm_grid_cascade.py",
+    "tool_sha256": "20ae6393dd0fd41f320a9e102e62d7f0e7ef67e232ce5b884243d2b200d80edc",
+    "features": [
+      "one atomically published bound row per completed image",
+      "separate retryable failure records",
+      "continue after a single VLM failure",
+      "resume only when image, state, review, prompt, schema and output files match",
+      "no inference call for a completed bound row"
+    ]
+  },
+  "first_run": {
+    "expected_samples": 8,
+    "completed_samples": 8,
+    "failed_samples": 0,
+    "resumed_rows": 0,
+    "vlm_elapsed_seconds": 0.377,
+    "sam_elapsed_seconds": 0.594,
+    "note": "Exact VLM responses were already cached from round111; this run validates row publication and output binding, not cold latency."
+  },
+  "resume_run": {
+    "completed_samples": 8,
+    "failed_samples": 0,
+    "resumed_rows": 8,
+    "vlm_cache_stats_before": {"hits": 8, "misses": 20, "stores": 20, "evictions": 0, "coalesced": 0, "busy_rejections": 0, "coalesce_timeouts": 0, "coalesce_reuse_failures": 0},
+    "vlm_cache_stats_after": {"hits": 8, "misses": 20, "stores": 20, "evictions": 0, "coalesced": 0, "busy_rejections": 0, "coalesce_timeouts": 0, "coalesce_reuse_failures": 0},
+    "exact_requests_inflight_after": 0,
+    "duplicate_inference_observed": false
+  },
+  "artifact": {
+    "results_sha256": "284c5667ca5b269327349cd6106be0eada4a95652e813833bf45c69d078726e7",
+    "row_files": 8,
+    "failure_files": 0
+  },
+  "regression": {
+    "python_unittest": "830/830 passed",
+    "web_node_test": "95/95 passed",
+    "git_diff_check": "passed",
+    "page_http_status": 200,
+    "sam_model_loaded": true,
+    "sam_inflight_after": 0,
+    "vlm_model_loaded": true,
+    "vlm_exact_requests_inflight_after": 0,
+    "formal_vlm_model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661"
+  },
+  "quality_boundary": "The recovered rows reproduce the already rejected round111 grid-localization quality: assistant-review presence TP=2 FP=0 FN=2 TN=4, with only one of two predicted masks visually acceptable. Resilience passed; automatic slope localization did not pass deployment quality."
+}

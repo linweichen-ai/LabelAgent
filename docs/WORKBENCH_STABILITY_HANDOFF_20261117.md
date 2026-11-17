@@ -1090,3 +1090,13 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 结构化请求中位 8.808 秒，非结构化请求中位 5.859 秒；在输出长度与内容完全相同时，结构化解码额外增加 2.949 秒，相对非结构化路径慢 50.334%。两次配对方向一致：9.358 对 5.913 秒、8.258 对 5.805 秒。`constraint_setup_seconds` 只有约 0.001 秒，主要差异发生在逐 token 生成阶段，而不是 schema 初始化阶段。
 
 这项结果只定位了工程瓶颈，不授权关闭结构约束；前面三轮已经证明无约束、删字段和短键编码都会造成语义漂移。正式协议、模型权重和服务均未修改，也没有写候选、人工真值或训练数据。权威工作树完整回归为 Python 761/761、网页 95/95。下一步停止改写输出协议，在隔离环境确认实际 SDPA 内核并比较不改变输出内容的结构化解码实现；任何依赖安装或生产重启都必须先有独立收益和回滚证据。复现工具为 `tools/benchmark_structured_decoder_overhead.py`，结构化记录见 [第九十轮结构化解码开销证据](evidence/workbench-stability-20261117/structured-decoder-overhead-round90.json)。
+
+## 第九十一轮结构化解码回调与字段顺序候选（均否决，2026-11-17）
+
+第九十轮确认相同 202 completion token 下结构化解码额外耗时约 2.949 秒。本轮先检查 LM Format Enforcer 的 Transformers 回调：现实现每步把整段 CUDA token 前缀转成 Python 列表。候选实现只在第一步读取完整 529-token 提示，后续 201 步各读取新增 token；5/5 次、每次 202 步的允许 token 列表与目标可接受性完全一致。但现实现中位 835.082 ms，增量版 850.090 ms，反而慢 1.797%，说明整段前缀回读不是主要瓶颈，候选未进入服务。
+
+随后只固定 JSON 字段顺序，不删除任何类别、置信度、理由或开放集字段。纯回调预筛选仍为 5/5 等价，中位从 835.082 ms 降到 696.408 ms；两张先导真实图也得到完整 JSON、类别状态和开放集尾部 2/2 一致，中位从 16.466 秒降到 15.965 秒，观测快 3.043%。因此曾用默认关闭的诊断开关扩展到固定 test24 八图门禁。
+
+扩大门禁后第一张就失败：`车辆` 从基线 absent 变为 forced-order present，尽管 `other_robot` 同时仍为 present；第二张八类状态相同，但解释文本变化且候选从 15.819 秒变慢到 16.096 秒。门禁要求逐图完整语义稳定，因此在 2/8 时提前停止，不把先导集 3.043% 写成生产收益。临时诊断代码没有保留在产品文件，远端 VLM 已恢复为 SHA-256 `70cfc4d...c3694`，备份位于 `/home/clw/labelagent_remote_20261110/backups/forced-field-order-round91-20261117`。页面 HTTP 200、VLM ok、inflight 0，六份正式状态哈希完全未变。
+
+本轮结论是继续保留完整、非强制顺序的生产协议；不再优化 LMFE 前缀回读或字段顺序。下一步转向与 JSON 语言无关的执行层，例如实际 SDPA 内核与安全的推理后端对照，同时保留现有预取和精确缓存作为已验证的交互加速。复现微基准为 `tools/benchmark_incremental_prefix_callback.py`，结构化证据见 [第九十一轮候选否决记录](evidence/workbench-stability-20261117/rejected-structured-decoder-candidates-round91.json)。

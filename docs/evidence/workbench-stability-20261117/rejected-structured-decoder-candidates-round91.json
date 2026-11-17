@@ -1,0 +1,79 @@
+{
+  "schema_version": "labelagent.structured-decoder-candidates.v1",
+  "round": 91,
+  "date": "2026-11-17",
+  "read_only_evaluation": true,
+  "incremental_prefix_readback": {
+    "binding": {
+      "device": "NVIDIA GeForce RTX 4090",
+      "prompt_tokens": 529,
+      "completion_tokens": 202,
+      "repetitions": 5,
+      "allowed_token_equivalent_repetitions": 5
+    },
+    "current_median_ms": 835.082,
+    "incremental_median_ms": 850.09,
+    "saved_ms": -15.008,
+    "saved_pct": -1.797,
+    "decision": "rejected_no_speed_gain"
+  },
+  "forced_field_order": {
+    "callback_prescreen": {
+      "allowed_token_equivalent_repetitions": 5,
+      "unordered_current_median_ms": 835.082,
+      "forced_order_current_median_ms": 696.408,
+      "callback_saved_pct": 16.606
+    },
+    "two_image_pilot": {
+      "cache_hit_count": 0,
+      "full_json_equal_count": 2,
+      "known_states_equal_count": 2,
+      "unknown_candidates_equal_count": 2,
+      "baseline_median_ms": 16465.967,
+      "forced_order_median_ms": 15964.905,
+      "saved_ms": 501.062,
+      "saved_pct": 3.043
+    },
+    "fixed_test24_gate": {
+      "planned_images": 8,
+      "evaluated_before_early_stop": 2,
+      "cache_hit_count": 0,
+      "rows": [
+        {
+          "image_sha256": "723aa08fe8e9b64f1736bb10f622371eb80be4f7abb67d63f3511c2b0142c548",
+          "baseline_ms": 16345.942,
+          "forced_order_ms": 16310.541,
+          "full_json_equal": false,
+          "known_states_equal": false,
+          "unknown_candidates_equal": true,
+          "semantic_drift": {
+            "label": "车辆",
+            "baseline": "absent",
+            "forced_order": "present"
+          }
+        },
+        {
+          "image_sha256": "ab0b950a82d3530a5aace8d500c1eac4ae97f66ddc3d5b9ecff87892512d3990",
+          "baseline_ms": 15818.913,
+          "forced_order_ms": 16096.078,
+          "full_json_equal": false,
+          "known_states_equal": true,
+          "unknown_candidates_equal": true
+        }
+      ],
+      "early_stop_reason": "The first fixed test24 image changed the vehicle decision; the second was slower and changed explanatory content.",
+      "decision": "rejected_semantic_drift_and_unstable_latency"
+    }
+  },
+  "production_restore": {
+    "remote_server_sha256": "70cfc4d5146b71fc59ed40c8af59e2ee7fd3dc27b52ee71d4d5eed14871c3694",
+    "backup_directory": "/home/clw/labelagent_remote_20261110/backups/forced-field-order-round91-20261117",
+    "page_http_status": 200,
+    "vlm_status": "ok",
+    "exact_requests_inflight": 0,
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "source_state_modified": false
+  }
+}

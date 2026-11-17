@@ -8,11 +8,14 @@ updates workbench state, candidates, truth, or training approval.
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import io
 import json
 import sys
 import time
+import urllib.parse
+import urllib.request
 from pathlib import Path
 
 from PIL import Image
@@ -44,6 +47,22 @@ def evidence_card(original_bytes: bytes, marked_bytes: bytes) -> bytes:
     return output.getvalue()
 
 
+def downscale_evidence(payload: bytes, longest_edge: int = 384) -> bytes:
+    """Resize one production crop once and preserve the result losslessly."""
+    with Image.open(io.BytesIO(payload)) as opened:
+        image = opened.convert("RGB")
+    if max(image.size) > longest_edge:
+        ratio = longest_edge / max(image.size)
+        image = image.resize(
+            (max(1, round(image.width * ratio)),
+             max(1, round(image.height * ratio))),
+            Image.Resampling.LANCZOS,
+        )
+    output = io.BytesIO()
+    image.save(output, "PNG", optimize=False)
+    return output.getvalue()
+
+
 def card_prompt(candidate_id, labels, definitions):
     prompt = audit.build_blind_candidate_class_prompt(
         candidate_id, labels, definitions)
@@ -61,6 +80,51 @@ def card_prompt(candidate_id, labels, definitions):
     return prompt.replace(original, replacement, 1)
 
 
+def compact_audit_schema(labels):
+    properties = {
+        "classification": {"type": "string", "enum": ["known_label", "uncertain", "conflict"]},
+        "observed_label": {"anyOf": [{"type": "string", "enum": labels}, {"type": "null"}]},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "reason_code": {"type": "string", "enum": ["visible_known_label", "insufficient_visual_evidence", "mixed_or_multiple_objects", "ontology_conflict"]},
+        "cue": {"type": "string", "minLength": 1, "maxLength": 100},
+    }
+    return {"type": "object", "properties": properties,
+            "required": sorted(properties), "additionalProperties": False}
+
+
+def short_evidence_audit_schema(labels):
+    schema = copy.deepcopy(audit.blind_candidate_class_schema(labels))
+    schema["properties"]["visible_cues"]["maxItems"] = 1
+    schema["properties"]["visible_cues"]["items"]["maxLength"] = 60
+    schema["properties"]["reason"]["maxLength"] = 96
+    return schema
+
+
+def compact_audit_prompt(candidate_id, labels, definitions):
+    return audit.build_blind_candidate_class_prompt(
+        candidate_id, labels, definitions
+    ) + (
+        " Use the compact response contract: classification, observed_label, confidence, "
+        "reason_code, cue. cue is one short concrete visible phrase. Do not output "
+        "candidate_supported, visible_cues, reason, or any extra field."
+    )
+
+
+def expand_compact_decision(value):
+    if not isinstance(value, dict) or not isinstance(value.get("cue"), str):
+        raise audit.CandidateClassProtocolError("紧凑盲审输出字段不合规")
+    known = value.get("classification") == "known_label"
+    return {
+        "classification": value.get("classification"),
+        "observed_label": value.get("observed_label"),
+        "candidate_supported": known,
+        "confidence": value.get("confidence"),
+        "reason_code": value.get("reason_code"),
+        "visible_cues": [value["cue"]],
+        "reason": value["cue"],
+    }
+
+
 def semantic_core(decision, route):
     return {
         "classification": decision.get("classification"),
@@ -74,38 +138,64 @@ def semantic_core(decision, route):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--state", required=True, type=Path)
-    parser.add_argument("--image", required=True, type=Path)
-    parser.add_argument("--candidate-json", required=True, type=Path)
+    image_group = parser.add_mutually_exclusive_group(required=True)
+    image_group.add_argument("--image", type=Path)
+    image_group.add_argument("--image-url")
+    parser.add_argument("--candidate-json", type=Path)
+    parser.add_argument("--frame", type=int)
     parser.add_argument("--candidate-ids", required=True, nargs="+", type=int)
     parser.add_argument(
-        "--variant", choices=("lossless_side_by_side_card", "production_two_image_384"),
+        "--variant", choices=("lossless_side_by_side_card", "production_two_image_384",
+                              "production_two_image_downscale_384",
+                              "production_two_image_compact_schema",
+                              "production_two_image_short_evidence"),
         default="lossless_side_by_side_card")
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--llm-url")
     args = parser.parse_args()
 
     artifact_root = (REPOSITORY_ROOT / "artifacts").resolve()
     state_path = args.state.resolve()
-    image_path = args.image.resolve()
-    candidate_path = args.candidate_json.resolve()
+    image_path = args.image.resolve() if args.image else None
+    candidate_path = args.candidate_json.resolve() if args.candidate_json else None
     output_path = args.output.resolve()
     if not output_path.is_relative_to(artifact_root):
         raise ValueError("output must be inside this repository's artifacts directory")
     if output_path.exists():
         raise FileExistsError(output_path)
-    for path in (state_path, image_path, candidate_path):
+    if (candidate_path is None) == (args.frame is None):
+        raise ValueError("provide exactly one of --candidate-json or --frame")
+    for path in (state_path, *([image_path] if image_path else []),
+                 *([candidate_path] if candidate_path else [])):
         if not path.is_file():
             raise FileNotFoundError(path)
 
+    def read_image_source():
+        if image_path:
+            return image_path.read_bytes()
+        parsed = urllib.parse.urlsplit(args.image_url)
+        if parsed.scheme != "http" or parsed.hostname not in {"127.0.0.1", "localhost"}:
+            raise ValueError("image-url must use the loopback workbench")
+        with urllib.request.urlopen(args.image_url, timeout=30) as response:
+            return response.read()
+
     state_sha_before = sha256(state_path)
-    image_sha_before = sha256(image_path)
-    candidate_sha_before = sha256(candidate_path)
+    image_bytes = read_image_source()
+    image_sha_before = hashlib.sha256(image_bytes).hexdigest()
+    candidate_sha_before = sha256(candidate_path) if candidate_path else None
     state = json.loads(state_path.read_text(encoding="utf-8"))
-    frozen = json.loads(candidate_path.read_text(encoding="utf-8"))
+    if candidate_path:
+        frozen = json.loads(candidate_path.read_text(encoding="utf-8"))
+    else:
+        key = str(args.frame)
+        frozen = {"candidates": (state.get("candidates") or {}).get(key),
+                  "agent": (state.get("agent_runs") or {}).get(key)}
     config = dict(state.get("config") or {})
+    if args.llm_url:
+        config["llm_url"] = args.llm_url
     labels = list(state.get("labels") or [])
     if not config.get("llm_url") or not config.get("llm_model") or not labels:
         raise ValueError("state lacks model settings or labels")
-    image_bytes = image_path.read_bytes()
     candidates = {item.get("id"): item for item in frozen.get("candidates") or []}
     baselines = {
         item.get("candidate_id"): item
@@ -127,32 +217,66 @@ def main():
             extra_images = ()
             prompt = card_prompt(candidate_id, labels, workflow.VISIBLE_LABEL_DEFINITIONS)
             request_config = config
-        else:
+        elif args.variant == "production_two_image_384":
             request_image = evidence["original"]
             extra_images = (evidence["marked"],)
             prompt = audit.build_blind_candidate_class_prompt(
                 candidate_id, labels, workflow.VISIBLE_LABEL_DEFINITIONS)
             request_config = dict(config)
             request_config["llm_max_tokens"] = 384
+        elif args.variant == "production_two_image_downscale_384":
+            request_image = downscale_evidence(evidence["original"])
+            extra_images = (downscale_evidence(evidence["marked"]),)
+            prompt = audit.build_blind_candidate_class_prompt(
+                candidate_id, labels, workflow.VISIBLE_LABEL_DEFINITIONS)
+            request_config = config
+        elif args.variant == "production_two_image_compact_schema":
+            request_image = evidence["original"]
+            extra_images = (evidence["marked"],)
+            prompt = compact_audit_prompt(
+                candidate_id, labels, workflow.VISIBLE_LABEL_DEFINITIONS)
+            request_config = config
+        else:
+            request_image = evidence["original"]
+            extra_images = (evidence["marked"],)
+            prompt = audit.build_blind_candidate_class_prompt(
+                candidate_id, labels, workflow.VISIBLE_LABEL_DEFINITIONS
+            ) + (
+                " Return exactly one concrete visible_cues item and one reason of at most "
+                "12 words. Keep every production field and do not add extra fields."
+            )
+            request_config = config
         raw = {}
         started = time.perf_counter()
-        decision = audit.validate_blind_candidate_class_decision(
-            workflow._chat(
-                request_config, prompt, request_image, extra_images=extra_images, raw=raw,
-                response_schema=audit.blind_candidate_class_schema(labels)),
-            labels,
-        )
+        if args.variant == "production_two_image_compact_schema":
+            response_schema = compact_audit_schema(labels)
+        elif args.variant == "production_two_image_short_evidence":
+            response_schema = short_evidence_audit_schema(labels)
+        else:
+            response_schema = audit.blind_candidate_class_schema(labels)
+        raw_model_decision = workflow._chat(
+            request_config, prompt, request_image, extra_images=extra_images, raw=raw,
+            response_schema=response_schema)
         elapsed_ms = round((time.perf_counter() - started) * 1000, 3)
-        route = (
-            "candidate_preserved"
-            if decision["classification"] == "known_label"
-            and decision["observed_label"] == candidate["label"]
-            and decision["confidence"] >= 0.90
-            else "human_review_required"
-        )
+        protocol_error = None
+        try:
+            model_decision = (expand_compact_decision(raw_model_decision)
+                              if args.variant == "production_two_image_compact_schema"
+                              else raw_model_decision)
+            decision = audit.validate_blind_candidate_class_decision(
+                model_decision, labels)
+        except Exception as error:
+            decision = None
+            protocol_error = str(error)
+        route = ("candidate_preserved"
+                 if decision is not None
+                 and decision["classification"] == "known_label"
+                 and decision["observed_label"] == candidate["label"]
+                 and decision["confidence"] >= 0.90
+                 else "human_review_required")
         baseline = baselines[candidate_id]
         baseline_core = semantic_core(baseline.get("decision") or {}, baseline.get("route"))
-        candidate_core = semantic_core(decision, route)
+        candidate_core = semantic_core(decision, route) if decision is not None else None
         local = raw.get("local_vlm") or {}
         stats = local.get("inference_stats") or {}
         rows.append({
@@ -161,7 +285,11 @@ def main():
             "candidate_fingerprint": audit.candidate_fingerprint(candidate),
             "baseline_semantic_core": baseline_core,
             "candidate_semantic_core": candidate_core,
-            "semantic_core_match": baseline_core == candidate_core,
+            "semantic_core_match": (decision is not None
+                                     and baseline_core == candidate_core),
+            "protocol_valid": decision is not None,
+            "protocol_error": protocol_error,
+            "raw_model_decision": raw_model_decision,
             "elapsed_ms": elapsed_ms,
             "finish_reason": raw.get("finish_reason"),
             "model_route": raw.get("model_route"),
@@ -174,8 +302,10 @@ def main():
             "generation_cache_implementation": stats.get(
                 "generation_cache_implementation"),
             "request_image_sha256": hashlib.sha256(request_image).hexdigest(),
+            "request_image_bytes": len(request_image),
             "extra_image_sha256": [hashlib.sha256(item).hexdigest()
                                    for item in extra_images],
+            "extra_image_bytes": [len(item) for item in extra_images],
             "max_tokens": request_config.get("llm_max_tokens") or 768,
             "candidate_only": True,
             "human_truth": False,
@@ -188,15 +318,18 @@ def main():
         "variant": args.variant,
         "state": str(state_path),
         "state_sha256": state_sha_before,
-        "image": str(image_path),
+        "image": str(image_path) if image_path else args.image_url,
         "image_sha256": image_sha_before,
-        "candidate_json": str(candidate_path),
+        "candidate_json": str(candidate_path) if candidate_path else None,
         "candidate_json_sha256": candidate_sha_before,
+        "state_frame": args.frame,
         "rows": rows,
         "summary": {
             "candidate_count": len(rows),
             "semantic_core_matches": sum(row["semantic_core_match"] for row in rows),
             "all_semantic_cores_match": all(row["semantic_core_match"] for row in rows),
+            "protocol_valid_count": sum(row["protocol_valid"] for row in rows),
+            "all_protocol_valid": all(row["protocol_valid"] for row in rows),
             "expected_image_count": expected_image_count,
             "all_image_counts_match_variant": all(
                 row["image_count"] == expected_image_count for row in rows),
@@ -208,8 +341,10 @@ def main():
         },
         "inputs_unchanged": {
             "state": sha256(state_path) == state_sha_before,
-            "image": sha256(image_path) == image_sha_before,
-            "candidate_json": sha256(candidate_path) == candidate_sha_before,
+            "image": hashlib.sha256(read_image_source()).hexdigest()
+                     == image_sha_before,
+            "candidate_json": (sha256(candidate_path) == candidate_sha_before
+                               if candidate_path else True),
         },
         "formal_workbench_writes": False,
     }

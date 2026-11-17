@@ -364,6 +364,106 @@ class TransformersBackend:
             effective_image_token_budget=self.image_token_budget if image_token_budget is None else image_token_budget)
         return content, prompt_tokens, int(generated.shape[-1])
 
+    def generate_batch(self, requests, max_tokens, response_schema=None):
+        """Generate independent, schema-identical requests in one GPU batch.
+
+        This path is deliberately narrower than ``generate``: every row keeps
+        its own prompt and image list, while the decoding contract and output
+        limit are shared.  It exists for bounded candidate-class audit probes;
+        callers cannot silently mix schemas or image-budget overrides.
+        """
+        if not isinstance(requests, list) or not 2 <= len(requests) <= 3:
+            raise ValueError("A VLM batch must contain two or three requests")
+        started = time.monotonic()
+        require_runtime_probe_headroom(
+            self.torch, self.process_allocator_fraction,
+            self.probe_reserved_free_mib)
+        self.torch.cuda.reset_peak_memory_stats()
+        texts, image_groups, image_group_sizes = [], [], []
+        for item in requests:
+            messages, images = item
+            texts.append(self.processor.apply_chat_template(
+                messages, tokenize=False, add_generation_prompt=True))
+            image_groups.append(images)
+            image_group_sizes.append(len(images))
+        inputs = self.processor(
+            text=texts, images=image_groups, return_tensors="pt", padding=True)
+        image_grids, image_counts = actual_image_encoding(
+            inputs, self.processor, sum(image_group_sizes))
+        inputs.pop("token_type_ids", None)
+        prompt_width = int(inputs["input_ids"].shape[-1])
+        prompt_tokens = [int(value) for value in
+                         inputs["attention_mask"].sum(dim=-1).tolist()]
+        if max(prompt_tokens) + max_tokens > self.context_budget:
+            raise ValueError(
+                "A batched request exceeds the configured context budget; "
+                "no truncation was performed")
+        inputs = inputs.to(self.model.device)
+        preprocess_seconds = time.monotonic() - started
+        constraint_started = time.monotonic()
+        options = {}
+        effective_cache, cache_fallback_reason = (
+            request_generation_cache_implementation(
+                self.generation_cache_implementation,
+                sum(image_group_sizes)))
+        if effective_cache is not None:
+            options["cache_implementation"] = effective_cache
+        if response_schema is not None:
+            from lmformatenforcer import JsonSchemaParser
+            from lmformatenforcer.integrations.transformers import (
+                build_transformers_prefix_allowed_tokens_fn)
+            parser = JsonSchemaParser(response_schema)
+            options["prefix_allowed_tokens_fn"] = (
+                build_transformers_prefix_allowed_tokens_fn(
+                    ensure_format_tokenizer_data(self), parser))
+        constraint_setup_seconds = time.monotonic() - constraint_started
+        generation_started = time.monotonic()
+        with self.torch.inference_mode():
+            output = self.model.generate(
+                **inputs, max_new_tokens=max_tokens, do_sample=False,
+                use_cache=True, **options)
+        generation_seconds = time.monotonic() - generation_started
+        generated = output[:, prompt_width:]
+        contents = self.processor.batch_decode(
+            generated, skip_special_tokens=True,
+            clean_up_tokenization_spaces=False)
+        eos = self.model.generation_config.eos_token_id
+        eos_ids = set(eos if isinstance(eos, list) else [eos])
+        completion_tokens = []
+        for row in generated.tolist():
+            count = len(row)
+            for index, token in enumerate(row):
+                if token in eos_ids:
+                    count = index + 1
+                    break
+            completion_tokens.append(count)
+        split_grids, split_counts, offset = [], [], 0
+        for size in image_group_sizes:
+            split_grids.append(image_grids[offset:offset + size])
+            split_counts.append(image_counts[offset:offset + size])
+            offset += size
+        self.last_inference_stats = {
+            "batch_size": len(requests),
+            "peak_allocated_bytes": self.torch.cuda.max_memory_allocated(),
+            "peak_reserved_bytes": self.torch.cuda.max_memory_reserved(),
+            "input_images": image_group_sizes,
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "preprocess_seconds": round(preprocess_seconds, 3),
+            "constraint_setup_seconds": round(
+                constraint_setup_seconds, 3),
+            "generation_seconds": round(generation_seconds, 3),
+            "generation_cache_implementation": effective_cache,
+            "configured_generation_cache_implementation":
+                self.generation_cache_implementation,
+            "generation_cache_fallback_reason": cache_fallback_reason,
+            "structured_output": response_schema is not None,
+            "image_grid_thw": split_grids,
+            "actual_image_token_counts": split_counts,
+            "effective_image_token_budget": self.image_token_budget,
+        }
+        return list(zip(contents, prompt_tokens, completion_tokens))
+
 
 def create_app(backend, response_cache_entries=32, coalesce_timeout_seconds=90):
     if (type(response_cache_entries) is not int
@@ -555,6 +655,95 @@ def create_app(backend, response_cache_entries=32, coalesce_timeout_seconds=90):
             return completion_response(content, prompt_tokens, completion_tokens, local_vlm)
         finally:
             finish_request(cache_key, claimed)
+
+    @app.post("/v1/chat/batch_completions")
+    def batch_chat():
+        """Bounded independent batch used by controlled latency experiments."""
+        body = request.get_json() or {}
+        items = body.get("requests") if isinstance(body, dict) else None
+        if not isinstance(items, list) or not 2 <= len(items) <= 3:
+            raise ValueError("requests must contain two or three request objects")
+        decoded, max_tokens, schema = [], None, None
+        for item in items:
+            if not isinstance(item, dict):
+                raise ValueError("Every batched request must be an object")
+            if item.get("model") != backend.model_id or item.get("stream"):
+                raise ValueError("Unknown model or unsupported streaming mode")
+            current_max = item.get("max_tokens", 2048)
+            if type(current_max) is not int or not 1 <= current_max <= 4096:
+                raise ValueError("max_tokens must be between 1 and 4096")
+            if item.get("temperature", 0) != 0:
+                raise ValueError(
+                    "This deterministic service accepts temperature 0")
+            if "image_token_budget" in item:
+                raise ValueError(
+                    "Batched requests do not support image budget overrides")
+            if max_tokens is None:
+                max_tokens = current_max
+            elif max_tokens != current_max:
+                raise ValueError(
+                    "Every batched request must share the same max_tokens")
+            current_schema = None
+            if "response_format" in item:
+                format_spec = item["response_format"]
+                if (not isinstance(format_spec, dict)
+                        or format_spec.get("type") != "json_schema"):
+                    raise ValueError(
+                        "Only json_schema response format is supported")
+                wrapper = format_spec.get("json_schema")
+                if (not isinstance(wrapper, dict)
+                        or not isinstance(wrapper.get("schema"), dict)):
+                    raise ValueError(
+                        "response_format must contain a JSON schema")
+                current_schema = wrapper["schema"]
+            if not decoded:
+                schema = current_schema
+            elif current_schema != schema:
+                raise ValueError(
+                    "Every batched request must share one response schema")
+            decoded.append(decode_messages(item.get("messages")))
+        if not hasattr(backend, "generate_batch"):
+            raise RuntimeError("The configured VLM backend has no batch support")
+        if not inference_lock.acquire(blocking=False):
+            return jsonify(error={"message": "Local VLM is busy"}), 503
+        started = time.monotonic()
+        try:
+            rows = backend.generate_batch(
+                decoded, max_tokens, response_schema=schema)
+            request_stats = deepcopy(
+                getattr(backend, "last_inference_stats", None) or {})
+            try:
+                cache_release = trim_idle_cuda_cache(
+                    getattr(backend, "torch", None),
+                    getattr(backend, "idle_cache_release", False))
+            except RuntimeError as error:
+                cache_release = {
+                    "enabled": True, "performed": False,
+                    "error_type": type(error).__name__}
+            backend.last_cache_release = cache_release
+        finally:
+            inference_lock.release()
+        elapsed = round(time.monotonic() - started, 3)
+        results = []
+        for content, prompt_count, completion_count in rows:
+            results.append({
+                "choices": [{"index": 0,
+                    "message": {"role": "assistant", "content": content},
+                    "finish_reason": ("length" if completion_count >= max_tokens
+                                      else "stop")}],
+                "usage": {"prompt_tokens": prompt_count,
+                    "completion_tokens": completion_count,
+                    "total_tokens": prompt_count + completion_count}})
+        return jsonify(
+            object="chat.batch_completion", model=backend.model_id,
+            results=results,
+            local_vlm={
+                "backend": backend.backend_name,
+                "batch_size": len(results),
+                "seconds": elapsed,
+                "inference_stats": request_stats,
+                "cache_release": cache_release,
+                "cache_hit": False})
 
     @app.errorhandler(ValueError)
     def invalid(error):

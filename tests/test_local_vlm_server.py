@@ -24,6 +24,15 @@ class ContractBackend:
         self.sizes = [image.size for image in images]
         return '{"protocol_test":true}', 20, 5
 
+    def generate_batch(self, requests, max_tokens, response_schema=None):
+        self.generate_batch_calls = getattr(self, "generate_batch_calls", 0) + 1
+        self.received_batch_schema = response_schema
+        self.batch_sizes = [[image.size for image in images]
+                            for _, images in requests]
+        self.last_inference_stats = {"batch_size": len(requests)}
+        return [('{"protocol_test":true}', 20 + index, 5)
+                for index in range(len(requests))]
+
 
 class BlockingBackend(ContractBackend):
     def __init__(self):
@@ -115,6 +124,39 @@ class LocalVLMContractTests(unittest.TestCase):
         self.assertEqual(result.json["local_vlm"]["backend"], "contract_test_double")
         self.assertEqual(result.json["usage"]["total_tokens"], 25)
         self.assertEqual(result.json["choices"][0]["message"]["content"], '{"protocol_test":true}')
+
+    def test_independent_batch_keeps_request_and_image_boundaries(self):
+        schema = {"type": "object", "properties": {
+            "protocol_test": {"type": "boolean"}}}
+        item = {"model": self.backend.model_id, "messages": messages(2),
+                "max_tokens": 32,
+                "response_format": {"type": "json_schema",
+                    "json_schema": {"schema": schema}}}
+        result = self.client.post(
+            "/v1/chat/batch_completions",
+            json={"requests": [item, {**item, "messages": messages(3)}]})
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(self.backend.generate_batch_calls, 1)
+        self.assertEqual(self.backend.batch_sizes,
+                         [[(10, 8), (11, 8)],
+                          [(10, 8), (11, 8), (12, 8)]])
+        self.assertEqual(self.backend.received_batch_schema, schema)
+        self.assertEqual(result.json["local_vlm"]["batch_size"], 2)
+        self.assertEqual(len(result.json["results"]), 2)
+
+    def test_batch_rejects_mixed_contracts_and_unsafe_sizes(self):
+        base = {"model": self.backend.model_id, "messages": messages(),
+                "max_tokens": 32}
+        bad_bodies = [
+            {"requests": [base]},
+            {"requests": [base] * 4},
+            {"requests": [base, {**base, "max_tokens": 33}]},
+            {"requests": [base, {**base, "image_token_budget": 128}]},
+        ]
+        for body in bad_bodies:
+            with self.subTest(body=body):
+                self.assertEqual(self.client.post(
+                    "/v1/chat/batch_completions", json=body).status_code, 400)
 
     def test_remote_image_fetching_and_invalid_token_budget_are_rejected(self):
         data = messages()

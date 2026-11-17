@@ -31,7 +31,7 @@ from .workflow import (DESCRIPTION_INPUT_VERSION, MAX_REVIEW_ROUNDS, RunCancelle
                        canonical_unreferenced_description, describe,
                        discover_visible_labels, reference_labels, restrict_description,
                        generate_only, review_existing, run, trace_calls,
-                       candidate_overlay, reference_overlay, chat,
+                       candidate_overlay, reference_overlay, chat, chat_batch,
                        sam_text_multi_prefetch, sam_text_prefetch,
                        slope_overlap_crop_images,
                        VISIBLE_LABEL_DEFINITIONS)
@@ -3398,7 +3398,7 @@ def audit_reference_candidates():
                 audits, queue = audit_high_risk_candidates(
                     state["config"], image_bytes, candidates, list(state.get("labels", [])),
                     VISIBLE_LABEL_DEFINITIONS, chat, check_cancelled=check_cancelled,
-                    tolerate_errors=False)
+                    tolerate_errors=False, batch_chat=chat_batch)
             check_cancelled()
         except RunCancelled:
             update_run_status(status="stopped", phase="stopped", frame=None, completed=0)
@@ -3853,7 +3853,8 @@ def generate_reference_draft():
                 class_audits, class_review_queue = audit_high_risk_candidates(
                     config, target_image, combined, labels,
                     VISIBLE_LABEL_DEFINITIONS, chat, check_cancelled=check_audit_cancelled,
-                    tolerate_errors=True, on_progress=on_audit_progress)
+                    tolerate_errors=True, on_progress=on_audit_progress,
+                    batch_chat=chat_batch)
         for audit in class_audits:
             audit["audit_version"] = audit_version
             audit["audit_sha256"] = _sha256_json({

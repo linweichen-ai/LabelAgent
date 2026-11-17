@@ -317,6 +317,12 @@ def chat(config, instruction, image, extra_images=(), response_schema=None):
         _emit_trace(record)
 
 
+def chat_batch(config, requests, response_schema=None, max_tokens=384):
+    """Run a bounded batch of independent prompts through the local VLM."""
+    return _cancellable_call(
+        _chat_batch, config, requests, response_schema, max_tokens)
+
+
 def _positive_int(value, default):
     if type(value) is not int or value < 1:
         return default
@@ -583,6 +589,73 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
             "大模型必须返回 JSON 对象", content[:20000],
             finish_reason=choice.get("finish_reason"))
     return result
+
+
+def _chat_batch(config, requests, response_schema=None, max_tokens=384):
+    if (not isinstance(requests, list) or not 2 <= len(requests) <= 3
+            or type(max_tokens) is not int or not 1 <= max_tokens <= 4096):
+        raise ValueError("批量盲审只接受 2～3 个独立请求")
+    if not config.get("llm_url") or not config.get("llm_model"):
+        raise ValueError("请先配置大模型地址和模型名")
+    bodies = []
+    for item in requests:
+        if not isinstance(item, dict) or not isinstance(item.get("instruction"), str):
+            raise ValueError("批量盲审请求格式无效")
+        images = (item.get("image"), *tuple(item.get("extra_images") or ()))
+        if any(not isinstance(data, bytes) or not data for data in images):
+            raise ValueError("批量盲审图像无效")
+        content = [{"type": "text", "text": item["instruction"]}]
+        for data in images:
+            content.append({"type": "image_url", "image_url": {"url":
+                "data:image/jpeg;base64," + base64.b64encode(data).decode()}})
+        body = {"model": config["llm_model"], "temperature": 0,
+                "max_tokens": max_tokens,
+                "messages": [{"role": "user", "content": content}]}
+        if response_schema is not None:
+            body["response_format"] = {
+                "type": "json_schema", "json_schema": {
+                    "name": "labelagent", "schema": response_schema,
+                    "strict": True}}
+        bodies.append(body)
+    endpoint = (config["llm_url"].rstrip("/")
+                + "/chat/batch_completions")
+    request = urllib.request.Request(
+        endpoint, json.dumps({"requests": bodies}).encode(),
+        headers={"Content-Type": "application/json",
+                 "Authorization": "Bearer " + config.get("llm_key", "")})
+    try:
+        with urllib.request.urlopen(request, timeout=1200) as response:
+            payload = json.load(response)
+    except urllib.error.HTTPError as error:
+        try:
+            detail = error.read().decode("utf-8", "replace")[:300]
+        except Exception:
+            detail = str(error.reason)
+        raise ValueError(
+            f"批量盲审请求失败（HTTP {error.code}）：{detail}") from error
+    except urllib.error.URLError as error:
+        raise ValueError(f"批量盲审请求失败：{error.reason}") from error
+    outputs = payload.get("results") if isinstance(payload, dict) else None
+    if not isinstance(outputs, list) or len(outputs) != len(requests):
+        raise ValueError("批量盲审响应数量不匹配")
+    parsed = []
+    for output in outputs:
+        try:
+            choice = output["choices"][0]
+            content = choice["message"]["content"]
+            if isinstance(content, list):
+                content = "".join(part.get("text", "") for part in content)
+            content = content.strip().removeprefix("```json").removeprefix(
+                "```").removesuffix("```").strip()
+            value = json.loads(content)
+        except (KeyError, IndexError, TypeError, json.JSONDecodeError) as error:
+            raise ModelOutputError(
+                "批量盲审未返回有效 JSON 对象", str(output)[:20000]) from error
+        if not isinstance(value, dict):
+            raise ModelOutputError(
+                "批量盲审必须逐项返回 JSON 对象", content[:20000])
+        parsed.append(value)
+    return parsed
 
 
 def compact_review_token_budget(config, hole_count):

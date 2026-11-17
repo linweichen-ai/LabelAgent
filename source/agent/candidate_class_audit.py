@@ -56,13 +56,59 @@ HIGH_RISK_LABELS = frozenset({"ego", "person", "other_robot"})
 def audit_high_risk_candidates(config, image_bytes, candidates, labels, class_definitions,
                                chat, *, check_cancelled=lambda: None,
                                tolerate_errors=False, candidate_ids=None,
-                               on_progress=None):
+                               on_progress=None, batch_chat=None):
     """共享盲审流程；仅在明确允许时将失败转为人工复核证据。"""
     artifact_sha = _sha256(_canonical_bytes(candidates))
     audits, queue = [], []
     targets = [candidate for candidate in candidates
                if candidate.get("label") in HIGH_RISK_LABELS
                and (candidate_ids is None or candidate.get("id") in candidate_ids)]
+    # True batching is intentionally limited to three independent high-risk
+    # candidates.  It is accepted only when every row is a protocol-valid,
+    # high-confidence confirmation of the already-bound candidate label.  Any
+    # uncertain, conflicting, low-confidence, malformed, unavailable or busy
+    # batch is discarded in full and the established sequential path runs.
+    if len(targets) == 3 and batch_chat is not None:
+        check_cancelled()
+        try:
+            prepared = []
+            for candidate in targets:
+                evidence = prepare_candidate_evidence(image_bytes, candidate)
+                prompt = build_blind_candidate_class_prompt(
+                    candidate["id"], labels, class_definitions)
+                prepared.append((candidate, evidence, prompt))
+            decisions = batch_chat(
+                config,
+                [{"instruction": prompt, "image": evidence["original"],
+                  "extra_images": (evidence["marked"],)}
+                 for _, evidence, prompt in prepared],
+                response_schema=blind_candidate_class_schema(labels),
+                max_tokens=384)
+            if not isinstance(decisions, list) or len(decisions) != 3:
+                raise CandidateClassProtocolError("批量盲审结果数量不匹配")
+            decisions = [validate_blind_candidate_class_decision(value, labels)
+                         for value in decisions]
+            if not all(
+                    decision["classification"] == "known_label"
+                    and decision["observed_label"] == candidate["label"]
+                    and decision["candidate_supported"]
+                    and decision["confidence"] >= 0.90
+                    for (candidate, _, _), decision in zip(prepared, decisions)):
+                raise CandidateClassProtocolError("批量盲审未全部高置信确认原候选类别")
+            for position, ((candidate, evidence, prompt), decision) in enumerate(
+                    zip(prepared, decisions), 1):
+                result = _candidate_class_audit_result(
+                    image_bytes, candidate, evidence, prompt, decision,
+                    candidate_artifact_sha256=artifact_sha,
+                    execution_mode="independent_batch_3")
+                audits.append(result)
+                if on_progress is not None:
+                    on_progress(position, len(targets), candidate, result)
+            check_cancelled()
+            return audits, queue
+        except Exception:
+            check_cancelled()
+            audits.clear()
     for position, candidate in enumerate(targets, 1):
         check_cancelled()
         try:
@@ -203,11 +249,42 @@ def validate_blind_candidate_class_decision(value, labels):
     return value
 
 
+def _candidate_class_audit_result(
+        image_bytes, candidate, evidence, prompt, decision,
+        minimum_confidence=0.90, candidate_artifact_sha256=None,
+        execution_mode="sequential"):
+    matches = (decision["classification"] == "known_label"
+               and decision["observed_label"] == candidate["label"]
+               and decision["confidence"] >= minimum_confidence)
+    result = {
+        "schema_version": "labelagent.blind_candidate_class_audit.v1",
+        "candidate_id": candidate["id"],
+        "candidate_sha256": candidate_fingerprint(candidate),
+        "candidate_artifact_sha256": candidate_artifact_sha256,
+        "bound_current_label": candidate["label"],
+        "source_image_sha256": _sha256(image_bytes),
+        "crop": {"box_xyxy": evidence["crop_box_xyxy"],
+                 "source_size": evidence["source_size"],
+                 "original_sha256": evidence["original_sha256"],
+                 "marked_sha256": evidence["marked_sha256"],
+                 "current_label_shown_to_model": False},
+        "prompt_sha256": _sha256(prompt.encode("utf-8")),
+        "decision": decision,
+        "route": "candidate_preserved" if matches else "human_review_required",
+        "minimum_confidence": minimum_confidence,
+        "execution_mode": execution_mode,
+        "operation_proposal": None, "candidate_mutated": False,
+        "human_truth": False, "approved_for_training": False,
+        "approved_for_deployment": False,
+    }
+    result["audit_sha256"] = _sha256(_canonical_bytes(result))
+    return result
+
+
 def audit_candidate_class_blind(config: dict, image_bytes: bytes, candidate: dict,
                                 labels: list[str], class_definitions: dict[str, str],
                                 chat: Callable, minimum_confidence: float = 0.90,
                                 candidate_artifact_sha256: str | None = None) -> dict:
-    fingerprint = candidate_fingerprint(candidate)
     if candidate["label"] not in labels:
         raise ValueError("候选类别不在注册表中")
     evidence = prepare_candidate_evidence(image_bytes, candidate)
@@ -215,22 +292,7 @@ def audit_candidate_class_blind(config: dict, image_bytes: bytes, candidate: dic
     decision = validate_blind_candidate_class_decision(chat(
         config, prompt, evidence["original"], extra_images=(evidence["marked"],),
         response_schema=blind_candidate_class_schema(labels)), labels)
-    matches = (decision["classification"] == "known_label"
-               and decision["observed_label"] == candidate["label"]
-               and decision["confidence"] >= minimum_confidence)
-    result = {
-        "schema_version": "labelagent.blind_candidate_class_audit.v1",
-        "candidate_id": candidate["id"], "candidate_sha256": fingerprint,
-        "candidate_artifact_sha256": candidate_artifact_sha256,
-        "bound_current_label": candidate["label"], "source_image_sha256": _sha256(image_bytes),
-        "crop": {"box_xyxy": evidence["crop_box_xyxy"], "source_size": evidence["source_size"],
-                 "original_sha256": evidence["original_sha256"], "marked_sha256": evidence["marked_sha256"],
-                 "current_label_shown_to_model": False},
-        "prompt_sha256": _sha256(prompt.encode("utf-8")), "decision": decision,
-        "route": "candidate_preserved" if matches else "human_review_required",
-        "minimum_confidence": minimum_confidence,
-        "operation_proposal": None, "candidate_mutated": False, "human_truth": False,
-        "approved_for_training": False, "approved_for_deployment": False,
-    }
-    result["audit_sha256"] = _sha256(_canonical_bytes(result))
-    return result
+    return _candidate_class_audit_result(
+        image_bytes, candidate, evidence, prompt, decision,
+        minimum_confidence=minimum_confidence,
+        candidate_artifact_sha256=candidate_artifact_sha256)

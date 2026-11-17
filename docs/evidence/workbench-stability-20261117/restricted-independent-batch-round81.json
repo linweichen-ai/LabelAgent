@@ -1,0 +1,165 @@
+{
+  "schema_version": "labelagent.restricted-independent-batch-round81.v1",
+  "observed_at": "2026-11-17T19:51:00+08:00",
+  "decision": "deploy_restricted_batch3_with_fail_closed_sequential_fallback",
+  "problem": {
+    "cold_frame126_candidates_visible_seconds": 3.518,
+    "cold_frame126_background_complete_seconds": 41.156,
+    "remaining_tail": "Agent review plus three sequential high-risk candidate audits"
+  },
+  "rejected_routes": [
+    {
+      "route": "one_combined_prompt_with_multiple_candidate_pairs",
+      "protocol_valid": "0/5",
+      "semantic_core_match": "0/5",
+      "decision": "rejected"
+    },
+    {
+      "route": "production_crops_downscaled_to_384",
+      "semantic_core_match": "2/2",
+      "elapsed_ms": 18439.198,
+      "sequential_baseline_ms": 18342.0,
+      "decision": "rejected_no_latency_gain"
+    },
+    {
+      "route": "compact_response_schema",
+      "semantic_core_match": "0/2",
+      "decision": "rejected_semantic_drift"
+    },
+    {
+      "route": "short_evidence_fields",
+      "elapsed_ms": 9750.0,
+      "semantic_core_match": "0/2",
+      "decision": "rejected_protocol_contradictions"
+    }
+  ],
+  "processor_probe": {
+    "nested_image_groups": {
+      "supported": true,
+      "input_ids_shape": [2, 143],
+      "pixel_values_shape": [1024, 1536],
+      "image_grid_thw_shape": [4, 3]
+    },
+    "flat_image_list": {
+      "supported": true,
+      "input_ids_shape": [2, 143],
+      "pixel_values_shape": [1024, 1536],
+      "image_grid_thw_shape": [4, 3]
+    }
+  },
+  "independent_batch_trials": {
+    "all_candidates": {
+      "count": 10,
+      "protocol_valid": 10,
+      "route_match": 10,
+      "strict_semantic_core_match": 8,
+      "strict_mismatches": [
+        "003 candidate 15: conflict changed to uncertain; route remained human_review_required",
+        "0920 frame 36 candidate 1: prior baseline had no valid decision; both routes remained human_review_required"
+      ]
+    },
+    "accepted_clear_triples": {
+      "candidate_count": 6,
+      "protocol_valid": 6,
+      "strict_semantic_core_match": 6,
+      "paired_trials": [
+        {
+          "sample": "frame126 candidates 19,20,18",
+          "batch_ms": 19268.451,
+          "sequential_ms": 27238.148,
+          "improvement_percent": 29.259,
+          "batch_peak_allocated_bytes": 18780173824,
+          "batch_peak_reserved_bytes": 19243466752
+        },
+        {
+          "sample": "0920 frame 1 candidates 12,11,10",
+          "batch_ms": 22516.264,
+          "sequential_ms": 30802.994,
+          "improvement_percent": 26.902,
+          "batch_peak_allocated_bytes": 18785347072,
+          "batch_peak_reserved_bytes": 19381878784
+        }
+      ],
+      "aggregate_batch_ms": 41784.715,
+      "aggregate_sequential_ms": 58041.142,
+      "aggregate_improvement_percent": 28.008
+    },
+    "two_candidate_boundary": {
+      "003_batch_ms": 18156.147,
+      "003_sequential_baseline_ms": 18342.0,
+      "decision": "do_not_batch_two_candidates"
+    }
+  },
+  "production_policy": {
+    "batch_size": 3,
+    "max_tokens": 384,
+    "accept_only_if": [
+      "all three outputs pass the full production schema",
+      "all three outputs classify as known_label",
+      "every observed label equals its already-bound candidate label",
+      "every candidate_supported is true",
+      "every confidence is at least 0.90"
+    ],
+    "fallback": "discard the entire batch and run the established sequential audits",
+    "two_candidate_behavior": "sequential",
+    "candidate_mutation": false,
+    "human_truth": false,
+    "approved_for_training": false
+  },
+  "deployed_product_smoke": {
+    "sample": "frozen frame126 candidates 19,20,18",
+    "elapsed_ms": 18436.404,
+    "execution_modes": [
+      "independent_batch_3",
+      "independent_batch_3",
+      "independent_batch_3"
+    ],
+    "routes": [
+      "candidate_preserved",
+      "candidate_preserved",
+      "candidate_preserved"
+    ],
+    "queue_count": 0,
+    "candidate_only": true,
+    "formal_workbench_writes": false
+  },
+  "validation": {
+    "focused_tests": "37 passed, 15 subtests passed",
+    "full_tests_utf8": "750 passed, 179 subtests passed",
+    "git_diff_check": "passed",
+    "formal_page_http": 200,
+    "formal_job_status": "idle",
+    "sam_ready": true,
+    "vlm_ready": true,
+    "fast_vlm_status": "disabled"
+  },
+  "deployment": {
+    "formal_backup": "D:/Apps/LabelAgent/.local/backups/restricted-independent-batch-round81-20261117",
+    "remote_backup": "/home/clw/labelagent_remote_20261110/backups/independent-batch-round81-20261117/local_vlm_server.py",
+    "candidate_class_audit_sha256": "a5f3933249d29916c3c730bd4a9a5510c9d1057a84f6ff6fcf863941bf61c038",
+    "workflow_sha256": "7c661cded4344144efd2da24b3cfe13d70b5236cddf1133dcf4f225c1100b046",
+    "server_sha256": "48278da2f79b86dd9678882446d654af549ef6561a880b04e29f39bfc06e515a",
+    "local_vlm_server_sha256": "70cfc4d5146b71fc59ed40c8af59e2ee7fd3dc27b52ee71d4d5eed14871c3694"
+  },
+  "formal_state_sha256_after": {
+    "state.json": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "file_sessions.json": "251a47963ebd2931ee033408e9fe39a94f74539bff0a339c58429ace409088cc",
+    "files.json": "0d8487cd72b3d29612f67ec351ced54f993e98527d44c7df59af6e29196be214",
+    "last_run.json": "2133da6186935d485fe2b2296fe2248ba6cc1183743357ab4c1d8c873d3cffdf",
+    "last_run_summary.json": "920c0d0e6dc37abfe109c13b24b88d9fdcd463e7c55d65bd7ca224534b203ce2",
+    "model_debug.json": "2d3be581405142deb66fe62dc24f8efeaac6d5c471fae61ccbc150819f432b6e"
+  },
+  "artifact_sha256": {
+    "combined_prompt_003": "31705df4fdfba33aa93e0fb0c3b79622c727cf5f5eb7c309b53dbc8c5f5bc476",
+    "combined_prompt_frame126": "018e6c3bc2ed4ccea44973ab5ea2da591c23b85fa5a239aa211064145eca315c",
+    "downscale_003": "33023714d6ccf7ce2802dbe60c376e7888fc21c600abfb7a4c2ea2fd90032b09",
+    "compact_schema_003": "c89c8505e836b03ee6506131ea40b76b01065ba4f4725caa83b70642a88c1832",
+    "short_evidence_003": "824203b219d6b153bae79656548f03f9e6ee693569f6deaa374feccea9b339a4",
+    "independent_003": "5f480174e74f858e363634705305b6c1fc521a4a230f5c86b217a3fff9dc4079",
+    "independent_frame126": "8fc83380a695edd08de6a029ee47228ff4af675d7315c99eb10d0123d773aaa3",
+    "sequential_frame126": "ba3e2850f3c3dabe0e203f947b61a88c941a4d1656f30d2ca7941844a2913932",
+    "independent_0920_frame1": "1fbad0e9b42f7403d4dad2d676cf64c70a336cb9682be716b1eeb825354359b9",
+    "sequential_0920_frame1": "0b8dd4729724530e6d218f49b24b4d28e61ca3a561f10c463218180e80000cb9",
+    "independent_0920_frame36": "3e0f0606d0131205fc5d9738bac3a5614665bf747f4eff7efc76368872484787"
+  }
+}

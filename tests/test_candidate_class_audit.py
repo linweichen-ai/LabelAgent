@@ -66,6 +66,43 @@ class CandidateClassAuditTests(unittest.TestCase):
         self.assertEqual(queue, [])
         self.assertEqual(progress, [(1, 1, 7, "candidate_preserved")])
 
+    def test_three_clear_candidates_use_independent_batch(self):
+        candidates = [{**self.candidate, "id": value} for value in (7, 8, 9)]
+        sequential_calls = []
+        batch_calls = []
+        def sequential(*args, **kwargs):
+            sequential_calls.append(args)
+            return self.decision()
+        def batch(config, requests, **kwargs):
+            batch_calls.append((requests, kwargs))
+            return [self.decision() for _ in requests]
+        audits, queue = audit.audit_high_risk_candidates(
+            {}, self.image, candidates, self.labels, {}, sequential,
+            batch_chat=batch)
+        self.assertEqual(queue, [])
+        self.assertEqual(sequential_calls, [])
+        self.assertEqual(len(batch_calls[0][0]), 3)
+        self.assertTrue(all(item["execution_mode"] == "independent_batch_3"
+                            for item in audits))
+        self.assertTrue(all(item["route"] == "candidate_preserved"
+                            for item in audits))
+
+    def test_uncertain_batch_is_discarded_and_falls_back_sequentially(self):
+        candidates = [{**self.candidate, "id": value} for value in (7, 8, 9)]
+        sequential_calls = []
+        def sequential(*args, **kwargs):
+            sequential_calls.append(args)
+            return self.decision()
+        uncertain = self.decision(None, .3, "uncertain")
+        audits, queue = audit.audit_high_risk_candidates(
+            {}, self.image, candidates, self.labels, {}, sequential,
+            batch_chat=lambda *args, **kwargs:
+                [self.decision(), uncertain, self.decision()])
+        self.assertEqual(queue, [])
+        self.assertEqual(len(sequential_calls), 3)
+        self.assertTrue(all(item["execution_mode"] == "sequential"
+                            for item in audits))
+
     def test_holes_and_invalid_coordinates(self):
         self.candidate["holes"] = [[[15, 15], [25, 15], [25, 25], [15, 25]]]
         evidence = audit.prepare_candidate_evidence(self.image, self.candidate)

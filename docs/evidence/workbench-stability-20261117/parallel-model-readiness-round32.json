@@ -1,0 +1,65 @@
+{
+  "round": 32,
+  "recorded_at": "2026-11-17T17:10:00+08:00",
+  "objective": "Reduce run-button preflight latency by checking SAM and VLM concurrently while preserving both readiness gates.",
+  "implementation": {
+    "sam_probe": "GET /health",
+    "vlm_probe": "GET /models and exact configured model registration check",
+    "execution": "two bounded worker threads per readiness request",
+    "error_isolation": true,
+    "combined_ready_requires_both": true,
+    "reported_server_elapsed_ms": true
+  },
+  "formal_ab_30_requests": {
+    "before_sequential_client_ms": {
+      "mean": 203.984,
+      "median": 187.064,
+      "p95": 308.224,
+      "min": 124.711,
+      "max": 332.95
+    },
+    "after_parallel_client_ms": {
+      "mean": 65.893,
+      "median": 62.334,
+      "p95": 109.28,
+      "min": 14.671,
+      "max": 242.79
+    },
+    "after_parallel_server_ms": {
+      "mean": 59.877,
+      "median": 59.601,
+      "p95": 107.111
+    },
+    "median_reduction_percent": 66.68,
+    "p95_reduction_percent": 64.55,
+    "mean_reduction_percent": 67.7
+  },
+  "formal_runtime_acceptance": {
+    "url": "http://127.0.0.1:8765",
+    "server_sha256": "6AF6D3878E4C79117CD56897FB343D1A0DDBA399D888FE76589A8A14BA94B950",
+    "sam3": "ready",
+    "vlm": "ready",
+    "workbench": "ready",
+    "run": "idle"
+  },
+  "runtime_state_readback": {
+    "state.json": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "unchanged_after_deploy_and_benchmark": true
+  },
+  "regression": {
+    "python_core_and_image_import": "140/140",
+    "web_polling_upload_recovery_and_dataset_load": "18/18",
+    "candidate_and_human_review_gates": "98/98",
+    "concurrency_contract": "a two-party barrier proves both network probes are in flight together"
+  },
+  "rollback": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-parallel-readiness-round32-20261117-171000",
+  "limitations": [
+    "This optimization reduces service-health preflight latency, not SAM/VLM inference time.",
+    "The unavailable-service worst case is covered by deterministic concurrency regression, not by intentionally stopping production model services.",
+    "No readiness result is cached; every run still performs fresh SAM and VLM checks."
+  ]
+}

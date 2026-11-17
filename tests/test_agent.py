@@ -1274,6 +1274,32 @@ class FakeVideo:
 
 
 class ServerTests(unittest.TestCase):
+    def test_model_readiness_probes_sam_and_vlm_concurrently(self):
+        old_state = server.state
+        barrier = threading.Barrier(2, timeout=1)
+        calls = []
+
+        def probe(url, timeout=3):
+            calls.append(url)
+            barrier.wait()
+            if url.endswith("/health"):
+                return {"status": "ok", "model_loaded": True}
+            return {"data": [{"id": "vlm-test"}]}
+
+        server.state = {"config": {
+            "sam3_url": "http://sam",
+            "llm_url": "http://vlm/v1",
+            "llm_model": "vlm-test",
+        }}
+        try:
+            with patch.object(server, "_fetch_readiness_json", side_effect=probe):
+                result = server.app.test_client().get("/api/model_readiness").json
+            self.assertTrue(result["ready"])
+            self.assertEqual(set(calls), {"http://sam/health", "http://vlm/v1/models"})
+            self.assertGreaterEqual(result["elapsed_ms"], 0)
+        finally:
+            server.state = old_state
+
     def test_run_accepts_exact_retry_frames_without_reprocessing_successful_range(self):
         old_state, old_status, old_work = server.state, server.run_status, server.WORK
         with tempfile.TemporaryDirectory() as directory:

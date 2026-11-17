@@ -12,6 +12,7 @@ import urllib.error
 import base64
 import hashlib
 import marshal
+from concurrent.futures import ThreadPoolExecutor
 from functools import wraps
 from datetime import datetime, timezone
 from pathlib import Path
@@ -2607,43 +2608,56 @@ def set_config():
 
 @app.get("/api/model_readiness")
 def model_readiness():
+    started = time.perf_counter()
     with lock:
         config = dict(state.setdefault("config", {}))
     sam_url = (config.get("sam3_url") or os.environ.get("SAM3_URL")
                or "http://127.0.0.1:8766").rstrip("/")
     llm_url = str(config.get("llm_url") or "").rstrip("/")
     configured_model = str(config.get("llm_model") or "").strip()
-    sam = {"ready": False, "status": "unavailable", "model_loaded": False,
-           "on_demand": False}
-    vlm = {"ready": False, "status": "unavailable", "model": configured_model,
-           "registered_models": []}
-    try:
-        health = _fetch_readiness_json(sam_url + "/health")
-        sam.update(status=health.get("status", "unknown"),
-                   model_loaded=bool(health.get("model_loaded")),
-                   on_demand=bool(health.get("on_demand")))
-        sam["ready"] = health.get("status") == "ok"
-    except RuntimeError as error:
-        sam["error"] = str(error)
-    if not llm_url:
-        vlm["error"] = "尚未配置 VLM 地址"
-    elif not configured_model:
-        vlm["error"] = "尚未配置 VLM 模型名"
-    else:
+    def probe_sam():
+        result = {"ready": False, "status": "unavailable", "model_loaded": False,
+                  "on_demand": False}
+        try:
+            health = _fetch_readiness_json(sam_url + "/health")
+            result.update(status=health.get("status", "unknown"),
+                          model_loaded=bool(health.get("model_loaded")),
+                          on_demand=bool(health.get("on_demand")))
+            result["ready"] = health.get("status") == "ok"
+        except RuntimeError as error:
+            result["error"] = str(error)
+        return result
+
+    def probe_vlm():
+        result = {"ready": False, "status": "unavailable", "model": configured_model,
+                  "registered_models": []}
+        if not llm_url:
+            result["error"] = "尚未配置 VLM 地址"
+            return result
+        if not configured_model:
+            result["error"] = "尚未配置 VLM 模型名"
+            return result
         try:
             listing = _fetch_readiness_json(llm_url + "/models")
             entries = listing.get("data") if isinstance(listing.get("data"), list) else []
             models = sorted({str(item.get("id")) for item in entries
                              if isinstance(item, dict) and item.get("id")})
-            vlm.update(status="ok", registered_models=models,
-                       ready=configured_model in models)
-            if not vlm["ready"]:
-                vlm["error"] = (f"配置模型 {configured_model} 未在服务中登记"
-                                if models else "VLM 服务没有返回可用模型")
+            result.update(status="ok", registered_models=models,
+                          ready=configured_model in models)
+            if not result["ready"]:
+                result["error"] = (f"配置模型 {configured_model} 未在服务中登记"
+                                   if models else "VLM 服务没有返回可用模型")
         except RuntimeError as error:
-            vlm["error"] = str(error)
+            result["error"] = str(error)
+        return result
+
+    with ThreadPoolExecutor(max_workers=2, thread_name_prefix="readiness") as executor:
+        sam_future = executor.submit(probe_sam)
+        vlm_future = executor.submit(probe_vlm)
+        sam, vlm = sam_future.result(), vlm_future.result()
     return jsonify(ready=sam["ready"] and vlm["ready"], sam=sam, vlm=vlm,
-                   checked_at=datetime.now(timezone.utc).isoformat())
+                   checked_at=datetime.now(timezone.utc).isoformat(),
+                   elapsed_ms=round((time.perf_counter() - started) * 1000, 3))
 
 
 @app.get("/api/run/readiness")

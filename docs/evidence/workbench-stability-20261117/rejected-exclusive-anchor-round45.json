@@ -1,0 +1,62 @@
+{
+  "schema_version": "labelagent.rejected_exclusive_anchor_round45.v1",
+  "date": "2026-11-17",
+  "status": "prompt_rejected_observability_accepted",
+  "hypothesis": "When more than one of generic vehicle, ego and other_robot is present, require one normalized point per physical instance so existing shared-anchor guards can route reused evidence to review.",
+  "paired_evaluation": {
+    "cohort": "Round 43 Capture_20261103 four-camera x two-frame benchmark",
+    "image_count": 8,
+    "request_success_count": 8,
+    "baseline_total_ms": 189080,
+    "trial_total_ms": 231683,
+    "observed_total_latency_change_percent": 22.53,
+    "baseline_median_ms": 24336.5,
+    "trial_median_ms": 29436.5,
+    "baseline_completion_tokens": 2837,
+    "trial_completion_tokens": 3287,
+    "completion_token_change_percent": 15.86,
+    "minimum_trial_ms": 23731,
+    "maximum_trial_ms": 31496,
+    "raw_trial_artifact_sha256": "02C1B2442A81B7DBBA11EBAE014B918ACD0AB94BEAA7F4E9779D2A02A148E9DF"
+  },
+  "observed_behavior": {
+    "shared_anchor_conflict_views": [6, 7],
+    "shared_anchor_result": "generic vehicle and other_robot were conservatively downgraded to uncertain and retained as review candidates",
+    "regressions": [
+      "Position 1 dropped other_robot from visible.",
+      "Position 2 dropped generic vehicle from visible.",
+      "Position 3 produced duplicate person assessments and missing registry assessments, leaving six labels uncertain.",
+      "Position 4 added other_robot to visible.",
+      "Position 8 added cargo_floor uncertainty through pallet-confusion guard."
+    ]
+  },
+  "decision": {
+    "prompt_change_accepted": false,
+    "reason": "The points activated the intended guard in two views but added 22.53% latency, 15.86% output tokens and unacceptable registry instability.",
+    "prompt_and_workflow_restored": true,
+    "formal_inference_runtime_modified": false,
+    "formal_candidate_modified": false,
+    "human_truth_modified": false,
+    "training_data_modified": false
+  },
+  "accepted_tooling_change": {
+    "change": "The read-only benchmark now records bounded consistency flags without model prose.",
+    "formal_tool_sha256": "B56CE55C7C651DDAABAEC97475C233FD106D44B53CCC9DFD456DE7085B2429F1",
+    "rollback": "D:/Apps/LabelAgent/.local/backups/workbench-consistency-observability-round45-20261117-110849/benchmark_visible_discovery.py",
+    "previous_tool_sha256": "4B7D406CF0CBC038A915EF07E131DBA314BB842B649DEE00D3334D03D2983F6C"
+  },
+  "validation_after_restore": {
+    "python_core_image_candidate_vlm_and_benchmark": "178/178",
+    "web_interaction": "84/84",
+    "formal_model_readiness": true,
+    "formal_run_status": "idle",
+    "formal_state_hashes_unchanged": {
+      "state.json": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+      "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+      "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+      "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+      "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+      "model_debug.json": "EFDF22CD6BD803C958E3ACB39D46054D294544FE48324A12B4AFE1502B3BBB9A"
+    }
+  }
+}

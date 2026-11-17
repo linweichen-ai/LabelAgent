@@ -608,3 +608,9 @@ Python 核心、图片、候选和 VLM 组件回归 174/174，网页交互 84/84
 尝试只把 `absent` 类别的依据约束为固定短语 `not visible`，`present/uncertain` 仍保留视觉依据，类别表、置信度和开放集尾部均不减少。八图请求 8/8 成功，总耗时 189.080→163.109 秒（观测下降 13.74%），中位 24.3365→20.105 秒；但 completion token 只下降 3.17%，且只有 4/8 的可见类别集合与基线一致。
 
 语义回退不可接受：Camera 1 首帧由 `pallet/person/floor/ego` 退化为只确认 `floor`，其余 7 类全部不确定；另外三帧新增 `车辆` 误报风险，其中一帧还新增 `cargo_floor` 不确定。该实验未部署，开发代码和测试已经恢复第四十三轮，相关 Python 回归 162 项通过、5 项按既有条件跳过；正式工作台 ready/idle，六份状态/历史哈希未变。完整否决证据见 [第四十四轮短语实验](evidence/workbench-stability-20261117/rejected-fixed-absence-round44.json)。
+
+## 第四十五轮车辆互斥位置锚点实验（提示否决、观测增强保留，2026-11-17）
+
+为解决八视角中 `车辆/ego/other_robot` 可能复用同一实体的问题，试验要求多类同时出现时各给一个归一化位置点；现有门禁会把复用同一点的类别降为不确定并送人工复核。该机制在 Camera 2 末帧和 Camera 3 首帧确实触发，但八图总耗时 189.080→231.683 秒（+22.53%），completion token 增加 15.86%，并造成一帧重复/缺失类别以及多帧类别漂移。
+
+位置点提示因此否决并恢复。只保留无行为影响的观测增强：只读基准会记录去除长文本后的 `reason_code / label / route / conflicting_labels / shared_anchor`，后续可直接定位一致性门禁，不读取提示词或模型长推理。Python 回归 178/178、网页交互 84/84；正式工作台 ready/idle，六份状态/历史哈希未变。正式工具回滚点 `D:\Apps\LabelAgent\.local\backups\workbench-consistency-observability-round45-20261117-110849`，完整证据见 [第四十五轮锚点实验](evidence/workbench-stability-20261117/rejected-exclusive-anchor-round45.json)。

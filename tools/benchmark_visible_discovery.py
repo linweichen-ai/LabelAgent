@@ -57,6 +57,14 @@ def bounded_unknown(result: dict) -> list[dict]:
     } for item in result.get("unknown_candidates", []) if isinstance(item, dict)]
 
 
+def bounded_consistency_flags(result: dict) -> list[dict]:
+    allowed = {"label", "normalized_evidence", "reason_code", "route",
+               "conflicting_labels", "shared_anchor"}
+    return [{key: item.get(key) for key in allowed if key in item}
+            for item in result.get("consistency_flags", [])
+            if isinstance(item, dict)]
+
+
 def request_metadata(trace: list[dict]) -> dict:
     for event in reversed(trace):
         if (isinstance(event, dict) and event.get("service") == "GPT"
@@ -128,6 +136,7 @@ def main() -> int:
             "visible_labels": result.get("visible_labels", []),
             "uncertain_labels": result.get("uncertain_labels", []),
             "unknown_candidates": bounded_unknown(result),
+            "consistency_flags": bounded_consistency_flags(result),
             "open_set_scan_complete": result.get("open_set_scan_complete"),
             "registry_mutated": result.get("registry_mutated"),
             "failure": failure,

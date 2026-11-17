@@ -1,7 +1,8 @@
 import unittest
 
 from tools.benchmark_visible_discovery import (
-    bounded_assessments, bounded_unknown, median, request_metadata)
+    bounded_assessments, bounded_consistency_flags, bounded_unknown, median,
+    request_metadata)
 
 
 class VisibleDiscoveryBenchmarkTests(unittest.TestCase):
@@ -22,6 +23,20 @@ class VisibleDiscoveryBenchmarkTests(unittest.TestCase):
                   "output": {}}]
         self.assertEqual(request_metadata(trace), {"elapsed_ms": 10,
             "raw_text_chars": 2, "local_vlm": {"quantization": "none"}})
+
+    def test_consistency_flags_exclude_model_prose(self):
+        result = {"consistency_flags": [{"label": "车辆",
+            "normalized_evidence": "uncertain",
+            "reason_code": "vlm_cross_label_entity_conflict",
+            "route": "human_review_required",
+            "conflicting_labels": ["车辆", "other_robot"],
+            "shared_anchor": [700, 450], "reason": "long prose"}]}
+        self.assertEqual(bounded_consistency_flags(result), [{
+            "label": "车辆", "normalized_evidence": "uncertain",
+            "reason_code": "vlm_cross_label_entity_conflict",
+            "route": "human_review_required",
+            "conflicting_labels": ["车辆", "other_robot"],
+            "shared_anchor": [700, 450]}])
 
     def test_median_averages_even_middle_pair(self):
         self.assertEqual(median([4, 1, 3, 2]), 2.5)

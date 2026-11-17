@@ -1,0 +1,115 @@
+{
+  "schema_version": "labelagent.workbench_round66_reference_preparation_index.v1",
+  "date": "2026-11-17",
+  "objective": "open and operate the reference preparation dialog without transferring all-frame polygon geometry",
+  "implementation": {
+    "index_endpoint": "/api/reference-preparation",
+    "single_frame_endpoint": "/api/frame_state/<frame>",
+    "index_fields": [
+      "file path and topic",
+      "label registry",
+      "reference frame ids",
+      "per-frame truth count and class names",
+      "per-frame candidate count and class names",
+      "compact human-review eligibility"
+    ],
+    "excluded_from_index": [
+      "polygon points",
+      "candidate geometry",
+      "Agent traces",
+      "model configuration and credentials"
+    ],
+    "selection_safety": [
+      "selected geometry is fetched only after a frame is chosen",
+      "frame readback is bound to expected file path, topic and frame",
+      "reference-frame commit rejects stale expected file or topic with HTTP 409"
+    ]
+  },
+  "formal_runtime_measurement": {
+    "formal_url": "http://127.0.0.1:8765",
+    "full_state": {
+      "bytes": 1953991,
+      "median_ms_over_5": 138.96,
+      "minimum_ms": 129.79
+    },
+    "reference_preparation_index": {
+      "bytes": 2351,
+      "median_ms_over_5": 3.01,
+      "minimum_ms": 2.69,
+      "byte_reduction_percent": 99.8797,
+      "truth_frames": 1,
+      "candidate_frames": 29,
+      "polygon_points_present": false
+    },
+    "selected_candidate_frame": {
+      "frame": 1,
+      "bytes": 65559,
+      "median_ms_over_5": 7.76,
+      "reference_binding_present": true
+    },
+    "browser_acceptance": {
+      "dialog_visible": true,
+      "open_elapsed_ms": 121,
+      "requests": [
+        "/api/reference-preparation",
+        "/api/model_readiness",
+        "/api/files/annotation-sources"
+      ],
+      "full_state_requested": false,
+      "page_errors": []
+    }
+  },
+  "large_dataset_benchmark": {
+    "kind": "isolated in-process synthetic scale benchmark",
+    "frames": 2014,
+    "shapes": 8056,
+    "points_per_shape": 96,
+    "compact_index_bytes": 128066,
+    "full_state_bytes": 22944839,
+    "byte_reduction_percent": 99.4419,
+    "compact_median_ms_over_5": 2.37,
+    "full_state_median_ms_over_5": 3803.38,
+    "indexed_frames": 2014,
+    "polygon_points_present": false,
+    "boundary": "This validates response scaling and geometry exclusion, not model accuracy or external-network throughput."
+  },
+  "tests": {
+    "python": {"tests": 731, "failures": 0, "encoding": "PYTHONUTF8=1"},
+    "web": {"tests": 88, "failures": 0},
+    "coverage": [
+      "geometry-free reference index schema and size",
+      "single-frame response includes reference-frame binding",
+      "stale file and topic commits are rejected without mutation",
+      "reference dialog never fetches the full state",
+      "real headless-browser dialog open and request audit"
+    ]
+  },
+  "deployment": {
+    "formal_ready": true,
+    "sam_ready": true,
+    "vlm_ready": true,
+    "fast_vlm_ready": false,
+    "formal_run_status": "idle",
+    "backup": "D:/Apps/LabelAgent/.local/backups/reference-preparation-index-round66-20261117",
+    "source_sha256": {
+      "source/agent/server.py": "c83bdf8e690b9781ad4501d7fe706d3721452bc1610b30bc480008da723b6cdf",
+      "source/agent/workflow.py": "32b098943fb8e089cb2b22eeebc2c672302bf9aa456e413105d4b79351fd8a57",
+      "source/web/app.js": "8105d606e42b18f4e32d2a0c626f576024c17a95df64b3e9438dba919c5b1294",
+      "source/web/reference-prep.js": "f45c2746c1f396ba0ebe592247ffcda7ea40305cd1f1e8991e997d0934029dae"
+    },
+    "formal_state_sha256_unchanged": {
+      "state.json": "54a5ee6ac1794ae3d769b3fefa3cadd79da7f2d5dff892f0b8b4f0a259238ff5",
+      "file_sessions.json": "251a47963ebd2931ee033408e9fe39a94f74539bff0a339c58429ace409088cc",
+      "files.json": "0d8487cd72b3d29612f67ec351ced54f993e98527d44c7df59af6e29196be214",
+      "last_run.json": "2133da6186935d485fe2b2296fe2248ba6cc1183743357ab4c1d8c873d3cffdf",
+      "last_run_summary.json": "920c0d0e6dc37abfe109c13b24b88d9fdcd463e7c55d65bd7ca224534b203ce2",
+      "model_debug.json": "efdf22cd6bd803c958e3acb39d46054d294544fe48324a12b4afe1502b3bbb9a"
+    }
+  },
+  "isolation": {
+    "candidate_only_preserved": true,
+    "human_truth_modified": false,
+    "training_approval_modified": false,
+    "oss_modified": false
+  }
+}

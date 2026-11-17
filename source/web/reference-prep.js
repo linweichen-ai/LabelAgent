@@ -50,24 +50,39 @@
     }
     select.disabled = false;
     for (const [frameId, items] of entries) {
-      const classes = [...new Set((items || []).map(item => item.label).filter(Boolean))];
+      const classes = frameItemLabels(items);
       const detail = typeof describe === 'function' ? describe(frameId, items) : '';
-      option(select, frameId, `帧 ${frameId} · ${(items || []).length} 个轮廓${classes.length ? ` · ${classes.slice(0, 3).join(' / ')}` : ''}${detail}`);
+      option(select, frameId, `帧 ${frameId} · ${frameItemCount(items)} 个轮廓${classes.length ? ` · ${classes.slice(0, 3).join(' / ')}` : ''}${detail}`);
     }
     if (preferredFrame !== null && entries.some(([frameId]) => String(frameId) === String(preferredFrame))) {
       select.value = String(preferredFrame);
     }
   }
 
+  function frameItemCount(items) {
+    return Array.isArray(items) ? items.length : Number(items?.count || 0);
+  }
+
+  function frameItemLabels(items) {
+    return Array.isArray(items)
+      ? [...new Set(items.map(item => item?.label).filter(Boolean))]
+      : Array.isArray(items?.labels) ? [...new Set(items.labels.filter(Boolean))] : [];
+  }
+
   function frameEntries(record) {
     return Object.entries(record || {})
-      .filter(([, items]) => Array.isArray(items) && items.length)
+      .filter(([, items]) => frameItemCount(items) > 0)
       .sort((a, b) => Number(a[0]) - Number(b[0]));
   }
 
   function currentFrameCandidate(state = latestState, frameId = currentFrame()) {
-    const items = state?.candidates?.[String(frameId)];
-    return Array.isArray(items) && items.length ? items : null;
+    const items = state?.candidates?.[String(frameId)] ?? state?.candidate_index?.[String(frameId)];
+    return frameItemCount(items) > 0 ? items : null;
+  }
+
+  function hasTruthFrame(state, frameId) {
+    const key = String(frameId);
+    return Object.hasOwn(state?.truth || {}, key) || Object.hasOwn(state?.truth_index || {}, key);
   }
 
   function updateAutoDraftAction() {
@@ -79,7 +94,7 @@
       button.textContent = '全流程已开始 · 无需再点图片';
       hint.textContent = '本轮请求已经提交；请查看上方实时阶段和计时，不要重复点击。';
     } else if (existing) {
-      button.textContent = `已有 ${existing.length} 个候选 · 直接载入复核`;
+      button.textContent = `已有 ${frameItemCount(existing)} 个候选 · 直接载入复核`;
       hint.textContent = '将复用已有轮廓并轻量复审高风险候选类别，不重新分割；审核通过绑定校验后载入，仍须逐个人工检查。';
     } else {
       button.textContent = '立即运行整帧 SAM + VLM 全流程';
@@ -93,11 +108,11 @@
     if (!text || !button) return;
     const state = latestState;
     const loaded = preparationStateReady && Boolean(state?.loaded && state?.topic);
-    const truthEntries = frameEntries(state?.truth);
+    const truthEntries = frameEntries(state?.truth_index || state?.truth);
     const truthStatus = state?.truth_review_status || {};
     const verified = truthEntries.filter(([frameId]) => truthStatus[frameId]?.reusable_as_reference === true);
     const legacy = truthEntries.filter(([frameId]) => truthStatus[frameId]?.reusable_as_reference !== true);
-    const candidates = frameEntries(state?.candidates).filter(([frameId]) => !Object.hasOwn(state?.truth || {}, frameId));
+    const candidates = frameEntries(state?.candidate_index || state?.candidates).filter(([frameId]) => !hasTruthFrame(state, frameId));
     const currentCandidate = candidates.find(([frameId]) => String(frameId) === String(currentFrame()));
     let source = '', message = '请先加载图像或 MCAP，随后会自动选择最省事的参考帧路线。';
     let target = '', actionLabel = '按推荐继续';
@@ -109,7 +124,7 @@
       message = `优先复用：当前数据有 ${legacy.length} 帧历史标注，载入后检查边界即可，不必从零画。`;
     } else if (loaded && currentCandidate) {
       source = 'sam'; target = 'useCandidateDraft'; actionLabel = '复用当前帧候选';
-      message = `当前帧已有 ${currentCandidate[1].length} 个机器候选，可复用并轻量复审高风险类别；不会重新运行 SAM，之后仍须逐个检查。`;
+      message = `当前帧已有 ${frameItemCount(currentCandidate[1])} 个机器候选，可复用并轻量复审高风险类别；不会重新运行 SAM，之后仍须逐个检查。`;
     } else if (loaded && registeredSources.length) {
       source = 'existing'; target = 'loadRegisteredAnnotationSource'; actionLabel = '切换并复核';
       message = `当前帧 ${currentFrame()} 没有已核验真值或机器候选；另有 ${registeredSources.length} 份含标注数据可先切换复核${candidates.length ? `，当前数据另有 ${candidates.length} 帧机器候选也可在下方选择` : ''}。`;
@@ -213,12 +228,12 @@
   function render(state) {
     latestState = state;
     const loaded = Boolean(state?.loaded && state?.topic);
-    const truthEntries = frameEntries(state?.truth);
+    const truthEntries = frameEntries(state?.truth_index || state?.truth);
     const truthStatus = state?.truth_review_status || {};
     const verifiedTruthEntries = truthEntries.filter(([frameId]) => truthStatus[frameId]?.reusable_as_reference === true);
     const legacyTruthEntries = truthEntries.filter(([frameId]) => truthStatus[frameId]?.reusable_as_reference !== true);
-    const candidateEntries = frameEntries(state?.candidates)
-      .filter(([frameId]) => !Object.hasOwn(state?.truth || {}, frameId));
+    const candidateEntries = frameEntries(state?.candidate_index || state?.candidates)
+      .filter(([frameId]) => !hasTruthFrame(state, frameId));
     const preferredFrame = currentFrame();
     fillFrameSelect(byId('existingTruthFrame'), verifiedTruthEntries, '暂无通过当前门禁的人工真值',
       () => ' · 人工回执已核验', preferredFrame);
@@ -254,10 +269,23 @@
     updateRecommendation();
   }
 
-  async function readState() {
-    const response = await fetch('/api/state', { cache: 'no-store' });
+  async function readPreparationState() {
+    const response = await fetch('/api/reference-preparation', { cache: 'no-store' });
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || '无法读取当前数据状态');
+    if (!response.ok) throw new Error(data.error || '无法读取参考帧目录');
+    if (data.schema_version !== 'labelagent.reference-preparation.v1' || data.compact_geometry !== true) {
+      throw new Error('参考帧目录版本不兼容，已停止准备');
+    }
+    return data;
+  }
+
+  async function readFrameSnapshot(frameId, expected = latestState) {
+    if (typeof window.readCompactFrameStateSnapshot !== 'function') throw new Error('单帧按需读取接口不可用，请刷新页面');
+    if (!expected?.loaded || !expected?.topic || !expected?.path) throw new Error('请先加载图像或 MCAP');
+    const data = await window.readCompactFrameStateSnapshot(frameId, expected.topic, expected.path);
+    if (data.path !== expected.path || data.topic !== expected.topic || Number(data.frame) !== Number(frameId)) {
+      throw new Error('单帧内容与参考目录不一致，已拒绝采用');
+    }
     return data;
   }
 
@@ -271,9 +299,8 @@
     renderReadiness(null);
     dialog.showModal();
     const [stateResult, readinessResult, sourceResult] = await Promise.allSettled([
-      readState().then(state => {
+      readPreparationState().then(state => {
         if (generation !== preparationGeneration) return state;
-        window.syncWorkbenchCandidateState?.(state);
         preparationStateReady = true;
         render(state);
         return state;
@@ -374,17 +401,19 @@
     const frameId = currentFrame();
     const label = byId('referenceAutoLabel').value;
     const autoDetectVisible = label === AUTO_VISIBLE_LABELS;
-    const fresh = await readState();
+    const fresh = await readPreparationState();
     if (!fresh.loaded) throw new Error('请先加载图像或 MCAP');
     if (latestState && (fresh.path !== latestState.path || fresh.topic !== latestState.topic)) throw new Error('数据作用域已变化，请重新打开参考帧准备');
-    if (Object.hasOwn(fresh.truth || {}, String(frameId))) throw new Error(existingAnnotationMessage(fresh, frameId));
+    if (hasTruthFrame(fresh, frameId)) throw new Error(existingAnnotationMessage(fresh, frameId));
     const existing = currentFrameCandidate(fresh, frameId);
     if (existing) {
-      window.syncWorkbenchCandidateState?.(fresh);
-      render(fresh);
+      const frameState = await readFrameSnapshot(frameId, fresh);
+      const candidate = frameState.candidates?.[String(frameId)];
+      if (!Array.isArray(candidate) || !candidate.length) throw new Error('当前帧候选已发生变化，请重新打开参考帧准备');
+      window.syncWorkbenchCandidateState?.(frameState);
       dialog.close();
-      await window.prepareReferenceCandidateDraft?.(frameId, clone(existing), clone(fresh.agent_runs?.[String(frameId)] || {}));
-      window.labelAgentToast?.(`当前帧已有 ${existing.length} 个机器候选，已直接载入；已完成高风险类别轻量复审，未重新分割，未写入人工真值，仍须逐个检查`);
+      await window.prepareReferenceCandidateDraft?.(frameId, clone(candidate), clone(frameState.agent_runs?.[String(frameId)] || {}));
+      window.labelAgentToast?.(`当前帧已有 ${candidate.length} 个机器候选，已直接载入；已完成高风险类别轻量复审，未重新分割，未写入人工真值，仍须逐个检查`);
       return;
     }
     if (!autoDetectVisible && (!label || !(fresh.labels || []).includes(label))) throw new Error('请选择有效的参考类别');
@@ -453,19 +482,21 @@
 
   async function useExisting() {
     const frameId = Number(byId('existingTruthFrame').value);
-    const fresh = await readState();
+    const index = await readPreparationState();
+    const fresh = await readFrameSnapshot(frameId, index);
     const truth = fresh.truth?.[String(frameId)];
     if (!Array.isArray(truth) || !truth.length) throw new Error('所选人工标注已发生变化，请重新选择');
     if (fresh.truth_review_status?.[String(frameId)]?.reusable_as_reference !== true) {
       throw new Error('该帧缺少与当前轮廓绑定的人工确认回执，请改用“载入历史标注并复核”');
     }
     const response = await fetch('/api/reference_frame', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ frame: frameId }),
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({frame: frameId, expected_topic: index.topic, expected_path: index.path}),
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || '设置参考帧失败');
-    const readback = await readState();
-    if (readback.reference_frames?.[fresh.topic]?.[0] !== frameId) throw new Error('服务器读回未确认参考帧，已停止');
+    const readback = await readFrameSnapshot(frameId, index);
+    if (readback.reference_frames?.[index.topic]?.[0] !== frameId) throw new Error('服务器读回未确认参考帧，已停止');
     window.referenceFrames = readback.reference_frames || {};
     dialog.close();
     await window.openFrameForReferencePreparation?.(frameId);
@@ -475,7 +506,8 @@
 
   async function useLegacyTruth() {
     const frameId = Number(byId('legacyTruthFrame').value);
-    const fresh = await readState();
+    const index = await readPreparationState();
+    const fresh = await readFrameSnapshot(frameId, index);
     const truth = fresh.truth?.[String(frameId)];
     const status = fresh.truth_review_status?.[String(frameId)] || {};
     if (!Array.isArray(truth) || !truth.length) throw new Error('所选历史标注已发生变化，请重新选择');
@@ -485,7 +517,8 @@
   }
 
   async function useCandidateFrame(frameId) {
-    const fresh = await readState();
+    const index = await readPreparationState();
+    const fresh = await readFrameSnapshot(frameId, index);
     if (Object.hasOwn(fresh.truth || {}, String(frameId))) throw new Error(existingAnnotationMessage(fresh, frameId));
     const candidate = fresh.candidates?.[String(frameId)];
     if (!Array.isArray(candidate) || !candidate.length) throw new Error('所选机器候选已发生变化，请重新选择');
@@ -501,9 +534,9 @@
 
   async function startSam() {
     const frameId = currentFrame();
-    const fresh = await readState();
+    const fresh = await readPreparationState();
     if (!fresh.loaded) throw new Error('请先加载图像或 MCAP');
-    if (Object.hasOwn(fresh.truth || {}, String(frameId))) throw new Error(existingAnnotationMessage(fresh, frameId));
+    if (hasTruthFrame(fresh, frameId)) throw new Error(existingAnnotationMessage(fresh, frameId));
     const readiness = await readModelReadiness();
     if (!readiness.sam?.ready) throw new Error(`SAM 尚未就绪：${readinessText(readiness.sam, 'sam')}`);
     dialog.close();
@@ -512,9 +545,9 @@
 
   async function startManual() {
     const frameId = currentFrame();
-    const fresh = await readState();
+    const fresh = await readPreparationState();
     if (!fresh.loaded) throw new Error('请先加载图像或 MCAP');
-    if (Object.hasOwn(fresh.truth || {}, String(frameId))) throw new Error(existingAnnotationMessage(fresh, frameId));
+    if (hasTruthFrame(fresh, frameId)) throw new Error(existingAnnotationMessage(fresh, frameId));
     dialog.close();
     await window.prepareReferenceManualDraft?.(frameId);
   }
@@ -533,7 +566,7 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || '切换已有标注数据失败');
       await window.loadVideoData(data);
-      const [freshState, freshSources] = await Promise.all([readState(), readAnnotationSources()]);
+      const [freshState, freshSources] = await Promise.all([readPreparationState(), readAnnotationSources()]);
       render(freshState);
       renderAnnotationSources(freshSources);
       window.labelAgentToast?.(`已切换到 ${source.name}；请选择历史帧并复核，不需要从零重画`);
@@ -553,12 +586,12 @@
   async function startAutoDraftFromGuide() {
     if (draftBusy) throw new Error('当前机器草稿正在生成，请等待本轮完成');
     if (!dialog.open) await openDialog();
-    const fresh = await readState();
+    const fresh = await readPreparationState();
     const frameId = currentFrame();
-    const currentCandidate = fresh.candidates?.[String(frameId)];
-    if (Array.isArray(currentCandidate) && currentCandidate.length) {
+    const currentCandidate = currentFrameCandidate(fresh, frameId);
+    if (currentCandidate) {
       await useCandidateFrame(frameId);
-      window.labelAgentToast?.(`当前帧已有 ${currentCandidate.length} 个机器候选，已轻量复审并载入；未重新运行 SAM，仍需逐个检查`);
+      window.labelAgentToast?.(`当前帧已有 ${frameItemCount(currentCandidate)} 个机器候选，已轻量复审并载入；未重新运行 SAM，仍需逐个检查`);
       return;
     }
     await runAutoDraft();

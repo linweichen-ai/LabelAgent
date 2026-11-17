@@ -91,6 +91,15 @@ test('候选生成、Agent 精修和类别复核只读回当前帧绑定', () =>
   assert.match(prep, /window\.fetchCompactFrameState\?\.\(frameId\)/);
 });
 
+test('参考准备弹窗只读取轻量目录并在选帧后按需读取几何', () => {
+  const prep = source('reference-prep.js');
+  assert.match(prep, /fetch\('\/api\/reference-preparation'/);
+  assert.match(prep, /window\.readCompactFrameStateSnapshot\(frameId, expected\.topic, expected\.path\)/);
+  assert.doesNotMatch(prep, /fetch\('\/api\/state'/);
+  assert.match(prep, /state\?\.truth_index \|\| state\?\.truth/);
+  assert.match(prep, /state\?\.candidate_index \|\| state\?\.candidates/);
+});
+
 test('状态请求隐藏期间完成不重建定时器，恢复后立即轮询且保持单链', async () => {
   let calls = 0, release;
   const h = harness({

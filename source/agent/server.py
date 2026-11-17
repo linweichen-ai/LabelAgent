@@ -1528,6 +1528,56 @@ def get_state_summary():
         )
 
 
+def _reference_frame_index(record):
+    """Summarize per-frame geometry without returning any polygon points."""
+    result = {}
+    for frame, items in record.items():
+        if not isinstance(items, list) or not items:
+            continue
+        labels = []
+        for item in items:
+            label = item.get("label") if isinstance(item, dict) else None
+            if label and label not in labels:
+                labels.append(label)
+        result[str(frame)] = {"count": len(items), "labels": labels}
+    return result
+
+
+@app.get("/api/reference-preparation")
+def get_reference_preparation():
+    """Return the geometry-free index used by the reference preparation dialog.
+
+    Selecting a frame still requires ``/api/frame_state/<frame>``.  This keeps
+    opening the dialog cheap even when a dataset contains many dense masks.
+    """
+    with lock:
+        recover_pending_human_reviews()
+        video = state.get("video")
+        topic = state.get("topic")
+        truth_status = current_truth_review_status()
+        compact_status = {
+            str(frame): {
+                key: copy.deepcopy(status.get(key))
+                for key in ("reusable_as_reference", "reason_code",
+                            "legacy_source_counts", "truth_sha256")
+                if key in status
+            }
+            for frame, status in truth_status.items()
+        }
+        return jsonify(
+            schema_version="labelagent.reference-preparation.v1",
+            compact_geometry=True,
+            loaded=video is not None,
+            path=str(video.path) if video is not None else "",
+            topic=topic,
+            labels=copy.deepcopy(state.get("labels", [])),
+            reference_frames=copy.deepcopy(state.get("reference_frames", {})),
+            truth_index=_reference_frame_index(state.get("truth", {})),
+            truth_review_status=compact_status,
+            candidate_index=_reference_frame_index(state.get("candidates", {})),
+        )
+
+
 def _get_bootstrap_locked():
     """Return enough metadata to open the workbench without all-frame geometry."""
     recover_pending_human_reviews()
@@ -1630,7 +1680,8 @@ def get_frame_state(index):
             raise ValueError("帧号无效")
         payload = selected_frame_payload(index)
         payload.update(path=str(state["video"].path), topic=state["topic"],
-                       frame=index, compact_geometry=True)
+                       frame=index, compact_geometry=True,
+                       reference_frames=copy.deepcopy(state.get("reference_frames", {})))
         return jsonify(payload)
 
 
@@ -2579,6 +2630,12 @@ def set_reference_frame():
         index = int(body.get("frame", -1))
         if state["video"] is None or state["topic"] is None or not 0 <= index < state["video"].topics[state["topic"]]["count"]:
             raise ValueError("帧号无效")
+        expected_topic = body.get("expected_topic")
+        expected_path = body.get("expected_path")
+        if expected_topic is not None and expected_topic != state["topic"]:
+            raise StaleHumanReviewError("相机已变化，拒绝设置旧参考帧")
+        if expected_path is not None and expected_path != str(state["video"].path):
+            raise StaleHumanReviewError("数据文件已变化，拒绝设置旧参考帧")
         if not state["truth"].get(str(index)):
             raise ValueError("请先保存该帧真值，再设为参考帧")
         review_status = current_truth_review_status().get(str(index), {})

@@ -1016,3 +1016,11 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 八张候选结果全部成功，8/8 有限语义与基线一致，开放集扫描 8/8 完整；但每张 completion token 和原始字符数都逐字相同，总 completion 都是 2,647 token。基线总耗时 128.529 秒、中位 15.777 秒，候选总耗时 130.197 秒、中位 16.216 秒，分别慢 1.30% 和 2.78%。这证明当前模型输出没有触及 LMFE 的连续空白上限，限制它不会减少生成步数。
 
 该方案明确否决，没有跑完整 test24，也没有进入正式代码。4090 VLM 服务与启动脚本已从 `/home/clw/labelagent_remote_20261110/backups/json-whitespace-round82-20261117` 恢复，哈希分别回到 `70cfc4d...c3694` 与 `e67f6d81...a4133`；SAM、VLM ready，工作台 idle，六份正式状态/历史哈希完全不变。结构化证据见 [第八十二轮否决记录](evidence/workbench-stability-20261117/rejected-json-whitespace-round82.json)。下一轮不再尝试排版空白压缩，转向不改变单图语义的服务调度或已验证硬件执行路线。
+
+## 第八十三轮后续帧类别发现批处理实验（否决，2026-11-17）
+
+为评估连续浏览数据时能否一次预备后续三帧，本轮新增只读复现实验工具：它从正式 `discover_visible_labels` 捕获完全相同的提示词、键化 schema 和 384 token 上限，再通过第八十一轮已经受控的独立批接口同时处理 test24 序列 010 的 camera 0/1/2。工具不加载工作台、不写候选、不改真值、参考帧或训练批准。
+
+吞吐收益真实存在：三张逐个冷请求合计 47.661 秒，三图批处理为 34.918 秒，观测下降 26.74%，3/3 JSON 协议完整，未知类尾部 3/3 一致。但严格语义门禁只通过 1/3：camera 0 额外把同一前景车体报为 `车辆`，camera 2 漏掉 `other_robot`。批处理因三张图形状走动态 KV cache，不能假定与已验证的单图 static 路径逐 token 等价。
+
+因此直接批量预取明确否决，批结果禁止写入正式精确缓存；正式服务器代码和配置没有变化。只读工具保留用于后续模型栈复核，原始运行留在未跟踪 `artifacts/`。结构化证据见 [第八十三轮否决记录](evidence/workbench-stability-20261117/rejected-batched-visible-discovery-round83.json)。下一条安全路线是仍使用逐帧单图 static 推理，只在当前流程结束且模型空闲后提前计算紧邻下一帧，确保语义路径完全不变。

@@ -1,0 +1,65 @@
+{
+  "schema_version": "labelagent.optimization_experiment.v1",
+  "round": 83,
+  "date": "2026-11-17",
+  "objective": "Test whether true independent GPU batching can safely precompute visible-label discovery for upcoming images.",
+  "protocol": {
+    "read_only": true,
+    "sample_count": 3,
+    "sample_source": "frozen test24 sequence 010 cameras 0, 1 and 2",
+    "same_production_prompt": true,
+    "same_production_schema": true,
+    "same_model_weights": true,
+    "same_384_token_budget": true,
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "source_state_modified": false
+  },
+  "latency": {
+    "sequential_baseline_total_ms": 47661.0,
+    "true_batch_total_ms": 34917.714,
+    "observed_reduction_percent": 26.737,
+    "batch_generation_cache": "dynamic",
+    "batch_cache_fallback_reason": "multi_image_static_cache_guard"
+  },
+  "protocol_result": {
+    "valid_count": 3,
+    "total": 3,
+    "open_set_tail_matches": 3
+  },
+  "semantic_gate": {
+    "exact_known_label_state_matches": 1,
+    "total": 3,
+    "failures": [
+      {
+        "image": "010/camera_0/1789899951882467655.png",
+        "baseline_present": ["pallet", "person", "floor", "ego", "other_robot"],
+        "batch_present": ["车辆", "pallet", "person", "floor", "ego", "other_robot"],
+        "reason": "batch added a mutually exclusive vehicle-class claim"
+      },
+      {
+        "image": "010/camera_2/1789899951882467655.png",
+        "baseline_present": ["车辆", "pallet", "person", "floor", "ego", "other_robot"],
+        "batch_present": ["车辆", "pallet", "person", "floor", "ego"],
+        "reason": "batch omitted other_robot"
+      }
+    ]
+  },
+  "decision": {
+    "status": "rejected",
+    "direct_batch_prefetch_allowed": false,
+    "batch_results_may_populate_production_cache": false,
+    "reason": "The throughput gain is real, but two of three images changed known-label decisions. Upcoming-frame prefetch must preserve the established single-image path."
+  },
+  "reproducibility": {
+    "tool": "tools/evaluate_batched_visible_discovery.py",
+    "raw_artifact": "artifacts/round83-batched-discovery/triple-010-cameras012.json"
+  },
+  "formal_runtime": {
+    "server_code_changed": false,
+    "sam_ready": true,
+    "vlm_ready": true,
+    "workbench_idle": true
+  }
+}

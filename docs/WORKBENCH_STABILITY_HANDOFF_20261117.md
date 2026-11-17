@@ -1009,3 +1009,10 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 受限策略已部署。正式代码路径真实只读验收在 18.436 秒完成第 126 帧三个候选，三个回执均标记 `execution_mode=independent_batch_3`、路由均为 `candidate_preserved`，仍保持候选态且没有正式状态写入。UTF-8 正式测试范围为 Python 750/750、179 个子测；未设置 UTF-8 时出现的 15 项中文解码失败在相同代码的 UTF-8 环境下全部消失。正式页面 HTTP 200、任务 idle、SAM/VLM ready，5090 快速通道仍 disabled；六份正式状态哈希完全未变。正式回滚点为 `D:\Apps\LabelAgent\.local\backups\restricted-independent-batch-round81-20261117`，远端 VLM 回滚文件位于 `/home/clw/labelagent_remote_20261110/backups/independent-batch-round81-20261117/local_vlm_server.py`。结构化证据见 [第八十一轮受限独立批处理验收](evidence/workbench-stability-20261117/restricted-independent-batch-round81.json)。
 
 边界：本轮优化的是高风险候选后台复核，不缩短首次 VLM 类别发现，也不是 SAM3 微调或 VLM 后训练；批处理结果依然只是机器候选证据，不是人工真值，不会自动进入训练集。下一步继续降低首次发现延迟，并扩大三目标批处理的跨帧回归覆盖；若新样本不能维持完整门禁，保留逐个流程为默认。
+## 第八十二轮 JSON 连续空白约束实验（否决，2026-11-17）
+
+为继续降低新图首次类别发现约 15～17 秒的等待，本轮只调整 LM Format Enforcer 的底层 JSON 排版约束：把连续空白上限从库默认 12 改为 1。图片、8 类注册表、开放集扫描、schema、模型权重、BF16、static KV cache 和 384 token 上限都没有改变，也没有安装新依赖。候选实现先通过 17/17 组件契约测试，再在清空精确请求缓存后，用 test24 固定前八张图做同图冷请求 A/B。
+
+八张候选结果全部成功，8/8 有限语义与基线一致，开放集扫描 8/8 完整；但每张 completion token 和原始字符数都逐字相同，总 completion 都是 2,647 token。基线总耗时 128.529 秒、中位 15.777 秒，候选总耗时 130.197 秒、中位 16.216 秒，分别慢 1.30% 和 2.78%。这证明当前模型输出没有触及 LMFE 的连续空白上限，限制它不会减少生成步数。
+
+该方案明确否决，没有跑完整 test24，也没有进入正式代码。4090 VLM 服务与启动脚本已从 `/home/clw/labelagent_remote_20261110/backups/json-whitespace-round82-20261117` 恢复，哈希分别回到 `70cfc4d...c3694` 与 `e67f6d81...a4133`；SAM、VLM ready，工作台 idle，六份正式状态/历史哈希完全不变。结构化证据见 [第八十二轮否决记录](evidence/workbench-stability-20261117/rejected-json-whitespace-round82.json)。下一轮不再尝试排版空白压缩，转向不改变单图语义的服务调度或已验证硬件执行路线。

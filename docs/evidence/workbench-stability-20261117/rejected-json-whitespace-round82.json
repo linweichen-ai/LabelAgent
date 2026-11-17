@@ -1,0 +1,76 @@
+{
+  "schema_version": "labelagent.optimization_experiment.v1",
+  "round": 82,
+  "date": "2026-11-17",
+  "objective": "Reduce cold visible-label discovery latency without changing images, labels, schema, open-set discovery, model weights, or candidate safeguards.",
+  "candidate": {
+    "name": "lmfe_json_max_consecutive_whitespaces_1",
+    "mechanism": "Use LM Format Enforcer CharacterLevelParserConfig to reduce its maximum consecutive JSON whitespace allowance from the library default 12 to 1.",
+    "dependency_installation": false,
+    "model_weights_changed": false,
+    "prompt_changed": false,
+    "schema_changed": false,
+    "image_changed": false,
+    "training_started": false
+  },
+  "protocol": {
+    "evaluation_only": true,
+    "sample_count": 8,
+    "sample_source": "first eight images from the frozen test24 read-only benchmark",
+    "route": "factory-4090 primary BF16 Qwen3-VL-8B",
+    "cold_exact_response_cache": true,
+    "same_images_and_model": true,
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "oss_modified": false
+  },
+  "baseline": {
+    "minimum_ms": 15104.0,
+    "median_ms": 15777.0,
+    "maximum_ms": 17559.0,
+    "total_ms": 128529.0,
+    "completion_tokens_total": 2647,
+    "success_count": 8,
+    "failure_count": 0
+  },
+  "candidate_result": {
+    "minimum_ms": 15318.0,
+    "median_ms": 16216.0,
+    "maximum_ms": 18017.0,
+    "total_ms": 130197.0,
+    "completion_tokens_total": 2647,
+    "success_count": 8,
+    "failure_count": 0,
+    "semantic_match_count": 8,
+    "open_set_complete_count": 8,
+    "median_latency_change_percent": 2.7838,
+    "total_latency_change_percent": 1.2978
+  },
+  "decision": {
+    "status": "rejected",
+    "reason": "The constraint changed neither completion tokens nor raw response length on any sample and made observed median and total latency slightly worse.",
+    "production_deployed": false,
+    "full_test24_run_required": false
+  },
+  "rollback": {
+    "remote_backup": "/home/clw/labelagent_remote_20261110/backups/json-whitespace-round82-20261117",
+    "restored_remote_server_sha256": "70cfc4d5146b71fc59ed40c8af59e2ee7fd3dc27b52ee71d4d5eed14871c3694",
+    "restored_start_script_sha256": "e67f6d810350813fb6cf82e65f5e9d937fd6aababe014abc5ba13988a61a4133",
+    "sam_ready": true,
+    "vlm_ready": true,
+    "workbench_idle": true
+  },
+  "formal_state_sha256": {
+    "state.json": "A01D57E013255DA55C6D76DB8F47BACF7EF872CFAA35371C4EBB03A213158E21",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "model_debug.json": "2D3BE581405142DEB66FE62DC24F8EFEAAC6D5C471FAE61CCBC150819F432B6E"
+  },
+  "local_raw_artifacts": [
+    "artifacts/round82-json-whitespace/baseline-8.json",
+    "artifacts/round82-json-whitespace/candidate-ws1-8.json"
+  ]
+}

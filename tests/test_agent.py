@@ -1274,6 +1274,41 @@ class FakeVideo:
 
 
 class ServerTests(unittest.TestCase):
+    def test_run_accepts_exact_retry_frames_without_reprocessing_successful_range(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                "config": {}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            description = {"description": "a only", "prompts": [{"label": "a", "text": "a"}],
+                           "reference_signature": server.reference_signature(0)}
+            calls = []
+            def successful(*args, **kwargs):
+                calls.append(len(calls) + 1)
+                return {"shapes": [shape(calls[-1])], "candidates_added": 1,
+                        "applied": [], "review_queue": [],
+                        "agent": {"stop_reason": "done", "rounds": 1}}
+            try:
+                client = server.app.test_client()
+                with patch.object(server, "run", side_effect=successful):
+                    response = client.post("/api/run", json={
+                        "frames": [2, 1, 2, 0], "description": description})
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertEqual([item["frame"] for item in response.json["frames"]], [2, 1])
+                self.assertEqual(response.json["requested_frames"], [2, 1, 0])
+                self.assertEqual(len(calls), 2)
+                self.assertEqual(set(server.state["candidates"]), {"1", "2"})
+                invalid_type = client.post("/api/run", json={
+                    "frames": [True], "description": description})
+                self.assertEqual(invalid_type.status_code, 400, invalid_type.json)
+                invalid_range = client.post("/api/run", json={
+                    "frames": [3], "description": description})
+                self.assertEqual(invalid_range.status_code, 400, invalid_range.json)
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
     def test_run_summary_is_bounded_scoped_and_recoverable_after_idle_restart(self):
         old_state, old_status, old_work = server.state, server.run_status, server.WORK
         with tempfile.TemporaryDirectory() as directory:

@@ -48,7 +48,8 @@ class ImageImportTests(unittest.TestCase):
         item = result.json["file"]
         self.assertEqual(item["name"], "自己的图片.PNG")
         self.assertEqual(Path(item["path"]).suffix, ".png")
-        self.assertEqual(self.client.post(f"/api/files/{item['id']}/load").status_code, 200)
+        loaded = self.client.post(f"/api/files/{item['id']}/load")
+        self.assertEqual(loaded.status_code, 200)
         frame = self.client.get("/api/frame/0")
         self.assertEqual(frame.content_type, "image/png")
         self.assertEqual(frame.data, photograph())
@@ -58,11 +59,33 @@ class ImageImportTests(unittest.TestCase):
             decoded = next(container.decode(video=0))
             self.assertEqual((decoded.width, decoded.height), (42, 34))
         shape = {"label": "车辆", "points": [[1, 1], [30, 1], [30, 25]], "holes": []}
-        self.assertEqual(self.client.post("/api/truth", json={"frame": 0, "shapes": [shape]}).json["saved"], 1)
+        binding_response = self.client.post("/api/human_review_binding", json={
+            "frame": 0, "topic": loaded.json["topic"]})
+        self.assertEqual(binding_response.status_code, 200, binding_response.json)
+        binding = binding_response.json
+        review = {"reviewer_declared_id": "image-import-test",
+                  "started_at": "2026-11-17T00:00:00Z",
+                  "decision_idempotency_key": "image-import-persistence-0"}
+        saved = self.client.post("/api/truth", json={"frame": 0,
+            "shapes": [shape], "review": review, "topic": binding["topic"],
+            "expected_frame_sha256": binding["frame_sha256"],
+            "expected_candidate_sha256": binding["candidate_sha256"],
+            "expected_dataset_id": binding["dataset_id"],
+            "expected_dataset_version": binding["dataset_version"],
+            "expected_camera": binding["camera"],
+            "expected_dataset_split": binding["dataset_split"],
+            "expected_split_policy": binding["split_policy"],
+            "expected_training_return_allowed": binding["training_return_allowed"]})
+        self.assertEqual(saved.status_code, 200, saved.json)
+        self.assertEqual(saved.json["saved"], 1)
         other = self.upload(photograph("JPEG"), "另一个.jpg").json["file"]
         self.client.post(f"/api/files/{other['id']}/load")
         again = self.client.post(f"/api/files/{item['id']}/load").json
-        self.assertEqual(again["truth"]["0"], [shape])
+        self.assertTrue(again["compact_geometry"])
+        restored = self.client.get("/api/frame_state/0", query_string={
+            "topic": again["topic"], "path": again["path"]})
+        self.assertEqual(restored.status_code, 200, restored.json)
+        self.assertEqual(restored.json["truth"]["0"], [shape])
         persisted = json.loads((self.root / "state.json").read_text())
         self.assertEqual(persisted["truth"]["0"], [shape])
 

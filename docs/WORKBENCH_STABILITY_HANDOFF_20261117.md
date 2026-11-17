@@ -398,3 +398,17 @@ Python 回归 127/127、轮询 10/10、候选与人工门禁 60/60，JavaScript 
 恢复前后正式 `state.json`、`file_sessions.json` 和 `last_run.json` SHA-256 完全一致；没有重新推理，没有保存或提升任何候选，也没有修改训练集。Python 131/131、轮询与恢复 12/12、候选与人工门禁 60/60 通过，正式 SAM、VLM、流程均 ready，运行 idle。回滚点为 `D:\Apps\LabelAgent\.local\backups\workbench-run-recovery-round23-20261117-120000`。截图见 [第二十三轮自动恢复结果](evidence/workbench-stability-20261117/run-recovery-after-restart-round23.png)，结构化证据见 [第二十三轮实测](evidence/workbench-stability-20261117/run-recovery-round23.json)。
 
 边界：本轮正式验收复用了已有完成任务，没有注入真实进程崩溃，也未启动新的长推理。下一轮继续实现失败帧的精确重试，确保已成功帧不会被重复计算。
+
+## 第二十四轮失败帧精确重试与完成态轻量刷新（2026-11-17）
+
+批量任务现在会保存失败帧号，并且只在当前文件和相机作用域完全一致时显示“重试 N 个失败帧”。重试请求直接携带去重后的精确帧列表，后端仍会跳过参考帧和已有人工真值；不再把失败帧扩展成连续区间，因此成功帧不会被重复推理。请求最多 100 帧，只接受整数且必须位于当前图像源范围内。
+
+确定性端到端验收提交 `[2, 1, 2, 0]`：服务端规范化为 `[2, 1, 0]`，实际只调用帧 2、1 各一次，参考帧 0 被安全跳过；布尔值和越界帧均被拒绝。正式服务上的越界请求返回 HTTP 400，任务状态保持 idle，没有启动 SAM/VLM 长推理，也没有改变候选或人工真值。
+
+正常完成和失败重试完成后，浏览器直接使用运行响应中的逐帧候选计数，再通过按需帧接口打开首个结果，不再额外读取约 1.95 MB 的完整 `/api/state`。正式 Edge 刷新恢复已有结果用时 915 ms，打开第 30 帧和 10 个候选；完整状态请求为 0，页面、控制台和网络失败均为 0。
+
+本轮还补齐了普通图片新数据源的完整回归：中文文件名、奇数尺寸原图、当前人工复核门禁、保存读回、切换到另一张图片后再恢复均通过；测试通过按需帧状态验证恢复内容，不再依赖冷启动返回整批几何。总回归为 Python 133/133、轮询与失败重试 13/13、候选与人工门禁 60/60。
+
+正式部署后，三份运行文件与工作树 SHA-256 一致；`state.json`、`file_sessions.json`、`last_run.json`、`last_run_summary.json` 与部署前逐字节一致。SAM、VLM 与页面均 ready，任务 idle。回滚点为 `D:\Apps\LabelAgent\.local\backups\workbench-failed-retry-round24-20261117-123000`。截图见 [第二十四轮恢复后的正式工作台](evidence/workbench-stability-20261117/failed-retry-after-restart-round24.png)，结构化证据见 [第二十四轮实测](evidence/workbench-stability-20261117/failed-retry-round24.json)。
+
+边界：本轮改善失败恢复、重复计算和页面完成态延迟，不改变模型精度。精确重试在隔离的确定性工作流中做了端到端验证；正式运行环境只验证了参数门禁、页面恢复和状态不变，没有为了验收人为制造一次长 GPU 失败任务。机器候选仍未自动升级为人工真值或训练集，camera_3 仍为 `reference_missing`。

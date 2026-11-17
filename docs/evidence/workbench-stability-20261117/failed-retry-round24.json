@@ -1,0 +1,67 @@
+{
+  "round": 24,
+  "recorded_at": "2026-11-17T12:30:00+08:00",
+  "objective": "Retry only failed frames and avoid a full workspace-state reload after a completed batch.",
+  "implementation": {
+    "exact_retry_request": "POST /api/run with frames=[...]",
+    "deduplication": "preserve first-seen order",
+    "safety": "reference frames and frames with saved human truth remain skipped",
+    "limit": "1-100 integer frame identifiers, all within the active image source",
+    "frontend": "failed frames remain scoped to the active file and topic",
+    "large_state_reload_removed": true,
+    "candidate_counts_updated_from_run_response": true
+  },
+  "synthetic_end_to_end_acceptance": {
+    "requested": [2, 1, 2, 0],
+    "normalized_requested": [2, 1, 0],
+    "processed": [2, 1],
+    "skipped_reference": [0],
+    "workflow_calls": 2,
+    "invalid_boolean_rejected": true,
+    "out_of_range_rejected": true
+  },
+  "formal_runtime_acceptance": {
+    "url": "http://127.0.0.1:8765",
+    "deployed_source_matches": {
+      "server.py": "B034AC7877F68B7936C83E56D6A903F80EFA358ACE7F03F266AB72DD51C7F3DA",
+      "app.js": "396B02A89FD6CC6F529427BA8CC3DB8F30F162FE6907B80ADF6D122E6B784C91",
+      "index.html": "227217D614E0A7BB29A52F6FFFD05C6DA01F235C85B3917BEB07014868975068"
+    },
+    "out_of_range_request_http": 400,
+    "run_status_after_rejection": "idle",
+    "browser_recovery_ms": 915,
+    "browser_recovered_frame": 30,
+    "browser_recovered_candidates": 10,
+    "browser_full_state_requests": 0,
+    "browser_page_errors": 0,
+    "browser_console_errors": 0,
+    "browser_failed_requests": 0,
+    "models": {
+      "sam3": "ready",
+      "vlm": "ready"
+    }
+  },
+  "runtime_state_readback": {
+    "state.json": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "unchanged_after_deploy_and_acceptance": true
+  },
+  "regression": {
+    "python": "133/133",
+    "web_polling": "13/13",
+    "candidate_and_human_review_gates": "60/60",
+    "new_image_import_save_switch_restore": "passed with current human-review gate and lazy frame-state readback"
+  },
+  "rollback": "D:\\Apps\\LabelAgent\\.local\\backups\\workbench-failed-retry-round24-20261117-123000",
+  "evidence": [
+    "failed-retry-browser-round24.json",
+    "failed-retry-after-restart-round24.png"
+  ],
+  "limitations": [
+    "No long GPU inference was started for this release acceptance.",
+    "The exact retry path was exercised end-to-end with a deterministic synthetic workflow; the formal runtime acceptance exercised validation and recovery without changing candidates or human truth.",
+    "This round changes reliability and latency, not model accuracy."
+  ]
+}

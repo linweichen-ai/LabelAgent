@@ -3075,28 +3075,45 @@ def generate_reference_draft():
 def run_workflow():
     body = request.get_json() or {}
     with lock:
-        index = int(body["frame"])
         topic_references = state.get("reference_frames", {}).get(state["topic"], [])
         if not topic_references:
             raise ValueError("请先设置参考帧并保存其真值")
         reference = topic_references[0]
         topic_count = state["video"].topics[state["topic"]]["count"]
-        if not 0 <= index < topic_count:
-            raise ValueError("当前帧号无效")
         if not state["truth"].get(str(reference)):
             raise ValueError("请先保存参考帧真值")
-        count = int(body.get("count", 10))
         max_rounds = requested_review_rounds(body)
-        if not 1 <= count <= 100:
-            raise ValueError("处理帧数须为 1～100")
-        last = min(index + count, topic_count)
         results = []
-        targets = [target for target in range(index, last)
-                   if target not in topic_references
-                   and str(target) not in state["truth"]]
+        requested_frames = body.get("frames")
+        if requested_frames is not None:
+            if (not isinstance(requested_frames, list) or not requested_frames
+                    or len(requested_frames) > 100
+                    or any(isinstance(item, bool) or not isinstance(item, int)
+                           for item in requested_frames)):
+                raise ValueError("重试帧须为 1～100 个整数帧号")
+            requested_frames = list(dict.fromkeys(requested_frames))
+            if any(not 0 <= item < topic_count for item in requested_frames):
+                raise ValueError("重试帧号超出当前图像源范围")
+            targets = [target for target in requested_frames
+                       if target not in topic_references
+                       and str(target) not in state["truth"]]
+            requested_range = "、".join(map(str, requested_frames))
+        else:
+            index = int(body["frame"])
+            if not 0 <= index < topic_count:
+                raise ValueError("当前帧号无效")
+            count = int(body.get("count", 10))
+            if not 1 <= count <= 100:
+                raise ValueError("处理帧数须为 1～100")
+            last = min(index + count, topic_count)
+            targets = [target for target in range(index, last)
+                       if target not in topic_references
+                       and str(target) not in state["truth"]]
+            requested_frames = list(range(index, last))
+            requested_range = f"{index}～{last - 1}"
         if not targets:
             raise ValueError(
-                f"所选范围（帧 {index}～{last - 1}）没有待处理帧。参考帧和已保存真值会跳过；"
+                f"所选范围（帧 {requested_range}）没有待处理帧。参考帧和已保存真值会跳过；"
                 "请增大处理帧数，或选择包含未标注帧的范围。"
             )
         allowed_labels = selected_auto_labels(reference)
@@ -3117,6 +3134,7 @@ def run_workflow():
                   "topic": state["topic"], "reference": reference,
                    "task_id": run_task_id, "status": "running",
                    "total": len(targets), "targets": targets,
+                   "requested_frames": requested_frames,
                   "message": "候选已保存到本地；请在工作台逐帧复核并保存真值"}
         video, topic = state["video"], state["topic"]
         file_name = str(video.path)

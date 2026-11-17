@@ -197,6 +197,7 @@ test('刷新后有持久化结果时按钮先恢复结果且不会重复恢复',
     latestAgentJob:{status:'idle',result_available:true,result_task_id:'task-1',
       result_completed:2,result_total:2},
     runRequestStartedAt:null,runRequestPhase:'preflight',runResultHandled:new Set(),
+    retryFailedFrames:[],retryFailedScope:null,loadedDataPath:'/data.mcap',topic:'camera0',
     renderAgentProgressPanel() {},
   });
   const text = source('app.js');
@@ -206,6 +207,8 @@ test('刷新后有持久化结果时按钮先恢复结果且不会重复恢复',
   assert.equal(button.textContent, '查看上次结果');
   h.run("markRunResultHandled('task-1');renderRunButton()");
   assert.equal(button.textContent, '开始自动标注');
+  h.run("retryFailedFrames=[3,7];retryFailedScope={file:'/data.mcap',topic:'camera0'};renderRunButton()");
+  assert.equal(button.textContent, '重试 2 个失败帧');
 });
 
 test('瞬时故障重试时同一任务进度不倒退，新任务重新计数', () => {
@@ -299,6 +302,13 @@ test('参考帧描述失效时预检阻止提交长推理', async () => {
   });
   h.run(section(source('app.js'), 'async function ensureAutoLabelReadiness', "$('runButton').onclick"));
   await assert.rejects(() => h.context.ensureAutoLabelReadiness(), /流程：参考帧 0 的描述已失效/);
+});
+
+test('完成与失败帧重试均复用轻量帧计数且不回读完整状态', () => {
+  const handler = section(source('app.js'), "$('runButton').onclick", 'let runStatusPollTimer');
+  assert.ok(handler.includes('{frames:requestedFrames,max_rounds:6}'));
+  assert.ok(handler.includes('candidateCountIndex[String(item.frame)]'));
+  assert.equal(handler.includes("fetch('/api/state')"), false);
 });
 
 test('按需帧标注严格绑定文件相机帧并只替换目标帧', () => {

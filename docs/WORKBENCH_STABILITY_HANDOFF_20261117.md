@@ -789,3 +789,13 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 更关键的是语义门禁没有通过。模型把两个结果都写成 `classification=uncertain`，却同时声明非空 `observed_label`、`candidate_supported=true` 和 `reason_code=visible_known_label`；其中候选 8 在独立盲审中由可见脚部和小腿支持 person，批量请求却改判为 floor。严格校验在任何候选、审核记录或训练标记写入前拒绝了整批结果。原型代码已全部撤回，正式工作台继续使用逐候选、证据与 ID 一一绑定的安全路径。
 
 完整否决记录见 [第六十轮批量复核否决证据](evidence/workbench-stability-20261117/rejected-batch-class-audit-round60.json)。边界：本轮是一次有明确负结果的工程实验，不能因为调用次数从二降到一就宣称更快或更好；后续速度优化应保持单候选视觉证据不变，转向缓存、调度或可用的独立加速路由。
+
+## 第六十一轮 1104 新数据双样本真实闭环（2026-11-17）
+
+为了把“新数据集也能用”从接口单测推进到真实证据，本轮在全新隔离工作区一次性上传批次 B 问题包 003、004 各一张 640×512 图片，总计 916,494 字节。两张图都在加载时通过首帧兼容检查，探测分别只用 0.377 和 0.367 毫秒；文件管理、图片解码和类别注册表无需针对文件名或厂区写死逻辑。
+
+003 图片完整一键起稿 40.605 秒，生成 16 个候选；004 图片 26.646 秒，生成 13 个候选。两次均为 HTTP 200、没有卡在 0、没有未知类别或注册表修改，且都明确保持 `candidate_only=true`、`human_truth=false`、`approved_for_training=false`。斜坡没有被单图 VLM 直接判为可见，但 floor 可见，因此既有 recall probe 只把 slope 加入 SAM 候选提示，不把它写真值。反复按 003→004→003→004 切换后，16/13 个候选及各自产物哈希稳定读回，没有跨文件串候选。
+
+隔离状态从正式副本 `54A5EE6A...238FF5` 变化为独立的 `112EE5D3...07D928`，正式状态始终保持 `54A5EE6A...238FF5`；未写正式候选、人工真值、训练集或 OSS。完整数据见 [第六十一轮新数据双样本验收](evidence/workbench-stability-20261117/newdata-003-004-round61.json)。
+
+边界：这证明两张独立批次 B 图片可以顺畅走通导入、加载、推理、候选保存和文件隔离，不等于完整 1104 批次的语义精度通过。两张图尚无人工像素真值，不能报告 slope IoU；下一步应把 train/test 隔离的人审结果作为独立验收集，统计候选 precision/recall 与可通行区域质量。

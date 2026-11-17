@@ -1,0 +1,81 @@
+{
+  "schema_version": "labelagent.workbench_round61_newdata.v1",
+  "date": "2026-11-17",
+  "objective": "Verify real import, compatibility, inference, persistence and file isolation on two images from the independent 2026-11-04 SFL-CPD15-Y batch.",
+  "isolation": {
+    "work_dir": "D:/Apps/LabelAgent/.local/isolated-round61-newdata-20261117",
+    "initial_state_sha256": "54A5EE6AC1794AE3D769B3FEFA3CADD79DA7F2D5DFF892F0B8B4F0A259238FF5",
+    "final_state_sha256": "112EE5D340E3DA87D5DC3D8D96390E6CE803A2D018DAB8028C11897C5E07D928",
+    "formal_state_sha256_after": "54A5EE6AC1794AE3D769B3FEFA3CADD79DA7F2D5DFF892F0B8B4F0A259238FF5"
+  },
+  "batch_upload": {
+    "request_count": 1,
+    "file_count": 2,
+    "total_bytes": 916494,
+    "status": 200
+  },
+  "samples": [
+    {
+      "source": "SFL_CPD15Y_20261104_smoke/003-1793759959809514987.png",
+      "source_problem_package": "record-20261104_103923-0005.mcap",
+      "width": 640,
+      "height": 512,
+      "compatibility_ready": true,
+      "compatibility_probe_ms": 0.377,
+      "endpoint_elapsed_seconds": 40.605,
+      "candidate_count": 16,
+      "requested_labels": ["pallet", "person", "floor", "slope", "ego"],
+      "vlm_visible_labels": ["pallet", "person", "floor", "ego"],
+      "slope_recall_probe_added": true,
+      "high_risk_audit_count": 2,
+      "review_queue_count": 4,
+      "candidate_artifact_sha256": "ed50d70fcd7ca92fc129090fb7c9dccb2e209d3701a9dc936b646549578e2927",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "source": "SFL_CPD15Y_20261104_smoke/004-1793760662042842987.png",
+      "source_problem_package": "record-20261104_105105-0006.mcap",
+      "width": 640,
+      "height": 512,
+      "compatibility_ready": true,
+      "compatibility_probe_ms": 0.367,
+      "endpoint_elapsed_seconds": 26.646,
+      "candidate_count": 13,
+      "requested_labels": ["pallet", "floor", "slope", "ego"],
+      "vlm_visible_labels": ["pallet", "floor", "ego"],
+      "slope_recall_probe_added": true,
+      "high_risk_audit_count": 0,
+      "review_queue_count": 3,
+      "candidate_artifact_sha256": "f358fb1fce512635ecb9047e2a282983e5d7a9e1bd633cb23cf9d9f7c95675c9",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    }
+  ],
+  "readback": {
+    "switch_sequence": ["003", "004", "003", "004"],
+    "003_candidate_count_after_reload": 16,
+    "004_candidate_count_after_reload": 13,
+    "candidate_artifact_hashes_preserved": true,
+    "cross_file_candidate_leakage_observed": false,
+    "registry_mutated": false,
+    "unknown_candidate_count": 0,
+    "uncertain_label_count": 0
+  },
+  "result": {
+    "platform_flow": "passed on both new-data images",
+    "stuck_at_zero": false,
+    "formal_runtime_changed": false,
+    "formal_candidate_changed": false,
+    "human_truth_changed": false,
+    "training_approval_changed": false,
+    "oss_changed": false
+  },
+  "boundaries": [
+    "This proves import and candidate-flow compatibility on two independent batch-B images, not full-batch semantic accuracy.",
+    "No human pixel truth was available for these two images, so candidate quality and slope IoU are not claimed.",
+    "Slope was added only as the established recall-probe prompt because floor was visible; it was not written as truth."
+  ]
+}

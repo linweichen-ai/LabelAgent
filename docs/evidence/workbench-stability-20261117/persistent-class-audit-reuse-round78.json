@@ -1,0 +1,99 @@
+{
+  "round": 78,
+  "checked_at": "2026-11-17T18:52:00+08:00",
+  "status": "accepted_and_deployed",
+  "objective": "Make repeated or recovered high-risk candidate audits idempotent without changing the production evidence, model decision, or candidate/truth/training boundary.",
+  "behavior": {
+    "cache_scope": "Persisted whole-frame high-risk class-audit receipt",
+    "required_exact_bindings": [
+      "candidate artifact SHA-256",
+      "source frame SHA-256",
+      "candidate fingerprint and bound label",
+      "complete audit-version object covering model config, protocol code, label registry, and definitions",
+      "strict decision schema and route recomputation",
+      "canonical audit SHA-256",
+      "candidate-only, non-mutating, non-truth, non-training, and non-deployment flags"
+    ],
+    "optional_binding_rule": "If candidate_review_status exists, every persisted review binding must also match. A synchronous draft may legitimately have no auxiliary status index, in which case the complete audit receipt remains sufficient.",
+    "miss_behavior": "Any missing, changed, malformed, duplicated, tampered, stale, or contradictory field falls back to a fresh production audit.",
+    "response_observability": "candidate_class_audit_cache_hit is true only for a fully validated reuse and false after a fresh audit."
+  },
+  "validation": {
+    "input_batch": "20261104_cs-seer_Dev_P2605901028248",
+    "directory": "003",
+    "image": "D:/Apps/LabelAgent/work/datasets/SFL_CPD15Y_20261104_smoke/003-1793759959809514987.png",
+    "input_sha256": "B610375B59E67FA8BDE8059F7347867585F1EB2CD9224E23D8CFE6E1C36623E5",
+    "isolated_workspace_removed": true,
+    "candidate_count": 16,
+    "candidate_counts_by_label": {
+      "floor": 1,
+      "pallet": 13,
+      "person": 2
+    },
+    "visible_labels": ["pallet", "person", "floor", "ego"],
+    "overlay_sha256": "C99BD0C91BFFAFA91EABAB356E33825E6A498C0252056FC9B551D4D75554C374",
+    "full_run_elapsed_ms": 1066.816,
+    "full_run_latency_boundary": "All nine model/SAM operations were exact cache hits. This is a repeat-path integration result, not unseen-image or cold-start latency.",
+    "exact_repeated_audit": {
+      "elapsed_ms": 5.419,
+      "candidate_class_audit_cache_hit": true,
+      "agent_response_identical": true,
+      "model_trace_unchanged": true,
+      "new_model_calls": 0,
+      "candidate_only": true,
+      "human_truth_false": true,
+      "approved_for_training_false": true
+    },
+    "artifact": "artifacts/round78-audit-reuse-003/summary.json",
+    "artifact_sha256": "68D151162FCB17AFA0C6651AE1BCF95C46A3CCB406B35A4985BF643BA6816C8C",
+    "candidate_receipt_sha256": "A059E21398CF781435EE4253DAB325CE96E11380E1DAE60DD12EE000DCED9E38",
+    "first_attempt_note": "The first integration attempt safely missed because synchronous drafts do not create the optional candidate_review_status index. No receipt was reused. The gate was corrected to validate the optional index only when present, then the exact same acceptance passed."
+  },
+  "tests": {
+    "python": "746 passed",
+    "web": "92 passed",
+    "focused_python": "19 passed",
+    "covered_negative_cases": [
+      "tampered audit hash",
+      "mismatched persisted review binding",
+      "changed audit version",
+      "malformed decision payload",
+      "missing optional review-status index",
+      "candidate and source-frame changes through existing endpoint guards"
+    ]
+  },
+  "deployment": {
+    "formal_server_sha256_before": "50560D9057E53F0ABEDF767AA49D0B617C735C089485B5721A03C10687A619D3",
+    "formal_server_sha256_after": "A71AD119805C4357904290FF65A56769D40880611120B0F8DE30E8CB4DE30EB0",
+    "worktree_server_sha256": "A71AD119805C4357904290FF65A56769D40880611120B0F8DE30E8CB4DE30EB0",
+    "smoke_tool_sha256": "7FDDB890236D5A18798473D40BC3B5350DE93DFC30FE888E28CFAD43016959AF",
+    "rollback_directory": "D:/Apps/LabelAgent/.local/backups/persistent-audit-reuse-round78-20261117",
+    "rollback_server_sha256": "50560D9057E53F0ABEDF767AA49D0B617C735C089485B5721A03C10687A619D3",
+    "formal_page_status": 200,
+    "formal_run_status": "idle",
+    "sam_ready": true,
+    "primary_vlm_ready": true,
+    "vlm_model_loaded": true,
+    "structured_decoder_ready": true,
+    "exact_requests_inflight": 0,
+    "optional_5090_route": "disabled"
+  },
+  "formal_state_sha256_unchanged": {
+    "state.json": "A01D57E013255DA55C6D76DB8F47BACF7EF872CFAA35371C4EBB03A213158E21",
+    "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+    "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+    "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+    "model_debug.json": "2D3BE581405142DEB66FE62DC24F8EFEAAC6D5C471FAE61CCBC150819F432B6E"
+  },
+  "manager_diagnostic": {
+    "finding": "The production Start/Stop launchers already invoke D:/Apps/LabelAgent/.venv/Scripts/python.exe, where psutil 7.2.2 is installed.",
+    "system_python_error": "Invoking manage_remote.py manually with an unrelated system Python lacks psutil, but this is not the supported user entry point and no system package was installed.",
+    "normal_launcher_changed": false
+  },
+  "boundaries": [
+    "This optimization removes duplicate persisted audits; it does not shorten the first audit for a new or changed candidate.",
+    "The 5.419 ms result is one exact persisted receipt reuse, not a population latency distribution.",
+    "No SAM3 fine-tuning, VLM post-training, model-weight change, formal candidate write, human-truth write, training approval, or OSS write occurred."
+  ]
+}

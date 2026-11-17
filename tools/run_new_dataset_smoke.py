@@ -42,6 +42,9 @@ def parse_args() -> argparse.Namespace:
                         help="Optional small-image VLM endpoint; source state is never changed.")
     parser.add_argument("--llm-fast-model",
                         help="Optional small-image VLM model-id; source state is never changed.")
+    parser.add_argument(
+        "--verify-audit-reuse", action="store_true",
+        help="After inference, repeat the exact persisted class audit and require a server cache hit.")
     return parser.parse_args()
 
 
@@ -217,6 +220,45 @@ def main() -> int:
             debug = (json.loads(debug_path.read_text(encoding="utf-8"))
                      if debug_path.is_file() else {})
             call_timings = summarize_model_trace(debug.get("trace"))
+            audit_reuse = None
+            if args.verify_audit_reuse:
+                expected_artifact = response.get("candidate_artifact_sha256")
+                expected_frame = response.get("input_sha256")
+                if (not isinstance(expected_artifact, str)
+                        or not isinstance(expected_frame, str)):
+                    raise RuntimeError("candidate response lacks audit binding hashes")
+                audit_started = time.perf_counter()
+                repeated = checked_json(client.post(
+                    "/api/reference_candidates/audit", json={
+                        "frame": 0,
+                        "topic": server.state.get("topic"),
+                        "expected_candidate_artifact_sha256": expected_artifact,
+                        "expected_frame_sha256": expected_frame,
+                    }), f"repeat candidate audit {image.name}")
+                audit_elapsed = elapsed_ms(audit_started)
+                debug_after = (json.loads(debug_path.read_text(encoding="utf-8"))
+                               if debug_path.is_file() else {})
+                if repeated.get("candidate_class_audit_cache_hit") is not True:
+                    raise RuntimeError("exact repeated audit did not report a server cache hit")
+                if repeated.get("agent") != response.get("agent"):
+                    raise RuntimeError("reused audit differs from the persisted audit")
+                if debug_after != debug:
+                    raise RuntimeError("exact repeated audit unexpectedly changed model trace")
+                if (repeated.get("candidate_only") is not True
+                        or repeated.get("human_truth") is not False
+                        or repeated.get("approved_for_training") is not False):
+                    raise RuntimeError("reused audit crossed the candidate-only boundary")
+                audit_reuse = {
+                    "verified": True,
+                    "elapsed_ms": audit_elapsed,
+                    "candidate_class_audit_cache_hit": True,
+                    "agent_response_identical": True,
+                    "model_trace_unchanged": True,
+                    "candidate_only": repeated.get("candidate_only") is True,
+                    "human_truth_false": repeated.get("human_truth") is False,
+                    "approved_for_training_false": (
+                        repeated.get("approved_for_training") is False),
+                }
             counts = dict(sorted(Counter(
                 shape.get("label", "<missing>") for shape in candidates
                 if isinstance(shape, dict)).items()))
@@ -239,6 +281,7 @@ def main() -> int:
                 "model_call_elapsed_ms": round(sum(
                     call.get("elapsed_ms") or 0 for call in call_timings), 3),
                 "model_call_timings": call_timings,
+                "audit_reuse": audit_reuse,
                 "candidate_count": len(candidates),
                 "candidate_counts_by_label": counts,
                 "visible_labels": discovery.get("visible_labels", []),

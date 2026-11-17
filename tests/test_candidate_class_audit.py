@@ -309,6 +309,106 @@ class CandidateClassAuditTests(unittest.TestCase):
                 chat.assert_not_called()
                 save.assert_not_called()
 
+    def test_candidate_audit_endpoint_reuses_only_exact_persisted_receipt(self):
+        candidate = copy.deepcopy(self.candidate)
+        candidates = [candidate]
+        artifact = server._sha256_json(candidates)
+        input_sha = hashlib.sha256(self.image).hexdigest()
+        state = {
+            "video": SimpleNamespace(path=Path("test.png"), topics={"camera": {"count": 1}}),
+            "topic": "camera", "labels": self.labels, "truth": {}, "config": {},
+            "reference_frames": {}, "candidates": {"0": candidates},
+            "agent_runs": {}, "candidate_review_status": {},
+        }
+        with patch.object(server, "state", state):
+            audit_version = server.candidate_class_audit_version()
+        record = audit.audit_candidate_class_blind(
+            {}, self.image, candidate, self.labels, {},
+            lambda *_args, **_kwargs: self.decision(),
+            candidate_artifact_sha256=artifact)
+        record["audit_version"] = audit_version
+        record["audit_sha256"] = server._sha256_json({
+            key: value for key, value in record.items() if key != "audit_sha256"})
+        fingerprint = record["candidate_sha256"]
+        run = {
+            "candidate_class_audit_status": "complete",
+            "candidate_class_audit_version": audit_version,
+            "candidate_artifact_sha256": artifact,
+            "input_sha256": input_sha,
+            "candidate_class_audits": [record],
+            "review_queue": [],
+        }
+        review_status = {fingerprint: {
+            "candidate_fingerprint": fingerprint,
+            "candidate_artifact_sha256": artifact,
+            "audit_sha256": record["audit_sha256"],
+            "route": record["route"],
+        }}
+        state["agent_runs"] = {"0": run}
+        state["candidate_review_status"] = {"0": review_status}
+        with patch.object(server, "state", state), \
+             patch.object(server, "run_status", {"status": "idle"}), \
+             patch.object(server, "frame_image", return_value=self.image), \
+             patch.object(server, "chat") as chat, patch.object(server, "save") as save:
+            response = server.app.test_client().post(
+                "/api/reference_candidates/audit", json={
+                    "frame": 0, "topic": "camera",
+                    "expected_candidate_artifact_sha256": artifact,
+                    "expected_frame_sha256": input_sha})
+        self.assertEqual(response.status_code, 200, response.json)
+        self.assertTrue(response.json["candidate_class_audit_cache_hit"])
+        self.assertEqual(response.json["agent"], run)
+        chat.assert_not_called()
+        save.assert_not_called()
+
+        state["candidate_review_status"]["0"] = {}
+        with patch.object(server, "state", state), \
+             patch.object(server, "run_status", {"status": "idle"}), \
+             patch.object(server, "frame_image", return_value=self.image), \
+             patch.object(server, "chat") as chat, patch.object(server, "save") as save:
+            response = server.app.test_client().post(
+                "/api/reference_candidates/audit", json={
+                    "frame": 0, "topic": "camera",
+                    "expected_candidate_artifact_sha256": artifact,
+                    "expected_frame_sha256": input_sha})
+        self.assertEqual(response.status_code, 200, response.json)
+        self.assertTrue(response.json["candidate_class_audit_cache_hit"])
+        chat.assert_not_called()
+        save.assert_not_called()
+        state["candidate_review_status"]["0"] = review_status
+
+        for mutation in ("audit_hash", "binding", "version", "decision"):
+            changed_run = copy.deepcopy(run)
+            changed_review = copy.deepcopy(review_status)
+            if mutation == "audit_hash":
+                changed_run["candidate_class_audits"][0]["audit_sha256"] = "0" * 64
+            elif mutation == "binding":
+                changed_review[fingerprint]["route"] = "human_review_required"
+            else:
+                if mutation == "version":
+                    changed_run["candidate_class_audit_version"] = {
+                        **audit_version, "protocol_sha256": "0" * 64}
+                else:
+                    changed_run["candidate_class_audits"][0]["decision"] = {
+                        "classification": "known_label"}
+            state["agent_runs"]["0"] = changed_run
+            state["candidate_review_status"]["0"] = changed_review
+            with self.subTest(mutation=mutation), \
+                 patch.object(server, "state", state), \
+                 patch.object(server, "run_status", {"status": "idle"}), \
+                 patch.object(server, "frame_image", return_value=self.image), \
+                 patch.object(server, "chat", return_value=self.decision()) as chat, \
+                 patch.object(server, "save") as save:
+                response = server.app.test_client().post(
+                    "/api/reference_candidates/audit", json={
+                        "frame": 0, "topic": "camera",
+                        "expected_candidate_artifact_sha256": artifact,
+                        "expected_frame_sha256": input_sha})
+            self.assertEqual(response.status_code, 200, response.json)
+            self.assertFalse(response.json["candidate_class_audit_cache_hit"])
+            chat.assert_called_once()
+            save.assert_called_once()
+
     def test_audit_endpoint_failures_and_cancellation_never_publish_partial_audits(self):
         candidates = [copy.deepcopy(self.candidate)]
         for outcome in (RuntimeError("盲审服务失败"), server.RunCancelled("已取消"), "save_failure"):

@@ -36,7 +36,8 @@ from .workflow import (DESCRIPTION_INPUT_VERSION, MAX_REVIEW_ROUNDS, RunCancelle
                        slope_overlap_crop_images,
                        VISIBLE_LABEL_DEFINITIONS)
 from .candidate_class_audit import (audit_candidate_class_blind, candidate_fingerprint,
-                                    audit_high_risk_candidates, HIGH_RISK_LABELS)
+                                    audit_high_risk_candidates, HIGH_RISK_LABELS,
+                                    validate_blind_candidate_class_decision)
 
 from . import candidate_class_audit as _candidate_audit_module
 
@@ -1492,6 +1493,79 @@ def candidate_class_audit_version():
         "labels_sha256": _sha256_json({"labels": state.get("labels", []),
                                        "definitions": VISIBLE_LABEL_DEFINITIONS}),
     }
+
+
+def reusable_candidate_class_audit(run, review_status, candidates, labels,
+                                   artifact_sha, input_sha, audit_version):
+    """Return True only for a complete, byte-bound persisted audit receipt.
+
+    This is deliberately stricter than the model response cache: it survives a
+    service restart, but any image, candidate, registry, model configuration,
+    protocol, audit payload, or review-binding change forces a fresh audit.
+    """
+    if (not isinstance(run, dict)
+            or run.get("candidate_class_audit_status") != "complete"
+            or run.get("candidate_class_audit_version") != audit_version
+            or run.get("candidate_artifact_sha256") != artifact_sha
+            or run.get("input_sha256") != input_sha
+            or not isinstance(review_status, dict)):
+        return False
+    targets = [candidate for candidate in candidates
+               if candidate.get("label") in HIGH_RISK_LABELS]
+    audits = run.get("candidate_class_audits")
+    if not isinstance(audits, list) or len(audits) != len(targets):
+        return False
+    by_id = {item.get("candidate_id"): item for item in audits
+             if isinstance(item, dict) and type(item.get("candidate_id")) is int}
+    if len(by_id) != len(audits):
+        return False
+    for candidate in targets:
+        try:
+            fingerprint = candidate_fingerprint(candidate)
+        except (TypeError, ValueError):
+            return False
+        audit = by_id.get(candidate.get("id"))
+        try:
+            decision = validate_blind_candidate_class_decision(
+                copy.deepcopy(audit.get("decision")) if isinstance(audit, dict) else None,
+                labels)
+        except (TypeError, ValueError):
+            return False
+        minimum_confidence = audit.get("minimum_confidence")
+        expected_route = (
+            "candidate_preserved"
+            if decision["classification"] == "known_label"
+            and decision["observed_label"] == candidate.get("label")
+            and isinstance(minimum_confidence, (int, float))
+            and not isinstance(minimum_confidence, bool)
+            and decision["confidence"] >= minimum_confidence
+            else "human_review_required")
+        if (not isinstance(audit, dict)
+                or audit.get("schema_version") != "labelagent.blind_candidate_class_audit.v1"
+                or audit.get("candidate_sha256") != fingerprint
+                or audit.get("candidate_artifact_sha256") != artifact_sha
+                or audit.get("source_image_sha256") != input_sha
+                or audit.get("bound_current_label") != candidate.get("label")
+                or audit.get("audit_version") != audit_version
+                or audit.get("route") != expected_route
+                or audit.get("candidate_mutated") is not False
+                or audit.get("human_truth") is not False
+                or audit.get("approved_for_training") is not False
+                or audit.get("approved_for_deployment") is not False
+                or not _valid_sha256(audit.get("audit_sha256"))
+                or audit["audit_sha256"] != _sha256_json({
+                    key: value for key, value in audit.items()
+                    if key != "audit_sha256"})):
+            return False
+        if review_status:
+            binding = review_status.get(fingerprint)
+            if (not isinstance(binding, dict)
+                    or binding.get("candidate_fingerprint") != fingerprint
+                    or binding.get("candidate_artifact_sha256") != artifact_sha
+                    or binding.get("audit_sha256") != audit["audit_sha256"]
+                    or binding.get("route") != audit["route"]):
+                return False
+    return set(by_id) == {candidate.get("id") for candidate in targets}
 
 
 @app.get("/api/state")
@@ -3297,12 +3371,28 @@ def audit_reference_candidates():
         ids = [item.get("id") for item in candidates if item.get("label") in HIGH_RISK_LABELS]
         if len(ids) != len(set(ids)):
             raise ValueError("高风险候选 ID 重复，拒绝复审")
+        audit_version = candidate_class_audit_version()
+        existing_run = state.get("agent_runs", {}).get(key, {})
+        existing_review_status = state.get("candidate_review_status", {}).get(key, {})
+        if reusable_candidate_class_audit(
+                existing_run, existing_review_status, candidates,
+                list(state.get("labels", [])), artifact_sha, input_sha, audit_version):
+            update_run_status(status="completed", phase="completed", frame=None,
+                              completed=1, total=1, audit_cache_hit=True)
+            bindings = candidate_review_bindings()
+            return jsonify(
+                frame=index, topic=topic, candidates=candidates,
+                agent=copy.deepcopy(existing_run), binding=bindings.get(key),
+                candidate_review_bindings=bindings, input_sha256=input_sha,
+                candidate_artifact_sha256=artifact_sha,
+                candidate_class_audit_cache_hit=True,
+                candidate_only=True, human_truth=False,
+                approved_for_training=False)
         update_run_status(status="stopping" if run_stop_event.is_set() else "running", phase="candidate_class_audit", frame=index,
                           completed=0, total=len(ids), topic=topic, error=None)
         def check_cancelled():
             if run_stop_event.is_set():
                 raise RunCancelled("用户已停止候选盲审")
-        audit_version = candidate_class_audit_version()
         try:
             with cancellation(run_stop_event):
                 audits, queue = audit_high_risk_candidates(
@@ -3377,6 +3467,7 @@ def audit_reference_candidates():
                        agent=replacement_run, binding=bindings.get(key),
                        candidate_review_bindings=bindings, input_sha256=input_sha,
                        candidate_artifact_sha256=artifact_sha,
+                       candidate_class_audit_cache_hit=False,
                        candidate_only=True, human_truth=False,
                        approved_for_training=False)
 

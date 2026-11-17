@@ -965,3 +965,13 @@ Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-rou
 第二条路线严格保留生产双图字节、顺序、完整提示和 schema，只把最大完成预算从 768 降到 384。两个候选的有限语义核心 2/2 一致，但实际仍自然结束在 123、127 个 token；总耗时为 20.161 秒，比 18.342 秒基线慢 9.92%。这证明上限并非当前复核延迟的约束，继续缩小不会带来可靠收益，也予以否决。
 
 两条路线均未部署。正式页面 HTTP 200、任务 idle，VLM `ok` 且无在途请求；六份正式状态文件哈希完全未变。复现实验工具为 `tools/evaluate_single_image_class_audit.py`，结构化证据见 [第七十七轮复核延迟否决记录](evidence/workbench-stability-20261117/rejected-class-audit-latency-round77.json)。下一步不再修改复核证据表达或无效 token 上限，转向修复本机管理入口的错误诊断，并寻找可保持逐候选视觉绑定的调度与硬件执行优化。
+
+## 第七十八轮持久化高风险复核精确复用（2026-11-17）
+
+第七十七轮证明缩短完成预算不能减少首次审核，本轮转向消除恢复、重试和非网页调用中的重复工作。网页原本已有严格缓存检查；服务端现在也会在收到重复审核请求时验证完整持久回执。命中必须同时满足候选集合哈希、原图哈希、每个候选指纹与绑定类别、模型配置/协议/标签版本、严格决策 schema、重新计算的 route、规范审核哈希以及候选/真值/训练边界。任何字段缺失、篡改、重复、过期或矛盾都会退回真实审核，不会为了速度采用旧结果。
+
+1104/003 隔离闭环先生成与第七十六轮一致的 16 个候选，再原样提交同一审核：服务端在 5.419 毫秒返回 `candidate_class_audit_cache_hit=true`，Agent 回执逐字一致，模型 trace 完全未变化，即 0 次新增 VLM 调用。首次验收曾因把同步起稿不会生成的辅助 `candidate_review_status` 索引误当成必需条件而安全 miss；修正为“存在时必须一致、不存在时验证完整审核回执”后，同一验收通过。整次起稿 1.067 秒是九项远端精确缓存全部命中的重复路径，不能冒充新图冷启动性能。
+
+完整回归为 Python 746/746、网页 92/92。正式 `server.py` 与验证工作树 SHA-256 均为 `A71AD119...30EB0`，回滚点为 `D:\Apps\LabelAgent\.local\backups\persistent-audit-reuse-round78-20261117`。正式页面 HTTP 200、任务 idle、SAM/主 VLM ready，5090 快速通道仍保持 disabled；六份正式状态哈希完全未变。结构化证据见 [第七十八轮持久审核复用](evidence/workbench-stability-20261117/persistent-class-audit-reuse-round78.json)。
+
+管理入口复核同时确认：正式 Start/Stop 脚本本来就使用项目 `.venv`，其中 `psutil 7.2.2` 正常；系统 Python 手工调用缺包是诊断方式错误，不是用户入口故障，因此没有污染系统 Python。边界：本轮只让完全相同的已审核候选在恢复时秒回，不缩短新候选第一次盲审，也没有进行 SAM3 微调、VLM 后训练或任何真值/训练/OSS 写入。

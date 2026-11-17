@@ -37,8 +37,10 @@ class CacheReleaseTests(unittest.TestCase):
         data=io.BytesIO();Image.new('RGB',(8,8)).save(data,'PNG')
         body={'model':'test','messages':[{'role':'user','content':[{'type':'text','text':'test'},
             {'type':'image_url','image_url':{'url':'data:image/png;base64,'+base64.b64encode(data.getvalue()).decode()}}]}]}
-        for _ in range(2):
-            response=client.post('/v1/chat/completions',json=body)
+        for max_tokens in (1,2):
+            # Distinct generation contracts both execute inference. An exact
+            # replay intentionally returns from the response cache instead.
+            response=client.post('/v1/chat/completions',json={**body,'max_tokens':max_tokens})
             self.assertEqual(response.status_code,200,response.json)
             self.assertEqual(response.json['choices'][0]['message']['content'],'{}')
             self.assertEqual(response.json['local_vlm']['cache_release']['error_type'],'RuntimeError')

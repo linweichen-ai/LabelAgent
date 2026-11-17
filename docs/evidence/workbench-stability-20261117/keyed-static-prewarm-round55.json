@@ -1,0 +1,126 @@
+{
+  "schema_version": "labelagent.workbench_round55.v1",
+  "recorded_at": "2026-11-17T14:01:13+08:00",
+  "goal_status": "active",
+  "accepted_changes": [
+    "keyed known-label visibility schema",
+    "exclusive BF16 static KV cache",
+    "startup generation prewarm before readiness"
+  ],
+  "problem_reproduced": {
+    "image_sha256": "0c7d2fd26538538ea39e743f812989ce316dcd74b3da092f8cd9979dae503f14",
+    "old_array_contract": {
+      "duplicate_labels": ["person", "pallet"],
+      "missing_labels": ["车辆", "slope", "ego", "other_robot", "cargo_floor"],
+      "visible_labels_after_fail_closed_normalization": ["floor"],
+      "uncertain_label_count": 7
+    },
+    "keyed_contract": {
+      "visible_labels": ["pallet", "person", "floor", "ego"],
+      "uncertain_labels": [],
+      "consistency_flags": [],
+      "open_set_scan_complete": true
+    },
+    "interpretation": "Required registry keys make duplicate and missing known-label assessments structurally impossible while retaining runtime validation and legacy rolling-upgrade parsing."
+  },
+  "paired_generation_seconds": [
+    {
+      "image": "0092ae4c74f10a6ece69b1509277f10850fcdcf4e1a5438a4fe53f59065cfa1d.jpg",
+      "dynamic": 21.769,
+      "static_after_prewarm": 13.604,
+      "visible_labels_match": true,
+      "normalized_semantic_sha256_match": true
+    },
+    {
+      "image": "067b4905663e15277dde9326f832b26811c751297152977e054b00c994acd52a.jpg",
+      "dynamic": 21.935,
+      "static_after_prewarm": 13.828,
+      "visible_labels_match": true,
+      "normalized_semantic_sha256_match": true
+    },
+    {
+      "image": "formal-slope-positive-frame95/frame-95-false-candidates.jpg",
+      "dynamic": 17.405,
+      "static_after_prewarm": 14.633,
+      "visible_labels_match": true,
+      "normalized_semantic_sha256_match": false,
+      "reason": "bounded visual reason wording differed; finite visible and uncertain label sets were identical"
+    }
+  ],
+  "paired_summary": {
+    "dynamic_mean_generation_seconds": 20.37,
+    "static_mean_generation_seconds": 14.022,
+    "observed_reduction_percent": 31.16,
+    "exact_semantic_hash_matches": 2,
+    "finite_label_set_matches": 3
+  },
+  "startup": {
+    "persistent_compile_cache_present": true,
+    "prewarm_generation_seconds": 10.636,
+    "prewarm_total_seconds": 10.69,
+    "service_ready_seconds_after_restart": 22.283,
+    "health_reports_last_user_inference_as_null_until_first_request": true,
+    "first_new_formal_source_image_elapsed_seconds": 14.813,
+    "first_new_formal_source_image_generation_seconds": 14.576
+  },
+  "memory": {
+    "static_user_request_peak_allocated_bytes": 18003552768,
+    "static_user_request_peak_reserved_bytes": 18276679680,
+    "startup_prewarm_peak_reserved_bytes": 18310234112,
+    "gpu1_memory_used_mib_after_validation": 17885,
+    "gpu1_memory_free_mib_after_validation": 6197,
+    "oom": false
+  },
+  "slope_boundary": {
+    "partial_or_small_ramp_visibility_result": "slope absent in both dynamic and static keyed discovery",
+    "floor_visible": true,
+    "existing_slope_recall_probe_still_adds_slope_to_SAM_candidate_generation": true,
+    "human_pixel_truth_claimed": false
+  },
+  "rejected_alternatives": [
+    {
+      "name": "short keyed fields s/c/r",
+      "decision": "rejected",
+      "reason": "marked the same visible foreground chassis as both 车辆 and ego and did not improve latency"
+    },
+    {
+      "name": "fixed positional prefixItems array",
+      "decision": "rejected",
+      "generation_seconds": 57.469,
+      "reason": "structurally correct but far too slow"
+    },
+    {
+      "name": "static cache without startup prewarm",
+      "decision": "rejected",
+      "first_generation_seconds": 61.222,
+      "reason": "the first user request would pay compilation latency"
+    }
+  ],
+  "verification": {
+    "python_tests": {"passed": 719, "failed": 0, "subtests_passed": 171},
+    "web_tests": {"passed": 84, "failed": 0},
+    "formal_runtime_ready": true,
+    "formal_run_status": "idle",
+    "fast_5090_route": "disabled because non-owned workloads still occupy both GPUs",
+    "formal_state_sha256": "54A5EE6AC1794AE3D769B3FEFA3CADD79DA7F2D5DFF892F0B8B4F0A259238FF5",
+    "formal_history_hashes_unchanged": true,
+    "local_vlm_server_sha256": "4644fc65b08259551705930a341686e16158b00af9258eecd3eb55395fa8a8d5",
+    "workflow_sha256": "db63899b6a88dda28e1160697039163f220f916aa5fcf34f5de7ab5ba4aca9f5",
+    "protocol_schema_sha256": "cddadb5bbbd5ba5f110ba965e7dd3bf55246d7cdc86d97e654f59ecb3040c5e3",
+    "remote_start_script_sha256": "e67f6d810350813fb6cf82e65f5e9d937fd6aababe014abc5ba13988a61a4133"
+  },
+  "safety": {
+    "candidate_written": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "oss_modified": false,
+    "non_owned_gpu_processes_stopped": 0,
+    "test24_training_reuse": false
+  },
+  "rollback": {
+    "windows": "D:/Apps/LabelAgent/.local/backups/keyed-static-prewarm-round55-20261117",
+    "remote_4090": "/home/clw/labelagent_remote_20261110/backups/vlm-static-cache-round55-20261117",
+    "remote_5090": "/home/clw/projects/labelagent-5090/app/work/backups/keyed-static-prewarm-round55-20261117"
+  },
+  "boundary": "The latency result is a three-image paired engineering acceptance, not a population latency distribution or a cross-dataset accuracy proof. Small/partial ramp visibility remains recall-probe assisted and lacks human pixel truth."
+}

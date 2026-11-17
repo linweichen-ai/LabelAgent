@@ -721,3 +721,17 @@ Python 回归 162/162、网页回归 78/78。Windows、4090、5090 的 VLM 服�
 更保守的 60 字符版本在 011/camera_1、010/camera_0、010/camera_3 三图上可见类别均与正式基线一致，但 completion 总量只从 1081 降到 1077（-0.37%）。三图墙钟时间观测下降 17.21%，其中 camera_3 仅相差 0.020 秒，说明变化主要来自生成波动，不能归因于字段上限，也不足以补偿 48 字符版已经暴露的语义风险。
 
 两种版本均未部署，正式 schema 继续保留 72/96 字符上限；SAM、主 VLM 和页面 ready，state 与五份候选/历史文件哈希未变。结构化否决证据见 [第五十四轮理由长度实验](evidence/workbench-stability-20261117/rejected-short-reason-round54.json)。下一步继续寻找不改变输出语义的模型执行层或可用 5090 路由优化。
+
+## 第五十五轮标签键化、静态 KV 缓存与启动内预热（2026-11-17）
+
+本轮首先复现了一个直接影响新数据集适用性的协议问题：旧 `assessments[]` 数组只能限制条目总数，不能阻止模型重复同一标签。真实图 `0c7d2f...` 中模型重复返回 person 和 pallet、漏掉 5 个注册标签，安全归一化因此把 7 类都降为不确定，只剩 floor 可见。现在每个注册标签成为 `assessments` 对象的必填唯一键；运行时仍检查键集合完全一致，并保留旧数组响应的滚动升级兼容。相同图恢复为 `pallet/person/floor/ego` 可见、0 个不确定、0 个一致性告警，开放集扫描完整。标签表来自当前数据集，因此不是写死 8 类，新数据集的任意现有注册表都会生成自己的必填键集合。
+
+执行层采用 BF16 专卡的 static KV cache，但不让用户承担首次编译。直接启用 static 时第一次生成需 61.222 秒，明确否决；服务现在只在“独占 BF16、无共享显存上限、显式 static”组合下允许 `--startup-prewarm`，用合成灰图和最小结构化输出在服务报告 ready 前完成编译。持久编译缓存已存在时，预热生成 10.636 秒，远端服务从重启到 ready 22.283 秒；真正第一张未见正式图端到端 14.813 秒。预热结果单独出现在 health 中，`last_inference_stats` 会在 ready 前清空，避免把合成预热冒充用户推理。
+
+三张配对真实图的 keyed schema 生成均值从动态缓存 20.370 秒降到预热 static 的 14.022 秒，观测下降 31.16%；三张可见/不确定类别集合全匹配，其中两张完整归一化语义哈希逐字节一致。小坡板图在两种执行方式下都没有被单图 VLM 叫出 slope，但 floor 可见，因此第四十九轮的独立 slope recall probe 仍会把 slope 加入 SAM 候选生成；本轮没有把该漏检包装成精度通过。短字段 `s/c/r` 因把同一前景车体同时判为 `车辆` 和 `ego` 被否决；固定位置数组虽结构正确但生成 57.469 秒，也被否决。
+
+正式部署已启用 keyed schema、static cache 和启动内预热；主 4090 GPU1 实占约 17,885 MiB、剩余 6,197 MiB，无 OOM。5090 仍有非本流程高负载，只同步代码、不启动、不抢占，快速路由保持 disabled。Python 回归 719/719（另有 171 个子测）、网页回归 84/84；此前 5 个断言已按确定性关键词兜底、紧凑 JSON、摘要双写和精确响应缓存的正式行为更新，没有改变运行逻辑。工作台 ready/idle，state、file_sessions、files、last_run、摘要和 model_debug 六份哈希完全不变，候选、人工真值、训练集和 OSS 均未修改。
+
+Windows 回滚点为 `D:\Apps\LabelAgent\.local\backups\keyed-static-prewarm-round55-20261117`，4090 原服务与启动脚本在 `/home/clw/labelagent_remote_20261110/backups/vlm-static-cache-round55-20261117`，5090 代码备份在 `/home/clw/projects/labelagent-5090/app/work/backups/keyed-static-prewarm-round55-20261117`。完整数据见 [第五十五轮结构化证据](evidence/workbench-stability-20261117/keyed-static-prewarm-round55.json)。
+
+边界：31.16% 来自三张配对工程样本，不是总体延迟分布；键化协议消除了已观测的重复/漏项结构失败，但不能替代跨数据集人工真值精度评测。斜坡仍默认与地面合并为可通行区域，困难小坡板的单图召回继续依赖候选探针和后续人工复核。

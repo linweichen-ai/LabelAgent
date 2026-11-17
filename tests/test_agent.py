@@ -289,9 +289,46 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(result["registry_conflicts"][0]["reason_code"], "known_label_alias_conflict")
         self.assertIn("assess every known label", chat.call_args.args[1])
         discovery_schema = chat.call_args.kwargs["response_schema"]
-        self.assertEqual(discovery_schema["properties"]["assessments"]["minItems"], 3)
-        self.assertEqual(discovery_schema["properties"]["assessments"]["items"]
+        keyed = discovery_schema["properties"]["assessments"]
+        self.assertEqual(keyed["required"], ["person", "pallet", "slope"])
+        self.assertFalse(keyed["additionalProperties"])
+        self.assertEqual(keyed["properties"]["person"]
                          ["properties"]["reason"]["maxLength"], 72)
+
+    def test_visible_label_discovery_normalizes_keyed_assessments_in_registry_order(self):
+        answer = {"assessments": {
+            "pallet": {"evidence": "absent", "confidence": 0.91,
+                       "reason": "No pallet is visible."},
+            "person": {"evidence": "present", "confidence": 0.94,
+                       "reason": "A standing person is visible."}},
+            "unknown_candidates": []}
+        with patch.object(workflow, "chat", return_value=answer):
+            result = workflow.discover_visible_labels({}, image_bytes(),
+                                                      ["person", "pallet"])
+        self.assertEqual([item["label"] for item in result["assessments"]],
+                         ["person", "pallet"])
+        self.assertEqual(result["visible_labels"], ["person"])
+        self.assertEqual(result["uncertain_labels"], [])
+
+    def test_visible_label_discovery_rejects_incomplete_keyed_assessments(self):
+        answer = {"assessments": {
+            "person": {"evidence": "present", "confidence": 0.94,
+                       "reason": "A standing person is visible."}},
+            "unknown_candidates": []}
+        with patch.object(workflow, "chat", return_value=answer):
+            with self.assertRaisesRegex(ValueError, "逐项判断"):
+                workflow.discover_visible_labels({}, image_bytes(),
+                                                 ["person", "pallet"])
+
+    def test_complete_json_object_recovers_only_a_closed_assessment_mapping(self):
+        raw = ('{"assessments":{"person":{"evidence":"present",'
+               '"confidence":0.9,"reason":"visible { body }"}},'
+               '"unknown_candidates":[{"candidate_name":"unfinished')
+        recovered = workflow._complete_json_object(raw, "assessments")
+        self.assertEqual(recovered["person"]["evidence"], "present")
+        self.assertIsNone(workflow._complete_json_object(
+            '{"assessments":{"person":{"evidence":"present"}',
+            "assessments"))
 
     def test_floor_visibility_adds_auditable_slope_recall_probe(self):
         registry = ["pallet", "floor", "slope", "ego"]

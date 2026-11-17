@@ -21,7 +21,7 @@ class ServerProgressSaveTests(unittest.TestCase):
     def test_success_keeps_utf8_json_serialization_exact(self):
         value={'类别':'托盘','progress':[1,2,3]}
         M.save_run(value)
-        expected=json.dumps(value,ensure_ascii=False,indent=2)
+        expected=json.dumps(value,ensure_ascii=False,separators=(',',':'))
         self.assertEqual(self.path.read_text('utf-8'),expected)
         self.assertFalse(self.path.with_suffix('.tmp').exists())
 
@@ -35,7 +35,9 @@ class ServerProgressSaveTests(unittest.TestCase):
             return original(path,target)
         with patch.object(Path,'replace',replace),patch.object(M.time,'sleep') as sleep:
             M.save_run({'complete':True})
-        self.assertEqual(len(attempts),3);self.assertEqual(sleep.call_count,2)
+        # Three attempts commit last_run; the fourth atomically commits its
+        # compact status summary.
+        self.assertEqual(len(attempts),4);self.assertEqual(sleep.call_count,2)
         self.assertEqual(json.loads(self.path.read_text('utf-8')),{'complete':True})
 
     def test_permanent_denial_is_bounded_and_other_errors_are_not_hidden(self):

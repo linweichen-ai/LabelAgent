@@ -26,12 +26,11 @@ def description_schema(labels):
 def visible_label_schema(labels):
     """Strict VLM contract for known-label visibility and open-set hints.
 
-    Runtime validation still enforces that every configured label occurs exactly
-    once.  JSON Schema alone cannot express uniqueness by an object's ``label``
-    field without generating one positional schema per registry entry.
+    Assessments are keyed by the exact registry labels.  Required object keys
+    make duplicates and omissions structurally impossible, including for a new
+    dataset whose registry was not known when this code was written.
     """
-    assessment = obj({
-        "label": {"type": "string", "enum": labels},
+    assessment_value = obj({
         "evidence": {"type": "string", "enum": ["present", "absent", "uncertain"]},
         "confidence": {"type": "number", "minimum": 0, "maximum": 1},
         # Visibility is a registry gate, not a captioning task.  One compact
@@ -45,8 +44,7 @@ def visible_label_schema(labels):
         "confidence": {"type": "number", "minimum": 0, "maximum": 1},
     })
     return obj({
-        "assessments": {"type": "array", "items": assessment,
-                        "minItems": len(labels), "maxItems": len(labels)},
+        "assessments": obj({label: assessment_value for label in labels}),
         "unknown_candidates": {"type": "array", "items": unknown, "maxItems": 5},
     })
 

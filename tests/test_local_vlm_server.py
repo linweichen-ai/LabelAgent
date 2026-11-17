@@ -48,6 +48,27 @@ def messages(count=1):
 
 
 class LocalVLMContractTests(unittest.TestCase):
+    def test_generation_cache_implementation_is_explicit_and_bounded(self):
+        self.assertIsNone(MODULE.checked_generation_cache_implementation(None))
+        self.assertEqual(MODULE.checked_generation_cache_implementation("dynamic"), "dynamic")
+        self.assertEqual(MODULE.checked_generation_cache_implementation("static"), "static")
+        for value in ("offloaded", "quantized", "", True):
+            with self.assertRaises(ValueError):
+                MODULE.checked_generation_cache_implementation(value)
+
+    def test_startup_prewarm_is_restricted_to_exclusive_bf16_static_mode(self):
+        self.assertFalse(MODULE.checked_startup_prewarm(
+            False, None, "none", None))
+        self.assertTrue(MODULE.checked_startup_prewarm(
+            True, "static", "none", None))
+        for arguments in ((True, None, "none", None),
+                          (True, "dynamic", "none", None),
+                          (True, "static", "nf4", None),
+                          (True, "static", "none", .35),
+                          ("yes", "static", "none", None)):
+            with self.assertRaises(ValueError):
+                MODULE.checked_startup_prewarm(*arguments)
+
     def test_structured_decoder_tokenizer_cache_builds_exactly_once(self):
         backend = SimpleNamespace(processor=SimpleNamespace(
             tokenizer=object()))

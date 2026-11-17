@@ -193,10 +193,28 @@ def trim_idle_cuda_cache(torch_module,enabled):
         'released_reserved_bytes':max(0,reserved-after_reserved)}
 
 
+def checked_generation_cache_implementation(value):
+    if value is None:
+        return None
+    if value not in {"dynamic", "static"}:
+        raise ValueError("Generation cache implementation must be dynamic or static")
+    return value
+
+
+def checked_startup_prewarm(enabled, cache_implementation, quantization,
+                            memory_fraction):
+    if not isinstance(enabled, bool):
+        raise ValueError("Startup prewarm must be a boolean")
+    if enabled and (cache_implementation != "static" or quantization != "none"
+                    or memory_fraction is not None):
+        raise ValueError("Startup prewarm requires exclusive BF16 static-cache mode")
+    return enabled
+
+
 class TransformersBackend:
     backend_name = "transformers_local_cuda"
 
-    def __init__(self, model_dir, model_id, max_pixels=512*32*32, context_budget=8192, quantization="none",memory_fraction=None,probe_reserve_mib=None,allow_single_image_budget_override=False,idle_cache_release=False):
+    def __init__(self, model_dir, model_id, max_pixels=512*32*32, context_budget=8192, quantization="none",memory_fraction=None,probe_reserve_mib=None,allow_single_image_budget_override=False,idle_cache_release=False,generation_cache_implementation=None,startup_prewarm=False):
         if allow_single_image_budget_override and (quantization!='nf4' or memory_fraction is not None):
             raise ValueError('Single-image overrides cannot bypass a shared probe allocator limit')
         import torch
@@ -213,6 +231,11 @@ class TransformersBackend:
         self.probe_reserved_free_mib=probe_reserve_mib
         self.allow_single_image_budget_override=bool(allow_single_image_budget_override)
         self.idle_cache_release=bool(idle_cache_release)
+        self.generation_cache_implementation=checked_generation_cache_implementation(
+            generation_cache_implementation)
+        self.startup_prewarm_enabled=checked_startup_prewarm(
+            startup_prewarm, self.generation_cache_implementation,
+            quantization, memory_fraction)
         self.last_cache_release=None
         self.model_config_sha256=hashlib.sha256(config_raw).hexdigest()
         self.model_id = model_id
@@ -240,7 +263,41 @@ class TransformersBackend:
         # service ready, rather than stalling the first user inference.
         ensure_format_tokenizer_data(self)
         self.last_inference_stats = None
+        self.startup_prewarm = (self._run_startup_prewarm()
+                                if self.startup_prewarm_enabled else None)
+        # Startup work is operational evidence, not a user inference.
+        self.last_inference_stats = None
         self.model_loaded = True
+
+    def _run_startup_prewarm(self):
+        """Compile the static decode path before the service reports ready."""
+        started = time.monotonic()
+        messages = [
+            {"role": "system", "content": [{"type": "text", "text": JSON_RULE}]},
+            {"role": "user", "content": [
+                {"type": "text", "text":
+                    "Prewarm deterministic structured vision generation. "
+                    + "neutral context " * 600},
+                {"type": "image"},
+            ]},
+        ]
+        schema = {"type": "object", "properties": {
+            "ready": {"type": "boolean"}}, "required": ["ready"],
+            "additionalProperties": False}
+        content, prompt_tokens, completion_tokens = self.generate(
+            messages, [Image.new("RGB", (640, 512), (127, 127, 127))],
+            768, response_schema=schema)
+        try:
+            decision = json.loads(content)
+        except json.JSONDecodeError as error:
+            raise RuntimeError("Static-cache startup prewarm returned invalid JSON") from error
+        if not isinstance(decision, dict) or not isinstance(decision.get("ready"), bool):
+            raise RuntimeError("Static-cache startup prewarm violated its schema")
+        return {"performed": True,
+                "seconds": round(time.monotonic() - started, 3),
+                "prompt_tokens": prompt_tokens,
+                "completion_tokens": completion_tokens,
+                "inference_stats": deepcopy(self.last_inference_stats)}
 
     def generate(self, messages, images, max_tokens, response_schema=None,image_token_budget=None):
         started = time.monotonic()
@@ -260,6 +317,8 @@ class TransformersBackend:
         preprocess_seconds = time.monotonic() - started
         constraint_started = time.monotonic()
         options = {}
+        if self.generation_cache_implementation is not None:
+            options["cache_implementation"] = self.generation_cache_implementation
         if response_schema is not None:
             from lmformatenforcer import JsonSchemaParser
             from lmformatenforcer.integrations.transformers import build_transformers_prefix_allowed_tokens_fn
@@ -280,6 +339,7 @@ class TransformersBackend:
                                      "preprocess_seconds": round(preprocess_seconds, 3),
                                      "constraint_setup_seconds": round(constraint_setup_seconds, 3),
                                      "generation_seconds": round(generation_seconds, 3),
+                                     "generation_cache_implementation": self.generation_cache_implementation,
                                      "structured_output": response_schema is not None}
         self.last_inference_stats.update(image_grid_thw=image_grids,actual_image_token_counts=image_counts,
             effective_image_token_budget=self.image_token_budget if image_token_budget is None else image_token_budget)
@@ -379,6 +439,9 @@ def create_app(backend, response_cache_entries=32, coalesce_timeout_seconds=90):
                        response_cache_entries=cached_entries,
                        exact_requests_inflight=inflight_count,
                        coalesce_timeout_seconds=coalesce_timeout_seconds,
+                       generation_cache_implementation=getattr(
+                           backend,"generation_cache_implementation",None),
+                       startup_prewarm=getattr(backend,"startup_prewarm",None),
                        last_cache_release=getattr(backend,'last_cache_release',None),
                        last_inference_stats=getattr(backend, "last_inference_stats", None))
 
@@ -501,6 +564,10 @@ if __name__ == "__main__":
     parser.add_argument('--probe-memory-fraction',type=float)
     parser.add_argument('--probe-reserve-mib',type=int)
     parser.add_argument('--probe-seconds',type=int)
+    parser.add_argument('--generation-cache-implementation', choices=['dynamic','static'],
+                        help='Optional Transformers KV-cache backend; omitted preserves the model default')
+    parser.add_argument('--startup-prewarm', action='store_true',
+                        help='Precompile exclusive BF16 static generation before reporting ready')
     args = parser.parse_args()
     is_probe=args.profile=='shared-4090-probe'
     image_tokens=args.max_image_tokens if args.max_image_tokens is not None else (256 if args.profile in {'local-8gb','shared-4090-probe'} else 512)
@@ -534,6 +601,8 @@ if __name__ == "__main__":
                                  quantization=args.quantization,memory_fraction=fraction,
                                  probe_reserve_mib=reserve if is_probe else None,
                                  allow_single_image_budget_override=args.profile=='local-8gb',
-                                 idle_cache_release=args.profile=='local-8gb')
+                                 idle_cache_release=args.profile=='local-8gb',
+                                 generation_cache_implementation=args.generation_cache_implementation,
+                                 startup_prewarm=args.startup_prewarm)
     if is_probe:engine.probe_lifetime_seconds=seconds
     create_app(engine).run(host="127.0.0.1", port=args.port, threaded=True)

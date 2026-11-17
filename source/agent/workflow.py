@@ -623,6 +623,44 @@ def _complete_json_array(raw_text, key):
     return None
 
 
+def _complete_json_object(raw_text, key):
+    """Recover one fully closed object without repairing or inventing values."""
+    if not isinstance(raw_text, str):
+        return None
+    marker = json.dumps(str(key))
+    marker_at = raw_text.find(marker)
+    if marker_at < 0:
+        return None
+    colon_at = raw_text.find(":", marker_at + len(marker))
+    start = raw_text.find("{", colon_at + 1) if colon_at >= 0 else -1
+    if start < 0:
+        return None
+    depth, in_string, escaped = 0, False, False
+    for position in range(start, len(raw_text)):
+        character = raw_text[position]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                in_string = False
+            continue
+        if character == '"':
+            in_string = True
+        elif character == "{":
+            depth += 1
+        elif character == "}":
+            depth -= 1
+            if depth == 0:
+                try:
+                    value = json.loads(raw_text[start:position + 1])
+                except json.JSONDecodeError:
+                    return None
+                return value if isinstance(value, dict) else None
+    return None
+
+
 def discover_visible_labels(config, image, labels):
     """Discover visible registry labels without promoting open-set guesses.
 
@@ -638,6 +676,8 @@ def discover_visible_labels(config, image, labels):
     definitions = visible_label_definitions(labels)
     instruction = (
         "Inspect this factory image and assess every known label below exactly once. "
+        "Return assessments as one JSON object keyed by the exact known label strings; "
+        "every key is required and must occur once. "
         "Use evidence='present' only when at least one instance is visibly supported in the image; "
         "use 'absent' when it is not visible and 'uncertain' when occlusion or image quality prevents a reliable decision. "
         "Do not infer an object merely because its label is listed. confidence is a number from 0 to 1. "
@@ -661,7 +701,11 @@ def discover_visible_labels(config, image, labels):
             request_config["llm_max_tokens"] = token_budget
         result = chat(request_config, instruction, image, response_schema=schema)
     except ModelOutputError as error:
-        recovered_assessments = _complete_json_array(error.raw_text, "assessments")
+        recovered_assessments = _complete_json_object(error.raw_text, "assessments")
+        if recovered_assessments is None:
+            # Defensive compatibility for an in-flight response from the older
+            # array contract during a rolling local upgrade.
+            recovered_assessments = _complete_json_array(error.raw_text, "assessments")
         if recovered_assessments is None:
             raise
         # Never guess or auto-complete a truncated open-set proposal.  A fully
@@ -673,6 +717,16 @@ def discover_visible_labels(config, image, labels):
     if not isinstance(result, dict):
         raise ValueError("VLM 可见类别识别未返回 JSON 对象")
     assessments = result.get("assessments")
+    if isinstance(assessments, dict):
+        if set(assessments) != set(labels) or len(assessments) != len(labels):
+            raise ValueError("VLM 必须逐项判断当前标签表中的每个类别")
+        normalized = []
+        for label in labels:
+            value = assessments[label]
+            if not isinstance(value, dict) or "label" in value:
+                raise ValueError("VLM 类别判断必须是对象")
+            normalized.append({"label": label, **value})
+        assessments = normalized
     if not isinstance(assessments, list) or len(assessments) != len(labels):
         raise ValueError("VLM 必须逐项判断当前标签表中的每个类别")
     by_label, consistency_flags = {}, []

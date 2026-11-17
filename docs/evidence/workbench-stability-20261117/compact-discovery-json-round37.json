@@ -1,0 +1,82 @@
+{
+  "schema_version": "labelagent.compact_discovery_json_round37.v1",
+  "date": "2026-11-17",
+  "objective": "Reduce full-registry VLM discovery decoding overhead while preserving known-label coverage, open-set review, and independent high-risk candidate audits.",
+  "change": {
+    "known_label_reason_max_chars": {"before": 96, "after": 72},
+    "unknown_evidence_max_chars": {"before": 120, "after": 96},
+    "reason_word_instruction": {"before": 12, "after": 10},
+    "compact_json_without_indentation_requested": true,
+    "known_labels_removed": 0,
+    "open_set_channel_removed": false,
+    "candidate_audit_batching": false
+  },
+  "measurements": {
+    "sample_003": {
+      "previous_elapsed_ms": 78624.434,
+      "current_elapsed_ms": 74092.92,
+      "reduction_percent": 5.76,
+      "previous_discovery_ms": 36667,
+      "current_discovery_ms": 32029,
+      "discovery_reduction_percent": 12.65,
+      "raw_discovery_chars": 1182,
+      "parsed_discovery_json_chars": 868,
+      "candidate_counts": {"pallet": 13, "person": 2, "floor": 1, "ego": 0},
+      "agent_rounds": 1,
+      "applied_operations": 0,
+      "open_set_scan_complete": true,
+      "independent_candidate_audits": [
+        {"candidate_id": 14, "classification": "known_label", "observed_label": "person", "confidence": 1.0, "route": "candidate_preserved"},
+        {"candidate_id": 15, "classification": "uncertain", "observed_label": null, "confidence": 0.1, "route": "human_review_required"}
+      ],
+      "summary_sha256": "C3658635EFE6B1853576F87244D6B423EC283DA7148E676CB348F0BD78BC99EC",
+      "candidate_sha256": "47DE4EB6B5C65CE5276C76D82F0DAE39448A0A1F16C37534C11883D93B414F72",
+      "overlay_sha256": "C99BD0C91BFFAFA91EABAB356E33825E6A498C0252056FC9B551D4D75554C374"
+    },
+    "sample_004": {
+      "previous_elapsed_ms": 47397.286,
+      "current_elapsed_ms": 47529.392,
+      "change_percent": 0.28,
+      "previous_discovery_ms": 32902,
+      "current_discovery_ms": 33240,
+      "candidate_counts": {"pallet": 12, "floor": 1, "ego": 0},
+      "agent_rounds": 1,
+      "applied_operations": 0,
+      "open_set_scan_complete": true,
+      "summary_sha256": "0C6017178D2241F7A12ED5259FC9491578CAE64FE27074AF38232DF06363012C",
+      "candidate_sha256": "90F85E2A51A1B043421AFAD57B4AF35AB57E014C6CBE76FD8FE100055FAB400D",
+      "overlay_sha256": "18E11015827E2AE55B73E9C7B4D56D06C61513A9222F0C5BFA47612B9F6799C8"
+    },
+    "two_sample_aggregate": {
+      "previous_elapsed_ms": 126021.72,
+      "current_elapsed_ms": 121622.312,
+      "reduction_percent": 3.49,
+      "previous_discovery_ms": 69569,
+      "current_discovery_ms": 65269,
+      "discovery_reduction_percent": 6.18
+    }
+  },
+  "validation": {
+    "python_core_image_candidate": "160/160",
+    "web_interaction": "84/84",
+    "python_syntax": "passed",
+    "javascript_syntax": "passed",
+    "formal_status": "ready_idle",
+    "formal_code_matches_worktree": true,
+    "rollback": "D:/Apps/LabelAgent/.local/backups/workbench-compact-json-round37-20261117-201500",
+    "formal_state_hashes_unchanged": {
+      "state.json": "8F73D496860FECC520C859F2230744DAF5118F5230A01AD2F5AA331EAF0E3652",
+      "file_sessions.json": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+      "files.json": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214",
+      "last_run.json": "2133DA6186935D485FE2B2296FE2248BA6CC1183743357AB4C1D8C873D3CFFDF",
+      "last_run_summary.json": "920C0D0E6DC37ABFE109C13B24B88D9FDCD463E7C55D65BD7CA224534B203CE2",
+      "model_debug.json": "EFDF22CD6BD803C958E3ACB39D46054D294544FE48324A12B4AFE1502B3BBB9A"
+    }
+  },
+  "boundaries": [
+    "The two-sample timing comparison is an observed pair, not a latency distribution.",
+    "Sample 004 was effectively unchanged in latency; the aggregate gain is driven by sample 003.",
+    "Neither image has human pixel-level truth or a visible slope, so no new accuracy or slope-quality claim is made.",
+    "All outputs remain machine candidates and are not human truth, training approval, or deployment approval."
+  ]
+}

@@ -440,13 +440,13 @@ def discover_visible_labels(config, image, labels):
         "Use evidence='present' only when at least one instance is visibly supported in the image; "
         "use 'absent' when it is not visible and 'uncertain' when occlusion or image quality prevents a reliable decision. "
         "Do not infer an object merely because its label is listed. confidence is a number from 0 to 1. "
-        "Each reason must be one visual clause of at most 12 words; do not list multiple exclusions or repeat the definition. "
+        "Each reason must be one visual clause of at most 10 words; do not list multiple exclusions or repeat the definition. "
         "A reason must name visible pixels or a visible physical part, not scene context, camera viewpoint, or an assumed function. "
         "If 车辆, ego, and other_robot are all available, they are not synonyms: one physical instance must not make multiple labels present; use the most specific project label and identify distinct instances separately. "
         "pallet and cargo_floor are not synonyms: cargo_floor requires visible physical attachment to a robot/mobile platform, and a pallet or static raised platform must never support cargo_floor='present'. "
         "If a clearly visible object does not fit any known label, add only an unknown_candidates proposal; "
         "known labels may be Chinese or English, so do not report a translation or simple synonym of a known label as unknown; "
-        "never rename, merge, or modify the known-label registry. Return only the schema JSON.\n"
+        "never rename, merge, or modify the known-label registry. Return only compact schema JSON with no indentation or extra whitespace.\n"
         + "Known labels: " + json.dumps(labels, ensure_ascii=False)
         + ("\nProject label definitions:\n" + "\n".join(definitions) if definitions else "")
     )

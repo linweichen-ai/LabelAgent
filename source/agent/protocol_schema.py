@@ -37,11 +37,11 @@ def visible_label_schema(labels):
         # Visibility is a registry gate, not a captioning task.  One compact
         # visual clause is enough for audit and keeps local constrained
         # decoding responsive when the registry contains many labels.
-        "reason": reason(96),
+        "reason": reason(72),
     })
     unknown = obj({
         "candidate_name": bounded_text(80),
-        "evidence": reason(120),
+        "evidence": reason(96),
         "confidence": {"type": "number", "minimum": 0, "maximum": 1},
     })
     return obj({

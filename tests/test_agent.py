@@ -285,7 +285,7 @@ class WorkflowTests(unittest.TestCase):
         discovery_schema = chat.call_args.kwargs["response_schema"]
         self.assertEqual(discovery_schema["properties"]["assessments"]["minItems"], 3)
         self.assertEqual(discovery_schema["properties"]["assessments"]["items"]
-                         ["properties"]["reason"]["maxLength"], 96)
+                         ["properties"]["reason"]["maxLength"], 72)
 
     def test_visible_label_discovery_uses_registry_sized_compact_budget(self):
         labels = ["车辆", "pallet", "person", "floor", "slope", "ego",
@@ -299,7 +299,8 @@ class WorkflowTests(unittest.TestCase):
             workflow.discover_visible_labels(config, image_bytes(), labels)
         self.assertEqual(chat.call_args.args[0]["llm_max_tokens"], 640)
         self.assertNotIn("llm_max_tokens", config)
-        self.assertIn("at most 12 words", chat.call_args.args[1])
+        self.assertIn("at most 10 words", chat.call_args.args[1])
+        self.assertIn("no indentation or extra whitespace", chat.call_args.args[1])
         self.assertEqual(workflow.compact_discovery_token_budget(config, 8), 640)
         self.assertEqual(workflow.compact_discovery_token_budget(config, 20), 1024)
         self.assertEqual(workflow.compact_discovery_token_budget(

@@ -1,0 +1,97 @@
+{
+  "schema_version": "labelagent.workbench-evidence.v1",
+  "round": 150,
+  "recorded_at": "2026-11-18T10:59:00+08:00",
+  "decision": "accepted_and_deployed",
+  "objective": "Keep long VLM stages visibly alive and honest instead of appearing frozen at a fixed percentage, while preserving the existing inference, state, candidate, truth, and training contracts.",
+  "implementation": {
+    "files": [
+      "source/web/app.js",
+      "source/web/index.html"
+    ],
+    "behavior": [
+      "VLM discovery, retry, and description phases advance smoothly from their established stage floor toward a bounded 20 percent ceiling using the measured 16 second 4090 baseline.",
+      "VLM observation and background refinement advance smoothly toward a bounded 72 percent ceiling using the measured 34 second multi-image baseline.",
+      "In-phase interpolation is capped at 92 percent of its allowed range, so waiting cannot falsely cross into the next stage.",
+      "Running percentages are explicitly prefixed with the Chinese approximation marker rather than presented as exact completion.",
+      "The detail line displays both actual phase elapsed time and the current 4090 typical duration.",
+      "The existing task high-water mark still prevents transient retries from moving progress backward; a new task resets it.",
+      "Unknown queue time in vlm_waiting remains indeterminate and is not assigned a fabricated duration."
+    ],
+    "cache_bust": {
+      "previous": "/app.js?v=144",
+      "deployed": "/app.js?v=145"
+    }
+  },
+  "measured_baselines": {
+    "single_image_visible_discovery_typical_seconds": 16,
+    "multi_image_agent_review_typical_seconds": 34,
+    "sources": [
+      "docs/evidence/workbench-stability-20261117/new-dataset-steady-state-round146.json",
+      "docs/evidence/workbench-stability-20261117/vlm-latency-trace-audit-round139.json"
+    ],
+    "boundary": "These values drive an explicitly approximate UI indicator. They are not a latency SLA or a claim that every request finishes by that time."
+  },
+  "live_acceptance": {
+    "workbench_url": "http://127.0.0.1:8765/",
+    "index_http_status": 200,
+    "served_index_references_v145": true,
+    "app_http_status": 200,
+    "served_app_contains_progress_logic": true,
+    "served_app_contains_baseline_label": true,
+    "workbench_run_status": "idle",
+    "remote_sam3": "normal",
+    "remote_qwen": "normal",
+    "runtime_app_sha256": "295cf47e0deb36d4daabab22ad4a631f464bb8143921050b308f1a3c478c4f4f",
+    "runtime_index_sha256": "dc2cb5303bfc3e2125e5a8f4d2e3402244d3546eb6f93de88fbce51854b3c09b",
+    "formal_state_sha256_before_after": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21"
+  },
+  "verification": {
+    "targeted_progress_tests": "36/36 passed",
+    "python_regression": "879/879 passed",
+    "web_regression": "104/104 passed",
+    "diff_check": "passed",
+    "runtime_source_hash_matches_worktree": true,
+    "candidate_frames_written": 0,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "model_weights_modified": false,
+    "oss_writes": false,
+    "other_gpu_processes_stopped": false
+  },
+  "acceleration_capacity_audit": {
+    "factory_5090_checked_at": "2026-11-18T10:53:24+08:00",
+    "gpu0_free_mib": 7531,
+    "gpu1_free_mib": 11580,
+    "required_existing_vlm_model_memory_bytes": 17534247720,
+    "safe_to_start_second_8b_vlm": false,
+    "existing_processes_stopped": false,
+    "factory_4090_optional_engines_installed": {
+      "vllm": false,
+      "sglang": false,
+      "flash_attn": false,
+      "flashinfer": false,
+      "tensorrt_llm": false,
+      "torchao": false,
+      "xformers": false,
+      "optimum": false
+    },
+    "dependency_installation_performed": false,
+    "decision": "Do not disrupt occupied 5090 workloads and do not install an unvalidated heavy engine into the stable 4090 environment."
+  },
+  "rollback": {
+    "path": "D:/Apps/LabelAgent/.local/backups/smooth-vlm-progress-round150-20261118-1055",
+    "previous_app_sha256": "1c89855b83e473313c457f49d7ad4830c20acbee1cc529d180964eac032f93ab",
+    "previous_index_sha256": "3504c82ff897d4790968fd268f5679dabe40ba0801990ec6adcaee8465278030",
+    "backup_hashes_verified": true
+  },
+  "storage": {
+    "reconstructible_test_cache_directories_removed": 4,
+    "reconstructible_test_cache_bytes_removed": 3560962,
+    "source_or_evidence_removed": false,
+    "windows_system_volume_free_gib_after": 1.903,
+    "runtime_data_volume_free_gib_observed": 20.68,
+    "warning": "The Windows system volume remains below the existing 2 GiB advisory threshold. LabelAgent runtime temp remains isolated on D:, but this UI change does not claim Windows-wide storage stability."
+  },
+  "boundary": "This improves live progress transparency and perceived responsiveness; it does not reduce the underlying 15 to 34 second VLM compute time, prove cross-dataset accuracy, improve slope IoU, or constitute SAM/VLM fine-tuning."
+}

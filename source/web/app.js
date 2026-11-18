@@ -611,6 +611,8 @@ $('describeButton').onclick=async()=>{const button=$('describeButton');if(button
 const agentStop={done:'Agent 流程已结束（不代表正确）',needs_review:'旧记录：请求人工复核',max_rounds:'达到最大复查轮数',no_progress:'没有有效修改',cycle:'检测到循环修改',error:'模型或工具调用失败'};
  const agentProgressStage={preflight:0,submitting:0,claiming:0,starting:0,discovering:0,discovering_retry:0,describing:0,loading:0,generating:1,generated:1,observing:2,agent_refining:2,vlm_waiting:2,editing:3,edited:3,finished:4,retrying:1,saved:4,completed:4,stopping:4,stopped:4,failed:4};
  const agentProgressWeight={preflight:0.01,submitting:0.02,claiming:0.03,starting:0.04,discovering:0.06,discovering_retry:0.08,describing:0.10,loading:0.12,generating:0.22,generated:0.38,observing:0.58,agent_refining:0.58,vlm_waiting:0.58,editing:0.74,edited:0.86,finished:0.94,retrying:0.18,saved:1};
+ const agentPhaseTypicalSeconds={discovering:16,discovering_retry:16,describing:16,observing:34,agent_refining:34};
+ const agentPhaseProgressCeiling={discovering:0.20,discovering_retry:0.20,describing:0.20,observing:0.72,agent_refining:0.72};
 let progressTaskId=null,progressHighWater=0,runStatusConnectionMessage='';
 let progressFetching=false;
 $('downloadDebug').onclick=async()=>{
@@ -647,11 +649,18 @@ function formatAgentDuration(seconds){
  if(minutes)return `${minutes} 分 ${rest} 秒`;
  return `${rest} 秒`;
 }
+function estimatedAgentPhaseWeight(phase,phaseElapsed){
+ const base=agentProgressWeight[phase]||0,typical=agentPhaseTypicalSeconds[phase],ceiling=agentPhaseProgressCeiling[phase];
+ if(!typical||!Number.isFinite(ceiling)||ceiling<=base)return base;
+ const fraction=Math.min(0.92,Math.max(0,Number(phaseElapsed)||0)/typical);
+ return base+(ceiling-base)*fraction;
+}
 function renderAgentProgressPanel(job,elapsed){
  const status=job.status||'idle',running=status==='running'||status==='stopping';
  const total=Math.max(0,Number(job.total)||0),completed=Math.min(total,Math.max(0,Number(job.completed)||0));
  const phase=job.phase||(status==='completed'?'completed':status==='failed'?'failed':status==='stopped'?'stopped':'starting');
- const currentWeight=running&&total?agentProgressWeight[phase]||0:0;
+ const phaseElapsed=Math.max(0,Number(job.phase_elapsed_seconds)||0);
+ const currentWeight=running&&total?estimatedAgentPhaseWeight(phase,phaseElapsed):0;
  const estimated=total?Math.round((completed+currentWeight)/total*100):0;
  const taskIdentity=job.task_id||null;
  if(taskIdentity!==progressTaskId){progressTaskId=taskIdentity;progressHighWater=0}
@@ -665,7 +674,8 @@ function renderAgentProgressPanel(job,elapsed){
  if(phase==='submitting')details.push('请求已提交，请勿重复点击');
  if(phase==='vlm_waiting')details.push(`共享模型正在处理其他请求，系统将自动重试${job.retry_in_seconds?`（约 ${job.retry_in_seconds} 秒后）`:''}`);
  if(latest?.label)details.push(`类别：${latest.label}`);
- const phaseElapsed=Math.max(0,Number(job.phase_elapsed_seconds)||0);
+ const typicalSeconds=agentPhaseTypicalSeconds[phase];
+ if(running&&typicalSeconds)details.push(`本阶段已进行 ${formatAgentDuration(phaseElapsed)} · 当前 4090 基线通常约 ${formatAgentDuration(typicalSeconds)}`);
  if(running&&phaseElapsed>=60)details.push(`该阶段已持续 ${formatAgentDuration(phaseElapsed)}，后台仍在线，可安全停止`);
  if(status==='failed'&&job.error)details.push(job.error);
  if(runStatusConnectionMessage)details.push(runStatusConnectionMessage);
@@ -673,7 +683,7 @@ function renderAgentProgressPanel(job,elapsed){
  const state=$('runProgressState');state.textContent=stateText;state.className=`runProgressState ${status}`;
  $('runProgressTitle').textContent=title;
  $('runProgressDetail').textContent=details.join(' · ');
- $('runProgressPercent').textContent=status==='idle'?'待开始':`${percent}%`;
+ $('runProgressPercent').textContent=status==='idle'?'待开始':running?`约 ${percent}%`:`${percent}%`;
  $('runProgressFill').style.width=`${percent}%`;
  const progressBar=$('runProgressBar');
  progressBar.classList.toggle('running',running);

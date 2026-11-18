@@ -316,7 +316,7 @@ test('引导台任务开始事件立即刷新并切换到活跃间隔', async ()
   assert.equal(calls, 2);
 });
 
-test('VLM 类别识别阶段显示非零进度并保持运行动画', () => {
+test('VLM 类别识别阶段按实测基线平滑显示预计进度并保持运行动画', () => {
   const elements = new Map();
   function element(id) {
     if (!elements.has(id)) elements.set(id, {
@@ -336,11 +336,23 @@ test('VLM 类别识别阶段显示非零进度并保持运行动画', () => {
   h.run(section(text, ' const agentPhase=', "$('downloadDebug').onclick"));
   h.run(section(text, 'function formatAgentDuration', 'function renderRunButton'));
   h.run("renderAgentProgressPanel({status:'running',phase:'discovering',total:1,completed:0,frame:31,phase_elapsed_seconds:70,events:[]},70)");
-  assert.equal(element('runProgressPercent').textContent, '6%');
+  assert.equal(element('runProgressPercent').textContent, '约 19%');
   assert.equal(element('runProgressTitle').textContent, 'VLM 识别当前帧可见类别');
+  assert.ok(element('runProgressDetail').textContent.includes('当前 4090 基线通常约 16 秒'));
   assert.ok(element('runProgressDetail').textContent.includes('后台仍在线'));
   assert.ok(element('runProgressBar').classList.values.has('running'));
   assert.ok(element('runProgressBar').classList.values.has('longPhase'));
+});
+
+test('VLM 预计进度随等待时间单调前进但不会越过下一阶段', () => {
+  const h = harness();
+  const text = source('app.js');
+  h.run(section(text, ' const agentPhase=', "$('downloadDebug').onclick"));
+  h.run(section(text, 'function formatAgentDuration', 'function renderAgentProgressPanel'));
+  const weights = [0, 8, 16, 60].map(seconds =>
+    h.run(`estimatedAgentPhaseWeight('discovering',${seconds})`));
+  assert.deepEqual(weights.map(value => Math.round(value * 100)), [6, 13, 19, 19]);
+  assert.ok(weights.every(value => value < 0.20));
 });
 
 test('后台 Agent 精修显示明确阶段而不是看似卡在百分之一', () => {
@@ -446,12 +458,12 @@ test('瞬时故障重试时同一任务进度不倒退，新任务重新计数',
   h.run(section(text, ' const agentPhase=', "$('downloadDebug').onclick"));
   h.run(section(text, 'function formatAgentDuration', 'function renderRunButton'));
   h.run("renderAgentProgressPanel({task_id:'a',status:'running',phase:'observing',total:1,completed:0,events:[]},10)");
-  assert.equal(element('runProgressPercent').textContent, '58%');
+  assert.equal(element('runProgressPercent').textContent, '约 58%');
   h.run("renderAgentProgressPanel({task_id:'a',status:'running',phase:'retrying',total:1,completed:0,events:[]},20)");
-  assert.equal(element('runProgressPercent').textContent, '58%');
+  assert.equal(element('runProgressPercent').textContent, '约 58%');
   assert.equal(element('runProgressTitle').textContent, '服务短暂异常，正在自动重试本帧');
   h.run("renderAgentProgressPanel({task_id:'b',status:'running',phase:'retrying',total:1,completed:0,events:[]},2)");
-  assert.equal(element('runProgressPercent').textContent, '18%');
+  assert.equal(element('runProgressPercent').textContent, '约 18%');
   h.run("renderAgentProgressPanel({task_id:'b',status:'running',phase:'vlm_waiting',total:1,completed:0,round:2,max_rounds:6,retry_in_seconds:10,events:[]},12)");
   assert.equal(element('runProgressTitle').textContent, 'VLM 正忙，任务正在排队等待');
   assert.ok(element('runProgressDetail').textContent.includes('约 10 秒后'));

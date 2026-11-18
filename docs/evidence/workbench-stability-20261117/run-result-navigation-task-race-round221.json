@@ -115,12 +115,12 @@
     "run_status": "idle"
   },
   "source_sync": {
-    "implementation_commit": null,
+    "implementation_commit": "c777b1a9db1520a0dcbff4fffa666e46904caabb",
     "receipt_commit": null,
     "branch": "codex/workbench-stability-20261117",
-    "github_readback": null,
-    "cnb_readback": null,
-    "both_remotes_matched": false,
+    "github_readback": "c777b1a9db1520a0dcbff4fffa666e46904caabb",
+    "cnb_readback": "c777b1a9db1520a0dcbff4fffa666e46904caabb",
+    "both_remotes_matched": true,
     "factory_images_uploaded": false,
     "untracked_experiment_artifacts_uploaded": false
   }

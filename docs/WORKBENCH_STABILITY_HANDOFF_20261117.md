@@ -1896,4 +1896,6 @@ Round220 解决了旧结果摘要读取期间出现新任务的问题；继续�
 
 v176部署前备份位于 `D:\Apps\LabelAgent\.local\backups\run-result-navigation-race-round221-20261119-065913`；验收发现细节后的v177另备份于 `D:\Apps\LabelAgent\.local\backups\run-result-navigation-race-v177-round221-20261119-070226`。本轮只受控重启工作台两次，最终管理PID23980、监听PID59788；4090通道PID60456和5090 SAM通道PID8656全程未变，五项探针均HTTP200，正式状态哈希不变。本轮没有模型推理、微调、后训练、人工真值、训练批准或OSS写入。
 
-完整说明见 [第二百二十一轮报告](RUN_RESULT_NAVIGATION_TASK_RACE_ROUND221_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/run-result-navigation-task-race-round221.json)。本地浏览器脚本与结果保持未跟踪。GitHub/CNB 提交与回读哈希将在同步完成后补入。
+完整说明见 [第二百二十一轮报告](RUN_RESULT_NAVIGATION_TASK_RACE_ROUND221_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/run-result-navigation-task-race-round221.json)。本地浏览器脚本与结果保持未跟踪。
+
+实现、测试和首版文档提交 `c777b1a9db1520a0dcbff4fffa666e46904caabb` 已推送并分别回读 GitHub/CNB，同名分支两端精确匹配；回读回执提交哈希将在下一次文档提交中补入。

@@ -1,0 +1,68 @@
+{
+  "schema_version": "labelagent.workbench-evidence.v1",
+  "round": 151,
+  "recorded_at": "2026-11-18T11:03:20.1003841+08:00",
+  "decision": "accepted_and_deployed",
+  "objective": "Recover Windows system-volume headroom without deleting LabelAgent evidence, changing paths, touching formal state, or disrupting active services.",
+  "scope": {
+    "source": "C:/Users/seer/Documents/ChatGPT/Seer2clw/task_workspaces/labelagent_stability_worktree_20261117/artifacts",
+    "target": "D:/Apps/LabelAgent/.local/relocated-worktrees/labelagent_stability_worktree_20261117-artifacts",
+    "content": "Untracked experiment receipts and visual evidence from the active stability worktree.",
+    "tracked_source_changed": false,
+    "formal_runtime_changed": false
+  },
+  "preflight": {
+    "source_was_directory": true,
+    "target_existed_before": false,
+    "nested_reparse_points": 0,
+    "other_process_command_lines_referencing_artifacts": 0,
+    "file_count": 2471,
+    "logical_bytes": 784295701,
+    "windows_system_volume_free_gib_before": 1.748,
+    "runtime_data_volume_free_gib_before": 20.734
+  },
+  "verification": {
+    "tree_digest_algorithm": "sha256 of sorted relative-path, length, file-sha256 records",
+    "source_digest": "a77cc0853b4a04aaf1a455451f441bdfb99bc3cd6a88d6a0e2ae9673845a659d",
+    "copied_target_digest": "a77cc0853b4a04aaf1a455451f441bdfb99bc3cd6a88d6a0e2ae9673845a659d",
+    "junction_readback_digest": "a77cc0853b4a04aaf1a455451f441bdfb99bc3cd6a88d6a0e2ae9673845a659d",
+    "counts_and_bytes_equal_at_all_stages": true,
+    "sample_receipt": "round149-torch-compile-baseline.json",
+    "sample_receipt_sha256_direct_and_junction": "b245c330ed54ccd90bf6ac64cf0c6faab1b174355a09c08e62d913aa5256c110",
+    "sample_json_readback": "passed",
+    "git_status_before_after": "artifacts remains the only intentional untracked path",
+    "relocation_manifest": "D:/Apps/LabelAgent/.local/relocated-worktrees/labelagent_stability_worktree_20261117-artifacts.RELOCATION.json"
+  },
+  "cutover": {
+    "source_path_after": "ntfs_junction",
+    "junction_target": "D:/Apps/LabelAgent/.local/relocated-worktrees/labelagent_stability_worktree_20261117-artifacts",
+    "original_c_volume_copy_removed_after_verified_readback": true,
+    "windows_system_volume_free_gib_after": 2.233,
+    "runtime_data_volume_free_gib_after": 19.997,
+    "measured_system_volume_gain_gib": 0.485
+  },
+  "live_acceptance": {
+    "formal_workbench_http_status": 200,
+    "formal_workbench_status": "idle",
+    "remote_sam3": "normal",
+    "remote_qwen": "normal",
+    "formal_state_sha256_before_after": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "candidate_frames_written": 0,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "model_weights_modified": false,
+    "oss_writes": false,
+    "other_processes_stopped": false
+  },
+  "recovery": {
+    "procedure": [
+      "Stop only processes actively using the exact artifacts path.",
+      "Remove only the artifacts junction, never the D target.",
+      "Copy the D target back to the exact original C path.",
+      "Verify 2471 files, 784295701 logical bytes, and the recorded tree digest.",
+      "Keep the D target until the restored C tree has passed readback."
+    ],
+    "independent_backup": false,
+    "boundary": "This is a verified relocation, not an independent backup. The evidence remains a single logical copy on D and is intentionally excluded from Git."
+  }
+}

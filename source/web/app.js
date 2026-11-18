@@ -84,9 +84,9 @@ workbenchSplitter.addEventListener('keydown',event=>{
 });
 new ResizeObserver(()=>window.resizeWorkbench()).observe(document.querySelector('.viewer'));
 window.resizeWorkbench();
-function selectedShapes(){const key=String(frame);return shapes[key]??(window.workspaceMode==='manual'?(manualDrafts[key]??(manualDrafts[key]=[])):(candidates[key]??(autoDrafts[key]??(autoDrafts[key]=[]))))}
+function selectedShapes(){const key=String(frame);if(window.workspaceMode==='auto'&&candidates[key]!==undefined)return candidates[key];return shapes[key]??(window.workspaceMode==='manual'?(manualDrafts[key]??(manualDrafts[key]=[])):(autoDrafts[key]??(autoDrafts[key]=[])))}
 function truthIsVerified(index=frame){return truthReviewStatus[String(index)]?.reusable_as_reference===true}
-function frameAnnotationState(index=frame){const key=String(index);return shapes[key]!==undefined?(truthIsVerified(index)?'truth':'legacy_truth'):window.workspaceMode==='auto'&&candidates[key]!==undefined?'candidate':window.workspaceMode==='manual'&&Array.isArray(manualDrafts[key])&&manualDrafts[key].length?'manual_draft':'empty'}
+function frameAnnotationState(index=frame){const key=String(index);if(window.workspaceMode==='auto'&&candidates[key]!==undefined)return shapes[key]!==undefined?'comparison_candidate':'candidate';return shapes[key]!==undefined?(truthIsVerified(index)?'truth':'legacy_truth'):window.workspaceMode==='manual'&&Array.isArray(manualDrafts[key])&&manualDrafts[key].length?'manual_draft':'empty'}
 const labelVisuals={
  '车辆':{stroke:'#ff7a18',fill:'rgba(255,122,24,.27)'},vehicle:{stroke:'#ff7a18',fill:'rgba(255,122,24,.27)'},
  pallet:{stroke:'#39d353',fill:'rgba(57,211,83,.24)'},person:{stroke:'#ff4f9a',fill:'rgba(255,79,154,.25)'},
@@ -99,7 +99,7 @@ const fallbackLabelVisuals=[
  {stroke:'#70a5ff',fill:'rgba(112,165,255,.25)'},{stroke:'#d07cff',fill:'rgba(208,124,255,.25)'}
 ];
 function labelVisual(label){if(labelVisuals[label])return labelVisuals[label];let hash=0;for(const char of String(label))hash=(Math.imul(hash,31)+char.codePointAt(0))>>>0;return fallbackLabelVisuals[hash%fallbackLabelVisuals.length]}
-function machineDraftVisible(){return ['machine_candidate','sam_point_prompt'].includes(referencePreparationIntent?.source)||(window.workspaceMode==='auto'&&shapes[String(frame)]===undefined&&candidates[String(frame)]!==undefined)}
+function machineDraftVisible(){return ['machine_candidate','sam_point_prompt'].includes(referencePreparationIntent?.source)||(window.workspaceMode==='auto'&&candidates[String(frame)]!==undefined)}
 function refreshClassColorLegend(items=selectedShapes()){
  const legend=$('classColorLegend');if(!legend)return;const names=[...new Set((items||[]).map(item=>item.label).filter(Boolean))];legend.hidden=!referencePreparationIntent||!names.length;legend.replaceChildren();
  if(legend.hidden)return;const title=document.createElement('strong');title.textContent='类别颜色';legend.append(title);
@@ -469,7 +469,7 @@ $('referenceReviewApprove').onclick=()=>{const items=selectedShapes();if(!items.
 $('referenceReviewSolo').onclick=()=>{if(selectedShapeIndex<0)selectReferenceReviewShape(1);referenceReviewOriginalOnly=false;referenceReviewSolo=!referenceReviewSolo;updateReferenceFinalizeGuide();draw();toast(referenceReviewSolo?'已隐藏其他轮廓，只检查当前黄色轮廓':'已恢复显示全部轮廓')};
 $('referenceReviewOriginal').onclick=()=>{referenceReviewOriginalOnly=!referenceReviewOriginalOnly;if(referenceReviewOriginalOnly){referenceReviewSolo=false;referenceOriginalSweepVisited=true;persistReferenceReviewProgress()}updateReferenceFinalizeGuide();draw();toast(referenceReviewOriginalOnly?'已临时隐藏全部候选；请检查漏标、远处小目标和标签表外目标':'已恢复显示候选轮廓')};
 $('referenceReviewFocus').onclick=()=>{if(selectedShapeIndex<0)selectReferenceReviewShape(1);if(referenceReviewFocused){referenceReviewFocused=false;zoomScale=1;$('stage').style.transform='';$('stage').style.transformOrigin='center center';draw();updateReferenceFinalizeGuide();toast('已还原完整画面');return}if(applyReferenceReviewFocus()){updateReferenceFinalizeGuide();toast(`已放大当前轮廓到 ${zoomScale.toFixed(1)} 倍`)}};
-function updateReferenceStatus(){const reference=window.referenceFrames?.[topic]?.[0],status=$('referenceStatus'),kind=frameAnnotationState(),run=agentRuns[String(frame)],geometryRisk=agentGeometryWarnings(run).length>0,invalidModelOutput=run?.stop_reason==='invalid_model_output';status.textContent=(reference===undefined?'':`当前参考帧：${reference}`)+(kind==='truth'?' · 当前帧真值已保存':kind==='legacy_truth'?' · 当前帧是历史标注，尚未通过当前人工门禁':kind==='candidate'?' · 当前帧是自动候选，尚未保存为真值':kind==='manual_draft'?' · 当前帧是可编辑人工草稿，尚未通过人工门禁':'')+(kind==='candidate'&&run?` · Agent ${invalidModelOutput?'无有效修正，SAM 候选待人工复核':geometryRisk?'结果含无效修正，需人工复核':run.converged?'复查完成，候选待保存':'流程未完成'} (${run.rounds} 轮)`: '');$('referenceButton').textContent=reference===frame?'已是参考帧':'设为参考帧';$('truthSave').textContent=window.workspaceMode==='auto'&&candidates[String(frame)]&&!shapes[String(frame)]?'确认并保存当前帧真值':'保存当前帧真值';$('openReferenceButton').hidden=reference===undefined;updateReferenceFinalizeGuide()}
+function updateReferenceStatus(){const reference=window.referenceFrames?.[topic]?.[0],status=$('referenceStatus'),kind=frameAnnotationState(),run=agentRuns[String(frame)],comparison=kind==='comparison_candidate',geometryRisk=agentGeometryWarnings(run).length>0,invalidModelOutput=run?.stop_reason==='invalid_model_output';status.textContent=(reference===undefined?'':`当前参考帧：${reference}`)+(kind==='truth'?' · 当前帧真值已保存':kind==='legacy_truth'?' · 当前帧是历史标注，尚未通过当前人工门禁':comparison?' · 正在显示机器评测候选；人工真值保持不变':kind==='candidate'?' · 当前帧是自动候选，尚未保存为真值':kind==='manual_draft'?' · 当前帧是可编辑人工草稿，尚未通过人工门禁':'')+((kind==='candidate'||comparison)&&run?` · Agent ${invalidModelOutput?'无有效修正，SAM 候选待人工复核':geometryRisk?'结果含无效修正，需人工复核':run.converged?'复查完成，候选待复核':'流程未完成'} (${run.rounds} 轮)`: '');$('referenceButton').textContent=reference===frame?'已是参考帧':'设为参考帧';$('truthSave').disabled=comparison;$('truthSave').textContent=comparison?'评测候选不可覆盖人工真值':window.workspaceMode==='auto'&&candidates[String(frame)]&&!shapes[String(frame)]?'确认并保存当前帧真值':'保存当前帧真值';$('openReferenceButton').hidden=reference===undefined;updateReferenceFinalizeGuide()}
 function candidateServerSignature(state){const runs={};for(const [key,run] of Object.entries(state?.agent_runs||{}))runs[key]=[run?.rounds,run?.stop_reason,run?.converged,run?.candidate_event_id,run?.candidate_sha256,run?.candidate_class_audits,run?.review_queue];return JSON.stringify([state?.topic||'',state?.candidates||{},runs,state?.candidate_review_proposals||[],state?.candidate_review_bindings||{},state?.reference_frames||{}])}
 window.syncWorkbenchCandidateState=state=>{
  if(!state||!state.loaded||!state.topic||state.topic!==topic||state.path!==loadedDataPath)return false;
@@ -585,6 +585,7 @@ async function lockReferenceFrame(target=frame,targetTopic=topic){const targetPa
 $('referenceButton').onclick=async()=>{try{await lockReferenceFrame();toast('服务器读回通过，已锁定参考帧，后续 AI 不会修改此帧')}catch(e){toast(e.message)}};
 async function saveCurrentTruth(candidateOnly=false){
  const targetFrame=frame,targetTopic=topic,targetPath=loadedDataPath,key=String(targetFrame);
+ if(window.workspaceMode==='auto'&&shapes[key]!==undefined&&candidates[key]!==undefined)throw Error('当前显示的是评测候选；人工真值已存在，禁止用候选覆盖');
  if(candidateOnly&&(window.workspaceMode!=='auto'||shapes[key]!==undefined||!Object.hasOwn(candidates,key)))throw Error('当前帧没有待保存的自动候选');
  if(!annotationMode)throw Error('请先在主画面打开待复核的图像帧');
  if(loading||playing)throw Error('请暂停并等待原始帧加载后再保存真值');
@@ -650,7 +651,7 @@ $('downloadDebug').onclick=async()=>{
   link.href=url;link.download='autolabel-model-debug.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
  }catch(error){toast(error.message)}finally{button.disabled=false}
 };
-let latestAgentJob={status:'idle'},runRequestStartedAt=null,runRequestPhase='preflight',runRequestFrame=null,runRequestCount=null,runStatusFailureCount=0;
+let latestAgentJob={status:'idle'},runRequestStartedAt=null,runRequestPhase='preflight',runRequestFrame=null,runRequestCount=null,runRequestMaxRounds=6,runStatusFailureCount=0;
 function pendingRunResult(job=latestAgentJob){const id=job?.result_task_id||job?.task_id;return !!(job?.result_available&&id&&!runResultHandled.has(id))}
 function markRunResultHandled(taskId){if(taskId)runResultHandled.add(taskId)}
 function pendingRetry(){return retryFrames.length>0&&retryScope?.file===loadedDataPath&&retryScope?.topic===topic}
@@ -731,7 +732,7 @@ function renderAgentProgressPanel(job,elapsed){
 function renderRunButton(){
  const button=$('runButton');
  const pending=runRequestStartedAt!==null&&(!latestAgentJob.started_at||latestAgentJob.started_at<runRequestStartedAt-1);
- const job=pending?{status:'running',phase:runRequestPhase,started_at:runRequestStartedAt,phase_started_at:runRequestStartedAt,phase_elapsed_seconds:Math.max(0,Date.now()/1000-runRequestStartedAt),frame:runRequestFrame??Number($('frameNumber').value),total:runRequestCount??Number($('taskCount').value),completed:0,shape_count:0}:latestAgentJob;
+ const job=pending?{status:'running',phase:runRequestPhase,started_at:runRequestStartedAt,phase_started_at:runRequestStartedAt,phase_elapsed_seconds:Math.max(0,Date.now()/1000-runRequestStartedAt),frame:runRequestFrame??Number($('frameNumber').value),total:runRequestCount??Number($('taskCount').value),max_rounds:runRequestMaxRounds,completed:0,shape_count:0}:latestAgentJob;
  const stopping=job.status==='stopping',running=job.status==='running'||stopping;
  const elapsed=job.started_at?Math.max(0,Math.floor((running?Date.now()/1000:(job.events?.at(-1)?.time||job.started_at))-job.started_at)):null;
   const recoverable=pendingRunResult(job),retryable=pendingRetry();
@@ -795,15 +796,17 @@ $('runButton').onclick=async()=>{
  if(runRequestStartedAt!==null)return;
  try{
    const requestedFrames=pendingRetry()?[...retryFrames]:null;
-   const startFrame=requestedFrames?.[0]??Number($('frameNumber').value),count=requestedFrames?.length??Number($('taskCount').value);
+   const startFrame=requestedFrames?.[0]??Number($('frameNumber').value),count=requestedFrames?.length??Number($('taskCount').value),maxRounds=Number($('reviewRounds').value);
   if(!Number.isInteger(startFrame)||startFrame<0||startFrame>=(topics[topic]?.count||0))throw Error('请选择有效的当前帧');
   if(!Number.isInteger(count)||count<1||count>100)throw Error('处理帧数须为 1～100');
-   runRequestStartedAt=Date.now()/1000;runRequestPhase='preflight';runRequestFrame=startFrame;runRequestCount=count;renderRunButton();scheduleRunStatusPoll(250);
+  if(!Number.isInteger(maxRounds)||maxRounds<1||maxRounds>12)throw Error('复查轮数须为 1～12');
+   runRequestStartedAt=Date.now()/1000;runRequestPhase='preflight';runRequestFrame=startFrame;runRequestCount=count;runRequestMaxRounds=maxRounds;renderRunButton();scheduleRunStatusPoll(250);
   await ensureAutoLabelReadiness(requestedFrames,startFrame,count);
   runRequestPhase='submitting';renderRunButton();
    const jobTopic=topic,jobFile=loadedDataPath;
   stopPlayback();
-    const data=await api('run',requestedFrames?{frames:requestedFrames,max_rounds:6,defer_agent_review:false}:{frame:startFrame,count,max_rounds:6,defer_agent_review:false});
+    const comparison=requestedFrames?requestedFrames.some(item=>truthFrameIndex.has(String(item))):truthFrameIndex.has(String(startFrame));
+    const data=await api('run',requestedFrames?{frames:requestedFrames,max_rounds:maxRounds,defer_agent_review:false,compare_with_truth:comparison}:{frame:startFrame,count,max_rounds:maxRounds,defer_agent_review:false,compare_with_truth:comparison});
    markRunResultHandled(data.task_id);latestAgentJob.result_available=false;
   if(data.description)currentDescription=data.description;
    for(const item of data.frames||[])if(Number.isInteger(item.frame))candidateCountIndex[String(item.frame)]=Math.max(0,Number(item.remaining)||0);

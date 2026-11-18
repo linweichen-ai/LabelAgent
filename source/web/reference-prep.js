@@ -15,6 +15,7 @@
   let draftPhaseChangedAt = 0;
   let draftProgressFailures = 0;
   let modelReadiness = null;
+  let modelReadinessRetryTimer = null;
   let registeredSources = [];
   let sourceSwitchBusy = false;
   let recommendationTargetId = '';
@@ -228,6 +229,22 @@
     return service.error || '不可用';
   }
 
+  function clearModelReadinessRetry() {
+    if (modelReadinessRetryTimer) clearTimeout(modelReadinessRetryTimer);
+    modelReadinessRetryTimer = null;
+  }
+
+  function scheduleModelReadinessRetry() {
+    clearModelReadinessRetry();
+    if (!dialog.open || draftBusy || modelReadiness?.ready) return;
+    const generation = preparationGeneration;
+    modelReadinessRetryTimer = setTimeout(() => {
+      modelReadinessRetryTimer = null;
+      if (!dialog.open || draftBusy || generation !== preparationGeneration) return;
+      readModelReadiness(generation).catch(() => scheduleModelReadinessRetry());
+    }, 5000);
+  }
+
   function renderReadiness(value) {
     modelReadiness = value;
     for (const [id, kind] of [['referenceSamReadiness', 'sam'], ['referenceVlmReadiness', 'vlm']]) {
@@ -242,15 +259,33 @@
     byId('referenceModelReadiness').classList.toggle('checking', !value);
     updateModelButtons();
     updateRecommendation();
+    if (value?.ready) clearModelReadinessRetry();
+    else if (value) scheduleModelReadinessRetry();
   }
 
   async function readModelReadiness(generation = preparationGeneration) {
-    if (generation === preparationGeneration) renderReadiness(null);
-    const response = await fetch('/api/model_readiness', {cache: 'no-store'});
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || '模型就绪检查失败');
-    if (generation === preparationGeneration) renderReadiness(data);
-    return data;
+    if (generation === preparationGeneration) {
+      if (!modelReadiness) renderReadiness(null);
+      else byId('referenceModelReadiness').classList.add('checking');
+    }
+    let lastError = null;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const response = await fetch('/api/model_readiness', {cache: 'no-store'});
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || '模型就绪检查失败');
+        if (data.ready || attempt === 2) {
+          if (generation === preparationGeneration) renderReadiness(data);
+          return data;
+        }
+        lastError = new Error(data.vlm?.error || data.sam?.error || '模型服务暂未就绪');
+      } catch (error) {
+        lastError = error;
+        if (attempt === 2) throw error;
+      }
+      await new Promise(resolve => setTimeout(resolve, attempt ? 750 : 250));
+    }
+    throw lastError || new Error('模型就绪检查失败');
   }
 
   function discoveryPrefetchKey(state = latestState, frameId = currentFrame()) {
@@ -812,6 +847,7 @@
   });
   dialog.addEventListener('cancel', event => { event.preventDefault(); if (!draftBusy) dialog.close(); });
   dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+  dialog.addEventListener('close', clearModelReadinessRetry);
   document.addEventListener('labelagent:frame-state', event => {
     const state = event.detail?.state;
     if (adjacentPrefetchSourceFrame !== null

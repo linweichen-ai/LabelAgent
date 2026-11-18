@@ -1,0 +1,29 @@
+{
+  "schema_version": "labelagent.workbench-resize-vlm-rounds-acceptance.v1",
+  "observed_at": "2026-11-18T15:24:00+08:00",
+  "base_url": "http://127.0.0.1:8765",
+  "dataset": "D:\\Apps\\LabelAgent\\work\\datasets\\Capture_20261103\\常熟0920_四相机与点云.mcap",
+  "topic": "/capture/camera_0/image",
+  "frame": 47,
+  "browser": {
+    "candidate_count": 11,
+    "candidate_visible_pixels": 1714950,
+    "splitter_dragged": true,
+    "overlay_layout_max_delta_px": 0,
+    "page_errors": [],
+    "passed": true,
+    "screenshot": "artifacts/round170-resize-vlm-rounds/frame-47-result-overlay.png"
+  },
+  "model_readiness": {
+    "vlm_ready": true,
+    "vlm_status": "ok",
+    "vlm_model": "labelagent-vlm8b",
+    "sam_ready": true
+  },
+  "review_rounds": {
+    "default": 6,
+    "ui_min": 1,
+    "ui_max": 12,
+    "early_stop_supported": true
+  }
+}

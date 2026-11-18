@@ -39,7 +39,9 @@ function inspectionCallState(call){return (call.status==='rejected'?(call.retryi
 function inspectionReviewAttempt(call){return call.review_attempt?` · 第 ${call.review_attempt} 次响应${call.review_attempt>1?'（协议修正）':''}`:''}
 function inspectionCallError(card,call){if(call.error)card.append(inspectionNode('p',call.error,'inspectionError'))}
 function updateCandidateSave(){
+ const comparison=window.workspaceMode==='auto'&&shapes[String(frame)]!==undefined&&Object.hasOwn(candidates,String(frame));
  $('saveCandidate').disabled=window.workspaceMode!=='auto'||!annotationMode||loading||!!playing||!$('frameImage').naturalWidth||['running','stopping'].includes(inspectionData.job?.status)||shapes[String(frame)]!==undefined||!Object.hasOwn(candidates,String(frame));
+ $('saveCandidate').textContent=comparison?'评测候选不可覆盖人工真值':'人工确认并保存为真值';
 }
 window.updateCandidateSave=updateCandidateSave;
 function renderInspection(force=false){

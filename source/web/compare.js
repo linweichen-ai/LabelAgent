@@ -8,7 +8,7 @@
   if (!dock || !stage || !baseCanvas || !frameImage) return;
 
   const controls = {
-    original: byId('compareOriginal'), candidate: byId('compareCandidate'), truth: byId('compareTruth'),
+    original: byId('compareOriginal'), candidate: byId('compareCandidate'), pending: byId('comparePending'), truth: byId('compareTruth'),
     selected: byId('compareSelectedOnly'), labels: byId('compareLabels'), fill: byId('compareFill'),
     boundaries: byId('compareBoundaries'), traversable: byId('compareTraversable'),
     candidateOpacity: byId('candidateOpacity'), truthOpacity: byId('truthOpacity'),
@@ -36,9 +36,10 @@
   }
 
   canvasLayer('Candidate', 'compareCandidateLayer', 2);
-  canvasLayer('Truth', 'compareTruthLayer', 3);
-  canvasLayer('Traversable', 'compareTraversableLayer', 4);
-  canvasLayer('Difference', 'compareDifferenceLayer', 5);
+  canvasLayer('Pending', 'comparePendingLayer', 3);
+  canvasLayer('Truth', 'compareTruthLayer', 4);
+  canvasLayer('Traversable', 'compareTraversableLayer', 5);
+  canvasLayer('Difference', 'compareDifferenceLayer', 6);
 
   function syncCanvas(canvas) {
     const width = baseCanvas.width || frameImage.naturalWidth;
@@ -83,6 +84,7 @@
   }
 
   function colorFor(shape, source) {
+    if (source === 'pending') return '#f59e0b';
     const label = String(shape?.label || '').toLowerCase();
     if (label === 'floor' || label === '地面') return '#3b82f6';
     if (label === 'slope' || label === 'ramp' || label === '斜坡') return '#f59e0b';
@@ -107,12 +109,15 @@
       if (controls.boundaries.checked) {
         context.strokeStyle = color;
         context.lineWidth = Math.max(2, canvas.width / 900 * boundary);
+        context.setLineDash(source === 'pending' ? [Math.max(8, canvas.width / 150), Math.max(5, canvas.width / 240)] : []);
         context.stroke();
+        context.setLineDash([]);
       }
       if (controls.labels.checked) {
         const box = bounds(shape);
         if (!box) return;
-        const text = `${index + 1} ${shape.label || 'unknown'}`;
+        const prefix = source === 'pending' ? '待复核 ' : '';
+        const text = `${prefix}${index + 1} ${shape.label || 'unknown'}`;
         const fontSize = Math.max(14, canvas.width / 95);
         context.font = `700 ${fontSize}px Arial, sans-serif`;
         context.lineWidth = Math.max(3, fontSize / 4);
@@ -189,11 +194,16 @@
     divider.hidden = !['split', 'wipe'].includes(mode);
     divider.style.left = `${position}%`;
     const candidate = canvases.Candidate;
+    const pending = canvases.Pending;
     candidate.style.clipPath = '';
+    pending.style.clipPath = '';
     if (mode === 'split') candidate.style.clipPath = 'inset(0 0 0 50%)';
+    if (mode === 'split') pending.style.clipPath = 'inset(0 0 0 50%)';
     if (mode === 'wipe') candidate.style.clipPath = `inset(0 ${100 - position}% 0 0)`;
+    if (mode === 'wipe') pending.style.clipPath = `inset(0 ${100 - position}% 0 0)`;
     const standard = mode === 'overlay';
     setVisibility('Candidate', (standard || mode === 'split' || mode === 'wipe') && controls.candidate.checked);
+    setVisibility('Pending', (standard || mode === 'split' || mode === 'wipe') && controls.pending.checked);
     setVisibility('Truth', standard && controls.truth.checked);
     setVisibility('Traversable', standard && controls.traversable.checked);
     setVisibility('Difference', mode === 'difference' && hasTruth);
@@ -224,7 +234,7 @@
     const storedAnnotation = state.truth?.[String(frame)] || [];
     const truthVerified = state.truth_review_status?.[String(frame)]?.reusable_as_reference === true;
     const truth = truthVerified ? storedAnnotation : [];
-    const legacyCount = truthVerified ? 0 : storedAnnotation.length;
+    const pending = truthVerified ? [] : storedAnnotation;
     const candidates = controls.selected.checked && selected?.frame === frame
       ? [selected.shape] : allCandidates;
     const hasTruth = truth.length > 0;
@@ -236,22 +246,23 @@
       modeButtons.forEach(button => button.classList.toggle('selected', button.dataset.compareMode === mode));
     }
     drawShapes(canvases.Candidate, candidates, 'candidate', Number(controls.candidateOpacity.value) / 100);
+    drawShapes(canvases.Pending, pending, 'pending', Number(controls.candidateOpacity.value) / 100);
     drawShapes(canvases.Truth, truth, 'truth', Number(controls.truthOpacity.value) / 100);
-    drawTraversable(canvases.Traversable, traversableShapes(allCandidates, truth));
+    drawTraversable(canvases.Traversable, traversableShapes(allCandidates, pending.length ? pending : truth));
     if (hasTruth && mode === 'difference') drawDifference(canvases.Difference, candidates, truth);
     applyMode(hasTruth);
-    if (!hasTruth && legacyCount) {
-      status.textContent = `第 ${frame} 帧：${allCandidates.length} 个机器候选，另有 ${legacyCount} 个历史标注待人工复核；历史标注不作为人工真值参与差异或质量判断。`;
+    if (!hasTruth && pending.length) {
+      status.textContent = `第 ${frame} 帧：${allCandidates.length} 个机器候选，另有 ${pending.length} 个待人工复核标注，已用黄色虚线叠加显示；它们不作为人工真值参与差异或质量判断。`;
     } else if (!hasTruth) {
       status.textContent = `第 ${frame} 帧：${allCandidates.length} 个机器候选，暂无人工像素真值；差异查看和质量指标不可用。`;
     } else if (mode === 'difference') {
       status.textContent = '差异可视化：绿色为重合区域、红色为候选独有、蓝色为真值独有；该图不等同于 IoU 或质量结论。';
     } else if (mode === 'split') {
-      status.textContent = `左右对比：左侧原图，右侧 ${allCandidates.length} 个机器候选；人工真值 ${truth.length} 个。`;
+      status.textContent = `左右对比：左侧原图，右侧 ${allCandidates.length} 个机器候选、${pending.length} 个待复核标注；人工真值 ${truth.length} 个。`;
     } else if (mode === 'wipe') {
       status.textContent = `拖动对比：分割线 ${controls.wipe.value}%，可移动滑杆检查候选边界。`;
     } else {
-      status.textContent = `普通叠加：机器候选 ${allCandidates.length} 个，人工真值 ${truth.length} 个。floor 与 slope 分色显示。`;
+      status.textContent = `普通叠加：机器候选 ${allCandidates.length} 个，待人工复核标注 ${pending.length} 个，人工真值 ${truth.length} 个。floor 与 slope 分色显示。`;
     }
     updateOutputs();
   }
@@ -321,6 +332,15 @@
   });
   frameImage.addEventListener('load', () => window.setTimeout(render, 40));
   window.addEventListener('resize', () => window.setTimeout(render, 40));
+  // The lower workbench panel can be resized without changing the browser
+  // window. Keep every comparison canvas locked to the source-image canvas
+  // when that happens; otherwise an old, smaller overlay can float above the
+  // newly resized image.
+  const scheduleLayoutRender = () => window.requestAnimationFrame(() => render());
+  new ResizeObserver(scheduleLayoutRender).observe(stage);
+  new MutationObserver(scheduleLayoutRender).observe(baseCanvas, {
+    attributes: true, attributeFilter: ['style', 'width', 'height'],
+  });
   new MutationObserver(render).observe(document.body, { attributes: true, attributeFilter: ['data-workspace'] });
 
   if (localStorage.getItem('labelagentCompareCompact') === '0') {

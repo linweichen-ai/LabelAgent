@@ -2281,6 +2281,35 @@ class ServerTests(unittest.TestCase):
             finally:
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work
 
+    def test_truth_comparison_run_keeps_truth_and_stores_separate_candidate(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            original_target_truth = [shape(7)]
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                "truth": {"0": [shape()], "1": copy.deepcopy(original_target_truth)},
+                "reference_frames": {"camera0": [0]}, "config": {},
+                "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            description = {"description": "a only", "prompts": [{"label": "a", "text": "a"}],
+                           "reference_signature": server.reference_signature(0)}
+            inferred = {"shapes": [shape(9)], "candidates_added": 1,
+                        "applied": [], "review_queue": [],
+                        "agent": {"stop_reason": "done", "rounds": 1}}
+            try:
+                with patch.object(server, "run", return_value=inferred):
+                    response = server.app.test_client().post("/api/run", json={
+                        "frame": 1, "count": 1, "compare_with_truth": True,
+                        "description": description})
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertTrue(response.json["compare_with_truth"])
+                self.assertEqual(response.json["frames"][0]["frame"], 1)
+                self.assertEqual(server.state["truth"]["1"], original_target_truth)
+                self.assertEqual(server.state["candidates"]["1"][0]["id"], 9)
+                self.assertFalse(server.state["agent_runs"]["1"].get("human_truth", False))
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
     def test_run_summary_is_bounded_scoped_and_recoverable_after_idle_restart(self):
         old_state, old_status, old_work = server.state, server.run_status, server.WORK
         with tempfile.TemporaryDirectory() as directory:

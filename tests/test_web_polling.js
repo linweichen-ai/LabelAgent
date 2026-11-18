@@ -643,9 +643,18 @@ test('运行前弹窗展示参考描述并提供一键恢复入口', () => {
 
 test('完成与失败帧重试均复用轻量帧计数且不回读完整状态', () => {
   const handler = section(source('app.js'), "$('runButton').onclick", 'let runStatusPollTimer');
-  assert.ok(handler.includes('{frames:requestedFrames,max_rounds:6,defer_agent_review:false}'));
+  assert.ok(handler.includes('{frames:requestedFrames,max_rounds:maxRounds,defer_agent_review:false,compare_with_truth:comparison}'));
   assert.ok(handler.includes('candidateCountIndex[String(item.frame)]'));
   assert.equal(handler.includes("fetch('/api/state')"), false);
+});
+
+test('主推理复查轮数可调且默认六轮', () => {
+  const html = source('index.html');
+  const app = source('app.js');
+  assert.match(html, /id="reviewRounds"[^>]*min="1"[^>]*max="12"[^>]*value="6"/);
+  assert.match(app, /复查轮数须为 1～12/);
+  assert.match(app, /max_rounds:maxRounds/);
+  assert.match(app, /max_rounds:runRequestMaxRounds/);
 });
 
 test('主自动标注仅在服务器完成 GPT 复查后宣告完成', () => {
@@ -783,4 +792,42 @@ test('按需帧标注严格绑定文件相机帧并只替换目标帧', () => {
   assert.throws(() => h.run(`applyCompactFrameState({...payload,topic:'/camera1'},2)`), /不一致/);
   assert.throws(() => h.run(`applyCompactFrameState({...payload,path:'/data/b.mcap'},2)`), /不一致/);
   assert.throws(() => h.run(`applyCompactFrameState({...payload,frame:3},2)`), /不一致/);
+});
+
+test('评测模式在原图上优先显示机器候选且禁止覆盖人工真值', () => {
+  const h = harness();
+  h.run(`let frame=5,shapes={'5':[{'id':'truth'}]},candidates={'5':[{'id':'candidate'}]},
+    manualDrafts={},autoDrafts={},truthReviewStatus={'5':{reusable_as_reference:true}};`);
+  h.run(section(source('app.js'), 'function selectedShapes', 'const labelVisuals'));
+  assert.equal(h.run('selectedShapes()[0].id'), 'candidate');
+  assert.equal(h.run('frameAnnotationState(5)'), 'comparison_candidate');
+  const app = source('app.js');
+  assert.match(app, /compare_with_truth:comparison/);
+  assert.match(app, /评测候选；人工真值已存在，禁止用候选覆盖/);
+});
+
+test('未通过当前人工门禁的已保存标注仍以待复核图层显示', () => {
+  const html = source('index.html');
+  const compare = source('compare.js');
+  assert.match(html, /id="comparePending"[^>]*checked> 待人工复核标注/);
+  assert.match(html, /legendPending[^<]*<\/i>待人工复核标注/);
+  assert.match(compare, /canvasLayer\('Pending'/);
+  assert.match(compare, /const pending = truthVerified \? \[\] : storedAnnotation/);
+  assert.match(compare, /drawShapes\(canvases\.Pending, pending, 'pending'/);
+  assert.match(compare, /待人工复核标注，已用黄色虚线叠加显示/);
+});
+
+test('拖动工作台高度后所有结果图层会重新贴合原图', () => {
+  const compare = source('compare.js');
+  assert.match(compare, /new ResizeObserver\(scheduleLayoutRender\)\.observe\(stage\)/);
+  assert.match(compare, /new MutationObserver\(scheduleLayoutRender\)\.observe\(baseCanvas/);
+  assert.match(compare, /attributeFilter: \['style', 'width', 'height'\]/);
+});
+
+test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () => {
+  const prep = source('reference-prep.js');
+  assert.match(prep, /for \(let attempt = 0; attempt < 3; attempt \+= 1\)/);
+  assert.match(prep, /setTimeout\(resolve, attempt \? 750 : 250\)/);
+  assert.match(prep, /readModelReadiness\(generation\)\.catch\(\(\) => scheduleModelReadinessRetry\(\)\)/);
+  assert.match(prep, /dialog\.addEventListener\('close', clearModelReadinessRetry\)/);
 });

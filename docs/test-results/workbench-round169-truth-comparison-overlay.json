@@ -1,0 +1,31 @@
+{
+  "schema_version": "labelagent.truth-comparison-overlay-acceptance.v1",
+  "observed_at": "2026-11-18T15:18:00+08:00",
+  "base_url": "http://127.0.0.1:8765",
+  "dataset": "D:\\Apps\\LabelAgent\\work\\datasets\\CVAT_Task3_20261028\\CVAT_Task3_original_annotations.mcap",
+  "topic": "/CVAT/Task3/images",
+  "frame": 100,
+  "run": {
+    "status": "completed",
+    "agent_review_status": "complete",
+    "candidate_count": 12,
+    "candidate_sha256": "be32a0d01182e41c6479aa0d911ddb2fa1ff551037a6367becc120764bd1aeff"
+  },
+  "saved_annotation_isolation": {
+    "saved_annotation_count": 12,
+    "saved_annotation_sha256": "f455118749ba306a9eb1988a4d03af7c11a4584888ff7a9eda76241be583765b",
+    "current_human_gate_verified": false,
+    "human_review_required": true,
+    "human_truth": false,
+    "approved_for_training": false
+  },
+  "browser": {
+    "workspace": "auto",
+    "candidate_canvas_hidden": false,
+    "candidate_canvas_width": 640,
+    "candidate_visible_pixels": 264211,
+    "page_errors": [],
+    "passed": true,
+    "screenshot": "artifacts/round169-truth-comparison-overlay/frame-100-result-overlay.png"
+  }
+}

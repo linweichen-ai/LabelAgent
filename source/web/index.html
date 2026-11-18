@@ -117,6 +117,7 @@
           <div class="compareLayers" aria-label="图层显示">
             <label><input id="compareOriginal" type="checkbox" checked> 原图</label>
             <label><input id="compareCandidate" type="checkbox" checked> 机器候选</label>
+            <label><input id="comparePending" type="checkbox" checked> 待人工复核标注</label>
             <label><input id="compareTruth" type="checkbox" checked> 人工真值</label>
             <label><input id="compareSelectedOnly" type="checkbox"> 只看选中</label>
             <label><input id="compareLabels" type="checkbox" checked> 类别文字</label>
@@ -137,6 +138,7 @@
           </div>
           <div class="compareLegend" aria-label="图层颜色说明">
             <span><i class="legendCandidate"></i>机器候选</span>
+            <span><i class="legendPending"></i>待人工复核标注</span>
             <span><i class="legendTruth"></i>人工真值</span>
             <span><i class="legendFloor"></i>floor</span>
             <span><i class="legendSlope"></i>slope</span>
@@ -259,6 +261,7 @@
             <div class="inspectionTitle"><strong>自动标注过程</strong><span id="inspectionContext"></span></div>
             <div class="inspectionActions">
               <label>本次处理 <input id="taskCount" type="number" min="1" max="100" value="1" title="从当前帧开始处理的帧数，首次演示建议只处理 1 帧"> 帧</label>
+              <label>最多复查 <input id="reviewRounds" type="number" min="1" max="12" value="6" title="每帧 VLM 与 Agent 最多复查轮数；结果稳定时会提前停止，展示建议 2～3，日常建议 4～6"> 轮</label>
               <button id="describeButton" type="button">生成真值描述</button>
               <button id="prepareReference" type="button">参考帧准备</button>
               <div class="runActions">
@@ -649,6 +652,6 @@
   </div>
 </div>
 <div id="toast" role="status"></div>
-<script src="/pointcloud.js?v=64"></script><script src="/app.js?v=164"></script><script src="/inspection.js?v=105"></script><script src="/guide.js?v=113"></script><script src="/review.js?v=67"></script><script src="/batch-review.js?v=65"></script><script src="/compare.js?v=65"></script><script src="/human-review.js?v=97"></script><script src="/reference-prep.js?v=163"></script><script src="/review-packet-core.js?v=163"></script><script src="/review-packet.js?v=163"></script>
+<script src="/pointcloud.js?v=64"></script><script src="/app.js?v=166"></script><script src="/inspection.js?v=106"></script><script src="/guide.js?v=113"></script><script src="/review.js?v=67"></script><script src="/batch-review.js?v=65"></script><script src="/compare.js?v=67"></script><script src="/human-review.js?v=97"></script><script src="/reference-prep.js?v=164"></script><script src="/review-packet-core.js?v=163"></script><script src="/review-packet.js?v=163"></script>
 </body>
 </html>

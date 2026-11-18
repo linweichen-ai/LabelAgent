@@ -4675,6 +4675,7 @@ def run_workflow():
             raise ValueError("请先保存参考帧真值")
         max_rounds = requested_review_rounds(body)
         defer_agent_review = body.get("defer_agent_review") is True
+        compare_with_truth = body.get("compare_with_truth") is True
         results = []
         requested_frames = body.get("frames")
         if requested_frames is not None:
@@ -4688,7 +4689,7 @@ def run_workflow():
                 raise ValueError("重试帧号超出当前图像源范围")
             targets = [target for target in requested_frames
                        if target not in topic_references
-                       and str(target) not in state["truth"]]
+                       and (compare_with_truth or str(target) not in state["truth"])]
             requested_range = "、".join(map(str, requested_frames))
         else:
             index = int(body["frame"])
@@ -4700,13 +4701,14 @@ def run_workflow():
             last = min(index + count, topic_count)
             targets = [target for target in range(index, last)
                        if target not in topic_references
-                       and str(target) not in state["truth"]]
+                       and (compare_with_truth or str(target) not in state["truth"])]
             requested_frames = list(range(index, last))
             requested_range = f"{index}～{last - 1}"
         if not targets:
             raise ValueError(
-                f"所选范围（帧 {requested_range}）没有待处理帧。参考帧和已保存真值会跳过；"
-                "请增大处理帧数，或选择包含未标注帧的范围。"
+                f"所选范围（帧 {requested_range}）没有待处理帧。参考帧始终会跳过；"
+                + ("请选择其他帧。" if compare_with_truth else
+                   "已保存真值默认不会覆盖；请增大处理帧数，或在评测模式生成独立候选。")
             )
         allowed_labels = selected_auto_labels(reference)
         description = body.get("description")
@@ -4728,6 +4730,7 @@ def run_workflow():
                    "total": len(targets), "targets": targets,
                    "requested_frames": requested_frames,
                    "agent_review_deferred": defer_agent_review,
+                   "compare_with_truth": compare_with_truth,
                   "message": ("初始机器候选已保存；Agent 将在后台继续精修，请人工复核后保存真值"
                               if defer_agent_review else
                               "候选已保存到本地；请在工作台逐帧复核并保存真值")}
@@ -4744,6 +4747,8 @@ def run_workflow():
                       for target in targets}
         runs = {str(target): copy.deepcopy(state.get("agent_runs", {}).get(str(target)))
                 for target in targets}
+        target_truth = {str(target): copy.deepcopy(state.get("truth", {}).get(str(target)))
+                        for target in targets}
         failed_frames = []
         with run_status_lock:
             _update_run_status_locked(status="running", frame=None, completed=0, total=len(targets),
@@ -4895,7 +4900,7 @@ def run_workflow():
                             or state.get("auto_labels") != auto_labels
                             or state.get("reference_frames", {}) != references
                             or state.get("truth", {}).get(str(reference)) != reference_truth
-                            or key in state.get("truth", {})
+                            or state.get("truth", {}).get(key) != target_truth[key]
                             or state.get("candidates", {}).get(key) != candidates[key]
                             or state.get("agent_runs", {}).get(key) != runs[key]
                             or reference_signature(reference) != reference_signature_snapshot):

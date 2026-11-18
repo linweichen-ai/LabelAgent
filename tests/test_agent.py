@@ -5,6 +5,7 @@ import copy
 import json
 import tempfile
 import threading
+import time
 import unittest
 import cv2
 import numpy as np
@@ -3273,9 +3274,118 @@ class ServerTests(unittest.TestCase):
             response = server.app.test_client().post("/api/segment_points", json={
                 "frame": 1, "points": [{"x": 1, "y": 1, "label": 1}]})
             self.assertEqual(response.status_code, 503, response.json)
-            self.assertIn("请勿重复点击", response.json["error"])
+            self.assertIn("不同的点提示", response.json["error"])
         finally:
             server.point_segment_lock.release()
+            server.state = old_state
+
+    def test_point_segment_coalesces_only_identical_inflight_requests(self):
+        old_state = server.state
+        server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+            "truth": {}, "reference_frames": {}, "config": {}, "candidates": {},
+            "agent_runs": {}}
+        entered, release = threading.Event(), threading.Event()
+        payload = {"points": [[1, 1], [2, 1], [2, 2]], "holes": [],
+                   "parts": [{"points": [[1, 1], [2, 1], [2, 2]], "holes": []}]}
+
+        class BlockingResponse(io.BytesIO):
+            def __enter__(self):
+                entered.set()
+                if not release.wait(5):
+                    raise RuntimeError("测试未释放 SAM 响应")
+                return self
+
+            def __exit__(self, *args):
+                self.close()
+
+        responses = []
+        errors = []
+
+        def post_point():
+            try:
+                with server.app.test_client() as client:
+                    responses.append(client.post("/api/segment_points", json={
+                        "frame": 1,
+                        "points": [{"x": 1, "y": 1, "label": 1}],
+                    }))
+            except BaseException as error:
+                errors.append(error)
+
+        try:
+            with patch.object(server.urllib.request, "urlopen",
+                              return_value=BlockingResponse(
+                                  json.dumps(payload).encode())) as opened:
+                first = threading.Thread(target=post_point)
+                second = threading.Thread(target=post_point)
+                first.start()
+                self.assertTrue(entered.wait(5))
+                second.start()
+                time.sleep(0.05)
+                release.set()
+                first.join(5)
+                second.join(5)
+            self.assertFalse(errors)
+            self.assertEqual(len(responses), 2)
+            self.assertTrue(all(item.status_code == 200 for item in responses))
+            opened.assert_called_once()
+            roles = {item.json["request_coalescing"]["role"] for item in responses}
+            self.assertEqual(roles, {"owner", "coalesced_waiter"})
+            self.assertTrue(any(item.json["request_coalescing"]["coalesced"]
+                                for item in responses))
+            self.assertEqual(responses[0].json["parts"], responses[1].json["parts"])
+            self.assertEqual(server.point_segment_flights, {})
+        finally:
+            release.set()
+            server.state = old_state
+
+    def test_point_segment_different_inflight_request_stays_busy(self):
+        old_state = server.state
+        server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+            "truth": {}, "reference_frames": {}, "config": {}, "candidates": {},
+            "agent_runs": {}}
+        entered, release = threading.Event(), threading.Event()
+        payload = {"points": [[1, 1], [2, 1], [2, 2]], "holes": [],
+                   "parts": [{"points": [[1, 1], [2, 1], [2, 2]], "holes": []}]}
+
+        class BlockingResponse(io.BytesIO):
+            def __enter__(self):
+                entered.set()
+                if not release.wait(5):
+                    raise RuntimeError("测试未释放 SAM 响应")
+                return self
+
+            def __exit__(self, *args):
+                self.close()
+
+        first_response = []
+
+        def post_first():
+            with server.app.test_client() as client:
+                first_response.append(client.post("/api/segment_points", json={
+                    "frame": 1, "points": [{"x": 1, "y": 1, "label": 1}]}))
+
+        try:
+            with patch.object(server.urllib.request, "urlopen",
+                              return_value=BlockingResponse(
+                                  json.dumps(payload).encode())) as opened:
+                first = threading.Thread(target=post_first)
+                first.start()
+                self.assertTrue(entered.wait(5))
+                with server.app.test_client() as client:
+                    different = client.post("/api/segment_points", json={
+                        "frame": 1,
+                        "points": [{"x": 2, "y": 1, "label": 1}],
+                    })
+                self.assertEqual(different.status_code, 503, different.json)
+                self.assertIn("已有推理任务", different.json["error"])
+                release.set()
+                first.join(5)
+            self.assertEqual(len(first_response), 1)
+            self.assertEqual(first_response[0].status_code, 200, first_response[0].json)
+            opened.assert_called_once()
+            self.assertEqual(server.point_segment_flights, {})
+        finally:
+            release.set()
             server.state = old_state
 
     def test_reference_draft_releases_lock_and_rejects_stale_commits(self):

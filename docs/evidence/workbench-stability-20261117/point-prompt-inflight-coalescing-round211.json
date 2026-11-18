@@ -1,0 +1,115 @@
+{
+  "schema_version": "labelagent.workbench-stability.round211.v1",
+  "round": 211,
+  "date": "2026-11-19",
+  "objective": "Coalesce only exact identical in-flight point-prompt requests without persistent caching or cross-request result mixing.",
+  "status": "implemented_tested_and_production_deployed",
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "model_weights_changed": false,
+    "oss_written": false,
+    "persistent_response_cache_added": false
+  },
+  "request_identity": [
+    "schema_version",
+    "service_url",
+    "topic",
+    "frame",
+    "image_sha256",
+    "exact_points"
+  ],
+  "behavior": {
+    "identical_inflight": "one owner computes and all exact waiters receive deep-copied results",
+    "different_request_inflight": "HTTP 503 busy rejection",
+    "flight_lifetime": "removed immediately after owner completion or failure",
+    "reference_frame_guard_preserved": true,
+    "global_auto_run_guard_preserved": true
+  },
+  "tests": {
+    "targeted_concurrency_tests": "5 passed",
+    "full_python": {
+      "passed": 979,
+      "failed": 0,
+      "elapsed_seconds": 7.12,
+      "environment": "PYTHONUTF8=1"
+    },
+    "production_compile": "passed",
+    "git_diff_check": "passed"
+  },
+  "isolated_http_acceptance": {
+    "port": 8776,
+    "service_stopped_after_test": true,
+    "identical_concurrency": 6,
+    "http_200": 6,
+    "owner_count": 1,
+    "waiter_count": 5,
+    "unique_request_hashes": 1,
+    "unique_core_hashes": 1,
+    "elapsed_seconds_min": 1.2344,
+    "elapsed_seconds_max": 1.2357,
+    "request_sha256": "ac9566ac7a6aed6d94590bc8d11b626933ca5a2f4d229e8c00f768dd9e91771f",
+    "core_sha256": "03948eb7cc5571d03423540524c759f1f3407d7d3255da3e98971d1dabb7b4e6",
+    "different_points": {
+      "statuses_sorted": [200, 503],
+      "busy_rejection_seconds": 0.084,
+      "accepted_one_rejected_one": true
+    },
+    "local_artifacts": {
+      "result_json_sha256": "3983d341ca5c8deb52a3c99307c684010d152ebf48ac3ab47b1504d8e13b56e0",
+      "different_result_json_sha256": "cb2b716f5d1160bbf7878c0b32af9dc17a4cf855494cb1af29203c78feed302a"
+    }
+  },
+  "deployment": {
+    "production_root": "D:\\Apps\\LabelAgent",
+    "backup_directory": "D:\\Apps\\LabelAgent\\.local\\backups\\point-coalescing-round211-20261119-034859",
+    "backup_sha256": {
+      "server.py": "adb472f99dff45b43601d513534bff79e3c5bed89acb93fa954a78a657a5305d",
+      "state.json": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+      "file_sessions.json": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+      "remote_processes.json": "6d79b0c6b2ba4c423cee0417694a3a2465526e93eb2f920830d7d51e2013472f"
+    },
+    "workbench_pid_before": 23672,
+    "workbench_pid_after": 67008,
+    "tunnel_4090_pid_unchanged": 60456,
+    "sam_5090_tunnel_pid_unchanged": 8656,
+    "sam_url": "http://127.0.0.1:38766",
+    "vlm_url": "http://127.0.0.1:28868/v1",
+    "worktree_server_sha256": "5ab3b68c35c797388308c74e09acb466b7687bebb312d37a4c66299041287f23",
+    "production_server_sha256": "5ab3b68c35c797388308c74e09acb466b7687bebb312d37a4c66299041287f23"
+  },
+  "production_acceptance": {
+    "dataset": "SFL_CPD15Y_20261111/batchA_0920_000_clean_review.mcap",
+    "topic": "/capture/camera_1/image",
+    "frame": 56,
+    "point": {"x": 960, "y": 760, "label": 1},
+    "identical_concurrency": 3,
+    "http_200": 3,
+    "owner_count": 1,
+    "waiter_count": 2,
+    "unique_request_hashes": 1,
+    "unique_core_hashes": 1,
+    "elapsed_seconds_each": 0.907,
+    "parts_each": 1,
+    "request_sha256": "a675d5f07ada68636ede5909f4333ad0065f7084e7dda574cd273558b696afb1",
+    "core_sha256": "27381103df96827416f68d000470fbb299daf92570921a7f6ac4eea993bbd4c8"
+  },
+  "formal_state_integrity": {
+    "state_sha256_before": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "state_sha256_after": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "file_sessions_sha256_before": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "file_sessions_sha256_after": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "unchanged": true
+  },
+  "service_health_after": {
+    "workbench_8765": 200,
+    "sam_4090_28766": 200,
+    "sam_5090_38766": 200,
+    "vlm_4090_28868": 200
+  },
+  "changed_files": {
+    "source/agent/server.py": "5ab3b68c35c797388308c74e09acb466b7687bebb312d37a4c66299041287f23",
+    "tests/test_agent.py": "c1a83b806db9b4e8bcaf1507f020b5d3d7ebedb6f7fbadb19d2471a0fbc63c5a"
+  }
+}

@@ -177,6 +177,8 @@ def run_claimed(handler):
             run_claim_lock.release()
     return invoke
 point_segment_lock = threading.Lock()
+point_segment_flights_lock = threading.Lock()
+point_segment_flights = {}
 POINT_SEGMENT_TIMEOUT_SECONDS = 180
 REFERENCE_DISCOVERY_RETRY_ERRORS = (
     "大模型未返回有效 JSON",
@@ -1951,10 +1953,41 @@ def get_downstream_projection(index):
     })
 
 
+class _PointSegmentFlight:
+    """One exact point request shared only while its owner is still running."""
+
+    def __init__(self):
+        self.event = threading.Event()
+        self.payload = None
+        self.error = None
+
+
+def _point_segment_result(image, points, service_url):
+    """Run one point request under the existing global and SAM safety gates."""
+    if not point_segment_lock.acquire(blocking=False):
+        raise RuntimeError("已有不同的点提示 SAM 请求正在计算，请稍后再试")
+    payload = json.dumps({"image": base64.b64encode(image).decode("ascii"),
+                          "points": points}).encode()
+    service_request = urllib.request.Request(service_url + "/segment_points", data=payload,
+        headers={"Content-Type": "application/json"})
+    started = time.monotonic()
+    try:
+        with urllib.request.urlopen(
+                service_request, timeout=POINT_SEGMENT_TIMEOUT_SECONDS) as response:
+            result = json.load(response)
+        result["inference_elapsed_seconds"] = round(time.monotonic() - started, 2)
+        return result
+    except Exception as error:
+        raise RuntimeError(f"SAM 3 服务不可用（{service_url}）：{error}") from error
+    finally:
+        point_segment_lock.release()
+
+
 @app.post("/api/segment_points")
-@run_claimed
 def get_point_segment():
-    body = request.get_json()
+    body = request.get_json() or {}
+    if run_claim_lock.locked() and ("frame" not in body or "points" not in body):
+        raise RuntimeError("已有推理任务正在运行，请稍后重试")
     with lock:
         if state["video"] is None or not state["topic"]:
             raise ValueError("请先加载图像消息")
@@ -1962,24 +1995,58 @@ def get_point_segment():
         if index in state.get("reference_frames", {}).get(state["topic"], []):
             raise ValueError("参考帧只能人工调整，不能调用 SAM 生成或修改")
         image = frame_image(index)
+        topic = state["topic"]
         service_url = (state["config"].get("sam3_url") or os.environ.get("SAM3_URL")
                        or "http://127.0.0.1:8766").rstrip("/")
-    if not point_segment_lock.acquire(blocking=False):
-        raise RuntimeError("已有点提示 SAM 请求正在计算，请勿重复点击")
-    payload = json.dumps({"image": base64.b64encode(image).decode("ascii"),
-                          "points": body["points"]}).encode()
-    service_request = urllib.request.Request(service_url + "/segment_points", data=payload,
-        headers={"Content-Type": "application/json"})
-    started = time.monotonic()
-    try:
-        with urllib.request.urlopen(service_request, timeout=POINT_SEGMENT_TIMEOUT_SECONDS) as response:
-            result = json.load(response)
-        result["inference_elapsed_seconds"] = round(time.monotonic() - started, 2)
+    points = body["points"]
+    request_key = _sha256_json({
+        "schema_version": "labelagent.point-segment-flight.v1",
+        "service_url": service_url,
+        "topic": topic,
+        "frame": index,
+        "image_sha256": hashlib.sha256(image).hexdigest(),
+        "points": points,
+    })
+    with point_segment_flights_lock:
+        flight = point_segment_flights.get(request_key)
+        owner = flight is None
+        if owner:
+            flight = _PointSegmentFlight()
+            point_segment_flights[request_key] = flight
+    if not owner:
+        wait_started = time.monotonic()
+        if not flight.event.wait(POINT_SEGMENT_TIMEOUT_SECONDS + 5):
+            raise RuntimeError("等待相同点提示 SAM 请求超时，请稍后重试")
+        if flight.error is not None:
+            raise RuntimeError(flight.error)
+        if flight.payload is None:
+            raise RuntimeError("相同点提示 SAM 请求结束但没有返回结果")
+        result = copy.deepcopy(flight.payload)
+        result["request_coalescing"] = {
+            "role": "coalesced_waiter", "coalesced": True,
+            "wait_seconds": round(time.monotonic() - wait_started, 2),
+            "request_sha256": request_key,
+        }
         return jsonify(result)
-    except Exception as error:
-        raise RuntimeError(f"SAM 3 服务不可用（{service_url}）：{error}") from error
+
+    compute = run_claimed(lambda: _point_segment_result(
+        image, points, service_url))
+    try:
+        result = compute()
+        flight.payload = copy.deepcopy(result)
+        result["request_coalescing"] = {
+            "role": "owner", "coalesced": False, "wait_seconds": 0.0,
+            "request_sha256": request_key,
+        }
+        return jsonify(result)
+    except BaseException as error:
+        flight.error = str(error)[:500]
+        raise
     finally:
-        point_segment_lock.release()
+        flight.event.set()
+        with point_segment_flights_lock:
+            if point_segment_flights.get(request_key) is flight:
+                point_segment_flights.pop(request_key, None)
 
 @app.post("/api/edit_region")
 def edit_region():

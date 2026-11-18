@@ -2735,7 +2735,8 @@ class ServerTests(unittest.TestCase):
                     worker.start()
                     self.assertTrue(entered.wait(2))
                     task_event = server.run_stop_event
-                    self.assertTrue(server.app.test_client().post("/api/run/stop").json["stopped"])
+                    self.assertTrue(server.app.test_client().post("/api/run/stop", json={
+                        "expected_task_id": server.run_status["task_id"]}).json["stopped"])
                     conflict = server.app.test_client().post("/api/reference_draft", json={
                         "frame": 2, "labels": ["a"]})
                     self.assertEqual(conflict.status_code, 503)
@@ -2781,7 +2782,8 @@ class ServerTests(unittest.TestCase):
                     worker.start()
                     self.assertTrue(entered.wait(2))
                     self.assertEqual(server.app.test_client().get("/api/state").status_code, 200)
-                    self.assertTrue(server.app.test_client().post("/api/run/stop").json["stopped"])
+                    self.assertTrue(server.app.test_client().post("/api/run/stop", json={
+                        "expected_task_id": server.run_status["task_id"]}).json["stopped"])
                     release.set()
                     worker.join(4)
                 self.assertFalse(worker.is_alive())
@@ -3196,7 +3198,8 @@ class ServerTests(unittest.TestCase):
                                 elif change == "reference_frames":
                                     server.state[change]["camera0"] = [1]
                             if change == "stop":
-                                self.assertTrue(server.app.test_client().post("/api/run/stop").json["stopped"])
+                                self.assertTrue(server.app.test_client().post("/api/run/stop", json={
+                                    "expected_task_id": server.run_status["task_id"]}).json["stopped"])
                             before_candidates = copy.deepcopy(server.state["candidates"])
                             before_runs = copy.deepcopy(server.state["agent_runs"])
                             release.set()
@@ -3422,7 +3425,8 @@ class ServerTests(unittest.TestCase):
             "truth": lambda: server.state["truth"].update({"1": [shape(label="person")]}),
             "reference": lambda: server.state["reference_frames"].update(camera0=[1]),
             "audit_version": lambda: setattr(server, "_CANDIDATE_AUDIT_LOADED_CODE_SHA256", "changed"),
-            "cancel": lambda: server.app.test_client().post("/api/run/stop"),
+            "cancel": lambda: server.app.test_client().post("/api/run/stop", json={
+                "expected_task_id": server.run_status["task_id"]}),
         }
         old_state, old_status, old_work = server.state, server.run_status, server.WORK
         old_stop = server.run_stop_event
@@ -3888,8 +3892,10 @@ class ServerTests(unittest.TestCase):
                     worker.start()
                     self.assertTrue(entered.wait(2))
                     client = server.app.test_client()
-                    stopped = client.post("/api/run/stop", json={})
-                    self.assertEqual(stopped.json, {"status": "stopping", "stopped": True})
+                    task_id = server.run_status["task_id"]
+                    stopped = client.post("/api/run/stop", json={"expected_task_id": task_id})
+                    self.assertEqual(stopped.json, {"status": "stopping", "stopped": True,
+                                                    "task_id": task_id})
                     worker.join(3)
                     self.assertFalse(worker.is_alive())
                 self.assertEqual(responses[0].status_code, 200)
@@ -3897,11 +3903,38 @@ class ServerTests(unittest.TestCase):
                 self.assertEqual(client.get("/api/run/status").json["status"], "stopped")
                 self.assertFalse(server.state["candidates"])
                 self.assertEqual(server.state["truth"], {"0": [shape()]})
-                self.assertFalse(client.post("/api/run/stop", json={}).json["stopped"])
+                self.assertFalse(client.post("/api/run/stop", json={
+                    "expected_task_id": task_id}).json["stopped"])
             finally:
                 server.run_stop_event.set()
                 worker.join(3)
                 server.state, server.run_status, server.WORK, server.run_stop_event = old_state, old_status, old_work, old_stop
+
+    def test_stop_endpoint_rejects_missing_or_stale_task_identity_without_stopping_active_run(self):
+        old_status, old_task, old_stop = server.run_status, server.run_task_id, server.run_stop_event
+        try:
+            server.run_status = {"status": "running", "phase": "generating",
+                                 "task_id": "new-active-task"}
+            server.run_task_id = "new-active-task"
+            server.run_stop_event = threading.Event()
+            client = server.app.test_client()
+
+            missing = client.post("/api/run/stop", json={})
+            self.assertEqual(missing.status_code, 400)
+            self.assertIn("缺少任务编号", missing.json["error"])
+            self.assertFalse(server.run_stop_event.is_set())
+            self.assertEqual(server.run_status["status"], "running")
+
+            stale = client.post("/api/run/stop", json={
+                "expected_task_id": "old-stale-task"})
+            self.assertEqual(stale.status_code, 409)
+            self.assertTrue(stale.json["stale_review"])
+            self.assertIn("未停止当前新任务", stale.json["error"])
+            self.assertFalse(server.run_stop_event.is_set())
+            self.assertEqual(server.run_status["status"], "running")
+            self.assertEqual(server.run_status["task_id"], "new-active-task")
+        finally:
+            server.run_status, server.run_task_id, server.run_stop_event = old_status, old_task, old_stop
 
     def test_old_description_requires_explicit_reference_preparation_then_is_reused(self):
         previous_state, previous_status, previous_work = server.state, server.run_status, server.WORK

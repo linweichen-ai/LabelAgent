@@ -12,6 +12,7 @@
   let draftBusy = false;
   let draftTimer = null;
   let draftStartedAt = 0;
+  let draftTaskId = null;
   let draftLastPhaseKey = '';
   let draftPhaseChangedAt = 0;
   let draftProgressFailures = 0;
@@ -554,6 +555,7 @@
     byId('referencePrepCancel').textContent = busy ? '停止生成' : '暂不准备';
     if (!busy && draftTimer) { clearInterval(draftTimer); draftTimer = null; }
     if (!busy) {
+      draftTaskId = null;
       draftLastPhaseKey = '';
       draftPhaseChangedAt = 0;
       draftProgressFailures = 0;
@@ -582,6 +584,10 @@
         byId('referenceDraftProgressTitle').textContent = '请求已提交 · 等待后台确认本轮任务';
         byId('referenceDraftProgressDetail').textContent = '上一轮运行状态已忽略；本轮 SAM + VLM 请求正在进入后台，请不要重复点击。';
         return;
+      }
+      if (!draftTaskId && ['running', 'stopping'].includes(status.status)
+          && typeof status.task_id === 'string' && status.task_id) {
+        draftTaskId = status.task_id;
       }
       const phaseKey = [status.status, status.phase, status.round, status.shape_count].join('|');
       if (phaseKey !== draftLastPhaseKey) {
@@ -641,6 +647,7 @@
     const readiness = await readModelReadiness();
     if (!readiness.ready) throw new Error(`模型尚未就绪：SAM ${readinessText(readiness.sam, 'sam')}；VLM ${readinessText(readiness.vlm, 'vlm')}`);
     draftStartedAt = Date.now();
+    draftTaskId = null;
     draftLastPhaseKey = '';
     draftPhaseChangedAt = draftStartedAt;
     draftProgressFailures = 0;
@@ -847,8 +854,14 @@
   byId('referencePrepCancel').addEventListener('click', async () => {
     if (!draftBusy) { dialog.close(); return; }
     try {
-      const response = await fetch('/api/run/stop', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}'});
-      if (!response.ok) throw new Error('停止请求失败');
+      if (!draftTaskId) await updateDraftProgress();
+      const stopTaskId = draftTaskId;
+      if (!stopTaskId) throw new Error('尚未确认本轮任务编号，请稍候再停止');
+      const response = await fetch('/api/run/stop', {method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({expected_task_id: stopTaskId})});
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || '停止请求失败');
+      if (result.task_id !== stopTaskId) throw new Error('停止回执与本轮任务不一致，未确认停止');
       byId('referenceDraftProgressTitle').textContent = '正在安全停止…';
     } catch (error) { window.labelAgentToast?.(error.message); }
   });

@@ -5049,14 +5049,24 @@ def run_workflow():
 
 @app.post("/api/run/stop")
 def stop_workflow():
+    body = request.get_json(silent=True) or {}
+    expected_task_id = body.get("expected_task_id")
+    if not isinstance(expected_task_id, str) or not expected_task_id.strip():
+        raise ValueError("停止请求缺少任务编号；请刷新任务状态后重试")
+    expected_task_id = expected_task_id.strip()
     with run_status_lock:
+        active_task_id = run_status.get("task_id")
+        if (run_status.get("status") in ("running", "stopping")
+                and expected_task_id != active_task_id):
+            raise StaleHumanReviewError("停止请求对应的任务已经更新；未停止当前新任务")
         if run_status.get("status") not in ("running", "stopping"):
-            return jsonify(status=run_status.get("status", "idle"), stopped=False)
+            return jsonify(status=run_status.get("status", "idle"), stopped=False,
+                           task_id=active_task_id)
         if run_status.get("status") == "stopping":
-            return jsonify(status="stopping", stopped=True)
+            return jsonify(status="stopping", stopped=True, task_id=active_task_id)
         run_stop_event.set()
         _update_run_status_locked(status="stopping", phase="stopping")
-    return jsonify(status="stopping", stopped=True)
+    return jsonify(status="stopping", stopped=True, task_id=active_task_id)
 
 
 @app.get("/api/run/status")

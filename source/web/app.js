@@ -855,8 +855,11 @@ async function ensureAutoLabelReadiness(requestedFrames,startFrame,count){
 $('runButton').onclick=async()=>{
  const button=$('runButton');
  if(latestAgentJob.status==='running'){
+  const stopTaskId=latestAgentJob.task_id;
+  if(!stopTaskId){toast('尚未确认本轮任务编号，请稍候再停止');scheduleRunStatusPoll(0);return}
   button.disabled=true;button.textContent='正在停止…';
-  try{await api('run/stop',{});toast('已请求停止自动标注')}catch(e){toast(e.message);button.disabled=false;renderRunButton()}
+  try{const stopped=await api('run/stop',{expected_task_id:stopTaskId});if(stopped.task_id!==stopTaskId)throw Error('停止回执与当前任务不一致，未确认停止');toast('已请求停止当前自动标注任务')}
+  catch(e){toast(e.message);button.disabled=false;renderRunButton();scheduleRunStatusPoll(0)}
   return;
  }
   if(pendingRunResult()){

@@ -1,0 +1,117 @@
+{
+  "schema_version": "labelagent.workbench-stability.round222.v1",
+  "round": 222,
+  "date": "2026-11-19",
+  "objective": "Bind every stop request to the task visible to the operator so a stale tab cannot stop a newer task.",
+  "status": "implemented_tested_and_production_deployed",
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "model_inference_performed": false,
+    "model_weights_changed": false,
+    "oss_written": false
+  },
+  "pre_fix_reproduction": {
+    "request_expected_task_id": "stale-old-task-round222",
+    "active_task_id": "new-task-round222",
+    "http_status": 200,
+    "active_status_after": "stopping",
+    "stop_event_set_after": true,
+    "unsafe_stop_reproduced": true,
+    "formal_state_mutated": false,
+    "local_untracked_artifact": "artifacts/round222-task-bound-stop/server-prefx-result.json"
+  },
+  "implementation": {
+    "server_requires_expected_task_id": true,
+    "missing_task_id_http_status": 400,
+    "stale_task_id_http_status": 409,
+    "stale_request_sets_stop_event": false,
+    "stop_receipt_returns_task_id": true,
+    "main_button_task_bound": true,
+    "reference_draft_cancel_task_bound": true,
+    "app_asset_version": 179,
+    "reference_prep_asset_version": 165
+  },
+  "post_fix_reproduction": {
+    "request_expected_task_id": "stale-old-task-round222",
+    "active_task_id": "new-task-round222",
+    "http_status": 409,
+    "active_status_after": "running",
+    "stop_event_set_after": false,
+    "new_task_preserved": true,
+    "local_untracked_artifact": "artifacts/round222-task-bound-stop/server-postfix-result.json"
+  },
+  "tests": {
+    "all_web": {"passed": 132, "failed": 0, "elapsed_ms": 196.2568},
+    "all_python": {"passed": 981, "failed": 0, "elapsed_seconds": 6.767},
+    "javascript_syntax": "passed",
+    "python_compile": "passed",
+    "git_diff_check": "passed"
+  },
+  "browser_acceptance": {
+    "browser": "Microsoft Edge headless fresh context",
+    "workbench_url": "http://127.0.0.1:8765",
+    "asset": "/app.js?v=179",
+    "reference_prep_asset": "/reference-prep.js?v=165",
+    "old_visible_task": "round222-old-visible-task",
+    "new_active_task": "round222-new-active-task",
+    "stop_request_bound_to_old_visible_task": true,
+    "new_task_still_running": true,
+    "clear_conflict_notice": true,
+    "model_inference_requests": 0,
+    "truth_write_requests": 0,
+    "page_errors": 0,
+    "expected_http_409_console_events": 1,
+    "unexpected_console_errors": 0,
+    "accepted": true,
+    "local_untracked_artifact": "artifacts/round222-task-bound-stop/browser-postfix-result.json"
+  },
+  "deployment": {
+    "production_root": "D:\\Apps\\LabelAgent",
+    "backup_directory": "D:\\Apps\\LabelAgent\\.local\\backups\\task-bound-stop-round222-20261119-072543",
+    "backup_sha256": {
+      "server.py": "F17CCCCB4A63BE3CC5465770E3F873880A2EA1595EDE572B124924E728A83CFC",
+      "app.js": "4046BD9D8458D699CF7F3C394450C42BB5188CA34D20DEB18A5B9522E91F820D",
+      "reference-prep.js": "BDF4DA5639E9F48FD0FC9F5B2EE98323D74BB07D8E878BB461EDDA3AFF496127",
+      "index.html": "5BA20FF28BD3124646F84C114B225FC70DF9662825C583955E1163E4E4D6E8C7",
+      "state.json": "1DCD67A8475A8DD1974C9A9B3D4BF68A56E1ABD30CF2A9559C12E849E3D86F96",
+      "file_sessions.json": "202927E295CABC27B1F9583B6438D3E16C020809EE421BCE1342C3AEBC0367F5",
+      "remote_processes.json": "CD9B2ED6C5C3D4135F219FE0538DAAAECE0FBB92E0E2B3A299B34B93416CEB1A"
+    },
+    "production_sha256": {
+      "server.py": "F99BB2E161BB4788076C0BE54841FEEB4972D2B05371CE48EC9E833E9E2B5862",
+      "app.js": "4E734E88BD9D23CA26F36C72067202B7D22313C7F1BEE85CEE4804C444C7CCD8",
+      "reference-prep.js": "F233D2E7B6FE1931EDDF39E525FD60FA7EA388F6FB978063F6509C3C6688CE38",
+      "index.html": "40DA69B384ED138DA674DE651323A1281F9BE877726C8FCB31DE34DCC747EAED"
+    },
+    "workbench_manager_pid_before": 23980,
+    "workbench_manager_pid_after": 18292,
+    "workbench_listener_pid_before": 59788,
+    "workbench_listener_pid_after": 68208,
+    "tunnel_4090_pid_unchanged": 60456,
+    "sam_5090_tunnel_pid_unchanged": 8656
+  },
+  "formal_state_integrity": {
+    "state_sha256_before": "1DCD67A8475A8DD1974C9A9B3D4BF68A56E1ABD30CF2A9559C12E849E3D86F96",
+    "state_sha256_after": "1DCD67A8475A8DD1974C9A9B3D4BF68A56E1ABD30CF2A9559C12E849E3D86F96",
+    "file_sessions_sha256_before": "202927E295CABC27B1F9583B6438D3E16C020809EE421BCE1342C3AEBC0367F5",
+    "file_sessions_sha256_after": "202927E295CABC27B1F9583B6438D3E16C020809EE421BCE1342C3AEBC0367F5",
+    "unchanged": true
+  },
+  "service_health_after": {
+    "workbench_state_8765": 200,
+    "workbench_run_8765": 200,
+    "sam_4090_28766": 200,
+    "sam_5090_38766": 200,
+    "vlm_4090_28868": 200,
+    "run_status": "idle"
+  },
+  "source_sync": {
+    "branch": "codex/workbench-stability-20261117",
+    "implementation_commit": null,
+    "receipt_commit": null,
+    "github_readback": "pending",
+    "cnb_readback": "pending"
+  }
+}

@@ -1899,3 +1899,17 @@ v176部署前备份位于 `D:\Apps\LabelAgent\.local\backups\run-result-navigati
 完整说明见 [第二百二十一轮报告](RUN_RESULT_NAVIGATION_TASK_RACE_ROUND221_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/run-result-navigation-task-race-round221.json)。本地浏览器脚本与结果保持未跟踪。
 
 实现、测试和首版文档提交 `c777b1a9db1520a0dcbff4fffa666e46904caabb` 已推送并分别回读 GitHub/CNB，同名分支两端精确匹配；回读回执提交为 `6b20902dc1a35ae05b2ee9d67fe9bf01b5873743`，该提交也已由两端精确回读。未跟踪实验产物和厂内内容均未上传。
+
+## 第二百二十二轮停止操作任务号强绑定（已部署，2026-11-19）
+
+继续审计多标签页控制操作时，隔离复现确认：旧页面即使提交旧任务号，原服务端也会忽略该字段并把当前新任务改为 `stopping`。这意味着一个未刷新的旧标签页可能误停另一标签页刚启动的新任务；主工作台和参考帧“停止生成”都受影响。
+
+现要求停止请求必须携带页面当前看到的任务号。服务端缺少任务号返回400，活动任务号不匹配返回409，且不设置停止信号；只有任务号一致才进入 `stopping`，回执也带回实际任务号。主工作台冻结 `latestAgentJob.task_id`，参考起稿只采用开始时间属于本轮的运行任务号，二者都核对停止回执。
+
+同一反向测试中，修复前为HTTP200、新任务进入stopping、停止信号已置位；修复后为HTTP409、新任务保持running、停止信号未置位。正式v179/v165 Edge验收确认停止请求绑定旧页面任务号，冲突后页面明确提示未停止新任务并刷新显示新任务仍在运行；模型请求0、真值写请求0、页面异常0，只有一条由故意409产生的预期网络提示，无其他控制台异常。
+
+全部网页132/132、Python981/981通过，JavaScript语法、Python编译和差异检查通过。部署备份位于 `D:\Apps\LabelAgent\.local\backups\task-bound-stop-round222-20261119-072543`。只重启工作台，管理PID从23980变为18292、监听PID从59788变为68208；4090通道PID60456和5090 SAM通道PID8656不变，五项探针均HTTP200，运行状态idle。正式 `state.json` 与 `file_sessions.json` 哈希不变。
+
+本轮没有模型推理、微调、后训练、候选、人工真值、训练批准或OSS写入。完整说明见 [第二百二十二轮报告](TASK_BOUND_STOP_ROUND222_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/task-bound-stop-round222.json)。浏览器脚本和临时结果保持本地未跟踪，不上传厂内内容。
+
+实现、文档及 GitHub/CNB 精确回读提交号将在本轮远端同步完成后回填。

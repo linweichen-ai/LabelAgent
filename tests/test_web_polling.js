@@ -812,6 +812,22 @@ test('主推理复查轮数可调且默认六轮', () => {
   assert.match(app, /max_rounds:runRequestMaxRounds/);
 });
 
+test('主工作台与参考起稿停止操作均绑定当前任务号', () => {
+  const app = source('app.js');
+  const prep = source('reference-prep.js');
+  const handler = section(app, "$('runButton').onclick", 'let runStatusPollTimer');
+  const cancel = section(prep, "byId('referencePrepCancel').addEventListener", "dialog.addEventListener('cancel'");
+  assert.match(handler, /const stopTaskId=latestAgentJob\.task_id/);
+  assert.match(handler, /expected_task_id:stopTaskId/);
+  assert.match(handler, /stopped\.task_id!==stopTaskId/);
+  assert.doesNotMatch(handler, /api\('run\/stop',\{\}\)/);
+  assert.match(prep, /let draftTaskId = null/);
+  assert.match(prep, /draftTaskId = status\.task_id/);
+  assert.match(cancel, /expected_task_id: stopTaskId/);
+  assert.match(cancel, /result\.task_id !== stopTaskId/);
+  assert.doesNotMatch(cancel, /body: '\{\}'/);
+});
+
 test('主自动标注仅在服务器完成 GPT 复查后宣告完成', () => {
   const app = source('app.js');
   const refinement = section(app, 'async function refineDeferredRunFrames', 'function invalidateChangedCandidateAudits');
@@ -1096,7 +1112,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=178/);
+  assert.match(source('index.html'), /app\.js\?v=179/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1157,7 +1173,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=178/);
+  assert.match(source('index.html'), /app\.js\?v=179/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1205,7 +1221,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 3);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=178/);
+  assert.match(source('index.html'), /app\.js\?v=179/);
 });
 
 test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () => {

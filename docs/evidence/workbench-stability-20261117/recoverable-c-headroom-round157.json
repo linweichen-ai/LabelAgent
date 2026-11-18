@@ -1,0 +1,59 @@
+{
+  "schema_version": "labelagent.recoverable-c-headroom.v1",
+  "recorded_at": "2026-11-18T12:10:00+08:00",
+  "round": 157,
+  "objective": "Restore the system volume above the LabelAgent 2 GiB warning line without deleting unique data or changing user-visible paths.",
+  "target": {
+    "original_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\mask2former_single_recovery_20261104",
+    "last_write_before": "2026-11-10T01:18:20.7630603+08:00",
+    "active_process_references": 0,
+    "git_worktree": false,
+    "files": 2512,
+    "bytes": 2999265523,
+    "tree_sha256": "95c51f4fc4171a0e607cf93aa54b383041a2672425af4cca414c4a96f4e514fd"
+  },
+  "compression_probe": {
+    "method": "reversible NTFS transparent compression",
+    "content_fingerprint_unchanged": true,
+    "stored_bytes_before": 2999265523,
+    "stored_bytes_after_reported": 2976682028,
+    "result": "insufficient because most payloads were already compressed media or model artifacts"
+  },
+  "relocation": {
+    "original_path_type_after": "junction",
+    "primary_target": "D:\\Apps\\LabelAgent\\.local\\relocated-worktrees\\mask2former_single_recovery_20261104",
+    "secondary_backup": "D:\\Apps\\LabelAgent\\.local\\backups\\mask2former_single_recovery-source-round157-20261118",
+    "primary_target_verified": true,
+    "junction_readback_verified": true,
+    "secondary_backup_verified": true,
+    "all_file_counts": 2512,
+    "all_total_bytes": 2999265523,
+    "all_tree_sha256": "95c51f4fc4171a0e607cf93aa54b383041a2672425af4cca414c4a96f4e514fd",
+    "files_deleted": 0,
+    "user_visible_path_changed": false,
+    "manifest": "D:\\Apps\\LabelAgent\\.local\\relocated-worktrees\\mask2former_single_recovery_20261104-RELOCATION.json"
+  },
+  "storage": {
+    "c_free_bytes_before": 1182027776,
+    "c_free_bytes_after": 3616694272,
+    "c_free_gib_after": 3.37,
+    "warning_line_gib": 2.0,
+    "d_free_bytes_before": 20693790720,
+    "d_free_bytes_after": 14679937024,
+    "d_free_gib_after": 13.67
+  },
+  "formal_runtime_readback": {
+    "workbench_managed": true,
+    "workbench_http_ok": true,
+    "run_readiness": "ready",
+    "sam": "ok",
+    "vlm": "ok",
+    "state_sha256": "d671dd5818a225bc774ac7e71ecff612cb3aed67de6b1985e5cd9e3233be8085",
+    "file_sessions_sha256": "251a47963ebd2931ee033408e9fe39a94f74539bff0a339c58429ace409088cc"
+  },
+  "boundaries": [
+    "The two recovery copies share one D volume and are not independent hardware backups.",
+    "No model weight, candidate, human truth, training approval, or OSS object changed.",
+    "This is a platform-stability improvement, not segmentation-quality evidence."
+  ]
+}

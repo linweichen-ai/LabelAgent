@@ -1606,3 +1606,13 @@ Round147 部署后，C盘可用空间继续被系统写入消耗，最低只剩�
 真实 Edge 页面读回中，数据、参考帧、描述、帧号和处理数量五项均通过，开始按钮可用，恢复按钮不再出现，页面错误为 0；验收只打开预检弹窗，没有启动新的推理。部署前代码和六份正式状态备份到 `D:\Apps\LabelAgent\.local\backups\description-deterministic-fallback-round156-20261118-115300`。部署前后人工真值、真值复核状态、参考帧、候选和 Agent 运行逐项相等；完整回归为 Python 889/889、网页 96/96。结构化记录见 [第一百五十三至一百五十六轮证据](evidence/workbench-stability-20261117/reference-description-fallback-round153-156.json)。
 
 边界：该兜底提升的是协议可靠性和工作台可恢复性，没有改 SAM/VLM 权重，也不是斜坡分割精度提升。frame 31 没有斜坡，不能据此宣称 slope 质量通过。C 盘当前约余 1.21 GiB，低于 2 GiB 警戒线；LabelAgent 临时目录仍固定在 D 盘，但扩大数据或实验前还需继续做可恢复磁盘治理。
+
+## 第一百五十七轮 C盘二次可恢复余量治理（已完成，2026-11-18）
+
+Round156 收尾时 C盘仅余约 1.18 GiB，再次低于工作台的 2 GiB 警戒线。只读统计跳过目录联接并确认当前 LabelAgent 活跃工作树本身不足以回收所需空间；较大占用来自同一标注/分割研发链的旧 `mask2former_single_recovery_20261104` 实验目录。该目录最后修改于 11 月 10 日，不是 Git 工作树，现场没有任何进程命令行引用。
+
+先对该目录执行可逆 NTFS 透明压缩。2,512 个文件、2,999,265,523 字节的完整内容树指纹保持 `95c51f4f...14fd`，但存储只降至 2,976,682,028 字节，说明大部分 PNG、模型和结果载荷本身已压缩，收益不足。随后先完整复制到 `D:\Apps\LabelAgent\.local\relocated-worktrees\mask2former_single_recovery_20261104`，再分别对原副本、D盘副本和原路径联接做逐文件 SHA-256 聚合，三者文件数、总字节和树指纹完全一致后才切换。
+
+系统策略拒绝递归删除 C盘暂存副本，因此没有绕过，而是把它整体移动为 `D:\Apps\LabelAgent\.local\backups\mask2former_single_recovery-source-round157-20261118`。最终原路径是透明目录联接，主副本和独立字节备份均在 D盘且再次读回同一指纹；没有删除项目文件，也没有改变用户可见路径。C盘可用空间升至 3.37 GiB，D盘仍余 13.67 GiB。恢复说明位于 `D:\Apps\LabelAgent\.local\relocated-worktrees\mask2former_single_recovery_20261104-RELOCATION.json`。
+
+正式工作台仍由管理器托管，页面与模型探针正常，运行门禁 `ready`，SAM/VLM 均为 `ok`；正式 `state.json` 和 `file_sessions.json` SHA-256 与 Round156 完全一致。结构化证据见 [第一百五十七轮 C盘治理](evidence/workbench-stability-20261117/recoverable-c-headroom-round157.json)。边界：D盘两份是同一物理卷上的独立字节副本，不是异盘灾备；本轮没有改变模型、候选、人工真值、训练批准或 OSS，也不是精度提升。

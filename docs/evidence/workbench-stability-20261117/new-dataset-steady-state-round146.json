@@ -1,0 +1,132 @@
+{
+  "schema_version": "labelagent.new-dataset-steady-state-round146.v1",
+  "recorded_at": "2026-11-18T10:09:00.5986469+08:00",
+  "decision": "engineering_gate_passed_and_isolate_retired",
+  "objective": "Verify that the deployed full-decode prewarm keeps uncached single-image discovery stable on several unseen factory frames without writing candidates, human truth, training approval, model weights, or OSS objects.",
+  "environment": {
+    "isolated_workbench_url": "http://127.0.0.1:18809",
+    "isolated_work_dir": "D:/Apps/LabelAgent/.local/isolated-round146-newdata",
+    "formal_workbench_url": "http://127.0.0.1:8765",
+    "primary_sam_url": "http://127.0.0.1:28766",
+    "primary_vlm_url": "http://127.0.0.1:28868/v1",
+    "vlm_model": "labelagent-vlm8b",
+    "prompt_profile": "compact",
+    "formal_state_sha256_before_after": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21"
+  },
+  "samples": [
+    {
+      "name": "hz001_camera2",
+      "source_dataset": "20260904_hz-yozea-elec_Dev_P2605901028248/001",
+      "authoritative_source": "/mnt/EIC-02/shared/robot_data/SFL-CPD15-Y/20260904_hz-yozea-elec_Dev_P2605901028248/001/bevannotation_data/cameras_640x512/camera_2/1788513560318632732.png",
+      "source_sha256": "c6282576fe870f2cbb38390c819e0c51e58c6ce957a67668b2731f9de273bb27",
+      "request_input_sha256": "245ee94eee2bf9bb333d196f0d5094bb70b1596a58072097bc35cc8171bc0aea",
+      "visible_labels": ["pallet", "floor"],
+      "uncached_discovery_seconds": 15.598,
+      "uncached_prefetch_seconds": 16.767,
+      "discovery_sha256": "82391d2f773a4b8e4c6a68d071c641db914fc415ba2a75683b320d0277c9499e"
+    },
+    {
+      "name": "hz002_camera2",
+      "source_dataset": "20260904_hz-yozea-elec_Dev_P2605901028248/002",
+      "authoritative_source": "/mnt/EIC-02/shared/robot_data/SFL-CPD15-Y/20260904_hz-yozea-elec_Dev_P2605901028248/002/bevannotation_data/cameras_640x512/camera_2/1788513842851815024.png",
+      "source_sha256": "5dd7b4555a819372b7fd0ee6b2e9164d6f6cd7e7a80771dd20649299673ea359",
+      "request_input_sha256": "2249aee849312d8192c84a70576943c44bb1eef318dee870571b81d90a5845d8",
+      "visible_labels": ["pallet", "floor"],
+      "uncached_discovery_seconds": 15.096,
+      "uncached_prefetch_seconds": 16.314,
+      "discovery_sha256": "2d9a43318fb21d6b40a559d835aaa70b3b277e04c25c87bbc4bd6b6449f3a6b6"
+    },
+    {
+      "name": "hz003_camera2",
+      "source_dataset": "20260904_hz-yozea-elec_Dev_P2605901028248/003",
+      "authoritative_source": "/mnt/EIC-02/shared/robot_data/SFL-CPD15-Y/20260904_hz-yozea-elec_Dev_P2605901028248/003/bevannotation_data/cameras_640x512/camera_2/1788513964885095732.png",
+      "source_sha256": "54d12ac33f924272e6b8d84c399d3c80b670b88df3d949f945e195d86f46e700",
+      "request_input_sha256": "8931b46b0a64f7f11e6d9f533ae8a2fb683d37aa31bdba3c0049d5824369fb66",
+      "visible_labels": ["pallet", "floor"],
+      "uncached_discovery_seconds": 15.544,
+      "uncached_prefetch_seconds": 16.990,
+      "discovery_sha256": "299ace37c654006d19f66dd07503378c17286ded07aed4caa0e665322a025175"
+    },
+    {
+      "name": "hz015_camera2",
+      "source_dataset": "Hangzhou015 preserved raw camera-2 sample",
+      "authoritative_source": "artifacts/round130-hz015-raw-camera2.png",
+      "source_sha256": "fe2011c3e85b88e5260c8224c4d48cc74f32786bee4f3b3fceea5d1547027837",
+      "request_input_sha256": "851f9a97767d8f84faf61f6369adb5e5bbdcbaf80b013873394b6f1551909975",
+      "visible_labels": ["floor"],
+      "uncached_discovery_seconds": 15.837,
+      "uncached_prefetch_seconds": 16.928,
+      "discovery_sha256": "23c599c6a585fd2db7c1a31d8161cd1934770132c4cbd4cc0983199069fc2bb7"
+    },
+    {
+      "name": "batch1104_004_camera2",
+      "source_dataset": "20261104_cs-seer_Dev_P2605901028248/004",
+      "authoritative_source": "artifacts/round144-deployed-004/work/uploads/30918d9b20a1479198e471499e02e05e-004-1793760662042842987.png",
+      "source_sha256": "6f02428b05f0463fc925503faab998133b2f2c4d3ade58ae28514c76a2011c7b",
+      "request_input_sha256": "0975bc2f88c3f01ef9179c05d271fd3d503bdef4ec981bd5b2b59762579df6ba",
+      "visible_labels": ["pallet", "floor", "ego"],
+      "uncached_discovery_seconds": 15.229,
+      "uncached_prefetch_seconds": 16.478,
+      "discovery_sha256": "0541e0ffe190e22adab60834fb6a1681ec40c11f76ead003caa7eb4e57196727"
+    }
+  ],
+  "uncached_summary": {
+    "sample_count": 5,
+    "dataset_families": 2,
+    "discovery_seconds": {
+      "minimum": 15.096,
+      "median": 15.544,
+      "mean": 15.461,
+      "maximum": 15.837
+    },
+    "prefetch_seconds": {
+      "minimum": 16.314,
+      "median": 16.767,
+      "mean": 16.695,
+      "maximum": 16.990
+    },
+    "all_prefetch_below_17_seconds": true
+  },
+  "exact_cache_repeat": {
+    "sample": "hz015_camera2",
+    "wall_seconds": 0.556,
+    "discovery_seconds": 0.199,
+    "prefetch_seconds": 0.551,
+    "discovery_sha256": "23c599c6a585fd2db7c1a31d8161cd1934770132c4cbd4cc0983199069fc2bb7",
+    "semantic_hash_identical_to_uncached": true,
+    "cache_hit_delta": 1,
+    "cache_miss_delta": 0
+  },
+  "isolation_gate": {
+    "isolated_truth_frames": 0,
+    "isolated_candidate_frames": 0,
+    "isolated_agent_runs": 0,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "formal_state_changed": false,
+    "oss_writes": false,
+    "model_weights_changed": false,
+    "other_gpu_processes_stopped": false
+  },
+  "retirement": {
+    "initial_invalid_stop_action": "The first cleanup invocation used an unsupported action and was rejected by argument validation before any directory deletion.",
+    "successful_stop_action": "manage_remote.py stop --port 18809 --work-dir D:/Apps/LabelAgent/.local/isolated-round146-newdata",
+    "isolated_port_released": true,
+    "isolate_process_record_removed": true,
+    "removed_reconstructible_paths": [
+      "D:/Apps/LabelAgent/.local/isolated-round146-newdata",
+      "D:/Apps/LabelAgent/.local/round146-newdata-samples"
+    ],
+    "removed_files": 12,
+    "removed_bytes": 4320019,
+    "recovery_sources": "The three Hangzhou source frames remain on the authoritative read-only NFS path; HZ015 and batch1104/004 remain in the existing untracked evidence artifacts named above.",
+    "formal_workbench_http_status_after": 200,
+    "formal_workbench_status_after": "idle",
+    "sam_ready_after": true,
+    "vlm_ready_after": true,
+    "c_free_gib_after": 0.530,
+    "d_free_gib_after": 23.590
+  },
+  "boundary": "This is a five-frame engineering compatibility and latency gate across two dataset families. It proves neither cross-dataset accuracy, class precision/recall, slope IoU, segmentation quality, a production P50/P95 distribution, nor a SAM fine-tuning result. Visible labels are model outputs rather than human truth."
+}

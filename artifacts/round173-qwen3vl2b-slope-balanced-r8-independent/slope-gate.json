@@ -1,0 +1,29 @@
+{
+  "schema_version": "labelagent.qwen3vl-slope-candidate-gate.v1",
+  "created_utc": "2026-11-18T08:51:12.633071+00:00",
+  "status": "assistant_candidate_passed_for_human_review",
+  "passed": true,
+  "human_truth": false,
+  "human_confirmed": false,
+  "production_deployed": false,
+  "production_approved": false,
+  "test24_authorized": false,
+  "guards": {
+    "false_positives_not_increased": true,
+    "true_positives_increased": true,
+    "false_negatives_reduced": true,
+    "uncertain_not_increased": true
+  },
+  "baseline": {
+    "true_positive_candidates": 1,
+    "false_positive_candidates": 0,
+    "false_negative_candidates": 3,
+    "uncertain_candidates": 0
+  },
+  "candidate": {
+    "true_positive_candidates": 2,
+    "false_positive_candidates": 0,
+    "false_negative_candidates": 2,
+    "uncertain_candidates": 0
+  }
+}

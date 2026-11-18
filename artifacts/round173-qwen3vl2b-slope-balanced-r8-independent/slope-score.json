@@ -1,0 +1,61 @@
+{
+  "schema_version": "labelagent.qwen3vl-slope-review-score.v1",
+  "created_utc": "2026-11-18T08:51:12.439684+00:00",
+  "status": "assistant_review_scored_not_human_truth",
+  "human_truth": false,
+  "human_confirmed": false,
+  "production_deployed": false,
+  "summary": {
+    "samples": 8,
+    "assistant_visible_slope_candidates": 4,
+    "true_positive_candidates": 2,
+    "false_positive_candidates": 0,
+    "false_negative_candidates": 2,
+    "true_negative_candidates": 4,
+    "uncertain_candidates": 0,
+    "precision_on_assistant_review": 1.0,
+    "recall_on_assistant_review": 0.5,
+    "details": [
+      {
+        "sample_id": "008_1789899740482474075_camera_0",
+        "assistant_visible_slope_candidate": false,
+        "candidate_evidence": "absent"
+      },
+      {
+        "sample_id": "008_1789899740482474075_camera_1",
+        "assistant_visible_slope_candidate": false,
+        "candidate_evidence": "absent"
+      },
+      {
+        "sample_id": "008_1789899740482474075_camera_2",
+        "assistant_visible_slope_candidate": true,
+        "candidate_evidence": "absent"
+      },
+      {
+        "sample_id": "008_1789899740482474075_camera_3",
+        "assistant_visible_slope_candidate": true,
+        "candidate_evidence": "present"
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_0",
+        "assistant_visible_slope_candidate": false,
+        "candidate_evidence": "absent"
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_1",
+        "assistant_visible_slope_candidate": true,
+        "candidate_evidence": "absent"
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_2",
+        "assistant_visible_slope_candidate": true,
+        "candidate_evidence": "present"
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_3",
+        "assistant_visible_slope_candidate": false,
+        "candidate_evidence": "absent"
+      }
+    ]
+  }
+}

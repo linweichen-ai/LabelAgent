@@ -6,9 +6,10 @@ import numpy as np
 from PIL import Image
 
 from tools.evaluate_reference_point_scan import (
-    artifact_frame_token, fixed_point_grid, isolated_mask_image,
-    known_coverage, merge_exemplar_results, multiscale_panel,
-    supported_other_robot)
+    artifact_frame_token, bounded_mask_record, fixed_point_grid,
+    isolated_mask_image, known_coverage, known_coverage_record,
+    merge_exemplar_results, multiscale_panel, supported_other_robot)
+from tools.tiled_candidate_utils import _mask_record
 
 
 class ReferencePointScanTests(unittest.TestCase):
@@ -26,6 +27,31 @@ class ReferencePointScanTests(unittest.TestCase):
         half[2:6, 2:4] = True
         result = known_coverage(candidate, 16, {"person": [half], "pallet": []})
         self.assertEqual(result, {"person": 0.5, "pallet": 0.0})
+
+    def test_bounded_raster_is_pixel_identical_to_full_image_record(self):
+        shape = {
+            "points": [[-3, 2], [15, 2], [15, 14], [-3, 14]],
+            "holes": [[[4, 5], [8, 5], [8, 9], [4, 9]]],
+            "parts": [
+                {"points": [[-3, 2], [15, 2], [15, 14], [-3, 14]],
+                 "holes": [[[4, 5], [8, 5], [8, 9], [4, 9]]]},
+                {"points": [[20, 4], [27, 4], [27, 10], [20, 10]],
+                 "holes": []},
+            ],
+        }
+        expected = _mask_record(shape, 24, 18)
+        actual = bounded_mask_record(shape, 24, 18)
+        self.assertEqual(actual["bbox"], expected["bbox"])
+        self.assertEqual(actual["area"], expected["area"])
+        np.testing.assert_array_equal(actual["mask"], expected["mask"])
+        known = np.zeros((18, 24), dtype=bool)
+        known[2:9, 0:6] = True
+        full = np.zeros_like(known)
+        x0, y0, x1, y1 = expected["bbox"]
+        full[y0:y1, x0:x1] = expected["mask"].astype(bool)
+        self.assertEqual(
+            known_coverage_record(actual, {"person": [known]}),
+            known_coverage(full, actual["area"], {"person": [known]}))
 
     def test_multiscale_panel_is_fixed_size_and_marks_the_candidate_at_every_scale(self):
         shape = {"id": 1, "label": "unknown_object", "bbox": [40, 30, 80, 60],

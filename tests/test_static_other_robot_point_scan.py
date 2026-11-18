@@ -59,7 +59,9 @@ class StaticOtherRobotPointScanTests(unittest.TestCase):
         sample = manifest()["samples"][0]
         report = {
             "selected_ids": ["C01"], "uncertain_review_ids": [],
-            "point_count": 184, "scan_seconds": 1.0, "raw_candidates": 10,
+            "point_count": 184, "scan_seconds": 1.0,
+            "known_instance_seconds": 0.5, "candidate_filter_seconds": 0.1,
+            "frame_elapsed_seconds": 2.0, "raw_candidates": 10,
             "geometric_candidates": 5, "nms_candidates": 4,
             "known_exclusion_passed": 3, "classified_count": 3,
             "classification_batch_seconds": {},
@@ -80,7 +82,9 @@ class StaticOtherRobotPointScanTests(unittest.TestCase):
         sample = manifest()["samples"][0]
         report = {
             "selected_ids": [], "uncertain_review_ids": ["C02"],
-            "point_count": 184, "scan_seconds": 1.0, "raw_candidates": 10,
+            "point_count": 184, "scan_seconds": 1.0,
+            "known_instance_seconds": 0.5, "candidate_filter_seconds": 0.1,
+            "frame_elapsed_seconds": 2.0, "raw_candidates": 10,
             "geometric_candidates": 5, "nms_candidates": 4,
             "known_exclusion_passed": 3, "classified_count": 3,
             "classification_batch_seconds": {},

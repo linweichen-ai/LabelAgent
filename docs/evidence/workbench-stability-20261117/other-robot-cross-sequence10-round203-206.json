@@ -1,0 +1,130 @@
+{
+  "schema_version": "labelagent.other-robot-cross-sequence10.round203-206.v1",
+  "created_local": "2026-11-19T02:46:22+08:00",
+  "status": "ten_sample_adaptive_review_verified_and_filter_optimized_offline",
+  "human_truth": false,
+  "candidate_only": true,
+  "production_deployed": false,
+  "approved_for_training": false,
+  "production_model_changed": false,
+  "state_written": false,
+  "manifest": {
+    "samples": 10,
+    "assistant_candidate_positive": 6,
+    "assistant_candidate_negative": 4,
+    "sha256": "71b071b947309e9e38e6a3537532cde4b0db0ab0284b70a3c2c79067d037b488",
+    "boundary": "Assistant visual triage only; not human truth."
+  },
+  "round203_adaptive_review": {
+    "assistant_candidate_triage": {
+      "positive_reviewed": 6,
+      "positive_covered_by_auto_or_review": 5,
+      "negative_reviewed": 4,
+      "negative_with_auto_candidate": 0,
+      "negative_with_review_candidate": 0,
+      "is_accuracy": false
+    },
+    "auto_candidates": {"capture1103-camera1-t0-positive": ["C04"]},
+    "review_candidates": {
+      "capture1103-camera0-t0-positive": ["C02"],
+      "capture1103-camera0-t100-positive": ["C02"],
+      "capture1103-camera2-t0-positive": ["C01", "C03"],
+      "capture1103-camera2-t100-positive": ["C02", "C03"]
+    },
+    "assistant_re_review": {
+      "capture1103-camera1-t0-positive": "The sole auto candidate visibly covers a separate low mobile platform and is not an ego fork or floor patch.",
+      "capture1103-camera1-t100-positive": "The prior assistant-positive label is visually weak; no clearly independent unmanned robot is established. This is still not human truth."
+    },
+    "timing_seconds": {
+      "elapsed": 199.944,
+      "point_scan": 66.833,
+      "known_instance": 11.061,
+      "candidate_filter": 22.552,
+      "classification": 94.134
+    },
+    "timing_percent_of_elapsed": {
+      "point_scan": 33.43,
+      "known_instance": 5.53,
+      "candidate_filter": 11.28,
+      "classification": 47.08,
+      "accounted": 97.32
+    },
+    "exemplar_candidates": 9,
+    "vlm_call_groups": 27,
+    "result_sha256": "df40e51e6ad853ef881725ed2d89dc7a0fa59b94c01c598136771f9bdae6f40f"
+  },
+  "round204_full_dual_pass": {
+    "exemplar_candidates": 40,
+    "vlm_call_groups": 40,
+    "classification_seconds": 138.320,
+    "elapsed_seconds": 240.443,
+    "adaptive_triage_match": "10/10",
+    "adaptive_exemplar_candidate_reduction_percent": 77.5,
+    "adaptive_vlm_call_group_reduction_percent": 32.5,
+    "adaptive_classification_reduction_percent": 31.94,
+    "adaptive_elapsed_reduction_percent": 16.84,
+    "result_sha256": "5c3c41d6f2dd86023daac1713a5a0e8ab1f99b9f6828e294affc5f0cc67e51fc"
+  },
+  "round205_bounded_mask_adaptive": {
+    "triage_match_vs_round203": "10/10",
+    "candidate_core_match_vs_round203": "10/10",
+    "candidate_core_fields": [
+      "id", "bbox", "area", "person_coverage", "pallet_coverage",
+      "baseline_class", "exemplar_class"
+    ],
+    "candidate_filter_seconds_before": 22.552,
+    "candidate_filter_seconds_after": 11.309,
+    "candidate_filter_reduction_percent": 49.85,
+    "elapsed_seconds_before": 199.944,
+    "elapsed_seconds_after": 164.692,
+    "elapsed_reduction_percent": 17.63,
+    "classification_change_percent": -21.27,
+    "classification_change_attribution": "Not attributed to mask optimization because shared VLM load can vary between runs.",
+    "result_sha256": "5295a63eaa7704e3351e51ef83cebeb42945281e52bdb74aedf50b3312c05fcf"
+  },
+  "round206_controlled_filter_benchmark": {
+    "same_point_batch": true,
+    "same_known_masks": true,
+    "repeats_per_implementation": 3,
+    "legacy_median_seconds": 3.058172699995339,
+    "bounded_median_seconds": 1.8410072999977274,
+    "median_reduction_percent": 39.800414149255424,
+    "candidate_core_identical": true,
+    "raw_candidates": 184,
+    "geometric_candidates": 24,
+    "kept_candidates": 11,
+    "result_sha256": "9eb640305624ffab7a72b04024627a0b6daa90c53c705dc4c4da994aef76038c"
+  },
+  "implementation_sha256": {
+    "tools/evaluate_reference_point_scan.py": "a3da10384565a1a476924e0440d90f27c9365df4c9b56258c1acceef33535a2c",
+    "tools/evaluate_static_other_robot_point_scan.py": "25c4f6af3253a78dacc60588652a52a38390f097fd0bba5db283f170a91daf67",
+    "tools/benchmark_bounded_point_filter.py": "9c792dd111ca39eeb136cd5891ca19b05e39baa66936fd149a2091c4e21e1655",
+    "tests/test_reference_point_scan.py": "ac3e5f255aea95ba772c09456d1d5ea6369ce03400ce525f458f4d98f268935c",
+    "tests/test_static_other_robot_point_scan.py": "8f1dc088a439b44058083a0838e1d4bdda1cf5379977046b7639fadc03bdf9e1"
+  },
+  "verification": {
+    "unittests": {"passed": 36, "failed": 0},
+    "python_compile": "passed",
+    "git_diff_check": "passed",
+    "live_readback": {
+      "checked_local": "2026-11-19T02:46:22+08:00",
+      "workbench_http": 200,
+      "point_sam_http": 200,
+      "formal_sam_http": 200,
+      "sam_status": "ok",
+      "sam_model_loaded": true,
+      "sam_inflight": 0,
+      "vlm_http": 200,
+      "vlm_status": "ok",
+      "vlm_model_loaded": true,
+      "vlm_inflight": 0,
+      "vlm_waiting": 0
+    },
+    "formal_state_sha256": {
+      "state.json": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+      "file_sessions.json": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5"
+    }
+  },
+  "next_gate": "Obtain current human review and expand to at least 24 sequence-isolated samples before production candidate-layer integration.",
+  "boundary": "No accuracy, fine-tuning, post-training, human-truth write, production deployment, or training approval is claimed."
+}

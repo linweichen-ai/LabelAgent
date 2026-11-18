@@ -148,6 +148,54 @@ def known_coverage(mask, area, known_masks):
     }
 
 
+def bounded_mask_record(shape, width, height):
+    """Rasterize only the polygon envelope while preserving full-image geometry."""
+    parts = shape.get("parts") or [shape]
+    point_arrays = [
+        np.asarray(part.get("points", []), dtype=np.int32)
+        for part in parts if len(part.get("points", [])) >= 3]
+    if not point_arrays:
+        raise ValueError("Empty candidate raster")
+    vertices = np.concatenate(point_arrays, axis=0)
+    x0 = max(0, int(vertices[:, 0].min()))
+    y0 = max(0, int(vertices[:, 1].min()))
+    x1 = min(width, int(vertices[:, 0].max()) + 1)
+    y1 = min(height, int(vertices[:, 1].max()) + 1)
+    if x1 <= x0 or y1 <= y0:
+        raise ValueError("Empty candidate raster")
+    shifted_parts = []
+    for part in parts:
+        shifted_parts.append({
+            "points": [[int(x) - x0, int(y) - y0]
+                       for x, y in part.get("points", [])],
+            "holes": [[[int(x) - x0, int(y) - y0] for x, y in hole]
+                      for hole in part.get("holes", [])],
+        })
+    mask = _rasterize({"parts": shifted_parts}, x1 - x0, y1 - y0)
+    rows, columns = np.nonzero(mask)
+    if not len(rows):
+        raise ValueError("Empty candidate raster")
+    local_x0, local_x1 = int(columns.min()), int(columns.max()) + 1
+    local_y0, local_y1 = int(rows.min()), int(rows.max()) + 1
+    return {
+        "bbox": (x0 + local_x0, y0 + local_y0,
+                 x0 + local_x1, y0 + local_y1),
+        "mask": mask[local_y0:local_y1, local_x0:local_x1].copy(),
+        "area": len(rows),
+    }
+
+
+def known_coverage_record(record, known_masks):
+    x0, y0, x1, y1 = record["bbox"]
+    candidate = record["mask"].astype(bool)
+    return {
+        label: max([
+            float(np.count_nonzero(candidate & known[y0:y1, x0:x1]))
+            / record["area"] for known in masks] or [0.0])
+        for label, masks in known_masks.items()
+    }
+
+
 def filtered_candidates(batch, width, height, known_masks):
     raw = []
     for item in batch["items"]:
@@ -160,7 +208,7 @@ def filtered_candidates(batch, width, height, known_masks):
             "parts": result["parts"], "score": float(result["score"]),
             "point": item["point"],
         }
-        record = _mask_record(shape, width, height)
+        record = bounded_mask_record(shape, width, height)
         shape.update(_record=record, bbox=list(record["bbox"]), area=record["area"])
         raw.append(shape)
     minimum_area = max(32, round(width * height * 0.000033))
@@ -173,8 +221,7 @@ def filtered_candidates(batch, width, height, known_masks):
     for shape in sorted(geometric, key=lambda item: item["score"], reverse=True):
         if any(_iou(shape["_record"], prior["_record"]) >= 0.85 for prior in kept):
             continue
-        mask = _rasterize(shape, width, height).astype(bool)
-        coverage = known_coverage(mask, shape["area"], known_masks)
+        coverage = known_coverage_record(shape["_record"], known_masks)
         shape["known_coverage"] = coverage
         shape["passes_known_exclusion"] = max(coverage.values(), default=0.0) < 0.5
         kept.append(shape)
@@ -436,18 +483,23 @@ def classify_surface_veto(config, rows, image, output, frame):
 def evaluate_frame(frame, image_bytes, existing_annotations, config, point_endpoint,
                    output, top_k, exemplar_sheet=None,
                    adaptive_exemplar_review=False):
+    frame_started = time.perf_counter()
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     width, height = image.size
     points = fixed_point_grid(width, height)
     started = time.perf_counter()
     batch = point_batch(image_bytes, points, point_endpoint)
     scan_seconds = time.perf_counter() - started
+    known_started = time.perf_counter()
     known_masks, known_diagnostics = known_instance_masks(
         image_bytes, width, height, config)
+    known_instance_seconds = time.perf_counter() - known_started
+    filter_started = time.perf_counter()
     raw, geometric, kept = filtered_candidates(
         batch, width, height, known_masks)
     preclassification_ego_pairs = mark_foreground_ego_pairs(
         kept, width, height)
+    candidate_filter_seconds = time.perf_counter() - filter_started
     baseline, baseline_seconds = classify_candidates(
         config, kept, image, output, frame, top_k,
         artifact_suffix="-baseline" if exemplar_sheet else "")
@@ -523,6 +575,9 @@ def evaluate_frame(frame, image_bytes, existing_annotations, config, point_endpo
         } for shape in existing_shapes],
         "point_count": len(points),
         "scan_seconds": scan_seconds,
+        "known_instance_seconds": known_instance_seconds,
+        "candidate_filter_seconds": candidate_filter_seconds,
+        "frame_elapsed_seconds": time.perf_counter() - frame_started,
         "batch_diagnostics": batch["diagnostics"],
         "known_prompt_diagnostics": known_diagnostics,
         "raw_candidates": len(raw),

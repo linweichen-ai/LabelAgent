@@ -1882,4 +1882,6 @@ Round218 已经防止预检期间把任务提交到错误数据，但继续审�
 
 部署备份位于 `D:\Apps\LabelAgent\.local\backups\run-result-task-race-round220-20261119-064802`。只重启本机工作台，管理PID从59604变为66384、监听PID从64748变为41340；4090通道PID60456和5090 SAM通道PID8656未变，五项探针均HTTP200，正式运行状态idle。`state.json` 与 `file_sessions.json` 哈希不变。本轮没有模型推理、微调、后训练、人工真值、训练批准或OSS写入。
 
-完整说明见 [第二百二十轮报告](RUN_RESULT_RECOVERY_TASK_RACE_ROUND220_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/run-result-recovery-task-race-round220.json)。本地浏览器脚本和结果保持未跟踪，不上传厂内内容。GitHub/CNB 提交与回读哈希将在同步完成后补入。
+完整说明见 [第二百二十轮报告](RUN_RESULT_RECOVERY_TASK_RACE_ROUND220_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/run-result-recovery-task-race-round220.json)。本地浏览器脚本和结果保持未跟踪，不上传厂内内容。
+
+实现、测试和首版文档提交 `3a5d86464a862d82331385703bf791e3024eb6e1` 已推送并分别回读 GitHub/CNB，同名分支两端精确匹配；回读回执提交哈希将在下一次文档提交中补入。

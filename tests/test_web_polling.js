@@ -814,12 +814,24 @@ test('启动前并行检查模型、参考流程与首个请求帧的数据兼�
 test('自动标注预检后只提交原数据文件相机和导航作用域', () => {
   const app = source('app.js');
   const handler = section(app, "$('runButton').onclick=async", 'let runStatusPollTimer');
-  assert.match(handler, /jobTopic=topic,jobFile=loadedDataPath,jobNavigationGeneration=frameNavigationGeneration/);
-  assert.match(handler, /topic!==jobTopic\|\|loadedDataPath!==jobFile\|\|frameNavigationGeneration!==jobNavigationGeneration/);
-  assert.match(handler, /预检期间数据集、相机或当前帧已经切换，本次自动标注未启动/);
+  assert.match(handler, /jobTopic=topic,jobFile=loadedDataPath,jobNavigationGeneration=frameNavigationGeneration,jobWorkspaceMode=window\.workspaceMode/);
+  assert.match(handler, /topic!==jobTopic\|\|loadedDataPath!==jobFile\|\|frameNavigationGeneration!==jobNavigationGeneration\|\|window\.workspaceMode!==jobWorkspaceMode/);
+  assert.match(handler, /预检期间数据集、相机、当前帧或工作模式已经切换，本次自动标注未启动/);
   assert.match(handler, /expected_file:jobFile,expected_topic:jobTopic/);
   assert.ok(handler.indexOf('jobTopic=topic') < handler.indexOf('await ensureAutoLabelReadiness'));
   assert.ok(handler.indexOf('await ensureAutoLabelReadiness') < handler.indexOf("const runScope={expected_file:jobFile,expected_topic:jobTopic}"));
+});
+
+test('自动标注完成回执只更新原始数据导航与工作模式作用域', () => {
+  const handler = section(source('app.js'), "$('runButton').onclick=async", 'let runStatusPollTimer');
+  assert.match(handler, /data\.file!==jobFile\|\|data\.topic!==jobTopic/);
+  assert.match(handler, /const sameDataScope=topic===jobTopic&&loadedDataPath===jobFile/);
+  assert.match(handler, /const sameOperatorScope=sameDataScope&&frameNavigationGeneration===jobNavigationGeneration&&window\.workspaceMode===jobWorkspaceMode/);
+  assert.match(handler, /runResultAutoRestoreDeferred\.add\(data\.task_id\)/);
+  assert.match(handler, /自动标注结果已保存到原数据作用域；当前页面保持不变/);
+  assert.ok(handler.indexOf('if(!sameOperatorScope)') < handler.indexOf('markRunResultHandled(data.task_id)'));
+  assert.ok(handler.indexOf('if(!sameOperatorScope)') < handler.indexOf('currentDescription=data.description'));
+  assert.ok(handler.indexOf('if(!sameOperatorScope)') < handler.indexOf('candidateCountIndex[String(item.frame)]'));
 });
 
 test('多文件新数据集使用一次批量上传请求', () => {
@@ -986,7 +998,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=174/);
+  assert.match(source('index.html'), /app\.js\?v=175/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1047,7 +1059,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=174/);
+  assert.match(source('index.html'), /app\.js\?v=175/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1095,7 +1107,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 3);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=174/);
+  assert.match(source('index.html'), /app\.js\?v=175/);
 });
 
 test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () => {

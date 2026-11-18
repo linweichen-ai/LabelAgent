@@ -853,18 +853,27 @@ $('runButton').onclick=async()=>{
  if(runRequestStartedAt!==null)return;
  try{
    const requestedFrames=pendingRetry()?[...retryFrames]:null;
-   const startFrame=requestedFrames?.[0]??Number($('frameNumber').value),count=requestedFrames?.length??Number($('taskCount').value),maxRounds=Number($('reviewRounds').value),jobTopic=topic,jobFile=loadedDataPath,jobNavigationGeneration=frameNavigationGeneration;
+   const startFrame=requestedFrames?.[0]??Number($('frameNumber').value),count=requestedFrames?.length??Number($('taskCount').value),maxRounds=Number($('reviewRounds').value),jobTopic=topic,jobFile=loadedDataPath,jobNavigationGeneration=frameNavigationGeneration,jobWorkspaceMode=window.workspaceMode;
   if(!Number.isInteger(startFrame)||startFrame<0||startFrame>=(topics[topic]?.count||0))throw Error('请选择有效的当前帧');
   if(!Number.isInteger(count)||count<1||count>100)throw Error('处理帧数须为 1～100');
   if(!Number.isInteger(maxRounds)||maxRounds<1||maxRounds>12)throw Error('复查轮数须为 1～12');
    runRequestStartedAt=Date.now()/1000;runRequestPhase='preflight';runRequestFrame=startFrame;runRequestCount=count;runRequestMaxRounds=maxRounds;renderRunButton();scheduleRunStatusPoll(250);
   await ensureAutoLabelReadiness(requestedFrames,startFrame,count);
-  if(topic!==jobTopic||loadedDataPath!==jobFile||frameNavigationGeneration!==jobNavigationGeneration)throw Error('预检期间数据集、相机或当前帧已经切换，本次自动标注未启动；请在当前画面重新开始');
+  if(topic!==jobTopic||loadedDataPath!==jobFile||frameNavigationGeneration!==jobNavigationGeneration||window.workspaceMode!==jobWorkspaceMode)throw Error('预检期间数据集、相机、当前帧或工作模式已经切换，本次自动标注未启动；请在当前画面重新开始');
   runRequestPhase='submitting';renderRunButton();
   stopPlayback();
     const comparison=requestedFrames?requestedFrames.some(item=>truthFrameIndex.has(String(item))):truthFrameIndex.has(String(startFrame));
     const runScope={expected_file:jobFile,expected_topic:jobTopic};
     const data=await api('run',requestedFrames?{...runScope,frames:requestedFrames,max_rounds:maxRounds,defer_agent_review:false,compare_with_truth:comparison}:{...runScope,frame:startFrame,count,max_rounds:maxRounds,defer_agent_review:false,compare_with_truth:comparison});
+   if(data.file!==jobFile||data.topic!==jobTopic)throw Error('自动标注回执与提交的数据文件或图像源不一致，已拒绝更新当前页面');
+   const sameDataScope=topic===jobTopic&&loadedDataPath===jobFile;
+   const sameOperatorScope=sameDataScope&&frameNavigationGeneration===jobNavigationGeneration&&window.workspaceMode===jobWorkspaceMode;
+   if(!sameOperatorScope){
+    if(data.task_id)runResultAutoRestoreDeferred.add(data.task_id);
+    if(sameDataScope)latestAgentJob.result_available=true;
+    toast(sameDataScope?'自动标注结果已保留；您已切换帧或工作模式，点击“查看上次结果”可打开':'自动标注结果已保存到原数据作用域；当前页面保持不变，切回原数据后可查看');
+    return;
+   }
    markRunResultHandled(data.task_id);latestAgentJob.result_available=false;
   if(data.description)currentDescription=data.description;
    for(const item of data.frames||[])if(Number.isInteger(item.frame))candidateCountIndex[String(item.frame)]=Math.max(0,Number(item.remaining)||0);

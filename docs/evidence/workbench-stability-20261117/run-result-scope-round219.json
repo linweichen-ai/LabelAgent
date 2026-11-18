@@ -1,0 +1,129 @@
+{
+  "schema_version": "labelagent.workbench-stability.round219.v1",
+  "round": 219,
+  "date": "2026-11-19",
+  "objective": "Keep a completed automatic-label response bound to the file, image topic, navigation generation, and workspace mode that submitted it.",
+  "status": "implemented_tested_and_production_deployed",
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "model_inference_performed": false,
+    "model_weights_changed": false,
+    "oss_written": false
+  },
+  "pre_fix_reproduction": {
+    "browser": "Microsoft Edge headless fresh context",
+    "asset": "/app.js?v=174",
+    "original": {
+      "frame": 74,
+      "topic": "/capture/camera_1/image",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap",
+      "mode": "auto"
+    },
+    "changed_scope": {
+      "frame": 33,
+      "topic": "/capture/camera_0/image",
+      "path": "D:\\synthetic-result-scope\\other-dataset.mcap",
+      "mode": "manual"
+    },
+    "after_old_response": {
+      "new_data_scope_preserved": true,
+      "manual_mode_taken_over": true,
+      "old_description_applied": true,
+      "old_candidate_count_applied": true,
+      "old_task_marked_handled": true,
+      "old_task_deferred": false
+    },
+    "model_inference_requests": 0,
+    "truth_write_requests": 0,
+    "page_errors": 0,
+    "console_errors": 0
+  },
+  "implementation": {
+    "captures_workspace_mode_before_preflight": true,
+    "preflight_rejects_workspace_mode_change": true,
+    "response_requires_original_file": true,
+    "response_requires_original_topic": true,
+    "separates_data_scope_from_operator_scope": true,
+    "defers_response_if_navigation_or_mode_changed": true,
+    "does_not_mark_deferred_result_handled": true,
+    "does_not_overwrite_description_or_candidate_count": true,
+    "does_not_take_over_workspace_mode": true,
+    "asset_version": 175
+  },
+  "tests": {
+    "targeted_result_scope": {"passed": 1, "failed": 0},
+    "targeted_preflight_scope": {"passed": 1, "failed": 0},
+    "all_web": {"passed": 120, "failed": 0, "elapsed_ms": 156.9605},
+    "all_python": {"passed": 980, "failed": 0, "subtests_passed": 186, "elapsed_seconds": 10.38, "environment": "PYTHONUTF8=1"},
+    "javascript_syntax": "passed",
+    "python_compile": "passed",
+    "git_diff_check": "passed"
+  },
+  "browser_acceptance": {
+    "browser": "Microsoft Edge headless fresh context",
+    "workbench_url": "http://127.0.0.1:8765",
+    "asset": "/app.js?v=175",
+    "new_scope_preserved": true,
+    "manual_mode_preserved": true,
+    "description_preserved": true,
+    "candidate_count_preserved": true,
+    "result_not_handled_in_new_scope": true,
+    "result_deferred_for_original_scope": true,
+    "operator_notice": "自动标注结果已保存到原数据作用域；当前页面保持不变，切回原数据后可查看",
+    "checks_passed": 13,
+    "checks_failed": 0,
+    "model_inference_requests": 0,
+    "truth_write_requests": 0,
+    "page_errors": 0,
+    "console_errors": 0,
+    "accepted": true,
+    "local_untracked_artifacts": "artifacts/round219-run-result-scope/",
+    "factory_image_uploaded": false
+  },
+  "deployment": {
+    "production_root": "D:\\Apps\\LabelAgent",
+    "backup_directory": "D:\\Apps\\LabelAgent\\.local\\backups\\run-result-scope-round219-20261119-062736",
+    "backup_sha256": {
+      "app.js": "23c8e0d3e2fa920e2849f1219fe14e4ef878af0a638ec9d2612491343aef67af",
+      "index.html": "f933324850016e8d028cf1add8e6c266c747d4e4ab4d387b95488fec85d07bbc",
+      "state.json": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+      "file_sessions.json": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+      "remote_processes.json": "4ad7652bc1ef120aa508eca1008905a16b2a42af19997f11630fe1839ebfceab"
+    },
+    "workbench_manager_pid_before": 56168,
+    "workbench_manager_pid_after": 59604,
+    "workbench_listener_pid_before": 54724,
+    "workbench_listener_pid_after": 64748,
+    "tunnel_4090_pid_unchanged": 60456,
+    "sam_5090_tunnel_pid_unchanged": 8656,
+    "app_js_sha256": "e614c6f750bc387b2a8046366256bd8e5fade7a2d15f3fce5b9c266956848654",
+    "index_html_sha256": "fa32f07b66ae1705a0b2f70a70974a4dfd98be463dbc17cfa068f092692bc0ad"
+  },
+  "formal_state_integrity": {
+    "state_sha256_before": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "state_sha256_after": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "file_sessions_sha256_before": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "file_sessions_sha256_after": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "unchanged": true
+  },
+  "service_health_after": {
+    "workbench_state_8765": 200,
+    "workbench_run_8765": 200,
+    "sam_4090_28766": 200,
+    "sam_5090_38766": 200,
+    "vlm_4090_28868": 200,
+    "run_status": "idle"
+  },
+  "source_sync": {
+    "implementation_commit": null,
+    "receipt_commit": null,
+    "branch": "codex/workbench-stability-20261117",
+    "github_readback": null,
+    "cnb_readback": null,
+    "both_remotes_matched": false,
+    "factory_images_uploaded": false,
+    "untracked_experiment_artifacts_uploaded": false
+  }
+}

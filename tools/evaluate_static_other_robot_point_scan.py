@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
+import time
 
 from tools.evaluate_reference_point_scan import evaluate_frame
 
@@ -94,12 +95,14 @@ def summarize_frame(sample: dict, report: dict) -> dict:
         "known_exclusion_passed": report["known_exclusion_passed"],
         "classified_count": report["classified_count"],
         "classification_batch_seconds": report["classification_batch_seconds"],
+        "classification_strategy": report["classification_strategy"],
         "surface_veto_batch_seconds": report["surface_veto_batch_seconds"],
         "rows": report["rows"],
     }
 
 
 def main() -> int:
+    run_started = time.perf_counter()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--state", required=True, type=Path)
     parser.add_argument("--manifest", required=True, type=Path)
@@ -107,6 +110,7 @@ def main() -> int:
     parser.add_argument("--point-sam-url", default="http://127.0.0.1:28766")
     parser.add_argument("--top-k", type=int, default=10)
     parser.add_argument("--exemplar-sheet", type=Path)
+    parser.add_argument("--adaptive-exemplar-review", action="store_true")
     args = parser.parse_args()
     if args.output.exists():
         raise FileExistsError(args.output)
@@ -135,7 +139,8 @@ def main() -> int:
         report = evaluate_frame(
             sample["sample_id"], image_path.read_bytes(), [], config,
             args.point_sam_url, sample_output, args.top_k,
-            exemplar_sheet=exemplar_sheet)
+            exemplar_sheet=exemplar_sheet,
+            adaptive_exemplar_review=args.adaptive_exemplar_review)
         row = summarize_frame(sample, report)
         rows.append(row)
         print(json.dumps({key: row[key] for key in (
@@ -161,6 +166,8 @@ def main() -> int:
         "exemplar_sheet_sha256": (
             file_sha256(args.exemplar_sheet) if args.exemplar_sheet else None),
         "top_k": args.top_k,
+        "adaptive_exemplar_review_requested": args.adaptive_exemplar_review,
+        "elapsed_seconds": time.perf_counter() - run_started,
         "assistant_candidate_review": {
             "reviewed": reviewed,
             "agreements": sum(row["assistant_candidate_agreement"] for row in rows),

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import base64
 import copy
+import hashlib
 import io
 import json
 import time
@@ -237,24 +238,32 @@ def isolated_mask_image(image, shape):
     return output.getvalue()
 
 
-def classify_candidates(config, candidates, image, output, frame, top_k,
-                        exemplar_sheet=None, artifact_suffix=""):
-    selected = [item for item in candidates
-                if item["passes_known_exclusion"]
-                and not item.get("_foreground_ego_pair_veto")][:top_k]
+def artifact_frame_token(frame):
+    """Keep generated artifact names bounded on Windows and traceable by hash."""
+    text = str(frame)
+    safe = "".join(character if (character.isalnum() or character in "-_")
+                   else "-" for character in text).strip("-")
+    if safe and len(safe) <= 24:
+        return safe
+    digest = hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
+    return f"id-{digest}"
+
+
+def classify_identified_candidates(config, identified, image, output, frame,
+                                   exemplar_sheet=None, artifact_suffix=""):
     requests = []
-    for index, shape in enumerate(selected, 1):
-        identifier = f"C{index:02d}"
+    for identifier, shape in identified:
         data = multiscale_panel(image, shape, identifier)
         path = output / (
-            f"frame-{frame}-{identifier.lower()}-multiscale{artifact_suffix}.jpg")
+            f"frame-{artifact_frame_token(frame)}-{identifier.lower()}-"
+            f"multiscale{artifact_suffix}.jpg")
         path.write_bytes(data)
         requests.append({"identifier": identifier, "shape": shape, "image": data,
                          "artifact": str(path.resolve())})
     results, durations = [], []
     for start in range(0, len(requests), 3):
         group = requests[start:start + 3]
-        started = time.time()
+        started = time.perf_counter()
         prompt = EXEMPLAR_PROMPT if exemplar_sheet else CLASS_PROMPT
         extra_images = (exemplar_sheet,) if exemplar_sheet else ()
         if len(group) == 1:
@@ -268,7 +277,7 @@ def classify_candidates(config, candidates, image, output, frame, top_k,
                   "extra_images": extra_images}
                  for item in group],
                 response_schema=CLASS_SCHEMA, max_tokens=192)
-        durations.append(time.time() - started)
+        durations.append(time.perf_counter() - started)
         for item, value in zip(group, values):
             results.append({
                 "id": item["identifier"], "result": value,
@@ -281,6 +290,48 @@ def classify_candidates(config, candidates, image, output, frame, top_k,
                 "_shape": item["shape"],
             })
     return results, durations
+
+
+def classify_candidates(config, candidates, image, output, frame, top_k,
+                        exemplar_sheet=None, artifact_suffix=""):
+    selected = [item for item in candidates
+                if item["passes_known_exclusion"]
+                and not item.get("_foreground_ego_pair_veto")][:top_k]
+    identified = [(f"C{index:02d}", shape)
+                  for index, shape in enumerate(selected, 1)]
+    return classify_identified_candidates(
+        config, identified, image, output, frame,
+        exemplar_sheet=exemplar_sheet, artifact_suffix=artifact_suffix)
+
+
+def merge_exemplar_results(baseline, exemplar, allow_subset=False):
+    baseline_ids = [item["id"] for item in baseline]
+    exemplar_ids = [item["id"] for item in exemplar]
+    if len(exemplar_ids) != len(set(exemplar_ids)):
+        raise ValueError("exemplar candidate IDs must be unique")
+    if (set(exemplar_ids) - set(baseline_ids)
+            or (not allow_subset and exemplar_ids != baseline_ids)):
+        raise ValueError("baseline and exemplar candidate order diverged")
+    exemplar_by_id = {item["id"]: item for item in exemplar}
+    classified = []
+    for baseline_item in baseline:
+        exemplar_item = exemplar_by_id.get(baseline_item["id"])
+        if exemplar_item is None:
+            item = baseline_item
+            item["baseline_result"] = baseline_item["result"]
+            item["baseline_artifact"] = baseline_item["artifact"]
+            item["exemplar_evaluated"] = False
+            item["dual_pass_consensus"] = False
+        else:
+            item = exemplar_item
+            item["baseline_result"] = baseline_item["result"]
+            item["baseline_artifact"] = baseline_item["artifact"]
+            item["exemplar_evaluated"] = True
+            item["dual_pass_consensus"] = (
+                supported_other_robot(baseline_item["result"])
+                and supported_other_robot(exemplar_item["result"]))
+        classified.append(item)
+    return classified
 
 
 def supported_other_robot(result):
@@ -357,13 +408,15 @@ def classify_surface_veto(config, rows, image, output, frame):
     requests = []
     for row in pending:
         data = isolated_mask_image(image, row["_shape"])
-        path = output / f"frame-{frame}-{row['id'].lower()}-isolated-veto.jpg"
+        path = output / (
+            f"frame-{artifact_frame_token(frame)}-{row['id'].lower()}-"
+            "isolated-veto.jpg")
         path.write_bytes(data)
         requests.append({"row": row, "image": data, "artifact": str(path.resolve())})
     durations = []
     for start in range(0, len(requests), 3):
         group = requests[start:start + 3]
-        started = time.time()
+        started = time.perf_counter()
         if len(group) == 1:
             values = [chat(config, SURFACE_PROMPT, group[0]["image"],
                            response_schema=SURFACE_SCHEMA)]
@@ -373,7 +426,7 @@ def classify_surface_veto(config, rows, image, output, frame):
                 [{"instruction": SURFACE_PROMPT, "image": item["image"]}
                  for item in group],
                 response_schema=SURFACE_SCHEMA, max_tokens=128)
-        durations.append(time.time() - started)
+        durations.append(time.perf_counter() - started)
         for request, value in zip(group, values):
             request["row"]["surface_veto"] = value
             request["row"]["surface_veto_artifact"] = request["artifact"]
@@ -381,13 +434,14 @@ def classify_surface_veto(config, rows, image, output, frame):
 
 
 def evaluate_frame(frame, image_bytes, existing_annotations, config, point_endpoint,
-                   output, top_k, exemplar_sheet=None):
+                   output, top_k, exemplar_sheet=None,
+                   adaptive_exemplar_review=False):
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     width, height = image.size
     points = fixed_point_grid(width, height)
-    started = time.time()
+    started = time.perf_counter()
     batch = point_batch(image_bytes, points, point_endpoint)
-    scan_seconds = time.time() - started
+    scan_seconds = time.perf_counter() - started
     known_masks, known_diagnostics = known_instance_masks(
         image_bytes, width, height, config)
     raw, geometric, kept = filtered_candidates(
@@ -398,20 +452,25 @@ def evaluate_frame(frame, image_bytes, existing_annotations, config, point_endpo
         config, kept, image, output, frame, top_k,
         artifact_suffix="-baseline" if exemplar_sheet else "")
     if exemplar_sheet:
-        exemplar, exemplar_seconds = classify_candidates(
-            config, kept, image, output, frame, top_k,
-            exemplar_sheet=exemplar_sheet, artifact_suffix="-exemplar")
-        if [item["id"] for item in baseline] != [item["id"] for item in exemplar]:
-            raise ValueError("baseline and exemplar candidate order diverged")
-        classified = []
-        for baseline_item, exemplar_item in zip(baseline, exemplar):
-            item = exemplar_item
-            item["baseline_result"] = baseline_item["result"]
-            item["baseline_artifact"] = baseline_item["artifact"]
-            item["dual_pass_consensus"] = (
-                supported_other_robot(baseline_item["result"])
-                and supported_other_robot(exemplar_item["result"]))
-            classified.append(item)
+        if adaptive_exemplar_review:
+            review_classes = {
+                "other_robot", "vehicle_or_forklift", "unknown_object",
+                "tool_or_equipment"}
+            identified = [
+                (item["id"], item["_shape"]) for item in baseline
+                if item["result"].get("class") in review_classes]
+            exemplar, exemplar_seconds = classify_identified_candidates(
+                config, identified, image, output, frame,
+                exemplar_sheet=exemplar_sheet, artifact_suffix="-exemplar")
+            classified = merge_exemplar_results(
+                baseline, exemplar, allow_subset=True)
+            classification_strategy = "adaptive_exemplar_review"
+        else:
+            exemplar, exemplar_seconds = classify_candidates(
+                config, kept, image, output, frame, top_k,
+                exemplar_sheet=exemplar_sheet, artifact_suffix="-exemplar")
+            classified = merge_exemplar_results(baseline, exemplar)
+            classification_strategy = "separate_dual_pass_batches"
         classify_seconds = {
             "baseline": baseline_seconds, "exemplar": exemplar_seconds}
     else:
@@ -419,6 +478,7 @@ def evaluate_frame(frame, image_bytes, existing_annotations, config, point_endpo
         for item in classified:
             item["dual_pass_consensus"] = supported_other_robot(item["result"])
         classify_seconds = {"baseline": baseline_seconds}
+        classification_strategy = "single_pass_batches"
     surface_veto_seconds = classify_surface_veto(
         config, classified, image, output, frame)
     existing_shapes = [
@@ -472,6 +532,7 @@ def evaluate_frame(frame, image_bytes, existing_annotations, config, point_endpo
             shape["passes_known_exclusion"] for shape in kept),
         "classified_count": len(classified),
         "classification_batch_seconds": classify_seconds,
+        "classification_strategy": classification_strategy,
         "surface_veto_batch_seconds": surface_veto_seconds,
         "selection_rule": (
             "baseline_and_exemplar_supported_other_robot"
@@ -497,6 +558,7 @@ def main():
     parser.add_argument("--point-sam-url", default="http://127.0.0.1:28766")
     parser.add_argument("--top-k", type=int, default=12)
     parser.add_argument("--exemplar-sheet")
+    parser.add_argument("--adaptive-exemplar-review", action="store_true")
     args = parser.parse_args()
     if not 1 <= args.top_k <= 24:
         parser.error("--top-k must be within 1..24")
@@ -517,7 +579,8 @@ def main():
         report = evaluate_frame(
             frame, video.frame(topic, frame), annotations_by_frame[str(frame)], config,
             args.point_sam_url, output, args.top_k,
-            exemplar_sheet=exemplar_sheet)
+            exemplar_sheet=exemplar_sheet,
+            adaptive_exemplar_review=args.adaptive_exemplar_review)
         frame_reports.append(report)
         print(json.dumps({"stage": "frame_complete", **{
             key: report[key] for key in

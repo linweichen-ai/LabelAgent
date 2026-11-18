@@ -6,7 +6,8 @@ import numpy as np
 from PIL import Image
 
 from tools.evaluate_reference_point_scan import (
-    fixed_point_grid, isolated_mask_image, known_coverage, multiscale_panel,
+    artifact_frame_token, fixed_point_grid, isolated_mask_image,
+    known_coverage, merge_exemplar_results, multiscale_panel,
     supported_other_robot)
 
 
@@ -41,6 +42,12 @@ class ReferencePointScanTests(unittest.TestCase):
         self.assertTrue(supported_other_robot(valid))
         self.assertFalse(supported_other_robot({"class": "pallet"}))
 
+    def test_long_static_frame_id_uses_short_traceable_artifact_token(self):
+        token = artifact_frame_token(
+            "capture1103-camera0-t100-positive-with-extra-context")
+        self.assertRegex(token, r"^id-[0-9a-f]{12}$")
+        self.assertEqual(artifact_frame_token(74), "74")
+
     def test_isolated_mask_image_hides_surrounding_pixels(self):
         shape = {"id": 1, "label": "unknown_object", "bbox": [40, 30, 80, 60],
                  "points": [[40, 30], [80, 30], [80, 60], [40, 60]],
@@ -51,6 +58,24 @@ class ReferencePointScanTests(unittest.TestCase):
         with Image.open(io.BytesIO(data)) as rendered:
             self.assertEqual(rendered.size, (512, 384))
             self.assertLess(max(rendered.getpixel((0, 0))), 150)
+
+    def test_adaptive_exemplar_skip_cannot_promote_baseline_candidate(self):
+        shape = {"id": 1}
+        baseline = [
+            {"id": "C01", "result": {"class": "pallet"},
+             "artifact": "baseline-1", "_shape": shape},
+            {"id": "C02", "result": {"class": "other_robot"},
+             "artifact": "baseline-2", "_shape": shape},
+        ]
+        exemplar = [
+            {"id": "C02", "result": {"class": "other_robot"},
+             "artifact": "exemplar-2", "_shape": shape},
+        ]
+        merged = merge_exemplar_results(baseline, exemplar, allow_subset=True)
+        self.assertFalse(merged[0]["exemplar_evaluated"])
+        self.assertFalse(merged[0]["dual_pass_consensus"])
+        self.assertTrue(merged[1]["exemplar_evaluated"])
+        self.assertTrue(merged[1]["dual_pass_consensus"])
 
 
 if __name__ == "__main__":

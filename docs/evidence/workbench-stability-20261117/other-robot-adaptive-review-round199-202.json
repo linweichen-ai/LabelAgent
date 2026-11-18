@@ -1,0 +1,115 @@
+{
+  "schema_version": "labelagent.other-robot-adaptive-review.round199-202.v1",
+  "created_local": "2026-11-19T02:15:49+08:00",
+  "status": "adaptive_review_candidate_retained_heterogeneous_batch_rejected",
+  "human_truth": false,
+  "candidate_only": true,
+  "production_deployed": false,
+  "approved_for_training": false,
+  "production_model_changed": false,
+  "state_written": false,
+  "round199": {
+    "initial_failure": {
+      "stage": "candidate_artifact_write_before_model_decision",
+      "cause": "duplicated long static sample ID exceeded the practical Windows path length",
+      "partial_directory_removed": true,
+      "model_conclusion_created": false
+    },
+    "fix": {
+      "short_frame_ids_preserved": true,
+      "long_frame_ids_use": "id-<first 12 hex of SHA-256>",
+      "full_sample_id_preserved_in_parent_and_result": true
+    },
+    "successful_rerun_result_sha256": "70b2986d4602baa7f00355861a466dcb7b839d89779ae30580bdccaa39b55d92",
+    "timing_accepted": false,
+    "timing_rejection_reason": "legacy component timing did not reconcile with external wait observation"
+  },
+  "round200_monotonic_full_dual_pass": {
+    "samples": 4,
+    "base_candidates": 16,
+    "exemplar_candidates": 16,
+    "vlm_call_groups": 16,
+    "scan_seconds": 26.917,
+    "classification_seconds": 51.810,
+    "elapsed_seconds": 97.835,
+    "triage": {
+      "capture1103-camera0-t100-positive": "review_required:C02",
+      "capture1103-camera2-t100-positive": "review_required:C02,C03",
+      "sfl-20261104-004-negative": "no_candidate",
+      "capture1103-camera3-t100-negative": "no_candidate"
+    },
+    "result_sha256": "aa07f87a32685e9ea4f5259507cdfd0eb01b820b877d3f72fcd513a66fff208e"
+  },
+  "round201_heterogeneous_tail_batch": {
+    "samples": 4,
+    "vlm_call_groups": 12,
+    "classification_seconds": 84.356,
+    "elapsed_seconds": 133.263,
+    "classification_slower_percent_vs_round200": 62.82,
+    "elapsed_slower_percent_vs_round200": 36.21,
+    "triage_unchanged": true,
+    "decision": "rejected_and_removed_from_source",
+    "result_sha256": "df1dfca00b058791305d3932d3303514cc73f69177b22c308a2211c7e34c2aa3"
+  },
+  "round202_adaptive_exemplar_review": {
+    "samples": 4,
+    "base_candidates": 16,
+    "exemplar_candidates": 4,
+    "exemplar_candidate_reduction_percent": 75.0,
+    "vlm_call_groups": 11,
+    "vlm_call_group_reduction_percent": 31.25,
+    "scan_seconds": 33.153,
+    "classification_seconds": 39.569,
+    "classification_reduction_percent_vs_round200": 23.63,
+    "elapsed_seconds": 86.513,
+    "elapsed_reduction_percent_vs_round200": 11.57,
+    "triage_matches_round200": "4/4",
+    "exemplar_candidate_ids": {
+      "capture1103-camera0-t100-positive": ["C02"],
+      "capture1103-camera2-t100-positive": ["C02", "C03"],
+      "sfl-20261104-004-negative": [],
+      "capture1103-camera3-t100-negative": ["C02"]
+    },
+    "triage": {
+      "capture1103-camera0-t100-positive": "review_required:C02",
+      "capture1103-camera2-t100-positive": "review_required:C02,C03",
+      "sfl-20261104-004-negative": "no_candidate",
+      "capture1103-camera3-t100-negative": "no_candidate"
+    },
+    "skipped_exemplar_behavior": "forced dual_pass_consensus=false; cannot become an auto candidate",
+    "decision": "retain_as_opt_in_offline_candidate_for_larger_validation",
+    "result_sha256": "2d8f600f3ac096c06a5275f8034014b137f122f01a7d2a05765397ca5292128b"
+  },
+  "timing_boundary": "All timing values are adjacent-run in-process engineering readings in this Windows environment, not production P50/P95 or user-perceived stopwatch latency.",
+  "implementation": {
+    "tools/evaluate_reference_point_scan.py": "d0bc6522444b6716c640d91d3925a5de428fe8eab06e26157ac31f8605f010c7",
+    "tools/evaluate_static_other_robot_point_scan.py": "7e9efa2c7b106a280d3ca252277879683f95c2aeb2aae3ab2187e592a390aeec",
+    "tests/test_reference_point_scan.py": "12dd82dea7f69c0dfa788c7009e1218e3345df0f9dc5f994f4d5e47fec5162df",
+    "tests/test_static_other_robot_point_scan.py": "5a194c8de80d621fe79f304618d290963c71ad8f5495dd589e5071d3592ad820"
+  },
+  "verification": {
+    "unittests": {"passed": 35, "failed": 0},
+    "python_compile": "passed",
+    "git_diff_check": "passed",
+    "live_readback": {
+      "checked_local": "2026-11-19T02:15:49+08:00",
+      "workbench_http": 200,
+      "point_sam_http": 200,
+      "formal_sam_http": 200,
+      "sam_status": "ok",
+      "sam_model_loaded": true,
+      "sam_inflight": 0,
+      "vlm_http": 200,
+      "vlm_status": "ok",
+      "vlm_model_loaded": true,
+      "vlm_inflight": 0,
+      "vlm_waiting": 0
+    },
+    "formal_state_sha256": {
+      "state.json": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+      "file_sessions.json": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5"
+    }
+  },
+  "next_gate": "Repeat adaptive review on at least 24 sequence-isolated human-reviewed positive and negative samples before any workbench candidate-layer integration.",
+  "boundary": "No accuracy, production deployment, human-truth write, model fine-tuning, or training approval is claimed."
+}

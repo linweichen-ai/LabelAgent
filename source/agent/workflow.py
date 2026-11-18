@@ -535,13 +535,18 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
                     break
                 if local_busy and busy_attempt < busy_retry_limit:
                     busy_retry_count += 1
-                    retry_seconds = min(30, 5 * (2 ** busy_attempt))
+                    # Newer VLM servers queue requests internally. Keep this
+                    # short fallback only for an older server during rollout;
+                    # long exponential sleeps leave the model idle and make a
+                    # harmless overlap look like a stalled demo.
+                    retry_seconds = 1
                     review_call = _review_call.get()
                     trace_record = review_call.get("record") if review_call else None
                     if trace_record is not None:
+                        trace_record.pop("error", None)
                         trace_record.update(status="waiting", busy_retry_count=busy_retry_count,
                                             retry_in_seconds=retry_seconds,
-                                            error="Local VLM is busy; waiting for the shared model slot")
+                                            waiting_reason="共享视觉模型正在处理上一项请求，当前任务已排队")
                         _emit_trace(trace_record)
                     _wait_cancellable(retry_seconds)
                     continue
@@ -1944,6 +1949,9 @@ def review(config, image, overlay, description, shapes, labels, history, referen
         f"\n当前候选（ID、类别、框、顶点数）：{json.dumps(shapes, ensure_ascii=False)}"
         f"\n历史决策及工具结果（最近 8 轮）：{json.dumps(history[-8:], ensure_ascii=False)}")
     holes = holes or []
+    synthesize_ground_fills = bool(
+        config.get("agent_synthesize_ground_fills", True)
+        and reference is not None)
     hole_report = [{**{key: value for key, value in item.items() if key != "mask"},
                     "number": index} for index, item in enumerate(holes, 1)]
     prompt += f"\n本轮从当前候选 mask 提取的封闭空洞和开放缺口清单：{json.dumps(hole_report, ensure_ascii=False)}"
@@ -2024,6 +2032,10 @@ def review(config, image, overlay, description, shapes, labels, history, referen
             prompt += "holes列表为空，hole_assessment必须是空数组，禁止编造孔洞编号。"
         prompt += ("\n每个reason最多一句话且不超过100个英文字符，每轮最多4个有视觉证据的局部操作。仅允许使用candidates中的ID。"
                    "所有reason使用英文。无法可靠定位缺陷时保持候选，返回done且operations为空。不要复述所有实例，不要输出额外解释。")
+        if synthesize_ground_fills and holes:
+            prompt += ("\n对holes只输出逐项semantic和简短reason，不要输出fill_gap操作或缺口polygon；"
+                       "系统会把semantic=ground的精确缺口mask一次性填满，并保持non_ground不变。"
+                       "operations仅用于缺口以外且有视觉证据的局部修正。")
     if duplicate_groups:
         prompt += ("\nExact same-class raster-mask overlap groups: "
                    + json.dumps(duplicate_groups, separators=(",", ":"))
@@ -2061,7 +2073,9 @@ def review(config, image, overlay, description, shapes, labels, history, referen
                 options = {}
                 if config.get("llm_prompt_profile") == "compact":
                     from .protocol_schema import review_schema
-                    options["response_schema"] = review_schema(labels, shapes, holes, sam_comparison is not None)
+                    options["response_schema"] = review_schema(
+                        labels, shapes, holes, sam_comparison is not None,
+                        synthesize_ground_fills=synthesize_ground_fills)
                 request_config = config
                 request_tokens = retry_max_tokens or base_review_tokens
                 if request_tokens is not None and request_tokens != config.get("llm_max_tokens"):
@@ -2077,8 +2091,7 @@ def review(config, image, overlay, description, shapes, labels, history, referen
                     return _validate_review_result(
                         last_result, holes, shapes, labels, width, height,
                         sam_comparison, reference_provided=reference is not None,
-                        synthesize_ground_fills=bool(
-                            config.get("agent_synthesize_ground_fills", True)))
+                        synthesize_ground_fills=synthesize_ground_fills)
                 except ValueError as error:
                     last_error = error
             # Update the original call rather than creating a fictitious model
@@ -2248,10 +2261,9 @@ def gap_detail_images(image, shapes, holes):
         if shape.get("label", "").strip().lower() in {"地面", "floor", "ground"}:
             mask |= _rasterize(shape, source.width, source.height)
     binary = Image.fromarray(mask * 255).convert("RGB")
-    # The full-frame evidence already contains every ID.  Send only the four
-    # largest actionable regions as high-resolution crops so a debugging
-    # record cannot make the model request exceed its image budget.
-    ranked = sorted(enumerate(holes, 1), key=lambda item: item[1]["area"], reverse=True)[:4]
+    # The full-frame evidence already contains every ID. Two four-row pages
+    # keep eight actionable regions readable without an unbounded request.
+    ranked = sorted(enumerate(holes, 1), key=lambda item: item[1]["area"], reverse=True)[:8]
     pages = []
     for start in range(0, len(ranked), 4):
         sheet = Image.new("RGB", (1080, 4 * 320), (28, 28, 28))
@@ -2794,7 +2806,7 @@ class AnnotationAgent:
                 all_holes = (candidate_holes(self.shapes, self.labels, self.width, self.height)
                              if self.reference is not None else [])
                 holes = select_review_gaps(
-                    all_holes, self.config.get("max_review_gaps", 4),
+                    all_holes, self.config.get("max_review_gaps", 8),
                     self.config.get("minimum_review_gap_area")) if all_holes else []
                 if len(all_holes) > len(holes):
                     self.progress("observing", round=number, operation="limit_review_gaps",

@@ -246,6 +246,21 @@ class WorkflowTests(unittest.TestCase):
         picture = Image.open(io.BytesIO(sheet))
         self.assertEqual(picture.width, 1080)
 
+    def test_local_gap_evidence_batches_eight_regions_into_two_pages(self):
+        image = io.BytesIO()
+        Image.new("RGB", (100, 100), "gray").save(image, "JPEG")
+        holes = []
+        for index in range(8):
+            mask = np.zeros((100, 100), dtype=np.uint8)
+            x = 4 + index * 10
+            mask[10:16, x:x + 6] = 1
+            holes.append({"id": f"1:hole:{index}", "shape_id": 1,
+                          "area": int(mask.sum()), "bbox": [x, 10, x + 5, 15],
+                          "centroid": [x + 2, 12], "mask": mask})
+        pages = workflow.gap_detail_images(
+            image.getvalue(), [shape(label="floor")], holes)
+        self.assertEqual([len(reports) for _, reports in pages], [4, 4])
+
     def test_description_uses_original_image_and_separate_outline(self):
         original = image_bytes()
         marked = io.BytesIO()
@@ -822,6 +837,41 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(len(applied), 2)
         self.assertEqual([item for item in workflow.candidate_holes(
             updated, ["floor"], 40, 40) if item["kind"] == "hole"], [])
+
+    def test_compact_reference_review_synthesizes_ground_fill_without_model_polygon(self):
+        floor = {
+            "id": 1, "label": "floor",
+            "points": [[2, 2], [36, 2], [36, 36], [2, 36]],
+            "holes": [[[8, 8], [14, 8], [14, 14], [8, 14]]],
+            "parts": [{"points": [[2, 2], [36, 2], [36, 36], [2, 36]],
+                       "holes": [[[8, 8], [14, 8], [14, 14], [8, 14]]]}],
+        }
+        holes = [item for item in workflow.candidate_holes(
+            [floor], ["floor"], 40, 40) if item["kind"] == "hole"]
+        reply = {
+            "status": "continue", "reason": "Visible reference-backed ground",
+            "hole_assessment": [{"hole_id": holes[0]["id"],
+                                 "semantic": "ground",
+                                 "reason": "Visible floor in target and reference"}],
+            "operations": [],
+        }
+        reference = {"image": image_bytes(), "marked_image": image_bytes(),
+                     "annotations": [floor]}
+        with patch.object(workflow, "chat", return_value=reply) as call:
+            decision = workflow.review(
+                {"llm_prompt_profile": "compact"}, image_bytes(), image_bytes(),
+                {"description": "Reference floor", "prompts": [{
+                    "label": "floor", "text": "floor"}]},
+                [floor], ["floor"], [], reference=reference,
+                hole_image=image_bytes(), holes=holes)
+        self.assertEqual([item["operation"] for item in decision["operations"]],
+                         ["fill_gap"])
+        variants = call.call_args.kwargs["response_schema"]["properties"][
+            "operations"]["items"]["anyOf"]
+        self.assertNotIn("fill_gap", {
+            name for variant in variants
+            for name in variant["properties"]["operation"]["enum"]})
+        self.assertIn("不要输出fill_gap", call.call_args.args[1])
 
     def test_ground_fill_synthesis_never_promotes_omitted_or_non_ground_gaps(self):
         holes = [
@@ -1545,6 +1595,14 @@ class WorkflowTests(unittest.TestCase):
         operation_variants = properties["operations"]["items"]["anyOf"]
         self.assertTrue(all(item["properties"]["reason"]["maxLength"] == 120
                             for item in operation_variants))
+        synthesized = review_schema(
+            ["floor"], [shape(label="floor")], [{
+                "id": "1:hole:1:1:2:2", "area": 4,
+                "bbox": [1, 1, 2, 2]}], synthesize_ground_fills=True)
+        synthesized_operations = synthesized["properties"]["operations"]["items"]["anyOf"]
+        self.assertNotIn("fill_gap", {
+            name for variant in synthesized_operations
+            for name in variant["properties"]["operation"]["enum"]})
 
     def test_review_gap_selection_excludes_open_image_border_artifacts(self):
         mask = np.zeros((20, 30), dtype=np.uint8)
@@ -1616,10 +1674,12 @@ class WorkflowTests(unittest.TestCase):
             workflow._review_call.reset(token)
         self.assertEqual(result, {"status": "done"})
         self.assertEqual(request.call_count, 2)
-        wait.assert_called_once_with(5)
+        wait.assert_called_once_with(1)
         self.assertEqual(raw["busy_retry_count"], 1)
         self.assertEqual(events[0]["status"], "waiting")
-        self.assertEqual(events[0]["retry_in_seconds"], 5)
+        self.assertEqual(events[0]["retry_in_seconds"], 1)
+        self.assertNotIn("error", events[0])
+        self.assertIn("已排队", events[0]["waiting_reason"])
 
     def test_small_image_fast_route_is_bounded_and_does_not_mutate_config(self):
         workflow._reset_fast_route_circuits()

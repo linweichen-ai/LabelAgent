@@ -49,7 +49,8 @@ def visible_label_schema(labels):
     })
 
 
-def review_schema(labels, shapes, holes, sam_pending=False):
+def review_schema(labels, shapes, holes, sam_pending=False,
+                  synthesize_ground_fills=False):
     ids = [shape["id"] for shape in shapes]
     hole_ids = [item["id"] for item in holes]
     identifier = {"type": "integer", "enum": ids}
@@ -68,7 +69,7 @@ def review_schema(labels, shapes, holes, sam_pending=False):
         if len(ids) >= 2:
             tools.append(operation(["merge"], {"label": {"type": "string", "enum": labels}},
                                    {"type": "array", "items": identifier, "minItems": 2, "maxItems": min(32, len(ids))}))
-        if hole_ids:
+        if hole_ids and not synthesize_ground_fills:
             tools.append(operation(["fill_gap"], {"polygon": polygon, "hole_id": {"type": "string", "enum": hole_ids}}))
     assessments = {"type": "array", "maxItems": len(holes), "minItems": len(holes),
                    "items": obj({"hole_id": {"type": "string", "enum": hole_ids or ["unused"]},

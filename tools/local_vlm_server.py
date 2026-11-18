@@ -567,16 +567,28 @@ class TransformersBackend:
 
 def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
                coalesce_timeout_seconds=90,
-               persistent_response_cache_dir=None):
+               persistent_response_cache_dir=None,
+               inference_queue_timeout_seconds=300):
     if (type(response_cache_entries) is not int
             or not 0 <= response_cache_entries <= 256):
         raise ValueError("response_cache_entries must be between 0 and 256")
     if (type(coalesce_timeout_seconds) is not int
             or not 1 <= coalesce_timeout_seconds <= 300):
         raise ValueError("coalesce_timeout_seconds must be between 1 and 300")
+    if (type(inference_queue_timeout_seconds) is not int
+            or not 1 <= inference_queue_timeout_seconds <= 1200):
+        raise ValueError(
+            "inference_queue_timeout_seconds must be between 1 and 1200")
     app = Flask(__name__)
     app.config["MAX_CONTENT_LENGTH"] = 64 * 1024 * 1024
     inference_lock = threading.Lock()
+    inference_queue_lock = threading.Lock()
+    inference_queue_state = {
+        "waiting": 0,
+        "total_waits": 0,
+        "timeouts": 0,
+        "max_waiting": 0,
+    }
     response_cache = OrderedDict()
     response_cache_lock = threading.Lock()
     inflight_requests = {}
@@ -693,6 +705,30 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
             return result, request_stats, cache_release
         return inference_executor.submit(run).result()
 
+    def acquire_inference_slot():
+        """Queue competing requests instead of bouncing them with HTTP 503."""
+        if inference_lock.acquire(blocking=False):
+            return 0.0
+        started = time.monotonic()
+        with inference_queue_lock:
+            inference_queue_state["waiting"] += 1
+            inference_queue_state["total_waits"] += 1
+            inference_queue_state["max_waiting"] = max(
+                inference_queue_state["max_waiting"],
+                inference_queue_state["waiting"])
+        try:
+            acquired = inference_lock.acquire(
+                timeout=inference_queue_timeout_seconds)
+        finally:
+            with inference_queue_lock:
+                inference_queue_state["waiting"] -= 1
+        if not acquired:
+            with inference_queue_lock:
+                inference_queue_state["timeouts"] += 1
+            raise RuntimeError(
+                "Timed out waiting for the shared Local VLM model slot")
+        return round(time.monotonic() - started, 3)
+
     if (getattr(backend, "startup_prewarm_enabled", False)
             and getattr(backend, "startup_prewarm", None) is None):
         backend.startup_prewarm = inference_executor.submit(
@@ -798,6 +834,8 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
             cached_entries = len(response_cache)
             inflight_count = len(inflight_requests)
             cache_stats = dict(response_cache_stats)
+        with inference_queue_lock:
+            queue_state = dict(inference_queue_state)
         return jsonify(status="ok", model_loaded=backend.model_loaded,
                        model=backend.model_id, backend=backend.backend_name,
                        quantization=getattr(backend, "quantization", "test_double"),
@@ -817,6 +855,10 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
                            "namespace_sha256":persistent_namespace},
                        exact_requests_inflight=inflight_count,
                        coalesce_timeout_seconds=coalesce_timeout_seconds,
+                       inference_queue={
+                           **queue_state,
+                           "timeout_seconds": inference_queue_timeout_seconds,
+                       },
                        generation_cache_implementation=getattr(
                            backend,"generation_cache_implementation",None),
                        startup_prewarm=getattr(backend,"startup_prewarm",None),
@@ -870,9 +912,7 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
             if 'image_token_budget' in body:
                 image_budget=checked_single_image_budget(
                     body['image_token_budget'],backend,len(images))
-            if not inference_lock.acquire(blocking=False):
-                increment_cache_stat("busy_rejections")
-                return jsonify(error={"message": "Local VLM is busy"}), 503
+            queue_wait_seconds = acquire_inference_slot()
             start = time.monotonic()
             try:
                 options = {}
@@ -900,6 +940,7 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
                            "inference_stats":request_stats,
                            "cache_release":cache_release,
                            "seconds": round(time.monotonic() - start, 3),
+                           "queue_wait_seconds": queue_wait_seconds,
                            "cache_hit":False, "cache_key_sha256":cache_key,
                            "coalesced":False, "max_tokens":max_tokens}
             cache_entries = remember_response(cache_key, {
@@ -958,8 +999,7 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
             decoded.append(decode_messages(item.get("messages")))
         if not hasattr(backend, "generate_batch"):
             raise RuntimeError("The configured VLM backend has no batch support")
-        if not inference_lock.acquire(blocking=False):
-            return jsonify(error={"message": "Local VLM is busy"}), 503
+        queue_wait_seconds = acquire_inference_slot()
         started = time.monotonic()
         try:
             result, request_stats, cache_release = execute_backend_call(
@@ -986,6 +1026,7 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
                 "backend": backend.backend_name,
                 "batch_size": len(results),
                 "seconds": elapsed,
+                "queue_wait_seconds": queue_wait_seconds,
                 "inference_stats": request_stats,
                 "cache_release": cache_release,
                 "cache_hit": False})

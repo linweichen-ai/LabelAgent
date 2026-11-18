@@ -427,30 +427,45 @@ class LocalVLMContractTests(unittest.TestCase):
             "coalesce_reuse_failures": 0, "busy_rejections": 0,
         })
 
-    def test_different_inflight_request_keeps_busy_backpressure(self):
+    def test_different_inflight_request_waits_in_server_queue(self):
         backend = BlockingBackend()
-        app = MODULE.create_app(backend, coalesce_timeout_seconds=2)
+        app = MODULE.create_app(
+            backend, coalesce_timeout_seconds=2,
+            inference_queue_timeout_seconds=2)
         body = {"model": backend.model_id, "messages": messages()}
-        holder = []
-        def post_first():
+        replies = []
+        def post(payload):
             with app.test_client() as client:
-                holder.append(client.post("/v1/chat/completions", json=body))
-        first = threading.Thread(target=post_first)
+                replies.append(client.post("/v1/chat/completions", json=payload))
+        first = threading.Thread(target=post, args=(body,))
         first.start()
         self.assertTrue(backend.started.wait(1))
-        with app.test_client() as client:
-            different = client.post("/v1/chat/completions",
-                                    json={**body, "max_tokens": 17})
-        self.assertEqual(different.status_code, 503)
-        self.assertEqual(different.json["error"]["message"], "Local VLM is busy")
+        second = threading.Thread(
+            target=post, args=({**body, "max_tokens": 17},))
+        second.start()
+        for _ in range(100):
+            queue = app.test_client().get("/health").json["inference_queue"]
+            if queue["waiting"] == 1:
+                break
+            threading.Event().wait(.01)
+        self.assertEqual(queue["waiting"], 1)
+        threading.Event().wait(.02)
         backend.release.set()
         first.join(2)
-        self.assertEqual(holder[0].status_code, 200)
-        self.assertEqual(backend.generate_calls, 1)
+        second.join(2)
+        self.assertEqual([reply.status_code for reply in replies], [200, 200])
+        self.assertEqual(backend.generate_calls, 2)
+        self.assertEqual(
+            sum(reply.json["local_vlm"]["queue_wait_seconds"] > 0
+                for reply in replies), 1)
         health = app.test_client().get("/health").json
         self.assertEqual(health["response_cache_stats"]["misses"], 2)
-        self.assertEqual(health["response_cache_stats"]["busy_rejections"], 1)
-        self.assertEqual(health["response_cache_stats"]["stores"], 1)
+        self.assertEqual(health["response_cache_stats"]["busy_rejections"], 0)
+        self.assertEqual(health["response_cache_stats"]["stores"], 2)
+        self.assertEqual(health["inference_queue"]["waiting"], 0)
+        self.assertEqual(health["inference_queue"]["total_waits"], 1)
+        self.assertEqual(health["inference_queue"]["timeouts"], 0)
+        self.assertEqual(health["inference_queue"]["max_waiting"], 1)
 
 
 if __name__ == "__main__":

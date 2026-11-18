@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="labelagent-ui-version" content="138">
+  <meta name="labelagent-ui-version" content="139">
   <title>标注 Agent 平台</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b6b5a'/%3E%3Ctext x='32' y='41' text-anchor='middle' font-family='Arial,sans-serif' font-size='26' font-weight='700' fill='white'%3ELA%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="/style.css?v=114">
+<link rel="stylesheet" href="/style.css?v=115">
 <link rel="stylesheet" href="/point-prompt-v19.css?v=64">
   <link rel="stylesheet" href="/human-review.css?v=64">
   <link rel="stylesheet" href="/reference-prep.css?v=103">
@@ -39,6 +39,14 @@
         <button id="openConfigDialog" class="iconButton" title="设置" aria-label="设置"><img src="/icons/settings.svg" alt=""></button>
       </div>
     </div>
+    <section id="datasetIdentity" class="datasetIdentity unloaded" aria-label="当前数据集" aria-live="polite">
+      <span id="datasetIdentityKind" class="datasetIdentityKind">尚未加载数据</span>
+      <div class="datasetIdentityCopy">
+        <strong id="datasetIdentityName">请先选择图片或 MCAP 数据</strong>
+        <small id="datasetIdentityDetail">加载后会在这里持续显示数据集、批次、相机话题和帧数</small>
+      </div>
+      <button id="datasetIdentitySwitch" type="button">切换数据</button>
+    </section>
     <aside id="uiVersionNotice" class="uiVersionNotice" hidden role="alert" aria-live="assertive">
       <div>
         <strong>页面已有新版，当前旧页面可能导致 SAM 按钮看起来没有反应</strong>
@@ -266,7 +274,7 @@
             <button id="autoLabelsAll" type="button">全选</button>
             <button id="autoLabelsReference" type="button">仅参考帧类别</button>
             <button id="autoLabelsSave" type="button" class="primary">应用类别</button>
-            <span id="autoLabelHint">这里选择的是模型要寻找的类别。模型输出只是候选，仍需人工复核后才能成为真值。</span>
+            <span id="autoLabelHint">勾选表示“逐类检查 / 允许生成”，不等于每帧必有该类。下方会区分：已生成、VLM 看见但 SAM 漏分、画面未见和尚未评估。</span>
           </div>
           <div id="candidateSummary" class="candidateSummary" aria-live="polite"></div>
           <section id="batchReviewPanel" class="batchReviewPanel" aria-labelledby="batchReviewTitle">
@@ -550,8 +558,8 @@
           <span>单目标点提示出现绿色点和“正在生成”计时才算提交；整帧全流程会立即显示实时进度。两者都没有就是尚未开始，不是速度慢。</span>
         </div>
         <label>一键起稿范围
-          <select id="referenceAutoLabel" aria-label="选择自动识别全部可见类别或指定单一类别"></select>
-          <small>推荐自动识别；VLM 先筛选可见的已知类别，不确定或疑似新类别只进入人工复核。</small>
+          <select id="referenceAutoLabel" aria-label="选择自动识别可见类别、逐类尝试全部已选类别或指定单一类别"></select>
+          <small>推荐先自动识别可见类别；“逐类尝试全部已选类别”会更慢且误检风险更高，结果仍只是机器候选。</small>
         </label>
         <label>选择机器候选帧
           <select id="candidateReferenceFrame" aria-label="选择机器候选帧"></select>
@@ -640,6 +648,6 @@
   </div>
 </div>
 <div id="toast" role="status"></div>
-<script src="/pointcloud.js?v=64"></script><script src="/app.js?v=162"></script><script src="/inspection.js?v=104"></script><script src="/guide.js?v=113"></script><script src="/review.js?v=67"></script><script src="/batch-review.js?v=65"></script><script src="/compare.js?v=65"></script><script src="/human-review.js?v=97"></script><script src="/reference-prep.js?v=162"></script><script src="/review-packet-core.js?v=163"></script><script src="/review-packet.js?v=163"></script>
+<script src="/pointcloud.js?v=64"></script><script src="/app.js?v=163"></script><script src="/inspection.js?v=104"></script><script src="/guide.js?v=113"></script><script src="/review.js?v=67"></script><script src="/batch-review.js?v=65"></script><script src="/compare.js?v=65"></script><script src="/human-review.js?v=97"></script><script src="/reference-prep.js?v=163"></script><script src="/review-packet-core.js?v=163"></script><script src="/review-packet.js?v=163"></script>
 </body>
 </html>

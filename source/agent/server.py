@@ -1777,6 +1777,10 @@ def get_reference_preparation():
         topic = state.get("topic")
         frame_count = (video.topics.get(topic, {}).get("count", 0)
                        if video is not None and topic else 0)
+        references = state.get("reference_frames", {}).get(topic, []) if topic else []
+        reference_index = references[0] if references else None
+        auto_labels = (selected_auto_labels(reference_index)
+                       if reference_index is not None else list(state.get("labels", [])))
         truth_status = current_truth_review_status()
         compact_status = {
             str(frame): {
@@ -1795,6 +1799,7 @@ def get_reference_preparation():
             topic=topic,
             frame_count=frame_count,
             labels=copy.deepcopy(state.get("labels", [])),
+            auto_labels=auto_labels,
             reference_frames=copy.deepcopy(state.get("reference_frames", {})),
             truth_index=_reference_frame_index(state.get("truth", {})),
             truth_review_status=compact_status,

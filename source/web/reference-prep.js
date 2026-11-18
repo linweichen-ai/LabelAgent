@@ -1,5 +1,6 @@
 (() => {
   const AUTO_VISIBLE_LABELS = '__auto_visible_labels__';
+  const ALL_SELECTED_LABELS = '__all_selected_labels__';
   const byId = id => document.getElementById(id);
   const dialog = byId('referencePrepDialog');
   if (!dialog) return;
@@ -422,6 +423,7 @@
     const selectedLabel = labelSelect.value || AUTO_VISIBLE_LABELS;
     labelSelect.replaceChildren();
     option(labelSelect, AUTO_VISIBLE_LABELS, '自动识别当前帧全部可见类别（推荐）');
+    option(labelSelect, ALL_SELECTED_LABELS, '逐类尝试全部已选推理类别（更慢，易误检）');
     for (const label of state?.labels || []) option(labelSelect, label, label);
     labelSelect.value = [...labelSelect.options].some(item => item.value === selectedLabel)
       ? selectedLabel : AUTO_VISIBLE_LABELS;
@@ -577,12 +579,14 @@
     const frameId = currentFrame();
     const label = byId('referenceAutoLabel').value;
     const autoDetectVisible = label === AUTO_VISIBLE_LABELS;
+    const tryAllSelected = label === ALL_SELECTED_LABELS;
     const fresh = await readPreparationState();
     if (!fresh.loaded) throw new Error('请先加载图像或 MCAP');
     if (latestState && (fresh.path !== latestState.path || fresh.topic !== latestState.topic)) throw new Error('数据作用域已变化，请重新打开参考帧准备');
     if (hasTruthFrame(fresh, frameId)) throw new Error(existingAnnotationMessage(fresh, frameId));
     const existing = currentFrameCandidate(fresh, frameId);
     if (existing) {
+      if (tryAllSelected) throw new Error('当前帧已有机器候选。为保护已有结果，系统不会用逐类重跑覆盖；请先载入候选，再按黄色漏分提示逐类补标');
       const frameState = await readFrameSnapshot(frameId, fresh);
       const candidate = frameState.candidates?.[String(frameId)];
       if (!Array.isArray(candidate) || !candidate.length) throw new Error('当前帧候选已发生变化，请重新打开参考帧准备');
@@ -592,17 +596,20 @@
       window.labelAgentToast?.(`当前帧已有 ${candidate.length} 个机器候选，已直接载入；已完成高风险类别轻量复审，未重新分割，未写入人工真值，仍须逐个检查`);
       return;
     }
-    if (!autoDetectVisible && (!label || !(fresh.labels || []).includes(label))) throw new Error('请选择有效的参考类别');
+    if (!autoDetectVisible && !tryAllSelected && (!label || !(fresh.labels || []).includes(label))) throw new Error('请选择有效的参考类别');
     if (autoDetectVisible && !(fresh.labels || []).length) throw new Error('当前标签表为空，无法自动识别');
+    const selectedLabels = tryAllSelected ? (fresh.auto_labels || []).filter(item => (fresh.labels || []).includes(item)) : [];
+    if (tryAllSelected && !selectedLabels.length) throw new Error('当前没有已选推理类别，请先在自动标注页应用类别');
     const readiness = await readModelReadiness();
     if (!readiness.ready) throw new Error(`模型尚未就绪：SAM ${readinessText(readiness.sam, 'sam')}；VLM ${readinessText(readiness.vlm, 'vlm')}`);
     draftStartedAt = Date.now();
     draftLastPhaseKey = '';
     draftPhaseChangedAt = draftStartedAt;
     draftProgressFailures = 0;
-    setDraftBusy(true, autoDetectVisible ? '请求已提交 · VLM 正在识别可见类别…' : '请求已提交 · 正在启动 SAM 与 VLM…');
+    setDraftBusy(true, autoDetectVisible ? '请求已提交 · VLM 正在识别可见类别…' : tryAllSelected ? `请求已提交 · 正在逐类尝试 ${selectedLabels.length} 个类别…` : '请求已提交 · 正在启动 SAM 与 VLM…');
     byId('referenceDraftProgressDetail').textContent = autoDetectVisible
       ? '后台已开始：新图首批机器候选通常约 15～25 秒出现；出现后可立即检查，Agent 与高风险复核会继续后台运行，请不要重复点击。'
+      : tryAllSelected ? `后台将依次尝试：${selectedLabels.join('、')}。没有有效轮廓的类别会明确显示为漏分或未见，不会伪造掩码。`
       : '后台已确认开始一键起稿；首批候选生成后会立即显示，Agent 与高风险复核会继续后台运行，请不要重复点击。';
     draftTimer = setInterval(updateDraftProgress, 1000);
     await updateDraftProgress();
@@ -611,7 +618,7 @@
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(autoDetectVisible
           ? {frame: frameId, auto_detect_visible: true, defer_agent_review: true, defer_class_audit: true}
-          : {frame: frameId, labels: [label], defer_agent_review: true, defer_class_audit: true}),
+          : {frame: frameId, labels: tryAllSelected ? selectedLabels : [label], defer_agent_review: true, defer_class_audit: true}),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || '参考帧机器草稿生成失败');

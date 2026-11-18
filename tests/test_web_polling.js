@@ -68,6 +68,30 @@ test('参考起稿公开高风险复核与安全保存阶段', () => {
   assert.match(text, /新图首批机器候选通常约 15～25 秒出现/);
 });
 
+test('参考起稿支持逐类尝试全部已选类别但仍保持候选边界', () => {
+  const prep = source('reference-prep.js');
+  assert.match(prep, /ALL_SELECTED_LABELS = '__all_selected_labels__'/);
+  assert.match(prep, /逐类尝试全部已选推理类别（更慢，易误检）/);
+  assert.match(prep, /fresh\.auto_labels \|\| \[\]/);
+  assert.match(prep, /系统不会用逐类重跑覆盖/);
+  assert.match(prep, /labels: tryAllSelected \? selectedLabels : \[label\]/);
+  assert.match(prep, /result\.candidate_only/);
+  assert.match(prep, /result\.human_truth !== false/);
+});
+
+test('工作台持续显示新旧数据集身份和逐类别覆盖状态', () => {
+  const html = source('index.html');
+  const app = source('app.js');
+  assert.match(html, /id="datasetIdentity"/);
+  assert.match(html, /id="datasetIdentitySwitch"/);
+  assert.match(app, /function datasetIdentityForPath/);
+  assert.match(app, /SFL-CPD15-Y · 批次 A（0920）· 000/);
+  assert.match(app, /CVAT Task3 · 斜坡复核集/);
+  assert.match(app, /VLM 看见，SAM 漏分/);
+  assert.match(app, /已选类别会进入检查流程/);
+  assert.match(app, /updateDatasetIdentity\(\)/);
+});
+
 test('参考起稿先展示候选并在后台完成高风险类别复核', () => {
   const prep = source('reference-prep.js');
   const app = source('app.js');

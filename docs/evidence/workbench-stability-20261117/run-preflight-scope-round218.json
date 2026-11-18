@@ -1,0 +1,156 @@
+{
+  "schema_version": "labelagent.workbench-stability.round218.v1",
+  "round": 218,
+  "date": "2026-11-19",
+  "objective": "Bind automatic-label submission to the dataset, image topic, frame range, and navigation state that passed preflight.",
+  "status": "implemented_tested_and_production_deployed_source_sync_pending",
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "model_inference_performed": false,
+    "model_weights_changed": false,
+    "oss_written": false
+  },
+  "description_audit": {
+    "server_snapshot_checks_dataset_topic_config_labels_auto_labels_references_truth_signature": true,
+    "cross_dataset_save_issue_found": false,
+    "change_required": false
+  },
+  "pre_fix_reproduction": {
+    "browser": "Microsoft Edge headless fresh context",
+    "asset": "/app.js?v=173",
+    "original": {
+      "frame": 74,
+      "topic": "/capture/camera_1/image",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap"
+    },
+    "scope_during_preflight": {
+      "frame": 33,
+      "topic": "/capture/camera_0/image",
+      "path": "D:\\synthetic-scope-change\\new-dataset.mcap"
+    },
+    "run_request_sent": true,
+    "submitted_frame": 74,
+    "expected_file_present": false,
+    "expected_topic_present": false,
+    "model_inference_requests": 0,
+    "truth_write_requests": 0,
+    "page_errors": 0,
+    "console_errors": 0
+  },
+  "implementation": {
+    "browser_captures_file_before_preflight": true,
+    "browser_captures_topic_before_preflight": true,
+    "browser_captures_navigation_generation_before_preflight": true,
+    "browser_cancels_if_scope_or_navigation_changes": true,
+    "normal_request_includes_expected_file": true,
+    "normal_request_includes_expected_topic": true,
+    "server_validates_complete_scope_pair": true,
+    "server_rejects_mismatch_before_reference_or_model_work": true,
+    "legacy_missing_scope_pair_compatible": true,
+    "asset_version": 174
+  },
+  "tests": {
+    "targeted_browser_scope": {"passed": 1, "failed": 0},
+    "targeted_server_scope": {"passed": 1, "failed": 0},
+    "all_web": {"passed": 119, "failed": 0, "elapsed_ms": 144.6313},
+    "all_python": {"passed": 980, "failed": 0, "subtests_passed": 186, "elapsed_seconds": 10.44, "environment": "PYTHONUTF8=1"},
+    "javascript_syntax": "passed",
+    "python_compile": "passed",
+    "git_diff_check": "passed"
+  },
+  "browser_acceptance": {
+    "browser": "Microsoft Edge headless fresh context",
+    "workbench_url": "http://127.0.0.1:8765",
+    "asset": "/app.js?v=174",
+    "race": {
+      "original_frame": 74,
+      "changed_frame": 33,
+      "changed_topic": "/capture/camera_0/image",
+      "changed_path": "D:\\synthetic-scope-change\\new-dataset.mcap",
+      "run_requests_after_scope_change": 0,
+      "stale_submission_blocked": true,
+      "message": "预检期间数据集、相机或当前帧已经切换，本次自动标注未启动；请在当前画面重新开始"
+    },
+    "normal_submission": {
+      "run_requests": 1,
+      "frame": 74,
+      "count": 1,
+      "max_rounds": 2,
+      "expected_file_matches": true,
+      "expected_topic_matches": true,
+      "bound": true
+    },
+    "model_inference_requests": 0,
+    "truth_write_requests": 0,
+    "page_errors": 0,
+    "console_errors": 0,
+    "accepted": true,
+    "local_untracked_artifacts": "artifacts/round218-run-preflight-scope/",
+    "factory_image_uploaded": false
+  },
+  "server_acceptance": {
+    "request_scope": "deliberately wrong expected_file with current expected_topic",
+    "http_status": 409,
+    "stale_review": true,
+    "error": "预检期间数据文件或图像源已经变化，本次自动标注未启动",
+    "run_status_after": "idle",
+    "state_changed": false,
+    "file_sessions_changed": false,
+    "model_inference_performed": false
+  },
+  "deployment": {
+    "production_root": "D:\\Apps\\LabelAgent",
+    "backup_directory": "D:\\Apps\\LabelAgent\\.local\\backups\\run-preflight-scope-round218-20261119-061050",
+    "backup_sha256": {
+      "app.js": "bc664ec26eea018bab7bc402f84aeb8d96e269a57fe70ae8f3107c1c06df389c",
+      "index.html": "091fd3dfbcbd47225141c8c1c351383cf58b4fb94f185b0063751349514cb627",
+      "server.py": "5ab3b68c35c797388308c74e09acb466b7687bebb312d37a4c66299041287f23",
+      "state.json": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+      "file_sessions.json": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+      "remote_processes.json": "1d4391169f9e7afc56b81c724f5cd85408c4431a45b9ab1cac42c9594f14ab92"
+    },
+    "workbench_manager_pid_before": 52724,
+    "workbench_manager_pid_after": 56168,
+    "workbench_listener_pid_before": 58424,
+    "workbench_listener_pid_after": 54724,
+    "tunnel_4090_pid_unchanged": 60456,
+    "sam_5090_tunnel_pid_unchanged": 8656,
+    "app_js_sha256": "23c8e0d3e2fa920e2849f1219fe14e4ef878af0a638ec9d2612491343aef67af",
+    "index_html_sha256": "f933324850016e8d028cf1add8e6c266c747d4e4ab4d387b95488fec85d07bbc",
+    "server_py_sha256": "f17ccccb4a63be3cc5465770e3f873880a2ea1595ede572b124924e728a83cfc"
+  },
+  "formal_state_integrity": {
+    "state_sha256_before": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "state_sha256_after": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "file_sessions_sha256_before": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "file_sessions_sha256_after": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "unchanged": true
+  },
+  "service_health_after": {
+    "workbench_state_8765": 200,
+    "workbench_run_8765": 200,
+    "sam_4090_28766": 200,
+    "sam_5090_38766": 200,
+    "vlm_4090_28868": 200,
+    "run_status": "idle"
+  },
+  "source_sync": {
+    "implementation_commit": null,
+    "receipt_commit": null,
+    "branch": "codex/workbench-stability-20261117",
+    "github_readback": null,
+    "cnb_readback": null,
+    "both_remotes_matched": false,
+    "factory_images_uploaded": false,
+    "untracked_experiment_artifacts_uploaded": false
+  },
+  "changed_files": {
+    "source/web/app.js": "23c8e0d3e2fa920e2849f1219fe14e4ef878af0a638ec9d2612491343aef67af",
+    "source/web/index.html": "f933324850016e8d028cf1add8e6c266c747d4e4ab4d387b95488fec85d07bbc",
+    "source/agent/server.py": "f17ccccb4a63be3cc5465770e3f873880a2ea1595ede572b124924e728a83cfc",
+    "tests/test_web_polling.js": "7d06b7b7a14fa0a7a1a67a8f75cbcbcd74453cdeaef41a0b23cbb39f4d308b33",
+    "tests/test_agent.py": "3293b104f2020e7e45f61cb2d7ae97ef2a7d3e9865d1f0770ba9f6acbd2d4749"
+  }
+}

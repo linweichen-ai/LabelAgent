@@ -2370,6 +2370,27 @@ class ServerTests(unittest.TestCase):
             finally:
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work
 
+    def test_run_rejects_preflight_scope_that_no_longer_matches_loaded_data(self):
+        old_state, old_status = server.state, server.run_status
+        server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+            "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+            "config": {}, "candidates": {}, "agent_runs": {}}
+        server.run_status = {"status": "idle"}
+        client = server.app.test_client()
+        try:
+            wrong_file = client.post("/api/run", json={"frame": 1, "count": 1,
+                "expected_file": "D:/different-dataset.mcap", "expected_topic": "camera0"})
+            self.assertEqual(wrong_file.status_code, 409, wrong_file.json)
+            self.assertIn("本次自动标注未启动", wrong_file.json["error"])
+            wrong_topic = client.post("/api/run", json={"frame": 1, "count": 1,
+                "expected_file": str(FakeVideo.path), "expected_topic": "camera1"})
+            self.assertEqual(wrong_topic.status_code, 409, wrong_topic.json)
+            missing_pair = client.post("/api/run", json={"frame": 1, "count": 1,
+                "expected_file": str(FakeVideo.path)})
+            self.assertEqual(missing_pair.status_code, 400, missing_pair.json)
+        finally:
+            server.state, server.run_status = old_state, old_status
+
     def test_truth_comparison_run_keeps_truth_and_stores_separate_candidate(self):
         old_state, old_status, old_work = server.state, server.run_status, server.WORK
         with tempfile.TemporaryDirectory() as directory:

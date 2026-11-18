@@ -853,17 +853,18 @@ $('runButton').onclick=async()=>{
  if(runRequestStartedAt!==null)return;
  try{
    const requestedFrames=pendingRetry()?[...retryFrames]:null;
-   const startFrame=requestedFrames?.[0]??Number($('frameNumber').value),count=requestedFrames?.length??Number($('taskCount').value),maxRounds=Number($('reviewRounds').value);
+   const startFrame=requestedFrames?.[0]??Number($('frameNumber').value),count=requestedFrames?.length??Number($('taskCount').value),maxRounds=Number($('reviewRounds').value),jobTopic=topic,jobFile=loadedDataPath,jobNavigationGeneration=frameNavigationGeneration;
   if(!Number.isInteger(startFrame)||startFrame<0||startFrame>=(topics[topic]?.count||0))throw Error('请选择有效的当前帧');
   if(!Number.isInteger(count)||count<1||count>100)throw Error('处理帧数须为 1～100');
   if(!Number.isInteger(maxRounds)||maxRounds<1||maxRounds>12)throw Error('复查轮数须为 1～12');
    runRequestStartedAt=Date.now()/1000;runRequestPhase='preflight';runRequestFrame=startFrame;runRequestCount=count;runRequestMaxRounds=maxRounds;renderRunButton();scheduleRunStatusPoll(250);
   await ensureAutoLabelReadiness(requestedFrames,startFrame,count);
+  if(topic!==jobTopic||loadedDataPath!==jobFile||frameNavigationGeneration!==jobNavigationGeneration)throw Error('预检期间数据集、相机或当前帧已经切换，本次自动标注未启动；请在当前画面重新开始');
   runRequestPhase='submitting';renderRunButton();
-   const jobTopic=topic,jobFile=loadedDataPath;
   stopPlayback();
     const comparison=requestedFrames?requestedFrames.some(item=>truthFrameIndex.has(String(item))):truthFrameIndex.has(String(startFrame));
-    const data=await api('run',requestedFrames?{frames:requestedFrames,max_rounds:maxRounds,defer_agent_review:false,compare_with_truth:comparison}:{frame:startFrame,count,max_rounds:maxRounds,defer_agent_review:false,compare_with_truth:comparison});
+    const runScope={expected_file:jobFile,expected_topic:jobTopic};
+    const data=await api('run',requestedFrames?{...runScope,frames:requestedFrames,max_rounds:maxRounds,defer_agent_review:false,compare_with_truth:comparison}:{...runScope,frame:startFrame,count,max_rounds:maxRounds,defer_agent_review:false,compare_with_truth:comparison});
    markRunResultHandled(data.task_id);latestAgentJob.result_available=false;
   if(data.description)currentDescription=data.description;
    for(const item of data.frames||[])if(Number.isInteger(item.frame))candidateCountIndex[String(item.frame)]=Math.max(0,Number(item.remaining)||0);

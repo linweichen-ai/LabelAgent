@@ -4742,6 +4742,17 @@ def generate_reference_draft():
 def run_workflow():
     body = request.get_json() or {}
     with lock:
+        if state.get("video") is None or state.get("topic") is None:
+            raise ValueError("请先加载图像消息")
+        expected_file = body.get("expected_file")
+        expected_topic = body.get("expected_topic")
+        if expected_file is not None or expected_topic is not None:
+            if not isinstance(expected_file, str) or not isinstance(expected_topic, str):
+                raise ValueError("自动标注作用域必须同时包含数据文件和图像源")
+            if (expected_file != str(state["video"].path)
+                    or expected_topic != state["topic"]):
+                raise StaleHumanReviewError(
+                    "预检期间数据文件或图像源已经变化，本次自动标注未启动")
         topic_references = state.get("reference_frames", {}).get(state["topic"], [])
         if not topic_references:
             raise ValueError("请先设置参考帧并保存其真值")

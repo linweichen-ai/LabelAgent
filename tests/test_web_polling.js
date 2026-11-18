@@ -700,7 +700,7 @@ test('运行前弹窗展示参考描述并提供一键恢复入口', () => {
 
 test('完成与失败帧重试均复用轻量帧计数且不回读完整状态', () => {
   const handler = section(source('app.js'), "$('runButton').onclick", 'let runStatusPollTimer');
-  assert.ok(handler.includes('{frames:requestedFrames,max_rounds:maxRounds,defer_agent_review:false,compare_with_truth:comparison}'));
+  assert.ok(handler.includes('{...runScope,frames:requestedFrames,max_rounds:maxRounds,defer_agent_review:false,compare_with_truth:comparison}'));
   assert.ok(handler.includes('candidateCountIndex[String(item.frame)]'));
   assert.equal(handler.includes("fetch('/api/state')"), false);
 });
@@ -809,6 +809,17 @@ test('启动前并行检查模型、参考流程与首个请求帧的数据兼�
         : {ready:true};
   }});
   await assert.rejects(() => h.context.ensureAutoLabelReadiness([7,9],7,2), /数据：帧 7 无法解码/);
+});
+
+test('自动标注预检后只提交原数据文件相机和导航作用域', () => {
+  const app = source('app.js');
+  const handler = section(app, "$('runButton').onclick=async", 'let runStatusPollTimer');
+  assert.match(handler, /jobTopic=topic,jobFile=loadedDataPath,jobNavigationGeneration=frameNavigationGeneration/);
+  assert.match(handler, /topic!==jobTopic\|\|loadedDataPath!==jobFile\|\|frameNavigationGeneration!==jobNavigationGeneration/);
+  assert.match(handler, /预检期间数据集、相机或当前帧已经切换，本次自动标注未启动/);
+  assert.match(handler, /expected_file:jobFile,expected_topic:jobTopic/);
+  assert.ok(handler.indexOf('jobTopic=topic') < handler.indexOf('await ensureAutoLabelReadiness'));
+  assert.ok(handler.indexOf('await ensureAutoLabelReadiness') < handler.indexOf("const runScope={expected_file:jobFile,expected_topic:jobTopic}"));
 });
 
 test('多文件新数据集使用一次批量上传请求', () => {
@@ -975,7 +986,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=173/);
+  assert.match(source('index.html'), /app\.js\?v=174/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1036,7 +1047,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=173/);
+  assert.match(source('index.html'), /app\.js\?v=174/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1084,7 +1095,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 3);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=173/);
+  assert.match(source('index.html'), /app\.js\?v=174/);
 });
 
 test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () => {

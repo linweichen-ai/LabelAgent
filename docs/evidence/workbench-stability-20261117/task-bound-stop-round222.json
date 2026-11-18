@@ -110,7 +110,7 @@
   "source_sync": {
     "branch": "codex/workbench-stability-20261117",
     "implementation_commit": "f0089a0303e047166d9c574db784e702f89b845c",
-    "receipt_commit": null,
+    "receipt_commit": "2cebb607e7c9aa0f509a35e2b1618cfd7a9c63d0",
     "github_readback": "f0089a0303e047166d9c574db784e702f89b845c",
     "cnb_readback": "f0089a0303e047166d9c574db784e702f89b845c",
     "both_remotes_matched": true,

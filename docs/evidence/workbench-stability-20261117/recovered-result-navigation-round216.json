@@ -1,0 +1,138 @@
+{
+  "schema_version": "labelagent.workbench-stability.round216.v1",
+  "round": 216,
+  "date": "2026-11-19",
+  "objective": "Preserve a recoverable result when opening its candidate frame is superseded by explicit user navigation, without repeated background takeovers.",
+  "status": "implemented_tested_and_production_deployed_pending_remote_receipt",
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "model_weights_changed": false,
+    "oss_written": false,
+    "gpu_used_by_browser_acceptance": false
+  },
+  "pre_fix_reproduction": {
+    "browser": "Microsoft Edge headless fresh context",
+    "asset": "/app.js?v=170",
+    "recovered_frame": 10,
+    "user_selected_frame": 20,
+    "delay_recovery_timeline_ms": 500,
+    "delay_user_timeline_ms": 50,
+    "final_frame": 20,
+    "recover_function_returned": true,
+    "task_marked_handled": true,
+    "still_pending": false,
+    "button_text": "开始自动标注",
+    "cancelled_result_incorrectly_handled": true,
+    "truth_write_requests": 0,
+    "segment_requests": 0,
+    "page_errors": 0
+  },
+  "implementation": {
+    "candidate_open_requires_successful_navigation": true,
+    "mark_handled_only_after_open": true,
+    "auto_restore_deferred_after_user_navigation": true,
+    "explicit_view_clears_deferred_state": true,
+    "newer_task_global_state_protected": true,
+    "deferred_state_persisted_to_server": false,
+    "asset_version": 171
+  },
+  "tests": {
+    "targeted_recovery_navigation": {"passed": 1, "failed": 0},
+    "all_web": {"passed": 117, "failed": 0},
+    "all_python": {"passed": 979, "failed": 0, "subtests_passed": 186, "elapsed_seconds": 10.28, "environment": "PYTHONUTF8=1"},
+    "javascript_syntax": "passed",
+    "python_compile": "passed",
+    "git_diff_check": "passed"
+  },
+  "browser_acceptance": {
+    "browser": "Microsoft Edge headless fresh context",
+    "workbench_url": "http://127.0.0.1:8765",
+    "asset": "/app.js?v=171",
+    "start": {
+      "frame": 74,
+      "topic": "/capture/camera_1/image",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap"
+    },
+    "after_cancelled_automatic_open": {
+      "frame": 20,
+      "recover_returned": false,
+      "handled": false,
+      "auto_deferred": true,
+      "still_pending": true,
+      "button_text": "查看上次结果",
+      "preserved": true
+    },
+    "suppressed_background_retry": {
+      "returned": false,
+      "task_result_requests_before": 1,
+      "task_result_requests_after": 1,
+      "suppressed": true
+    },
+    "after_explicit_view": {
+      "frame": 10,
+      "recover_returned": true,
+      "handled": true,
+      "auto_deferred": false,
+      "still_pending": false,
+      "button_text": "开始自动标注",
+      "opened": true
+    },
+    "task_result_requests": 2,
+    "truth_write_requests": 0,
+    "segment_requests": 0,
+    "page_errors": 0,
+    "console_errors": 0,
+    "accepted": true,
+    "local_untracked_artifacts": "artifacts/round216-recovered-result-navigation/",
+    "factory_image_uploaded": false
+  },
+  "deployment": {
+    "production_root": "D:\\Apps\\LabelAgent",
+    "backup_directory": "D:\\Apps\\LabelAgent\\.local\\backups\\recovered-result-navigation-round216-20261119-052815",
+    "backup_sha256": {
+      "app.js": "ee1c245131658f73518bb04c0f7319b39cb165f88d371f0992419282a2f5ea57",
+      "index.html": "184926ebfdb3bf61a72e42040f318761dd2062e949c8a094cb682f46410203bf",
+      "state.json": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+      "file_sessions.json": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+      "remote_processes.json": "b2bacbb9efb8eed0da486dc5dba0d27ea0e376551a1e521416dfe57ba03aaf96"
+    },
+    "workbench_manager_pid_before": 38764,
+    "workbench_manager_pid_after": 66408,
+    "workbench_listener_pid_before": 31708,
+    "workbench_listener_pid_after": 70256,
+    "tunnel_4090_pid_unchanged": 60456,
+    "sam_5090_tunnel_pid_unchanged": 8656,
+    "app_js_sha256": "679da9ac1a33f081fb555e9a3e8a73567e21168dcf9e5a04d37826a4e252ac2d",
+    "index_html_sha256": "e02af5f4ff7e3fd0ee92ad9f3713f400b5df2de3c5078a08ee5ae93af5860bdd"
+  },
+  "formal_state_integrity": {
+    "state_sha256_before": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "state_sha256_after": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "file_sessions_sha256_before": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "file_sessions_sha256_after": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "unchanged": true
+  },
+  "service_health_after": {
+    "workbench_state_8765": 200,
+    "workbench_run_8765": 200,
+    "sam_4090_28766": 200,
+    "sam_5090_38766": 200,
+    "vlm_4090_28868": 200
+  },
+  "source_sync": {
+    "implementation_commit": null,
+    "branch": "codex/workbench-stability-20261117",
+    "github_readback": null,
+    "cnb_readback": null,
+    "both_remotes_matched_implementation_commit": false,
+    "factory_images_uploaded": false,
+    "untracked_experiment_artifacts_uploaded": false
+  },
+  "changed_files": {
+    "source/web/app.js": "679da9ac1a33f081fb555e9a3e8a73567e21168dcf9e5a04d37826a4e252ac2d",
+    "source/web/index.html": "e02af5f4ff7e3fd0ee92ad9f3713f400b5df2de3c5078a08ee5ae93af5860bdd",
+    "tests/test_web_polling.js": "72e12fec3517b8b5f24027351716a1529aaedb1508c10c5d0abf2a29e8029cf7"
+  }
+}

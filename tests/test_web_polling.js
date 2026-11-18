@@ -487,14 +487,14 @@ test('中断回执恢复已完成结果并只排队未完成帧', async () => {
     $: id => id === 'runButton' ? button : {value:'0'},
     latestAgentJob:{status:'idle',result_available:true,result_task_id:'interrupted-1'},
     runRequestStartedAt:null,runRequestPhase:'preflight',runRequestFrame:null,runRequestCount:null,
-    runResultHandled:new Set(),retryFrames:[],retryScope:null,retryMode:'',
+    runResultHandled:new Set(),runResultAutoRestoreDeferred:new Set(),retryFrames:[],retryScope:null,retryMode:'',
     loadedDataPath:'/data.mcap',topic:'camera0',candidateCountIndex:{},
     async fetch() { return {ok:true,async json(){return {
       task_id:'interrupted-1',status:'running',file:'/data.mcap',topic:'camera0',
       completed:1,frames:[{frame:1,remaining:2,failed:false}],pending_frames:[2,3],failed_frames:[]
     }}}},
     refreshCandidateSummary() {},
-    async openCandidateFrame(frame,topic) { opened={frame,topic}; },
+    async openCandidateFrame(frame,topic) { opened={frame,topic}; return true; },
     toast(message) { notice=message; },
     renderAgentProgressPanel() {},
   });
@@ -506,6 +506,45 @@ test('中断回执恢复已完成结果并只排队未完成帧', async () => {
   assert.equal(h.run('retryFrames.join(",")'), '2,3');
   assert.equal(button.textContent, '继续 2 个未完成帧');
   assert.ok(notice.includes('已完成帧不会重跑'));
+});
+
+test('候选恢复被用户导航取消后保留查看入口且不反复抢回帧', async () => {
+  let fetchCount = 0, allowOpen = false, notice = '';
+  const job = {status:'completed',result_available:true,result_task_id:'recover-cancelled-1'};
+  const h = harness({
+    latestAgentJob:job, runResultHandled:new Set(), runResultAutoRestoreDeferred:new Set(),
+    retryFrames:[],retryScope:null,retryMode:'',loadedDataPath:'/data.mcap',topic:'camera0',
+    candidateCountIndex:{},
+    async fetch() { fetchCount++; return {ok:true,async json(){return {
+      task_id:'recover-cancelled-1',status:'completed',file:'/data.mcap',topic:'camera0',
+      completed:1,frames:[{frame:10,remaining:2,failed:false}],pending_frames:[],failed_frames:[]
+    }}}},
+    refreshCandidateSummary() {},
+    async openCandidateFrame() { return allowOpen; },
+    renderRunButton() {},
+    toast(message) { notice=message; },
+  });
+  const text = source('app.js');
+  h.run(section(text, 'function pendingRunResult', 'function formatAgentDuration'));
+
+  assert.equal(await h.run('recoverRunResult(latestAgentJob,{automatic:true})'), false);
+  assert.equal(fetchCount, 1);
+  assert.equal(h.run("runResultHandled.has('recover-cancelled-1')"), false);
+  assert.equal(h.run("runResultAutoRestoreDeferred.has('recover-cancelled-1')"), true);
+  assert.equal(h.run('pendingRunResult(latestAgentJob)'), true);
+  assert.match(notice, /结果已保留/);
+
+  assert.equal(await h.run('recoverRunResult(latestAgentJob,{automatic:true})'), false);
+  assert.equal(fetchCount, 1);
+
+  allowOpen = true;
+  assert.equal(await h.run('recoverRunResult(latestAgentJob)'), true);
+  assert.equal(fetchCount, 2);
+  assert.equal(h.run("runResultHandled.has('recover-cancelled-1')"), true);
+  assert.equal(h.run("runResultAutoRestoreDeferred.has('recover-cancelled-1')"), false);
+  assert.equal(h.run('pendingRunResult(latestAgentJob)'), false);
+  assert.match(text, /recoverRunResult\(job,\{automatic:true\}\)/);
+  assert.match(text, /\(latestAgentJob\?\.result_task_id\|\|latestAgentJob\?\.task_id\)===taskId/);
 });
 
 test('瞬时故障重试时同一任务进度不倒退，新任务重新计数', () => {
@@ -900,7 +939,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=170/);
+  assert.match(source('index.html'), /app\.js\?v=171/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -908,7 +947,7 @@ test('页面启动先恢复最终工作帧再开放点选推理', () => {
   assert.match(app, /workspaceRestoreState='booting'/);
   assert.match(app, /window\.labelAgentWorkspaceReady=window\.labelAgentBootstrapReady\.then/);
   assert.match(app, /workspaceRestoreState='restoring';bootstrapComplete=true;updateDatasetIdentity\(\);updatePointPromptCoach\(\);await refreshAgentProgress\(\);await workspaceReadyDeferred/);
-  assert.match(app, /if\(bootstrapComplete&&runRequestStartedAt===null&&pendingRunResult\(job\)\)await recoverRunResult\(job\);if\(bootstrapComplete&&workspaceRestoreState!=='ready'\)markWorkspaceReady\(\)/);
+  assert.match(app, /if\(bootstrapComplete&&runRequestStartedAt===null&&pendingRunResult\(job\)\)await recoverRunResult\(job,\{automatic:true\}\);if\(bootstrapComplete&&workspaceRestoreState!=='ready'\)markWorkspaceReady\(\)/);
   assert.match(app, /正在恢复上次工作帧，请稍候/);
   assert.match(app, /button\.textContent=restoring\?'正在恢复工作帧…'/);
   assert.doesNotMatch(app, /bootstrapComplete=true;setTimeout\(refreshAgentProgress,0\)/);
@@ -961,7 +1000,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=170/);
+  assert.match(source('index.html'), /app\.js\?v=171/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1009,7 +1048,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 3);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=170/);
+  assert.match(source('index.html'), /app\.js\?v=171/);
 });
 
 test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () => {

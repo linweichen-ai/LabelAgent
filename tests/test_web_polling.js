@@ -17,6 +17,8 @@ function harness(extra = {}) {
   let now = 0, next = 1;
   const timers = new Map(), listeners = new Map();
   const context = {
+    frame: 0,
+    frameNavigationGeneration: 0,
     document: {
       hidden: false,
       addEventListener(name, callback) {
@@ -607,6 +609,42 @@ test('恢复旧结果读取期间的新导航和工作模式优先于旧回执',
   assert.match(notice, /恢复期间您已切换/);
 });
 
+test('旧候选图片载入期间出现新任务会返回恢复前帧和工作模式', async () => {
+  let restoredFrame = null, notice = '';
+  const oldJob = {status:'idle',result_available:true,result_task_id:'old-task'};
+  const h = harness({
+    frame:74,latestAgentJob:oldJob,runResultHandled:new Set(),runResultAutoRestoreDeferred:new Set(),
+    retryFrames:[],retryScope:null,retryMode:'',loadedDataPath:'/data.mcap',topic:'camera0',
+    frameNavigationGeneration:7,candidateCountIndex:{},
+    async fetch() { return {ok:true,async json(){return {
+      task_id:'old-task',status:'completed',file:'/data.mcap',topic:'camera0',
+      completed:1,frames:[{frame:10,remaining:2,failed:false}],pending_frames:[],failed_frames:[]
+    }}}},
+    refreshCandidateSummary() {},
+    async openCandidateFrame() {
+      h.context.candidateCountIndex['10']=9;
+      h.context.frame=10;h.context.workspaceMode='auto';
+      h.context.latestAgentJob={status:'running',task_id:'new-task'};
+      return true;
+    },
+    async showFrame(target) { restoredFrame=target;h.context.frame=target;return true; },
+    async setWorkspaceMode(mode) { h.context.workspaceMode=mode; },
+    renderRunButton() {},
+    toast(message) { notice=message; },
+  });
+  const text = source('app.js');
+  h.run(section(text, 'function pendingRunResult', 'function formatAgentDuration'));
+  h.context.workspaceMode='manual';
+  assert.equal(await h.run('recoverRunResult(latestAgentJob,{automatic:false})'), false);
+  assert.equal(restoredFrame, 74);
+  assert.equal(h.run('frame'), 74);
+  assert.equal(h.run('window.workspaceMode'), 'manual');
+  assert.equal(h.run("candidateCountIndex['10'] ?? null"), null);
+  assert.equal(h.run("runResultHandled.has('old-task')"), false);
+  assert.equal(h.run("runResultAutoRestoreDeferred.has('old-task')"), true);
+  assert.match(notice, /已返回您原来的帧和工作模式/);
+});
+
 test('瞬时故障重试时同一任务进度不倒退，新任务重新计数', () => {
   const elements = new Map();
   function element(id) {
@@ -1058,7 +1096,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=176/);
+  assert.match(source('index.html'), /app\.js\?v=178/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1119,7 +1157,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=176/);
+  assert.match(source('index.html'), /app\.js\?v=178/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1167,7 +1205,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 3);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=176/);
+  assert.match(source('index.html'), /app\.js\?v=178/);
 });
 
 test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () => {

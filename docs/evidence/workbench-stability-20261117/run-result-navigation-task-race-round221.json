@@ -1,0 +1,127 @@
+{
+  "schema_version": "labelagent.workbench-stability.round221.v1",
+  "round": 221,
+  "date": "2026-11-19",
+  "objective": "Fully roll back an older result navigation when a newer task appears during candidate image loading.",
+  "status": "implemented_tested_and_production_deployed",
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "model_inference_performed": false,
+    "model_weights_changed": false,
+    "oss_written": false
+  },
+  "pre_fix_reproduction": {
+    "browser": "Microsoft Edge headless fresh context",
+    "asset": "/app.js?v=176",
+    "original": {"frame": 74, "mode": "manual", "task_id": "round221-old"},
+    "new_job_during_frame_load": {"task_id": "round221-new", "status": "running"},
+    "after_old_frame_load": {
+      "frame": 10,
+      "mode": "auto",
+      "old_task_handled": false,
+      "old_task_deferred": true,
+      "new_task_still_running": true
+    },
+    "model_inference_requests": 0,
+    "truth_write_requests": 0,
+    "page_errors": 0,
+    "console_errors": 0
+  },
+  "intermediate_v177_acceptance": {
+    "frame_restored": true,
+    "workspace_mode_restored": true,
+    "candidate_count_restored": false,
+    "observed_before": null,
+    "observed_after": 0,
+    "accepted": false,
+    "action": "retain strict acceptance and restore the candidate-count cache entry"
+  },
+  "implementation": {
+    "captures_recovery_frame": true,
+    "restores_original_frame_if_same_scope": true,
+    "restores_original_workspace_mode": true,
+    "respects_newer_manual_navigation_during_rollback": true,
+    "captures_candidate_count_presence_and_value": true,
+    "restores_or_deletes_temporary_candidate_count": true,
+    "asset_version": 178
+  },
+  "tests": {
+    "new_task_during_candidate_image_load": {"passed": 1, "failed": 0},
+    "all_web": {"passed": 123, "failed": 0, "elapsed_ms": 159.1314},
+    "all_python": {"passed": 980, "failed": 0, "subtests_passed": 186, "elapsed_seconds": 9.86, "environment": "PYTHONUTF8=1"},
+    "javascript_syntax": "passed",
+    "python_compile": "passed",
+    "git_diff_check": "passed"
+  },
+  "browser_acceptance": {
+    "browser": "Microsoft Edge headless fresh context",
+    "workbench_url": "http://127.0.0.1:8765",
+    "asset": "/app.js?v=178",
+    "checks_passed": 14,
+    "checks_failed": 0,
+    "original_frame_restored": true,
+    "original_scope_preserved": true,
+    "manual_mode_restored": true,
+    "candidate_count_unchanged": true,
+    "old_task_not_handled": true,
+    "old_task_deferred": true,
+    "new_task_still_running": true,
+    "operator_notice": "新的自动标注任务已经开始；已返回您原来的帧和工作模式，旧候选仍保留",
+    "model_inference_requests": 0,
+    "truth_write_requests": 0,
+    "page_errors": 0,
+    "console_errors": 0,
+    "accepted": true,
+    "local_untracked_artifacts": "artifacts/round221-result-navigation-task-race/",
+    "factory_image_uploaded": false
+  },
+  "deployment": {
+    "production_root": "D:\\Apps\\LabelAgent",
+    "backup_directory": "D:\\Apps\\LabelAgent\\.local\\backups\\run-result-navigation-race-round221-20261119-065913",
+    "intermediate_v177_backup_directory": "D:\\Apps\\LabelAgent\\.local\\backups\\run-result-navigation-race-v177-round221-20261119-070226",
+    "backup_sha256": {
+      "app.js": "8ea1da0a9ae153e992cb5870517bc3946cc1de437e31b9c614c7742f071980ed",
+      "index.html": "8dff2651334be553b6cf5876f51ad3dbee2a539ba4343e7f882ec3c704204e03",
+      "state.json": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+      "file_sessions.json": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+      "remote_processes.json": "3856063c75995de5d344e205db9f1e16bf3cf1c1590d9a745666aef0e8221134"
+    },
+    "workbench_manager_pid_before": 66384,
+    "workbench_manager_pid_final": 23980,
+    "workbench_listener_pid_before": 41340,
+    "workbench_listener_pid_final": 59788,
+    "controlled_workbench_restarts": 2,
+    "restart_reason": "v177 acceptance exposed candidate-count cache residue; v178 restored it",
+    "tunnel_4090_pid_unchanged": 60456,
+    "sam_5090_tunnel_pid_unchanged": 8656,
+    "app_js_sha256": "4046bd9d8458d699cf7f3c394450c42bb5188ca34d20deb18a5b9522e91f820d",
+    "index_html_sha256": "5ba20ff28bd3124646f84c114b225fc70df9662825c583955e1163e4e4d6e8c7"
+  },
+  "formal_state_integrity": {
+    "state_sha256_before": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "state_sha256_after": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "file_sessions_sha256_before": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "file_sessions_sha256_after": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "unchanged": true
+  },
+  "service_health_after": {
+    "workbench_state_8765": 200,
+    "workbench_run_8765": 200,
+    "sam_4090_28766": 200,
+    "sam_5090_38766": 200,
+    "vlm_4090_28868": 200,
+    "run_status": "idle"
+  },
+  "source_sync": {
+    "implementation_commit": null,
+    "receipt_commit": null,
+    "branch": "codex/workbench-stability-20261117",
+    "github_readback": null,
+    "cnb_readback": null,
+    "both_remotes_matched": false,
+    "factory_images_uploaded": false,
+    "untracked_experiment_artifacts_uploaded": false
+  }
+}

@@ -15,7 +15,13 @@ def score(result: dict, review: dict) -> dict:
             or review.get("split") != "dev8"
             or review.get("source_sequence") != "008"):
         raise ValueError("review is not a bounded non-human dev8 review")
+    if (result.get("human_truth") not in {None, False}
+            or result.get("production_deployed") not in {None, False}
+            or result.get("test24_used") not in {None, False}):
+        raise ValueError("result crosses the bounded candidate evaluation boundary")
     rows = result.get("per_sample")
+    if isinstance(rows, dict):
+        rows = rows.get("adapter")
     decisions = review.get("decisions")
     if not isinstance(rows, list) or not isinstance(decisions, list):
         raise ValueError("result or review rows are missing")

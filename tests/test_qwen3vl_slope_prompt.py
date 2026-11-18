@@ -90,6 +90,39 @@ class Qwen3VlSlopePromptTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             score({"per_sample": result_rows}, review)
 
+    def test_scorer_accepts_isolated_generation_eval_adapter_rows(self):
+        rows = []
+        decisions = []
+        for index in range(8):
+            visible = index in {2, 3, 5, 6}
+            rows.append({
+                "sample_id": f"s{index}", "status": "ok",
+                "content": {"assessments": {"slope": {
+                    "evidence": "present" if index == 6 else "absent"}}},
+            })
+            decisions.append({
+                "sample_id": f"s{index}",
+                "assistant_visible_slope_candidate": visible,
+            })
+        result = {
+            "human_truth": False, "production_deployed": False,
+            "test24_used": False,
+            "per_sample": {"base": [], "adapter": rows},
+        }
+        review = {
+            "schema_version": "labelagent.slope-visual-review.v1",
+            "human_truth": False, "human_confirmed": False,
+            "split": "dev8", "source_sequence": "008",
+            "decisions": decisions,
+        }
+        summary = score(result, review)
+        self.assertEqual(summary["true_positive_candidates"], 1)
+        self.assertEqual(summary["false_positive_candidates"], 0)
+        self.assertEqual(summary["false_negative_candidates"], 3)
+        result["test24_used"] = True
+        with self.assertRaises(ValueError):
+            score(result, review)
+
 
 if __name__ == "__main__":
     unittest.main()

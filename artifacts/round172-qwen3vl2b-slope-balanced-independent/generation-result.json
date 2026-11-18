@@ -1,0 +1,722 @@
+{
+  "schema_version": "labelagent.qwen3vl2b-lora-generation-eval.v1",
+  "created_utc": "2026-11-18T08:42:02.798767+00:00",
+  "status": "evaluated",
+  "track": "teacher_distillation",
+  "prompt_order": "text_then_image",
+  "human_truth": false,
+  "production_deployed": false,
+  "test24_used": false,
+  "evaluation_sequence": "008",
+  "generation_cache_implementation": "dynamic",
+  "dataset_manifest_sha256": "e3e6d34f42569b02e290f5d3e9cb31b1026be3c838a55a9efe704a6b3240821e",
+  "contract_sha256": "948707da63ba014342d3ee02d80edff67367d3b681a3607f6e1b1caa23d3fe26",
+  "adapter_sha256": "431e7ac34f2a0eef634fc1fc8bd13f5ca7c717ae599163ff6fb8afeb03d0096f",
+  "base": {
+    "samples": 8,
+    "one_pass_successes": 0,
+    "one_pass_success_rate": 0.0,
+    "teacher_evidence_matches": 0,
+    "teacher_evidence_total": 0,
+    "teacher_evidence_accuracy": 0.0,
+    "unknown_count_matches": 0,
+    "generation_seconds_median": null,
+    "generation_seconds_max": null,
+    "completion_tokens_median": null,
+    "completion_tokens_max": null
+  },
+  "adapter": {
+    "samples": 8,
+    "one_pass_successes": 8,
+    "one_pass_success_rate": 1.0,
+    "teacher_evidence_matches": 59,
+    "teacher_evidence_total": 64,
+    "teacher_evidence_accuracy": 0.921875,
+    "unknown_count_matches": 8,
+    "generation_seconds_median": 15.023,
+    "generation_seconds_max": 15.804,
+    "completion_tokens_median": 203.0,
+    "completion_tokens_max": 207
+  },
+  "comparison": {
+    "one_pass_success_delta": 1.0,
+    "teacher_evidence_accuracy_delta": 0.921875,
+    "generation_seconds_median_delta": null,
+    "adapter_all_samples_valid": true,
+    "adapter_teacher_evidence_better": true
+  },
+  "per_sample": {
+    "base": [
+      {
+        "sample_id": "008_1789899740482474075_camera_0",
+        "mode": "base",
+        "status": "failed",
+        "error_type": "JSONDecodeError",
+        "error": "Expecting value: line 45 column 24 (char 1387)",
+        "wall_seconds": 21.586499
+      },
+      {
+        "sample_id": "008_1789899740482474075_camera_1",
+        "mode": "base",
+        "status": "failed",
+        "error_type": "JSONDecodeError",
+        "error": "Unterminated string starting at: line 47 column 17 (char 1267)",
+        "wall_seconds": 19.329193
+      },
+      {
+        "sample_id": "008_1789899740482474075_camera_2",
+        "mode": "base",
+        "status": "failed",
+        "error_type": "JSONDecodeError",
+        "error": "Expecting ',' delimiter: line 48 column 1 (char 1315)",
+        "wall_seconds": 19.758032
+      },
+      {
+        "sample_id": "008_1789899740482474075_camera_3",
+        "mode": "base",
+        "status": "failed",
+        "error_type": "JSONDecodeError",
+        "error": "Expecting ',' delimiter: line 49 column 20 (char 1319)",
+        "wall_seconds": 19.442897
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_0",
+        "mode": "base",
+        "status": "failed",
+        "error_type": "JSONDecodeError",
+        "error": "Expecting value: line 47 column 18 (char 1327)",
+        "wall_seconds": 24.369177
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_1",
+        "mode": "base",
+        "status": "failed",
+        "error_type": "JSONDecodeError",
+        "error": "Unterminated string starting at: line 48 column 19 (char 1386)",
+        "wall_seconds": 19.672576
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_2",
+        "mode": "base",
+        "status": "failed",
+        "error_type": "JSONDecodeError",
+        "error": "Expecting ',' delimiter: line 42 column 25 (char 1331)",
+        "wall_seconds": 19.441733
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_3",
+        "mode": "base",
+        "status": "failed",
+        "error_type": "JSONDecodeError",
+        "error": "Expecting ',' delimiter: line 49 column 20 (char 1291)",
+        "wall_seconds": 18.985091
+      }
+    ],
+    "adapter": [
+      {
+        "sample_id": "008_1789899740482474075_camera_0",
+        "mode": "adapter",
+        "status": "ok",
+        "prompt_tokens": 842,
+        "completion_tokens": 206,
+        "generation_seconds": 15.649,
+        "wall_seconds": 15.723883,
+        "actual_image_token_counts": [
+          238
+        ],
+        "content": {
+          "assessments": {
+            "车辆": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no visible vehicle instance present"
+            },
+            "pallet": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "visible wooden pallets stacked in background"
+            },
+            "person": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "visible human head and shoulder in bottom right"
+            },
+            "floor": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "visible concrete warehouse floor surface"
+            },
+            "slope": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no visible inclined ramp or transition surface"
+            },
+            "ego": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "visible robot chassis and control panel in foreground"
+            },
+            "other_robot": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "visible forklift in background"
+            },
+            "cargo_floor": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no visible elevated deck attached to robot"
+            }
+          },
+          "unknown_candidates": []
+        },
+        "content_sha256": "e677afe956ed38fee2baecefa87017b3e8b6c42810c5c5f453f031e1388a21d7",
+        "score": {
+          "label_matches": {
+            "车辆": true,
+            "pallet": true,
+            "person": true,
+            "floor": true,
+            "slope": true,
+            "ego": true,
+            "other_robot": true,
+            "cargo_floor": true
+          },
+          "matched_labels": 8,
+          "label_count": 8,
+          "unknown_count": 0,
+          "teacher_unknown_count": 0,
+          "unknown_count_matches": true
+        }
+      },
+      {
+        "sample_id": "008_1789899740482474075_camera_1",
+        "mode": "adapter",
+        "status": "ok",
+        "prompt_tokens": 842,
+        "completion_tokens": 203,
+        "generation_seconds": 15.804,
+        "wall_seconds": 15.869532,
+        "actual_image_token_counts": [
+          238
+        ],
+        "content": {
+          "assessments": {
+            "车辆": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no visible vehicle instance present"
+            },
+            "pallet": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "visible wooden pallets on left side"
+            },
+            "person": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "visible human body in black shirt"
+            },
+            "floor": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "visible concrete warehouse floor surface"
+            },
+            "slope": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no visible inclined ramp or transition surface"
+            },
+            "ego": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "visible robot chassis and control panel"
+            },
+            "other_robot": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no visible robot distinct from ego"
+            },
+            "cargo_floor": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no visible elevated deck attached to robot"
+            }
+          },
+          "unknown_candidates": []
+        },
+        "content_sha256": "6def01bba46b98b73be265ab950dedbbf40a342e80f2630eb7bf0930ff893fde",
+        "score": {
+          "label_matches": {
+            "车辆": true,
+            "pallet": true,
+            "person": true,
+            "floor": true,
+            "slope": true,
+            "ego": true,
+            "other_robot": true,
+            "cargo_floor": true
+          },
+          "matched_labels": 8,
+          "label_count": 8,
+          "unknown_count": 0,
+          "teacher_unknown_count": 0,
+          "unknown_count_matches": true
+        }
+      },
+      {
+        "sample_id": "008_1789899740482474075_camera_2",
+        "mode": "adapter",
+        "status": "ok",
+        "prompt_tokens": 842,
+        "completion_tokens": 202,
+        "generation_seconds": 15.018,
+        "wall_seconds": 15.08541,
+        "actual_image_token_counts": [
+          238
+        ],
+        "content": {
+          "assessments": {
+            "车辆": {
+              "evidence": "present",
+              "confidence": 0.95,
+              "reason": "blue forklift visible in background"
+            },
+            "pallet": {
+              "evidence": "present",
+              "confidence": 0.9,
+              "reason": "blue plastic pallet visible under person"
+            },
+            "person": {
+              "evidence": "present",
+              "confidence": 0.95,
+              "reason": "human body visible in background"
+            },
+            "floor": {
+              "evidence": "present",
+              "confidence": 0.95,
+              "reason": "concrete ground surface visible"
+            },
+            "slope": {
+              "evidence": "absent",
+              "confidence": 0.95,
+              "reason": "no visible inclined ramp or transition surface"
+            },
+            "ego": {
+              "evidence": "present",
+              "confidence": 0.95,
+              "reason": "robot chassis and controls visible in foreground"
+            },
+            "other_robot": {
+              "evidence": "present",
+              "confidence": 0.95,
+              "reason": "white forklift visible in background"
+            },
+            "cargo_floor": {
+              "evidence": "absent",
+              "confidence": 0.95,
+              "reason": "no visible elevated deck attached to robot"
+            }
+          },
+          "unknown_candidates": []
+        },
+        "content_sha256": "326df1adb8a67ae90b3efba403906208d2a4176e4c9fbe779cc6a3dd667ef3d6",
+        "score": {
+          "label_matches": {
+            "车辆": true,
+            "pallet": true,
+            "person": true,
+            "floor": true,
+            "slope": true,
+            "ego": true,
+            "other_robot": true,
+            "cargo_floor": true
+          },
+          "matched_labels": 8,
+          "label_count": 8,
+          "unknown_count": 0,
+          "teacher_unknown_count": 0,
+          "unknown_count_matches": true
+        }
+      },
+      {
+        "sample_id": "008_1789899740482474075_camera_3",
+        "mode": "adapter",
+        "status": "ok",
+        "prompt_tokens": 842,
+        "completion_tokens": 203,
+        "generation_seconds": 14.765,
+        "wall_seconds": 14.824002,
+        "actual_image_token_counts": [
+          238
+        ],
+        "content": {
+          "assessments": {
+            "车辆": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no visible vehicle instance present"
+            },
+            "pallet": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no visible pallet structure present"
+            },
+            "person": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "visible human body in white shirt and shorts"
+            },
+            "floor": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "visible warehouse ground surface"
+            },
+            "slope": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no visible inclined ramp or transition surface"
+            },
+            "ego": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "visible black robot chassis and forks"
+            },
+            "other_robot": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no visible robot distinct from ego"
+            },
+            "cargo_floor": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no visible elevated deck attached to robot"
+            }
+          },
+          "unknown_candidates": []
+        },
+        "content_sha256": "c1443942bfa3173fc2e9f0cebaa7c9ca5a389af7115d6629ac88a5ee9c626c22",
+        "score": {
+          "label_matches": {
+            "车辆": true,
+            "pallet": false,
+            "person": true,
+            "floor": true,
+            "slope": false,
+            "ego": true,
+            "other_robot": false,
+            "cargo_floor": true
+          },
+          "matched_labels": 5,
+          "label_count": 8,
+          "unknown_count": 0,
+          "teacher_unknown_count": 0,
+          "unknown_count_matches": true
+        }
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_0",
+        "mode": "adapter",
+        "status": "ok",
+        "prompt_tokens": 842,
+        "completion_tokens": 207,
+        "generation_seconds": 15.195,
+        "wall_seconds": 15.276417,
+        "actual_image_token_counts": [
+          238
+        ],
+        "content": {
+          "assessments": {
+            "车辆": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no visible vehicle instance present"
+            },
+            "pallet": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "blue plastic pallet visible under forklift"
+            },
+            "person": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "human face visible in bottom right"
+            },
+            "floor": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "concrete ground surface visible throughout"
+            },
+            "slope": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no visible inclined ramp or transition surface"
+            },
+            "ego": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "robot chassis and controls visible in bottom left"
+            },
+            "other_robot": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "black forklift visible in center"
+            },
+            "cargo_floor": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no visible elevated deck attached to robot"
+            }
+          },
+          "unknown_candidates": []
+        },
+        "content_sha256": "ffa2ea2682d7d174bd23e85b29e937dadedfbd00ea5f4c474d68243887950e8c",
+        "score": {
+          "label_matches": {
+            "车辆": true,
+            "pallet": true,
+            "person": true,
+            "floor": true,
+            "slope": true,
+            "ego": true,
+            "other_robot": true,
+            "cargo_floor": true
+          },
+          "matched_labels": 8,
+          "label_count": 8,
+          "unknown_count": 0,
+          "teacher_unknown_count": 0,
+          "unknown_count_matches": true
+        }
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_1",
+        "mode": "adapter",
+        "status": "ok",
+        "prompt_tokens": 842,
+        "completion_tokens": 204,
+        "generation_seconds": 14.822,
+        "wall_seconds": 14.885061,
+        "actual_image_token_counts": [
+          238
+        ],
+        "content": {
+          "assessments": {
+            "车辆": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no visible vehicle instance present"
+            },
+            "pallet": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "blue plastic pallet visible on left side"
+            },
+            "person": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "two visible human bodies in background"
+            },
+            "floor": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "concrete ground surface visible throughout"
+            },
+            "slope": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no visible inclined ramp or transition surface"
+            },
+            "ego": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "black robot chassis and control panel visible"
+            },
+            "other_robot": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no other robot visible in image"
+            },
+            "cargo_floor": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no elevated deck attached to robot"
+            }
+          },
+          "unknown_candidates": []
+        },
+        "content_sha256": "51c0fce9b058504577589d1f2d100f481ed3514ebd0930b91f5e9e904e74da7c",
+        "score": {
+          "label_matches": {
+            "车辆": true,
+            "pallet": true,
+            "person": true,
+            "floor": true,
+            "slope": true,
+            "ego": true,
+            "other_robot": true,
+            "cargo_floor": true
+          },
+          "matched_labels": 8,
+          "label_count": 8,
+          "unknown_count": 0,
+          "teacher_unknown_count": 0,
+          "unknown_count_matches": true
+        }
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_2",
+        "mode": "adapter",
+        "status": "ok",
+        "prompt_tokens": 842,
+        "completion_tokens": 200,
+        "generation_seconds": 14.989,
+        "wall_seconds": 15.049401,
+        "actual_image_token_counts": [
+          238
+        ],
+        "content": {
+          "assessments": {
+            "车辆": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no visible vehicle instance present"
+            },
+            "pallet": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "visible wooden pallet on right side"
+            },
+            "person": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "visible human figure on left side"
+            },
+            "floor": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "visible concrete warehouse floor surface"
+            },
+            "slope": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "visible yellow inclined ramp surface"
+            },
+            "ego": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "visible robot chassis and controls in foreground"
+            },
+            "other_robot": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "visible blue forklift in background"
+            },
+            "cargo_floor": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no visible elevated deck attached to robot"
+            }
+          },
+          "unknown_candidates": []
+        },
+        "content_sha256": "7dd2c07c934ce2e1abce0f9b018ca60f89bebd1d076b16af4f7176e076e1141a",
+        "score": {
+          "label_matches": {
+            "车辆": false,
+            "pallet": true,
+            "person": true,
+            "floor": true,
+            "slope": true,
+            "ego": true,
+            "other_robot": false,
+            "cargo_floor": true
+          },
+          "matched_labels": 6,
+          "label_count": 8,
+          "unknown_count": 0,
+          "teacher_unknown_count": 0,
+          "unknown_count_matches": true
+        }
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_3",
+        "mode": "adapter",
+        "status": "ok",
+        "prompt_tokens": 842,
+        "completion_tokens": 198,
+        "generation_seconds": 15.028,
+        "wall_seconds": 15.088329,
+        "actual_image_token_counts": [
+          238
+        ],
+        "content": {
+          "assessments": {
+            "车辆": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no visible vehicle instance present"
+            },
+            "pallet": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "visible wooden pallet under cardboard box"
+            },
+            "person": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no human body visible"
+            },
+            "floor": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "visible concrete warehouse floor surface"
+            },
+            "slope": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no visible inclined ramp or transition surface"
+            },
+            "ego": {
+              "evidence": "present",
+              "confidence": 0.99,
+              "reason": "visible black robot chassis and forks"
+            },
+            "other_robot": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no other robot visible"
+            },
+            "cargo_floor": {
+              "evidence": "absent",
+              "confidence": 0.99,
+              "reason": "no elevated deck attached to robot"
+            }
+          },
+          "unknown_candidates": []
+        },
+        "content_sha256": "f83badabcf78a5bae068dccfddb33763e4ee670fea5a8cf8a4ed602c68f7a010",
+        "score": {
+          "label_matches": {
+            "车辆": true,
+            "pallet": true,
+            "person": true,
+            "floor": true,
+            "slope": true,
+            "ego": true,
+            "other_robot": true,
+            "cargo_floor": true
+          },
+          "matched_labels": 8,
+          "label_count": 8,
+          "unknown_count": 0,
+          "teacher_unknown_count": 0,
+          "unknown_count_matches": true
+        }
+      }
+    ]
+  },
+  "peak_cuda_memory_bytes": 4493047296,
+  "torch": "2.10.0+cu128",
+  "transformers": "4.57.6",
+  "peft": "0.18.0"
+}

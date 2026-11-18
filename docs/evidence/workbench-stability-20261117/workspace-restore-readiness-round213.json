@@ -1,0 +1,110 @@
+{
+  "schema_version": "labelagent.workbench-stability.round213.v1",
+  "round": 213,
+  "date": "2026-11-19",
+  "objective": "Expose one final workspace-ready boundary after prior-run restoration and block point prompting until that boundary.",
+  "status": "implemented_tested_and_production_deployed",
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "model_weights_changed": false,
+    "oss_written": false,
+    "gpu_used_by_browser_acceptance": false
+  },
+  "implementation": {
+    "states": ["booting", "restoring", "ready"],
+    "browser_promise": "window.labelAgentWorkspaceReady",
+    "browser_event": "labelagent:workspace-ready",
+    "status_request_coalescing": true,
+    "removed_deferred_restore_timer": true,
+    "point_prompt_blocked_until_ready": true,
+    "server_side_sam_abort_added": false
+  },
+  "tests": {
+    "targeted_web": {"passed": 48, "failed": 0},
+    "all_web": {"passed": 114, "failed": 0},
+    "all_python": {"passed": 979, "failed": 0, "elapsed_seconds": 6.511, "environment": "PYTHONUTF8=1"},
+    "javascript_syntax": "passed",
+    "python_compile": "passed_with_known_upstream_sam3_syntax_warning",
+    "git_diff_check": "passed"
+  },
+  "browser_acceptance": {
+    "browser": "Microsoft Edge headless fresh context",
+    "workbench_url": "http://127.0.0.1:8765",
+    "asset": "/app.js?v=168",
+    "status_response_delayed_for_deterministic_restore_window": true,
+    "before_ready": {
+      "workspace_state": "restoring",
+      "frame": 0,
+      "point_button_disabled": true,
+      "point_button_text": "正在恢复工作帧…",
+      "dataset_status_visible": true,
+      "forced_point_function_call_message": "正在恢复上次工作帧，完成后才能运行 SAM"
+    },
+    "after_ready": {
+      "workspace_state": "ready",
+      "frame": 74,
+      "stable_after_ms": 500,
+      "stable_frame": 74,
+      "topic": "/capture/camera_1/image",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap",
+      "point_button_disabled": false,
+      "point_button_text": "SAM 点选（点目标即运行）"
+    },
+    "status_requests": 4,
+    "segment_requests": 0,
+    "truth_write_requests": 0,
+    "page_errors": 0,
+    "console_errors": 0,
+    "local_untracked_screenshot": "artifacts/round213-workspace-ready-browser/workspace-ready.png",
+    "factory_image_uploaded": false
+  },
+  "deployment": {
+    "production_root": "D:\\Apps\\LabelAgent",
+    "backup_directory": "D:\\Apps\\LabelAgent\\.local\\backups\\workspace-ready-round213-20261119-043126",
+    "backup_sha256": {
+      "app.js": "21343596b8e4b139451a1de599bdea33e6805452bdd3d69217d92681e88d38ac",
+      "index.html": "225bbf08fad35d51ca6f30af4b1e78ff06c5153194ba31cae9332bb22e23c029",
+      "state.json": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+      "file_sessions.json": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+      "remote_processes.json": "5bc7053a1322a0f41e84797e5a871f406c9edc597fc539b30273c49e7fe29223"
+    },
+    "workbench_manager_pid_before": 69944,
+    "workbench_manager_pid_after": 61156,
+    "workbench_listener_pid_before": 35980,
+    "workbench_listener_pid_after": 52168,
+    "tunnel_4090_pid_unchanged": 60456,
+    "sam_5090_tunnel_pid_unchanged": 8656,
+    "app_js_sha256": "8dda1637153b8a4140604c928c412d1c534d87198ba56fcfff564b841fda4098",
+    "index_html_sha256": "4b4bca981521ead56e68b51bcd274591c81d8414eafb50c9c4bc30d87efe288c"
+  },
+  "formal_state_integrity": {
+    "state_sha256_before": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "state_sha256_after": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "file_sessions_sha256_before": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "file_sessions_sha256_after": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "unchanged": true
+  },
+  "service_health_after": {
+    "workbench_state_8765": 200,
+    "workbench_run_8765": 200,
+    "sam_4090_28766": 200,
+    "sam_5090_38766": 200,
+    "vlm_4090_28868": 200
+  },
+  "source_sync": {
+    "implementation_commit": null,
+    "branch": "codex/workbench-stability-20261117",
+    "github_readback": null,
+    "cnb_readback": null,
+    "both_remotes_matched_implementation_commit": false,
+    "factory_images_uploaded": false,
+    "untracked_experiment_artifacts_uploaded": false
+  },
+  "changed_files": {
+    "source/web/app.js": "8dda1637153b8a4140604c928c412d1c534d87198ba56fcfff564b841fda4098",
+    "source/web/index.html": "4b4bca981521ead56e68b51bcd274591c81d8414eafb50c9c4bc30d87efe288c",
+    "tests/test_web_polling.js": "8ae88dc42b18a53ba06bd07d33f08b8ab9136c0f3b7f40432bce1bc432e59b1c"
+  }
+}

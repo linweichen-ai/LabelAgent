@@ -1771,3 +1771,15 @@ Round156 收尾时 C盘仅余约 1.18 GiB，再次低于工作台的 2 GiB 警�
 实现与首版文档提交 `befd9c4bc56c8d20a74c52f6e5cef442dbadb7ea` 已分别推送并回读 GitHub/CNB，同名分支两端精确匹配；厂内图片和未跟踪实验产物未上传。
 
 完整说明见 [第二百一十二轮报告](POINT_PROMPT_SCOPE_RACE_ROUND212_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/point-prompt-scope-race-round212.json)。下一步把会话恢复完成状态显式化，并评估在切换上下文时主动取消浏览器等待，继续减少用户感知卡顿。
+
+## 第二百一十三轮工作台启动恢复就绪门禁（已部署，2026-11-19）
+
+Round212 的浏览器验收发现页面会先显示第0帧，再异步恢复到上次候选第74帧。根因是旧实现把基础数据载入完成过早称为整个工作台完成，之后再通过定时器恢复上次运行结果。现新增单一 `window.labelAgentWorkspaceReady`：只有数据、相机、任务状态和历史结果帧全部恢复完成后，才发布 `labelagent:workspace-ready` 并开放点提示；状态读取也改为共享同一个进行中 Promise，避免初始轮询和恢复过程重复读取。
+
+恢复期间数据集栏明确显示“正在恢复上次工作帧”，SAM 点选按钮禁用并显示“正在恢复工作帧…”。`generatePointMask()` 在请求发出前失败关闭，提前调用会提示稍候且不产生 `/api/segment_points` 请求。没有粗暴中止已经进入服务端的 SAM，因为那不会停止 GPU 计算，反而可能导致第二次请求遇到 busy；本轮解决的是请求前时序和可观察性。
+
+完整 Python 979/979、网页114/114、JavaScript语法、Python编译和差异检查通过。全新 Edge 上人为暂缓状态响应后，页面稳定处于 `restoring / frame 0`，点选按钮禁用，强行调用点提示仍为0个SAM请求；释放状态响应后统一就绪信号返回 `frame 74 + camera_1 + 当前SFL文件`，500毫秒后仍为74，按钮才恢复可用。控制台错误、页面异常和真值写请求均为0，实际资源为 `/app.js?v=168`。
+
+部署前备份位于 `D:\Apps\LabelAgent\.local\backups\workspace-ready-round213-20261119-043126`。只重启8765工作台，管理PID从69944变为61156，4090通道PID60456和5090 SAM通道PID8656保持不变；工作台两项、两路SAM和VLM五个探针均HTTP 200。正式 `state.json` 与 `file_sessions.json` 哈希保持不变。浏览器截图含厂内画面，只保留在本地未跟踪目录，不上传远端。
+
+本轮没有改模型权重、人工真值、训练批准或OSS，也没有产生新的分割结果；第74帧仍是既有机器候选。完整说明见 [第二百一十三轮报告](WORKSPACE_RESTORE_READINESS_ROUND213_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/workspace-restore-readiness-round213.json)。下一步继续把同一精确作用域和就绪门禁扩展到其余异步交互，但不取消已经进入GPU的请求。

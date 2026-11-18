@@ -541,7 +541,7 @@ test('瞬时故障重试时同一任务进度不倒退，新任务重新计数',
 });
 
 test('状态读取超过八秒会解除轮询占用并在主面板提示恢复', async () => {
-  let renders = 0;
+  let renders = 0, fetches = 0;
   class FakeAbortController {
     constructor() { this.signal = {}; }
     abort() { if (this.signal.onabort) this.signal.onabort(); }
@@ -550,12 +550,14 @@ test('状态读取超过八秒会解除轮询占用并在主面板提示恢复',
   const h = harness({
     AbortController: FakeAbortController,
     progressFetching: false,
+    progressFetchPromise: null,
     runStatusFailureCount: 0,
     runStatusConnectionMessage: '',
     latestAgentJob: {status: 'running'},
     $() { return button; },
     renderRunButton() { renders++; },
     fetch(url, options) {
+      fetches++;
       return new Promise((resolve, reject) => {
         options.signal.onabort = () => {
           const error = new Error('aborted'); error.name = 'AbortError'; reject(error);
@@ -565,8 +567,10 @@ test('状态读取超过八秒会解除轮询占用并在主面板提示恢复',
   });
   h.run(section(source('app.js'), 'async function fetchAgentStatus', 'async function ensureAutoLabelReadiness'));
   const pending = h.run('refreshAgentProgress()');
+  const duplicate = h.run('refreshAgentProgress()');
+  assert.equal(fetches, 1);
   await h.advance(8000);
-  await pending;
+  await Promise.all([pending, duplicate]);
   assert.equal(h.context.progressFetching, false);
   assert.ok(h.context.runStatusConnectionMessage.includes('超过 8 秒'));
   assert.equal(renders, 1);
@@ -838,10 +842,10 @@ test('拖动工作台高度后所有结果图层会重新贴合原图', () => {
   assert.match(compare, /attributeFilter: \['style', 'width', 'height'\]/);
 });
 
-test('点提示请求同步单飞并绑定提交时的数据集类别与点位', async () => {
+test('点提示请求同步单飞、等待工作台就绪并绑定提交时的数据集类别与点位', async () => {
   const app = source('app.js');
   const generate = section(app, 'async function generatePointMask', 'function frameAtTime');
-  function setup() {
+  function setup(restoreState = 'ready') {
     const elements = {labelSelect: {value: 'pallet'}};
     const calls = [], items = [], notices = [];
     let resolveRequest;
@@ -861,7 +865,7 @@ test('点提示请求同步单飞并绑定提交时的数据集类别与点位',
       pointPromptTimer=null,frame=3,topic='/camera',loadedDataPath='file-a',
       generatedShapeFrame=null,generatedShapeTopic='',generatedShapeIndex=-1,
       selectedShapeIndex=-1,referenceReviewOriginalOnly=true,pointPromptGeneratedPointCount=0,
-      pointPromptRequiresRefinement=false;`);
+      pointPromptRequiresRefinement=false,workspaceRestoreState='${restoreState}';`);
     h.run(generate);
     return {h, elements, calls, items, notices, resolve(value) { resolveRequest(value); }};
   }
@@ -888,10 +892,26 @@ test('点提示请求同步单飞并绑定提交时的数据集类别与点位',
   assert.equal(stale.items.length, 0);
   assert.ok(stale.notices.includes('数据集、相机或帧已切换，旧 SAM 结果已安全丢弃'));
 
+  const restoring = setup('restoring');
+  await restoring.h.run('generatePointMask()');
+  assert.equal(restoring.calls.length, 0);
+  assert.ok(restoring.notices.includes('正在恢复上次工作帧，完成后才能运行 SAM'));
+
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=167/);
+  assert.match(source('index.html'), /app\.js\?v=168/);
+});
+
+test('页面启动先恢复最终工作帧再开放点选推理', () => {
+  const app = source('app.js');
+  assert.match(app, /workspaceRestoreState='booting'/);
+  assert.match(app, /window\.labelAgentWorkspaceReady=window\.labelAgentBootstrapReady\.then/);
+  assert.match(app, /workspaceRestoreState='restoring';bootstrapComplete=true;updateDatasetIdentity\(\);updatePointPromptCoach\(\);await refreshAgentProgress\(\);await workspaceReadyDeferred/);
+  assert.match(app, /if\(bootstrapComplete&&runRequestStartedAt===null&&pendingRunResult\(job\)\)await recoverRunResult\(job\);if\(bootstrapComplete&&workspaceRestoreState!=='ready'\)markWorkspaceReady\(\)/);
+  assert.match(app, /正在恢复上次工作帧，请稍候/);
+  assert.match(app, /button\.textContent=restoring\?'正在恢复工作帧…'/);
+  assert.doesNotMatch(app, /bootstrapComplete=true;setTimeout\(refreshAgentProgress,0\)/);
 });
 
 test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () => {

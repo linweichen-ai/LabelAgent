@@ -4,7 +4,9 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from tools.train_qwen3vl_lora import OneImageCollator, load_jsonl, verify_manifest
+from tools.train_qwen3vl_lora import (
+    OneImageCollator, load_jsonl, slope_balanced_rows, verify_manifest,
+)
 
 
 def write_fixture(root: Path):
@@ -27,6 +29,24 @@ def write_fixture(root: Path):
 
 
 class Qwen3VlLoraBoundaryTests(unittest.TestCase):
+    def test_slope_balancing_repeats_only_positive_rows(self):
+        def row(sample_id, evidence):
+            return {
+                "sample_id": sample_id,
+                "target": json.dumps({"assessments": {
+                    "slope": {"evidence": evidence}}}),
+            }
+
+        rows, report = slope_balanced_rows(
+            [row("positive", "present"), row("negative", "absent")], 8)
+        self.assertEqual([item["sample_id"] for item in rows].count("positive"), 8)
+        self.assertEqual([item["sample_id"] for item in rows].count("negative"), 1)
+        self.assertEqual(report["effective_samples"], 9)
+
+    def test_slope_balancing_rejects_missing_evidence(self):
+        with self.assertRaises(ValueError):
+            slope_balanced_rows([{"target": "{}"}], 2)
+
     def test_valid_teacher_distillation_fixture_passes(self):
         with tempfile.TemporaryDirectory() as directory:
             train, manifest_path, _, _ = write_fixture(Path(directory))

@@ -43,6 +43,38 @@ def verify_manifest(manifest_path: Path, train_path: Path) -> dict:
     return manifest
 
 
+def slope_balanced_rows(rows: list[dict], repeat: int) -> tuple[list[dict], dict]:
+    """Repeat train-only slope-positive teacher rows without changing truth status.
+
+    This is deliberately a narrow distillation aid.  It does not invent labels,
+    does not read the external test split, and keeps every duplicated row bound
+    to the original image/target hashes.
+    """
+    if not 1 <= repeat <= 8:
+        raise ValueError("slope-positive repeat must be between 1 and 8")
+    positives = []
+    for row in rows:
+        try:
+            target = json.loads(row["target"])
+            evidence = target["assessments"]["slope"]["evidence"]
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+            raise ValueError("training row has no valid slope evidence") from error
+        if evidence not in {"present", "absent", "uncertain"}:
+            raise ValueError("training row has invalid slope evidence")
+        if evidence == "present":
+            positives.append(row)
+    balanced = list(rows)
+    for _ in range(repeat - 1):
+        balanced.extend(positives)
+    return balanced, {
+        "original_samples": len(rows),
+        "original_slope_positive_samples": len(positives),
+        "slope_positive_repeat": repeat,
+        "effective_samples": len(balanced),
+        "effective_slope_positive_samples": len(positives) * repeat,
+    }
+
+
 class OneImageCollator:
     def __init__(self, processor):
         self.processor = processor
@@ -90,6 +122,7 @@ def main() -> int:
     parser.add_argument("--max-samples", type=int, default=8)
     parser.add_argument("--learning-rate", type=float, default=2e-4)
     parser.add_argument("--gradient-accumulation-steps", type=int, default=2)
+    parser.add_argument("--slope-positive-repeat", type=int, default=1)
     parser.add_argument("--seed", type=int, default=20261118)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
@@ -98,10 +131,11 @@ def main() -> int:
     train_path = args.dataset_dir / "train.jsonl"
     manifest_path = args.dataset_dir / "manifest.json"
     manifest = verify_manifest(manifest_path, train_path)
-    rows = load_jsonl(train_path)
+    source_rows = load_jsonl(train_path)
+    rows, sampling = slope_balanced_rows(source_rows, args.slope_positive_repeat)
     random.Random(args.seed).shuffle(rows)
     rows = rows[:args.max_samples]
-    if not 1 <= args.max_steps <= 100 or not 1 <= args.max_samples <= len(load_jsonl(train_path)):
+    if not 1 <= args.max_steps <= 100 or not 1 <= args.max_samples <= len(rows):
         raise ValueError("unsafe smoke/full training bounds")
 
     import torch
@@ -119,6 +153,7 @@ def main() -> int:
             "supervised_tokens": int((first_batch["labels"] != -100).sum()),
             "image_grid_thw": first_batch.get("image_grid_thw").tolist(),
             "dataset_manifest_sha256": file_sha256(manifest_path),
+            "sampling": sampling,
             "training_started": False,
         }
         args.output.mkdir(parents=True)
@@ -186,6 +221,7 @@ def main() -> int:
         "train_jsonl_sha256": manifest["train_jsonl_sha256"],
         "samples_available": manifest["train_samples"],
         "samples_loaded": len(rows),
+        "sampling": sampling,
         "steps": args.max_steps,
         "learning_rate": args.learning_rate,
         "gradient_accumulation_steps": args.gradient_accumulation_steps,

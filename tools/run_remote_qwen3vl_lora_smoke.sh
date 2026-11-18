@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -lt 2 || $# -gt 4 ]]; then
-  echo "usage: $0 PROJECT_ROOT OUTPUT_NAME [MAX_SAMPLES] [MAX_STEPS]" >&2
+if [[ $# -lt 2 || $# -gt 6 ]]; then
+  echo "usage: $0 PROJECT_ROOT OUTPUT_NAME [MAX_SAMPLES] [MAX_STEPS] [SLOPE_REPEAT] [LEARNING_RATE]" >&2
   exit 64
 fi
 
@@ -10,6 +10,8 @@ PROJECT_ROOT=$1
 OUTPUT_NAME=$2
 MAX_SAMPLES=${3:-8}
 MAX_STEPS=${4:-2}
+SLOPE_REPEAT=${5:-1}
+LEARNING_RATE=${6:-2e-4}
 SERVICE_ROOT=/home/clw/labelagent_remote_20261110
 VLM_SESSION=labelagent-vlm-20261110
 GPU_UUID=GPU-f8597845-b2fa-5ca1-6918-816853753818
@@ -27,10 +29,15 @@ if [[ ! "$OUTPUT_NAME" =~ ^[A-Za-z0-9._-]+$ ]]; then
   exit 66
 fi
 if [[ ! "$MAX_SAMPLES" =~ ^[0-9]+$ || ! "$MAX_STEPS" =~ ^[0-9]+$ \
-      || "$MAX_SAMPLES" -lt 1 || "$MAX_SAMPLES" -gt 62 \
+      || "$MAX_SAMPLES" -lt 1 || "$MAX_SAMPLES" -gt 128 \
       || "$MAX_STEPS" -lt 1 || "$MAX_STEPS" -gt 100 ]]; then
   echo "unsafe training bounds" >&2
   exit 75
+fi
+if [[ ! "$SLOPE_REPEAT" =~ ^[1-8]$ \
+      || ! "$LEARNING_RATE" =~ ^(0\.[0-9]+|[0-9]+(\.[0-9]+)?e-[0-9]+)$ ]]; then
+  echo "unsafe slope repeat or learning rate" >&2
+  exit 77
 fi
 if [[ -e "$OUTPUT_DIR" ]]; then
   echo "training output already exists: $OUTPUT_DIR" >&2
@@ -114,8 +121,9 @@ env \
     --output "$OUTPUT_NAME" \
     --max-samples "$MAX_SAMPLES" \
     --max-steps "$MAX_STEPS" \
+    --slope-positive-repeat "$SLOPE_REPEAT" \
     --gradient-accumulation-steps 2 \
-    --learning-rate 2e-4
+    --learning-rate "$LEARNING_RATE"
 echo "training_command_completed=true"
 
 restore_and_wait

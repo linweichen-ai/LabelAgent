@@ -1,0 +1,124 @@
+{
+  "schema_version": "labelagent.qwen3vl2b-slope-balanced-posttrain.v1",
+  "round": 172,
+  "date": "2026-11-18",
+  "status": "internal_dev_candidate_passed_not_deployed",
+  "objective": "Test whether train-only slope-positive balancing improves the 2B VLM slope gate without using exposed test24, changing human truth, or replacing the production 8B service.",
+  "boundaries": {
+    "track": "machine_teacher_distillation",
+    "human_truth": false,
+    "production_training_approved": false,
+    "production_deployed": false,
+    "sam3_fine_tuned": false,
+    "test24_used_for_training": false,
+    "test24_used_for_model_selection": false,
+    "train_sequences": "000-007",
+    "internal_dev_sequence": "008",
+    "external_test_sequences": "010-012 excluded because already exposed",
+    "slope_review_packet_human_decisions": 0
+  },
+  "method": {
+    "base_model": "Qwen3-VL-2B-Instruct",
+    "adapter": "LoRA r=8",
+    "trainable_parameters": 8716288,
+    "trainable_percent": 0.4080184835440853,
+    "source_train_rows": 62,
+    "source_slope_positive_rows": 6,
+    "sampling_only": true,
+    "images_or_targets_duplicated_on_disk": false,
+    "ordinary_floor_negatives_retained": true,
+    "learning_rate": 0.0001,
+    "gradient_accumulation_steps": 2
+  },
+  "repeat4_candidate": {
+    "decision": "rejected",
+    "effective_samples": 80,
+    "effective_slope_positive_samples": 24,
+    "steps": 40,
+    "train_loss": 0.2584634264931083,
+    "dev8_one_pass_success": "8/8",
+    "dev8_teacher_evidence_matches": "59/64",
+    "dev8_slope_teacher_matches": "7/8",
+    "reason": "No slope gain and one-point overall regression versus the prior 60/64 candidate."
+  },
+  "repeat8_candidate": {
+    "decision": "retain_offline_for_fresh_external_gate",
+    "effective_samples": 104,
+    "effective_slope_positive_samples": 48,
+    "steps": 52,
+    "train_loss": 0.21737109160480592,
+    "peak_training_cuda_bytes": 6659381760,
+    "adapter_bytes": 34922600,
+    "adapter_sha256": "62a8610d524edc144bbb6cf3f175f0e8a5633a588cd22a5c7b863d7dbf02527c",
+    "adapter_audit": "passed_392_of_392_finite_and_updated",
+    "dev8_one_pass_success": "8/8",
+    "dev8_teacher_evidence_matches": "61/64",
+    "dev8_teacher_evidence_accuracy": 0.953125,
+    "dev8_slope_teacher_matches": "8/8",
+    "dev8_slope_predictions": "2 present and 6 absent, all matching the frozen 8B teacher",
+    "dev8_static_generation_seconds_median": 5.683,
+    "dev8_static_generation_seconds_max": 6.368,
+    "remaining_mismatches": {
+      "pallet": "1/8",
+      "other_robot": "2/8"
+    }
+  },
+  "prior_two_epoch_static_reference": {
+    "teacher_evidence_matches": "60/64",
+    "teacher_evidence_accuracy": 0.9375,
+    "slope_teacher_matches": "7/8",
+    "generation_seconds_median": 6.7585,
+    "source": "qwen3vl2b-static-external-round104.json"
+  },
+  "independent_assistant_review_round173": {
+    "status": "assistant_candidate_passed_for_human_review",
+    "human_truth": false,
+    "human_confirmed": false,
+    "reviewed_samples": 8,
+    "assistant_visible_slope_candidates": 4,
+    "baseline": {
+      "true_positive_candidates": 1,
+      "false_positive_candidates": 0,
+      "false_negative_candidates": 3,
+      "precision": 1.0,
+      "recall": 0.25
+    },
+    "repeat8_candidate": {
+      "true_positive_candidates": 2,
+      "false_positive_candidates": 0,
+      "false_negative_candidates": 2,
+      "precision": 1.0,
+      "recall": 0.5
+    },
+    "artifact": "artifacts/round173-qwen3vl2b-slope-balanced-r8-independent/slope-gate.json",
+    "interpretation": "The retained candidate recovers one additional assistant-visible slope without adding a bounded floor false positive, but still misses two partial or edge slopes."
+  },
+  "service_restore": {
+    "sam_4090": "healthy",
+    "vlm_8b_4090": "healthy",
+    "vlm_model": "labelagent-vlm8b",
+    "vlm_exact_requests_inflight": 0,
+    "production_weights_changed": false
+  },
+  "verification": {
+    "targeted_lora_boundary_tests": "6/6",
+    "full_python_regression_utf8": "928/928",
+    "first_non_authoritative_system_locale_attempt": "2 failures and 13 errors caused by GBK decoding; excluded and rerun with the formal PYTHONUTF8=1 environment",
+    "remote_shell_syntax": "passed",
+    "remote_python_compile": "passed",
+    "git_diff_check": "passed"
+  },
+  "artifacts": {
+    "local_untracked_backup": "artifacts/round172-qwen3vl2b-slope-balanced",
+    "remote_root": "/home/clw/projects/sfl-cpd15y/qwen3vl2b-lora-round102",
+    "repeat8_run": "train-slope-balanced-r8-lr1e4-v1",
+    "repeat8_static_eval": "adapter-static-slope-balanced-r8-lr1e4-v1"
+  },
+  "interpretation": [
+    "The retained candidate improves internal agreement with the 8B machine teacher, not human accuracy or segmentation IoU.",
+    "Independent assistant review improves bounded dev8 slope recall from 25% to 50% at unchanged zero candidate false positives, but this is still not human truth.",
+    "The exposed test24 was not rerun because it can no longer serve as an unbiased model-selection gate.",
+    "The candidate must remain offline until a fresh untouched external set and current human slope review pass.",
+    "SAM3 pixel-mask fine-tuning remains blocked because the current 32-frame slope packet has zero human decisions."
+  ]
+}

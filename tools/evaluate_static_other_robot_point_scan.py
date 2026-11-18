@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 import time
 
-from tools.evaluate_reference_point_scan import evaluate_frame
+from tools.evaluate_reference_point_scan import evaluate_frame, fixed_point_grid
 
 
 def file_sha256(path: str | Path) -> str:
@@ -88,6 +88,7 @@ def summarize_frame(sample: dict, report: dict) -> dict:
         "classification_disagreement_review_ids": (
             report["classification_disagreement_review_ids"]),
         "point_count": report["point_count"],
+        "point_grid": report["point_grid"],
         "scan_seconds": report["scan_seconds"],
         "known_instance_seconds": report["known_instance_seconds"],
         "candidate_filter_seconds": report["candidate_filter_seconds"],
@@ -114,11 +115,20 @@ def main() -> int:
     parser.add_argument("--top-k", type=int, default=10)
     parser.add_argument("--exemplar-sheet", type=Path)
     parser.add_argument("--adaptive-exemplar-review", action="store_true")
+    parser.add_argument("--point-columns", type=int, default=24)
+    parser.add_argument("--point-rows", type=int, default=12)
+    parser.add_argument("--point-top-fraction", type=float, default=2 / 3)
     args = parser.parse_args()
-    if args.output.exists():
-        raise FileExistsError(args.output)
     if not 1 <= args.top_k <= 24:
         parser.error("--top-k must be within 1..24")
+    try:
+        fixed_point_grid(64, 64, columns=args.point_columns,
+                         rows=args.point_rows,
+                         top_fraction=args.point_top_fraction)
+    except ValueError as error:
+        parser.error(f"invalid point grid: {error}")
+    if args.output.exists():
+        raise FileExistsError(args.output)
     state = json.loads(args.state.read_text(encoding="utf-8"))
     manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
     samples = verify_manifest(manifest)
@@ -143,7 +153,9 @@ def main() -> int:
             sample["sample_id"], image_path.read_bytes(), [], config,
             args.point_sam_url, sample_output, args.top_k,
             exemplar_sheet=exemplar_sheet,
-            adaptive_exemplar_review=args.adaptive_exemplar_review)
+            adaptive_exemplar_review=args.adaptive_exemplar_review,
+            point_grid={"columns": args.point_columns, "rows": args.point_rows,
+                        "top_fraction": args.point_top_fraction})
         row = summarize_frame(sample, report)
         rows.append(row)
         print(json.dumps({key: row[key] for key in (
@@ -169,6 +181,9 @@ def main() -> int:
         "exemplar_sheet_sha256": (
             file_sha256(args.exemplar_sheet) if args.exemplar_sheet else None),
         "top_k": args.top_k,
+        "point_grid": {"columns": args.point_columns,
+                       "rows": args.point_rows,
+                       "top_fraction": args.point_top_fraction},
         "adaptive_exemplar_review_requested": args.adaptive_exemplar_review,
         "elapsed_seconds": time.perf_counter() - run_started,
         "assistant_candidate_review": {

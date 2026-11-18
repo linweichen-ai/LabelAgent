@@ -2,7 +2,7 @@ import unittest
 
 from tools.evaluate_reference_point_scan import (
     CLASS_PROMPT, classification_disagreement_review_ids,
-    foreground_ego_pair_ids, mark_foreground_ego_pairs)
+    fixed_point_grid, foreground_ego_pair_ids, mark_foreground_ego_pairs)
 from tools.evaluate_static_other_robot_point_scan import (
     safe_sample_dir, summarize_frame, verify_manifest)
 
@@ -27,6 +27,11 @@ def manifest():
 
 
 class StaticOtherRobotPointScanTests(unittest.TestCase):
+    def test_fixed_point_grid_rejects_empty_scan_region(self):
+        with self.assertRaisesRegex(ValueError, "no scan points"):
+            fixed_point_grid(64, 64, columns=24, rows=12,
+                             top_fraction=0.01)
+
     def test_manifest_keeps_assistant_review_outside_truth(self):
         value = manifest()
         self.assertEqual(verify_manifest(value), value["samples"])
@@ -60,6 +65,8 @@ class StaticOtherRobotPointScanTests(unittest.TestCase):
         report = {
             "selected_ids": ["C01"], "uncertain_review_ids": [],
             "point_count": 184, "scan_seconds": 1.0,
+            "point_grid": {"columns": 24, "rows": 12,
+                           "top_fraction": 2 / 3},
             "known_instance_seconds": 0.5, "candidate_filter_seconds": 0.1,
             "frame_elapsed_seconds": 2.0, "raw_candidates": 10,
             "geometric_candidates": 5, "nms_candidates": 4,
@@ -83,6 +90,8 @@ class StaticOtherRobotPointScanTests(unittest.TestCase):
         report = {
             "selected_ids": [], "uncertain_review_ids": ["C02"],
             "point_count": 184, "scan_seconds": 1.0,
+            "point_grid": {"columns": 24, "rows": 12,
+                           "top_fraction": 2 / 3},
             "known_instance_seconds": 0.5, "candidate_filter_seconds": 0.1,
             "frame_elapsed_seconds": 2.0, "raw_candidates": 10,
             "geometric_candidates": 5, "nms_candidates": 4,

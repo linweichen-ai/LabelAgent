@@ -90,13 +90,16 @@ def fixed_point_grid(width, height, columns=24, rows=12, top_fraction=2 / 3):
             or not 0 < top_fraction <= 1):
         raise ValueError("invalid point grid")
     top = height * top_fraction
-    return [
+    points = [
         {"x": min(width - 1, round(column * width / columns)),
          "y": min(height - 1, round(row * height / rows))}
         for row in range(1, rows + 1)
         if row * height / rows <= top + 1e-9
         for column in range(1, columns)
     ]
+    if not points:
+        raise ValueError("point grid contains no scan points")
+    return points
 
 
 def point_batch(image, points, endpoint):
@@ -482,11 +485,15 @@ def classify_surface_veto(config, rows, image, output, frame):
 
 def evaluate_frame(frame, image_bytes, existing_annotations, config, point_endpoint,
                    output, top_k, exemplar_sheet=None,
-                   adaptive_exemplar_review=False):
+                   adaptive_exemplar_review=False, point_grid=None):
     frame_started = time.perf_counter()
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     width, height = image.size
-    points = fixed_point_grid(width, height)
+    grid = point_grid or {"columns": 24, "rows": 12,
+                          "top_fraction": 2 / 3}
+    points = fixed_point_grid(
+        width, height, columns=grid["columns"], rows=grid["rows"],
+        top_fraction=grid["top_fraction"])
     started = time.perf_counter()
     batch = point_batch(image_bytes, points, point_endpoint)
     scan_seconds = time.perf_counter() - started
@@ -574,6 +581,7 @@ def evaluate_frame(frame, image_bytes, existing_annotations, config, point_endpo
             "review_status": shape.get("review_status"),
         } for shape in existing_shapes],
         "point_count": len(points),
+        "point_grid": grid,
         "scan_seconds": scan_seconds,
         "known_instance_seconds": known_instance_seconds,
         "candidate_filter_seconds": candidate_filter_seconds,
@@ -614,9 +622,18 @@ def main():
     parser.add_argument("--top-k", type=int, default=12)
     parser.add_argument("--exemplar-sheet")
     parser.add_argument("--adaptive-exemplar-review", action="store_true")
+    parser.add_argument("--point-columns", type=int, default=24)
+    parser.add_argument("--point-rows", type=int, default=12)
+    parser.add_argument("--point-top-fraction", type=float, default=2 / 3)
     args = parser.parse_args()
     if not 1 <= args.top_k <= 24:
         parser.error("--top-k must be within 1..24")
+    try:
+        fixed_point_grid(64, 64, columns=args.point_columns,
+                         rows=args.point_rows,
+                         top_fraction=args.point_top_fraction)
+    except ValueError as error:
+        parser.error(f"invalid point grid: {error}")
     state = json.loads(Path(args.state).read_text(encoding="utf-8"))
     topic = state.get("topic")
     annotations_by_frame = state.get("truth") or {}
@@ -635,7 +652,9 @@ def main():
             frame, video.frame(topic, frame), annotations_by_frame[str(frame)], config,
             args.point_sam_url, output, args.top_k,
             exemplar_sheet=exemplar_sheet,
-            adaptive_exemplar_review=args.adaptive_exemplar_review)
+            adaptive_exemplar_review=args.adaptive_exemplar_review,
+            point_grid={"columns": args.point_columns, "rows": args.point_rows,
+                        "top_fraction": args.point_top_fraction})
         frame_reports.append(report)
         print(json.dumps({"stage": "frame_complete", **{
             key: report[key] for key in

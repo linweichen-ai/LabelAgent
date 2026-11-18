@@ -1,0 +1,123 @@
+{
+  "schema_version": "labelagent.other-robot-scan-density.round207-210.v1",
+  "created_local": "2026-11-19T03:30:00+08:00",
+  "status": "all_density_and_prompt_batch_candidates_rejected",
+  "human_truth": false,
+  "candidate_only": true,
+  "production_deployed": false,
+  "approved_for_training": false,
+  "production_model_changed": false,
+  "state_written": false,
+  "baseline_round205": {
+    "point_grid": {"columns": 24, "rows": 12, "top_fraction": 0.6666666666666666},
+    "point_count": 184,
+    "scan_seconds": 65.635843,
+    "elapsed_seconds": 164.691784,
+    "positive_covered_by_auto_or_review": 5,
+    "negative_with_auto_candidate": 0,
+    "negative_with_review_candidate": 0,
+    "result_sha256": "5295a63eaa7704e3351e51ef83cebeb42945281e52bdb74aedf50b3312c05fcf"
+  },
+  "density_candidates": [
+    {
+      "round": 207,
+      "point_grid": {"columns": 20, "rows": 10, "top_fraction": 0.7},
+      "point_count": 133,
+      "scan_seconds": 51.227125,
+      "scan_reduction_percent": 21.952515,
+      "elapsed_seconds": 186.813575,
+      "elapsed_change_percent": 13.432237,
+      "positive_covered_by_auto_or_review": 3,
+      "negative_with_auto_candidate": 0,
+      "negative_with_review_candidate": 1,
+      "decision": "rejected",
+      "result_sha256": "1a33721db0ceac4c939089607b2646c1dce415b848bc119a72fa627eee0aaa23"
+    },
+    {
+      "round": 208,
+      "point_grid": {"columns": 22, "rows": 11, "top_fraction": 0.7},
+      "point_count": 147,
+      "scan_seconds": 54.854,
+      "scan_reduction_percent": 16.426761,
+      "elapsed_seconds": 195.409391,
+      "elapsed_change_percent": 18.651572,
+      "positive_covered_by_auto_or_review": 4,
+      "negative_with_auto_candidate": 0,
+      "negative_with_review_candidate": 2,
+      "decision": "rejected",
+      "result_sha256": "e88a80743b9cdeb88d18d28cc97be0763d3b0e765a23805b9aa3f92161e90289"
+    },
+    {
+      "round": 209,
+      "point_grid": {"columns": 20, "rows": 12, "top_fraction": 0.666666666666667},
+      "point_count": 152,
+      "scan_seconds": 57.414162,
+      "scan_reduction_percent": 12.526206,
+      "elapsed_seconds": 208.778146,
+      "elapsed_change_percent": 26.769011,
+      "positive_covered_by_auto_or_review": 5,
+      "negative_with_auto_candidate": 1,
+      "negative_with_review_candidate": 2,
+      "decision": "rejected",
+      "result_sha256": "ad069f8d652fe723c8eceb0c33bc42fa756b8055c55542af1ff23b70db2a84c2"
+    }
+  ],
+  "round210_prompt_batch_candidate": {
+    "image_sha256": "ac078542a25608de3ea3358e96a046c7e3193d8628d533e55df2b56b9768c335",
+    "point_count": 184,
+    "warmup_seconds": 27.989414,
+    "all_candidates_exact": false,
+    "runs": [
+      {"prompt_batch_size": 1, "client_seconds": 8.295398, "speedup_vs_sequential": 1.0, "exact": true, "items_sha256": "40880467bfcd156900f96cc5d3bedefcf7a9cf815c7cb04c2fc1a7429509a78e"},
+      {"prompt_batch_size": 2, "client_seconds": 11.847959, "speedup_vs_sequential": 0.700154, "exact": false, "items_sha256": "76c29c0f1485505f24fd142d0aa98019b7430991b9572b805129d769f78ecc60"},
+      {"prompt_batch_size": 4, "client_seconds": 11.018206, "speedup_vs_sequential": 0.752881, "exact": false, "items_sha256": "f8f26d290ed71bb2dd6d3850de89610751ce13ac15aa840bd6055988f451c2b7"},
+      {"prompt_batch_size": 8, "client_seconds": 10.951853, "speedup_vs_sequential": 0.757442, "exact": false, "items_sha256": "668cdfe0a0b323d972cdcd2947945f3ff4a222bfb1291c426f1f6c4bbcb69776"},
+      {"prompt_batch_size": 16, "client_seconds": 10.260548, "speedup_vs_sequential": 0.808475, "exact": false, "items_sha256": "7267ea48c889c16c5d33170ee785c42badf6615480e88de9a69ffbdfb7774a0d"}
+    ],
+    "decision": "rejected_and_rolled_back",
+    "result_sha256": "0d15137a4556cba35f59ff3a0f30d578cb134ecb8de5eb477323d2f38896abb9",
+    "remote_backup": "/home/clw/labelagent_remote_20261110/backups/prompt-batch-round210-before-20261119",
+    "restored_remote_sha256": {
+      "point_segment.py": "e4156b3a1416b06d95c4f6f3e5a22bc24c272650be46a74e9bd0fa9788276559",
+      "sam_service_fastapi.py": "4f2e2716407ba259fc70d613ba53d01c85b8a40d143c238efe728500502b0adf"
+    },
+    "rollback_smoke": {"items": 1, "successful": 1, "sam_status": "ok", "model_loaded": true}
+  },
+  "retained_implementation": {
+    "default_point_count": 184,
+    "default_changed": false,
+    "configurable_offline_grid": true,
+    "rejects_invalid_or_empty_grid_before_output": true,
+    "prompt_batch_candidate_code_retained": false
+  },
+  "implementation_sha256": {
+    "tools/evaluate_reference_point_scan.py": "0a001054daa0a4dc4304f30dc2bddaa35393d895eee8742d785971da2625972b",
+    "tools/evaluate_static_other_robot_point_scan.py": "279b339cfc85e8bcb3ecf796bd8729e027b6ef46d5e410b71a92f6e3b8d31337",
+    "tests/test_static_other_robot_point_scan.py": "34e85ed97031625042df1f82d145477e70a564ced354a10536a513fe018f8008",
+    "docs/OTHER_ROBOT_SCAN_DENSITY_ROUND207_210_20261119.md": "595bb40e03e5fe269953fef8274c035194f1b0902e86e669c4904e1e616f2a3c"
+  },
+  "verification": {
+    "unittests": {"passed": 29, "failed": 0},
+    "remote_contract": "passed",
+    "python_compile": "passed",
+    "git_diff_check": "passed",
+    "live_readback": {
+      "workbench_http": 200,
+      "workbench_status": "idle",
+      "point_sam_status": "ok",
+      "point_sam_model_loaded_after_smoke": true,
+      "formal_sam_status": "ok",
+      "formal_sam_model_loaded": true,
+      "vlm_status": "ok",
+      "vlm_model_loaded": true,
+      "vlm_inflight": 0,
+      "vlm_waiting": 0
+    },
+    "formal_state_sha256": {
+      "state.json": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+      "file_sessions.json": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5"
+    }
+  },
+  "next_gate": "Obtain current human review and expand to at least 24 sequence-isolated images; retain 184 points until an exact-candidate optimization passes positive non-regression and zero-negative-distraction gates.",
+  "boundary": "Assistant triage is not accuracy. No human truth, training approval, model weight, OSS object, or production workbench candidate behavior was changed."
+}

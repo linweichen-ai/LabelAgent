@@ -1532,3 +1532,13 @@ test24 已经在上一轮曝光，本轮没有再次读取它做调参，而是�
 4 项定向测试、Python 876/876、网页 103/103 与 `git diff --check` 全部通过。正式状态 SHA-256 前后仍为 `a01d57e0...58e21`，页面 HTTP 200、工作台 idle、SAM/VLM ready；18804、18806、18807、18808 四个隔离端口均已释放。运行目录与工作树 `server.py` SHA-256 同为 `06945e25...b58f`，管理器同为 `25c8d01...8024`；远端 VLM 源码保持旧版 `0f3f6957...f58b36`，没有改权重或停止其他 GPU 任务。备份位于 `D:\Apps\LabelAgent\.local\backups\full-discovery-prewarm-round144-20261118-091338`。结构化证据见 [第一百四十四轮完整解码预热](evidence/workbench-stability-20261117/full-discovery-prewarm-round144.json)。
 
 边界：本轮把一次约 30 秒的冷启动成本前移到浏览器打开前，使首张真实图在三次受控样本中稳定回到约 15 秒；它不是斜坡分割精度、跨数据集 IoU 或 SAM 微调成果。现场同时发现 C 盘仅余约 0.39 GiB、D 盘仅余约 0.02 GiB；测试已改用明确临时目录并在完成后删除，没有删除用户数据。继续大量下载、训练或保留新实验前，必须先通过可恢复、带清单的方式恢复磁盘余量。
+
+## 第一百四十五轮可恢复磁盘余量治理（已完成，2026-11-18）
+
+Round144 完整回归首次因 D 盘临时空间只余约 0.02 GiB 而触发 `No space left on device`；这不是代码回归，但会直接造成保存、测试和新数据加载失败。首先对工作树未跟踪实验产物和正式回滚备份启用透明 NTFS 压缩。工作树 `artifacts` 的 2,888 个文件在压缩前后目录内容指纹同为 `9ff11c5b...75a12`，释放约 0.221 GiB；`D:\Apps\LabelAgent\.local\backups` 的 528 个文件指纹同为 `dd4a4ea4...d8cfd`，释放约 0.440 GiB。文件路径、字节内容和读取方式均未改变。
+
+随后定位到已停止的旧隔离目录 `D:\Apps\LabelAgent\.local\isolated-round64-deferred-agent-20261117`，逻辑大小约 23.14 GiB，与正式 `work` 近乎完整复制。该目录没有隔离进程记录，也没有活跃服务引用。对两边逐项比对：正式目录 10,611 个文件、隔离目录 10,619 个文件；10,595 个同路径同大小文件全部完成 SHA-256 配对，内容不一致数为 0。隔离专属 22 个检查图和隔离版 `state.json/model_debug.json` 共 24 个文件、7,299,215 字节，已复制到 `D:\Apps\LabelAgent\.local\backups\isolated-round64-unique-20261118`，复制后哈希不一致为 0，载荷树指纹为 `32d7f13c...9e7e`，并附 `RECOVERY-MANIFEST.md`。
+
+在确认共有文件可由正式 `work` 逐字节恢复、差异文件可由归档恢复后，仅删除这个精确旧隔离目录，释放 23.163 GiB；D 盘可用空间从约 0.447 GiB 增至 23.610 GiB。正式工作台仍 HTTP 200、idle，SAM/VLM ready，正式状态 SHA-256 仍为 `a01d57e0...58e21`。结构化证据见 [第一百四十五轮可恢复磁盘治理](evidence/workbench-stability-20261117/recoverable-disk-headroom-round145.json)。
+
+边界：没有删除正式数据、独有隔离证据、人工真值、候选、模型权重、OSS 对象或其他项目文件。C 盘当前仍仅约 0.54 GiB 可用，其主要占用来自其他项目的 `outputs` 与多个任务工作区；本轮只读统计后保持不动，后续必须另行建立备份和恢复清单才能治理。

@@ -1,0 +1,71 @@
+{
+  "schema_version": "labelagent.recoverable-disk-headroom-round145.v1",
+  "date": "2026-11-18",
+  "decision": "completed_with_recovery_manifest",
+  "objective": "Restore enough local headroom for stable LabelAgent saves and tests without deleting unique evidence, formal state, user data, or unrelated project outputs.",
+  "transparent_compression": [
+    {
+      "path": "C:/Users/seer/Documents/ChatGPT/Seer2clw/task_workspaces/labelagent_stability_worktree_20261117/artifacts",
+      "files": 2888,
+      "logical_bytes": 784321064,
+      "stored_bytes_after": 534462053,
+      "tree_digest_before": "9ff11c5b3d3840f75d4b96483f618cf8e0669156df4681d07112778f6f575a12",
+      "tree_digest_after": "9ff11c5b3d3840f75d4b96483f618cf8e0669156df4681d07112778f6f575a12",
+      "content_unchanged": true,
+      "reclaimed_gib": 0.221
+    },
+    {
+      "path": "D:/Apps/LabelAgent/.local/backups",
+      "files": 528,
+      "logical_bytes": 924225370,
+      "stored_bytes_after": 451993722,
+      "tree_digest_before": "dd4a4ea45d1a0cf71f011df8d24123291c2dd226d7525a8e1b7bd2d56e1d8cfd",
+      "tree_digest_after": "dd4a4ea45d1a0cf71f011df8d24123291c2dd226d7525a8e1b7bd2d56e1d8cfd",
+      "content_unchanged": true,
+      "reclaimed_gib": 0.440
+    }
+  ],
+  "retired_isolate": {
+    "removed_path": "D:/Apps/LabelAgent/.local/isolated-round64-deferred-agent-20261117",
+    "process_record_present": false,
+    "active_isolate_process_present": false,
+    "formal_path": "D:/Apps/LabelAgent/work",
+    "formal_files": 10611,
+    "isolated_files": 10619,
+    "same_relative_path_and_length": 10595,
+    "full_sha256_compared": 10595,
+    "full_sha256_mismatches": 0,
+    "formal_only_files": 14,
+    "isolated_only_files": 22,
+    "length_mismatch_files": ["state.json", "model_debug.json"],
+    "comparison_elapsed_seconds": 73.577,
+    "recoverable_common_from": "D:/Apps/LabelAgent/work",
+    "recoverable_unique_from": "D:/Apps/LabelAgent/.local/backups/isolated-round64-unique-20261118",
+    "archive_files": 24,
+    "archive_bytes": 7299215,
+    "archive_copy_hash_mismatches": 0,
+    "archive_payload_tree_digest": "32d7f13cec7ff8ac656ac2ee193afc5dcc231ec2c7c2b5b5ba2d827d79949e7e",
+    "recovery_manifest": "D:/Apps/LabelAgent/.local/backups/isolated-round64-unique-20261118/RECOVERY-MANIFEST.md",
+    "free_before_delete_gib": 0.447,
+    "free_after_delete_gib": 23.610,
+    "reclaimed_gib": 23.163
+  },
+  "final_runtime": {
+    "workbench_http_status": 200,
+    "workbench_status": "idle",
+    "sam_ready": true,
+    "vlm_ready": true,
+    "formal_state_sha256": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "d_free_gib": 23.610,
+    "c_free_gib": 0.541
+  },
+  "boundaries": {
+    "oss_writes": false,
+    "formal_state_changed": false,
+    "formal_truth_changed": false,
+    "formal_candidates_changed": false,
+    "other_gpu_processes_stopped": false,
+    "unrelated_c_drive_outputs_modified": false,
+    "remaining_risk": "C drive headroom is still low. Its largest directories belong to other projects, so they were inspected read-only and left untouched pending an independent recoverable cleanup scope."
+  }
+}

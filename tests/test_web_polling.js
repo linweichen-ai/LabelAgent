@@ -900,7 +900,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=168/);
+  assert.match(source('index.html'), /app\.js\?v=169/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -912,6 +912,56 @@ test('页面启动先恢复最终工作帧再开放点选推理', () => {
   assert.match(app, /正在恢复上次工作帧，请稍候/);
   assert.match(app, /button\.textContent=restoring\?'正在恢复工作帧…'/);
   assert.doesNotMatch(app, /bootstrapComplete=true;setTimeout\(refreshAgentProgress,0\)/);
+});
+
+test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', async () => {
+  const app = source('app.js');
+  const timelineResolvers = [], loads = [], notices = [];
+  const h = harness({
+    stopPlayback() {},
+    prepareTimeline() { return new Promise(resolve => timelineResolvers.push(resolve)); },
+    async loadStill(target) { loads.push(target); h.context.frame = target; },
+    updateControls() {}, updateWindows() {},
+    toast(message) { notices.push(message); },
+  });
+  h.run(`let frameNavigationGeneration=0,topic='/camera',loadedDataPath='file-a',
+    topics={'/camera':{count:100}},playback=null,clockTime=0,frame=74;`);
+  h.run(section(app, 'function frameAtTime', 'function currentClock'));
+  h.run(section(app, 'function beginFrameNavigation', 'async function pauseAtClock'));
+  h.run(section(app, 'async function showFrame', 'function refreshTopics'));
+
+  const first = h.run('showFrame(10)');
+  const second = h.run('showFrame(20)');
+  assert.equal(timelineResolvers.length, 2);
+  timelineResolvers[1]({offset:0,times:Array.from({length:100},(_,index)=>index)});
+  await h.flush();
+  timelineResolvers[0]({offset:0,times:Array.from({length:100},(_,index)=>index)});
+  await Promise.all([first, second]);
+  assert.deepEqual(loads, [20]);
+  assert.equal(h.context.frame, 20);
+
+  h.run("playback=null;loadedDataPath='file-a'");
+  const staleScope = h.run('showFrame(30)');
+  h.run("loadedDataPath='file-b'");
+  timelineResolvers[2]({offset:0,times:Array.from({length:100},(_,index)=>index)});
+  await staleScope;
+  assert.deepEqual(loads, [20]);
+  assert.deepEqual(notices, []);
+
+  h.run("playback=null;loadedDataPath='file-a'");
+  const oldTime = h.run('showTime(1)');
+  const latestTime = h.run('showTime(2)');
+  timelineResolvers[4]({offset:0,times:[0,1,2,3]});
+  await h.flush();
+  timelineResolvers[3]({offset:0,times:[0,1,2,3]});
+  await Promise.all([oldTime, latestTime]);
+  assert.deepEqual(loads, [20,2]);
+  assert.equal(h.context.frame, 2);
+
+  assert.match(app, /async function loadVideo\(data\)\{invalidateFrameNavigation\(\)/);
+  assert.match(app, /function clearLoadedVideo\(\)\{invalidateFrameNavigation\(\)/);
+  assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
+  assert.match(source('index.html'), /app\.js\?v=169/);
 });
 
 test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () => {

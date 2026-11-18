@@ -1,0 +1,135 @@
+{
+  "schema_version": "labelagent.workbench-stability.round214.v1",
+  "round": 214,
+  "date": "2026-11-19",
+  "objective": "Ensure the newest frame, time, camera, or dataset navigation intent wins even when older responses arrive last.",
+  "status": "implemented_tested_and_production_deployed_pending_remote_receipt",
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "model_weights_changed": false,
+    "oss_written": false,
+    "gpu_used_by_browser_acceptance": false
+  },
+  "pre_fix_reproduction": {
+    "browser": "Microsoft Edge headless fresh context",
+    "asset": "/app.js?v=168",
+    "requested_frames_in_order": [10, 20],
+    "delay_first_timeline_ms": 500,
+    "delay_second_timeline_ms": 50,
+    "final_frame": 10,
+    "expected_final_frame": 20,
+    "stale_request_overrode_latest": true,
+    "truth_write_requests": 0,
+    "page_errors": 0
+  },
+  "implementation": {
+    "navigation_generation": true,
+    "scope_fields": ["generation", "dataset_path", "topic"],
+    "guarded_operations": [
+      "showFrame",
+      "showTime",
+      "pauseAtClock",
+      "activateAnnotation",
+      "openFrameForReferencePreparation",
+      "loadVideo",
+      "clearLoadedVideo"
+    ],
+    "timeline_change_uses_show_time": true,
+    "model_request_abort_added": false,
+    "asset_version": 169
+  },
+  "tests": {
+    "targeted_web": {"passed": 49, "failed": 0},
+    "all_web": {"passed": 115, "failed": 0},
+    "all_python": {"passed": 979, "failed": 0, "elapsed_seconds": 6.183, "environment": "PYTHONUTF8=1"},
+    "javascript_syntax": "passed",
+    "python_compile": "passed_with_known_upstream_sam3_syntax_warning",
+    "git_diff_check": "passed"
+  },
+  "browser_acceptance": {
+    "browser": "Microsoft Edge headless fresh context",
+    "workbench_url": "http://127.0.0.1:8765",
+    "asset": "/app.js?v=169",
+    "start": {
+      "frame": 74,
+      "topic": "/capture/camera_1/image",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap"
+    },
+    "frame_race": {
+      "requested_in_order": [10, 20],
+      "settled": [false, true],
+      "final_frame": 20,
+      "latest_wins": true
+    },
+    "time_race": {
+      "requested_seconds_in_order": [1, 2],
+      "settled": [false, true],
+      "final_clock_seconds": 2,
+      "final_frame": 2,
+      "latest_wins": true
+    },
+    "scope_invalidation": {
+      "requested_frame": 30,
+      "old_navigation_accepted": false,
+      "original_path_restored": true,
+      "stale_scope_discarded": true
+    },
+    "timeline_requests": 5,
+    "truth_write_requests": 0,
+    "segment_requests": 0,
+    "page_errors": 0,
+    "console_errors": 0,
+    "accepted": true,
+    "local_untracked_artifacts": "artifacts/round214-frame-navigation-race/",
+    "factory_image_uploaded": false
+  },
+  "deployment": {
+    "production_root": "D:\\Apps\\LabelAgent",
+    "backup_directory": "D:\\Apps\\LabelAgent\\.local\\backups\\frame-navigation-round214-20261119-045157",
+    "backup_sha256": {
+      "app.js": "8dda1637153b8a4140604c928c412d1c534d87198ba56fcfff564b841fda4098",
+      "index.html": "4b4bca981521ead56e68b51bcd274591c81d8414eafb50c9c4bc30d87efe288c",
+      "state.json": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+      "file_sessions.json": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+      "remote_processes.json": "540897913b16ac26dec8077f274e3e557cfb2d4f1161fcfedd1dc4f774c1198f"
+    },
+    "workbench_manager_pid_before": 61156,
+    "workbench_manager_pid_after": 66136,
+    "workbench_listener_pid_before": 52168,
+    "workbench_listener_pid_after": 39644,
+    "tunnel_4090_pid_unchanged": 60456,
+    "sam_5090_tunnel_pid_unchanged": 8656,
+    "app_js_sha256": "393b9866306f6c1616a2b75c25fc4b7bce9dd686a8f09a4ad9d7ceacd3995391",
+    "index_html_sha256": "705661990759121cb67edff4501081e9c9f8be0e882c9c5c9c9d9fb546b9069a"
+  },
+  "formal_state_integrity": {
+    "state_sha256_before": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "state_sha256_after": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "file_sessions_sha256_before": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "file_sessions_sha256_after": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "unchanged": true
+  },
+  "service_health_after": {
+    "workbench_state_8765": 200,
+    "workbench_run_8765": 200,
+    "sam_4090_28766": 200,
+    "sam_5090_38766": 200,
+    "vlm_4090_28868": 200
+  },
+  "source_sync": {
+    "implementation_commit": null,
+    "branch": "codex/workbench-stability-20261117",
+    "github_readback": null,
+    "cnb_readback": null,
+    "both_remotes_matched_implementation_commit": false,
+    "factory_images_uploaded": false,
+    "untracked_experiment_artifacts_uploaded": false
+  },
+  "changed_files": {
+    "source/web/app.js": "393b9866306f6c1616a2b75c25fc4b7bce9dd686a8f09a4ad9d7ceacd3995391",
+    "source/web/index.html": "705661990759121cb67edff4501081e9c9f8be0e882c9c5c9c9d9fb546b9069a",
+    "tests/test_web_polling.js": "a8d4761879b5d19f2afba612f041bb9443b1b16e43403811a6570226c994bb93"
+  }
+}

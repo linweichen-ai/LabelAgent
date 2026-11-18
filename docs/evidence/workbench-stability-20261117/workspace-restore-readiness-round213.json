@@ -94,11 +94,11 @@
     "vlm_4090_28868": 200
   },
   "source_sync": {
-    "implementation_commit": null,
+    "implementation_commit": "53b386e121b1cabee40a27d5ca2e4316ff82439b",
     "branch": "codex/workbench-stability-20261117",
-    "github_readback": null,
-    "cnb_readback": null,
-    "both_remotes_matched_implementation_commit": false,
+    "github_readback": "53b386e121b1cabee40a27d5ca2e4316ff82439b",
+    "cnb_readback": "53b386e121b1cabee40a27d5ca2e4316ff82439b",
+    "both_remotes_matched_implementation_commit": true,
     "factory_images_uploaded": false,
     "untracked_experiment_artifacts_uploaded": false
   },

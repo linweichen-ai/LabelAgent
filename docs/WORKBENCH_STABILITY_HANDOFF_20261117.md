@@ -1782,4 +1782,6 @@ Round212 的浏览器验收发现页面会先显示第0帧，再异步恢复到�
 
 部署前备份位于 `D:\Apps\LabelAgent\.local\backups\workspace-ready-round213-20261119-043126`。只重启8765工作台，管理PID从69944变为61156，4090通道PID60456和5090 SAM通道PID8656保持不变；工作台两项、两路SAM和VLM五个探针均HTTP 200。正式 `state.json` 与 `file_sessions.json` 哈希保持不变。浏览器截图含厂内画面，只保留在本地未跟踪目录，不上传远端。
 
+实现与首版文档提交 `53b386e121b1cabee40a27d5ca2e4316ff82439b` 已推送并分别回读 GitHub/CNB，同名分支两端精确匹配；未跟踪实验产物和厂内截图均未上传。
+
 本轮没有改模型权重、人工真值、训练批准或OSS，也没有产生新的分割结果；第74帧仍是既有机器候选。完整说明见 [第二百一十三轮报告](WORKSPACE_RESTORE_READINESS_ROUND213_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/workspace-restore-readiness-round213.json)。下一步继续把同一精确作用域和就绪门禁扩展到其余异步交互，但不取消已经进入GPU的请求。

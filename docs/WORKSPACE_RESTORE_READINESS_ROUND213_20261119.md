@@ -100,6 +100,8 @@ SAM 点选按钮同时显示“正在恢复工作帧…”并禁用。恢复完�
 
 正式 `state.json` 与 `file_sessions.json` 的 SHA-256 前后保持不变。`remote_processes.json` 因工作台 PID 合法更新而变化，不属于标注或真值变化。
 
+实现与首版文档提交为 `53b386e121b1cabee40a27d5ca2e4316ff82439b`。推送后回读 GitHub 与 CNB 的 `codex/workbench-stability-20261117` 分支，两端均精确匹配该提交；厂内截图和全部未跟踪实验产物均未上传。
+
 ## 边界
 
 - 本轮没有修改 SAM/VLM 权重、微调或后训练；

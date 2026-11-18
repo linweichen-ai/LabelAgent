@@ -43,6 +43,25 @@
     "local_untracked_result": "artifacts/round161-review-packet-browser-v2/result.json",
     "local_untracked_screenshot": "artifacts/round161-review-packet-browser-v2/review-packet-frame74.png"
   },
+  "all_frame_readback": {
+    "environment": "The same isolated CVAT Task3 workbench after browser acceptance.",
+    "frames_requested": 32,
+    "binding_requests_succeeded": 32,
+    "image_requests_succeeded": 32,
+    "manifest_binding_image_hashes_match": "32/32",
+    "write_endpoints_called": 0,
+    "binding_latency_ms": {
+      "p50": 14.81,
+      "p95": 40.926,
+      "max": 73.103
+    },
+    "image_latency_ms": {
+      "p50": 1.94,
+      "p95": 6.591,
+      "max": 13.827
+    },
+    "interpretation": "All selected frames are directly readable and content-bound; this is a navigation/readback result, not an accuracy or human-review result."
+  },
   "verification": {
     "targeted_prefetch_tests": "3/3 passed",
     "full_python_regression": "904 passed, 186 subtests passed",

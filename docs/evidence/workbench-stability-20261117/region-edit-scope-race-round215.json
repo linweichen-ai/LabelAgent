@@ -1,0 +1,132 @@
+{
+  "schema_version": "labelagent.workbench-stability.round215.v1",
+  "round": 215,
+  "date": "2026-11-19",
+  "objective": "Prevent an asynchronous add/erase region response from mutating a different frame, dataset, topic, mode, shape, or newer edit.",
+  "status": "implemented_tested_and_production_deployed_pending_remote_receipt",
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "model_weights_changed": false,
+    "oss_written": false,
+    "gpu_used_by_browser_acceptance": false
+  },
+  "pre_fix_reproduction": {
+    "browser": "Microsoft Edge headless fresh context",
+    "asset": "/app.js?v=169",
+    "source_frame": 74,
+    "destination_frame": 20,
+    "response_delay_ms": 600,
+    "destination_label_before": "DESTINATION_FRAME_SHAPE",
+    "destination_label_after": "STALE_REGION_RESULT",
+    "stale_edit_overrode_destination": true,
+    "edit_requests": 1,
+    "truth_write_requests": 0,
+    "page_errors": 0
+  },
+  "implementation": {
+    "generation_bound": true,
+    "scope_fields": ["dataset_path", "topic", "frame", "workspace_mode", "shape_index", "shape_snapshot"],
+    "request_payload_frozen": ["operation", "polygon", "shape"],
+    "latest_edit_wins": true,
+    "missing_shape_rejected_before_request": true,
+    "asset_version": 170
+  },
+  "tests": {
+    "targeted_region_edit": {"passed": 1, "failed": 0},
+    "all_web": {"passed": 116, "failed": 0},
+    "all_python": {"passed": 979, "failed": 0, "subtests_passed": 186, "elapsed_seconds": 9.96, "environment": "PYTHONUTF8=1"},
+    "javascript_syntax": "passed",
+    "python_compile": "passed",
+    "git_diff_check": "passed",
+    "initial_overbroad_pytest_invocation": {
+      "status": "collection_stopped",
+      "reason": "optional upstream source/sam3/scripts/qualitative_test.py requires matplotlib",
+      "dependency_installed": false,
+      "product_test_command_then_used": "python -m pytest -q tests"
+    }
+  },
+  "browser_acceptance": {
+    "browser": "Microsoft Edge headless fresh context",
+    "workbench_url": "http://127.0.0.1:8765",
+    "asset": "/app.js?v=170",
+    "start": {
+      "frame": 74,
+      "topic": "/capture/camera_1/image",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap"
+    },
+    "cross_frame_stale_response": {
+      "destination_frame": 20,
+      "destination_label_after": "DESTINATION_FRAME_SHAPE",
+      "discard_message_visible": true,
+      "discarded": true
+    },
+    "same_scope_response": {
+      "frame": 30,
+      "label_after": "CURRENT_REGION_RESULT",
+      "applied": true
+    },
+    "concurrent_same_shape_responses": {
+      "older_response_delay_ms": 500,
+      "latest_response_delay_ms": 50,
+      "final_label": "LATEST_REGION_RESULT",
+      "latest_wins": true
+    },
+    "edit_requests": 4,
+    "truth_write_requests": 0,
+    "segment_requests": 0,
+    "page_errors": 0,
+    "console_errors": 0,
+    "accepted": true,
+    "local_untracked_artifacts": "artifacts/round215-region-edit-scope-race/",
+    "factory_image_uploaded": false
+  },
+  "deployment": {
+    "production_root": "D:\\Apps\\LabelAgent",
+    "backup_directory": "D:\\Apps\\LabelAgent\\.local\\backups\\region-edit-scope-round215-20261119-051404",
+    "backup_sha256": {
+      "app.js": "393b9866306f6c1616a2b75c25fc4b7bce9dd686a8f09a4ad9d7ceacd3995391",
+      "index.html": "705661990759121cb67edff4501081e9c9f8be0e882c9c5c9c9d9fb546b9069a",
+      "state.json": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+      "file_sessions.json": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+      "remote_processes.json": "468e384b88768a6bf274a81bd1f3722fd6c14cbbaf5f17174482e32c0d82132d"
+    },
+    "workbench_manager_pid_before": 66136,
+    "workbench_manager_pid_after": 38764,
+    "workbench_listener_pid_before": 39644,
+    "workbench_listener_pid_after": 31708,
+    "tunnel_4090_pid_unchanged": 60456,
+    "sam_5090_tunnel_pid_unchanged": 8656,
+    "app_js_sha256": "ee1c245131658f73518bb04c0f7319b39cb165f88d371f0992419282a2f5ea57",
+    "index_html_sha256": "184926ebfdb3bf61a72e42040f318761dd2062e949c8a094cb682f46410203bf"
+  },
+  "formal_state_integrity": {
+    "state_sha256_before": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "state_sha256_after": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "file_sessions_sha256_before": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "file_sessions_sha256_after": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "unchanged": true
+  },
+  "service_health_after": {
+    "workbench_state_8765": 200,
+    "workbench_run_8765": 200,
+    "sam_4090_28766": 200,
+    "sam_5090_38766": 200,
+    "vlm_4090_28868": 200
+  },
+  "source_sync": {
+    "implementation_commit": null,
+    "branch": "codex/workbench-stability-20261117",
+    "github_readback": null,
+    "cnb_readback": null,
+    "both_remotes_matched_implementation_commit": false,
+    "factory_images_uploaded": false,
+    "untracked_experiment_artifacts_uploaded": false
+  },
+  "changed_files": {
+    "source/web/app.js": "ee1c245131658f73518bb04c0f7319b39cb165f88d371f0992419282a2f5ea57",
+    "source/web/index.html": "184926ebfdb3bf61a72e42040f318761dd2062e949c8a094cb682f46410203bf",
+    "tests/test_web_polling.js": "391d71d4e30e6f19122baccc89d7b70af8c2f87b0d58643bd3663c516274b636"
+  }
+}

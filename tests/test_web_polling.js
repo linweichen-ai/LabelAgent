@@ -900,7 +900,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=169/);
+  assert.match(source('index.html'), /app\.js\?v=170/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -961,7 +961,55 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=169/);
+  assert.match(source('index.html'), /app\.js\?v=170/);
+});
+
+test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
+  const app = source('app.js');
+  const pendingRequests = [], notices = [];
+  const h = harness({
+    refreshPointTools() {}, refreshShapeList() {}, draw() {},
+    toast(message) { notices.push(message); },
+  });
+  h.context.itemsByFrame = {
+    '3': [{label:'source',points:[[1,1],[10,1],[1,10]]}],
+    '4': [{label:'destination',points:[[20,20],[30,20],[20,30]]}],
+  };
+  h.context.api = (route, body) => new Promise(resolve => pendingRequests.push({route,body,resolve}));
+  h.run(`let pointMode=false,annotationMode=true,loading=false,playing=null,
+    draft=[[2,2],[8,2],[2,8]],regionMode='add',regionEditGeneration=0,
+    selectedShapeIndex=0,frame=3,topic='/camera',loadedDataPath='file-a';
+    function selectedShapes(){return itemsByFrame[String(frame)]}
+    function candidateAuditFullSnapshot(value){return JSON.stringify(value)}`);
+  h.run(section(app, 'async function finish', "$('frameImage').onload"));
+
+  const stale = h.run('finish()');
+  assert.equal(pendingRequests.length, 1);
+  h.run('frame=4;selectedShapeIndex=0');
+  pendingRequests[0].resolve({label:'stale-result',points:[[4,4],[9,4],[4,9]]});
+  await stale;
+  assert.equal(h.context.itemsByFrame['4'][0].label, 'destination');
+  assert.ok(notices.includes('帧、相机、数据集或模式已切换，旧区域编辑结果已安全丢弃'));
+
+  h.run("frame=3;regionMode='add';draft=[[2,2],[8,2],[2,8]];selectedShapeIndex=0");
+  const older = h.run('finish()');
+  const latest = h.run('finish()');
+  assert.equal(pendingRequests.length, 3);
+  pendingRequests[1].resolve({label:'older-result',points:[[3,3],[7,3],[3,7]]});
+  await older;
+  assert.equal(h.context.itemsByFrame['3'][0].label, 'source');
+  pendingRequests[2].resolve({label:'latest-result',points:[[5,5],[9,5],[5,9]]});
+  await latest;
+  assert.equal(h.context.itemsByFrame['3'][0].label, 'latest-result');
+  assert.equal(pendingRequests[2].body.frame, 3);
+  assert.equal(pendingRequests[2].body.operation, 'add');
+  assert.equal(JSON.stringify(pendingRequests[2].body.shape), JSON.stringify({label:'source',points:[[1,1],[10,1],[1,10]]}));
+
+  h.run("itemsByFrame['3']=[];regionMode='add';draft=[[2,2],[8,2],[2,8]];selectedShapeIndex=0");
+  await h.run('finish()');
+  assert.equal(pendingRequests.length, 3);
+  assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
+  assert.match(source('index.html'), /app\.js\?v=170/);
 });
 
 test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () => {

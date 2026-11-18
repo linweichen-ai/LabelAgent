@@ -1,0 +1,184 @@
+{
+  "schema_version": "labelagent.other-robot-cross-sequence-round190-193.v1",
+  "created_local": "2026-11-19T00:45:00+08:00",
+  "status": "cross_sequence_failure_modes_confirmed_no_candidate_deployed",
+  "track": "candidate_only_other_robot_posttrain_and_guard",
+  "human_truth": false,
+  "production_deployed": false,
+  "production_model_changed": false,
+  "best_retained_candidate": {
+    "round": 189,
+    "adapter_sha256": "39a5e67e6d7e1366d442b648d11cab48391fd754853f7ed68b1070960fde027a",
+    "reason": "Later hard-negative and contrastive candidates failed cross-sequence negative or positive guards. Round 189 remains offline and is not production-accepted."
+  },
+  "round190": {
+    "purpose": "Run the frozen round 189 adapter in read-only shadow mode on different sequences.",
+    "sfl_20261104": {
+      "frames": 2,
+      "assistant_reviewed": 2,
+      "assistant_candidate_expected_absent": 2,
+      "predicted_present": 2,
+      "assistant_candidate_agreements": 0,
+      "boundary": "The expected state is assistant visual triage, not human truth."
+    },
+    "capture_20261103": {
+      "frames": 8,
+      "assistant_candidate_positive": 6,
+      "assistant_candidate_negative": 2,
+      "positive_agreements": 6,
+      "negative_agreements": 0,
+      "total_agreements": 6,
+      "total_disagreements": 2,
+      "failure_mode": "The adapter detects the obvious separate platforms but also calls conventional forklifts other_robot."
+    }
+  },
+  "round191": {
+    "attempt_1_evidence_loss_hard_negatives": {
+      "dataset_rows": 108,
+      "assistant_candidate_hard_negative_rows": 16,
+      "steps": 64,
+      "learning_rate": 0.0001,
+      "train_loss": 0.7242897218707327,
+      "elapsed_seconds": 67.11,
+      "peak_cuda_memory_bytes": 10512737792,
+      "adapter_sha256": "9bbb2c7d1d05746f7e9ba6c346964ad1e16774e2bd64c0ea3e1b6295c0b35d82",
+      "dev22": {
+        "tp": 12,
+        "fp": 10,
+        "fn": 0,
+        "tn": 0,
+        "precision": 0.5454545454545454,
+        "recall": 1.0,
+        "f1": 0.7058823529411764,
+        "behavior": "all_present"
+      },
+      "heldout_assistant_candidate_agreement": {
+        "reviewed": 2,
+        "agreements": 1,
+        "disagreements": 1,
+        "is_accuracy": false
+      },
+      "decision": "rejected"
+    },
+    "attempt_2_full_loss_continuation": {
+      "parent_adapter_sha256": "39a5e67e6d7e1366d442b648d11cab48391fd754853f7ed68b1070960fde027a",
+      "steps": 24,
+      "learning_rate": 0.00002,
+      "train_loss": 1.6088321134448051,
+      "elapsed_seconds": 26.988,
+      "peak_cuda_memory_bytes": 10462716416,
+      "adapter_sha256": "395d26791bfe456f72403fb6e797bf970e740283df200df6510ec2418e8b502f",
+      "heldout_assistant_candidate_agreement": {
+        "reviewed": 2,
+        "agreements": 0,
+        "disagreements": 2,
+        "is_accuracy": false
+      },
+      "decision": "rejected_before_dev_evaluation"
+    }
+  },
+  "round192": {
+    "balanced_contrastive_micro_tune": {
+      "assistant_candidate_sources": 4,
+      "positive_sources": 2,
+      "negative_sources": 2,
+      "training_rows": 32,
+      "parent_adapter_sha256": "39a5e67e6d7e1366d442b648d11cab48391fd754853f7ed68b1070960fde027a",
+      "steps": 16,
+      "learning_rate": 0.00001,
+      "train_loss": 2.506093308329582,
+      "elapsed_seconds": 31.031,
+      "peak_cuda_memory_bytes": 10528870912,
+      "adapter_sha256": "22db272af1ada2b551d23b059eb52b86b3aabb372227f3dc5699d83a4e7dbede",
+      "heldout_assistant_candidate_agreement": {
+        "positive": "2/2",
+        "negative": "0/2",
+        "total": "2/4",
+        "is_accuracy": false
+      },
+      "decision": "rejected"
+    },
+    "formal_8b_full_image_guard": {
+      "model": "labelagent-vlm8b",
+      "reviewed": 4,
+      "positive_agreement": "0/2",
+      "negative_agreement": "2/2",
+      "total_agreement": "2/4",
+      "logical_conflict_abstentions": 0,
+      "observed_wall_seconds_range": [3.944, 4.432],
+      "failure_mode": "The conservative full-image guard removes false positives but misses small separate robots.",
+      "decision": "not_deployable"
+    }
+  },
+  "round193": {
+    "formal_8b_full_plus_assistant_roi_guard": {
+      "model": "labelagent-vlm8b",
+      "reviewed": 4,
+      "positive_agreement": "1/2",
+      "negative_agreement": "1/2",
+      "total_agreement": "2/4",
+      "logical_conflict_abstentions": 0,
+      "observed_wall_seconds_range": [4.643, 5.528],
+      "diagnostic": "One tight-enough positive ROI recovered a missed robot, while a broad manual-forklift ROI was falsely promoted to other_robot.",
+      "decision": "diagnostic_only_not_deployable"
+    }
+  },
+  "implementation": {
+    "shadow_manifest_gates": [
+      "candidate_only must be true",
+      "human_truth must be false",
+      "production_deployed must be false",
+      "contract hash and image hashes must match",
+      "assistant reviews cannot be promoted to truth"
+    ],
+    "training_extensions": [
+      "isolated named dataset selection",
+      "optional continuation from a frozen parent adapter",
+      "parent adapter hash in the run receipt",
+      "assistant candidate rows remain unapproved and acceptance-gated"
+    ],
+    "guard_extensions": [
+      "five-way scene classification",
+      "cross-field logical consistency check",
+      "fail-closed uncertain result on contradictory output",
+      "optional bounded ROI with source-image hash verification"
+    ]
+  },
+  "verification": {
+    "targeted_unittests": {"passed": 22, "failed": 0},
+    "python_compile": "passed",
+    "shell_syntax": "passed",
+    "git_diff_check": "passed",
+    "service_readback_after_local_channel_recovery": {
+      "checked_local": "2026-11-19T00:37:36+08:00",
+      "workbench_http": 200,
+      "sam_status": "ok",
+      "sam_inflight": 0,
+      "vlm_status": "ok",
+      "vlm_model": "labelagent-vlm8b",
+      "vlm_model_loaded": true,
+      "vlm_inflight": 0,
+      "note": "Remote services remained healthy. Missing local SSH channels were detected and restored with the managed launcher."
+    }
+  },
+  "artifact_sha256": {
+    "round190_sfl_result": "d2139fc825ebc5d9727f3bc627d7b040ed6d8d4d1dcda5cf1269f7a7dd5ee1f1",
+    "round190_capture_manifest": "bdacd18ce8eedc226175dd1253f4d97c7ebde804ed10eb80921b48c686a4f5a7",
+    "round190_capture_result": "1a14b800a87729a01f2e7fb7ff433c736b6c66cf84ac0a0551820d36642e4318",
+    "round191_evidence_run_receipt": "706f36a0b387d590c5521e262bdf481679bf93952ec642eeaa6a1bd4d3272022",
+    "round191_dev_generation": "5497a71ab3291f3a6a712cc802dc266fa191bd663574e144285baf4c99911532",
+    "round191_continuation_run_receipt": "c106d3497b63ae076ad1ad332c225a548ac0a3e8a00c6e64b213fcfc24267635",
+    "round191_continuation_holdout": "c726310df73358046a6ec7ebd9c01c8290f72755b9eea9b6d65217a606be9944",
+    "round192_train_run_receipt": "7d9fc2eacd7243173138f65e3c94c7e24d9b87d979670d04643ce2c28193c22b",
+    "round192_shadow_result": "052185408995f9e09860ddc4edd7a6bbe79c8b0eee3c489f735dcdf9c63278df",
+    "round192_vlm8b_guard_result": "84d0a7df6e31cbd7b0e004bf3f7040dff398d4c690ca7aa150df837264aedca0",
+    "round193_roi_guard_manifest": "20fe28aa4cafbb990dbdc463c0b06841fa23e69f9571161ff261e3eb0e506ae3",
+    "round193_roi_guard_result": "154f289079aa6d9bd129660f2ae48e5610cc371a30f567a632ea50e9ccaa7d87"
+  },
+  "next_gate": {
+    "proposal": "Use automatically localized tight object crops plus a context crop, and explicitly separate autonomous robot, ego structure, conventional forklift, and pallet/cargo evidence.",
+    "required_behavior": "Ambiguous or conventional-forklift cases must abstain to human review rather than create truth.",
+    "acceptance": "Pass both positive and negative cross-sequence gates without regressing the round 189 development guard before any workbench integration."
+  },
+  "boundary": "All cross-sequence labels in rounds 190-193 are assistant-reviewed candidates, not human truth. Agreement counts are triage evidence, not accuracy, precision, recall, or production acceptance."
+}

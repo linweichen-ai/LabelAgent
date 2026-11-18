@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -lt 2 || $# -gt 10 ]]; then
-  echo "usage: $0 PROJECT_ROOT OUTPUT_NAME [MAX_SAMPLES] [MAX_STEPS] [POSITIVE_REPEAT] [LEARNING_RATE] [SEED] [POSITIVE_LABEL] [REPEAT_EVIDENCE] [LOSS_SCOPE]" >&2
+if [[ $# -lt 2 || $# -gt 12 ]]; then
+  echo "usage: $0 PROJECT_ROOT OUTPUT_NAME [MAX_SAMPLES] [MAX_STEPS] [POSITIVE_REPEAT] [LEARNING_RATE] [SEED] [POSITIVE_LABEL] [REPEAT_EVIDENCE] [LOSS_SCOPE] [DATASET_NAME] [INIT_ADAPTER_NAME]" >&2
   exit 64
 fi
 
@@ -16,6 +16,8 @@ SEED=${7:-20261118}
 POSITIVE_LABEL=${8:-slope}
 REPEAT_EVIDENCE=${9:-present}
 LOSS_SCOPE=${10:-full}
+DATASET_NAME=${11:-dataset}
+INIT_ADAPTER_NAME=${12:-}
 GPU_UUID=GPU-8dde4d59-7e14-09ff-46c0-35da2f7177b8
 SAM_PORT=18766
 VLM_PORT=18878
@@ -35,13 +37,21 @@ case "$PROJECT_ROOT" in /home/clw/projects/sfl-cpd15y/*) ;; *) exit 65 ;; esac
 [[ "$POSITIVE_LABEL" =~ ^[A-Za-z0-9_]+$ ]] || exit 79
 [[ "$REPEAT_EVIDENCE" =~ ^(present|absent|uncertain)$ ]] || exit 80
 [[ "$LOSS_SCOPE" =~ ^(full|evidence)$ ]] || exit 81
+[[ "$DATASET_NAME" =~ ^[A-Za-z0-9._-]+$ ]] || exit 82
+[[ -z "$INIT_ADAPTER_NAME" || "$INIT_ADAPTER_NAME" =~ ^[A-Za-z0-9._-]+$ ]] || exit 83
 [[ ! -e "$OUTPUT_DIR" ]] || { echo "training output already exists" >&2; exit 72; }
 
 for required in "$PROJECT_ROOT/train_qwen3vl_lora.py" \
-  "$PROJECT_ROOT/dataset/train.jsonl" "$PROJECT_ROOT/dataset/manifest.json" \
+  "$PROJECT_ROOT/$DATASET_NAME/train.jsonl" "$PROJECT_ROOT/$DATASET_NAME/manifest.json" \
   "$MODEL_DIR/config.json" "$PEFT_OVERLAY"; do
   [[ -e "$required" ]] || { echo "missing required path: $required" >&2; exit 73; }
 done
+INIT_ADAPTER_ARGS=()
+if [[ -n "$INIT_ADAPTER_NAME" ]]; then
+  INIT_ADAPTER_DIR="$PROJECT_ROOT/$INIT_ADAPTER_NAME/adapter"
+  [[ -f "$INIT_ADAPTER_DIR/adapter_model.safetensors" ]] || exit 84
+  INIT_ADAPTER_ARGS=(--init-adapter-dir "$INIT_ADAPTER_DIR")
+fi
 
 exec 9>"$PROJECT_ROOT/.qwen3vl2b-parallel.lock"
 flock -n 9 || { echo "another parallel 2B experiment is active" >&2; exit 74; }
@@ -64,12 +74,12 @@ cd "$PROJECT_ROOT"
 env PYTHONPATH="$PEFT_OVERLAY" CUDA_VISIBLE_DEVICES="$GPU_UUID" \
   HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 TOKENIZERS_PARALLELISM=false \
   "$PYTHON" train_qwen3vl_lora.py \
-    --model-dir "$MODEL_DIR" --dataset-dir dataset --output "$OUTPUT_NAME" \
+    --model-dir "$MODEL_DIR" --dataset-dir "$DATASET_NAME" --output "$OUTPUT_NAME" \
     --max-samples "$MAX_SAMPLES" --max-steps "$MAX_STEPS" \
     --slope-positive-repeat "$SLOPE_REPEAT" --gradient-accumulation-steps 2 \
     --learning-rate "$LEARNING_RATE" --seed "$SEED" \
     --positive-label "$POSITIVE_LABEL" --repeat-evidence "$REPEAT_EVIDENCE" \
-    --loss-scope "$LOSS_SCOPE"
+    --loss-scope "$LOSS_SCOPE" "${INIT_ADAPTER_ARGS[@]}"
 
 curl -fsS "http://127.0.0.1:$SAM_PORT/health" >"$OUTPUT_DIR/sam-health-after.json"
 curl -fsS "http://127.0.0.1:$VLM_PORT/health" >"$OUTPUT_DIR/vlm-health-after.json"

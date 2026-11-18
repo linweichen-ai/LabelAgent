@@ -8,6 +8,7 @@ from tools.train_qwen3vl_lora import (
     OneImageCollator, find_evidence_token_span, load_jsonl, slope_balanced_rows,
     verify_manifest,
 )
+from tools.run_qwen3vl_lora_shadow import verify_shadow_manifest
 
 
 def write_fixture(root: Path):
@@ -50,7 +51,9 @@ class Qwen3VlLoraBoundaryTests(unittest.TestCase):
             encoding="utf-8")
         generation = (root / "tools" / "run_remote_qwen3vl_lora_generation_eval_parallel.sh").read_text(
             encoding="utf-8")
-        for script in (train, evaluate, teacher_force, generation):
+        shadow = (root / "tools" / "run_remote_qwen3vl_lora_shadow_parallel.sh").read_text(
+            encoding="utf-8")
+        for script in (train, evaluate, teacher_force, generation, shadow):
             self.assertIn("MINIMUM_FREE_MIB=12000", script)
             self.assertIn("SAM_INFLIGHT", script)
             self.assertIn("flock -n 9", script)
@@ -58,6 +61,61 @@ class Qwen3VlLoraBoundaryTests(unittest.TestCase):
             self.assertNotIn("tmux kill-session", script)
         self.assertIn('--seed "$SEED"', train)
         self.assertIn('TRITON_CACHE_DIR="$TRITON_CACHE_DIR"', evaluate)
+
+    def test_shadow_manifest_remains_candidate_only(self):
+        contract = {"contract_sha256": "abc"}
+        manifest = {
+            "schema_version": "labelagent.qwen3vl-shadow-manifest.v1",
+            "human_truth": False,
+            "candidate_only": True,
+            "production_deployed": False,
+            "contract_sha256": "abc",
+            "images": [{
+                "sample_id": "new-sequence-1",
+                "image_path": "/tmp/image.png",
+                "image_sha256": "0" * 64,
+                "assistant_review_candidate": {
+                    "review_kind": "assistant_visual_candidate",
+                    "human_truth": False,
+                    "expected_evidence": "absent",
+                    "reason": "Only the ego forks are visible.",
+                },
+            }],
+        }
+        self.assertEqual(verify_shadow_manifest(manifest, contract), manifest["images"])
+        manifest["human_truth"] = True
+        with self.assertRaises(ValueError):
+            verify_shadow_manifest(manifest, contract)
+
+    def test_shadow_manifest_rejects_duplicate_samples(self):
+        image = {"sample_id": "duplicate", "image_path": "/tmp/image.png",
+                 "image_sha256": "0" * 64}
+        manifest = {
+            "schema_version": "labelagent.qwen3vl-shadow-manifest.v1",
+            "human_truth": False, "candidate_only": True,
+            "production_deployed": False, "contract_sha256": "abc",
+            "images": [image, dict(image)],
+        }
+        with self.assertRaises(ValueError):
+            verify_shadow_manifest(manifest, {"contract_sha256": "abc"})
+
+    def test_shadow_manifest_rejects_assistant_review_promoted_to_truth(self):
+        manifest = {
+            "schema_version": "labelagent.qwen3vl-shadow-manifest.v1",
+            "human_truth": False, "candidate_only": True,
+            "production_deployed": False, "contract_sha256": "abc",
+            "images": [{
+                "sample_id": "candidate", "image_path": "/tmp/image.png",
+                "image_sha256": "0" * 64,
+                "assistant_review_candidate": {
+                    "review_kind": "assistant_visual_candidate",
+                    "human_truth": True, "expected_evidence": "absent",
+                    "reason": "Only the ego vehicle is visible.",
+                },
+            }],
+        }
+        with self.assertRaises(ValueError):
+            verify_shadow_manifest(manifest, {"contract_sha256": "abc"})
 
     def test_slope_balancing_repeats_only_positive_rows(self):
         def row(sample_id, evidence):
@@ -113,6 +171,18 @@ class Qwen3VlLoraBoundaryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             train, _, row, _ = write_fixture(Path(directory))
             row["human_truth"] = True
+            train.write_text(json.dumps(row) + "\n", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_jsonl(train)
+
+    def test_assistant_review_candidate_training_row_stays_non_truth(self):
+        with tempfile.TemporaryDirectory() as directory:
+            train, _, row, _ = write_fixture(Path(directory))
+            row["candidate_kind"] = "assistant_review_candidate"
+            train.write_text(json.dumps(row) + "\n", encoding="utf-8")
+            self.assertEqual(load_jsonl(train)[0]["candidate_kind"],
+                             "assistant_review_candidate")
+            row["production_training_approved"] = True
             train.write_text(json.dumps(row) + "\n", encoding="utf-8")
             with self.assertRaises(ValueError):
                 load_jsonl(train)

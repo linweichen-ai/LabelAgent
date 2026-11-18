@@ -21,7 +21,8 @@ def load_jsonl(path: Path) -> list[dict]:
         raise ValueError("training JSONL is empty")
     for row in rows:
         if (row.get("split") != "train" or row.get("track") != "teacher_distillation"
-                or row.get("candidate_kind") != "machine_teacher_output"
+                or row.get("candidate_kind") not in {
+                    "machine_teacher_output", "assistant_review_candidate"}
                 or row.get("human_truth") is not False
                 or row.get("production_training_approved") is not False
                 or row.get("requires_acceptance_gate") is not True):
@@ -180,6 +181,7 @@ def main() -> int:
     parser.add_argument("--repeat-evidence", default="present",
                         choices=("present", "absent", "uncertain"))
     parser.add_argument("--loss-scope", default="full", choices=("full", "evidence"))
+    parser.add_argument("--init-adapter-dir", type=Path)
     parser.add_argument("--seed", type=int, default=20261118)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
@@ -223,7 +225,7 @@ def main() -> int:
         return 0
 
     import peft
-    from peft import LoraConfig, get_peft_model
+    from peft import LoraConfig, PeftModel, get_peft_model
     from transformers import Trainer, TrainingArguments
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is required for LoRA training")
@@ -233,13 +235,22 @@ def main() -> int:
         attn_implementation="sdpa")
     model.config.use_cache = False
     model.enable_input_require_grads()
-    lora = LoraConfig(
-        r=8, lora_alpha=16, lora_dropout=0.05, bias="none",
-        task_type="CAUSAL_LM",
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
-                        "gate_proj", "up_proj", "down_proj"],
-    )
-    model = get_peft_model(model, lora)
+    parent_adapter_sha256 = None
+    if args.init_adapter_dir:
+        parent_adapter = args.init_adapter_dir / "adapter_model.safetensors"
+        if not parent_adapter.is_file():
+            raise FileNotFoundError(parent_adapter)
+        parent_adapter_sha256 = file_sha256(parent_adapter)
+        model = PeftModel.from_pretrained(
+            model, args.init_adapter_dir, is_trainable=True)
+    else:
+        lora = LoraConfig(
+            r=8, lora_alpha=16, lora_dropout=0.05, bias="none",
+            task_type="CAUSAL_LM",
+            target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
+                            "gate_proj", "up_proj", "down_proj"],
+        )
+        model = get_peft_model(model, lora)
     trainable = sum(parameter.numel() for parameter in model.parameters() if parameter.requires_grad)
     total = sum(parameter.numel() for parameter in model.parameters())
     args.output.mkdir(parents=True)
@@ -293,6 +304,7 @@ def main() -> int:
         "elapsed_seconds": round(time.perf_counter() - started, 3),
         "peak_cuda_memory_bytes": torch.cuda.max_memory_allocated(),
         "adapter_sha256": file_sha256(adapter_path),
+        "parent_adapter_sha256": parent_adapter_sha256,
         "step_metrics": [item for item in trainer.state.log_history if "loss" in item],
         "torch": torch.__version__,
         "transformers": transformers.__version__,

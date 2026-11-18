@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -lt 3 || $# -gt 5 ]]; then
-  echo "usage: $0 PROJECT_ROOT OUTPUT_NAME ADAPTER_RUN_NAME [BASE_RESULT_NAME] [SPLIT]" >&2
+if [[ $# -lt 3 || $# -gt 6 ]]; then
+  echo "usage: $0 PROJECT_ROOT OUTPUT_NAME ADAPTER_RUN_NAME [BASE_RESULT_NAME] [SPLIT] [DATASET_NAME]" >&2
   exit 64
 fi
 PROJECT_ROOT=$1
@@ -10,6 +10,7 @@ OUTPUT_NAME=$2
 ADAPTER_RUN_NAME=$3
 BASE_RESULT_NAME=${4:-}
 SPLIT=${5:-dev}
+DATASET_NAME=${6:-dataset}
 GPU_UUID=GPU-8dde4d59-7e14-09ff-46c0-35da2f7177b8
 SAM_PORT=18766
 VLM_PORT=18878
@@ -26,11 +27,12 @@ case "$PROJECT_ROOT" in /home/clw/projects/sfl-cpd15y/*) ;; *) exit 65 ;; esac
 [[ "$ADAPTER_RUN_NAME" =~ ^[A-Za-z0-9._-]+$ ]] || exit 67
 [[ -z "$BASE_RESULT_NAME" || "$BASE_RESULT_NAME" =~ ^[A-Za-z0-9._-]+$ ]] || exit 74
 [[ "$SPLIT" =~ ^(dev|holdout)$ ]] || exit 76
+[[ "$DATASET_NAME" =~ ^[A-Za-z0-9._-]+$ ]] || exit 77
 [[ ! -e "$OUTPUT_DIR" ]] || { echo "evaluation output already exists" >&2; exit 68; }
 for required in "$PROJECT_ROOT/evaluate_qwen3vl_lora_generation.py" \
   "$PROJECT_ROOT/evaluate_qwen3vl_lora_teacher_forcing.py" \
-  "$PROJECT_ROOT/train_qwen3vl_lora.py" "$PROJECT_ROOT/dataset/dev.jsonl" \
-  "$PROJECT_ROOT/dataset/manifest.json" "$PROJECT_ROOT/dataset/contract.json" \
+  "$PROJECT_ROOT/train_qwen3vl_lora.py" "$PROJECT_ROOT/$DATASET_NAME/dev.jsonl" \
+  "$PROJECT_ROOT/$DATASET_NAME/manifest.json" "$PROJECT_ROOT/$DATASET_NAME/contract.json" \
   "$ADAPTER_DIR/adapter_model.safetensors" "$MODEL_DIR/config.json" \
   "$SERVER_DIR/local_vlm_server.py" "$PEFT_OVERLAY"; do
   [[ -e "$required" ]] || { echo "missing required path: $required" >&2; exit 69; }
@@ -61,7 +63,7 @@ env PYTHONPATH="$PEFT_OVERLAY:$PROJECT_ROOT:$SERVER_DIR" \
   CUDA_VISIBLE_DEVICES="$GPU_UUID" HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
   TOKENIZERS_PARALLELISM=false "$PYTHON" evaluate_qwen3vl_lora_generation.py \
     --model-dir "$MODEL_DIR" --adapter-dir "$ADAPTER_DIR" \
-    --dataset-dir dataset --contract dataset/contract.json \
+    --dataset-dir "$DATASET_NAME" --contract "$DATASET_NAME/contract.json" \
     --server-module-dir "$SERVER_DIR" --output "$OUTPUT_NAME" \
     --split "$SPLIT" \
     "${BASE_ARGS[@]}"

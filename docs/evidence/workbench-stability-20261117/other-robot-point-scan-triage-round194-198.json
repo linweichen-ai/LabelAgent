@@ -1,0 +1,184 @@
+{
+  "schema_version": "labelagent.other-robot-point-scan-triage.round194-198.v1",
+  "created_local": "2026-11-19T01:41:25+08:00",
+  "status": "offline_candidate_triage_improved_not_deployed",
+  "track": "candidate_only_other_robot_localization_and_review_routing",
+  "human_truth": false,
+  "candidate_only": true,
+  "production_deployed": false,
+  "production_model_changed": false,
+  "approved_for_training": false,
+  "state_written": false,
+  "manifest": {
+    "path": "artifacts/round194-static-other-robot-point-scan-manifest.json",
+    "sha256": "dabb2d48ec6c9588bb984b75b6d1b1720490feedf9dc3d1ab1332e36295cd0e7",
+    "samples": 4,
+    "assistant_candidate_positive": 2,
+    "assistant_candidate_negative": 2,
+    "boundary": "Assistant visual triage only; not human truth or accuracy ground truth."
+  },
+  "round194": {
+    "purpose": "Run color-independent point scanning and dual VLM classification over up to ten candidates per image.",
+    "samples": 4,
+    "classified_candidates": 40,
+    "scan_seconds_total": 25.84,
+    "classification_seconds_total": 168.72,
+    "assistant_candidate_agreement": "1/4",
+    "auto_selected": [
+      {
+        "sample_id": "capture1103-camera3-t100-negative",
+        "candidate_id": "C04",
+        "failure_mode": "one of the ego fork components was promoted as other_robot"
+      }
+    ],
+    "result_sha256": "bfee164a62704f8c36a8bf7eacca7af36c4c866031389674b238b8cc3339bc4e",
+    "decision": "failed_false_positive_guard"
+  },
+  "round195": {
+    "purpose": "Expand the camera2 scan to inspect the occluded left-edge assistant candidate.",
+    "classified_candidates": 13,
+    "selected_ids": [],
+    "diagnostic": "The suspected object was either low-scoring or merged with a known person region. The assistant positive label itself remains uncertain.",
+    "result_sha256": "054b6df04121e9e13d4bbb80b14b89d02dc953fecacd9d4dacd20d7a343064eb",
+    "decision": "localization_not_resolved"
+  },
+  "round196": {
+    "purpose": "Add a symmetric lower-image ego fork-pair veto and route VLM disagreements to review.",
+    "samples": 4,
+    "classified_candidates": 40,
+    "selected_candidates": 0,
+    "review_candidates": 6,
+    "ego_pair_veto_ids": {
+      "capture1103-camera3-t100-negative": ["C04", "C09"]
+    },
+    "remaining_negative_review_candidate": "C08",
+    "result_sha256": "644fdad17d99907c6285666a6185a055a5ee4cd1c9a946cf9add64d10ee46709",
+    "decision": "false_auto_selection_removed_but_late_and_noisy"
+  },
+  "round197": {
+    "purpose": "Expose explicit auto_candidate_present, review_required, and no_candidate states.",
+    "samples": 4,
+    "classified_candidates": 40,
+    "scan_seconds_total": 25.565,
+    "classification_seconds_total": 146.904,
+    "estimated_scan_plus_classification_seconds": 172.491,
+    "assistant_candidate_triage": {
+      "positive_reviewed": 2,
+      "positive_covered_by_auto_or_review": 2,
+      "negative_reviewed": 2,
+      "negative_with_auto_candidate": 0,
+      "negative_with_review_candidate": 1,
+      "is_accuracy": false
+    },
+    "result_sha256": "133b05ed9f5e053bdd4f839e6298adc94c126571cbda1ff7afb022b82de42428",
+    "decision": "safe_but_too_slow_and_one_negative_review_distraction"
+  },
+  "round198": {
+    "purpose": "Move ego fork-pair veto before VLM classification and reduce candidate classification limit from ten to four.",
+    "samples": 4,
+    "classified_candidates": 16,
+    "scan_seconds_total": 26.278,
+    "classification_seconds_total": 71.067,
+    "estimated_scan_plus_classification_seconds": 97.346,
+    "classification_reduction_percent_vs_round197": 51.62,
+    "estimated_total_reduction_percent_vs_round197": 43.56,
+    "assistant_candidate_review": {
+      "reviewed": 4,
+      "agreements": 2,
+      "disagreements": 2,
+      "is_accuracy": false
+    },
+    "assistant_candidate_triage": {
+      "positive_reviewed": 2,
+      "positive_covered_by_auto_or_review": 2,
+      "negative_reviewed": 2,
+      "negative_with_auto_candidate": 0,
+      "negative_with_review_candidate": 0,
+      "is_accuracy": false
+    },
+    "rows": [
+      {
+        "sample_id": "capture1103-camera0-t100-positive",
+        "triage_status": "review_required",
+        "selected_ids": [],
+        "uncertain_review_ids": ["C02"]
+      },
+      {
+        "sample_id": "capture1103-camera2-t100-positive",
+        "triage_status": "review_required",
+        "selected_ids": [],
+        "uncertain_review_ids": ["C02", "C03"]
+      },
+      {
+        "sample_id": "sfl-20261104-004-negative",
+        "triage_status": "no_candidate",
+        "selected_ids": [],
+        "uncertain_review_ids": []
+      },
+      {
+        "sample_id": "capture1103-camera3-t100-negative",
+        "triage_status": "no_candidate",
+        "selected_ids": [],
+        "uncertain_review_ids": [],
+        "preclassification_foreground_ego_pair_veto_ids": ["P04", "P09"]
+      }
+    ],
+    "result_sha256": "ac9a4465e3eeaa592222f172a2c2935b6d2ef184b5b460d144dcf338c037a8ff",
+    "decision": "retain_as_offline_conservative_triage_candidate"
+  },
+  "semantic_prompt_probe": {
+    "prompts": ["robot", "AGV", "AMR", "mobile robot", "industrial robot", "forklift"],
+    "other_robot_detected_on_four_sample_set": 0,
+    "conventional_forklift_detected": true,
+    "decision": "semantic_SAM_prompt_is_not_a_replacement_for_instance_localization",
+    "formal_metric": false
+  },
+  "implementation": {
+    "source": {
+      "tools/evaluate_reference_point_scan.py": "65c12a293e63197a519e95d4920065bb61ebf14f3a42a0eb7ca3868ced6952ee",
+      "tools/evaluate_static_other_robot_point_scan.py": "468fb0e8ef7719162acfbe6ea04dde1e7cc5e22287a3430d216057b7692f2543",
+      "tests/test_static_other_robot_point_scan.py": "edf701c6ff67f31880a4db28b685f6e50af0d0955929ba68f69d513ca6f0fca0"
+    },
+    "gates": [
+      "strict candidate-only manifest",
+      "source image SHA-256 binding",
+      "duplicate sample rejection",
+      "safe local output directory",
+      "pre-VLM symmetric ego fork-pair veto",
+      "classification disagreement routed to review",
+      "review candidates are never promoted to labels"
+    ]
+  },
+  "verification": {
+    "targeted_and_boundary_unittests": {
+      "passed": 33,
+      "failed": 0
+    },
+    "python_compile": "passed",
+    "git_diff_check": "passed",
+    "live_readback": {
+      "checked_local": "2026-11-19T01:41:25+08:00",
+      "workbench_http": 200,
+      "sam_point_http": 200,
+      "sam_formal_http": 200,
+      "sam_status": "ok",
+      "sam_model_loaded": true,
+      "sam_inflight": 0,
+      "vlm_http": 200,
+      "vlm_status": "ok",
+      "vlm_model_loaded": true,
+      "vlm_inflight": 0
+    },
+    "current_state_readback_sha256": {
+      "state.json": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+      "file_sessions.json": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5"
+    }
+  },
+  "next_gate": {
+    "human_review": "Confirm the four images and exact candidate regions, especially the two assistant-positive samples.",
+    "dataset": "Expand to at least 24 sequence-isolated positive and negative samples.",
+    "latency": "Batch VLM candidate review and reuse image features without weakening the false-positive gate.",
+    "acceptance": "Require human truth, positive coverage, negative distraction, and incumbent non-regression before workbench candidate-layer integration."
+  },
+  "boundary": "No accuracy, precision, recall, model fine-tuning, production deployment, human-truth write, or training approval is claimed in rounds 194-198."
+}

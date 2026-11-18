@@ -44,8 +44,10 @@ CLASS_PROMPT = (
     "includes a manual pallet jack, loose cart, machine part or hand-operated device. "
     "other_robot requires concrete visible evidence of a separate unmanned motorized "
     "autonomous chassis or AGV, not merely a low platform, seat, pallet, box, tool or "
-    "forklift. A visible driver, seat, steering handle or manual pull handle is evidence "
-    "against other_robot. Use unknown_object when motorization is not visibly supported. "
+    "forklift. A parked or currently unoccupied conventional forklift is still "
+    "vehicle_or_forklift: a forklift mast, forks, operator compartment, seat, steering "
+    "controls or manual pull handle are evidence against other_robot, even when no driver "
+    "is visible. Use unknown_object when motorization or autonomy is not visibly supported. "
     "The fourth panel highlights the candidate mask in cyan. Judge the outlined candidate, "
     "not a nearby object in the wider context. Do not use overlay color as evidence."
 )
@@ -237,7 +239,9 @@ def isolated_mask_image(image, shape):
 
 def classify_candidates(config, candidates, image, output, frame, top_k,
                         exemplar_sheet=None, artifact_suffix=""):
-    selected = [item for item in candidates if item["passes_known_exclusion"]][:top_k]
+    selected = [item for item in candidates
+                if item["passes_known_exclusion"]
+                and not item.get("_foreground_ego_pair_veto")][:top_k]
     requests = []
     for index, shape in enumerate(selected, 1):
         identifier = f"C{index:02d}"
@@ -283,6 +287,71 @@ def supported_other_robot(result):
     return result.get("class") == "other_robot"
 
 
+def foreground_ego_pair_ids(rows, width, height):
+    """Find a symmetric pair of lower-image fork-like ego components."""
+    eligible = []
+    for row in rows:
+        x0, y0, x1, y1 = row["bbox"]
+        box_width, box_height = x1 - x0, y1 - y0
+        center_x = (x0 + x1) / 2
+        if (y0 >= height * 0.55
+                and 0 < box_width <= width * 0.08
+                and box_height <= height * 0.22
+                and box_height >= box_width * 1.5
+                and abs(center_x - width / 2) <= width * 0.20):
+            eligible.append((row["id"], row["bbox"], center_x))
+    paired = set()
+    for index, (left_id, left_box, left_center) in enumerate(eligible):
+        for right_id, right_box, right_center in eligible[index + 1:]:
+            if (left_center - width / 2) * (right_center - width / 2) >= 0:
+                continue
+            first_width, first_height = (
+                left_box[2] - left_box[0], left_box[3] - left_box[1])
+            second_width, second_height = (
+                right_box[2] - right_box[0], right_box[3] - right_box[1])
+            overlap = max(0, min(left_box[3], right_box[3])
+                          - max(left_box[1], right_box[1]))
+            if (abs((left_center + right_center) / 2 - width / 2) <= width * 0.05
+                    and width * 0.08 <= abs(left_center - right_center) <= width * 0.25
+                    and overlap / min(first_height, second_height) >= 0.80
+                    and min(first_width, second_width) / max(first_width, second_width) >= 0.75
+                    and min(first_height, second_height) / max(first_height, second_height) >= 0.80):
+                paired.update((left_id, right_id))
+    return paired
+
+
+def mark_foreground_ego_pairs(candidates, width, height):
+    """Mark ego-pair geometry before the expensive VLM ranking stage."""
+    eligible = [candidate for candidate in candidates
+                if candidate.get("passes_known_exclusion")]
+    probes = [{"id": f"P{index:02d}", "bbox": candidate["bbox"]}
+              for index, candidate in enumerate(eligible, 1)]
+    paired = foreground_ego_pair_ids(probes, width, height)
+    records = []
+    for probe, candidate in zip(probes, eligible):
+        candidate["_foreground_ego_pair_veto"] = probe["id"] in paired
+        if candidate["_foreground_ego_pair_veto"]:
+            records.append({
+                "id": probe["id"], "bbox": candidate["bbox"],
+                "point": candidate.get("point"), "score": candidate.get("score"),
+            })
+    return records
+
+
+def classification_disagreement_review_ids(rows, ego_pair_ids):
+    """Route one-pass robot evidence to review without promoting it to a label."""
+    review = set()
+    for row in rows:
+        baseline = row.get("baseline_result", {}).get("class")
+        exemplar = row.get("result", {}).get("class")
+        classes = {baseline, exemplar}
+        if (row["id"] not in ego_pair_ids
+                and "other_robot" in classes
+                and classes & {"vehicle_or_forklift", "unknown_object"}):
+            review.add(row["id"])
+    return review
+
+
 def classify_surface_veto(config, rows, image, output, frame):
     pending = [row for row in rows if row.get("dual_pass_consensus")]
     requests = []
@@ -323,6 +392,8 @@ def evaluate_frame(frame, image_bytes, existing_annotations, config, point_endpo
         image_bytes, width, height, config)
     raw, geometric, kept = filtered_candidates(
         batch, width, height, known_masks)
+    preclassification_ego_pairs = mark_foreground_ego_pairs(
+        kept, width, height)
     baseline, baseline_seconds = classify_candidates(
         config, kept, image, output, frame, top_k,
         artifact_suffix="-baseline" if exemplar_sheet else "")
@@ -355,12 +426,22 @@ def evaluate_frame(frame, image_bytes, existing_annotations, config, point_endpo
         if shape.get("label") == "other_robot"]
     existing_records = [
         _mask_record(shape, width, height) for shape in existing_shapes]
+    ego_pair_ids = foreground_ego_pair_ids(classified, width, height)
+    disagreement_ids = classification_disagreement_review_ids(
+        classified, ego_pair_ids)
+    for item in classified:
+        item["foreground_ego_pair_veto"] = item["id"] in ego_pair_ids
+        item["classification_disagreement_review"] = (
+            item["id"] in disagreement_ids)
     selected = [item for item in classified
                 if item["dual_pass_consensus"]
+                and not item["foreground_ego_pair_veto"]
                 and item.get("surface_veto", {}).get("decision") == "physical_object"]
     uncertain = [item for item in classified
-                 if item["dual_pass_consensus"]
-                 and item.get("surface_veto", {}).get("decision") == "uncertain"]
+                 if ((item["dual_pass_consensus"]
+                      and not item["foreground_ego_pair_veto"]
+                      and item.get("surface_veto", {}).get("decision") == "uncertain")
+                     or item["classification_disagreement_review"])]
     for item in classified:
         item["existing_annotation_ious"] = [
             _iou(item["_shape"]["_record"], record)
@@ -397,6 +478,9 @@ def evaluate_frame(frame, image_bytes, existing_annotations, config, point_endpo
             if exemplar_sheet else "baseline_supported_other_robot"),
         "selected_ids": [item["id"] for item in selected],
         "uncertain_review_ids": [item["id"] for item in uncertain],
+        "foreground_ego_pair_veto_ids": sorted(ego_pair_ids),
+        "preclassification_foreground_ego_pair_veto": preclassification_ego_pairs,
+        "classification_disagreement_review_ids": sorted(disagreement_ids),
         "matched_existing_count": matched_existing,
         "unmatched_existing_annotation_ids": [
             item["id"] for item in selected

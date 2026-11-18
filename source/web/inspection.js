@@ -35,9 +35,10 @@ function inspectionImage(parent,url,title,annotations=null){
 }
 function inspectionImages(parent,images,titles){const gallery=inspectionNode('div',undefined,'inspectionGallery');images.forEach((item,i)=>inspectionImage(gallery,item?.url,titles[i]||`输入图像 ${i+1}`));if(gallery.children.length)parent.append(gallery);else parent.append(inspectionNode('p','此旧记录没有保存过程图像；后续运行会保留实际输入和输出图像。','inspectionEmpty'))}
 function inspectionCard(parent,title,status){const card=inspectionNode('article',undefined,'inspectionCard');const heading=inspectionNode('div',undefined,'inspectionCardHeading');heading.append(inspectionNode('strong',title),inspectionNode('span',status||''));card.append(heading);parent.append(card);return card}
-function inspectionCallState(call){return (call.status==='rejected'?(call.retrying?'校验未通过，已请求修正':'校验未通过，重试已耗尽'):({running:'调用中',succeeded:'已返回',failed:'调用失败'}[call.status]||call.status))+(call.elapsed_ms===undefined?'':` · ${(call.elapsed_ms/1000).toFixed(1)} 秒`)}
+function inspectionCallQueued(call){return call.status==='waiting'||/local vlm is busy|shared model slot/i.test(String(call.error||''))}
+function inspectionCallState(call){return (inspectionCallQueued(call)?'已进入共享模型队列':call.status==='rejected'?(call.retrying?'校验未通过，已请求修正':'校验未通过，重试已耗尽'):({running:'调用中',succeeded:'已返回',failed:'调用失败'}[call.status]||call.status))+(call.elapsed_ms===undefined?'':` · ${(call.elapsed_ms/1000).toFixed(1)} 秒`)}
 function inspectionReviewAttempt(call){return call.review_attempt?` · 第 ${call.review_attempt} 次响应${call.review_attempt>1?'（协议修正）':''}`:''}
-function inspectionCallError(card,call){if(call.error)card.append(inspectionNode('p',call.error,'inspectionError'))}
+function inspectionCallError(card,call){if(inspectionCallQueued(call)){card.append(inspectionNode('p',call.waiting_reason||'共享视觉模型正在处理上一项请求；本任务已排队，会在模型空闲后立即继续。','inspectionSummary'));return}if(call.error)card.append(inspectionNode('p',call.error,'inspectionError'))}
 function updateCandidateSave(){
  const comparison=window.workspaceMode==='auto'&&shapes[String(frame)]!==undefined&&Object.hasOwn(candidates,String(frame));
  $('saveCandidate').disabled=window.workspaceMode!=='auto'||!annotationMode||loading||!!playing||!$('frameImage').naturalWidth||['running','stopping'].includes(inspectionData.job?.status)||shapes[String(frame)]!==undefined||!Object.hasOwn(candidates,String(frame));

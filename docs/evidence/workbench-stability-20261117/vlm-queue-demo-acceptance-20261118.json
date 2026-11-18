@@ -47,6 +47,7 @@
     "server_side_queue_active": true,
     "legacy_busy_backoff_seconds": 1,
     "legacy_busy_trace_is_error": false,
+    "legacy_busy_history_renders_as_neutral_queue_state": true,
     "demo_gate_passed": true
   }
 }

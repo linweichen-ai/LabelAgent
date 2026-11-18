@@ -1,0 +1,68 @@
+{
+  "schema_version": "labelagent.workbench-stability.round223.v1",
+  "round": 223,
+  "date": "2026-11-19",
+  "objective": "Make the description-recovery acceptance tool cancel the exact deferred refinement instead of issuing an unbound batch stop.",
+  "status": "implemented_and_fully_regressed",
+  "boundaries": {
+    "production_code_deployed": false,
+    "production_restart_performed": false,
+    "model_inference_performed": false,
+    "candidate_mutated": false,
+    "human_truth": false,
+    "approved_for_training": false,
+    "model_weights_changed": false,
+    "oss_written": false
+  },
+  "pre_fix_audit": {
+    "tool": "tools/browser_description_recovery_acceptance.cjs",
+    "observed_refinement_endpoint": "/api/reference_candidates/refine",
+    "cancel_endpoint_used": "/api/run/stop",
+    "cancel_body": {},
+    "checked_only_http_200": true,
+    "refinement_identity_bound": false,
+    "actual_refinement_cancel_proven": false
+  },
+  "implementation": {
+    "reads_refinement_request_body": true,
+    "cancel_endpoint": "/api/reference_candidates/refine/stop",
+    "bound_fields": ["frame", "topic", "refinement_id"],
+    "validates_refinement_id": true,
+    "requires_cancellation_requested": true,
+    "validates_cancel_receipt_identity": true,
+    "records_immediate_match_result": true,
+    "unbound_batch_stop_removed": true
+  },
+  "tests": {
+    "targeted_web": {"passed": 59, "failed": 0, "elapsed_ms": 154.2842},
+    "all_web": {"passed": 133, "failed": 0, "elapsed_ms": 231.5163},
+    "all_python": {"passed": 981, "failed": 0, "elapsed_seconds": 6.655},
+    "acceptance_tool_javascript_syntax": "passed",
+    "workbench_javascript_syntax": "passed",
+    "python_compile": "passed",
+    "git_diff_check": "passed"
+  },
+  "production_health": {
+    "workbench_state_8765": 200,
+    "workbench_run_8765": 200,
+    "sam_4090_28766": 200,
+    "sam_5090_38766": 200,
+    "vlm_4090_28868": 200,
+    "run_status": "idle",
+    "workbench_manager_pid": 18292,
+    "tunnel_4090_pid": 60456,
+    "sam_5090_tunnel_pid": 8656
+  },
+  "formal_state_integrity": {
+    "state_sha256": "1DCD67A8475A8DD1974C9A9B3D4BF68A56E1ABD30CF2A9559C12E849E3D86F96",
+    "file_sessions_sha256": "202927E295CABC27B1F9583B6438D3E16C020809EE421BCE1342C3AEBC0367F5",
+    "unchanged": true
+  },
+  "source_sync": {
+    "branch": "codex/workbench-stability-20261117",
+    "implementation_commit": null,
+    "receipt_commit": null,
+    "github_readback": "pending",
+    "cnb_readback": "pending"
+  }
+}

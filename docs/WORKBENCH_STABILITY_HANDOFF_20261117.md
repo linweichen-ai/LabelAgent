@@ -1913,3 +1913,15 @@ v176部署前备份位于 `D:\Apps\LabelAgent\.local\backups\run-result-navigati
 本轮没有模型推理、微调、后训练、候选、人工真值、训练批准或OSS写入。完整说明见 [第二百二十二轮报告](TASK_BOUND_STOP_ROUND222_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/task-bound-stop-round222.json)。浏览器脚本和临时结果保持本地未跟踪，不上传厂内内容。
 
 实现、测试和首版文档提交 `f0089a0303e047166d9c574db784e702f89b845c` 已推送并分别回读 GitHub/CNB，同名分支两端精确匹配；回读回执提交为 `2cebb607e7c9aa0f509a35e2b1618cfd7a9c63d0`，该提交也已由两端精确回读。未跟踪实验产物和厂内内容均未上传。
+
+## 第二百二十三轮参考描述恢复验收真实取消精修（已完成，2026-11-19）
+
+Round222 安全收紧后继续全仓检查，发现 `tools/browser_description_recovery_acceptance.cjs` 仍用空请求调用整批 `/api/run/stop`，但它真正想取消的是 `/api/reference_candidates/refine` 单帧后台精修。旧逻辑只检查HTTP200，无法证明精修真的被取消，新服务端也会拒绝这个空请求。
+
+现从捕获到的精修请求读取 `frame/topic/refinement_id`，改用 `/api/reference_candidates/refine/stop`，并要求回执确认 `cancellation_requested=true` 且三项身份完全一致。这样无论精修已经运行还是即将启动，取消都绑定同一个唯一精修编号，不会误停整批任务，也不会产生“看似停止”的假验收。
+
+定向网页59/59、全部网页133/133、Python981/981通过；工具和工作台JavaScript语法、Python编译、差异检查均通过。本轮只改仓库验收工具和防回退测试，未改生产服务代码，因此没有重启工作台。五项正式探针仍为HTTP200，状态idle，管理PID18292、4090通道PID60456、5090 SAM通道PID8656保持，正式状态和文件会话哈希不变。
+
+本轮没有模型推理、候选、人工真值、训练批准、微调、后训练或OSS写入。完整说明见 [第二百二十三轮报告](DESCRIPTION_RECOVERY_REFINEMENT_CANCEL_ROUND223_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/description-recovery-refinement-cancel-round223.json)。
+
+实现、文档及 GitHub/CNB 精确回读提交号将在本轮远端同步完成后回填。

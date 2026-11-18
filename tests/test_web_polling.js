@@ -828,6 +828,17 @@ test('主工作台与参考起稿停止操作均绑定当前任务号', () => {
   assert.doesNotMatch(cancel, /body: '\{\}'/);
 });
 
+test('参考描述恢复验收按精修唯一编号取消后台精修', () => {
+  const tool = fs.readFileSync(path.join(__dirname, '../tools/browser_description_recovery_acceptance.cjs'), 'utf8');
+  assert.match(tool, /refinementRequest\.postDataJSON\(\)/);
+  assert.match(tool, /\/api\/reference_candidates\/refine\/stop/);
+  assert.match(tool, /frame: payload\.frame/);
+  assert.match(tool, /topic: payload\.topic/);
+  assert.match(tool, /refinement_id: payload\.refinement_id/);
+  assert.match(tool, /stopResult\.cancellation_requested, true/);
+  assert.doesNotMatch(tool, /fetch\("\/api\/run\/stop"/);
+});
+
 test('主自动标注仅在服务器完成 GPT 复查后宣告完成', () => {
   const app = source('app.js');
   const refinement = section(app, 'async function refineDeferredRunFrames', 'function invalidateChangedCandidateAudits');

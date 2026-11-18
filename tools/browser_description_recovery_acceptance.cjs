@@ -156,15 +156,30 @@ function required(name) {
 
     const refinementRequest = await refinementRequestPromise;
     let stopStatus = null;
+    let stopResult = null;
     if (refinementRequest) {
-      const stopped = await page.evaluate(async () => {
-        const response = await fetch("/api/run/stop", {
-          method: "POST", headers: {"Content-Type": "application/json"}, body: "{}",
+      const refinement = refinementRequest.postDataJSON();
+      assert.equal(Number.isInteger(refinement.frame), true);
+      assert.equal(typeof refinement.topic, "string");
+      assert.match(refinement.refinement_id, /^[0-9a-f]{32}$/i);
+      const stopped = await page.evaluate(async payload => {
+        const response = await fetch("/api/reference_candidates/refine/stop", {
+          method: "POST", headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            frame: payload.frame,
+            topic: payload.topic,
+            refinement_id: payload.refinement_id,
+          }),
         });
         return {status: response.status, body: await response.json()};
-      });
+      }, refinement);
       stopStatus = stopped.status;
+      stopResult = stopped.body;
       assert.equal(stopStatus, 200);
+      assert.equal(stopResult.cancellation_requested, true);
+      assert.equal(stopResult.refinement_id, refinement.refinement_id);
+      assert.equal(stopResult.frame, refinement.frame);
+      assert.equal(stopResult.topic, refinement.topic);
     }
 
     const final = await page.evaluate(() => {
@@ -213,6 +228,9 @@ function required(name) {
       page_errors: pageErrors,
       deferred_refinement_started: Boolean(refinementRequest),
       deferred_refinement_stop_status: stopStatus,
+      deferred_refinement_stop_bound: stopResult ? stopResult.cancellation_requested === true : null,
+      deferred_refinement_stop_matched: stopResult?.stopped ?? null,
+      deferred_refinement_id: stopResult?.refinement_id ?? null,
       total_ms: Date.now() - started,
     };
     fs.writeFileSync(outputJson, JSON.stringify(result, null, 2) + "\n", "utf8");

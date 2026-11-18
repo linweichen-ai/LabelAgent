@@ -1768,4 +1768,6 @@ Round156 收尾时 C盘仅余约 1.18 GiB，再次低于工作台的 2 GiB 警�
 
 前两次浏览器脚本还捕捉到页面启动后的历史帧恢复：强制151帧以及启动0帧均被恢复到74帧，旧结果都被新门禁安全丢弃；最终验收先等待恢复稳定再执行。部署备份位于 `D:\Apps\LabelAgent\.local\backups\point-scope-race-round212-20261119-040905`，只重启8765，PID从67008变为69944；4090/5090通道PID未变。正式状态和文件会话哈希保持不变，四项服务均HTTP 200。本轮没有改模型、真值、训练批准或OSS。
 
+实现与首版文档提交 `befd9c4bc56c8d20a74c52f6e5cef442dbadb7ea` 已分别推送并回读 GitHub/CNB，同名分支两端精确匹配；厂内图片和未跟踪实验产物未上传。
+
 完整说明见 [第二百一十二轮报告](POINT_PROMPT_SCOPE_RACE_ROUND212_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/point-prompt-scope-race-round212.json)。下一步把会话恢复完成状态显式化，并评估在切换上下文时主动取消浏览器等待，继续减少用户感知卡顿。

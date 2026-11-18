@@ -109,6 +109,15 @@
     "sam_5090_38766": 200,
     "vlm_4090_28868": 200
   },
+  "source_sync": {
+    "implementation_commit": "befd9c4bc56c8d20a74c52f6e5cef442dbadb7ea",
+    "branch": "codex/workbench-stability-20261117",
+    "github_readback": "befd9c4bc56c8d20a74c52f6e5cef442dbadb7ea",
+    "cnb_readback": "befd9c4bc56c8d20a74c52f6e5cef442dbadb7ea",
+    "both_remotes_matched_implementation_commit": true,
+    "factory_images_uploaded": false,
+    "untracked_experiment_artifacts_uploaded": false
+  },
   "changed_files": {
     "source/web/app.js": "21343596b8e4b139451a1de599bdea33e6805452bdd3d69217d92681e88d38ac",
     "source/web/index.html": "225bbf08fad35d51ca6f30af4b1e78ff06c5153194ba31cae9332bb22e23c029",

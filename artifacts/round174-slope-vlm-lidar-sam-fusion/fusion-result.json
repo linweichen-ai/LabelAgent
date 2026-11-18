@@ -1,0 +1,85 @@
+{
+  "schema_version": "labelagent.slope-fused-candidate.v1",
+  "created_utc": "2026-11-18T08:57:59.934586+00:00",
+  "status": "assistant_candidate_only_not_human_truth",
+  "human_truth": false,
+  "human_confirmed": false,
+  "training_authorized": false,
+  "production_deployed": false,
+  "production_approved": false,
+  "summary": {
+    "samples": 8,
+    "true_positive_candidates": 4,
+    "false_positive_candidates": 0,
+    "false_negative_candidates": 0,
+    "true_negative_candidates": 4,
+    "precision_on_assistant_review": 1.0,
+    "recall_on_assistant_review": 1.0,
+    "details": [
+      {
+        "sample_id": "008_1789899740482474075_camera_0",
+        "assistant_visible_slope_candidate": false,
+        "vlm_evidence": "absent",
+        "geometry_hint_count": 0,
+        "geometry_sam_supported": false,
+        "fused_candidate_present": false
+      },
+      {
+        "sample_id": "008_1789899740482474075_camera_1",
+        "assistant_visible_slope_candidate": false,
+        "vlm_evidence": "absent",
+        "geometry_hint_count": 0,
+        "geometry_sam_supported": false,
+        "fused_candidate_present": false
+      },
+      {
+        "sample_id": "008_1789899740482474075_camera_2",
+        "assistant_visible_slope_candidate": true,
+        "vlm_evidence": "absent",
+        "geometry_hint_count": 1,
+        "geometry_sam_supported": true,
+        "fused_candidate_present": true
+      },
+      {
+        "sample_id": "008_1789899740482474075_camera_3",
+        "assistant_visible_slope_candidate": true,
+        "vlm_evidence": "present",
+        "geometry_hint_count": 1,
+        "geometry_sam_supported": true,
+        "fused_candidate_present": true
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_0",
+        "assistant_visible_slope_candidate": false,
+        "vlm_evidence": "absent",
+        "geometry_hint_count": 0,
+        "geometry_sam_supported": false,
+        "fused_candidate_present": false
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_1",
+        "assistant_visible_slope_candidate": true,
+        "vlm_evidence": "absent",
+        "geometry_hint_count": 1,
+        "geometry_sam_supported": true,
+        "fused_candidate_present": true
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_2",
+        "assistant_visible_slope_candidate": true,
+        "vlm_evidence": "present",
+        "geometry_hint_count": 3,
+        "geometry_sam_supported": true,
+        "fused_candidate_present": true
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_3",
+        "assistant_visible_slope_candidate": false,
+        "vlm_evidence": "absent",
+        "geometry_hint_count": 0,
+        "geometry_sam_supported": false,
+        "fused_candidate_present": false
+      }
+    ]
+  }
+}

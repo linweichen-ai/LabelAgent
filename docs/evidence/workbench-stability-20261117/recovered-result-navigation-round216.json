@@ -3,7 +3,7 @@
   "round": 216,
   "date": "2026-11-19",
   "objective": "Preserve a recoverable result when opening its candidate frame is superseded by explicit user navigation, without repeated background takeovers.",
-  "status": "implemented_tested_and_production_deployed_pending_remote_receipt",
+  "status": "implemented_tested_production_deployed_and_remotely_verified",
   "boundaries": {
     "candidate_only": true,
     "human_truth": false,
@@ -122,11 +122,11 @@
     "vlm_4090_28868": 200
   },
   "source_sync": {
-    "implementation_commit": null,
+    "implementation_commit": "5c219b0b4b4e8ba02ca7b4baf0c8d6e74f19f109",
     "branch": "codex/workbench-stability-20261117",
-    "github_readback": null,
-    "cnb_readback": null,
-    "both_remotes_matched_implementation_commit": false,
+    "github_readback": "5c219b0b4b4e8ba02ca7b4baf0c8d6e74f19f109",
+    "cnb_readback": "5c219b0b4b4e8ba02ca7b4baf0c8d6e74f19f109",
+    "both_remotes_matched_implementation_commit": true,
     "factory_images_uploaded": false,
     "untracked_experiment_artifacts_uploaded": false
   },

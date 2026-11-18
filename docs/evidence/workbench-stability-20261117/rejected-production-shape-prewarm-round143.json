@@ -1,0 +1,90 @@
+{
+  "schema_version": "labelagent.rejected-production-shape-prewarm-round143.v1",
+  "date": "2026-11-18",
+  "decision": "rejected_and_restored",
+  "objective": "Test whether startup prewarming a single-image static-cache request with the production discovery prompt width and generation budget removes the first post-restart latency tail without changing semantics or annotation state.",
+  "baseline": {
+    "same_session_first_browser_discovery_ms": 29971.838,
+    "same_session_candidate_visible_ms": 31159,
+    "same_session_background_complete_ms": 35965,
+    "second_uncached_image_discovery_ms": 14815,
+    "historical_first_post_restart_seconds": 33.018,
+    "interpretation": "The recurring first post-restart discovery path is about 30 to 33 seconds; later uncached images are about 15 seconds."
+  },
+  "candidate": {
+    "profile": "single_image_discovery_v1",
+    "image_size": [640, 512],
+    "prompt_tokens": 894,
+    "max_new_tokens": 384,
+    "corrected_source_sha256": "007163d7a0503329e43cae1fb1bf16021bf0f47f200d0f2ead55874b4e00233f",
+    "startup_prewarm_seconds": 48.545,
+    "startup_generation_seconds": 48.455,
+    "startup_completion_tokens": 11,
+    "first_real_request": {
+      "input": "D:/Apps/LabelAgent/work/datasets/SFL_CPD15Y_20261104_smoke/003-1793759959809514987.png",
+      "upload_ms": 62.071,
+      "load_ms": 63.074,
+      "discovery_elapsed_ms": 29803.385,
+      "prefetch_wall_ms": 30193.194,
+      "sam_prefetch_cache_hit": true
+    }
+  },
+  "semantic_gate": {
+    "passed": true,
+    "discovery_sha256": "089dc2afc7cf7cf0f3a9f3e2ce837c30b68eb0744f4362439f7fb95a2dc993f0",
+    "expected_discovery_sha256": "089dc2afc7cf7cf0f3a9f3e2ce837c30b68eb0744f4362439f7fb95a2dc993f0",
+    "visible_labels": ["pallet", "person", "floor", "ego"],
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "isolated_truth_count": 0,
+    "isolated_candidate_frame_count": 0
+  },
+  "latency_gate": {
+    "target_first_request_ms": 25000,
+    "observed_first_request_ms": 29803.385,
+    "passed": false,
+    "same_session_baseline_change_percent": -0.562,
+    "reason": "Matching prompt width and max token budget did not remove the first production request tail; the observed change versus the paired 29.972 second baseline is within single-sample variation."
+  },
+  "controlled_switch_record": {
+    "attempt_1": "Rejected before model load because the old CUDA process had exited but remained in the driver compute list; the original source was automatically restored.",
+    "attempt_2": "Rejected before serving because the real processor measured 812 prompt tokens rather than the expected 894. The old source hash was restored; a second driver-release race required a bounded manual restart of the already-restored old source.",
+    "real_processor_calibration": {
+      "filler_503_prompt_tokens": 812,
+      "filler_560_prompt_tokens": 869,
+      "filler_585_prompt_tokens": 894,
+      "filler_600_prompt_tokens": 909,
+      "filler_620_prompt_tokens": 929
+    },
+    "attempt_3": "The corrected candidate became healthy and met the 894-token startup contract, then failed only the live latency gate.",
+    "rollback": "The same ownership, in-flight, GPU-idle and health checks restored the previous source and waited for the previous health contract before returning."
+  },
+  "final_runtime": {
+    "remote_source_sha256": "0f3f69577325468464caa7530374f85dd2aa1782bf66317bdfa5ed6eb2f58b36",
+    "expected_previous_source_sha256": "0f3f69577325468464caa7530374f85dd2aa1782bf66317bdfa5ed6eb2f58b36",
+    "vlm_status": "ok",
+    "vlm_prompt_tokens": 1509,
+    "vlm_exact_requests_inflight": 0,
+    "sam_status": "ok",
+    "workbench_http_status": 200,
+    "formal_state_sha256_before_after": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "isolated_port_released": true,
+    "gpu_utilization_after_percent": [0, 0]
+  },
+  "backup_and_staging": {
+    "remote_backup": "/home/clw/labelagent_remote_20261110/backups/production-shape-prewarm-round143-20261118",
+    "remote_candidate_directory": "/home/clw/projects/sfl-cpd15y/vlm-prewarm-round143",
+    "previous_source_sha256": "0f3f69577325468464caa7530374f85dd2aa1782bf66317bdfa5ed6eb2f58b36"
+  },
+  "verification": {
+    "candidate_targeted_tests": "20/20",
+    "deployed_round142_python_regression": "872/872",
+    "deployed_round142_web_regression": "101/101",
+    "formal_oss_writes": false,
+    "other_gpu_processes_stopped": false,
+    "model_weights_changed": false,
+    "candidate_product_changes_retained": false
+  },
+  "next_direction": "Do not repeat prompt-width-only prewarming. The remaining tail likely depends on the full discovery schema, constrained-decoder path, or longer decode trajectory; any next candidate must preserve the exact request and pass the same semantic hash and under-25-second first-request gate."
+}

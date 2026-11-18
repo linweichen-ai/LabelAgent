@@ -33,6 +33,7 @@
       "passed": 979,
       "failed": 0,
       "elapsed_seconds": 7.12,
+      "final_rerun_elapsed_seconds": 6.982,
       "environment": "PYTHONUTF8=1"
     },
     "production_compile": "passed",
@@ -107,6 +108,15 @@
     "sam_4090_28766": 200,
     "sam_5090_38766": 200,
     "vlm_4090_28868": 200
+  },
+  "source_sync": {
+    "implementation_commit": "3a908ba2973c34482a26727614f6020265647ea2",
+    "branch": "codex/workbench-stability-20261117",
+    "github_readback": "3a908ba2973c34482a26727614f6020265647ea2",
+    "cnb_readback": "3a908ba2973c34482a26727614f6020265647ea2",
+    "both_remotes_matched_implementation_commit": true,
+    "factory_images_uploaded": false,
+    "untracked_experiment_artifacts_uploaded": false
   },
   "changed_files": {
     "source/agent/server.py": "5ab3b68c35c797388308c74e09acb466b7687bebb312d37a4c66299041287f23",

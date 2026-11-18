@@ -1754,6 +1754,8 @@ Round156 收尾时 C盘仅余约 1.18 GiB，再次低于工作台的 2 GiB 警�
 
 隔离端口 8776 的6路同请求并发为1个 owner、5个 waiter、6/6 HTTP 200，唯一请求哈希和唯一核心结果哈希均为1；两个不同点并发严格为一个200和一个503。正式工作台部署只重启8765，PID从23672变为67008，4090通道PID 60456和5090 SAM通道PID 8656未变。正式 SFL camera 1 第56帧的3路同点并发为1个 owner、2个 waiter、3/3 HTTP 200，三份核心结果哈希完全一致，墙钟均约0.907秒。
 
-完整 Python 回归979/979通过。部署前备份位于 `D:\Apps\LabelAgent\.local\backups\point-coalescing-round211-20261119-034859`。正式 `state.json` 与 `file_sessions.json` 的SHA-256在真实请求前后分别保持 `1dcd67a...6f96` 和 `202927e2...7f5`；工作台、两路SAM和VLM均HTTP 200。本轮只改善交互稳定性与重复GPU占用，没有改变分割结果、模型权重、人工真值、训练批准或OSS。
+完整 Python 回归首次979/979通过，生产部署和文档后的最终复验仍为979/979通过（6.982秒）。部署前备份位于 `D:\Apps\LabelAgent\.local\backups\point-coalescing-round211-20261119-034859`。正式 `state.json` 与 `file_sessions.json` 的SHA-256在真实请求前后分别保持 `1dcd67a...6f96` 和 `202927e2...7f5`；工作台、两路SAM和VLM均HTTP 200。本轮只改善交互稳定性与重复GPU占用，没有改变分割结果、模型权重、人工真值、训练批准或OSS。
+
+实现与首版文档提交为 `3a908ba2973c34482a26727614f6020265647ea2`；推送后回读 GitHub 与 CNB 的同名分支均精确匹配该提交。厂内图片和未跟踪实验产物未上传。
 
 完整说明见 [第二百一十一轮报告](POINT_PROMPT_INFLIGHT_COALESCING_ROUND211_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/point-prompt-inflight-coalescing-round211.json)。下一步继续从浏览器源头消除可避免的重复事件，并评估只在单次运行内复用完全相同候选后处理；模型效果仍必须通过独立人工真值门禁。

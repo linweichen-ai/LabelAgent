@@ -838,6 +838,62 @@ test('拖动工作台高度后所有结果图层会重新贴合原图', () => {
   assert.match(compare, /attributeFilter: \['style', 'width', 'height'\]/);
 });
 
+test('点提示请求同步单飞并绑定提交时的数据集类别与点位', async () => {
+  const app = source('app.js');
+  const generate = section(app, 'async function generatePointMask', 'function frameAtTime');
+  function setup() {
+    const elements = {labelSelect: {value: 'pallet'}};
+    const calls = [], items = [], notices = [];
+    let resolveRequest;
+    const h = harness({
+      $(id) { return elements[id] || (elements[id] = {}); },
+      setInterval() { return 1; }, clearInterval() {},
+      updatePointPromptCoach() {}, refreshShapeList() {}, draw() {},
+      toast(message) { notices.push(message); },
+      selectedShapes() { return items; },
+      api(route, body) {
+        calls.push({route, body: JSON.parse(JSON.stringify(body))});
+        return new Promise(resolve => { resolveRequest = resolve; });
+      },
+    });
+    h.run(`let segmentBusy=false,loading=false,playing=false,annotationMode=true,pointMode=true,
+      promptPoints=[{x:10,y:20,label:1}],pointPromptNotice='',pointPromptStartedAt=0,
+      pointPromptTimer=null,frame=3,topic='/camera',loadedDataPath='file-a',
+      generatedShapeFrame=null,generatedShapeTopic='',generatedShapeIndex=-1,
+      selectedShapeIndex=-1,referenceReviewOriginalOnly=true,pointPromptGeneratedPointCount=0,
+      pointPromptRequiresRefinement=false;`);
+    h.run(generate);
+    return {h, elements, calls, items, notices, resolve(value) { resolveRequest(value); }};
+  }
+
+  const first = setup();
+  const owner = first.h.run('generatePointMask()');
+  const duplicate = first.h.run('generatePointMask()');
+  assert.equal(first.calls.length, 1);
+  first.h.run("promptPoints[0].x=999;$('labelSelect').value='person'");
+  first.resolve({points:[[1,1],[2,1],[2,2]],holes:[],parts:[{points:[[1,1],[2,1],[2,2]],holes:[]}],score:.9});
+  await Promise.all([owner, duplicate]);
+  assert.deepEqual(first.calls[0], {route:'segment_points', body:{frame:3, points:[{x:10,y:20,label:1}]}});
+  assert.equal(first.items.length, 1);
+  assert.equal(first.items[0].label, 'pallet');
+  assert.equal(first.h.run('pointPromptGeneratedPointCount'), 1);
+  assert.equal(first.h.run('segmentBusy'), false);
+  assert.match(first.h.run('pointPromptNotice'), /提交时类别“pallet”/);
+
+  const stale = setup();
+  const pending = stale.h.run('generatePointMask()');
+  stale.h.run("loadedDataPath='file-b'");
+  stale.resolve({points:[[1,1],[2,1],[2,2]],holes:[],parts:[{points:[[1,1],[2,1],[2,2]],holes:[]}],score:.9});
+  await pending;
+  assert.equal(stale.items.length, 0);
+  assert.ok(stale.notices.includes('数据集、相机或帧已切换，旧 SAM 结果已安全丢弃'));
+
+  assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
+  assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
+  assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
+  assert.match(source('index.html'), /app\.js\?v=167/);
+});
+
 test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () => {
   const prep = source('reference-prep.js');
   assert.match(prep, /for \(let attempt = 0; attempt < 3; attempt \+= 1\)/);

@@ -1,0 +1,117 @@
+{
+  "schema_version": "labelagent.workbench-stability.round212.v1",
+  "round": 212,
+  "date": "2026-11-19",
+  "objective": "Bind point-prompt results to the exact dataset, topic, frame, class and point snapshot submitted by the operator.",
+  "status": "implemented_tested_and_production_deployed",
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "model_weights_changed": false,
+    "oss_written": false,
+    "gpu_used_by_browser_acceptance": false
+  },
+  "fixed_races": [
+    "response-time class selection could relabel an older mask",
+    "same topic and frame in a different dataset could accept an older response",
+    "point edits during inference could make UI point state differ from submitted points"
+  ],
+  "request_snapshot": [
+    "loadedDataPath",
+    "topic",
+    "frame",
+    "requestLabel",
+    "deep-copied numeric requestPoints"
+  ],
+  "interaction_guards": [
+    "point mode re-entry",
+    "polygon mode switch",
+    "positive-negative mode switch",
+    "canvas point addition",
+    "point undo",
+    "frame clear"
+  ],
+  "tests": {
+    "targeted_web": {"passed": 47, "failed": 0},
+    "all_web": {"passed": 121, "failed": 0, "elapsed_ms": 168.2211},
+    "all_python": {"passed": 979, "failed": 0, "elapsed_seconds": 6.82, "environment": "PYTHONUTF8=1"},
+    "javascript_syntax": "passed",
+    "python_compile": "passed",
+    "git_diff_check": "passed"
+  },
+  "browser_acceptance": {
+    "browser": "Microsoft Edge headless",
+    "workbench_url": "http://127.0.0.1:8765",
+    "http_status": 200,
+    "asset": "/app.js?v=167",
+    "stable_frame": 74,
+    "segment_endpoint_intercepted": true,
+    "response_delay_ms": 350,
+    "gpu_request_sent": false,
+    "scenario_identical_calls_and_class_change": {
+      "function_calls": 2,
+      "network_requests": 1,
+      "request_frame": 74,
+      "request_points": [{"x": 10, "y": 20, "label": 1}],
+      "submitted_class": "pallet",
+      "class_during_wait": "person",
+      "result_class": "pallet",
+      "candidate_count_before": 0,
+      "candidate_count_after": 1,
+      "busy_released": true
+    },
+    "scenario_dataset_switch": {
+      "network_requests": 1,
+      "request_frame": 74,
+      "request_points": [{"x": 30, "y": 40, "label": 1}],
+      "candidate_count_before": 1,
+      "candidate_count_after": 1,
+      "stale_result_discarded": true,
+      "busy_released": true
+    },
+    "console_errors": 0,
+    "page_errors": 0,
+    "truth_write_requests": 0,
+    "self_correction": [
+      "forced frame 151 was superseded by normal session restoration and safely discarded",
+      "startup frame 0 was superseded by normal restoration to frame 74 and safely discarded",
+      "final acceptance waited 1800 ms for stable session restoration"
+    ]
+  },
+  "deployment": {
+    "production_root": "D:\\Apps\\LabelAgent",
+    "backup_directory": "D:\\Apps\\LabelAgent\\.local\\backups\\point-scope-race-round212-20261119-040905",
+    "backup_sha256": {
+      "app.js": "976ae18bf09949d02721588d115a6fa86737e6287a4286ddba0f83caf95fd43d",
+      "index.html": "e35bfd642c33b3223847c444e5c74e7fce8adc1625e1ec6f8ea675d500ea1680",
+      "state.json": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+      "file_sessions.json": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+      "remote_processes.json": "03997ab0c07a52b2d41197e5a871f406c9edc597fc539b30273c49e7fe29223"
+    },
+    "workbench_pid_before": 67008,
+    "workbench_pid_after": 69944,
+    "tunnel_4090_pid_unchanged": 60456,
+    "sam_5090_tunnel_pid_unchanged": 8656,
+    "app_js_sha256": "21343596b8e4b139451a1de599bdea33e6805452bdd3d69217d92681e88d38ac",
+    "index_html_sha256": "225bbf08fad35d51ca6f30af4b1e78ff06c5153194ba31cae9332bb22e23c029"
+  },
+  "formal_state_integrity": {
+    "state_sha256_before": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "state_sha256_after": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "file_sessions_sha256_before": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "file_sessions_sha256_after": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "unchanged": true
+  },
+  "service_health_after": {
+    "workbench_8765": 200,
+    "sam_4090_28766": 200,
+    "sam_5090_38766": 200,
+    "vlm_4090_28868": 200
+  },
+  "changed_files": {
+    "source/web/app.js": "21343596b8e4b139451a1de599bdea33e6805452bdd3d69217d92681e88d38ac",
+    "source/web/index.html": "225bbf08fad35d51ca6f30af4b1e78ff06c5153194ba31cae9332bb22e23c029",
+    "tests/test_web_polling.js": "443085b8ce542f2bcc9309cb7c311ce6f09c13fdef70a10a69ba7da61f9202b4"
+  }
+}

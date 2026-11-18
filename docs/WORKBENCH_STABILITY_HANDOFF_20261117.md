@@ -1898,4 +1898,4 @@ v176部署前备份位于 `D:\Apps\LabelAgent\.local\backups\run-result-navigati
 
 完整说明见 [第二百二十一轮报告](RUN_RESULT_NAVIGATION_TASK_RACE_ROUND221_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/run-result-navigation-task-race-round221.json)。本地浏览器脚本与结果保持未跟踪。
 
-实现、测试和首版文档提交 `c777b1a9db1520a0dcbff4fffa666e46904caabb` 已推送并分别回读 GitHub/CNB，同名分支两端精确匹配；回读回执提交哈希将在下一次文档提交中补入。
+实现、测试和首版文档提交 `c777b1a9db1520a0dcbff4fffa666e46904caabb` 已推送并分别回读 GitHub/CNB，同名分支两端精确匹配；回读回执提交为 `6b20902dc1a35ae05b2ee9d67fe9bf01b5873743`，该提交也已由两端精确回读。未跟踪实验产物和厂内内容均未上传。

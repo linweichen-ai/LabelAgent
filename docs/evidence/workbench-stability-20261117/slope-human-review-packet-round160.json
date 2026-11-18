@@ -1,0 +1,68 @@
+{
+  "round": 160,
+  "recorded_at": "2026-11-18T12:36:00+08:00",
+  "status": "READ_ONLY_HUMAN_REVIEW_PACKET_BUILT_AND_VERIFIED",
+  "objective": "Reduce the manual effort needed to create an independently reviewed slope gate without allowing assistant output to become human truth.",
+  "implementation": {
+    "generator": "tools/build_slope_review_packet.py",
+    "generator_sha256": "DDB8EFC620887B69F7DD67AD69D29A463DACB102DAF5C3BD0E87AEC78402BBFF",
+    "test": "tests/test_slope_review_packet.py",
+    "test_sha256": "13982EFAB0B00C5C3A762FC797033C1951B4C25037E808074991AEA90701124D",
+    "schema": "labelagent.slope-review-packet.v1",
+    "properties": [
+      "Binds every frame to its source-image SHA-256 and the input result packet hashes.",
+      "Provides raw images, review overlays, a contact sheet, a static HTML index, a manifest, and a file receipt.",
+      "Every row is candidate_only=true, human_truth=false, approved_for_training=false, and training_return_allowed=false.",
+      "The static page cannot sign decisions; final review must use the LabelAgent human-review gate."
+    ]
+  },
+  "packet": {
+    "path": "artifacts/round160-slope-human-review-packet",
+    "frames": 32,
+    "positive_proxy_frames": 8,
+    "negative_cohort_frames": 24,
+    "pending_human_review": 32,
+    "human_truth_frames": 0,
+    "training_approved_frames": 0,
+    "manifest_sha256": "1C67CB8DC22B225A7B3B0D149539EC210B7386C0A2A4F1016B7384160092A79C",
+    "contact_sheet_sha256": "29B1DEB319207A94CA7762521F7F18A3F606FDE8D3A2E922D594B9A3D9FB3349",
+    "index_html_sha256": "F33AD67452D8378228B70F0FCE864D380E480E595CF2E66525A0E2C7F3BD79B5",
+    "receipt_sha256": "CAACF5951BDD01921F82D9849A74FF0394B0607B80E3E03C549A4CCC03AA5BB9",
+    "receipt_entries": 67,
+    "receipt_failures": 0,
+    "payload_bytes_excluding_receipt": 6861957
+  },
+  "visual_readback": {
+    "contact_sheet_inspected": true,
+    "positive_proxy_cards": "Eight orange cards show the legacy auto target boundary and machine output with an explicit NOT HUMAN TRUTH banner.",
+    "negative_cards": "Twenty-four blue cards show indoor floor, pallets and obstacle scenes with HUMAN REVIEW REQUIRED banners.",
+    "layout_complete": true
+  },
+  "verification": {
+    "packet_unit_tests": "2/2 passed",
+    "full_python_regression": "899/899 passed",
+    "full_web_regression": "96/96 passed",
+    "python_compile": "passed",
+    "git_diff_check": "passed",
+    "all_rows_candidate_only": true,
+    "all_rows_human_truth_false": true,
+    "all_rows_training_disabled": true,
+    "all_rows_pending": true
+  },
+  "formal_state": {
+    "state_sha256_before_and_after": "D671DD5818A225BC774AC7E71ECFF612CB3AED67DE6B1985E5CD9E3233BE8085",
+    "file_sessions_sha256_before_and_after": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "page_http_status": 200,
+    "run_readiness": "ready"
+  },
+  "deployment": {
+    "runtime": "D:\\Apps\\LabelAgent",
+    "backup_manifest": "D:\\Apps\\LabelAgent\\.local\\backups\\slope-review-packet-round160-20261118-123800\\ABSENT-BEFORE-DEPLOYMENT.json",
+    "previous_runtime_files": "absent",
+    "runtime_hashes_match_worktree": true,
+    "sam_status": "ok",
+    "vlm_model": "labelagent-vlm8b"
+  },
+  "publication_boundary": "Raw and review images remain in untracked local artifacts and are not uploaded to GitHub or CNB. Code and non-image evidence may be synchronized separately.",
+  "remaining_gate": "A human must inspect/correct each selected frame and submit through the workbench review gate before these samples can support accuracy or training claims."
+}

@@ -1640,3 +1640,13 @@ Round156 收尾时 C盘仅余约 1.18 GiB，再次低于工作台的 2 GiB 警�
 正式目录原先没有负样本评测器，已有来源测试先备份到 `D:\Apps\LabelAgent\.local\backups\slope-negative-provenance-round159-20261118-122800`；部署后运行目录与工作树两个文件哈希一致。页面 HTTP 200、运行门禁 `ready`、SAM/VLM 正常，正式 `state.json` 和 `file_sessions.json` 哈希保持不变。结构化记录见 [第一百五十九轮斜坡负样本来源门禁](evidence/workbench-stability-20261117/slope-negative-provenance-round159.json)。
 
 边界：本轮提升的是评测可信度，不是模型精度；0候选仍是有价值的回归观察，但只有建立当前人工确认的正负样本后，才能计算真实 precision/recall/IoU。
+
+## 第一百六十轮斜坡集中人工复核包（已生成并验证，2026-11-18）
+
+为把“缺少当前人工回执”从抽象阻塞变成可直接执行的复核任务，本轮新增只读审阅包生成器。它把第一百五十八轮8个正候选代理帧和第一百五十九轮24个困难负候选帧集中为32帧审阅包；每帧同时提供原图、审阅图、源图 SHA-256、候选路线和来源类别。正候选卡使用橙色边框，并明确写出绿色是旧自动目标、机器输出不是人工真值；负候选卡使用蓝色边框，覆盖普通地面、托盘、障碍和近距离遮挡场景，并明确要求人工检查。
+
+产物包括静态 `index.html`、32张原图、32张审阅图、接触表、`manifest.json` 和67项逐文件 `receipt.json`。清单内32/32条均为 `candidate_only=true / human_truth=false / approved_for_training=false / training_return_allowed=false / pending_human_review`；静态页面本身不能提交决定，最终结果只能回到 LabelAgent 人工复核门禁保存。逐文件哈希和长度回读0项失败，清单 SHA-256 为 `1c67cb8d...2a79c`，接触表 SHA-256 为 `29b1deb3...3349`，总载荷约6.86 MB。
+
+目视读回确认接触表32帧完整、正负分组清楚、警示可见。2/2定向测试、完整 Python 899/899、网页96/96和 `git diff --check` 通过。正式目录此前没有生成器和定向测试，部署前不存在清单保存在 `D:\Apps\LabelAgent\.local\backups\slope-review-packet-round160-20261118-123800`；部署后两个文件与工作树哈希一致。正式工作台 HTTP 200、运行门禁 `ready`、SAM/VLM 正常，正式状态哈希不变。结构化记录见 [第一百六十轮斜坡集中复核包](evidence/workbench-stability-20261117/slope-human-review-packet-round160.json)，本地入口为未跟踪 `artifacts/round160-slope-human-review-packet/index.html`。
+
+边界：原图与审阅图可能包含厂内画面，因此继续保留在本地未跟踪产物，不上传 GitHub/CNB；代码和非图像证据可以正常同步。该包降低了复核成本，但没有替代人工签署，也没有解锁 SAM 微调。

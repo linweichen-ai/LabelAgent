@@ -1,4 +1,4 @@
-"""Run the production slope generation path on human-labelled no-slope frames."""
+"""Run the production slope path on provenance-audited saved cohorts."""
 import argparse
 import io
 import json
@@ -7,6 +7,7 @@ import time
 
 from PIL import Image
 
+from source.agent.evaluation_provenance import classify_target_provenance
 from source.agent.mcap_video import Video
 from source.agent.workflow import AnnotationAgent, _shape_summary, candidate_overlay
 from tools.evaluate_slope_sam import metrics, union_mask
@@ -24,6 +25,9 @@ def main():
     parser.add_argument("--output", required=True)
     parser.add_argument("--quiet", action="store_true",
                         help="Write per-frame evidence without printing every row")
+    parser.add_argument(
+        "--require-human-truth", action="store_true",
+        help="Fail before model calls unless every saved cohort frame has a current review receipt.")
     args = parser.parse_args()
 
     mcap = str(Path(args.mcap).resolve())
@@ -46,12 +50,37 @@ def main():
         if args.mode == "candidate":
             continue
         if not isinstance(shapes, list):
-            raise ValueError(f"Frame {frame} has no human truth")
+            raise ValueError(f"Frame {frame} has no saved evaluation target")
         has_slope = any(item.get("label") == "slope" for item in shapes)
         if args.mode == "negative" and has_slope:
             raise ValueError(f"Frame {frame} is not a no-slope negative")
         if args.mode == "positive" and not has_slope:
-            raise ValueError(f"Frame {frame} has no slope truth")
+            raise ValueError(f"Frame {frame} has no saved slope target")
+
+    if args.mode == "candidate":
+        target_provenance = {
+            "kind": "unlabelled_candidate_mode",
+            "human_truth_verified": False,
+            "frame_count": len(frames),
+            "verified_frames": [],
+            "unverified_frames": frames,
+            "evidence_note": (
+                "Candidate mode has no evaluation targets and produces review-only outputs."),
+        }
+    else:
+        cohort_labels = sorted({
+            shape.get("label")
+            for frame in frames
+            for shape in truth.get(str(frame), [])
+            if isinstance(shape, dict) and shape.get("label")
+        })
+        target_provenance = classify_target_provenance(
+            session, frames, cohort_labels if args.mode == "negative" else ["slope"])
+        if args.require_human_truth and not target_provenance["human_truth_verified"]:
+            raise ValueError(
+                "Human truth is required but target provenance is "
+                f"{target_provenance['kind']}; unverified frames: "
+                f"{target_provenance['unverified_frames']}")
 
     output = Path(args.output)
     output.mkdir(parents=True, exist_ok=True)
@@ -107,8 +136,15 @@ def main():
     }
     if args.mode == "negative":
         summary.update({
-            "frames_with_false_candidate": summary["frames_with_candidate"],
-            "false_candidates": summary["candidates"],
+            "negative_cohort_human_truth_verified": target_provenance["human_truth_verified"],
+            "frames_with_slope_candidate": summary["frames_with_candidate"],
+            "slope_candidates": summary["candidates"],
+            "frames_with_false_candidate": (summary["frames_with_candidate"]
+                                             if target_provenance["human_truth_verified"]
+                                             else None),
+            "false_candidates": (summary["candidates"]
+                                 if target_provenance["human_truth_verified"]
+                                 else None),
         })
     if args.mode == "positive":
         summary.update({
@@ -119,11 +155,14 @@ def main():
         })
     report = {
         "mcap": mcap, "topic": session["topic"], "mode": args.mode,
+        "target_provenance": target_provenance,
         "summary": summary, "rows": rows,
-        "evidence_note": ("Candidate mode is unlabelled and produces review-only outputs; no accuracy "
-                          "claim or truth mutation is allowed." if args.mode == "candidate" else
-                          "Human labels were checked for cohort membership and used after generation "
-                          "for positive scoring only; generation used image/model data."),
+        "evidence_note": (
+            target_provenance["evidence_note"]
+            + (" No accuracy claim or truth mutation is allowed."
+               if args.mode == "candidate" else
+               " Saved targets were used only for cohort membership and post-generation scoring; "
+               "generation used image/model data only.")),
     }
     (output / "results.json").write_text(json.dumps(report, ensure_ascii=False, indent=2),
                                           encoding="utf-8")

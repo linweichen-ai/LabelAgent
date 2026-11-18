@@ -1628,3 +1628,15 @@ Round156 收尾时 C盘仅余约 1.18 GiB，再次低于工作台的 2 GiB 警�
 正式运行目录此前没有这三个离线评测文件，第一次部署检查在任何写入前停止；“部署前不存在”清单保存在 `D:\Apps\LabelAgent\.local\backups\slope-provenance-round158-20261118-121601`。随后按新增工具部署，运行目录与工作树三个文件 SHA-256 逐项一致。无需重启工作台；页面 HTTP 200、运行门禁 `ready`、SAM `ok`、VLM 模型 `labelagent-vlm8b` 在线。结构化证据见 [第一百五十八轮斜坡来源门禁](evidence/workbench-stability-20261117/slope-target-provenance-round158.json)。
 
 边界：本轮修复的是证据口径和失败关闭，不是模型精度提升，也没有微调或后训练 SAM。真正的斜坡质量门禁仍需一批带当前人工复核回执、与开发数据独立的新工厂正负样本；在此之前不允许把 0.9727 写成真实准确率。
+
+## 第一百五十九轮斜坡负样本来源门禁与历史纠偏（已实现并复跑，2026-11-18）
+
+继续审计发现，困难负样本工具同样把历史 `truth` 键误当成人工确认：旧24帧证据写成“人工负样本”，但当前逐帧核对显示没有任何一帧具备当前人工复核回执；262个保存轮廓中13个为旧 `source=manual`、249个为 `source=auto`。因此旧结果中的“0误检”只能解释为“当前生产路径在这24个未验证保存帧上保留0个 slope 候选”，不是人工真值假阳性率。
+
+正样本、负样本和无标签候选三种模式现已统一使用第一百五十八轮的来源分类器。启用 `--require-human-truth` 时，24帧在输出目录创建和 SAM 调用前以 `unverified_saved_annotations` 失败关闭；门禁前后 SAM 缓存 hits/misses 均为 296/840，证明没有模型请求。普通审计模式随后完整重放：24帧仍为0个 slope 候选，14帧触发裁剪回退，平均每帧0.744秒；结果中的 `frames_with_false_candidate` 和 `false_candidates` 明确写为 `null`，避免把候选保留率冒充准确率。
+
+旧24帧和150帧结构化证据没有被删除，而是在原文件顶部追加来源纠偏与新证据哈希；旧 `total_human_labelled_frames` 字段改为 `total_saved_annotation_frames`。新重放结果 SHA-256 为 `69775fbe...10a2`，完整回归为 Python 897/897、网页96/96，8/8来源门禁定向测试通过。
+
+正式目录原先没有负样本评测器，已有来源测试先备份到 `D:\Apps\LabelAgent\.local\backups\slope-negative-provenance-round159-20261118-122800`；部署后运行目录与工作树两个文件哈希一致。页面 HTTP 200、运行门禁 `ready`、SAM/VLM 正常，正式 `state.json` 和 `file_sessions.json` 哈希保持不变。结构化记录见 [第一百五十九轮斜坡负样本来源门禁](evidence/workbench-stability-20261117/slope-negative-provenance-round159.json)。
+
+边界：本轮提升的是评测可信度，不是模型精度；0候选仍是有价值的回归观察，但只有建立当前人工确认的正负样本后，才能计算真实 precision/recall/IoU。

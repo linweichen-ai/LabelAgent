@@ -81,6 +81,29 @@ class SlopeTargetProvenanceTests(unittest.TestCase):
         self.assertEqual(result["kind"], "unverified_saved_annotations")
         self.assertFalse(result["human_truth_verified"])
 
+    def test_legacy_auto_negative_cohort_is_not_human_truth(self):
+        session = {
+            "truth": {
+                "10": [shape("auto") | {"label": "floor"}],
+                "11": [shape("auto") | {"label": "pallet"}],
+            }
+        }
+        result = classify_target_provenance(
+            session, [10, 11], ["floor", "pallet"])
+        self.assertEqual(result["kind"], "legacy_auto_preannotation")
+        self.assertFalse(result["human_truth_verified"])
+        self.assertEqual(result["selected_shape_count"], 2)
+
+    def test_reviewed_negative_cohort_can_be_verified_without_slope_shape(self):
+        session = {
+            "truth": {"12": [shape("manual") | {"label": "floor"}]},
+            "truth_review_status": {"12": verified_status()},
+        }
+        result = classify_target_provenance(session, [12], ["slope"])
+        self.assertEqual(result["kind"], "human_reviewed")
+        self.assertTrue(result["human_truth_verified"])
+        self.assertEqual(result["selected_shape_count"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()

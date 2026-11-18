@@ -1,9 +1,15 @@
 {
   "date": "2026-11-17",
+  "provenance_correction_2026_11_18": {
+    "human_truth_verified": false,
+    "reason": "The legacy session has no current committed human-review receipts. Its slope targets are source=auto, and a 24-frame negative subset contains both legacy source=manual and source=auto shapes.",
+    "correct_interpretation": "Positive scores are auto-preannotation consistency and negative counts are candidate-retention regression evidence. Historical fields containing false or human do not establish accuracy.",
+    "superseding_evidence": "slope-target-provenance-round158.json and slope-negative-provenance-round159.json"
+  },
   "dataset": "CVAT_Task3_original_annotations.mcap",
   "topic": "/CVAT/Task3/images",
   "cohort": {
-    "total_human_labelled_frames": 150,
+    "total_saved_annotation_frames": 150,
     "positive_slope_frames": [74, 77, 80, 83, 86, 95, 97, 99],
     "no_slope_frames": 142
   },

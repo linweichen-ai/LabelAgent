@@ -1,0 +1,77 @@
+{
+  "round": 159,
+  "recorded_at": "2026-11-18T12:23:00+08:00",
+  "status": "NEGATIVE_COHORT_PROVENANCE_GATE_IMPLEMENTED_AND_REPLAYED",
+  "objective": "Prevent saved no-slope cohorts from being reported as human-verified negatives without current review receipts.",
+  "implementation": {
+    "tool": "tools/evaluate_slope_negatives.py",
+    "shared_classifier": "source/agent/evaluation_provenance.py",
+    "modes": ["negative", "positive", "candidate"],
+    "behavior": [
+      "Negative and positive modes classify target provenance before creating outputs or calling SAM.",
+      "--require-human-truth fails closed unless every cohort frame has a current exact-hash committed review receipt.",
+      "Unverified negative cohorts report slope candidate retention but leave false-positive fields null.",
+      "Unlabelled candidate mode remains candidate-only and makes no accuracy claim."
+    ]
+  },
+  "gate_probe": {
+    "frames": [0, 10, 20, 30, 40, 50, 60, 70, 73, 75, 78, 81, 84, 87, 90, 94, 96, 98, 100, 110, 120, 130, 140, 149],
+    "exit_code": 1,
+    "classification": "unverified_saved_annotations",
+    "output_created": false,
+    "sam_cache_before": {"hits": 296, "misses": 840, "in_flight": 0},
+    "sam_cache_after": {"hits": 296, "misses": 840, "in_flight": 0},
+    "model_call_before_failure": false
+  },
+  "audited_replay": {
+    "output": "artifacts/round159-slope-negative-provenance-audited/results.json",
+    "result_sha256": "69775FBE7117A44FDCF67177A6097CCD99D5B63152646D5415407B1A31D210A2",
+    "target_provenance": {
+      "kind": "unverified_saved_annotations",
+      "human_truth_verified": false,
+      "frame_count": 24,
+      "selected_shape_count": 262,
+      "source_counts": {"manual": 13, "auto": 249, "unknown": 0},
+      "verified_frames": [],
+      "unverified_frame_count": 24
+    },
+    "production_path_observation": {
+      "frames": 24,
+      "frames_with_slope_candidate": 0,
+      "slope_candidates": 0,
+      "crop_fallback_frames": 14,
+      "mean_seconds": 0.7441666666666666,
+      "frames_with_false_candidate": null,
+      "false_candidates": null
+    }
+  },
+  "formal_state": {
+    "state_sha256_before_and_after": "D671DD5818A225BC774AC7E71ECFF612CB3AED67DE6B1985E5CD9E3233BE8085",
+    "file_sessions_sha256_before_and_after": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC"
+  },
+  "verification": {
+    "provenance_unit_tests": "8/8 passed",
+    "full_python_regression": "897/897 passed",
+    "full_web_regression": "96/96 passed",
+    "json_parse": "passed",
+    "python_compile": "passed",
+    "git_diff_check": "passed"
+  },
+  "deployment": {
+    "runtime": "D:\\Apps\\LabelAgent",
+    "backup_manifest": "D:\\Apps\\LabelAgent\\.local\\backups\\slope-negative-provenance-round159-20261118-122800\\DEPLOYMENT-MANIFEST.json",
+    "evaluator_previous_runtime_state": "absent",
+    "evaluator_sha256": "0BCB0809CD6D52D1F8C4D24A7A95EE01A1E359DE8E6D228DDF0889882969A56D",
+    "test_sha256": "0063A9145D8CCE2DDF526DB05E79661E9F89C90241B4400DD750B8EA5A6459A6",
+    "runtime_hashes_match_worktree": true,
+    "page_http_status": 200,
+    "run_readiness": "ready",
+    "sam_status": "ok",
+    "vlm_model": "labelagent-vlm8b"
+  },
+  "boundaries": [
+    "Zero retained candidates on this cohort is not a human-verified false-positive rate.",
+    "The cohort is one legacy session and does not prove cross-factory generalization.",
+    "No model weights, formal truth, candidate state, training approvals, or OSS objects changed."
+  ]
+}

@@ -1623,7 +1623,9 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
                 "label": operation.get("label"),
             })
             continue
-        if isinstance(operation, dict) and operation.get("operation") == "remove":
+        if (isinstance(operation, dict) and operation.get("operation") == "remove"
+                and isinstance(ids, list) and ids
+                and all(shape_id in shape_ids for shape_id in ids)):
             reason = str(operation.get("reason", "")).casefold()
             negative_evidence = (
                 "false positive", "not visible", "not present", "no visible",

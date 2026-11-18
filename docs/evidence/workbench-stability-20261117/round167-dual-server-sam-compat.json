@@ -1,0 +1,88 @@
+{
+  "schema_version": "labelagent.workbench-evidence.v1",
+  "recorded_at": "2026-11-18T15:19:14.8180423+08:00",
+  "scope": "dual-server-routing-and-legacy-sam-multi-compatibility",
+  "architecture": {
+    "workbench": "http://127.0.0.1:8765",
+    "sam": {
+      "server": "factory-5090",
+      "tunnel": "http://127.0.0.1:38766",
+      "ready": true,
+      "model_loaded": true
+    },
+    "vlm": {
+      "server": "factory-4090",
+      "endpoint": "http://127.0.0.1:28868/v1",
+      "model": "labelagent-vlm8b",
+      "ready": true
+    },
+    "local_fallback_ports": {
+      "sam_8766_listening": false,
+      "vlm_18868_listening": false,
+      "implicit_local_start_blocked": true
+    }
+  },
+  "change": {
+    "sam_multi_protocol": "The workflow detects the legacy list/items contract once per endpoint, validates prompt order and response completeness, then caches the endpoint protocol.",
+    "image_feature_reuse": "The legacy response is normalized without falling back to sequential per-label requests.",
+    "agent_remove_guard": "A remove operation with an unknown shape id is no longer silently normalized away; normal protocol correction is retained.",
+    "launcher_gate": "Local GPU mode now requires LABELAGENT_ALLOW_LOCAL_DIAGNOSTIC=1 and is exposed only through Start-LabelAgent-Local-Diagnostic.cmd."
+  },
+  "live_probes": {
+    "direct_5090_eight_prompt": {
+      "image_long_edge": 640,
+      "elapsed_seconds": 0.517,
+      "prompt_count": 8,
+      "feature_reuse": true,
+      "image_feature_passes": 1,
+      "image_encoded_once": true,
+      "legacy_protocol": true
+    },
+    "formal_workbench": {
+      "task_id": "aedaff75bd3841f0bbe3867b987971d8",
+      "frame": 100,
+      "status": "completed",
+      "completed": 1,
+      "total": 1,
+      "elapsed_seconds": 39.021,
+      "sam_elapsed_ms": 304,
+      "sam_prompt_count": 8,
+      "sam_image_feature_passes": 1,
+      "vlm_elapsed_ms": 37647,
+      "agent_rounds": 1,
+      "agent_converged": true,
+      "candidate_count": 12,
+      "truth_count_after_run": 12,
+      "candidate_count_after_run": 12,
+      "compare_with_truth": true,
+      "truth_and_candidate_kept_separate": true,
+      "slope_candidates_guarded_out": 5,
+      "agent_operations_applied": 0,
+      "quality_gain_claimed": false,
+      "quality_note": "This run proves service routing, progress and candidate/truth isolation. Agent removal proposals were conservatively dropped, so it is not evidence of a quality gain."
+    }
+  },
+  "tests": {
+    "focused": {
+      "command": "python -m unittest tests.test_agent.WorkflowTests tests.test_remote_workbench_manager",
+      "passed": 124,
+      "failed": 0
+    },
+    "full": {
+      "command": "PYTHONUTF8=1 python -m unittest discover -s tests",
+      "passed": 917,
+      "failed": 0
+    }
+  },
+  "rollback": {
+    "workflow_backup": "D:/Apps/LabelAgent/.local/backups/sam-multi-compat-20261118-151430/workflow.py",
+    "local_gate_backup": "D:/Apps/LabelAgent/.local/backups/disable-implicit-local-20261118-151650",
+    "remote_models_restarted": false,
+    "other_users_gpu_processes_modified": false
+  },
+  "remaining_bottleneck": {
+    "component": "4090 VLM Agent review",
+    "observed_seconds": 37.647,
+    "next_gate": "Reduce multi-image review prompt and decode cost without weakening candidate, truth and unknown-label safety boundaries."
+  }
+}

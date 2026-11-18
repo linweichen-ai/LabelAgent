@@ -1,0 +1,112 @@
+{
+  "schema_version": "labelagent.optimization_experiment.v1",
+  "round": 149,
+  "recorded_at": "2026-11-18T10:51:17.4992401+08:00",
+  "objective": "Test a compute-only torch.compile route for the existing full Qwen3-VL protocol without changing prompts, schemas, images, weights, candidate state, human truth, or training approval.",
+  "decision": "rejected_and_restored",
+  "baseline": {
+    "service_sha256": "0f3f69577325468464caa7530374f85dd2aa1782bf66317bdfa5ed6eb2f58b36",
+    "model": "labelagent-vlm8b",
+    "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+    "attention": "sdpa",
+    "generation_cache": "static",
+    "image_token_budget": 256,
+    "benchmark_receipt": "artifacts/round149-torch-compile-baseline.json",
+    "benchmark_receipt_sha256": "b245c330ed54ccd90bf6ac64cf0c6faab1b174355a09c08e62d913aa5256c110",
+    "uncached_wall_ms": [15081.415, 14772.868],
+    "uncached_generation_seconds": [14.846, 14.492]
+  },
+  "candidate": {
+    "source_sha256": "142c4a98e720c2fb3ff9b60b034146a12e391d10e8c650c6af60e2a2a4988951",
+    "flags": [
+      "--generation-cache-implementation static",
+      "--startup-prewarm",
+      "--torch-compile",
+      "--torch-compile-mode reduce-overhead"
+    ],
+    "target": "Qwen3VLForConditionalGeneration.forward",
+    "torch": "2.10.0+cu128",
+    "transformers": "4.57.6",
+    "flash_attention_installed": false,
+    "targeted_contract_tests_before_remote_attempt": "19/19 passed",
+    "became_healthy": false,
+    "served_user_requests": false,
+    "candidate_benchmark_performed": false,
+    "failure_after_approximately_seconds": 190,
+    "failure_class": "RuntimeError",
+    "failure_summary": "CUDA Graph output used by the static KV-cache path was overwritten by a later invocation; torch.compile requested an explicit graph step boundary or an out-of-graph clone.",
+    "compiler_diagnostics": [
+      "Qwen3-VL vision rotary position code caused a Tensor.item graph break.",
+      "The decoder reached the torch._dynamo recompile limit because static cache layers changed initialization state.",
+      "The final failure occurred during Triton autotuning on a CUDA Graph partition."
+    ],
+    "remote_evidence": {
+      "rejected_source": "/home/clw/labelagent_remote_20261110/backups/round149-20261118-1045/local_vlm_server-round149-rejected.py",
+      "original_backup": "/home/clw/labelagent_remote_20261110/backups/round149-20261118-1045/local_vlm_server.py",
+      "start_script_backup": "/home/clw/labelagent_remote_20261110/backups/round149-20261118-1045/start_remote_services.sh",
+      "log": "/home/clw/labelagent_remote_20261110/logs/vlm-round149-compile.log",
+      "log_sha256": "f77768be90269cb07026ec71ced5e6f2b5dcb482519ee1f513eeab7753d49d79"
+    }
+  },
+  "restoration": {
+    "method": "Restarted the unchanged original service through the existing managed start script after the failed candidate process released GPU1.",
+    "health_ready_seconds_after_restore_request": 22.4,
+    "service_sha256_after": "0f3f69577325468464caa7530374f85dd2aa1782bf66317bdfa5ed6eb2f58b36",
+    "service_hash_matches_baseline": true,
+    "model_loaded": true,
+    "structured_decoder_ready": true,
+    "startup_prewarm_performed": true,
+    "formal_workbench_http_status": 200,
+    "formal_workbench_run_status": "idle",
+    "remote_sam3": "normal",
+    "remote_qwen": "normal",
+    "state_sha256_before_after": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "restored_benchmark_receipt": "artifacts/round149-torch-compile-restored.json",
+    "restored_benchmark_receipt_sha256": "87f78032c9aad5b3061938921b1f68aba730cd166786d0f6218d826f1c459d30",
+    "uncached_wall_ms": [15714.791, 15330.645],
+    "uncached_generation_seconds": [15.079, 15.036]
+  },
+  "cold_restart_replay_observation": {
+    "sample_count": 2,
+    "complete_discovery_hash_equal": 1,
+    "visible_label_set_equal": 1,
+    "sample_1": {
+      "completion_tokens_before_after": [331, 331],
+      "complete_discovery_hash_equal": true
+    },
+    "sample_2": {
+      "completion_tokens_before_after": [325, 329],
+      "complete_discovery_hash_equal": false,
+      "baseline_visible_labels": ["车辆", "person", "floor", "slope", "ego", "other_robot"],
+      "restored_visible_labels": ["车辆", "pallet", "person", "floor", "slope", "ego"]
+    },
+    "interpretation": "The candidate never served either sample, so this difference is not a candidate regression. It is evidence that an unchanged BF16 greedy service is not guaranteed to reproduce a cold result bit-for-bit across process restarts. Future engine gates must therefore combine fixed semantic acceptance criteria with repeated cold runs instead of assuming one exact hash is sufficient."
+  },
+  "isolation": {
+    "other_gpu_processes_stopped": false,
+    "candidate_frames_written": 0,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "model_weights_modified": false,
+    "oss_writes": false,
+    "production_source_changed": false,
+    "rejected_local_patch_retained": false,
+    "temporary_browser_cookie_database_copies_removed": {
+      "path": "D:/Apps/LabelAgent/.local/cvat-session-audit",
+      "items": 3,
+      "bytes": 41834,
+      "exists_after": false
+    }
+  },
+  "next_direction": {
+    "do_not_retry": [
+      "Compiling the complete Qwen3-VL forward method with reduce-overhead CUDA Graphs on this runtime.",
+      "Any speed shortcut that changes the production prompt, schema, image budget, or candidate/truth boundary."
+    ],
+    "preferred": [
+      "Evaluate a decode-only engine path that explicitly supports static KV-cache mutation, using repeated cold semantic gates.",
+      "Retain exact response reuse and adjacent-frame prefetch while engine work remains experimental.",
+      "Use the optional 5090 route only after existing external workloads naturally release enough memory."
+    ]
+  }
+}

@@ -596,6 +596,21 @@ test('主自动标注先返回机器候选并用绑定读回完成后台精修',
   assert.equal(refinement.includes("fetch('/api/state')"), false);
 });
 
+test('人工修改候选会按唯一任务号取消单帧和批量后台精修', () => {
+  const app = source('app.js');
+  const cancellation = section(app, 'function newCandidateRefinementId', 'async function auditReferenceCandidateSnapshot');
+  const refinement = section(app, 'async function refineReferenceCandidateSnapshot', 'function invalidateChangedCandidateAudits');
+  const refresh = section(app, 'function refreshShapeList', 'function draw');
+  assert.match(cancellation, /reference_candidates\/refine\/stop/);
+  assert.match(cancellation, /entry\.editSnapshot===snapshot/);
+  assert.match(cancellation, /refinement_id:entry\.refinementId/);
+  assert.match(cancellation, /intent\?\.source!=='machine_candidate'/);
+  assert.match(refresh, /cancelChangedCandidateRefinement\(selectedShapes\(\),frame\)/);
+  assert.equal((refinement.match(/refinement_id:entry\.refinementId/g) || []).length, 2);
+  assert.match(refinement, /entry\.stale/);
+  assert.match(refinement, /人工草稿已变化，过时的后台精修已取消/);
+});
+
 test('启动前并行检查模型、参考流程与首个请求帧的数据兼容性', async () => {
   const calls = [];
   const h = harness({

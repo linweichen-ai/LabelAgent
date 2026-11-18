@@ -2,7 +2,10 @@
 import copy
 import hashlib
 import io
+import threading
+import time
 import unittest
+import uuid
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -10,6 +13,7 @@ from unittest.mock import patch
 from PIL import Image
 from source.agent import server
 from source.agent import candidate_class_audit as audit
+from source.agent import workflow
 
 
 class CandidateClassAuditTests(unittest.TestCase):
@@ -329,6 +333,91 @@ class CandidateClassAuditTests(unittest.TestCase):
         self.assertEqual(state["truth"], {})
         save.assert_not_called()
         archive.assert_not_called()
+
+    def test_manual_edit_cancel_stops_only_the_matching_deferred_refinement(self):
+        candidate = copy.deepcopy(self.candidate)
+        artifact = server._sha256_json([candidate])
+        image_hash = hashlib.sha256(self.image).hexdigest()
+        prior_run = {"agent_review_status": "pending", "agent_review_deferred": True,
+                     "candidate_artifact_sha256": artifact, "draft_labels": ["ego"],
+                     "max_rounds": 2, "candidate_filters": [],
+                     "sam_generation": {"mode": "multi_prompt"}, "review_queue": []}
+        state = {"video": SimpleNamespace(path=Path("test.png"),
+                                             topics={"camera": {"count": 1}}),
+                 "topic": "camera", "labels": self.labels, "truth": {}, "config": {},
+                 "reference_frames": {}, "candidates": {"0": [copy.deepcopy(candidate)]},
+                 "agent_runs": {"0": copy.deepcopy(prior_run)},
+                 "candidate_review_status": {}, "candidate_revisions": {}}
+        refinement_id = uuid.uuid4().hex
+        started = threading.Event()
+        response = {}
+
+        def wait_for_cancel(*_args, **_kwargs):
+            started.set()
+            while True:
+                workflow.check_cancelled()
+                time.sleep(.01)
+
+        def run_refinement():
+            with server.app.test_client() as client:
+                result = client.post("/api/reference_candidates/refine", json={
+                    "frame": 0, "topic": "camera", "refinement_id": refinement_id,
+                    "expected_candidate_artifact_sha256": artifact,
+                    "expected_frame_sha256": image_hash})
+                response.update(status=result.status_code, body=result.json)
+
+        with patch.object(server, "state", state), \
+             patch.object(server, "run_status", {"status": "idle"}), \
+             patch.object(server, "run_stop_event", threading.Event()), \
+             patch.object(server, "refinement_cancel_intents", {}), \
+             patch.object(server, "frame_image", return_value=self.image), \
+             patch.object(server, "review_existing", side_effect=wait_for_cancel), \
+             patch.object(server, "save") as save, \
+             patch.object(server, "archive_candidate_revision") as archive:
+            worker = threading.Thread(target=run_refinement)
+            worker.start()
+            self.assertTrue(started.wait(2), "refinement did not start")
+            with server.app.test_client() as client:
+                unrelated = client.post("/api/reference_candidates/refine/stop", json={
+                    "frame": 0, "topic": "camera", "refinement_id": uuid.uuid4().hex})
+                self.assertFalse(unrelated.json["stopped"])
+                self.assertTrue(worker.is_alive(), "an unrelated id stopped the refinement")
+                cancelled = client.post("/api/reference_candidates/refine/stop", json={
+                    "frame": 0, "topic": "camera", "refinement_id": refinement_id})
+            worker.join(2)
+            self.assertFalse(worker.is_alive(), "refinement did not stop promptly")
+
+        self.assertEqual(cancelled.status_code, 200, cancelled.json)
+        self.assertTrue(cancelled.json["cancellation_requested"])
+        self.assertTrue(cancelled.json["stopped"])
+        self.assertEqual(response["status"], 200, response)
+        self.assertTrue(response["body"]["stopped"])
+        self.assertEqual(response["body"]["refinement_id"], refinement_id)
+        self.assertEqual(response["body"]["cancellation_reason"], "manual_edit")
+        self.assertEqual(state["candidates"]["0"], [candidate])
+        self.assertEqual(state["agent_runs"]["0"], prior_run)
+        self.assertEqual(state["truth"], {})
+        save.assert_not_called()
+        archive.assert_not_called()
+
+    def test_manual_edit_cancel_intent_closes_the_preflight_race(self):
+        refinement_id = uuid.uuid4().hex
+        with patch.object(server, "run_status", {"status": "idle"}), \
+             patch.object(server, "run_stop_event", threading.Event()), \
+             patch.object(server, "refinement_cancel_intents", {}), \
+             patch.object(server, "review_existing") as review:
+            with server.app.test_client() as client:
+                cancelled = client.post("/api/reference_candidates/refine/stop", json={
+                    "frame": 4, "topic": "camera", "refinement_id": refinement_id})
+                result = client.post("/api/reference_candidates/refine", json={
+                    "frame": 4, "topic": "camera", "refinement_id": refinement_id})
+        self.assertEqual(cancelled.status_code, 200, cancelled.json)
+        self.assertFalse(cancelled.json["stopped"])
+        self.assertTrue(cancelled.json["cancellation_requested"])
+        self.assertEqual(result.status_code, 200, result.json)
+        self.assertTrue(result.json["stopped"])
+        self.assertEqual(result.json["cancellation_reason"], "manual_edit")
+        review.assert_not_called()
 
     def test_merge_keeps_existing_ids_and_renumbers_collisions_without_mutation(self):
         existing = [{"id": 3, "label": "floor"}]

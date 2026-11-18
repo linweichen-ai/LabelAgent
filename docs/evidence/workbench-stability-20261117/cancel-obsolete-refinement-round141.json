@@ -1,0 +1,77 @@
+{
+  "schema_version": "labelagent.workbench_round141_cancel_obsolete_refinement.v1",
+  "recorded_at": "2026-11-18T08:15:12+08:00",
+  "objective": "When an operator changes a machine-candidate draft, stop the matching deferred Agent refinement before it can run more rounds or overwrite the operator's work.",
+  "implementation": {
+    "client": [
+      "Assign a fresh UUID to both single-frame and post-run deferred refinements.",
+      "Compare the active editable draft with the snapshot bound to that refinement.",
+      "On a real content change, invalidate the local generation and request cancellation for that exact UUID, frame and topic.",
+      "Do not cancel merely for selecting a shape, switching views or inspecting an unchanged draft."
+    ],
+    "server": [
+      "Bind refinement_id into the live run status and every refinement response.",
+      "Cancel only when refinement_id, frame and topic all match the active task.",
+      "Retain a bounded five-minute cancellation intent so an edit arriving just before server registration closes the preflight race.",
+      "Keep candidate compare-and-swap, candidate-only status and human-truth isolation unchanged."
+    ]
+  },
+  "verification": {
+    "targeted": {
+      "tests": 4,
+      "status": "passed",
+      "observed": [
+        "matching cancellation stopped the request promptly",
+        "an unrelated UUID did not stop the active refinement",
+        "a preflight cancellation intent prevented model review from starting",
+        "candidates, Agent metadata and truth remained unchanged"
+      ]
+    },
+    "python": {
+      "command": "PYTHONUTF8=1 python -m unittest discover -s tests",
+      "passed": 870,
+      "failed": 0
+    },
+    "web": {
+      "command": "node --test <all tests/*.js>",
+      "passed": 95,
+      "failed": 0
+    },
+    "first_windows_attempt": {
+      "status": "environment_failure_not_product_regression",
+      "reason": "The suite was first started without PYTHONUTF8=1, so existing UTF-8 Chinese fixtures were read through the Windows GBK default. The unchanged suite passed after restoring the project's required UTF-8 environment."
+    }
+  },
+  "deployment": {
+    "runtime": "D:/Apps/LabelAgent",
+    "backup": "D:/Apps/LabelAgent/.local/backups/cancel-obsolete-refinement-round141-20261118-081351",
+    "old_server_sha256": "67ebed711b0329f7dd36096a972decbafd976da4c9e9dda94083a16519eecb6a",
+    "new_server_sha256": "37d7aee237b974bb84b81a182445b34c9ecab5b963ade52c2f41f8ffe03c1d9c",
+    "old_app_sha256": "f3347efdbbc48c1968c4cc4673571e5ea09daed2b30fc3e85663622e4fde4904",
+    "new_app_sha256": "7a5e2085832f356679d22f18f31f5790d464defaed183844121103a136b15c34",
+    "runtime_matches_worktree": true,
+    "formal_state_sha256_before": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "formal_state_sha256_after": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21"
+  },
+  "online_readback": {
+    "workbench": "ok",
+    "sam": "ready_model_loaded",
+    "vlm": "ready_model_loaded",
+    "vlm_exact_requests_inflight": 0,
+    "run_status": "idle",
+    "cancel_endpoint": {
+      "cancellation_requested": true,
+      "stopped": false,
+      "meaning": "The endpoint is live and correctly refused to stop a non-existent task."
+    },
+    "optional_5090_acceleration": "unavailable_fell_back_to_verified_4090"
+  },
+  "safety_boundaries": {
+    "human_truth_changed": false,
+    "training_approval_changed": false,
+    "oss_changed": false,
+    "model_weights_changed": false,
+    "other_users_gpu_jobs_stopped": false,
+    "current_inflight_model_call": "Cancellation returns control to the workbench and prevents later Agent rounds, but an HTTP model call already executing underneath may finish naturally before releasing its GPU work."
+  }
+}

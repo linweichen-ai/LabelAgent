@@ -61,9 +61,49 @@ run_claim_lock = threading.Lock()
 run_status = {"status": "idle"}
 run_stop_event = threading.Event()
 run_task_id = None
+refinement_cancel_lock = threading.Lock()
+refinement_cancel_intents = {}
+REFINEMENT_CANCEL_TTL_SECONDS = 300
 file_sessions_dirty = False
 batch_review_index_cache = None
 DEFAULT_REVIEW_ROUNDS = 6
+
+
+def _normalize_refinement_id(value):
+    """Return a canonical UUID for one deferred refinement request."""
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ValueError("refinement_id 必须是 UUID 字符串")
+    try:
+        return uuid.UUID(value).hex
+    except (ValueError, AttributeError, TypeError) as error:
+        raise ValueError("refinement_id 必须是有效 UUID") from error
+
+
+def _prune_refinement_cancel_intents(now=None):
+    now = time.monotonic() if now is None else now
+    expired = [key for key, recorded_at in refinement_cancel_intents.items()
+               if now - recorded_at > REFINEMENT_CANCEL_TTL_SECONDS]
+    for key in expired:
+        refinement_cancel_intents.pop(key, None)
+    while len(refinement_cancel_intents) > 256:
+        oldest = min(refinement_cancel_intents, key=refinement_cancel_intents.get)
+        refinement_cancel_intents.pop(oldest, None)
+
+
+def _record_refinement_cancel(refinement_id):
+    with refinement_cancel_lock:
+        _prune_refinement_cancel_intents()
+        refinement_cancel_intents[refinement_id] = time.monotonic()
+
+
+def _consume_refinement_cancel(refinement_id):
+    if refinement_id is None:
+        return False
+    with refinement_cancel_lock:
+        _prune_refinement_cancel_intents()
+        return refinement_cancel_intents.pop(refinement_id, None) is not None
 
 
 def Video(path):
@@ -3156,6 +3196,15 @@ def refine_reference_candidates():
     if type(body.get("frame")) is not int or not isinstance(body.get("topic"), str):
         raise ValueError("候选精修必须包含整数 frame 和 topic")
     index, topic = body["frame"], body["topic"]
+    refinement_id = _normalize_refinement_id(body.get("refinement_id"))
+    if _consume_refinement_cancel(refinement_id):
+        update_run_status(status="stopped", phase="stopped", frame=None,
+                          completed=0, total=1, topic=topic,
+                          refinement_id=refinement_id,
+                          cancellation_reason="manual_edit")
+        return jsonify(stopped=True, cancellation_reason="manual_edit",
+                       refinement_id=refinement_id, candidate_only=True,
+                       candidate_mutated=False, human_truth=False)
     expected_artifact = body.get("expected_candidate_artifact_sha256")
     expected_frame = body.get("expected_frame_sha256")
     with lock:
@@ -3233,7 +3282,8 @@ def refine_reference_candidates():
             raise ValueError("候选精修轮数记录无效")
         update_run_status(status="running", phase="agent_refining", frame=index,
                           completed=0, total=1, topic=topic, shape_count=len(candidates),
-                          round=0, error=None)
+                          round=0, error=None, refinement_id=refinement_id,
+                          cancellation_reason=None)
 
     trace = []
     debug_key = config.get("llm_key")
@@ -3357,6 +3407,7 @@ def refine_reference_candidates():
             bindings = candidate_review_bindings()
             return jsonify(frame=index, topic=topic, candidates=refined,
                            agent=replacement_run, binding=bindings.get(key),
+                           refinement_id=refinement_id,
                            candidate_review_bindings=bindings,
                            input_sha256=input_sha,
                            initial_candidate_artifact_sha256=artifact_sha,
@@ -3365,13 +3416,44 @@ def refine_reference_candidates():
                            candidate_only=True, human_truth=False,
                            approved_for_training=False)
     except RunCancelled:
-        update_run_status(status="stopped", phase="stopped", frame=None, completed=0)
+        with run_status_lock:
+            cancellation_reason = run_status.get("cancellation_reason") or "user_stop"
+        update_run_status(status="stopped", phase="stopped", frame=None, completed=0,
+                          cancellation_reason=cancellation_reason)
         return jsonify(stopped=True, candidate_only=True, candidate_mutated=False,
-                       human_truth=False)
+                       human_truth=False, refinement_id=refinement_id,
+                       cancellation_reason=cancellation_reason)
     except Exception as error:
         update_run_status(status="failed", phase="failed", frame=None,
                           completed=0, error=str(error)[:300])
         raise
+
+
+@app.post("/api/reference_candidates/refine/stop")
+def stop_reference_candidate_refinement():
+    """Cancel only the deferred refinement identified by the editing client."""
+    body = request.get_json() or {}
+    if type(body.get("frame")) is not int or not isinstance(body.get("topic"), str):
+        raise ValueError("取消候选精修必须包含整数 frame 和 topic")
+    index, topic = body["frame"], body["topic"]
+    refinement_id = _normalize_refinement_id(body.get("refinement_id"))
+    if refinement_id is None:
+        raise ValueError("取消候选精修必须包含 refinement_id")
+    _record_refinement_cancel(refinement_id)
+    with run_status_lock:
+        matched = (
+            run_status.get("status") in {"running", "stopping"}
+            and run_status.get("refinement_id") == refinement_id
+            and run_status.get("frame") == index
+            and run_status.get("topic") == topic
+        )
+        if matched:
+            run_stop_event.set()
+            _consume_refinement_cancel(refinement_id)
+            _update_run_status_locked(status="stopping", phase="stopping",
+                                      cancellation_reason="manual_edit")
+    return jsonify(cancellation_requested=True, stopped=matched,
+                   refinement_id=refinement_id, frame=index, topic=topic)
 
 
 @app.post("/api/reference_candidates/audit")

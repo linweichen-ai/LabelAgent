@@ -1854,4 +1854,6 @@ Round212 的浏览器验收发现页面会先显示第0帧，再异步恢复到�
 
 部署备份位于 `D:\Apps\LabelAgent\.local\backups\run-preflight-scope-round218-20261119-061050`。只重启本机工作台，管理PID从52724变为56168，监听PID从58424变为54724；4090通道PID60456和5090 SAM通道PID8656不变，五项探针均HTTP200。本轮没有模型推理、候选、人工真值、训练批准、微调、后训练或OSS写入。
 
-完整说明见 [第二百一十八轮报告](RUN_PREFLIGHT_SCOPE_ROUND218_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/run-preflight-scope-round218.json)。本地浏览器脚本、结果和厂内截图保持未跟踪；GitHub/CNB提交与回读在推送后回填。
+完整说明见 [第二百一十八轮报告](RUN_PREFLIGHT_SCOPE_ROUND218_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/run-preflight-scope-round218.json)。本地浏览器脚本、结果和厂内截图保持未跟踪。
+
+实现、测试和首版文档提交 `7fd01ef9d93bddf650cfc6e45b105d6fcf10ba14` 已推送并分别回读 GitHub/CNB，同名分支两端精确匹配；未跟踪实验产物和厂内截图均未上传。

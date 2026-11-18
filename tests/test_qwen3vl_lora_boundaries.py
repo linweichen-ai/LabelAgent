@@ -29,6 +29,21 @@ def write_fixture(root: Path):
 
 
 class Qwen3VlLoraBoundaryTests(unittest.TestCase):
+    def test_parallel_wrappers_preserve_services_and_gate_shared_gpu(self):
+        root = Path(__file__).parents[1]
+        train = (root / "tools" / "run_remote_qwen3vl_lora_parallel.sh").read_text(
+            encoding="utf-8")
+        evaluate = (root / "tools" / "run_remote_qwen3vl_adapter_static_eval_parallel.sh").read_text(
+            encoding="utf-8")
+        for script in (train, evaluate):
+            self.assertIn("MINIMUM_FREE_MIB=12000", script)
+            self.assertIn("SAM_INFLIGHT", script)
+            self.assertIn("flock -n 9", script)
+            self.assertIn("vlm-health-after.json", script)
+            self.assertNotIn("tmux kill-session", script)
+        self.assertIn('--seed "$SEED"', train)
+        self.assertIn('TRITON_CACHE_DIR="$TRITON_CACHE_DIR"', evaluate)
+
     def test_slope_balancing_repeats_only_positive_rows(self):
         def row(sample_id, evidence):
             return {

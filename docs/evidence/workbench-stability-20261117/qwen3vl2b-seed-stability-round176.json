@@ -1,0 +1,80 @@
+{
+  "schema_version": "labelagent.qwen3vl2b-seed-stability.v1",
+  "round": 176,
+  "date": "2026-11-18",
+  "status": "internal_seed_stability_mixed_not_deployed",
+  "objective": "Check whether the retained 8x slope-positive LoRA result is stable across training seeds while keeping production SAM and VLM online.",
+  "boundaries": {
+    "track": "machine_teacher_distillation",
+    "human_truth": false,
+    "production_training_approved": false,
+    "production_deployed": false,
+    "sam3_fine_tuned": false,
+    "test24_used": false,
+    "evaluation_sequence": "008 internal dev8",
+    "fresh_external_validation": false
+  },
+  "method": {
+    "model": "Qwen3-VL-2B-Instruct",
+    "adapter": "LoRA r=8",
+    "source_train_rows": 62,
+    "slope_positive_rows": 6,
+    "slope_positive_repeat": 8,
+    "effective_samples": 104,
+    "steps": 52,
+    "learning_rate": 0.0001,
+    "seeds": [20261118, 3407, 42],
+    "parallel_service_policy": "shared SAM GPU only when in_flight=0 and free memory >=12000 MiB; production services are not stopped"
+  },
+  "results": [
+    {
+      "seed": 20261118,
+      "train_loss": 0.21737109160480592,
+      "adapter_sha256": "62a8610d524edc144bbb6cf3f175f0e8a5633a588cd22a5c7b863d7dbf02527c",
+      "one_pass_json": "8/8",
+      "teacher_evidence_matches": "61/64",
+      "slope_teacher_matches": "8/8",
+      "median_generation_seconds": 5.683
+    },
+    {
+      "seed": 3407,
+      "train_loss": 0.21898206180104843,
+      "adapter_sha256": "19821da13c99a132c4f5a6cc891006541daa73782ddea0ff7d4dce0620708fd8",
+      "one_pass_json": "8/8",
+      "teacher_evidence_matches": "62/64",
+      "slope_teacher_matches": "8/8",
+      "median_generation_seconds": 6.3405,
+      "decision": "retain_offline_as_best_internal_candidate"
+    },
+    {
+      "seed": 42,
+      "train_loss": 0.21560634729953912,
+      "adapter_sha256": "0d16f2fa47c642204de976af5c581ad786479f34a3f381d1ac7e9f5d5a0a73d4",
+      "one_pass_json": "8/8",
+      "teacher_evidence_matches": "60/64",
+      "slope_teacher_matches": "7/8",
+      "median_generation_seconds": 6.1995,
+      "decision": "reject_for_slope_regression"
+    }
+  ],
+  "service_acceptance": {
+    "production_vlm_stopped": false,
+    "production_sam_stopped": false,
+    "workbench_model_ready_after": true,
+    "workbench_run_ready_after": true,
+    "sam_ready_after": true,
+    "vlm_ready_after": true,
+    "vlm_model_after": "labelagent-vlm8b"
+  },
+  "artifacts": {
+    "local_best_adapter": "artifacts/round176-qwen3vl2b-seed-stability/seed3407/adapter",
+    "local_results": "artifacts/round176-qwen3vl2b-seed-stability",
+    "remote_root": "/home/clw/projects/sfl-cpd15y/qwen3vl2b-lora-round102"
+  },
+  "interpretation": [
+    "The 8x balancing direction is promising but not seed-stable: one of three seeds regressed slope agreement to 7/8.",
+    "Seed 3407 is the strongest internal candidate, but dev8 is machine-teacher evidence rather than human truth or a fresh external gate.",
+    "No candidate may replace the production 8B model until fresh external and human-reviewed slope gates pass."
+  ]
+}
+

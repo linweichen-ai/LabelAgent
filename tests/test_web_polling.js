@@ -744,9 +744,45 @@ test('人工修改候选会按唯一任务号取消单帧和批量后台精修',
   assert.match(refinement, /entry\.stale/);
   assert.match(refinement, /人工草稿已变化，过时的后台精修已取消/);
   const openDraft = section(app, 'window.prepareReferenceCandidateDraft=async', 'window.prepareReferenceLegacyTruthDraft=async');
-  assert.match(openDraft, /candidateAuditFullSnapshot\(manualDrafts\[key\]\)!==candidateAuditFullSnapshot\(candidate\)\)return/);
+  assert.match(openDraft, /candidateAuditFullSnapshot\(manualDrafts\[key\]\)!==candidateAuditFullSnapshot\(candidate\)\)return false/);
   assert.ok(openDraft.indexOf('candidateAuditFullSnapshot(manualDrafts[key])!==candidateAuditFullSnapshot(candidate)')
     < openDraft.lastIndexOf('return finishAudit(candidate)'));
+});
+
+test('四种参考起稿只在目标帧真实打开后激活且后台返回服从当前人工作用域', async () => {
+  const app = source('app.js');
+  const openFrame = section(app, 'async function openFrameForReferencePreparation', 'async function openReferenceFrame');
+  const preparation = section(app, 'async function enterReferencePreparationFrame', "$('openReferenceButton').onclick");
+  const begin = section(app, 'function beginReferenceFinalize', 'function clearReferenceFinalize');
+  const guide = section(app, 'function updateReferenceFinalizeGuide', 'function selectInitialReferenceReviewTarget');
+  assert.equal((preparation.match(/await enterReferencePreparationFrame\(/g) || []).length, 4);
+  assert.match(preparation, /const active=\(\)=>referencePreparationIsActive\(target,sourceTopic,sourcePath\)/);
+  assert.match(preparation, /if\(!active\(\)\)return false/);
+  assert.ok(preparation.indexOf('await enterReferencePreparationFrame(target,requestGeneration,sourceTopic,sourcePath)')
+    < preparation.indexOf('manualDrafts[key]=preparedDraft'));
+  assert.ok(preparation.indexOf('await enterReferencePreparationFrame(target,requestGeneration,sourceTopic,sourcePath)')
+    < preparation.indexOf('shapes[key]=preparedTruth'));
+  assert.match(begin, /path:loadedDataPath/);
+  assert.match(guide, /intent\.path===loadedDataPath/);
+  assert.match(openFrame, /const targetFrame=Math\.max/);
+  assert.match(openFrame, /const timeline=await prepareTimeline\(topic\)/);
+  assert.match(openFrame, /clockTime=\(timeline\.offset\|\|0\)\+\(timeline\.times\[targetFrame\]\?\?0\)/);
+  assert.match(openFrame, /await loadStill\(targetFrame\)/);
+
+  let resolveOpen;
+  const h = harness({
+    openFrameForReferencePreparation() { return new Promise(resolve => { resolveOpen = resolve; }); },
+  });
+  h.run("let frameNavigationGeneration=3,topic='/camera',loadedDataPath='file-a',frame=5;");
+  h.run(section(app, 'async function enterReferencePreparationFrame', 'window.prepareReferenceCandidateDraft=async'));
+  const stale = h.run("enterReferencePreparationFrame(10,3,'/camera','file-a')");
+  h.run('frameNavigationGeneration=4;frame=20');
+  resolveOpen(true);
+  await assert.rejects(stale, /本次参考起稿未进入/);
+
+  h.context.openFrameForReferencePreparation = async () => true;
+  h.run('frameNavigationGeneration=5;frame=10');
+  assert.equal(await h.run("enterReferencePreparationFrame(10,5,'/camera','file-a')"), true);
 });
 
 test('启动前并行检查模型、参考流程与首个请求帧的数据兼容性', async () => {
@@ -939,7 +975,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=171/);
+  assert.match(source('index.html'), /app\.js\?v=173/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1000,7 +1036,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=171/);
+  assert.match(source('index.html'), /app\.js\?v=173/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1048,7 +1084,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 3);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=171/);
+  assert.match(source('index.html'), /app\.js\?v=173/);
 });
 
 test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () => {

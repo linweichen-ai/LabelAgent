@@ -1,0 +1,154 @@
+{
+  "schema_version": "labelagent.workbench-stability.round217.v1",
+  "round": 217,
+  "date": "2026-11-19",
+  "objective": "Cancel stale reference preparation and background refinement when the operator navigates away, while preserving a working steady-state preparation path.",
+  "status": "implemented_tested_and_production_deployed_source_sync_pending",
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "model_weights_changed": false,
+    "oss_written": false,
+    "gpu_used_by_browser_acceptance": false
+  },
+  "pre_fix_reproduction": {
+    "browser": "Microsoft Edge headless fresh context",
+    "asset": "/app.js?v=171",
+    "start_frame": 74,
+    "preparation_frame": 0,
+    "user_selected_frame": 1,
+    "preparation_frame_delay_ms": 600,
+    "preparation_resolved": true,
+    "final_frame": 1,
+    "intent_frame": 0,
+    "intent_source": "manual_polygon",
+    "polygon_selected": true,
+    "stale_preparation_activated_on_different_frame": true,
+    "truth_write_requests": 0,
+    "segment_requests": 0,
+    "page_errors": 0
+  },
+  "implementation": {
+    "all_four_entry_points_scope_guarded": true,
+    "candidate_commit_after_target_open": true,
+    "legacy_truth_commit_after_target_open": true,
+    "intent_binds_dataset_path": true,
+    "guide_requires_dataset_topic_frame_match": true,
+    "background_refine_requires_active_scope": true,
+    "background_audit_requires_active_scope": true,
+    "stale_background_toast_suppressed": true,
+    "ordinary_window_timeline_aligned_to_target": true,
+    "asset_version": 173
+  },
+  "intermediate_acceptance": {
+    "asset": "/app.js?v=172",
+    "stale_race_blocked": true,
+    "normal_preparation_rejected": true,
+    "cause": "The ordinary annotation window control update restored the old clock frame after the target image loaded.",
+    "resolution": "Align clockTime and playback timeline to the reference target before loading and updating controls.",
+    "truth_write_requests": 0,
+    "segment_requests": 0
+  },
+  "tests": {
+    "targeted_reference_scope": {"passed": 1, "failed": 0},
+    "all_web": {"passed": 118, "failed": 0, "elapsed_ms": 158.5797},
+    "all_python": {"passed": 979, "failed": 0, "subtests_passed": 186, "elapsed_seconds": 10.28, "environment": "PYTHONUTF8=1"},
+    "javascript_syntax": "passed",
+    "python_compile": "passed",
+    "git_diff_check": "passed",
+    "test_environment_notes": [
+      "An initial unrestricted pytest invocation collected an optional upstream SAM3 qualitative script and stopped because matplotlib was not installed; no dependency was added.",
+      "An initial Windows project-test invocation without PYTHONUTF8 produced GBK readback failures; the canonical UTF-8 run passed all tests."
+    ]
+  },
+  "browser_acceptance": {
+    "browser": "Microsoft Edge headless fresh context",
+    "workbench_url": "http://127.0.0.1:8765",
+    "asset": "/app.js?v=173",
+    "scope": {
+      "frame": 74,
+      "topic": "/capture/camera_1/image",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap",
+      "frame_count": 152
+    },
+    "race": {
+      "delayed_preparation_frame": 0,
+      "user_selected_frame": 1,
+      "preparation_resolved": false,
+      "error": "您已切换到其他帧、相机或数据集，本次参考起稿未进入",
+      "final_frame": 1,
+      "intent_frame": null,
+      "polygon_selected": false,
+      "stale_preparation_blocked": true
+    },
+    "steady_state": {
+      "target_frame": 2,
+      "preparation_resolved": true,
+      "final_frame": 2,
+      "intent_frame": 2,
+      "intent_source": "manual_polygon",
+      "intent_path_matches": true,
+      "active_scope": true,
+      "polygon_selected": true,
+      "accepted": true
+    },
+    "truth_write_requests": 0,
+    "segment_requests": 0,
+    "page_errors": 0,
+    "console_errors": 0,
+    "accepted": true,
+    "local_untracked_artifacts": "artifacts/round217-reference-preparation-navigation/",
+    "factory_image_uploaded": false
+  },
+  "deployment": {
+    "production_root": "D:\\Apps\\LabelAgent",
+    "backup_directory": "D:\\Apps\\LabelAgent\\.local\\backups\\reference-preparation-navigation-round217-20261119-054201",
+    "backup_sha256": {
+      "app.js": "679da9ac1a33f081fb555e9a3e8a73567e21168dcf9e5a04d37826a4e252ac2d",
+      "index.html": "e02af5f4ff7e3fd0ee92ad9f3713f400b5df2de3c5078a08ee5ae93af5860bdd",
+      "state.json": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+      "file_sessions.json": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+      "remote_processes.json": "64ac0b3306bd15fc9f1408330f019dd43840f3d152d9292568b91c487080391b"
+    },
+    "workbench_manager_pid_before": 66408,
+    "workbench_manager_pid_intermediate": 36536,
+    "workbench_manager_pid_after": 52724,
+    "workbench_listener_pid_before": 70256,
+    "workbench_listener_pid_after": 58424,
+    "tunnel_4090_pid_unchanged": 60456,
+    "sam_5090_tunnel_pid_unchanged": 8656,
+    "app_js_sha256": "bc664ec26eea018bab7bc402f84aeb8d96e269a57fe70ae8f3107c1c06df389c",
+    "index_html_sha256": "091fd3dfbcbd47225141c8c1c351383cf58b4fb94f185b0063751349514cb627"
+  },
+  "formal_state_integrity": {
+    "state_sha256_before": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "state_sha256_after": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "file_sessions_sha256_before": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "file_sessions_sha256_after": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "unchanged": true
+  },
+  "service_health_after": {
+    "workbench_state_8765": 200,
+    "workbench_run_8765": 200,
+    "sam_4090_28766": 200,
+    "sam_5090_38766": 200,
+    "vlm_4090_28868": 200,
+    "run_status": "idle"
+  },
+  "source_sync": {
+    "implementation_commit": null,
+    "receipt_commit": null,
+    "branch": "codex/workbench-stability-20261117",
+    "github_readback": null,
+    "cnb_readback": null,
+    "both_remotes_matched": false,
+    "factory_images_uploaded": false,
+    "untracked_experiment_artifacts_uploaded": false
+  },
+  "changed_files": {
+    "source/web/app.js": "bc664ec26eea018bab7bc402f84aeb8d96e269a57fe70ae8f3107c1c06df389c",
+    "source/web/index.html": "091fd3dfbcbd47225141c8c1c351383cf58b4fb94f185b0063751349514cb627",
+    "tests/test_web_polling.js": "e9055db2a270f6d89c8104af787eb617b5878527ab877f01b966a17ba1041704"
+  }
+}

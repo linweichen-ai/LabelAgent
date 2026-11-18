@@ -435,7 +435,7 @@ function normalizeReferenceDiscovery(discovery){
  }
  return normalized;
 }
-function beginReferenceFinalize(source,target){referencePreparationIntent={source,frame:Number(target),topic};referenceDismissedMissingLabels=new Set();referenceOriginalSweepVisited=false;referenceOpenSetReviewed=false;const restored=restoreReferenceReviewProgress(selectedShapes(),target,topic);referenceFinalizeNotice=restored||referenceOpenSetReviewed?`已从当前浏览器会话恢复检查进度 ${restored}/${selectedShapes().length}${referenceOpenSetReviewed?'，原图漏标检查已完成':''}`:'';resetReferenceReviewView();updateReferenceFinalizeGuide()}
+function beginReferenceFinalize(source,target){referencePreparationIntent={source,frame:Number(target),topic,path:loadedDataPath};referenceDismissedMissingLabels=new Set();referenceOriginalSweepVisited=false;referenceOpenSetReviewed=false;const restored=restoreReferenceReviewProgress(selectedShapes(),target,topic);referenceFinalizeNotice=restored||referenceOpenSetReviewed?`已从当前浏览器会话恢复检查进度 ${restored}/${selectedShapes().length}${referenceOpenSetReviewed?'，原图漏标检查已完成':''}`:'';resetReferenceReviewView();updateReferenceFinalizeGuide()}
 function clearReferenceFinalize(){referencePreparationIntent=null;referenceFinalizeNotice='';referenceReviewedShapeKeys=new Set();referenceDismissedMissingLabels=new Set();referenceOriginalSweepVisited=false;referenceOpenSetReviewed=false;resetReferenceReviewView();updateReferenceFinalizeGuide();document.dispatchEvent(new CustomEvent('labelagent:reference-draft-cleared'))}
 function appendCandidateClassAuditAlerts(alerts,items,run){
  const audits=Array.isArray(run?.candidate_class_audits)?run.candidate_class_audits:[],queue=(Array.isArray(run?.review_queue)?run.review_queue:[]).filter(item=>item?.source==='candidate_class_audit'),records=[...audits];
@@ -455,7 +455,7 @@ function updateReferenceFinalizeGuide(){
  if(referencePreparationIntent?.source==='machine_candidate'&&referencePreparationIntent.frame===frame&&referencePreparationIntent.topic===topic)invalidateChangedCandidateAudits(selectedShapes(),frame);
  const guide=$('referenceFinalizeGuide');if(!guide)return;
  const intent=referencePreparationIntent;guide.hidden=!intent;if(!intent)return;
- const same=intent.topic===topic&&intent.frame===frame,key=String(intent.frame),items=same?(shapes[key]??manualDrafts[key]??autoDrafts[key]??candidates[key]??[]):[],truthReady=same&&truthIsVerified(intent.frame)&&Array.isArray(shapes[key])&&shapes[key].length>0,draftReady=same&&Array.isArray(items)&&items.length>0,reference=window.referenceFrames?.[intent.topic]?.[0],locked=reference===intent.frame,run=agentRuns[key],openSetIncomplete=run?.visible_label_discovery?.open_set_scan_complete===false||(run?.review_queue||[]).some(item=>item?.reason_code==='vlm_open_set_output_truncated'),unresolvedModelConflicts=items.map((shape,index)=>({index,conflict:unresolvedCandidateModelConflict(shape)})).filter(item=>item.conflict),reviewKeys=referenceReviewKeys(items),reviewedCount=reviewKeys.filter(item=>referenceReviewedShapeKeys.has(item)).length,allReviewed=items.length>0&&reviewedCount===items.length&&unresolvedModelConflicts.length===0;refreshClassColorLegend(items);
+ const same=intent.path===loadedDataPath&&intent.topic===topic&&intent.frame===frame,key=String(intent.frame),items=same?(shapes[key]??manualDrafts[key]??autoDrafts[key]??candidates[key]??[]):[],truthReady=same&&truthIsVerified(intent.frame)&&Array.isArray(shapes[key])&&shapes[key].length>0,draftReady=same&&Array.isArray(items)&&items.length>0,reference=window.referenceFrames?.[intent.topic]?.[0],locked=reference===intent.frame,run=agentRuns[key],openSetIncomplete=run?.visible_label_discovery?.open_set_scan_complete===false||(run?.review_queue||[]).some(item=>item?.reason_code==='vlm_open_set_output_truncated'),unresolvedModelConflicts=items.map((shape,index)=>({index,conflict:unresolvedCandidateModelConflict(shape)})).filter(item=>item.conflict),reviewKeys=referenceReviewKeys(items),reviewedCount=reviewKeys.filter(item=>referenceReviewedShapeKeys.has(item)).length,allReviewed=items.length>0&&reviewedCount===items.length&&unresolvedModelConflicts.length===0;refreshClassColorLegend(items);
  const active=locked?3:truthReady?3:draftReady?2:1;
  for(const [id,step]of[['referenceFinalizeStep1',1],['referenceFinalizeStep2',2],['referenceFinalizeStep3',3]]){const item=$(id);item.classList.toggle('active',step===active&&!locked);item.classList.toggle('done',locked||step<active)}
  const status=referenceFinalizeNotice||(locked?'参考帧已锁定':!same?`正在准备帧 ${intent.frame}，请先返回该帧`:truthReady?'人工真值已保存且回执已核验，最后锁定参考帧':intent.source==='legacy_truth'?'历史标注已载入，请检查/精修后完成人工确认':draftReady?'轮廓草稿待人工确认':'当前没有轮廓，请先完成标注');$('referenceFinalizeStatus').textContent=status;
@@ -518,6 +518,7 @@ async function openFrameForReferencePreparation(target){
  if(!topic||catalog[topic]?.type!=='image')throw Error('当前没有可用的图像话题');
  const navigation=beginFrameNavigation();
  stopPlayback();
+ const targetFrame=Math.max(0,Math.min(Number(target)||0,topics[topic].count-1));
  let view=annotationView;
  if(!view||view.sources[0]!==topic){
   if(annotationView)leaveAnnotation();
@@ -533,7 +534,13 @@ async function openFrameForReferencePreparation(target){
  $('primaryTitle').textContent=topic;
  setAnnotationMode(true);
  updateGrid();
- await loadStill(target);
+ if(!view.directStill){
+  const timeline=await prepareTimeline(topic);
+  if(!frameNavigationIsCurrent(navigation))return false;
+  playback=timeline;
+  clockTime=(timeline.offset||0)+(timeline.times[targetFrame]??0);
+ }
+ await loadStill(targetFrame);
  if(!frameNavigationIsCurrent(navigation))return false;
  updateControls();
  updateWindows(true);
@@ -541,45 +548,54 @@ async function openFrameForReferencePreparation(target){
 }
 async function openReferenceFrame(){const reference=window.referenceFrames?.[topic]?.[0];if(reference===undefined)return;try{await openFrameForReferencePreparation(reference)}catch(error){toast(error.message)}}
 window.openFrameForReferencePreparation=openFrameForReferencePreparation;
+async function enterReferencePreparationFrame(target,expectedGeneration,expectedTopic,expectedPath){
+ if(frameNavigationGeneration!==expectedGeneration||topic!==expectedTopic||loadedDataPath!==expectedPath)throw Error('您已切换到其他帧、相机或数据集，本次参考起稿未进入');
+ const opened=await openFrameForReferencePreparation(target);
+ if(!opened||frame!==Number(target)||topic!==expectedTopic||loadedDataPath!==expectedPath)throw Error('您已切换到其他帧、相机或数据集，本次参考起稿未进入');
+ return true;
+}
+function referencePreparationIsActive(target,expectedTopic,expectedPath){const intent=referencePreparationIntent;return frame===Number(target)&&topic===expectedTopic&&loadedDataPath===expectedPath&&intent?.frame===Number(target)&&intent?.topic===expectedTopic&&intent?.path===expectedPath}
 window.prepareReferenceCandidateDraft=async(target,candidate,runMetadata=null)=>{
- const key=String(target);
+ const key=String(target),sourceTopic=topic,sourcePath=loadedDataPath,requestGeneration=frameNavigationGeneration;
  if(shapes[key]!==undefined)throw Error(truthIsVerified(target)?'该帧已有已核验人工真值，请直接复用已有标注':'该帧已有历史标注，请从参考帧助手载入并复核');
  if(!Array.isArray(candidate)||!candidate.length)throw Error('该帧没有可精修的机器候选');
  if(Array.isArray(candidates[key])&&candidateAuditFullSnapshot(candidates[key])!==candidateAuditFullSnapshot(candidate))throw Error('候选集合与当前服务器快照不一致，已拒绝载入');
  const agentPending=runMetadata?.agent_review_status==='pending';
  const auditPending=['pending','blocked_on_agent_review'].includes(runMetadata?.candidate_class_audit_status);
- const auditedRun=(agentPending||auditPending)?runMetadata:await auditReferenceCandidateSnapshot(target,candidate);
- manualDrafts[key]=JSON.parse(JSON.stringify(candidate));agentRuns[key]=JSON.parse(JSON.stringify(auditedRun));const proposalCount=await applyCandidateReviewProposals(target,manualDrafts[key],agentRuns[key]||{});
+ const auditedRun=(agentPending||auditPending)?runMetadata:await auditReferenceCandidateSnapshot(target,candidate),preparedDraft=JSON.parse(JSON.stringify(candidate)),preparedRun=JSON.parse(JSON.stringify(auditedRun));
+ const proposalCount=await applyCandidateReviewProposals(target,preparedDraft,preparedRun||{});
  await window.setWorkspaceMode?.('manual',false);
- await openFrameForReferencePreparation(target);
+ await enterReferencePreparationFrame(target,requestGeneration,sourceTopic,sourcePath);
+ manualDrafts[key]=preparedDraft;agentRuns[key]=preparedRun;
  selectedShapeIndex=-1;pointMode=false;negativeMode=false;regionMode='';draft=[];resetPrompts();$('polygonButton').classList.add('selected');refreshPointTools();beginReferenceFinalize('machine_candidate',target);const initialRisk=selectInitialReferenceReviewTarget(manualDrafts[key],agentRuns[key]);refreshShapeList();draw();
  document.dispatchEvent(new CustomEvent('labelagent:reference-draft-loaded',{detail:{frame:target,source:'machine_candidate',candidate_count:candidate.length}}));
  requestAnimationFrame(()=>{$('referenceFinalizeGuide')?.scrollIntoView({behavior:'smooth',block:'center'});$('referenceReviewApproveNext')?.focus({preventScroll:true})});
  toast(agentPending?`已载入 ${candidate.length} 个初始候选，可立即检查轮廓；Agent 正在后台精修，不会写成人工真值`:auditPending?`已载入 ${candidate.length} 个候选，可立即检查轮廓；高风险类别正在后台复核，结果不会自动变成人工真值`:initialRisk?`已载入 ${candidate.length} 个候选${proposalCount?`，其中 ${proposalCount} 个有隔离模型改类建议`:''}，并定位到第一条高风险轮廓；检查通过后点“检查通过并下一个”`:`已载入 ${candidate.length} 个候选，并选中第一条；请逐个检查后再保存真值`);
- const finishAudit=items=>auditReferenceCandidateSnapshot(target,items).then(result=>{if(candidateAuditFullSnapshot(manualDrafts[key])!==candidateAuditFullSnapshot(items))return;agentRuns[key]=JSON.parse(JSON.stringify(result));updateReferenceFinalizeGuide();refreshShapeList();toast('高风险类别后台复核已完成；候选仍需人工逐个确认')}).catch(error=>{updateReferenceFinalizeGuide();toast(`高风险类别后台复核未采用：${error.message}；候选仍保留给人工检查`)});
- if(agentPending)refineReferenceCandidateSnapshot(target,candidate).then(result=>{const untouched=candidateAuditFullSnapshot(manualDrafts[key])===candidateAuditFullSnapshot(candidate);if(!untouched){toast('Agent 后台精修已完成，但您已开始编辑；系统没有覆盖当前人工草稿');return}manualDrafts[key]=JSON.parse(JSON.stringify(result.candidates));agentRuns[key]=JSON.parse(JSON.stringify(result.agent));selectedShapeIndex=-1;referenceReviewedShapeKeys=new Set();referenceOriginalSweepVisited=false;referenceOpenSetReviewed=false;refreshShapeList();draw();toast(result.mutated?'Agent 后台精修已安全应用；仍需人工逐个确认':'Agent 后台检查完成，初始轮廓无需改动；仍需人工逐个确认');if(result.agent?.candidate_class_audit_status==='pending')return finishAudit(result.candidates)}).catch(error=>{updateReferenceFinalizeGuide();toast(`Agent 后台精修未采用：${error.message}；已保留初始候选供人工检查`);if(candidateAuditFullSnapshot(manualDrafts[key])!==candidateAuditFullSnapshot(candidate))return;if(candidateAuditFullSnapshot(candidates[key])===candidateAuditFullSnapshot(candidate))return finishAudit(candidate)});
+ const active=()=>referencePreparationIsActive(target,sourceTopic,sourcePath);
+ const finishAudit=items=>auditReferenceCandidateSnapshot(target,items).then(result=>{if(!active()||candidateAuditFullSnapshot(manualDrafts[key])!==candidateAuditFullSnapshot(items))return false;agentRuns[key]=JSON.parse(JSON.stringify(result));updateReferenceFinalizeGuide();refreshShapeList();toast('高风险类别后台复核已完成；候选仍需人工逐个确认');return true}).catch(error=>{if(!active())return false;updateReferenceFinalizeGuide();toast(`高风险类别后台复核未采用：${error.message}；候选仍保留给人工检查`);return false});
+ if(agentPending)refineReferenceCandidateSnapshot(target,candidate).then(result=>{if(!active())return false;const untouched=candidateAuditFullSnapshot(manualDrafts[key])===candidateAuditFullSnapshot(candidate);if(!untouched){toast('Agent 后台精修已完成，但您已开始编辑；系统没有覆盖当前人工草稿');return false}manualDrafts[key]=JSON.parse(JSON.stringify(result.candidates));agentRuns[key]=JSON.parse(JSON.stringify(result.agent));selectedShapeIndex=-1;referenceReviewedShapeKeys=new Set();referenceOriginalSweepVisited=false;referenceOpenSetReviewed=false;refreshShapeList();draw();toast(result.mutated?'Agent 后台精修已安全应用；仍需人工逐个确认':'Agent 后台检查完成，初始轮廓无需改动；仍需人工逐个确认');if(result.agent?.candidate_class_audit_status==='pending')return finishAudit(result.candidates);return true}).catch(error=>{if(!active())return false;updateReferenceFinalizeGuide();toast(`Agent 后台精修未采用：${error.message}；已保留初始候选供人工检查`);if(candidateAuditFullSnapshot(manualDrafts[key])!==candidateAuditFullSnapshot(candidate))return false;if(candidateAuditFullSnapshot(candidates[key])===candidateAuditFullSnapshot(candidate))return finishAudit(candidate);return false});
  else if(auditPending)finishAudit(candidate);
 };
 window.prepareReferenceLegacyTruthDraft=async(target,legacyTruth,provenance={})=>{
- const key=String(target);
+ const key=String(target),sourceTopic=topic,sourcePath=loadedDataPath,requestGeneration=frameNavigationGeneration;
  if(!Array.isArray(legacyTruth)||!legacyTruth.length)throw Error('该帧没有可复核的历史标注');
  if(provenance.reusable_as_reference===true)throw Error('该帧已经通过当前人工门禁，请直接采用已核验真值');
- shapes[key]=JSON.parse(JSON.stringify(legacyTruth));
- truthReviewStatus[key]={...provenance,reusable_as_reference:false,current_human_review_verified:false};
- await window.setWorkspaceMode?.('manual',false);await openFrameForReferencePreparation(target);
+ const preparedTruth=JSON.parse(JSON.stringify(legacyTruth)),preparedStatus={...provenance,reusable_as_reference:false,current_human_review_verified:false};
+ await window.setWorkspaceMode?.('manual',false);await enterReferencePreparationFrame(target,requestGeneration,sourceTopic,sourcePath);
+ shapes[key]=preparedTruth;truthReviewStatus[key]=preparedStatus;
  selectedShapeIndex=-1;pointMode=false;negativeMode=false;regionMode='';draft=[];resetPrompts();$('polygonButton').classList.add('selected');refreshPointTools();refreshShapeList();beginReferenceFinalize('legacy_truth',target);draw();
  toast(`已载入帧 ${target} 的历史标注；请检查/精修并通过当前人工门禁，不需要从零重画`);
 };
 window.prepareReferenceSamDraft=async target=>{
- const key=String(target);if(shapes[key]!==undefined)throw Error(truthIsVerified(target)?'该帧已有已核验人工真值，请直接复用已有标注':'该帧已有历史标注，请从参考帧助手载入并复核');
- await window.setWorkspaceMode?.('manual',false);await openFrameForReferencePreparation(target);
+ const key=String(target),sourceTopic=topic,sourcePath=loadedDataPath,requestGeneration=frameNavigationGeneration;if(shapes[key]!==undefined)throw Error(truthIsVerified(target)?'该帧已有已核验人工真值，请直接复用已有标注':'该帧已有历史标注，请从参考帧助手载入并复核');
+ await window.setWorkspaceMode?.('manual',false);await enterReferencePreparationFrame(target,requestGeneration,sourceTopic,sourcePath);
  pointMode=true;negativeMode=false;regionMode='';draft=[];$('polygonButton').classList.remove('selected');resetPrompts();pointPromptAutoRunOnce=true;pointPromptNotice='第 2 步：尚未提交，请现在点击图片中的目标内部';refreshPointTools();beginReferenceFinalize('sam_point_prompt',target);draw();
  focusPointPromptCanvas();
  toast('第 1 步已完成，但 SAM 尚未运行；现在请点击图片中的目标内部');
 };
 window.prepareReferenceManualDraft=async target=>{
- const key=String(target);if(shapes[key]!==undefined)throw Error(truthIsVerified(target)?'该帧已有已核验人工真值，请直接复用已有标注':'该帧已有历史标注，请从参考帧助手载入并复核');
- await window.setWorkspaceMode?.('manual',false);await openFrameForReferencePreparation(target);
+ const key=String(target),sourceTopic=topic,sourcePath=loadedDataPath,requestGeneration=frameNavigationGeneration;if(shapes[key]!==undefined)throw Error(truthIsVerified(target)?'该帧已有已核验人工真值，请直接复用已有标注':'该帧已有历史标注，请从参考帧助手载入并复核');
+ await window.setWorkspaceMode?.('manual',false);await enterReferencePreparationFrame(target,requestGeneration,sourceTopic,sourcePath);
  pointMode=false;negativeMode=false;regionMode='';draft=[];resetPrompts();$('polygonButton').classList.add('selected');refreshPointTools();beginReferenceFinalize('manual_polygon',target);draw();
  toast('已进入多边形绘制；保存真值并通过人工门禁后，再点击“设为参考帧”');
 };

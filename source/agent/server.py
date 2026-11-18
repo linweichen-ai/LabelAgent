@@ -58,6 +58,8 @@ lock = threading.RLock()
 run_status_lock = threading.Lock()
 run_summary_lock = threading.Lock()
 run_claim_lock = threading.Lock()
+model_prewarm_lock = threading.Lock()
+PRIMARY_MODEL_PREWARM_TOKENS = 2048
 run_status = {"status": "idle"}
 run_stop_event = threading.Event()
 run_task_id = None
@@ -3749,6 +3751,85 @@ def prefetch_reference_discovery():
         candidate_only=True,
         human_truth=False,
         approved_for_training=False,
+    )
+
+
+def primary_model_prewarm_image():
+    """Return a deterministic, data-free factory scene for the present path."""
+    image = Image.new("RGB", (640, 512), (210, 215, 220))
+    draw = ImageDraw.Draw(image)
+    draw.rectangle((0, 300, 639, 511), fill=(125, 125, 125))
+    draw.polygon([(380, 300), (620, 300), (639, 430), (420, 430)],
+                 fill=(185, 170, 130))
+    draw.rectangle((70, 360, 270, 385), fill=(135, 80, 35))
+    for x in (80, 125, 170, 215, 260):
+        draw.rectangle((x, 330, x + 18, 410), fill=(150, 90, 40))
+    draw.ellipse((300, 225, 335, 260), fill=(235, 190, 150))
+    draw.rectangle((307, 258, 328, 350), fill=(40, 90, 180))
+    draw.line((317, 280, 280, 330), fill=(30, 30, 30), width=8)
+    draw.line((317, 280, 360, 330), fill=(30, 30, 30), width=8)
+    draw.line((316, 350, 290, 420), fill=(30, 30, 30), width=9)
+    draw.line((320, 350, 350, 420), fill=(30, 30, 30), width=9)
+    draw.rectangle((430, 240, 555, 330), fill=(190, 45, 35))
+    draw.rectangle((470, 190, 520, 250), fill=(60, 60, 60))
+    draw.rectangle((520, 325, 630, 340), fill=(70, 70, 70))
+    draw.rectangle((520, 345, 630, 358), fill=(70, 70, 70))
+    output = io.BytesIO()
+    image.save(output, "PNG")
+    return output.getvalue()
+
+
+@app.post("/api/model_prewarm")
+def prewarm_primary_model():
+    """Exercise the full visible-label decode path without annotation writes.
+
+    The remote VLM receives a deterministic synthetic request with its complete
+    generation budget.  Repeated workbench starts are therefore cheap, while
+    the first start after a model restart pays the long structured-decode setup
+    cost before the browser is opened.  The fast route is deliberately removed
+    so this warms the authoritative 4090 path.
+    """
+    if run_claim_lock.locked():
+        return jsonify(prewarmed=False, code="active_workflow"), 202
+    with run_status_lock:
+        if run_status.get("status") in {"running", "stopping"}:
+            return jsonify(prewarmed=False, code="active_workflow"), 202
+    with lock:
+        labels = list(state.get("labels", []))
+        config = copy.deepcopy(state.get("config", {}))
+    if not labels:
+        return jsonify(prewarmed=False, code="no_labels"), 200
+    for key in tuple(config):
+        if key.startswith("llm_fast_"):
+            config.pop(key, None)
+    config["llm_busy_retries"] = 0
+    # Match the remote service's unbounded default explicitly.  The production
+    # discovery path remains compact; only this data-free startup request warms
+    # the longer static generation cache before a user submits a real image.
+    config["llm_max_tokens"] = PRIMARY_MODEL_PREWARM_TOKENS
+    started = time.perf_counter()
+    with model_prewarm_lock:
+        try:
+            discovery, retry_count = discover_reference_labels(
+                config, primary_model_prewarm_image(), labels)
+        except ValueError as error:
+            message = str(error)
+            if "Local VLM is busy" in message or "HTTP 503" in message:
+                return jsonify(prewarmed=False, code="vlm_busy"), 202
+            raise
+    return jsonify(
+        schema_version="labelagent.primary-model-prewarm.v1",
+        profile="synthetic_factory_present_v1",
+        prewarmed=True,
+        code="ready",
+        elapsed_ms=round((time.perf_counter() - started) * 1000, 3),
+        discovery_sha256=_sha256_json(discovery),
+        visible_labels=discovery.get("visible_labels", []),
+        retry_count=retry_count,
+        candidate_only=True,
+        human_truth=False,
+        approved_for_training=False,
+        state_written=False,
     )
 
 

@@ -87,15 +87,32 @@ def request_ok(port, endpoint, timeout=3):
         return False
 
 
-def post_json(port, endpoint, body):
+def post_json(port, endpoint, body, timeout=10, accepted_statuses=(200,)):
     payload = json.dumps(body).encode("utf-8")
     request = urllib.request.Request(
         f"http://127.0.0.1:{port}{endpoint}", data=payload,
         headers={"Content-Type": "application/json"}, method="POST")
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-    with opener.open(request, timeout=10) as response:
-        if response.status != 200:
+    with opener.open(request, timeout=timeout) as response:
+        if response.status not in accepted_statuses:
             raise RuntimeError(f"配置标注页面失败：HTTP {response.status}")
+        raw = response.read()
+        return json.loads(raw) if raw else {}
+
+
+def prewarm_primary_vlm(attempts=3):
+    """Move the first full discovery decode before the browser opens."""
+    for attempt in range(attempts):
+        result = post_json(
+            WEB_PORT, "/api/model_prewarm", {}, timeout=90,
+            accepted_statuses=(200, 202))
+        if result.get("prewarmed") is True:
+            return result
+        code = result.get("code")
+        if code != "vlm_busy" or attempt + 1 >= attempts:
+            return result
+        time.sleep(2)
+    return {"prewarmed": False, "code": "attempts_exhausted"}
 
 
 def wait_for(item, checks, seconds, label):
@@ -264,6 +281,15 @@ def start(open_browser):
             "llm_fast_cooldown_seconds": 60,
         }
         post_json(WEB_PORT, "/api/config", model_config)
+        try:
+            print("正在准备主 VLM 首次推理路径，请稍候……", flush=True)
+            prewarm = prewarm_primary_vlm()
+            if prewarm.get("prewarmed") is True:
+                print(f"主 VLM 完整预热已就绪：{prewarm.get('elapsed_ms', 0) / 1000:.3f} 秒")
+            else:
+                print(f"提示：主 VLM 完整预热已跳过：{prewarm.get('code', 'unknown')}")
+        except Exception as error:
+            print(f"提示：主 VLM 完整预热失败，工作台仍可使用：{error}")
         print(f"4090 版 LabelAgent 已启动：http://127.0.0.1:{WEB_PORT}")
         print("SAM3 和主 VLM 使用 4090；640×512 小图在可用时由 5090 加速并自动回退。")
         if open_browser:

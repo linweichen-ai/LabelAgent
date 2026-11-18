@@ -2008,6 +2008,55 @@ class FakeVideo:
 
 
 class ServerTests(unittest.TestCase):
+    def test_primary_model_prewarm_uses_main_route_without_state_writes(self):
+        old_state = server.state
+        old_status = server.run_status
+        labels = ["floor", "slope", "person"]
+        server.state = {"labels": labels, "config": {
+            "llm_url": "http://primary/v1", "llm_model": "primary",
+            "llm_fast_url": "http://fast/v1", "llm_fast_model": "fast",
+        }, "truth": {"7": ["protected"]}, "candidates": {"8": ["protected"]}}
+        server.run_status = {"status": "idle"}
+        before = copy.deepcopy(server.state)
+        discovery = {"visible_labels": ["floor"], "candidate_labels": ["floor"]}
+        try:
+            with patch.object(server, "discover_reference_labels",
+                              return_value=(discovery, 0)) as discover:
+                response = server.app.test_client().post("/api/model_prewarm", json={})
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.json["prewarmed"])
+            self.assertTrue(response.json["candidate_only"])
+            self.assertFalse(response.json["human_truth"])
+            self.assertFalse(response.json["approved_for_training"])
+            self.assertFalse(response.json["state_written"])
+            config, image, passed_labels = discover.call_args.args
+            self.assertEqual(config["llm_url"], "http://primary/v1")
+            self.assertEqual(config["llm_busy_retries"], 0)
+            self.assertEqual(config["llm_max_tokens"], 2048)
+            self.assertNotIn("llm_fast_url", config)
+            self.assertNotIn("llm_fast_model", config)
+            self.assertEqual(passed_labels, labels)
+            prewarm_image = Image.open(io.BytesIO(image))
+            self.assertEqual(prewarm_image.size, (640, 512))
+            self.assertTrue(any(low != high for low, high in prewarm_image.getextrema()))
+            self.assertEqual(response.json["profile"], "synthetic_factory_present_v1")
+            self.assertEqual(server.state, before)
+        finally:
+            server.state = old_state
+            server.run_status = old_status
+
+    def test_primary_model_prewarm_yields_to_active_workflow(self):
+        old_status = server.run_status
+        server.run_status = {"status": "running"}
+        try:
+            with patch.object(server, "discover_reference_labels") as discover:
+                response = server.app.test_client().post("/api/model_prewarm", json={})
+            self.assertEqual(response.status_code, 202)
+            self.assertEqual(response.json["code"], "active_workflow")
+            discover.assert_not_called()
+        finally:
+            server.run_status = old_status
+
     def test_model_readiness_probes_sam_and_vlm_concurrently(self):
         old_state = server.state
         barrier = threading.Barrier(2, timeout=1)

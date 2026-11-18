@@ -1,0 +1,121 @@
+{
+  "schema_version": "labelagent.full-discovery-prewarm-round144.v1",
+  "date": "2026-11-18",
+  "decision": "accepted_and_deployed",
+  "objective": "Move the recurring first full visible-label decode cost before the browser opens without changing the compact production request, semantic result, annotation state, model weights, or candidate/truth/training boundaries.",
+  "diagnosis": {
+    "remote_default_max_tokens": 2048,
+    "production_compact_max_tokens": 384,
+    "failed_compact_synthetic_prewarm": {
+      "prewarm_seconds": 13.904,
+      "following_003_discovery_seconds": 28.937811,
+      "following_003_prefetch_seconds": 29.303801,
+      "decision": "rejected"
+    },
+    "conclusion": "A short synthetic decode did not warm the longer static generation path. The accepted startup request explicitly exercises the remote service's complete 2048-token generation budget, while real image discovery remains compact at 384 tokens."
+  },
+  "candidate": {
+    "endpoint": "/api/model_prewarm",
+    "profile": "synthetic_factory_present_v1",
+    "image_size": [640, 512],
+    "data_free": true,
+    "primary_route_only": true,
+    "prewarm_max_tokens": 2048,
+    "production_max_tokens_unchanged": 384,
+    "busy_retries_inside_endpoint": 0,
+    "manager_busy_attempts": 3,
+    "manager_request_timeout_seconds": 90,
+    "yields_to_active_workflow": true,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "state_written": false
+  },
+  "cold_repetitions": [
+    {
+      "name": "isolated_cold_1",
+      "verified_cache_entries_before": 0,
+      "startup_health_prewarm_seconds": 11.159,
+      "full_prewarm_wall_seconds": 30.268,
+      "full_prewarm_endpoint_seconds": 30.216,
+      "prewarm_visible_labels": ["person", "floor", "slope"],
+      "prewarm_discovery_sha256": "a98140f6fa889127f5c20e069dc7562ddb605016137843aca2f44ba115190149",
+      "real_003_discovery_seconds": 15.532,
+      "real_003_prefetch_seconds": 16.125
+    },
+    {
+      "name": "isolated_cold_2",
+      "verified_cache_entries_before": 0,
+      "startup_health_prewarm_seconds": 11.482,
+      "full_prewarm_wall_seconds": 29.713,
+      "full_prewarm_endpoint_seconds": 29.665,
+      "prewarm_visible_labels": ["person", "floor", "slope"],
+      "prewarm_discovery_sha256": "a98140f6fa889127f5c20e069dc7562ddb605016137843aca2f44ba115190149",
+      "real_003_discovery_seconds": 15.195,
+      "real_003_prefetch_seconds": 15.670
+    },
+    {
+      "name": "formal_manager_cold",
+      "verified_cache_entries_before": 0,
+      "manager_wall_seconds": 35.355,
+      "full_prewarm_endpoint_seconds": 29.600,
+      "workbench_http_status": 200,
+      "sam_ready": true,
+      "vlm_ready": true,
+      "real_003_discovery_seconds": 15.333,
+      "real_003_prefetch_seconds": 15.816
+    }
+  ],
+  "hot_start": {
+    "manager_wall_seconds": 1.986,
+    "prewarm_endpoint_seconds": 0.014,
+    "formal_state_unchanged": true
+  },
+  "semantic_gate": {
+    "passed_all_three_real_requests": true,
+    "real_003_discovery_sha256": "089dc2afc7cf7cf0f3a9f3e2ce837c30b68eb0744f4362439f7fb95a2dc993f0",
+    "expected_discovery_sha256": "089dc2afc7cf7cf0f3a9f3e2ce837c30b68eb0744f4362439f7fb95a2dc993f0",
+    "visible_labels": ["pallet", "person", "floor", "ego"],
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "isolated_state_unchanged_each_run": true
+  },
+  "latency_gate": {
+    "target_first_real_request_seconds": 25,
+    "observed_real_discovery_seconds": [15.532, 15.195, 15.333],
+    "observed_real_prefetch_seconds": [16.125, 15.670, 15.816],
+    "passed": true,
+    "scope": "Three controlled engineering samples after independent cold service starts; not a P50 or P95 claim."
+  },
+  "deployment": {
+    "formal_workbench_url": "http://127.0.0.1:8765",
+    "formal_workbench_status": "idle",
+    "formal_state_sha256_before_after": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "runtime_server_sha256": "06945e257f66e6ece175a63ed8565ead30c636878773c95191095874462eb58f",
+    "runtime_manager_sha256": "25c8d01cb79e16f39914af15bfcab2a237b53ad2162dc5459ba905899c8a8024",
+    "remote_vlm_source_sha256": "0f3f69577325468464caa7530374f85dd2aa1782bf66317bdfa5ed6eb2f58b36",
+    "remote_vlm_source_changed": false,
+    "isolated_ports_released": [18804, 18806, 18807, 18808],
+    "backup": "D:/Apps/LabelAgent/.local/backups/full-discovery-prewarm-round144-20261118-091338"
+  },
+  "verification": {
+    "targeted_tests": "4/4",
+    "python_regression": "876/876",
+    "web_regression": "103/103",
+    "diff_check": "passed",
+    "formal_oss_writes": false,
+    "other_gpu_processes_stopped": false,
+    "model_weights_changed": false,
+    "formal_truth_changed": false,
+    "formal_candidates_changed": false,
+    "training_approval_changed": false
+  },
+  "environment_risk": {
+    "c_free_gib_observed": 0.39,
+    "d_free_gib_observed": 0.02,
+    "test_mitigation": "The full regression used an exact worktree-local temporary directory and removed it after completion; no user data was deleted.",
+    "remaining_action": "Recover verified disk headroom before large new datasets, training exports, or additional retained artifacts."
+  },
+  "boundary": "This round improves first-interaction latency after a VLM restart. It does not prove a segmentation-quality improvement, slope IoU improvement, cross-dataset accuracy distribution, SAM fine-tuning result, or production latency percentile."
+}

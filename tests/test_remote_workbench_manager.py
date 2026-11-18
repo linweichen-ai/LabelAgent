@@ -13,6 +13,23 @@ SPEC.loader.exec_module(MODULE)
 
 
 class RemoteWorkbenchManagerTests(unittest.TestCase):
+    def test_primary_prewarm_uses_long_timeout_and_accepts_busy_status(self):
+        ready = {"prewarmed": True, "elapsed_ms": 15000}
+        with mock.patch.object(MODULE, "post_json", return_value=ready) as post:
+            self.assertEqual(MODULE.prewarm_primary_vlm(), ready)
+        post.assert_called_once_with(
+            MODULE.WEB_PORT, "/api/model_prewarm", {}, timeout=90,
+            accepted_statuses=(200, 202))
+
+    def test_primary_prewarm_retries_busy_without_blocking_forever(self):
+        ready = {"prewarmed": True, "elapsed_ms": 15000}
+        with (mock.patch.object(MODULE, "post_json", side_effect=[
+                  {"prewarmed": False, "code": "vlm_busy"}, ready]) as post,
+              mock.patch.object(MODULE.time, "sleep") as sleep):
+            self.assertEqual(MODULE.prewarm_primary_vlm(), ready)
+        self.assertEqual(post.call_count, 2)
+        sleep.assert_called_once_with(2)
+
     def test_optional_fast_route_uses_a_short_default_wait(self):
         self.assertEqual(MODULE.optional_fast_wait_seconds({}), 3.0)
 

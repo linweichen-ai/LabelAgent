@@ -417,6 +417,17 @@ class WorkflowTests(unittest.TestCase):
             "candidate_labels": ["floor", "slope"]}, registry)
         self.assertEqual((selected, probes), (["floor", "slope"], []))
 
+    def test_reference_coverage_probes_every_missing_registry_label_without_mutating_discovery(self):
+        registry = ["person", "pallet", "floor", "slope"]
+        discovery = {"visible_labels": ["person"], "uncertain_labels": ["floor"],
+                     "candidate_labels": ["person", "floor"]}
+        selected, probes = workflow.candidate_labels_with_recall_probes(
+            discovery, registry, probe_missing_selected=True)
+        self.assertEqual(selected, registry)
+        self.assertEqual(probes, ["slope", "pallet"])
+        self.assertEqual(discovery["candidate_labels"], ["person", "floor"])
+        self.assertNotIn("pallet", discovery["visible_labels"])
+
     def test_visible_label_discovery_uses_registry_sized_compact_budget(self):
         labels = ["车辆", "pallet", "person", "floor", "slope", "ego",
                   "other_robot", "cargo_floor"]
@@ -3679,6 +3690,40 @@ class ServerTests(unittest.TestCase):
                 self.assertIn("未发现可生成候选的已知类别", response.json["error"])
                 describe_mock.assert_not_called(); run_mock.assert_not_called()
                 self.assertEqual(server.state["candidates"], {})
+                self.assertEqual(server.state["truth"], {})
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_reference_draft_coverage_probes_missing_selected_classes(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0",
+                "labels": ["person", "pallet", "slope"], "truth": {},
+                "reference_frames": {}, "config": {}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            discovery = {"assessments": [], "visible_labels": ["person"],
+                "uncertain_labels": [], "candidate_labels": ["person"],
+                "unknown_candidates": [], "registry_mutated": False}
+            result = {"shapes": [shape(label="person")], "candidates_added": 1,
+                "applied": [], "review_queue": [],
+                "agent": {"stop_reason": "done", "rounds": 0, "audit": []}}
+            try:
+                with patch.object(server, "discover_visible_labels", return_value=discovery), \
+                     patch.object(server, "generate_only", return_value=result) as generate_mock:
+                    response = server.app.test_client().post("/api/reference_draft", json={
+                        "frame": 1, "auto_detect_visible": True,
+                        "probe_missing_selected": True, "defer_agent_review": True,
+                        "defer_class_audit": True})
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertEqual(response.json["labels"], ["person", "pallet", "slope"])
+                self.assertTrue(response.json["probe_missing_selected"])
+                self.assertEqual(response.json["visible_label_discovery"]["recall_probe_labels"],
+                                 ["pallet", "slope"])
+                self.assertEqual(generate_mock.call_args.args[3], ["person", "pallet", "slope"])
+                provenance = response.json["candidates"][0]["provenance"]
+                self.assertTrue(provenance["probe_missing_selected"])
+                self.assertFalse(response.json["human_truth"])
                 self.assertEqual(server.state["truth"], {})
             finally:
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work

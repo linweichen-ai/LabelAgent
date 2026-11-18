@@ -1,5 +1,6 @@
 (() => {
   const AUTO_VISIBLE_LABELS = '__auto_visible_labels__';
+  const AUTO_COVERAGE_LABELS = '__auto_visible_with_coverage__';
   const ALL_SELECTED_LABELS = '__all_selected_labels__';
   const byId = id => document.getElementById(id);
   const dialog = byId('referencePrepDialog');
@@ -333,7 +334,7 @@
     const frameId = currentFrame();
     const key = discoveryPrefetchKey(state, frameId);
     if (generation !== preparationGeneration || !preparationStateReady || !modelReadiness?.ready
-        || byId('referenceAutoLabel')?.value !== AUTO_VISIBLE_LABELS || !key
+        || ![AUTO_VISIBLE_LABELS, AUTO_COVERAGE_LABELS].includes(byId('referenceAutoLabel')?.value) || !key
         || hasTruthFrame(state, frameId) || currentFrameCandidate(state, frameId)) return;
     return prefetchVisibleDiscovery(state, frameId, key,
       () => generation === preparationGeneration);
@@ -346,7 +347,7 @@
     const frameId = currentFrame();
     const key = discoveryPrefetchKey(state, frameId);
     const selectedMode = byId('referenceAutoLabel')?.value;
-    if (!key || (selectedMode && selectedMode !== AUTO_VISIBLE_LABELS)
+    if (!key || (selectedMode && ![AUTO_VISIBLE_LABELS, AUTO_COVERAGE_LABELS].includes(selectedMode))
         || hasTruthFrame(state, frameId) || currentFrameCandidate(state, frameId)) return;
     frameDwellPrefetchTimer = setTimeout(async () => {
       frameDwellPrefetchTimer = null;
@@ -455,13 +456,14 @@
     }, preferredFrame);
     fillFrameSelect(byId('candidateReferenceFrame'), candidateEntries, '当前数据没有可精修的机器候选', null, preferredFrame);
     const labelSelect = byId('referenceAutoLabel');
-    const selectedLabel = labelSelect.value || AUTO_VISIBLE_LABELS;
+    const selectedLabel = labelSelect.value || AUTO_COVERAGE_LABELS;
     labelSelect.replaceChildren();
-    option(labelSelect, AUTO_VISIBLE_LABELS, '自动识别当前帧全部可见类别（推荐）');
+    option(labelSelect, AUTO_COVERAGE_LABELS, '自动识别 + 已选类别补漏（参考帧推荐）');
+    option(labelSelect, AUTO_VISIBLE_LABELS, '仅自动识别可见类别（更快）');
     option(labelSelect, ALL_SELECTED_LABELS, '逐类尝试全部已选推理类别（更慢，易误检）');
     for (const label of state?.labels || []) option(labelSelect, label, label);
     labelSelect.value = [...labelSelect.options].some(item => item.value === selectedLabel)
-      ? selectedLabel : AUTO_VISIBLE_LABELS;
+      ? selectedLabel : AUTO_COVERAGE_LABELS;
     byId('useExistingTruth').disabled = !loaded || !verifiedTruthEntries.length;
     byId('useLegacyTruthDraft').disabled = !loaded || !legacyTruthEntries.length;
     byId('useCandidateDraft').disabled = !loaded || !candidateEntries.length;
@@ -613,7 +615,8 @@
   async function runAutoDraft() {
     const frameId = currentFrame();
     const label = byId('referenceAutoLabel').value;
-    const autoDetectVisible = label === AUTO_VISIBLE_LABELS;
+    const autoDetectVisible = [AUTO_VISIBLE_LABELS, AUTO_COVERAGE_LABELS].includes(label);
+    const probeMissingSelected = label === AUTO_COVERAGE_LABELS;
     const tryAllSelected = label === ALL_SELECTED_LABELS;
     const fresh = await readPreparationState();
     if (!fresh.loaded) throw new Error('请先加载图像或 MCAP');
@@ -641,9 +644,11 @@
     draftLastPhaseKey = '';
     draftPhaseChangedAt = draftStartedAt;
     draftProgressFailures = 0;
-    setDraftBusy(true, autoDetectVisible ? '请求已提交 · VLM 正在识别可见类别…' : tryAllSelected ? `请求已提交 · 正在逐类尝试 ${selectedLabels.length} 个类别…` : '请求已提交 · 正在启动 SAM 与 VLM…');
+    setDraftBusy(true, probeMissingSelected ? '请求已提交 · 正在识别并补漏已选类别…' : autoDetectVisible ? '请求已提交 · VLM 正在识别可见类别…' : tryAllSelected ? `请求已提交 · 正在逐类尝试 ${selectedLabels.length} 个类别…` : '请求已提交 · 正在启动 SAM 与 VLM…');
     byId('referenceDraftProgressDetail').textContent = autoDetectVisible
-      ? '后台已开始：新图首批机器候选通常约 15～25 秒出现；出现后可立即检查，Agent 与高风险复核会继续后台运行，请不要重复点击。'
+      ? probeMissingSelected
+        ? '后台已开始：先生成 VLM 明确认出的类别，再对其余已选类别做 SAM 补漏；结果全部是待复核机器候选，不会自动写入人工真值。'
+        : '后台已开始：新图首批机器候选通常约 15～25 秒出现；出现后可立即检查，Agent 与高风险复核会继续后台运行，请不要重复点击。'
       : tryAllSelected ? `后台将依次尝试：${selectedLabels.join('、')}。没有有效轮廓的类别会明确显示为漏分或未见，不会伪造掩码。`
       : '后台已确认开始一键起稿；首批候选生成后会立即显示，Agent 与高风险复核会继续后台运行，请不要重复点击。';
     draftTimer = setInterval(updateDraftProgress, 1000);
@@ -652,7 +657,7 @@
       const response = await fetch('/api/reference_draft', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(autoDetectVisible
-          ? {frame: frameId, auto_detect_visible: true, defer_agent_review: true, defer_class_audit: true}
+          ? {frame: frameId, auto_detect_visible: true, probe_missing_selected: probeMissingSelected, defer_agent_review: true, defer_class_audit: true}
           : {frame: frameId, labels: tryAllSelected ? selectedLabels : [label], defer_agent_review: true, defer_class_audit: true}),
       });
       const result = await response.json();
@@ -681,7 +686,9 @@
       const uncertain = result.visible_label_discovery?.uncertain_labels || [];
       const unknown = result.visible_label_discovery?.unknown_candidates || [];
       const conflicts = result.visible_label_discovery?.registry_conflicts || [];
+      const recallProbes = result.visible_label_discovery?.recall_probe_labels || [];
       const reviewHint = [...(uncertain.length ? [`${uncertain.length} 类不确定`] : []),
+        ...(recallProbes.length ? [`${recallProbes.length} 类已补漏`] : []),
         ...(unknown.length ? [`${unknown.length} 个疑似新类`] : []),
         ...(conflicts.length ? [`${conflicts.length} 个标签别名冲突`] : [])].join('、');
       window.labelAgentToast?.(`已生成 ${result.candidates.length} 个机器草稿${visibleLabels.length ? `（${visibleLabels.join('、')}）` : ''}；${labelSynced ? '编辑类别已同步，' : ''}${reviewHint ? `${reviewHint}已送人工复核，` : ''}${result.agent_review_deferred ? 'Agent 正在后台精修，可先检查轮廓；' : result.candidate_class_audit_deferred ? '高风险类别正在后台复核，可先检查轮廓；' : ''}请精修后人工确认`);
@@ -830,7 +837,7 @@
   byId('startSamDraft').addEventListener('click', safely(startSam));
   byId('referenceAutoLabel').addEventListener('change', () => {
     updateModelButtons();
-    if (byId('referenceAutoLabel').value === AUTO_VISIBLE_LABELS) {
+    if ([AUTO_VISIBLE_LABELS, AUTO_COVERAGE_LABELS].includes(byId('referenceAutoLabel').value)) {
       void maybePrefetchVisibleDiscovery(preparationGeneration);
     }
   });

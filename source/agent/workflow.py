@@ -1108,14 +1108,17 @@ def discover_visible_labels(config, image, labels):
             "registry_mutated": False}
 
 
-def candidate_labels_with_recall_probes(discovery, labels):
+def candidate_labels_with_recall_probes(discovery, labels,
+                                        probe_missing_selected=False):
     """Add bounded high-value probes without promoting visibility truth.
 
     Low, distant ramps are often described as ordinary floor in a single
     camera image.  If floor is visible or uncertain, preserve one independent
     slope SAM probe so downstream geometry and conflict guards can decide
-    whether a machine candidate exists.  The probe is not VLM truth, human
-    truth, or training approval.
+    whether a machine candidate exists.  Reference drafting may additionally
+    probe every user-selected registry label that discovery did not cover.
+    Probes never mutate discovery evidence and are not VLM truth, human truth,
+    or training approval.
     """
     registry = list(dict.fromkeys(labels or []))
     visible = list((discovery or {}).get("visible_labels") or [])
@@ -1127,6 +1130,10 @@ def candidate_labels_with_recall_probes(discovery, labels):
     if ("slope" in registry and "slope" not in selected
             and "floor" in set(visible + uncertain)):
         probes.append("slope")
+    if probe_missing_selected:
+        selected_or_probed = set(selected + probes)
+        probes.extend(label for label in registry
+                      if label not in selected_or_probed)
     selected_set = set(selected + probes)
     return [label for label in registry if label in selected_set], probes
 

@@ -562,8 +562,8 @@
           <span>单目标点提示出现绿色点和“正在生成”计时才算提交；整帧全流程会立即显示实时进度。两者都没有就是尚未开始，不是速度慢。</span>
         </div>
         <label>一键起稿范围
-          <select id="referenceAutoLabel" aria-label="选择自动识别可见类别、逐类尝试全部已选类别或指定单一类别"></select>
-          <small>推荐先自动识别可见类别；“逐类尝试全部已选类别”会更慢且误检风险更高，结果仍只是机器候选。</small>
+          <select id="referenceAutoLabel" aria-label="选择自动识别并补漏、仅识别可见类别、逐类尝试全部已选类别或指定单一类别"></select>
+          <small>参考帧推荐“自动识别 + 已选类别补漏”：先找明显类别，再补查漏掉的已选类别；速度模式只处理 VLM 已识别类别。结果都只是待复核机器候选。</small>
         </label>
         <label>选择机器候选帧
           <select id="candidateReferenceFrame" aria-label="选择机器候选帧"></select>

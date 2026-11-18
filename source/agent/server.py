@@ -4350,6 +4350,9 @@ def generate_reference_draft():
                 raise ValueError("该帧已有已核验人工真值，请直接复用或另选未标注帧")
             raise ValueError("该帧已有历史标注，请先载入历史标注并完成人工复核")
         auto_detect_visible = body.get("auto_detect_visible") is True
+        probe_missing_selected = body.get("probe_missing_selected") is True
+        if probe_missing_selected and not auto_detect_visible:
+            raise ValueError("类别补漏只适用于自动识别参考帧模式")
         defer_class_audit = body.get("defer_class_audit") is True
         defer_agent_review = body.get("defer_agent_review") is True
         max_rounds = requested_review_rounds(body)
@@ -4434,7 +4437,8 @@ def generate_reference_draft():
                         phase="discovering_retry", discovery_attempt=2,
                         error=f"首次类别结构不合规，正在自动重试：{str(error)[:300]}"))
                 selected, recall_probes = candidate_labels_with_recall_probes(
-                    discovery, labels)
+                    discovery, labels,
+                    probe_missing_selected=probe_missing_selected)
                 discovery["recall_probe_labels"] = recall_probes
                 if not selected:
                     raise ValueError("VLM 未发现可生成候选的已知类别；请改用单类别起稿或点提示 SAM")
@@ -4476,6 +4480,7 @@ def generate_reference_draft():
                 "max_review_rounds": max_rounds,
                 "sam_prompts": prompt_payload,
                 "auto_detect_visible": auto_detect_visible,
+                "probe_missing_selected": probe_missing_selected,
                 "defer_class_audit": defer_class_audit,
                 "defer_agent_review": defer_agent_review,
                 "discovery_sha256": discovery_sha256,
@@ -4489,6 +4494,7 @@ def generate_reference_draft():
                 "input_sha256": input_sha256,
                 "labels": selected,
                 "auto_detect_visible": auto_detect_visible,
+                "probe_missing_selected": probe_missing_selected,
                 "discovery_sha256": discovery_sha256,
                 "pipeline_config_sha256": pipeline_config_sha256,
             })
@@ -4521,6 +4527,7 @@ def generate_reference_draft():
                 "frame": index,
                 "labels": selected,
                 "auto_detect_visible": auto_detect_visible,
+                "probe_missing_selected": probe_missing_selected,
                 "visible_label_discovery": discovery,
                 "discovery_sha256": discovery_sha256,
                 "sam_prompts": prompt_payload,
@@ -4592,6 +4599,7 @@ def generate_reference_draft():
             "pipeline_config_sha256": pipeline_config_sha256,
             "sam_prompts": prompt_payload,
             "auto_detect_visible": auto_detect_visible,
+            "probe_missing_selected": probe_missing_selected,
             "visible_label_discovery": discovery,
             "description_source": description_source,
             "discovery_sha256": discovery_sha256,
@@ -4637,6 +4645,7 @@ def generate_reference_draft():
                            prior_candidate_revision_id=(revision.get("revision_id") if revision else None),
                            candidate_revision_count=len(state.get("candidate_revisions", {}).get(str(index), [])),
                            auto_detect_visible=auto_detect_visible,
+                            probe_missing_selected=probe_missing_selected,
                            description_source=description_source,
                            visible_label_discovery=discovery,
                            discovery_sha256=discovery_sha256,

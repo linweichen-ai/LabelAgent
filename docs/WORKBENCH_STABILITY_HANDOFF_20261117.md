@@ -1924,4 +1924,4 @@ Round222 安全收紧后继续全仓检查，发现 `tools/browser_description_r
 
 本轮没有模型推理、候选、人工真值、训练批准、微调、后训练或OSS写入。完整说明见 [第二百二十三轮报告](DESCRIPTION_RECOVERY_REFINEMENT_CANCEL_ROUND223_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/description-recovery-refinement-cancel-round223.json)。
 
-实现、文档及 GitHub/CNB 精确回读提交号将在本轮远端同步完成后回填。
+实现、测试和首版文档提交 `17af0ffc1474da2c5983edaa15e3c2ae0df31ae8` 已推送并分别回读 GitHub/CNB，同名分支两端精确匹配；回读回执提交号将在回执同步完成后补入。未跟踪实验产物和厂内内容均未上传。

@@ -103,7 +103,11 @@
 - 没有写 OSS；
 - 本轮提升的是验收可信度和取消控制准确性，不是模型精度。
 
-机器证据见 `docs/evidence/workbench-stability-20261117/description-recovery-refinement-cancel-round223.json`。远端提交和回读信息将在同步后补入。
+机器证据见 `docs/evidence/workbench-stability-20261117/description-recovery-refinement-cancel-round223.json`。
+
+## 代码与文档同步
+
+实现、测试、详细报告、机器证据和总交接文档提交为 `17af0ffc1474da2c5983edaa15e3c2ae0df31ae8`。推送后分别回读 GitHub 与 CNB 的 `codex/workbench-stability-20261117` 分支，两端均精确匹配该提交；回读回执提交号将在回执同步完成后补入。未跟踪实验产物和厂内内容没有进入远端仓库。
 
 ## 下一步
 

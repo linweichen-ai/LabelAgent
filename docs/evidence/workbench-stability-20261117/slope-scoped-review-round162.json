@@ -1,0 +1,98 @@
+{
+  "round": 162,
+  "recorded_at": "2026-11-18T13:28:22+08:00",
+  "status": "SCOPED_SLOPE_DECISION_AND_ASSISTANT_SUGGESTIONS_VERIFIED",
+  "objective": "Reduce the human cost of reviewing the 32-frame slope packet without converting assistant opinions into human truth or training data.",
+  "problem": "A no-slope decision previously required a full-frame truth save, which forced reviewers to re-check unrelated classes. The packet also had no bounded assistant preview to focus attention on ambiguous slope geometry.",
+  "implementation": {
+    "assistant_schema": "labelagent.slope-assistant-review.v1",
+    "decision_schema": "labelagent.slope-review-decision.v1",
+    "assistant_suggestions": 32,
+    "assistant_boundary": {
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "auto_submit_allowed": false,
+      "ui_preselects_decision": false
+    },
+    "allowed_human_decisions": [
+      "slope_present_and_mask_acceptable",
+      "slope_present_mask_needs_correction",
+      "no_slope_present",
+      "uncertain"
+    ],
+    "decision_binding": "POST decisions must match the active packet, manifest SHA-256, source-frame SHA-256, current slope-geometry SHA-256, reviewer identity, review start time, idempotency key, and optionally the exact assistant proposal SHA-256.",
+    "dirty_geometry_behavior": "If the browser draft geometry differs from the content-bound slope geometry, scoped sign-off is disabled and the reviewer must use the full truth gate.",
+    "decision_storage": "Append-only per-packet decision chain under work/review_packets/<packet>/decisions.",
+    "truth_boundary": "Scoped decisions do not call the full truth save endpoint and remain human_truth=false, approved_for_training=false, training_return_allowed=false."
+  },
+  "assistant_review": {
+    "path_in_formal_runtime": "D:\\Apps\\LabelAgent\\work\\review_packets\\slope-round160\\assistant-review.json",
+    "sha256": "BBD212CF06CC0CE8DF23817B04AF9F26B01012A203279C3B66A2E2020B159E83",
+    "positive_proxy_proposals": 8,
+    "negative_cohort_proposals": 24,
+    "medium_confidence_boundary_case": 95,
+    "interpretation": "The suggestions are an assistant review aid derived from the already-bound packet views. They are not current human labels and cannot unlock training."
+  },
+  "browser_acceptance": {
+    "environment": "Fresh isolated copy of formal state, file sessions, file library, packet manifest, and assistant review on port 8875.",
+    "passed": true,
+    "elapsed_ms": 3283,
+    "opened_frame": 74,
+    "opened_topic": "/CVAT/Task3/images",
+    "source_frame_sha256": "10D8ED84741C0031C935349DD200804B465C149956728E50A37A2096A151C34C",
+    "assistant_text_visible": true,
+    "decision_preselected": "",
+    "decision_submit_disabled": true,
+    "truth_write_requests": 0,
+    "page_errors": 0,
+    "failed_requests": 0,
+    "http_4xx_5xx": 0,
+    "result_sha256": "FB569882303B586551F3B779B17BE810559258CD331507F41820120891CCFE2F",
+    "screenshot_sha256": "8886F04EE135298ECFD7A4EA0FA9E1DE095F22839D5FE987020EB2ADA2317C51",
+    "local_untracked_result": "artifacts/round162-slope-scoped-review-browser/result.json",
+    "local_untracked_screenshot": "artifacts/round162-slope-scoped-review-browser/review-packet-frame74.png"
+  },
+  "verification": {
+    "targeted_python": "6 passed, 7 subtests passed",
+    "full_python_regression": "906 passed, 186 subtests passed",
+    "full_web_regression": "103/103 passed",
+    "javascript_syntax": "passed",
+    "python_compile": "passed",
+    "git_diff_check": "passed"
+  },
+  "formal_deployment": {
+    "runtime": "D:\\Apps\\LabelAgent",
+    "backup_manifest": "D:\\Apps\\LabelAgent\\.local\\backups\\slope-scoped-review-round162-20261118-131421\\DEPLOYMENT-MANIFEST.json",
+    "gpu_manager_pid_preserved": 138436,
+    "workbench_restarted_only": true,
+    "workbench_pid_after": 286756,
+    "asset_cache_version": 163,
+    "manager_http_ok": true,
+    "workbench_http_ok": true,
+    "sam_ready": true,
+    "vlm_ready": true,
+    "run_status": "idle",
+    "run_readiness": "ready",
+    "formal_active_dataset_preserved": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap",
+    "formal_active_topic_preserved": "/capture/camera_1/image",
+    "packet_index": {
+      "packets": 1,
+      "rejected_packets": 0,
+      "assistant_proposals_loaded": 32,
+      "human_truth_frames": 0,
+      "training_approved_frames": 0,
+      "pending_human_review": 32
+    },
+    "formal_decisions": 0,
+    "formal_truth_written": false,
+    "formal_training_data_written": false,
+    "state_sha256_before_and_after": "D671DD5818A225BC774AC7E71ECFF612CB3AED67DE6B1985E5CD9E3233BE8085",
+    "file_sessions_sha256_before_and_after": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "runtime_hashes_match_worktree": true,
+    "isolated_port_8875_released": true
+  },
+  "publication_boundary": "Factory images, assistant-review.json, browser result, screenshot, and the illustrated acceptance document remain local untracked artifacts. Source, tests, and this non-image structured record may be synchronized.",
+  "model_training_boundary": "This round does not fine-tune or post-train SAM. No new model checkpoint exists. Human review is still required before any train/test split or model-accuracy claim.",
+  "remaining_gate": "A human must explicitly review the 32 packet frames. Only then can confirmed samples be split into non-overlapping training and evaluation sets for a bounded fine-tuning experiment."
+}

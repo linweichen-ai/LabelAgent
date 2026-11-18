@@ -70,6 +70,8 @@ file_sessions_dirty = False
 batch_review_index_cache = None
 DEFAULT_REVIEW_ROUNDS = 6
 REVIEW_PACKET_SCHEMA = "labelagent.slope-review-packet.v1"
+REVIEW_PACKET_ASSISTANT_SCHEMA = "labelagent.slope-assistant-review.v1"
+REVIEW_PACKET_DECISION_SCHEMA = "labelagent.slope-review-decision.v1"
 REVIEW_PACKET_ACCEPT_DECISIONS = {
     "slope_present_and_mask_acceptable",
     "slope_present_mask_needs_correction",
@@ -2185,6 +2187,7 @@ def _read_review_packet(packet_id):
             "human_truth": False,
             "approved_for_training": False,
             "training_return_allowed": False,
+            "allowed_human_decisions": list(decisions),
         })
     summary = value.get("summary") or {}
     if summary.get("frames") != len(normalized_rows):
@@ -2197,10 +2200,15 @@ def _read_review_packet(packet_id):
             or summary.get("human_truth_frames") != 0
             or summary.get("training_approved_frames") != 0):
         raise ValueError("专项复核包汇总越过来源或训练隔离门禁")
+    manifest_sha256 = hashlib.sha256(raw).hexdigest()
+    proposals = _read_review_packet_assistant_proposals(
+        path.parent, _review_packet_id(packet_id), manifest_sha256, normalized_rows)
+    for row in normalized_rows:
+        row["assistant_proposal"] = proposals.get(row["frame"])
     return {
         "schema_version": REVIEW_PACKET_SCHEMA,
         "packet_id": _review_packet_id(packet_id),
-        "manifest_sha256": hashlib.sha256(raw).hexdigest(),
+        "manifest_sha256": manifest_sha256,
         "mcap_path": str(Path(mcap).resolve()),
         "mcap_sha256": value["mcap_sha256"].lower(),
         "mcap_available": Path(mcap).is_file(),
@@ -2216,7 +2224,103 @@ def _read_review_packet(packet_id):
         "rows": normalized_rows,
         "read_only_packet": True,
         "submits_human_truth": False,
+        "assistant_proposals_loaded": len(proposals),
     }
+
+
+def _read_review_packet_assistant_proposals(folder, packet_id, manifest_sha256, rows):
+    """Read optional assistant suggestions without allowing them to become decisions."""
+    path = folder / "assistant-review.json"
+    if not path.exists():
+        return {}
+    raw = path.read_bytes()
+    if len(raw) > 1024 * 1024:
+        raise ValueError("专项复核助手建议文件过大")
+    try:
+        value = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError("专项复核助手建议不是有效 UTF-8 JSON") from error
+    if (not isinstance(value, dict)
+            or value.get("schema_version") != REVIEW_PACKET_ASSISTANT_SCHEMA
+            or value.get("packet_id") != packet_id
+            or value.get("manifest_sha256") != manifest_sha256):
+        raise ValueError("专项复核助手建议未绑定当前清单")
+    packet_rows = {row["frame"]: row for row in rows}
+    proposals = {}
+    for proposal in value.get("rows", []):
+        if not isinstance(proposal, dict):
+            raise ValueError("专项复核助手建议行无效")
+        frame = proposal.get("frame")
+        row = packet_rows.get(frame)
+        decision = proposal.get("proposed_decision")
+        rationale = proposal.get("rationale")
+        confidence = proposal.get("confidence_band")
+        if frame in proposals or row is None:
+            raise ValueError("专项复核助手建议包含未知或重复帧")
+        if decision not in row["allowed_human_decisions"]:
+            raise ValueError("专项复核助手建议决定不在人工允许集合")
+        if confidence not in {"high", "medium", "low"}:
+            raise ValueError("专项复核助手建议置信分档无效")
+        if not isinstance(rationale, str) or not rationale.strip() or len(rationale) > 500:
+            raise ValueError("专项复核助手建议理由无效")
+        if (proposal.get("assistant_only") is not True
+                or proposal.get("human_truth") is not False
+                or proposal.get("approved_for_training") is not False
+                or proposal.get("auto_submit_allowed") is not False):
+            raise ValueError("专项复核助手建议越过人工/训练隔离门禁")
+        sanitized = {
+            "proposed_decision": decision,
+            "confidence_band": confidence,
+            "rationale": rationale.strip(),
+            "assistant_only": True,
+            "human_truth": False,
+            "approved_for_training": False,
+            "auto_submit_allowed": False,
+        }
+        sanitized["proposal_sha256"] = _sha256_json(sanitized)
+        proposals[frame] = sanitized
+    return proposals
+
+
+def _review_packet_decision_folder(packet_id):
+    folder = (_review_packet_path(packet_id).parent / "decisions").resolve()
+    root = (WORK / "review_packets" / _review_packet_id(packet_id)).resolve()
+    if folder.parent != root:
+        raise ValueError("专项复核决定路径越界")
+    return folder
+
+
+def _review_packet_decision_records(packet):
+    """Read and verify the append-only, packet-bound scoped decision chain."""
+    folder = _review_packet_decision_folder(packet["packet_id"])
+    records = []
+    previous = None
+    for path in sorted(folder.glob("*.json")) if folder.exists() else []:
+        value = json.loads(path.read_text(encoding="utf-8"))
+        decision_id = value.get("decision_id") if isinstance(value, dict) else None
+        body = {key: copy.deepcopy(item) for key, item in value.items()
+                if key != "decision_id"} if isinstance(value, dict) else {}
+        if (body.get("schema_version") != REVIEW_PACKET_DECISION_SCHEMA
+                or body.get("packet_id") != packet["packet_id"]
+                or body.get("manifest_sha256") != packet["manifest_sha256"]
+                or body.get("previous_decision_id") != previous
+                or not _valid_sha256(decision_id)
+                or _sha256_json(body) != decision_id
+                or body.get("human_truth") is not False
+                or body.get("approved_for_training") is not False
+                or body.get("training_return_allowed") is not False):
+            raise RuntimeError(f"专项复核决定审计链损坏：{path.name}")
+        value["decision_id"] = decision_id
+        records.append(value)
+        previous = decision_id
+    return records
+
+
+def _current_review_packet_decisions(packet):
+    latest = {}
+    for record in _review_packet_decision_records(packet):
+        latest[record["frame"]] = record
+    return [latest[row["frame"]] for row in packet["rows"] if row["frame"] in latest]
 
 
 def _review_packet_summary(packet):
@@ -2225,7 +2329,7 @@ def _review_packet_summary(packet):
         key: copy.deepcopy(packet[key]) for key in (
             "schema_version", "packet_id", "manifest_sha256", "mcap_sha256",
             "mcap_available", "topic", "summary", "read_only_packet",
-            "submits_human_truth")
+            "submits_human_truth", "assistant_proposals_loaded")
     } | {
         "title": f"斜坡集中复核 · {packet['summary']['frames']} 帧",
         "active_file": current_path == packet["mcap_path"],
@@ -2372,6 +2476,141 @@ def activate_review_packet(packet_id):
             "training_data_written": False,
         }
         return jsonify(**payload)
+
+
+@app.get('/api/review_packets/<packet_id>/decisions')
+def get_review_packet_decisions(packet_id):
+    """Return current scoped decisions without promoting them to frame truth."""
+    with lock:
+        packet = _read_review_packet(packet_id)
+        records = _review_packet_decision_records(packet)
+        return jsonify(
+            schema_version="labelagent.slope-review-decision-index.v1",
+            packet_id=packet["packet_id"],
+            manifest_sha256=packet["manifest_sha256"],
+            decisions=_current_review_packet_decisions(packet),
+            history_count=len(records),
+            human_truth_written=False,
+            training_data_written=False,
+        )
+
+
+@app.post('/api/review_packets/<packet_id>/decisions')
+def submit_review_packet_decision(packet_id):
+    """Append an explicit human slope decision bound to the exact source frame.
+
+    This is deliberately narrower than full-frame human truth.  It advances the
+    packet review queue but cannot approve training data or make the frame a
+    reusable reference.
+    """
+    body = request.get_json() or {}
+    review = _parse_review(body)
+    with lock:
+        packet = _read_review_packet(packet_id)
+        if body.get("expected_manifest_sha256") != packet["manifest_sha256"]:
+            raise StaleHumanReviewError("专项复核清单已变化，请刷新后重新确认")
+        if (state.get("video") is None
+                or str(state["video"].path.resolve()) != packet["mcap_path"]
+                or state.get("topic") != packet["topic"]):
+            raise StaleHumanReviewError("当前文件或相机不是专项复核包绑定的数据")
+        frame = body.get("frame")
+        if isinstance(frame, bool) or not isinstance(frame, int):
+            raise ValueError("专项复核决定必须包含整数帧号")
+        matches = [row for row in packet["rows"] if row["frame"] == frame]
+        if len(matches) != 1:
+            raise ValueError("专项复核帧不在当前清单中")
+        row = matches[0]
+        decision = body.get("decision")
+        if decision not in row["allowed_human_decisions"]:
+            raise ValueError("专项复核决定不在允许集合中")
+        expected_frame = body.get("expected_frame_sha256")
+        if expected_frame != row["source_frame_sha256"]:
+            raise StaleHumanReviewError("专项复核原图绑定已变化")
+        frame_sha256 = hashlib.sha256(frame_image(frame)).hexdigest()
+        if frame_sha256 != expected_frame:
+            raise StaleHumanReviewError("专项复核原图内容已变化")
+        slope_geometry = [copy.deepcopy(shape)
+                          for shape in state.get("truth", {}).get(str(frame), [])
+                          if str(shape.get("label", "")).strip().lower() == "slope"]
+        slope_geometry_sha256 = _sha256_json(slope_geometry)
+        if body.get("expected_slope_geometry_sha256") != slope_geometry_sha256:
+            raise StaleHumanReviewError("专项复核斜坡候选几何已变化")
+        if decision.startswith("slope_present") and not slope_geometry:
+            raise ValueError("当前帧没有可供复核的斜坡候选轮廓")
+        proposal = row.get("assistant_proposal")
+        expected_proposal = body.get("expected_assistant_proposal_sha256")
+        current_proposal = proposal.get("proposal_sha256") if proposal else None
+        if expected_proposal != current_proposal:
+            raise StaleHumanReviewError("助手建议已变化，请刷新后重新确认")
+        records = _review_packet_decision_records(packet)
+        idempotent = [item for item in records if item.get("decision_idempotency_key")
+                      == review["decision_idempotency_key"]]
+        if len(idempotent) > 1:
+            raise RuntimeError("专项复核决定幂等键重复")
+        if idempotent:
+            existing = idempotent[0]
+            expected = {
+                "packet_id": packet["packet_id"],
+                "manifest_sha256": packet["manifest_sha256"],
+                "file": packet["mcap_path"], "topic": packet["topic"],
+                "frame": frame, "frame_sha256": frame_sha256,
+                "decision": decision,
+                "reviewer_declared_id": review["reviewer_declared_id"],
+                "started_at": review["started_at"], "note": review["note"],
+                "assistant_proposal_sha256": current_proposal,
+                "slope_geometry_sha256": slope_geometry_sha256,
+            }
+            if any(existing.get(key) != value for key, value in expected.items()):
+                raise ValueError("该幂等键对应另一项专项复核决定")
+            return jsonify(decision_receipt=existing,
+                           readback={"verified": True, "idempotent_replay": True},
+                           human_truth_written=False, training_data_written=False)
+        finished = datetime.now(timezone.utc)
+        started = datetime.fromisoformat(review["started_at"].replace("Z", "+00:00"))
+        record_body = {
+            "schema_version": REVIEW_PACKET_DECISION_SCHEMA,
+            "sequence": len(records) + 1,
+            "previous_decision_id": records[-1]["decision_id"] if records else None,
+            "packet_id": packet["packet_id"],
+            "manifest_sha256": packet["manifest_sha256"],
+            "file": packet["mcap_path"], "topic": packet["topic"],
+            "frame": frame, "frame_sha256": frame_sha256,
+            "decision": decision,
+            "review_scope": "slope_presence_and_visible_mask_quality",
+            "slope_geometry_sha256": slope_geometry_sha256,
+            "slope_candidate_count": len(slope_geometry),
+            **review,
+            "decided_at": finished.isoformat().replace("+00:00", "Z"),
+            "elapsed_seconds": round(max(0.0, (finished - started).total_seconds()), 3),
+            "assistant_proposal_sha256": current_proposal,
+            "assistant_proposal_matched": bool(
+                proposal and proposal.get("proposed_decision") == decision),
+            "identity_assurance": "self_declared",
+            "human_decision": True,
+            "human_truth": False,
+            "approved_for_training": False,
+            "training_return_allowed": False,
+        }
+        decision_id = _sha256_json(record_body)
+        record = {**record_body, "decision_id": decision_id}
+        folder = _review_packet_decision_folder(packet["packet_id"])
+        folder.mkdir(parents=True, exist_ok=True)
+        destination = folder / f"{record['sequence']:06d}-{decision_id}.json"
+        temporary = folder / f".{uuid.uuid4().hex}.tmp"
+        temporary.write_text(json.dumps(record, ensure_ascii=False, indent=2,
+                                        sort_keys=True), encoding="utf-8")
+        _commit_work_file(temporary, destination)
+        persisted = _review_packet_decision_records(packet)
+        verified = bool(persisted and persisted[-1] == record)
+        if not verified:
+            raise RuntimeError("专项复核决定写入后读回校验失败")
+        return jsonify(
+            decision_receipt=record,
+            readback={"verified": True, "idempotent_replay": False,
+                      "audit_file": destination.name},
+            human_truth_written=False,
+            training_data_written=False,
+        )
 
 
 @app.get('/api/files')

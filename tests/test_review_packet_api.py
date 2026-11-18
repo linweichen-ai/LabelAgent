@@ -2,6 +2,7 @@ import hashlib
 import json
 from pathlib import Path
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -101,6 +102,102 @@ class ReviewPacketApiTests(unittest.TestCase):
         self.assertEqual(response.json["rejected_packets"], 1)
         self.assertFalse(response.json["raw_images_served"])
         self.assertFalse(response.json["auto_truth_submission"])
+
+    def test_assistant_proposal_is_hash_bound_and_never_becomes_a_decision(self):
+        packet = server._read_review_packet("slope-round")
+        proposal = {
+            "schema_version": "labelagent.slope-assistant-review.v1",
+            "packet_id": "slope-round",
+            "manifest_sha256": packet["manifest_sha256"],
+            "rows": [{
+                "frame": 7,
+                "proposed_decision": "slope_present_and_mask_acceptable",
+                "confidence_band": "high",
+                "rationale": "Visible transition ramp; candidate follows the visible boundary.",
+                "assistant_only": True,
+                "human_truth": False,
+                "approved_for_training": False,
+                "auto_submit_allowed": False,
+            }],
+        }
+        (self.packet / "assistant-review.json").write_text(
+            json.dumps(proposal), encoding="utf-8")
+        loaded = server._read_review_packet("slope-round")
+        suggestion = loaded["rows"][0]["assistant_proposal"]
+        self.assertEqual(suggestion["proposed_decision"],
+                         "slope_present_and_mask_acceptable")
+        self.assertTrue(suggestion["assistant_only"])
+        self.assertFalse(suggestion["human_truth"])
+        self.assertFalse(suggestion["approved_for_training"])
+        self.assertFalse(suggestion["auto_submit_allowed"])
+        self.assertEqual(len(suggestion["proposal_sha256"]), 64)
+        self.assertEqual(loaded["assistant_proposals_loaded"], 1)
+        proposal["rows"][0]["auto_submit_allowed"] = True
+        (self.packet / "assistant-review.json").write_text(
+            json.dumps(proposal), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "隔离门禁"):
+            server._read_review_packet("slope-round")
+
+    def test_scoped_decision_is_append_only_idempotent_and_writes_no_truth(self):
+        frame_bytes = b"exact-review-frame"
+        self.value = manifest(
+            self.mcap, frame_sha=hashlib.sha256(frame_bytes).hexdigest())
+        (self.packet / "manifest.json").write_text(
+            json.dumps(self.value, ensure_ascii=False), encoding="utf-8")
+        packet = server._read_review_packet("slope-round")
+        old_state, old_status = server.state, server.run_status
+        slope_shape = {"label": "slope", "points": [[1, 1], [4, 1], [4, 4]],
+                       "holes": []}
+        server.state = {"video": SimpleNamespace(path=self.mcap), "topic": "/camera",
+                        "truth": {"7": [slope_shape]}, "candidates": {}, "config": {}}
+        server.run_status = {"status": "idle"}
+        review = {"reviewer_declared_id": "human-reviewer",
+                  "started_at": "2026-11-18T05:00:00Z", "note": "slope only",
+                  "decision_idempotency_key": "slope-review-frame-7-v1"}
+        request_body = {
+            "frame": 7,
+            "decision": "slope_present_and_mask_acceptable",
+            "expected_manifest_sha256": packet["manifest_sha256"],
+            "expected_frame_sha256": hashlib.sha256(frame_bytes).hexdigest(),
+            "expected_assistant_proposal_sha256": None,
+            "expected_slope_geometry_sha256": server._sha256_json([slope_shape]),
+            "review": review,
+        }
+        try:
+            with patch.object(server, "frame_image", return_value=frame_bytes), \
+                 patch.object(server, "save") as save_mock:
+                client = server.app.test_client()
+                response = client.post(
+                    "/api/review_packets/slope-round/decisions", json=request_body)
+                replay = client.post(
+                    "/api/review_packets/slope-round/decisions", json=request_body)
+                listing = client.get("/api/review_packets/slope-round/decisions")
+            self.assertEqual(response.status_code, 200, response.json)
+            self.assertTrue(response.json["readback"]["verified"])
+            self.assertFalse(response.json["readback"]["idempotent_replay"])
+            receipt = response.json["decision_receipt"]
+            self.assertTrue(receipt["human_decision"])
+            self.assertFalse(receipt["human_truth"])
+            self.assertFalse(receipt["approved_for_training"])
+            self.assertFalse(receipt["training_return_allowed"])
+            self.assertFalse(response.json["human_truth_written"])
+            self.assertFalse(response.json["training_data_written"])
+            self.assertEqual(replay.status_code, 200, replay.json)
+            self.assertTrue(replay.json["readback"]["idempotent_replay"])
+            self.assertEqual(replay.json["decision_receipt"]["decision_id"],
+                             receipt["decision_id"])
+            self.assertEqual(listing.status_code, 200, listing.json)
+            self.assertEqual(listing.json["history_count"], 1)
+            self.assertEqual(len(listing.json["decisions"]), 1)
+            self.assertFalse(listing.json["human_truth_written"])
+            self.assertFalse(listing.json["training_data_written"])
+            self.assertEqual(server.state["truth"], {"7": [slope_shape]})
+            self.assertEqual(server.state["candidates"], {})
+            save_mock.assert_not_called()
+            files = list((self.packet / "decisions").glob("*.json"))
+            self.assertEqual(len(files), 1)
+        finally:
+            server.state, server.run_status = old_state, old_status
 
     def test_activation_requires_mcap_hash_and_reports_zero_truth_writes(self):
         old_state, old_status = server.state, server.run_status

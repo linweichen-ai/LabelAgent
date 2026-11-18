@@ -11,6 +11,11 @@
   const body = byId('reviewPacketBody');
   const queue = byId('reviewPacketQueue');
   const dock = byId('reviewPacketDock');
+  const assistantBox = byId('reviewPacketAssistant');
+  const reviewerInput = byId('reviewPacketReviewer');
+  const decisionSelect = byId('reviewPacketDecision');
+  const decisionNote = byId('reviewPacketDecisionNote');
+  const decisionSubmit = byId('reviewPacketDecisionSubmit');
   let catalog = [];
   let packet = null;
   let completed = new Map();
@@ -18,6 +23,26 @@
   let currentIndex = -1;
   let baseline = null;
   let busy = false;
+  let decisionStartedAt = null;
+  let decisionKey = null;
+
+  const decisionLabels = {
+    slope_present_and_mask_acceptable: '有斜坡 · 当前掩码可接受',
+    slope_present_mask_needs_correction: '有斜坡 · 掩码需要修正',
+    no_slope_present: '当前画面没有斜坡',
+    uncertain: '不确定 · 留待进一步复核',
+  };
+
+  function makeDecisionKey() {
+    if (globalThis.crypto?.randomUUID) return `slope-review-${crypto.randomUUID()}`;
+    return `slope-review-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
+
+  async function sha256Json(value) {
+    const bytes = new TextEncoder().encode(core.stableJson(value));
+    const digest = await crypto.subtle.digest('SHA-256', bytes);
+    return [...new Uint8Array(digest)].map(item => item.toString(16).padStart(2, '0')).join('');
+  }
 
   async function request(path, options = {}) {
     const response = await fetch(path, {cache: 'no-store', ...options});
@@ -39,6 +64,8 @@
     activateButton.disabled = value || !catalog.length;
     byId('reviewPacketRefresh').disabled = value;
     select.disabled = value || !catalog.length;
+    decisionSubmit.disabled = value || currentIndex < 0
+      || !reviewerInput.value.trim() || !decisionSelect.value;
     if (message) setStatus(message, value ? 'busy' : '');
   }
 
@@ -62,18 +89,26 @@
   function renderDock() {
     if (!packet || currentIndex < 0 || !packet.rows?.[currentIndex]) { dock.hidden = true; return; }
     const row = packet.rows[currentIndex];
-    const done = completed.has(Number(row.frame));
+    const receipt = completed.get(Number(row.frame));
+    const done = Boolean(receipt);
     dock.hidden = false;
     byId('reviewPacketDockTitle').textContent = `斜坡专项 · 第 ${row.frame} 帧 · ${currentIndex + 1}/${packet.rows.length}`;
-    byId('reviewPacketDockDetail').textContent = done
-      ? '已核对原图哈希并具备当前人工签名回执'
-      : '原图哈希已核对；仍需人工检查并点击“保存当前帧真值”';
+    byId('reviewPacketDockDetail').textContent = receipt?.type === 'slope_scoped_decision'
+      ? `已签署专项判断：${decisionLabels[receipt.decision] || receipt.decision}；未写入整帧真值或训练集`
+      : done ? '已核对原图哈希并具备当前完整人工真值回执'
+        : '原图哈希已核对；请签署专项判断，或修正轮廓后走完整真值门禁';
+    const proposal = row.assistant_proposal;
+    assistantBox.textContent = proposal
+      ? `助手预审（${proposal.confidence_band === 'high' ? '较高把握' : proposal.confidence_band === 'medium' ? '中等把握' : '低把握'}）：${decisionLabels[proposal.proposed_decision] || proposal.proposed_decision}。${proposal.rationale} 仅供参考，不会自动代选。`
+      : '当前帧没有助手预审建议；请独立作出人工判断。';
     byId('reviewPacketDockPrevious').disabled = busy || packet.rows.length < 2;
     byId('reviewPacketDockNext').disabled = busy || packet.rows.length < 2;
+    decisionSubmit.disabled = busy || !reviewerInput.value.trim() || !decisionSelect.value;
   }
 
   function rowNode(row, index) {
-    const done = completed.has(Number(row.frame));
+    const receipt = completed.get(Number(row.frame));
+    const done = Boolean(receipt);
     const button = document.createElement('button');
     button.type = 'button';
     button.className = `reviewPacketItem ${row.cohort === 'positive_proxy' ? 'positive' : 'negative'}${done ? ' complete' : ''}${index === currentIndex ? ' current' : ''}`;
@@ -86,9 +121,15 @@
     const title = document.createElement('strong');
     title.textContent = `第 ${row.frame} 帧 · ${cohortLabel(row)}`;
     const detail = document.createElement('small');
-    detail.textContent = done ? '当前人工回执已验证' : `${row.candidate_count} 个斜坡候选 · 等待人工复核`;
+    detail.textContent = receipt?.type === 'slope_scoped_decision'
+      ? decisionLabels[receipt.decision] || receipt.decision
+      : done ? '当前完整人工真值回执已验证'
+        : `${row.candidate_count} 个斜坡候选 · 等待人工复核`;
     const route = document.createElement('span');
-    route.textContent = done ? '不会自动回流训练' : `来源：${row.target_provenance || '未验证保存标注'}`;
+    route.textContent = done ? '专项完成，但不会自动回流训练'
+      : row.assistant_proposal
+        ? `助手建议：${decisionLabels[row.assistant_proposal.proposed_decision] || row.assistant_proposal.proposed_decision}`
+        : `来源：${row.target_provenance || '未验证保存标注'}`;
     copy.append(title, detail, route);
     button.append(frame, copy);
     button.addEventListener('click', () => openRow(index));
@@ -100,9 +141,9 @@
     const visible = rows.map((row, index) => ({row, index})).filter(item => matches(item.row));
     const done = rows.filter(row => completed.has(Number(row.frame))).length;
     const percent = rows.length ? Math.round(done / rows.length * 100) : 0;
-    byId('reviewPacketProgressTitle').textContent = `${done} / ${rows.length} 帧已正式复核`;
+    byId('reviewPacketProgressTitle').textContent = `${done} / ${rows.length} 帧已专项复核`;
     byId('reviewPacketProgressDetail').textContent = rows.length
-      ? `${rows.length - done} 帧待处理 · 只认可当前人工门禁、精确原图哈希和已提交事务`
+      ? `${rows.length - done} 帧待处理 · 只认可显式人工决定、精确原图哈希和不可变审计回执`
       : '等待选择复核包';
     byId('reviewPacketProgressPercent').textContent = `${percent}%`;
     byId('reviewPacketProgressBar').setAttribute('aria-valuenow', String(percent));
@@ -124,11 +165,16 @@
 
   async function refreshCompletion() {
     if (!packet?.ready_to_navigate) { completed = new Map(); render(); return; }
-    const [preparation, reviewData] = await Promise.all([
+    const [preparation, reviewData, decisionData] = await Promise.all([
       request('/api/reference-preparation'),
       request(`/api/human_reviews?topic=${encodeURIComponent(packet.topic)}`),
+      request(`/api/review_packets/${encodeURIComponent(packet.packet_id)}/decisions`),
     ]);
-    completed = core.completionMap(packet, preparation, reviewData.reviews || []);
+    if (decisionData.manifest_sha256 !== packet.manifest_sha256) {
+      throw new Error('专项复核决定索引与当前清单不一致');
+    }
+    completed = core.completionMap(packet, preparation, reviewData.reviews || [],
+      decisionData.decisions || []);
     render();
   }
 
@@ -138,6 +184,8 @@
     completed = new Map();
     currentIndex = -1;
     baseline = null;
+    decisionStartedAt = null;
+    decisionKey = null;
     render();
     if (packet.ready_to_navigate && refreshReceipts) await refreshCompletion();
     setStatus(packet.ready_to_navigate
@@ -234,9 +282,14 @@
       }
       baseline = {...snapshot, shapes_json: core.stableJson(snapshot.shapes || [])};
       currentIndex = index;
+      decisionStartedAt = new Date().toISOString();
+      decisionKey = makeDecisionKey();
+      reviewerInput.value = sessionStorage.getItem('labelagentReviewerDeclaredId') || '';
+      decisionSelect.value = '';
+      decisionNote.value = '';
       dialog.close();
       render();
-      window.labelAgentToast?.(`第 ${row.frame} 帧原图哈希已通过；请人工检查轮廓，确认后点击“保存当前帧真值”`);
+      window.labelAgentToast?.(`第 ${row.frame} 帧原图哈希已通过；可签署斜坡专项判断，修正轮廓则走完整真值门禁`);
     } catch (error) { setStatus(error.message, 'error'); window.labelAgentToast?.(error.message); }
     finally { setBusy(false); renderDock(); }
   }
@@ -246,6 +299,65 @@
     const start = currentIndex < 0 ? (direction < 0 ? 0 : -1) : currentIndex;
     const next = core.adjacentPendingIndex(packet.rows, completed, start, direction);
     if (next >= 0) await openRow(next);
+  }
+
+  async function submitScopedDecision() {
+    if (busy || currentIndex < 0 || !packet?.rows?.[currentIndex]) return;
+    const row = packet.rows[currentIndex];
+    const reviewer = reviewerInput.value.trim();
+    const decision = decisionSelect.value;
+    if (!reviewer) { window.labelAgentToast?.('请填写复核人自报标识'); reviewerInput.focus(); return; }
+    if (!row.allowed_human_decisions?.includes(decision)) {
+      window.labelAgentToast?.('请选择当前复核包允许的人工判断'); decisionSelect.focus(); return;
+    }
+    if (currentDraftIsDirty()) {
+      window.labelAgentToast?.('当前轮廓已经修改；请先通过完整真值门禁保存，或撤销修改后再签署专项判断');
+      return;
+    }
+    const snapshot = window.reviewPacketWorkbenchSnapshot?.();
+    if (!snapshot || core.normalizePath(snapshot.path) !== core.normalizePath(packet.mcap_path)
+        || snapshot.topic !== packet.topic || Number(snapshot.frame) !== Number(row.frame)) {
+      window.labelAgentToast?.('当前工作台作用域已变化，请重新打开该帧');
+      return;
+    }
+    const slopeGeometry = (snapshot.shapes || []).filter(shape =>
+      String(shape?.label || '').trim().toLowerCase() === 'slope');
+    const slopeGeometrySha256 = await sha256Json(slopeGeometry);
+    sessionStorage.setItem('labelagentReviewerDeclaredId', reviewer);
+    setBusy(true, '正在绑定原图、斜坡候选几何并写入专项人工决定；不会写入整帧真值或训练集…');
+    try {
+      const data = await request(`/api/review_packets/${encodeURIComponent(packet.packet_id)}/decisions`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          frame: row.frame, decision,
+          expected_manifest_sha256: packet.manifest_sha256,
+          expected_frame_sha256: row.source_frame_sha256,
+          expected_slope_geometry_sha256: slopeGeometrySha256,
+          expected_assistant_proposal_sha256: row.assistant_proposal?.proposal_sha256 || null,
+          review: {reviewer_declared_id: reviewer,
+            started_at: decisionStartedAt || new Date().toISOString(),
+            note: decisionNote.value.trim(),
+            decision_idempotency_key: decisionKey || makeDecisionKey()},
+        }),
+      });
+      const receipt = data.decision_receipt || {};
+      if (data.readback?.verified !== true || data.human_truth_written !== false
+          || data.training_data_written !== false || receipt.frame !== row.frame
+          || receipt.frame_sha256 !== row.source_frame_sha256
+          || receipt.slope_geometry_sha256 !== slopeGeometrySha256
+          || receipt.decision !== decision || receipt.human_truth !== false
+          || receipt.approved_for_training !== false) {
+        throw new Error('专项人工决定写入后读回不完整');
+      }
+      decisionStartedAt = new Date().toISOString();
+      decisionKey = makeDecisionKey();
+      await refreshCompletion();
+      setStatus(`第 ${row.frame} 帧专项人工决定已读回；没有写入整帧真值或训练集。`, 'ready');
+      window.labelAgentToast?.(`第 ${row.frame} 帧专项判断已签署；可进入下一帧`);
+    } catch (error) {
+      setStatus(error.message, 'error');
+      window.labelAgentToast?.(error.message);
+    } finally { setBusy(false); renderDock(); }
   }
 
   byId('openReviewPacketsButton').addEventListener('click', async () => {
@@ -271,6 +383,9 @@
   byId('reviewPacketDockQueue').addEventListener('click', () => { dialog.showModal(); render(); });
   byId('reviewPacketDockPrevious').addEventListener('click', () => navigate(-1));
   byId('reviewPacketDockNext').addEventListener('click', () => navigate(1));
+  reviewerInput.addEventListener('input', renderDock);
+  decisionSelect.addEventListener('change', renderDock);
+  decisionSubmit.addEventListener('click', submitScopedDecision);
   document.addEventListener('labelagent:human-truth-saved', async event => {
     if (!packet || core.normalizePath(event.detail?.path) !== core.normalizePath(packet.mcap_path)
         || event.detail?.topic !== packet.topic) return;

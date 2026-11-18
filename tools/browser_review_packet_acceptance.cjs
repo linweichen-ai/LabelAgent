@@ -21,7 +21,10 @@ const output = path.resolve(process.env.LABELAGENT_ACCEPTANCE_OUTPUT || 'artifac
     }
   });
   page.on('request', request => {
-    if (request.method() !== 'GET' && /\/api\/(truth|human_review)(?:$|\?)/.test(request.url())) writes.push(`${request.method()} ${request.url()}`);
+    if (request.method() !== 'GET' && (/\/api\/(truth|human_review)(?:$|\?)/.test(request.url())
+        || /\/api\/review_packets\/[^/]+\/decisions(?:$|\?)/.test(request.url()))) {
+      writes.push(`${request.method()} ${request.url()}`);
+    }
   });
   const started = Date.now();
   try {
@@ -48,13 +51,20 @@ const output = path.resolve(process.env.LABELAGENT_ACCEPTANCE_OUTPUT || 'artifac
         body: JSON.stringify({frame: 74, topic: state.topic})});
       return {state, binding: await response.json(), status: response.status,
         dock: document.querySelector('#reviewPacketDockDetail')?.textContent,
+        assistant: document.querySelector('#reviewPacketAssistant')?.textContent,
+        decision: document.querySelector('#reviewPacketDecision')?.value,
+        decisionSubmitDisabled: document.querySelector('#reviewPacketDecisionSubmit')?.disabled,
         dialogOpen: document.querySelector('#reviewPacketDialog')?.open};
     });
     await page.screenshot({path: path.join(output, 'review-packet-frame74.png'), fullPage: true});
     if (readback.status !== 200 || readback.binding.frame_sha256 !== '10d8ed84741c0031c935349dd200804b465c149956728e50a37a2096a151c34c') {
       throw new Error('Frame 74 binding does not match the packet');
     }
-    if (writes.length) throw new Error(`Unexpected truth write requests: ${writes.join(', ')}`);
+    if (writes.length) throw new Error(`Unexpected review write requests: ${writes.join(', ')}`);
+    if (!readback.assistant?.includes('助手预审') || readback.decision !== ''
+        || readback.decisionSubmitDisabled !== true) {
+      throw new Error('Assistant suggestion was not shown with a blank, disabled human decision gate');
+    }
     if (errors.length || failedRequests.length || httpErrors.length) {
       throw new Error(`Browser errors: ${[...errors, ...failedRequests, ...httpErrors].join(' | ')}`);
     }
@@ -63,6 +73,8 @@ const output = path.resolve(process.env.LABELAGENT_ACCEPTANCE_OUTPUT || 'artifac
         path: readback.state.path, topic: readback.state.topic, frame: readback.state.frame,
         annotation_state: readback.state.annotation_state, truth_verified: readback.state.truth_verified,
         frame_sha256: readback.binding.frame_sha256, dock: readback.dock,
+        assistant: readback.assistant, decision_preselected: readback.decision,
+        decision_submit_disabled: readback.decisionSubmitDisabled,
       }, dialog_closed_after_navigation: readback.dialogOpen === false,
       truth_write_requests: writes, page_errors: errors, failed_requests: failedRequests,
       http_errors: httpErrors,

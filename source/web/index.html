@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="/human-review.css?v=64">
   <link rel="stylesheet" href="/reference-prep.css?v=103">
   <link rel="stylesheet" href="/batch-review.css?v=64">
-  <link rel="stylesheet" href="/review-packet.css?v=161">
+  <link rel="stylesheet" href="/review-packet.css?v=163">
 </head>
 <body>
 <main class="workspace">
@@ -603,7 +603,7 @@
   <div id="reviewPacketStatus" class="reviewPacketStatus" role="status" aria-live="polite">正在读取本机复核包…</div>
   <div id="reviewPacketBody" class="reviewPacketBody" hidden>
     <div class="reviewPacketSummary">
-      <div><strong id="reviewPacketProgressTitle">0 / 0 帧已正式复核</strong><span id="reviewPacketProgressDetail">只有现有人工门禁的签名回执才计入完成</span></div>
+      <div><strong id="reviewPacketProgressTitle">0 / 0 帧已专项复核</strong><span id="reviewPacketProgressDetail">只认可精确绑定原图的显式人工决定或完整真值回执</span></div>
       <b id="reviewPacketProgressPercent">0%</b>
     </div>
     <div id="reviewPacketProgressBar" class="reviewPacketProgressBar" role="progressbar" aria-label="专项复核进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
@@ -612,19 +612,34 @@
       <button type="button" data-packet-filter="pending">待人工复核</button>
       <button type="button" data-packet-filter="positive_proxy">斜坡正候选</button>
       <button type="button" data-packet-filter="negative_cohort">困难负样本</button>
-      <button type="button" data-packet-filter="complete">已签署</button>
+      <button type="button" data-packet-filter="complete">已复核</button>
     </div>
     <div id="reviewPacketQueue" class="reviewPacketQueue" aria-live="polite"></div>
-    <p class="reviewPacketBoundary"><b>不会自动审批：</b>打开一帧只会切换数据、校验原图哈希并进入人工编辑画面。只有您检查后通过现有“保存当前帧真值”门禁，才会生成正式回执；复核包本身永不写入真值或训练集。</p>
+    <p class="reviewPacketBoundary"><b>不会自动审批：</b>助手建议只帮助定位。您可以签署“斜坡专项判断”，也可以修正轮廓后走完整真值门禁；专项判断只绑定斜坡存在性和当前候选几何，不会写入整帧真值或训练集。</p>
   </div>
 </dialog>
 <div id="reviewPacketDock" class="reviewPacketDock" hidden>
-  <div><strong id="reviewPacketDockTitle">专项复核</strong><small id="reviewPacketDockDetail">等待选择帧</small></div>
-  <button id="reviewPacketDockQueue" type="button">打开队列</button>
-  <button id="reviewPacketDockPrevious" type="button">← 上一帧</button>
-  <button id="reviewPacketDockNext" type="button" class="primary">下一帧 →</button>
+  <div class="reviewPacketDockSummary"><strong id="reviewPacketDockTitle">专项复核</strong><small id="reviewPacketDockDetail">等待选择帧</small></div>
+  <div id="reviewPacketAssistant" class="reviewPacketAssistant">助手建议将在校验原图后显示；不会自动代选。</div>
+  <div class="reviewPacketDecisionControls">
+    <input id="reviewPacketReviewer" type="text" maxlength="100" placeholder="复核人自报标识" aria-label="专项复核人自报标识">
+    <select id="reviewPacketDecision" aria-label="斜坡专项人工决定">
+      <option value="">请选择人工判断（助手不会代选）</option>
+      <option value="slope_present_and_mask_acceptable">有斜坡 · 当前掩码可接受</option>
+      <option value="slope_present_mask_needs_correction">有斜坡 · 掩码需要修正</option>
+      <option value="no_slope_present">当前画面没有斜坡</option>
+      <option value="uncertain">不确定 · 留待进一步复核</option>
+    </select>
+    <input id="reviewPacketDecisionNote" type="text" maxlength="500" placeholder="备注（可选）" aria-label="专项复核备注">
+    <button id="reviewPacketDecisionSubmit" type="button" class="primary">签署专项判断</button>
+  </div>
+  <div class="reviewPacketDockNav">
+    <button id="reviewPacketDockQueue" type="button">打开队列</button>
+    <button id="reviewPacketDockPrevious" type="button">← 上一帧</button>
+    <button id="reviewPacketDockNext" type="button" class="primary">下一帧 →</button>
+  </div>
 </div>
 <div id="toast" role="status"></div>
-<script src="/pointcloud.js?v=64"></script><script src="/app.js?v=162"></script><script src="/inspection.js?v=104"></script><script src="/guide.js?v=113"></script><script src="/review.js?v=67"></script><script src="/batch-review.js?v=65"></script><script src="/compare.js?v=65"></script><script src="/human-review.js?v=97"></script><script src="/reference-prep.js?v=162"></script><script src="/review-packet-core.js?v=161"></script><script src="/review-packet.js?v=162"></script>
+<script src="/pointcloud.js?v=64"></script><script src="/app.js?v=162"></script><script src="/inspection.js?v=104"></script><script src="/guide.js?v=113"></script><script src="/review.js?v=67"></script><script src="/batch-review.js?v=65"></script><script src="/compare.js?v=65"></script><script src="/human-review.js?v=97"></script><script src="/reference-prep.js?v=162"></script><script src="/review-packet-core.js?v=163"></script><script src="/review-packet.js?v=163"></script>
 </body>
 </html>

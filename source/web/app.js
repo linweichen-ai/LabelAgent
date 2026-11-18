@@ -702,19 +702,26 @@ $('downloadDebug').onclick=async()=>{
 let latestAgentJob={status:'idle'},runRequestStartedAt=null,runRequestPhase='preflight',runRequestFrame=null,runRequestCount=null,runRequestMaxRounds=6,runStatusFailureCount=0;
 function pendingRunResult(job=latestAgentJob){const id=job?.result_task_id||job?.task_id;return !!(job?.result_available&&id&&!runResultHandled.has(id))}
 function markRunResultHandled(taskId){if(taskId)runResultHandled.add(taskId)}
+function runJobIdentity(job=latestAgentJob){return job?.task_id||job?.result_task_id||null}
+function competingRunJob(taskId){const currentId=runJobIdentity(latestAgentJob);return !!(currentId&&currentId!==taskId&&(['running','stopping'].includes(latestAgentJob?.status)||latestAgentJob?.result_available))}
 function pendingRetry(){return retryFrames.length>0&&retryScope?.file===loadedDataPath&&retryScope?.topic===topic}
 async function recoverRunResult(job=latestAgentJob,{automatic=false}={}){
  const taskId=job?.result_task_id||job?.task_id;if(!taskId||runResultHandled.has(taskId))return false;
  if(automatic&&runResultAutoRestoreDeferred.has(taskId))return false;
  if(!automatic)runResultAutoRestoreDeferred.delete(taskId);
+ const recoveryPath=loadedDataPath,recoveryTopic=topic,recoveryNavigationGeneration=frameNavigationGeneration,recoveryWorkspaceMode=window.workspaceMode;
  const response=await fetch('/api/run/result?task_id='+encodeURIComponent(taskId),{cache:'no-store'}),data=await response.json();
  if(!response.ok)throw Error(data.error||'无法恢复上次运行结果');
- if(data.file!==loadedDataPath||data.topic!==topic)throw Error('上次结果不属于当前数据文件和图像源');
- for(const item of data.frames||[])if(Number.isInteger(item.frame))candidateCountIndex[String(item.frame)]=Math.max(0,Number(item.remaining)||0);
- refreshCandidateSummary();
+ if(data.task_id!==taskId)throw Error('上次运行结果的任务号不匹配，已拒绝更新当前页面');
+ if(data.file!==recoveryPath||data.topic!==recoveryTopic)throw Error('上次结果不属于请求恢复时的数据文件和图像源');
+ const operatorChanged=loadedDataPath!==recoveryPath||topic!==recoveryTopic||frameNavigationGeneration!==recoveryNavigationGeneration||window.workspaceMode!==recoveryWorkspaceMode;
+ if(competingRunJob(taskId)||operatorChanged){runResultAutoRestoreDeferred.add(taskId);renderRunButton();toast(competingRunJob(taskId)?'新的自动标注任务已经开始；旧候选仍保留在原帧，当前页面保持不变':'恢复期间您已切换数据、帧或工作模式；旧结果仍保留，当前页面保持不变');return false}
  const first=(data.frames||[]).find(item=>!item.failed&&item.remaining>0)||(data.frames||[]).find(item=>item.remaining>0);
  const opened=first?await openCandidateFrame(first.frame,data.topic):true;
  if(first&&!opened){runResultAutoRestoreDeferred.add(taskId);if((latestAgentJob?.result_task_id||latestAgentJob?.task_id)===taskId)latestAgentJob.result_available=true;renderRunButton();toast(`帧 ${first.frame} 的结果已保留；您已切换到其他位置，点击“查看上次结果”可再次打开`);return false}
+ if(competingRunJob(taskId)){runResultAutoRestoreDeferred.add(taskId);renderRunButton();toast('新的自动标注任务已经开始；旧候选仍保留在原帧，当前任务状态不变');return false}
+ for(const item of data.frames||[])if(Number.isInteger(item.frame))candidateCountIndex[String(item.frame)]=Math.max(0,Number(item.remaining)||0);
+ refreshCandidateSummary();
  runResultAutoRestoreDeferred.delete(taskId);
  markRunResultHandled(taskId);if((latestAgentJob?.result_task_id||latestAgentJob?.task_id)===taskId)latestAgentJob.result_available=false;renderRunButton();
  const failed=data.failed_frames||[],pending=(data.status==='running'||data.status==='failed')?(data.pending_frames||[]):[];

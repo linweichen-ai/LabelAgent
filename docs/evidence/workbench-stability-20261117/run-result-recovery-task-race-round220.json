@@ -1,0 +1,125 @@
+{
+  "schema_version": "labelagent.workbench-stability.round220.v1",
+  "round": 220,
+  "date": "2026-11-19",
+  "objective": "Prevent an older result recovery from taking over the page after a newer task or operator action appears.",
+  "status": "implemented_tested_and_production_deployed",
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "model_inference_performed": false,
+    "model_weights_changed": false,
+    "oss_written": false
+  },
+  "pre_fix_reproduction": {
+    "browser": "Microsoft Edge headless fresh context",
+    "asset": "/app.js?v=175",
+    "original": {
+      "frame": 74,
+      "topic": "/capture/camera_1/image",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap",
+      "mode": "manual",
+      "result_task": "round220-old"
+    },
+    "new_job_during_result_fetch": {"task_id": "round220-new", "status": "running"},
+    "after_old_result": {
+      "frame": 10,
+      "mode": "auto",
+      "old_task_handled": true,
+      "old_task_deferred": false,
+      "new_task_still_running": true,
+      "toast": "已恢复 1 帧结果，请继续人工复核"
+    },
+    "model_inference_requests": 0,
+    "truth_write_requests": 0,
+    "page_errors": 0,
+    "console_errors": 0
+  },
+  "implementation": {
+    "captures_result_task_id": true,
+    "captures_file_and_topic": true,
+    "captures_navigation_generation": true,
+    "captures_workspace_mode": true,
+    "rejects_mismatched_response_task": true,
+    "defers_when_newer_task_appears": true,
+    "defers_when_operator_scope_changes": true,
+    "candidate_count_updates_after_successful_open": true,
+    "asset_version": 176
+  },
+  "tests": {
+    "new_task_during_recovery": {"passed": 1, "failed": 0},
+    "operator_navigation_during_recovery": {"passed": 1, "failed": 0},
+    "all_web": {"passed": 122, "failed": 0, "elapsed_ms": 165.7773},
+    "all_python": {"passed": 980, "failed": 0, "subtests_passed": 186, "elapsed_seconds": 40.95, "environment": "PYTHONUTF8=1"},
+    "javascript_syntax": "passed",
+    "python_compile": "passed",
+    "git_diff_check": "passed"
+  },
+  "browser_acceptance": {
+    "browser": "Microsoft Edge headless fresh context",
+    "workbench_url": "http://127.0.0.1:8765",
+    "asset": "/app.js?v=176",
+    "checks_passed": 14,
+    "checks_failed": 0,
+    "original_frame_preserved": true,
+    "original_scope_preserved": true,
+    "manual_mode_preserved": true,
+    "old_task_not_handled": true,
+    "old_task_deferred": true,
+    "candidate_count_unchanged": true,
+    "new_task_still_running": true,
+    "operator_notice": "新的自动标注任务已经开始；旧候选仍保留在原帧，当前页面保持不变",
+    "model_inference_requests": 0,
+    "truth_write_requests": 0,
+    "page_errors": 0,
+    "console_errors": 0,
+    "accepted": true,
+    "local_untracked_artifacts": "artifacts/round220-result-recovery-task-race/",
+    "factory_image_uploaded": false
+  },
+  "deployment": {
+    "production_root": "D:\\Apps\\LabelAgent",
+    "backup_directory": "D:\\Apps\\LabelAgent\\.local\\backups\\run-result-task-race-round220-20261119-064802",
+    "backup_sha256": {
+      "app.js": "e614c6f750bc387b2a8046366256bd8e5fade7a2d15f3fce5b9c266956848654",
+      "index.html": "fa32f07b66ae1705a0b2f70a70974a4dfd98be463dbc17cfa068f092692bc0ad",
+      "state.json": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+      "file_sessions.json": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+      "remote_processes.json": "81f4a176a7f168789c7261d4f34b1faa23fec2580349b61775ae5dfa30fbbf39"
+    },
+    "workbench_manager_pid_before": 59604,
+    "workbench_manager_pid_after": 66384,
+    "workbench_listener_pid_before": 64748,
+    "workbench_listener_pid_after": 41340,
+    "tunnel_4090_pid_unchanged": 60456,
+    "sam_5090_tunnel_pid_unchanged": 8656,
+    "app_js_sha256": "8ea1da0a9ae153e992cb5870517bc3946cc1de437e31b9c614c7742f071980ed",
+    "index_html_sha256": "8dff2651334be553b6cf5876f51ad3dbee2a539ba4343e7f882ec3c704204e03"
+  },
+  "formal_state_integrity": {
+    "state_sha256_before": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "state_sha256_after": "1dcd67a8475a8dd1974c9a9b3d4bf68a56e1abd30cf2a9559c12e849e3d86f96",
+    "file_sessions_sha256_before": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "file_sessions_sha256_after": "202927e295cabc27b1f9583b6438d3e16c020809ee421bce1342c3aebc0367f5",
+    "unchanged": true
+  },
+  "service_health_after": {
+    "workbench_state_8765": 200,
+    "workbench_run_8765": 200,
+    "sam_4090_28766": 200,
+    "sam_5090_38766": 200,
+    "vlm_4090_28868": 200,
+    "run_status": "idle"
+  },
+  "source_sync": {
+    "implementation_commit": null,
+    "receipt_commit": null,
+    "branch": "codex/workbench-stability-20261117",
+    "github_readback": null,
+    "cnb_readback": null,
+    "both_remotes_matched": false,
+    "factory_images_uploaded": false,
+    "untracked_experiment_artifacts_uploaded": false
+  }
+}

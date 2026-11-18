@@ -488,7 +488,7 @@ test('中断回执恢复已完成结果并只排队未完成帧', async () => {
     latestAgentJob:{status:'idle',result_available:true,result_task_id:'interrupted-1'},
     runRequestStartedAt:null,runRequestPhase:'preflight',runRequestFrame:null,runRequestCount:null,
     runResultHandled:new Set(),runResultAutoRestoreDeferred:new Set(),retryFrames:[],retryScope:null,retryMode:'',
-    loadedDataPath:'/data.mcap',topic:'camera0',candidateCountIndex:{},
+    loadedDataPath:'/data.mcap',topic:'camera0',frameNavigationGeneration:0,candidateCountIndex:{},
     async fetch() { return {ok:true,async json(){return {
       task_id:'interrupted-1',status:'running',file:'/data.mcap',topic:'camera0',
       completed:1,frames:[{frame:1,remaining:2,failed:false}],pending_frames:[2,3],failed_frames:[]
@@ -514,7 +514,7 @@ test('候选恢复被用户导航取消后保留查看入口且不反复抢回�
   const h = harness({
     latestAgentJob:job, runResultHandled:new Set(), runResultAutoRestoreDeferred:new Set(),
     retryFrames:[],retryScope:null,retryMode:'',loadedDataPath:'/data.mcap',topic:'camera0',
-    candidateCountIndex:{},
+    frameNavigationGeneration:0,candidateCountIndex:{},
     async fetch() { fetchCount++; return {ok:true,async json(){return {
       task_id:'recover-cancelled-1',status:'completed',file:'/data.mcap',topic:'camera0',
       completed:1,frames:[{frame:10,remaining:2,failed:false}],pending_frames:[],failed_frames:[]
@@ -545,6 +545,66 @@ test('候选恢复被用户导航取消后保留查看入口且不反复抢回�
   assert.equal(h.run('pendingRunResult(latestAgentJob)'), false);
   assert.match(text, /recoverRunResult\(job,\{automatic:true\}\)/);
   assert.match(text, /\(latestAgentJob\?\.result_task_id\|\|latestAgentJob\?\.task_id\)===taskId/);
+});
+
+test('恢复旧结果期间出现更新任务时不抢帧、不改计数且保留旧候选', async () => {
+  let releaseResult, opened = 0, notice = '';
+  const blocked = new Promise(resolve => { releaseResult = resolve; });
+  const oldJob = {status:'idle',result_available:true,result_task_id:'old-task'};
+  const h = harness({
+    latestAgentJob:oldJob, runResultHandled:new Set(), runResultAutoRestoreDeferred:new Set(),
+    retryFrames:[],retryScope:null,retryMode:'',loadedDataPath:'/data.mcap',topic:'camera0',
+    frameNavigationGeneration:7,candidateCountIndex:{},
+    async fetch() { await blocked; return {ok:true,async json(){return {
+      task_id:'old-task',status:'completed',file:'/data.mcap',topic:'camera0',
+      completed:1,frames:[{frame:10,remaining:2,failed:false}],pending_frames:[],failed_frames:[]
+    }}}},
+    refreshCandidateSummary() {},
+    async openCandidateFrame() { opened++; return true; },
+    renderRunButton() {},
+    toast(message) { notice=message; },
+  });
+  const text = source('app.js');
+  h.run(section(text, 'function pendingRunResult', 'function formatAgentDuration'));
+  const recovery = h.run('recoverRunResult(latestAgentJob,{automatic:false})');
+  h.run("latestAgentJob={status:'running',task_id:'new-task',result_available:false}");
+  releaseResult();
+  assert.equal(await recovery, false);
+  assert.equal(opened, 0);
+  assert.equal(h.run("candidateCountIndex['10'] ?? null"), null);
+  assert.equal(h.run("runResultHandled.has('old-task')"), false);
+  assert.equal(h.run("runResultAutoRestoreDeferred.has('old-task')"), true);
+  assert.match(notice, /新的自动标注任务已经开始/);
+});
+
+test('恢复旧结果读取期间的新导航和工作模式优先于旧回执', async () => {
+  let releaseResult, opened = 0, notice = '';
+  const blocked = new Promise(resolve => { releaseResult = resolve; });
+  const job = {status:'idle',result_available:true,result_task_id:'old-task'};
+  const h = harness({
+    latestAgentJob:job, runResultHandled:new Set(), runResultAutoRestoreDeferred:new Set(),
+    retryFrames:[],retryScope:null,retryMode:'',loadedDataPath:'/data.mcap',topic:'camera0',
+    frameNavigationGeneration:7,candidateCountIndex:{},
+    async fetch() { await blocked; return {ok:true,async json(){return {
+      task_id:'old-task',status:'completed',file:'/data.mcap',topic:'camera0',
+      completed:1,frames:[{frame:10,remaining:2,failed:false}],pending_frames:[],failed_frames:[]
+    }}}},
+    refreshCandidateSummary() {},
+    async openCandidateFrame() { opened++; return true; },
+    renderRunButton() {},
+    toast(message) { notice=message; },
+  });
+  const text = source('app.js');
+  h.run(section(text, 'function pendingRunResult', 'function formatAgentDuration'));
+  const recovery = h.run('recoverRunResult(latestAgentJob,{automatic:false})');
+  h.run("frameNavigationGeneration++;window.workspaceMode='manual'");
+  releaseResult();
+  assert.equal(await recovery, false);
+  assert.equal(opened, 0);
+  assert.equal(h.run("candidateCountIndex['10'] ?? null"), null);
+  assert.equal(h.run("runResultHandled.has('old-task')"), false);
+  assert.equal(h.run("runResultAutoRestoreDeferred.has('old-task')"), true);
+  assert.match(notice, /恢复期间您已切换/);
 });
 
 test('瞬时故障重试时同一任务进度不倒退，新任务重新计数', () => {
@@ -998,7 +1058,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=175/);
+  assert.match(source('index.html'), /app\.js\?v=176/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1059,7 +1119,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=175/);
+  assert.match(source('index.html'), /app\.js\?v=176/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1107,7 +1167,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 3);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=175/);
+  assert.match(source('index.html'), /app\.js\?v=176/);
 });
 
 test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () => {

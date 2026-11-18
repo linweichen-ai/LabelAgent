@@ -144,6 +144,45 @@ def remote_start():
         raise RuntimeError("4090 服务启动请求失败：" + message)
 
 
+def remote_fast_ready(timeout=3):
+    """Check the optional 5090 VLM before creating a noisy local tunnel."""
+    try:
+        result = subprocess.run(
+            [str(SSH), "-o", "BatchMode=yes", "-o", f"ConnectTimeout={timeout}",
+             FAST_REMOTE_HOST,
+             "curl -fsS --max-time 2 http://127.0.0.1:18878/v1/models >/dev/null"],
+            stdin=subprocess.DEVNULL, capture_output=True, text=True,
+            encoding="utf-8", errors="replace", timeout=timeout + 2,
+            creationflags=subprocess.CREATE_NO_WINDOW)
+        return result.returncode == 0
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return False
+
+
+def start_optional_fast_tunnel(items, environment, newly_started):
+    """Start the optional tunnel only when its remote service is already ready."""
+    if "fast_tunnel" not in items:
+        if not remote_fast_ready():
+            raise RuntimeError("5090 远端 VLM 尚未就绪，已跳过可选安全通道")
+        tunnel_command = [
+            str(SSH), "-N", "-o", "BatchMode=yes", "-o", "ExitOnForwardFailure=yes",
+            "-o", "ConnectTimeout=10", "-o", "ServerAliveInterval=30",
+            "-o", "ServerAliveCountMax=6", "-o", "TCPKeepAlive=yes",
+            "-L", f"{FAST_VLM_PORT}:127.0.0.1:18878", FAST_REMOTE_HOST]
+        with (LOCAL / "logs" / "fast_vlm_tunnel.log").open("ab") as output:
+            process = subprocess.Popen(
+                tunnel_command, cwd=ROOT, env=environment, stdin=subprocess.DEVNULL,
+                stdout=output, stderr=output, creationflags=subprocess.CREATE_NO_WINDOW)
+        item = {"pid": process.pid, "created": psutil.Process(process.pid).create_time(),
+                "marker": f"{FAST_VLM_PORT}:127.0.0.1:18878",
+                "executable": str(SSH), "ports": [FAST_VLM_PORT]}
+        items["fast_tunnel"] = item
+        newly_started.append("fast_tunnel")
+        save(items)
+    wait_for(items["fast_tunnel"], ((FAST_VLM_PORT, "/v1/models"),),
+             optional_fast_wait_seconds(), "5090 可选加速通道")
+
+
 def start(open_browser):
     preflight()
     items = records()
@@ -190,24 +229,7 @@ def start(open_browser):
 
         fast_ready = False
         try:
-            if "fast_tunnel" not in items:
-                tunnel_command = [
-                    str(SSH), "-N", "-o", "BatchMode=yes", "-o", "ExitOnForwardFailure=yes",
-                    "-o", "ConnectTimeout=10", "-o", "ServerAliveInterval=30",
-                    "-o", "ServerAliveCountMax=6", "-o", "TCPKeepAlive=yes",
-                    "-L", f"{FAST_VLM_PORT}:127.0.0.1:18878", FAST_REMOTE_HOST]
-                with (LOCAL / "logs" / "fast_vlm_tunnel.log").open("ab") as output:
-                    process = subprocess.Popen(
-                        tunnel_command, cwd=ROOT, env=environment, stdin=subprocess.DEVNULL,
-                        stdout=output, stderr=output, creationflags=subprocess.CREATE_NO_WINDOW)
-                item = {"pid": process.pid, "created": psutil.Process(process.pid).create_time(),
-                        "marker": f"{FAST_VLM_PORT}:127.0.0.1:18878",
-                        "executable": str(SSH), "ports": [FAST_VLM_PORT]}
-                items["fast_tunnel"] = item
-                newly_started.append("fast_tunnel")
-                save(items)
-            wait_for(items["fast_tunnel"], ((FAST_VLM_PORT, "/v1/models"),),
-                     optional_fast_wait_seconds(), "5090 可选加速通道")
+            start_optional_fast_tunnel(items, environment, newly_started)
             fast_ready = True
         except Exception as error:
             stop_item(items.pop("fast_tunnel", {}))

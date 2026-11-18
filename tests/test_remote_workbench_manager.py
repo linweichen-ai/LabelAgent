@@ -3,6 +3,7 @@ from pathlib import Path
 import json
 import tempfile
 import unittest
+from unittest import mock
 
 
 PATH = Path(__file__).resolve().parents[1] / "tools" / "manage_remote_workbench.py"
@@ -30,6 +31,40 @@ class RemoteWorkbenchManagerTests(unittest.TestCase):
         self.assertIn(
             'optional_fast_wait_seconds(), "5090 可选加速通道")', source)
         self.assertNotIn('20, "5090 可选加速通道")', source)
+
+    def test_unready_remote_skips_optional_tunnel_without_spawning(self):
+        items = {}
+        newly_started = []
+        with (mock.patch.object(MODULE, "remote_fast_ready", return_value=False),
+              mock.patch.object(MODULE.subprocess, "Popen") as popen):
+            with self.assertRaisesRegex(RuntimeError, "尚未就绪"):
+                MODULE.start_optional_fast_tunnel(items, {}, newly_started)
+        popen.assert_not_called()
+        self.assertEqual(items, {})
+        self.assertEqual(newly_started, [])
+
+    def test_ready_remote_starts_and_verifies_optional_tunnel(self):
+        items = {}
+        newly_started = []
+        process = mock.Mock(pid=321)
+        process_record = mock.Mock()
+        process_record.create_time.return_value = 123.0
+        with (tempfile.TemporaryDirectory() as temporary,
+              mock.patch.object(MODULE, "LOCAL", Path(temporary)),
+              mock.patch.object(MODULE, "remote_fast_ready", return_value=True),
+              mock.patch.object(MODULE.subprocess, "Popen", return_value=process) as popen,
+              mock.patch.object(MODULE.psutil, "Process", return_value=process_record),
+              mock.patch.object(MODULE, "save") as save,
+              mock.patch.object(MODULE, "wait_for") as wait_for):
+            (Path(temporary) / "logs").mkdir()
+            MODULE.start_optional_fast_tunnel(items, {}, newly_started)
+        popen.assert_called_once()
+        save.assert_called_once_with(items)
+        wait_for.assert_called_once_with(
+            items["fast_tunnel"], ((MODULE.FAST_VLM_PORT, "/v1/models"),),
+            MODULE.optional_fast_wait_seconds(), "5090 可选加速通道")
+        self.assertEqual(newly_started, ["fast_tunnel"])
+        self.assertEqual(items["fast_tunnel"]["pid"], 321)
 
     def test_isolated_acceptance_uses_the_verified_primary_tunnels(self):
         self.assertEqual(MODULE.isolate_model_config(), {

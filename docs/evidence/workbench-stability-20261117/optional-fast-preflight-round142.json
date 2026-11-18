@@ -1,0 +1,71 @@
+{
+  "schema_version": "labelagent.optimization_acceptance.v1",
+  "round": 142,
+  "date": "2026-11-18",
+  "objective": "Skip creation of the optional 5090 tunnel when the remote VLM is not listening, while preserving the verified 4090 primary route and automatic 5090 enablement when ready.",
+  "diagnosis": {
+    "factory_5090_ssh_reachable": true,
+    "remote_port_18878_listening": false,
+    "remote_curl_available": true,
+    "previous_fast_tunnel_log_bytes": 24360,
+    "previous_fast_tunnel_log_tail": "Repeated remote connection refused messages",
+    "gpu_snapshot": [
+      {"index": 0, "name": "NVIDIA GeForce RTX 5090", "memory_used_mib": 24581, "memory_total_mib": 32607, "utilization_percent": 41},
+      {"index": 1, "name": "NVIDIA GeForce RTX 5090", "memory_used_mib": 20532, "memory_total_mib": 32607, "utilization_percent": 100}
+    ],
+    "external_process_stopped_or_modified": false,
+    "new_persistent_gpu_process_started": false
+  },
+  "implementation": {
+    "canonical_manager": "tools/manage_remote_workbench.py",
+    "formal_manager": "D:/Apps/LabelAgent/.local/manage_remote.py",
+    "remote_preflight": "Read-only SSH curl to 127.0.0.1:18878/v1/models with bounded connect and request timeouts",
+    "unready_behavior": "Do not create the optional tunnel; emit one bounded fallback message and continue with 4090",
+    "ready_behavior": "Create and verify the existing optional tunnel exactly as before",
+    "primary_4090_gated_by_optional_route": false
+  },
+  "tests": {
+    "targeted_manager": {"passed": 7, "failed": 0},
+    "python_full": {"passed": 872, "failed": 0},
+    "web_full": {"passed": 101, "failed": 0},
+    "python_utf8": true,
+    "compile": "passed",
+    "git_diff_check": "passed"
+  },
+  "deployment": {
+    "backup": "D:/Apps/LabelAgent/.local/backups/fast-route-preflight-round142-20261118-083309",
+    "previous_manager_sha256": "1141a07ab01e0ac6d18fa1bb90c24ffbeb94373467b6432eb8550d7e305af46b",
+    "deployed_manager_sha256": "8b2cae6cf435aab998493fd814f16295b022616de672ecfa0a3160bd771fbe8e",
+    "canonical_and_formal_hash_match": true,
+    "formal_state_sha256_before": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "formal_state_sha256_after": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21"
+  },
+  "acceptance": {
+    "measured_start_seconds": 5.68,
+    "prior_round85_start_seconds": 9.919,
+    "single_sample_improvement_seconds": 4.239,
+    "single_sample_improvement_percent": 42.74,
+    "process_record_keys": ["tunnel", "workbench"],
+    "fast_tunnel_record_present": false,
+    "local_fast_port_38868_listener_count": 0,
+    "fast_tunnel_log_bytes_after": 24360,
+    "fast_tunnel_log_grew": false,
+    "workbench_http_200": true,
+    "run_status_http_200": true,
+    "sam3_http_200": true,
+    "primary_vlm_http_200": true,
+    "workbench_idle": true,
+    "fast_5090_route": "disabled_or_unavailable",
+    "automatic_4090_fallback": true
+  },
+  "decision": {
+    "status": "accepted_and_deployed",
+    "reason": "The missing 5090 VLM is rejected before tunnel creation, the refusal log no longer grows, startup remains healthy on 4090, and formal state is byte-identical."
+  },
+  "limits": [
+    "The 5.680 second and prior 9.919 second values are single warm-model startup samples, not a latency distribution.",
+    "This removes optional-route startup waste; it does not reduce SAM or VLM inference latency.",
+    "The ready-5090 branch is covered by a controlled unit test but was not live-tested because no 5090 VLM was listening.",
+    "No SAM3 fine-tuning, VLM post-training, candidate write, truth write, training approval or OSS write occurred."
+  ]
+}

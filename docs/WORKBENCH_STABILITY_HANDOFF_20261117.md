@@ -1813,3 +1813,5 @@ Round212 的浏览器验收发现页面会先显示第0帧，再异步恢复到�
 部署备份位于 `D:\Apps\LabelAgent\.local\backups\region-edit-scope-round215-20261119-051404`。只重启本机工作台，管理PID从66136变为38764，4090通道PID60456和5090 SAM通道PID8656保持；五项工作台/模型探针均HTTP 200。正式 `state.json` 和 `file_sessions.json` 哈希前后保持不变。
 
 本轮没有改模型、微调、后训练、人工真值、训练批准或OSS。完整说明见 [第二百一十五轮报告](REGION_EDIT_SCOPE_RACE_ROUND215_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/region-edit-scope-race-round215.json)。浏览器脚本、JSON和厂内截图继续只保留在本地未跟踪目录。
+
+实现、测试和首版文档提交 `91300bdb2c665ddb23ff90feaaed4a4f3466a139` 已推送并分别回读 GitHub/CNB，同名分支两端精确匹配；未跟踪实验产物和厂内截图均未上传。

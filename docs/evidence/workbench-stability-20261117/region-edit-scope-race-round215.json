@@ -3,7 +3,7 @@
   "round": 215,
   "date": "2026-11-19",
   "objective": "Prevent an asynchronous add/erase region response from mutating a different frame, dataset, topic, mode, shape, or newer edit.",
-  "status": "implemented_tested_and_production_deployed_pending_remote_receipt",
+  "status": "implemented_tested_production_deployed_and_remotely_verified",
   "boundaries": {
     "candidate_only": true,
     "human_truth": false,
@@ -116,11 +116,11 @@
     "vlm_4090_28868": 200
   },
   "source_sync": {
-    "implementation_commit": null,
+    "implementation_commit": "91300bdb2c665ddb23ff90feaaed4a4f3466a139",
     "branch": "codex/workbench-stability-20261117",
-    "github_readback": null,
-    "cnb_readback": null,
-    "both_remotes_matched_implementation_commit": false,
+    "github_readback": "91300bdb2c665ddb23ff90feaaed4a4f3466a139",
+    "cnb_readback": "91300bdb2c665ddb23ff90feaaed4a4f3466a139",
+    "both_remotes_matched_implementation_commit": true,
     "factory_images_uploaded": false,
     "untracked_experiment_artifacts_uploaded": false
   },

@@ -83,6 +83,17 @@ dev8 中助理认为有 4 张能看见完整或局部斜坡：
 
 这说明新候选获得了正收益，但仍会漏掉两个局部 / 画面边缘斜坡，距离独立承担斜坡发现还有明显差距。
 
+### 4.4 VLM + LiDAR 几何 + SAM 离线融合
+
+随后增加了一条不改生产配置的离线组合门禁：2B VLM 负责语义判断，LiDAR 只提供不依赖颜色的坡面几何提示，SAM 必须在同一张哈希绑定图像上返回非空掩码后，才允许补回 VLM 漏检。结果如下：
+
+| 候选路线 | 命中 | 漏检 | 误报 | 候选召回 |
+|---|---:|---:|---:|---:|
+| 新 8× LoRA 单独判断 | 2/4 | 2 | 0 | 50% |
+| 8× LoRA + LiDAR 几何 + SAM | 4/4 | 0 | 0 | 100% |
+
+这 4 个正视角和 4 个负视角仍来自同一受控 dev8 助理复核，不能解释成生产准确率；它只说明“几何补漏、SAM 出掩码”的方向能补回当前两个边缘坡，值得进入新批次和人工真值验证。融合器对缺少 SAM 结果、图像哈希不一致和任何人工真值越权声明均失败关闭，11 项定向测试通过。结构化结果位于 `artifacts/round174-slope-vlm-lidar-sam-fusion/fusion-result.json`。
+
 ## 5. 为什么现在不部署
 
 当前证据有三条明确边界：
@@ -113,12 +124,15 @@ SAM3 需要像素级正确掩码。当前 32 帧斜坡复核包虽然已经整�
 5. 同时检查斜坡召回、普通地面误报、pallet/other_robot 退化、端到端时延；
 6. 只有所有门禁都通过，才用 feature flag 做小流量部署，随时可回滚到 8B + 原 SAM3。
 
+其中优先验证的工程路线调整为：有 LiDAR 的工厂数据先走“几何提示 + SAM”补漏，2B VLM 提供语义复核；缺少可靠 LiDAR 时继续由稳定 8B VLM 兜底。当前不把 2B 的“无坡”结论作为唯一过滤条件，以免再次漏掉画面边缘坡。
+
 ## 8. 复现与记录
 
 - 代码提交：`dece6c3 train: balance slope positives for offline VLM candidate`；
 - CNB / GitHub 分支：`codex/workbench-stability-20261117`；
 - 结构化证据：`docs/evidence/workbench-stability-20261117/qwen3vl2b-slope-balanced-posttrain-round172.json`；
 - 独立复核：`artifacts/round173-qwen3vl2b-slope-balanced-r8-independent/`；
+- 离线融合复核：`artifacts/round174-slope-vlm-lidar-sam-fusion/`；
 - 本地适配器备份：`artifacts/round172-qwen3vl2b-slope-balanced/r8/adapter/`；
 - 完整 Python 回归：`928/928`（正式 `PYTHONUTF8=1` 环境）；
 - 当前服务：4090 SAM、4090 8B VLM、工作台均健康。

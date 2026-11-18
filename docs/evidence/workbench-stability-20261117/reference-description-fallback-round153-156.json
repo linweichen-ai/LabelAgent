@@ -1,0 +1,124 @@
+{
+  "schema_version": "labelagent.reference-description-fallback.v1",
+  "recorded_at": "2026-11-18T11:53:00+08:00",
+  "rounds": [153, 154, 155, 156],
+  "objective": "Recover the formal reference-description gate without accepting truncated VLM prose or weakening candidate and human-truth isolation.",
+  "formal_runtime": "D:\\Apps\\LabelAgent",
+  "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\description-deterministic-fallback-round156-20261118-115300",
+  "incident": {
+    "reference_frame": 55,
+    "observed_failure": "The constrained VLM repeatedly returned a syntactically closed JSON string whose description ended in an incomplete phrase.",
+    "unsafe_text_saved": false,
+    "pre_fix_readiness_code": "description_stale",
+    "previous_failure_status": "failed"
+  },
+  "implementation": {
+    "description_input_version": 12,
+    "max_reference_description_chars": 450,
+    "fallback_source": "deterministic_reference_geometry_fallback",
+    "fallback_trigger": "vlm_protocol_retries_exhausted",
+    "allowed_inputs": [
+      "selected reference labels",
+      "reference annotation counts",
+      "contour part counts",
+      "excluded hole counts",
+      "controlled SAM prompt registry"
+    ],
+    "forbidden_inference": [
+      "appearance",
+      "color",
+      "scene context",
+      "person action",
+      "unknown-class prompt invention"
+    ],
+    "worktree_runtime_workflow_sha256": "d316cac0f51091be2c26e698b55fa678b8fd1fe799c10058221e00aaa8360866"
+  },
+  "formal_recovery": {
+    "elapsed_seconds": 1.441,
+    "reference_signature": "7f9413788c4d416d8cf4d9625401bb3feaf5760212498e6813455367fbb36a1a",
+    "description": "Supplied reference contours contain 6 pallet instances, 1 person instance, and 1 floor instance. Their 13 contour parts contain 11 excluded holes; 5 selected classes have no reference contour, and all resulting machine candidates require human review.",
+    "description_ready": true,
+    "run_readiness": "ready",
+    "model_readiness": {
+      "ready": true,
+      "sam": "ok",
+      "vlm": "ok",
+      "fast_vlm": "disabled"
+    },
+    "description_json_sha256": "970e9b3ec71af072cfcd6d8eaa3549de9c1fe3ad797f582e353f4b6f78220046",
+    "description_debug_sha256": "be61e9cc2d44f749ee1eba748a059f045b9cc41bbc7c5f5bb0a5d8095a9ec99b"
+  },
+  "browser_readback": {
+    "browser": "Microsoft Edge via Playwright",
+    "http_status": 200,
+    "readiness_rows": {
+      "data": "passed",
+      "reference": "passed",
+      "description": "passed",
+      "frame": "passed",
+      "count": "passed"
+    },
+    "confirm_enabled": true,
+    "recovery_button_visible": false,
+    "page_errors": [],
+    "inference_started": false
+  },
+  "frame31_candidate_flow": {
+    "initial_candidate_elapsed_seconds": 5.167,
+    "agent_refine_elapsed_seconds": 30.781,
+    "class_audit_elapsed_seconds": 19.83,
+    "candidate_count": 11,
+    "class_counts": {
+      "floor": 1,
+      "pallet": 8,
+      "person": 2
+    },
+    "agent_review_status": "complete",
+    "candidate_class_audit_status": "complete",
+    "human_review_required": true,
+    "in_human_truth": false,
+    "all_candidate_only": true,
+    "all_human_truth_false": true,
+    "all_approved_for_training_false": true,
+    "inspection_image": "/api/inspection/image/2cfa8b9d34237677356b8e088f9613e5ae705ccfb3d22259e81d8327064053c0.jpg"
+  },
+  "formal_state_isolation": {
+    "truth_before_after_equal": true,
+    "truth_sha256": "60fbbb0f32fa7429fb923ecc02f4b2f843d8611b822aa8c85efc4897c1b5cc4f",
+    "truth_review_status_before_after_equal": true,
+    "truth_review_status_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+    "reference_frames_before_after_equal": true,
+    "reference_frames_sha256": "2fc4371817c70aefd7e9ed00a6774992e9ae59b367afe645afd85985a2fd2326",
+    "candidates_before_after_equal": true,
+    "agent_runs_before_after_equal": true,
+    "state_file_sha256": "d671dd5818a225bc774ac7e71ecff612cb3aed67de6b1985e5cd9e3233be8085",
+    "file_sessions_sha256": "251a47963ebd2931ee033408e9fe39a94f74539bff0a339c58429ace409088cc"
+  },
+  "tests": {
+    "targeted": {
+      "passed": 3,
+      "failed": 0
+    },
+    "python_utf8": {
+      "passed": 889,
+      "failed": 0
+    },
+    "web_node": {
+      "passed": 96,
+      "failed": 0
+    },
+    "note": "A first Python invocation without PYTHONUTF8 exposed Windows GBK decoding errors; the authoritative project UTF-8 invocation passed all tests."
+  },
+  "storage": {
+    "c_free_gib": 1.21,
+    "d_free_gib": 19.27,
+    "risk": "C volume remains below the 2 GiB warning line; LabelAgent runtime temporary files remain pinned to D."
+  },
+  "boundaries": [
+    "No model weights were changed.",
+    "No candidate was promoted to human truth or training approval.",
+    "No OSS object was written.",
+    "Frame 31 contains no slope, so this record is not slope-quality evidence.",
+    "The deterministic fallback restores protocol reliability; it is not a segmentation-accuracy improvement."
+  ]
+}

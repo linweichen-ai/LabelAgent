@@ -250,13 +250,56 @@ class WorkflowTests(unittest.TestCase):
         original = image_bytes()
         marked = io.BytesIO()
         Image.new("RGB", (40, 40), (255, 0, 255)).save(marked, "JPEG")
-        with patch.object(workflow, "chat", return_value={"description": "地面可见边界",
+        with patch.object(workflow, "chat", return_value={"description": "地面可见边界。",
                 "prompts": [{"label": "地面", "text": "floor"}]}) as chat:
             workflow.describe({}, original, [shape(label="地面")], ["地面"], marked.getvalue())
         self.assertEqual(chat.call_args.args[2], original)
         self.assertEqual(chat.call_args.kwargs["extra_images"], (marked.getvalue(),))
         self.assertIn("轮廓颜色只是界面标记", chat.call_args.args[1])
         self.assertIn("仅依据图像 1", chat.call_args.args[1])
+
+    def test_description_retries_a_schema_bound_string_instead_of_saving_it(self):
+        truncated = {"description": "x" * 699,
+                     "prompts": [{"label": "地面", "text": "floor"}]}
+        complete = {"description": "The visible floor follows the confirmed reference boundary.",
+                    "prompts": [{"label": "地面", "text": "floor"}]}
+        with patch.object(workflow, "chat",
+                          side_effect=[truncated, complete]) as chat:
+            result = workflow.describe(
+                {}, image_bytes(), [shape(label="地面")], ["地面"])
+        self.assertEqual(result, complete)
+        self.assertEqual(chat.call_count, 2)
+        self.assertIn("360 characters", chat.call_args_list[0].args[1])
+        self.assertIn("达到长度上限", chat.call_args_list[1].args[1])
+
+    def test_description_uses_truth_bound_fallback_if_every_retry_hits_schema_bound(self):
+        truncated = {"description": "x" * 699,
+                     "prompts": [{"label": "地面", "text": "floor"}]}
+        with patch.object(workflow, "chat", return_value=truncated) as chat:
+            result = workflow.describe(
+                {}, image_bytes(), [shape(label="地面")], ["地面"])
+        self.assertEqual(chat.call_count, workflow.MAX_PROTOCOL_RETRIES + 1)
+        self.assertEqual(result["prompt_source"],
+                         "deterministic_reference_geometry_fallback")
+        self.assertEqual(result["description_fallback_reason"],
+                         "vlm_protocol_retries_exhausted")
+        self.assertTrue(result["description"].endswith("."))
+        self.assertLessEqual(len(result["description"]),
+                             workflow.MAX_REFERENCE_DESCRIPTION_CHARS)
+        self.assertIn("1 地面 instance", result["description"])
+        self.assertEqual(result["prompts"],
+                         [{"label": "地面", "text": "floor"}])
+        self.assertTrue(result["candidate_only"])
+        self.assertTrue(result["human_reference_available"])
+
+    def test_reference_description_fallback_rejects_unknown_class_prompt(self):
+        truncated = {"description": "x" * 699,
+                     "prompts": [{"label": "unknown_widget", "text": "widget"}]}
+        with patch.object(workflow, "chat", return_value=truncated):
+            with self.assertRaisesRegex(ValueError, "没有受控的 SAM 3 兜底提示"):
+                workflow.describe({}, image_bytes(),
+                                  [shape(label="unknown_widget")],
+                                  ["unknown_widget"])
 
     def test_visible_label_blind_review_keeps_operator_person_and_viewpoint_non_ego(self):
         labels = ["ego", "other_robot", "person"]
@@ -521,7 +564,7 @@ class WorkflowTests(unittest.TestCase):
         reference = shape(label="地面")
         reference["source"] = "automatic"
         reference["parts"][0]["holes"] = [[[5, 5], [8, 5], [8, 8], [5, 8]]]
-        with patch.object(workflow, "chat", return_value={"description": "参考地面区域",
+        with patch.object(workflow, "chat", return_value={"description": "参考地面区域。",
                 "prompts": [{"label": "地面", "text": "floor"}]}) as chat:
             workflow.describe({}, image_bytes(), [reference], ["地面"])
         instruction = chat.call_args.args[1]

@@ -1594,3 +1594,15 @@ Round147 部署后，C盘可用空间继续被系统写入消耗，最低只剩�
 第一次候选部署成功后，真实图片短 schema 请求端到端 0.804 秒、模型生成 0.568 秒。第一次立即冷重启暴露了旧 CUDA 进程退出与 22 GB 空闲显存门禁之间的竞态；候选被门禁拒绝，自动回滚恢复旧服务。部署器随后增加“确认目标 GPU 空闲显存达到 22,000 MiB 后再启动”的等待，第二次冷重启成功，健康状态加载 1 条磁盘响应。同一请求端到端 0.223 秒、模型生成 0 秒，`cache_hit=true`、`persistent_cache_hit=true`，请求键 `f001b5cd...d7975` 与内容 SHA-256 `61ac5857...1b44` 均与首次完全一致。
 
 完整回归为 Python 886/886、网页 104/104、定向缓存与清单测试 25/25。正式页面 idle，SAM/Qwen ready，六份正式状态文件哈希全部未变；5090 可选通道继续禁用，没有抢占外部任务。远端旧服务和启动脚本备份在 `/home/clw/labelagent_remote_20261110/backups/persistent-response-cache-round152-20261118`。边界：本轮只加速完全相同的重复请求，不降低首张新图片约 15～17 秒的完整生产推理，也不是 SAM 微调、VLM 后训练或精度提升。结构化证据见 [第一百五十二轮证据](evidence/workbench-stability-20261117/persistent-vlm-response-cache-round152.json)。
+
+## 第一百五十三至一百五十六轮真实候选闭环与参考描述确定性恢复（已部署，2026-11-18）
+
+正式工作台先恢复参考帧 55 的描述并在 frame 31 完成一次真实候选闭环。初始 SAM 候选 5.167 秒得到 11 个实例，后台 Agent 30.781 秒完成且没有改动几何，两个高风险 person 候选的独立类别盲审 19.830 秒完成；最终为 `8 pallet + 2 person + 1 floor`。11 个实例全部保持 `candidate_only=true / human_truth=false / approved_for_training=false`，frame 31 不在人工真值中，人工复核仍为必需。对应检查图为 `/api/inspection/image/2cfa8b9d34237677356b8e088f9613e5ae705ccfb3d22259e81d8327064053c0.jpg`。
+
+随后发现 VLM 在参考描述的 700 字符 schema 边界处关闭 JSON，但文本实际停在半句话，`finish_reason=stop` 因而不能代表语义完整。工作台新增完整句门禁，拒绝长度超限、没有句末标点或以连接词/逗号结尾的描述。模型按更短的两句提示重试仍然截断，因此没有把坏文本保存为可用描述，而是保持 `description_stale`。
+
+最终恢复路径只在全部 VLM 协议重试耗尽后启用：从已提供的参考轮廓中确定性统计类别实例、轮廓组成和孔洞数量，并只使用受控 SAM 提示词；不得推断颜色、场景、动作或未知类别提示。正式 frame 55 在 1.441 秒内恢复为两句完整描述，准确读出 `6 pallet + 1 person + 1 floor`、13 个轮廓组成和 11 个孔洞，8 个类别提示全部来自受控词表。运行门禁恢复 `ready`，SAM 与主 VLM 均 ready。
+
+真实 Edge 页面读回中，数据、参考帧、描述、帧号和处理数量五项均通过，开始按钮可用，恢复按钮不再出现，页面错误为 0；验收只打开预检弹窗，没有启动新的推理。部署前代码和六份正式状态备份到 `D:\Apps\LabelAgent\.local\backups\description-deterministic-fallback-round156-20261118-115300`。部署前后人工真值、真值复核状态、参考帧、候选和 Agent 运行逐项相等；完整回归为 Python 889/889、网页 96/96。结构化记录见 [第一百五十三至一百五十六轮证据](evidence/workbench-stability-20261117/reference-description-fallback-round153-156.json)。
+
+边界：该兜底提升的是协议可靠性和工作台可恢复性，没有改 SAM/VLM 权重，也不是斜坡分割精度提升。frame 31 没有斜坡，不能据此宣称 slope 质量通过。C 盘当前约余 1.21 GiB，低于 2 GiB 警戒线；LabelAgent 临时目录仍固定在 D 盘，但扩大数据或实验前还需继续做可恢复磁盘治理。

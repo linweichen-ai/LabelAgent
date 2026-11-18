@@ -14,10 +14,10 @@ class DescriptionProtocolRetryTests(unittest.TestCase):
         self.shapes = [{"id": 1, "label": "pallet", "points": [[1, 1], [20, 1], [20, 20]]}]
 
     def test_missing_known_class_prompt_uses_deterministic_fallback_without_retry(self):
-        valid = {"description": "Visible pallet outlines", "prompts": [{"label": "pallet", "text": "pallet"}]}
-        with patch.object(workflow, "chat", side_effect=[{"description": "objects", "prompts": []}, valid]) as call:
+        valid = {"description": "Visible pallet outlines.", "prompts": [{"label": "pallet", "text": "pallet"}]}
+        with patch.object(workflow, "chat", side_effect=[{"description": "Objects.", "prompts": []}, valid]) as call:
             result = workflow.describe({"llm_prompt_profile": "compact"}, self.image, self.shapes, ["pallet"], self.image)
-        self.assertEqual(result, {"description": "objects",
+        self.assertEqual(result, {"description": "Objects.",
                                   "prompts": [{"label": "pallet", "text": "pallet"}]})
         self.assertEqual(call.call_count, 1)
 

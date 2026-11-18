@@ -1166,7 +1166,95 @@ def canonical_unreferenced_description(labels):
     return result
 
 
-DESCRIPTION_INPUT_VERSION = 8
+DESCRIPTION_INPUT_VERSION = 12
+MAX_REFERENCE_DESCRIPTION_CHARS = 450
+
+
+def require_complete_reference_description(description):
+    """Reject a syntactically closed string that exhausted its schema bound."""
+    if not isinstance(description, str) or not description.strip():
+        raise ValueError("参考描述不能为空")
+    text = description.strip()
+    dangling = re.search(
+        r"(?:\b(?:and|or|but|with|including|such as)|[,;:])$", text,
+        flags=re.IGNORECASE)
+    if (len(text) > MAX_REFERENCE_DESCRIPTION_CHARS
+            or not re.search(r"[.!?。！？]$", text)
+            or dangling):
+        raise ValueError(
+            "参考描述达到长度上限，可能被截断；请用不超过 450 个字符的完整句子重写")
+    return text
+
+
+def canonical_reference_geometry_description(annotations, labels):
+    """Build a complete, non-visual fallback from supplied reference geometry.
+
+    This path is used only after every VLM protocol retry failed.  It must not
+    infer appearance, scene context, actions, or annotation policy from the
+    image.  Unknown classes also fail closed instead of inventing a SAM query.
+    """
+    counts = {}
+    part_count = 0
+    hole_count = 0
+    allowed = set(labels)
+    for shape in annotations:
+        if not isinstance(shape, dict) or shape.get("label") not in allowed:
+            continue
+        label = shape["label"]
+        counts[label] = counts.get(label, 0) + 1
+        parts = shape.get("parts")
+        if not isinstance(parts, list) or not parts:
+            parts = [shape]
+        part_count += len(parts)
+        for part in parts:
+            holes = part.get("holes", []) if isinstance(part, dict) else []
+            if isinstance(holes, list):
+                hole_count += len(holes)
+    if not counts:
+        raise ValueError("参考轮廓中没有可用于确定性描述的已选类别")
+
+    prompts = []
+    for label in labels:
+        text = SAM_PROMPT_OVERRIDES.get(label) or SAM_PROMPT_FALLBACKS.get(label)
+        if not text:
+            raise ValueError(f"类别 {label} 没有受控的 SAM 3 兜底提示")
+        prompts.append({"label": label, "text": text})
+
+    phrases = []
+    for label in labels:
+        count = counts.get(label)
+        if count:
+            phrases.append(f"{count} {label} instance{'s' if count != 1 else ''}")
+    if len(phrases) == 1:
+        count_text = phrases[0]
+    else:
+        count_text = ", ".join(phrases[:-1]) + ", and " + phrases[-1]
+    unreferenced_count = len([label for label in labels if label not in counts])
+    description = (
+        f"Supplied reference contours contain {count_text}. "
+        f"Their {part_count} contour parts contain {hole_count} excluded "
+        f"hole{'s' if hole_count != 1 else ''}; {unreferenced_count} selected "
+        "classes have no reference contour, and all resulting machine "
+        "candidates require human review."
+    )
+    if len(description) > MAX_REFERENCE_DESCRIPTION_CHARS:
+        description = (
+            f"Supplied reference geometry contains {sum(counts.values())} "
+            f"annotations across {len(counts)} selected classes. Its "
+            f"{part_count} contour parts contain {hole_count} excluded "
+            f"hole{'s' if hole_count != 1 else ''}; {unreferenced_count} "
+            "selected classes have no reference contour, and all resulting "
+            "machine candidates require human review."
+        )
+    description = require_complete_reference_description(description)
+    return {
+        "description": description,
+        "prompts": prompts,
+        "prompt_source": "deterministic_reference_geometry_fallback",
+        "human_reference_available": True,
+        "candidate_only": True,
+        "description_fallback_reason": "vlm_protocol_retries_exhausted",
+    }
 
 COMPACT_REFERENCE_RULES = """Use the supplied reference contours as the task example. Their review status is not inferred.
 Only annotate the listed classes. Inspect original images for appearance and outlined images for geometry.
@@ -1262,6 +1350,8 @@ def describe(config, image, annotations, labels, marked_image=None, include_unre
               '{"description":"参考帧真值标注规范","prompts":[{"label":"类别名","text":"SAM 3 英文关键词"}]}。'
               "\n8. 分别生成完整描述和 SAM 3 关键词："
               "description 给复核 Agent 使用，描述真值中的目标、实例归属、可见边界、遮挡及排除范围；"
+              "description must contain exactly two complete English sentences, use at most 360 characters total, and end with a period;"
+              "不得在连接词或未完成短语处截断；"
               "只描述已标注类别，不为图中未标注的物体新增任务。"
               "prompts 给 SAM 3 分割使用，每个类别一个 text，仅 1～4 个英文关键词（名词短语），"
               "例如 floor、wooden pallet；不得写完整句子、排除项或边界规则。"
@@ -1274,6 +1364,8 @@ def describe(config, image, annotations, labels, marked_image=None, include_unre
         prompt = (COMPACT_REFERENCE_RULES
             + '\n图片1是参考原图，图片2是洋红色参考轮廓。只返回JSON对象，包含description和prompts两个字段。'
               'description用英文描述每个类别在图中的实际对象、可见边界、实例归属和排除范围，不要复述提示原则。'
+              'description must contain exactly two complete English sentences, use at most 360 characters total, and end with a period;'
+              '不得在连接词或未完成短语处截断。'
               'prompts是对象数组，每项包含label和text。label必须逐字使用允许类别，每个类别各一项，不能合并类别。'
               'text为对应类别的1到4个英文关键词，供SAM3分割使用。'
             + extended_note
@@ -1301,7 +1393,10 @@ def describe(config, image, annotations, labels, marked_image=None, include_unre
                     pass
             continue
         try:
-            return restrict_description(result, labels)
+            restricted = restrict_description(result, labels)
+            restricted["description"] = require_complete_reference_description(
+                restricted["description"])
+            return restricted
         except ValueError as error:
             last_error, last_result = error, result
             if include_unreferenced and not annotations:
@@ -1309,6 +1404,13 @@ def describe(config, image, annotations, labels, marked_image=None, include_unre
                     return canonical_unreferenced_description(labels)
                 except ValueError:
                     pass
+    if annotations:
+        try:
+            return canonical_reference_geometry_description(annotations, labels)
+        except ValueError as fallback_error:
+            raise ValueError(
+                f"参考规范多次未通过协议校验：{last_error}；"
+                f"确定性兜底也不可用：{fallback_error}") from fallback_error
     raise ValueError(f"参考规范多次未通过协议校验：{last_error}")
 
 

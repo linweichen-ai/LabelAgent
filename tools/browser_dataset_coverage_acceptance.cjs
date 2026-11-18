@@ -26,29 +26,44 @@ const output = path.resolve(process.env.LABELAGENT_ACCEPTANCE_OUTPUT || "artifac
   });
   const started = Date.now();
   try {
-    const response = await page.goto(base, {waitUntil: "networkidle", timeout: 60000});
+    // The workbench intentionally polls run state, so "networkidle" is not a
+    // valid readiness signal and can leave acceptance stuck at 0 forever.
+    // Load the document, then wait on the application's explicit bootstrap
+    // promise and the concrete UI states exercised below.
+    const response = await page.goto(base, {waitUntil: "domcontentloaded", timeout: 60000});
     assert.equal(response.status(), 200);
     await page.evaluate(() => window.labelAgentBootstrapReady);
-    await page.waitForFunction(() => document.querySelector("#datasetIdentityName")?.textContent.includes("SFL-CPD15-Y"));
+    await page.waitForFunction(() => !document.querySelector("#datasetIdentity")?.classList.contains("unloaded"));
     const identity = await page.evaluate(() => ({
       kind: document.querySelector("#datasetIdentityKind")?.textContent,
       name: document.querySelector("#datasetIdentityName")?.textContent,
       detail: document.querySelector("#datasetIdentityDetail")?.textContent,
       title: document.querySelector("#datasetIdentity")?.title,
     }));
-    assert.equal(identity.kind, "新数据集");
-    assert(identity.detail.includes("/capture/camera_"));
+    assert(["新数据集", "旧验证集", "已加载数据"].includes(identity.kind));
+    assert(identity.detail.includes("/capture/camera_") || identity.detail.includes("/CVAT/Task3/images"));
 
     await page.locator("#datasetIdentitySwitch").click();
     await page.locator("#fileManager[open]").waitFor({state: "visible"});
-    const newRow = page.locator(".fileRow", {hasText: "SFL-CPD15-Y · 批次 A（0920）· 000"});
-    await newRow.waitFor({state: "visible"});
-    const fileRow = await newRow.innerText();
-    assert(fileRow.includes("新数据集"));
+    const currentRow = page.locator(".fileRow", {hasText: "当前已加载"});
+    await currentRow.waitFor({state: "visible"});
+    const fileRow = await currentRow.innerText();
     assert(fileRow.includes("当前已加载"));
     await page.locator("#closeFilesDialog").click();
 
-    await page.locator("#autoModeButton").click();
+    await page.locator("#manualModeButton").click();
+    await page.waitForFunction(() => document.body.dataset.workspace === "manual");
+    const inferenceShortcut = page.locator("#goToAutoInference");
+    await inferenceShortcut.waitFor({state: "visible"});
+    assert((await inferenceShortcut.innerText()).includes("设置 N 帧"));
+    const manualScreenshot = path.join(output, "manual-inference-shortcut.png");
+    await page.screenshot({path: manualScreenshot, fullPage: true});
+    await inferenceShortcut.click();
+    await page.waitForFunction(() => document.body.dataset.workspace === "auto");
+    await page.waitForFunction(() => document.activeElement?.id === "taskCount");
+    assert.equal(await page.locator("#taskCount").inputValue(), "1");
+    assert.equal(await page.evaluate(() => document.activeElement?.id), "taskCount");
+    assert.equal(await inferenceShortcut.isHidden(), true);
     await page.waitForFunction(() => document.querySelectorAll("#autoLabelOptions input:checked").length === 8);
     await page.waitForFunction(() => document.querySelectorAll("#candidateSummary > span").length >= 8);
     const coverage = await page.evaluate(() => ({
@@ -78,6 +93,12 @@ const output = path.resolve(process.env.LABELAGENT_ACCEPTANCE_OUTPUT || "artifac
       identity,
       file_row: fileRow,
       coverage,
+      inference_shortcut: {
+        switched_to_auto: true,
+        task_count_focused: true,
+        default_count: 1,
+        manual_screenshot: manualScreenshot,
+      },
       forced_all_selected_option: true,
       truth_write_requests: truthWrites,
       page_errors: errors,

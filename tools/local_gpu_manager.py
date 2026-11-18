@@ -212,6 +212,9 @@ def create_apps(manager, model):
         return Response(data, status=status, content_type=content_type)
 
     sam_app.add_url_rule("/segment_text", "text", lambda: forward("sam3", "/segment_text"), methods=["POST"])
+    sam_app.add_url_rule("/segment_text_multi", "text_multi", lambda: forward("sam3", "/segment_text_multi"), methods=["POST"])
+    sam_app.add_url_rule("/prefetch_text", "prefetch_text", lambda: forward("sam3", "/prefetch_text"), methods=["POST"])
+    sam_app.add_url_rule("/prefetch_text_multi", "prefetch_text_multi", lambda: forward("sam3", "/prefetch_text_multi"), methods=["POST"])
     sam_app.add_url_rule("/segment_points", "points", lambda: forward("sam3", "/segment_points"), methods=["POST"])
     vlm_app.add_url_rule("/v1/chat/completions", "chat", lambda: forward("qwen", "/v1/chat/completions"), methods=["POST"])
 

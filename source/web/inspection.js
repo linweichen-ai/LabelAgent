@@ -145,7 +145,8 @@ window.setWorkspaceMode=async(mode,openImage=true)=>{
  if(changed&&mode==='manual')inspectionRunFrame=null;
  window.workspaceMode=mode;document.body.dataset.workspace=mode;
  $('manualModeButton').classList.toggle('selected',mode==='manual');$('autoModeButton').classList.toggle('selected',mode==='auto');$('manualModeButton').setAttribute('aria-pressed',String(mode==='manual'));$('autoModeButton').setAttribute('aria-pressed',String(mode==='auto'));
- $('workspaceModeHint').textContent=mode==='auto'?'候选复核 · 可查看模型输入、分割和执行结果':'手工绘制与编辑真值';
+ $('workspaceModeHint').textContent=mode==='auto'?'从当前帧开始，在下方设置“本次处理 N 帧”':'当前是人工真值界面；需要连续推理请点“去自动推理”';
+ const inferenceShortcut=$('goToAutoInference');if(inferenceShortcut)inferenceShortcut.hidden=mode==='auto';
  $('autoDesk').hidden=mode!=='auto';
  inspectionPanel.hidden=mode!=='auto';
  $('truth').hidden=mode==='auto';
@@ -167,6 +168,7 @@ window.setWorkspaceMode=async(mode,openImage=true)=>{
 };
 $('manualModeButton').onclick=()=>{localStorage.setItem('labelagentWorkspaceMode','manual');window.setWorkspaceMode('manual').catch(e=>toast(e.message))};
 $('autoModeButton').onclick=()=>{localStorage.setItem('labelagentWorkspaceMode','auto');window.setWorkspaceMode('auto').catch(e=>toast(e.message))};
+$('goToAutoInference').onclick=async()=>{localStorage.setItem('labelagentWorkspaceMode','auto');try{await window.setWorkspaceMode('auto');const count=$('taskCount');count?.scrollIntoView({behavior:'smooth',block:'center'});count?.focus();count?.select();toast('已进入自动推理：请设置从当前帧向后连续处理多少帧，再点“开始自动标注”')}catch(e){toast(e.message)}};
 $('runButton').addEventListener('click',()=>{inspectionRunFrame=null;inspectionStageManual=false;inspectionStage=2;refreshInspection()});
 function refreshPrimaryReferenceAction(){
  const button=$('prepareReference');if(!button)return;

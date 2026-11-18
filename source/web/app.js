@@ -803,7 +803,7 @@ $('runButton').onclick=async()=>{
   runRequestPhase='submitting';renderRunButton();
    const jobTopic=topic,jobFile=loadedDataPath;
   stopPlayback();
-   const data=await api('run',requestedFrames?{frames:requestedFrames,max_rounds:6,defer_agent_review:true}:{frame:startFrame,count,max_rounds:6,defer_agent_review:true});
+    const data=await api('run',requestedFrames?{frames:requestedFrames,max_rounds:6,defer_agent_review:false}:{frame:startFrame,count,max_rounds:6,defer_agent_review:false});
    markRunResultHandled(data.task_id);latestAgentJob.result_available=false;
   if(data.description)currentDescription=data.description;
    for(const item of data.frames||[])if(Number.isInteger(item.frame))candidateCountIndex[String(item.frame)]=Math.max(0,Number(item.remaining)||0);
@@ -815,8 +815,7 @@ $('runButton').onclick=async()=>{
   const first=data.frames.find(item=>!item.failed&&item.remaining>0)||data.frames.find(item=>item.remaining>0);
   if(first){
    await openCandidateFrame(first.frame,jobTopic);
-   if(data.agent_review_deferred)void refineDeferredRunFrames(data.frames,jobTopic,jobFile);
-   toast(failed.length?`${failed.length} 帧失败，旧候选已保留；已打开结果，请先查看错误`:data.agent_review_deferred?'初始机器候选已打开，可立即检查；Agent 正在后台精修，不会自动写成人工真值':'已打开候选，请检查后点击“保存结果”');
+    toast(failed.length?`${failed.length} 帧失败，旧候选已保留；已打开结果，请先查看错误`:'SAM3、GPT 复查与 Agent 决策均已完成；已打开候选，请检查后点击“保存结果”');
   }else toast('处理结束，但没有可显示的候选，请查看自动标注过程');
  }catch(e){toast(e.message)}
   finally{await refreshAgentProgress();runRequestStartedAt=null;runRequestFrame=null;runRequestCount=null;renderRunButton()}

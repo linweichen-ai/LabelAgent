@@ -1,9 +1,11 @@
 """HTTP service for SAM 3 image segmentation."""
 import os
+from time import perf_counter
 
 from flask import Flask, jsonify, request
 
 from .point_segment import model_loaded, segment
+from .sam_multi_helpers import evaluate_prompt_states, validate_prompt_map
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 64 * 1024 * 1024
@@ -97,6 +99,58 @@ def segment_text():
                              else "mask 没有可用轮廓" if not results else None)})
     except (ValueError, TypeError) as error:
         return jsonify(error=str(error)), 400
+
+
+@app.post("/segment_text_multi")
+def segment_text_multi():
+    """Evaluate several text prompts while encoding the image only once."""
+    body = request.get_json(silent=True) or {}
+    image = body.get("image")
+    if not isinstance(image, str):
+        return jsonify(error="image (base64) is required"), 400
+    try:
+        import base64
+        import io
+        from contextlib import nullcontext
+
+        import torch
+        from PIL import Image
+        from .point_segment import _model_lock, _predictor
+
+        image_bytes = base64.b64decode(image, validate=True)
+        prompts = validate_prompt_map(body.get("prompts"))
+        pil_image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        started = perf_counter()
+        with _model_lock:
+            _, processor = _predictor()
+            precision = (torch.autocast("cuda", dtype=torch.bfloat16)
+                         if torch.cuda.is_available() else nullcontext())
+            with torch.inference_mode(), precision:
+                encode_started = perf_counter()
+                state = processor.set_image(pil_image)
+                image_encoding_seconds = perf_counter() - encode_started
+                _, outputs, prompt_seconds = evaluate_prompt_states(
+                    processor, state, prompts)
+        return jsonify(prompts=outputs, diagnostics={
+            "image_encoded_once": True,
+            "image_encoding_seconds": image_encoding_seconds,
+            "prompt_seconds": prompt_seconds,
+            "total_seconds": perf_counter() - started,
+        })
+    except (ValueError, TypeError) as error:
+        return jsonify(error=str(error)), 400
+
+
+@app.post("/prefetch_text")
+def prefetch_text():
+    """Keep the local contract explicit when response caching is unavailable."""
+    return jsonify(prefetched=False, code="local_response_cache_unavailable"), 202
+
+
+@app.post("/prefetch_text_multi")
+def prefetch_text_multi():
+    """Avoid a misleading 404; foreground multi-prompt inference stays fast."""
+    return jsonify(prefetched=False, code="local_response_cache_unavailable"), 202
 
 
 def main():

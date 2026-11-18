@@ -126,6 +126,32 @@ class RemoteWorkbenchManagerTests(unittest.TestCase):
         self.assertEqual(newly_started, ["fast_tunnel"])
         self.assertEqual(items["fast_tunnel"]["pid"], 321)
 
+    def test_ready_5090_sam_starts_and_verifies_dedicated_tunnel(self):
+        items = {}
+        newly_started = []
+        process = mock.Mock(pid=654)
+        process_record = mock.Mock()
+        process_record.create_time.return_value = 456.0
+        with (tempfile.TemporaryDirectory() as temporary,
+              mock.patch.object(MODULE, "LOCAL", Path(temporary)),
+              mock.patch.object(MODULE, "remote_5090_sam_ready", return_value=True),
+              mock.patch.object(MODULE.subprocess, "Popen", return_value=process),
+              mock.patch.object(MODULE.psutil, "Process", return_value=process_record),
+              mock.patch.object(MODULE, "save") as save,
+              mock.patch.object(MODULE, "wait_for") as wait_for):
+            (Path(temporary) / "logs").mkdir()
+            MODULE.start_5090_sam_tunnel(items, {}, newly_started)
+        save.assert_called_once_with(items)
+        wait_for.assert_called_once_with(
+            items["sam_5090_tunnel"], ((MODULE.FAST_SAM_PORT, "/health"),),
+            MODULE.optional_fast_wait_seconds(), "5090 SAM 通道")
+        self.assertEqual(newly_started, ["sam_5090_tunnel"])
+        self.assertEqual(items["sam_5090_tunnel"]["pid"], 654)
+
+    def test_standard_start_persists_an_explicit_sam_route(self):
+        source = PATH.read_text(encoding="utf-8")
+        self.assertIn('"sam3_url": f"http://127.0.0.1:{sam_endpoint_port}"', source)
+
     def test_isolated_acceptance_uses_the_verified_primary_tunnels(self):
         self.assertEqual(MODULE.isolate_model_config(), {
             "llm_url": f"http://127.0.0.1:{MODULE.VLM_PORT}/v1",

@@ -28,6 +28,7 @@ REMOTE_START = "/home/clw/labelagent_remote_20261110/start_remote_services.sh"
 SAM_PORT = 28766
 VLM_PORT = 28868
 FAST_VLM_PORT = 38868
+FAST_SAM_PORT = 38766
 WEB_PORT = 8765
 STORAGE_WARNING_BYTES = 2 * 1024 ** 3
 STORAGE_CRITICAL_BYTES = 256 * 1024 ** 2
@@ -232,6 +233,45 @@ def remote_fast_ready(timeout=3):
         return False
 
 
+def remote_5090_sam_ready(timeout=3):
+    """Check the already-deployed 5090 SAM service before tunnelling it."""
+    try:
+        result = subprocess.run(
+            [str(SSH), "-o", "BatchMode=yes", "-o", f"ConnectTimeout={timeout}",
+             FAST_REMOTE_HOST,
+             "curl -fsS --max-time 2 http://127.0.0.1:18766/health >/dev/null"],
+            stdin=subprocess.DEVNULL, capture_output=True, text=True,
+            encoding="utf-8", errors="replace", timeout=timeout + 2,
+            creationflags=subprocess.CREATE_NO_WINDOW)
+        return result.returncode == 0
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return False
+
+
+def start_5090_sam_tunnel(items, environment, newly_started):
+    """Prefer the dedicated 5090 SAM while retaining 4090 SAM as fallback."""
+    if "sam_5090_tunnel" not in items:
+        if not remote_5090_sam_ready():
+            raise RuntimeError("5090 远端 SAM 尚未就绪，继续使用 4090 SAM")
+        command = [
+            str(SSH), "-N", "-o", "BatchMode=yes", "-o", "ExitOnForwardFailure=yes",
+            "-o", "ConnectTimeout=10", "-o", "ServerAliveInterval=30",
+            "-o", "ServerAliveCountMax=6", "-o", "TCPKeepAlive=yes",
+            "-L", f"{FAST_SAM_PORT}:127.0.0.1:18766", FAST_REMOTE_HOST]
+        with (LOCAL / "logs" / "sam_5090_tunnel.log").open("ab") as output:
+            process = subprocess.Popen(
+                command, cwd=ROOT, env=environment, stdin=subprocess.DEVNULL,
+                stdout=output, stderr=output, creationflags=subprocess.CREATE_NO_WINDOW)
+        item = {"pid": process.pid, "created": psutil.Process(process.pid).create_time(),
+                "marker": f"{FAST_SAM_PORT}:127.0.0.1:18766",
+                "executable": str(SSH), "ports": [FAST_SAM_PORT]}
+        items["sam_5090_tunnel"] = item
+        newly_started.append("sam_5090_tunnel")
+        save(items)
+    wait_for(items["sam_5090_tunnel"], ((FAST_SAM_PORT, "/health"),),
+             optional_fast_wait_seconds(), "5090 SAM 通道")
+
+
 def start_optional_fast_tunnel(items, environment, newly_started):
     """Start the optional tunnel only when its remote service is already ready."""
     if "fast_tunnel" not in items:
@@ -259,7 +299,7 @@ def start_optional_fast_tunnel(items, environment, newly_started):
 def start(open_browser):
     preflight()
     items = records()
-    for name in ("tunnel", "fast_tunnel", "workbench"):
+    for name in ("tunnel", "sam_5090_tunnel", "fast_tunnel", "workbench"):
         if managed_process(items.get(name, {})) is None:
             items.pop(name, None)
     save(items)
@@ -271,6 +311,8 @@ def start(open_browser):
             raise RuntimeError(f"本机端口 {port} 已被其他程序使用，请先确认该程序。")
     if "fast_tunnel" not in items and port_busy(FAST_VLM_PORT):
         raise RuntimeError(f"本机端口 {FAST_VLM_PORT} 已被其他程序使用，请先确认该程序。")
+    if "sam_5090_tunnel" not in items and port_busy(FAST_SAM_PORT):
+        raise RuntimeError(f"本机端口 {FAST_SAM_PORT} 已被其他程序使用，请先确认该程序。")
 
     remote_start()
     (LOCAL / "logs").mkdir(parents=True, exist_ok=True)
@@ -299,6 +341,17 @@ def start(open_browser):
             save(items)
         wait_for(items["tunnel"], ((SAM_PORT, "/health"), (VLM_PORT, "/v1/models")),
                  240, "4090 模型与安全通道")
+
+        sam_endpoint_port = SAM_PORT
+        try:
+            start_5090_sam_tunnel(items, environment, newly_started)
+            sam_endpoint_port = FAST_SAM_PORT
+        except Exception as error:
+            stop_item(items.pop("sam_5090_tunnel", {}))
+            newly_started = [name for name in newly_started if name != "sam_5090_tunnel"]
+            save(items)
+            print(f"提示：5090 SAM 通道暂不可用，将继续使用 4090：{error}")
+        environment["SAM3_URL"] = f"http://127.0.0.1:{sam_endpoint_port}"
 
         fast_ready = False
         try:
@@ -330,6 +383,7 @@ def start(open_browser):
         model_config = {
             "llm_url": f"http://127.0.0.1:{VLM_PORT}/v1",
             "llm_model": "labelagent-vlm8b",
+            "sam3_url": f"http://127.0.0.1:{sam_endpoint_port}",
             "llm_fast_url": (f"http://127.0.0.1:{FAST_VLM_PORT}/v1"
                              if fast_ready else ""),
             "llm_fast_model": "labelagent-vlm8b" if fast_ready else "",
@@ -350,8 +404,8 @@ def start(open_browser):
                 print(f"提示：主 VLM 完整预热已跳过：{prewarm.get('code', 'unknown')}")
         except Exception as error:
             print(f"提示：主 VLM 完整预热失败，工作台仍可使用：{error}")
-        print(f"4090 版 LabelAgent 已启动：http://127.0.0.1:{WEB_PORT}")
-        print("SAM3 和主 VLM 使用 4090；640×512 小图在可用时由 5090 加速并自动回退。")
+        print(f"双服务器 LabelAgent 已启动：http://127.0.0.1:{WEB_PORT}")
+        print("SAM3 优先使用 5090、失败时回退 4090；主 VLM 使用 4090，5090 VLM 就绪后自动加速小图。")
         if open_browser:
             webbrowser.open(f"http://127.0.0.1:{WEB_PORT}")
     except Exception:
@@ -363,7 +417,7 @@ def start(open_browser):
 
 def stop():
     items = records()
-    for name in ("workbench", "fast_tunnel", "tunnel"):
+    for name in ("workbench", "fast_tunnel", "sam_5090_tunnel", "tunnel"):
         stop_item(items.get(name, {}))
     save({})
     print("4090 版 LabelAgent 本机页面和安全通道已停止；服务器模型保持热启动。")
@@ -373,6 +427,7 @@ def status():
     items = records()
     print(f"安全通道：{'正常' if managed_process(items.get('tunnel', {})) else '未运行'}")
     print(f"远端 SAM3：{'正常' if request_ok(SAM_PORT, '/health') else '不可用'}")
+    print(f"5090 SAM 通道：{'正常' if request_ok(FAST_SAM_PORT, '/health') else '未启用或不可用'}")
     print(f"远端 Qwen：{'正常' if request_ok(VLM_PORT, '/v1/models') else '不可用'}")
     print(f"5090 加速通道：{'正常' if request_ok(FAST_VLM_PORT, '/v1/models') else '未启用或不可用'}")
     print(f"标注页面：{'正常' if request_ok(WEB_PORT, '/api/state') else '未运行'}")
@@ -381,7 +436,7 @@ def status():
 def isolate_options(port, work_dir):
     if port is None or work_dir is None:
         raise ValueError("隔离模式必须同时指定 --port 和 --work-dir")
-    if not 1 <= port <= 65535 or port in (8756, 8765, 18766, 18878, SAM_PORT, VLM_PORT):
+    if not 1 <= port <= 65535 or port in (8756, 8765, 18766, 18878, SAM_PORT, VLM_PORT, FAST_SAM_PORT):
         raise ValueError("隔离端口必须有效且不能使用标准工作台、manager 或模型通道端口")
     work = Path(work_dir).resolve()
     standard = (ROOT / "work").resolve()

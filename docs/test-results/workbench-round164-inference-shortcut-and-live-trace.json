@@ -1,0 +1,66 @@
+{
+  "schema_version": "labelagent.workbench-round164.v1",
+  "recorded_at": "2026-11-18T14:19:29.3804138+08:00",
+  "base_commit": "cc407a62dc3e85d287b9ecfed2844aa72ea4b0ed",
+  "scope": [
+    "Expose an explicit manual-truth to automatic-inference shortcut and focus the bounded frame-count control.",
+    "Prefer a newer scope-bound model trace for a persisted candidate frame so successful GPT review is not hidden by an older batch receipt.",
+    "Make browser acceptance wait on explicit application readiness instead of network-idle polling."
+  ],
+  "verification": {
+    "python": {
+      "command": "PYTHONUTF8=1 python -m unittest discover -s tests -p test_*.py",
+      "passed": 907,
+      "failed": 0,
+      "elapsed_seconds": 6.905
+    },
+    "node": {
+      "command": "node --test tests/test_review_packet_core.js tests/test_web_candidate_audit.js tests/test_web_polling.js",
+      "passed": 106,
+      "failed": 0
+    },
+    "syntax": {
+      "python_compile": true,
+      "inspection_js_check": true,
+      "browser_acceptance_js_check": true
+    },
+    "browser": {
+      "passed": true,
+      "elapsed_ms": 1009,
+      "url": "http://127.0.0.1:8877",
+      "dataset_kind": "新数据集",
+      "dataset_name": "SFL-CPD15-Y · 批次 A（0920）· 000",
+      "selected_classes": 8,
+      "shortcut_visible_in_manual_mode": true,
+      "switched_to_auto": true,
+      "default_frame_count": 1,
+      "frame_count_focused": true,
+      "truth_write_requests": 0,
+      "page_errors": 0,
+      "failed_requests": 0,
+      "http_errors": 0
+    }
+  },
+  "local_evidence": {
+    "result": {
+      "path": "artifacts/round164-inference-shortcut-browser-v4/result.json",
+      "sha256": "3B74B217CF6ABB09E3CF48E83519675629725199CE04C502BA15B1EED047D5D8"
+    },
+    "manual_shortcut_screenshot": {
+      "path": "artifacts/round164-inference-shortcut-browser-v4/manual-inference-shortcut.png",
+      "sha256": "5A34DF3997B63A33092A36D2ED6DB00F15A4DB979C4B25E8CC99C7A7FB6E24C7"
+    },
+    "auto_mode_screenshot": {
+      "path": "artifacts/round164-inference-shortcut-browser-v4/new-dataset-class-coverage.png",
+      "sha256": "5FB7354DB397B221C2B1A364DAB960B830DBA4900AE9C11E1F96414ED9988EC7"
+    }
+  },
+  "safety_boundary": {
+    "machine_output_remains_candidate_only": true,
+    "human_truth_was_not_written": true,
+    "approved_for_training_was_not_changed": true,
+    "test24_was_not_used": true,
+    "model_inference_was_not_started": true
+  },
+  "environment_note": "A first Windows run without PYTHONUTF8 failed only while tests read UTF-8 JSON through the GBK default codec. The complete suite passed under the project's required UTF-8 runtime setting."
+}

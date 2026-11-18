@@ -875,6 +875,20 @@ class WorkflowTests(unittest.TestCase):
             [item["reason_code"] for item in decision["protocol_normalizations"]],
             ["no_op_reclassify_dropped", "empty_continue_normalized_to_done"])
 
+    def test_remove_without_negative_evidence_is_dropped(self):
+        decision = workflow._validate_review_result({
+            "status": "continue",
+            "reason": "Candidate is correct",
+            "operations": [{"operation": "remove", "shape_ids": [1],
+                            "reason": "Person instance matches reference geometry"}],
+        }, [], [shape()], ["a"], 40, 40)
+        self.assertEqual(decision["status"], "done")
+        self.assertEqual(decision["operations"], [])
+        self.assertEqual(
+            [item["reason_code"] for item in decision["protocol_normalizations"]],
+            ["remove_without_negative_evidence_dropped",
+             "empty_continue_normalized_to_done"])
+
     def test_review_retries_unknown_operation_and_missing_tool_fields(self):
         operation = {"operation": "add_region", "shape_ids": [1],
                      "polygon": [[16, 2], [25, 2], [25, 18], [16, 18]], "reason": "repair floor"}
@@ -1057,6 +1071,53 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual([item["label"] for item in agent.shapes], ["a"])
         self.assertEqual(agent.sam_generation["mode"], "multi_prompt")
         self.assertTrue(agent.sam_generation["diagnostics"]["image_encoded_once"])
+
+    def test_multi_prompt_adapts_legacy_list_contract_and_caches_protocol(self):
+        prompts = {"a": "square", "b": "circle"}
+        config = {"sam3_url": "http://legacy-sam:18766"}
+        legacy = {"items": [
+            {"prompt": "square", "results": [sam_result()]},
+            {"prompt": "circle", "results": []},
+        ], "diagnostics": {"feature_reuse": True, "image_feature_passes": 1}}
+        with workflow._sam_multi_protocol_lock:
+            workflow._sam_multi_protocols.pop(config["sam3_url"], None)
+        with patch.object(workflow, "sam_request", side_effect=[
+                ValueError("SAM 3 请求失败：image (base64) and prompts are required"),
+                legacy, legacy]) as request:
+            first, first_diagnostics = workflow.sam_text_multi(
+                image_bytes(), prompts, config)
+            second, second_diagnostics = workflow.sam_text_multi(
+                image_bytes(), prompts, config)
+        self.assertEqual(request.call_args_list[0].kwargs["prompts"], prompts)
+        self.assertEqual(request.call_args_list[1].kwargs["prompts"], ["square", "circle"])
+        self.assertEqual(request.call_args_list[2].kwargs["prompts"], ["square", "circle"])
+        self.assertEqual(set(first), set(prompts))
+        self.assertEqual(set(second), set(prompts))
+        self.assertTrue(first_diagnostics["legacy_protocol"])
+        self.assertTrue(first_diagnostics["image_encoded_once"])
+        self.assertTrue(second_diagnostics["image_encoded_once"])
+
+    def test_multi_prompt_does_not_cache_malformed_legacy_response(self):
+        prompts = {"a": "square", "b": "circle"}
+        config = {"sam3_url": "http://malformed-legacy-sam:18766"}
+        with workflow._sam_multi_protocol_lock:
+            workflow._sam_multi_protocols.pop(config["sam3_url"], None)
+        with patch.object(workflow, "sam_request", side_effect=[
+                ValueError("SAM 3 请求失败：image (base64) and prompts are required"),
+                {"items": [{"prompt": "square", "results": []}]}]):
+            with self.assertRaisesRegex(ValueError, "缺少完整类别结果"):
+                workflow.sam_text_multi(image_bytes(), prompts, config)
+        with workflow._sam_multi_protocol_lock:
+            self.assertNotIn(config["sam3_url"], workflow._sam_multi_protocols)
+
+    def test_multi_prompt_does_not_hide_unrelated_server_error(self):
+        config = {"sam3_url": "http://unavailable-sam:18766"}
+        with patch.object(workflow, "sam_request",
+                          side_effect=ValueError("SAM 3 请求失败：service busy")) as request:
+            with self.assertRaisesRegex(ValueError, "service busy"):
+                workflow.sam_text_multi(
+                    image_bytes(), {"a": "square", "b": "circle"}, config)
+        request.assert_called_once()
 
     def test_multi_prompt_generation_falls_back_to_sequential_requests(self):
         agent = workflow.AnnotationAgent({}, image_bytes(), {
@@ -1377,7 +1438,10 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(conflict["original_shape_ids"], [1, 2])
 
     def test_unreferenced_pipeline_retains_conflict_despite_model_done(self):
-        with patch.object(workflow, "sam_text", return_value=[sam_result()]), \
+        multi = ({"floor": {"results": [sam_result()]},
+                  "cargo_floor": {"results": [sam_result()]}},
+                 {"image_encoded_once": True})
+        with patch.object(workflow, "sam_text_multi", return_value=multi), \
              patch.object(workflow, "chat", return_value={"status": "done", "operations": []}):
             result = workflow.run({}, image_bytes(), {"description": "draft", "prompts": [
                 {"label": "floor", "text": "floor"},
@@ -3920,6 +3984,60 @@ class ServerTests(unittest.TestCase):
             finally:
                 server.state, server.WORK = old_state, old_work
 
+    def test_inspection_prefers_newer_live_trace_for_persisted_candidate_frame(self):
+        old_state, old_work = server.state, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "config": {},
+                            "candidates": {"2": [shape()]},
+                            "agent_runs": {"2": {"agent_review_status": "complete"}},
+                            "reference_frames": {"camera0": []}}
+            saved = {"id": "saved", "service": "SAM 3", "status": "succeeded",
+                     "frame": 2, "topic": "camera0", "file": str(FakeVideo.path),
+                     "purpose": "自动标注", "started_at": 10}
+            live_sam = saved | {"id": "live-sam", "started_at": 20,
+                                "purpose": "参考帧机器草稿"}
+            live_gpt = saved | {"id": "live-gpt", "service": "GPT",
+                                "started_at": 21, "purpose": "参考帧机器草稿",
+                                "input": {"instruction": "review"},
+                                "output": {"parsed": {"status": "done"}}}
+            try:
+                server.save_run({"file": str(FakeVideo.path), "topic": "camera0",
+                                 "trace": [saved], "steps": [], "frames": [{"frame": 2}]})
+                server.save_debug([live_sam, live_gpt])
+                result = server.app.test_client().get(
+                    "/api/run/inspection?topic=camera0&frame=2").json
+                self.assertEqual([item["id"] for item in result["trace"]],
+                                 ["live-sam", "live-gpt"])
+            finally:
+                server.state, server.WORK = old_state, old_work
+
+    def test_inspection_keeps_per_frame_trace_after_later_run_overwrites_debug_files(self):
+        old_state, old_work = server.state, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            persisted = {"id": "persisted-gpt", "service": "GPT", "status": "succeeded",
+                         "frame": 2, "topic": "camera0", "file": str(FakeVideo.path),
+                         "purpose": "自动标注", "started_at": 20,
+                         "input": {"instruction": "review frame two"},
+                         "output": {"parsed": {"status": "done"}}}
+            later = persisted | {"id": "later-gpt", "frame": 3, "started_at": 30}
+            server.state = {"video": FakeVideo(), "topic": "camera0", "config": {},
+                            "candidates": {"2": [shape()]},
+                            "agent_runs": {"2": {"agent_review_status": "complete",
+                                                   "inspection_trace": [persisted]}},
+                            "reference_frames": {"camera0": []}}
+            try:
+                server.save_run({"file": str(FakeVideo.path), "topic": "camera0",
+                                 "trace": [later], "steps": [], "frames": [{"frame": 3}]})
+                server.save_debug([later])
+                result = server.app.test_client().get(
+                    "/api/run/inspection?topic=camera0&frame=2").json
+                self.assertEqual([item["id"] for item in result["trace"]],
+                                 ["persisted-gpt"])
+            finally:
+                server.state, server.WORK = old_state, old_work
+
     def test_missing_or_stale_description_rejected_without_model_calls_or_record_changes(self):
         old_state, old_status, old_work = server.state, server.run_status, server.WORK
         with tempfile.TemporaryDirectory() as directory:
@@ -4199,7 +4317,7 @@ class ServerTests(unittest.TestCase):
             attempts = []
             failed = {"shapes": [], "candidates_added": 0, "applied": [],
                 "review_queue": [{"reason": "Agent 调用失败",
-                                  "error": "HTTP Error 503: Service Unavailable"}],
+                                  "error": "SAM 3 请求失败：[WinError 10061] 由于目标计算机积极拒绝，无法连接。"}],
                 "agent": {"converged": False, "rounds": 0, "max_rounds": 100,
                           "stop_reason": "error", "audit": []}}
             succeeded = {"shapes": [shape()], "candidates_added": 1, "applied": [],

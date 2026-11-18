@@ -1,0 +1,32 @@
+{
+  "schema_version": "labelagent.live-progress-evidence.v1",
+  "recorded_at": "2026-11-18T14:27:25.3366347+08:00",
+  "task_id": "da1695d66d7b4d62946be2bb2024cb6d",
+  "source": "formal runtime at http://127.0.0.1:8765",
+  "browser_acceptance": {
+    "passed": true,
+    "state": "推理中",
+    "title": "VLM 观察图像和候选",
+    "detail": "第 52 帧 · 本阶段已进行 1 分 1 秒 · 当前 4090 基线通常约 34 秒 · 该阶段已持续 1 分 1 秒，后台仍在线，可安全停止",
+    "percent": "约 63%",
+    "frames": "5 / 9",
+    "frame": "52",
+    "round": "1 / 2",
+    "elapsed": "7 分 26 秒",
+    "truth_write_requests": 0,
+    "page_errors": 0,
+    "failed_requests": 0,
+    "http_errors": 0
+  },
+  "claim_boundary": "This proves that the live workbench advances beyond 0% and reports the current long VLM phase. It does not prove model accuracy or that the still-running task will complete successfully.",
+  "local_evidence": {
+    "result": {
+      "path": "artifacts/round166-live-progress-browser-v2/result.json",
+      "sha256": "2B7DFA4F71C28CD1FA080A4FAA99BCA541907017D1CB1A086E0689E8E1107256"
+    },
+    "screenshot": {
+      "path": "artifacts/round166-live-progress-browser-v2/live-progress.png",
+      "sha256": "93489D644413EE0D1813AEC06FA2E319083F10031DD6C7F6CB9257F9C6F53FE7"
+    }
+  }
+}

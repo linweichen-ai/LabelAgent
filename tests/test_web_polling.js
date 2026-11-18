@@ -92,6 +92,17 @@ test('工作台持续显示新旧数据集身份和逐类别覆盖状态', () =>
   assert.match(app, /updateDatasetIdentity\(\)/);
 });
 
+test('人工真值界面提供明确的连续推理入口', () => {
+  const html = source('index.html');
+  const inspection = source('inspection.js');
+  assert.match(html, /id="goToAutoInference"/);
+  assert.match(html, /去自动推理 · 设置 N 帧/);
+  assert.match(inspection, /从当前帧开始，在下方设置“本次处理 N 帧”/);
+  assert.match(inspection, /inferenceShortcut\.hidden=mode==='auto'/);
+  assert.match(inspection, /count\?\.focus\(\)/);
+  assert.match(inspection, /再点“开始自动标注”/);
+});
+
 test('参考起稿先展示候选并在后台完成高风险类别复核', () => {
   const prep = source('reference-prep.js');
   const app = source('app.js');
@@ -632,18 +643,18 @@ test('运行前弹窗展示参考描述并提供一键恢复入口', () => {
 
 test('完成与失败帧重试均复用轻量帧计数且不回读完整状态', () => {
   const handler = section(source('app.js'), "$('runButton').onclick", 'let runStatusPollTimer');
-  assert.ok(handler.includes('{frames:requestedFrames,max_rounds:6,defer_agent_review:true}'));
+  assert.ok(handler.includes('{frames:requestedFrames,max_rounds:6,defer_agent_review:false}'));
   assert.ok(handler.includes('candidateCountIndex[String(item.frame)]'));
   assert.equal(handler.includes("fetch('/api/state')"), false);
 });
 
-test('主自动标注先返回机器候选并用绑定读回完成后台精修', () => {
+test('主自动标注仅在服务器完成 GPT 复查后宣告完成', () => {
   const app = source('app.js');
   const refinement = section(app, 'async function refineDeferredRunFrames', 'function invalidateChangedCandidateAudits');
   const handler = section(app, "$('runButton').onclick", 'let runStatusPollTimer');
-  assert.match(handler, /defer_agent_review:true/);
-  assert.match(handler, /void refineDeferredRunFrames\(data\.frames,jobTopic,jobFile\)/);
-  assert.match(handler, /初始机器候选已打开，可立即检查/);
+  assert.match(handler, /defer_agent_review:false/);
+  assert.doesNotMatch(handler, /void refineDeferredRunFrames\(data\.frames,jobTopic,jobFile\)/);
+  assert.match(handler, /SAM3、GPT 复查与 Agent 决策均已完成/);
   assert.match(refinement, /readCompactFrameStateSnapshot\(target,sourceTopic,sourcePath\)/);
   assert.match(refinement, /expected_candidate_artifact_sha256:artifact/);
   assert.match(refinement, /expected_frame_sha256:imageHash/);

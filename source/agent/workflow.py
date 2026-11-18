@@ -28,6 +28,8 @@ _review_call = ContextVar("review_call", default=None)
 _cancel_event = ContextVar("workflow_cancel_event", default=None)
 _fast_route_lock = threading.Lock()
 _fast_route_circuits = {}
+_sam_multi_protocol_lock = threading.Lock()
+_sam_multi_protocols = {}
 MAX_REVIEW_ROUNDS = 100
 MAX_PROTOCOL_RETRIES = 2
 
@@ -232,6 +234,38 @@ def sam_text_prefetch(image, prompt, config):
     return response | {"prefetched": True}
 
 
+def _sam_multi_endpoint_key(config):
+    return (config.get("sam3_url") or os.environ.get(
+        "SAM3_URL", "http://127.0.0.1:8766")).rstrip("/")
+
+
+def _sam_text_multi_legacy(image, prompts, config):
+    """Adapt the original list/items contract used by the 5090 SAM worker."""
+    response = sam_request(
+        config, "/segment_text_multi", image, prompts=list(prompts.values()))
+    items = response.get("items") if isinstance(response, dict) else None
+    if not isinstance(items, list) or len(items) != len(prompts):
+        raise ValueError("SAM 3 旧版多提示响应缺少完整类别结果")
+    outputs = {}
+    for (label, expected_prompt), item in zip(prompts.items(), items):
+        if (not isinstance(item, dict)
+                or item.get("prompt") != expected_prompt
+                or not isinstance(item.get("results"), list)):
+            raise ValueError(f"SAM 3 旧版多提示响应中的类别 {label} 格式无效")
+        payload = {"results": item["results"]}
+        if isinstance(item.get("diagnostics"), dict):
+            payload["diagnostics"] = item["diagnostics"]
+        outputs[label] = payload
+    diagnostics = (response.get("diagnostics", {}).copy()
+                   if isinstance(response.get("diagnostics"), dict) else {})
+    diagnostics["legacy_protocol"] = True
+    diagnostics["image_encoded_once"] = bool(
+        diagnostics.get("image_encoded_once")
+        or diagnostics.get("feature_reuse")
+        or diagnostics.get("image_feature_passes") == 1)
+    return outputs, diagnostics
+
+
 def sam_text_multi(image, prompts, config):
     """Evaluate several label prompts while the service reuses one image encoding."""
     if (not isinstance(prompts, dict) or not 2 <= len(prompts) <= 16
@@ -239,13 +273,28 @@ def sam_text_multi(image, prompts, config):
                    or not isinstance(prompt, str) or not prompt.strip()
                    for label, prompt in prompts.items())):
         raise ValueError("SAM 3 多提示请求须包含 2～16 个有效类别与关键词")
-    response = sam_request(config, "/segment_text_multi", image, prompts=prompts)
+    endpoint_key = _sam_multi_endpoint_key(config)
+    with _sam_multi_protocol_lock:
+        protocol = _sam_multi_protocols.get(endpoint_key)
+    if protocol == "legacy_list":
+        return _sam_text_multi_legacy(image, prompts, config)
+    try:
+        response = sam_request(config, "/segment_text_multi", image, prompts=prompts)
+    except ValueError as error:
+        if "image (base64) and prompts are required" not in str(error):
+            raise
+        outputs, diagnostics = _sam_text_multi_legacy(image, prompts, config)
+        with _sam_multi_protocol_lock:
+            _sam_multi_protocols[endpoint_key] = "legacy_list"
+        return outputs, diagnostics
     outputs = response.get("prompts") if isinstance(response, dict) else None
     if not isinstance(outputs, dict) or set(outputs) != set(prompts):
         raise ValueError("SAM 3 多提示响应缺少类别结果")
     for label, payload in outputs.items():
         if not isinstance(payload, dict) or not isinstance(payload.get("results"), list):
             raise ValueError(f"SAM 3 多提示响应中的类别 {label} 格式无效")
+    with _sam_multi_protocol_lock:
+        _sam_multi_protocols[endpoint_key] = "mapping"
     return outputs, response.get("diagnostics", {})
 
 
@@ -1574,6 +1623,21 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
                 "label": operation.get("label"),
             })
             continue
+        if isinstance(operation, dict) and operation.get("operation") == "remove":
+            reason = str(operation.get("reason", "")).casefold()
+            negative_evidence = (
+                "false positive", "not visible", "not present", "no visible",
+                "absent", "wrong class", "wrong label", "wrong instance",
+                "misclassified", "duplicate", "background artifact",
+                "误检", "不存在", "不可见", "类别错误", "重复",
+            )
+            if not any(marker in reason for marker in negative_evidence):
+                result.setdefault("protocol_normalizations", []).append({
+                    "reason_code": "remove_without_negative_evidence_dropped",
+                    "shape_ids": copy.deepcopy(ids),
+                    "reason": operation.get("reason"),
+                })
+                continue
         retained_operations.append(operation)
     result["operations"] = retained_operations
     for index, operation in enumerate(result["operations"], 1):

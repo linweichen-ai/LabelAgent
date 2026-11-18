@@ -191,7 +191,8 @@ TRANSIENT_RUN_ERROR_MARKERS = (
     "http error 500", "http error 502", "http error 503", "http error 504",
     "http 429", "http 500", "http 502", "http 503", "http 504",
     "local vlm is busy", "vlm is busy",
-    "超时", "连接被重置", "连接被拒绝", "连接中断", "暂时不可用", "服务不可用",
+    "超时", "连接被重置", "连接被拒绝", "积极拒绝", "winerror 10061",
+    "连接中断", "暂时不可用", "服务不可用",
 )
 
 
@@ -3843,6 +3844,7 @@ def refine_reference_candidates():
             item.get("label") in HIGH_RISK_LABELS for item in refined)
         replacement_run["candidate_class_audits"] = []
         replacement_run["human_review_required"] = True
+        replacement_run["inspection_trace"] = copy.deepcopy(trace)
 
         with lock, run_status_lock:
             if (run_stop_event.is_set() or state.get("video") is not video
@@ -4594,7 +4596,8 @@ def generate_reference_draft():
             "description_source": description_source,
             "discovery_sha256": discovery_sha256,
             "discovery_retry_count": discovery_retry_count,
-            "human_review_required": True}
+            "human_review_required": True,
+            "inspection_trace": copy.deepcopy(trace)}
         update_run_status(phase="committing", audit_completed=len(class_audits),
                           audit_total=audit_total, audit_candidate_id=None,
                           shape_count=len(combined), error=None)
@@ -4869,6 +4872,10 @@ def run_workflow():
                     "candidate_artifact_sha256": candidate_artifact_sha256,
                     "input_sha256": input_sha256,
                     "human_review_required": True,
+                    "inspection_trace": copy.deepcopy([
+                        item for item in output["trace"]
+                        if item.get("frame") == target
+                        and item.get("purpose") != "生成真值描述"]),
                 }
                 if defer_agent_review and not failed:
                     replacement_run.update(
@@ -5038,8 +5045,9 @@ def get_inspection():
     output = read("last_run.json")
     description_record = read("description_debug.json")
     legacy_trace = not output.get("file") and not output.get("topic")
+    model_trace = read("model_debug.json").get("trace", [])
     if not output.get("trace"):
-        output["trace"] = read("model_debug.json").get("trace", [])
+        output["trace"] = model_trace
     selected_topic = request.args.get("topic", state.get("topic"))
     selected_file = str(state["video"].path) if state["video"] else ""
     def belongs(item):
@@ -5073,6 +5081,23 @@ def get_inspection():
         has_frame_state = selected_topic == state.get("topic") and (
             str(selected_frame) in state.get("candidates", {})
             or str(selected_frame) in state.get("agent_runs", {}))
+        # Keep the newest scope-bound trace among the latest batch, the trace
+        # persisted with this frame, and the live debug stream.  Persisted
+        # per-frame traces prevent a later run from making older GPT tabs look
+        # empty; requiring live machine state keeps deleted frames deleted.
+        persisted_frame_calls = [
+            item for item in state.get("agent_runs", {}).get(
+                str(selected_frame), {}).get("inspection_trace", [])
+            if belongs(item) and item.get("frame") == selected_frame
+            and item.get("purpose") != "生成真值描述"]
+        live_frame_calls = [item for item in model_trace if belongs(item)
+                            and item.get("frame") == selected_frame
+                            and item.get("purpose") != "生成真值描述"]
+        if has_frame_state:
+            frame_calls = max(
+                (frame_calls, persisted_frame_calls, live_frame_calls),
+                key=lambda items: max(
+                    (item.get("started_at", 0) for item in items), default=0))
         show_description = (selected_frame in reference or bool(frame_calls)
                             or any(item.get("frame") == selected_frame for item in steps)
                             or has_frame_result or has_frame_state)

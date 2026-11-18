@@ -51,6 +51,26 @@ class SingleGPUManagerTests(unittest.TestCase):
             self.assertEqual(vlm.test_client().get("/v1/models").json["data"][0]["id"], "local-test")
             self.assertEqual(manager.started, 0)
 
+    def test_multi_prompt_endpoint_is_forwarded_to_sam_worker(self):
+        with tempfile.TemporaryDirectory() as directory:
+            manager = MODULE.WorkerManager({}, directory, directory, Path(directory)/"events.json")
+            sam, _ = MODULE.create_apps(manager, "local-test")
+            with patch.object(manager, "call", return_value=(200, b'{"prompts":{}}', "application/json")) as call:
+                response = sam.test_client().post("/segment_text_multi", json={
+                    "image": "aW1hZ2U=", "prompts": {"floor": "floor", "slope": "ramp"}})
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(call.call_args.args[:2], ("sam3", "/segment_text_multi"))
+
+    def test_prefetch_endpoints_are_forwarded_to_sam_worker(self):
+        with tempfile.TemporaryDirectory() as directory:
+            manager = MODULE.WorkerManager({}, directory, directory, Path(directory)/"events.json")
+            sam, _ = MODULE.create_apps(manager, "local-test")
+            with patch.object(manager, "call", return_value=(202, b'{"prefetched":false}', "application/json")) as call:
+                self.assertEqual(sam.test_client().post("/prefetch_text", json={}).status_code, 202)
+                self.assertEqual(call.call_args.args[:2], ("sam3", "/prefetch_text"))
+                self.assertEqual(sam.test_client().post("/prefetch_text_multi", json={}).status_code, 202)
+                self.assertEqual(call.call_args.args[:2], ("sam3", "/prefetch_text_multi"))
+
 
 if __name__ == "__main__":
     unittest.main()

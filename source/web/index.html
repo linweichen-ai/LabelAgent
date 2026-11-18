@@ -563,7 +563,7 @@
         </div>
         <label>一键起稿范围
           <select id="referenceAutoLabel" aria-label="选择自动识别并补漏、仅识别可见类别、逐类尝试全部已选类别或指定单一类别"></select>
-          <small>参考帧推荐“自动识别 + 已选类别补漏”：先找明显类别，再补查漏掉的已选类别；速度模式只处理 VLM 已识别类别。结果都只是待复核机器候选。</small>
+          <small>默认先快速处理 VLM 识别到的类别；“已选类别补漏”会额外尝试全部已选类别，适合人工发现明显漏类时使用，但更慢且不保证产生有效轮廓。结果都只是待复核机器候选。</small>
         </label>
         <label>选择机器候选帧
           <select id="candidateReferenceFrame" aria-label="选择机器候选帧"></select>

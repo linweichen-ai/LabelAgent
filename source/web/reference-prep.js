@@ -456,14 +456,14 @@
     }, preferredFrame);
     fillFrameSelect(byId('candidateReferenceFrame'), candidateEntries, '当前数据没有可精修的机器候选', null, preferredFrame);
     const labelSelect = byId('referenceAutoLabel');
-    const selectedLabel = labelSelect.value || AUTO_COVERAGE_LABELS;
+    const selectedLabel = labelSelect.value || AUTO_VISIBLE_LABELS;
     labelSelect.replaceChildren();
-    option(labelSelect, AUTO_COVERAGE_LABELS, '自动识别 + 已选类别补漏（参考帧推荐）');
-    option(labelSelect, AUTO_VISIBLE_LABELS, '仅自动识别可见类别（更快）');
+    option(labelSelect, AUTO_VISIBLE_LABELS, '自动识别当前帧可见类别（推荐，快速）');
+    option(labelSelect, AUTO_COVERAGE_LABELS, '自动识别 + 已选类别补漏（实验，较慢）');
     option(labelSelect, ALL_SELECTED_LABELS, '逐类尝试全部已选推理类别（更慢，易误检）');
     for (const label of state?.labels || []) option(labelSelect, label, label);
     labelSelect.value = [...labelSelect.options].some(item => item.value === selectedLabel)
-      ? selectedLabel : AUTO_COVERAGE_LABELS;
+      ? selectedLabel : AUTO_VISIBLE_LABELS;
     byId('useExistingTruth').disabled = !loaded || !verifiedTruthEntries.length;
     byId('useLegacyTruthDraft').disabled = !loaded || !legacyTruthEntries.length;
     byId('useCandidateDraft').disabled = !loaded || !candidateEntries.length;

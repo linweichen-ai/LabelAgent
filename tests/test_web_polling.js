@@ -79,14 +79,16 @@ test('参考起稿支持逐类尝试全部已选类别但仍保持候选边界',
   assert.match(prep, /result\.human_truth !== false/);
 });
 
-test('参考起稿默认两阶段补漏且仍保持机器候选边界', () => {
+test('参考起稿提供两阶段补漏但依据实测保持快速模式为默认', () => {
   const prep = source('reference-prep.js');
   const html = source('index.html');
   assert.match(prep, /AUTO_COVERAGE_LABELS = '__auto_visible_with_coverage__'/);
-  assert.match(prep, /自动识别 \+ 已选类别补漏（参考帧推荐）/);
+  assert.match(prep, /自动识别当前帧可见类别（推荐，快速）/);
+  assert.match(prep, /自动识别 \+ 已选类别补漏（实验，较慢）/);
+  assert.match(prep, /selectedLabel = labelSelect\.value \|\| AUTO_VISIBLE_LABELS/);
   assert.match(prep, /probe_missing_selected: probeMissingSelected/);
   assert.match(prep, /recall_probe_labels/);
-  assert.match(html, /先找明显类别，再补查漏掉的已选类别/);
+  assert.match(html, /人工发现明显漏类时使用，但更慢且不保证产生有效轮廓/);
   assert.match(prep, /result\.candidate_only/);
   assert.match(prep, /result\.human_truth !== false/);
 });

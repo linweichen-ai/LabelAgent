@@ -1,0 +1,39 @@
+{
+  "schema_version": "labelagent.reference-coverage-ab.v1",
+  "round": 177,
+  "date": "2026-11-18",
+  "status": "coverage_mode_retained_optional_fast_mode_default",
+  "dataset": "SFL_CPD15Y batchA 0920 000 camera_1 isolated read-only source",
+  "formal_state_modified": false,
+  "frames": [
+    {
+      "frame": 95,
+      "fast": {"candidates": 13, "counts": {"floor": 1, "pallet": 9, "person": 3}},
+      "coverage": {"candidates": 13, "counts": {"floor": 1, "pallet": 9, "person": 3}, "extra_probes": ["车辆", "other_robot", "cargo_floor"]}
+    },
+    {
+      "frame": 74,
+      "fast": {"candidates": 16, "counts": {"floor": 1, "pallet": 13, "person": 2}},
+      "coverage": {"candidates": 16, "counts": {"floor": 1, "pallet": 13, "person": 2}, "extra_probes": ["车辆", "other_robot", "cargo_floor"]}
+    },
+    {
+      "frame": 0,
+      "human_reviewed_labels_for_read_only_comparison": ["ego", "floor", "other_robot", "pallet", "person"],
+      "fast": {"candidates": 16, "counts": {"floor": 1, "pallet": 10, "person": 5}},
+      "coverage": {"candidates": 16, "counts": {"floor": 1, "pallet": 10, "person": 5}, "extra_probes": ["车辆", "other_robot", "cargo_floor"]}
+    }
+  ],
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "latency_comparison_valid": false,
+    "latency_reason": "shared persistent VLM and SAM caches make sequential wall times order-dependent"
+  },
+  "decision": {
+    "fast_mode_default": true,
+    "coverage_mode_available": true,
+    "reason": "Three paired frames produced identical effective candidate classes and counts; unconditional extra class probes added no observed coverage benefit.",
+    "next_focus": "class-specific prompts, reference geometry, and fresh reviewed training data for other_robot and cargo_floor"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": "labelagent.sam-route-contract-acceptance.v1",
+  "observed_at": "2026-11-18T15:36:00+08:00",
+  "primary_workbench": "http://127.0.0.1:8765",
+  "routes": {
+    "4090_sam": "http://127.0.0.1:28766",
+    "5090_sam": "http://127.0.0.1:38766",
+    "selected": "http://127.0.0.1:38766"
+  },
+  "live_contract": {
+    "source_frame": 47,
+    "topic": "/capture/camera_0/image",
+    "prompts": ["warehouse floor", "traversable ramp surface"],
+    "4090_protocol": "mapping",
+    "4090_complete": true,
+    "4090_image_encoded_once": true,
+    "5090_protocol": "legacy_list",
+    "5090_complete": true,
+    "5090_image_encoded_once": true,
+    "formal_startup_gate_accepted": true,
+    "formal_selected_port": 38766
+  },
+  "fallback_contract": {
+    "health_only_is_insufficient": true,
+    "requires_complete_prompt_results": true,
+    "requires_image_feature_reuse": true,
+    "fallback_port": 28766
+  },
+  "tests": {
+    "python_tests_passed": 215,
+    "python_subtests_passed": 83,
+    "failures": 0
+  },
+  "rollback": {
+    "previous_commit": "980db2fe76b57a0c2df4b08f4f0caa32164a9130",
+    "note": "Restore the previous manager version or set sam3_url to port 28766. No dataset or truth objects are changed by routing."
+  }
+}

@@ -1,5 +1,6 @@
 """Start the local LabelAgent workbench against private services on factory-4090."""
 import argparse
+import base64
 import json
 import os
 from pathlib import Path
@@ -30,6 +31,7 @@ VLM_PORT = 28868
 FAST_VLM_PORT = 38868
 FAST_SAM_PORT = 38766
 WEB_PORT = 8765
+SAM_CONTRACT_IMAGE = ROOT / "source" / "sam3" / "assets" / "images" / "test_image.jpg"
 STORAGE_WARNING_BYTES = 2 * 1024 ** 3
 STORAGE_CRITICAL_BYTES = 256 * 1024 ** 2
 
@@ -272,6 +274,53 @@ def start_5090_sam_tunnel(items, environment, newly_started):
              optional_fast_wait_seconds(), "5090 SAM 通道")
 
 
+def verify_5090_sam_multi_prompt_contract(port=FAST_SAM_PORT):
+    """Require the deployed 5090 worker's legacy multi-prompt contract.
+
+    A health response proves only that a process is listening.  The workbench
+    may route real traffic to 5090 only after one bounded request proves that
+    both prompts are returned, the result lists are well formed, and image
+    features were reused once.
+    """
+    image = SAM_CONTRACT_IMAGE.read_bytes()
+    prompts = ["warehouse floor", "traversable ramp surface"]
+    result = post_json(port, "/segment_text_multi", {
+        "image": base64.b64encode(image).decode("ascii"),
+        "prompts": prompts,
+    }, timeout=1200)
+    items = result.get("items") if isinstance(result, dict) else None
+    diagnostics = result.get("diagnostics") if isinstance(result, dict) else None
+    complete = (isinstance(items, list) and len(items) == len(prompts)
+                and all(isinstance(item, dict)
+                        and item.get("prompt") == prompt
+                        and isinstance(item.get("results"), list)
+                        for item, prompt in zip(items, prompts)))
+    reused = (isinstance(diagnostics, dict)
+              and (diagnostics.get("image_encoded_once") is True
+                   or diagnostics.get("feature_reuse") is True
+                   or diagnostics.get("image_feature_passes") == 1))
+    return {
+        "accepted": complete and reused,
+        "protocol": "legacy_list",
+        "prompt_count": len(items) if isinstance(items, list) else 0,
+        "image_encoded_once": reused,
+    }
+
+
+def select_standard_sam_port():
+    """Prefer 5090 only after a real contract check; otherwise use 4090."""
+    try:
+        report = verify_5090_sam_multi_prompt_contract()
+    except Exception as error:
+        print(f"提示：5090 SAM 多提示契约验收失败，继续使用 4090；{error}")
+        return SAM_PORT
+    if report.get("accepted") is True:
+        print("5090 SAM 多提示契约验收通过，正式推理将优先使用 5090。")
+        return FAST_SAM_PORT
+    print("提示：5090 SAM 多提示契约验收完成前仅作备用，继续使用 4090。")
+    return SAM_PORT
+
+
 def start_optional_fast_tunnel(items, environment, newly_started):
     """Start the optional tunnel only when its remote service is already ready."""
     if "fast_tunnel" not in items:
@@ -345,7 +394,7 @@ def start(open_browser):
         sam_endpoint_port = SAM_PORT
         try:
             start_5090_sam_tunnel(items, environment, newly_started)
-            sam_endpoint_port = FAST_SAM_PORT
+            sam_endpoint_port = select_standard_sam_port()
         except Exception as error:
             stop_item(items.pop("sam_5090_tunnel", {}))
             newly_started = [name for name in newly_started if name != "sam_5090_tunnel"]

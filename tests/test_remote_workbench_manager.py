@@ -151,6 +151,41 @@ class RemoteWorkbenchManagerTests(unittest.TestCase):
     def test_standard_start_persists_an_explicit_sam_route(self):
         source = PATH.read_text(encoding="utf-8")
         self.assertIn('"sam3_url": f"http://127.0.0.1:{sam_endpoint_port}"', source)
+        self.assertNotIn("sam_endpoint_port = FAST_SAM_PORT", source)
+        self.assertIn("多提示契约验收完成前仅作备用", source)
+
+    def test_5090_sam_contract_requires_complete_reused_multi_prompt_output(self):
+        accepted = {
+            "items": [
+                {"prompt": "warehouse floor", "results": []},
+                {"prompt": "traversable ramp surface", "results": []},
+            ],
+            "diagnostics": {"feature_reuse": True, "image_feature_passes": 1},
+        }
+        with mock.patch.object(MODULE, "post_json", return_value=accepted) as post:
+            report = MODULE.verify_5090_sam_multi_prompt_contract()
+        self.assertTrue(report["accepted"])
+        self.assertTrue(report["image_encoded_once"])
+        self.assertEqual(report["prompt_count"], 2)
+        self.assertEqual(post.call_args.args[:2],
+                         (MODULE.FAST_SAM_PORT, "/segment_text_multi"))
+
+        incomplete = {"items": accepted["items"][:1],
+                      "diagnostics": {"feature_reuse": True}}
+        with mock.patch.object(MODULE, "post_json", return_value=incomplete):
+            self.assertFalse(
+                MODULE.verify_5090_sam_multi_prompt_contract()["accepted"])
+
+    def test_standard_sam_route_falls_back_unless_contract_is_accepted(self):
+        with mock.patch.object(MODULE, "verify_5090_sam_multi_prompt_contract",
+                               return_value={"accepted": True}):
+            self.assertEqual(MODULE.select_standard_sam_port(), MODULE.FAST_SAM_PORT)
+        with mock.patch.object(MODULE, "verify_5090_sam_multi_prompt_contract",
+                               return_value={"accepted": False}):
+            self.assertEqual(MODULE.select_standard_sam_port(), MODULE.SAM_PORT)
+        with mock.patch.object(MODULE, "verify_5090_sam_multi_prompt_contract",
+                               side_effect=RuntimeError("offline")):
+            self.assertEqual(MODULE.select_standard_sam_port(), MODULE.SAM_PORT)
 
     def test_isolated_acceptance_uses_the_verified_primary_tunnels(self):
         self.assertEqual(MODULE.isolate_model_config(), {

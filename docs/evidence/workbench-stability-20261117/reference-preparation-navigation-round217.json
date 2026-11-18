@@ -3,7 +3,7 @@
   "round": 217,
   "date": "2026-11-19",
   "objective": "Cancel stale reference preparation and background refinement when the operator navigates away, while preserving a working steady-state preparation path.",
-  "status": "implemented_tested_and_production_deployed_source_sync_pending",
+  "status": "implemented_tested_production_deployed_and_remotely_verified",
   "boundaries": {
     "candidate_only": true,
     "human_truth": false,
@@ -137,12 +137,12 @@
     "run_status": "idle"
   },
   "source_sync": {
-    "implementation_commit": null,
+    "implementation_commit": "a91bbb05d9a937b16c61e53672312a6959efcd35",
     "receipt_commit": null,
     "branch": "codex/workbench-stability-20261117",
-    "github_readback": null,
-    "cnb_readback": null,
-    "both_remotes_matched": false,
+    "github_readback": "a91bbb05d9a937b16c61e53672312a6959efcd35",
+    "cnb_readback": "a91bbb05d9a937b16c61e53672312a6959efcd35",
+    "both_remotes_matched": true,
     "factory_images_uploaded": false,
     "untracked_experiment_artifacts_uploaded": false
   },

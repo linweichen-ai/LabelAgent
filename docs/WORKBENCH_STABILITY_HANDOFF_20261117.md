@@ -1840,4 +1840,6 @@ Round212 的浏览器验收发现页面会先显示第0帧，再异步恢复到�
 
 部署备份位于 `D:\Apps\LabelAgent\.local\backups\reference-preparation-navigation-round217-20261119-054201`。只重启本机工作台，管理PID经历 `66408 -> 36536 -> 52724`，第二次重启用于修复验收发现的正常路径时间轴问题；最终监听PID58424。4090通道PID60456和5090 SAM通道PID8656全程不变，五项工作台/模型探针均HTTP 200，运行状态idle。正式 `state.json` 与 `file_sessions.json` 哈希前后不变。
 
-本轮没有调用模型生成候选、修改权重、微调、后训练、人工真值、训练批准或OSS。完整说明见 [第二百一十七轮报告](REFERENCE_PREPARATION_NAVIGATION_ROUND217_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/reference-preparation-navigation-round217.json)。浏览器脚本、JSON和厂内截图仍只保留在本地未跟踪目录；GitHub/CNB提交与回读在推送后回填。
+本轮没有调用模型生成候选、修改权重、微调、后训练、人工真值、训练批准或OSS。完整说明见 [第二百一十七轮报告](REFERENCE_PREPARATION_NAVIGATION_ROUND217_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/reference-preparation-navigation-round217.json)。浏览器脚本、JSON和厂内截图仍只保留在本地未跟踪目录。
+
+实现、测试和首版文档提交 `a91bbb05d9a937b16c61e53672312a6959efcd35` 已推送并分别回读 GitHub/CNB，同名分支两端精确匹配；未跟踪实验产物和厂内截图均未上传。

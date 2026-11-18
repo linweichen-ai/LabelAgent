@@ -1842,4 +1842,4 @@ Round212 的浏览器验收发现页面会先显示第0帧，再异步恢复到�
 
 本轮没有调用模型生成候选、修改权重、微调、后训练、人工真值、训练批准或OSS。完整说明见 [第二百一十七轮报告](REFERENCE_PREPARATION_NAVIGATION_ROUND217_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/reference-preparation-navigation-round217.json)。浏览器脚本、JSON和厂内截图仍只保留在本地未跟踪目录。
 
-实现、测试和首版文档提交 `a91bbb05d9a937b16c61e53672312a6959efcd35` 已推送并分别回读 GitHub/CNB，同名分支两端精确匹配；未跟踪实验产物和厂内截图均未上传。
+实现、测试和首版文档提交 `a91bbb05d9a937b16c61e53672312a6959efcd35` 已推送并分别回读 GitHub/CNB，同名分支两端精确匹配；回读回执提交为 `40fc4c6ff8a7ecd46134cf4fb8554e1aa0fbac88`。未跟踪实验产物和厂内截图均未上传。

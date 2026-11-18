@@ -609,6 +609,10 @@ test('人工修改候选会按唯一任务号取消单帧和批量后台精修',
   assert.equal((refinement.match(/refinement_id:entry\.refinementId/g) || []).length, 2);
   assert.match(refinement, /entry\.stale/);
   assert.match(refinement, /人工草稿已变化，过时的后台精修已取消/);
+  const openDraft = section(app, 'window.prepareReferenceCandidateDraft=async', 'window.prepareReferenceLegacyTruthDraft=async');
+  assert.match(openDraft, /candidateAuditFullSnapshot\(manualDrafts\[key\]\)!==candidateAuditFullSnapshot\(candidate\)\)return/);
+  assert.ok(openDraft.indexOf('candidateAuditFullSnapshot(manualDrafts[key])!==candidateAuditFullSnapshot(candidate)')
+    < openDraft.lastIndexOf('return finishAudit(candidate)'));
 });
 
 test('启动前并行检查模型、参考流程与首个请求帧的数据兼容性', async () => {

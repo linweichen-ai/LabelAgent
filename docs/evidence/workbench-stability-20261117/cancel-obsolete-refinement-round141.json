@@ -7,7 +7,8 @@
       "Assign a fresh UUID to both single-frame and post-run deferred refinements.",
       "Compare the active editable draft with the snapshot bound to that refinement.",
       "On a real content change, invalidate the local generation and request cancellation for that exact UUID, frame and topic.",
-      "Do not cancel merely for selecting a shape, switching views or inspecting an unchanged draft."
+      "Do not cancel merely for selecting a shape, switching views or inspecting an unchanged draft.",
+      "After an edit cancellation, do not launch the old fallback class audit for the now-obsolete candidate snapshot."
     ],
     "server": [
       "Bind refinement_id into the live run status and every refinement response.",
@@ -37,6 +38,39 @@
       "passed": 95,
       "failed": 0
     },
+    "isolated_real_browser": {
+      "status": "passed",
+      "work_dir": "D:/Apps/LabelAgent/.local/isolated-round141-edit-cancel-v3-20261118",
+      "port": 18943,
+      "frame": 36,
+      "initial_candidate_count": 11,
+      "edited_draft_count": 10,
+      "stop_response_ms": 305,
+      "workbench_stopped_ms": 462,
+      "vlm_idle_after_workbench_ms": 30,
+      "matching_refinement_id": true,
+      "active_task_was_already_registered": true,
+      "server_candidates_unchanged": true,
+      "server_agent_run_unchanged": true,
+      "truth_unchanged": true,
+      "audit_requests_after_edit": 0,
+      "page_errors": [],
+      "isolated_port_released": true,
+      "result_artifact": {
+        "path": "artifacts/round141-edit-cancel/browser-result-v3.json",
+        "sha256": "08ec494bcfcac75c3708ee079fa10eabd36a9a095f2def055a75535ed0ae5977"
+      },
+      "screenshot": {
+        "path": "artifacts/round141-edit-cancel/browser-v3.png",
+        "sha256": "5c78a04e412ab461bf732f60396b585e5641086050d6540652617ee2686e6e9b",
+        "visual_readback": "The manual-truth workspace remained active with ten editable outlines and an explicit toast that obsolete Agent refinement was not adopted."
+      },
+      "invalid_attempts_retained": [
+        "The first harness version obscured its original failure with an unhandled Playwright listener rejection.",
+        "The archived frame-34 sample then completed from exact cache before the edit could exercise cancellation, so it was rejected as an invalid timing sample.",
+        "The accepted frame-36 fixture copied production state into a new isolated directory and changed only isolated Agent metadata to pending; image, candidates and truth were not changed."
+      ]
+    },
     "first_windows_attempt": {
       "status": "environment_failure_not_product_regression",
       "reason": "The suite was first started without PYTHONUTF8=1, so existing UTF-8 Chinese fixtures were read through the Windows GBK default. The unchanged suite passed after restoring the project's required UTF-8 environment."
@@ -48,7 +82,7 @@
     "old_server_sha256": "67ebed711b0329f7dd36096a972decbafd976da4c9e9dda94083a16519eecb6a",
     "new_server_sha256": "37d7aee237b974bb84b81a182445b34c9ecab5b963ade52c2f41f8ffe03c1d9c",
     "old_app_sha256": "f3347efdbbc48c1968c4cc4673571e5ea09daed2b30fc3e85663622e4fde4904",
-    "new_app_sha256": "7a5e2085832f356679d22f18f31f5790d464defaed183844121103a136b15c34",
+    "new_app_sha256": "1c89855b83e473313c457f49d7ad4830c20acbee1cc529d180964eac032f93ab",
     "runtime_matches_worktree": true,
     "formal_state_sha256_before": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
     "formal_state_sha256_after": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21"

@@ -1,0 +1,469 @@
+"""Evaluate candidate-only point scanning for missed reference-frame instances."""
+
+from __future__ import annotations
+
+import argparse
+import base64
+import copy
+import io
+import json
+import time
+import urllib.request
+from pathlib import Path
+
+import numpy as np
+from PIL import Image, ImageDraw
+
+from source.agent.edit_agent import _rasterize
+from source.agent.mcap_video import Video
+from source.agent.workflow import chat, chat_batch, sam_text_multi
+from tools.tiled_candidate_utils import _iou, _mask_record
+
+
+CLASS_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "class": {"type": "string", "enum": [
+            "person", "pallet", "other_robot", "vehicle_or_forklift",
+            "chair_or_furniture", "tool_or_equipment", "ego_robot_part",
+            "floor_or_structure", "unknown_object",
+        ]},
+        "visible_evidence": {"type": "string", "minLength": 1, "maxLength": 120},
+    },
+    "required": ["class", "visible_evidence"],
+}
+
+CLASS_PROMPT = (
+    "Classify only the thin-red-outlined object shown at four scales. Choose the most "
+    "literal visible class. person means any human body or limb; pallet means passive "
+    "load support or crate stack; ego_robot_part means foreground hardware attached to "
+    "the camera vehicle; floor_or_structure includes racks, walls, beams and fixed "
+    "equipment; vehicle_or_forklift means a manned forklift, tug or ordinary industrial "
+    "vehicle; chair_or_furniture includes seats and wheeled chairs; tool_or_equipment "
+    "includes a manual pallet jack, loose cart, machine part or hand-operated device. "
+    "other_robot requires concrete visible evidence of a separate unmanned motorized "
+    "autonomous chassis or AGV, not merely a low platform, seat, pallet, box, tool or "
+    "forklift. A visible driver, seat, steering handle or manual pull handle is evidence "
+    "against other_robot. Use unknown_object when motorization is not visibly supported. "
+    "The fourth panel highlights the candidate mask in cyan. Judge the outlined candidate, "
+    "not a nearby object in the wider context. Do not use overlay color as evidence."
+)
+
+EXEMPLAR_PROMPT = CLASS_PROMPT + (
+    " The second image is a sheet of confirmed project-specific other_robot positive "
+    "examples outlined in green. In this project, other_robot may be either the visible "
+    "body of a separate autonomous industrial mobile robot or a clearly associated "
+    "visible part such as its fork tip or attachment. Use the sheet to understand that "
+    "project convention, but do not classify an object as other_robot merely because it "
+    "has a similar color, is low to the floor, or is near a pallet. The first image is "
+    "the candidate to classify; the second image is reference only."
+)
+
+SURFACE_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "decision": {"type": "string", "enum": [
+            "physical_object", "background_surface", "uncertain"]},
+        "visible_evidence": {"type": "string", "minLength": 1, "maxLength": 120},
+    },
+    "required": ["decision", "visible_evidence"],
+}
+
+SURFACE_PROMPT = (
+    "This image contains only the candidate pixels on a uniform gray background. Decide "
+    "whether the visible pixels themselves form a coherent physical item, or are merely a "
+    "patch of floor, wall, ceiling, glare or empty background. A small blurry box-like item "
+    "still counts as physical_object. Do not decide its semantic class and do not infer from "
+    "anything outside the isolated pixels. Use uncertain when evidence is insufficient."
+)
+
+
+def fixed_point_grid(width, height, columns=24, rows=12, top_fraction=2 / 3):
+    """Return deterministic interior scan points without using class or color cues."""
+    if (type(width) is not int or type(height) is not int or width < columns
+            or height < rows or not 2 <= columns <= 64 or not 2 <= rows <= 64
+            or not 0 < top_fraction <= 1):
+        raise ValueError("invalid point grid")
+    top = height * top_fraction
+    return [
+        {"x": min(width - 1, round(column * width / columns)),
+         "y": min(height - 1, round(row * height / rows))}
+        for row in range(1, rows + 1)
+        if row * height / rows <= top + 1e-9
+        for column in range(1, columns)
+    ]
+
+
+def point_batch(image, points, endpoint):
+    body = {"image": base64.b64encode(image).decode("ascii"), "points": points}
+    request = urllib.request.Request(
+        endpoint.rstrip("/") + "/segment_points_batch",
+        data=json.dumps(body).encode("utf-8"),
+        headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(request, timeout=1200) as response:
+        payload = json.load(response)
+    if (not isinstance(payload, dict) or not isinstance(payload.get("items"), list)
+            or payload.get("diagnostics", {}).get("image_encoded_once") is not True
+            or payload.get("diagnostics", {}).get("point_count") != len(points)):
+        raise ValueError("point batch response did not prove one-pass complete coverage")
+    return payload
+
+
+def sam_shapes(payload, label):
+    shapes = []
+    for index, result in enumerate(payload.get("results") or [], 1):
+        parts = result.get("parts") or []
+        if not parts:
+            continue
+        shapes.append({
+            "id": index, "label": label,
+            "points": parts[0]["points"], "holes": parts[0].get("holes", []),
+            "parts": parts, "score": result.get("score"),
+        })
+    return shapes
+
+
+def known_instance_masks(image, width, height, config):
+    outputs, diagnostics = sam_text_multi(
+        image, {"person": "person", "pallet": "pallet"}, config)
+    masks = {}
+    for label, payload in outputs.items():
+        masks[label] = [
+            _rasterize(shape, width, height).astype(bool)
+            for shape in sam_shapes(payload, label)
+        ]
+    return masks, diagnostics
+
+
+def known_coverage(mask, area, known_masks):
+    return {
+        label: max([float(np.count_nonzero(mask & known)) / area
+                    for known in masks] or [0.0])
+        for label, masks in known_masks.items()
+    }
+
+
+def filtered_candidates(batch, width, height, known_masks):
+    raw = []
+    for item in batch["items"]:
+        result = item.get("result")
+        if not result or not result.get("parts"):
+            continue
+        shape = {
+            "id": len(raw) + 1, "label": "unknown_object",
+            "points": result["points"], "holes": result.get("holes", []),
+            "parts": result["parts"], "score": float(result["score"]),
+            "point": item["point"],
+        }
+        record = _mask_record(shape, width, height)
+        shape.update(_record=record, bbox=list(record["bbox"]), area=record["area"])
+        raw.append(shape)
+    minimum_area = max(32, round(width * height * 0.000033))
+    geometric = [shape for shape in raw
+                 if shape["score"] >= 0.80
+                 and minimum_area <= shape["area"] <= width * height * 0.08
+                 and shape["bbox"][2] - shape["bbox"][0] <= width * 0.5
+                 and shape["bbox"][3] - shape["bbox"][1] <= height * 0.5]
+    kept = []
+    for shape in sorted(geometric, key=lambda item: item["score"], reverse=True):
+        if any(_iou(shape["_record"], prior["_record"]) >= 0.85 for prior in kept):
+            continue
+        mask = _rasterize(shape, width, height).astype(bool)
+        coverage = known_coverage(mask, shape["area"], known_masks)
+        shape["known_coverage"] = coverage
+        shape["passes_known_exclusion"] = max(coverage.values(), default=0.0) < 0.5
+        kept.append(shape)
+    return raw, geometric, kept
+
+
+def multiscale_panel(image, shape, identifier):
+    width, height = image.size
+    x0, y0, x1, y1 = shape["bbox"]
+    panels = []
+    center_x, center_y = (x0 + x1) // 2, (y0 + y1) // 2
+    for factor in (12, 8, 4):
+        box_width = max(160, (x1 - x0) * factor)
+        box_height = max(100, (y1 - y0) * factor)
+        box = (max(0, int(center_x - box_width / 2)),
+               max(0, int(center_y - box_height / 2)),
+               min(width, int(center_x + box_width / 2)),
+               min(height, int(center_y + box_height / 2)))
+        crop = image.crop(box).resize((512, 384), Image.Resampling.LANCZOS)
+        scale_x = 512 / max(1, box[2] - box[0])
+        scale_y = 384 / max(1, box[3] - box[1])
+        polygon = [((x - box[0]) * scale_x, (y - box[1]) * scale_y)
+                   for x, y in shape["points"]]
+        if polygon:
+            ImageDraw.Draw(crop).line(
+                polygon + [polygon[0]], fill=(255, 40, 40), width=5)
+        panels.append(crop)
+    box = (max(0, x0 - 40), max(0, y0 - 40),
+           min(width, x1 + 40), min(height, y1 + 40))
+    crop = image.crop(box)
+    mask = _rasterize(shape, width, height)[box[1]:box[3], box[0]:box[2]].astype(bool)
+    pixels = np.asarray(crop).copy()
+    pixels[mask] = (
+        pixels[mask] * 0.75 + np.asarray([0, 230, 255]) * 0.25).astype(np.uint8)
+    panels.append(Image.fromarray(pixels).resize((512, 384), Image.Resampling.LANCZOS))
+    board = Image.new("RGB", (1024, 768))
+    labels = ("WIDE CONTEXT", "CONTEXT", "CLOSE CROP", "MASK / cyan tint")
+    for index, (panel, label) in enumerate(zip(panels, labels)):
+        draw = ImageDraw.Draw(panel)
+        draw.rectangle((0, 0, 320, 28), fill=(0, 0, 0))
+        draw.text((6, 6), f"{identifier} {label}", fill=(255, 255, 255))
+        board.paste(panel, ((index % 2) * 512, (index // 2) * 384))
+    output = io.BytesIO()
+    board.save(output, "JPEG", quality=92)
+    return output.getvalue()
+
+
+def isolated_mask_image(image, shape):
+    width, height = image.size
+    x0, y0, x1, y1 = shape["bbox"]
+    box = (max(0, x0 - 40), max(0, y0 - 40),
+           min(width, x1 + 40), min(height, y1 + 40))
+    crop = image.crop(box)
+    mask = _rasterize(shape, width, height)[box[1]:box[3], box[0]:box[2]].astype(bool)
+    source_pixels = np.asarray(crop).copy()
+    pixels = np.full_like(source_pixels, 118)
+    pixels[mask] = source_pixels[mask]
+    isolated = Image.fromarray(pixels).resize((512, 384), Image.Resampling.LANCZOS)
+    output = io.BytesIO()
+    isolated.save(output, "JPEG", quality=95)
+    return output.getvalue()
+
+
+def classify_candidates(config, candidates, image, output, frame, top_k,
+                        exemplar_sheet=None, artifact_suffix=""):
+    selected = [item for item in candidates if item["passes_known_exclusion"]][:top_k]
+    requests = []
+    for index, shape in enumerate(selected, 1):
+        identifier = f"C{index:02d}"
+        data = multiscale_panel(image, shape, identifier)
+        path = output / (
+            f"frame-{frame}-{identifier.lower()}-multiscale{artifact_suffix}.jpg")
+        path.write_bytes(data)
+        requests.append({"identifier": identifier, "shape": shape, "image": data,
+                         "artifact": str(path.resolve())})
+    results, durations = [], []
+    for start in range(0, len(requests), 3):
+        group = requests[start:start + 3]
+        started = time.time()
+        prompt = EXEMPLAR_PROMPT if exemplar_sheet else CLASS_PROMPT
+        extra_images = (exemplar_sheet,) if exemplar_sheet else ()
+        if len(group) == 1:
+            values = [chat(config, prompt, group[0]["image"],
+                           extra_images=extra_images,
+                           response_schema=CLASS_SCHEMA)]
+        else:
+            values = chat_batch(
+                config,
+                [{"instruction": prompt, "image": item["image"],
+                  "extra_images": extra_images}
+                 for item in group],
+                response_schema=CLASS_SCHEMA, max_tokens=192)
+        durations.append(time.time() - started)
+        for item, value in zip(group, values):
+            results.append({
+                "id": item["identifier"], "result": value,
+                "point": item["shape"]["point"],
+                "score": item["shape"]["score"],
+                "bbox": item["shape"]["bbox"],
+                "area": item["shape"]["area"],
+                "known_coverage": item["shape"]["known_coverage"],
+                "artifact": item["artifact"],
+                "_shape": item["shape"],
+            })
+    return results, durations
+
+
+def supported_other_robot(result):
+    return result.get("class") == "other_robot"
+
+
+def classify_surface_veto(config, rows, image, output, frame):
+    pending = [row for row in rows if row.get("dual_pass_consensus")]
+    requests = []
+    for row in pending:
+        data = isolated_mask_image(image, row["_shape"])
+        path = output / f"frame-{frame}-{row['id'].lower()}-isolated-veto.jpg"
+        path.write_bytes(data)
+        requests.append({"row": row, "image": data, "artifact": str(path.resolve())})
+    durations = []
+    for start in range(0, len(requests), 3):
+        group = requests[start:start + 3]
+        started = time.time()
+        if len(group) == 1:
+            values = [chat(config, SURFACE_PROMPT, group[0]["image"],
+                           response_schema=SURFACE_SCHEMA)]
+        else:
+            values = chat_batch(
+                config,
+                [{"instruction": SURFACE_PROMPT, "image": item["image"]}
+                 for item in group],
+                response_schema=SURFACE_SCHEMA, max_tokens=128)
+        durations.append(time.time() - started)
+        for request, value in zip(group, values):
+            request["row"]["surface_veto"] = value
+            request["row"]["surface_veto_artifact"] = request["artifact"]
+    return durations
+
+
+def evaluate_frame(frame, image_bytes, existing_annotations, config, point_endpoint,
+                   output, top_k, exemplar_sheet=None):
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    width, height = image.size
+    points = fixed_point_grid(width, height)
+    started = time.time()
+    batch = point_batch(image_bytes, points, point_endpoint)
+    scan_seconds = time.time() - started
+    known_masks, known_diagnostics = known_instance_masks(
+        image_bytes, width, height, config)
+    raw, geometric, kept = filtered_candidates(
+        batch, width, height, known_masks)
+    baseline, baseline_seconds = classify_candidates(
+        config, kept, image, output, frame, top_k,
+        artifact_suffix="-baseline" if exemplar_sheet else "")
+    if exemplar_sheet:
+        exemplar, exemplar_seconds = classify_candidates(
+            config, kept, image, output, frame, top_k,
+            exemplar_sheet=exemplar_sheet, artifact_suffix="-exemplar")
+        if [item["id"] for item in baseline] != [item["id"] for item in exemplar]:
+            raise ValueError("baseline and exemplar candidate order diverged")
+        classified = []
+        for baseline_item, exemplar_item in zip(baseline, exemplar):
+            item = exemplar_item
+            item["baseline_result"] = baseline_item["result"]
+            item["baseline_artifact"] = baseline_item["artifact"]
+            item["dual_pass_consensus"] = (
+                supported_other_robot(baseline_item["result"])
+                and supported_other_robot(exemplar_item["result"]))
+            classified.append(item)
+        classify_seconds = {
+            "baseline": baseline_seconds, "exemplar": exemplar_seconds}
+    else:
+        classified = baseline
+        for item in classified:
+            item["dual_pass_consensus"] = supported_other_robot(item["result"])
+        classify_seconds = {"baseline": baseline_seconds}
+    surface_veto_seconds = classify_surface_veto(
+        config, classified, image, output, frame)
+    existing_shapes = [
+        shape for shape in existing_annotations
+        if shape.get("label") == "other_robot"]
+    existing_records = [
+        _mask_record(shape, width, height) for shape in existing_shapes]
+    selected = [item for item in classified
+                if item["dual_pass_consensus"]
+                and item.get("surface_veto", {}).get("decision") == "physical_object"]
+    uncertain = [item for item in classified
+                 if item["dual_pass_consensus"]
+                 and item.get("surface_veto", {}).get("decision") == "uncertain"]
+    for item in classified:
+        item["existing_annotation_ious"] = [
+            _iou(item["_shape"]["_record"], record)
+            for record in existing_records]
+        item["existing_annotation_iou"] = max(
+            item["existing_annotation_ious"] or [0.0])
+        item.pop("_shape", None)
+    matched_existing = sum(any(
+        item["existing_annotation_ious"][index] >= 0.5 for item in selected)
+        for index in range(len(existing_records)))
+    return {
+        "frame": frame,
+        "existing_other_robot_count": len(existing_records),
+        "existing_other_robot_provenance": [{
+            "human_truth": bool(shape.get("human_truth", False)),
+            "candidate_only": bool(shape.get("candidate_only", False)),
+            "approved_for_training": bool(shape.get("approved_for_training", False)),
+            "review_status": shape.get("review_status"),
+        } for shape in existing_shapes],
+        "point_count": len(points),
+        "scan_seconds": scan_seconds,
+        "batch_diagnostics": batch["diagnostics"],
+        "known_prompt_diagnostics": known_diagnostics,
+        "raw_candidates": len(raw),
+        "geometric_candidates": len(geometric),
+        "nms_candidates": len(kept),
+        "known_exclusion_passed": sum(
+            shape["passes_known_exclusion"] for shape in kept),
+        "classified_count": len(classified),
+        "classification_batch_seconds": classify_seconds,
+        "surface_veto_batch_seconds": surface_veto_seconds,
+        "selection_rule": (
+            "baseline_and_exemplar_supported_other_robot"
+            if exemplar_sheet else "baseline_supported_other_robot"),
+        "selected_ids": [item["id"] for item in selected],
+        "uncertain_review_ids": [item["id"] for item in uncertain],
+        "matched_existing_count": matched_existing,
+        "unmatched_existing_annotation_ids": [
+            item["id"] for item in selected
+            if item["existing_annotation_iou"] < 0.5],
+        "rows": classified,
+    }
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--state", required=True)
+    parser.add_argument("--output", required=True)
+    parser.add_argument("--frames", required=True)
+    parser.add_argument("--point-sam-url", default="http://127.0.0.1:28766")
+    parser.add_argument("--top-k", type=int, default=12)
+    parser.add_argument("--exemplar-sheet")
+    args = parser.parse_args()
+    if not 1 <= args.top_k <= 24:
+        parser.error("--top-k must be within 1..24")
+    state = json.loads(Path(args.state).read_text(encoding="utf-8"))
+    topic = state.get("topic")
+    annotations_by_frame = state.get("truth") or {}
+    frames = [int(value.strip()) for value in args.frames.split(",") if value.strip()]
+    if not frames or any(str(frame) not in annotations_by_frame for frame in frames):
+        raise ValueError("every evaluation frame must have local existing annotations")
+    video = Video(state["video_path"])
+    output = Path(args.output)
+    output.mkdir(parents=True, exist_ok=True)
+    config = copy.deepcopy(state.get("config") or {})
+    exemplar_sheet = (Path(args.exemplar_sheet).read_bytes()
+                      if args.exemplar_sheet else None)
+    frame_reports = []
+    for frame in frames:
+        report = evaluate_frame(
+            frame, video.frame(topic, frame), annotations_by_frame[str(frame)], config,
+            args.point_sam_url, output, args.top_k,
+            exemplar_sheet=exemplar_sheet)
+        frame_reports.append(report)
+        print(json.dumps({"stage": "frame_complete", **{
+            key: report[key] for key in
+            ("frame", "selected_ids", "matched_existing_count",
+             "unmatched_existing_annotation_ids")}},
+            ensure_ascii=False), flush=True)
+    summary = {
+        "candidate_only": True,
+        "human_truth": False,
+        "approved_for_training": False,
+        "state_written": False,
+        "project_exemplar_sheet_used": bool(exemplar_sheet),
+        "frames": len(frame_reports),
+        "existing_annotation_instances": sum(
+            item["existing_other_robot_count"] for item in frame_reports),
+        "matched_existing_annotation_instances": sum(
+            item["matched_existing_count"] or 0 for item in frame_reports),
+        "unmatched_candidate_count": sum(
+            len(item["unmatched_existing_annotation_ids"])
+            for item in frame_reports),
+        "evaluation_boundary": (
+            "Existing annotations are used only for overlap scoring and may be "
+            "assistant-reviewed candidates rather than human truth. Unmatched candidates "
+            "are neither automatic false positives nor training-approved truth."),
+        "frame_reports": frame_reports,
+    }
+    (output / "report.json").write_text(
+        json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(json.dumps(summary, ensure_ascii=False))
+
+
+if __name__ == "__main__":
+    main()

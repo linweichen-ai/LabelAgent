@@ -1,0 +1,45 @@
+{
+  "date": "2026-11-18",
+  "status": "candidate_only",
+  "human_truth": false,
+  "approved_for_training": false,
+  "state_written": false,
+  "method": {
+    "point_prompts": 184,
+    "color_dependent": false,
+    "image_encoded_once": true,
+    "semantic_votes": ["baseline", "project_positive_exemplars"],
+    "background_surface_veto": true
+  },
+  "project_reference": {
+    "source": "CVAT_Task3_20261028 reviewed local snapshot",
+    "frames": 150,
+    "other_robot_instances": 215,
+    "positive_exemplars_used": 12,
+    "live_remote_cvat_verified": false
+  },
+  "results": [
+    {
+      "frame": 0,
+      "selected_ids": ["C05", "C07"],
+      "existing_annotation_count": 1,
+      "matched_existing_annotation_count": 1,
+      "best_existing_overlap_iou": 0.9659474039109912,
+      "point_service_seconds": 5.629856860963628
+    },
+    {
+      "frame": 55,
+      "selected_ids": ["C01", "C06"],
+      "existing_annotation_count": 0,
+      "matched_existing_annotation_count": 0,
+      "point_service_seconds": 5.852490124991164
+    }
+  ],
+  "runtime_after_trial": {
+    "formal_sam_38766": "healthy_unmodified",
+    "candidate_sam_28766": "healthy_batch_endpoint",
+    "local_vlm_28868": "http_200",
+    "workbench_8765": "http_200"
+  },
+  "boundary": "Selected instances are offline review candidates, not automatic false positives, human truth, or training-approved labels."
+}

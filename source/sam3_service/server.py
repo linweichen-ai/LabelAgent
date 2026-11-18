@@ -4,7 +4,7 @@ from time import perf_counter
 
 from flask import Flask, jsonify, request
 
-from .point_segment import model_loaded, segment
+from .point_segment import model_loaded, segment, segment_many
 from .sam_multi_helpers import evaluate_prompt_states, validate_prompt_map
 
 app = Flask(__name__)
@@ -32,6 +32,23 @@ def segment_points():
             raise ValueError("mask must be a base64 PNG image")
         prior_mask = base64.b64decode(mask, validate=True) if mask is not None else None
         return jsonify(segment(image_bytes, points, prior_mask=prior_mask))
+    except (ValueError, TypeError) as error:
+        return jsonify(error=str(error)), 400
+
+
+@app.post("/segment_points_batch")
+def segment_points_batch():
+    """Generate independent point candidates with one image feature pass."""
+    body = request.get_json(silent=True) or {}
+    image = body.get("image")
+    points = body.get("points")
+    if not isinstance(image, str) or not isinstance(points, list):
+        return jsonify(error="image (base64) and points are required"), 400
+    try:
+        import base64
+
+        image_bytes = base64.b64decode(image, validate=True)
+        return jsonify(segment_many(image_bytes, points))
     except (ValueError, TypeError) as error:
         return jsonify(error=str(error)), 400
 

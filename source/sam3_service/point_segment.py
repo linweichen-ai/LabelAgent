@@ -4,6 +4,7 @@ import sys
 import threading
 from contextlib import nullcontext
 from pathlib import Path
+from time import perf_counter
 
 import numpy as np
 from PIL import Image
@@ -12,6 +13,7 @@ SAM3_SOURCE = Path(__file__).resolve().parents[1] / "sam3"
 WEIGHTS = SAM3_SOURCE / "weights"
 _model = None
 _model_lock = threading.Lock()
+MAX_BATCH_POINTS = 512
 
 
 def model_loaded():
@@ -38,6 +40,91 @@ def _predictor():
         load_from_HF=False, enable_inst_interactivity=True, device=device)
     _model = (model, Sam3Processor(model))
     return _model
+
+
+def _prediction_result(masks, scores, coords, labels, previous=None):
+    """Convert one interactive prediction into the existing polygon contract."""
+    import cv2
+
+    masks_array = np.asarray(masks)
+    positive = [(int(y), int(x)) for (x, y), label in zip(coords, labels) if label == 1]
+    negative = [(int(y), int(x)) for (x, y), label in zip(coords, labels) if label == 0]
+
+    def covered(binary, y, x, radius=3):
+        y0, y1 = max(0, y-radius), min(binary.shape[0], y+radius+1)
+        x0, x1 = max(0, x-radius), min(binary.shape[1], x+radius+1)
+        return bool(binary[y0:y1, x0:x1].any())
+
+    candidates = []
+    for index, candidate in enumerate(masks_array):
+        binary = np.asarray(candidate, dtype=bool)
+        positive_ok = all(binary[y, x] for y, x in positive)
+        negative_ok = all(not covered(binary, y, x) for y, x in negative)
+        violations = (sum(not binary[y, x] for y, x in positive)
+                      + sum(covered(binary, y, x) for y, x in negative))
+        candidates.append((positive_ok and negative_ok, -violations,
+                           float(scores[index]), index))
+    best = max(candidates)[-1]
+    mask = np.asarray(masks_array[best], dtype=np.uint8)
+    contours, hierarchy = cv2.findContours(mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+    if not contours:
+        raise ValueError("SAM 3 没有找到目标，请补充提示点")
+    outer = [index for index, node in enumerate(hierarchy[0])
+             if node[3] == -1 and cv2.contourArea(contours[index]) >= 9]
+    if not outer:
+        raise ValueError("生成区域过小，请补充提示点")
+    prompted_outer = [index for index in outer if any(
+        mask[y, x] and cv2.pointPolygonTest(contours[index], (x, y), False) >= 0
+        for y, x in positive)]
+    if previous is not None:
+        pass
+    elif prompted_outer:
+        outer = prompted_outer
+    else:
+        outer = [max(outer, key=lambda index: cv2.contourArea(contours[index]))]
+
+    def polygon(contour, simplify=True):
+        if simplify:
+            contour = cv2.approxPolyDP(
+                contour, max(0.5, cv2.arcLength(contour, True) * 0.001), True)
+        return [[int(x), int(y)] for [[x, y]] in contour]
+
+    def extract_parts(simplify=True):
+        parts = []
+        for index in outer:
+            vertices = polygon(contours[index], simplify)
+            if len(vertices) < 3:
+                continue
+            holes = []
+            child = hierarchy[0][index][2]
+            while child != -1:
+                hole = polygon(contours[child], simplify)
+                if len(hole) >= 3:
+                    holes.append(hole)
+                child = hierarchy[0][child][0]
+            parts.append({"points": vertices, "holes": holes})
+        return parts
+
+    def rasterize(parts):
+        rendered = np.zeros(mask.shape, dtype=np.uint8)
+        for part in parts:
+            cv2.fillPoly(rendered, [np.asarray(part["points"], dtype=np.int32)], 1)
+            for hole in part["holes"]:
+                cv2.fillPoly(rendered, [np.asarray(hole, dtype=np.int32)], 0)
+        return rendered
+
+    parts = extract_parts()
+    rendered = rasterize(parts)
+    if any(bool(mask[y, x]) != bool(rendered[y, x]) for y, x in positive + negative):
+        parts = extract_parts(simplify=False)
+        rendered = rasterize(parts)
+    if any(rendered[y, x] for y, x in negative):
+        raise ValueError("SAM 3 无法排除当前负点区域，请补充或调整提示点")
+    warnings = []
+    if any(not rendered[y, x] for y, x in positive):
+        warnings.append("SAM 3 未覆盖全部正点；已保留候选轮廓，请继续调整提示点")
+    return {"points": parts[0]["points"], "holes": parts[0]["holes"],
+            "parts": parts, "score": float(scores[best]), "warnings": warnings}
 
 
 def segment(image_bytes, points, prior_mask=None):
@@ -85,88 +172,54 @@ def segment(image_bytes, points, prior_mask=None):
                 point_coords=np.asarray(coords, dtype=np.float32),
                 point_labels=np.asarray(labels, dtype=np.int32),
                 multimask_output=previous is None and len(coords) == 1, **mask_prompt)
-    # SAM 3 may return several candidates.  Its quality score alone can pick
-    # a mask that still covers a user supplied negative point, so rank masks
-    # by prompt consistency first and use the model score as the tie breaker.
-    masks_array = np.asarray(masks)
-    positive = [(int(y), int(x)) for (x, y), label in zip(coords, labels) if label == 1]
-    negative = [(int(y), int(x)) for (x, y), label in zip(coords, labels) if label == 0]
-    # Check a small neighbourhood as well as the exact click pixel.  This
-    # avoids accepting a mask whose boundary merely passes through a negative
-    # click because of image scaling/interpolation.
-    def covered(binary, y, x, radius=3):
-        y0, y1 = max(0, y-radius), min(binary.shape[0], y+radius+1)
-        x0, x1 = max(0, x-radius), min(binary.shape[1], x+radius+1)
-        return bool(binary[y0:y1, x0:x1].any())
-    candidates = []
-    for index, candidate in enumerate(masks_array):
-        binary = np.asarray(candidate, dtype=bool)
-        positive_ok = all(binary[y, x] for y, x in positive)
-        negative_ok = all(not covered(binary, y, x) for y, x in negative)
-        violations = sum(not binary[y, x] for y, x in positive) + sum(covered(binary, y, x) for y, x in negative)
-        candidates.append((positive_ok and negative_ok, -violations, float(scores[index]), index))
-    # Exact prompt agreement wins; if the model has no exact candidate, pick
-    # the least violating one rather than silently ignoring negative clicks.
-    best = max(candidates)[-1]
-    mask = np.asarray(masks_array[best], dtype=np.uint8)
-    contours, hierarchy = cv2.findContours(mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-    if not contours:
-        raise ValueError("SAM 3 没有找到目标，请补充提示点")
-    outer = [index for index, node in enumerate(hierarchy[0]) if node[3] == -1 and cv2.contourArea(contours[index]) >= 9]
-    if not outer:
-        raise ValueError("生成区域过小，请补充提示点")
-    prompted_outer = [index for index in outer if any(
-        mask[y, x] and cv2.pointPolygonTest(contours[index], (x, y), False) >= 0
-        for y, x in positive)]
-    if previous is not None:
-        # Refinement must keep all predicted components, including regions
-        # disconnected by occluders that were part of the previous mask.
-        pass
-    elif prompted_outer:
-        outer = prompted_outer
-    else:
-        outer = [max(outer, key=lambda index: cv2.contourArea(contours[index]))]
+    return _prediction_result(masks, scores, coords, labels, previous)
 
-    def polygon(contour, simplify=True):
-        if simplify:
-            contour = cv2.approxPolyDP(contour, max(0.5, cv2.arcLength(contour, True) * 0.001), True)
-        return [[int(x), int(y)] for [[x, y]] in contour]
 
-    def extract_parts(simplify=True):
-        parts = []
-        for index in outer:
-            vertices = polygon(contours[index], simplify)
-            if len(vertices) < 3:
-                continue
-            holes = []
-            child = hierarchy[0][index][2]
-            while child != -1:
-                hole = polygon(contours[child], simplify)
-                if len(hole) >= 3:
-                    holes.append(hole)
-                child = hierarchy[0][child][0]
-            parts.append({"points": vertices, "holes": holes})
-        return parts
+def segment_many(image_bytes, points):
+    """Generate independent point candidates while encoding the image once."""
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    width, height = image.size
+    if (not isinstance(points, list) or not points
+            or len(points) > MAX_BATCH_POINTS):
+        raise ValueError(f"批量提示点须包含 1～{MAX_BATCH_POINTS} 个点")
+    normalized = []
+    for point in points:
+        if not isinstance(point, dict):
+            raise ValueError("每个批量提示点必须是对象")
+        x, y = point.get("x"), point.get("y")
+        if (type(x) is not int or type(y) is not int
+                or not (0 <= x < width and 0 <= y < height)):
+            raise ValueError("批量提示点超出图像范围或类型无效")
+        normalized.append({"x": x, "y": y})
+    if len({(point["x"], point["y"]) for point in normalized}) != len(normalized):
+        raise ValueError("批量提示点不得重复")
 
-    def rasterize(parts):
-        rendered = np.zeros(mask.shape, dtype=np.uint8)
-        for part in parts:
-            cv2.fillPoly(rendered, [np.asarray(part["points"], dtype=np.int32)], 1)
-            for hole in part["holes"]:
-                cv2.fillPoly(rendered, [np.asarray(hole, dtype=np.int32)], 0)
-        return rendered
-
-    parts = extract_parts()
-    rendered = rasterize(parts)
-    # Simplification may move a boundary across a click. Keep exact contour
-    # vertices when that happens; do not blame the model for conversion loss.
-    if any(bool(mask[y, x]) != bool(rendered[y, x]) for y, x in positive + negative):
-        parts = extract_parts(simplify=False)
-        rendered = rasterize(parts)
-    if any(rendered[y, x] for y, x in negative):
-        raise ValueError("SAM 3 无法排除当前负点区域，请补充或调整提示点")
-    warnings = []
-    if any(not rendered[y, x] for y, x in positive):
-        warnings.append("SAM 3 未覆盖全部正点；已保留候选轮廓，请继续调整提示点")
-    return {"points": parts[0]["points"], "holes": parts[0]["holes"],
-            "parts": parts, "score": float(scores[best]), "warnings": warnings}
+    started = perf_counter()
+    items = []
+    with _model_lock:
+        model, processor = _predictor()
+        import torch
+        precision = (torch.autocast("cuda", dtype=torch.bfloat16)
+                     if torch.cuda.is_available() else nullcontext())
+        with torch.inference_mode(), precision:
+            encode_started = perf_counter()
+            state = processor.set_image(image)
+            image_encoding_seconds = perf_counter() - encode_started
+            for point in normalized:
+                coords = np.asarray([[point["x"], point["y"]]], dtype=np.float32)
+                labels = np.asarray([1], dtype=np.int32)
+                try:
+                    masks, scores, _ = model.predict_inst(
+                        state, point_coords=coords, point_labels=labels,
+                        multimask_output=True)
+                    result = _prediction_result(masks, scores, coords, labels)
+                    items.append({"point": point, "result": result})
+                except ValueError as error:
+                    items.append({"point": point, "error": str(error)[:200]})
+    return {"items": items, "diagnostics": {
+        "image_encoded_once": True,
+        "image_encoding_seconds": image_encoding_seconds,
+        "point_count": len(normalized),
+        "successful_count": sum("result" in item for item in items),
+        "total_seconds": perf_counter() - started,
+    }}

@@ -24,11 +24,13 @@ from fastapi.responses import JSONResponse
 from PIL import Image
 
 try:  # Package import for tests and repository use.
-    from .point_segment import _model_lock, _predictor, model_loaded, segment
+    from .point_segment import (
+        _model_lock, _predictor, model_loaded, segment, segment_many)
     from .response_cache import ExactResponseCoordinator
     from .sam_multi_helpers import evaluate_prompt_states, validate_prompt_map
 except ImportError:  # Direct script execution in the remote deployment folder.
-    from point_segment import _model_lock, _predictor, model_loaded, segment
+    from point_segment import (
+        _model_lock, _predictor, model_loaded, segment, segment_many)
     from response_cache import ExactResponseCoordinator
     from sam_multi_helpers import evaluate_prompt_states, validate_prompt_map
 
@@ -186,6 +188,20 @@ def segment_points(body: dict):
         prior = base64.b64decode(mask, validate=True) if isinstance(mask, str) else None
         with request_lock:
             return segment(image, points, prior_mask=prior)
+    except (ValueError, TypeError) as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+
+@app.post("/segment_points_batch")
+def segment_points_batch(body: dict):
+    """Generate independent point candidates with one image feature pass."""
+    try:
+        image = decode_image(body.get("image"))
+        points = body.get("points")
+        if not isinstance(points, list):
+            raise ValueError("points must be a list")
+        with request_lock:
+            return segment_many(image, points)
     except (ValueError, TypeError) as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
 

@@ -2354,12 +2354,14 @@ def suppress_near_duplicate_candidates(shapes, width, height,
     return final, suppressed
 
 
-def filter_slope_candidate_geometry(shapes, image_height, minimum_width_height_ratio=1.5,
+def filter_slope_candidate_geometry(shapes, image_height, minimum_width_height_ratio=1.75,
                                     minimum_height_fraction=0.07):
     """Retain broad planar slope proposals; route tall strip responses to review.
 
     The filter does not confirm a slope or use color. It only rejects the repeatable
-    vertical floor-strip distractors returned by the broader traversable-surface query.
+    vertical and compact floor-patch distractors returned by the broader
+    traversable-surface query. Borderline proposals are retained in the audit as
+    human-review-required rather than being promoted as slope truth.
     """
     if not 1.0 <= minimum_width_height_ratio <= 10.0:
         raise ValueError("斜坡候选宽高比阈值无效")

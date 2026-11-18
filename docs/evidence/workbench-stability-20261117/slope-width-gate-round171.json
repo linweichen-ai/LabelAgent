@@ -1,0 +1,53 @@
+{
+  "round": 171,
+  "recorded_at": "2026-11-18T16:15:00+08:00",
+  "status": "DEPLOYED_WITH_PROXY_RECALL_GATE",
+  "objective": "Suppress the user-confirmed compact floor-patch slope false positive without using color or reducing observed slope proxy recall.",
+  "change": {
+    "filter": "filter_slope_candidate_geometry",
+    "old_minimum_width_height_ratio": 1.5,
+    "new_minimum_width_height_ratio": 1.75,
+    "suppressed_route": "human_review_required",
+    "downstream_policy_unchanged": "floor union slope maps to traversable_area"
+  },
+  "user_confirmed_negative": {
+    "dataset": "常熟0920_四相机与点云.mcap",
+    "topic": "/capture/camera_0/image",
+    "frame": 47,
+    "candidate_id": 11,
+    "bbox": [758, 589, 1263, 888],
+    "width_height_ratio": 1.6867,
+    "old_retained": true,
+    "new_retained": false,
+    "reason_code": "slope_candidate_not_broad_planar"
+  },
+  "positive_proxy_gate": {
+    "provenance": "legacy_auto_preannotation",
+    "human_truth_verified": false,
+    "frames": [74, 77, 80, 83, 86, 95, 97, 99],
+    "retained_frames": 8,
+    "total_frames": 8,
+    "minimum_retained_ratio": 1.9459,
+    "routes": {
+      "full_frame": 7,
+      "overlap_crop_fallback": 1
+    },
+    "interpretation": "This is a non-regression gate against the existing automatic slope proxies, not human-truth recall or cross-dataset accuracy."
+  },
+  "verification": {
+    "targeted_tests": "3/3 passed",
+    "full_python_regression": "922/922 passed",
+    "live_runtime_replay": "user negative suppressed and 8/8 proxy positives retained",
+    "sam_calls": "foreground bounded replay; model released immediately"
+  },
+  "deployment": {
+    "runtime": "D:/Apps/LabelAgent",
+    "backup": "D:/Apps/LabelAgent/.local/backups/slope-width-gate-round171-20261118-161314/workflow.py",
+    "sam_route": "factory-5090",
+    "vlm_route": "factory-4090",
+    "model_weights_changed": false,
+    "human_truth_written": false,
+    "training_data_written": false,
+    "oss_written": false
+  }
+}

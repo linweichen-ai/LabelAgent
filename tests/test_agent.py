@@ -1325,6 +1325,23 @@ class WorkflowTests(unittest.TestCase):
                          "slope_candidate_below_minimum_height")
         self.assertEqual(suppressed[0]["minimum_height"], 4)
 
+    def test_slope_geometry_filter_rejects_compact_floor_patch_without_losing_wide_ramp(self):
+        def polygon(candidate_id, width, height):
+            points = [[0, 0], [width - 1, 0],
+                      [width - 1, height - 1], [0, height - 1]]
+            part = {"points": points, "holes": []}
+            return {"id": candidate_id, "label": "slope", "points": points,
+                    "holes": [], "parts": [part], "score": 0.8}
+        compact_floor_patch = polygon(1, 169, 100)
+        narrowest_preserved_ramp_proxy = polygon(2, 195, 100)
+        retained, suppressed = workflow.filter_slope_candidate_geometry(
+            [compact_floor_patch, narrowest_preserved_ramp_proxy], 480)
+        self.assertEqual([item["id"] for item in retained], [2])
+        self.assertEqual([item["id"] for item in suppressed], [1])
+        self.assertEqual(suppressed[0]["reason_code"],
+                         "slope_candidate_not_broad_planar")
+        self.assertEqual(suppressed[0]["minimum_width_height_ratio"], 1.75)
+
     def test_slope_generation_uses_overlap_crops_only_after_full_frame_rejection(self):
         def result(points, score=0.8):
             return {"parts": [{"points": points, "holes": []}], "score": score}

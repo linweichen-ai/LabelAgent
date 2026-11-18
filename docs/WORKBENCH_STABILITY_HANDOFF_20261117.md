@@ -1676,3 +1676,11 @@ Round156 收尾时 C盘仅余约 1.18 GiB，再次低于工作台的 2 GiB 警�
 正式部署前源码、测试、正式状态和“助手文件此前不存在”的事实备份到 `D:\Apps\LabelAgent\.local\backups\slope-scoped-review-round162-20261118-131421`。部署只重启工作台，GPU管理器 PID 138436 保持；正式工作台与模型探针正常，SAM/VLM ready、运行状态 idle，正式活动数据仍是 SFL camera 1。复核包在线读回32/32条助手建议，当前决定数0、人工真值写入0、训练数据写入0；`state.json` 与 `file_sessions.json` SHA-256 仍分别为 `d671dd58...8085` 和 `251a4796...8cc`。结构化证据见 [第一百六十二轮专项判断](evidence/workbench-stability-20261117/slope-scoped-review-round162.json)。
 
 边界：本轮减少的是人工复核操作成本，不是模型精度提升。助手建议不是真值，专项人工决定也不会自动批准训练；SAM仍未微调或后训练。只有完成当前人工复核并建立互不重叠的训练与评测划分后，才能启动有验收意义的微调。
+
+## 第一百七十一轮斜坡紧凑地面误检门禁（已部署，2026-11-18）
+
+针对用户明确指出的常熟0920四相机数据 camera 0 第47帧错误斜坡候选，本轮从保存会话回读出候选框 `[758,589,1263,888]`，宽高比为1.6867。旧宽平面门槛1.50会保留它；现把门槛收紧到1.75，该候选转入 `human_review_required / slope_candidate_not_broad_planar`，不再作为机器斜坡候选晋级。规则只使用候选几何，不读取颜色；`floor + slope -> traversable_area` 的下游策略保持不变。
+
+为避免用单个负样本换取漏检，正式5090 SAM对8个既有斜坡自动代理帧做了现场只读重放：74、77、80、83、86、95、97、99仍为8/8保留，其中7帧走全图、95帧走重叠裁剪补救；最窄保留候选宽高比为1.9459，与1.75门槛仍有余量。定向测试3/3、完整Python回归922/922通过。部署前工作流备份位于 `D:\Apps\LabelAgent\.local\backups\slope-width-gate-round171-20261118-161314`，工作台只做本地重启，远端模型保持热启动。
+
+边界：8帧来源仍是 `legacy_auto_preannotation`，只能作为现有自动代理的非退化门禁，不能称为人工真值召回率或跨数据集准确率。本轮没有修改SAM/VLM权重、人工真值、训练批准或OSS。完整结构化记录见 [第一百七十一轮斜坡宽度门禁](evidence/workbench-stability-20261117/slope-width-gate-round171.json)。

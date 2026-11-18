@@ -120,7 +120,11 @@
 - 没有写 OSS；
 - 浏览器验收全部使用合成任务状态，未把测试任务写入正式状态。
 
-机器证据见 `docs/evidence/workbench-stability-20261117/task-bound-stop-round222.json`。实现、文档及 GitHub/CNB 回读提交号将在远端同步完成后回填。
+机器证据见 `docs/evidence/workbench-stability-20261117/task-bound-stop-round222.json`。
+
+## 代码与文档同步
+
+实现、测试、详细报告、机器证据和总交接文档提交为 `f0089a0303e047166d9c574db784e702f89b845c`。推送后分别回读 GitHub 与 CNB 的 `codex/workbench-stability-20261117` 分支，两端均精确匹配该提交；回读回执提交号将在回执同步完成后补入。未跟踪浏览器产物和厂内内容没有进入远端仓库。
 
 ## 下一步
 

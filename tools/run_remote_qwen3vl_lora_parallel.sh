@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -lt 2 || $# -gt 7 ]]; then
-  echo "usage: $0 PROJECT_ROOT OUTPUT_NAME [MAX_SAMPLES] [MAX_STEPS] [SLOPE_REPEAT] [LEARNING_RATE] [SEED]" >&2
+if [[ $# -lt 2 || $# -gt 10 ]]; then
+  echo "usage: $0 PROJECT_ROOT OUTPUT_NAME [MAX_SAMPLES] [MAX_STEPS] [POSITIVE_REPEAT] [LEARNING_RATE] [SEED] [POSITIVE_LABEL] [REPEAT_EVIDENCE] [LOSS_SCOPE]" >&2
   exit 64
 fi
 
@@ -13,6 +13,9 @@ MAX_STEPS=${4:-52}
 SLOPE_REPEAT=${5:-8}
 LEARNING_RATE=${6:-1e-4}
 SEED=${7:-20261118}
+POSITIVE_LABEL=${8:-slope}
+REPEAT_EVIDENCE=${9:-present}
+LOSS_SCOPE=${10:-full}
 GPU_UUID=GPU-8dde4d59-7e14-09ff-46c0-35da2f7177b8
 SAM_PORT=18766
 VLM_PORT=18878
@@ -29,6 +32,9 @@ case "$PROJECT_ROOT" in /home/clw/projects/sfl-cpd15y/*) ;; *) exit 65 ;; esac
 [[ "$SLOPE_REPEAT" =~ ^[1-8]$ ]] || exit 69
 [[ "$LEARNING_RATE" =~ ^(0\.[0-9]+|[0-9]+(\.[0-9]+)?e-[0-9]+)$ ]] || exit 70
 [[ "$SEED" =~ ^[0-9]+$ && "$SEED" -le 2147483647 ]] || exit 71
+[[ "$POSITIVE_LABEL" =~ ^[A-Za-z0-9_]+$ ]] || exit 79
+[[ "$REPEAT_EVIDENCE" =~ ^(present|absent|uncertain)$ ]] || exit 80
+[[ "$LOSS_SCOPE" =~ ^(full|evidence)$ ]] || exit 81
 [[ ! -e "$OUTPUT_DIR" ]] || { echo "training output already exists" >&2; exit 72; }
 
 for required in "$PROJECT_ROOT/train_qwen3vl_lora.py" \
@@ -61,7 +67,9 @@ env PYTHONPATH="$PEFT_OVERLAY" CUDA_VISIBLE_DEVICES="$GPU_UUID" \
     --model-dir "$MODEL_DIR" --dataset-dir dataset --output "$OUTPUT_NAME" \
     --max-samples "$MAX_SAMPLES" --max-steps "$MAX_STEPS" \
     --slope-positive-repeat "$SLOPE_REPEAT" --gradient-accumulation-steps 2 \
-    --learning-rate "$LEARNING_RATE" --seed "$SEED"
+    --learning-rate "$LEARNING_RATE" --seed "$SEED" \
+    --positive-label "$POSITIVE_LABEL" --repeat-evidence "$REPEAT_EVIDENCE" \
+    --loss-scope "$LOSS_SCOPE"
 
 curl -fsS "http://127.0.0.1:$SAM_PORT/health" >"$OUTPUT_DIR/sam-health-after.json"
 curl -fsS "http://127.0.0.1:$VLM_PORT/health" >"$OUTPUT_DIR/vlm-health-after.json"

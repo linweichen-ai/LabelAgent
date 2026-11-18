@@ -5,7 +5,8 @@ import tempfile
 import unittest
 
 from tools.train_qwen3vl_lora import (
-    OneImageCollator, load_jsonl, slope_balanced_rows, verify_manifest,
+    OneImageCollator, find_evidence_token_span, load_jsonl, slope_balanced_rows,
+    verify_manifest,
 )
 
 
@@ -29,13 +30,27 @@ def write_fixture(root: Path):
 
 
 class Qwen3VlLoraBoundaryTests(unittest.TestCase):
+    def test_evidence_token_span_is_exact(self):
+        class Tokenizer:
+            pieces = {1: '{"evidence":"', 2: "present", 3: '"}'}
+
+            def decode(self, values, skip_special_tokens=False):
+                return "".join(self.pieces[value] for value in values)
+
+        self.assertEqual(find_evidence_token_span(Tokenizer(), [1, 2, 3], "present"),
+                         (1, 2))
+
     def test_parallel_wrappers_preserve_services_and_gate_shared_gpu(self):
         root = Path(__file__).parents[1]
         train = (root / "tools" / "run_remote_qwen3vl_lora_parallel.sh").read_text(
             encoding="utf-8")
         evaluate = (root / "tools" / "run_remote_qwen3vl_adapter_static_eval_parallel.sh").read_text(
             encoding="utf-8")
-        for script in (train, evaluate):
+        teacher_force = (root / "tools" / "run_remote_qwen3vl_lora_eval_parallel.sh").read_text(
+            encoding="utf-8")
+        generation = (root / "tools" / "run_remote_qwen3vl_lora_generation_eval_parallel.sh").read_text(
+            encoding="utf-8")
+        for script in (train, evaluate, teacher_force, generation):
             self.assertIn("MINIMUM_FREE_MIB=12000", script)
             self.assertIn("SAM_INFLIGHT", script)
             self.assertIn("flock -n 9", script)
@@ -61,6 +76,24 @@ class Qwen3VlLoraBoundaryTests(unittest.TestCase):
     def test_slope_balancing_rejects_missing_evidence(self):
         with self.assertRaises(ValueError):
             slope_balanced_rows([{"target": "{}"}], 2)
+
+    def test_balancing_supports_an_explicit_project_label(self):
+        def row(sample_id, evidence):
+            return {"sample_id": sample_id, "target": json.dumps({
+                "assessments": {"other_robot": {"evidence": evidence}}})}
+
+        rows, report = slope_balanced_rows(
+            [row("positive", "present"), row("negative", "absent")],
+            2, "other_robot")
+        self.assertEqual(len(rows), 3)
+        self.assertEqual(report["positive_label"], "other_robot")
+        self.assertNotIn("slope_positive_repeat", report)
+
+        rows, report = slope_balanced_rows(
+            [row("positive", "present"), row("negative", "absent")],
+            3, "other_robot", "absent")
+        self.assertEqual([item["sample_id"] for item in rows].count("negative"), 3)
+        self.assertEqual(report["repeat_evidence"], "absent")
 
     def test_valid_teacher_distillation_fixture_passes(self):
         with tempfile.TemporaryDirectory() as directory:

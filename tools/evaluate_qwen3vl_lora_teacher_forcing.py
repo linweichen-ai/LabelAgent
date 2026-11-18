@@ -20,9 +20,11 @@ def file_sha256(path: str | Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def load_dev_rows(dataset_dir: Path) -> tuple[list[dict], dict]:
+def load_eval_rows(dataset_dir: Path, split: str = "dev") -> tuple[list[dict], dict]:
+    if split not in {"dev", "holdout"}:
+        raise ValueError("evaluation split is invalid")
     manifest_path = dataset_dir / "manifest.json"
-    dev_path = dataset_dir / "dev.jsonl"
+    dev_path = dataset_dir / f"{split}.jsonl"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     if (manifest.get("status") != "ready_for_isolated_lora_smoke"
             or manifest.get("track") != "teacher_distillation"
@@ -31,15 +33,21 @@ def load_dev_rows(dataset_dir: Path) -> tuple[list[dict], dict]:
             or manifest.get("requires_acceptance_gate") is not True
             or manifest.get("test24_included") is not False):
         raise ValueError("distillation manifest boundary differs")
-    if manifest.get("dev_jsonl_sha256") != file_sha256(dev_path):
-        raise ValueError("development JSONL hash differs")
+    if manifest.get(f"{split}_jsonl_sha256") != file_sha256(dev_path):
+        raise ValueError(f"{split} JSONL hash differs")
     rows = [json.loads(line) for line in dev_path.read_text(encoding="utf-8").splitlines()
             if line.strip()]
-    if len(rows) != manifest.get("dev_samples") or not rows:
-        raise ValueError("development sample count differs")
+    if len(rows) != manifest.get(f"{split}_samples") or not rows:
+        raise ValueError(f"{split} sample count differs")
     seen = set()
+    allowed_sequences = manifest.get(f"{split}_source_sequences") \
+        or manifest.get("dev_source_sequences") or ["008"]
+    if (not isinstance(allowed_sequences, list) or not allowed_sequences
+            or any(not isinstance(value, str) or not value for value in allowed_sequences)):
+        raise ValueError("development source sequence boundary differs")
     for row in rows:
-        if (row.get("split") != "dev" or row.get("source_sequence") != "008"
+        if (row.get("split") != split
+                or row.get("source_sequence") not in allowed_sequences
                 or row.get("track") != "teacher_distillation"
                 or row.get("candidate_kind") != "machine_teacher_output"
                 or row.get("human_truth") is not False
@@ -50,6 +58,10 @@ def load_dev_rows(dataset_dir: Path) -> tuple[list[dict], dict]:
             raise ValueError("duplicate development sample")
         seen.add(row.get("sample_id"))
     return rows, manifest
+
+
+def load_dev_rows(dataset_dir: Path) -> tuple[list[dict], dict]:
+    return load_eval_rows(dataset_dir, "dev")
 
 
 def summarize(per_sample: list[dict]) -> dict:
@@ -151,6 +163,7 @@ def main() -> int:
         "token_accuracy_not_worse": (
             adapter_summary["token_accuracy"] >= base_summary["token_accuracy"]),
     }
+    evaluation_sequences = manifest.get("dev_source_sequences") or ["008"]
     result = {
         "schema_version": "labelagent.qwen3vl2b-lora-teacher-forcing.v1",
         "created_utc": datetime.now(timezone.utc).isoformat(),
@@ -160,7 +173,9 @@ def main() -> int:
         "human_truth": False,
         "production_deployed": False,
         "test24_used": False,
-        "evaluation_sequence": "008",
+        "evaluation_sequence": (evaluation_sequences[0]
+                                if len(evaluation_sequences) == 1 else None),
+        "evaluation_sequences": evaluation_sequences,
         "dataset_manifest_sha256": file_sha256(args.dataset_dir / "manifest.json"),
         "dev_jsonl_sha256": manifest["dev_jsonl_sha256"],
         "adapter_sha256": file_sha256(args.adapter_dir / "adapter_model.safetensors"),

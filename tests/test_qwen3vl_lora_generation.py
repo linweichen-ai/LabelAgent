@@ -13,6 +13,8 @@ class Qwen3VlLoraGenerationTests(unittest.TestCase):
         score = score_output(row, parsed)
         self.assertEqual(score["matched_labels"], 1)
         self.assertEqual(score["label_count"], 2)
+        self.assertEqual(score["evidence_pairs"]["slope"], {
+            "expected": "absent", "actual": "present"})
 
     def test_registry_drift_is_rejected(self):
         row = {"target": '{"assessments":{"floor":{"evidence":"present"}},'
@@ -31,6 +33,28 @@ class Qwen3VlLoraGenerationTests(unittest.TestCase):
         summary = summarize(rows)
         self.assertEqual(summary["one_pass_success_rate"], 0.5)
         self.assertEqual(summary["teacher_evidence_accuracy"], 0.5)
+
+    def test_summary_reports_present_confusion(self):
+        pairs = [
+            ("present", "present"), ("absent", "present"),
+            ("present", "absent"), ("absent", "absent"),
+        ]
+        rows = [{
+            "status": "ok", "generation_seconds": 1.0, "completion_tokens": 4,
+            "score": {
+                "label_count": 1,
+                "matched_labels": int(expected == actual),
+                "unknown_count_matches": True,
+                "evidence_pairs": {
+                    "other_robot": {"expected": expected, "actual": actual}},
+            },
+        } for expected, actual in pairs]
+        metrics = summarize(rows)["per_label"]["other_robot"]
+        self.assertEqual(metrics["tp"], 1)
+        self.assertEqual(metrics["fp"], 1)
+        self.assertEqual(metrics["fn"], 1)
+        self.assertEqual(metrics["tn"], 1)
+        self.assertEqual(metrics["f1"], 0.5)
 
 
 if __name__ == "__main__":

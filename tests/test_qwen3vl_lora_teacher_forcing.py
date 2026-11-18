@@ -4,7 +4,8 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from tools.evaluate_qwen3vl_lora_teacher_forcing import load_dev_rows, summarize
+from tools.evaluate_qwen3vl_lora_teacher_forcing import (
+    load_dev_rows, load_eval_rows, summarize)
 
 
 def fixture(root: Path):
@@ -43,6 +44,27 @@ class Qwen3VlLoraTeacherForcingTests(unittest.TestCase):
             (root / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
             with self.assertRaises(ValueError):
                 load_dev_rows(root)
+
+    def test_holdout_boundary_uses_frozen_holdout_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _, manifest = fixture(root)
+            row = {
+                "sample_id": "holdout-001", "split": "holdout",
+                "source_sequence": "008", "track": "teacher_distillation",
+                "candidate_kind": "machine_teacher_output", "human_truth": False,
+                "production_training_approved": False,
+                "requires_acceptance_gate": True,
+            }
+            path = root / "holdout.jsonl"
+            path.write_text(json.dumps(row) + "\n", encoding="utf-8")
+            manifest["holdout_samples"] = 1
+            manifest["holdout_jsonl_sha256"] = hashlib.sha256(
+                path.read_bytes()).hexdigest()
+            (root / "manifest.json").write_text(
+                json.dumps(manifest), encoding="utf-8")
+            rows, _ = load_eval_rows(root, "holdout")
+            self.assertEqual(rows[0]["sample_id"], "holdout-001")
 
     def test_summary_is_token_weighted(self):
         result = summarize([

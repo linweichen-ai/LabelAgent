@@ -1,0 +1,71 @@
+{
+  "schema_version": "labelagent.other-robot-evidence-only-round189.v1",
+  "created_local": "2026-11-18T19:40:00+08:00",
+  "status": "candidate_holdout_consistency_passed_not_deployed",
+  "track": "machine_teacher_distillation",
+  "human_truth": false,
+  "production_deployed": false,
+  "source_labels": "legacy_auto_snapshot",
+  "source_truth_sha256": "381a8f2e76a4d58d013302cd416842eaed88cb720b8cfc42185efe6e0e0f6c8a",
+  "dataset_manifest_sha256": "8b02bbe4d499dc449fefb17b16c7d48f1d2e4668da55731dbfc7d710d180113d",
+  "contract_sha256": "e9e3eb58a482d4e9552921d45f82255e4c47ba94e1dc7e618439363cdd415312",
+  "adapter_sha256": "39a5e67e6d7e1366d442b648d11cab48391fd754853f7ed68b1070960fde027a",
+  "training": {
+    "loss_scope": "evidence",
+    "steps": 64,
+    "sampled_rows": 128,
+    "sampled_evidence_counts": {"present": 62, "absent": 66},
+    "learning_rate": 0.0001,
+    "seed": 3407,
+    "train_loss": 0.648554651463157,
+    "elapsed_seconds": 63.96,
+    "peak_cuda_memory_bytes": 5353843712
+  },
+  "development": {
+    "frames": 22,
+    "positive_frames": 12,
+    "negative_frames": 10,
+    "valid_generations": 22,
+    "tp": 9,
+    "fp": 1,
+    "fn": 3,
+    "tn": 9,
+    "precision": 0.9,
+    "recall": 0.75,
+    "f1": 0.8181818181818182,
+    "disagreement_frames": [24, 102, 104, 108],
+    "visual_review": "Frame 24 contains an unlabeled black background device; frames 102, 104 and 108 contain only a tiny occluded auto mask at the upper-right edge. These are review disagreements, not confirmed model errors."
+  },
+  "frozen_holdout": {
+    "used_for_tuning": false,
+    "evaluated_once_after_candidate_freeze": true,
+    "frames": 28,
+    "positive_frames": 17,
+    "negative_frames": 11,
+    "valid_generations": 28,
+    "tp": 17,
+    "fp": 0,
+    "fn": 0,
+    "tn": 11,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+  },
+  "failed_comparators": [
+    {"name": "full-target-step64", "behavior": "all_present", "fp": 10, "fn": 0},
+    {"name": "full-target-step32", "behavior": "all_absent", "fp": 0, "fn": 12}
+  ],
+  "artifact_sha256": {
+    "run_receipt": "a5473ae4412ad9fbcd09de01fcea9aa7c7b0fee5f76b8d51c45ecbc5d6cbdc71",
+    "development_result": "bbef1ae8b39f0bc5cfca35f3ee838b5c68eb94d035c2d81e048c6044a8e261b4",
+    "holdout_result": "727d51a93cba72c8f8c5fc7fab509eb8d2740d4ddc7aa2ccac54d3caccd0644f"
+  },
+  "service_readback": {
+    "sam_status": "ok",
+    "sam_inflight": 0,
+    "vlm_status": "ok",
+    "vlm_model": "labelagent-vlm8b",
+    "vlm_inflight": 0
+  },
+  "boundary": "The holdout result measures consistency with one legacy auto-labeled sequence. It is not human-truth accuracy, cross-site generalization, or production acceptance."
+}

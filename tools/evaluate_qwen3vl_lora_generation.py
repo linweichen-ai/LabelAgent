@@ -12,16 +12,20 @@ import statistics
 import sys
 import time
 
-from PIL import Image, ImageOps
-
 try:
-    from tools.evaluate_qwen3vl_lora_teacher_forcing import load_dev_rows
+    from tools.evaluate_qwen3vl_lora_teacher_forcing import load_eval_rows
 except ModuleNotFoundError:  # Flat, isolated remote bundle.
-    from evaluate_qwen3vl_lora_teacher_forcing import load_dev_rows
+    from evaluate_qwen3vl_lora_teacher_forcing import load_eval_rows
 
 
 def file_sha256(path: str | Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def json_sha256(value: dict) -> str:
+    payload = json.dumps(value, ensure_ascii=False, sort_keys=True,
+                         separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
 
 
 def score_output(row: dict, parsed: dict) -> dict:
@@ -33,17 +37,23 @@ def score_output(row: dict, parsed: dict) -> dict:
     if set(generated_assessments) != set(target_assessments):
         raise ValueError("generated label registry differs")
     matches = {}
+    evidence_pairs = {}
     for label, expected in target_assessments.items():
         actual = generated_assessments.get(label)
         if not isinstance(actual, dict) or actual.get("evidence") not in {
                 "present", "absent", "uncertain"}:
             raise ValueError("generated evidence is invalid")
         matches[label] = actual["evidence"] == expected.get("evidence")
+        evidence_pairs[label] = {
+            "expected": expected.get("evidence"),
+            "actual": actual["evidence"],
+        }
     unknown = parsed.get("unknown_candidates")
     if not isinstance(unknown, list):
         raise ValueError("unknown candidate list is invalid")
     return {
         "label_matches": matches,
+        "evidence_pairs": evidence_pairs,
         "matched_labels": sum(matches.values()),
         "label_count": len(matches),
         "unknown_count": len(unknown),
@@ -58,6 +68,31 @@ def summarize(rows: list[dict]) -> dict:
     label_matches = sum(row["score"]["matched_labels"] for row in successful)
     generations = [row["generation_seconds"] for row in successful]
     completions = [row["completion_tokens"] for row in successful]
+    labels = sorted({label for row in successful
+                     for label in row["score"].get("evidence_pairs", {})})
+    per_label = {}
+    for label in labels:
+        pairs = [row["score"]["evidence_pairs"][label] for row in successful
+                 if label in row["score"].get("evidence_pairs", {})]
+        tp = sum(pair["expected"] == "present" and pair["actual"] == "present"
+                 for pair in pairs)
+        fp = sum(pair["expected"] != "present" and pair["actual"] == "present"
+                 for pair in pairs)
+        fn = sum(pair["expected"] == "present" and pair["actual"] != "present"
+                 for pair in pairs)
+        tn = sum(pair["expected"] != "present" and pair["actual"] != "present"
+                 for pair in pairs)
+        precision = tp / (tp + fp) if tp + fp else 0.0
+        recall = tp / (tp + fn) if tp + fn else 0.0
+        per_label[label] = {
+            "tp": tp, "fp": fp, "fn": fn, "tn": tn,
+            "precision": precision,
+            "recall": recall,
+            "f1": (2 * precision * recall / (precision + recall)
+                   if precision + recall else 0.0),
+            "uncertain_predictions": sum(
+                pair["actual"] == "uncertain" for pair in pairs),
+        }
     return {
         "samples": len(rows),
         "one_pass_successes": len(successful),
@@ -71,10 +106,13 @@ def summarize(rows: list[dict]) -> dict:
         "generation_seconds_max": max(generations) if generations else None,
         "completion_tokens_median": statistics.median(completions) if completions else None,
         "completion_tokens_max": max(completions) if completions else None,
+        "per_label": per_label,
     }
 
 
 def evaluate_mode(backend, rows: list[dict], contract: dict, mode: str) -> tuple[dict, list[dict]]:
+    from PIL import Image, ImageOps
+
     results = []
     for row in rows:
         started = time.perf_counter()
@@ -134,14 +172,22 @@ def main() -> int:
     parser.add_argument("--contract", required=True, type=Path)
     parser.add_argument("--server-module-dir", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--base-result", type=Path)
+    parser.add_argument("--split", default="dev", choices=("dev", "holdout"))
     args = parser.parse_args()
     if args.output.exists():
         raise FileExistsError(args.output)
-    rows, manifest = load_dev_rows(args.dataset_dir)
+    rows, manifest = load_eval_rows(args.dataset_dir, args.split)
     contract = json.loads(args.contract.read_text(encoding="utf-8"))
-    if (contract.get("schema_version") != "labelagent.vlm-teacher-contract.v1"
+    contract_record = {key: value for key, value in contract.items()
+                       if key != "contract_sha256"}
+    expected_schema = manifest.get(
+        "generation_contract_schema_version", "labelagent.vlm-teacher-contract.v1")
+    expected_max_tokens = manifest.get("generation_max_tokens", 384)
+    if (contract.get("schema_version") != expected_schema
             or contract.get("contract_sha256") != manifest.get("teacher_contract_sha256")
-            or contract.get("max_tokens") != 384
+            or contract.get("contract_sha256") != json_sha256(contract_record)
+            or contract.get("max_tokens") != expected_max_tokens
             or not isinstance(contract.get("response_schema"), dict)):
         raise ValueError("generation contract differs")
     sys.path.insert(0, str(args.server_module_dir.resolve()))
@@ -156,7 +202,19 @@ def main() -> int:
         args.model_dir, "qwen3vl2b-base", max_pixels=256 * 32 * 32,
         context_budget=16384, quantization="none",
         generation_cache_implementation="dynamic", startup_prewarm=False)
-    base_summary, base_rows = evaluate_mode(backend, rows, contract, "base")
+    if args.base_result:
+        prior = json.loads(args.base_result.read_text(encoding="utf-8"))
+        if (prior.get("evaluation_split", "dev") != args.split
+                or prior.get("dataset_manifest_sha256")
+                != file_sha256(args.dataset_dir / "manifest.json")
+                or prior.get("contract_sha256") != contract["contract_sha256"]
+                or prior.get("base", {}).get("samples") != len(rows)
+                or len(prior.get("per_sample", {}).get("base", [])) != len(rows)):
+            raise ValueError("reused base result differs")
+        base_summary = prior["base"]
+        base_rows = prior["per_sample"]["base"]
+    else:
+        base_summary, base_rows = evaluate_mode(backend, rows, contract, "base")
     backend.model = PeftModel.from_pretrained(
         backend.model, args.adapter_dir, is_trainable=False)
     backend.model.eval()
@@ -187,8 +245,12 @@ def main() -> int:
         "human_truth": False,
         "production_deployed": False,
         "test24_used": False,
-        "evaluation_sequence": "008",
+        "evaluation_split": args.split,
+        "evaluation_sequences": manifest.get(
+            f"{args.split}_source_sequences",
+            manifest.get("dev_source_sequences", ["008"])),
         "generation_cache_implementation": "dynamic",
+        "base_result_reused": bool(args.base_result),
         "dataset_manifest_sha256": file_sha256(args.dataset_dir / "manifest.json"),
         "contract_sha256": contract["contract_sha256"],
         "adapter_sha256": file_sha256(args.adapter_dir / "adapter_model.safetensors"),

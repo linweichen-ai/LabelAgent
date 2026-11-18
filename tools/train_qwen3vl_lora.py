@@ -43,41 +43,80 @@ def verify_manifest(manifest_path: Path, train_path: Path) -> dict:
     return manifest
 
 
-def slope_balanced_rows(rows: list[dict], repeat: int) -> tuple[list[dict], dict]:
-    """Repeat train-only slope-positive teacher rows without changing truth status.
+def slope_balanced_rows(rows: list[dict], repeat: int,
+                        positive_label: str = "slope",
+                        repeat_evidence: str = "present") -> tuple[list[dict], dict]:
+    """Repeat train-only positive teacher rows without changing truth status.
 
     This is deliberately a narrow distillation aid.  It does not invent labels,
     does not read the external test split, and keeps every duplicated row bound
     to the original image/target hashes.
     """
-    if not 1 <= repeat <= 8:
-        raise ValueError("slope-positive repeat must be between 1 and 8")
+    if (not 1 <= repeat <= 8 or not isinstance(positive_label, str)
+            or not positive_label.strip()
+            or repeat_evidence not in {"present", "absent", "uncertain"}):
+        raise ValueError("positive repeat/label is invalid")
+    positive_label = positive_label.strip()
     positives = []
     for row in rows:
         try:
             target = json.loads(row["target"])
-            evidence = target["assessments"]["slope"]["evidence"]
+            evidence = target["assessments"][positive_label]["evidence"]
         except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
-            raise ValueError("training row has no valid slope evidence") from error
+            raise ValueError(
+                f"training row has no valid {positive_label} evidence") from error
         if evidence not in {"present", "absent", "uncertain"}:
-            raise ValueError("training row has invalid slope evidence")
-        if evidence == "present":
+            raise ValueError(
+                f"training row has invalid {positive_label} evidence")
+        if evidence == repeat_evidence:
             positives.append(row)
     balanced = list(rows)
     for _ in range(repeat - 1):
         balanced.extend(positives)
-    return balanced, {
+    report = {
         "original_samples": len(rows),
-        "original_slope_positive_samples": len(positives),
-        "slope_positive_repeat": repeat,
+        "positive_label": positive_label,
+        "repeat_evidence": repeat_evidence,
+        "original_repeated_samples": len(positives),
+        "positive_repeat": repeat,
         "effective_samples": len(balanced),
-        "effective_slope_positive_samples": len(positives) * repeat,
+        "effective_repeated_samples": len(positives) * repeat,
     }
+    if positive_label == "slope" and repeat_evidence == "present":
+        report.update({
+            "original_positive_samples": len(positives),
+            "effective_positive_samples": len(positives) * repeat,
+            "original_slope_positive_samples": len(positives),
+            "slope_positive_repeat": repeat,
+            "effective_slope_positive_samples": len(positives) * repeat,
+        })
+    return balanced, report
+
+
+def find_evidence_token_span(tokenizer, token_ids: list[int], evidence: str) -> tuple[int, int]:
+    """Find the single short token span that decodes to an evidence value."""
+    matches = []
+    for start in range(len(token_ids)):
+        for end in range(start + 1, min(start + 5, len(token_ids) + 1)):
+            decoded = tokenizer.decode(token_ids[start:end], skip_special_tokens=False)
+            if decoded.strip(' \t\r\n"\':,') == evidence:
+                matches.append((start, end))
+    shortest = sorted(matches, key=lambda item: (item[1] - item[0], item))
+    if not shortest:
+        raise ValueError(f"cannot locate {evidence} evidence tokens")
+    width = shortest[0][1] - shortest[0][0]
+    unique = [item for item in shortest if item[1] - item[0] == width]
+    if len(unique) != 1:
+        raise ValueError(f"ambiguous {evidence} evidence token span")
+    return unique[0]
 
 
 class OneImageCollator:
-    def __init__(self, processor):
+    def __init__(self, processor, loss_scope: str = "full"):
+        if loss_scope not in {"full", "evidence"}:
+            raise ValueError("loss scope is invalid")
         self.processor = processor
+        self.loss_scope = loss_scope
 
     def __call__(self, rows):
         if len(rows) != 1:
@@ -109,6 +148,20 @@ class OneImageCollator:
             raise ValueError("assistant target is not an exact prompt suffix")
         labels = full["input_ids"].clone()
         labels[:, :len(prompt_ids)] = -100
+        if self.loss_scope == "evidence":
+            target = json.loads(row["target"])
+            assessments = target.get("assessments")
+            if not isinstance(assessments, dict) or len(assessments) != 1:
+                raise ValueError("evidence-only training requires one assessment")
+            evidence = next(iter(assessments.values())).get("evidence")
+            if evidence not in {"present", "absent", "uncertain"}:
+                raise ValueError("evidence-only target is invalid")
+            suffix_ids = full_ids[len(prompt_ids):].tolist()
+            start, end = find_evidence_token_span(
+                self.processor.tokenizer, suffix_ids, evidence)
+            labels.fill_(-100)
+            labels[:, len(prompt_ids) + start:len(prompt_ids) + end] = \
+                full["input_ids"][:, len(prompt_ids) + start:len(prompt_ids) + end]
         full["labels"] = labels
         return full
 
@@ -123,6 +176,10 @@ def main() -> int:
     parser.add_argument("--learning-rate", type=float, default=2e-4)
     parser.add_argument("--gradient-accumulation-steps", type=int, default=2)
     parser.add_argument("--slope-positive-repeat", type=int, default=1)
+    parser.add_argument("--positive-label", default="slope")
+    parser.add_argument("--repeat-evidence", default="present",
+                        choices=("present", "absent", "uncertain"))
+    parser.add_argument("--loss-scope", default="full", choices=("full", "evidence"))
     parser.add_argument("--seed", type=int, default=20261118)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
@@ -132,7 +189,9 @@ def main() -> int:
     manifest_path = args.dataset_dir / "manifest.json"
     manifest = verify_manifest(manifest_path, train_path)
     source_rows = load_jsonl(train_path)
-    rows, sampling = slope_balanced_rows(source_rows, args.slope_positive_repeat)
+    rows, sampling = slope_balanced_rows(
+        source_rows, args.slope_positive_repeat, args.positive_label,
+        args.repeat_evidence)
     random.Random(args.seed).shuffle(rows)
     rows = rows[:args.max_samples]
     if not 1 <= args.max_steps <= 100 or not 1 <= args.max_samples <= len(rows):
@@ -143,7 +202,7 @@ def main() -> int:
     from transformers import AutoProcessor, Qwen3VLForConditionalGeneration
     processor = AutoProcessor.from_pretrained(
         args.model_dir, local_files_only=True, trust_remote_code=False)
-    collator = OneImageCollator(processor)
+    collator = OneImageCollator(processor, args.loss_scope)
     first_batch = collator([rows[0]])
     if args.dry_run:
         result = {
@@ -154,6 +213,7 @@ def main() -> int:
             "image_grid_thw": first_batch.get("image_grid_thw").tolist(),
             "dataset_manifest_sha256": file_sha256(manifest_path),
             "sampling": sampling,
+            "loss_scope": args.loss_scope,
             "training_started": False,
         }
         args.output.mkdir(parents=True)
@@ -222,6 +282,7 @@ def main() -> int:
         "samples_available": manifest["train_samples"],
         "samples_loaded": len(rows),
         "sampling": sampling,
+        "loss_scope": args.loss_scope,
         "steps": args.max_steps,
         "learning_rate": args.learning_rate,
         "gradient_accumulation_steps": args.gradient_accumulation_steps,

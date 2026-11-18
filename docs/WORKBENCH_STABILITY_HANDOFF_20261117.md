@@ -1797,3 +1797,5 @@ Round212 的浏览器验收发现页面会先显示第0帧，再异步恢复到�
 快速导航定向网页49/49、全部网页115/115、Python979/979通过；JavaScript语法、Python编译和差异检查通过。部署备份位于 `D:\Apps\LabelAgent\.local\backups\frame-navigation-round214-20261119-045157`。只重启本机工作台，管理PID从61156变为66136，4090通道PID60456和5090 SAM通道PID8656不变；五项工作台/模型探针均HTTP 200。正式 `state.json` 和 `file_sessions.json` 哈希前后保持不变。
 
 本轮没有改权重、微调、后训练、人工真值、训练批准或OSS，也没有调用GPU生成新候选。完整说明见 [第二百一十四轮报告](FRAME_NAVIGATION_LATEST_WINS_ROUND214_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/frame-navigation-latest-wins-round214.json)。浏览器脚本、JSON和含厂内画面的截图继续只保留在本地未跟踪目录，不上传GitHub/CNB。
+
+实现、测试和首版文档提交 `b356ff3540f6d2dc71841d970d53577b9d27bb3b` 已推送并分别回读 GitHub/CNB，同名分支两端精确匹配；未跟踪实验产物和厂内截图均未上传。

@@ -3,7 +3,7 @@
   "round": 214,
   "date": "2026-11-19",
   "objective": "Ensure the newest frame, time, camera, or dataset navigation intent wins even when older responses arrive last.",
-  "status": "implemented_tested_and_production_deployed_pending_remote_receipt",
+  "status": "implemented_tested_production_deployed_and_remotely_verified",
   "boundaries": {
     "candidate_only": true,
     "human_truth": false,
@@ -119,11 +119,11 @@
     "vlm_4090_28868": 200
   },
   "source_sync": {
-    "implementation_commit": null,
+    "implementation_commit": "b356ff3540f6d2dc71841d970d53577b9d27bb3b",
     "branch": "codex/workbench-stability-20261117",
-    "github_readback": null,
-    "cnb_readback": null,
-    "both_remotes_matched_implementation_commit": false,
+    "github_readback": "b356ff3540f6d2dc71841d970d53577b9d27bb3b",
+    "cnb_readback": "b356ff3540f6d2dc71841d970d53577b9d27bb3b",
+    "both_remotes_matched_implementation_commit": true,
     "factory_images_uploaded": false,
     "untracked_experiment_artifacts_uploaded": false
   },

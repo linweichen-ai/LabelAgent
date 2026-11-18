@@ -1616,3 +1616,15 @@ Round156 收尾时 C盘仅余约 1.18 GiB，再次低于工作台的 2 GiB 警�
 系统策略拒绝递归删除 C盘暂存副本，因此没有绕过，而是把它整体移动为 `D:\Apps\LabelAgent\.local\backups\mask2former_single_recovery-source-round157-20261118`。最终原路径是透明目录联接，主副本和独立字节备份均在 D盘且再次读回同一指纹；没有删除项目文件，也没有改变用户可见路径。C盘可用空间升至 3.37 GiB，D盘仍余 13.67 GiB。恢复说明位于 `D:\Apps\LabelAgent\.local\relocated-worktrees\mask2former_single_recovery_20261104-RELOCATION.json`。
 
 正式工作台仍由管理器托管，页面与模型探针正常，运行门禁 `ready`，SAM/VLM 均为 `ok`；正式 `state.json` 和 `file_sessions.json` SHA-256 与 Round156 完全一致。结构化证据见 [第一百五十七轮 C盘治理](evidence/workbench-stability-20261117/recoverable-c-headroom-round157.json)。边界：D盘两份是同一物理卷上的独立字节副本，不是异盘灾备；本轮没有改变模型、候选、人工真值、训练批准或 OSS，也不是精度提升。
+
+## 第一百五十八轮斜坡评测来源门禁（已实现并复跑，2026-11-18）
+
+对正式 `file_sessions.json` 中八个带 `slope` 轮廓的帧做只读复跑，当前全图几何筛选加重叠裁剪补救仍为 8/8 接受，平均轮廓一致性 0.972735，`floor ∪ slope` 平均一致性 0.973773。但进一步核对权威来源后确认，八个目标轮廓的 CVAT `source` 全为 `auto`，没有当前人工复核回执；旧结构审计还保留 `PENDING_ACTUAL_VIEW`。因此这些数值只能称为旧自动预标注一致性，不能称为人工真值 IoU、跨工厂泛化或生产精度。
+
+评测器不再因为数据位于历史 `truth` 键下就把它写成人工真值。新增零模型依赖的来源分类器：只有每个评测帧都同时通过当前人工复核契约、精确真值哈希和已提交事务检查，才标记为 `human_reviewed`；显式机器边界优先，全部 `source=auto` 且无回执的目标标记为 `legacy_auto_preannotation`，其余保存标注默认未验证。`--require-human-truth` 会在创建输出目录和调用 SAM 前失败关闭。
+
+6/6 定向测试、完整 Python 895/895、网页 96/96、Python 编译和 `git diff --check` 通过。真实门禁探针以退出码 1 拒绝八帧旧数据，探针前后 SAM 缓存 hits/misses 完全相同且没有输出目录，证明没有发起模型调用。带来源字段的重放结果 SHA-256 为 `1d8f826c...c6b6b`；正式 `state.json` 与 `file_sessions.json` 哈希前后仍分别为 `d671dd58...8085` 和 `251a4796...8cc`。
+
+正式运行目录此前没有这三个离线评测文件，第一次部署检查在任何写入前停止；“部署前不存在”清单保存在 `D:\Apps\LabelAgent\.local\backups\slope-provenance-round158-20261118-121601`。随后按新增工具部署，运行目录与工作树三个文件 SHA-256 逐项一致。无需重启工作台；页面 HTTP 200、运行门禁 `ready`、SAM `ok`、VLM 模型 `labelagent-vlm8b` 在线。结构化证据见 [第一百五十八轮斜坡来源门禁](evidence/workbench-stability-20261117/slope-target-provenance-round158.json)。
+
+边界：本轮修复的是证据口径和失败关闭，不是模型精度提升，也没有微调或后训练 SAM。真正的斜坡质量门禁仍需一批带当前人工复核回执、与开发数据独立的新工厂正负样本；在此之前不允许把 0.9727 写成真实准确率。

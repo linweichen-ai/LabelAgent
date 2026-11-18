@@ -1,4 +1,9 @@
-"""Evaluate text-prompted SAM slope masks against saved human truth, read-only."""
+"""Evaluate text-prompted SAM slope masks against saved targets, read-only.
+
+Saved annotations are not assumed to be human truth.  The report carries an
+explicit provenance audit, and ``--require-human-truth`` fails before any SAM
+request unless every evaluated frame has a current, committed review receipt.
+"""
 import argparse
 import io
 import json
@@ -9,6 +14,7 @@ import numpy as np
 from PIL import Image
 
 from source.agent.edit_agent import _rasterize
+from source.agent.evaluation_provenance import classify_target_provenance
 from source.agent.mcap_video import Video
 from source.agent.workflow import filter_slope_candidate_geometry, sam_request, sam_text
 
@@ -112,6 +118,9 @@ def main():
                         default=["slope", "斜坡", "ramp"])
     parser.add_argument("--truth-labels", nargs="+", default=["slope", "斜坡", "ramp"])
     parser.add_argument("--crop-fallback", action="store_true")
+    parser.add_argument(
+        "--require-human-truth", action="store_true",
+        help="Fail before model calls unless every selected frame has a current review receipt.")
     args = parser.parse_args()
 
     mcap = str(Path(args.mcap).resolve())
@@ -126,7 +135,13 @@ def main():
                     if any(item.get("label") in set(args.frame_selector_labels)
                            for item in shapes))
     if not frames:
-        raise ValueError("No slope human-truth frames found")
+        raise ValueError("No slope evaluation-target frames found")
+    target_provenance = classify_target_provenance(session, frames, args.truth_labels)
+    if args.require_human_truth and not target_provenance["human_truth_verified"]:
+        raise ValueError(
+            "Human truth is required but target provenance is "
+            f"{target_provenance['kind']}; unverified frames: "
+            f"{target_provenance['unverified_frames']}")
 
     output = Path(args.output)
     output.mkdir(parents=True, exist_ok=True)
@@ -463,6 +478,7 @@ def main():
               "prompts": args.prompts, "best_prompt_on_this_development_set": best_prompt,
               "frame_selector_labels": args.frame_selector_labels,
               "truth_labels": args.truth_labels,
+              "target_provenance": target_provenance,
               "summaries": summaries, "rows": rows,
               "combined_prompt_union": combined_prompt_union,
               "guided_prompt_unions": guided_prompt_unions,
@@ -470,11 +486,15 @@ def main():
               "crop_fallback_summary": crop_fallback_summary,
               "final_slope_summary": final_slope_summary,
               "oracle_point_summaries": oracle_summaries, "oracle_point_rows": oracle_rows,
-              "evidence_note": "Human truth was read-only; prompt selection is development-set evidence, not generalization. Point profiles use truth-derived oracle clicks and only isolate segmentation from localization."}
+              "evidence_note": (target_provenance["evidence_note"]
+                                + " Prompt selection is development-set evidence, not "
+                                  "generalization. Point profiles use target-derived oracle "
+                                  "clicks and only isolate segmentation from localization.")}
     (output / "results.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps({"output": str(output.resolve()), "best_prompt": best_prompt,
                       "summaries": summaries, "combined_prompt_union": combined_prompt_union,
                       "guided_prompt_unions": guided_prompt_unions,
+                      "target_provenance": target_provenance,
                       "filtered_slope_summary": filtered_slope_summary,
                       "crop_fallback_summary": crop_fallback_summary,
                       "final_slope_summary": final_slope_summary,

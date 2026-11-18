@@ -1,0 +1,80 @@
+{
+  "round": 158,
+  "recorded_at": "2026-11-18T12:13:52.7619327+08:00",
+  "status": "PROVENANCE_GATE_IMPLEMENTED_AND_REPLAYED",
+  "objective": "Prevent legacy automatic slope masks from being reported as human truth while preserving read-only diagnostic evaluation.",
+  "authoritative_inputs": {
+    "mcap": "D:\\Apps\\LabelAgent\\work\\datasets\\CVAT_Task3_20261028\\CVAT_Task3_original_annotations.mcap",
+    "state_sha256_before_and_after": "D671DD5818A225BC774AC7E71ECFF612CB3AED67DE6B1985E5CD9E3233BE8085",
+    "file_sessions_sha256_before_and_after": "251A47963EBD2931EE033408E9FE39A94F74539BFF0A339C58429ACE409088CC",
+    "legacy_saved_annotations_sha256": "F0CDCD2CA102DA58977FFA0595E74985B9B5FF5BAFDBC10A40843D3A5760F971",
+    "legacy_coverage_review_sha256": "D026EFFC80D812E5B9729891C5C3F9140B86BC1236858781B0A02EA15D910544",
+    "legacy_structure_audit_sha256": "970B305091ABDC9CAFAC0B4531439B71C17118B05087AC6714CD906B94D67957"
+  },
+  "implementation": {
+    "classification_module": "source/agent/evaluation_provenance.py",
+    "evaluator": "tools/evaluate_slope_sam.py",
+    "test": "tests/test_evaluate_slope_provenance.py",
+    "rules": [
+      "The historical truth key alone never proves human review.",
+      "Human-reviewed status requires every evaluated frame to have the current contract, exact truth hash, and committed transaction checks.",
+      "Explicit machine-only flags take precedence over storage location.",
+      "All source=auto shapes without current receipts are legacy_auto_preannotation.",
+      "--require-human-truth fails before output creation or any SAM request when the gate is not met."
+    ],
+    "sha256": {
+      "evaluator": "57F778CF451063138F3E82BE71055B261C2B4090255DCD1026CF285A36084860",
+      "classification_module": "A13C34D3C77E26E54A93D023BC234E2ABF3DBCE954C1233B0DAD34088E5D0AFA",
+      "test": "78622299BAEF11055090107780621EE2545082A001FF7CD8FD167AC93FA60B1D"
+    }
+  },
+  "tests": {
+    "provenance_unit_tests": "6/6 passed",
+    "full_python_regression": "895/895 passed",
+    "full_web_regression": "96/96 passed",
+    "python_compile": "passed",
+    "git_diff_check": "passed",
+    "human_truth_gate_exit_code": 1,
+    "human_truth_gate_error": "Human truth is required but target provenance is legacy_auto_preannotation; unverified frames: [74, 77, 80, 83, 86, 95, 97, 99]",
+    "gate_probe_output_created": false,
+    "sam_cache_before": {"hits": 296, "misses": 840, "in_flight": 0},
+    "sam_cache_after": {"hits": 296, "misses": 840, "in_flight": 0},
+    "model_call_before_gate_failure": false
+  },
+  "deployment": {
+    "runtime": "D:\\Apps\\LabelAgent",
+    "backup_manifest": "D:\\Apps\\LabelAgent\\.local\\backups\\slope-provenance-round158-20261118-121601\\ABSENT-BEFORE-DEPLOYMENT.json",
+    "previous_runtime_files": "absent",
+    "deployed_file_hashes_match_worktree": true,
+    "page_http_status": 200,
+    "run_readiness": "ready",
+    "sam_status": "ok",
+    "vlm_model": "labelagent-vlm8b"
+  },
+  "audited_replay": {
+    "output": "artifacts/round158-slope-provenance-audited/results.json",
+    "result_sha256": "1D8F826C7F41E8F3BE7C5E20997FD95B9336E1A06FB5BB0B0625DF2BA9AC6B6B",
+    "target_provenance": {
+      "kind": "legacy_auto_preannotation",
+      "human_truth_verified": false,
+      "frames": [74, 77, 80, 83, 86, 95, 97, 99],
+      "source_counts": {"manual": 0, "auto": 8, "unknown": 0},
+      "verified_frames": [],
+      "unverified_frames": [74, 77, 80, 83, 86, 95, 97, 99]
+    },
+    "raw_text_prompt_mean_iou": 0.24044365729756711,
+    "filtered_crop_cascade": {
+      "accepted_frames": 8,
+      "mean_proxy_iou": 0.9727348586253763,
+      "mean_proxy_precision": 0.998761985733474,
+      "mean_proxy_recall": 0.9739136545758631,
+      "traversable_union_mean_proxy_iou": 0.973772532830151
+    }
+  },
+  "boundaries": [
+    "The 0.9727 score is auto-preannotation consistency, not human-truth IoU.",
+    "The replay does not establish cross-factory generalization or production accuracy.",
+    "No model weights, production state, human truth, training approvals, or OSS objects changed.",
+    "Formal SAM and VLM services remained available; the evaluation ran foreground and released immediately."
+  ]
+}

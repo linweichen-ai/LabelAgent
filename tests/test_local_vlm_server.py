@@ -1,7 +1,10 @@
 import base64
+import hashlib
 import importlib.util
 import io
+import json
 from pathlib import Path
+import tempfile
 import threading
 from types import SimpleNamespace
 import unittest
@@ -73,7 +76,132 @@ def messages(count=1):
     return [{"role": "user", "content": parts}]
 
 
+def model_asset_fixture(base):
+    model_dir = Path(base) / "model"
+    model_dir.mkdir()
+    contents = {
+        "config.json": b"{}\n",
+        "generation_config.json": b"{}\n",
+        "model.safetensors.index.json": b"{}\n",
+        "preprocessor_config.json": b"{}\n",
+        "tokenizer_config.json": b"{}\n",
+        "tokenizer.json": b"{}\n",
+        "model-00001-of-00001.safetensors": b"test-weights",
+    }
+    records = []
+    for name, content in contents.items():
+        path = model_dir / name
+        path.write_bytes(content)
+        stat = path.stat()
+        records.append({"name": name, "size": stat.st_size,
+                        "mtime_ns": stat.st_mtime_ns,
+                        "sha256": hashlib.sha256(content).hexdigest()})
+    manifest = Path(base) / "model-assets.json"
+    manifest.write_text(json.dumps({
+        "schema_version": "labelagent.model-assets.v1",
+        "files": records,
+    }), encoding="utf-8")
+    return model_dir, manifest
+
+
 class LocalVLMContractTests(unittest.TestCase):
+    def test_model_asset_manifest_binds_complete_runtime_set(self):
+        with tempfile.TemporaryDirectory() as directory:
+            model_dir, manifest = model_asset_fixture(directory)
+            fingerprint = MODULE.validate_model_asset_manifest(
+                model_dir, manifest)
+            self.assertEqual(len(fingerprint), 64)
+
+            (model_dir / "tokenizer.json").write_bytes(b"changed\n")
+            with self.assertRaisesRegex(ValueError, "metadata differs"):
+                MODULE.validate_model_asset_manifest(model_dir, manifest)
+
+    def test_model_asset_manifest_rejects_partial_and_unsafe_records(self):
+        with tempfile.TemporaryDirectory() as directory:
+            model_dir, manifest = model_asset_fixture(directory)
+            payload = json.loads(manifest.read_text(encoding="utf-8"))
+            payload["files"].pop()
+            manifest.write_text(json.dumps(payload), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "complete runtime file set"):
+                MODULE.validate_model_asset_manifest(model_dir, manifest)
+
+            payload["files"].append({
+                "name": "../outside.json", "size": 0, "mtime_ns": 0,
+                "sha256": "0" * 64})
+            manifest.write_text(json.dumps(payload), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "Invalid model asset record"):
+                MODULE.validate_model_asset_manifest(model_dir, manifest)
+
+    def test_persistent_response_cache_survives_restart_without_request_data(self):
+        with tempfile.TemporaryDirectory() as directory:
+            body = {"model": ContractBackend.model_id,
+                    "messages": messages(), "max_tokens": 23}
+            first_backend = ContractBackend()
+            first_backend.model_assets_sha256 = "a" * 64
+            first_app = MODULE.create_app(
+                first_backend, persistent_response_cache_dir=directory)
+            first = first_app.test_client().post(
+                "/v1/chat/completions", json=body)
+            self.assertEqual(first.status_code, 200)
+            self.assertEqual(first_backend.generate_calls, 1)
+
+            records = list(Path(directory).glob("*/*.json"))
+            self.assertEqual(len(records), 1)
+            persisted = records[0].read_text(encoding="utf-8")
+            self.assertNotIn("data:image", persisted)
+            self.assertNotIn('"messages"', persisted)
+            self.assertNotIn("Return JSON", persisted)
+
+            restarted_backend = ContractBackend()
+            restarted_backend.model_assets_sha256 = "a" * 64
+            restarted_app = MODULE.create_app(
+                restarted_backend, persistent_response_cache_dir=directory)
+            restarted = restarted_app.test_client().post(
+                "/v1/chat/completions", json=body)
+            self.assertEqual(restarted.status_code, 200)
+            self.assertFalse(hasattr(restarted_backend, "generate_calls"))
+            self.assertTrue(restarted.json["local_vlm"]["cache_hit"])
+            self.assertTrue(
+                restarted.json["local_vlm"]["persistent_cache_hit"])
+            health = restarted_app.test_client().get("/health").json
+            self.assertEqual(
+                health["persistent_response_cache"]["loaded_at_start"], 1)
+            self.assertEqual(
+                health["persistent_response_cache"]["invalid_files"], 0)
+
+            changed_backend = ContractBackend()
+            changed_backend.model_assets_sha256 = "b" * 64
+            changed_app = MODULE.create_app(
+                changed_backend, persistent_response_cache_dir=directory)
+            changed = changed_app.test_client().post(
+                "/v1/chat/completions", json=body)
+            self.assertEqual(changed.status_code, 200)
+            self.assertEqual(changed_backend.generate_calls, 1)
+            self.assertFalse(changed.json["local_vlm"]["cache_hit"])
+            self.assertEqual(len([path for path in Path(directory).iterdir()
+                                  if path.is_dir()]), 2)
+
+    def test_persistent_cache_write_failure_never_fails_inference(self):
+        with tempfile.TemporaryDirectory() as directory:
+            backend = ContractBackend()
+            backend.model_assets_sha256 = "c" * 64
+            app = MODULE.create_app(
+                backend, persistent_response_cache_dir=directory)
+            body = {"model": backend.model_id, "messages": messages()}
+            with patch.object(MODULE.os, "replace",
+                              side_effect=OSError("read-only cache")):
+                first = app.test_client().post(
+                    "/v1/chat/completions", json=body)
+            second = app.test_client().post(
+                "/v1/chat/completions", json=body)
+            self.assertEqual(first.status_code, 200)
+            self.assertEqual(second.status_code, 200)
+            self.assertEqual(backend.generate_calls, 1)
+            self.assertTrue(second.json["local_vlm"]["cache_hit"])
+            health = app.test_client().get("/health").json
+            self.assertEqual(
+                health["persistent_response_cache"]["write_failures"], 1)
+
     def test_prewarm_and_requests_share_one_inference_thread(self):
         backend = ThreadAffinityBackend()
         app = MODULE.create_app(backend)

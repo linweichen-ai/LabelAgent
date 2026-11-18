@@ -1,0 +1,106 @@
+{
+  "schema_version": "labelagent.workbench-evidence.v1",
+  "round": 152,
+  "date": "2026-11-18",
+  "status": "deployed_and_verified",
+  "objective": "Reuse an exact VLM response across process restarts without weakening request, model, or truth isolation.",
+  "implementation": {
+    "server_sha256": "f1c480798de03ede6d57b0543a170f986623fb43385fb253cfef3601129ce069",
+    "manifest_builder_sha256": "300820adeb84077895df8b8a96f9c60e686bd8da4648c87bf64d5f07776fc7ab",
+    "remote_start_sha256": "e31376d53e065f665ce596e16995ae047d562cd7a412734bb1b17a70bcf0f800",
+    "namespace_binds": [
+      "full-content model asset manifest",
+      "server source",
+      "model id and backend",
+      "quantization",
+      "image token budget",
+      "generation cache implementation",
+      "JSON rule"
+    ],
+    "persistent_record_excludes": [
+      "request body",
+      "messages",
+      "prompt text",
+      "embedded image bytes"
+    ],
+    "write_failure_policy": "best_effort_cache_only; completed inference remains successful"
+  },
+  "model_manifest": {
+    "schema_version": "labelagent.model-assets.v1",
+    "files": 14,
+    "bytes": 17545907231,
+    "manifest_sha256": "1817b33f75abee51e0038d9f394f86828a2811a81f6c117c84a01daf2760c28b",
+    "runtime_namespace_sha256": "bd97498cdea186ab59f5e39c88f4c833e5577e5020d71c3b58cfb2755bdcf1d7"
+  },
+  "acceptance": {
+    "image": "formal workbench frame 55 read-only image endpoint",
+    "first_request": {
+      "endpoint_seconds": 0.804,
+      "model_seconds": 0.568,
+      "cache_hit": false,
+      "persistent_cache_hit": null,
+      "response_cache_entries": 1
+    },
+    "after_complete_service_restart": {
+      "loaded_at_start": 1,
+      "endpoint_seconds": 0.223,
+      "model_seconds": 0.0,
+      "cache_hit": true,
+      "persistent_cache_hit": true,
+      "response_cache_entries": 1
+    },
+    "cache_key_sha256": "f001b5cd5bf658aed471315588e773a668c5f1738cca8f1e1c44e07ab99d7975",
+    "content_sha256": "61ac5857feb130a1dc475db36bbe21604fddf30024110bb2bea9d8b23e8b1b44",
+    "persistent_record_bytes": 1272,
+    "request_data_scan": {
+      "data_image": false,
+      "messages_field": false,
+      "prompt_text": false
+    },
+    "health_errors": {
+      "invalid_files": 0,
+      "write_failures": 0,
+      "cleanup_failures": 0
+    }
+  },
+  "lifecycle_correction": {
+    "observed": "An immediate second restart raced CUDA process teardown and failed the 22000 MiB startup gate.",
+    "safety_result": "Candidate exited; automatic rollback restored the previous service.",
+    "fix": "Wait for the selected GPU to report at least 22000 MiB free before starting the replacement service.",
+    "retest": "passed"
+  },
+  "tests": {
+    "targeted_cache_and_manifest": "25/25",
+    "python": "886/886",
+    "web": "104/104",
+    "py_compile": "passed",
+    "git_diff_check": "passed"
+  },
+  "formal_state_sha256": {
+    "state.json": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "files.json": "0d8487cd72b3d29612f67ec351ced54f993e98527d44c7df59af6e29196be214",
+    "last_run.json": "2133da6186935d485fe2b2296fe2248ba6cc1183743357ab4c1d8c873d3cffdf",
+    "last_run_summary.json": "920c0d0e6dc37abfe109c13b24b88d9fdcd463e7c55d65bd7ca224534b203ce2",
+    "model_debug.json": "2d3be581405142deb66fe62dc24f8efeaac6d5c471fae61ccbc150819f432b6e",
+    "description.json": "64d735bb66d1dc8c998ecedf0e44d3f9caef30df18288283947a71dfaf419291"
+  },
+  "runtime": {
+    "workbench": "idle",
+    "sam": "ready",
+    "primary_vlm": "ready",
+    "fast_5090": "disabled",
+    "primary_gpu_used_mib": 17863,
+    "primary_gpu_free_mib": 6219
+  },
+  "rollback": {
+    "remote": "/home/clw/labelagent_remote_20261110/backups/persistent-response-cache-round152-20261118",
+    "windows": "D:\\Apps\\LabelAgent\\.local\\backups\\persistent-response-cache-round152-20261118-112733"
+  },
+  "boundaries": [
+    "Only an exact canonical request can hit this cache.",
+    "The smoke schema is intentionally short and is not a production cold-latency benchmark.",
+    "A first request for a new image still pays normal VLM generation cost.",
+    "No model weights, candidates, human truth, training approval, or OSS objects were modified.",
+    "This is not SAM fine-tuning, VLM post-training, or accuracy evidence."
+  ]
+}

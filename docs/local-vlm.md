@@ -23,12 +23,17 @@
 当目标 4090 在启动前没有其他计算进程、空闲显存超过 22000 MiB 时，同一 8B 权重可直接使用 BF16，而不是 NF4。1104 新批次两张隔离图片上，完整候选流程分别从 74.093 秒降到 52.553 秒、从 47.529 秒降到 32.205 秒；候选预览 SHA-256 与 NF4 结果完全一致。BF16 模型内存 17,534,247,720 字节，完整推理后 GPU 实占约 18,075 MiB、剩余约 6,007 MiB。该配置保持 256 图像 token、完整标签表、开放集扫描和独立高风险候选审核，不以降分辨率换速度。
 
 ```sh
-python tools/local_vlm_server.py --model-dir <private-model-directory> --model-id labelagent-vlm8b --gpu-uuid <verified-idle-4090-UUID> --profile shared-4090 --quantization none --cache-dir <local-disk-private-cache> --max-image-tokens 256 --context-budget 16384 --generation-cache-implementation static --startup-prewarm --port 18878
+python tools/build_model_asset_manifest.py --model-dir <private-model-directory> --output <private-cache-directory>/model-assets.json
+python tools/local_vlm_server.py --model-dir <private-model-directory> --model-id labelagent-vlm8b --gpu-uuid <verified-idle-4090-UUID> --profile shared-4090 --quantization none --cache-dir <local-disk-private-cache> --max-image-tokens 256 --context-budget 16384 --generation-cache-implementation static --startup-prewarm --model-asset-manifest <private-cache-directory>/model-assets.json --persistent-response-cache-dir <private-cache-directory>/responses --port 18878
 ```
 
 static KV cache 只在该独占 BF16 配置中允许。`--startup-prewarm` 会在 `/health` 报告 ready 之前用合成图完成一次结构化生成，从而把首次编译移出用户点击路径；它不写候选、不读训练数据，也不会占用响应缓存。2026-11-17 三图配对中，生成均值由 20.370 秒降到 14.022 秒；启动预热约 10.69 秒，服务从重启到 ready 约 22.28 秒。若缺少 static、BF16 独占或显存无限额任一条件，启动会明确拒绝该预热组合。
 
 该结果只适用于启动时通过空闲卡门禁的独占 24 GB 4090；如果卡上已有计算进程、需要给其他任务保留更多显存，仍使用 NF4 或显式的限时共享探测配置。不得为了加载 BF16 停止其他用户进程。BF16 基线见 [第四十轮对照](evidence/workbench-stability-20261117/bf16-runtime-round40.json)，static 与预热验收见 [第五十五轮证据](evidence/workbench-stability-20261117/keyed-static-prewarm-round55.json)。
+
+`build_model_asset_manifest.py` 对模型运行所需的顶层 JSON、TXT 和 safetensors 做一次完整 SHA-256 扫描；服务启动时只核对完整文件集合、大小和纳秒修改时间，因此不会每次重启都重读约 17.55 GB 权重。响应缓存命名空间同时绑定模型清单、服务源码、模型名、量化方式、图像预算、KV cache 配置和 JSON 规则。任一项变化都会自动使用新命名空间，禁止复用旧结果。
+
+持久缓存只保存已经生成的响应、token 计数和有限运行元数据，不保存原始请求、提示词或内嵌图片；写盘失败只增加健康统计，不得让已经完成的推理返回 5xx。缓存仍然只接受完全相同的规范化请求，不做相似图像或近似提示复用。2026-11-18 冷重启实测中，同一真实图片请求首次端到端 0.804 秒、模型生成 0.568 秒；完全重启后端到端 0.223 秒、模型生成 0 秒，内容 SHA-256 和请求键均严格一致。该短 schema 请求用于验证缓存生命周期，不代表完整生产提示的冷推理时延；完整记录见 [第一百五十二轮证据](evidence/workbench-stability-20261117/persistent-vlm-response-cache-round152.json)。
 
 ## 服务器恢复后的步骤
 

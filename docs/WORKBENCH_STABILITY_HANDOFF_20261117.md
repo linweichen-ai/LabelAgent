@@ -1574,3 +1574,23 @@ Round147 部署后，C盘可用空间继续被系统写入消耗，最低只剩�
 最终 C盘可用空间恢复到 2.265 GiB，超过 Round147 设置的 2 GiB 启动警戒线；D盘仍有 20.927 GiB。正式 LabelAgent 页面 HTTP 200、idle，SAM/VLM ready、VLM inflight 0，正式状态 SHA-256 仍为 `a01d57e0...58e21`。结构化证据见 [第一百四十八轮 C盘治理](evidence/workbench-stability-20261117/recoverable-c-headroom-round148.json)。
 
 边界：没有删除独有研究文件、改变用户可见路径、修改其他项目、人工真值、候选、训练批准、模型权重或 OSS。2.265 GiB 只是恢复到安全线以上，不是长期容量；后续大数据和实验产物继续优先写 D盘或 NFS。
+
+## 第一百四十九轮 Qwen `torch.compile` 执行引擎探测（已否决，2026-11-18）
+
+在完整备份和独立候选服务中尝试对 Qwen3-VL 完整 forward 启用 `torch.compile`。候选约 190 秒后仍未形成健康服务，并因 static KV cache 的原地更新触发 CUDA Graph 输出覆盖错误。该候选没有进入正式服务；旧版在 22.4 秒内恢复，SAM、Qwen 和工作台均正常。随后做了两次原版 BF16 冷启动回放，只有 1/2 输出逐字节一致，证明即使是温度为零的相同权重，跨冷启动也不能把单次精确文本哈希当作唯一语义门禁。完整否决记录见 [第一百四十九轮证据](evidence/workbench-stability-20261117/rejected-torch-compile-round149.json)。
+
+## 第一百五十轮 VLM 平滑进度（已部署，2026-11-18）
+
+工作台按实测基线为单图 VLM 阶段显示有上限的平滑预计进度：类别识别使用 16 秒基线，Agent 复核使用 34 秒基线，同时显示“约”、已用时间和历史基线。进度保持单调且不会提前跨越真实阶段；空闲状态继续显示待开始，不伪装成 0% 运行。完整回归 Python 879/879、网页 104/104，正式页面版本更新为 145。结构化证据见 [第一百五十轮证据](evidence/workbench-stability-20261117/smooth-vlm-progress-round150.json)。
+
+## 第一百五十一轮工作树产物迁移（已完成，2026-11-18）
+
+系统盘可用空间再次降到约 1.75 GiB 后，把当前稳定性工作树的未跟踪 `artifacts` 迁移到 `D:\Apps\LabelAgent\.local\relocated-worktrees\labelagent_stability_worktree_20261117-artifacts`，并在原路径建立 NTFS 目录联接。源、目标及联接读回均为 2,471 个文件、784,295,701 字节，完整树指纹均为 `a77cc085...e659d`；Git 仍把该目录识别为未跟踪产物，没有把实验图片提交。恢复清单位于同目录旁的 `RELOCATION.json`，结构化证据见 [第一百五十一轮证据](evidence/workbench-stability-20261117/artifact-relocation-round151.json)。
+
+## 第一百五十二轮 VLM 跨重启精确响应缓存（已部署，2026-11-18）
+
+正式 4090 VLM 新增跨进程重启的精确响应缓存。一次性清单对 14 个模型运行文件、17,545,907,231 字节完成 SHA-256 绑定，清单 SHA-256 为 `1817b33f...0c28b`；启动时不再重读全部权重，而是验证完整文件集合、大小和纳秒修改时间。缓存命名空间同时绑定清单、服务源码和全部生成契约，任一项变化都会自动失效。磁盘只保存响应和有限统计，不保存请求、提示词或图片；真实缓存文件检查未发现 `data:image`、`messages` 或测试提示文本。
+
+第一次候选部署成功后，真实图片短 schema 请求端到端 0.804 秒、模型生成 0.568 秒。第一次立即冷重启暴露了旧 CUDA 进程退出与 22 GB 空闲显存门禁之间的竞态；候选被门禁拒绝，自动回滚恢复旧服务。部署器随后增加“确认目标 GPU 空闲显存达到 22,000 MiB 后再启动”的等待，第二次冷重启成功，健康状态加载 1 条磁盘响应。同一请求端到端 0.223 秒、模型生成 0 秒，`cache_hit=true`、`persistent_cache_hit=true`，请求键 `f001b5cd...d7975` 与内容 SHA-256 `61ac5857...1b44` 均与首次完全一致。
+
+完整回归为 Python 886/886、网页 104/104、定向缓存与清单测试 25/25。正式页面 idle，SAM/Qwen ready，六份正式状态文件哈希全部未变；5090 可选通道继续禁用，没有抢占外部任务。远端旧服务和启动脚本备份在 `/home/clw/labelagent_remote_20261110/backups/persistent-response-cache-round152-20261118`。边界：本轮只加速完全相同的重复请求，不降低首张新图片约 15～17 秒的完整生产推理，也不是 SAM 微调、VLM 后训练或精度提升。结构化证据见 [第一百五十二轮证据](evidence/workbench-stability-20261117/persistent-vlm-response-cache-round152.json)。

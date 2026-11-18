@@ -1,0 +1,130 @@
+{
+  "schema_version": "labelagent.workbench_evidence.v1",
+  "round": 140,
+  "date": "2026-11-18",
+  "objective": "Re-evaluate the old multi-image static-cache guard after all inference was moved onto one dedicated thread in round 95.",
+  "status": "candidate_rejected_production_restored",
+  "hypothesis": {
+    "old_failure": "A multi-image static-cache request compiled and executed on a Flask worker whose CUDA-graph thread-local state differed from startup prewarm.",
+    "new_condition": "Round 95 now runs prewarm and all generation on one dedicated inference thread.",
+    "candidate": "Keep the configured static KV cache for six-image Agent requests instead of applying multi_image_static_cache_guard."
+  },
+  "safety": {
+    "production_source_overwritten": false,
+    "candidate_location": "/home/clw/labelagent_remote_20261110/experiments/multi-image-static-round140/local_vlm_server.py",
+    "only_owned_vlm_process_stopped": true,
+    "other_gpu_processes_stopped": false,
+    "sam_stopped": false,
+    "formal_workbench_state_written": false,
+    "oss_written": false,
+    "candidate_default_enabled": false
+  },
+  "setup_failures_preserved": [
+    {
+      "attempt": 1,
+      "stage": "before model load",
+      "error": "ModuleNotFoundError: vlm_resources",
+      "cause": "The isolated candidate directory did not include the production helper module path.",
+      "fix": "Set PYTHONPATH to the unchanged production VLM directory.",
+      "candidate_inference_started": false
+    },
+    {
+      "attempt": 2,
+      "stage": "before model load",
+      "error": "Selected GPU has existing compute work; no processes were stopped",
+      "cause": "The prior owned VLM process had exited, but its CUDA context had not yet disappeared from the driver process list.",
+      "fix": "Wait for the selected GPU UUID to have no compute process before starting the candidate.",
+      "candidate_inference_started": false
+    }
+  ],
+  "paired_replay": {
+    "tool": "tools/replay_vlm_trace_calls.py",
+    "calls": [
+      {
+        "call_id": "fcd545102aea467bb99f4a046e3ad6fa",
+        "frame": 31,
+        "image_count": 6,
+        "baseline_cache": "dynamic",
+        "candidate_cache": "static",
+        "baseline_generation_seconds": 38.041,
+        "candidate_generation_seconds": 50.358,
+        "change_percent": 32.378,
+        "completion_tokens_equal": true,
+        "full_parsed_output_equal": true,
+        "finite_semantic_signature_equal": true
+      },
+      {
+        "call_id": "d691a0babb6b419498e7267d897789c1",
+        "frame": 32,
+        "image_count": 6,
+        "baseline_cache": "dynamic",
+        "candidate_cache": "static",
+        "baseline_generation_seconds": 30.494,
+        "candidate_generation_seconds": 27.765,
+        "change_percent": -8.949,
+        "completion_tokens_equal": true,
+        "full_parsed_output_equal": false,
+        "finite_semantic_signature_equal": true,
+        "geometry_equal": false,
+        "geometry_difference": "Both fill_gap polygons changed from three-corner closed shapes to full rectangles, changing six Y coordinates and potentially the final raster intersection."
+      },
+      {
+        "call_id": "c4754ae72d554e43bb069c7dffb468d6",
+        "frame": 33,
+        "image_count": 6,
+        "baseline_cache": "dynamic",
+        "candidate_cache": "static",
+        "baseline_generation_seconds": 26.313,
+        "candidate_generation_seconds": 24.068,
+        "change_percent": -8.532,
+        "completion_tokens_equal": false,
+        "full_parsed_output_equal": false,
+        "finite_semantic_signature_equal": true,
+        "difference_scope": "Natural-language reason fields only."
+      }
+    ],
+    "baseline_total_generation_seconds": 94.848,
+    "candidate_total_generation_seconds": 102.191,
+    "total_change_percent": 7.742,
+    "baseline_median_generation_seconds": 30.494,
+    "candidate_median_generation_seconds": 27.765,
+    "full_parsed_output_equal": "1/3",
+    "finite_semantic_signature_equal": "3/3",
+    "pixel_geometry_equal": "2/3",
+    "interpretation": "Steady-state static requests were about 8.5 to 8.9 percent faster, but the first new six-image static shape incurred a 32.4 percent penalty and made the three-call total slower. One call also changed fill geometry, so the candidate fails both aggregate latency and exact-geometry gates."
+  },
+  "decision": {
+    "deploy": false,
+    "retain_multi_image_static_cache_guard": true,
+    "add_multi_image_static_prewarm": false,
+    "reason": "A larger startup prewarm cannot repair the observed geometry difference and would add shape-specific startup cost.",
+    "diagnostic_product_changes_removed": true
+  },
+  "recovery": {
+    "production_vlm_source_sha256": "0f3f69577325468464caa7530374f85dd2aa1782bf66317bdfa5ed6eb2f58b36",
+    "worktree_source_sha256": "0f3f69577325468464caa7530374f85dd2aa1782bf66317bdfa5ed6eb2f58b36",
+    "source_hashes_equal": true,
+    "workbench_status": "idle",
+    "model_readiness": true,
+    "sam_status": "ok",
+    "vlm_status": "ok",
+    "vlm_inflight": 0,
+    "formal_state_sha256": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21"
+  },
+  "verification": {
+    "replay_tool_targeted_tests": "3/3 passed",
+    "python_unittest": "868/868 passed",
+    "web_node_test": "94/94 passed",
+    "python_compile": "passed",
+    "git_diff_check": "passed"
+  },
+  "untracked_artifacts": [
+    "artifacts/round140-multi-image-static/baseline.json",
+    "artifacts/round140-multi-image-static/candidate.json",
+    "artifacts/round140-multi-image-static/candidate-attempt1.log",
+    "artifacts/round140-multi-image-static/candidate-attempt2.log",
+    "artifacts/round140-multi-image-static/candidate.log",
+    "artifacts/round140-multi-image-static/switch_vlm.sh"
+  ],
+  "boundary": "This is a three-call execution-engine A/B, not a model-accuracy or generalization evaluation. The candidate was rejected and the formal runtime was restored before this evidence was written."
+}

@@ -1562,3 +1562,15 @@ Round144 完整回归首次因 D 盘临时空间只余约 0.02 GiB 而触发 `No
 定向管理器测试 12/12、完整 Python 879/879（另有 179/179 subtests）、网页 103/103、Python 编译与 `git diff --check` 全部通过。部署前旧管理器、正式状态和进程记录逐字节备份到 `D:\Apps\LabelAgent\.local\backups\storage-preflight-round147-20261118-101500`，备份哈希均已核对。只清理了当前工作树内 36 个可重建的 `__pycache__/.pytest_cache` 和空测试临时目录，共 11.369 MiB；该数字也证明更大的 C 盘缺口并非主要由本轮测试造成，其他项目内容保持不动。结构化证据见 [第一百四十七轮系统盘保护](evidence/workbench-stability-20261117/system-volume-runtime-temp-round147.json)。
 
 边界：本轮保护的是 LabelAgent 自己的临时写入并让系统盘风险可见，没有解决 Windows 全局仅余约 0.17 GiB 的根本问题，也不代表精度、泛化或 SAM 微调提升。后续大规模实验前仍需对 C 盘做独立、可恢复、带哈希清单的治理；在此之前，LabelAgent 数据和临时文件继续使用 D 盘。
+
+## 第一百四十八轮 C盘可恢复余量治理（已完成，2026-11-18）
+
+Round147 部署后，C盘可用空间继续被系统写入消耗，最低只剩约 23.2 MiB。只读统计确认当前 LabelAgent 稳定性工作树的可重建缓存只有约 11.37 MiB，无法解释整体缺口；因此没有删除其他项目文件，而是先对无活动进程引用的旧 `labelagent_5090_20261111` 工作区做透明 NTFS 压缩。15,947 个文件、1,084,228,842 字节的完整树指纹在压缩前后均为 `387044e4...28dca`，存储占用降到 877,946,589 字节，C盘回升到约 226.6 MiB。
+
+随后把六个旧 LabelAgent 工作区迁移到 `D:\Apps\LabelAgent\.local\relocated-worktrees`，并在原 C盘路径建立 NTFS 目录联接：`labelagent_5090_20261111`、`labelagent_hybrid_comparison_20261104`、`labelagent_hybrid_repair_20261104`、`labelagent_ui_20261113`、`labelagent_projection_20261104` 和 `labelagent_efficiency_20261104`。每个目录均先复制到 D盘，再按排序后的相对路径、长度和逐文件 SHA-256 计算完整树指纹；只有源和目标完全相同才切换。切换后通过原路径再次核对，六个目录的文件数、总字节和完整指纹全部一致；旧 5090 工作树的 `codex/dual-5090-20261111` 分支、已修改文件和未跟踪研究产物均保留，原路径和使用方式不变。恢复清单位于 D盘 relocated-worktrees 根目录。
+
+切换 `labelagent_realtime_handoff_20261104` 时，递归删除在一个拒绝访问的 Git 对象处停止，普通文件此前已有部分被删。该目录的完整 D盘副本仍然完好，因此立即复制回原 C盘路径；恢复后 5,737 个文件、152,323,812 字节和原完整树指纹 `2c9dcf6e...701db` 全部匹配。后续 `git status` 只刷新了 `.git/index`；与 D盘副本比较没有新增/缺失文件、长度差异或其他同长哈希差异。该实时交接工作区最终保持普通 C盘目录，不再迁移，D盘副本保留作恢复备份，没有内容损失。
+
+最终 C盘可用空间恢复到 2.265 GiB，超过 Round147 设置的 2 GiB 启动警戒线；D盘仍有 20.927 GiB。正式 LabelAgent 页面 HTTP 200、idle，SAM/VLM ready、VLM inflight 0，正式状态 SHA-256 仍为 `a01d57e0...58e21`。结构化证据见 [第一百四十八轮 C盘治理](evidence/workbench-stability-20261117/recoverable-c-headroom-round148.json)。
+
+边界：没有删除独有研究文件、改变用户可见路径、修改其他项目、人工真值、候选、训练批准、模型权重或 OSS。2.265 GiB 只是恢复到安全线以上，不是长期容量；后续大数据和实验产物继续优先写 D盘或 NFS。

@@ -1,0 +1,112 @@
+{
+  "schema_version": "labelagent.recoverable-c-headroom-round148.v1",
+  "date": "2026-11-18",
+  "decision": "completed_with_verified_relocation_manifests",
+  "objective": "Restore the Windows system volume above the LabelAgent 2 GiB startup warning threshold without deleting unique LabelAgent research files, changing original workspace paths, or touching unrelated projects.",
+  "initial_risk": {
+    "lowest_c_free_mib_observed": 23.2,
+    "effect": "Windows-wide writes were at risk even though LabelAgent runtime temp had already been isolated to D:."
+  },
+  "transparent_compression": {
+    "path": "C:/Users/seer/Documents/ChatGPT/Seer2clw/task_workspaces/labelagent_5090_20261111",
+    "files": 15947,
+    "logical_bytes": 1084228842,
+    "stored_bytes_after": 877946589,
+    "reclaimed_bytes": 206282253,
+    "tree_digest_before": "387044e47f58efa190cdab7fcd139d7aed82731cfb839487f4eb866092f28dca",
+    "tree_digest_after": "387044e47f58efa190cdab7fcd139d7aed82731cfb839487f4eb866092f28dca",
+    "content_unchanged": true,
+    "c_free_mib_after": 226.6
+  },
+  "relocations": {
+    "destination_root": "D:/Apps/LabelAgent/.local/relocated-worktrees",
+    "link_type": "NTFS directory junction",
+    "junctioned_workspaces": [
+      {
+        "name": "labelagent_5090_20261111",
+        "files": 15947,
+        "logical_bytes": 1084228842,
+        "tree_digest": "387044e47f58efa190cdab7fcd139d7aed82731cfb839487f4eb866092f28dca"
+      },
+      {
+        "name": "labelagent_hybrid_comparison_20261104",
+        "files": 1725,
+        "logical_bytes": 278160648,
+        "tree_digest": "b0210090ca61382775cd00a6aff055e1fa677b95b81ecd5693e34226c455894f"
+      },
+      {
+        "name": "labelagent_hybrid_repair_20261104",
+        "files": 2596,
+        "logical_bytes": 227089420,
+        "tree_digest": "34aa56a7bc249f3ccc14d29ca9a44205a08385473b4cc681ccbd3cb85cae120b"
+      },
+      {
+        "name": "labelagent_ui_20261113",
+        "files": 1732,
+        "logical_bytes": 224063435,
+        "tree_digest": "7b3af27f98ce1145b80e5ee2c8aedbbde74c36c476b3429313987bff7813d52c"
+      },
+      {
+        "name": "labelagent_projection_20261104",
+        "files": 2328,
+        "logical_bytes": 215833564,
+        "tree_digest": "362c635985e857a59eb0dc5ae46cd1bb56717372590d9f87310ce9837dac2e25"
+      },
+      {
+        "name": "labelagent_efficiency_20261104",
+        "files": 1730,
+        "logical_bytes": 151401411,
+        "tree_digest": "25f4ca26161b342f5f6d8ff67312929ca24b05410a394232828128c2442e8678"
+      }
+    ],
+    "all_junction_tree_digests_verified": true,
+    "original_paths_preserved": true,
+    "git_5090_branch_after": "codex/dual-5090-20261111",
+    "dirty_5090_worktree_preserved": true,
+    "manifests": [
+      "D:/Apps/LabelAgent/.local/relocated-worktrees/labelagent_5090_20261111.RELOCATION.json",
+      "D:/Apps/LabelAgent/.local/relocated-worktrees/labelagent-legacy-batch-20261118.RELOCATION.json"
+    ]
+  },
+  "recovery_event": {
+    "workspace": "labelagent_realtime_handoff_20261104",
+    "event": "A recursive Directory.Delete stopped on an access-denied Git object after partially removing ordinary files.",
+    "response": "The verified D: copy was immediately copied back to the unchanged C: path. File count, byte count, and the original complete tree digest all matched before a later git status refresh changed only .git/index.",
+    "source_files_after_restore": 5737,
+    "source_bytes_after_restore": 152323812,
+    "source_tree_digest_after_restore_before_git_status": "2c9dcf6ec134cb0e2fa1a9d6fb8016a6e8c6702f7b02b777b806fadc8b1701db",
+    "source_only_after_git_status": 0,
+    "backup_only_after_git_status": 0,
+    "length_differences_after_git_status": 0,
+    "same_length_hash_differences_after_git_status": [".git/index"],
+    "final_source_type": "normal C: directory",
+    "destination_copy_retained_as_recovery_backup": true,
+    "content_loss": false
+  },
+  "final_state": {
+    "c_free_bytes": 2431709184,
+    "c_free_gib": 2.265,
+    "d_free_bytes": 22470316032,
+    "d_free_gib": 20.927,
+    "above_labelagent_2gib_warning_threshold": true,
+    "formal_workbench_http_status": 200,
+    "formal_workbench_status": "idle",
+    "sam_ready": true,
+    "vlm_ready": true,
+    "vlm_inflight": 0,
+    "formal_state_sha256": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21"
+  },
+  "boundaries": {
+    "unique_files_deleted": false,
+    "original_paths_changed_for_users": false,
+    "unrelated_projects_modified": false,
+    "formal_state_changed": false,
+    "formal_truth_changed": false,
+    "formal_candidates_changed": false,
+    "training_approval_changed": false,
+    "model_weights_changed": false,
+    "oss_writes": false,
+    "other_gpu_processes_stopped": false,
+    "remaining_risk": "2.265 GiB is above the configured warning threshold but is not long-term capacity. Large local datasets and retained experiment artifacts should still use D: or NFS."
+  }
+}

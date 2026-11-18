@@ -138,7 +138,7 @@
   },
   "source_sync": {
     "implementation_commit": "7fd01ef9d93bddf650cfc6e45b105d6fcf10ba14",
-    "receipt_commit": null,
+    "receipt_commit": "ccd771d5d9f20daf728650c4fa4299f66a2c876a",
     "branch": "codex/workbench-stability-20261117",
     "github_readback": "7fd01ef9d93bddf650cfc6e45b105d6fcf10ba14",
     "cnb_readback": "7fd01ef9d93bddf650cfc6e45b105d6fcf10ba14",

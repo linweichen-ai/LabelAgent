@@ -23,6 +23,7 @@
   let adjacentPrefetchTimer = null;
   let adjacentPrefetchGeneration = 0;
   let adjacentPrefetchSourceFrame = null;
+  const speculativeFetchControllers = new Set();
   const DISCOVERY_PREFETCH_REUSE_MS = 5 * 60 * 1000;
   const FRAME_DWELL_PREFETCH_MS = 1200;
   const ADJACENT_PREFETCH_DELAY_MS = 3000;
@@ -30,6 +31,13 @@
   const ADJACENT_PREFETCH_MAX_ATTEMPTS = 12;
   const clone = value => JSON.parse(JSON.stringify(value));
   const currentFrame = () => Number.parseInt(byId('frameNumber')?.value || '0', 10) || 0;
+
+  function speculativeFetch(url, options = {}) {
+    const controller = new AbortController();
+    speculativeFetchControllers.add(controller);
+    return fetch(url, {...options, signal: controller.signal})
+      .finally(() => speculativeFetchControllers.delete(controller));
+  }
 
   function syncEditorLabel(label) {
     const select = byId('labelSelect');
@@ -257,7 +265,7 @@
     discoveryPrefetch = {key, status: 'warming', completedAt: 0, samReady: false};
     updateAutoDraftAction();
     try {
-      const response = await fetch('/api/reference_discovery/prefetch', {
+      const response = await speculativeFetch('/api/reference_discovery/prefetch', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({frame: frameId, expected_path: state.path,
           expected_topic: state.topic}),
@@ -308,7 +316,7 @@
       frameDwellPrefetchTimer = null;
       if (generation !== frameDwellPrefetchGeneration || currentFrame() !== frameId) return;
       try {
-        const response = await fetch('/api/model_readiness', {cache: 'no-store'});
+        const response = await speculativeFetch('/api/model_readiness', {cache: 'no-store'});
         const readiness = await response.json();
         if (generation !== frameDwellPrefetchGeneration || currentFrame() !== frameId
             || !response.ok || !readiness?.ready) return;
@@ -327,6 +335,17 @@
     if (adjacentPrefetchTimer) clearTimeout(adjacentPrefetchTimer);
     adjacentPrefetchTimer = null;
     adjacentPrefetchSourceFrame = null;
+  }
+
+  function cancelReferencePrefetch() {
+    frameDwellPrefetchGeneration += 1;
+    if (frameDwellPrefetchTimer) clearTimeout(frameDwellPrefetchTimer);
+    frameDwellPrefetchTimer = null;
+    cancelAdjacentFramePrefetch();
+    for (const controller of speculativeFetchControllers) controller.abort();
+    speculativeFetchControllers.clear();
+    discoveryPrefetch = {key: '', status: 'idle', completedAt: 0, samReady: false};
+    updateAutoDraftAction();
   }
 
   function scheduleAdjacentFramePrefetch(state, sourceFrame) {
@@ -348,7 +367,7 @@
       adjacentPrefetchTimer = null;
       if (!stillRelevant()) return;
       try {
-        const statusResponse = await fetch('/api/run/status', {cache: 'no-store'});
+        const statusResponse = await speculativeFetch('/api/run/status', {cache: 'no-store'});
         const status = await statusResponse.json();
         if (!statusResponse.ok || status.status !== 'idle') {
           if (remaining > 1 && stillRelevant()) {
@@ -357,7 +376,7 @@
           }
           return;
         }
-        const response = await fetch('/api/reference_discovery/prefetch', {
+        const response = await speculativeFetch('/api/reference_discovery/prefetch', {
           method: 'POST', headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({frame: nextFrame, expected_path: state.path,
             expected_topic: state.topic}),
@@ -718,6 +737,7 @@
     sourceSwitchBusy = true;
     renderAnnotationSources({sources: registeredSources});
     try {
+      cancelReferencePrefetch();
       const response = await fetch(`/api/files/${encodeURIComponent(fileId)}/load`, {
         method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}',
       });
@@ -793,6 +813,8 @@
     }
     if (state) scheduleFrameDwellPrefetch(state);
   });
+  document.addEventListener('labelagent:data-scope-changing', cancelReferencePrefetch);
+  window.cancelReferencePrefetch = cancelReferencePrefetch;
   window.openReferencePreparation = openDialog;
   window.loadCurrentFrameCandidateForReference = frameId => useCandidateFrame(Number(frameId));
   window.startReferenceAutoDraft = safely(startAutoDraftFromGuide);

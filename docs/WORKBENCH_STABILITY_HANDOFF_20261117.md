@@ -1650,3 +1650,15 @@ Round156 收尾时 C盘仅余约 1.18 GiB，再次低于工作台的 2 GiB 警�
 目视读回确认接触表32帧完整、正负分组清楚、警示可见。2/2定向测试、完整 Python 899/899、网页96/96和 `git diff --check` 通过。正式目录此前没有生成器和定向测试，部署前不存在清单保存在 `D:\Apps\LabelAgent\.local\backups\slope-review-packet-round160-20261118-123800`；部署后两个文件与工作树哈希一致。正式工作台 HTTP 200、运行门禁 `ready`、SAM/VLM 正常，正式状态哈希不变。结构化记录见 [第一百六十轮斜坡集中复核包](evidence/workbench-stability-20261117/slope-human-review-packet-round160.json)，本地入口为未跟踪 `artifacts/round160-slope-human-review-packet/index.html`。
 
 边界：原图与审阅图可能包含厂内画面，因此继续保留在本地未跟踪产物，不上传 GitHub/CNB；代码和非图像证据可以正常同步。该包降低了复核成本，但没有替代人工签署，也没有解锁 SAM 微调。
+
+## 第一百六十一轮斜坡专项复核工作台与切换竞态修复（已部署，2026-11-18）
+
+32帧复核包现已成为工作台内的“专项复核”队列。服务端只接受 `labelagent.slope-review-packet.v1` 清单，逐项校验 MCAP/topic、源图 SHA-256、帧号唯一性以及候选、人工真值和训练隔离字段；激活时重新计算完整 MCAP SHA-256，并在自动任务运行时拒绝切换。页面提供正负分组、筛选、完成进度、前后帧导航和未保存草稿离开提醒。打开一帧前会读取当前人工复核绑定并核对源图哈希；完成状态只认可当前 `labelagent.human-review.v2` 回执、精确文件/topic/帧哈希和已提交真值状态。复核包本身不会调用真值写入接口。
+
+第一次隔离浏览器验收成功切到 CVAT Task3 并打开第74帧，但捕获到旧 SFL 数据集的相邻帧后台预取在切换后返回一次409。前端原实现只会清除未触发计时器，不会终止已发出的请求。本轮为所有推测性就绪/发现请求加入可取消控制器，并在文件、相机、注册来源和专项包切换前统一取消；服务端将仍然越过切换边界的旧请求处理为 `200 scope_changed` 安全空操作，明确保持 `human_truth=false / approved_for_training=false`，不再把正常取消显示成运行失败。
+
+修复后用正式状态、文件会话、文件库和复核清单的新隔离副本重跑真实 Edge：3.030秒完成包读取、完整 MCAP 哈希校验、切换与第74帧打开；原图 SHA-256 精确为 `10d8ed84...51c34c`，页面错误0、失败请求0、HTTP 4xx/5xx 0、真值写请求0。页面明确显示该帧仍是 `legacy_truth / truth_verified=false`，要求人工检查并点击保存。浏览器结果与截图保留在本地未跟踪 `artifacts/round161-review-packet-browser-v2/`，不上传厂内画面。
+
+完整回归为 Python 904通过、186个子测试通过，网页101/101；JavaScript语法、Python编译和 `git diff --check` 通过。三个改动脚本的浏览器资源版本统一提升为 v162，已打开过旧页面的浏览器也会自动读取新逻辑。正式部署前增量备份位于 `D:\Apps\LabelAgent\.local\backups\prefetch-race-round161b-20261118-125530`。部署只重启工作台，GPU管理器 PID 138436 保持不变；SAM/VLM均ready、运行门禁ready，正式活动数据仍是 SFL camera 1。`state.json` 与 `file_sessions.json` SHA-256 前后保持 `d671dd58...8085` 和 `251a4796...8cc`。结构化证据见 [第一百六十一轮专项复核工作台](evidence/workbench-stability-20261117/review-packet-workbench-round161.json)。
+
+边界：本轮解决的是人工复核吞吐、数据集切换稳定性和证据绑定，没有微调或后训练 SAM，也没有把32帧变成人工真值或训练样本。下一门禁仍是逐帧人工复核；只有得到当前回执并建立独立训练/评测划分后，才能选择轻量微调方案并报告真实斜坡 precision/recall/IoU。

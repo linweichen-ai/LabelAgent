@@ -3361,7 +3361,12 @@ class ServerTests(unittest.TestCase):
                     "/api/reference_discovery/prefetch", json={
                         "frame": 1, "expected_path": "C:/stale.mcap",
                         "expected_topic": "camera0"})
-                self.assertEqual(stale.status_code, 409)
+                self.assertEqual(stale.status_code, 200)
+                self.assertFalse(stale.json["prefetched"])
+                self.assertEqual(stale.json["code"], "scope_changed")
+                self.assertTrue(stale.json["stale_request_discarded"])
+                self.assertFalse(stale.json["human_truth"])
+                self.assertFalse(stale.json["approved_for_training"])
             finally:
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work
 
@@ -3385,6 +3390,42 @@ class ServerTests(unittest.TestCase):
                 self.assertFalse(response.json["prefetched"])
                 self.assertEqual(response.json["code"], "vlm_busy")
                 sam_prefetch_mock.assert_not_called()
+                self.assertEqual(server.state["truth"], {})
+                self.assertEqual(server.state["candidates"], {})
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_reference_discovery_prefetch_scope_change_during_model_is_clean_noop(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0",
+                "labels": ["person"], "truth": {}, "reference_frames": {},
+                "config": {"llm_model": "test-vlm"},
+                "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            try:
+                def switch_scope(*_args, **_kwargs):
+                    server.state["topic"] = "camera1"
+                    return ({"visible_labels": ["person"],
+                             "uncertain_labels": [], "unknown_candidates": []}, 0)
+
+                with patch.object(server, "discover_reference_labels",
+                                  side_effect=switch_scope), \
+                     patch.object(server, "sam_text_multi_prefetch") as sam_prefetch_mock, \
+                     patch.object(server, "save") as save_mock:
+                    response = server.app.test_client().post(
+                        "/api/reference_discovery/prefetch", json={
+                            "frame": 1, "expected_path": str(FakeVideo.path),
+                            "expected_topic": "camera0"})
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertFalse(response.json["prefetched"])
+                self.assertEqual(response.json["code"], "scope_changed")
+                self.assertTrue(response.json["stale_request_discarded"])
+                self.assertFalse(response.json["human_truth"])
+                self.assertFalse(response.json["approved_for_training"])
+                sam_prefetch_mock.assert_not_called()
+                save_mock.assert_not_called()
                 self.assertEqual(server.state["truth"], {})
                 self.assertEqual(server.state["candidates"], {})
             finally:

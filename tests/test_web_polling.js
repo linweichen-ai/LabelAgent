@@ -105,7 +105,7 @@ test('参考准备弹窗为当前空白帧预取可见类别并显示SAM预热�
   const prefetch = prep.slice(prep.indexOf('async function prefetchVisibleDiscovery'),
     prep.indexOf('\n  function render(state)'));
   assert.match(prefetch, /hasTruthFrame\(state, frameId\) \|\| currentFrameCandidate\(state, frameId\)/);
-  assert.match(prefetch, /fetch\('\/api\/reference_discovery\/prefetch'/);
+  assert.match(prefetch, /speculativeFetch\('\/api\/reference_discovery\/prefetch'/);
   assert.match(prefetch, /expected_path: state\.path/);
   assert.match(prefetch, /expected_topic: state\.topic/);
   assert.match(prefetch, /data\.schema_version === 'labelagent\.reference-discovery-prefetch\.v1'/);
@@ -123,7 +123,7 @@ test('图片稳定停留后提前预取但跳过真值候选和快速导航', ()
   assert.match(prep, /state\?\.loaded === true \|\| Boolean\(state\?\.path && state\?\.topic\)/);
   assert.match(dwell, /clearTimeout\(frameDwellPrefetchTimer\)/);
   assert.match(dwell, /hasTruthFrame\(state, frameId\) \|\| currentFrameCandidate\(state, frameId\)/);
-  assert.match(dwell, /fetch\('\/api\/model_readiness'/);
+  assert.match(dwell, /speculativeFetch\('\/api\/model_readiness'/);
   assert.match(dwell, /generation !== frameDwellPrefetchGeneration \|\| currentFrame\(\) !== frameId/);
   assert.match(dwell, /await prefetchVisibleDiscovery\(state, frameId, key/);
   assert.match(prep, /discoveryPrefetch = \{key, status: 'idle', completedAt: 0, samReady: false\}/);
@@ -140,7 +140,7 @@ test('当前候选返回后只在空闲时预备紧邻下一帧且切帧立即�
   assert.match(adjacent, /nextFrame >= frameCount/);
   assert.match(adjacent, /hasTruthFrame\(state, nextFrame\)/);
   assert.match(adjacent, /currentFrameCandidate\(state, nextFrame\)/);
-  assert.match(adjacent, /fetch\('\/api\/run\/status'/);
+  assert.match(adjacent, /speculativeFetch\('\/api\/run\/status'/);
   assert.match(adjacent, /status\.status !== 'idle'/);
   assert.match(adjacent, /frame: nextFrame, expected_path: state\.path/);
   assert.match(adjacent, /\['active_workflow', 'vlm_busy', 'sam_busy'\]/);
@@ -178,6 +178,7 @@ test('相邻帧预取在繁忙时低频重试、空闲后只请求下一帧且�
     const ADJACENT_PREFETCH_RETRY_MS = 5000;
     const ADJACENT_PREFETCH_MAX_ATTEMPTS = 12;
     const currentFrame = () => frameValue;
+    const speculativeFetch = fetch;
     const discoveryPrefetchKey = (state, frame) => state
       ? [state.path, state.topic, (state.labels || []).join(','), frame].join('|') : '';
     const hasTruthFrame = (state, frame) => Boolean(state.truth_index?.[String(frame)]);
@@ -204,6 +205,26 @@ test('相邻帧预取在繁忙时低频重试、空闲后只请求下一帧且�
   h.run('scheduleAdjacentFramePrefetch(state, 30); frameValue = 31; cancelAdjacentFramePrefetch()');
   await h.advance(3000);
   assert.equal(calls.length, 0);
+});
+
+test('数据文件或相机切换前取消全部推测性预取且调用方先取消再切换', () => {
+  const prep = source('reference-prep.js');
+  const reviewPacket = source('review-packet.js');
+  const app = source('app.js');
+  const cancellation = prep.slice(prep.indexOf('function cancelReferencePrefetch'),
+    prep.indexOf('\n  function scheduleAdjacentFramePrefetch'));
+  assert.match(prep, /const speculativeFetchControllers = new Set\(\)/);
+  assert.match(prep, /signal: controller\.signal/);
+  assert.match(cancellation, /frameDwellPrefetchGeneration \+= 1/);
+  assert.match(cancellation, /clearTimeout\(frameDwellPrefetchTimer\)/);
+  assert.match(cancellation, /cancelAdjacentFramePrefetch\(\)/);
+  assert.match(cancellation, /controller\.abort\(\)/);
+  assert.match(cancellation, /speculativeFetchControllers\.clear\(\)/);
+  assert.match(prep, /document\.addEventListener\('labelagent:data-scope-changing', cancelReferencePrefetch\)/);
+  assert.match(prep, /window\.cancelReferencePrefetch = cancelReferencePrefetch/);
+  assert.match(reviewPacket, /window\.cancelReferencePrefetch\?\.\(\);[\s\S]*\/activate/);
+  assert.ok(app.includes("window.cancelReferencePrefetch?.();const data=await api('files/'+file.id+'/load'"));
+  assert.match(app, /window\.cancelReferencePrefetch\?\.\(\);const data=await api\('topic'/);
 });
 
 test('保存真值和锁定参考帧只读回目标帧且保留强绑定校验', () => {

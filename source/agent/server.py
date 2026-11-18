@@ -69,6 +69,13 @@ REFINEMENT_CANCEL_TTL_SECONDS = 300
 file_sessions_dirty = False
 batch_review_index_cache = None
 DEFAULT_REVIEW_ROUNDS = 6
+REVIEW_PACKET_SCHEMA = "labelagent.slope-review-packet.v1"
+REVIEW_PACKET_ACCEPT_DECISIONS = {
+    "slope_present_and_mask_acceptable",
+    "slope_present_mask_needs_correction",
+    "no_slope_present",
+    "uncertain",
+}
 
 
 def _normalize_refinement_id(value):
@@ -2089,6 +2096,171 @@ def file_list():
     return [dict(item, available=Path(item['path']).is_file(), loaded=item['path'] == current) for item in read_library()]
 
 
+def _review_packet_id(value):
+    value = str(value or "")
+    if (not 1 <= len(value) <= 80
+            or any(character not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_" for character in value)):
+        raise ValueError("专项复核包标识无效")
+    return value
+
+
+def _review_packet_path(packet_id):
+    packet_id = _review_packet_id(packet_id)
+    root = (WORK / "review_packets").resolve()
+    path = (root / packet_id / "manifest.json").resolve()
+    if path.parent.parent != root:
+        raise ValueError("专项复核包路径越界")
+    if not path.is_file():
+        raise ValueError("专项复核包不存在")
+    return path
+
+
+def _valid_sha256(value):
+    return (isinstance(value, str) and len(value) == 64
+            and all(character in "0123456789abcdef" for character in value.lower()))
+
+
+def _read_review_packet(packet_id):
+    """Read and fail closed on a local, read-only review packet manifest."""
+    path = _review_packet_path(packet_id)
+    raw = path.read_bytes()
+    if len(raw) > 4 * 1024 * 1024:
+        raise ValueError("专项复核包清单过大")
+    try:
+        value = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError("专项复核包清单不是有效 UTF-8 JSON") from error
+    if not isinstance(value, dict) or value.get("schema_version") != REVIEW_PACKET_SCHEMA:
+        raise ValueError("专项复核包版本不受支持")
+    mcap = value.get("mcap")
+    topic = value.get("topic")
+    rows = value.get("rows")
+    if (not isinstance(mcap, str) or not Path(mcap).is_absolute()
+            or Path(mcap).suffix.lower() != ".mcap"):
+        raise ValueError("专项复核包没有绑定有效 MCAP")
+    if not isinstance(topic, str) or not topic.strip():
+        raise ValueError("专项复核包没有绑定图像 topic")
+    if not _valid_sha256(value.get("mcap_sha256")):
+        raise ValueError("专项复核包 MCAP 哈希无效")
+    if not isinstance(rows, list) or not 1 <= len(rows) <= 500:
+        raise ValueError("专项复核包帧清单为空或过大")
+    normalized_rows = []
+    seen_frames = set()
+    for row in rows:
+        if not isinstance(row, dict):
+            raise ValueError("专项复核包帧记录无效")
+        frame = row.get("frame")
+        if isinstance(frame, bool) or not isinstance(frame, int) or frame < 0 or frame in seen_frames:
+            raise ValueError("专项复核包包含无效或重复帧号")
+        seen_frames.add(frame)
+        if not _valid_sha256(row.get("source_frame_sha256")):
+            raise ValueError(f"专项复核包第 {frame} 帧原图哈希无效")
+        if (row.get("candidate_only") is not True
+                or row.get("human_truth") is not False
+                or row.get("approved_for_training") is not False
+                or row.get("training_return_allowed") is not False
+                or row.get("review_status") != "pending_human_review"
+                or row.get("human_decision") is not None
+                or row.get("reviewer_declared_id") is not None):
+            raise ValueError(f"专项复核包第 {frame} 帧越过候选/训练隔离门禁")
+        decisions = row.get("allowed_human_decisions")
+        if (not isinstance(decisions, list) or not decisions
+                or any(decision not in REVIEW_PACKET_ACCEPT_DECISIONS for decision in decisions)):
+            raise ValueError(f"专项复核包第 {frame} 帧人工决策集合无效")
+        cohort = row.get("cohort")
+        if cohort not in {"positive_proxy", "negative_cohort"}:
+            raise ValueError(f"专项复核包第 {frame} 帧分组无效")
+        candidate_count = row.get("candidate_count")
+        if isinstance(candidate_count, bool) or not isinstance(candidate_count, int) or candidate_count < 0:
+            raise ValueError(f"专项复核包第 {frame} 帧候选数无效")
+        normalized_rows.append({
+            "frame": frame,
+            "cohort": cohort,
+            "source_frame_sha256": row["source_frame_sha256"].lower(),
+            "route": str(row.get("route") or "")[:100],
+            "candidate_count": candidate_count,
+            "target_provenance": str(row.get("target_provenance") or "")[:100],
+            "review_status": "pending_human_review",
+            "candidate_only": True,
+            "human_truth": False,
+            "approved_for_training": False,
+            "training_return_allowed": False,
+        })
+    summary = value.get("summary") or {}
+    if summary.get("frames") != len(normalized_rows):
+        raise ValueError("专项复核包汇总帧数与清单不一致")
+    positives = sum(row["cohort"] == "positive_proxy" for row in normalized_rows)
+    negatives = len(normalized_rows) - positives
+    if (summary.get("positive_proxy_frames") != positives
+            or summary.get("negative_cohort_frames") != negatives
+            or summary.get("pending_human_review") != len(normalized_rows)
+            or summary.get("human_truth_frames") != 0
+            or summary.get("training_approved_frames") != 0):
+        raise ValueError("专项复核包汇总越过来源或训练隔离门禁")
+    return {
+        "schema_version": REVIEW_PACKET_SCHEMA,
+        "packet_id": _review_packet_id(packet_id),
+        "manifest_sha256": hashlib.sha256(raw).hexdigest(),
+        "mcap_path": str(Path(mcap).resolve()),
+        "mcap_sha256": value["mcap_sha256"].lower(),
+        "mcap_available": Path(mcap).is_file(),
+        "topic": topic,
+        "summary": {
+            "frames": len(normalized_rows),
+            "positive_proxy_frames": positives,
+            "negative_cohort_frames": negatives,
+            "pending_human_review": len(normalized_rows),
+            "human_truth_frames": 0,
+            "training_approved_frames": 0,
+        },
+        "rows": normalized_rows,
+        "read_only_packet": True,
+        "submits_human_truth": False,
+    }
+
+
+def _review_packet_summary(packet):
+    current_path = str(state["video"].path.resolve()) if state.get("video") else ""
+    return {
+        key: copy.deepcopy(packet[key]) for key in (
+            "schema_version", "packet_id", "manifest_sha256", "mcap_sha256",
+            "mcap_available", "topic", "summary", "read_only_packet",
+            "submits_human_truth")
+    } | {
+        "title": f"斜坡集中复核 · {packet['summary']['frames']} 帧",
+        "active_file": current_path == packet["mcap_path"],
+        "active_topic": state.get("topic") == packet["topic"],
+        "ready_to_navigate": (current_path == packet["mcap_path"]
+                              and state.get("topic") == packet["topic"]),
+    }
+
+
+def _review_packet_file_sha256(path):
+    path = Path(path).resolve()
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(8 * 1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _activate_review_packet_topic(topic):
+    if topic not in state["video"].topics:
+        raise ValueError("专项复核包绑定的图像 topic 不存在")
+    if topic == state["topic"]:
+        return
+    state.setdefault("truths_by_topic", {})[state["topic"]] = state["truth"]
+    state.setdefault("candidates_by_topic", {})[state["topic"]] = state.get("candidates", {})
+    state.setdefault("agent_runs_by_topic", {})[state["topic"]] = state.get("agent_runs", {})
+    state.setdefault("candidate_revisions_by_topic", {})[state["topic"]] = state.get("candidate_revisions", {})
+    state["topic"] = topic
+    state["truth"] = state["truths_by_topic"].get(topic, {})
+    state["candidates"] = state["candidates_by_topic"].get(topic, {})
+    state["agent_runs"] = state["agent_runs_by_topic"].get(topic, {})
+    state["candidate_revisions"] = state["candidate_revisions_by_topic"].get(topic, {})
+    save()
+
+
 def activate_file(item):
     global file_sessions_dirty
     started = time.perf_counter()
@@ -2141,6 +2313,65 @@ def activate_file(item):
         "bootstrap": round((time.perf_counter() - state_saved) * 1000, 3),
     }
     return payload
+
+
+@app.get('/api/review_packets')
+def get_review_packets():
+    """List verified local review packets without serving factory images."""
+    packets = []
+    rejected = 0
+    root = WORK / "review_packets"
+    if root.is_dir():
+        for folder in sorted(root.iterdir(), key=lambda item: item.name):
+            if not folder.is_dir():
+                continue
+            try:
+                packets.append(_review_packet_summary(_read_review_packet(folder.name)))
+            except (OSError, ValueError):
+                rejected += 1
+    return jsonify(schema_version="labelagent.review-packet-index.v1",
+                   packets=packets, rejected_packets=rejected,
+                   raw_images_served=False, auto_truth_submission=False)
+
+
+@app.get('/api/review_packets/<packet_id>')
+def get_review_packet(packet_id):
+    packet = _read_review_packet(packet_id)
+    packet["active_file"] = (state.get("video") is not None
+                             and str(state["video"].path.resolve()) == packet["mcap_path"])
+    packet["active_topic"] = state.get("topic") == packet["topic"]
+    packet["ready_to_navigate"] = packet["active_file"] and packet["active_topic"]
+    return jsonify(packet)
+
+
+@app.post('/api/review_packets/<packet_id>/activate')
+def activate_review_packet(packet_id):
+    """Activate exactly the packet-bound MCAP/topic after a content hash check."""
+    with lock:
+        with run_status_lock:
+            if run_status.get("status") in {"running", "stopping"}:
+                raise ValueError("自动任务运行中，暂不能切换专项复核数据")
+        packet = _read_review_packet(packet_id)
+        if not packet["mcap_available"]:
+            raise ValueError("专项复核包绑定的 MCAP 不存在")
+        if _review_packet_file_sha256(packet["mcap_path"]) != packet["mcap_sha256"]:
+            raise ValueError("专项复核包绑定的 MCAP 内容哈希不一致")
+        current = (str(state["video"].path.resolve()) if state.get("video") else "")
+        if current != packet["mcap_path"]:
+            payload = activate_file(register_file(packet["mcap_path"]))
+        else:
+            payload = _get_bootstrap_locked()
+        _activate_review_packet_topic(packet["topic"])
+        payload = _get_bootstrap_locked()
+        payload["review_packet"] = packet
+        payload["review_packet_activation"] = {
+            "mcap_sha256_verified": True,
+            "topic_verified": True,
+            "raw_images_served": False,
+            "human_truth_written": False,
+            "training_data_written": False,
+        }
+        return jsonify(**payload)
 
 
 @app.get('/api/files')
@@ -3621,7 +3852,19 @@ def prefetch_reference_discovery():
         selected_topic = state["topic"]
         file_name = str(video.path)
         if expected_path != file_name or expected_topic != selected_topic:
-            raise StaleHumanReviewError("数据文件或相机已变化，未启动旧帧预取")
+            # This endpoint is speculative.  A dataset/topic switch may race an
+            # already-issued browser prefetch even after the client aborts it.
+            # Treat that expected cancellation as a successful no-op instead of
+            # surfacing a red 409 in the operator workbench.
+            return jsonify(
+                schema_version="labelagent.reference-discovery-prefetch.v1",
+                prefetched=False,
+                code="scope_changed",
+                stale_request_discarded=True,
+                candidate_only=True,
+                human_truth=False,
+                approved_for_training=False,
+            ), 200
         index = int(body.get("frame", -1))
         count = video.topics[selected_topic]["count"]
         if not 0 <= index < count:
@@ -3732,7 +3975,15 @@ def prefetch_reference_discovery():
                 or state.get("topic") != selected_topic
                 or state.get("labels", []) != labels
                 or _sha256_json(state.get("config", {})) != config_sha256):
-            raise StaleHumanReviewError("预取期间数据作用域或模型配置已变化，未采用旧结果")
+            return jsonify(
+                schema_version="labelagent.reference-discovery-prefetch.v1",
+                prefetched=False,
+                code="scope_changed",
+                stale_request_discarded=True,
+                candidate_only=True,
+                human_truth=False,
+                approved_for_training=False,
+            ), 200
     return jsonify(
         schema_version="labelagent.reference-discovery-prefetch.v1",
         prefetched=True,

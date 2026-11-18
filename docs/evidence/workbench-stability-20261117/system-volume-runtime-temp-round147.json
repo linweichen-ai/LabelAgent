@@ -1,0 +1,88 @@
+{
+  "schema_version": "labelagent.system-volume-runtime-temp-round147.v1",
+  "recorded_at": "2026-11-18T10:18:45.0575161+08:00",
+  "decision": "accepted_and_deployed",
+  "objective": "Prevent a nearly full Windows system volume from making the LabelAgent workbench appear frozen or corrupt an in-progress save, while keeping the formal state, model services, candidates, truth, training approval, and OSS unchanged.",
+  "diagnosis": {
+    "windows_system_volume": "C:/",
+    "windows_system_volume_free_bytes_after": 182792192,
+    "windows_system_volume_free_gib_after": 0.170,
+    "inherited_system_temp": "D:/AI/Temp",
+    "workbench_data_volume_free_bytes_after": 25340432384,
+    "workbench_data_volume_free_gib_after": 23.600,
+    "finding": "TEMP and TMP were already redirected to D:, so checking the inherited temporary directory alone concealed the critically low C: system volume. The final implementation checks the Windows system volume, inherited temp volume, and selected runtime-temp volume independently."
+  },
+  "implementation": {
+    "manager": "tools/manage_remote_workbench.py",
+    "runtime_temp": "D:/Apps/LabelAgent/.local/runtime-temp/workbench-8765",
+    "environment_variables_fixed_for_workbench": [
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "LABELAGENT_RUNTIME_TEMP"
+    ],
+    "warning_threshold_bytes": 2147483648,
+    "critical_runtime_target_bytes": 268435456,
+    "behavior": [
+      "Print an explicit startup advisory when the Windows system volume has less than 2 GiB free.",
+      "Place all workbench temporary files in the LabelAgent D: runtime-temp directory even when inherited TEMP already points elsewhere.",
+      "Refuse a new workbench or isolated-workbench start when its selected runtime-temp volume has less than 256 MiB free, rather than risking partial writes.",
+      "Apply the same bounded runtime-temp preparation to isolated acceptance workbenches."
+    ],
+    "intermediate_candidate": {
+      "status": "corrected_before_commit",
+      "problem": "The first deployed draft checked the inherited TEMP path, which was D:/AI/Temp, and therefore did not warn about C:.",
+      "effect_on_formal_state": false,
+      "resolution": "The final candidate derives and checks the Windows system drive separately, then was retested and redeployed."
+    }
+  },
+  "live_acceptance": {
+    "startup_warning_observed": "Windows system volume C:\\ had 0.17 GiB free; workbench temp fixed to D:\\Apps\\LabelAgent\\.local\\runtime-temp\\workbench-8765 with 23.60 GiB free.",
+    "process_environment_readback": {
+      "TEMP": "D:/Apps/LabelAgent/.local/runtime-temp/workbench-8765",
+      "TMP": "D:/Apps/LabelAgent/.local/runtime-temp/workbench-8765",
+      "TMPDIR": "D:/Apps/LabelAgent/.local/runtime-temp/workbench-8765",
+      "LABELAGENT_RUNTIME_TEMP": "D:/Apps/LabelAgent/.local/runtime-temp/workbench-8765"
+    },
+    "hot_full_decode_prewarm_seconds": 0.084,
+    "workbench_http_status": 200,
+    "workbench_status": "idle",
+    "sam_ready": true,
+    "vlm_ready": true,
+    "vlm_exact_requests_inflight": 0,
+    "formal_state_sha256_before_after": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "worktree_manager_sha256": "5bb90b8bc60abf551fa957c94ebe89ae1b7401c69e3c35712d44772b1362bd5e",
+    "runtime_manager_sha256": "5bb90b8bc60abf551fa957c94ebe89ae1b7401c69e3c35712d44772b1362bd5e"
+  },
+  "verification": {
+    "targeted_manager_tests": "12/12",
+    "python_regression": "879/879",
+    "python_subtests": "179/179",
+    "web_regression": "103/103",
+    "python_compile": "passed",
+    "diff_check": "passed",
+    "formal_state_changed": false,
+    "formal_truth_changed": false,
+    "formal_candidates_changed": false,
+    "training_approval_changed": false,
+    "model_weights_changed": false,
+    "oss_writes": false,
+    "other_gpu_processes_stopped": false
+  },
+  "cleanup": {
+    "scope": "Only reconstructible __pycache__ and .pytest_cache directories inside this exact worktree, plus the empty D: test-temp directory.",
+    "cache_directories_removed": 36,
+    "cache_bytes_removed": 11921733,
+    "cache_mib_removed": 11.369,
+    "source_or_evidence_removed": false,
+    "finding": "The small cache total proves the wider C: shortage was not caused mainly by this LabelAgent test run; unrelated C: content was left untouched."
+  },
+  "rollback": {
+    "path": "D:/Apps/LabelAgent/.local/backups/storage-preflight-round147-20261118-101500",
+    "old_manager_sha256": "25c8d01cb79e16f39914af15bfcab2a237b53ad2162dc5459ba905899c8a8024",
+    "state_sha256": "a01d57e013255da55c6d76db8f47bacf7ef872cfaa35371c4ebb03a213158e21",
+    "process_record_sha256": "68cd3e0df9386bc35c82e831e1760f7195388691c93db93b77a43865ac23c8b9",
+    "backup_hashes_verified": true
+  },
+  "boundary": "This protects LabelAgent runtime temporary writes and exposes the low-system-volume condition at startup. It does not free the broader C: volume, guarantee Windows-wide stability at 0.17 GiB free, improve segmentation accuracy, prove cross-dataset generalization, or constitute SAM fine-tuning."
+}

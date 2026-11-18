@@ -7,6 +7,7 @@ import shutil
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 import uuid
 import urllib.request
@@ -28,6 +29,8 @@ SAM_PORT = 28766
 VLM_PORT = 28868
 FAST_VLM_PORT = 38868
 WEB_PORT = 8765
+STORAGE_WARNING_BYTES = 2 * 1024 ** 3
+STORAGE_CRITICAL_BYTES = 256 * 1024 ** 2
 
 
 def optional_fast_wait_seconds(environment=None):
@@ -39,6 +42,59 @@ def optional_fast_wait_seconds(environment=None):
     except (TypeError, ValueError):
         seconds = 3.0
     return min(20.0, max(1.0, seconds))
+
+
+def storage_free_bytes(path):
+    """Return free bytes for a path even when its final directory is new."""
+    target = Path(path).resolve()
+    while not target.exists() and target != target.parent:
+        target = target.parent
+    return shutil.disk_usage(target).free
+
+
+def prepare_runtime_environment(environment, runtime_temp):
+    """Keep workbench temporary writes off a low-headroom system volume."""
+    prepared = environment.copy()
+    system_drive = prepared.get("SystemDrive")
+    system_volume = Path(f"{system_drive}\\" if system_drive else Path.home().anchor).resolve()
+    system_temp = Path(
+        prepared.get("TEMP") or prepared.get("TMP") or tempfile.gettempdir()
+    ).resolve()
+    runtime_temp = Path(runtime_temp).resolve()
+    runtime_temp.mkdir(parents=True, exist_ok=True)
+    system_volume_free = storage_free_bytes(system_volume)
+    system_temp_free = storage_free_bytes(system_temp)
+    runtime_free = storage_free_bytes(runtime_temp)
+    if runtime_free < STORAGE_CRITICAL_BYTES:
+        raise RuntimeError(
+            f"工作台临时目录可用空间不足 256 MiB：{runtime_temp}；"
+            "为避免保存损坏，本次不会启动")
+    prepared.update(
+        TEMP=str(runtime_temp), TMP=str(runtime_temp), TMPDIR=str(runtime_temp),
+        LABELAGENT_RUNTIME_TEMP=str(runtime_temp))
+    return prepared, {
+        "system_volume": str(system_volume),
+        "system_volume_free_bytes": system_volume_free,
+        "system_temp": str(system_temp),
+        "system_temp_free_bytes": system_temp_free,
+        "runtime_temp": str(runtime_temp),
+        "runtime_free_bytes": runtime_free,
+        "redirected": system_temp != runtime_temp,
+    }
+
+
+def print_storage_advisory(report):
+    system_volume_free = report["system_volume_free_bytes"]
+    runtime_free = report["runtime_free_bytes"]
+    if system_volume_free < STORAGE_WARNING_BYTES:
+        print(
+            f"提示：Windows 系统盘 {report['system_volume']} 可用空间仅 "
+            f"{system_volume_free / 1024 ** 3:.2f} GiB；工作台临时文件已固定到 "
+            f"{report['runtime_temp']}（可用 {runtime_free / 1024 ** 3:.2f} GiB）")
+    if runtime_free < STORAGE_WARNING_BYTES:
+        print(
+            "提示：工作台数据盘可用空间低于 2 GiB，请先释放可恢复空间，"
+            "再导入大批量数据")
 
 
 def records(path=RECORD):
@@ -256,9 +312,13 @@ def start(open_browser):
 
         if "workbench" not in items:
             command = [str(PYTHON), "-u", "-m", "source.agent.server"]
+            workbench_environment, storage = prepare_runtime_environment(
+                environment, LOCAL / "runtime-temp" / f"workbench-{WEB_PORT}")
+            print_storage_advisory(storage)
             with (LOCAL / "logs" / "remote_workbench.log").open("ab") as output:
                 process = subprocess.Popen(
-                    command, cwd=ROOT, env=environment, stdin=subprocess.DEVNULL,
+                    command, cwd=ROOT, env=workbench_environment,
+                    stdin=subprocess.DEVNULL,
                     stdout=output, stderr=output, creationflags=subprocess.CREATE_NO_WINDOW)
             item = {"pid": process.pid, "created": psutil.Process(process.pid).create_time(),
                     "marker": "source.agent.server", "executable": str(PYTHON),
@@ -512,6 +572,9 @@ def isolate(action, port, work, open_browser=False):
                 AUTOLABEL_PORT=str(port),
                 SAM3_URL=f"http://127.0.0.1:{SAM_PORT}",
                 NO_PROXY="127.0.0.1,localhost")
+            environment, storage = prepare_runtime_environment(
+                environment, work / ".runtime-temp")
+            print_storage_advisory(storage)
             token = uuid.uuid4().hex
             with (log_dir / f"isolated_workbench_{port}.log").open("ab") as output:
                 process = subprocess.Popen(

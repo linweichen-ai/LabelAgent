@@ -13,6 +13,49 @@ SPEC.loader.exec_module(MODULE)
 
 
 class RemoteWorkbenchManagerTests(unittest.TestCase):
+    def test_runtime_temp_redirects_from_low_system_volume(self):
+        with (tempfile.TemporaryDirectory() as temporary,
+              mock.patch.object(MODULE, "storage_free_bytes", side_effect=[
+                  512 * 1024 ** 2, 12 * 1024 ** 3, 12 * 1024 ** 3])):
+            runtime_temp = Path(temporary) / "runtime-temp"
+            environment, report = MODULE.prepare_runtime_environment(
+                {"TEMP": "C:/system-temp", "KEEP": "yes"}, runtime_temp)
+        self.assertEqual(environment["TEMP"], str(runtime_temp.resolve()))
+        self.assertEqual(environment["TMP"], str(runtime_temp.resolve()))
+        self.assertEqual(environment["TMPDIR"], str(runtime_temp.resolve()))
+        self.assertEqual(environment["LABELAGENT_RUNTIME_TEMP"],
+                         str(runtime_temp.resolve()))
+        self.assertEqual(environment["KEEP"], "yes")
+        self.assertTrue(report["redirected"])
+        self.assertEqual(report["system_volume_free_bytes"], 512 * 1024 ** 2)
+        self.assertEqual(report["system_temp_free_bytes"], 12 * 1024 ** 3)
+        self.assertEqual(report["runtime_free_bytes"], 12 * 1024 ** 3)
+
+    def test_runtime_temp_refuses_critically_low_target_volume(self):
+        with (tempfile.TemporaryDirectory() as temporary,
+              mock.patch.object(MODULE, "storage_free_bytes", side_effect=[
+                  8 * 1024 ** 3, 8 * 1024 ** 3, 128 * 1024 ** 2])):
+            with self.assertRaisesRegex(RuntimeError, "不足 256 MiB"):
+                MODULE.prepare_runtime_environment(
+                    {"TEMP": temporary}, Path(temporary) / "runtime-temp")
+
+    def test_low_space_advisory_reports_redirect_without_blocking(self):
+        report = {
+            "system_volume": "C:\\",
+            "system_volume_free_bytes": 512 * 1024 ** 2,
+            "system_temp": "C:/system-temp",
+            "system_temp_free_bytes": 512 * 1024 ** 2,
+            "runtime_temp": "D:/runtime-temp",
+            "runtime_free_bytes": 12 * 1024 ** 3,
+            "redirected": True,
+        }
+        with mock.patch("builtins.print") as output:
+            MODULE.print_storage_advisory(report)
+        message = " ".join(str(call.args[0]) for call in output.call_args_list)
+        self.assertIn("Windows 系统盘", message)
+        self.assertIn("工作台临时文件已固定", message)
+        self.assertNotIn("数据盘可用空间低于", message)
+
     def test_primary_prewarm_uses_long_timeout_and_accepts_busy_status(self):
         ready = {"prewarmed": True, "elapsed_ms": 15000}
         with mock.patch.object(MODULE, "post_json", return_value=ready) as post:

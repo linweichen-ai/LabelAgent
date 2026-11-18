@@ -1,0 +1,52 @@
+{
+  "schema_version": "labelagent.demo-acceptance.v1",
+  "observed_at": "2026-11-18T15:45:00+08:00",
+  "objective": "Eliminate Local VLM busy failures during demonstrations",
+  "implementation_commit": "a25bd1d",
+  "tests": {
+    "command": "python -m unittest discover -s tests",
+    "python_utf8": true,
+    "passed": 921,
+    "failed": 0
+  },
+  "deployment": {
+    "workbench": "http://127.0.0.1:8765",
+    "sam_route": "factory-5090 via http://127.0.0.1:38766",
+    "vlm_route": "factory-4090 via http://127.0.0.1:28868/v1",
+    "local_vlm_process": false,
+    "server_queue_timeout_seconds": 300
+  },
+  "backups": {
+    "local": "D:/Apps/LabelAgent/.local/backups/vlm-queue-20261118-154020",
+    "factory_4090": "/home/clw/labelagent_remote_20261110/backups/vlm-queue-20261118-154020/local_vlm_server.py",
+    "original_server_sha256": "f1c480798de03ede6d57b0543a170f986623fb43385fb253cfef3601129ce069",
+    "deployed_server_sha256": "5a9380161b11760f949059e578e27d6eb4e78f7789d41633c7e3841100385a41"
+  },
+  "concurrent_probe": {
+    "different_requests": 2,
+    "http_200": 2,
+    "http_503": 0,
+    "max_queue_depth_observed": 2,
+    "queue_timeouts": 0,
+    "busy_rejections": 0,
+    "elapsed_seconds": [22.594, 23.938],
+    "note": "Both probes arrived while a startup request was still in flight; all requests completed through the server queue."
+  },
+  "formal_workbench_run": {
+    "task_id": "e7ecb9d48d34410aba68e2d98f47a7b4",
+    "dataset": "CVAT_Task3_original_annotations.mcap",
+    "topic": "/CVAT/Task3/images",
+    "frame": 55,
+    "completed": 1,
+    "failed": 0,
+    "elapsed_seconds": 8.2,
+    "debug_busy_text_count": 0,
+    "debug_legacy_waiting_text_count": 0
+  },
+  "acceptance": {
+    "server_side_queue_active": true,
+    "legacy_busy_backoff_seconds": 1,
+    "legacy_busy_trace_is_error": false,
+    "demo_gate_passed": true
+  }
+}

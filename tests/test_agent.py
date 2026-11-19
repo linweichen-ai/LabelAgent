@@ -4093,7 +4093,8 @@ class ServerTests(unittest.TestCase):
                 client = server.app.test_client()
                 full = client.post("/api/topic", json={"topic": "camera0"})
                 compact = client.post("/api/topic", json={
-                    "topic": "camera0", "frame": 0, "compact": True})
+                    "topic": "camera0", "frame": 0, "compact": True,
+                    "path": str(FakeVideo.path)})
                 self.assertEqual(compact.status_code, 200, compact.json)
                 self.assertTrue(compact.json["compact_geometry"])
                 self.assertEqual(compact.json["frame"], 0)
@@ -4105,6 +4106,14 @@ class ServerTests(unittest.TestCase):
                 self.assertEqual(compact.json["auto_labels"], ["a"])
                 self.assertEqual(compact.json["reference_only_labels"], [])
                 self.assertLess(len(compact.data), len(full.data) * 0.05)
+
+                stale_topic = server.state["topic"]
+                stale = client.post("/api/topic", json={
+                    "topic": "camera1", "frame": 0, "compact": True,
+                    "path": "/stale/other-file.mcap"})
+                self.assertEqual(stale.status_code, 409, stale.json)
+                self.assertIn("另一个窗口切换", stale.json["error"])
+                self.assertEqual(server.state["topic"], stale_topic)
 
                 lazy = client.get("/api/frame_state/1", query_string={
                     "topic": "camera0", "path": str(FakeVideo.path)})

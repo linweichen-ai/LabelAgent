@@ -789,7 +789,7 @@
     const fileId = byId('registeredAnnotationSource').value;
     const source = registeredSources.find(item => item.id === fileId);
     if (!source) throw new Error('请选择仍然可用的已有标注数据');
-    if (typeof window.loadVideoData !== 'function') throw new Error('当前页面版本不支持安全切换，请刷新后重试');
+    if (typeof window.loadVerifiedVideoData !== 'function') throw new Error('当前页面版本不支持安全切换，请刷新后重试');
     sourceSwitchBusy = true;
     renderAnnotationSources({sources: registeredSources});
     try {
@@ -799,7 +799,7 @@
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || '切换已有标注数据失败');
-      await window.loadVideoData(data);
+      await window.loadVerifiedVideoData(data);
       const [freshState, freshSources] = await Promise.all([readPreparationState(), readAnnotationSources()]);
       render(freshState);
       renderAnnotationSources(freshSources);

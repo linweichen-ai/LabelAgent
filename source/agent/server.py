@@ -3039,6 +3039,12 @@ def upload_videos():
 def set_topic():
     body = request.get_json()
     with lock:
+        if state["video"] is None:
+            raise ValueError("请先打开 MCAP")
+        if (body.get("compact") is True
+                and body.get("path") != str(state["video"].path)):
+            raise StaleHumanReviewError(
+                "数据文件已在另一个窗口切换，旧相机请求已拒绝")
         if body["topic"] not in state["video"].topics:
             raise ValueError("话题不存在")
         if body["topic"] != state["topic"]:

@@ -236,8 +236,8 @@
           || activation.human_truth_written !== false || activation.training_data_written !== false) {
         throw new Error('专项复核激活读回不完整，已停止进入队列');
       }
-      if (typeof window.loadVideoData !== 'function') throw new Error('工作台数据加载器不可用');
-      await window.loadVideoData(data);
+      if (typeof window.loadVerifiedVideoData !== 'function') throw new Error('工作台安全数据加载器不可用');
+      await window.loadVerifiedVideoData(data);
       packet = {...data.review_packet, ready_to_navigate: true, active_file: true, active_topic: true};
       completed = new Map(); currentIndex = -1; baseline = null;
       await refreshCompletion();

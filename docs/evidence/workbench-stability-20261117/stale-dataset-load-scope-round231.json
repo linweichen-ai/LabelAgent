@@ -1,0 +1,83 @@
+{
+  "round": 231,
+  "date": "2026-11-19",
+  "status": "deployed_and_verified",
+  "objective": "Reject stale file-load replies and stale compact topic requests across windows and tabs",
+  "versions": {
+    "ui": 147,
+    "app_js": 185,
+    "reference_prep_js": 166,
+    "review_packet_js": 164
+  },
+  "before_browser_probe": {
+    "ui": 146,
+    "stale_reply_applied": true,
+    "path_overwritten": true,
+    "summary_before": {"selected_classes": 8, "classes": 8, "candidate_frames": 44, "current_candidates": 16},
+    "summary_after": {"selected_classes": 2, "classes": 2, "candidate_frames": 0, "current_candidates": 0},
+    "stale_requests": ["POST /api/topic", "GET /api/timeline", "GET /api/frame/0"],
+    "page_errors": 0,
+    "server_mutated": false,
+    "note": "Synthetic stale responses were intercepted in the browser only"
+  },
+  "after_browser_probe": {
+    "ui": 147,
+    "stale_reply_applied": false,
+    "scope_unchanged": true,
+    "summary_unchanged": true,
+    "primary_window_visible": true,
+    "requests": ["GET /api/state/summary"],
+    "stale_topic_timeline_frame_requests": 0,
+    "page_errors": 0,
+    "visible_error": "数据已在另一个窗口切换，本次过期加载结果未显示；请重新选择当前数据"
+  },
+  "live_server_guard": {
+    "request": "POST /api/topic with compact=true and stale path",
+    "http_status": 409,
+    "file_unchanged": true,
+    "topic_unchanged": true,
+    "error": "数据文件已在另一个窗口切换，旧相机请求已拒绝"
+  },
+  "tests": {
+    "web": {"passed": 131, "total": 131},
+    "python": {"passed": 982, "total": 982},
+    "python_targeted": {"passed": 1, "total": 1},
+    "javascript_syntax": "passed",
+    "diff_check": "passed_with_existing_crlf_warning"
+  },
+  "process_corrections": [
+    "Initial targeted Python command named nonexistent AgentTests; corrected to ServerTests without changing assertions",
+    "Initial backup directory creation used unsupported New-Item -LiteralPath; the resulting exact review-packet.js copy was moved intact into the corrected directory and all five files were hashed"
+  ],
+  "backup": {
+    "path": "D:\\Apps\\LabelAgent\\.local\\backups\\stale-load-round231-20261119-102453",
+    "files": 5,
+    "verified": true
+  },
+  "deployment": {
+    "workbench_pid": 65676,
+    "probes": {
+      "workbench": 200,
+      "run_status": 200,
+      "sam_4090": 200,
+      "sam_5090": 200,
+      "vlm_4090": 200
+    },
+    "run_status": "idle",
+    "worktree_matches_production": true,
+    "state_sha256_before_after": "1DCD67A8475A8DD1974C9A9B3D4BF68A56E1ABD30CF2A9559C12E849E3D86F96",
+    "file_sessions_sha256_before_after": "202927E295CABC27B1F9583B6438D3E16C020809EE421BCE1342C3AEBC0367F5"
+  },
+  "safety": {
+    "model_requests": 0,
+    "candidate_writes": 0,
+    "human_truth_writes": 0,
+    "training_approvals": 0,
+    "fine_tuning": false,
+    "post_training": false,
+    "oss_writes": 0,
+    "raw_factory_artifacts_tracked": false
+  },
+  "implementation_commit": null,
+  "remote_readback_commit": null
+}

@@ -1,0 +1,357 @@
+{
+  "schema_version": "labelagent.batchb-cross-class-browser-acceptance.v1",
+  "base_url": "http://127.0.0.1:18793",
+  "frames": [
+    {
+      "sample": "003",
+      "input": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261104_smoke\\003-1793759959809514987.png",
+      "input_bytes": 471700,
+      "topic": "图片",
+      "frame_count": 1,
+      "selected_labels": [
+        "车辆",
+        "pallet",
+        "person",
+        "floor",
+        "slope",
+        "ego",
+        "other_robot",
+        "cargo_floor"
+      ],
+      "identity": {
+        "badge": "问题包抽样",
+        "name": "SFL-CPD15-Y · 批次 B（1104）· 003/004 抽样图",
+        "detail": "003-1793759959809514987.png · 图片 · 1 帧 · 1 路图像"
+      },
+      "truth_before": [],
+      "reference_before": {},
+      "reused_existing_candidates": true,
+      "candidate_visible_ms": 0,
+      "background_complete_ms": 0,
+      "candidate_count": 17,
+      "candidate_counts_by_label": {
+        "floor": 1,
+        "person": 2,
+        "pallet": 13,
+        "ego": 1
+      },
+      "agent_review_status": "complete",
+      "candidate_class_audit_status": "complete",
+      "visible_label_discovery": {
+        "assessments": [
+          {
+            "confidence": 1,
+            "evidence": "absent",
+            "label": "车辆",
+            "reason": "no visible vehicle in the image"
+          },
+          {
+            "confidence": 0.95,
+            "evidence": "present",
+            "label": "pallet",
+            "reason": "blue plastic pallet visible in background"
+          },
+          {
+            "confidence": 0.95,
+            "evidence": "present",
+            "label": "person",
+            "reason": "human body visible in foreground"
+          },
+          {
+            "confidence": 0.95,
+            "evidence": "present",
+            "label": "floor",
+            "reason": "concrete warehouse floor visible"
+          },
+          {
+            "confidence": 1,
+            "evidence": "absent",
+            "label": "slope",
+            "reason": "no visible inclined ramp or transition surface"
+          },
+          {
+            "confidence": 0.95,
+            "evidence": "present",
+            "label": "ego",
+            "reason": "robot chassis visible in foreground"
+          },
+          {
+            "confidence": 1,
+            "evidence": "absent",
+            "label": "other_robot",
+            "reason": "no other robot visible"
+          },
+          {
+            "confidence": 1,
+            "evidence": "absent",
+            "label": "cargo_floor",
+            "reason": "no elevated deck attached to robot visible"
+          }
+        ],
+        "candidate_labels": [
+          "pallet",
+          "person",
+          "floor",
+          "ego"
+        ],
+        "consistency_flags": [],
+        "open_set_scan_complete": true,
+        "recall_probe_labels": [
+          "slope"
+        ],
+        "registry_conflicts": [],
+        "registry_mutated": false,
+        "uncertain_labels": [],
+        "unknown_candidates": [],
+        "visible_labels": [
+          "pallet",
+          "person",
+          "floor",
+          "ego"
+        ]
+      },
+      "truth_after": [],
+      "reference_after": {},
+      "coverage": {
+        "summary": "自动候选总览 · 已选 8/8 类 · 1 帧有结果 · 当前帧 17 个\n车辆：本帧未见\npallet：已生成 13 个\nperson：已生成 2 个\nfloor：已生成 1 个\nslope：本帧未见\nego：已生成 1 个\nother_robot：本帧未见\ncargo_floor：本帧未见\n点击任一类别可查看当前帧依据；缺失类别可转人工点选补标，但不会自动运行模型或写入人工真值。",
+        "chips": [
+          {
+            "label": "车辆",
+            "text": "车辆：本帧未见",
+            "state": "candidateCoverageChip candidateAbsent"
+          },
+          {
+            "label": "pallet",
+            "text": "pallet：已生成 13 个",
+            "state": "candidateCoverageChip candidatePresent"
+          },
+          {
+            "label": "person",
+            "text": "person：已生成 2 个",
+            "state": "candidateCoverageChip candidatePresent"
+          },
+          {
+            "label": "floor",
+            "text": "floor：已生成 1 个",
+            "state": "candidateCoverageChip candidatePresent"
+          },
+          {
+            "label": "slope",
+            "text": "slope：本帧未见",
+            "state": "candidateCoverageChip candidateAbsent"
+          },
+          {
+            "label": "ego",
+            "text": "ego：已生成 1 个",
+            "state": "candidateCoverageChip candidatePresent"
+          },
+          {
+            "label": "other_robot",
+            "text": "other_robot：本帧未见",
+            "state": "candidateCoverageChip candidateAbsent"
+          },
+          {
+            "label": "cargo_floor",
+            "text": "cargo_floor：本帧未见",
+            "state": "candidateCoverageChip candidateAbsent"
+          }
+        ]
+      },
+      "canvas": {
+        "hidden": false,
+        "width": 640,
+        "height": 512,
+        "rect": {
+          "x": 256.75,
+          "y": 435.171875,
+          "width": 222.5,
+          "height": 178,
+          "top": 435.171875,
+          "right": 479.25,
+          "bottom": 613.171875,
+          "left": 256.75
+        }
+      },
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "screenshot": "batchb-003.png"
+    },
+    {
+      "sample": "004",
+      "input": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261104_smoke\\004-1793760662042842987.png",
+      "input_bytes": 444794,
+      "topic": "图片",
+      "frame_count": 1,
+      "selected_labels": [
+        "车辆",
+        "pallet",
+        "person",
+        "floor",
+        "slope",
+        "ego",
+        "other_robot",
+        "cargo_floor"
+      ],
+      "identity": {
+        "badge": "问题包抽样",
+        "name": "SFL-CPD15-Y · 批次 B（1104）· 003/004 抽样图",
+        "detail": "004-1793760662042842987.png · 图片 · 1 帧 · 1 路图像"
+      },
+      "truth_before": [],
+      "reference_before": {},
+      "reused_existing_candidates": false,
+      "candidate_visible_ms": 16756,
+      "background_complete_ms": 36514,
+      "candidate_count": 14,
+      "candidate_counts_by_label": {
+        "floor": 1,
+        "pallet": 12,
+        "ego": 1
+      },
+      "agent_review_status": "complete",
+      "candidate_class_audit_status": "complete",
+      "visible_label_discovery": {
+        "assessments": [
+          {
+            "confidence": 0.99,
+            "evidence": "absent",
+            "label": "车辆",
+            "reason": "no visible vehicle in the image"
+          },
+          {
+            "confidence": 0.99,
+            "evidence": "present",
+            "label": "pallet",
+            "reason": "visible wooden pallets with cargo stacked on them"
+          },
+          {
+            "confidence": 0.99,
+            "evidence": "absent",
+            "label": "person",
+            "reason": "no visible human body in the image"
+          },
+          {
+            "confidence": 0.99,
+            "evidence": "present",
+            "label": "floor",
+            "reason": "visible warehouse concrete ground surface"
+          },
+          {
+            "confidence": 0.99,
+            "evidence": "absent",
+            "label": "slope",
+            "reason": "no visible inclined ramp or transition surface"
+          },
+          {
+            "confidence": 0.99,
+            "evidence": "present",
+            "label": "ego",
+            "reason": "visible robot chassis and control panel in foreground"
+          },
+          {
+            "confidence": 0.99,
+            "evidence": "absent",
+            "label": "other_robot",
+            "reason": "no visible robot distinct from ego"
+          },
+          {
+            "confidence": 0.99,
+            "evidence": "absent",
+            "label": "cargo_floor",
+            "reason": "no visible elevated deck attached to robot"
+          }
+        ],
+        "candidate_labels": [
+          "pallet",
+          "floor",
+          "ego"
+        ],
+        "consistency_flags": [],
+        "open_set_scan_complete": true,
+        "recall_probe_labels": [
+          "slope"
+        ],
+        "registry_conflicts": [],
+        "registry_mutated": false,
+        "uncertain_labels": [],
+        "unknown_candidates": [],
+        "visible_labels": [
+          "pallet",
+          "floor",
+          "ego"
+        ]
+      },
+      "truth_after": [],
+      "reference_after": {},
+      "coverage": {
+        "summary": "自动候选总览 · 已选 8/8 类 · 1 帧有结果 · 当前帧 14 个车辆：本帧未见pallet：已生成 12 个person：本帧未见floor：已生成 1 个slope：本帧未见ego：已生成 1 个other_robot：本帧未见cargo_floor：本帧未见点击任一类别可查看当前帧依据；缺失类别可转人工点选补标，但不会自动运行模型或写入人工真值。",
+        "chips": [
+          {
+            "label": "车辆",
+            "text": "车辆：本帧未见",
+            "state": "candidateCoverageChip candidateAbsent"
+          },
+          {
+            "label": "pallet",
+            "text": "pallet：已生成 12 个",
+            "state": "candidateCoverageChip candidatePresent"
+          },
+          {
+            "label": "person",
+            "text": "person：本帧未见",
+            "state": "candidateCoverageChip candidateAbsent"
+          },
+          {
+            "label": "floor",
+            "text": "floor：已生成 1 个",
+            "state": "candidateCoverageChip candidatePresent"
+          },
+          {
+            "label": "slope",
+            "text": "slope：本帧未见",
+            "state": "candidateCoverageChip candidateAbsent"
+          },
+          {
+            "label": "ego",
+            "text": "ego：已生成 1 个",
+            "state": "candidateCoverageChip candidatePresent"
+          },
+          {
+            "label": "other_robot",
+            "text": "other_robot：本帧未见",
+            "state": "candidateCoverageChip candidateAbsent"
+          },
+          {
+            "label": "cargo_floor",
+            "text": "cargo_floor：本帧未见",
+            "state": "candidateCoverageChip candidateAbsent"
+          }
+        ]
+      },
+      "canvas": {
+        "hidden": false,
+        "width": 640,
+        "height": 512,
+        "rect": {
+          "x": 547.5,
+          "y": 247,
+          "width": 505,
+          "height": 404,
+          "top": 247,
+          "right": 1052.5,
+          "bottom": 651,
+          "left": 547.5
+        }
+      },
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "screenshot": "batchb-004.png"
+    }
+  ],
+  "page_errors": [],
+  "failed_requests": [],
+  "http_errors": [],
+  "passed": true
+}

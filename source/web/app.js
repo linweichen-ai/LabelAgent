@@ -137,7 +137,7 @@ function applyInferenceLabelState(data,refresh=true){
 }
 function datasetIdentityForPath(pathValue){
  const value=String(pathValue||''),lower=value.toLowerCase(),basename=value.split(/[\\/]/).pop()||'未命名数据';
- if(lower.includes('sfl_cpd15y_20261104')||lower.includes('20261104_smoke'))return {kind:'new',badge:'问题包抽样',name:'SFL-CPD15-Y · 批次 B（1104）· 003/004 抽样图',file:basename};
+ if(lower.includes('sfl_cpd15y_20261104')||lower.includes('20261104_smoke')){const sample=basename.match(/^(003|004)(?:[-_.]|$)/i)?.[1];return {kind:'new',badge:'问题包抽样',name:`SFL-CPD15-Y · 批次 B（1104）· 问题包 ${sample||'003/004'} · 单图抽样`,file:basename}}
  if(lower.includes('capture_20261103'))return {kind:'new',badge:'新实采数据',name:'Capture_20261103 · 常熟实采 · 四相机',file:basename};
  if(lower.includes('sfl_cpd15y_20261111')||lower.includes('batcha_0920'))return {kind:'new',badge:'新数据集',name:'SFL-CPD15-Y · 批次 A（0920）· 000',file:basename};
  if(lower.includes('cvat_task3_20261028')||lower.includes('cvat')&&lower.includes('task3'))return {kind:'old',badge:'旧验证集',name:'CVAT Task3 · 斜坡复核集',file:basename};

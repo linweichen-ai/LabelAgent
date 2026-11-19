@@ -119,7 +119,7 @@ test('工作台持续显示新旧数据集身份和逐类别覆盖状态', () =>
   assert.match(html, /id="datasetIdentitySwitch"/);
   assert.match(app, /function datasetIdentityForPath/);
   assert.match(app, /Capture_20261103 · 常熟实采 · 四相机/);
-  assert.match(app, /SFL-CPD15-Y · 批次 B（1104）· 003\/004 抽样图/);
+  assert.match(app, /SFL-CPD15-Y · 批次 B（1104）· 问题包/);
   assert.match(app, /问题包抽样/);
   assert.match(app, /SFL-CPD15-Y · 批次 A（0920）· 000/);
   assert.match(app, /CVAT Task3 · 斜坡复核集/);
@@ -139,13 +139,15 @@ test('数据集身份按真实路径区分旧验证集、新实采数据和问�
   const h = harness();
   h.run(section(source('app.js'), 'function datasetIdentityForPath', 'function updateDatasetIdentity'));
   const capture = h.context.datasetIdentityForPath('D:\\Apps\\LabelAgent\\work\\datasets\\Capture_20261103\\常熟0920_四相机与点云.mcap');
-  const batchB = h.context.datasetIdentityForPath('D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261104_smoke\\003_camera0.png');
+  const batchB = h.context.datasetIdentityForPath('D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261104_smoke\\003-1793759959809514987.png');
+  const batchB004 = h.context.datasetIdentityForPath('D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261104_smoke\\004-1793760662042842987.png');
   const batchA = h.context.datasetIdentityForPath('D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap');
   const cvat = h.context.datasetIdentityForPath('D:\\Apps\\LabelAgent\\work\\datasets\\CVAT_Task3_20261028\\CVAT_Task3_SAM3_candidates.mcap');
   assert.equal(capture.badge, '新实采数据');
   assert.equal(capture.name, 'Capture_20261103 · 常熟实采 · 四相机');
   assert.equal(batchB.badge, '问题包抽样');
-  assert.equal(batchB.name, 'SFL-CPD15-Y · 批次 B（1104）· 003/004 抽样图');
+  assert.equal(batchB.name, 'SFL-CPD15-Y · 批次 B（1104）· 问题包 003 · 单图抽样');
+  assert.equal(batchB004.name, 'SFL-CPD15-Y · 批次 B（1104）· 问题包 004 · 单图抽样');
   assert.equal(batchA.badge, '新数据集');
   assert.equal(cvat.badge, '旧验证集');
 });
@@ -1367,7 +1369,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=195/);
+  assert.match(source('index.html'), /app\.js\?v=196/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1428,7 +1430,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{\s*invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(currentGeneration=0\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=195/);
+  assert.match(source('index.html'), /app\.js\?v=196/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1487,7 +1489,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 4);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=195/);
+  assert.match(source('index.html'), /app\.js\?v=196/);
 });
 
 test('类别与推理类别保存绑定文件载入代次和类别状态版本', async () => {
@@ -1526,7 +1528,7 @@ test('类别与推理类别保存绑定文件载入代次和类别状态版本',
   assert.deepEqual(applied[0].labels, ['a','b']);
   assert.deepEqual(applied[0].auto_labels, ['b']);
   assert.equal(h.run('currentDescription'), null);
-  assert.match(source('index.html'), /app\.js\?v=195/);
+  assert.match(source('index.html'), /app\.js\?v=196/);
 });
 
 test('模型配置保存绑定工作区载入代次和配置版本', async () => {

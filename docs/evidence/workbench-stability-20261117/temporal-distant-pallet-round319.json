@@ -1,0 +1,40 @@
+{
+  "schema_version": "labelagent.temporal_distant_pallet_summary.v1",
+  "round": 319,
+  "date": "2026-11-20",
+  "scope": "Capture_20261103 highest geometry-change distant pallet candidates",
+  "selected_count": 16,
+  "neighbor_offsets": [-2, -1, 1, 2],
+  "neighbor_pair_count": 64,
+  "accepted_transport_count": 515,
+  "forward_backward_inconsistent_count": 31,
+  "area_change_outside_bounds_count": 5,
+  "qualified_neighbor_expansion_count": 0,
+  "two_frame_consensus_count": 0,
+  "minimum_consensus_iou": 0.45,
+  "minimum_baseline_coverage": 0.5,
+  "minimum_area_ratio": 1.25,
+  "maximum_minor_axis_ratio": 1.5,
+  "maximum_other_baseline_fraction": 0.1,
+  "new_model_requests": 0,
+  "workbench_writes": 0,
+  "contact_sheet_sha256": "70a016f6fa85117145e2306302151b47e03018f1c76aab6ed2163858a68ea9d4",
+  "full_report_sha256": "a6576cb6d303ee6786d9dd50c14aa05ac8781649ac42ef69fa3d62276a248f2d",
+  "tests": {
+    "targeted_passed": 12,
+    "python_passed": 1103,
+    "python_subtests_passed": 186
+  },
+  "services": {
+    "workbench_ready": true,
+    "sam_ready": true,
+    "vlm_ready": true,
+    "vlm_model": "labelagent-vlm8b"
+  },
+  "production_state_sha256": "237844f73ff4495e575c6a3f966260b9385efbdf1edee7d0e5177518470ddfab",
+  "decision": "do not deploy temporal expansion; retain the audit as a gate and move to calibrated lidar prompts or reviewed hard-example training",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false
+}

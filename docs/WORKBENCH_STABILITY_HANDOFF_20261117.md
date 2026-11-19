@@ -2245,3 +2245,9 @@ Python1024/1024通过；Round259页面完整回归140/140，Round260后再次执
 生产第100帧保持11个栈板和10个结构孔，轮廓顶点1874→715（减少61.8%），变化1499像素，331 ms；第二次点击5 ms、无修改，修订数保持3，人工真值仍0。Python1028/1028、网页70/70通过，SAM3和主VLM均就绪。回滚点为`pallet-boundary-simplification-round261-20261119-183030`；本地对比图在`artifacts/pallet-boundary-simplification-round261/`，未上传工厂原图。
 
 本轮C盘一度为0可用空间，导致工作树补丁写入失败；生产未受影响，工作树从已验证提交精确恢复。旧临时目录`tmpj1tzc69c`完整迁移至`D:\Apps\LabelAgent\.local\artifact-archive\seer2clw-temp-20261119\`，没有删除；5个可自动重建的Python/测试缓存也完整迁移至`D:\Apps\LabelAgent\.local\artifact-archive\python-caches-round261-20261119`。C盘随后在约8.934–64.727 MiB间波动；旧`.codex_ppt_v116`–`v124`只启用可逆NTFS压缩，收益很低后停止，没有移动或删除成果。最终快照C约52.512 MiB、D约547.129 MiB，后续应优先扩容或经确认迁移旧构建产物，避免大规模实验写入。
+
+### Round 262：可重建缓存清理与低空间运行复核
+
+继续工作前 C 盘再次只余约49 MiB。只读盘点确认 npm 下载缓存与日志占222.68 MiB；先完整迁移到 LabelAgent 本地归档区，随后因 C、D 两盘同时告急而永久清理该可重建副本，以及 Round261 的12.37 MiB Python/测试缓存副本。两项均可重新下载或生成；模型、数据集、工厂图像、人工真值、机器候选、源码、文档构建产物和正式回滚包未删除。最终回读 C 盘约290.87 MiB、D 盘约530.53 MiB，仍低于2 GiB警戒线，因此没有启动大批量推理、训练、下载或导入。
+
+处置后工作台首页HTTP200，SAM已加载且ready，主VLM `labelagent-vlm8b` ready，运行状态idle。Round261代码与文档已在GitHub、CNB和本地精确一致于`0323d007782919ac5881ed0cae83b62e2eb207ef`；本轮只改变可重建缓存和记录，不改变产品代码、候选、真值、训练批准或生产模型。

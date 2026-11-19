@@ -258,6 +258,40 @@
       "d_free_mib_final_snapshot": 547.129
     }
   },
+  "round262": {
+    "status": "disk_cache_recovery_and_runtime_reverified",
+    "npm_cache_source": "C:\\Users\\seer\\AppData\\Local\\npm-cache",
+    "npm_cache_mib": 222.68,
+    "npm_cache_archive_permanently_removed": "D:\\Apps\\LabelAgent\\.local\\artifact-archive\\npm-cache-20261119",
+    "python_test_cache_archive_permanently_removed": "D:\\Apps\\LabelAgent\\.local\\artifact-archive\\python-caches-round261-20261119",
+    "python_test_cache_mib": 12.37,
+    "recoverability": "download and test caches are rebuildable but their removed copies are not retained",
+    "protected_items_deleted": false,
+    "protected_items": [
+      "models",
+      "datasets",
+      "factory images",
+      "human truth",
+      "machine candidates",
+      "source code",
+      "document build outputs",
+      "production rollback packages"
+    ],
+    "c_free_mib_final_snapshot": 290.87,
+    "d_free_mib_final_snapshot": 530.53,
+    "below_2gib_guard": true,
+    "large_runs_started": false,
+    "runtime": {
+      "root_http_status": 200,
+      "workbench_ready": true,
+      "sam_ready": true,
+      "sam_model_loaded": true,
+      "vlm_ready": true,
+      "vlm_model": "labelagent-vlm8b",
+      "run_status": "idle"
+    },
+    "code_changed": false
+  },
   "safety_boundaries": {
     "human_truth_written": false,
     "approved_for_training": false,

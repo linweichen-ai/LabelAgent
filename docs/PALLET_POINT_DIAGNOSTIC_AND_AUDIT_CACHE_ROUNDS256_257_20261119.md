@@ -1,6 +1,6 @@
-# 栈板点提示诊断、重复复核加速与候选边界优化（Round 256–261）
+# 栈板点提示诊断、重复复核加速与候选边界优化（Round 256–262）
 
-更新时间：2026-11-19 18:36（Asia/Shanghai）
+更新时间：2026-11-19 18:55（Asia/Shanghai）
 
 ## 结论先行
 
@@ -173,3 +173,9 @@ Round 260 解决了木纹小孔，但像素级多边形仍包含大量短折点�
 部署回滚目录：`D:\Apps\LabelAgent\.local\backups\pallet-boundary-simplification-round261-20261119-183030`。生产 `server.py` SHA-256 为 `B21F79F5F619DDF83093A4A4664F26822615D1EF24022DF3357FBC5409BFDA12`，`workflow.py` 为 `D5EDD6CD6E815A5C02760B887178294445F705EFE92F9476F0E4446E242F899F`。
 
 开发期间 C 盘曾降到 0 可用空间，补丁工具写入失败；生产服务未受影响。工作树文件从已验证提交精确恢复后才重新应用本轮改动。旧临时目录 `C:\Users\seer\Documents\ChatGPT\Seer2clw\tmpj1tzc69c` 被完整移动到 `D:\Apps\LabelAgent\.local\artifact-archive\seer2clw-temp-20261119\tmpj1tzc69c`，未删除。随后将工作树内 5 个可自动重建的 Python/测试缓存完整迁移至 `D:\Apps\LabelAgent\.local\artifact-archive\python-caches-round261-20261119`，同样未删除。C 盘随后在约 8.934–64.727 MiB 间波动；对旧 `.codex_ppt_v116`–`v124` 构建目录启用可逆 NTFS 压缩，收益很低，因此未扩大范围，也未移动或删除成果。最终回读快照为 C 盘 52.512 MiB、D 盘 547.129 MiB，仍属于严重低空间状态。
+
+## Round 262：低磁盘缓存处置与运行复核
+
+继续运行前只读盘点确认，C 盘可用空间再次降至约 49 MiB；`C:\Users\seer\AppData\Local\npm-cache` 中只有可重新下载的 npm 包缓存与日志，占 222.68 MiB。先把这两项完整迁移到 `D:\Apps\LabelAgent\.local\artifact-archive\npm-cache-20261119`，确认 C 盘回升后，因 C、D 两盘总空间仍同时告急，永久删除该可重建副本和 Round 261 的 12.37 MiB Python/测试缓存副本。删除内容不能从原目录恢复，但可由包管理器或测试重新生成；模型、数据集、工厂图像、人工真值、机器候选、文档构建产物、源码和全部正式回滚包均未删除。
+
+处置后回读为 C 盘约 290.87 MiB、D 盘约 530.53 MiB。该数值仍远低于 2 GiB 运行警戒线，因此本轮没有启动大批量推理、训练、下载或导入。工作台首页 HTTP 200；`/api/model_readiness` 回传整体 `ready=true`，SAM 已加载且 `ready=true`，主 VLM `labelagent-vlm8b` 为 `ready=true`；当前任务状态 `idle`。GitHub、CNB 与本地分支在处置前均已精确读回提交 `0323d007782919ac5881ed0cae83b62e2eb207ef`，磁盘处置不改变产品代码或生产状态。

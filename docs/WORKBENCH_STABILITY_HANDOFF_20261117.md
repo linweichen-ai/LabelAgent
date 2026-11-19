@@ -2275,3 +2275,13 @@ Round264规则扩展到更多帧后，肉眼发现第123帧中等塑料实例的
 为恢复运行空间，将已具有活动副本和独立tar恢复包的旧Mask2Former恢复目录完整迁至`C:\Users\seer\AppData\Local\LabelAgent\backup-archive\large-recovery-round265\`；2512文件、2,999,265,523字节逐文件哈希0差异，D盘旧路径保留NTFS联接。最终C约3.332 GiB、D约3.029 GiB；1/20/100帧空间预检全部ready且无警告。工作台idle，SAM和主VLM ready，第100帧12候选/11 pallet/4条结构缝、人工真值0保持不变。
 
 详细记录见`docs/PALLET_SURFACE_SCALE_GUARD_ROUND265_20261119.md`与`docs/evidence/workbench-stability-20261117/pallet-surface-scale-guard-round265.json`；真实图像及完整审计只保留本地`artifacts/pallet-surface-cross-dataset-round265/`。
+
+### Round 266：近景木栈板密集纹理孔清理 v4（已部署，2026-11-19）
+
+用户新截图对应一组近景木栈板，不是单个偶发小孔：第110/112/118帧主栈板分别有55/47/75个内部碎洞。v4在相对尺度和几何门禁上加入原图局部外观判断；同材质木纹洞按安全程度在5%预算内填充，长、规则、明显更暗的洞建立结构行并保留。有原图证据时，紧凑洞不再仅凭几何填充，合成蓝色塑料网格测试保持4个真实圆孔。
+
+三帧内部洞最终为3/3/4，最大变化4.6694%，结构洞最低保留93.4783%。CVAT全部1126个机器栈板候选只读回归的连通组件、结构洞和预算违规均为0；Capture_20261103四路相机分层160项调整0、违规0。Python1035/1035、186子测试、浏览器149/149和定向13/13通过。
+
+生产帧118经强绑定接口刷新后候选哈希`3bb35b...65d7`→`bc56b3...6933`，14个候选保持，主栈板75洞→4洞；人工真值0，训练和部署批准均为false。回滚点`pallet-dense-texture-round266-20261119-213118`，实现提交`f92eaa4761a628f97a168aee7371122a426cb8a3`。工作台idle，SAM、主VLM ready，5090 SAM契约通过；可选5090 VLM仍未启用。
+
+详细报告见`docs/PALLET_DENSE_TEXTURE_ROUND266_20261119.md`，结构化证据见`docs/evidence/workbench-stability-20261117/pallet-dense-texture-round266.json`。含厂内画面的前后对比仅保存在本机`artifacts/pallet-dense-texture-round266/`，不随源码上传。

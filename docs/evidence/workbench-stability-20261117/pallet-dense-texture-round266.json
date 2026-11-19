@@ -1,0 +1,52 @@
+{
+  "schema_version": "labelagent.pallet_dense_texture_round266.v1",
+  "date": "2026-11-19",
+  "implementation_commit": "f92eaa4761a628f97a168aee7371122a426cb8a3",
+  "production_backup": "D:\\Apps\\LabelAgent\\.local\\backups\\pallet-dense-texture-round266-20261119-213118",
+  "production_hashes": {
+    "source/agent/workflow.py": "430848C5D9004EA3CD55120DA28ADB4D5B8A28970167255C523BC0439D082BB6",
+    "source/agent/server.py": "6B1C7A495CE3992687536265E1B657C061570B0D3AEDE2D7C13EC9BB7C905E28"
+  },
+  "real_frame_ab": [
+    {"frame": 110, "holes_before": 55, "holes_after": 3, "change_ratio": 0.041304, "minimum_structural_hole_retention": 0.979798},
+    {"frame": 112, "holes_before": 47, "holes_after": 3, "change_ratio": 0.024521, "minimum_structural_hole_retention": 0.985075},
+    {"frame": 118, "holes_before": 75, "holes_after": 4, "change_ratio": 0.046694, "minimum_structural_hole_retention": 0.934783}
+  ],
+  "cvat_full_audit": {
+    "pallet_candidates": 1126,
+    "adjusted": 1055,
+    "image_guided_adjusted": 9,
+    "maximum_change_ratio": 0.046694,
+    "component_violations": 0,
+    "structural_hole_retention_violations": 0,
+    "change_budget_violations": 0
+  },
+  "capture_20261103_audit": {
+    "selection": "deterministic_size_stratified_40_per_topic",
+    "sample_count": 160,
+    "adjusted": 0,
+    "image_guided_adjusted": 0,
+    "component_violations": 0,
+    "structural_hole_retention_violations": 0,
+    "change_budget_violations": 0
+  },
+  "tests": {
+    "python_passed": 1035,
+    "python_subtests_passed": 186,
+    "browser_passed": 149,
+    "targeted_pallet_passed": 13
+  },
+  "production_readback": {
+    "frame": 118,
+    "prior_candidate_artifact_sha256": "3bb35b2faddd109019efc6bdc4bba3f15ae798f3b1630ab0d77187b783ea65d7",
+    "candidate_artifact_sha256": "bc56b30310ae7da82c9cf7108d09be0f0ef9be8e5dc58df5ce7ba9ca7d4a6933",
+    "candidate_count": 14,
+    "pallet_shape_id": 11,
+    "pallet_holes": 4,
+    "truth_count": 0,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "approved_for_deployment": false
+  }
+}

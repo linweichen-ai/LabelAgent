@@ -237,8 +237,10 @@
     "disk_recovery": {
       "production_affected": false,
       "temporary_directory_moved_not_deleted": "D:\\Apps\\LabelAgent\\.local\\artifact-archive\\seer2clw-temp-20261119\\tmpj1tzc69c",
-      "c_free_mib_after": 18.281,
-      "d_free_mib_after": 628.223
+      "rebuildable_python_caches_moved_not_deleted": "D:\\Apps\\LabelAgent\\.local\\artifact-archive\\python-caches-round261-20261119",
+      "moved_python_cache_directories": 5,
+      "c_free_mib_after": 64.727,
+      "d_free_mib_after": 580.871
     }
   },
   "safety_boundaries": {

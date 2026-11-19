@@ -172,4 +172,4 @@ Round 260 解决了木纹小孔，但像素级多边形仍包含大量短折点�
 
 部署回滚目录：`D:\Apps\LabelAgent\.local\backups\pallet-boundary-simplification-round261-20261119-183030`。生产 `server.py` SHA-256 为 `B21F79F5F619DDF83093A4A4664F26822615D1EF24022DF3357FBC5409BFDA12`，`workflow.py` 为 `D5EDD6CD6E815A5C02760B887178294445F705EFE92F9476F0E4446E242F899F`。
 
-开发期间 C 盘曾降到 0 可用空间，补丁工具写入失败；生产服务未受影响。工作树文件从已验证提交精确恢复后才重新应用本轮改动。旧临时目录 `C:\Users\seer\Documents\ChatGPT\Seer2clw\tmpj1tzc69c` 被完整移动到 `D:\Apps\LabelAgent\.local\artifact-archive\seer2clw-temp-20261119\tmpj1tzc69c`，未删除；验收结束时 C 盘约 18.281 MiB、D 盘约 628.223 MiB 可用，仍属于严重低空间状态。
+开发期间 C 盘曾降到 0 可用空间，补丁工具写入失败；生产服务未受影响。工作树文件从已验证提交精确恢复后才重新应用本轮改动。旧临时目录 `C:\Users\seer\Documents\ChatGPT\Seer2clw\tmpj1tzc69c` 被完整移动到 `D:\Apps\LabelAgent\.local\artifact-archive\seer2clw-temp-20261119\tmpj1tzc69c`，未删除。随后将工作树内 5 个可自动重建的 Python/测试缓存完整迁移至 `D:\Apps\LabelAgent\.local\artifact-archive\python-caches-round261-20261119`，同样未删除；最终 C 盘约 64.727 MiB、D 盘约 580.871 MiB 可用，仍属于低空间状态。

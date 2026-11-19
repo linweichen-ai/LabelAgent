@@ -2244,4 +2244,4 @@ Python1024/1024通过；Round259页面完整回归140/140，Round260后再次执
 
 生产第100帧保持11个栈板和10个结构孔，轮廓顶点1874→715（减少61.8%），变化1499像素，331 ms；第二次点击5 ms、无修改，修订数保持3，人工真值仍0。Python1028/1028、网页70/70通过，SAM3和主VLM均就绪。回滚点为`pallet-boundary-simplification-round261-20261119-183030`；本地对比图在`artifacts/pallet-boundary-simplification-round261/`，未上传工厂原图。
 
-本轮C盘一度为0可用空间，导致工作树补丁写入失败；生产未受影响，工作树从已验证提交精确恢复。旧临时目录`tmpj1tzc69c`完整迁移至`D:\Apps\LabelAgent\.local\artifact-archive\seer2clw-temp-20261119\`，没有删除。当前C约18.281 MiB、D约628.223 MiB可用，后续应优先扩容或迁移可恢复缓存，避免大规模实验写入。
+本轮C盘一度为0可用空间，导致工作树补丁写入失败；生产未受影响，工作树从已验证提交精确恢复。旧临时目录`tmpj1tzc69c`完整迁移至`D:\Apps\LabelAgent\.local\artifact-archive\seer2clw-temp-20261119\`，没有删除；5个可自动重建的Python/测试缓存也完整迁移至`D:\Apps\LabelAgent\.local\artifact-archive\python-caches-round261-20261119`。最终C约64.727 MiB、D约580.871 MiB可用，后续仍应优先扩容或迁移可恢复缓存，避免大规模实验写入。

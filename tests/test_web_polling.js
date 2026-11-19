@@ -475,7 +475,7 @@ test('刷新后有持久化结果时按钮先恢复结果且不会重复恢复',
   assert.equal(button.textContent, '查看上次结果');
   h.run("markRunResultHandled('task-1');renderRunButton()");
   assert.equal(button.textContent, '开始自动标注');
-  h.run("retryFrames=[3,7];retryScope={file:'/data.mcap',topic:'camera0'};retryMode='failed';renderRunButton()");
+  h.run("retryFrames=[3,7];retryScope={file:'/data.mcap',topic:'camera0',taskId:'failed-task'};retryMode='failed';renderRunButton()");
   assert.equal(button.textContent, '重试 2 个失败帧');
   h.run("retryMode='resume';renderRunButton()");
   assert.equal(button.textContent, '继续 2 个未完成帧');
@@ -798,9 +798,24 @@ test('运行前弹窗展示参考描述并提供一键恢复入口', () => {
 
 test('完成与失败帧重试均复用轻量帧计数且不回读完整状态', () => {
   const handler = section(source('app.js'), "$('runButton').onclick", 'let runStatusPollTimer');
-  assert.ok(handler.includes('{...runScope,frames:requestedFrames,max_rounds:maxRounds,defer_agent_review:false,compare_with_truth:comparison}'));
+  assert.ok(handler.includes('{...runScope,frames:requestedFrames,expected_result_task_id:retryTaskId,max_rounds:maxRounds,defer_agent_review:false,compare_with_truth:comparison}'));
   assert.ok(handler.includes('candidateCountIndex[String(item.frame)]'));
   assert.equal(handler.includes("fetch('/api/state')"), false);
+});
+
+test('失败与中断重试绑定来源任务并在过期时清除旧清单', () => {
+  const app = source('app.js');
+  const recovery = section(app, 'function pendingRetry', 'function formatAgentDuration');
+  const handler = section(app, "$('runButton').onclick", 'let runStatusPollTimer');
+  assert.match(recovery, /typeof retryScope\?\.taskId==='string'/);
+  assert.match(recovery, /taskId\}/);
+  assert.match(handler, /retryTaskId=requestedFrames\?retryScope\.taskId:null/);
+  assert.match(handler, /retryScope\.taskId!==retryTaskId/);
+  assert.match(handler, /expected_result_task_id:retryTaskId/);
+  assert.match(handler, /requestedFrames&&e\.status===409/);
+  assert.match(handler, /retryFrames=\[\];retryScope=null;retryMode=''/);
+  assert.match(handler, /scheduleRunStatusPoll\(0\)/);
+  assert.match(app, /error\.status=response\.status/);
 });
 
 test('主推理复查轮数可调且默认六轮', () => {
@@ -1123,7 +1138,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=179/);
+  assert.match(source('index.html'), /app\.js\?v=180/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1184,7 +1199,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=179/);
+  assert.match(source('index.html'), /app\.js\?v=180/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1232,7 +1247,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 3);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=179/);
+  assert.match(source('index.html'), /app\.js\?v=180/);
 });
 
 test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () => {

@@ -1925,3 +1925,17 @@ Round222 安全收紧后继续全仓检查，发现 `tools/browser_description_r
 本轮没有模型推理、候选、人工真值、训练批准、微调、后训练或OSS写入。完整说明见 [第二百二十三轮报告](DESCRIPTION_RECOVERY_REFINEMENT_CANCEL_ROUND223_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/description-recovery-refinement-cancel-round223.json)。
 
 实现、测试和首版文档提交 `17af0ffc1474da2c5983edaa15e3c2ae0df31ae8` 已推送并分别回读 GitHub/CNB，同名分支两端精确匹配；回读回执提交为 `ee7e63250272065f07006334ba1a4e1fcf662842`，该提交也已由两端精确回读。未跟踪实验产物和厂内内容均未上传。
+
+## 第二百二十四轮失败重试来源任务强绑定（已部署，2026-11-19）
+
+继续审计失败重试链路时，隔离复现确认：旧标签页的失败帧清单只绑定数据文件和相机，不绑定产生它的任务。另一标签页已经形成较新结果后，旧页仍可提交旧清单；修复前服务端返回HTTP200、真实进入模型入口1次并改变机器候选。
+
+现由页面为失败/未完成清单同时保存来源任务号，在预检前冻结、预检后复核，并随重试提交 `expected_result_task_id`。服务端在模型启动前要求来源任务仍是当前持久化结果、文件和相机一致、每个请求帧仍属于该任务的失败或未完成清单；缺任务号返回400，过期或不匹配返回409。页面收到409后清空旧清单、解除提交锁并立即读取最新结果。
+
+同一反向测试中，修复后为HTTP409、模型调用0、候选不变、较新结果保留。正式v180 Edge验收确认旧重试绑定旧任务号，409后旧清单清空并自动读取 `round224-newer-result-task`；操作锁正常释放。模型请求0、真值写请求0、页面异常0，只有一条故意409产生的预期网络提示，无其他控制台异常。
+
+全部网页134/134、Python982/982通过，JavaScript语法、Python编译和差异检查通过。部署备份位于 `D:\Apps\LabelAgent\.local\backups\retry-task-binding-round224-20261119-075926`。只重启工作台，管理PID从18292变为70012、监听PID从68208变为71652；4090通道PID60456和5090 SAM通道PID8656未变，五项探针均HTTP200，正式状态idle，SAM/VLM就绪。正式 `state.json` 与 `file_sessions.json` 哈希不变。
+
+本轮没有真实模型推理、正式候选修改、人工真值、训练批准、微调、后训练或OSS写入。完整说明见 [第二百二十四轮报告](RETRY_SOURCE_TASK_BINDING_ROUND224_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/retry-source-task-binding-round224.json)。浏览器脚本与隔离结果保留在本地未跟踪目录，不上传厂内内容。
+
+GitHub/CNB 精确提交号将在本轮推送与逐端回读完成后补入本段和详细报告。

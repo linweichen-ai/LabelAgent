@@ -2353,12 +2353,22 @@ class ServerTests(unittest.TestCase):
                         "agent": {"stop_reason": "done", "rounds": 1}}
             try:
                 client = server.app.test_client()
+                server.save_run({
+                    "task_id": "retry-source-task", "file": str(FakeVideo.path),
+                    "topic": "camera0", "reference": 0, "status": "failed",
+                    "total": 2, "targets": [2, 1],
+                    "frames": [{"frame": 2, "failed": True},
+                               {"frame": 1, "failed": True}],
+                    "failed_frames": [2, 1]})
                 with patch.object(server, "run", side_effect=successful):
                     response = client.post("/api/run", json={
-                        "frames": [2, 1, 2, 0], "description": description})
+                        "frames": [2, 1, 2], "description": description,
+                        "expected_file": str(FakeVideo.path),
+                        "expected_topic": "camera0",
+                        "expected_result_task_id": "retry-source-task"})
                 self.assertEqual(response.status_code, 200, response.json)
                 self.assertEqual([item["frame"] for item in response.json["frames"]], [2, 1])
-                self.assertEqual(response.json["requested_frames"], [2, 1, 0])
+                self.assertEqual(response.json["requested_frames"], [2, 1])
                 self.assertEqual(len(calls), 2)
                 self.assertEqual(set(server.state["candidates"]), {"1", "2"})
                 invalid_type = client.post("/api/run", json={
@@ -2367,6 +2377,42 @@ class ServerTests(unittest.TestCase):
                 invalid_range = client.post("/api/run", json={
                     "frames": [3], "description": description})
                 self.assertEqual(invalid_range.status_code, 400, invalid_range.json)
+                missing_identity = client.post("/api/run", json={
+                    "frames": [1], "description": description})
+                self.assertEqual(missing_identity.status_code, 400, missing_identity.json)
+                self.assertIn("缺少来源任务编号", missing_identity.json["error"])
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_run_rejects_retry_after_a_newer_result_replaced_its_source_task(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
+                "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                "config": {}, "candidates": {"1": [shape(8)]}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            description = {"description": "a only", "prompts": [{"label": "a", "text": "a"}],
+                           "reference_signature": server.reference_signature(0)}
+            server.save_run({
+                "task_id": "newer-result-task", "file": str(FakeVideo.path),
+                "topic": "camera0", "reference": 0, "status": "completed",
+                "total": 1, "targets": [1],
+                "frames": [{"frame": 1, "remaining": 1, "failed": False}],
+                "failed_frames": []})
+            before = copy.deepcopy(server.state["candidates"])
+            try:
+                with patch.object(server, "run") as inference:
+                    response = server.app.test_client().post("/api/run", json={
+                        "frames": [1], "description": description,
+                        "expected_file": str(FakeVideo.path),
+                        "expected_topic": "camera0",
+                        "expected_result_task_id": "stale-failed-task"})
+                self.assertEqual(response.status_code, 409, response.json)
+                self.assertIn("未启动旧重试", response.json["error"])
+                inference.assert_not_called()
+                self.assertEqual(server.state["candidates"], before)
+                self.assertEqual(server.load_run_summary()["task_id"], "newer-result-task")
             finally:
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work
 

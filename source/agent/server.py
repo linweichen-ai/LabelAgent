@@ -4774,6 +4774,23 @@ def run_workflow():
             requested_frames = list(dict.fromkeys(requested_frames))
             if any(not 0 <= item < topic_count for item in requested_frames):
                 raise ValueError("重试帧号超出当前图像源范围")
+            expected_result_task_id = body.get("expected_result_task_id")
+            if (not isinstance(expected_result_task_id, str)
+                    or not expected_result_task_id.strip()):
+                raise ValueError("重试请求缺少来源任务编号；请读取最新运行结果后重试")
+            expected_result_task_id = expected_result_task_id.strip()
+            retry_source = load_run_summary()
+            if (not retry_source
+                    or retry_source.get("task_id") != expected_result_task_id
+                    or retry_source.get("file") != str(state["video"].path)
+                    or retry_source.get("topic") != state["topic"]):
+                raise StaleHumanReviewError(
+                    "重试来源任务已被更新结果替代；未启动旧重试")
+            retryable_frames = set(retry_source.get("pending_frames") or [])
+            retryable_frames.update(retry_source.get("failed_frames") or [])
+            if any(item not in retryable_frames for item in requested_frames):
+                raise StaleHumanReviewError(
+                    "重试帧清单已被更新结果替代；未启动旧重试")
             targets = [target for target in requested_frames
                        if target not in topic_references
                        and (compare_with_truth or str(target) not in state["truth"])]

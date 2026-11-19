@@ -1,6 +1,6 @@
 const $=id=>document.getElementById(id);let candidates={},agentRuns={},candidateReviewProposals=[],candidateReviewBindings={},truthReviewStatus={},topics={},topic='',frame=0,shapes={},draft=[],playing=null,labels=[],autoLabels=[],referenceOnlyLabels=[],imageWidth=0,imageHeight=0,loading=false,frameLoadGeneration=0,frameNavigationGeneration=0,playback=null,playGeneration=0,presentedTime=0,catalog={},recordDuration=0,clockTime=0,clockAnchor=0,clockBase=0,rate=1,tickHandle=null,extraWindows=new Map(),windowSerial=0,annotationMode=false,annotationView=null,pointMode=false,negativeMode=false,promptPoints=[],segmentBusy=false,pointPromptStartedAt=0,pointPromptTimer=null,pointPromptNotice='',pointPromptAutoRunOnce=false,pointPromptGeneratedPointCount=0,pointPromptRequiresRefinement=false,generatedShapeFrame=null,generatedShapeTopic='',generatedShapeIndex=-1,regionMode='',regionEditGeneration=0,selectedShapeIndex=-1,zoomScale=1,referencePreparationIntent=null,referenceFinalizeBusy=false,referenceFinalizeNotice='',referenceReviewSolo=false,referenceReviewFocused=false,referenceReviewOriginalOnly=false,referenceOriginalSweepVisited=false,referenceOpenSetReviewed=false,referenceReviewedShapeKeys=new Set(),referenceDismissedMissingLabels=new Set(),candidateStateSignature='',loadedDataPath='',restoringFrameNavigation=false,compactGeometryMode=false,truthFrameIndex=new Set(),candidateCountIndex={},workbenchConfig={},runResultHandled=new Set(),runResultAutoRestoreDeferred=new Set(),bootstrapComplete=false,workspaceRestoreState='booting',workspaceReadyResolved=false,resolveWorkspaceReady,retryFrames=[],retryScope=null,retryMode='';
 const workspaceReadyDeferred=new Promise(resolve=>{resolveWorkspaceReady=resolve});
-async function api(path,body){const response=await fetch('/api/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const raw=await response.text();let data;try{data=JSON.parse(raw)}catch{throw Error(`接口 ${path} 返回非 JSON 响应（HTTP ${response.status}），请重启标注服务`)}if(!response.ok)throw Error(data.error||`请求失败（HTTP ${response.status}）`);return data}
+async function api(path,body){const response=await fetch('/api/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const raw=await response.text();let data;try{data=JSON.parse(raw)}catch{throw Error(`接口 ${path} 返回非 JSON 响应（HTTP ${response.status}），请重启标注服务`)}if(!response.ok){const error=Error(data.error||`请求失败（HTTP ${response.status}）`);error.status=response.status;error.payload=data;throw error}return data}
 function applyCompactFrameState(data,target,expectedTopic=topic,expectedPath=loadedDataPath){
  if(!data?.compact_geometry||data.topic!==expectedTopic||data.path!==expectedPath||Number(data.frame)!==Number(target))throw Error('按需标注层与当前文件、相机或帧不一致，已拒绝显示');
  const key=String(target),replace=(store,source)=>{if(Object.prototype.hasOwnProperty.call(source||{},key))store[key]=source[key];else delete store[key]};
@@ -704,7 +704,7 @@ function pendingRunResult(job=latestAgentJob){const id=job?.result_task_id||job?
 function markRunResultHandled(taskId){if(taskId)runResultHandled.add(taskId)}
 function runJobIdentity(job=latestAgentJob){return job?.task_id||job?.result_task_id||null}
 function competingRunJob(taskId){const currentId=runJobIdentity(latestAgentJob);return !!(currentId&&currentId!==taskId&&(['running','stopping'].includes(latestAgentJob?.status)||latestAgentJob?.result_available))}
-function pendingRetry(){return retryFrames.length>0&&retryScope?.file===loadedDataPath&&retryScope?.topic===topic}
+function pendingRetry(){return retryFrames.length>0&&typeof retryScope?.taskId==='string'&&retryScope.taskId&&retryScope.file===loadedDataPath&&retryScope.topic===topic}
 async function recoverRunResult(job=latestAgentJob,{automatic=false}={}){
  const taskId=job?.result_task_id||job?.task_id;if(!taskId||runResultHandled.has(taskId))return false;
  if(automatic&&runResultAutoRestoreDeferred.has(taskId))return false;
@@ -732,7 +732,7 @@ async function recoverRunResult(job=latestAgentJob,{automatic=false}={}){
  runResultAutoRestoreDeferred.delete(taskId);
  markRunResultHandled(taskId);if((latestAgentJob?.result_task_id||latestAgentJob?.task_id)===taskId)latestAgentJob.result_available=false;renderRunButton();
  const failed=data.failed_frames||[],pending=(data.status==='running'||data.status==='failed')?(data.pending_frames||[]):[];
- retryFrames=[...new Set([...pending,...failed])];retryScope={file:data.file,topic:data.topic};retryMode=pending.length?'resume':failed.length?'failed':'';renderRunButton();
+ retryFrames=[...new Set([...pending,...failed])];retryScope=retryFrames.length?{file:data.file,topic:data.topic,taskId}:null;retryMode=pending.length?'resume':failed.length?'failed':'';renderRunButton();
  toast(pending.length?`已恢复 ${data.completed} 帧结果，另有 ${retryFrames.length} 帧待继续；已完成帧不会重跑`:first?(failed.length?`已恢复 ${data.completed} 帧结果，其中 ${failed.length} 帧失败；旧候选已保留`:`已恢复 ${data.completed} 帧结果，请继续人工复核`):'上次任务没有可显示的候选');
  return true;
 }
@@ -868,20 +868,23 @@ $('runButton').onclick=async()=>{
    return;
   }
  if(runRequestStartedAt!==null)return;
+ let requestedFrames=null,retryTaskId=null,staleRetryRejected=false;
  try{
-   const requestedFrames=pendingRetry()?[...retryFrames]:null;
+   requestedFrames=pendingRetry()?[...retryFrames]:null;
+   retryTaskId=requestedFrames?retryScope.taskId:null;
    const startFrame=requestedFrames?.[0]??Number($('frameNumber').value),count=requestedFrames?.length??Number($('taskCount').value),maxRounds=Number($('reviewRounds').value),jobTopic=topic,jobFile=loadedDataPath,jobNavigationGeneration=frameNavigationGeneration,jobWorkspaceMode=window.workspaceMode;
   if(!Number.isInteger(startFrame)||startFrame<0||startFrame>=(topics[topic]?.count||0))throw Error('请选择有效的当前帧');
   if(!Number.isInteger(count)||count<1||count>100)throw Error('处理帧数须为 1～100');
   if(!Number.isInteger(maxRounds)||maxRounds<1||maxRounds>12)throw Error('复查轮数须为 1～12');
    runRequestStartedAt=Date.now()/1000;runRequestPhase='preflight';runRequestFrame=startFrame;runRequestCount=count;runRequestMaxRounds=maxRounds;renderRunButton();scheduleRunStatusPoll(250);
   await ensureAutoLabelReadiness(requestedFrames,startFrame,count);
+  if(requestedFrames&&(!pendingRetry()||retryScope.taskId!==retryTaskId))throw Error('预检期间重试来源已经更新，本次旧重试未启动');
   if(topic!==jobTopic||loadedDataPath!==jobFile||frameNavigationGeneration!==jobNavigationGeneration||window.workspaceMode!==jobWorkspaceMode)throw Error('预检期间数据集、相机、当前帧或工作模式已经切换，本次自动标注未启动；请在当前画面重新开始');
   runRequestPhase='submitting';renderRunButton();
   stopPlayback();
     const comparison=requestedFrames?requestedFrames.some(item=>truthFrameIndex.has(String(item))):truthFrameIndex.has(String(startFrame));
     const runScope={expected_file:jobFile,expected_topic:jobTopic};
-    const data=await api('run',requestedFrames?{...runScope,frames:requestedFrames,max_rounds:maxRounds,defer_agent_review:false,compare_with_truth:comparison}:{...runScope,frame:startFrame,count,max_rounds:maxRounds,defer_agent_review:false,compare_with_truth:comparison});
+    const data=await api('run',requestedFrames?{...runScope,frames:requestedFrames,expected_result_task_id:retryTaskId,max_rounds:maxRounds,defer_agent_review:false,compare_with_truth:comparison}:{...runScope,frame:startFrame,count,max_rounds:maxRounds,defer_agent_review:false,compare_with_truth:comparison});
    if(data.file!==jobFile||data.topic!==jobTopic)throw Error('自动标注回执与提交的数据文件或图像源不一致，已拒绝更新当前页面');
    const sameDataScope=topic===jobTopic&&loadedDataPath===jobFile;
    const sameOperatorScope=sameDataScope&&frameNavigationGeneration===jobNavigationGeneration&&window.workspaceMode===jobWorkspaceMode;
@@ -898,14 +901,14 @@ $('runButton').onclick=async()=>{
    if(data.stopped){toast('自动标注已停止；已完成帧的候选已保存');return}
   if(!data.frames?.length)throw Error('没有实际处理任何帧。参考帧和已有真值会跳过，请增大处理帧数。');
   const failed=data.failed_frames||data.frames.filter(item=>item.failed).map(item=>item.frame);
-   retryFrames=[...failed];retryScope={file:jobFile,topic:jobTopic};retryMode=failed.length?'failed':'';
+   retryFrames=[...failed];retryScope=failed.length?{file:jobFile,topic:jobTopic,taskId:data.task_id}:null;retryMode=failed.length?'failed':'';
   const first=data.frames.find(item=>!item.failed&&item.remaining>0)||data.frames.find(item=>item.remaining>0);
   if(first){
    await openCandidateFrame(first.frame,jobTopic);
     toast(failed.length?`${failed.length} 帧失败，旧候选已保留；已打开结果，请先查看错误`:'SAM3、GPT 复查与 Agent 决策均已完成；已打开候选，请检查后点击“保存结果”');
   }else toast('处理结束，但没有可显示的候选，请查看自动标注过程');
- }catch(e){toast(e.message)}
-  finally{await refreshAgentProgress();runRequestStartedAt=null;runRequestFrame=null;runRequestCount=null;renderRunButton()}
+ }catch(e){if(requestedFrames&&e.status===409){retryFrames=[];retryScope=null;retryMode='';staleRetryRejected=true;toast(`${e.message}；正在读取最新任务结果`)}else toast(e.message)}
+  finally{await refreshAgentProgress();runRequestStartedAt=null;runRequestFrame=null;runRequestCount=null;renderRunButton();if(staleRetryRejected)scheduleRunStatusPoll(0)}
 };
 let runStatusPollTimer=null,runStatusPollDelay=3000,runStatusFetching=false;
 function scheduleRunStatusPoll(delay=runStatusPollDelay){

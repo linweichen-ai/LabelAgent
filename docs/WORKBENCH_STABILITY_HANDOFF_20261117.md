@@ -2484,3 +2484,15 @@ person→ego高风险互改，另一个是盲审证据不足的小候选。Agent
 参考帧均为0，0页面/HTTP错误。139/139前端测试通过。正式只替换app/style/index，回滚点为
 `D:\Apps\LabelAgent\.local\backups\candidate-coverage-risk-round297-20261120-050633`；CVAT
 Task3、相机和1帧人工真值保持不变。详见`CANDIDATE_COVERAGE_RISK_ROUND297_20261120.md`。
+
+### Round 298：当前生产栈板边界与验收工具自恢复（2026-11-20）
+
+直接从正式工作台只读打开第110帧最新版候选：14个机器候选正常叠加，图层绘制257,452个像素，
+拖动工作台后最大偏差0.015625像素，页面错误0，VLM在线，人工像素真值0。该帧shape 11已在
+Round288升级为v5：修改237像素、修复3个边缘凹口、组件合并0、结构孔保留97.9798%；旧截图
+中的大量木纹碎洞已经清理，真实长槽和板缝继续保留。
+
+只读验收第一次因脚本固定的旧Playwright路径失效而未启动，LabelAgent本身没有故障。工具现会
+跟随当前Node运行时自动发现Playwright；不设置环境变量重跑同一帧通过，前端140/140通过。
+当前厂内截图只保存在本机，远端只同步无图像的结构化回执。详见
+`PALLET_CURRENT_PRODUCTION_ACCEPTANCE_ROUND298_20261120.md`。

@@ -1,0 +1,28 @@
+{
+  "target_frame": 110,
+  "checks": {
+    "workspace": "auto",
+    "current_frame": 110,
+    "candidate_count": 14,
+    "pending_count": 0,
+    "truth_count": 0,
+    "candidate_canvas_hidden": false,
+    "candidate_canvas_width": 640,
+    "candidate_visible_pixels": 257452,
+    "pending_canvas_hidden": false,
+    "pending_visible_pixels": 0,
+    "truth_visible_pixels": 0,
+    "overlay_layout_max_delta_px": 0.015625,
+    "compare_status": "第 110 帧：14 个机器候选，暂无人工像素真值；差异查看和质量指标不可用。",
+    "vlm_readiness": {
+      "model": "labelagent-vlm8b",
+      "ready": true,
+      "registered_models": [
+        "labelagent-vlm8b"
+      ],
+      "status": "ok"
+    }
+  },
+  "page_errors": [],
+  "passed": true
+}

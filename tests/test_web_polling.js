@@ -229,6 +229,15 @@ test('逐类别覆盖汇总绑定当前候选的复核风险且按候选去重',
   assert.match(review.detail, /不会据此自动删除或改写真值/);
 });
 
+test('结果叠加验收工具跟随当前 Node 运行时寻找 Playwright', () => {
+  const tool = fs.readFileSync(path.join(
+    __dirname, '../tools/browser_result_overlay_acceptance.cjs'), 'utf8');
+  assert.match(tool, /path\.dirname\(process\.execPath\)/);
+  assert.match(tool, /node_modules', 'playwright/);
+  assert.match(tool, /playwrightCandidates\.find\(candidate => fs\.existsSync\(candidate\)\)/);
+  assert.match(tool, /Playwright runtime not found/);
+});
+
 test('人工真值界面提供明确的连续推理入口', () => {
   const html = source('index.html');
   const inspection = source('inspection.js');

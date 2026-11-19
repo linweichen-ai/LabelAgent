@@ -2,8 +2,15 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const playwrightRoot = process.env.PLAYWRIGHT_NODE_MODULES ||
-  'C:/Users/seer/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright';
+const playwrightCandidates = [
+  process.env.PLAYWRIGHT_NODE_MODULES,
+  path.resolve(path.dirname(process.execPath), '..', 'node_modules', 'playwright'),
+  'C:/Users/seer/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright',
+].filter(Boolean);
+const playwrightRoot = playwrightCandidates.find(candidate => fs.existsSync(candidate));
+if (!playwrightRoot) {
+  throw Error(`Playwright runtime not found; checked: ${playwrightCandidates.join(', ')}`);
+}
 const {chromium} = require(playwrightRoot);
 
 const base = process.argv[2] || 'http://127.0.0.1:8765';

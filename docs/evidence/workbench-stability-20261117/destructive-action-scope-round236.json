@@ -1,0 +1,118 @@
+{
+  "round": 236,
+  "date": "2026-11-19",
+  "status": "deployed_verified_and_dual_remote_synced",
+  "objective": "Bind label configuration and candidate deletion to the current workspace generation and exact content versions",
+  "versions": {
+    "ui": 151,
+    "app_js": 189,
+    "inspection_js": 108
+  },
+  "audit": {
+    "fixed_endpoints": [
+      "/api/labels",
+      "/api/auto_labels",
+      "/api/auto_result/<index>"
+    ],
+    "description_generation_already_snapshot_bound": true,
+    "review_packet_decisions_already_manifest_and_content_bound": true
+  },
+  "implementation": {
+    "workspace_scope_fields": [
+      "path",
+      "topic",
+      "file_activation_generation"
+    ],
+    "label_state_sha256_required": true,
+    "candidate_artifact_sha256_required_for_clear": true,
+    "agent_run_sha256_required_for_clear": true,
+    "browser_response_scope_guard": true,
+    "server_readback_after_clear": true,
+    "stale_status": 409
+  },
+  "tests": {
+    "python": {
+      "passed": 987,
+      "total": 987,
+      "subtests_passed": 186
+    },
+    "web": {
+      "passed": 135,
+      "total": 135
+    },
+    "syntax": "passed",
+    "diff_check": "passed",
+    "initial_web_failure": {
+      "count": 1,
+      "cause": "cross-realm array prototype difference in the Node test harness",
+      "functional_gate_relaxed": false,
+      "rerun_passed": true
+    },
+    "stale_label_write_rejected": true,
+    "stale_auto_label_write_rejected": true,
+    "old_label_state_rejected": true,
+    "stale_candidate_clear_rejected": true,
+    "changed_candidate_clear_rejected_and_preserved": true,
+    "browser_stale_response_applied": false
+  },
+  "production_browser_probe": {
+    "path": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap",
+    "topic": "/capture/camera_1/image",
+    "current_generation": 0,
+    "stale_generation": -1,
+    "label_state_sha256": "7e135f51f6ec8981ed17334caf02b76d07329d891669d62488e4025ece0d7121",
+    "clear_binding_available": true,
+    "stale_labels_status": 409,
+    "stale_auto_labels_status": 409,
+    "wrong_label_binding_status": 409,
+    "stale_clear_status": 409,
+    "wrong_clear_binding_status": 409,
+    "page_errors": 0,
+    "formal_state_unchanged": true
+  },
+  "backup": {
+    "path": "D:\\Apps\\LabelAgent\\.local\\backups\\destructive-action-scope-round236-20261119-120018",
+    "files": 4,
+    "predeploy_hash_match": true,
+    "manifest": "manifest.json"
+  },
+  "deployment": {
+    "management_record_pid": 70536,
+    "listener_pid": 71936,
+    "port": 8765,
+    "worktree_matches_production": true,
+    "local_http_probes": {
+      "workbench": 200,
+      "bootstrap": 200,
+      "model_readiness": 200,
+      "run_readiness": 200,
+      "run_status": 200,
+      "state_summary": 200
+    },
+    "run_status": "idle",
+    "startup_vlm_prewarm_without_factory_image_seconds": 0.058,
+    "state_sha256_after": "1DCD67A8475A8DD1974C9A9B3D4BF68A56E1ABD30CF2A9559C12E849E3D86F96",
+    "file_sessions_sha256_after": "202927E295CABC27B1F9583B6438D3E16C020809EE421BCE1342C3AEBC0367F5"
+  },
+  "production_hashes": {
+    "source/agent/server.py": "E4D7DA9C8CB8F0253403E279B6AC2A58C09A80C695C7F2409D34A3C8933DA756",
+    "source/web/app.js": "669625B1A9B75DC7D79EA2F21BD589E4110C8C57C2F9E9AA46D3D06ADE0D36C9",
+    "source/web/inspection.js": "995C659B27A4EDDCB46A78DE2FD07E92391A0AD26087F7189404464310CAD519",
+    "source/web/index.html": "98589D0E45E0B9D9BD294FEACFC8869D9D3C186A98CC6D6141D244E3B95A622A"
+  },
+  "safety": {
+    "production_data_model_requests": 0,
+    "candidate_writes_or_deletes": 0,
+    "human_truth_writes": 0,
+    "reference_frame_writes": 0,
+    "training_approvals": 0,
+    "fine_tuning": false,
+    "post_training": false,
+    "oss_writes": 0,
+    "raw_factory_artifacts_tracked": false
+  },
+  "local_untracked_evidence": "artifacts/round236-destructive-action-scope/",
+  "implementation_commit": "2a838264f31d6544a1315068b36e13b51f62ac22",
+  "github_readback_commit": "2a838264f31d6544a1315068b36e13b51f62ac22",
+  "cnb_readback_commit": "2a838264f31d6544a1315068b36e13b51f62ac22"
+}

@@ -62,6 +62,13 @@
 
 状态文件中两张最严重候选的原始 `holes` 列表分别为 70 和 73；表中 55/58 是重新栅格化后面积不少于 9 像素的可操作孔洞数，两种口径均保留，避免混淆。
 
+本地还生成了“原图 / 修整前 / 修整后”三联图：
+
+- `artifacts/pallet-geometry-round242/frame-120-before-after.jpg`
+- `artifacts/pallet-geometry-round242/frame-122-before-after.jpg`
+
+肉眼复核结果：小孔和短毛刺明显减少，主要板缝与下方叉孔保留。图片包含工厂原图，因此仅作本地验收，不纳入 GitHub/CNB 提交。
+
 ## 5. 验证、部署与回滚
 
 - Python 全量回归：998/998 通过；

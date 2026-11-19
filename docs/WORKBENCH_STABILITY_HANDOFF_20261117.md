@@ -2160,6 +2160,8 @@ Python995/995、网页69/69和定向删空回滚1/1通过。修复部署后，�
 
 Python998/998、浏览器145/145通过；生产SAM/VLM就绪，`workflow.py`哈希为`5A64B09C4F34C77E5C2D3E65074EE07FCBB0CF4C3CB26DEB15E3983FE4CF90B1`。备份为`review-and-pallet-geometry-round241-20261119-132623`和`pallet-boundary-smoothing-round242-20261119-133503`。D盘仅余约1.95 GiB；最大2.86 GiB Mask2Former恢复备份含模型权重和训练状态，已启用NTFS压缩但几乎无压缩收益，未经恢复性核验不得删除。详细报告见`docs/PALLET_GEOMETRY_AND_REVIEW_LATENCY_ROUNDS241_242_20261119.md`。
 
+帧120和122的“原图/修整前/修整后”三联图已保存在本地`artifacts/pallet-geometry-round242/`；肉眼复核确认小孔和短毛刺减少、主要板缝及叉孔保留。因图中含工厂原图，图像未推送GitHub/CNB，远端只保留代码、指标和文字证据。
+
 部署备份位于 `D:\Apps\LabelAgent\.local\backups\agent-empty-result-rollback-round240-20261119-130115`。完整说明见 [第二百四十轮报告](AGENT_EMPTY_RESULT_ROLLBACK_ROUND240_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/agent-empty-result-rollback-round240.json)。实现提交 `840d9c1f89b7f67132845e6d2d80e34eca82dd39`。过去24小时的通俗汇总见 [工作总结](LABELAGENT_LAST_24_HOURS_SUMMARY_20261119.md)。
 
 Round239、Round240及过去24小时总结已随报告提交 `a5622f6eff19b02fa7e92e82faef0c2d1f990837` 推送，并从 GitHub/CNB 同名分支精确读回；未跟踪厂内图像和本地验收产物未上传。

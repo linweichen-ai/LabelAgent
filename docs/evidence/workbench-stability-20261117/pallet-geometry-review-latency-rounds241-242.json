@@ -43,6 +43,15 @@
       "smoothing_kernel": 5
     }
   ],
+  "local_visual_acceptance": {
+    "published_to_remotes": false,
+    "reason": "contains factory source imagery",
+    "files": [
+      "artifacts/pallet-geometry-round242/frame-120-before-after.jpg",
+      "artifacts/pallet-geometry-round242/frame-122-before-after.jpg"
+    ],
+    "finding": "texture holes and short boundary noise decreased while long slat gaps and fork openings remained"
+  },
   "tests": {
     "python": {"passed": 998, "failed": 0},
     "browser": {"passed": 145, "failed": 0}

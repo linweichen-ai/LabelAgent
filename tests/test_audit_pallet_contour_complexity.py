@@ -2,6 +2,9 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
+
+import numpy as np
 
 from PIL import Image
 
@@ -58,6 +61,27 @@ class PalletContourComplexityAuditTest(unittest.TestCase):
         self.assertEqual([row["shape_id"] for row in ranked], ["second"])
         self.assertEqual(ranked[0]["_audit_result"]["change_ratio"], .02)
 
+    def test_ranking_can_select_only_rows_that_fill_holes(self):
+        filled = rectangle("filled", [[0, 0], [100, 0], [100, 50], [0, 50]])
+        untouched = rectangle(
+            "untouched", [[0, 0], [120, 0], [120, 60], [0, 60]])
+        payload = {"/capture/camera_0/image": {
+            "0": [filled], "1": [untouched]}}
+        audit = [
+            {"topic": "/capture/camera_0/image", "frame": 0,
+             "shape_id": "filled", "change_ratio": .01,
+             "filled_hole_count": 1},
+            {"topic": "/capture/camera_0/image", "frame": 1,
+             "shape_id": "untouched", "change_ratio": .02,
+             "filled_hole_count": 0},
+        ]
+
+        ranked = rank_candidates(
+            payload, minimum_bbox_area=1000, limit=5,
+            audit_results=audit, only_hole_fills=True)
+
+        self.assertEqual([row["shape_id"] for row in ranked], ["filled"])
+
     def test_render_review_is_read_only_and_writes_bounded_evidence(self):
         shape = rectangle(
             "sam3-camera_0-0-pallet-1",
@@ -93,6 +117,33 @@ class PalletContourComplexityAuditTest(unittest.TestCase):
             self.assertTrue(report["candidate_only"])
             self.assertFalse(report["human_truth"])
             self.assertFalse(report["approved_for_training"])
+
+    def test_render_review_passes_source_image_to_geometry_cleanup(self):
+        shape = rectangle(
+            "sam3-camera_0-0-pallet-image-guided",
+            [[10, 10], [110, 10], [110, 70], [10, 70]])
+        payload = {"/capture/camera_0/image": {"0": [shape]}}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            candidates = root / "candidates.json"
+            candidates.write_text(json.dumps(payload), encoding="utf-8")
+            camera = root / "images" / "camera_0"
+            camera.mkdir(parents=True)
+            Image.new("RGB", (160, 100), "gray").save(camera / "000.png")
+
+            with mock.patch(
+                    "tools.audit_pallet_contour_complexity."
+                    "refine_pallet_candidate_geometry",
+                    return_value=(shape, None)) as refine:
+                report = render_review(
+                    candidates, root / "images", root / "output",
+                    minimum_bbox_area=1000, limit=1)
+
+            image_rgb = refine.call_args.kwargs["image_rgb"]
+            self.assertIsInstance(image_rgb, np.ndarray)
+            self.assertEqual(image_rgb.shape, (100, 160, 3))
+            self.assertTrue(report["image_guidance_used"])
+            self.assertTrue(report["audit_replay_match"])
 
 
 if __name__ == "__main__":

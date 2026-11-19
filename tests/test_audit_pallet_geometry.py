@@ -115,6 +115,8 @@ class PalletGeometryAuditTest(unittest.TestCase):
         self.assertEqual(result["sample_count"], 1)
         self.assertIn("boundary_simplified_count", result)
         self.assertIn("median_boundary_vertex_reduction_ratio", result)
+        self.assertEqual(
+            result["selection"], "deterministic_size_stratified_per_topic")
 
     def test_workbench_state_overlays_active_topic_candidates_on_stale_topic_snapshot(self):
         stale_mask = np.zeros((60, 60), dtype=np.uint8)
@@ -190,7 +192,7 @@ class PalletGeometryAuditTest(unittest.TestCase):
             progress = io.StringIO()
 
             with contextlib.redirect_stderr(progress):
-                run_audit(
+                result = run_audit(
                     source, width=40, height=40, per_topic=0,
                     image_root=root / "images", progress_every=100)
 
@@ -199,6 +201,8 @@ class PalletGeometryAuditTest(unittest.TestCase):
         self.assertTrue(all(event["event"] == "pallet_audit_progress"
                             for event in events))
         self.assertEqual(events[-1]["percent"], 100.0)
+
+        self.assertEqual(result["selection"], "full_collection")
 
     def test_image_guided_audit_rejects_missing_camera_mapping(self):
         payload = {"camera": {"0": []}}

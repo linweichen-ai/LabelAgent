@@ -63,7 +63,8 @@ def contour_metrics(shape: dict) -> dict | None:
 
 def rank_candidates(payload: dict, *, minimum_bbox_area: float = 1000,
                     limit: int = 16, audit_results: list[dict] | None = None,
-                    size_band: str | None = None) -> list[dict]:
+                    size_band: str | None = None,
+                    only_hole_fills: bool = False) -> list[dict]:
     audit_by_key = {
         (str(result.get("topic")), int(result.get("frame", -1)),
          str(result.get("shape_id"))): result
@@ -82,6 +83,9 @@ def rank_candidates(payload: dict, *, minimum_bbox_area: float = 1000,
                 if audit_results is not None and audit is None:
                     continue
                 if size_band and (audit or {}).get("size_band") != size_band:
+                    continue
+                if only_hole_fills and int(
+                        (audit or {}).get("filled_hole_count") or 0) <= 0:
                     continue
                 rows.append({
                     "topic": topic,
@@ -150,7 +154,8 @@ def _overlay(image: Image.Image, shape: dict) -> Image.Image:
 def render_review(candidate_file: Path, image_root: Path, output_dir: Path, *,
                   minimum_bbox_area: float = 1000, limit: int = 16,
                   audit_report: Path | None = None,
-                  size_band: str | None = None) -> dict:
+                  size_band: str | None = None,
+                  only_hole_fills: bool = False) -> dict:
     source_before = candidate_file.read_bytes()
     payload = json.loads(source_before.decode("utf-8"))
     audit_results = None
@@ -161,7 +166,8 @@ def render_review(candidate_file: Path, image_root: Path, output_dir: Path, *,
             raise ValueError(f"audit report has no results list: {audit_report}")
     selected = rank_candidates(
         payload, minimum_bbox_area=minimum_bbox_area, limit=limit,
-        audit_results=audit_results, size_band=size_band)
+        audit_results=audit_results, size_band=size_band,
+        only_hole_fills=only_hole_fills)
     if not selected:
         raise ValueError("no pallet candidates satisfy the contour review scope")
 
@@ -184,8 +190,10 @@ def render_review(candidate_file: Path, image_root: Path, output_dir: Path, *,
         crop = _crop_box(row, image)
         original = _fit(image.crop(crop), (420, 280))
         overlay = _fit(_overlay(image, row["_shape"]).crop(crop), (420, 280))
+        image_rgb = np.asarray(image)
         proposed, audit = refine_pallet_candidate_geometry(
-            copy.deepcopy(row["_shape"]), image.width, image.height)
+            copy.deepcopy(row["_shape"]), image.width, image.height,
+            image_rgb=image_rgb)
         before_mask = _rasterize(
             row["_shape"], image.width, image.height).astype(np.uint8)
         after_mask = _rasterize(
@@ -194,6 +202,18 @@ def render_review(candidate_file: Path, image_root: Path, output_dir: Path, *,
         before_pixels = int(np.count_nonzero(before_mask))
         change_fraction = changed_pixels / max(before_pixels, 1)
         proposed_metrics = contour_metrics(proposed) or {}
+        expected_changed_pixels = (
+            int(row["_audit_result"]["changed_pixels"])
+            if row.get("_audit_result") is not None else None)
+        audit_replay_match = (
+            expected_changed_pixels is None
+            or expected_changed_pixels == changed_pixels)
+        if not audit_replay_match:
+            raise RuntimeError(
+                "rendered proposal does not match the image-guided audit for "
+                f"{row['topic']} frame {row['frame']} shape {row['shape_id']}: "
+                f"expected {expected_changed_pixels} changed pixels, got "
+                f"{changed_pixels}")
         proposed_overlay = _fit(_overlay(image, proposed).crop(crop), (420, 280))
         header = 48
         panel = Image.new("RGB", (1260, 280 + header), "white")
@@ -224,6 +244,9 @@ def render_review(candidate_file: Path, image_root: Path, output_dir: Path, *,
             "proposed": audit is not None,
             "proposed_shape_id": proposed.get("id"),
             "changed_pixels": changed_pixels,
+            "expected_changed_pixels": expected_changed_pixels,
+            "audit_replay_match": audit_replay_match,
+            "image_guidance_used": True,
             "change_fraction_of_candidate": round(change_fraction, 8),
             "outer_vertices_after": proposed_metrics.get("outer_vertices"),
             "outer_vertex_density_after": proposed_metrics.get(
@@ -239,6 +262,8 @@ def render_review(candidate_file: Path, image_root: Path, output_dir: Path, *,
 
     output_dir.mkdir(parents=True, exist_ok=True)
     selection_slug = "top-change" if audit_results is not None else "top-complexity"
+    if only_hole_fills:
+        selection_slug = "hole-fills"
     if size_band:
         selection_slug += f"-{size_band}"
     sheet_path = output_dir / f"pallet-{selection_slug}-before-after.jpg"
@@ -255,10 +280,16 @@ def render_review(candidate_file: Path, image_root: Path, output_dir: Path, *,
         "adjusted_count": sum(row["proposed"] for row in public_rows),
         "maximum_change_fraction": max(
             row["change_fraction_of_candidate"] for row in public_rows),
-        "selection": ("highest_cleanup_change_ratio" if audit_results is not None
+        "selection": ("audit_rows_with_filled_holes" if only_hole_fills
+                      else "highest_cleanup_change_ratio"
+                      if audit_results is not None
                       else "highest_scale_normalized_outer_vertex_density"),
         "audit_report": (str(audit_report.resolve()) if audit_report else None),
         "size_band": size_band,
+        "only_hole_fills": only_hole_fills,
+        "image_guidance_used": True,
+        "audit_replay_match": all(
+            row["audit_replay_match"] for row in public_rows),
         "contact_sheet": str(sheet_path.resolve()),
         "contact_sheet_sha256": hashlib.sha256(sheet_path.read_bytes()).hexdigest(),
         "candidate_only": True,
@@ -283,11 +314,15 @@ def main() -> int:
     parser.add_argument("--limit", type=int, default=16)
     parser.add_argument("--audit-report", type=Path)
     parser.add_argument("--size-band", choices=("tiny_skipped", "small", "medium", "large"))
+    parser.add_argument(
+        "--only-hole-fills", action="store_true",
+        help="Review only candidates whose full audit filled at least one hole.")
     args = parser.parse_args()
     report = render_review(
         args.candidates, args.image_root, args.output,
         minimum_bbox_area=args.minimum_bbox_area, limit=args.limit,
-        audit_report=args.audit_report, size_band=args.size_band)
+        audit_report=args.audit_report, size_band=args.size_band,
+        only_hole_fills=args.only_hole_fills)
     print(json.dumps({key: report[key] for key in (
         "selected_count", "selection", "contact_sheet", "contact_sheet_sha256",
         "report_path", "report_sha256", "candidate_only", "human_truth",

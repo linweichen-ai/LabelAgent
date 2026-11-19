@@ -2164,6 +2164,12 @@ Python998/998、浏览器145/145通过；生产SAM/VLM就绪，`workflow.py`哈�
 
 第二版随后完成生产在线验收：任务`681b89d6059a41f99fc1fbd55850f8c8`以评测/候选模式重新运行第120帧，服务端24.47秒、一轮收敛、12个候选、复核队列为空，8个类别提示只编码一次图像。11个pallet候选均有清理审计；主栈板shape 9填充52个纹理孔并平滑322像素，总变化1.3245%，shape 7填充10个纹理孔并平滑134像素，总变化1.7799%。结果仍为候选，未覆盖人工真值、未批准训练。
 
+### Round 244–247：近景栈板短纹理孔、实例改地面门禁与解码恢复
+
+用户继续指出近景栈板仍有凹凸小孔。本轮在原96像素微孔规则上增加“面积不超过256、跨度不超过24”的短纹理孔规则，近景大栈板使用7×7受限平滑，并在平滑后只二次清理原96像素门槛内的残余微孔。第120帧生产最终任务`4a4ed3794b444e0b85e451390a25d272`于25.35秒完成，12个候选、一轮复查；shape 9保持pallet，清理59个孔、总变化2668像素（2.1275%），最终11个残孔降到4条长度31–90像素的结构开口。
+
+在线验收同时暴露并修复两项问题：任务`7fa3c5e490bc4802b99fbe1dd267752e`曾把明显栈板整体错改为floor，现以`instance_to_global_surface_requires_human_review`硬门禁保留原候选；任务`eb935f682c2d47059ee10e1e709cc9c7`与`329baecc01e84304a11674e0102f7de1`重复遇到结构化解码无解400，均保留旧候选。现在只对这一精确错误做一次普通JSON恢复，之后仍强制JSON解析和Agent协议校验；最终任务trace记录`decoder_constraint_unsatisfiable`后成功。Python1002/1002、186子测试、网页145/145通过，生产workflow哈希`9FE17F65...61DB0`、edit_agent哈希`48C6826A...6FDE3`。详细报告见`docs/PALLET_BOUNDARY_ROUNDS244_247_20261119.md`，结构化证据见`docs/evidence/workbench-stability-20261117/pallet-boundary-rounds244-247.json`；工厂图像只保留本地，未推送远端。
+
 部署备份位于 `D:\Apps\LabelAgent\.local\backups\agent-empty-result-rollback-round240-20261119-130115`。完整说明见 [第二百四十轮报告](AGENT_EMPTY_RESULT_ROLLBACK_ROUND240_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/agent-empty-result-rollback-round240.json)。实现提交 `840d9c1f89b7f67132845e6d2d80e34eca82dd39`。过去24小时的通俗汇总见 [工作总结](LABELAGENT_LAST_24_HOURS_SUMMARY_20261119.md)。
 
 Round239、Round240及过去24小时总结已随报告提交 `a5622f6eff19b02fa7e92e82faef0c2d1f990837` 推送，并从 GitHub/CNB 同名分支精确读回；未跟踪厂内图像和本地验收产物未上传。

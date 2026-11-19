@@ -1,0 +1,79 @@
+{
+  "schema_version": "labelagent.pallet-boundary-rounds244-247.v1",
+  "date": "2026-11-19T14:27:00+08:00",
+  "boundary": {
+    "candidate_only": true,
+    "human_truth_changed": false,
+    "training_approved": false
+  },
+  "offline_real_candidate": {
+    "frame": 120,
+    "shape_id": 9,
+    "before_remaining_holes": 11,
+    "after_remaining_holes": 4,
+    "additional_changed_pixels": 1159,
+    "additional_change_ratio": 0.009137,
+    "preserved_structural_spans": [90, 76, 31, 40]
+  },
+  "production_acceptance": {
+    "task_id": "4a4ed3794b444e0b85e451390a25d272",
+    "status": "completed",
+    "wall_seconds": 25.35,
+    "candidate_count": 12,
+    "agent_rounds": 1,
+    "stop_reason": "no_progress",
+    "shape_9_label": "pallet",
+    "shape_9_adjustment": {
+      "filled_hole_count": 59,
+      "filled_hole_pixels": 2249,
+      "filled_texture_hole_count": 5,
+      "filled_texture_hole_pixels": 752,
+      "post_smoothing_filled_hole_count": 2,
+      "post_smoothing_filled_hole_pixels": 159,
+      "smoothing_kernel": 7,
+      "smoothing_changed_pixels": 437,
+      "changed_pixels": 2668,
+      "change_ratio": 0.021275,
+      "preserved_component_count": 1
+    },
+    "remaining_holes": [
+      {"area": 832, "width": 90, "height": 11, "x": 349, "y": 378},
+      {"area": 555, "width": 77, "height": 10, "x": 177, "y": 380},
+      {"area": 268, "width": 32, "height": 11, "x": 361, "y": 272},
+      {"area": 233, "width": 41, "height": 9, "x": 122, "y": 381}
+    ],
+    "structured_fallback_reason": "decoder_constraint_unsatisfiable",
+    "instance_surface_guard": "instance_to_global_surface_requires_human_review"
+  },
+  "observed_failures": [
+    {
+      "task_id": "7fa3c5e490bc4802b99fbe1dd267752e",
+      "issue": "VLM incorrectly reclassified close pallet shape 9 as floor",
+      "resolution": "hard human-review gate for instance-to-global-surface reclassification"
+    },
+    {
+      "task_ids": [
+        "eb935f682c2d47059ee10e1e709cc9c7",
+        "329baecc01e84304a11674e0102f7de1"
+      ],
+      "issue": "HTTP 400 structured decoder constraint unsatisfiable",
+      "state_preservation": "existing candidates preserved",
+      "resolution": "one bounded unstructured JSON retry followed by mandatory JSON and protocol validation"
+    }
+  ],
+  "tests": {
+    "python_passed": 1002,
+    "python_subtests_passed": 186,
+    "browser_passed": 145,
+    "failed": 0
+  },
+  "production_hashes": {
+    "workflow_py_sha256": "9FE17F65BCF308A7FF424D8DFE4660721C97B922003381A0D46D14EF80361DB0",
+    "edit_agent_py_sha256": "48C6826A89E277CCC961FA70166B809E2778895964877EB2DFB966EF43A6FDE3"
+  },
+  "local_visuals_not_published": [
+    "artifacts/pallet-geometry-round244/frame-120-round242-vs-round244.jpg",
+    "artifacts/pallet-geometry-round247/frame-120-production-final.jpg",
+    "artifacts/pallet-geometry-round247/frame-120-production-final-crop.jpg"
+  ]
+}

@@ -229,6 +229,7 @@ class WorkflowTests(unittest.TestCase):
         mask = np.zeros((100, 140), dtype=np.uint8)
         mask[10:90, 10:130] = 1
         mask[30:35, 30:35] = 0       # texture-scale enclosed hole
+        mask[62:75, 92:105] = 0      # larger compact texture hole
         mask[55:61, 45:75] = 0       # structural elongated slot
         mask[9, 60] = 1              # one-pixel outer spike
         mask[10, 90] = 0             # one-pixel boundary notch
@@ -243,13 +244,34 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(audit["reason_code"], "pallet_texture_geometry_cleanup")
         self.assertEqual(audit["route"], "candidate_only")
         self.assertEqual(output[32, 32], 1)
+        self.assertEqual(output[68, 98], 1)
         self.assertEqual(output[58, 60], 0)
         self.assertEqual(output[9, 60], 0)
         self.assertEqual(output[10, 90], 1)
         self.assertEqual(refined["score"], candidate["score"])
         self.assertTrue(audit["smoothing_applied"])
         self.assertEqual(audit["smoothing_kernel"], 5)
-        self.assertLessEqual(audit["change_ratio"], 0.02)
+        self.assertEqual(audit["filled_texture_hole_count"], 1)
+        self.assertLessEqual(audit["change_ratio"], 0.025)
+
+    def test_close_pallet_cleanup_uses_stronger_bounded_boundary_smoothing(self):
+        mask = np.zeros((260, 360), dtype=np.uint8)
+        mask[20:240, 20:340] = 1
+        mask[80:88, 80:110] = 0      # long structural slit remains
+        mask[120:135, 150:165] = 0   # compact texture hole is filled
+        mask[19, 200] = 1            # shallow outer spike is smoothed
+        candidate = _shape_from_mask(mask, "pallet", 8)
+
+        refined, audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 360, 260)
+        output = _rasterize(refined, 360, 260)
+
+        self.assertIsNotNone(audit)
+        self.assertEqual(audit["smoothing_kernel"], 7)
+        self.assertEqual(output[126, 156], 1)
+        self.assertEqual(output[84, 95], 0)
+        self.assertEqual(output[19, 200], 0)
+        self.assertLessEqual(audit["change_ratio"], 0.025)
 
     def test_pallet_cleanup_skips_small_distant_instances(self):
         candidate = shape(shape_id=3, label="pallet", left=2, right=12)

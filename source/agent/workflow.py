@@ -2608,14 +2608,18 @@ def _fingerprint(shapes):
 
 
 def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=96,
-                                     maximum_hole_span=32, maximum_change_ratio=0.02):
+                                     maximum_hole_span=32,
+                                     maximum_texture_hole_area=256,
+                                     maximum_texture_hole_span=24,
+                                     maximum_change_ratio=0.025):
     """Remove texture-scale pallet mask noise without erasing structural gaps.
 
     The cleanup is deliberately bounded to one already detected instance.  It
-    fills only enclosed, small background components and applies a 3x3 median
-    boundary proposal when that proposal preserves the connected-component
-    count and changes at most two percent of the original mask area.  Large or
-    elongated openings (for example fork slots and inter-slat gaps) remain.
+    fills enclosed micro holes plus slightly larger, short-span texture holes.
+    It then applies a size-adaptive median boundary proposal when that proposal
+    preserves the connected-component count and stays inside a 2.5 percent
+    total-change budget.  Long openings (for example fork slots and inter-slat
+    gaps) remain even when their area is modest.
     """
     if not isinstance(shape, dict) or str(shape.get("label", "")).casefold() != "pallet":
         return shape, None
@@ -2632,14 +2636,21 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
     border_labels = set(np.unique(np.concatenate((
         components[0, :], components[-1, :], components[:, 0], components[:, -1]))).tolist())
     filled_holes = []
+    filled_texture_holes = []
     for component in range(1, count):
         if component in border_labels:
             continue
         x, y, w, h, component_area = [int(value) for value in stats[component]]
-        if (component_area <= maximum_hole_area
-                and max(w, h) <= maximum_hole_span):
+        micro_hole = (component_area <= maximum_hole_area
+                      and max(w, h) <= maximum_hole_span)
+        texture_hole = (component_area <= maximum_texture_hole_area
+                        and max(w, h) <= maximum_texture_hole_span)
+        if micro_hole or texture_hole:
             refined[components == component] = 1
-            filled_holes.append({"area": component_area, "bbox": [x, y, x + w - 1, y + h - 1]})
+            record = {"area": component_area, "bbox": [x, y, x + w - 1, y + h - 1]}
+            filled_holes.append(record)
+            if texture_hole and not micro_hole:
+                filled_texture_holes.append(record)
 
     foreground_count, foreground, foreground_stats, _ = cv2.connectedComponentsWithStats(
         refined, connectivity=8)
@@ -2652,7 +2663,7 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
     before_components = sum(
         int(foreground_stats[component, cv2.CC_STAT_AREA]) >= 9
         for component in range(1, foreground_count))
-    smoothing_kernel = 5 if area >= 5000 else 3
+    smoothing_kernel = 7 if area >= 50000 else (5 if area >= 5000 else 3)
     smoothed = (cv2.medianBlur(
         (refined * 255).astype(np.uint8), smoothing_kernel) > 127).astype(np.uint8)
     smoothed_count, _, smoothed_stats, _ = cv2.connectedComponentsWithStats(
@@ -2681,6 +2692,8 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         "label": shape["label"],
         "filled_hole_count": len(filled_holes),
         "filled_hole_pixels": sum(item["area"] for item in filled_holes),
+        "filled_texture_hole_count": len(filled_texture_holes),
+        "filled_texture_hole_pixels": sum(item["area"] for item in filled_texture_holes),
         "removed_island_pixels": removed_island_pixels,
         "smoothing_applied": smoothing_applied,
         "smoothing_kernel": smoothing_kernel if smoothing_applied else None,
@@ -2689,6 +2702,8 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         "change_ratio": round(changed / area, 6),
         "maximum_hole_area": maximum_hole_area,
         "maximum_hole_span": maximum_hole_span,
+        "maximum_texture_hole_area": maximum_texture_hole_area,
+        "maximum_texture_hole_span": maximum_texture_hole_span,
         "preserved_component_count": before_components,
         "route": "candidate_only",
     }

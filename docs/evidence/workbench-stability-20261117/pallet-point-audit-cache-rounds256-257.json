@@ -100,6 +100,72 @@
     },
     "local_visual_evidence": "artifacts/pallet-geometry-cross-dataset-round251/cvat-task3-top4-before-after.jpg"
   },
+  "round259": {
+    "status": "deployed_and_live_verified",
+    "behavior": "strongly bound on-demand refresh of current-frame legacy pallet machine candidates",
+    "binding": [
+      "path",
+      "topic",
+      "frame",
+      "file_activation_generation",
+      "candidate_artifact_sha256",
+      "agent_run_sha256"
+    ],
+    "live_frame100_first_pass": {
+      "elapsed_ms": 233,
+      "adjusted_candidate_count": 10,
+      "changed_pixels": 506,
+      "revision_count_after": 1
+    },
+    "live_frame100_repeat": {
+      "elapsed_ms": 19,
+      "changed": false,
+      "adjusted_candidate_count": 0,
+      "revision_count_after": 1
+    },
+    "rollback_directory": "D:\\Apps\\LabelAgent\\.local\\backups\\pallet-candidate-refresh-round259-20261119-174131"
+  },
+  "round260": {
+    "status": "deployed_and_live_verified",
+    "finding": "combined safe hole filling and optional smoothing exceeded the 2.5 percent cap by 0.0977 percentage points, causing the old implementation to reject the whole cleanup",
+    "change": "when the combined proposal exceeds the cap, retain the independently bounded hole-only snapshot if it remains within the same cap",
+    "tests": {
+      "python": {"passed": 1024, "failed": 0},
+      "round259_browser": {"passed": 140, "failed": 0},
+      "round260_browser_scenarios": {"passed": 70, "failed": 0}
+    },
+    "live_frame100": {
+      "pallet_count_before": 11,
+      "pallet_count_after": 11,
+      "holes_before": 97,
+      "holes_after": 10,
+      "hole_reduction": 87,
+      "hole_reduction_percent": 89.7,
+      "enhanced_adjusted_candidate_count": 1,
+      "enhanced_changed_pixels": 2320,
+      "enhanced_elapsed_ms": 214,
+      "repeat_elapsed_ms": 8,
+      "repeat_changed": false,
+      "revision_count_after_repeat": 2,
+      "truth_count_before": 0,
+      "truth_count_after": 0
+    },
+    "model_readiness": {
+      "ready": true,
+      "sam_ready": true,
+      "sam_model_loaded": true,
+      "vlm_ready": true,
+      "vlm_model": "labelagent-vlm8b"
+    },
+    "production_sha256": {
+      "server.py": "C538FA8D24703A45F7C65C48F853140FDAA028E5B22CD6A652447659C1B8EDE3",
+      "workflow.py": "A10FB241C9FF2D72AE377DA707D3D9F11EA38720EB6A791BDA861EA14AD52F7A",
+      "index.html": "F69111306662F5876FB61C6E7D8C1880748EE38B6BD4D130B57FCBDCE323E8FE",
+      "inspection.js": "45CA8307273F5ABD27B1A2268434734F804EE39B50A76B9C18A7F4B3F4A2F779"
+    },
+    "rollback_directory": "D:\\Apps\\LabelAgent\\.local\\backups\\pallet-cleanup-budget-fallback-round260-20261119-175350",
+    "local_visual_evidence": "artifacts/pallet-geometry-refresh-round260/frame100-before-after.jpg"
+  },
   "safety_boundaries": {
     "human_truth_written": false,
     "approved_for_training": false,

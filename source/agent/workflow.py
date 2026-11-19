@@ -2722,6 +2722,16 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
     before_components = sum(
         int(foreground_stats[component, cv2.CC_STAT_AREA]) >= 9
         for component in range(1, foreground_count))
+    # Keep the bounded hole/island cleanup as an independent fallback.  A
+    # large textured pallet can have many individually safe micro holes while
+    # median smoothing adds just enough boundary pixels to push the combined
+    # proposal over the total-change budget.  Rejecting the whole proposal in
+    # that case preserves the very texture noise this helper is meant to
+    # remove.  Falling back to this snapshot keeps the same hard change cap
+    # without accepting the optional smoothing step.
+    cleanup_only = refined.copy()
+    cleanup_only_changed = int(np.count_nonzero(cleanup_only != mask))
+    cleanup_only_filled_holes = copy.deepcopy(filled_holes)
     smoothing_kernel = 7 if area >= 50000 else (5 if area >= 5000 else 3)
     smoothed = (cv2.medianBlur(
         (refined * 255).astype(np.uint8), smoothing_kernel) > 127).astype(np.uint8)
@@ -2761,6 +2771,16 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         filled_holes.extend(post_smoothing_filled_holes)
 
     changed = int(np.count_nonzero(refined != mask))
+    smoothing_rejected_by_budget = False
+    if (changed / max(area, 1) > maximum_change_ratio
+            and cleanup_only_changed
+            and cleanup_only_changed / max(area, 1) <= maximum_change_ratio):
+        refined = cleanup_only
+        filled_holes = cleanup_only_filled_holes
+        post_smoothing_filled_holes = []
+        smoothing_applied = False
+        smoothing_rejected_by_budget = True
+        changed = cleanup_only_changed
     if not changed or changed / max(area, 1) > maximum_change_ratio:
         return shape, None
     replacement = _shape_from_mask(refined, shape["label"], shape["id"])
@@ -2782,6 +2802,7 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
             item["area"] for item in post_smoothing_filled_holes),
         "removed_island_pixels": removed_island_pixels,
         "smoothing_applied": smoothing_applied,
+        "smoothing_rejected_by_budget": smoothing_rejected_by_budget,
         "smoothing_kernel": smoothing_kernel if smoothing_applied else None,
         "smoothing_changed_pixels": smoothing_pixels if smoothing_applied else 0,
         "changed_pixels": changed,

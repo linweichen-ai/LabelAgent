@@ -89,7 +89,9 @@ function renderInspection(force=false){
   details.open=expanded.has(details.dataset.disclosureKey);
  }
  updateCandidateSave();
- $('clearAutoResult').disabled=!(Object.hasOwn(candidates,String(target))||Object.hasOwn(agentRuns,String(target))||steps.length||calls.length)||['running','stopping'].includes(inspectionData.job?.status);
+ const frameCandidates=candidates[String(target)]||[],jobBusy=['running','stopping'].includes(inspectionData.job?.status);
+ $('clearAutoResult').disabled=!(Object.hasOwn(candidates,String(target))||Object.hasOwn(agentRuns,String(target))||steps.length||calls.length)||jobBusy;
+ const palletCleanup=$('cleanupPalletGeometry');if(palletCleanup)palletCleanup.disabled=jobBusy||!frameCandidates.some(item=>String(item?.label||'').toLowerCase()==='pallet');
 }
 async function refreshInspection(){
  if(window.workspaceMode!=='auto')return;
@@ -302,6 +304,37 @@ $('clearAutoResult').onclick=async()=>{
   toast(result.truth_preserved?`帧 ${selected} 的自动结果已清除，人工真值保留`:`帧 ${selected} 的自动结果已清除`);
  }catch(error){toast(error.message)}
  finally{button.textContent='清除结果';renderInspection(true)}
+};
+$('cleanupPalletGeometry').onclick=async()=>{
+ const selected=frame,selectedTopic=topic,selectedPath=loadedDataPath,
+  selectedGeneration=loadedFileActivationGeneration,button=$('cleanupPalletGeometry'),
+  binding=inspectionData.clear_auto_result_binding;
+ if(button.disabled)return;
+ button.disabled=true;button.textContent='优化中…';
+ try{
+  if(!binding||binding.path!==selectedPath||binding.topic!==selectedTopic
+    ||Number(binding.frame)!==Number(selected)
+    ||binding.file_activation_generation!==selectedGeneration)throw Error('机器候选绑定尚未刷新，请等待过程记录更新后重试');
+  const response=await fetch('/api/candidates/pallet_cleanup/'+selected,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:selectedPath,topic:selectedTopic,file_activation_generation:selectedGeneration,expected_candidate_artifact_sha256:binding.candidate_artifact_sha256,expected_agent_run_sha256:binding.agent_run_sha256})});
+  const result=await response.json();
+  if(!response.ok)throw Error(result.error||'栈板边界优化失败');
+  if(loadedDataPath!==selectedPath||topic!==selectedTopic
+    ||loadedFileActivationGeneration!==selectedGeneration
+    ||result.path!==selectedPath||result.topic!==selectedTopic
+    ||Number(result.frame)!==Number(selected)
+    ||result.file_activation_generation!==selectedGeneration
+    ||result.prior_candidate_artifact_sha256!==binding.candidate_artifact_sha256
+    ||result.prior_agent_run_sha256!==binding.agent_run_sha256
+    ||result.candidate_only!==true||result.human_truth!==false
+    ||result.approved_for_training!==false||result.approved_for_deployment!==false)throw Error('优化期间数据文件、相机、帧、载入代次或机器候选绑定已变化；服务器结果未应用到当前页面');
+  const readback=await readCompactFrameStateSnapshot(selected,selectedTopic,selectedPath,selectedGeneration);
+  if(loadedDataPath!==selectedPath||topic!==selectedTopic||loadedFileActivationGeneration!==selectedGeneration)throw Error('优化结果读回期间数据作用域已变化，拒绝更新当前页面');
+  applyCompactFrameState(readback,selected,selectedTopic,selectedPath);
+  if(frame===selected){draft=[];resetPrompts();refreshShapeList();draw();updateReferenceStatus()}
+  inspectionVersion='';await Promise.all([refreshInspection(),refreshAgentProgress()]);
+  toast(result.changed?`已优化 ${result.adjusted_candidate_count} 个栈板候选边界；旧类别审核已失效，仍需人工复核`:'当前帧栈板候选已经使用最新版边界，无需重复处理');
+ }catch(error){toast(error.message)}
+ finally{button.textContent='优化本帧栈板边界';renderInspection(true)}
 };
 window.setWorkspaceMode('manual',false);
 document.addEventListener('labelagent:job-status',event=>{

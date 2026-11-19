@@ -32,6 +32,7 @@ from .workflow import (DESCRIPTION_INPUT_VERSION, MAX_REVIEW_ROUNDS, RunCancelle
                        discover_visible_labels, reference_labels, restrict_description,
                        generate_only, review_existing, run, trace_calls,
                        candidate_overlay, reference_overlay, chat, chat_batch,
+                       refine_pallet_candidate_geometry,
                        sam_text_multi_prefetch, sam_text_prefetch,
                        slope_overlap_crop_images,
                        VISIBLE_LABEL_DEFINITIONS)
@@ -3822,6 +3823,143 @@ def clear_auto_result(index):
                        removed_agent_run_sha256=binding["agent_run_sha256"],
                        path=data_path, topic=topic,
                        file_activation_generation=activation_generation)
+
+
+@app.post("/api/candidates/pallet_cleanup/<int:index>")
+def cleanup_pallet_candidates(index):
+    """Refresh legacy pallet geometry without touching truth or training state."""
+    body = request.get_json(silent=True) or {}
+    with lock:
+        if state["video"] is None or state["topic"] is None:
+            raise ValueError("请先加载图像消息")
+        activation_generation, data_path, topic = assert_request_data_scope(body)
+        if not 0 <= index < state["video"].topics[state["topic"]]["count"]:
+            raise ValueError("帧号无效")
+        with run_status_lock:
+            if run_status.get("status") in ("running", "stopping"):
+                raise RuntimeError("自动标注仍在运行，请任务结束后再优化栈板边界")
+        key = str(index)
+        current_candidates = copy.deepcopy(state.get("candidates", {}).get(key) or [])
+        current_run = copy.deepcopy(state.get("agent_runs", {}).get(key) or {})
+        if not current_candidates:
+            raise ValueError("当前帧没有机器候选")
+        binding = auto_result_clear_binding(index)
+        for field in ("candidate_artifact_sha256", "agent_run_sha256"):
+            expected_key = "expected_" + field
+            if expected_key not in body:
+                raise ValueError(f"栈板边界优化必须包含 {expected_key}")
+            expected = body.get(expected_key)
+            if expected is not None and not _valid_sha256(expected):
+                raise ValueError(f"{expected_key} 必须是 SHA-256 或 null")
+            if expected != binding[field]:
+                raise StaleHumanReviewError(
+                    "机器候选或过程记录已变化，旧窗口栈板边界优化请求已拒绝")
+
+        frame_image = state["video"].frame(state["topic"], index)
+        with Image.open(io.BytesIO(frame_image)) as decoded:
+            width, height = decoded.size
+        already_adjusted = {
+            item.get("shape_id") for item in current_run.get(
+                "candidate_geometry_adjustments", [])
+            if isinstance(item, dict)
+            and item.get("reason_code") == "pallet_texture_geometry_cleanup"
+            and type(item.get("shape_id")) is int
+        }
+        refreshed, adjustments = [], []
+        for candidate in current_candidates:
+            if candidate.get("id") in already_adjusted:
+                refined, adjustment = candidate, None
+            else:
+                refined, adjustment = refine_pallet_candidate_geometry(
+                    candidate, width, height)
+            refreshed.append(refined)
+            if adjustment is not None:
+                adjustment = copy.deepcopy(adjustment)
+                adjustment.update(
+                    source="legacy_candidate_geometry_refresh",
+                    candidate_only=True, human_truth=False,
+                    approved_for_training=False, approved_for_deployment=False)
+                adjustments.append(adjustment)
+
+        if not adjustments:
+            return jsonify(
+                frame=index, changed=False, adjusted_candidate_count=0,
+                candidate_only=True, human_truth=False,
+                approved_for_training=False, approved_for_deployment=False,
+                truth_preserved=key in state.get("truth", {}),
+                prior_candidate_artifact_sha256=binding["candidate_artifact_sha256"],
+                prior_agent_run_sha256=binding["agent_run_sha256"],
+                candidate_artifact_sha256=binding["candidate_artifact_sha256"],
+                agent_run_sha256=binding["agent_run_sha256"],
+                path=data_path, topic=topic,
+                file_activation_generation=activation_generation)
+
+        new_artifact_sha = _sha256_json(refreshed)
+        high_risk_total = sum(candidate_requires_class_audit(item) for item in refreshed)
+        replacement_run = copy.deepcopy(current_run)
+        replacement_run.update({
+            "candidate_artifact_sha256": new_artifact_sha,
+            "input_sha256": hashlib.sha256(frame_image).hexdigest(),
+            "candidate_geometry_adjustments": (
+                copy.deepcopy(current_run.get("candidate_geometry_adjustments", []))
+                + adjustments),
+            "candidate_geometry_cleanup_refresh": {
+                "schema_version": "labelagent.pallet_geometry_refresh.v1",
+                "adjusted_candidate_count": len(adjustments),
+                "prior_candidate_artifact_sha256": binding["candidate_artifact_sha256"],
+                "candidate_artifact_sha256": new_artifact_sha,
+                "candidate_only": True, "human_truth": False,
+                "approved_for_training": False, "approved_for_deployment": False,
+            },
+            "candidate_class_audits": [],
+            "candidate_class_audit_status": "pending" if high_risk_total else "complete",
+            "candidate_class_audit_deferred": bool(high_risk_total),
+            "candidate_class_audit_total": high_risk_total,
+            "candidate_class_audit_cache_hit": False,
+            "review_queue": [
+                item for item in current_run.get("review_queue", [])
+                if item.get("source") != "candidate_class_audit"],
+            "candidate_only": True, "human_truth": False,
+            "approved_for_training": False, "approved_for_deployment": False,
+            "human_review_required": True,
+        })
+        previous_revisions = copy.deepcopy(state.get("candidate_revisions", {}).get(key))
+        previous_review_status = copy.deepcopy(
+            state.get("candidate_review_status", {}).get(key))
+        try:
+            archive_candidate_revision(
+                index, topic, current_candidates, current_run,
+                refreshed, replacement_run, reason="pallet_geometry_cleanup_refresh")
+            state.setdefault("candidates", {})[key] = refreshed
+            state.setdefault("agent_runs", {})[key] = replacement_run
+            state.setdefault("candidate_review_status", {})[key] = {}
+            save()
+        except Exception:
+            state.setdefault("candidates", {})[key] = current_candidates
+            state.setdefault("agent_runs", {})[key] = current_run
+            if previous_revisions is None:
+                state.setdefault("candidate_revisions", {}).pop(key, None)
+            else:
+                state.setdefault("candidate_revisions", {})[key] = previous_revisions
+            if previous_review_status is None:
+                state.setdefault("candidate_review_status", {}).pop(key, None)
+            else:
+                state.setdefault("candidate_review_status", {})[key] = previous_review_status
+            raise
+        return jsonify(
+            frame=index, changed=True,
+            adjusted_candidate_count=len(adjustments),
+            changed_pixels=sum(item["changed_pixels"] for item in adjustments),
+            candidate_only=True, human_truth=False,
+            approved_for_training=False, approved_for_deployment=False,
+            truth_preserved=key in state.get("truth", {}),
+            prior_candidate_artifact_sha256=binding["candidate_artifact_sha256"],
+            prior_agent_run_sha256=binding["agent_run_sha256"],
+            candidate_artifact_sha256=new_artifact_sha,
+            agent_run_sha256=_sha256_json(replacement_run),
+            candidate_class_audit_status=replacement_run["candidate_class_audit_status"],
+            path=data_path, topic=topic,
+            file_activation_generation=activation_generation)
 
 @app.post("/api/reference_frame")
 def set_reference_frame():

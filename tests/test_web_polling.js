@@ -1566,7 +1566,38 @@ test('清除机器结果绑定文件代次及候选和过程记录哈希并以�
   assert.equal(stale.readbacks.length, 0);
   assert.equal(stale.applied.length, 0);
   assert.ok(stale.notices.some(message=>message.includes('载入代次')));
-  assert.match(source('index.html'), /inspection\.js\?v=108/);
+  assert.match(source('index.html'), /inspection\.js\?v=109/);
+});
+
+test('栈板边界优化只改当前强绑定机器候选并完成服务器读回', async () => {
+  const inspection = source('inspection.js'), notices = [], requests = [], pending = [], applied = [];
+  const button = {disabled:false,textContent:'优化本帧栈板边界'};
+  const h = harness({
+    $(id) { return id==='cleanupPalletGeometry'?button:{}; },
+    fetch(url, options) { requests.push({url,options}); return new Promise(resolve=>pending.push(resolve)); },
+    async readCompactFrameStateSnapshot() { return {compact_geometry:true,path:'file-a',topic:'/camera',frame:3,file_activation_generation:7,candidates:{'3':[{}]},agent_runs:{'3':{}},candidate_review_bindings:{}}; },
+    applyCompactFrameState(data, ...scope) { applied.push({data,scope}); },
+    resetPrompts() {}, refreshShapeList() {}, draw() {}, updateReferenceStatus() {},
+    async refreshInspection() {}, async refreshAgentProgress() {}, renderInspection() {},
+    toast(message) { notices.push(message); },
+  });
+  h.run(`let frame=3,topic='/camera',loadedDataPath='file-a',loadedFileActivationGeneration=7,draft=[],inspectionVersion='',inspectionData={clear_auto_result_binding:{path:'file-a',topic:'/camera',frame:3,file_activation_generation:7,candidate_artifact_sha256:'${'a'.repeat(64)}',agent_run_sha256:'${'b'.repeat(64)}'}};`);
+  h.run(section(inspection, "$('cleanupPalletGeometry').onclick", "window.setWorkspaceMode('manual',false)"));
+  const operation = h.run("$('cleanupPalletGeometry').onclick()");
+  assert.equal(requests[0].url, '/api/candidates/pallet_cleanup/3');
+  const submitted = JSON.parse(requests[0].options.body);
+  assert.equal(submitted.path, 'file-a');
+  assert.equal(submitted.topic, '/camera');
+  assert.equal(submitted.file_activation_generation, 7);
+  assert.equal(submitted.expected_candidate_artifact_sha256, 'a'.repeat(64));
+  assert.equal(submitted.expected_agent_run_sha256, 'b'.repeat(64));
+  pending[0]({ok:true,json:async()=>({path:'file-a',topic:'/camera',frame:3,file_activation_generation:7,prior_candidate_artifact_sha256:'a'.repeat(64),prior_agent_run_sha256:'b'.repeat(64),candidate_only:true,human_truth:false,approved_for_training:false,approved_for_deployment:false,changed:true,adjusted_candidate_count:2})});
+  await operation;
+  assert.equal(applied.length, 1);
+  assert.ok(notices.some(message=>message.includes('已优化 2 个栈板候选边界')));
+  assert.equal(button.textContent, '优化本帧栈板边界');
+  assert.match(source('index.html'), /id="cleanupPalletGeometry"/);
+  assert.match(source('index.html'), /inspection\.js\?v=109/);
 });
 
 test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () => {

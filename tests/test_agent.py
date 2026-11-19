@@ -331,6 +331,39 @@ class WorkflowTests(unittest.TestCase):
         self.assertTrue(audit["smoothing_applied"])
         self.assertEqual(audit["smoothing_kernel"], 5)
         self.assertEqual(audit["filled_texture_hole_count"], 1)
+
+    def test_pallet_cleanup_keeps_safe_hole_fill_when_smoothing_exceeds_budget(self):
+        mask = np.zeros((480, 640), dtype=np.uint8)
+        mask[40:440, 80:560] = 1
+        placed = 0
+        for y in range(60, 420, 24):
+            for x in range(100, 540, 24):
+                if placed >= 120:
+                    break
+                mask[y:y + 5, x:x + 5] = 0
+                placed += 1
+            if placed >= 120:
+                break
+        # Optional median smoothing changes these high-frequency outer-edge
+        # notches.  Combined with the safe enclosed-hole fills it exceeds the
+        # 2.5 percent total budget, so only the hole cleanup may survive.
+        for x in range(80, 560, 8):
+            mask[40:44, x:x + 4] = 0
+            mask[436:440, x + 4:x + 8] = 0
+        shape = _shape_from_mask(mask, "pallet", 17)
+
+        refined, audit = workflow.refine_pallet_candidate_geometry(shape, 640, 480)
+
+        self.assertIsNotNone(audit)
+        self.assertTrue(audit["smoothing_rejected_by_budget"])
+        self.assertFalse(audit["smoothing_applied"])
+        self.assertEqual(audit["filled_hole_count"], 120)
+        self.assertLessEqual(audit["change_ratio"], .025)
+        after = _rasterize(refined, 640, 480)
+        self.assertEqual(after[62, 102], 1)
+        # The optional outer-edge smoothing was rejected, so the attached
+        # background notch remains unchanged.
+        self.assertEqual(after[41, 81], 0)
         self.assertLessEqual(audit["change_ratio"], 0.025)
 
     def test_close_pallet_cleanup_uses_stronger_bounded_boundary_smoothing(self):
@@ -4790,6 +4823,73 @@ class ServerTests(unittest.TestCase):
             self.assertEqual(original_truth[0]["label"], "地面")
         finally:
             server.state = old_state
+
+    def test_pallet_cleanup_refresh_is_bound_reversible_and_idempotent(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            mask = np.zeros((40, 40), dtype=np.uint8)
+            mask[1:39, 1:39] = 1
+            mask[12:17, 12:17] = 0
+            mask[0, 20] = 1
+            pallet = _shape_from_mask(mask, "pallet", 7)
+            candidate_sha = server._sha256_json([pallet])
+            prior_run = {
+                "candidate_artifact_sha256": candidate_sha,
+                "candidate_geometry_adjustments": [],
+                "candidate_class_audits": [{"candidate_id": 7}],
+                "candidate_class_audit_status": "complete",
+                "review_queue": [{"source": "candidate_class_audit", "candidate_id": 7}],
+            }
+            original_truth = {"1": [shape(99, "pallet")]}
+            server.state = {
+                "video": FakeVideo(), "topic": "camera0", "labels": ["pallet"],
+                "truth": copy.deepcopy(original_truth), "reference_frames": {"camera0": [1]},
+                "config": {}, "candidates": {"1": [copy.deepcopy(pallet)]},
+                "agent_runs": {"1": copy.deepcopy(prior_run)},
+                "candidate_review_status": {"1": {"old": {"route": "candidate_preserved"}}},
+                "candidate_revisions": {},
+            }
+            server.run_status = {"status": "completed"}
+            client = server.app.test_client()
+            try:
+                stale = active_auto_clear_scope(1)
+                stale["expected_candidate_artifact_sha256"] = "0" * 64
+                self.assertEqual(client.post(
+                    "/api/candidates/pallet_cleanup/1", json=stale).status_code, 409)
+
+                response = client.post(
+                    "/api/candidates/pallet_cleanup/1", json=active_auto_clear_scope(1))
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertTrue(response.json["changed"])
+                self.assertEqual(response.json["adjusted_candidate_count"], 1)
+                self.assertFalse(response.json["human_truth"])
+                self.assertFalse(response.json["approved_for_training"])
+                self.assertFalse(response.json["approved_for_deployment"])
+                self.assertTrue(response.json["truth_preserved"])
+                refreshed = server.state["candidates"]["1"][0]
+                refreshed_mask = _rasterize(refreshed, 40, 40)
+                self.assertEqual(refreshed_mask[14, 14], 1)
+                self.assertGreater(response.json["changed_pixels"], 0)
+                run = server.state["agent_runs"]["1"]
+                self.assertEqual(run["candidate_class_audits"], [])
+                self.assertEqual(run["candidate_class_audit_status"], "complete")
+                self.assertFalse(run["approved_for_training"])
+                self.assertEqual(server.state["candidate_review_status"]["1"], {})
+                self.assertEqual(server.state["truth"], original_truth)
+                self.assertEqual(
+                    server.state["candidate_revisions"]["1"][-1]["reason"],
+                    "pallet_geometry_cleanup_refresh")
+
+                before_second = copy.deepcopy(server.state["candidates"]["1"])
+                second = client.post(
+                    "/api/candidates/pallet_cleanup/1", json=active_auto_clear_scope(1))
+                self.assertEqual(second.status_code, 200, second.json)
+                self.assertFalse(second.json["changed"])
+                self.assertEqual(server.state["candidates"]["1"], before_second)
+                self.assertEqual(len(server.state["candidate_revisions"]["1"]), 1)
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
 
     def test_clear_auto_result_removes_only_selected_frame_and_preserves_truth(self):
         old_state, old_status, old_work = server.state, server.run_status, server.WORK

@@ -53,6 +53,52 @@ def candidate_fingerprint(candidate: dict) -> str:
 HIGH_RISK_LABELS = frozenset({"ego", "person", "other_robot"})
 
 
+def _polygon_area(points):
+    return abs(sum(
+        points[index][0] * points[(index + 1) % len(points)][1]
+        - points[(index + 1) % len(points)][0] * points[index][1]
+        for index in range(len(points))) / 2.0)
+
+
+def candidate_requires_class_audit(candidate: dict) -> bool:
+    """Return whether a candidate needs a focused, label-blind semantic check.
+
+    The three historically high-risk labels are always checked.  Pallets are
+    checked only when a sizeable, nearly solid, box-like mask could be cargo
+    or a container rather than the load-bearing pallet underneath it.  The
+    focused check remains candidate-only and never mutates the mask.
+    """
+    label = str(candidate.get("label", ""))
+    if label in HIGH_RISK_LABELS:
+        return True
+    if label.casefold() != "pallet":
+        return False
+    try:
+        parts = _parts(candidate)
+    except (TypeError, ValueError):
+        return True
+    points = [point for part in parts for point in part["points"]]
+    if not points:
+        return True
+    left, top = (min(point[index] for point in points) for index in (0, 1))
+    right, bottom = (max(point[index] for point in points) for index in (0, 1))
+    width, height = right - left + 1, bottom - top + 1
+    bbox_area = width * height
+    if width < 120 or height < 80 or bbox_area < 5000:
+        return False
+    foreground_area = sum(
+        _polygon_area(part["points"])
+        - sum(_polygon_area(hole) for hole in part["holes"])
+        for part in parts)
+    fill_ratio = foreground_area / max(bbox_area, 1)
+    width_height_ratio = width / max(height, 1)
+    # Cargo/container masks are often not perfect rectangles: handles, straps
+    # and foreground occlusion brought the observed false pallet down to 0.848.
+    # Keep the gate below that case while the size/aspect guards exclude the
+    # thin slatted pallets that should stay on the fast path.
+    return fill_ratio >= 0.82 and width_height_ratio <= 2.10
+
+
 def audit_high_risk_candidates(config, image_bytes, candidates, labels, class_definitions,
                                chat, *, check_cancelled=lambda: None,
                                tolerate_errors=False, candidate_ids=None,
@@ -61,7 +107,7 @@ def audit_high_risk_candidates(config, image_bytes, candidates, labels, class_de
     artifact_sha = _sha256(_canonical_bytes(candidates))
     audits, queue = [], []
     targets = [candidate for candidate in candidates
-               if candidate.get("label") in HIGH_RISK_LABELS
+               if candidate_requires_class_audit(candidate)
                and (candidate_ids is None or candidate.get("id") in candidate_ids)]
     def run_sequential(candidate, position):
         check_cancelled()
@@ -213,6 +259,9 @@ def build_blind_candidate_class_prompt(candidate_id, labels, class_definitions):
         " For person, require visible human anatomy inside the cyan mask; a driver/operator is still person."
         " For ego, require visible host robot body/chassis/forks inside the mask; viewpoint alone never proves ego."
         " For other_robot, require a distinct robot or mobile platform inside the mask, separate from ego and people."
+        " For pallet, require visible load-bearing pallet slats, deck, feet, or fork-entry structure inside the cyan mask;"
+        " a box, container, or stacked cargo is not pallet merely because a pallet is nearby or underneath it."
+        " If the cyan mask mainly covers cargo instead of the pallet structure, use uncertain or conflict."
         " A mask mixing a person with vehicle/robot structure is uncertain."
     )
     return (

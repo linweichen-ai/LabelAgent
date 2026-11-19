@@ -2191,3 +2191,13 @@ Round248的新数据图包含5个人物候选，旧逻辑因数量不等于3而�
 第一次同图验收发现批处理没有复用单请求缓存，热图仍耗时28.66秒。主VLM端点随后增加逐请求精确缓存：全部命中直接返回，部分命中只生成缺失项，等待模型槽后再检查一次，批处理生成结果也逐项回填单请求缓存。4090服务源码哈希为`2EEA52D7...D6880`，回滚点为`/home/clw/labelagent_remote_20261110/backups/batch-cache-round250-20261119-150131`。
 
 同一真实图全新缓存首跑70.73秒，较Round243旧冷基线85.48秒缩短14.74秒（17.25%）；紧接重复运行7.84秒，7 hit/0 miss。冷/热均为17个候选（1 floor、11 pallet、5 person），几何哈希同为`4d9d9f...436fa6`，5项盲审路由一致，busy rejection为0，地面大矩形继续被拦截。ego可见但无候选仍是待处理问题。Python1011/1011、186子测试、网页145/145通过；详细报告见`docs/CANDIDATE_AUDIT_BATCH_CACHE_ROUNDS249_250_20261119.md`，结构化证据见`docs/evidence/workbench-stability-20261117/candidate-audit-batch-cache-rounds249-250.json`。实现提交`a651d16`与`6fc2866`，真实图像只保留本地。
+
+### Round 251–252：栈板跨数据审计、明确否定生效与箱体候选复核
+
+新增可复现的栈板几何审计工具，并对 Capture_20261103 与 CVAT Task3 各分层抽样160项。Capture样本无需调整且三类违规均为0；CVAT样本145项被受限修整，小孔总数133降到18，最大变化2.1998%，结构孔最低保留88.716%，连通组件、结构保留和变化预算违规均为0。典型第120帧从11个短孔降到4条结构缝，原图/前/后图只保存在本机。
+
+修复 Agent 明确写出“not a pallet / 不是 pallet”却被协议丢弃的问题。第120帧真实1轮任务`4adb1c...a5fe`将12项降至11项，3轮任务`77003b...56cf`逐轮移除3个明确纸箱并降至9项；人工真值和训练批准均未写入。另为足够大、近实心、箱体形的pallet候选增加隐藏当前类别的VLM复核；第132帧门禁选中1项，但VLM仍判断看到塑料栈板结构，因此按安全策略保留，纸箱/下层栈板粘连仍是未解决问题。
+
+部署期间D盘临时空间曾低于256MiB，管理器现会自动改用`%LOCALAPPDATA%\LabelAgent\runtime-temp\workbench-8765`，同时保留原硬性空间门禁。旧日志和不活动工作树经过哈希校验后迁移，模型、数据、人工真值和Mask2Former恢复包未删除。最终观测C约2.20GiB、D约1.33GiB。工作台、主VLM、5090 SAM通道正常，5090可选VLM仍未启用。
+
+Python1018/1018、网页145/145通过。回滚点为`pallet-semantic-negative-round251-20261119-154109`和`pallet-semantic-audit-round252-20261119-160829`。详细报告见`docs/PALLET_CROSS_DATASET_AND_SEMANTIC_GUARD_ROUNDS251_252_20261119.md`，结构化证据见`docs/evidence/workbench-stability-20261117/pallet-geometry-semantic-rounds251-252.json`；工厂图像未上传远端。

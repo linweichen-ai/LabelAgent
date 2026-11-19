@@ -56,6 +56,26 @@ def storage_free_bytes(path):
     return shutil.disk_usage(target).free
 
 
+def select_workbench_runtime_temp(environment, default_runtime_temp):
+    """Choose a writable temp volume without weakening the 256 MiB gate."""
+    override = environment.get("LABELAGENT_RUNTIME_TEMP_ROOT")
+    if override:
+        return Path(override).resolve() / f"workbench-{WEB_PORT}"
+    default_runtime_temp = Path(default_runtime_temp).resolve()
+    if storage_free_bytes(default_runtime_temp) >= STORAGE_CRITICAL_BYTES:
+        return default_runtime_temp
+    local_app_data = environment.get("LOCALAPPDATA")
+    fallback_root = (Path(local_app_data) if local_app_data
+                     else Path.home() / "AppData" / "Local")
+    fallback = (fallback_root / "LabelAgent" / "runtime-temp"
+                / f"workbench-{WEB_PORT}").resolve()
+    if storage_free_bytes(fallback) >= STORAGE_CRITICAL_BYTES:
+        return fallback
+    # Preserve the existing fail-closed error and its exact default path when
+    # neither volume has enough space.
+    return default_runtime_temp
+
+
 def prepare_runtime_environment(environment, runtime_temp):
     """Keep workbench temporary writes off a low-headroom system volume."""
     prepared = environment.copy()
@@ -467,8 +487,10 @@ def start(open_browser):
 
         if "workbench" not in items:
             command = [str(PYTHON), "-u", "-m", "source.agent.server"]
-            workbench_environment, storage = prepare_runtime_environment(
+            runtime_temp = select_workbench_runtime_temp(
                 environment, LOCAL / "runtime-temp" / f"workbench-{WEB_PORT}")
+            workbench_environment, storage = prepare_runtime_environment(
+                environment, runtime_temp)
             print_storage_advisory(storage)
             with (LOCAL / "logs" / "remote_workbench.log").open("ab") as output:
                 process = subprocess.Popen(

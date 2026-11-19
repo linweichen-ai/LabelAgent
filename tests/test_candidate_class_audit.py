@@ -70,6 +70,17 @@ class CandidateClassAuditTests(unittest.TestCase):
         self.assertEqual(queue, [])
         self.assertEqual(progress, [(1, 1, 7, "candidate_preserved")])
 
+    def test_solid_box_like_pallet_routes_focused_audit_without_auditing_normal_pallet(self):
+        suspicious = {"id": 20, "label": "pallet",
+                      "points": [[0, 0], [149, 0], [149, 99], [0, 99]]}
+        normal = {"id": 21, "label": "pallet",
+                  "points": [[0, 0], [239, 0], [239, 59], [0, 59]]}
+        self.assertTrue(audit.candidate_requires_class_audit(suspicious))
+        self.assertFalse(audit.candidate_requires_class_audit(normal))
+        prompt = audit.build_blind_candidate_class_prompt(
+            suspicious["id"], self.labels + ["pallet"], {})
+        self.assertIn("box, container, or stacked cargo is not pallet", prompt)
+
     def test_three_clear_candidates_use_independent_batch(self):
         candidates = [{**self.candidate, "id": value} for value in (7, 8, 9)]
         sequential_calls = []

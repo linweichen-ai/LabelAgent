@@ -1142,6 +1142,17 @@ class WorkflowTests(unittest.TestCase):
             ["remove_without_negative_evidence_dropped",
              "empty_continue_normalized_to_done"])
 
+    def test_remove_with_explicit_source_class_negative_is_retained(self):
+        decision = workflow._validate_review_result({
+            "status": "continue",
+            "reason": "Reject the false pallet candidate",
+            "operations": [{"operation": "remove", "shape_ids": [1],
+                            "reason": "Candidate is not a pallet; it is a cardboard box."}],
+        }, [], [shape(label="pallet")], ["pallet"], 40, 40)
+        self.assertEqual(len(decision["operations"]), 1)
+        self.assertEqual(decision["operations"][0]["operation"], "remove")
+        self.assertNotIn("protocol_normalizations", decision)
+
     def test_review_retries_unknown_operation_and_missing_tool_fields(self):
         operation = {"operation": "add_region", "shape_ids": [1],
                      "polygon": [[16, 2], [25, 2], [25, 18], [16, 18]], "reason": "repair floor"}

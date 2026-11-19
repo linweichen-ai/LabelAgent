@@ -74,6 +74,24 @@ class RemoteWorkbenchManagerTests(unittest.TestCase):
                 MODULE.prepare_runtime_environment(
                     {"TEMP": temporary}, Path(temporary) / "runtime-temp")
 
+    def test_workbench_temp_falls_back_to_local_app_data_when_default_is_full(self):
+        environment = {"LOCALAPPDATA": "C:/Users/test/AppData/Local"}
+        with mock.patch.object(MODULE, "storage_free_bytes",
+                               side_effect=[128 * 1024 ** 2, 3 * 1024 ** 3]):
+            selected = MODULE.select_workbench_runtime_temp(
+                environment, "D:/LabelAgent/runtime-temp/workbench-8765")
+        self.assertEqual(
+            selected,
+            (Path(environment["LOCALAPPDATA"]) / "LabelAgent" / "runtime-temp"
+             / "workbench-8765").resolve())
+
+    def test_workbench_temp_override_is_explicit_and_port_scoped(self):
+        selected = MODULE.select_workbench_runtime_temp(
+            {"LABELAGENT_RUNTIME_TEMP_ROOT": "C:/LabelAgentTemp"},
+            "D:/LabelAgent/runtime-temp/workbench-8765")
+        self.assertEqual(selected,
+                         (Path("C:/LabelAgentTemp") / "workbench-8765").resolve())
+
     def test_low_space_advisory_reports_redirect_without_blocking(self):
         report = {
             "system_volume": "C:\\",

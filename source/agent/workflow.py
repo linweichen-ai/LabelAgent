@@ -1688,7 +1688,23 @@ def _validate_review_result(result, holes, shapes, labels, width, height, sam_co
                 "misclassified", "duplicate", "background artifact",
                 "误检", "不存在", "不可见", "类别错误", "重复",
             )
-            if not any(marker in reason for marker in negative_evidence):
+            source_labels = {
+                str(shapes_by_id[shape_id].get("label", "")).casefold().strip()
+                for shape_id in ids if shape_id in shapes_by_id
+            }
+            source_label_negative = any(
+                label and (
+                    re.search(
+                        rf"(?:^|\b)not\s+(?:(?:a|an|the)\s+)?{re.escape(label)}(?:\b|$)",
+                        reason,
+                    ) is not None
+                    or f"不是{label}" in reason
+                    or f"并非{label}" in reason
+                )
+                for label in source_labels
+            )
+            if (not source_label_negative
+                    and not any(marker in reason for marker in negative_evidence)):
                 result.setdefault("protocol_normalizations", []).append({
                     "reason_code": "remove_without_negative_evidence_dropped",
                     "shape_ids": copy.deepcopy(ids),

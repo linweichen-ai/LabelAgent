@@ -36,7 +36,8 @@ from .workflow import (DESCRIPTION_INPUT_VERSION, MAX_REVIEW_ROUNDS, RunCancelle
                        slope_overlap_crop_images,
                        VISIBLE_LABEL_DEFINITIONS)
 from .candidate_class_audit import (audit_candidate_class_blind, candidate_fingerprint,
-                                    audit_high_risk_candidates, HIGH_RISK_LABELS,
+                                    audit_high_risk_candidates,
+                                    candidate_requires_class_audit,
                                     validate_blind_candidate_class_decision)
 
 from . import candidate_class_audit as _candidate_audit_module
@@ -1814,7 +1815,7 @@ def reusable_candidate_class_audit(run, review_status, candidates, labels,
             or not isinstance(review_status, dict)):
         return False
     targets = [candidate for candidate in candidates
-               if candidate.get("label") in HIGH_RISK_LABELS]
+               if candidate_requires_class_audit(candidate)]
     audits = run.get("candidate_class_audits")
     if not isinstance(audits, list) or len(audits) != len(targets):
         return False
@@ -4350,12 +4351,12 @@ def refine_reference_candidates():
         }
         replacement_run["candidate_artifact_sha256"] = refined_sha
         replacement_run["candidate_class_audit_status"] = (
-            "pending" if any(item.get("label") in HIGH_RISK_LABELS for item in refined)
+            "pending" if any(candidate_requires_class_audit(item) for item in refined)
             else "complete")
         replacement_run["candidate_class_audit_deferred"] = (
             replacement_run["candidate_class_audit_status"] == "pending")
         replacement_run["candidate_class_audit_total"] = sum(
-            item.get("label") in HIGH_RISK_LABELS for item in refined)
+            candidate_requires_class_audit(item) for item in refined)
         replacement_run["candidate_class_audits"] = []
         replacement_run["human_review_required"] = True
         replacement_run["inspection_trace"] = copy.deepcopy(trace)
@@ -4484,7 +4485,8 @@ def audit_reference_candidates():
         input_sha = hashlib.sha256(image_bytes).hexdigest()
         if expected_frame is not None and expected_frame != input_sha:
             raise StaleHumanReviewError("帧图像已变化，请重新读取后复审")
-        ids = [item.get("id") for item in candidates if item.get("label") in HIGH_RISK_LABELS]
+        ids = [item.get("id") for item in candidates
+               if candidate_requires_class_audit(item)]
         if len(ids) != len(set(ids)):
             raise ValueError("高风险候选 ID 重复，拒绝复审")
         audit_version = candidate_class_audit_version()
@@ -5056,7 +5058,7 @@ def generate_reference_draft():
         bind_merged_candidate_references(result, merged_id_map)
         candidate_artifact_sha256 = _sha256_json(combined)
         visibility_review_queue = reference_visibility_review_queue(discovery, combined)
-        audit_total = sum(candidate.get("label") in HIGH_RISK_LABELS
+        audit_total = sum(candidate_requires_class_audit(candidate)
                           for candidate in combined)
         class_audits, class_review_queue = [], []
         if audit_total and not defer_class_audit and not defer_agent_review:

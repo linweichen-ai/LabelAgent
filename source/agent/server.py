@@ -55,6 +55,8 @@ app = Flask(__name__, static_folder=str(WEB), static_url_path="")
 app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024 * 1024
 state = {"video": None, "topic": None, "labels": [], "truth": {}, "reference_frames": {}, "config": {}, "candidates": {}, "candidates_by_topic": {}, "agent_runs": {}, "agent_runs_by_topic": {}, "candidate_revisions": {}, "candidate_revisions_by_topic": {}, "candidate_review_status": {}, "candidate_review_proposals": [], "human_review_transactions": {}, "rejected_candidates": {}}
 lock = threading.RLock()
+file_activation_intent_lock = threading.RLock()
+file_activation_generation = 0
 run_status_lock = threading.Lock()
 run_summary_lock = threading.Lock()
 run_claim_lock = threading.Lock()
@@ -78,6 +80,30 @@ REVIEW_PACKET_ACCEPT_DECISIONS = {
     "no_slope_present",
     "uncertain",
 }
+
+
+def claim_file_activation():
+    """Give one incoming file-selection request an authoritative order.
+
+    This lock is deliberately independent from the main state lock.  A newer
+    browser tab can therefore supersede an older request while the older file
+    is still opening or decoding its compatibility frame.
+    """
+    global file_activation_generation
+    with file_activation_intent_lock:
+        file_activation_generation += 1
+        return file_activation_generation
+
+
+def current_file_activation_generation():
+    with file_activation_intent_lock:
+        return file_activation_generation
+
+
+def assert_current_file_activation(generation):
+    if generation != file_activation_generation:
+        raise StaleHumanReviewError(
+            "已有更新的文件选择，本次过期加载未应用；请以最后一次选择为准")
 
 
 def _normalize_refinement_id(value):
@@ -1508,6 +1534,7 @@ def compact_topic_payload(index, description):
     payload = selected_frame_payload(index)
     payload.update({
         "compact_geometry": True,
+        "file_activation_generation": current_file_activation_generation(),
         "path": str(state["video"].path),
         "topic": state["topic"],
         "frame": index,
@@ -1664,6 +1691,7 @@ def get_state_summary():
         }
         return jsonify(
             schema_version="labelagent.state-summary.v1",
+            file_activation_generation=current_file_activation_generation(),
             loaded=state.get("video") is not None,
             path=str(state["video"].path) if state.get("video") else "",
             topic=state.get("topic"),
@@ -1838,6 +1866,7 @@ def _get_bootstrap_locked():
         if reference_index is not None else [])
     return {
         "schema_version": "labelagent.workbench-bootstrap.v1",
+        "file_activation_generation": current_file_activation_generation(),
         "compact_geometry": True,
         "loaded": video is not None,
         "path": str(video.path) if video is not None else "",
@@ -1884,6 +1913,7 @@ def _get_state_locked():
                              if reference_index is not None else [])
     truth_review_status = current_truth_review_status()
     return jsonify(loaded=state["video"] is not None,
+        file_activation_generation=current_file_activation_generation(),
         path=str(state["video"].path) if state["video"] else "",
         catalog=state["video"].catalog if state["video"] else {}, duration=state["video"].duration if state["video"] else 0,
         topics=state["video"].topics if state["video"] else {}, topic=state["topic"],
@@ -2449,7 +2479,7 @@ def _activate_review_packet_topic(topic):
     save()
 
 
-def activate_file(item):
+def activate_file(item, activation_generation=None):
     global file_sessions_dirty
     started = time.perf_counter()
     video = Video(item['path'])
@@ -2468,39 +2498,48 @@ def activate_file(item):
     except Exception as error:
         raise ValueError(f'文件首帧兼容检查失败，当前数据保持不变：{str(error)[:300]}')
     probe_finished = time.perf_counter()
-    # Preserve each file's annotations and candidates when switching records.
-    sessions = state.setdefault('file_sessions', {})
-    fields = ('topic', 'truth', 'truths_by_topic', 'reference_frames', 'candidates', 'candidates_by_topic', 'agent_runs', 'agent_runs_by_topic', 'candidate_revisions', 'candidate_revisions_by_topic')
-    if state['video']:
-        sessions[str(state['video'].path.resolve())] = {key: state.get(key) for key in fields}
-        file_sessions_dirty = True
-    previous = sessions.pop(item['path'], {})
-    if previous:
-        file_sessions_dirty = True
-    state.update(video=video, video_path=str(video.path), topic=next(iter(video.topics), None),
-                 truth={}, truths_by_topic={}, reference_frames={}, candidates={}, candidates_by_topic={}, agent_runs={}, agent_runs_by_topic={}, candidate_revisions={}, candidate_revisions_by_topic={})
-    state.update(previous)
-    if state['topic'] not in video.topics:
-        state['topic'] = next(iter(video.topics), None)
-    session_swapped = time.perf_counter()
-    save_timings = save()
-    state_saved = time.perf_counter()
-    payload = _get_bootstrap_locked()
-    payload["data_compatibility"] = {
-        **compatibility, "ready": True, "code": "ready",
-        "topic": probe_topic,
-        "elapsed_ms": round((probe_finished - probe_started) * 1000, 3),
-        "scope": "selected_topic_first_frame",
-    }
-    payload["load_timings_ms"] = {
-        "media_open": round((media_opened - started) * 1000, 3),
-        "data_probe": round((probe_finished - probe_started) * 1000, 3),
-        "session_swap": round((session_swapped - probe_finished) * 1000, 3),
-        "state_save": round((state_saved - session_swapped) * 1000, 3),
-        **save_timings,
-        "bootstrap": round((time.perf_counter() - state_saved) * 1000, 3),
-    }
-    return payload
+    guarded = activation_generation is not None
+    if guarded:
+        file_activation_intent_lock.acquire()
+    try:
+        if guarded:
+            assert_current_file_activation(activation_generation)
+        # Preserve each file's annotations and candidates when switching records.
+        sessions = state.setdefault('file_sessions', {})
+        fields = ('topic', 'truth', 'truths_by_topic', 'reference_frames', 'candidates', 'candidates_by_topic', 'agent_runs', 'agent_runs_by_topic', 'candidate_revisions', 'candidate_revisions_by_topic')
+        if state['video']:
+            sessions[str(state['video'].path.resolve())] = {key: state.get(key) for key in fields}
+            file_sessions_dirty = True
+        previous = sessions.pop(item['path'], {})
+        if previous:
+            file_sessions_dirty = True
+        state.update(video=video, video_path=str(video.path), topic=next(iter(video.topics), None),
+                     truth={}, truths_by_topic={}, reference_frames={}, candidates={}, candidates_by_topic={}, agent_runs={}, agent_runs_by_topic={}, candidate_revisions={}, candidate_revisions_by_topic={})
+        state.update(previous)
+        if state['topic'] not in video.topics:
+            state['topic'] = next(iter(video.topics), None)
+        session_swapped = time.perf_counter()
+        save_timings = save()
+        state_saved = time.perf_counter()
+        payload = _get_bootstrap_locked()
+        payload["data_compatibility"] = {
+            **compatibility, "ready": True, "code": "ready",
+            "topic": probe_topic,
+            "elapsed_ms": round((probe_finished - probe_started) * 1000, 3),
+            "scope": "selected_topic_first_frame",
+        }
+        payload["load_timings_ms"] = {
+            "media_open": round((media_opened - started) * 1000, 3),
+            "data_probe": round((probe_finished - probe_started) * 1000, 3),
+            "session_swap": round((session_swapped - probe_finished) * 1000, 3),
+            "state_save": round((state_saved - session_swapped) * 1000, 3),
+            **save_timings,
+            "bootstrap": round((time.perf_counter() - state_saved) * 1000, 3),
+        }
+        return payload
+    finally:
+        if guarded:
+            file_activation_intent_lock.release()
 
 
 @app.get('/api/review_packets')
@@ -2535,6 +2574,7 @@ def get_review_packet(packet_id):
 @app.post('/api/review_packets/<packet_id>/activate')
 def activate_review_packet(packet_id):
     """Activate exactly the packet-bound MCAP/topic after a content hash check."""
+    activation_generation = claim_file_activation()
     with lock:
         with run_status_lock:
             if run_status.get("status") in {"running", "stopping"}:
@@ -2546,8 +2586,10 @@ def activate_review_packet(packet_id):
             raise ValueError("专项复核包绑定的 MCAP 内容哈希不一致")
         current = (str(state["video"].path.resolve()) if state.get("video") else "")
         if current != packet["mcap_path"]:
-            payload = activate_file(register_file(packet["mcap_path"]))
+            payload = activate_file(register_file(packet["mcap_path"]), activation_generation)
         else:
+            with file_activation_intent_lock:
+                assert_current_file_activation(activation_generation)
             payload = _get_bootstrap_locked()
         _activate_review_packet_topic(packet["topic"])
         payload = _get_bootstrap_locked()
@@ -2769,11 +2811,12 @@ def add_file():
 
 @app.post('/api/files/<file_id>/load')
 def load_file(file_id):
+    activation_generation = claim_file_activation()
     with lock:
         item = next((item for item in read_library() if item['id'] == file_id), None)
         if item is None:
             raise ValueError('文件不在列表中')
-        return jsonify(**activate_file(item))
+        return jsonify(**activate_file(item, activation_generation))
 
 
 @app.post('/api/candidates/import')
@@ -2979,8 +3022,10 @@ def remove_file(file_id):
 
 @app.post("/api/open")
 def open_video():
+    activation_generation = claim_file_activation()
     with lock:
-        return jsonify(**activate_file(register_file(request.get_json()['path'])))
+        return jsonify(**activate_file(
+            register_file(request.get_json()['path']), activation_generation))
 
 
 MAX_BATCH_UPLOADS = 100
@@ -3045,6 +3090,11 @@ def set_topic():
                 and body.get("path") != str(state["video"].path)):
             raise StaleHumanReviewError(
                 "数据文件已在另一个窗口切换，旧相机请求已拒绝")
+        if (body.get("compact") is True
+                and body.get("file_activation_generation")
+                != current_file_activation_generation()):
+            raise StaleHumanReviewError(
+                "数据文件已被重新载入，旧窗口相机请求已拒绝")
         if body["topic"] not in state["video"].topics:
             raise ValueError("话题不存在")
         if body["topic"] != state["topic"]:

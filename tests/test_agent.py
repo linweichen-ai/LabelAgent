@@ -4094,7 +4094,8 @@ class ServerTests(unittest.TestCase):
                 full = client.post("/api/topic", json={"topic": "camera0"})
                 compact = client.post("/api/topic", json={
                     "topic": "camera0", "frame": 0, "compact": True,
-                    "path": str(FakeVideo.path)})
+                    "path": str(FakeVideo.path),
+                    "file_activation_generation": server.current_file_activation_generation()})
                 self.assertEqual(compact.status_code, 200, compact.json)
                 self.assertTrue(compact.json["compact_geometry"])
                 self.assertEqual(compact.json["frame"], 0)
@@ -4110,7 +4111,8 @@ class ServerTests(unittest.TestCase):
                 stale_topic = server.state["topic"]
                 stale = client.post("/api/topic", json={
                     "topic": "camera1", "frame": 0, "compact": True,
-                    "path": "/stale/other-file.mcap"})
+                    "path": "/stale/other-file.mcap",
+                    "file_activation_generation": server.current_file_activation_generation()})
                 self.assertEqual(stale.status_code, 409, stale.json)
                 self.assertIn("另一个窗口切换", stale.json["error"])
                 self.assertEqual(server.state["topic"], stale_topic)
@@ -4989,6 +4991,90 @@ class ServerTests(unittest.TestCase):
             finally:
                 server.state, server.WORK = old_state, old_work
                 server.file_sessions_dirty = old_dirty
+
+    def test_newer_file_activation_supersedes_older_probe_before_state_mutation(self):
+        old_state, old_work, old_dirty = server.state, server.WORK, server.file_sessions_dirty
+        with server.file_activation_intent_lock:
+            old_generation = server.file_activation_generation
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            current = FakeVideo()
+            current.path = Path(directory) / "current.mcap"
+            first_video, second_video = FakeVideo(), FakeVideo()
+            first_video.path = Path(directory) / "first.mcap"
+            second_video.path = Path(directory) / "second.mcap"
+            entered, release, second_claimed = (threading.Event() for _ in range(3))
+            original_first_frame = first_video.frame
+
+            def delayed_first_frame(topic, index):
+                entered.set()
+                self.assertTrue(release.wait(2), "newer activation did not arrive")
+                return original_first_frame(topic, index)
+
+            first_video.frame = delayed_first_frame
+            server.state = {
+                "video": current, "video_path": str(current.path), "topic": "camera0",
+                "labels": ["a"], "truth": {"0": [shape()]}, "truths_by_topic": {},
+                "reference_frames": {"camera0": [0]}, "config": {}, "candidates": {},
+                "candidates_by_topic": {}, "agent_runs": {}, "agent_runs_by_topic": {},
+                "candidate_revisions": {}, "candidate_revisions_by_topic": {},
+                "file_sessions": {},
+            }
+            files = [
+                {"id": "first", "path": str(first_video.path), "name": "first.mcap", "size": 1},
+                {"id": "second", "path": str(second_video.path), "name": "second.mcap", "size": 1},
+            ]
+            server.write_library(files)
+            responses = {}
+            original_claim = server.claim_file_activation
+            claims = []
+
+            def tracked_claim():
+                generation = original_claim()
+                claims.append(generation)
+                if len(claims) == 2:
+                    second_claimed.set()
+                return generation
+
+            def open_video(path):
+                return first_video if Path(path) == first_video.path else second_video
+
+            def activate(name):
+                response = server.app.test_client().post(f"/api/files/{name}/load", json={})
+                responses[name] = (response.status_code, response.json)
+
+            try:
+                with patch.object(server, "Video", side_effect=open_video), \
+                        patch.object(server, "claim_file_activation", side_effect=tracked_claim):
+                    first = threading.Thread(target=activate, args=("first",))
+                    second = threading.Thread(target=activate, args=("second",))
+                    first.start()
+                    self.assertTrue(entered.wait(2), "older activation did not reach probe")
+                    second.start()
+                    self.assertTrue(second_claimed.wait(2), "newer activation was not registered")
+                    release.set()
+                    first.join(2)
+                    second.join(2)
+                    self.assertFalse(first.is_alive())
+                    self.assertFalse(second.is_alive())
+
+                self.assertEqual(responses["first"][0], 409, responses["first"])
+                self.assertTrue(responses["first"][1]["stale_review"])
+                self.assertIn("最后一次选择", responses["first"][1]["error"])
+                self.assertEqual(responses["second"][0], 200, responses["second"])
+                self.assertIs(server.state["video"], second_video)
+                self.assertEqual(server.state["topic"], "camera0")
+                self.assertEqual(
+                    responses["second"][1]["file_activation_generation"], claims[1])
+                summary = server.app.test_client().get("/api/state/summary").json
+                self.assertEqual(summary["file_activation_generation"], claims[1])
+                self.assertEqual(summary["path"], str(second_video.path))
+            finally:
+                release.set()
+                server.state, server.WORK = old_state, old_work
+                server.file_sessions_dirty = old_dirty
+                with server.file_activation_intent_lock:
+                    server.file_activation_generation = old_generation
 
 
 if __name__ == "__main__":

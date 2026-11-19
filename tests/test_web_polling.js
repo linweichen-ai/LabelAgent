@@ -130,7 +130,7 @@ test('新数据集先原子替换逐类状态并直接打开当前图像相机',
   assert.match(app, /pendingDatasetLoad=\{path:file\.path,name:file\.name\};updateDatasetIdentity\(\)/);
   assert.match(app, /finally\{pendingDatasetLoad=null;updateDatasetIdentity\(\)/);
   assert.match(app, /正在读取媒体索引并检查首帧；完成前保留当前工作区/);
-  assert.match(app, /compact:true,path:loadedDataPath/);
+  assert.match(app, /compact:true,path:loadedDataPath,file_activation_generation:loadedFileActivationGeneration/);
   assert.match(app, /async function loadVerifiedVideoData\(data\)/);
   assert.match(app, /window\.loadVideoData=loadVerifiedVideoData/);
   assert.match(app, /const before=await readCurrentDataScope\(\)/);
@@ -143,10 +143,11 @@ test('新数据集先原子替换逐类状态并直接打开当前图像相机',
 test('过期文件加载回执必须与服务器当前文件和相机同时一致', () => {
   const h = harness();
   h.run(section(source('app.js'), 'function sameLoadedDataScope', 'async function loadVerifiedVideoData'));
-  assert.equal(h.run(`sameLoadedDataScope({path:'/a',topic:'c0'},{loaded:true,path:'/a',topic:'c0'})`), true);
-  assert.equal(h.run(`sameLoadedDataScope({path:'/a',topic:'c0'},{loaded:true,path:'/b',topic:'c0'})`), false);
-  assert.equal(h.run(`sameLoadedDataScope({path:'/a',topic:'c0'},{loaded:true,path:'/a',topic:'c1'})`), false);
-  assert.equal(h.run(`sameLoadedDataScope({path:'/a',topic:'c0'},{loaded:false,path:'/a',topic:'c0'})`), false);
+  assert.equal(h.run(`sameLoadedDataScope({path:'/a',topic:'c0',file_activation_generation:7},{loaded:true,path:'/a',topic:'c0',file_activation_generation:7})`), true);
+  assert.equal(h.run(`sameLoadedDataScope({path:'/a',topic:'c0',file_activation_generation:6},{loaded:true,path:'/a',topic:'c0',file_activation_generation:7})`), false);
+  assert.equal(h.run(`sameLoadedDataScope({path:'/a',topic:'c0',file_activation_generation:7},{loaded:true,path:'/b',topic:'c0',file_activation_generation:7})`), false);
+  assert.equal(h.run(`sameLoadedDataScope({path:'/a',topic:'c0',file_activation_generation:7},{loaded:true,path:'/a',topic:'c1',file_activation_generation:7})`), false);
+  assert.equal(h.run(`sameLoadedDataScope({path:'/a',topic:'c0',file_activation_generation:7},{loaded:false,path:'/a',topic:'c0',file_activation_generation:7})`), false);
 });
 
 test('逐类别覆盖区分可见漏分、明确未见和没有可追溯证据', () => {
@@ -1245,7 +1246,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=185/);
+  assert.match(source('index.html'), /app\.js\?v=186/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1306,7 +1307,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{\s*invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=185/);
+  assert.match(source('index.html'), /app\.js\?v=186/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1354,7 +1355,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 3);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=185/);
+  assert.match(source('index.html'), /app\.js\?v=186/);
 });
 
 test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () => {

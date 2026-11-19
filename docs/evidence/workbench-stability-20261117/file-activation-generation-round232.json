@@ -1,0 +1,80 @@
+{
+  "round": 232,
+  "date": "2026-11-19",
+  "status": "deployed_and_verified",
+  "objective": "Guarantee that the last arriving valid file activation is the only request allowed to mutate server and browser scope",
+  "versions": {"ui": 148, "app_js": 186},
+  "implementation": {
+    "server_generation_claim": true,
+    "claim_lock_independent_from_state_lock": true,
+    "pre_commit_generation_guard": true,
+    "browser_scope_fields": ["path", "topic", "file_activation_generation"],
+    "compact_topic_generation_guard": true,
+    "covered_entrypoints": [
+      "/api/files/<file_id>/load",
+      "/api/review_packets/<packet_id>/activate",
+      "/api/open"
+    ]
+  },
+  "deterministic_concurrency_test": {
+    "older_probe_paused": true,
+    "newer_intent_registered_before_release": true,
+    "older_status": 409,
+    "newer_status": 200,
+    "final_file_is_newer": true,
+    "summary_generation_is_newer": true,
+    "older_state_commit": false
+  },
+  "production_browser_probe": {
+    "same_path": true,
+    "same_topic": true,
+    "current_generation": 0,
+    "stale_generation": -1,
+    "stale_loader_applied": false,
+    "stale_compact_topic_status": 409,
+    "scope_unchanged": true,
+    "summary_unchanged": true,
+    "primary_window_visible": true,
+    "page_errors": 0
+  },
+  "tests": {
+    "web": {"passed": 131, "total": 131},
+    "python": {"passed": 983, "total": 983},
+    "targeted": {"passed": 2, "total": 2},
+    "syntax": "passed",
+    "diff_check": "passed"
+  },
+  "backup": {
+    "path": "D:\\Apps\\LabelAgent\\.local\\backups\\file-activation-generation-round232-20261119-104319",
+    "files": 3,
+    "verified": true
+  },
+  "deployment": {
+    "workbench_pid": 62452,
+    "probes": {
+      "workbench": 200,
+      "run_status": 200,
+      "sam_4090": 200,
+      "sam_5090": 200,
+      "vlm_4090": 200
+    },
+    "run_status": "idle",
+    "worktree_matches_production": true,
+    "state_sha256_before_after": "1DCD67A8475A8DD1974C9A9B3D4BF68A56E1ABD30CF2A9559C12E849E3D86F96",
+    "file_sessions_sha256_before_after": "202927E295CABC27B1F9583B6438D3E16C020809EE421BCE1342C3AEBC0367F5",
+    "runtime_drive_free_gib": 1.52,
+    "runtime_drive_warning": true
+  },
+  "safety": {
+    "model_requests": 0,
+    "candidate_writes": 0,
+    "human_truth_writes": 0,
+    "training_approvals": 0,
+    "fine_tuning": false,
+    "post_training": false,
+    "oss_writes": 0,
+    "raw_factory_artifacts_tracked": false
+  },
+  "implementation_commit": null,
+  "remote_readback_commit": null
+}

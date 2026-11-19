@@ -1,0 +1,63 @@
+{
+  "schema_version": "labelagent.round271.evidence.v1",
+  "date": "2026-11-20",
+  "base_commit": "10f1091b25e83a812b97b3b91085b0ce1af201da",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "new_dataset_smoke": {
+    "images": 2,
+    "runs": [
+      {"directory": "003", "elapsed_seconds": 44.884851, "candidate_count": 16, "counts": {"floor": 1, "pallet": 13, "person": 2}, "review_queue_count": 2},
+      {"directory": "004", "elapsed_seconds": 25.477532, "candidate_count": 13, "counts": {"floor": 1, "pallet": 12}, "review_queue_count": 3}
+    ],
+    "vlm_cache_delta": {"misses": 6, "stores": 6, "busy_rejections": 0, "coalesce_timeouts": 0, "coalesce_reuse_failures": 0},
+    "ego_visible_but_missing_candidate": 2,
+    "summary_sha256": "2ff5c12c67eba6d68e4db073efcce6420fab166b12a029d7b6897486ee36b7c6"
+  },
+  "text_prompt_diagnostic": {
+    "image_count": 2,
+    "color_dependent": false,
+    "prompt_count_per_image": 7,
+    "total_candidate_count": 0,
+    "results_sha256": "e08ffb876946270a8778b8350b008a172a39fcdbe26dcb1f796206bc508e420b"
+  },
+  "vlm_point_diagnostic": {
+    "deployed": false,
+    "finding": "unstable_across_images_and_prompt_variants",
+    "results_sha256": "972f94367e6852635ddaadff95c3219d7cb530bdf9cd0e50560cd6e4072152fc"
+  },
+  "bottom_point_diagnostic_v2": {
+    "assistant_visible_positive_count": 5,
+    "synthetic_negative_count": 4,
+    "matches": 9,
+    "total": 9,
+    "profiles": ["wide_bottom_chassis", "centered_fork_carriage"],
+    "real_negative_control_count": 0,
+    "occluded_side_ego_status": "unresolved_human_review",
+    "results_sha256": "388e1da7b88d079a19bc2fe5a0520e6c8b3908ba84f8cbc1aeab889d5a3f1f07",
+    "contact_sheet_sha256": "15c736615317ae88c4623e6e5f8622128997f2d43ff726938d2f39d4cf583064",
+    "synthetic_negative_contact_sheet_sha256": "c8e706ef8410aa6e9e80002db2ab963bf3360bf9b299ce61435e641cd76b9440"
+  },
+  "test_evidence": {
+    "targeted": {"passed": 6, "failed": 0},
+    "full": {"passed": 1050, "subtests_passed": 186, "failed": 0, "environment": "PYTHONUTF8=1"},
+    "initial_full_run_environment_failure": "WinError 1455 pagefile too small while loading torch CUDA DLL",
+    "recovery": "stopped only local workbench and tunnels after confirming no in-flight run; remote models remained hot; restarted and revalidated"
+  },
+  "live_readback": {
+    "workbench_http": 200,
+    "run_status": "idle",
+    "primary_sam": "ready",
+    "fast_5090_sam": "ready",
+    "primary_vlm": "ready",
+    "optional_5090_vlm": "disabled_or_unavailable"
+  },
+  "storage": {
+    "additional_reversible_log_compression_logical_mib": 58.08,
+    "additional_recovered_mib": 39.02,
+    "c_free_mib_final_observed": 255.91,
+    "risk": "critical_low_headroom"
+  }
+}

@@ -120,4 +120,4 @@
 
 ## 证据与同步
 
-机器证据见 `docs/evidence/workbench-stability-20261117/run-readiness-scope-round226.json`。实现、测试、本文和总交接文档将随同一代码提交同步到 GitHub 与 CNB；推送后再写入两端精确回读的最终提交号。
+机器证据见 `docs/evidence/workbench-stability-20261117/run-readiness-scope-round226.json`。实现、测试、本文和总交接文档提交为 `2d397f49db15ba8adc2a5cb6cac01e7bf12d8caf`；推送后分别从 GitHub 与 CNB 回读同名分支，两端均精确匹配该提交。浏览器脚本、截图、JSON 原始产物和厂内数据保持本地未跟踪，没有上传。

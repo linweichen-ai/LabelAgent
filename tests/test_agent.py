@@ -4101,6 +4101,9 @@ class ServerTests(unittest.TestCase):
                 self.assertEqual(compact.json["candidates"], {})
                 self.assertEqual(compact.json["truth_frames"], ["0", "2"])
                 self.assertEqual(compact.json["candidate_counts"], {"1": 240, "2": 1})
+                self.assertEqual(compact.json["labels"], ["a"])
+                self.assertEqual(compact.json["auto_labels"], ["a"])
+                self.assertEqual(compact.json["reference_only_labels"], [])
                 self.assertLess(len(compact.data), len(full.data) * 0.05)
 
                 lazy = client.get("/api/frame_state/1", query_string={

@@ -1,0 +1,87 @@
+{
+  "schema_version": "labelagent.workbench-stability-evidence.v1",
+  "round": 228,
+  "date": "2026-11-19",
+  "status": "deployed_and_browser_verified",
+  "problem": {
+    "file_load_omitted_label_state_refresh": true,
+    "topic_switch_omitted_auto_and_reference_label_state": true,
+    "risk": "image and per-class coverage controls could temporarily belong to different data scopes"
+  },
+  "fix": {
+    "ui_version": 144,
+    "app_cache_version": 182,
+    "shared_frontend_applier": "applyInferenceLabelState",
+    "file_load_bound": true,
+    "topic_switch_bound": true,
+    "topic_payload_fields": ["labels", "auto_labels", "reference_only_labels"]
+  },
+  "tests": {
+    "javascript_syntax": "passed",
+    "python_compile": "passed",
+    "web": {"passed": 128, "total": 128},
+    "python": {"passed": 982, "total": 982, "required_environment": "PYTHONUTF8=1"},
+    "initial_test_iterations": [
+      {
+        "result": "3 web failures",
+        "cause": "three cache assertions still expected app.js v181",
+        "resolution": "updated assertions to deployed v182 without relaxing behavior gates"
+      },
+      {
+        "result": "13 errors and 2 failures in default-codepage Python run",
+        "cause": "Windows GBK decoded UTF-8 Chinese receipts",
+        "resolution": "reran under the production PYTHONUTF8=1 contract; 982/982 passed"
+      }
+    ]
+  },
+  "browser_acceptance": {
+    "base": "http://127.0.0.1:8765",
+    "dataset": "SFL_CPD15Y batchA 0920 clean review",
+    "topic": "/capture/camera_1/image",
+    "frame": 74,
+    "ui_version": "144",
+    "topic_endpoint_status": 200,
+    "label_count": 8,
+    "selected_label_count": 8,
+    "reference_only_labels": ["pallet", "person", "floor"],
+    "synthetic_scope": {
+      "label_count": 2,
+      "selected_count": 1,
+      "reference_label_classification_correct": true,
+      "unreferenced_label_classification_correct": true
+    },
+    "restored_original_scope": true,
+    "model_requests": 0,
+    "page_errors": 0
+  },
+  "deployment": {
+    "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\class-scope-round228-20261119-092544",
+    "run_status": "idle",
+    "service_checks": {
+      "secure_tunnel": "ok",
+      "sam_4090": "ok",
+      "sam_5090": "ok",
+      "qwen_4090": "ok",
+      "vlm_5090_optional": "unavailable_not_required",
+      "workbench": "ok"
+    },
+    "production_sha256": {
+      "source/agent/server.py": "1294FAC4FDBF87FB684E7EC76EACAF0326B615B3EC7EF06798C12772505D5C1C",
+      "source/web/app.js": "9E308499A06E86F56546B3F3681AC15EBEC7760EE7738E1A93BAD1135BFBAB9D",
+      "source/web/index.html": "EBF383052EA785523AE80DBB209E4DEBCFF7AD43DED4B8BBB7E8ADB2BFBC4465"
+    },
+    "state_sha256": "1DCD67A8475A8DD1974C9A9B3D4BF68A56E1ABD30CF2A9559C12E849E3D86F96",
+    "file_sessions_sha256": "202927E295CABC27B1F9583B6438D3E16C020809EE421BCE1342C3AEBC0367F5"
+  },
+  "safety_boundaries": {
+    "sam_calls": 0,
+    "data_image_vlm_calls": 0,
+    "candidate_writes": 0,
+    "human_truth_writes": 0,
+    "training_approvals": 0,
+    "fine_tuning": false,
+    "post_training": false,
+    "oss_writes": 0,
+    "synthetic_labels_persisted": false
+  }
+}

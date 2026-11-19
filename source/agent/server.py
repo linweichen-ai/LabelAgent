@@ -1497,6 +1497,14 @@ def selected_frame_payload(index):
 
 
 def compact_topic_payload(index, description):
+    references = state.get("reference_frames", {}).get(state["topic"], [])
+    reference_index = references[0] if references else None
+    auto_labels = (selected_auto_labels(reference_index)
+                   if reference_index is not None else list(state.get("labels", [])))
+    reference_only_labels = (
+        reference_labels(state.get("truth", {}).get(str(reference_index), []),
+                         state.get("labels", []))
+        if reference_index is not None else [])
     payload = selected_frame_payload(index)
     payload.update({
         "compact_geometry": True,
@@ -1509,6 +1517,9 @@ def compact_topic_payload(index, description):
             for frame, items in state.get("candidates", {}).items()
         },
         "reference_frames": copy.deepcopy(state.get("reference_frames", {})),
+        "labels": copy.deepcopy(state.get("labels", [])),
+        "auto_labels": auto_labels,
+        "reference_only_labels": reference_only_labels,
         "description": copy.deepcopy(description),
         "description_cache_hit": description is not None,
     })
@@ -3058,6 +3069,13 @@ def set_topic():
                        candidate_revision_summary=candidate_revision_summary(),
                        candidate_review_proposals=state.get("candidate_review_proposals", []),
                        reference_frames=state.get("reference_frames", {}),
+                       labels=state.get("labels", []),
+                       auto_labels=(selected_auto_labels(topic_references[0])
+                                    if topic_references else list(state.get("labels", []))),
+                       reference_only_labels=(
+                           reference_labels(state.get("truth", {}).get(str(topic_references[0]), []),
+                                            state.get("labels", []))
+                           if topic_references else []),
                        description=description,
                        description_cache_hit=description is not None)
 

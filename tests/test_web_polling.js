@@ -105,6 +105,9 @@ test('工作台持续显示新旧数据集身份和逐类别覆盖状态', () =>
   assert.match(app, /CVAT Task3 · 斜坡复核集/);
   assert.match(app, /VLM 看见，SAM 漏分/);
   assert.match(app, /已选类别会进入检查流程/);
+  assert.match(app, /function applyInferenceLabelState\(data\)/);
+  assert.match(app, /applyInferenceLabelState\(data\);const resumeFrame/);
+  assert.match(app, /window\.referenceFrames=data\.reference_frames\|\|\{\};applyInferenceLabelState\(data\)/);
   assert.match(app, /updateDatasetIdentity\(\)/);
 });
 
@@ -1189,7 +1192,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=181/);
+  assert.match(source('index.html'), /app\.js\?v=182/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1250,7 +1253,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=181/);
+  assert.match(source('index.html'), /app\.js\?v=182/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1298,7 +1301,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 3);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=181/);
+  assert.match(source('index.html'), /app\.js\?v=182/);
 });
 
 test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () => {

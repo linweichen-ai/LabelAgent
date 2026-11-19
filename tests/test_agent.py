@@ -247,6 +247,8 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(output[9, 60], 0)
         self.assertEqual(output[10, 90], 1)
         self.assertEqual(refined["score"], candidate["score"])
+        self.assertTrue(audit["smoothing_applied"])
+        self.assertEqual(audit["smoothing_kernel"], 5)
         self.assertLessEqual(audit["change_ratio"], 0.02)
 
     def test_pallet_cleanup_skips_small_distant_instances(self):

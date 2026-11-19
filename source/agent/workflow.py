@@ -2627,7 +2627,8 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
 
     refined = mask.copy()
     background = (mask == 0).astype(np.uint8)
-    count, components, stats, _ = cv2.connectedComponentsWithStats(background, 8)
+    count, components, stats, _ = cv2.connectedComponentsWithStats(
+        background, connectivity=8)
     border_labels = set(np.unique(np.concatenate((
         components[0, :], components[-1, :], components[:, 0], components[:, -1]))).tolist())
     filled_holes = []
@@ -2640,9 +2641,25 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
             refined[components == component] = 1
             filled_holes.append({"area": component_area, "bbox": [x, y, x + w - 1, y + h - 1]})
 
-    before_components = cv2.connectedComponents(mask, 8)[0] - 1
-    smoothed = (cv2.medianBlur((refined * 255).astype(np.uint8), 3) > 127).astype(np.uint8)
-    after_components = cv2.connectedComponents(smoothed, 8)[0] - 1
+    foreground_count, foreground, foreground_stats, _ = cv2.connectedComponentsWithStats(
+        refined, connectivity=8)
+    removed_island_pixels = 0
+    for component in range(1, foreground_count):
+        component_area = int(foreground_stats[component, cv2.CC_STAT_AREA])
+        if component_area < 9:
+            refined[foreground == component] = 0
+            removed_island_pixels += component_area
+    before_components = sum(
+        int(foreground_stats[component, cv2.CC_STAT_AREA]) >= 9
+        for component in range(1, foreground_count))
+    smoothing_kernel = 5 if area >= 5000 else 3
+    smoothed = (cv2.medianBlur(
+        (refined * 255).astype(np.uint8), smoothing_kernel) > 127).astype(np.uint8)
+    smoothed_count, _, smoothed_stats, _ = cv2.connectedComponentsWithStats(
+        smoothed, connectivity=8)
+    after_components = sum(
+        int(smoothed_stats[component, cv2.CC_STAT_AREA]) >= 9
+        for component in range(1, smoothed_count))
     smoothing_pixels = int(np.count_nonzero(smoothed != refined))
     smoothing_applied = (before_components == after_components
                          and smoothing_pixels / max(area, 1) <= maximum_change_ratio)
@@ -2664,7 +2681,9 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         "label": shape["label"],
         "filled_hole_count": len(filled_holes),
         "filled_hole_pixels": sum(item["area"] for item in filled_holes),
+        "removed_island_pixels": removed_island_pixels,
         "smoothing_applied": smoothing_applied,
+        "smoothing_kernel": smoothing_kernel if smoothing_applied else None,
         "smoothing_changed_pixels": smoothing_pixels if smoothing_applied else 0,
         "changed_pixels": changed,
         "change_ratio": round(changed / area, 6),

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from tools.review_pallet_pair_semantics import review_pairs
+from tools.review_pallet_pair_semantics import _validate_decision, review_pairs
 
 
 def rectangle(shape_id, left, top, right, bottom):
@@ -15,6 +15,20 @@ def rectangle(shape_id, left, top, right, bottom):
 
 
 class PalletPairSemanticReviewTest(unittest.TestCase):
+    def test_safe_decision_requires_visible_pallet_and_clear_evidence(self):
+        decision = {
+            "larger_candidate_is_visible_pallet": False,
+            "smaller_candidate_is_visible_pallet_part": True,
+            "visual_evidence_is_clear": True,
+            "same_physical_instance": "yes",
+            "smaller_is_redundant_fragment": True,
+            "safe_to_consolidate": True,
+            "confidence": .99,
+            "reason": "Synthetic invalid combination.",
+        }
+        with self.assertRaisesRegex(ValueError, "unsafe semantic"):
+            _validate_decision(decision)
+
     def test_review_is_read_only_and_cannot_authorize_automatic_merge(self):
         payload = {"0": [
             rectangle("large", 10, 10, 130, 80),
@@ -42,6 +56,9 @@ class PalletPairSemanticReviewTest(unittest.TestCase):
                 self.assertIn("same single physical pallet", prompt)
                 raw["model_route"] = "test"
                 return {
+                    "larger_candidate_is_visible_pallet": True,
+                    "smaller_candidate_is_visible_pallet_part": True,
+                    "visual_evidence_is_clear": True,
                     "same_physical_instance": "yes",
                     "smaller_is_redundant_fragment": True,
                     "safe_to_consolidate": True,
@@ -53,6 +70,8 @@ class PalletPairSemanticReviewTest(unittest.TestCase):
                 candidates, pairs, root / "output", [1], {}, chat=fake_chat)
 
             self.assertEqual(candidates.read_bytes(), before)
+            self.assertEqual(report["visible_pallet_support_count"], 1)
+            self.assertEqual(report["clear_visual_evidence_count"], 1)
             self.assertEqual(report["semantic_safe_count"], 1)
             self.assertFalse(report["automatic_merge_allowed"])
             self.assertFalse(report["human_truth"])

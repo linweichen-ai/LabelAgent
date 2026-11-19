@@ -76,8 +76,11 @@ class CandidateClassAuditTests(unittest.TestCase):
                       "points": [[0, 0], [149, 0], [149, 99], [0, 99]]}
         normal = {"id": 21, "label": "pallet",
                   "points": [[0, 0], [239, 0], [239, 59], [0, 59]]}
+        extreme_thin = {"id": 22, "label": "pallet",
+                        "points": [[0, 0], [199, 0], [199, 11], [0, 11]]}
         self.assertTrue(audit.candidate_requires_class_audit(suspicious))
         self.assertFalse(audit.candidate_requires_class_audit(normal))
+        self.assertTrue(audit.candidate_requires_class_audit(extreme_thin))
         prompt = audit.build_blind_candidate_class_prompt(
             suspicious["id"], self.labels + ["pallet"], {})
         self.assertIn("box, container, or stacked cargo is not pallet", prompt)

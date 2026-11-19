@@ -26,6 +26,9 @@ from tools.audit_pallet_instance_fragmentation import (
 RESPONSE_SCHEMA = {
     "type": "object",
     "properties": {
+        "larger_candidate_is_visible_pallet": {"type": "boolean"},
+        "smaller_candidate_is_visible_pallet_part": {"type": "boolean"},
+        "visual_evidence_is_clear": {"type": "boolean"},
         "same_physical_instance": {
             "type": "string", "enum": ["yes", "no", "uncertain"]},
         "smaller_is_redundant_fragment": {"type": "boolean"},
@@ -34,6 +37,9 @@ RESPONSE_SCHEMA = {
         "reason": {"type": "string", "minLength": 1, "maxLength": 400},
     },
     "required": [
+        "larger_candidate_is_visible_pallet",
+        "smaller_candidate_is_visible_pallet_part",
+        "visual_evidence_is_clear",
         "same_physical_instance", "smaller_is_redundant_fragment",
         "safe_to_consolidate", "confidence", "reason"],
     "additionalProperties": False,
@@ -46,12 +52,17 @@ in green and the smaller mask in orange. Decide from visible physical object
 boundaries, not color or geometric overlap alone.
 
 Questions:
-1. Do both masks refer to the same single physical pallet instance?
-2. Is the orange mask only a redundant fragment/duplicate of the green pallet?
-3. Would consolidating the orange candidate into the green candidate preserve
+1. Does the green larger mask outline one visible physical pallet, rather than
+   floor, a forklift fork, cargo, a box, tape, a shadow, or another object?
+2. Does the orange smaller mask outline a visible part of that pallet?
+3. Are both masks from the same single physical pallet instance?
+4. Is the orange mask only a redundant fragment/duplicate of the green pallet?
+5. Is the visual evidence clear rather than blurred, tiny, or occluded?
+6. Would consolidating the orange candidate into the green candidate preserve
 all visible pallet instances? Answer safe_to_consolidate=false whenever another
 pallet, a person/cargo occlusion, disconnected regions, blur, or ambiguity could
-make consolidation lose an object.
+make consolidation lose an object. Also answer false whenever the green region
+is not itself a supported pallet or the orange region is not a visible part of it.
 
 Return only the requested JSON. This is an assistant review, not human truth."""
 
@@ -104,6 +115,9 @@ def _validate_decision(decision: dict) -> dict:
     if decision.get("same_physical_instance") not in {"yes", "no", "uncertain"}:
         raise ValueError("invalid same_physical_instance")
     if any(type(decision.get(key)) is not bool for key in (
+            "larger_candidate_is_visible_pallet",
+            "smaller_candidate_is_visible_pallet_part",
+            "visual_evidence_is_clear",
             "smaller_is_redundant_fragment", "safe_to_consolidate")):
         raise ValueError("VLM boolean decision fields are invalid")
     confidence = decision.get("confidence")
@@ -115,6 +129,9 @@ def _validate_decision(decision: dict) -> dict:
         raise ValueError("VLM reason is invalid")
     if (decision["safe_to_consolidate"]
             and (decision["same_physical_instance"] != "yes"
+                 or not decision["larger_candidate_is_visible_pallet"]
+                 or not decision["smaller_candidate_is_visible_pallet_part"]
+                 or not decision["visual_evidence_is_clear"]
                  or not decision["smaller_is_redundant_fragment"]
                  or confidence < .9)):
         raise ValueError("unsafe semantic decision combination")
@@ -160,7 +177,7 @@ def review_pairs(candidate_file: Path, pair_report: Path, output_dir: Path,
     if candidate_file.read_bytes() != candidate_before:
         raise RuntimeError("candidate source changed during semantic review")
     report = {
-        "schema_version": "labelagent.pallet_pair_semantic_review.v1",
+        "schema_version": "labelagent.pallet_pair_semantic_review.v2",
         "candidate_file": str(candidate_file.resolve()),
         "candidate_sha256": hashlib.sha256(candidate_before).hexdigest(),
         "pair_report": str(pair_report.resolve()),
@@ -169,6 +186,12 @@ def review_pairs(candidate_file: Path, pair_report: Path, output_dir: Path,
         "review_count": len(results),
         "same_instance_yes_count": sum(
             row["decision"]["same_physical_instance"] == "yes" for row in results),
+        "visible_pallet_support_count": sum(
+            row["decision"]["larger_candidate_is_visible_pallet"]
+            and row["decision"]["smaller_candidate_is_visible_pallet_part"]
+            for row in results),
+        "clear_visual_evidence_count": sum(
+            row["decision"]["visual_evidence_is_clear"] for row in results),
         "semantic_safe_count": sum(
             row["decision"]["safe_to_consolidate"] for row in results),
         "assistant_review_only": True,
@@ -203,6 +226,7 @@ def main() -> int:
          "llm_busy_retries": 5})
     print(json.dumps({key: report[key] for key in (
         "review_count", "same_instance_yes_count", "semantic_safe_count",
+        "visible_pallet_support_count", "clear_visual_evidence_count",
         "report_path", "report_sha256", "automatic_merge_allowed")},
         ensure_ascii=False, indent=2))
     return 0

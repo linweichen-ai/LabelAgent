@@ -331,10 +331,11 @@ function candidateClassAuditRequired(shape){
   const validRing=ring=>Array.isArray(ring)&&ring.length>=3&&ring.every(point=>Array.isArray(point)&&point.length===2&&point.every(Number.isFinite));
   if(rings.some(part=>!validRing(part.points)||part.holes.some(hole=>!validRing(hole))))return true;
   const points=rings.flatMap(part=>part.points);if(!points.length)return true;
-  const xs=points.map(point=>point[0]),ys=points.map(point=>point[1]),width=Math.max(...xs)-Math.min(...xs)+1,height=Math.max(...ys)-Math.min(...ys)+1,bboxArea=width*height;
-  if(width<120||height<80||bboxArea<5000)return false;
+   const xs=points.map(point=>point[0]),ys=points.map(point=>point[1]),width=Math.max(...xs)-Math.min(...xs)+1,height=Math.max(...ys)-Math.min(...ys)+1,bboxArea=width*height;
   const area=ring=>Math.abs(ring.reduce((sum,point,index)=>{const next=ring[(index+1)%ring.length];return sum+point[0]*next[1]-next[0]*point[1]},0)/2);
   const foreground=rings.reduce((sum,part)=>sum+area(part.points)-part.holes.reduce((holes,hole)=>holes+area(hole),0),0);
+   const longSide=Math.max(width,height),shortSide=Math.min(width,height);if(longSide>=120&&shortSide>=4&&shortSide/Math.max(1,longSide)<=.08&&foreground>=500)return true;
+   if(width<120||height<80||bboxArea<5000)return false;
   return foreground/Math.max(1,bboxArea)>=.82&&width/Math.max(1,height)<=2.10;
  }catch{return true}
 }

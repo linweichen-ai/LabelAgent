@@ -64,8 +64,10 @@ def candidate_requires_class_audit(candidate: dict) -> bool:
     """Return whether a candidate needs a focused, label-blind semantic check.
 
     The three historically high-risk labels are always checked.  Pallets are
-    checked only when a sizeable, nearly solid, box-like mask could be cargo
-    or a container rather than the load-bearing pallet underneath it.  The
+    checked when a sizeable, nearly solid, box-like mask could be cargo or a
+    container rather than the load-bearing pallet underneath it.  Extremely
+    thin, long masks are also checked because the observed failure mode can be
+    a forklift tine, floor seam, tape or shadow carrying a pallet label.  The
     focused check remains candidate-only and never mutates the mask.
     """
     label = str(candidate.get("label", ""))
@@ -84,18 +86,26 @@ def candidate_requires_class_audit(candidate: dict) -> bool:
     right, bottom = (max(point[index] for point in points) for index in (0, 1))
     width, height = right - left + 1, bottom - top + 1
     bbox_area = width * height
-    if width < 120 or height < 80 or bbox_area < 5000:
-        return False
     foreground_area = sum(
         _polygon_area(part["points"])
         - sum(_polygon_area(hole) for hole in part["holes"])
         for part in parts)
+    long_side, short_side = max(width, height), min(width, height)
+    extreme_thin_artifact = (
+        long_side >= 120 and short_side >= 4
+        and short_side / max(long_side, 1) <= .08
+        and foreground_area >= 500)
+    if extreme_thin_artifact:
+        return True
+    if width < 120 or height < 80 or bbox_area < 5000:
+        return False
     fill_ratio = foreground_area / max(bbox_area, 1)
     width_height_ratio = width / max(height, 1)
     # Cargo/container masks are often not perfect rectangles: handles, straps
     # and foreground occlusion brought the observed false pallet down to 0.848.
-    # Keep the gate below that case while the size/aspect guards exclude the
-    # thin slatted pallets that should stay on the fast path.
+    # Keep the gate below that case while the size/aspect guards leave ordinary
+    # side-view slatted pallets on the fast path. Only the much thinner <=.08
+    # artifact band above is diverted to semantic review.
     return fill_ratio >= 0.82 and width_height_ratio <= 2.10
 
 

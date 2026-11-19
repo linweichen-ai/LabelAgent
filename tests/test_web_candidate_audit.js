@@ -55,13 +55,15 @@ test('文件、话题和帧共同隔离审核', () => {
     assert.notEqual(vm.runInContext(expression, ctx), original);
 });
 
-test('箱体形栈板进入隔离复核而细长正常栈板保持快速路径', () => {
+test('箱体形和极细长栈板进入隔离复核而普通侧视栈板保持快速路径', () => {
   const ctx = context();
   ctx.solid = {id: 8, label: 'pallet', points: [[0,0],[149,0],[149,99],[0,99]]};
   ctx.normal = {id: 9, label: 'pallet', points: [[0,0],[239,0],[239,59],[0,59]]};
+  ctx.extremeThin = {id: 11, label: 'pallet', points: [[0,0],[199,0],[199,11],[0,11]]};
   ctx.malformed = {id: 10, label: 'pallet', points: [[0,0],[1,1]]};
   assert.equal(vm.runInContext('candidateClassAuditRequired(solid)', ctx), true);
   assert.equal(vm.runInContext('candidateClassAuditRequired(normal)', ctx), false);
+  assert.equal(vm.runInContext('candidateClassAuditRequired(extremeThin)', ctx), true);
   assert.equal(vm.runInContext('candidateClassAuditRequired(malformed)', ctx), true);
 });
 

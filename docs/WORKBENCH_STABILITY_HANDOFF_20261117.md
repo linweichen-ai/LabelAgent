@@ -2472,3 +2472,15 @@ Task3 150帧工作区与人工真值哈希未变，全程没有点击加载或�
 `D:\Apps\LabelAgent\.local\backups\batchb-sample-name-round296-20261120-045435`；隔离端口已关闭，
 正式CVAT数据、真值哈希和模型状态未变。详见
 `BATCHB_CROSS_CLASS_ACCEPTANCE_ROUNDS295_296_20261120.md`与对应图片、结构化证据。
+
+### Round 297：逐类别候选风险直接可见（2026-11-20）
+
+类别卡片不再只写“已生成N个”。现在会把绑定当前候选的Agent与类别盲审风险按候选去重后直接
+显示为“已生成N个 · M个需复核”，有风险时使用琥珀色；点击后明确说明必须人工决定，系统不会
+据此自动删除候选、改类或改写真值。
+
+真实批次B 003隔离读回显示17个候选，其中person为2个且2个均需复核；一个是被门禁拒绝的
+person→ego高风险互改，另一个是盲审证据不足的小候选。Agent与类别盲审均complete，真值和
+参考帧均为0，0页面/HTTP错误。139/139前端测试通过。正式只替换app/style/index，回滚点为
+`D:\Apps\LabelAgent\.local\backups\candidate-coverage-risk-round297-20261120-050633`；CVAT
+Task3、相机和1帧人工真值保持不变。详见`CANDIDATE_COVERAGE_RISK_ROUND297_20261120.md`。

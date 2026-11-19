@@ -1,0 +1,33 @@
+{
+  "schema_version": "labelagent.candidate-coverage-risk-browser-acceptance.v1",
+  "sample": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261104_smoke\\003-1793759959809514987.png",
+  "page_errors": [],
+  "http_errors": [],
+  "ui": {
+    "identity": "SFL-CPD15-Y · 批次 B（1104）· 问题包 003 · 单图抽样",
+    "person_chip": {
+      "text": "person：已生成 2 个 · 2 个需复核",
+      "class_name": "candidateCoverageChip candidatePresent candidateNeedsReview",
+      "title": "2 个候选有风险记录，点击查看依据"
+    },
+    "detail": "person 已生成 2 个机器候选，其中 2 个需重点复核\n依据：当前帧保存了 2 个通过分割门槛的 person 候选。其中 2 个有绑定当前候选的 Agent 或类别盲审风险记录，必须人工决定；系统不会据此自动删除或改写真值。\n收起",
+    "chips": [
+      "车辆：本帧未见",
+      "pallet：已生成 13 个",
+      "person：已生成 2 个 · 2 个需复核",
+      "floor：已生成 1 个",
+      "slope：本帧未见",
+      "ego：已生成 1 个",
+      "other_robot：本帧未见",
+      "cargo_floor：本帧未见"
+    ]
+  },
+  "boundary": {
+    "truth_frames": [],
+    "reference_frames": {},
+    "candidate_count": 17,
+    "agent_review_status": "complete",
+    "class_audit_status": "complete"
+  },
+  "passed": true
+}

@@ -127,6 +127,10 @@ test('工作台持续显示新旧数据集身份和逐类别覆盖状态', () =>
   assert.match(app, /点击任一类别可查看当前帧依据/);
   assert.match(app, /function applyInferenceLabelState\(data,refresh=true\)/);
   assert.match(app, /function candidateCoverageEvidence\(/);
+  assert.match(app, /function candidateReviewCountsByLabel\(/);
+  assert.match(app, /candidateNeedsReview/);
+  assert.match(html, /style\.css\?v=119/);
+  assert.match(html, /app\.js\?v=198/);
   assert.match(app, /action\.dataset\.coverageRepair=label/);
   assert.match(app, /startCandidateCoverageRepair\(label\)/);
   assert.match(app, /不会自动运行模型或写入人工真值/);
@@ -200,6 +204,29 @@ test('逐类别覆盖区分可见漏分、明确未见和没有可追溯证据',
   assert.match(absent.detail, /只是机器判断/);
   assert.equal(pending.state, 'pending');
   assert.match(pending.detail, /不能据此判断画面中没有/);
+});
+
+test('逐类别覆盖汇总绑定当前候选的复核风险且按候选去重', () => {
+  const h = harness();
+  h.run(section(source('app.js'), 'function candidateReviewCountsByLabel', 'function showCandidateCoverageDetail'));
+  const run = `({
+    candidate_class_audits:[
+      {candidate_id:15,bound_current_label:'person',route:'human_review_required',decision:{classification:'uncertain'}},
+      {candidate_id:15,bound_current_label:'person',human_review_required:true,decision:{candidate_supported:false}},
+      {candidate_id:3,bound_current_label:'ego',route:'accepted',decision:{classification:'supported'}}
+    ],
+    review_queue:[
+      {shape_ids:[14],source_label:'person'},
+      {shape_ids:[15],source_label:'person'},
+      {source_label:'person'}
+    ]
+  })`;
+  assert.equal(h.run(`candidateReviewCountsByLabel(${run}).get('person')`), 2);
+  assert.equal(h.run(`candidateReviewCountsByLabel(${run}).has('ego')`), false);
+  const review = h.run(`candidateCoverageEvidence('person',2,true,undefined,true,2)`);
+  assert.equal(review.state, 'candidate-review');
+  assert.match(review.title, /其中 2 个需重点复核/);
+  assert.match(review.detail, /不会据此自动删除或改写真值/);
 });
 
 test('人工真值界面提供明确的连续推理入口', () => {
@@ -1369,7 +1396,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=196/);
+  assert.match(source('index.html'), /app\.js\?v=198/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1430,7 +1457,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{\s*invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(currentGeneration=0\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=196/);
+  assert.match(source('index.html'), /app\.js\?v=198/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1489,7 +1516,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 4);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=196/);
+  assert.match(source('index.html'), /app\.js\?v=198/);
 });
 
 test('类别与推理类别保存绑定文件载入代次和类别状态版本', async () => {
@@ -1528,7 +1555,7 @@ test('类别与推理类别保存绑定文件载入代次和类别状态版本',
   assert.deepEqual(applied[0].labels, ['a','b']);
   assert.deepEqual(applied[0].auto_labels, ['b']);
   assert.equal(h.run('currentDescription'), null);
-  assert.match(source('index.html'), /app\.js\?v=196/);
+  assert.match(source('index.html'), /app\.js\?v=198/);
 });
 
 test('模型配置保存绑定工作区载入代次和配置版本', async () => {

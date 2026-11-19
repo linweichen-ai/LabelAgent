@@ -1,0 +1,78 @@
+{
+  "schema_version": "labelagent.pallet_point_audit_cache_rounds256_257.v1",
+  "recorded_at": "2026-11-19T17:20:00+08:00",
+  "round256": {
+    "status": "diagnostic_rejected_for_production",
+    "reason": "fixed prompt coordinates drifted from the pallet to the floor on frame 124",
+    "diagnostic_only_proxy": "Blue HSV statistics are not ground truth or a production classifier",
+    "frame132_minimal": {
+      "sam_score": 0.9375,
+      "blue_proxy_precision": 0.899329,
+      "blue_proxy_recall": 0.922547,
+      "outside_roi_pixels": 0
+    },
+    "frame124_temporal_failure": {
+      "sam_score": 0.703125,
+      "area_pixels": 84803,
+      "blue_proxy_precision": 0.001863,
+      "blue_proxy_recall": 0.026604,
+      "outside_roi_pixels": 76069
+    },
+    "production_change": false,
+    "local_artifacts_only": "artifacts/pallet-roi-split-round256"
+  },
+  "round257": {
+    "status": "deployed_and_live_verified",
+    "behavior": "reuse only byte-bound pallet audit receipts for an unchanged current frame and candidate set",
+    "guards": [
+      "source_image_sha256",
+      "candidate_artifact_sha256",
+      "candidate_fingerprint",
+      "label_registry",
+      "model_config",
+      "audit_protocol_version",
+      "audit_sha256",
+      "review_binding"
+    ],
+    "tests": {
+      "python": {"passed": 1022, "failed": 0},
+      "browser": {"passed": 139, "failed": 0}
+    },
+    "live_runs": [
+      {
+        "task_id": "176b25ebc04a4265b9a734b56c5eaf10",
+        "frame": 120,
+        "elapsed_seconds": 14.441,
+        "candidate_count_after": 9,
+        "candidate_class_audit_cache_hit": false,
+        "interpretation": "candidate set changed from 11 to 9, so reuse was correctly rejected"
+      },
+      {
+        "task_id": "53e1196464b14605b874606df4097aa5",
+        "frame": 120,
+        "elapsed_seconds": 13.908,
+        "candidate_count_after": 9,
+        "candidate_class_audit_cache_hit": true,
+        "interpretation": "unchanged candidate set reused the exact persisted audit receipt"
+      }
+    ],
+    "post_run_state": {
+      "status": "completed",
+      "failed_frames": 0,
+      "truth_count_frame120": 1,
+      "candidate_count_frame120": 9,
+      "audit_candidate_ids": [7],
+      "audit_status": "complete",
+      "page_http_status": 200
+    },
+    "production_server_sha256": "F8F7D09950E6B8BC3D9A6B762F17BA95549F20E0B4652A26677A222BC01C56FA",
+    "rollback_directory": "D:\\Apps\\LabelAgent\\.local\\backups\\main-run-pallet-audit-cache-round257-20261119-171409",
+    "rollback_server_sha256": "CED317163CB7E4B3F8417D1AE2525B48304FDED11CB116ADBBA73B954C803CA6"
+  },
+  "safety_boundaries": {
+    "human_truth_written": false,
+    "approved_for_training": false,
+    "approved_for_deployment": false,
+    "factory_images_published": false
+  }
+}

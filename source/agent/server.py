@@ -1800,7 +1800,8 @@ def candidate_class_audit_version():
 
 
 def reusable_candidate_class_audit(run, review_status, candidates, labels,
-                                   artifact_sha, input_sha, audit_version):
+                                   artifact_sha, input_sha, audit_version, *,
+                                   candidate_ids=None, require_review_bindings=False):
     """Return True only for a complete, byte-bound persisted audit receipt.
 
     This is deliberately stricter than the model response cache: it survives a
@@ -1815,7 +1816,8 @@ def reusable_candidate_class_audit(run, review_status, candidates, labels,
             or not isinstance(review_status, dict)):
         return False
     targets = [candidate for candidate in candidates
-               if candidate_requires_class_audit(candidate)]
+               if candidate_requires_class_audit(candidate)
+               and (candidate_ids is None or candidate.get("id") in candidate_ids)]
     audits = run.get("candidate_class_audits")
     if not isinstance(audits, list) or len(audits) != len(targets):
         return False
@@ -1861,7 +1863,7 @@ def reusable_candidate_class_audit(run, review_status, candidates, labels,
                     key: value for key, value in audit.items()
                     if key != "audit_sha256"})):
             return False
-        if review_status:
+        if require_review_bindings or review_status:
             binding = review_status.get(fingerprint)
             if (not isinstance(binding, dict)
                     or binding.get("candidate_fingerprint") != fingerprint
@@ -1870,6 +1872,24 @@ def reusable_candidate_class_audit(run, review_status, candidates, labels,
                     or binding.get("route") != audit["route"]):
                 return False
     return set(by_id) == {candidate.get("id") for candidate in targets}
+
+
+def candidate_class_review_queue(audits, artifact_sha):
+    """Rebuild UI-only review rows from validated immutable audit receipts."""
+    return [{
+        "reason_code": ("candidate_class_blind_audit_failed" if audit.get("error")
+                        else "candidate_class_blind_review_required"),
+        "route": "human_review_required", "source": "candidate_class_audit",
+        "candidate_id": audit["candidate_id"],
+        "shape_ids": [audit["candidate_id"]],
+        "candidate_sha256": audit["candidate_sha256"],
+        "candidate_artifact_sha256": artifact_sha,
+        "audit_sha256": audit["audit_sha256"],
+        "classification": audit.get("decision", {}).get("classification"),
+        "reason": audit.get("decision", {}).get(
+            "reason", "候选类别盲审失败，请人工检查"),
+        **({"error": audit["error"]} if audit.get("error") else {}),
+    } for audit in audits if audit.get("route") == "human_review_required"]
 
 
 @app.get("/api/state")
@@ -5430,30 +5450,49 @@ def run_workflow():
                     if str(candidate.get("label", "")).casefold() == "pallet"
                     and candidate_requires_class_audit(candidate)
                 ] if not failed else []
+                candidate_class_audit_cache_hit = False
                 if pallet_audit_ids and not defer_agent_review:
                     update_run_status(
                         phase="candidate_class_audit", frame=target,
                         completed=len(results), audit_completed=0,
                         audit_total=len(pallet_audit_ids))
-                    class_audits, class_review_queue = audit_high_risk_candidates(
-                        config, target_image, combined, labels,
-                        VISIBLE_LABEL_DEFINITIONS, chat,
-                        check_cancelled=check_cancelled,
-                        tolerate_errors=True,
-                        candidate_ids=set(pallet_audit_ids),
-                        on_progress=lambda completed, total, candidate, audit: update_run_status(
+                    candidate_id_set = set(pallet_audit_ids)
+                    previous_run = runs.get(key) or {}
+                    previous_review_status = review_statuses.get(key) or {}
+                    if reusable_candidate_class_audit(
+                            previous_run, previous_review_status, combined, labels,
+                            candidate_artifact_sha256, input_sha256, audit_version,
+                            candidate_ids=candidate_id_set,
+                            require_review_bindings=True):
+                        class_audits = copy.deepcopy(
+                            previous_run.get("candidate_class_audits", []))
+                        class_review_queue = candidate_class_review_queue(
+                            class_audits, candidate_artifact_sha256)
+                        candidate_class_audit_cache_hit = True
+                        update_run_status(
                             phase="candidate_class_audit", frame=target,
-                            audit_completed=completed, audit_total=total),
-                        batch_chat=chat_batch)
-                    for audit in class_audits:
-                        audit["audit_version"] = audit_version
-                        audit["audit_sha256"] = _sha256_json({
-                            field: value for field, value in audit.items()
-                            if field != "audit_sha256"})
-                    for entry in class_review_queue:
-                        entry["audit_sha256"] = next(
-                            audit["audit_sha256"] for audit in class_audits
-                            if audit["candidate_id"] == entry["candidate_id"])
+                            audit_completed=len(class_audits),
+                            audit_total=len(pallet_audit_ids), audit_cache_hit=True)
+                    else:
+                        class_audits, class_review_queue = audit_high_risk_candidates(
+                            config, target_image, combined, labels,
+                            VISIBLE_LABEL_DEFINITIONS, chat,
+                            check_cancelled=check_cancelled,
+                            tolerate_errors=True,
+                            candidate_ids=candidate_id_set,
+                            on_progress=lambda completed, total, candidate, audit: update_run_status(
+                                phase="candidate_class_audit", frame=target,
+                                audit_completed=completed, audit_total=total),
+                            batch_chat=chat_batch)
+                        for audit in class_audits:
+                            audit["audit_version"] = audit_version
+                            audit["audit_sha256"] = _sha256_json({
+                                field: value for field, value in audit.items()
+                                if field != "audit_sha256"})
+                        for entry in class_review_queue:
+                            entry["audit_sha256"] = next(
+                                audit["audit_sha256"] for audit in class_audits
+                                if audit["candidate_id"] == entry["candidate_id"])
                 final_review_queue = list(result["review_queue"]) + class_review_queue
                 class_review_status = {
                     audit["candidate_sha256"]: {
@@ -5484,6 +5523,7 @@ def run_workflow():
                         defer_agent_review and not failed),
                     "candidate_class_audit_total": len(pallet_audit_ids),
                     "candidate_class_audit_scope": "solid_pallet_after_agent",
+                    "candidate_class_audit_cache_hit": candidate_class_audit_cache_hit,
                     "inspection_trace": copy.deepcopy([
                         item for item in output["trace"]
                         if item.get("frame") == target
@@ -5529,7 +5569,9 @@ def run_workflow():
                         "agent_review_status": replacement_run["agent_review_status"],
                         "agent_review_deferred": replacement_run["agent_review_deferred"],
                         "candidate_artifact_sha256": candidate_artifact_sha256,
-                        "input_sha256": input_sha256})
+                        "input_sha256": input_sha256,
+                        "candidate_class_audit_cache_hit":
+                            candidate_class_audit_cache_hit})
                     output["current"] = None
                     save_run(output)
                     _update_run_status_locked(completed=len(results), phase="saved")

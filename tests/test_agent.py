@@ -2814,6 +2814,119 @@ class ServerTests(unittest.TestCase):
             finally:
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work
 
+    def test_reusable_candidate_class_audit_can_validate_an_explicit_subset(self):
+        pallet, person = shape(9, "pallet"), shape(10, "person")
+        candidates = [pallet, person]
+        artifact_sha = server._sha256_json(candidates)
+        input_sha = "1" * 64
+        audit_version = {"schema_version": "test", "protocol_sha256": "2" * 64}
+        fingerprint = server.candidate_fingerprint(pallet)
+        decision = {
+            "classification": "known_label", "observed_label": "pallet",
+            "candidate_supported": True, "confidence": 0.97,
+            "reason_code": "visible_known_label",
+            "visible_cues": ["visible pallet deck"], "reason": "pallet structure visible",
+        }
+        audit = {
+            "schema_version": "labelagent.blind_candidate_class_audit.v1",
+            "candidate_id": 9, "candidate_sha256": fingerprint,
+            "candidate_artifact_sha256": artifact_sha,
+            "source_image_sha256": input_sha, "bound_current_label": "pallet",
+            "audit_version": audit_version, "route": "candidate_preserved",
+            "minimum_confidence": 0.90, "candidate_mutated": False,
+            "human_truth": False, "approved_for_training": False,
+            "approved_for_deployment": False, "decision": decision,
+        }
+        audit["audit_sha256"] = server._sha256_json(audit)
+        run = {
+            "candidate_class_audit_status": "complete",
+            "candidate_class_audit_version": audit_version,
+            "candidate_artifact_sha256": artifact_sha, "input_sha256": input_sha,
+            "candidate_class_audits": [audit],
+        }
+        review_status = {fingerprint: {
+            "candidate_fingerprint": fingerprint,
+            "candidate_artifact_sha256": artifact_sha,
+            "audit_sha256": audit["audit_sha256"], "route": "candidate_preserved",
+        }}
+        with patch.object(server, "candidate_requires_class_audit", return_value=True):
+            self.assertFalse(server.reusable_candidate_class_audit(
+                run, review_status, candidates, ["pallet", "person"], artifact_sha,
+                input_sha, audit_version))
+            self.assertTrue(server.reusable_candidate_class_audit(
+                run, review_status, candidates, ["pallet", "person"], artifact_sha,
+                input_sha, audit_version, candidate_ids={9}))
+            self.assertFalse(server.reusable_candidate_class_audit(
+                run, {}, candidates, ["pallet", "person"], artifact_sha,
+                input_sha, audit_version, candidate_ids={9},
+                require_review_bindings=True))
+
+    def test_main_run_reuses_exact_pallet_audit_without_second_vlm_call(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {
+                "video": FakeVideo(), "topic": "camera0", "labels": ["pallet"],
+                "truth": {"0": [shape(1, "pallet")]},
+                "reference_frames": {"camera0": [0]}, "config": {},
+                "candidates": {}, "agent_runs": {}, "candidate_review_status": {},
+            }
+            server.run_status = {"status": "idle"}
+            description = {
+                "description": "pallet only",
+                "prompts": [{"label": "pallet", "text": "pallet"}],
+                "reference_signature": server.reference_signature(0),
+            }
+            inferred = {
+                "shapes": [shape(9, "pallet")], "candidates_added": 1,
+                "applied": [], "review_queue": [],
+                "agent": {"stop_reason": "done", "rounds": 1},
+            }
+
+            def audit_once(config, frame_image, candidates, labels, definitions, chat, **kwargs):
+                candidate = next(item for item in candidates if item["id"] == 9)
+                audit = {
+                    "schema_version": "labelagent.blind_candidate_class_audit.v1",
+                    "candidate_id": 9,
+                    "candidate_sha256": server.candidate_fingerprint(candidate),
+                    "candidate_artifact_sha256": server._sha256_json(candidates),
+                    "source_image_sha256": server.hashlib.sha256(frame_image).hexdigest(),
+                    "bound_current_label": "pallet", "route": "candidate_preserved",
+                    "minimum_confidence": 0.90, "candidate_mutated": False,
+                    "human_truth": False, "approved_for_training": False,
+                    "approved_for_deployment": False,
+                    "decision": {
+                        "classification": "known_label", "observed_label": "pallet",
+                        "candidate_supported": True, "confidence": 0.97,
+                        "reason_code": "visible_known_label",
+                        "visible_cues": ["visible pallet deck"],
+                        "reason": "pallet structure visible",
+                    },
+                }
+                return [audit], []
+
+            try:
+                with patch.object(server, "run", side_effect=lambda *args, **kwargs: copy.deepcopy(inferred)), \
+                     patch.object(server, "candidate_requires_class_audit",
+                                  side_effect=lambda candidate: candidate.get("label") == "pallet"), \
+                     patch.object(server, "audit_high_risk_candidates",
+                                  side_effect=audit_once) as focused:
+                    first = server.app.test_client().post("/api/run", json={
+                        "frame": 1, "count": 1, "description": description})
+                    second = server.app.test_client().post("/api/run", json={
+                        "frame": 1, "count": 1, "description": description})
+                self.assertEqual(first.status_code, 200, first.json)
+                self.assertEqual(second.status_code, 200, second.json)
+                self.assertEqual(focused.call_count, 1)
+                self.assertFalse(first.json["frames"][0]["candidate_class_audit_cache_hit"])
+                self.assertTrue(second.json["frames"][0]["candidate_class_audit_cache_hit"])
+                saved = server.state["agent_runs"]["1"]
+                self.assertTrue(saved["candidate_class_audit_cache_hit"])
+                self.assertEqual(saved["candidate_class_audits"][0]["candidate_id"], 9)
+                self.assertEqual(server.state["truth"], {"0": [shape(1, "pallet")]})
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
     def test_run_summary_is_bounded_scoped_and_recoverable_after_idle_restart(self):
         old_state, old_status, old_work = server.state, server.run_status, server.WORK
         with tempfile.TemporaryDirectory() as directory:

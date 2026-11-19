@@ -85,8 +85,28 @@
   "storage": {
     "c_free_gib_after_deploy": 0.256,
     "d_free_gib_after_deploy": 0.413,
+    "c_free_gib_after_reversible_compression": 0.25,
+    "d_free_gib_after_reversible_compression": 1.2,
     "reversible_ntfs_compression_target": "D:\\Apps\\LabelAgent\\.local\\relocated-worktrees\\mask2former_single_recovery_20261104",
     "recovered_mib": 40.96,
+    "additional_reversible_compression": [
+      {
+        "target": "D:\\AI\\Temp\\DiagOutputDir",
+        "description": "68 expired Remote Desktop ETL diagnostic traces",
+        "recovered_mib": 487.68
+      },
+      {
+        "target": "D:\\Apps\\LabelAgent\\.local\\isolated-*",
+        "description": "29 inactive isolated acceptance directories",
+        "recovered_mib": 86.51
+      },
+      {
+        "target": "D:\\Apps\\LabelAgent\\.local\\relocated-worktrees\\labelagent_stability_worktree_20261117-artifacts",
+        "description": "current local evidence directory",
+        "recovered_mib": 236.95,
+        "content_hash_verified_sha256": "DB196AFC14DA57F1B3FA51DFF5C4550130AE675D2E5CA77F36A18B1424F4C1F1"
+      }
+    ],
     "files_deleted": 0
   },
   "limitations": [

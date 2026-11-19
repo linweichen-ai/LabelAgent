@@ -239,8 +239,23 @@
       "temporary_directory_moved_not_deleted": "D:\\Apps\\LabelAgent\\.local\\artifact-archive\\seer2clw-temp-20261119\\tmpj1tzc69c",
       "rebuildable_python_caches_moved_not_deleted": "D:\\Apps\\LabelAgent\\.local\\artifact-archive\\python-caches-round261-20261119",
       "moved_python_cache_directories": 5,
-      "c_free_mib_after": 64.727,
-      "d_free_mib_after": 580.871
+      "ntfs_compression_only": [
+        ".codex_ppt_v116",
+        ".codex_ppt_v117",
+        ".codex_ppt_v118",
+        ".codex_ppt_v119",
+        ".codex_ppt_v120",
+        ".codex_ppt_v121",
+        ".codex_ppt_v122",
+        ".codex_ppt_v123",
+        ".codex_ppt_v124"
+      ],
+      "build_outputs_moved_or_deleted": false,
+      "compression_interpretation": "low yield; stopped without expanding scope",
+      "c_free_mib_observed_minimum_after_recovery": 8.934,
+      "c_free_mib_observed_maximum_after_recovery": 64.727,
+      "c_free_mib_final_snapshot": 52.512,
+      "d_free_mib_final_snapshot": 547.129
     }
   },
   "safety_boundaries": {

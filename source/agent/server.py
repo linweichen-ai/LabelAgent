@@ -3910,7 +3910,7 @@ def cleanup_pallet_candidates(index):
                 copy.deepcopy(current_run.get("candidate_geometry_adjustments", []))
                 + adjustments),
             "candidate_geometry_cleanup_refresh": {
-                "schema_version": "labelagent.pallet_geometry_refresh.v2",
+                "schema_version": "labelagent.pallet_geometry_refresh.v3",
                 "adjusted_candidate_count": len(adjustments),
                 "prior_candidate_artifact_sha256": binding["candidate_artifact_sha256"],
                 "candidate_artifact_sha256": new_artifact_sha,

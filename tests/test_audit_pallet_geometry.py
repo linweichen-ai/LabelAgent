@@ -3,6 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import cv2
 import numpy as np
 
 from source.agent.edit_agent import _shape_from_mask
@@ -50,6 +51,24 @@ class PalletGeometryAuditTest(unittest.TestCase):
                         result["boundary_vertices_before"])
         self.assertLessEqual(result["change_ratio"], .025)
 
+    def test_audit_uses_v3_compact_hole_contract_without_reclassifying_long_slot(self):
+        mask = np.zeros((480, 640), dtype=np.uint8)
+        mask[40:440, 80:560] = 1
+        # Compact surface drop-out: wider than the old 32-pixel structural rule.
+        cv2.ellipse(mask, (180, 170), (24, 8), 0, 0, 360, 0, thickness=cv2.FILLED)
+        # Long board slot: still structural under the v3 aspect-ratio gate.
+        mask[300:310, 240:310] = 0
+        shape = _shape_from_mask(mask, "pallet", 3)
+
+        result = audit_candidate(
+            {"topic": "camera", "frame": "3", "shape": shape}, 640, 480)
+
+        self.assertEqual(result["geometry_cleanup_version"], 3)
+        self.assertGreaterEqual(result["filled_compact_texture_hole_count"], 1)
+        self.assertEqual(result["structural_holes_before"], 1)
+        self.assertGreaterEqual(result["minimum_structural_hole_retention"], .75)
+        self.assertLessEqual(result["change_ratio"], .025)
+
     def test_workbench_state_uses_nested_candidates_by_topic(self):
         mask = np.zeros((40, 40), dtype=np.uint8)
         mask[5:35, 5:35] = 1
@@ -64,6 +83,31 @@ class PalletGeometryAuditTest(unittest.TestCase):
         self.assertEqual(result["sample_count"], 1)
         self.assertIn("boundary_simplified_count", result)
         self.assertIn("median_boundary_vertex_reduction_ratio", result)
+
+    def test_workbench_state_overlays_active_topic_candidates_on_stale_topic_snapshot(self):
+        stale_mask = np.zeros((60, 60), dtype=np.uint8)
+        stale_mask[5:55, 5:55] = 1
+        stale_mask[20:25, 20:25] = 0
+        current_mask = np.zeros((60, 60), dtype=np.uint8)
+        current_mask[10:50, 10:50] = 1
+        stale = _shape_from_mask(stale_mask, "pallet", 1)
+        current = _shape_from_mask(current_mask, "pallet", 2)
+        state = {
+            "topic": "camera",
+            "candidates": {"7": [current]},
+            "candidates_by_topic": {"camera": {"3": [stale]}},
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory, "state.json")
+            source.write_text(json.dumps(state), encoding="utf-8")
+            result = run_audit(source, width=60, height=60, per_topic=4)
+
+        self.assertEqual(
+            result["input_scope"],
+            "workbench_state.current_candidates_overlaid_on_candidates_by_topic")
+        self.assertEqual(result["sample_count"], 1)
+        self.assertEqual(result["results"][0]["frame"], "7")
+        self.assertEqual(result["results"][0]["shape_id"], 2)
 
 
 if __name__ == "__main__":

@@ -393,7 +393,7 @@ class WorkflowTests(unittest.TestCase):
         output = _rasterize(refined, 640, 480)
 
         self.assertIsNotNone(audit)
-        self.assertEqual(audit["geometry_cleanup_version"], 2)
+        self.assertEqual(audit["geometry_cleanup_version"], 3)
         self.assertEqual(audit["filled_hole_count"], 6)
         self.assertGreaterEqual(audit["filled_compact_texture_hole_count"], 4)
         for y, x, h, w in compact_holes:
@@ -402,6 +402,22 @@ class WorkflowTests(unittest.TestCase):
             self.assertEqual(output[y + h // 2, x + w // 2], 0)
         self.assertGreaterEqual(audit["minimum_structural_hole_retention"], .75)
         self.assertLessEqual(audit["change_ratio"], .025)
+
+    def test_pallet_cleanup_preserves_compact_opening_on_medium_plastic_instance(self):
+        mask = np.zeros((300, 420), dtype=np.uint8)
+        mask[60:240, 120:300] = 1
+        cv2.circle(mask, (210, 150), 12, 0, thickness=cv2.FILLED)
+        candidate = _shape_from_mask(mask, "pallet", 25)
+
+        refined, audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 420, 300)
+        output = _rasterize(refined, 420, 300)
+
+        self.assertEqual(output[150, 210], 0)
+        self.assertIsNotNone(audit)
+        self.assertEqual(audit["geometry_cleanup_version"], 3)
+        self.assertEqual(audit["filled_compact_texture_hole_count"], 0)
+        self.assertGreaterEqual(audit["minimum_structural_hole_retention"], .75)
 
     def test_close_pallet_cleanup_uses_stronger_bounded_boundary_smoothing(self):
         mask = np.zeros((260, 360), dtype=np.uint8)

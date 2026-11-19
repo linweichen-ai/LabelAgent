@@ -2680,6 +2680,9 @@ def _significant_component_count(mask):
                for index in range(1, count))
 
 
+PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO = 0.30
+
+
 def _compact_pallet_texture_hole(area, width, height, *, maximum_area=768,
                                  maximum_span=64, maximum_aspect_ratio=3.0):
     """Identify compact surface drop-outs without swallowing long pallet slots."""
@@ -2689,7 +2692,10 @@ def _compact_pallet_texture_hole(area, width, height, *, maximum_area=768,
             and aspect_ratio <= maximum_aspect_ratio)
 
 
-def _structural_hole_masks(mask):
+def _structural_hole_masks(
+        mask, *,
+        minimum_compact_texture_candidate_area_ratio=(
+            PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO)):
     background = (mask == 0).astype(np.uint8)
     count, components, stats, _ = cv2.connectedComponentsWithStats(
         background, connectivity=8)
@@ -2697,6 +2703,7 @@ def _structural_hole_masks(mask):
         components[0, :], components[-1, :],
         components[:, 0], components[:, -1]))).tolist())
     output = []
+    candidate_area = int(mask.sum())
     for component in range(1, count):
         if component in border_labels:
             continue
@@ -2705,15 +2712,19 @@ def _structural_hole_masks(mask):
         area = int(stats[component, cv2.CC_STAT_AREA])
         micro_hole = area <= 96 and max(width, height) <= 32
         texture_hole = area <= 256 and max(width, height) <= 24
-        compact_texture_hole = _compact_pallet_texture_hole(
-            area, width, height)
+        compact_texture_hole = (
+            candidate_area / max(mask.size, 1)
+            >= minimum_compact_texture_candidate_area_ratio
+            and _compact_pallet_texture_hole(area, width, height))
         if not (micro_hole or texture_hole or compact_texture_hole):
             output.append((components == component, area))
     return output
 
 
 def _simplify_pallet_boundary(shape, original_mask, width, height, *,
-                              maximum_change_ratio, minimum_hole_retention=.75):
+                              maximum_change_ratio, minimum_hole_retention=.75,
+                              minimum_compact_texture_candidate_area_ratio=(
+                                  PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO)):
     """Reduce pixel-staircase vertices under the existing geometry gates."""
     from .edit_agent import _rasterize
     before_vertices = _pallet_geometry_vertex_count(shape)
@@ -2721,7 +2732,10 @@ def _simplify_pallet_boundary(shape, original_mask, width, height, *,
         return shape, None, _rasterize(shape, width, height).astype(np.uint8)
     original_area = int(original_mask.sum())
     original_components = _significant_component_count(original_mask)
-    structural_holes = _structural_hole_masks(original_mask)
+    structural_holes = _structural_hole_masks(
+        original_mask,
+        minimum_compact_texture_candidate_area_ratio=(
+            minimum_compact_texture_candidate_area_ratio))
     baseline_mask = _rasterize(shape, width, height).astype(np.uint8)
     for epsilon in (.75, .5):
         proposal = copy.deepcopy(shape)
@@ -2788,6 +2802,8 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
                                      maximum_compact_texture_hole_area=768,
                                      maximum_compact_texture_hole_span=64,
                                      maximum_compact_texture_aspect_ratio=3.0,
+                                     minimum_compact_texture_candidate_area_ratio=(
+                                         PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO),
                                      maximum_change_ratio=0.025):
     """Remove texture-scale pallet mask noise without erasing structural gaps.
 
@@ -2825,11 +2841,14 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
                       and max(w, h) <= maximum_hole_span)
         texture_hole = (component_area <= maximum_texture_hole_area
                         and max(w, h) <= maximum_texture_hole_span)
-        compact_texture_hole = _compact_pallet_texture_hole(
-            component_area, w, h,
-            maximum_area=maximum_compact_texture_hole_area,
-            maximum_span=maximum_compact_texture_hole_span,
-            maximum_aspect_ratio=maximum_compact_texture_aspect_ratio)
+        compact_texture_hole = (
+            area / max(mask.size, 1)
+            >= minimum_compact_texture_candidate_area_ratio
+            and _compact_pallet_texture_hole(
+                component_area, w, h,
+                maximum_area=maximum_compact_texture_hole_area,
+                maximum_span=maximum_compact_texture_hole_span,
+                maximum_aspect_ratio=maximum_compact_texture_aspect_ratio))
         if micro_hole or texture_hole or compact_texture_hole:
             refined[components == component] = 1
             record = {"area": component_area, "bbox": [x, y, x + w - 1, y + h - 1]}
@@ -2922,11 +2941,16 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         replacement = copy.deepcopy(shape)
     replacement, boundary_audit, replacement_mask = _simplify_pallet_boundary(
         replacement, mask, width, height,
-        maximum_change_ratio=maximum_change_ratio)
+        maximum_change_ratio=maximum_change_ratio,
+        minimum_compact_texture_candidate_area_ratio=(
+            minimum_compact_texture_candidate_area_ratio))
     changed = int(np.count_nonzero(replacement_mask != mask))
     if _significant_component_count(replacement_mask) != _significant_component_count(mask):
         return shape, None
-    structural_holes = _structural_hole_masks(mask)
+    structural_holes = _structural_hole_masks(
+        mask,
+        minimum_compact_texture_candidate_area_ratio=(
+            minimum_compact_texture_candidate_area_ratio))
     structural_retention = [
         int(np.count_nonzero(hole_mask & (replacement_mask == 0))) / hole_area
         for hole_mask, hole_area in structural_holes]
@@ -2965,8 +2989,10 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         "maximum_compact_texture_hole_area": maximum_compact_texture_hole_area,
         "maximum_compact_texture_hole_span": maximum_compact_texture_hole_span,
         "maximum_compact_texture_aspect_ratio": maximum_compact_texture_aspect_ratio,
+        "minimum_compact_texture_candidate_area_ratio": (
+            minimum_compact_texture_candidate_area_ratio),
         "preserved_component_count": before_components,
-        "geometry_cleanup_version": 2,
+        "geometry_cleanup_version": 3,
         "route": "candidate_only",
     }
     adjustment.update(boundary_audit or {

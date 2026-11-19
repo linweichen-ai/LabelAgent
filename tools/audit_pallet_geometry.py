@@ -19,7 +19,11 @@ import cv2
 import numpy as np
 
 from source.agent.edit_agent import _rasterize
-from source.agent.workflow import refine_pallet_candidate_geometry
+from source.agent.workflow import (
+    PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO,
+    _compact_pallet_texture_hole,
+    refine_pallet_candidate_geometry,
+)
 
 
 def _bbox_area(shape: dict) -> int:
@@ -58,7 +62,10 @@ def enclosed_holes(mask: np.ndarray) -> list[dict]:
         holes.append({
             "area": area,
             "bbox": [x, y, x + width - 1, y + height - 1],
+            "width": width,
+            "height": height,
             "span": max(width, height),
+            "aspect_ratio": round(max(width, height) / max(min(width, height), 1), 6),
             "mask": components == component,
         })
     return holes
@@ -76,13 +83,22 @@ def audit_candidate(row: dict, width: int, height: int) -> dict:
     after = _rasterize(refined, width, height).astype(np.uint8)
     before_holes = enclosed_holes(before)
     after_holes = enclosed_holes(after)
-    structural = [hole for hole in before_holes
-                  if hole["area"] > 256 or hole["span"] > 32]
+    area = int(before.sum())
+    def structural_hole(hole):
+        micro_hole = hole["area"] <= 96 and hole["span"] <= 32
+        texture_hole = hole["area"] <= 256 and hole["span"] <= 24
+        compact_texture_hole = (
+            area / max(before.size, 1)
+            >= PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO
+            and _compact_pallet_texture_hole(
+                hole["area"], hole["width"], hole["height"]))
+        return not (micro_hole or texture_hole or compact_texture_hole)
+
+    structural = [hole for hole in before_holes if structural_hole(hole)]
     structural_retention = []
     for hole in structural:
         retained = int(np.count_nonzero(hole["mask"] & (after == 0)))
         structural_retention.append(round(retained / hole["area"], 6))
-    area = int(before.sum())
     changed = int(np.count_nonzero(before != after))
     return {
         "topic": row["topic"],
@@ -107,6 +123,13 @@ def audit_candidate(row: dict, width: int, height: int) -> dict:
         "boundary_vertex_reduction_ratio": (
             adjustment.get("boundary_vertex_reduction_ratio", 0.0)
             if adjustment else 0.0),
+        "geometry_cleanup_version": (
+            adjustment.get("geometry_cleanup_version") if adjustment else None),
+        "filled_hole_count": (
+            adjustment.get("filled_hole_count", 0) if adjustment else 0),
+        "filled_compact_texture_hole_count": (
+            adjustment.get("filled_compact_texture_hole_count", 0)
+            if adjustment else 0),
         "components_before": _components(before),
         "components_after": _components(after),
         "holes_before": len(before_holes),
@@ -121,13 +144,19 @@ def audit_candidate(row: dict, width: int, height: int) -> dict:
 
 
 def run_audit(source: Path, *, width: int, height: int, per_topic: int) -> dict:
-    payload = json.loads(source.read_text(encoding="utf-8"))
-    if not isinstance(payload, dict):
+    stored = json.loads(source.read_text(encoding="utf-8"))
+    if not isinstance(stored, dict):
         raise ValueError("expected topic-to-frame candidate mapping")
+    payload = stored
     input_scope = "topic_candidate_mapping"
-    if isinstance(payload.get("candidates_by_topic"), dict):
-        payload = payload["candidates_by_topic"]
+    if isinstance(stored.get("candidates_by_topic"), dict):
+        payload = copy.deepcopy(stored["candidates_by_topic"])
         input_scope = "workbench_state.candidates_by_topic"
+        active_topic = stored.get("topic")
+        active_candidates = stored.get("candidates")
+        if isinstance(active_topic, str) and isinstance(active_candidates, dict):
+            payload[active_topic] = active_candidates
+            input_scope = "workbench_state.current_candidates_overlaid_on_candidates_by_topic"
     selected = []
     topic_inventory = {}
     for topic, frames in sorted(payload.items()):
@@ -156,7 +185,7 @@ def run_audit(source: Path, *, width: int, height: int, per_topic: int) -> dict:
             "maximum_change_ratio": max((row["change_ratio"] for row in subset), default=0.0),
         }
     return {
-        "schema_version": "labelagent.pallet_geometry_cross_dataset_audit.v1",
+        "schema_version": "labelagent.pallet_geometry_cross_dataset_audit.v3",
         "input": str(source.resolve()),
         "input_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
         "width": width,
@@ -168,6 +197,11 @@ def run_audit(source: Path, *, width: int, height: int, per_topic: int) -> dict:
         "sample_count": len(results),
         "size_bands": bands,
         "adjusted_count": sum(row["adjustment_applied"] for row in results),
+        "v3_adjusted_count": sum(
+            row["geometry_cleanup_version"] == 3 for row in results),
+        "filled_hole_count": sum(row["filled_hole_count"] for row in results),
+        "filled_compact_texture_hole_count": sum(
+            row["filled_compact_texture_hole_count"] for row in results),
         "boundary_simplified_count": sum(
             row["boundary_simplification_applied"] for row in results),
         "median_boundary_vertex_reduction_ratio": (
@@ -214,6 +248,7 @@ def main() -> int:
         args.output.write_text(rendered + "\n", encoding="utf-8")
     print(json.dumps({key: report[key] for key in (
         "sample_count", "size_bands", "adjusted_count", "unchanged_tiny_count",
+        "v3_adjusted_count", "filled_hole_count", "filled_compact_texture_hole_count",
         "boundary_simplified_count", "median_boundary_vertex_reduction_ratio",
         "boundary_simplification_epsilon_counts", "holes_before", "holes_after",
         "gate_passed")}, ensure_ascii=False, indent=2))

@@ -82,6 +82,16 @@ SURFACE_PROMPT = (
     "anything outside the isolated pixels. Use uncertain when evidence is insufficient."
 )
 
+ISOLATED_SEMANTIC_PROMPT = (
+    "This image shows only the candidate pixels on a uniform gray background. "
+    "Classify only those visible pixels using the supplied class enum. Do not infer "
+    "identity from location, surrounding context, overlay color or the earlier robot "
+    "proposal. other_robot requires visible evidence of a separate motorized autonomous "
+    "chassis or AGV. A box, pallet, passive platform, fork, manual cart, conventional "
+    "forklift or camera-vehicle part is not other_robot. Use unknown_object whenever the "
+    "isolated pixels do not establish a literal semantic class."
+)
+
 
 def fixed_point_grid(width, height, columns=24, rows=12, top_fraction=2 / 3):
     """Return deterministic interior scan points without using class or color cues."""
@@ -483,9 +493,57 @@ def classify_surface_veto(config, rows, image, output, frame):
     return durations
 
 
+def classify_isolated_semantics(config, rows, image, output, frame):
+    """Classify consensus candidates without surrounding contextual pixels."""
+    pending = [
+        row for row in rows
+        if (row.get("dual_pass_consensus")
+            and row.get("surface_veto", {}).get("decision") == "physical_object")]
+    requests = []
+    for row in pending:
+        data = isolated_mask_image(image, row["_shape"])
+        path = output / (
+            f"frame-{artifact_frame_token(frame)}-{row['id'].lower()}-"
+            "isolated-semantic.jpg")
+        path.write_bytes(data)
+        requests.append({"row": row, "image": data, "artifact": str(path.resolve())})
+    durations = []
+    for start in range(0, len(requests), 3):
+        group = requests[start:start + 3]
+        started = time.perf_counter()
+        if len(group) == 1:
+            values = [chat(
+                config, ISOLATED_SEMANTIC_PROMPT, group[0]["image"],
+                response_schema=CLASS_SCHEMA)]
+        else:
+            values = chat_batch(
+                config,
+                [{"instruction": ISOLATED_SEMANTIC_PROMPT, "image": item["image"]}
+                 for item in group],
+                response_schema=CLASS_SCHEMA, max_tokens=192)
+        durations.append(time.perf_counter() - started)
+        for request, value in zip(group, values):
+            request["row"]["isolated_semantic"] = value
+            request["row"]["isolated_semantic_artifact"] = request["artifact"]
+    return durations
+
+
+def isolated_semantic_route(result):
+    """Return a conservative route for a context-free semantic classification."""
+    semantic_class = (result or {}).get("class")
+    if semantic_class == "other_robot":
+        return "auto_candidate"
+    if semantic_class == "unknown_object":
+        return "review_required"
+    if semantic_class:
+        return "explicit_negative"
+    return "not_evaluated"
+
+
 def evaluate_frame(frame, image_bytes, existing_annotations, config, point_endpoint,
                    output, top_k, exemplar_sheet=None,
-                   adaptive_exemplar_review=False, point_grid=None):
+                   adaptive_exemplar_review=False, point_grid=None,
+                   isolated_semantic_triage=False):
     frame_started = time.perf_counter()
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     width, height = image.size
@@ -540,6 +598,9 @@ def evaluate_frame(frame, image_bytes, existing_annotations, config, point_endpo
         classification_strategy = "single_pass_batches"
     surface_veto_seconds = classify_surface_veto(
         config, classified, image, output, frame)
+    isolated_semantic_seconds = (
+        classify_isolated_semantics(config, classified, image, output, frame)
+        if isolated_semantic_triage else [])
     existing_shapes = [
         shape for shape in existing_annotations
         if shape.get("label") == "other_robot"]
@@ -552,16 +613,26 @@ def evaluate_frame(frame, image_bytes, existing_annotations, config, point_endpo
         item["foreground_ego_pair_veto"] = item["id"] in ego_pair_ids
         item["classification_disagreement_review"] = (
             item["id"] in disagreement_ids)
-    selected = [item for item in classified
-                if item["dual_pass_consensus"]
-                and not item["foreground_ego_pair_veto"]
-                and item.get("surface_veto", {}).get("decision") == "physical_object"]
+    selected = [
+        item for item in classified
+        if (item["dual_pass_consensus"]
+            and not item["foreground_ego_pair_veto"]
+            and item.get("surface_veto", {}).get("decision") == "physical_object"
+            and (not isolated_semantic_triage
+                 or isolated_semantic_route(item.get("isolated_semantic"))
+                 == "auto_candidate"))]
     uncertain = [item for item in classified
                  if ((item["dual_pass_consensus"]
                       and not item["foreground_ego_pair_veto"]
-                      and item.get("surface_veto", {}).get("decision") == "uncertain")
+                      and (item.get("surface_veto", {}).get("decision") == "uncertain"
+                           or (isolated_semantic_triage
+                               and isolated_semantic_route(
+                                   item.get("isolated_semantic"))
+                               == "review_required")))
                      or item["classification_disagreement_review"])]
     for item in classified:
+        item["isolated_semantic_route"] = isolated_semantic_route(
+            item.get("isolated_semantic"))
         item["existing_annotation_ious"] = [
             _iou(item["_shape"]["_record"], record)
             for record in existing_records]
@@ -597,9 +668,13 @@ def evaluate_frame(frame, image_bytes, existing_annotations, config, point_endpo
         "classification_batch_seconds": classify_seconds,
         "classification_strategy": classification_strategy,
         "surface_veto_batch_seconds": surface_veto_seconds,
+        "isolated_semantic_batch_seconds": isolated_semantic_seconds,
+        "isolated_semantic_triage": isolated_semantic_triage,
         "selection_rule": (
-            "baseline_and_exemplar_supported_other_robot"
-            if exemplar_sheet else "baseline_supported_other_robot"),
+            "context_and_isolated_semantic_supported_other_robot"
+            if isolated_semantic_triage else
+            ("baseline_and_exemplar_supported_other_robot"
+             if exemplar_sheet else "baseline_supported_other_robot")),
         "selected_ids": [item["id"] for item in selected],
         "uncertain_review_ids": [item["id"] for item in uncertain],
         "foreground_ego_pair_veto_ids": sorted(ego_pair_ids),

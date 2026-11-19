@@ -101,6 +101,10 @@ def summarize_frame(sample: dict, report: dict) -> dict:
         "classification_batch_seconds": report["classification_batch_seconds"],
         "classification_strategy": report["classification_strategy"],
         "surface_veto_batch_seconds": report["surface_veto_batch_seconds"],
+        "isolated_semantic_batch_seconds": report.get(
+            "isolated_semantic_batch_seconds", []),
+        "isolated_semantic_triage": report.get(
+            "isolated_semantic_triage", False),
         "rows": report["rows"],
     }
 
@@ -115,6 +119,7 @@ def main() -> int:
     parser.add_argument("--top-k", type=int, default=10)
     parser.add_argument("--exemplar-sheet", type=Path)
     parser.add_argument("--adaptive-exemplar-review", action="store_true")
+    parser.add_argument("--isolated-semantic-triage", action="store_true")
     parser.add_argument("--point-columns", type=int, default=24)
     parser.add_argument("--point-rows", type=int, default=12)
     parser.add_argument("--point-top-fraction", type=float, default=2 / 3)
@@ -155,7 +160,8 @@ def main() -> int:
             exemplar_sheet=exemplar_sheet,
             adaptive_exemplar_review=args.adaptive_exemplar_review,
             point_grid={"columns": args.point_columns, "rows": args.point_rows,
-                        "top_fraction": args.point_top_fraction})
+                        "top_fraction": args.point_top_fraction},
+            isolated_semantic_triage=args.isolated_semantic_triage)
         row = summarize_frame(sample, report)
         rows.append(row)
         print(json.dumps({key: row[key] for key in (
@@ -185,6 +191,7 @@ def main() -> int:
                        "rows": args.point_rows,
                        "top_fraction": args.point_top_fraction},
         "adaptive_exemplar_review_requested": args.adaptive_exemplar_review,
+        "isolated_semantic_triage_requested": args.isolated_semantic_triage,
         "elapsed_seconds": time.perf_counter() - run_started,
         "assistant_candidate_review": {
             "reviewed": reviewed,

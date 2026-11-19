@@ -8,7 +8,8 @@ from PIL import Image
 from tools.evaluate_reference_point_scan import (
     artifact_frame_token, bounded_mask_record, fixed_point_grid,
     isolated_mask_image, known_coverage, known_coverage_record,
-    merge_exemplar_results, multiscale_panel, supported_other_robot)
+    isolated_semantic_route, merge_exemplar_results, multiscale_panel,
+    supported_other_robot)
 from tools.tiled_candidate_utils import _mask_record
 
 
@@ -102,6 +103,20 @@ class ReferencePointScanTests(unittest.TestCase):
         self.assertFalse(merged[0]["dual_pass_consensus"])
         self.assertTrue(merged[1]["exemplar_evaluated"])
         self.assertTrue(merged[1]["dual_pass_consensus"])
+
+    def test_isolated_semantic_route_requires_literal_robot_evidence(self):
+        self.assertEqual(
+            isolated_semantic_route({"class": "other_robot"}),
+            "auto_candidate")
+        self.assertEqual(
+            isolated_semantic_route({"class": "unknown_object"}),
+            "review_required")
+        for semantic_class in ("pallet", "vehicle_or_forklift", "ego_robot_part",
+                               "tool_or_equipment", "floor_or_structure"):
+            self.assertEqual(
+                isolated_semantic_route({"class": semantic_class}),
+                "explicit_negative")
+        self.assertEqual(isolated_semantic_route(None), "not_evaluated")
 
 
 if __name__ == "__main__":

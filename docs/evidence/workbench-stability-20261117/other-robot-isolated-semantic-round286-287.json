@@ -1,0 +1,77 @@
+{
+  "schema_version": "labelagent.other-robot-isolated-semantic.round286-287.v1",
+  "created_local": "2026-11-20T04:11:27+08:00",
+  "status": "offline_safety_diagnostic_verified_not_accepted_for_production",
+  "human_truth": false,
+  "candidate_only": true,
+  "production_deployed": false,
+  "approved_for_training": false,
+  "production_model_changed": false,
+  "state_written": false,
+  "round286_new_dataset_frame": {
+    "dataset": "Capture_20261103/capture.mcap",
+    "frame": 0,
+    "point_count": 184,
+    "classified_count": 10,
+    "selected_ids": [],
+    "uncertain_review_ids": ["C02", "C04", "C08", "C10"],
+    "isolated_semantic": {
+      "C04": "unknown_object",
+      "C08": "unknown_object"
+    },
+    "elapsed_seconds": 20.260922000015853,
+    "result_sha256": "17cc29ad52f0a5544a25bf6317055256087ffcb0e0532a0a37de8872a9180fa4"
+  },
+  "round287_cross_sequence10": {
+    "samples": 10,
+    "assistant_candidate_positive": 6,
+    "assistant_candidate_negative": 4,
+    "positive_covered_by_auto_or_review": 5,
+    "negative_with_auto_candidate": 0,
+    "negative_with_review_candidate": 0,
+    "auto_candidate_images": 0,
+    "review_required_images": 5,
+    "elapsed_seconds": 250.38875450001797,
+    "result_sha256": "9bef226b1802cee2a4494ea8502b879e1094f76f5a64291e471dec1dec764c16",
+    "is_accuracy": false
+  },
+  "baseline_round203": {
+    "positive_covered_by_auto_or_review": 5,
+    "negative_with_auto_candidate": 0,
+    "negative_with_review_candidate": 0,
+    "auto_candidate_images": 1,
+    "review_required_images": 4,
+    "elapsed_seconds": 164.691784,
+    "timing_comparison_controlled": false
+  },
+  "decision": {
+    "production_integration": "rejected",
+    "reason": "Preserved assistant-triage coverage and negative cleanliness but removed the only auto candidate, added review load, and added model latency.",
+    "retained_scope": "explicit_offline_diagnostic_only"
+  },
+  "implementation_sha256": {
+    "tools/evaluate_reference_point_scan.py": "718762b303e0bb8a71114d238d779f00c2ffcbb8322746761a68eb8894ef2f2d",
+    "tools/evaluate_static_other_robot_point_scan.py": "320173233de8684c54aa984b107e2d2f2bc5f8c906f9e82097645380f162cb65",
+    "tools/diagnose_new_dataset_other_robot.py": "3b6c7abf147e5d8fb5486f13326724f9fe2dea22b25c59a3d72110e66488f978",
+    "tests/test_reference_point_scan.py": "503817e73412585c428bccf718a7393abe5972b591db347525df9c7948fbf893"
+  },
+  "verification": {
+    "python_compile": "passed",
+    "targeted_unittests": {"passed": 20, "failed": 0},
+    "live_readback": {
+      "workbench_http": 200,
+      "point_sam_http": 200,
+      "formal_sam_http": 200,
+      "vlm_http": 200,
+      "point_sam_model_loaded": true,
+      "formal_sam_model_loaded": true,
+      "vlm_model_loaded": true,
+      "vlm_inflight": 0,
+      "vlm_waiting": 0
+    },
+    "free_space_gib": {"C": 0.366, "D": 1.181}
+  },
+  "next_gate": "Obtain current human review and expand to at least 24 sequence-isolated samples before any production candidate-layer integration.",
+  "boundary": "Assistant triage is not accuracy. No human truth, training approval, production candidate behavior, model weight, or OSS object changed."
+}
+

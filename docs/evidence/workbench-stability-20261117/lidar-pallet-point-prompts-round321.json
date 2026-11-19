@@ -1,0 +1,47 @@
+{
+  "schema_version": "labelagent.lidar_pallet_point_prompt_summary.v1",
+  "round": 321,
+  "date": "2026-11-20",
+  "scope": "Capture_20261103 highest geometry-change distant pallet candidates",
+  "selected_count": 4,
+  "prompt_ready_count": 3,
+  "sam_frame_count": 3,
+  "sam_attempt_count": 9,
+  "sam_successful_attempt_count": 7,
+  "sam_http_error_count": 2,
+  "sam_other_error_count": 0,
+  "safe_expansion_count": 0,
+  "minimum_baseline_coverage": 0.5,
+  "minimum_area_ratio": 1.25,
+  "maximum_minor_axis_ratio": 1.5,
+  "maximum_other_baseline_fraction": 0.1,
+  "reference_labels_used": false,
+  "workbench_writes": 0,
+  "contact_sheet_sha256": "54aa551f9a517256656a36f102e8b93b1109e3378cd5909290bba8ff08be48bb",
+  "full_report_sha256": "0c22c5c015537709cca42b6d1d2ef34d317c2657809d4d7fcd6f908ff99997e3",
+  "tests": {
+    "targeted_passed": 14,
+    "python_passed": 1111,
+    "python_subtests_passed": 186,
+    "python_utf8_required": true
+  },
+  "services": {
+    "workbench_ready": true,
+    "text_sam_ready": true,
+    "point_sam_ready": true,
+    "vlm_ready": true,
+    "vlm_model": "labelagent-vlm8b"
+  },
+  "runtime_storage": {
+    "observed_free_mib_range": [289.91, 322.06],
+    "one_frame_required_mib": 264.0,
+    "status": "low_single_frame_only",
+    "external_recent_paths_modified": false
+  },
+  "production_state_sha256": "237844f73ff4495e575c6a3f966260b9385efbdf1edee7d0e5177518470ddfab",
+  "decision": "do not deploy lidar prompt expansion; retain failure isolation and gates, then move to reviewed hard-example post-training",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false
+}

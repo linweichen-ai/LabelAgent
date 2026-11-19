@@ -34,6 +34,7 @@ from .workflow import (DESCRIPTION_INPUT_VERSION, MAX_REVIEW_ROUNDS, RunCancelle
                        generate_only, review_existing, run, trace_calls,
                        candidate_overlay, reference_overlay, chat, chat_batch,
                        refine_pallet_candidate_geometry,
+                       ego_bottom_point_candidates,
                        sam_text_multi_prefetch, sam_text_prefetch,
                        slope_overlap_crop_images,
                        VISIBLE_LABEL_DEFINITIONS)
@@ -376,6 +377,58 @@ def reference_visibility_review_queue(discovery, candidates):
                 "route": "human_review_required", "source": "visible_label_discovery",
                 "conflict_index": index, "conflict": conflict})
     return queue
+
+
+def recover_reference_ego_candidate(config, image, discovery, result):
+    """Add one guarded ego proposal only for a high-confidence discovery miss."""
+    status = {"enabled": config.get("ego_bottom_point_fallback") is True,
+              "triggered": False, "status": "disabled"}
+    if not status["enabled"]:
+        return status
+    shapes = result.get("shapes") if isinstance(result, dict) else None
+    if not isinstance(shapes, list):
+        raise ValueError("ego 补救前候选格式无效")
+    if any(isinstance(shape, dict) and shape.get("label") == "ego" for shape in shapes):
+        return status | {"status": "existing_candidate"}
+    assessments = discovery.get("assessments") if isinstance(discovery, dict) else None
+    assessment = next((item for item in assessments or []
+                       if isinstance(item, dict) and item.get("label") == "ego"), None)
+    if (not isinstance(assessment, dict) or assessment.get("evidence") != "present"
+            or type(assessment.get("confidence")) not in (int, float)
+            or isinstance(assessment.get("confidence"), bool)
+            or assessment["confidence"] < 0.90):
+        return status | {"status": "discovery_not_eligible"}
+    status.update(triggered=True, discovery_confidence=float(assessment["confidence"]))
+    next_id = max([0] + [shape.get("id", 0) for shape in shapes
+                         if isinstance(shape, dict) and type(shape.get("id")) is int]) + 1
+    try:
+        recovered, evidence = ego_bottom_point_candidates(config, image, next_id=next_id)
+    except RunCancelled:
+        raise
+    except Exception as error:
+        result.setdefault("review_queue", []).append({
+            "label": "ego", "reason_code": "ego_point_fallback_failed",
+            "route": "human_review_required", "source": "ego_bottom_point_fallback",
+            "error": str(error)[:500],
+        })
+        return status | {"status": "failed", "error": str(error)[:500]}
+    if not recovered:
+        result.setdefault("review_queue", []).append({
+            "label": "ego", "reason_code": "ego_point_fallback_no_guarded_candidate",
+            "route": "human_review_required", "source": "ego_bottom_point_fallback",
+            "evidence": evidence,
+        })
+        return status | {"status": "no_guarded_candidate", "evidence": evidence}
+    shapes.extend(recovered)
+    result["candidates_added"] = int(result.get("candidates_added") or 0) + len(recovered)
+    result.setdefault("review_queue", []).append({
+        "label": "ego", "reason_code": "ego_point_fallback_candidate",
+        "route": "human_review_required", "source": "ego_bottom_point_fallback",
+        "candidate_available": True, "candidate_id": recovered[0]["id"],
+        "evidence": evidence,
+    })
+    return status | {"status": "candidate_generated", "candidate_count": len(recovered),
+                     "candidate_id": recovered[0]["id"], "evidence": evidence}
 
 
 @app.after_request
@@ -4054,10 +4107,16 @@ def set_config():
         updated_keys = []
         try:
             for key in ("llm_url", "llm_model", "llm_key",
-                        "llm_prompt_profile", "sam3_url"):
+                        "llm_prompt_profile", "sam3_url", "sam3_point_url"):
                 if key in body and body[key]:
                     state["config"][key] = body[key]
                     updated_keys.append(key)
+            if "ego_bottom_point_fallback" in body:
+                if type(body["ego_bottom_point_fallback"]) is not bool:
+                    raise ValueError("ego_bottom_point_fallback 必须为布尔值")
+                state["config"]["ego_bottom_point_fallback"] = body[
+                    "ego_bottom_point_fallback"]
+                updated_keys.append("ego_bottom_point_fallback")
             for key, value in fast_updates.items():
                 if value is None:
                     state["config"].pop(key, None)
@@ -5221,6 +5280,9 @@ def generate_reference_draft():
                 },
                 "max_review_rounds": max_rounds,
                 "sam_prompts": prompt_payload,
+                "ego_bottom_point_fallback": bool(
+                    config.get("ego_bottom_point_fallback")),
+                "sam3_point_url": config.get("sam3_point_url"),
                 "auto_detect_visible": auto_detect_visible,
                 "probe_missing_selected": probe_missing_selected,
                 "defer_class_audit": defer_class_audit,
@@ -5247,6 +5309,9 @@ def generate_reference_draft():
             result = runner(config, target_image, description, selected,
                             max_rounds=max_rounds,
                             on_progress=on_progress, reference=None)
+            ego_recovery = recover_reference_ego_candidate(
+                config, target_image, discovery, result)
+            result.setdefault("agent", {})["ego_bottom_point_fallback"] = ego_recovery
         if result["agent"].get("stop_reason") == "error":
             raise RuntimeError("SAM/VLM/Agent 未能生成有效参考帧草稿")
         candidate_output_sha256 = _sha256_json(result["shapes"])

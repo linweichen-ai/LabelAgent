@@ -1,0 +1,97 @@
+{
+  "round": 272,
+  "date": "2026-11-20",
+  "status": "production_deployed_candidate_only",
+  "production_deployed": true,
+  "candidate_only": true,
+  "human_truth_modified": false,
+  "training_data_modified": false,
+  "model_weights_modified": false,
+  "trigger_contract": {
+    "feature_flag_required": true,
+    "vlm_ego_present_required": true,
+    "minimum_vlm_confidence": 0.9,
+    "existing_ego_candidate_required_absent": true,
+    "point_count": 18,
+    "single_image_encoding_required": true,
+    "complete_point_coverage_required": true,
+    "accepted_geometry_profiles": [
+      "wide_bottom_chassis",
+      "centered_fork_carriage"
+    ]
+  },
+  "isolated_real_smoke": {
+    "003": {
+      "candidates_before": 16,
+      "candidates_after": 17,
+      "ego_candidates_added": 1,
+      "elapsed_seconds": 38.512,
+      "point_service_seconds": 0.316,
+      "blind_class_audit_label": "ego",
+      "blind_class_audit_confidence": 1.0
+    },
+    "004": {
+      "candidates_before": 13,
+      "candidates_after": 14,
+      "ego_candidates_added": 1,
+      "elapsed_seconds": 13.328,
+      "point_service_seconds": 0.411,
+      "blind_class_audit_label": "ego",
+      "blind_class_audit_confidence": 1.0
+    }
+  },
+  "tests": {
+    "targeted_pytest_passed": 36,
+    "full_pytest_passed": 1057,
+    "unittest_subtests_passed": 186,
+    "node_tests_passed": 142,
+    "node_tests_failed": 0,
+    "javascript_syntax_passed": true,
+    "git_diff_check_passed": true
+  },
+  "deployment": {
+    "backup_path": "D:\\Apps\\LabelAgent\\.local\\backups\\round272-ego-fallback-predeploy-20261120",
+    "files": {
+      "source/agent/workflow.py": {
+        "previous_sha256": "AFE8C9D522EE6E5EBF24396B274F8FBD2EC9C69E777A97D64945AFDD7D79D122",
+        "deployed_sha256": "E83B0E6043FAA0F48392B27E72C13B59BE5C144B5F4549646FD8879644830FA7"
+      },
+      "source/agent/server.py": {
+        "previous_sha256": "75B6B423652425F1D28D88E5F2CFF4C96E8F6F0B38257049E38765920C40324E",
+        "deployed_sha256": "6247FFFED9ED1E00152D3F86594E78A9A391F74347A49FC506F49510CC0FE825"
+      },
+      "source/web/app.js": {
+        "previous_sha256": "01389EDEA69F9D04D01BD7D0CC6AFCCEEACB061C83678D08A458022CD182D858",
+        "deployed_sha256": "F476AFD26E9DDCDCA8CE85E2D25D92E5895B38360F92AD4C14BCC7B1BBB4549A"
+      },
+      ".local/manage_remote.py": {
+        "previous_sha256": "38A1A87987FDFD2D7929F31A4BB66CD14FA7CAA4FB0F95885487CFED7BE36AD6",
+        "deployed_sha256": "EAE8CC44D606283B91B4CD62A88439138DAE8CA435A7DDBB7A82A84D91877EDC"
+      }
+    }
+  },
+  "post_deploy_readback": {
+    "home_http_status": 200,
+    "run_status": "idle",
+    "sam_model_loaded": true,
+    "sam_backend": "remote_4090_sam3",
+    "vlm_model": "labelagent-vlm8b",
+    "ego_bottom_point_fallback": true,
+    "sam3_point_url": "http://127.0.0.1:28766",
+    "dataset_path": "D:\\Apps\\LabelAgent\\work\\datasets\\CVAT_Task3_20261028\\CVAT_Task3_SAM3_candidates.mcap",
+    "topic": "/CVAT/Task3/images",
+    "truth_frames": ["44"]
+  },
+  "storage": {
+    "c_free_gib_after_deploy": 0.256,
+    "d_free_gib_after_deploy": 0.413,
+    "reversible_ntfs_compression_target": "D:\\Apps\\LabelAgent\\.local\\relocated-worktrees\\mask2former_single_recovery_20261104",
+    "recovered_mib": 40.96,
+    "files_deleted": 0
+  },
+  "limitations": [
+    "No same-sequence natural negative without visible host hardware was found in the reviewed four-camera sample.",
+    "The fallback remains a human-review candidate and is not human truth or approved training data.",
+    "Low local disk space blocks safe bulk inference, downloads, and training until more recoverable space is released."
+  ]
+}

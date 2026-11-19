@@ -70,6 +70,14 @@ test('参考起稿公开高风险复核与安全保存阶段', () => {
   assert.match(text, /新图首批机器候选通常约 15～25 秒出现/);
 });
 
+test('ego 点扫描补救在界面中保持高风险人工复核边界', () => {
+  const app = source('app.js');
+  assert.match(app, /ego_bottom_point_fallback/);
+  assert.match(app, /egoFallback\.status==='candidate_generated'/);
+  assert.match(app, /文本分割漏检/);
+  assert.match(app, /该结果已进入高风险复核，仍须逐个检查后才能成为人工真值/);
+});
+
 test('参考起稿支持逐类尝试全部已选类别但仍保持候选边界', () => {
   const prep = source('reference-prep.js');
   assert.match(prep, /ALL_SELECTED_LABELS = '__all_selected_labels__'/);

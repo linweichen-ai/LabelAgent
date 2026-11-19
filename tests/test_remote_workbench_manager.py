@@ -204,6 +204,8 @@ class RemoteWorkbenchManagerTests(unittest.TestCase):
     def test_standard_start_persists_an_explicit_sam_route(self):
         source = PATH.read_text(encoding="utf-8")
         self.assertIn('"sam3_url": f"http://127.0.0.1:{sam_endpoint_port}"', source)
+        self.assertIn('"sam3_point_url": f"http://127.0.0.1:{SAM_PORT}"', source)
+        self.assertIn('"ego_bottom_point_fallback": True', source)
         self.assertNotIn("sam_endpoint_port = FAST_SAM_PORT", source)
         self.assertIn("多提示契约验收完成前仅作备用", source)
 
@@ -245,6 +247,8 @@ class RemoteWorkbenchManagerTests(unittest.TestCase):
             "llm_url": f"http://127.0.0.1:{MODULE.VLM_PORT}/v1",
             "llm_model": "labelagent-vlm8b",
             "sam3_url": f"http://127.0.0.1:{MODULE.SAM_PORT}",
+            "sam3_point_url": f"http://127.0.0.1:{MODULE.SAM_PORT}",
+            "ego_bottom_point_fallback": True,
         })
         source = PATH.read_text(encoding="utf-8")
         self.assertNotIn(

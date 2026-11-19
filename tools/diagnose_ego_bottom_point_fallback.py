@@ -26,7 +26,8 @@ if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from source.agent.edit_agent import _rasterize
-from source.agent.workflow import candidate_overlay
+from source.agent.workflow import (candidate_overlay, ego_bottom_geometry_profile,
+                                   ego_bottom_points)
 
 
 def file_sha256(path: Path) -> str:
@@ -35,14 +36,6 @@ def file_sha256(path: Path) -> str:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
-
-
-def fixed_bottom_points(width: int, height: int) -> list[dict]:
-    x_fractions = (0.094, 0.25, 0.406, 0.562, 0.719, 0.875)
-    y_fractions = (0.742, 0.859, 0.957)
-    return [{"x": min(width - 1, round(width * x)),
-             "y": min(height - 1, round(height * y))}
-            for y in y_fractions for x in x_fractions]
 
 
 def point_batch(image: bytes, points: list[dict], endpoint: str) -> dict:
@@ -84,37 +77,12 @@ def mask_iou(first: dict, second: dict) -> float:
     return intersection / max(first["area"] + second["area"] - intersection, 1)
 
 
-def guard_profile(record: dict, score: float, width: int, height: int) -> str | None:
-    x0, y0, x1, y1 = record["bbox"]
-    area_ratio = record["area"] / (width * height)
-    width_ratio = (x1 - x0) / width
-    height_ratio = (y1 - y0) / height
-    center_ratio = ((x0 + x1) / 2) / width
-    common = score >= 0.70 and y1 >= height - 2
-    if common and (
-        y0 >= height * 0.70
-        and width_ratio >= 0.60
-        and 0.12 <= height_ratio <= 0.35
-        and 0.08 <= area_ratio <= 0.30
-    ):
-        return "wide_bottom_chassis"
-    if common and (
-        y0 >= height * 0.60
-        and 0.35 <= width_ratio <= 0.60
-        and 0.30 <= height_ratio <= 0.45
-        and 0.08 <= area_ratio <= 0.18
-        and 0.35 <= center_ratio <= 0.65
-    ):
-        return "centered_fork_carriage"
-    return None
-
-
 def evaluate(image_path: Path, expected: bool, endpoint: str,
              output_dir: Path, index: int) -> dict:
     image = image_path.read_bytes()
     with Image.open(io.BytesIO(image)) as decoded:
         width, height = decoded.size
-    points = fixed_bottom_points(width, height)
+    points = ego_bottom_points(width, height)
     started = time.monotonic()
     batch = point_batch(image, points, endpoint)
     raw, guarded = [], []
@@ -133,7 +101,8 @@ def evaluate(image_path: Path, expected: bool, endpoint: str,
         record = mask_record(shape, width, height)
         shape["_record"] = record
         raw.append(shape)
-        profile = guard_profile(record, shape["score"], width, height)
+        profile = ego_bottom_geometry_profile(
+            record["bbox"], record["area"], shape["score"], width, height)
         if profile:
             shape["guard_profile"] = profile
             guarded.append(shape)

@@ -508,6 +508,8 @@ def start(open_browser):
             "llm_url": f"http://127.0.0.1:{VLM_PORT}/v1",
             "llm_model": "labelagent-vlm8b",
             "sam3_url": f"http://127.0.0.1:{sam_endpoint_port}",
+            "sam3_point_url": f"http://127.0.0.1:{SAM_PORT}",
+            "ego_bottom_point_fallback": True,
             "llm_fast_url": (f"http://127.0.0.1:{FAST_VLM_PORT}/v1"
                              if fast_ready else ""),
             "llm_fast_model": "labelagent-vlm8b" if fast_ready else "",
@@ -586,6 +588,8 @@ def isolate_model_config():
         "llm_url": f"http://127.0.0.1:{VLM_PORT}/v1",
         "llm_model": "labelagent-vlm8b",
         "sam3_url": f"http://127.0.0.1:{SAM_PORT}",
+        "sam3_point_url": f"http://127.0.0.1:{SAM_PORT}",
+        "ego_bottom_point_fallback": True,
     }
 
 

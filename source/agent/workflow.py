@@ -32,6 +32,7 @@ _sam_multi_protocol_lock = threading.Lock()
 _sam_multi_protocols = {}
 MAX_REVIEW_ROUNDS = 100
 MAX_PROTOCOL_RETRIES = 2
+EGO_BOTTOM_POINT_FALLBACK_VERSION = "labelagent.ego_bottom_point_fallback.v1"
 
 
 class ModelOutputError(ValueError):
@@ -199,7 +200,10 @@ def sam_request(config, endpoint, image, **prompt):
 
 
 def _sam_request(config, endpoint, image, **prompt):
-    url = config.get("sam3_url") or os.environ.get("SAM3_URL", "http://127.0.0.1:8766")
+    point_endpoint = endpoint == "/segment_points_batch"
+    url = ((config.get("sam3_point_url") if point_endpoint else None)
+           or config.get("sam3_url")
+           or os.environ.get("SAM3_URL", "http://127.0.0.1:8766"))
     payload = json.dumps({"image": base64.b64encode(image).decode("ascii"), **prompt}).encode()
     request = urllib.request.Request(url.rstrip("/") + endpoint, data=payload,
         headers={"Content-Type": "application/json"})
@@ -220,6 +224,122 @@ def _sam_request(config, endpoint, image, **prompt):
 
 def sam_text(image, prompt, config):
     return sam_request(config, "/segment_text", image, prompt=prompt).get("results", [])
+
+
+def ego_bottom_points(width, height):
+    """Return one deterministic, resolution-relative scan of the image bottom."""
+    if type(width) is not int or type(height) is not int or width < 2 or height < 2:
+        raise ValueError("ego 底部点扫描需要有效图像尺寸")
+    x_fractions = (0.094, 0.25, 0.406, 0.562, 0.719, 0.875)
+    y_fractions = (0.742, 0.859, 0.957)
+    return [{"x": min(width - 1, round(width * x)),
+             "y": min(height - 1, round(height * y))}
+            for y in y_fractions for x in x_fractions]
+
+
+def ego_bottom_geometry_profile(bbox, area, score, width, height):
+    """Fail closed unless a mask matches one reviewed host-robot geometry."""
+    if (not isinstance(bbox, (list, tuple)) or len(bbox) != 4
+            or any(type(value) is not int for value in bbox)
+            or type(area) is not int or area <= 0
+            or type(score) not in (int, float) or isinstance(score, bool)
+            or not math.isfinite(score)):
+        return None
+    x0, y0, x1, y1 = bbox
+    if not (0 <= x0 < x1 <= width and 0 <= y0 < y1 <= height):
+        return None
+    area_ratio = area / (width * height)
+    width_ratio = (x1 - x0) / width
+    height_ratio = (y1 - y0) / height
+    center_ratio = ((x0 + x1) / 2) / width
+    common = score >= 0.70 and y1 >= height - 2
+    if common and (
+        y0 >= height * 0.70
+        and width_ratio >= 0.60
+        and 0.12 <= height_ratio <= 0.35
+        and 0.08 <= area_ratio <= 0.30
+    ):
+        return "wide_bottom_chassis"
+    if common and (
+        y0 >= height * 0.60
+        and 0.35 <= width_ratio <= 0.60
+        and 0.30 <= height_ratio <= 0.45
+        and 0.08 <= area_ratio <= 0.18
+        and 0.35 <= center_ratio <= 0.65
+    ):
+        return "centered_fork_carriage"
+    return None
+
+
+def ego_bottom_point_candidates(config, image, next_id=1):
+    """Recover at most one review-only ego proposal from a single SAM feature pass."""
+    if type(next_id) is not int or next_id < 1:
+        raise ValueError("ego 补救候选 ID 无效")
+    with Image.open(io.BytesIO(image)) as decoded:
+        width, height = decoded.size
+    points = ego_bottom_points(width, height)
+    response = sam_request(config, "/segment_points_batch", image, points=points)
+    items = response.get("items") if isinstance(response, dict) else None
+    diagnostics = response.get("diagnostics") if isinstance(response, dict) else None
+    expected_points = {(point["x"], point["y"]) for point in points}
+    returned_points = {
+        (item.get("point", {}).get("x"), item.get("point", {}).get("y"))
+        for item in items or [] if isinstance(item, dict)
+    }
+    if (not isinstance(items, list) or len(items) != len(points)
+            or not isinstance(diagnostics, dict)
+            or diagnostics.get("image_encoded_once") is not True
+            or diagnostics.get("point_count") != len(points)
+            or returned_points != expected_points):
+        raise ValueError("SAM 3 ego 批量点扫描未证明单次编码和完整点覆盖")
+
+    from .edit_agent import _rasterize
+    guarded = []
+    raw_count = 0
+    for item in items:
+        result = item.get("result")
+        if not isinstance(result, dict) or not result.get("parts"):
+            continue
+        raw_count += 1
+        score = result.get("score")
+        shape = {
+            "id": next_id,
+            "label": "ego",
+            "points": result["parts"][0].get("points", []),
+            "holes": result["parts"][0].get("holes", []),
+            "parts": result["parts"],
+            "score": score,
+            "source": "sam_point_ego_fallback",
+            "source_point": copy.deepcopy(item["point"]),
+        }
+        if not valid_shape(shape, width, height):
+            continue
+        mask = _rasterize(shape, width, height)
+        rows, columns = mask.nonzero()
+        if not len(rows):
+            continue
+        bbox = [int(columns.min()), int(rows.min()),
+                int(columns.max()) + 1, int(rows.max()) + 1]
+        profile = ego_bottom_geometry_profile(
+            bbox, int(mask.sum()), score, width, height)
+        if profile is None:
+            continue
+        shape["ego_fallback_profile"] = profile
+        shape["ego_fallback_version"] = EGO_BOTTOM_POINT_FALLBACK_VERSION
+        shape["ego_fallback_bbox"] = bbox
+        shape["ego_fallback_area"] = int(mask.sum())
+        guarded.append(shape)
+    selected = max(guarded, key=lambda shape: shape["score"], default=None)
+    evidence = {
+        "version": EGO_BOTTOM_POINT_FALLBACK_VERSION,
+        "point_count": len(points),
+        "raw_candidate_count": raw_count,
+        "guarded_candidate_count": len(guarded),
+        "selected_profile": (selected.get("ego_fallback_profile") if selected else None),
+        "selected_score": (selected.get("score") if selected else None),
+        "service_diagnostics": copy.deepcopy(diagnostics),
+    }
+    return ([selected] if selected is not None else []), evidence
 
 
 def sam_text_prefetch(image, prompt, config):

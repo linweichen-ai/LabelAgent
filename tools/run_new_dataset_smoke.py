@@ -8,6 +8,7 @@ It never changes the source state, human truth, or training data.
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import os
@@ -235,6 +236,7 @@ def main() -> int:
         config_payload = {
             key: value for key, value in config.items()
             if key in {"llm_url", "llm_model", "llm_key", "llm_prompt_profile", "sam3_url",
+                       "sam3_point_url", "ego_bottom_point_fallback",
                        "llm_fast_url", "llm_fast_model", "llm_fast_key",
                        "llm_fast_max_pixels", "llm_fast_max_long_edge",
                        "llm_fast_max_extra_pixels", "llm_fast_max_extra_long_edge",
@@ -350,6 +352,8 @@ def main() -> int:
                 "unknown_candidates": discovery.get("unknown_candidates", []),
                 "open_set_scan_complete": discovery.get("open_set_scan_complete"),
                 "review_queue_count": len((response.get("agent") or {}).get("review_queue") or []),
+                "ego_bottom_point_fallback": copy.deepcopy(
+                    (response.get("agent") or {}).get("ego_bottom_point_fallback")),
                 "candidate_only": response.get("candidate_only") is True,
                 "human_truth": response.get("human_truth") is True,
                 "approved_for_training": response.get("approved_for_training") is True,

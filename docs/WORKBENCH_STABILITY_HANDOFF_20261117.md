@@ -1987,3 +1987,5 @@ Round224 重启时正式启动器提示工作临时目录低于2 GiB。只读盘
 部署备份位于 `D:\Apps\LabelAgent\.local\backups\class-scope-round228-20261119-092544`。管理器检查确认安全通道、4090 SAM、5090 SAM、4090 Qwen和标注页面正常，5090可选VLM通道未启用但不影响主路；工作台idle。正式 `state.json` 与 `file_sessions.json` 哈希仍与Round227相同。本轮正式验收没有调用SAM/VLM/Agent或写真值；启动器只做无数据图像的VLM就绪预热，没有候选、人工真值、训练批准、微调、后训练或OSS写入。
 
 完整说明见 [第二百二十八轮报告](CLASS_SCOPE_COVERAGE_ROUND228_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/class-scope-coverage-round228.json)。浏览器脚本、截图和含厂内候选几何的原始回执保留在本地未跟踪目录，不上传远端仓库。
+
+实现、测试和首版文档提交 `8f218e085252b2688c6317e98cef8363b34e0702` 已推送并分别回读 GitHub/CNB，同名分支两端与本地精确匹配；未跟踪厂内内容未上传。

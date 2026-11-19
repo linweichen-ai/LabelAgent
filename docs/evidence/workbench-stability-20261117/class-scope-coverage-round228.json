@@ -73,6 +73,14 @@
     "state_sha256": "1DCD67A8475A8DD1974C9A9B3D4BF68A56E1ABD30CF2A9559C12E849E3D86F96",
     "file_sessions_sha256": "202927E295CABC27B1F9583B6438D3E16C020809EE421BCE1342C3AEBC0367F5"
   },
+  "version_control": {
+    "branch": "codex/workbench-stability-20261117",
+    "implementation_commit": "8f218e085252b2688c6317e98cef8363b34e0702",
+    "github_readback": "8f218e085252b2688c6317e98cef8363b34e0702",
+    "cnb_readback": "8f218e085252b2688c6317e98cef8363b34e0702",
+    "exact_match": true,
+    "untracked_factory_artifacts_uploaded": false
+  },
   "safety_boundaries": {
     "sam_calls": 0,
     "data_image_vlm_calls": 0,

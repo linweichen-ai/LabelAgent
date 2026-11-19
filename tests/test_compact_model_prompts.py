@@ -26,7 +26,8 @@ class CompactModelPromptTests(unittest.TestCase):
         self.assertLess(len(calls[1].args[1]), len(calls[0].args[1]) * 0.76)
         self.assertEqual(calls[1].kwargs["extra_images"][-2:], calls[0].kwargs["extra_images"][-2:])
         self.assertEqual(len(calls[1].kwargs["extra_images"]), 3)
-        self.assertIn('"reference_counts":{"pallet":1}', calls[1].args[1])
+        self.assertNotIn('"reference_counts"', calls[1].args[1])
+        self.assertIn("不得统计或照搬参考图实例数量", calls[1].args[1])
         self.assertIn('"target_size":[40,40]', calls[1].args[1])
 
     def test_compact_profile_still_rejects_operations_on_unknown_candidates(self):

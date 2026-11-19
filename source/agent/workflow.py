@@ -2013,10 +2013,8 @@ def review(config, image, overlay, description, shapes, labels, history, referen
                    "rules": description.get("description", ""),
                    "prompts": description["prompts"], "candidates": shapes, "recent_history": history[-3:],
                    "holes": hole_report, "reference_provided": reference is not None}
-        if reference is not None:
-            payload["reference_counts"] = {label: sum(shape.get("label") == label for shape in reference["annotations"]) for label in labels}
-            if floor_task:
-                payload["reference_geometry"] = reference_geometry(reference["annotations"])
+        if reference is not None and floor_task:
+            payload["reference_geometry"] = reference_geometry(reference["annotations"])
         base_image_count = 1 + len(extra_images) - int(sam_comparison is not None) - len(gap_images or [])
         if sam_comparison is not None:
             payload["pending_sam_shape"] = sam_comparison["shape_id"]
@@ -2032,7 +2030,8 @@ def review(config, image, overlay, description, shapes, labels, history, referen
             prompt += "\n本轮只标注提供的物体类别，不标注地面。图片1是目标原图，图片2是目标候选；"
             if reference is not None:
                 prompt += ("图片3、4分别是参考原图和参考轮廓，覆盖此前通用图号说明。"
-                           "reference_counts是参考图的真实标注数量，目标图数量不同完全正常，不能因此修改。")
+                           "参考图只提供类别语义和标注边界规范；不得统计或照搬参考图实例数量，"
+                           "目标图数量不同完全正常，不能因此删除、增加或修改候选。")
             else:
                 prompt += ("没有图片3或图片4，也没有任何参考原图、参考轮廓或人工真值。"
                            "禁止提及不存在的参考轮廓；禁止 remove，疑似误检保留给人工复核。")
@@ -2608,6 +2607,75 @@ def _fingerprint(shapes):
     return hashlib.sha256(json.dumps(geometry, sort_keys=True).encode()).hexdigest()
 
 
+def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=96,
+                                     maximum_hole_span=32, maximum_change_ratio=0.02):
+    """Remove texture-scale pallet mask noise without erasing structural gaps.
+
+    The cleanup is deliberately bounded to one already detected instance.  It
+    fills only enclosed, small background components and applies a 3x3 median
+    boundary proposal when that proposal preserves the connected-component
+    count and changes at most two percent of the original mask area.  Large or
+    elongated openings (for example fork slots and inter-slat gaps) remain.
+    """
+    if not isinstance(shape, dict) or str(shape.get("label", "")).casefold() != "pallet":
+        return shape, None
+    from .edit_agent import _rasterize, _shape_from_mask
+    mask = _rasterize(shape, width, height).astype(np.uint8)
+    area = int(mask.sum())
+    if area < 400:
+        return shape, None
+
+    refined = mask.copy()
+    background = (mask == 0).astype(np.uint8)
+    count, components, stats, _ = cv2.connectedComponentsWithStats(background, 8)
+    border_labels = set(np.unique(np.concatenate((
+        components[0, :], components[-1, :], components[:, 0], components[:, -1]))).tolist())
+    filled_holes = []
+    for component in range(1, count):
+        if component in border_labels:
+            continue
+        x, y, w, h, component_area = [int(value) for value in stats[component]]
+        if (component_area <= maximum_hole_area
+                and max(w, h) <= maximum_hole_span):
+            refined[components == component] = 1
+            filled_holes.append({"area": component_area, "bbox": [x, y, x + w - 1, y + h - 1]})
+
+    before_components = cv2.connectedComponents(mask, 8)[0] - 1
+    smoothed = (cv2.medianBlur((refined * 255).astype(np.uint8), 3) > 127).astype(np.uint8)
+    after_components = cv2.connectedComponents(smoothed, 8)[0] - 1
+    smoothing_pixels = int(np.count_nonzero(smoothed != refined))
+    smoothing_applied = (before_components == after_components
+                         and smoothing_pixels / max(area, 1) <= maximum_change_ratio)
+    if smoothing_applied:
+        refined = smoothed
+
+    changed = int(np.count_nonzero(refined != mask))
+    if not changed or changed / max(area, 1) > maximum_change_ratio:
+        return shape, None
+    replacement = _shape_from_mask(refined, shape["label"], shape["id"])
+    if replacement is None or not valid_shape(replacement, width, height):
+        return shape, None
+    for key, value in shape.items():
+        if key not in {"id", "label", "points", "holes", "parts"}:
+            replacement[key] = copy.deepcopy(value)
+    adjustment = {
+        "reason_code": "pallet_texture_geometry_cleanup",
+        "shape_id": shape["id"],
+        "label": shape["label"],
+        "filled_hole_count": len(filled_holes),
+        "filled_hole_pixels": sum(item["area"] for item in filled_holes),
+        "smoothing_applied": smoothing_applied,
+        "smoothing_changed_pixels": smoothing_pixels if smoothing_applied else 0,
+        "changed_pixels": changed,
+        "change_ratio": round(changed / area, 6),
+        "maximum_hole_area": maximum_hole_area,
+        "maximum_hole_span": maximum_hole_span,
+        "preserved_component_count": before_components,
+        "route": "candidate_only",
+    }
+    return replacement, adjustment
+
+
 def repeated_no_change_after_repairs(audit, minimum_rounds=3):
     """Find an exact no-change edit repeated while useful gap repairs finish.
 
@@ -2677,6 +2745,7 @@ class AnnotationAgent:
         self.sam_points_by_shape = {}
         self.sam_fallback = set()
         self.candidate_filters = []
+        self.candidate_geometry_adjustments = []
         self.sam_generation = {"mode": "not_started"}
 
     def progress(self, phase, **details):
@@ -2701,6 +2770,11 @@ class AnnotationAgent:
                 "holes": parts[0].get("holes", []), "parts": parts, "score": result.get("score")}
             if not valid_shape(shape, self.width, self.height):
                 raise ValueError("SAM 3 返回无效轮廓")
+            if str(label).casefold() == "pallet":
+                shape, adjustment = refine_pallet_candidate_geometry(
+                    shape, self.width, self.height)
+                if adjustment is not None:
+                    self.candidate_geometry_adjustments.append(adjustment)
             shapes.append(shape)
             self.next_id += 1
         return shapes
@@ -2817,8 +2891,15 @@ class AnnotationAgent:
                 # Gap semantics require a human reference example. For a generic,
                 # unreferenced class batch, review visible candidates conservatively
                 # without inventing reference-backed floor-hole rules.
+                floor_review = any(
+                    str(label).strip().casefold() in {"地面", "floor", "ground"}
+                    for label in self.labels)
+                # Internal-gap semantics are meaningful only for traversable-ground
+                # masks. Treating pallet/person/robot mask holes as floor gaps adds
+                # irrelevant evidence pages and can make the VLM chase reference
+                # instance counts instead of judging the target image.
                 all_holes = (candidate_holes(self.shapes, self.labels, self.width, self.height)
-                             if self.reference is not None else [])
+                             if self.reference is not None and floor_review else [])
                 holes = select_review_gaps(
                     all_holes, self.config.get("max_review_gaps", 8),
                     self.config.get("minimum_review_gap_area")) if all_holes else []
@@ -3071,6 +3152,7 @@ class AnnotationAgent:
             "rounds": len(self.audit), "max_rounds": self.max_rounds,
             "stop_reason": stop_reason, "audit": self.audit,
             "candidate_filters": self.candidate_filters,
+            "candidate_geometry_adjustments": self.candidate_geometry_adjustments,
             "sam_generation": copy.deepcopy(self.sam_generation)}}
         self.progress("finished", result=result)
         return result

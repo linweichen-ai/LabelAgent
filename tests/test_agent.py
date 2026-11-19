@@ -225,6 +225,50 @@ class EditTests(unittest.TestCase):
 
 
 class WorkflowTests(unittest.TestCase):
+    def test_pallet_cleanup_fills_texture_holes_and_preserves_structural_opening(self):
+        mask = np.zeros((100, 140), dtype=np.uint8)
+        mask[10:90, 10:130] = 1
+        mask[30:35, 30:35] = 0       # texture-scale enclosed hole
+        mask[55:61, 45:75] = 0       # structural elongated slot
+        mask[9, 60] = 1              # one-pixel outer spike
+        mask[10, 90] = 0             # one-pixel boundary notch
+        candidate = _shape_from_mask(mask, "pallet", 7)
+        candidate["score"] = 0.875
+
+        refined, audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 140, 100)
+        output = _rasterize(refined, 140, 100)
+
+        self.assertIsNotNone(audit)
+        self.assertEqual(audit["reason_code"], "pallet_texture_geometry_cleanup")
+        self.assertEqual(audit["route"], "candidate_only")
+        self.assertEqual(output[32, 32], 1)
+        self.assertEqual(output[58, 60], 0)
+        self.assertEqual(output[9, 60], 0)
+        self.assertEqual(output[10, 90], 1)
+        self.assertEqual(refined["score"], candidate["score"])
+        self.assertLessEqual(audit["change_ratio"], 0.02)
+
+    def test_pallet_cleanup_skips_small_distant_instances(self):
+        candidate = shape(shape_id=3, label="pallet", left=2, right=12)
+        refined, audit = workflow.refine_pallet_candidate_geometry(candidate, 40, 40)
+        self.assertIs(refined, candidate)
+        self.assertIsNone(audit)
+
+    def test_non_ground_review_does_not_generate_irrelevant_gap_evidence(self):
+        agent = workflow.AnnotationAgent(
+            {}, image_bytes(), {"prompts": []}, ["pallet"], max_rounds=1,
+            reference={"image": image_bytes(), "marked_image": image_bytes(),
+                       "annotations": [shape(label="pallet")]})
+        agent.shapes = [shape(label="pallet")]
+        with patch.object(workflow, "candidate_holes") as holes, \
+             patch.object(workflow, "review", return_value={
+                 "status": "done", "reason": "No supported edit",
+                 "hole_assessment": [], "operations": []}):
+            result = agent.execute(skip_generation=True)
+        holes.assert_not_called()
+        self.assertEqual(result["agent"]["stop_reason"], "done")
+
     def test_agent_cannot_silently_delete_every_generated_candidate(self):
         agent = workflow.AnnotationAgent(
             {}, image_bytes(), {"prompts": []}, ["a"], max_rounds=1)

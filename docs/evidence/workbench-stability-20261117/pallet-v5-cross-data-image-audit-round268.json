@@ -1,0 +1,54 @@
+{
+  "schema_version": "labelagent.pallet_v5_cross_data_image_audit_round268.v1",
+  "date": "2026-11-19",
+  "implementation_commit": "4dc2d7160fdcccc20f812426ec7364a9151fc097",
+  "production_code_changed": false,
+  "candidate_or_truth_written": false,
+  "top_changed_live_review": {
+    "frames": [114, 106, 116, 104, 108, 67, 65],
+    "result_count": 7,
+    "maximum_change_ratio": 0.048994,
+    "minimum_structural_hole_retention": 0.965517,
+    "maximum_component_merge_count": 2,
+    "gate_passed": true,
+    "audit_sha256": "BD069988229241F34A8285CC39F89CFDE4BFCC8B48789FCAF0A5C852075D3086",
+    "visual_sha256": "3FD62A7E03250B17F8371783A2B08AB39CF9ACD118794DEB930C693F4994AE2C"
+  },
+  "capture_20261103": {
+    "input_sha256": "591EBBA97AEACA4F58DFCB0EECFD79EC026B4915AA670143D46D9702181B7F92",
+    "artifact_sha256": "4B7B4622E3F2AE6326B82357A8546E4B1950AEB9B1832427F0607D730C2DA985",
+    "image_guidance": true,
+    "image_dimensions": [1920, 1536],
+    "selection": "deterministic_size_stratified_40_per_topic",
+    "topic_inventory": {
+      "/capture/camera_0/image": {"frames": 152, "pallet_candidates": 1593},
+      "/capture/camera_1/image": {"frames": 152, "pallet_candidates": 1513},
+      "/capture/camera_2/image": {"frames": 152, "pallet_candidates": 857},
+      "/capture/camera_3/image": {"frames": 152, "pallet_candidates": 460}
+    },
+    "sample_count": 160,
+    "size_bands": {
+      "tiny_skipped": {"count": 2, "adjusted": 0},
+      "small": {"count": 109, "adjusted": 0},
+      "medium": {"count": 48, "adjusted": 0},
+      "large": {"count": 1, "adjusted": 0}
+    },
+    "adjusted_count": 0,
+    "filled_hole_count": 0,
+    "filled_image_boundary_notch_count": 0,
+    "component_merge_count": 0,
+    "violation_count": 0,
+    "gate_passed": true,
+    "claim_scope": "160_deterministic_size_stratified_candidates_not_all_candidates_or_future_data"
+  },
+  "tests": {
+    "targeted_passed": 8,
+    "python_passed": 1040,
+    "python_subtests_passed": 186,
+    "official_scope": "tests",
+    "unscoped_collection_note": "SAM3 qualitative demo requires optional matplotlib and is outside the project tests directory"
+  },
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false
+}

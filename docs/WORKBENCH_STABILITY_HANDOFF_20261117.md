@@ -2295,3 +2295,11 @@ Round266仍留下少量与外部背景连通的白色边缘凹口，不能按普
 Python1038/1038、186子测试、浏览器149/149、定向14/14通过。生产第118帧强绑定刷新后仍为14个候选、人工真值0，主栈板修复9个边缘凹口/1352像素，重复刷新返回`changed=false`且两个哈希均不再变化。错误绑定请求按预期HTTP409且候选未变。回滚点`pallet-boundary-notch-round267-20261119-233130`，实现提交`13603a245eb38f2242dfa62bf12a07ca93a6dd7b`。工作台HTTP200、idle，SAM和主VLM ready；SAM/VLM/隧道均未重启。
 
 详细报告见`docs/PALLET_BOUNDARY_NOTCH_ROUND267_20261119.md`，结构化证据见`docs/evidence/workbench-stability-20261117/pallet-boundary-notch-round267.json`。厂内原图和完整审计只保存在本机`artifacts/pallet-boundary-notch-round267/`，不随源码上传。部署时C盘一度约0.04GiB可用；最终读回C约1.06GiB、D约3.22GiB，工作台临时目录已放在D盘且保存空间检查通过，余量仍应继续监控。
+
+### Round 268：v5 跨数据原图路径复核（2026-11-19）
+
+Round267对Capture_20261103的结论仍主要来自候选尺寸门禁；原有跨数据工具没有把原图实际传入v5。本轮为审计工具增加`--image-root`、严格相机话题映射、帧序号和分辨率核验，并记录是否实际使用图像。输入候选JSON在测试中前后字节不变。
+
+先对CVAT变化最大的第114/106/116/104/108/67/65帧生成在线前后对比并逐张复核：最大变化4.8994%、最低结构保留96.5517%、最多合并2个局部组件，长叉孔和深色板缝仍保留。随后对Capture四路相机各分层40个、共160个候选执行完整原图路径；160项全部成功读取对应1920×1536图像，调整0、填孔0、边缘凹口修复0、组件合并0、违规0。这把“门禁推断”升级为实际图像调用证据，但仍只代表这160个分层样本，不外推到全部4423个候选或未来新数据。
+
+定向8项、正式Python1040项及186个子测试通过，审计工具实现提交`4dc2d7160fdcccc20f812426ec7364a9151fc097`。生产推理代码未改变，因此没有重启或重新部署；候选、人工真值、训练批准和模型均未写入。详细报告见`docs/PALLET_V5_CROSS_DATA_IMAGE_AUDIT_ROUND268_20261119.md`，结构化证据见`docs/evidence/workbench-stability-20261117/pallet-v5-cross-data-image-audit-round268.json`。厂内对比图和完整160项明细只保留本机`artifacts/pallet-boundary-notch-round268/`。

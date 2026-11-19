@@ -109,6 +109,46 @@ class PalletGeometryAuditTest(unittest.TestCase):
         self.assertEqual(result["results"][0]["frame"], "7")
         self.assertEqual(result["results"][0]["shape_id"], 2)
 
+    def test_image_guided_audit_loads_matching_topic_frame_without_writing_source(self):
+        mask = np.zeros((480, 640), dtype=np.uint8)
+        mask[40:440, 80:560] = 1
+        mask[180:210, 200:240] = 0
+        shape = _shape_from_mask(mask, "pallet", 4)
+        payload = {"/capture/camera_0/image": {"0": [shape]}}
+        image = np.full((480, 640, 3), 180, dtype=np.uint8)
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "candidates.json"
+            source.write_text(json.dumps(payload), encoding="utf-8")
+            camera = root / "images" / "camera_0"
+            camera.mkdir(parents=True)
+            image_path = camera / "000.png"
+            cv2.imwrite(str(image_path), image)
+            before = source.read_bytes()
+
+            result = run_audit(
+                source, width=640, height=480, per_topic=4,
+                image_root=root / "images")
+
+            self.assertEqual(source.read_bytes(), before)
+            self.assertTrue(result["image_guidance"])
+            self.assertEqual(result["sample_count"], 1)
+            self.assertTrue(result["results"][0]["image_guidance_used"])
+            self.assertEqual(
+                Path(result["results"][0]["image_path"]), image_path.resolve())
+
+    def test_image_guided_audit_rejects_missing_camera_mapping(self):
+        payload = {"camera": {"0": []}}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "candidates.json"
+            source.write_text(json.dumps(payload), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "map topic"):
+                run_audit(
+                    source, width=40, height=40, per_topic=4,
+                    image_root=root / "images")
+
 
 if __name__ == "__main__":
     unittest.main()

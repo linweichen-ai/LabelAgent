@@ -11,8 +11,10 @@ from __future__ import annotations
 
 import argparse
 import copy
+import functools
 import hashlib
 import json
+import re
 from pathlib import Path
 
 import cv2
@@ -77,10 +79,12 @@ def _components(mask: np.ndarray) -> int:
     return sum(int(stats[index, cv2.CC_STAT_AREA]) >= 9 for index in range(1, count))
 
 
-def audit_candidate(row: dict, width: int, height: int) -> dict:
+def audit_candidate(row: dict, width: int, height: int, *, image_rgb=None,
+                    image_path: str | None = None) -> dict:
     shape = copy.deepcopy(row["shape"])
     before = _rasterize(shape, width, height).astype(np.uint8)
-    refined, adjustment = refine_pallet_candidate_geometry(shape, width, height)
+    refined, adjustment = refine_pallet_candidate_geometry(
+        shape, width, height, image_rgb=image_rgb)
     after = _rasterize(refined, width, height).astype(np.uint8)
     before_holes = enclosed_holes(before)
     after_holes = enclosed_holes(after)
@@ -118,6 +122,7 @@ def audit_candidate(row: dict, width: int, height: int) -> dict:
         "frame": str(row["frame"]),
         "shape_id": shape.get("id"),
         "pixel_area": area,
+        "candidate_area_ratio": round(area / max(before.size, 1), 6),
         "size_band": ("tiny_skipped" if area < 400 else
                       "small" if area < 5000 else
                       "medium" if area < 50000 else "large"),
@@ -138,6 +143,11 @@ def audit_candidate(row: dict, width: int, height: int) -> dict:
             if adjustment else 0.0),
         "geometry_cleanup_version": (
             adjustment.get("geometry_cleanup_version") if adjustment else None),
+        "image_guidance_used": image_rgb is not None,
+        "image_path": image_path,
+        "effective_maximum_change_ratio": (
+            adjustment.get("effective_maximum_change_ratio", .025)
+            if adjustment else .025),
         "filled_hole_count": (
             adjustment.get("filled_hole_count", 0) if adjustment else 0),
         "filled_compact_texture_hole_count": (
@@ -159,7 +169,34 @@ def audit_candidate(row: dict, width: int, height: int) -> dict:
     }
 
 
-def run_audit(source: Path, *, width: int, height: int, per_topic: int) -> dict:
+def _camera_name_for_topic(topic: str) -> str:
+    match = re.search(r"/(camera_\d+)(?:/|$)", str(topic))
+    if not match:
+        raise ValueError(f"cannot map topic to camera directory: {topic}")
+    return match.group(1)
+
+
+@functools.lru_cache(maxsize=8)
+def _read_image_rgb(path: str) -> np.ndarray:
+    image_bgr = cv2.imread(path, cv2.IMREAD_COLOR)
+    if image_bgr is None:
+        raise ValueError(f"failed to read image: {path}")
+    return cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
+
+
+def _image_inventory(image_root: Path, topics: list[str]) -> dict[str, list[Path]]:
+    inventory = {}
+    for topic in topics:
+        camera = _camera_name_for_topic(topic)
+        files = sorted((image_root / camera).glob("*.png"))
+        if not files:
+            raise ValueError(f"no PNG images for {topic}: {image_root / camera}")
+        inventory[topic] = files
+    return inventory
+
+
+def run_audit(source: Path, *, width: int, height: int, per_topic: int,
+              image_root: Path | None = None) -> dict:
     stored = json.loads(source.read_text(encoding="utf-8"))
     if not isinstance(stored, dict):
         raise ValueError("expected topic-to-frame candidate mapping")
@@ -185,13 +222,37 @@ def run_audit(source: Path, *, width: int, height: int, per_topic: int) -> dict:
             "pallet_candidates": len(rows),
         }
         selected.extend(select_stratified(rows, per_topic))
-    results = [audit_candidate(row, width, height) for row in selected]
+    images = (_image_inventory(image_root, sorted(payload))
+              if image_root is not None else {})
+    results = []
+    for row in selected:
+        image_rgb = None
+        image_path = None
+        if image_root is not None:
+            try:
+                frame_index = int(row["frame"])
+            except (TypeError, ValueError) as error:
+                raise ValueError(f"frame is not an integer index: {row['frame']}") from error
+            topic_images = images[row["topic"]]
+            if frame_index < 0 or frame_index >= len(topic_images):
+                raise ValueError(
+                    f"frame {frame_index} outside image inventory for {row['topic']}")
+            image_path = str(topic_images[frame_index].resolve())
+            image_rgb = _read_image_rgb(image_path)
+            if image_rgb.shape[:2] != (height, width):
+                raise ValueError(
+                    f"image dimensions {image_rgb.shape[1]}x{image_rgb.shape[0]} "
+                    f"do not match requested {width}x{height}: {image_path}")
+        results.append(audit_candidate(
+            row, width, height, image_rgb=image_rgb, image_path=image_path))
     component_violations = [row for row in results
                             if not row["component_guard_passed"]]
     structural_violations = [row for row in results
                              if row["minimum_structural_hole_retention"] is not None
                              and row["minimum_structural_hole_retention"] < 0.75]
-    change_violations = [row for row in results if row["change_ratio"] > 0.025]
+    change_violations = [
+        row for row in results
+        if row["change_ratio"] > row["effective_maximum_change_ratio"]]
     bands = {}
     for band in ("tiny_skipped", "small", "medium", "large"):
         subset = [row for row in results if row["size_band"] == band]
@@ -208,6 +269,8 @@ def run_audit(source: Path, *, width: int, height: int, per_topic: int) -> dict:
         "height": height,
         "selection": "deterministic_size_stratified_per_topic",
         "input_scope": input_scope,
+        "image_guidance": image_root is not None,
+        "image_root": str(image_root.resolve()) if image_root is not None else None,
         "per_topic_limit": per_topic,
         "topic_inventory": topic_inventory,
         "sample_count": len(results),
@@ -259,9 +322,13 @@ def main() -> int:
     parser.add_argument("--width", type=int, default=1920)
     parser.add_argument("--height", type=int, default=1536)
     parser.add_argument("--per-topic", type=int, default=40)
+    parser.add_argument(
+        "--image-root", type=Path,
+        help="Optional root containing camera_0/... PNG directories. When set, "
+             "the audit replays the complete image-guided cleanup route.")
     args = parser.parse_args()
     report = run_audit(args.input, width=args.width, height=args.height,
-                       per_topic=args.per_topic)
+                       per_topic=args.per_topic, image_root=args.image_root)
     rendered = json.dumps(report, ensure_ascii=False, indent=2)
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)

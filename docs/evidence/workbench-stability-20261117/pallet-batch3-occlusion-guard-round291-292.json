@@ -1,0 +1,78 @@
+{
+  "schema_version": "labelagent.pallet-batch3-occlusion-guard.round291-292.v1",
+  "created_local": "2026-11-20T04:27:02+08:00",
+  "status": "targeted_batch3_refresh_and_occlusion_rejection_verified",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "approved_for_deployment": false,
+  "model_changed": false,
+  "round291_review": {
+    "accepted_frames": [102, 96],
+    "rejected_frames": [67, 65],
+    "rejection_reason": "Large box occlusion plus one or two component merges makes same-instance membership ambiguous.",
+    "proposal_image_sha256": "6e8d0a400f0fb10da69206c736332a466fad20df17029a7e0ee4c595cfe9e8bb"
+  },
+  "round292_backup": {
+    "path": "D:\\Apps\\LabelAgent\\.local\\backups\\pallet-candidate-batch3-round292-20261120-042523\\state.json",
+    "bytes": 4953368,
+    "sha256": "C0FCC1A804525AA0B2A9F3EAACF9300583A273A1E19C088E62405EF278727BD1",
+    "source_backup_hashes_exact": true
+  },
+  "round292_frames": [
+    {
+      "frame": 102,
+      "candidate_count": 13,
+      "adjusted_candidate_count": 12,
+      "changed_pixels": 3372,
+      "candidate_artifact_sha256": "f9f833cd958507f0affd97a98b7f599fe558d0972f06baa077cded7854c2550c",
+      "agent_run_sha256": "b23eaef73bc76ebf9b481d0b1317bb3d2f58dd379b871ebf0b0d192240a4f6a3",
+      "second_refresh_changed": false,
+      "residual_change_ratio": 0.000309
+    },
+    {
+      "frame": 96,
+      "candidate_count": 14,
+      "adjusted_candidate_count": 13,
+      "changed_pixels": 1326,
+      "candidate_artifact_sha256": "1ad56480b210c14bcbc6a9952f39f39718a4fe5eeef3f41905d7241cf31cd078",
+      "agent_run_sha256": "b8bf5dd8d39225b6d0ccac200db26ecb5567515ea509c423d2e4dda097715900",
+      "second_refresh_changed": false,
+      "residual_change_ratio": 0.002507
+    }
+  ],
+  "truth_state_sha256": {
+    "before": "e35a944554c74c00717de5a4cfdafd8b01f51df20a90781121469eec4f9a70a3",
+    "after": "e35a944554c74c00717de5a4cfdafd8b01f51df20a90781121469eec4f9a70a3",
+    "unchanged": true
+  },
+  "inventory_after_batch3": {
+    "frame_count": 150,
+    "candidate_count": 1316,
+    "pallet_candidate_count": 1126,
+    "adjusted_count": 1040,
+    "filled_image_boundary_notch_count": 94,
+    "maximum_change_ratio": 0.029408,
+    "minimum_structural_hole_retention": 0.895911,
+    "maximum_component_merge_count": 2,
+    "violation_count": 0,
+    "change_ratio_above_0_02": {"candidates": 78, "frames": 62},
+    "change_ratio_above_0_025": {"candidates": 1, "frames": 1},
+    "change_ratio_above_0_03": {"candidates": 0, "frames": 0},
+    "result_sha256": "b977999b0d8f3ca5d33838cbdf72b07c34b3c4165b1a1f1c88779524bf9c4343"
+  },
+  "formal_state_sha256_after": "237844F73FF4495E575C6A3F966260B9385EFBDF1EDEE7D0E5177518470DDFAB",
+  "accepted_after_image_sha256": "ecde85b01fcc14066f19b6b2e5ebc655dd2bd1db1c056dadb4a04b5d62b372ac",
+  "live_readback": {
+    "workbench_http": 200,
+    "point_sam_status": "ok",
+    "formal_sam_status": "ok",
+    "vlm_status": "ok",
+    "vlm_inflight": 0,
+    "vlm_waiting": 0,
+    "free_space_gib": {"C": 0.750, "D": 1.108}
+  },
+  "next_gate": "Do not auto-refresh occluded merge cases; prioritize new-run automatic cleanup and explicit human review for frames 67 and 65.",
+  "boundary": "Only machine candidates for frames 102 and 96 changed. Frames 67 and 65, human truth, model weights, OSS objects and all other frames were preserved."
+}
+

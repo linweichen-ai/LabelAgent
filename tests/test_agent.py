@@ -2508,6 +2508,8 @@ class ServerTests(unittest.TestCase):
                 self.assertTrue(status["result_available"])
                 self.assertEqual(status["result_task_id"], "task-123")
                 self.assertEqual(status["failed_frames"], [2])
+                self.assertEqual(status["selected_file"], str(FakeVideo.path))
+                self.assertEqual(status["selected_topic"], "camera0")
                 stale = client.get("/api/run/result?task_id=other-task")
                 self.assertEqual(stale.status_code, 409, stale.json)
                 server.state["topic"] = "camera1"

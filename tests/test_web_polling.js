@@ -713,6 +713,42 @@ test('状态读取超过八秒会解除轮询占用并在主面板提示恢复',
   assert.equal(renders, 1);
 });
 
+test('旧数据集状态回执不会在新数据集显示查看结果或伪装连接失败', async () => {
+  const button = {disabled:false,textContent:'',title:'',attributes:{},
+    setAttribute(name,value){this.attributes[name]=value},removeAttribute(name){delete this[name]}};
+  let responseIndex = 0, rendered = 0, scheduled = null;
+  const responses = [
+    {status:'idle',result_available:true,result_task_id:'old-task',
+      selected_file:'/old.mcap',selected_topic:'camera0'},
+    {status:'idle',result_available:false,selected_file:'/new.mcap',selected_topic:'camera0'},
+  ];
+  const h = harness({
+    loadedDataPath:'/new.mcap',topic:'camera0',latestAgentJob:{status:'idle'},
+    progressFetching:false,progressFetchPromise:null,runStatusScopeMismatch:null,
+    runStatusConnectionMessage:'',runStatusFailureCount:0,runRequestStartedAt:null,
+    bootstrapComplete:true,workspaceRestoreState:'ready',
+    $: id => id === 'runButton' ? button : {},
+    async fetchAgentStatus(){const job=responses[responseIndex++];return {ok:true,async json(){return job}}},
+    renderAgentProgress(job){rendered++;h.context.latestAgentJob=job},
+    renderRunButton(){button.disabled=h.context.runStatusScopeMismatch!==null;
+      button.textContent=button.disabled?'数据已在其他窗口切换 · 请重新载入':'开始自动标注'},
+    scheduleRunStatusPoll(delay){scheduled=delay},pendingRunResult(){return false},
+    markWorkspaceReady(){},
+  });
+  h.run(section(source('app.js'), 'async function refreshAgentProgress', 'async function ensureAutoLabelReadiness'));
+  assert.equal(await h.context.refreshAgentProgress(), false);
+  assert.equal(rendered, 0);
+  assert.equal(button.disabled, true);
+  assert.match(button.textContent, /数据已在其他窗口切换/);
+  assert.match(button.title, /不会沿用其任务状态/);
+  assert.equal(scheduled, 250);
+  assert.equal(h.context.runStatusFailureCount, 0);
+  assert.equal(await h.context.refreshAgentProgress(), true);
+  assert.equal(rendered, 1);
+  assert.equal(h.context.runStatusScopeMismatch, null);
+  assert.equal(button.title, undefined);
+});
+
 test('模型未就绪时预检明确失败且不伪装为推理已启动', async () => {
   let calls = 0;
   const h = harness({
@@ -1153,7 +1189,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=180/);
+  assert.match(source('index.html'), /app\.js\?v=181/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1214,7 +1250,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=180/);
+  assert.match(source('index.html'), /app\.js\?v=181/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1262,7 +1298,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 3);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=180/);
+  assert.match(source('index.html'), /app\.js\?v=181/);
 });
 
 test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () => {

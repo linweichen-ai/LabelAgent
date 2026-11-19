@@ -688,7 +688,7 @@ const agentStop={done:'Agent 流程已结束（不代表正确）',needs_review:
  const agentProgressWeight={preflight:0.01,submitting:0.02,claiming:0.03,starting:0.04,discovering:0.06,discovering_retry:0.08,describing:0.10,loading:0.12,generating:0.22,generated:0.38,observing:0.58,agent_refining:0.58,vlm_waiting:0.58,editing:0.74,edited:0.86,finished:0.94,retrying:0.18,saved:1};
  const agentPhaseTypicalSeconds={discovering:16,discovering_retry:16,describing:16,observing:34,agent_refining:34};
  const agentPhaseProgressCeiling={discovering:0.20,discovering_retry:0.20,describing:0.20,observing:0.72,agent_refining:0.72};
-let progressTaskId=null,progressHighWater=0,runStatusConnectionMessage='';
+let progressTaskId=null,progressHighWater=0,runStatusConnectionMessage='',runStatusScopeMismatch=null;
 let progressFetching=false,progressFetchPromise=null;
 $('downloadDebug').onclick=async()=>{
  const button=$('downloadDebug');if(button.disabled)return;button.disabled=true;
@@ -803,8 +803,9 @@ function renderRunButton(){
  const elapsed=job.started_at?Math.max(0,Math.floor((running?Date.now()/1000:(job.events?.at(-1)?.time||job.started_at))-job.started_at)):null;
   const recoverable=pendingRunResult(job),retryable=pendingRetry();
   const launchingRefinement=typeof deferredRunRefinementActive!=='undefined'&&deferredRunRefinementActive&&!running;
-  button.disabled=pending||stopping||launchingRefinement;
-  button.textContent=(pending?'启动中…':stopping?'正在停止…':running?'停止自动标注':launchingRefinement?'正在启动后台精修…':recoverable?'查看上次结果':retryable?(retryMode==='resume'?`继续 ${retryFrames.length} 个未完成帧`:`重试 ${retryFrames.length} 个失败帧`):'开始自动标注')+(running&&!pending?` · 第 ${job.round||0}/${Math.max(1,Number(job.max_rounds)||6)} 轮`: '')+(elapsed===null?'':` · ${elapsed} 秒`);
+  const scopeBlocked=typeof runStatusScopeMismatch!=='undefined'&&runStatusScopeMismatch!==null;
+  button.disabled=pending||stopping||launchingRefinement||scopeBlocked;
+  button.textContent=(scopeBlocked?'数据已在其他窗口切换 · 请重新载入':pending?'启动中…':stopping?'正在停止…':running?'停止自动标注':launchingRefinement?'正在启动后台精修…':recoverable?'查看上次结果':retryable?(retryMode==='resume'?`继续 ${retryFrames.length} 个未完成帧`:`重试 ${retryFrames.length} 个失败帧`):'开始自动标注')+(running&&!pending&&!scopeBlocked?` · 第 ${job.round||0}/${Math.max(1,Number(job.max_rounds)||6)} 轮`: '')+(elapsed===null||scopeBlocked?'':` · ${elapsed} 秒`);
  button.setAttribute('aria-busy',String(pending||running||launchingRefinement));
  renderAgentProgressPanel(job,elapsed||0);
 }
@@ -818,7 +819,8 @@ async function fetchAgentStatus(){
 async function refreshAgentProgress(){
  if(progressFetchPromise)return progressFetchPromise;
  progressFetching=true;
- progressFetchPromise=(async()=>{try{const response=await fetchAgentStatus();if(!response.ok)throw Error(`HTTP ${response.status}`);runStatusConnectionMessage='';const job=await response.json();renderAgentProgress(job);runStatusFailureCount=0;$('runButton').removeAttribute('title');if(bootstrapComplete&&runRequestStartedAt===null&&pendingRunResult(job))await recoverRunResult(job,{automatic:true});if(bootstrapComplete&&workspaceRestoreState!=='ready')markWorkspaceReady();return true}catch(error){runStatusFailureCount++;runStatusConnectionMessage=runStatusFailureCount>=3?`连续无法读取推理状态：${error.message}；后台任务不会重复提交`:`暂时无法读取推理状态：${error.message}，正在自动恢复`;$('runButton').title=runStatusConnectionMessage;renderRunButton();return false}finally{progressFetching=false;progressFetchPromise=null}})();
+ const requestPath=typeof loadedDataPath==='undefined'?'':loadedDataPath,requestTopic=typeof topic==='undefined'?'':topic;
+ progressFetchPromise=(async()=>{try{const response=await fetchAgentStatus();if(!response.ok)throw Error(`HTTP ${response.status}`);const job=await response.json(),currentPath=typeof loadedDataPath==='undefined'?'':loadedDataPath,currentTopic=typeof topic==='undefined'?'':topic;const currentScopeReady=Boolean(currentPath&&currentTopic),requestScopeChanged=currentPath!==requestPath||currentTopic!==requestTopic,serverScopeMismatch=currentScopeReady&&(job.selected_file!==currentPath||job.selected_topic!==currentTopic);if(requestScopeChanged||serverScopeMismatch){runStatusScopeMismatch={file:job.selected_file||'',topic:job.selected_topic||'',current_file:currentPath,current_topic:currentTopic};runStatusConnectionMessage='数据集已在另一个窗口切换，当前页面不会沿用其任务状态；请重新载入需要操作的数据';latestAgentJob={status:'idle'};runStatusFailureCount=0;$('runButton').title=runStatusConnectionMessage;renderRunButton();scheduleRunStatusPoll(250);return false}runStatusScopeMismatch=null;runStatusConnectionMessage='';renderAgentProgress(job);runStatusFailureCount=0;$('runButton').removeAttribute('title');if(bootstrapComplete&&runRequestStartedAt===null&&pendingRunResult(job))await recoverRunResult(job,{automatic:true});if(bootstrapComplete&&workspaceRestoreState!=='ready')markWorkspaceReady();return true}catch(error){runStatusFailureCount++;runStatusConnectionMessage=runStatusFailureCount>=3?`连续无法读取推理状态：${error.message}；后台任务不会重复提交`:`暂时无法读取推理状态：${error.message}，正在自动恢复`;$('runButton').title=runStatusConnectionMessage;renderRunButton();return false}finally{progressFetching=false;progressFetchPromise=null}})();
  return progressFetchPromise;
 }
 async function ensureAutoLabelReadiness(requestedFrames,startFrame,count){
@@ -924,7 +926,7 @@ async function pollRunStatus(){
  try{
   await refreshAgentProgress();
   const active=['running','stopping'].includes(latestAgentJob?.status);
-  runStatusPollDelay=active?1000:15000;
+   runStatusPollDelay=typeof runStatusScopeMismatch!=='undefined'&&runStatusScopeMismatch?1000:active?1000:15000;
  }finally{
   runStatusFetching=false;
   scheduleRunStatusPoll(runStatusPollDelay);

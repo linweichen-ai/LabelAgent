@@ -1,0 +1,83 @@
+{
+  "schema_version": "labelagent.workbench-stability-evidence.v1",
+  "round": 227,
+  "date": "2026-11-19",
+  "title": "bind run status and result recovery to current dataset scope",
+  "status": "implemented_tested_deployed_browser_verified",
+  "before": {
+    "ui_version": "142",
+    "button_text": "查看上次结果",
+    "button_disabled": false,
+    "button_title": "暂时无法读取推理状态：运行结果不属于当前数据文件和图像源，正在自动恢复",
+    "stale_result_requests": 1,
+    "model_requests": 0,
+    "page_errors": 0,
+    "artifact": "artifacts/round227-status-scope/before.json"
+  },
+  "fix": {
+    "server_status_fields": ["selected_file", "selected_topic"],
+    "request_scope_frozen": true,
+    "response_scope_compared_to_current_workspace": true,
+    "stale_status_discarded_before_render": true,
+    "stale_result_recovery_suppressed": true,
+    "scope_mismatch_not_counted_as_network_failure": true,
+    "scope_mismatch_poll_seconds": 1,
+    "ui_version": "143",
+    "app_asset_version": "181"
+  },
+  "after": {
+    "button_text": "数据已在其他窗口切换 · 请重新载入",
+    "button_disabled": true,
+    "stale_result_requests": 0,
+    "model_requests": 0,
+    "page_errors": 0,
+    "real_scope_restored": true,
+    "real_scope_button_disabled": false,
+    "scope_mismatch_after_restore": null,
+    "artifact": "artifacts/round227-status-scope/after-final.json",
+    "screenshot": "artifacts/round227-status-scope/after-final.png"
+  },
+  "tests": {
+    "web": {"passed": 128, "failed": 0},
+    "python": {"passed": 982, "failed": 0, "subtests_passed": 186},
+    "javascript_syntax": "passed",
+    "python_compile": "passed",
+    "git_diff_check": "passed",
+    "initial_targeted_web_run": {
+      "passed": 55,
+      "failed": 7,
+      "cause": "extracted test harnesses lacked the new global and three cache-version assertions still expected app v180",
+      "resolution": "test-compatible guards and v181 assertions; full suite passed"
+    }
+  },
+  "deployment": {
+    "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\status-scope-round227-20261119-090906",
+    "backup_link_type": "Junction",
+    "old_processes": {"manager": 65772, "listener": 61124, "ssh_4090": 59620, "ssh_5090": 70988},
+    "new_processes": {"manager": 36848, "listener": 63940, "ssh_4090": 48488, "ssh_5090": 64852},
+    "health_http": {"workbench": 200, "run_status": 200, "sam_4090": 200, "sam_5090": 200, "vlm_4090": 200},
+    "run_status": "idle",
+    "selected_file": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap",
+    "selected_topic": "/capture/camera_1/image",
+    "prewarm": "startup VLM readiness prewarm only; no dataset image inference"
+  },
+  "hashes": {
+    "backup_server_py": "CA7ECA7AC32FED55017A3ADCB562CC09EFC4725B0753BD56E17EEA38FFB07216",
+    "production_server_py": "6A00E9AEC9F7CCE17B771568CD8C13AC6DF50FA2D063336CFE05D78272AE6F83",
+    "backup_app_js": "5CF020AB9174F523D77D309C0BB75D5EF06A6BDA1A9B7FCD8C17E3397B01AC8D",
+    "production_app_js": "FB221F5DA09C40487FF1CF73BE971574DAD86089A0A5308AF76FDF750FEA158E",
+    "backup_index_html": "5C5CF8A2E0FDAE6B03AE4A7ABA51AD9D118B08F7FFF63EA55AAAC43DEE3B85DA",
+    "production_index_html": "01C30B27DFAAB734A23B1FC2C4D4696C84021437B23F2C55FDD06410647F5D82",
+    "state_json_before_after": "1DCD67A8475A8DD1974C9A9B3D4BF68A56E1ABD30CF2A9559C12E849E3D86F96",
+    "file_sessions_json_before_after": "202927E295CABC27B1F9583B6438D3E16C020809EE421BCE1342C3AEBC0367F5"
+  },
+  "boundaries": {
+    "formal_candidates_changed": false,
+    "human_truth_changed": false,
+    "training_approval_changed": false,
+    "fine_tuning_run": false,
+    "post_training_run": false,
+    "oss_write": false,
+    "browser_artifacts_tracked": false
+  }
+}

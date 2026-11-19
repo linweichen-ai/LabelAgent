@@ -5104,11 +5104,12 @@ def get_run_status():
         if phase_started_at else 0.0,
         progress_contract_version=2,
     )
+    with lock:
+        selected_file = str(state["video"].path) if state.get("video") else ""
+        selected_topic = state.get("topic")
+    snapshot.update(selected_file=selected_file, selected_topic=selected_topic)
     if snapshot.get("status") not in ("running", "stopping"):
         summary = load_run_summary()
-        with lock:
-            selected_file = str(state["video"].path) if state.get("video") else ""
-            selected_topic = state.get("topic")
         same_scope = (summary and summary.get("file") == selected_file
                       and summary.get("topic") == selected_topic)
         same_task = (not snapshot.get("task_id")

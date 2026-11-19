@@ -1,0 +1,117 @@
+{
+  "round": 238,
+  "date": "2026-11-19",
+  "status": "deployed_verified_and_dual_remote_synced",
+  "objective": "Bind external candidate import and label-scoped merge to the exact current workspace, label, truth, and candidate state",
+  "versions": {
+    "ui": 152,
+    "app_js": 190
+  },
+  "implementation": {
+    "endpoints": [
+      "/api/candidates/import",
+      "/api/candidates/merge"
+    ],
+    "binding_fields": [
+      "path",
+      "topic",
+      "file_activation_generation",
+      "label_state_sha256",
+      "truth_state_sha256",
+      "candidate_state_sha256"
+    ],
+    "all_topic_truth_canonicalization": true,
+    "all_topic_candidate_canonicalization": true,
+    "server_atomic_validation": true,
+    "input_sha256_receipt": true,
+    "pre_and_post_binding_receipts": true,
+    "official_import_tool_updated": true,
+    "saved_as_truth": false,
+    "stale_status": 409
+  },
+  "tests": {
+    "python": {
+      "passed": 990,
+      "total": 990,
+      "subtests_passed": 186
+    },
+    "candidate_import_targeted": {
+      "passed": 6,
+      "total": 6
+    },
+    "web": {
+      "passed": 68,
+      "total": 68
+    },
+    "syntax": "passed",
+    "diff_check": "passed",
+    "old_generation_rejected": true,
+    "old_label_state_rejected": true,
+    "old_truth_state_rejected": true,
+    "old_candidate_state_rejected": true,
+    "merge_preserves_unselected_labels": true,
+    "replay_after_success_rejected": true
+  },
+  "production_probe": {
+    "path": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap",
+    "topic": "/capture/camera_1/image",
+    "generation": 0,
+    "label_state_sha256": "7e135f51f6ec8981ed17334caf02b76d07329d891669d62488e4025ece0d7121",
+    "truth_state_sha256": "4230b579d394c17de8c632d1c818aab786efbf1ed6df6b363eb630b8758c75b7",
+    "candidate_state_sha256": "51a8335510d6eec89c5336354e1fc3434a6b984a7dd61a2cdad4b26a8835d0ec",
+    "stale_generation_status": 409,
+    "wrong_topic_status": 409,
+    "wrong_label_state_status": 409,
+    "wrong_truth_state_status": 409,
+    "wrong_candidate_state_status": 409,
+    "wrong_merge_base_status": 409,
+    "binding_unchanged_after_probe": true
+  },
+  "backup": {
+    "path": "D:\\Apps\\LabelAgent\\.local\\backups\\candidate-import-binding-round238-20261119-123449",
+    "files": 2,
+    "manifest": "manifest.json",
+    "predeploy_hash_match": true
+  },
+  "deployment": {
+    "management_record_pid": 68028,
+    "listener_pid": 74456,
+    "tunnel_pid_4090": 64416,
+    "sam_tunnel_pid_5090": 57760,
+    "worktree_matches_production": true,
+    "startup_vlm_prewarm_without_factory_image_seconds": 0.059,
+    "run_status": "idle",
+    "http_probes": {
+      "bootstrap": 200,
+      "run_status": 200,
+      "model_readiness": 200,
+      "run_readiness": 200,
+      "state_summary": 200
+    },
+    "state_sha256_before_after": "1DCD67A8475A8DD1974C9A9B3D4BF68A56E1ABD30CF2A9559C12E849E3D86F96",
+    "file_sessions_sha256_before_after": "202927E295CABC27B1F9583B6438D3E16C020809EE421BCE1342C3AEBC0367F5",
+    "files_json_sha256_before_after": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214"
+  },
+  "production_hashes": {
+    "source/agent/server.py": "8DC2EDEFD16AE4ADA4454F90FED143E0D1A0A38EFE4FD44459FEE7FC1361B9F8",
+    "tools/load_candidates.py": "D6A9E07EF9E86139E74565F4979851D446360DCA8828E48B78F3566B3D72FCE5"
+  },
+  "safety": {
+    "production_candidate_imports_or_merges": 0,
+    "candidate_writes_or_deletes": 0,
+    "human_truth_writes": 0,
+    "file_library_writes": 0,
+    "disk_data_file_deletes": 0,
+    "production_data_model_requests": 0,
+    "reference_frame_writes": 0,
+    "training_approvals": 0,
+    "fine_tuning": false,
+    "post_training": false,
+    "oss_writes": 0,
+    "raw_factory_artifacts_tracked": false
+  },
+  "local_untracked_evidence": "artifacts/round238-candidate-import-binding/",
+  "implementation_commit": "08d9c98121e9ce68c216fd299315cc068678156e",
+  "github_readback_commit": "08d9c98121e9ce68c216fd299315cc068678156e",
+  "cnb_readback_commit": "08d9c98121e9ce68c216fd299315cc068678156e"
+}

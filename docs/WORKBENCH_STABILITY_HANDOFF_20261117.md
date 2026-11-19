@@ -2121,3 +2121,19 @@ Round235 已挡住旧 SAM 点选和区域编辑结果，但继续审计确认三
 完整说明见 [第二百三十七轮报告](FILE_LIBRARY_REMOVAL_SCOPE_ROUND237_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/file-library-removal-scope-round237.json)。浏览器脚本、原始JSON和截图只保留在本地未跟踪目录。
 
 实现与测试提交 `15ab781160a562eb01a3352600df1e6711e05993` 已推送并精确回读 GitHub/CNB，两端分支头与本地一致。未跟踪浏览器证据和厂内内容未上传。
+
+## 第二百三十八轮外部候选导入与合并状态强绑定（已部署，2026-11-19）
+
+继续审计外部工具写入后确认：`/api/candidates/import` 与 `/api/candidates/merge` 原先只核对文件路径。同一MCAP重新载入、相机切换，或类别、人工真值、现有候选被另一流程更新后，旧工具输出仍可能写入新会话。
+
+现由 bootstrap/文件载入回执提供统一 `candidate_import_binding`，同时绑定路径、相机、文件载入代次、类别状态哈希、全部相机人工真值哈希和全部相机候选哈希。导入与按类别合并在主锁内逐项核对后才验证输入并写入；成功回执同时返回应用前绑定、写入后新绑定和输入哈希，始终声明 `saved_as_truth=false`。官方 `tools/load_candidates.py` 已同步要求完整绑定并核对回执。
+
+定向6项覆盖正常导入、旧请求重放、已确认空真值、非法帧、磁盘失败、运行中阻断、旧代次/类别/真值/候选基线及按类别合并。全量 Python 990/990及186个子测试、网页68/68、语法和差异检查全部通过。
+
+正式当前 SFL camera 1、代次0上只发送错误绑定请求：旧代次、错相机、错类别、错人工真值、错候选及错误合并基线共6项全部HTTP409。三项导入绑定和 `state.json`、`file_sessions.json`、`files.json` 前后不变；五项探针HTTP200，工作台idle。没有正式候选导入/合并、人工真值、文件列表、模型、参考帧、训练、微调、后训练或OSS写入。
+
+部署备份位于 `D:\Apps\LabelAgent\.local\backups\candidate-import-binding-round238-20261119-123449`，两个文件与清单逐一校验；部署后工作树和正式目录一致。最终管理记录工作台PID68028、监听PID74456，4090通道PID64416和5090 SAM通道PID57760未重启。
+
+完整说明见 [第二百三十八轮报告](CANDIDATE_IMPORT_BINDING_ROUND238_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/candidate-import-binding-round238.json)。HTTP反向脚本和原始JSON只保留本地未跟踪；终端中文乱码只是Windows代码页显示，不影响UTF-8证据与哈希判定。
+
+实现与测试提交 `08d9c98121e9ce68c216fd299315cc068678156e` 已推送并精确回读 GitHub/CNB，两端分支头与本地一致。未跟踪证据和厂内内容未上传。

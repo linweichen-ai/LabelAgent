@@ -86,4 +86,6 @@
 
 重启时启动器提示工作临时盘可用空间低于2 GiB；部署后 D 盘实测约1.52 GiB。当前服务已正常启动，但继续导入新数据可能受影响。下一步先做只读容量归因，优先迁移或压缩可恢复的缓存和本地回滚副本，不删除唯一数据，并逐项验证哈希与可恢复性。
 
+实现、测试和首版文档提交 `c02f19c33ad1007bff6958c321b6d52d2b4fe93f` 已分别从 GitHub 与 CNB 精确读回，两端与本地一致。
+
 机器证据见 [`evidence/workbench-stability-20261117/file-activation-generation-round232.json`](evidence/workbench-stability-20261117/file-activation-generation-round232.json)。

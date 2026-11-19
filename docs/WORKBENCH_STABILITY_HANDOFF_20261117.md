@@ -2049,3 +2049,5 @@ Round228 已保证新旧数据、相机与类别选择不串台，但逐类别�
 启动器同时提示D盘可用空间低于2 GiB，部署后实测约1.52 GiB。当前服务正常，下一轮优先做只读容量归因，再按完整清单、哈希和可恢复性门禁迁移或压缩可重建内容。
 
 完整说明见 [第二百三十二轮报告](FILE_ACTIVATION_GENERATION_ROUND232_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/file-activation-generation-round232.json)。浏览器脚本、原始回执和截图只保留本地未跟踪目录。
+
+实现、测试和首版文档提交 `c02f19c33ad1007bff6958c321b6d52d2b4fe93f` 已推送并分别回读 GitHub/CNB，同名分支两端与本地精确匹配。未跟踪厂内内容未上传。

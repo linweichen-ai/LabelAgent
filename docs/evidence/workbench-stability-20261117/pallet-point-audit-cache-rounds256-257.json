@@ -69,6 +69,37 @@
     "rollback_directory": "D:\\Apps\\LabelAgent\\.local\\backups\\main-run-pallet-audit-cache-round257-20261119-171409",
     "rollback_server_sha256": "CED317163CB7E4B3F8417D1AE2525B48304FDED11CB116ADBBA73B954C803CA6"
   },
+  "round258": {
+    "status": "live_candidate_refresh_verified",
+    "finding": "the visibly jagged masks were persisted pre-cleanup machine candidates rather than newly generated current-pipeline masks",
+    "live_runs": [
+      {
+        "frame": 102,
+        "task_id": "1a9b072bca4b416090e14404fe0b5659",
+        "elapsed_seconds": 34.046,
+        "holes_before": 68,
+        "holes_after": 10,
+        "geometry_adjusted_candidate_count": 12,
+        "truth_count_after": 0
+      },
+      {
+        "frame": 122,
+        "task_id": "49a92d6a90604920b241b1bfd1a1d90e",
+        "elapsed_seconds": 32.082,
+        "holes_before": 62,
+        "holes_after": 5,
+        "geometry_adjusted_candidate_count": 12,
+        "truth_count_after": 0
+      }
+    ],
+    "legacy_refresh_inventory": {
+      "large_pallet_candidates_with_at_least_10_holes": 25,
+      "action": "candidate_refresh_queue_only",
+      "bulk_truth_overwrite": false,
+      "automatic_training_approval": false
+    },
+    "local_visual_evidence": "artifacts/pallet-geometry-cross-dataset-round251/cvat-task3-top4-before-after.jpg"
+  },
   "safety_boundaries": {
     "human_truth_written": false,
     "approved_for_training": false,

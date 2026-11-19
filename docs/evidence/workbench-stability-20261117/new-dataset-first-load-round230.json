@@ -1,0 +1,110 @@
+{
+  "schema_version": "labelagent.workbench-stability-evidence.v1",
+  "round": 230,
+  "date": "2026-11-19",
+  "status": "deployed_and_browser_verified",
+  "problem": {
+    "new_labels_rendered_with_old_candidate_counts": true,
+    "compressed_image_mcap_not_auto_opened": true,
+    "before": {
+      "actual_candidate_store_empty": true,
+      "displayed_candidate_frames": 44,
+      "displayed_current_candidates": 16,
+      "displayed_floor_candidates": 1,
+      "primary_window_hidden": true,
+      "annotation_mode": false,
+      "open_image_windows": 0
+    }
+  },
+  "fix": {
+    "ui_version": 146,
+    "app_cache_version": 184,
+    "style_cache_version": 118,
+    "atomic_dataset_state_before_render": true,
+    "auto_open_any_image_topic": true,
+    "deferred_preview_read": true,
+    "pending_identity_feedback": true,
+    "old_workspace_preserved_until_compatibility_passes": true
+  },
+  "tests": {
+    "javascript_syntax": "passed",
+    "diff_check": "passed",
+    "web": {"passed": 130, "total": 130},
+    "python": {"passed": 982, "total": 982, "required_environment": "PYTHONUTF8=1"},
+    "initial_test_iterations": [
+      {
+        "result": "one targeted web assertion failure",
+        "cause": "the test assumed loadVideo opening brace and invalidateFrameNavigation were on the same physical line",
+        "resolution": "allowed whitespace while retaining the requirement that navigation invalidation is the first operation"
+      }
+    ]
+  },
+  "browser_acceptance": {
+    "base": "http://127.0.0.1:8765",
+    "synthetic_scope": {
+      "frames": 3,
+      "labels": ["floor", "slope", "other_robot"],
+      "candidate_frames": 0,
+      "server_requests_intercepted": ["POST /api/topic", "GET /api/timeline", "GET /api/frame/0"],
+      "formal_server_data_switched": false
+    },
+    "pending_preview": {
+      "kind": "正在验证",
+      "target_name_visible": true,
+      "old_loaded_path_unchanged": true,
+      "compatibility_boundary_visible": true
+    },
+    "after": {
+      "displayed_candidate_frames": 0,
+      "displayed_current_candidates": 0,
+      "floor_pending_not_candidate": true,
+      "slope_pending_not_absent": true,
+      "other_robot_pending_not_absent": true,
+      "primary_window_hidden": false,
+      "annotation_mode": true,
+      "open_image_windows": 1,
+      "timeline_requests": 1,
+      "frame_requests": 1,
+      "page_errors": 0
+    }
+  },
+  "deployment": {
+    "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\first-load-round230-20261119-100659",
+    "service_checks": {
+      "secure_tunnel": "ok",
+      "sam_4090": "ok",
+      "sam_5090": "ok",
+      "qwen_4090": "ok",
+      "vlm_5090_optional": "unavailable_not_required",
+      "workbench": "ok"
+    },
+    "production_sha256": {
+      "source/web/app.js": "3901D56F2CA085EE9BCCE9F6D601B892DB76D4DC8D9A30E1F6F3945C2BF9FEA9",
+      "source/web/index.html": "33DAD5B6B4EDB6190AD51A4E3A6CDF7D214A546F3CF1AEDC7DA2895676C6AD11",
+      "source/web/style.css": "FE96F29DF44448B418FB02046E21EEC83E217BC4CE3C26DBEF2AF5BD1CD39C38"
+    },
+    "state_sha256": "1DCD67A8475A8DD1974C9A9B3D4BF68A56E1ABD30CF2A9559C12E849E3D86F96",
+    "file_sessions_sha256": "202927E295CABC27B1F9583B6438D3E16C020809EE421BCE1342C3AEBC0367F5"
+  },
+  "version_control": {
+    "branch": "codex/workbench-stability-20261117",
+    "implementation_commit": null,
+    "receipt_commit": null,
+    "github_readback": null,
+    "cnb_readback": null,
+    "exact_match": false,
+    "untracked_factory_artifacts_uploaded": false
+  },
+  "safety_boundaries": {
+    "sam_calls": 0,
+    "data_image_vlm_calls": 0,
+    "agent_calls": 0,
+    "candidate_writes": 0,
+    "human_truth_writes": 0,
+    "training_approvals": 0,
+    "fine_tuning": false,
+    "post_training": false,
+    "oss_writes": 0,
+    "synthetic_dataset_persisted": false
+  }
+}

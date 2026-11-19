@@ -105,14 +105,29 @@ test('工作台持续显示新旧数据集身份和逐类别覆盖状态', () =>
   assert.match(app, /CVAT Task3 · 斜坡复核集/);
   assert.match(app, /VLM 看见，SAM 漏分/);
   assert.match(app, /点击任一类别可查看当前帧依据/);
-  assert.match(app, /function applyInferenceLabelState\(data\)/);
+  assert.match(app, /function applyInferenceLabelState\(data,refresh=true\)/);
   assert.match(app, /function candidateCoverageEvidence\(/);
   assert.match(app, /action\.dataset\.coverageRepair=label/);
   assert.match(app, /startCandidateCoverageRepair\(label\)/);
   assert.match(app, /不会自动运行模型或写入人工真值/);
-  assert.match(app, /applyInferenceLabelState\(data\);const resumeFrame/);
+  assert.match(app, /applyInferenceLabelState\(data,false\)/);
   assert.match(app, /window\.referenceFrames=data\.reference_frames\|\|\{\};applyInferenceLabelState\(data\)/);
   assert.match(app, /updateDatasetIdentity\(\)/);
+});
+
+test('新数据集先原子替换逐类状态并直接打开当前图像相机', () => {
+  const app = source('app.js');
+  const load = section(app, 'async function loadVideo', 'window.loadVideoData=loadVideo');
+  assert.ok(load.indexOf('candidates=data.candidates||{}') < load.indexOf('applyInferenceLabelState(data,false)'));
+  assert.ok(load.indexOf('candidateCountIndex=data.candidate_counts') < load.indexOf('applyInferenceLabelState(data,false)'));
+  assert.ok(load.indexOf('refreshTopics()') < load.indexOf('refreshCandidateSummary()'));
+  assert.match(app, /if\(catalog\[topic\]\?\.type!=='image'\)return/);
+  assert.match(app, /await addWindow\('image',\[topic\],true\)/);
+  assert.match(app, /async function addWindow\(type,sources,deferInitialLoad=false\)/);
+  assert.match(app, /if\(deferInitialLoad\).*continue/);
+  assert.match(app, /pendingDatasetLoad=\{path:file\.path,name:file\.name\};updateDatasetIdentity\(\)/);
+  assert.match(app, /finally\{pendingDatasetLoad=null;updateDatasetIdentity\(\)/);
+  assert.match(app, /正在读取媒体索引并检查首帧；完成前保留当前工作区/);
 });
 
 test('逐类别覆盖区分可见漏分、明确未见和没有可追溯证据', () => {
@@ -1211,7 +1226,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=183/);
+  assert.match(source('index.html'), /app\.js\?v=184/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1269,10 +1284,10 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.deepEqual(loads, [20,2]);
   assert.equal(h.context.frame, 2);
 
-  assert.match(app, /async function loadVideo\(data\)\{invalidateFrameNavigation\(\)/);
+  assert.match(app, /async function loadVideo\(data\)\{\s*invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=183/);
+  assert.match(source('index.html'), /app\.js\?v=184/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1320,7 +1335,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 3);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=183/);
+  assert.match(source('index.html'), /app\.js\?v=184/);
 });
 
 test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () => {

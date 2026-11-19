@@ -2265,3 +2265,13 @@ Python1029/1029、网页71/71通过，部署备份为`run-storage-preflight-roun
 离线提案与正式读回一致：大栈板洞10→4，填平6个/2123像素，结构洞最低保留92.6136%，总变化1.9813%；4条横向板缝保留。正式帧仍有12个候选、11个pallet，人工真值0，11个pallet升级为v2；重复请求返回0项修改。Python1030/1030、网页71/71通过，实现提交`c8785c03cc228410e28df3003e45fecafa523d3a`，回滚点`pallet-surface-cleanup-round264-20261119-193900`。生产server/workflow哈希分别为`CD2F5570...AB119`和`483CCF08...CE73`，SAM、主VLM ready、工作台idle。
 
 完整说明见`docs/RUN_STORAGE_AND_PALLET_SURFACE_ROUNDS263_264_20261119.md`，结构化证据见`docs/evidence/workbench-stability-20261117/run-storage-pallet-surface-rounds263-264.json`。三张真实帧对比图只保存在本地`artifacts/pallet-surface-cleanup-round264/`，未上传厂内图像。
+
+### Round 265：跨分辨率近景门禁与跨数据回归（已部署，2026-11-19）
+
+Round264规则扩展到更多帧后，肉眼发现第123帧中等塑料实例的圆形真实开口存在被紧凑洞规则填掉的风险。v3现仅在候选覆盖整图至少30%时启用面积≤768、跨度≤64、长短轴比≤3.0的紧凑填孔；使用相对面积而非固定像素，避免1920图上门槛意外变松。第102/122帧近景木栈板仍各填1个表面洞，第123帧紧凑填孔0、圆形开口保留。
+
+审计工具同步修复两个口径：结构洞判断与v3共享规则；工作台状态审计用顶层当前候选覆盖当前相机的旧分相机快照。Capture与CVAT各分层抽样160项：Capture调整0，CVAT洞52→15、紧凑填孔2；两套的组件、结构洞保留和2.5%预算违规均为0。Python1033/1033、网页71/71通过，实现提交`a421f4b06c4f47cd9853c0f5a8574db6b97553ae`，回滚点`pallet-relative-scale-guard-round265-20261119-202500`。
+
+为恢复运行空间，将已具有活动副本和独立tar恢复包的旧Mask2Former恢复目录完整迁至`C:\Users\seer\AppData\Local\LabelAgent\backup-archive\large-recovery-round265\`；2512文件、2,999,265,523字节逐文件哈希0差异，D盘旧路径保留NTFS联接。最终C约3.332 GiB、D约3.029 GiB；1/20/100帧空间预检全部ready且无警告。工作台idle，SAM和主VLM ready，第100帧12候选/11 pallet/4条结构缝、人工真值0保持不变。
+
+详细记录见`docs/PALLET_SURFACE_SCALE_GUARD_ROUND265_20261119.md`与`docs/evidence/workbench-stability-20261117/pallet-surface-scale-guard-round265.json`；真实图像及完整审计只保留本地`artifacts/pallet-surface-cross-dataset-round265/`。

@@ -1,0 +1,129 @@
+{
+  "schema_version": "labelagent.round265.evidence.v1",
+  "round": 265,
+  "date": "2026-11-19",
+  "objective": "Keep close wooden pallet surfaces smooth without filling structural openings on medium or cross-resolution candidates.",
+  "implementation": {
+    "geometry_cleanup_version": 3,
+    "compact_hole_maximum_area": 768,
+    "compact_hole_maximum_span": 64,
+    "compact_hole_maximum_aspect_ratio": 3.0,
+    "minimum_candidate_image_area_ratio": 0.3,
+    "maximum_change_ratio": 0.025,
+    "minimum_structural_hole_retention": 0.75,
+    "commit": "a421f4b06c4f47cd9853c0f5a8574db6b97553ae"
+  },
+  "audit_input_fix": {
+    "old_behavior": "read candidates_by_topic even when the active topic had newer top-level candidates",
+    "new_behavior": "overlay current top-level candidates onto the active topic before sampling",
+    "input_scope": "workbench_state.current_candidates_overlaid_on_candidates_by_topic",
+    "tested": true
+  },
+  "cross_dataset_audit": {
+    "capture_20261103": {
+      "input_sha256": "591ebba97aeaca4f58dfcb0eecfd79ec026b4915aa670143d46d9702181b7f92",
+      "sample_count": 160,
+      "adjusted_count": 0,
+      "component_violations": 0,
+      "structural_retention_violations": 0,
+      "change_budget_violations": 0,
+      "gate_passed": true,
+      "local_report": "artifacts/pallet-surface-cross-dataset-round265/capture-20261103-v3-audit.json"
+    },
+    "cvat_task3": {
+      "input_sha256": "c6e710e49c9dafac525b195850cc195a0fbd1fffba32aabfd6e55d15bb52df24",
+      "sample_count": 160,
+      "adjusted_count": 149,
+      "holes_before": 52,
+      "holes_after": 15,
+      "compact_texture_holes_filled": 2,
+      "maximum_change_ratio": 0.023571,
+      "component_violations": 0,
+      "structural_retention_violations": 0,
+      "change_budget_violations": 0,
+      "gate_passed": true,
+      "local_report": "artifacts/pallet-surface-cross-dataset-round265/cvat-task3-current-v3-audit.json"
+    }
+  },
+  "visual_review": [
+    {
+      "frame": 102,
+      "shape_id": 11,
+      "cohort": "close_wood_positive",
+      "compact_holes_filled": 1,
+      "change_ratio": 0.00387,
+      "minimum_structural_retention": 0.976562
+    },
+    {
+      "frame": 122,
+      "shape_id": 12,
+      "cohort": "close_wood_positive",
+      "compact_holes_filled": 1,
+      "change_ratio": 0.006814,
+      "minimum_structural_retention": 0.879464
+    },
+    {
+      "frame": 123,
+      "shape_id": 3,
+      "cohort": "medium_plastic_negative",
+      "compact_holes_filled": 0,
+      "circular_opening_preserved": true,
+      "change_ratio": 0.007757,
+      "minimum_structural_retention": 0.895911
+    }
+  ],
+  "tests": {
+    "targeted": "8/8",
+    "python": "1033/1033",
+    "browser": "71/71",
+    "compile_and_diff_check": "passed"
+  },
+  "deployment": {
+    "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\pallet-relative-scale-guard-round265-20261119-202500",
+    "production_sha256": {
+      "source/agent/server.py": "8491B2F60FC6D94D71E1CF3A8A96ED56CF2E1A4D898F58FF2B767E57FF1239F3",
+      "source/agent/workflow.py": "9EE40BADD6F7EB2F91D70A864036CFD34FFDBC01582FBF82D455408D6D63AD97"
+    },
+    "service": {
+      "run_status": "idle",
+      "model_ready": true,
+      "sam_ready": true,
+      "vlm_ready": true
+    },
+    "frame_100_readback": {
+      "candidate_count": 12,
+      "pallet_count": 11,
+      "large_pallet_holes": 4,
+      "truth_count": 0
+    }
+  },
+  "storage_relocation": {
+    "source_compatibility_path": "D:\\Apps\\LabelAgent\\.local\\backups\\mask2former_single_recovery-source-round157-20261118",
+    "target": "C:\\Users\\seer\\AppData\\Local\\LabelAgent\\backup-archive\\large-recovery-round265\\mask2former_single_recovery-source-round157-20261118",
+    "source_link_type": "Junction",
+    "files": 2512,
+    "bytes": 2999265523,
+    "filewise_differences": 0,
+    "active_copy_files": 2512,
+    "active_copy_bytes": 2999265523,
+    "verified_archive_sha256": "3E6CFB966F7564ACFC2A434073C534A2B8EB8F6E3BC0CDBEACE1F05D7ED884FA",
+    "final_c_free_gib": 3.332,
+    "final_d_free_gib": 3.029,
+    "run_readiness": {
+      "1": {"ready": true, "required_mib": 264.0},
+      "20": {"ready": true, "required_mib": 416.0},
+      "100": {"ready": true, "required_mib": 1056.0},
+      "observed_free_mib": 3101.54
+    }
+  },
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth_modified": false,
+    "approved_for_training": false,
+    "approved_for_deployment": false,
+    "model_weights_changed": false,
+    "model_inference_performed": false,
+    "oss_written": false,
+    "factory_images_published": false
+  }
+}

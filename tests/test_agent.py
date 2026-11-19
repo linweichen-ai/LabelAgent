@@ -2203,6 +2203,11 @@ class FakeVideo:
                 "progress": 1, "playback_ready": False, "url": None}
 
 
+def active_request_scope():
+    return {"path": str(FakeVideo.path), "topic": "camera0",
+            "file_activation_generation": server.current_file_activation_generation()}
+
+
 class ServerTests(unittest.TestCase):
     def test_primary_model_prewarm_uses_main_route_without_state_writes(self):
         old_state = server.state
@@ -3349,10 +3354,106 @@ class ServerTests(unittest.TestCase):
             with patch.object(server.urllib.request, "urlopen",
                               return_value=io.BytesIO(json.dumps(payload).encode())) as opened:
                 response = server.app.test_client().post("/api/segment_points", json={
-                    "frame": 1, "points": [{"x": 1, "y": 1, "label": 1}]})
+                    **active_request_scope(), "frame": 1,
+                    "points": [{"x": 1, "y": 1, "label": 1}]})
             self.assertEqual(response.status_code, 200, response.json)
             self.assertGreaterEqual(response.json["inference_elapsed_seconds"], 0)
+            self.assertEqual(response.json["path"], str(FakeVideo.path))
+            self.assertEqual(response.json["topic"], "camera0")
+            self.assertEqual(response.json["frame"], 1)
+            self.assertEqual(response.json["file_activation_generation"],
+                             server.current_file_activation_generation())
             self.assertEqual(opened.call_args.kwargs["timeout"], 180)
+        finally:
+            server.state = old_state
+
+    def test_interactive_edits_reject_stale_activation_before_frame_read(self):
+        old_state = server.state
+        server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+            "truth": {}, "reference_frames": {}, "config": {}, "candidates": {},
+            "agent_runs": {}}
+        stale_scope = active_request_scope()
+        stale_scope["file_activation_generation"] -= 1
+        try:
+            with patch.object(server, "frame_image", wraps=server.frame_image) as frame_reader, \
+                 patch.object(server.urllib.request, "urlopen") as opened:
+                point = server.app.test_client().post("/api/segment_points", json={
+                    **stale_scope, "frame": 1,
+                    "points": [{"x": 1, "y": 1, "label": 1}]})
+                region = server.app.test_client().post("/api/edit_region", json={
+                    **stale_scope, "frame": 1, "operation": "add",
+                    "polygon": [[1, 1], [5, 1], [5, 5]], "shape": shape()})
+            self.assertEqual(point.status_code, 409, point.json)
+            self.assertEqual(region.status_code, 409, region.json)
+            self.assertEqual(frame_reader.call_count, 0)
+            opened.assert_not_called()
+        finally:
+            server.state = old_state
+
+    def test_point_segment_rejects_completion_after_same_file_reload(self):
+        old_state = server.state
+        old_generation = server.file_activation_generation
+        server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+            "truth": {}, "reference_frames": {}, "config": {}, "candidates": {},
+            "agent_runs": {}}
+        entered, release = threading.Event(), threading.Event()
+        response_holder = []
+        payload = {"points": [[1, 1], [2, 1], [2, 2]], "holes": [],
+                   "parts": [{"points": [[1, 1], [2, 1], [2, 2]], "holes": []}]}
+
+        class BlockingResponse(io.BytesIO):
+            def __enter__(self):
+                entered.set()
+                if not release.wait(5):
+                    raise RuntimeError("测试未释放 SAM 响应")
+                return self
+
+            def __exit__(self, *args):
+                self.close()
+
+        request_scope = active_request_scope()
+        def post_point():
+            with server.app.test_client() as client:
+                response_holder.append(client.post("/api/segment_points", json={
+                    **request_scope, "frame": 1,
+                    "points": [{"x": 1, "y": 1, "label": 1}]}))
+        worker = threading.Thread(target=post_point)
+        try:
+            with patch.object(server.urllib.request, "urlopen",
+                              return_value=BlockingResponse(json.dumps(payload).encode())):
+                worker.start()
+                self.assertTrue(entered.wait(5))
+                server.claim_file_activation()
+                release.set()
+                worker.join(5)
+            self.assertFalse(worker.is_alive())
+            self.assertEqual(len(response_holder), 1)
+            self.assertEqual(response_holder[0].status_code, 409, response_holder[0].json)
+            self.assertEqual(server.point_segment_flights, {})
+        finally:
+            release.set()
+            if worker.ident is not None:
+                worker.join(5)
+            with server.file_activation_intent_lock:
+                server.file_activation_generation = old_generation
+            server.state = old_state
+
+    def test_region_edit_returns_exact_activation_scope(self):
+        old_state = server.state
+        server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+            "truth": {}, "reference_frames": {}, "config": {}, "candidates": {},
+            "agent_runs": {}}
+        try:
+            response = server.app.test_client().post("/api/edit_region", json={
+                **active_request_scope(), "frame": 1, "operation": "add",
+                "polygon": [[20, 20], [28, 20], [28, 28], [20, 28]],
+                "shape": shape(label="person")})
+            self.assertEqual(response.status_code, 200, response.json)
+            self.assertEqual(response.json["path"], str(FakeVideo.path))
+            self.assertEqual(response.json["topic"], "camera0")
+            self.assertEqual(response.json["frame"], 1)
+            self.assertEqual(response.json["file_activation_generation"],
+                             server.current_file_activation_generation())
         finally:
             server.state = old_state
 
@@ -3363,7 +3464,8 @@ class ServerTests(unittest.TestCase):
         self.assertTrue(server.point_segment_lock.acquire(blocking=False))
         try:
             response = server.app.test_client().post("/api/segment_points", json={
-                "frame": 1, "points": [{"x": 1, "y": 1, "label": 1}]})
+                **active_request_scope(), "frame": 1,
+                "points": [{"x": 1, "y": 1, "label": 1}]})
             self.assertEqual(response.status_code, 503, response.json)
             self.assertIn("不同的点提示", response.json["error"])
         finally:
@@ -3396,7 +3498,7 @@ class ServerTests(unittest.TestCase):
             try:
                 with server.app.test_client() as client:
                     responses.append(client.post("/api/segment_points", json={
-                        "frame": 1,
+                        **active_request_scope(), "frame": 1,
                         "points": [{"x": 1, "y": 1, "label": 1}],
                     }))
             except BaseException as error:
@@ -3453,7 +3555,8 @@ class ServerTests(unittest.TestCase):
         def post_first():
             with server.app.test_client() as client:
                 first_response.append(client.post("/api/segment_points", json={
-                    "frame": 1, "points": [{"x": 1, "y": 1, "label": 1}]}))
+                    **active_request_scope(), "frame": 1,
+                    "points": [{"x": 1, "y": 1, "label": 1}]}))
 
         try:
             with patch.object(server.urllib.request, "urlopen",
@@ -3464,7 +3567,7 @@ class ServerTests(unittest.TestCase):
                 self.assertTrue(entered.wait(5))
                 with server.app.test_client() as client:
                     different = client.post("/api/segment_points", json={
-                        "frame": 1,
+                        **active_request_scope(), "frame": 1,
                         "points": [{"x": 2, "y": 1, "label": 1}],
                     })
                 self.assertEqual(different.status_code, 503, different.json)

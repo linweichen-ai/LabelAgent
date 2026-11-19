@@ -124,6 +124,24 @@ def assert_request_file_activation(payload, key="file_activation_generation"):
     return generation
 
 
+def assert_request_data_scope(payload, *, generation_key="file_activation_generation",
+                              path_key="path", topic_key="topic"):
+    """Require one request to target the exact active file, topic and load."""
+    generation = assert_request_file_activation(payload, generation_key)
+    expected_path = payload.get(path_key)
+    expected_topic = payload.get(topic_key)
+    if not isinstance(expected_path, str) or not expected_path:
+        raise ValueError(f"{path_key} 必须是当前数据文件路径")
+    if not isinstance(expected_topic, str) or not expected_topic:
+        raise ValueError(f"{topic_key} 必须是当前图像相机")
+    video = state.get("video")
+    if (video is None or expected_path != str(video.path)
+            or expected_topic != state.get("topic")):
+        raise StaleHumanReviewError(
+            "数据文件或相机已变化，旧窗口请求已拒绝；请刷新后重新操作")
+    return generation, expected_path, expected_topic
+
+
 def _normalize_refinement_id(value):
     """Return a canonical UUID for one deferred refinement request."""
     if value is None:
@@ -2067,18 +2085,20 @@ def get_point_segment():
     with lock:
         if state["video"] is None or not state["topic"]:
             raise ValueError("请先加载图像消息")
+        activation_generation, data_path, topic = assert_request_data_scope(body)
         index = int(body["frame"])
         if index in state.get("reference_frames", {}).get(state["topic"], []):
             raise ValueError("参考帧只能人工调整，不能调用 SAM 生成或修改")
         image = frame_image(index)
-        topic = state["topic"]
         service_url = (state["config"].get("sam3_url") or os.environ.get("SAM3_URL")
                        or "http://127.0.0.1:8766").rstrip("/")
     points = body["points"]
     request_key = _sha256_json({
         "schema_version": "labelagent.point-segment-flight.v1",
         "service_url": service_url,
+        "path": data_path,
         "topic": topic,
+        "file_activation_generation": activation_generation,
         "frame": index,
         "image_sha256": hashlib.sha256(image).hexdigest(),
         "points": points,
@@ -2097,6 +2117,8 @@ def get_point_segment():
             raise RuntimeError(flight.error)
         if flight.payload is None:
             raise RuntimeError("相同点提示 SAM 请求结束但没有返回结果")
+        with lock:
+            assert_request_data_scope(body)
         result = copy.deepcopy(flight.payload)
         result["request_coalescing"] = {
             "role": "coalesced_waiter", "coalesced": True,
@@ -2109,6 +2131,10 @@ def get_point_segment():
         image, points, service_url))
     try:
         result = compute()
+        with lock:
+            assert_request_data_scope(body)
+        result.update(path=data_path, topic=topic, frame=index,
+                      file_activation_generation=activation_generation)
         flight.payload = copy.deepcopy(result)
         result["request_coalescing"] = {
             "role": "owner", "coalesced": False, "wait_seconds": 0.0,
@@ -2128,13 +2154,18 @@ def get_point_segment():
 def edit_region():
     """Union or subtract a user drawn polygon from an existing annotation."""
     body = request.get_json() or {}
-    index = int(body.get("frame", -1))
+    with lock:
+        if state.get("video") is None or not state.get("topic"):
+            raise ValueError("请先加载图像消息")
+        activation_generation, data_path, topic = assert_request_data_scope(body)
+        index = int(body.get("frame", -1))
+        image_payload = frame_image(index)
     shape = body.get("shape") or {}
     polygon = body.get("polygon") or []
     operation = body.get("operation")
     if operation not in ("add", "erase") or len(polygon) < 3:
         raise ValueError("区域至少需要 3 个点")
-    image = Image.open(io.BytesIO(frame_image(index)))
+    image = Image.open(io.BytesIO(image_payload))
     width, height = image.size
     import cv2
     canvas = np.zeros((height, width), np.uint8)
@@ -2160,7 +2191,12 @@ def edit_region():
             holes.append(contours[child][:,0,:].astype(int).tolist()); child=hierarchy[0][child][0]
         parts.append({"points": pts, "holes": holes})
     if not parts: raise ValueError("编辑后区域为空")
-    return jsonify(label=shape.get("label", ""), points=parts[0]["points"], holes=parts[0]["holes"], parts=parts)
+    with lock:
+        assert_request_data_scope(body)
+    return jsonify(label=shape.get("label", ""), points=parts[0]["points"],
+                   holes=parts[0]["holes"], parts=parts, path=data_path,
+                   topic=topic, frame=index,
+                   file_activation_generation=activation_generation)
 
 
 @app.get("/api/playback")

@@ -731,7 +731,9 @@ class CandidateClassAuditTests(unittest.TestCase):
                 self.assertNotEqual(first, server.candidate_class_audit_version())
 
     def test_sam3_config_save_and_point_request(self):
-        state = {"video": object(), "topic": "camera", "config": {}, "reference_frames": {}}
+        candidate_path = Path("/tmp/candidate-audit.mcap")
+        state = {"video": SimpleNamespace(path=candidate_path),
+                 "topic": "camera", "config": {}, "reference_frames": {}}
         with patch.object(server, "state", state), patch.object(server, "save"), \
              patch.object(server, "frame_image", return_value=self.image), \
              patch.object(server.urllib.request, "urlopen") as urlopen:
@@ -740,7 +742,10 @@ class CandidateClassAuditTests(unittest.TestCase):
             client = server.app.test_client()
             response = client.post("/api/config", json={"sam3_url": "http://127.0.0.1:9999/"})
             self.assertEqual(response.status_code, 200)
-            response = client.post("/api/segment_points", json={"frame": 0, "points": []})
+            response = client.post("/api/segment_points", json={
+                "frame": 0, "points": [], "path": str(candidate_path),
+                "topic": "camera", "file_activation_generation":
+                    server.current_file_activation_generation()})
             self.assertEqual(response.status_code, 200, response.json)
             self.assertEqual(urlopen.call_args.args[0].full_url, "http://127.0.0.1:9999/segment_points")
 

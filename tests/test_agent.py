@@ -2213,6 +2213,17 @@ def active_label_write_scope():
             "expected_label_state_sha256": server.label_state_sha256()}
 
 
+def active_config_write_scope():
+    video = server.state.get("video")
+    return {
+        "expected_path": str(video.path) if video is not None else "",
+        "expected_topic": server.state.get("topic"),
+        "expected_file_activation_generation":
+            server.current_file_activation_generation(),
+        "expected_config_state_sha256": server.config_state_sha256(),
+    }
+
+
 def active_auto_clear_scope(frame):
     binding = server.auto_result_clear_binding(frame)
     return {**active_request_scope(),
@@ -2330,6 +2341,7 @@ class ServerTests(unittest.TestCase):
         try:
             client = server.app.test_client()
             with patch.object(server, "save"):
+                previous_sha = server.config_state_sha256()
                 saved = client.post("/api/config", json={
                     "llm_fast_url": "http://127.0.0.1:38868/v1",
                     "llm_fast_model": "fast", "llm_fast_max_pixels": 327680,
@@ -2337,19 +2349,75 @@ class ServerTests(unittest.TestCase):
                     "llm_fast_max_extra_pixels": 1310720,
                     "llm_fast_max_extra_long_edge": 1280,
                     "llm_fast_timeout_seconds": 30,
-                    "llm_fast_cooldown_seconds": 60})
+                    "llm_fast_cooldown_seconds": 60,
+                    **active_config_write_scope()})
                 self.assertEqual(saved.status_code, 200, saved.json)
                 self.assertEqual(server.state["config"]["llm_fast_timeout_seconds"], 30)
+                self.assertEqual(saved.json["previous_config_state_sha256"],
+                                 previous_sha)
                 rejected = client.post("/api/config", json={
                     "llm_fast_url": "http://user:secret@127.0.0.1/v1"})
                 self.assertEqual(rejected.status_code, 400, rejected.json)
                 malformed = client.post("/api/config", json=["not", "an", "object"])
                 self.assertEqual(malformed.status_code, 400, malformed.json)
                 disabled = client.post("/api/config", json={
-                    "llm_fast_url": "", "llm_fast_model": ""})
+                    "llm_fast_url": "", "llm_fast_model": "",
+                    **active_config_write_scope()})
                 self.assertEqual(disabled.status_code, 200, disabled.json)
                 self.assertNotIn("llm_fast_url", server.state["config"])
                 self.assertNotIn("llm_fast_model", server.state["config"])
+        finally:
+            server.state = old_state
+
+    def test_config_write_rejects_stale_active_and_failed_transactions(self):
+        old_state, old_status = server.state, server.run_status
+        server.state = {"config": {"llm_model": "before"}}
+        server.run_status = {"status": "idle"}
+        client = server.app.test_client()
+        try:
+            stale = active_config_write_scope()
+            stale["expected_config_state_sha256"] = "0" * 64
+            response = client.post("/api/config", json={
+                "llm_model": "stale", **stale})
+            self.assertEqual(response.status_code, 409, response.json)
+            self.assertEqual(server.state["config"], {"llm_model": "before"})
+
+            server.run_status = {"status": "running"}
+            response = client.post("/api/config", json={
+                "llm_model": "active", **active_config_write_scope()})
+            self.assertEqual(response.status_code, 503, response.json)
+            self.assertEqual(server.state["config"], {"llm_model": "before"})
+
+            server.run_status = {"status": "idle"}
+            with patch.object(server, "save", side_effect=OSError("disk full")):
+                response = client.post("/api/config", json={
+                    "llm_model": "uncommitted", **active_config_write_scope()})
+            self.assertEqual(response.status_code, 503, response.json)
+            self.assertIn("已恢复原配置", response.json["error"])
+            self.assertEqual(server.state["config"], {"llm_model": "before"})
+        finally:
+            server.state, server.run_status = old_state, old_status
+
+    def test_config_readback_hides_both_keys_but_hash_tracks_them(self):
+        old_state = server.state
+        server.state = {
+            "video": None, "topic": None, "labels": [], "truth": {},
+            "reference_frames": {}, "config": {
+                "llm_model": "model", "llm_key": "primary-private",
+                "llm_fast_key": "fast-private"},
+            "candidates": {}, "agent_runs": {},
+        }
+        try:
+            before = server.config_state_sha256()
+            client = server.app.test_client()
+            for endpoint in ("/api/bootstrap", "/api/state"):
+                response = client.get(endpoint)
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertNotIn("llm_key", response.json["config"])
+                self.assertNotIn("llm_fast_key", response.json["config"])
+                self.assertEqual(response.json["config_state_sha256"], before)
+            server.state["config"]["llm_fast_key"] = "rotated"
+            self.assertNotEqual(server.config_state_sha256(), before)
         finally:
             server.state = old_state
 

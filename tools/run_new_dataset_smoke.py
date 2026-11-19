@@ -222,15 +222,32 @@ def main() -> int:
         from agent import server, workflow
 
         client = server.app.test_client()
-        checked_json(client.post("/api/labels", json={"labels": labels}), "set labels")
-        checked_json(client.post("/api/config", json={
+        bootstrap = checked_json(client.get("/api/bootstrap"), "read label binding")
+        checked_json(client.post("/api/labels", json={
+            "labels": labels,
+            "path": bootstrap.get("path", ""),
+            "topic": bootstrap.get("topic"),
+            "file_activation_generation": bootstrap.get(
+                "file_activation_generation"),
+            "expected_label_state_sha256": bootstrap.get("label_state_sha256"),
+        }), "set labels")
+        bootstrap = checked_json(client.get("/api/bootstrap"), "read config binding")
+        config_payload = {
             key: value for key, value in config.items()
             if key in {"llm_url", "llm_model", "llm_key", "llm_prompt_profile", "sam3_url",
                        "llm_fast_url", "llm_fast_model", "llm_fast_key",
                        "llm_fast_max_pixels", "llm_fast_max_long_edge",
                        "llm_fast_max_extra_pixels", "llm_fast_max_extra_long_edge",
                        "llm_fast_timeout_seconds", "llm_fast_cooldown_seconds"}
-        }), "set model config")
+        }
+        config_payload.update({
+            "expected_path": bootstrap.get("path", ""),
+            "expected_topic": bootstrap.get("topic"),
+            "expected_file_activation_generation": bootstrap.get(
+                "file_activation_generation"),
+            "expected_config_state_sha256": bootstrap.get("config_state_sha256"),
+        })
+        checked_json(client.post("/api/config", json=config_payload), "set model config")
 
         started = time.perf_counter()
         with ExitStack() as stack:

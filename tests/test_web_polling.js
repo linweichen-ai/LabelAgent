@@ -1321,7 +1321,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=190/);
+  assert.match(source('index.html'), /app\.js\?v=191/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1382,7 +1382,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{\s*invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(currentGeneration=0\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=190/);
+  assert.match(source('index.html'), /app\.js\?v=191/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1441,7 +1441,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 4);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=190/);
+  assert.match(source('index.html'), /app\.js\?v=191/);
 });
 
 test('类别与推理类别保存绑定文件载入代次和类别状态版本', async () => {
@@ -1480,7 +1480,50 @@ test('类别与推理类别保存绑定文件载入代次和类别状态版本',
   assert.deepEqual(applied[0].labels, ['a','b']);
   assert.deepEqual(applied[0].auto_labels, ['b']);
   assert.equal(h.run('currentDescription'), null);
-  assert.match(source('index.html'), /app\.js\?v=190/);
+  assert.match(source('index.html'), /app\.js\?v=191/);
+});
+
+test('模型配置保存绑定工作区载入代次和配置版本', async () => {
+  const app = source('app.js'), calls = [], pending = [], notices = [];
+  const dialog = {closed:false,close(){this.closed=true}};
+  const elements = {
+    configSave: {}, llmUrl: {value:'http://localhost/v1'},
+    llmModel: {value:'model'}, llmKey: {value:'local'}, config: dialog,
+  };
+  const h = harness({
+    $(id) { return elements[id]; },
+    api(route, body) { calls.push({route,body}); return new Promise(resolve=>pending.push(resolve)); },
+    toast(message) { notices.push(message); },
+  });
+  h.run(`let loadedDataPath='file-a',topic='/camera',loadedFileActivationGeneration=7,
+    configStateSha256='${'a'.repeat(64)}',workbenchConfig={llm_model:'old'},
+    currentDescription={ready:true};`);
+  h.run(section(app, "$('configSave').onclick", 'let currentDescription'));
+
+  const stale = h.run("$('configSave').onclick()");
+  assert.deepEqual(JSON.parse(JSON.stringify(calls[0])), {route:'config',body:{
+    llm_url:'http://localhost/v1',llm_model:'model',llm_key:'local',
+    expected_path:'file-a',expected_topic:'/camera',
+    expected_file_activation_generation:7,expected_config_state_sha256:'a'.repeat(64)}});
+  h.run('loadedFileActivationGeneration=8');
+  pending[0]({saved:true,path:'file-a',topic:'/camera',file_activation_generation:7,
+    previous_config_state_sha256:'a'.repeat(64),config_state_sha256:'b'.repeat(64),
+    config:{llm_model:'model'}});
+  await stale;
+  assert.equal(h.run('configStateSha256'), 'a'.repeat(64));
+  assert.equal(dialog.closed, false);
+  assert.ok(notices.includes('配置保存期间数据文件、相机、载入代次或配置版本已变化，拒绝更新当前页面'));
+
+  h.run("loadedFileActivationGeneration=7;configStateSha256='"+'c'.repeat(64)+"'");
+  const current = h.run("$('configSave').onclick()");
+  pending[1]({saved:true,path:'file-a',topic:'/camera',file_activation_generation:7,
+    previous_config_state_sha256:'c'.repeat(64),config_state_sha256:'d'.repeat(64),
+    config:{llm_model:'model'}});
+  await current;
+  assert.equal(h.run('configStateSha256'), 'd'.repeat(64));
+  assert.equal(h.run('workbenchConfig.llm_model'), 'model');
+  assert.equal(h.run('currentDescription'), null);
+  assert.equal(dialog.closed, true);
 });
 
 test('清除机器结果绑定文件代次及候选和过程记录哈希并以服务器读回为准', async () => {

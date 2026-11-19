@@ -1458,6 +1458,56 @@ def label_state_sha256(label_state=None):
     })
 
 
+CONFIG_SECRET_KEYS = {"llm_key", "llm_fast_key"}
+
+
+def public_model_config(config=None):
+    """Return browser-safe model settings without either credential field."""
+    current = state.get("config", {}) if config is None else config
+    return {
+        key: copy.deepcopy(value) for key, value in current.items()
+        if key not in CONFIG_SECRET_KEYS
+    }
+
+
+def config_state_sha256(config=None):
+    """Fingerprint the complete persisted model configuration, including keys.
+
+    The digest lets writers detect a stale base without exposing the secret
+    values that also participate in the mutable configuration state.
+    """
+    current = state.get("config", {}) if config is None else config
+    return _sha256_json(current)
+
+
+def config_write_binding():
+    """Bind a configuration write to the exact workspace and prior config."""
+    video = state.get("video")
+    return {
+        "path": str(video.path) if video is not None else "",
+        "topic": state.get("topic"),
+        "file_activation_generation": current_file_activation_generation(),
+        "config_state_sha256": config_state_sha256(),
+    }
+
+
+def assert_config_write_binding(payload):
+    """Reject configuration updates prepared against an older browser state."""
+    generation, path, topic = assert_request_workspace_scope(
+        payload,
+        generation_key="expected_file_activation_generation",
+        path_key="expected_path",
+        topic_key="expected_topic")
+    expected = payload.get("expected_config_state_sha256")
+    if not _valid_sha256(expected):
+        raise ValueError("expected_config_state_sha256 必须是当前配置 SHA-256")
+    current = config_state_sha256()
+    if expected != current:
+        raise StaleHumanReviewError(
+            "模型配置已被其他窗口或启动工具更新，旧配置保存请求已拒绝；请刷新后重试")
+    return generation, path, topic, current
+
+
 def _all_topic_state(current_key, by_topic_key):
     """Canonicalize one current-topic map with its parked topic maps."""
     values = copy.deepcopy(state.get(by_topic_key, {}))
@@ -2060,8 +2110,9 @@ def _get_bootstrap_locked():
         "agent_runs": {},
         "candidate_review_proposals": [],
         "candidate_review_bindings": {},
-        "config": {key: value for key, value in state.get("config", {}).items()
-                   if key != "llm_key"},
+        "config": public_model_config(),
+        "config_state_sha256": config_state_sha256(),
+        "config_write_binding": config_write_binding(),
         "description": description,
     }
 
@@ -2096,7 +2147,9 @@ def _get_state_locked():
         }),
         truth=state["truth"], truth_review_status=truth_review_status,
         reference_frames=state.get("reference_frames", {}),
-        config={k: v for k, v in state["config"].items() if k != "llm_key"},
+        config=public_model_config(),
+        config_state_sha256=config_state_sha256(),
+        config_write_binding=config_write_binding(),
         candidates=state.get("candidates", {}), agent_runs=state.get("agent_runs", {}),
         candidate_revision_summary=candidate_revision_summary(),
         candidate_review_status=state.get("candidate_review_status", {}),
@@ -3827,16 +3880,39 @@ def set_config():
         else:
             fast_updates[key] = value
     with lock:
-        for key in ("llm_url", "llm_model", "llm_key", "llm_prompt_profile", "sam3_url"):
-            if key in body and body[key]:
-                state["config"][key] = body[key]
-        for key, value in fast_updates.items():
-            if value is None:
-                state["config"].pop(key, None)
-            else:
-                state["config"][key] = value
-        save()
-        return jsonify(saved=True)
+        with run_status_lock:
+            if run_status.get("status") in {"running", "stopping"}:
+                raise RuntimeError("自动标注仍在运行，请任务结束后再修改模型配置")
+        generation, path, topic, previous_sha = assert_config_write_binding(body)
+        previous_config = copy.deepcopy(state.setdefault("config", {}))
+        updated_keys = []
+        try:
+            for key in ("llm_url", "llm_model", "llm_key",
+                        "llm_prompt_profile", "sam3_url"):
+                if key in body and body[key]:
+                    state["config"][key] = body[key]
+                    updated_keys.append(key)
+            for key, value in fast_updates.items():
+                if value is None:
+                    state["config"].pop(key, None)
+                else:
+                    state["config"][key] = value
+                updated_keys.append(key)
+            save()
+        except Exception as error:
+            state["config"] = previous_config
+            raise RuntimeError("模型配置保存失败，已恢复原配置") from error
+        current_sha = config_state_sha256()
+        return jsonify(
+            saved=True,
+            config=public_model_config(),
+            config_state_sha256=current_sha,
+            previous_config_state_sha256=previous_sha,
+            updated_keys=sorted(set(updated_keys)),
+            path=path,
+            topic=topic,
+            file_activation_generation=generation,
+        )
 
 
 @app.get("/api/model_readiness")

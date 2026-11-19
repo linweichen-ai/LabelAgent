@@ -11,6 +11,7 @@ import sys
 import tempfile
 import time
 import uuid
+import urllib.error
 import urllib.request
 import webbrowser
 
@@ -146,6 +147,14 @@ def request_ok(port, endpoint, timeout=3):
         return False
 
 
+def get_json(port, endpoint, timeout=10):
+    request = urllib.request.Request(
+        f"http://127.0.0.1:{port}{endpoint}", method="GET")
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    with opener.open(request, timeout=timeout) as response:
+        return json.load(response)
+
+
 def post_json(port, endpoint, body, timeout=10, accepted_statuses=(200,)):
     payload = json.dumps(body).encode("utf-8")
     request = urllib.request.Request(
@@ -157,6 +166,50 @@ def post_json(port, endpoint, body, timeout=10, accepted_statuses=(200,)):
             raise RuntimeError(f"配置标注页面失败：HTTP {response.status}")
         raw = response.read()
         return json.loads(raw) if raw else {}
+
+
+def config_write_payload(port, settings):
+    """Attach the server's current workspace/config binding to one update."""
+    bootstrap = get_json(port, "/api/bootstrap")
+    config_sha = bootstrap.get("config_state_sha256")
+    if not isinstance(config_sha, str) or len(config_sha) != 64:
+        raise RuntimeError("标注页面未返回可核验的配置版本")
+    return {
+        **settings,
+        "expected_path": bootstrap.get("path", ""),
+        "expected_topic": bootstrap.get("topic"),
+        "expected_file_activation_generation": bootstrap.get(
+            "file_activation_generation"),
+        "expected_config_state_sha256": config_sha,
+    }
+
+
+def post_bound_config(port, settings, attempts=3):
+    """Retry only a stale binding; never reuse an old configuration base."""
+    for attempt in range(attempts):
+        payload = config_write_payload(port, settings)
+        try:
+            return post_json(port, "/api/config", payload)
+        except urllib.error.HTTPError as error:
+            if error.code != 409 or attempt + 1 >= attempts:
+                raise
+    raise RuntimeError("配置标注页面失败：配置版本持续变化")
+
+
+def label_write_payload(port, labels):
+    """Attach the current workspace/label binding used by /api/labels."""
+    bootstrap = get_json(port, "/api/bootstrap")
+    label_sha = bootstrap.get("label_state_sha256")
+    if not isinstance(label_sha, str) or len(label_sha) != 64:
+        raise RuntimeError("标注页面未返回可核验的类别版本")
+    return {
+        "labels": labels,
+        "path": bootstrap.get("path", ""),
+        "topic": bootstrap.get("topic"),
+        "file_activation_generation": bootstrap.get(
+            "file_activation_generation"),
+        "expected_label_state_sha256": label_sha,
+    }
 
 
 def prewarm_primary_vlm(attempts=3):
@@ -443,7 +496,7 @@ def start(open_browser):
             "llm_fast_timeout_seconds": 60,
             "llm_fast_cooldown_seconds": 60,
         }
-        post_json(WEB_PORT, "/api/config", model_config)
+        post_bound_config(WEB_PORT, model_config)
         try:
             print("正在准备主 VLM 首次推理路径，请稍候……", flush=True)
             prewarm = prewarm_primary_vlm()
@@ -705,8 +758,8 @@ def isolate(action, port, work, open_browser=False):
             if time.monotonic() >= deadline:
                 raise RuntimeError("等待隔离工作台超时")
             time.sleep(1)
-        post_json(port, "/api/config", isolate_model_config())
-        post_json(port, "/api/labels", {"labels": isolate_labels()})
+        post_bound_config(port, isolate_model_config())
+        post_json(port, "/api/labels", label_write_payload(port, isolate_labels()))
         print(f"隔离工作台已启动：http://127.0.0.1:{port}")
         if open_browser:
             webbrowser.open(f"http://127.0.0.1:{port}")

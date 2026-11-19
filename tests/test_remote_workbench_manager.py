@@ -13,6 +13,41 @@ SPEC.loader.exec_module(MODULE)
 
 
 class RemoteWorkbenchManagerTests(unittest.TestCase):
+    def test_config_and_label_writes_use_fresh_server_bindings(self):
+        bootstrap = {
+            "path": "D:/data/example.mcap", "topic": "camera2",
+            "file_activation_generation": 17,
+            "config_state_sha256": "a" * 64,
+            "label_state_sha256": "b" * 64,
+        }
+        with mock.patch.object(MODULE, "get_json", return_value=bootstrap):
+            config = MODULE.config_write_payload(8765, {"llm_model": "model"})
+            labels = MODULE.label_write_payload(8765, ["floor", "slope"])
+        self.assertEqual(config["expected_path"], bootstrap["path"])
+        self.assertEqual(config["expected_topic"], bootstrap["topic"])
+        self.assertEqual(config["expected_file_activation_generation"], 17)
+        self.assertEqual(config["expected_config_state_sha256"], "a" * 64)
+        self.assertEqual(labels["path"], bootstrap["path"])
+        self.assertEqual(labels["topic"], bootstrap["topic"])
+        self.assertEqual(labels["file_activation_generation"], 17)
+        self.assertEqual(labels["expected_label_state_sha256"], "b" * 64)
+
+    def test_bound_config_reloads_binding_after_one_conflict(self):
+        payloads = [
+            {"expected_config_state_sha256": "a" * 64},
+            {"expected_config_state_sha256": "b" * 64},
+        ]
+        conflict = MODULE.urllib.error.HTTPError(
+            "http://127.0.0.1:8765/api/config", 409, "Conflict", {}, None)
+        with (mock.patch.object(MODULE, "config_write_payload",
+                                side_effect=payloads) as bind,
+              mock.patch.object(MODULE, "post_json",
+                                side_effect=[conflict, {"saved": True}]) as post):
+            result = MODULE.post_bound_config(8765, {"llm_model": "model"})
+        self.assertEqual(result, {"saved": True})
+        self.assertEqual(bind.call_count, 2)
+        self.assertEqual(post.call_count, 2)
+
     def test_runtime_temp_redirects_from_low_system_volume(self):
         with (tempfile.TemporaryDirectory() as temporary,
               mock.patch.object(MODULE, "storage_free_bytes", side_effect=[

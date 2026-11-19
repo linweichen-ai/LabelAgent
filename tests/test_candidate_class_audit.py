@@ -740,7 +740,14 @@ class CandidateClassAuditTests(unittest.TestCase):
             response_body = io.BytesIO(b'{"shapes": []}')
             urlopen.return_value.__enter__.return_value = response_body
             client = server.app.test_client()
-            response = client.post("/api/config", json={"sam3_url": "http://127.0.0.1:9999/"})
+            response = client.post("/api/config", json={
+                "sam3_url": "http://127.0.0.1:9999/",
+                "expected_path": str(candidate_path),
+                "expected_topic": "camera",
+                "expected_file_activation_generation":
+                    server.current_file_activation_generation(),
+                "expected_config_state_sha256": server.config_state_sha256(),
+            })
             self.assertEqual(response.status_code, 200)
             response = client.post("/api/segment_points", json={
                 "frame": 0, "points": [], "path": str(candidate_path),

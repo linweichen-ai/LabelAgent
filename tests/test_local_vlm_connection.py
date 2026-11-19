@@ -44,9 +44,26 @@ class LocalVLMConnectionTests(unittest.TestCase):
         self.assertEqual(call.call_count, 1)
 
     def test_cloud_key_is_replaced_by_explicit_nonsecret_local_value(self):
-        with patch.object(MODULE, "require_real_service"), patch.object(MODULE, "request_json", side_effect=[{"status": "idle"}, {"saved": True}]) as call:
-            self.assertEqual(MODULE.apply_configuration("http://localhost:18868/v1", "test", "http://localhost:8765"), {"saved": True})
-        self.assertEqual(call.call_args.args[1]["llm_key"], "local")
+        bootstrap = {"path": "D:/data.mcap", "topic": "camera0",
+                     "file_activation_generation": 7,
+                     "config_state_sha256": "a" * 64}
+        saved = {"saved": True, "path": bootstrap["path"],
+                 "topic": bootstrap["topic"],
+                 "file_activation_generation": 7,
+                 "previous_config_state_sha256": "a" * 64,
+                 "config_state_sha256": "b" * 64}
+        with patch.object(MODULE, "require_real_service"), patch.object(
+                MODULE, "request_json",
+                side_effect=[{"status": "idle"}, bootstrap, saved]) as call:
+            self.assertEqual(MODULE.apply_configuration(
+                "http://localhost:18868/v1", "test",
+                "http://localhost:8765"), saved)
+        payload = call.call_args_list[2].args[1]
+        self.assertEqual(payload["llm_key"], "local")
+        self.assertEqual(payload["expected_path"], bootstrap["path"])
+        self.assertEqual(payload["expected_topic"], bootstrap["topic"])
+        self.assertEqual(payload["expected_file_activation_generation"], 7)
+        self.assertEqual(payload["expected_config_state_sha256"], "a" * 64)
 
 
 if __name__ == "__main__":

@@ -82,7 +82,26 @@ def apply_configuration(base, model, workbench, prompt_profile=None):
         if prompt_profile not in {"full", "compact"}:
             raise ValueError("Unknown prompt profile")
         settings["llm_prompt_profile"] = prompt_profile
-    return request_json(workbench + "/api/config", settings)
+    bootstrap = request_json(workbench + "/api/bootstrap")
+    expected_sha = bootstrap.get("config_state_sha256")
+    if not isinstance(expected_sha, str) or len(expected_sha) != 64:
+        raise ValueError("Workbench did not provide a verifiable configuration version")
+    settings.update({
+        "expected_path": bootstrap.get("path", ""),
+        "expected_topic": bootstrap.get("topic"),
+        "expected_file_activation_generation": bootstrap.get(
+            "file_activation_generation"),
+        "expected_config_state_sha256": expected_sha,
+    })
+    result = request_json(workbench + "/api/config", settings)
+    if (result.get("previous_config_state_sha256") != expected_sha
+            or result.get("path") != bootstrap.get("path", "")
+            or result.get("topic") != bootstrap.get("topic")
+            or result.get("file_activation_generation")
+            != bootstrap.get("file_activation_generation")
+            or not isinstance(result.get("config_state_sha256"), str)):
+        raise ValueError("Workbench configuration readback did not match the submitted scope")
+    return result
 
 
 if __name__ == "__main__":

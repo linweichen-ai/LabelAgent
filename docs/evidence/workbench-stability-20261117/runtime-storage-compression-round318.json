@@ -1,0 +1,31 @@
+{
+  "schema_version": "labelagent.runtime_storage_compression.v1",
+  "date": "2026-11-20",
+  "operation": "reversible_ntfs_compression",
+  "files_deleted": 0,
+  "before_free_mib": 272.68,
+  "after_free_mib": 2316.89,
+  "targets": [
+    {"path": "D:\\Apps\\LabelAgent\\work\\checkpoints", "files": 16, "logical_mib": 1134.52, "compressed_before": 0, "compressed_after": 16, "freed_mib": 921.63},
+    {"path": "D:\\Apps\\LabelAgent\\work\\local_gpu_acceptance_20261103", "files": 86, "logical_mib": 430.67, "compressed_before": 0, "compressed_after": 86, "freed_mib": 339.48},
+    {"path": "D:\\Apps\\LabelAgent\\work\\experiments\\labelagent_projection_20261104", "files": 6410, "logical_mib": 1252.23, "compressed_before": 163, "compressed_after": 6410, "freed_mib": 847.34}
+  ],
+  "total_freed_mib": 2108.45,
+  "readiness": {
+    "one_frame_ready": true,
+    "one_frame_storage_status": "ok",
+    "ten_frames_ready": true,
+    "fifty_frames_ready": true,
+    "fifty_frames_required_mib": 656.0,
+    "one_hundred_frames_ready": true,
+    "one_hundred_frames_required_mib": 1056.0,
+    "two_hundred_frames_ready": false,
+    "two_hundred_frames_code": "frame_request_invalid",
+    "maximum_frames_per_run": 100
+  },
+  "services": {"workbench_ready": true, "sam_ready": true, "vlm_ready": true},
+  "production_state_sha256": "237844f73ff4495e575c6a3f966260b9385efbdf1edee7d0e5177518470ddfab",
+  "stale_incomplete_fragment_mib": 470.0,
+  "stale_fragment_removed": false,
+  "boundaries": {"oss_modified": false, "model_weights_modified": false, "human_truth_modified": false, "training_approval_modified": false}
+}

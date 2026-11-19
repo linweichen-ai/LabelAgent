@@ -2175,3 +2175,11 @@ Python998/998、浏览器145/145通过；生产SAM/VLM就绪，`workflow.py`哈�
 Round239、Round240及过去24小时总结已随报告提交 `a5622f6eff19b02fa7e92e82faef0c2d1f990837` 推送，并从 GitHub/CNB 同名分支精确读回；未跟踪厂内图像和本地验收产物未上传。
 
 Round240部署后又完成第二次连续真实验收：CVAT Task3第116帧约71.3秒完成，失败帧0，按帧读回15个候选（14 pallet、1 floor），人工真值与训练批准仍为0。连续两次均未再出现完成后原图无候选；较长的第二次时延被保留为下一轮优化基线。
+
+### Round 248：新数据无参考帧地面大范围误扩张保护
+
+在 `Capture_20261103` camera_1 的 `1789897506782450197.png` 上，旧 Agent 曾用覆盖整图 71.8177% 的大矩形扩张 floor，导致地面与人物重叠 403,929 像素、覆盖人物掩码 99.4728%。现对无参考帧的 floor/slope 大范围 `add_region` 增加三重比例门禁；小范围局部修补和有参考帧扩张仍允许。相同操作被记录为 `unreferenced_global_surface_large_add_requires_human_review` 并保留原 SAM 候选。
+
+同图隔离复跑后，floor 从旧结果 2,117,990 像素回到 984,781 像素，移除 1,133,209 个危险新增像素；与人物重叠降到 63 像素、覆盖比例 0.0155%。热缓存复跑 7.94 秒，17个候选、一轮 `no_progress`，7个VLM请求全部命中缓存；该时延不替代 Round243 约85.5秒冷路径基线。可见类别发现仍认为 ego 存在但未生成 ego 候选，已保留为后续召回问题。
+
+Python1006/1006、186子测试、网页145/145通过；正式工作台、SAM3、主VLM和安全通道正常。备份位于 `D:\Apps\LabelAgent\.local\backups\unreferenced-surface-add-guard-round248-20261119-144022`，正式 workflow/edit_agent 哈希分别为 `57F065B3...E828` 与 `D90786C4...3604`。详细报告见 `docs/NEW_DATASET_SURFACE_EXPANSION_GUARD_ROUND248_20261119.md`，结构化证据见 `docs/evidence/workbench-stability-20261117/unreferenced-surface-expansion-round248.json`；工厂图像只保留本地，未推送远端。实现提交 `0a40214`。

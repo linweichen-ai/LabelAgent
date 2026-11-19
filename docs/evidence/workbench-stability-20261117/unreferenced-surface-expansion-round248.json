@@ -1,0 +1,75 @@
+{
+  "schema_version": "labelagent.unreferenced-surface-expansion-round248.v1",
+  "date": "2026-11-19T14:40:00+08:00",
+  "boundary": {
+    "candidate_only": true,
+    "human_truth_changed": false,
+    "training_approved": false,
+    "production_state_changed_by_isolated_smoke": false
+  },
+  "source": {
+    "dataset": "Capture_20261103",
+    "camera": "camera_1",
+    "image": "1789897506782450197.png",
+    "width": 1920,
+    "height": 1536
+  },
+  "rejected_operation": {
+    "operation": "add_region",
+    "target_shape_id": 18,
+    "label": "floor",
+    "added_pixels": 1131417,
+    "added_image_fraction": 0.383646,
+    "original_pixels": 986573,
+    "added_original_fraction": 1.146815,
+    "polygon_image_fraction": 0.718177,
+    "reason_code": "unreferenced_global_surface_large_add_requires_human_review"
+  },
+  "mask_comparison": {
+    "image_pixels": 2949120,
+    "old_floor_pixels": 2117990,
+    "new_floor_pixels": 984781,
+    "unsafe_pixels_removed": 1133209,
+    "new_only_floor_pixels": 0,
+    "old_floor_fraction": 0.718177,
+    "new_floor_fraction": 0.333924,
+    "person_pixels": 406070,
+    "old_floor_person_overlap": 403929,
+    "new_floor_person_overlap": 63,
+    "old_overlap_person_fraction": 0.994728,
+    "new_overlap_person_fraction": 0.000155
+  },
+  "isolated_smoke": {
+    "elapsed_ms": 7938.952,
+    "cache_state": "warm",
+    "candidate_count": 17,
+    "class_counts": {
+      "floor": 1,
+      "pallet": 11,
+      "person": 5
+    },
+    "agent_rounds": 1,
+    "stop_reason": "no_progress",
+    "review_queue_count": 3,
+    "vlm_cache_hits": 7,
+    "vlm_cache_misses": 0,
+    "busy_rejections": 0,
+    "remaining_known_issue": "ego visible in discovery but no ego candidate"
+  },
+  "tests": {
+    "python_passed": 1006,
+    "python_subtests_passed": 186,
+    "browser_passed": 145,
+    "failed": 0
+  },
+  "production": {
+    "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\unreferenced-surface-add-guard-round248-20261119-144022",
+    "workflow_py_sha256": "57F065B3390148E165A077AB5D87B4D762F2147D62FCA1F5B37D404CC8B7E828",
+    "edit_agent_py_sha256": "D90786C4FC5D3D864D232ACECDB065EFACA6A72EC737E06911CA02A8EA0A3604",
+    "implementation_commit": "0a40214"
+  },
+  "local_visuals_not_published": [
+    "artifacts/new-dataset-smoke-round243/1789897506782450197-overlay.jpg",
+    "D:\\Apps\\LabelAgent\\.local\\relocated-worktrees\\labelagent_stability_worktree_20261117-artifacts\\new-dataset-smoke-round248\\1789897506782450197-overlay.jpg"
+  ]
+}

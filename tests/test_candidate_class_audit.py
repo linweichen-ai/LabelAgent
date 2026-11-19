@@ -107,6 +107,60 @@ class CandidateClassAuditTests(unittest.TestCase):
         self.assertTrue(all(item["execution_mode"] == "sequential"
                             for item in audits))
 
+    def test_five_candidates_batch_one_triple_and_keep_two_sequential(self):
+        candidates = [{**self.candidate, "id": value} for value in range(7, 12)]
+        sequential_ids = []
+        batch_ids = []
+        progress = []
+        def sequential(config, prompt, image, **kwargs):
+            candidate_id = int(prompt.split('"candidate_id": ')[1].split(',')[0])
+            sequential_ids.append(candidate_id)
+            return self.decision()
+        def batch(config, requests, **kwargs):
+            batch_ids.append([
+                int(item["instruction"].split('"candidate_id": ')[1].split(',')[0])
+                for item in requests])
+            return [self.decision() for _ in requests]
+        audits, queue = audit.audit_high_risk_candidates(
+            {}, self.image, candidates, self.labels, {}, sequential,
+            batch_chat=batch,
+            on_progress=lambda completed, total, candidate, result:
+                progress.append((completed, total, candidate["id"],
+                                 result["execution_mode"])))
+        self.assertEqual(queue, [])
+        self.assertEqual(batch_ids, [[7, 8, 9]])
+        self.assertEqual(sequential_ids, [10, 11])
+        self.assertEqual([item["candidate_id"] for item in audits],
+                         [7, 8, 9, 10, 11])
+        self.assertEqual([item["execution_mode"] for item in audits],
+                         ["independent_batch_3"] * 3 + ["sequential"] * 2)
+        self.assertEqual([row[:3] for row in progress],
+                         [(1, 5, 7), (2, 5, 8), (3, 5, 9),
+                          (4, 5, 10), (5, 5, 11)])
+
+    def test_later_uncertain_triple_only_falls_back_that_group(self):
+        candidates = [{**self.candidate, "id": value} for value in range(7, 13)]
+        sequential_calls = []
+        batch_calls = []
+        def sequential(config, prompt, image, **kwargs):
+            sequential_calls.append(
+                int(prompt.split('"candidate_id": ')[1].split(',')[0]))
+            return self.decision()
+        def batch(config, requests, **kwargs):
+            batch_calls.append(len(requests))
+            if len(batch_calls) == 1:
+                return [self.decision() for _ in requests]
+            return [self.decision(), self.decision(None, .3, "uncertain"),
+                    self.decision()]
+        audits, queue = audit.audit_high_risk_candidates(
+            {}, self.image, candidates, self.labels, {}, sequential,
+            batch_chat=batch)
+        self.assertEqual(queue, [])
+        self.assertEqual(batch_calls, [3, 3])
+        self.assertEqual(sequential_calls, [10, 11, 12])
+        self.assertEqual([item["execution_mode"] for item in audits],
+                         ["independent_batch_3"] * 3 + ["sequential"] * 3)
+
     def test_holes_and_invalid_coordinates(self):
         self.candidate["holes"] = [[[15, 15], [25, 15], [25, 25], [15, 25]]]
         evidence = audit.prepare_candidate_evidence(self.image, self.candidate)

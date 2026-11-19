@@ -63,53 +63,7 @@ def audit_high_risk_candidates(config, image_bytes, candidates, labels, class_de
     targets = [candidate for candidate in candidates
                if candidate.get("label") in HIGH_RISK_LABELS
                and (candidate_ids is None or candidate.get("id") in candidate_ids)]
-    # True batching is intentionally limited to three independent high-risk
-    # candidates.  It is accepted only when every row is a protocol-valid,
-    # high-confidence confirmation of the already-bound candidate label.  Any
-    # uncertain, conflicting, low-confidence, malformed, unavailable or busy
-    # batch is discarded in full and the established sequential path runs.
-    if len(targets) == 3 and batch_chat is not None:
-        check_cancelled()
-        try:
-            prepared = []
-            for candidate in targets:
-                evidence = prepare_candidate_evidence(image_bytes, candidate)
-                prompt = build_blind_candidate_class_prompt(
-                    candidate["id"], labels, class_definitions)
-                prepared.append((candidate, evidence, prompt))
-            decisions = batch_chat(
-                config,
-                [{"instruction": prompt, "image": evidence["original"],
-                  "extra_images": (evidence["marked"],)}
-                 for _, evidence, prompt in prepared],
-                response_schema=blind_candidate_class_schema(labels),
-                max_tokens=384)
-            if not isinstance(decisions, list) or len(decisions) != 3:
-                raise CandidateClassProtocolError("批量盲审结果数量不匹配")
-            decisions = [validate_blind_candidate_class_decision(value, labels)
-                         for value in decisions]
-            if not all(
-                    decision["classification"] == "known_label"
-                    and decision["observed_label"] == candidate["label"]
-                    and decision["candidate_supported"]
-                    and decision["confidence"] >= 0.90
-                    for (candidate, _, _), decision in zip(prepared, decisions)):
-                raise CandidateClassProtocolError("批量盲审未全部高置信确认原候选类别")
-            for position, ((candidate, evidence, prompt), decision) in enumerate(
-                    zip(prepared, decisions), 1):
-                result = _candidate_class_audit_result(
-                    image_bytes, candidate, evidence, prompt, decision,
-                    candidate_artifact_sha256=artifact_sha,
-                    execution_mode="independent_batch_3")
-                audits.append(result)
-                if on_progress is not None:
-                    on_progress(position, len(targets), candidate, result)
-            check_cancelled()
-            return audits, queue
-        except Exception:
-            check_cancelled()
-            audits.clear()
-    for position, candidate in enumerate(targets, 1):
+    def run_sequential(candidate, position):
         check_cancelled()
         try:
             result = audit_candidate_class_blind(
@@ -144,6 +98,61 @@ def audit_high_risk_candidates(config, image_bytes, candidates, labels, class_de
         if on_progress is not None:
             on_progress(position, len(targets), candidate, result)
         check_cancelled()
+
+    # True batching stays restricted to independently encoded groups of three:
+    # that is the only batch size with measured latency gain and accepted
+    # semantic parity.  Longer target lists use as many full triples as they
+    # contain; one or two remainders keep the established sequential path.
+    # Each triple fails closed independently, so one uncertain or malformed
+    # group is discarded and rerun sequentially without invalidating earlier
+    # protocol-valid groups.
+    batched_target_count = ((len(targets) // 3) * 3
+                            if batch_chat is not None else 0)
+    for start in range(0, batched_target_count, 3):
+        group = targets[start:start + 3]
+        check_cancelled()
+        try:
+            prepared = []
+            for candidate in group:
+                evidence = prepare_candidate_evidence(image_bytes, candidate)
+                prompt = build_blind_candidate_class_prompt(
+                    candidate["id"], labels, class_definitions)
+                prepared.append((candidate, evidence, prompt))
+            decisions = batch_chat(
+                config,
+                [{"instruction": prompt, "image": evidence["original"],
+                  "extra_images": (evidence["marked"],)}
+                 for _, evidence, prompt in prepared],
+                response_schema=blind_candidate_class_schema(labels),
+                max_tokens=384)
+            if not isinstance(decisions, list) or len(decisions) != 3:
+                raise CandidateClassProtocolError("批量盲审结果数量不匹配")
+            decisions = [validate_blind_candidate_class_decision(value, labels)
+                         for value in decisions]
+            if not all(
+                    decision["classification"] == "known_label"
+                    and decision["observed_label"] == candidate["label"]
+                    and decision["candidate_supported"]
+                    and decision["confidence"] >= 0.90
+                    for (candidate, _, _), decision in zip(prepared, decisions)):
+                raise CandidateClassProtocolError("批量盲审未全部高置信确认原候选类别")
+            for offset, ((candidate, evidence, prompt), decision) in enumerate(
+                    zip(prepared, decisions)):
+                result = _candidate_class_audit_result(
+                    image_bytes, candidate, evidence, prompt, decision,
+                    candidate_artifact_sha256=artifact_sha,
+                    execution_mode="independent_batch_3")
+                audits.append(result)
+                if on_progress is not None:
+                    on_progress(start + offset + 1, len(targets), candidate, result)
+            check_cancelled()
+        except Exception:
+            check_cancelled()
+            for offset, candidate in enumerate(group):
+                run_sequential(candidate, start + offset + 1)
+    for position, candidate in enumerate(
+            targets[batched_target_count:], batched_target_count + 1):
+        run_sequential(candidate, position)
     return audits, queue
 
 

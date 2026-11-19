@@ -9,6 +9,10 @@ INSTANCE_LABELS = frozenset({"车辆", "pallet", "person", "ego", "other_robot",
 HIGH_RISK_INSTANCE_LABELS = frozenset({"person", "ego", "other_robot"})
 MAX_GLOBAL_TO_INSTANCE_RECLASSIFY_RATIO = 0.35
 MAX_GLOBAL_SURFACE_ERASE_FRACTION = 0.25
+MAX_UNREFERENCED_GLOBAL_ADD_IMAGE_FRACTION = 0.05
+MAX_UNREFERENCED_GLOBAL_ADD_ORIGINAL_FRACTION = 0.50
+MIN_UNREFERENCED_GLOBAL_ADD_IMAGE_FRACTION = 0.01
+MAX_UNREFERENCED_GLOBAL_ADD_REGION_FRACTION = 0.25
 
 
 def _rasterize(shape, width, height):
@@ -177,7 +181,8 @@ def _next_id(current, next_id):
 
 
 def apply_operations(shapes, operations, labels, width, height, next_id=None, gap_regions=None,
-                     allow_high_risk_reclassify=True):
+                     allow_high_risk_reclassify=True,
+                     allow_large_global_surface_expansion=True):
     """Apply a small allowlist of LLM actions; return edited shapes and errors."""
     current = {shape["id"]: shape for shape in shapes}
     # All polygons in a decision address the same observation. Keep those
@@ -347,6 +352,39 @@ def apply_operations(shapes, operations, labels, width, height, next_id=None, ga
             region = np.zeros_like(mask)
             cv2.fillPoly(region, [np.asarray(polygon, dtype=np.int32)], 1)
             if kind == "add_region":
+                original_pixels = int(np.count_nonzero(mask))
+                added_pixels = int(np.count_nonzero((mask == 0) & (region != 0)))
+                image_fraction = added_pixels / float(width * height)
+                region_fraction = int(np.count_nonzero(region)) / float(width * height)
+                original_fraction = (added_pixels / original_pixels
+                                     if original_pixels else float("inf"))
+                unsafe_unreferenced_global_add = (
+                    not allow_large_global_surface_expansion
+                    and current[shape_id].get("label") in GLOBAL_TRAVERSABLE_LABELS
+                    and (region_fraction > MAX_UNREFERENCED_GLOBAL_ADD_REGION_FRACTION
+                         or image_fraction > MAX_UNREFERENCED_GLOBAL_ADD_IMAGE_FRACTION
+                         or (image_fraction > MIN_UNREFERENCED_GLOBAL_ADD_IMAGE_FRACTION
+                             and original_fraction
+                             > MAX_UNREFERENCED_GLOBAL_ADD_ORIGINAL_FRACTION)))
+                if unsafe_unreferenced_global_add:
+                    review_queue.append({
+                        **item,
+                        "reason": "无人工参考时不能一次扩张大面积地面或斜坡；已保留原候选并转人工复核",
+                        "reason_code": "unreferenced_global_surface_large_add_requires_human_review",
+                        "route": "human_review_required",
+                        "added_pixels": added_pixels,
+                        "original_pixels": original_pixels,
+                        "image_fraction": round(image_fraction, 6),
+                        "region_fraction": round(region_fraction, 6),
+                        "original_fraction": (round(original_fraction, 6)
+                                              if math.isfinite(original_fraction) else None),
+                        "maximum_image_fraction": MAX_UNREFERENCED_GLOBAL_ADD_IMAGE_FRACTION,
+                        "maximum_region_fraction":
+                            MAX_UNREFERENCED_GLOBAL_ADD_REGION_FRACTION,
+                        "maximum_original_fraction":
+                            MAX_UNREFERENCED_GLOBAL_ADD_ORIGINAL_FRACTION,
+                    })
+                    continue
                 mask = cv2.bitwise_or(mask, region)
             else:
                 original_pixels = int(np.count_nonzero(mask))

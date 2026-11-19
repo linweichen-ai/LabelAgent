@@ -3153,7 +3153,8 @@ class AnnotationAgent:
                             updated, applied, queue = apply_operations(
                                 self.shapes, [item], self.labels, self.width, self.height,
                                 next_id=self.next_id, gap_regions=holes,
-                                allow_high_risk_reclassify=self.reference is not None)
+                                allow_high_risk_reclassify=self.reference is not None,
+                                allow_large_global_surface_expansion=self.reference is not None)
                             self.shapes = updated
                             self.next_id = max([self.next_id-1] + [s["id"] for s in updated]) + 1
                             self.queue.extend(queue)

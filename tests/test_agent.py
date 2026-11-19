@@ -223,6 +223,71 @@ class EditTests(unittest.TestCase):
         self.assertTrue(applied)
         self.assertFalse(queue)
 
+    def test_unreferenced_large_floor_expansion_requires_human_review(self):
+        mask = np.zeros((40, 40), dtype=np.uint8)
+        mask[20:39, 2:39] = 1
+        floor = _shape_from_mask(mask, "floor", 1)
+        updated, applied, queue = apply_operations([floor], [{
+            "operation": "add_region", "shape_ids": [1],
+            "polygon": [[0, 0], [39, 0], [39, 25], [0, 25]],
+            "reason": "expand floor across the upper image",
+        }], ["floor"], 40, 40,
+            allow_large_global_surface_expansion=False)
+        self.assertEqual(updated, [floor])
+        self.assertFalse(applied)
+        self.assertEqual(
+            queue[0]["reason_code"],
+            "unreferenced_global_surface_large_add_requires_human_review")
+        self.assertEqual(queue[0]["route"], "human_review_required")
+        self.assertGreater(queue[0]["image_fraction"], 0.05)
+
+    def test_unreferenced_small_local_floor_repair_remains_available(self):
+        mask = np.zeros((40, 40), dtype=np.uint8)
+        mask[10:39, 2:39] = 1
+        floor = _shape_from_mask(mask, "floor", 1)
+        updated, applied, queue = apply_operations([floor], [{
+            "operation": "add_region", "shape_ids": [1],
+            "polygon": [[5, 7], [10, 7], [10, 11], [5, 11]],
+            "reason": "repair a small visible floor boundary notch",
+        }], ["floor"], 40, 40,
+            allow_large_global_surface_expansion=False)
+        self.assertNotEqual(updated, [floor])
+        self.assertTrue(applied)
+        self.assertFalse(queue)
+
+    def test_broad_floor_polygon_cannot_fill_small_excluded_object_hole(self):
+        mask = np.zeros((40, 40), dtype=np.uint8)
+        mask[1:39, 1:39] = 1
+        mask[16:21, 16:21] = 0
+        floor = _shape_from_mask(mask, "floor", 1)
+        updated, applied, queue = apply_operations([floor], [{
+            "operation": "add_region", "shape_ids": [1],
+            "polygon": [[1, 1], [38, 1], [38, 38], [1, 38]],
+            "reason": "fill the entire floor envelope",
+        }], ["floor"], 40, 40,
+            allow_large_global_surface_expansion=False)
+        self.assertEqual(updated, [floor])
+        self.assertFalse(applied)
+        self.assertEqual(
+            queue[0]["reason_code"],
+            "unreferenced_global_surface_large_add_requires_human_review")
+        self.assertGreater(queue[0]["region_fraction"], 0.25)
+        self.assertLess(queue[0]["image_fraction"], 0.05)
+
+    def test_reference_backed_large_floor_expansion_remains_available(self):
+        mask = np.zeros((40, 40), dtype=np.uint8)
+        mask[20:39, 2:39] = 1
+        floor = _shape_from_mask(mask, "floor", 1)
+        updated, applied, queue = apply_operations([floor], [{
+            "operation": "add_region", "shape_ids": [1],
+            "polygon": [[0, 0], [39, 0], [39, 25], [0, 25]],
+            "reason": "human reference confirms the missing surface",
+        }], ["floor"], 40, 40,
+            allow_large_global_surface_expansion=True)
+        self.assertNotEqual(updated, [floor])
+        self.assertTrue(applied)
+        self.assertFalse(queue)
+
     def test_instance_candidate_cannot_be_reclassified_wholesale_as_floor(self):
         pallet = shape(label="pallet")
         updated, applied, queue = apply_operations([pallet], [{

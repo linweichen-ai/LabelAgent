@@ -152,12 +152,34 @@ function markWorkspaceReady(){
  const detail={frame,topic,path:loadedDataPath};resolveWorkspaceReady(detail);document.dispatchEvent(new CustomEvent('labelagent:workspace-ready',{detail}));
 }
 window.currentInferenceLabels=()=>[...autoLabels];
+function candidateCoverageEvidence(label,count,selected,assessment,visible){
+ const confidence=Number(assessment?.confidence),confidenceText=Number.isFinite(confidence)?` · 置信度 ${(confidence*100).toFixed(0)}%`:'',reason=String(assessment?.reason||'').trim();
+ if(count)return {state:'candidate',title:`${label} 已生成 ${count} 个机器候选`,detail:`依据：当前帧保存了 ${count} 个通过分割门槛的 ${label} 候选。机器候选仍需人工检查，不是人工真值。`};
+ if(!selected)return {state:'unselected',title:`${label} 未进入本轮检查`,detail:'依据：该类别不在当前 auto_labels 中。若需要检查，请先在上方勾选并应用类别。'};
+ if(visible)return {state:'missing',title:`${label} 可能漏分`,detail:`依据：当前帧 VLM 逐类判断为 ${assessment?.evidence||'present/uncertain'}${confidenceText}${reason?`；理由：${reason}`:''}。SAM 没有留下合格候选，需要人工确认或补标。`};
+ if(assessment?.evidence==='absent')return {state:'absent',title:`${label} 被机器判断为未见`,detail:`依据：当前帧 VLM 逐类判断为 absent${confidenceText}${reason?`；理由：${reason}`:''}。这只是机器判断，仍可转人工检查。`};
+ return {state:'pending',title:`${label} 尚未形成可追溯结论`,detail:'当前运行记录既没有该类别的有效掩码，也没有 present、uncertain 或 absent 的逐类证据；不能据此判断画面中没有该类别。'};
+}
+function showCandidateCoverageDetail(label,count,selected,assessment,visible){
+ const detail=$('candidateCoverageDetail');if(!detail)return;const evidence=candidateCoverageEvidence(label,count,selected,assessment,visible);detail.replaceChildren();detail.hidden=false;detail.dataset.coverageLabel=label;
+ const copy=document.createElement('div'),heading=document.createElement('strong'),text=document.createElement('span');heading.textContent=evidence.title;text.textContent=evidence.detail;copy.append(heading,text);detail.append(copy);
+ if(selected&&!count){const action=document.createElement('button');action.type='button';action.dataset.coverageRepair=label;action.textContent=evidence.state==='absent'?'仍要人工检查':evidence.state==='missing'?'补标这个类别':'人工检查并补标';action.onclick=event=>{event.stopPropagation();startCandidateCoverageRepair(label).catch(error=>toast(error.message))};detail.append(action)}
+ const close=document.createElement('button');close.type='button';close.className='candidateCoverageClose';close.textContent='收起';close.onclick=()=>{detail.hidden=true};detail.append(close);
+}
+async function startCandidateCoverageRepair(label){
+ if(segmentBusy)throw Error('SAM 正在处理上一项请求，请完成后再补标');
+ const sourceFrame=frame,sourceTopic=topic,sourcePath=loadedDataPath;if(!labels.includes(label))throw Error(`当前类别表中没有 ${label}`);
+ localStorage.setItem('labelagentWorkspaceMode','manual');await window.setWorkspaceMode?.('manual');
+ if(frame!==sourceFrame||topic!==sourceTopic||loadedDataPath!==sourcePath)throw Error('进入补标期间数据、相机或帧已经切换，请在当前帧重新选择类别');
+ if(!annotationMode)throw Error('图像标注窗口尚未准备好，请先打开当前相机图像');
+ startMissingCandidatePointPrompt(label);toast(`已进入 ${label} 人工补标；机器候选仍独立保留。请在目标内部点一下，点下后才会运行 SAM`);
+}
 function refreshCandidateSummary(){
- const host=$('candidateSummary');if(!host)return;const keys=Object.keys(candidates),current=candidates[String(frame)]||[],indexedKeys=Object.keys(candidateCountIndex).filter(key=>Number(candidateCountIndex[key])>0),run=agentRuns[String(frame)]||{},discovery=normalizeReferenceDiscovery(run.visible_label_discovery||{}),visible=new Set([...(discovery.visible_labels||[]),...(discovery.uncertain_labels||[])]),assessments=new Map((discovery.assessments||[]).filter(item=>item?.label).map(item=>[item.label,item.evidence])),counts=new Map();
+ const host=$('candidateSummary');if(!host)return;const keys=Object.keys(candidates),current=candidates[String(frame)]||[],indexedKeys=Object.keys(candidateCountIndex).filter(key=>Number(candidateCountIndex[key])>0),run=agentRuns[String(frame)]||{},discovery=normalizeReferenceDiscovery(run.visible_label_discovery||{}),visible=new Set([...(discovery.visible_labels||[]),...(discovery.uncertain_labels||[])]),assessments=new Map((discovery.assessments||[]).filter(item=>item?.label).map(item=>[item.label,item])),counts=new Map();
  for(const item of current)counts.set(item.label,(counts.get(item.label)||0)+1);
  host.replaceChildren();const title=document.createElement('strong');title.textContent=`自动候选总览 · 已选 ${autoLabels.length}/${labels.length} 类 · ${compactGeometryMode?indexedKeys.length:keys.length} 帧有结果 · 当前帧 ${current.length} 个`;host.append(title);
- for(const label of labels){const count=counts.get(label)||0,selected=autoLabels.includes(label),chip=document.createElement('span');if(count){chip.className='candidatePresent';chip.textContent=`${label}：已生成 ${count} 个`}else if(!selected){chip.className='candidateUnselected';chip.textContent=`${label}：未选`}else if(visible.has(label)){chip.className='candidateMissing';chip.textContent=`${label}：VLM 看见，SAM 漏分`}else if(assessments.get(label)==='absent'){chip.className='candidateAbsent';chip.textContent=`${label}：本帧未见`}else{chip.className='candidatePending';chip.textContent=`${label}：尚无有效掩码`}host.append(chip)}
- const note=document.createElement('span');note.className='candidateCoverageNote';note.textContent='已选类别会进入检查流程；只有通过分割质量门槛的轮廓才显示。黄色表示需要补标或复核，不会自动写入人工真值。';host.append(note);
+ for(const label of labels){const count=counts.get(label)||0,selected=autoLabels.includes(label),assessment=assessments.get(label),isVisible=visible.has(label),chip=document.createElement('button');chip.type='button';chip.className='candidateCoverageChip ';chip.dataset.coverageLabel=label;if(count){chip.className+='candidatePresent';chip.textContent=`${label}：已生成 ${count} 个`}else if(!selected){chip.className+='candidateUnselected';chip.textContent=`${label}：未选`}else if(isVisible){chip.className+='candidateMissing';chip.textContent=`${label}：VLM 看见，SAM 漏分`}else if(assessment?.evidence==='absent'){chip.className+='candidateAbsent';chip.textContent=`${label}：本帧未见`}else{chip.className+='candidatePending';chip.textContent=`${label}：尚未评估 / 无有效掩码`}chip.title='点击查看判定依据和下一步';chip.onclick=()=>showCandidateCoverageDetail(label,count,selected,assessment,isVisible);host.append(chip)}
+ const note=document.createElement('span');note.className='candidateCoverageNote';note.textContent='点击任一类别可查看当前帧依据；缺失类别可转人工点选补标，但不会自动运行模型或写入人工真值。';host.append(note);const detail=document.createElement('div');detail.id='candidateCoverageDetail';detail.className='candidateCoverageDetail';detail.hidden=true;host.append(detail);
 }
 function updateCandidateReuseBanner(){
  const banner=$('candidateReuseBanner'),button=$('candidateReuseButton'),summary=$('candidateReuseSummary');if(!banner||!button||!summary)return;

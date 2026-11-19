@@ -167,6 +167,80 @@
     "rollback_directory": "D:\\Apps\\LabelAgent\\.local\\backups\\pallet-cleanup-budget-fallback-round260-20261119-175350",
     "local_visual_evidence": "artifacts/pallet-geometry-refresh-round260/frame100-before-after.jpg"
   },
+  "round261": {
+    "status": "deployed_and_live_verified",
+    "behavior": "two-level 0.75 then 0.5 pixel pallet boundary simplification under unchanged geometry gates",
+    "gates": {
+      "maximum_total_change_ratio": 0.025,
+      "significant_component_count_preserved": true,
+      "minimum_structural_hole_retention": 0.75,
+      "fail_closed_to_original_candidate": true
+    },
+    "cross_dataset_audit": {
+      "cvat_current": {
+        "sample_count": 158,
+        "boundary_simplified": 151,
+        "epsilon_075": 144,
+        "epsilon_05": 7,
+        "unchanged": 7,
+        "component_violations": 0,
+        "structural_hole_violations": 0,
+        "change_budget_violations": 0,
+        "maximum_change_ratio": 0.024417,
+        "minimum_structural_hole_retention": 0.879464,
+        "median_vertex_reduction_ratio": 0.545455
+      },
+      "capture_20261103_formal_session": {
+        "sample_count": 80,
+        "boundary_simplified": 78,
+        "epsilon_075": 77,
+        "epsilon_05": 1,
+        "unchanged": 2,
+        "component_violations": 0,
+        "structural_hole_violations": 0,
+        "change_budget_violations": 0,
+        "maximum_change_ratio": 0.022247,
+        "minimum_structural_hole_retention": 0.965625,
+        "median_vertex_reduction_ratio": 0.592949
+      },
+      "rejected_development_finding": "one thin significant component was lost before the final component-count gate was added; this version was not deployed"
+    },
+    "live_frame100": {
+      "pallet_count_before": 11,
+      "pallet_count_after": 11,
+      "holes_before": 10,
+      "holes_after": 10,
+      "vertices_before": 1874,
+      "vertices_after": 715,
+      "vertex_reduction": 1159,
+      "vertex_reduction_percent": 61.8,
+      "changed_pixels": 1499,
+      "elapsed_ms": 331,
+      "repeat_elapsed_ms": 5,
+      "repeat_changed": false,
+      "revision_count_before": 2,
+      "revision_count_after": 3,
+      "revision_count_after_repeat": 3,
+      "truth_count_before": 0,
+      "truth_count_after": 0
+    },
+    "tests": {
+      "python": {"passed": 1028, "failed": 0},
+      "browser_scenarios": {"passed": 70, "failed": 0}
+    },
+    "production_sha256": {
+      "server.py": "B21F79F5F619DDF83093A4A4664F26822615D1EF24022DF3357FBC5409BFDA12",
+      "workflow.py": "D5EDD6CD6E815A5C02760B887178294445F705EFE92F9476F0E4446E242F899F"
+    },
+    "rollback_directory": "D:\\Apps\\LabelAgent\\.local\\backups\\pallet-boundary-simplification-round261-20261119-183030",
+    "local_visual_evidence": "artifacts/pallet-boundary-simplification-round261/frame100-current-vs-simplified.jpg",
+    "disk_recovery": {
+      "production_affected": false,
+      "temporary_directory_moved_not_deleted": "D:\\Apps\\LabelAgent\\.local\\artifact-archive\\seer2clw-temp-20261119\\tmpj1tzc69c",
+      "c_free_mib_after": 18.281,
+      "d_free_mib_after": 628.223
+    }
+  },
   "safety_boundaries": {
     "human_truth_written": false,
     "approved_for_training": false,

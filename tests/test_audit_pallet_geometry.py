@@ -36,6 +36,20 @@ class PalletGeometryAuditTest(unittest.TestCase):
         self.assertLess(result["holes_after"], result["holes_before"])
         self.assertLessEqual(result["change_ratio"], 0.025)
 
+    def test_audit_reports_bounded_boundary_vertex_reduction(self):
+        mask = np.zeros((300, 420), dtype=np.uint8)
+        for y in range(30, 270):
+            mask[y, 30 + y % 6:390 - (y + 2) % 6] = 1
+        shape = _shape_from_mask(mask, "pallet", 2)
+
+        result = audit_candidate(
+            {"topic": "camera", "frame": "2", "shape": shape}, 420, 300)
+
+        self.assertTrue(result["boundary_simplification_applied"])
+        self.assertLess(result["boundary_vertices_after"],
+                        result["boundary_vertices_before"])
+        self.assertLessEqual(result["change_ratio"], .025)
+
     def test_workbench_state_uses_nested_candidates_by_topic(self):
         mask = np.zeros((40, 40), dtype=np.uint8)
         mask[5:35, 5:35] = 1
@@ -48,6 +62,8 @@ class PalletGeometryAuditTest(unittest.TestCase):
         self.assertEqual(result["input_scope"],
                          "workbench_state.candidates_by_topic")
         self.assertEqual(result["sample_count"], 1)
+        self.assertIn("boundary_simplified_count", result)
+        self.assertIn("median_boundary_vertex_reduction_ratio", result)
 
 
 if __name__ == "__main__":

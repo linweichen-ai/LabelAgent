@@ -385,6 +385,74 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(output[19, 200], 0)
         self.assertLessEqual(audit["change_ratio"], 0.025)
 
+    def test_pallet_boundary_simplification_reduces_pixel_staircase_vertices(self):
+        mask = np.zeros((300, 420), dtype=np.uint8)
+        for y in range(30, 270):
+            left = 30 + (y % 6)
+            right = 390 - ((y + 2) % 6)
+            mask[y, left:right] = 1
+        mask[110:120, 120:180] = 0  # structural long slot remains excluded
+        candidate = _shape_from_mask(mask, "pallet", 21)
+
+        refined, audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 420, 300)
+        output = _rasterize(refined, 420, 300)
+
+        self.assertIsNotNone(audit)
+        self.assertTrue(audit["boundary_simplification_applied"])
+        self.assertIn(audit["boundary_simplification_epsilon"], (.75, .5))
+        self.assertLess(audit["boundary_vertices_after"],
+                        audit["boundary_vertices_before"])
+        self.assertGreater(audit["boundary_vertex_reduction_ratio"], .1)
+        self.assertLessEqual(audit["change_ratio"], .025)
+        self.assertGreaterEqual(audit["minimum_structural_hole_retention"], .75)
+        self.assertEqual(output[115, 150], 0)
+
+    def test_pallet_boundary_simplification_fails_closed_when_budget_would_break(self):
+        mask = np.zeros((240, 320), dtype=np.uint8)
+        cv2.circle(mask, (160, 120), 90, 1, thickness=cv2.FILLED)
+        candidate = _shape_from_mask(mask, "pallet", 22)
+
+        def triangle(contour, epsilon, closed):
+            points = np.asarray(contour).reshape(-1, 2)
+            minimum = points.min(axis=0)
+            maximum = points.max(axis=0)
+            return np.asarray([
+                [[minimum[0], minimum[1]]],
+                [[maximum[0], minimum[1]]],
+                [[minimum[0], maximum[1]]],
+            ], dtype=np.float32)
+
+        with patch.object(workflow.cv2, "approxPolyDP", side_effect=triangle):
+            refined, audit = workflow.refine_pallet_candidate_geometry(
+                candidate, 320, 240)
+
+        self.assertIsNotNone(audit)
+        self.assertFalse(audit["boundary_simplification_applied"])
+        self.assertLessEqual(audit["change_ratio"], .025)
+        self.assertGreaterEqual(
+            np.logical_and(_rasterize(refined, 320, 240) != 0, mask != 0).sum()
+            / max(int(mask.sum()), 1), .975)
+
+    def test_pallet_cleanup_rejects_polygon_rebuild_that_loses_thin_component(self):
+        large = {"points": [[10, 10], [290, 10], [290, 210], [10, 210]],
+                 "holes": []}
+        # Twelve raster pixels but only five contour-area pixels: this is a
+        # significant thin part that _shape_from_mask would otherwise omit.
+        thin = {"points": [[300, 10], [301, 10], [301, 15], [300, 15]],
+                "holes": []}
+        candidate = {"id": 23, "label": "pallet",
+                     "points": large["points"], "holes": [],
+                     "parts": [large, thin]}
+        before = _rasterize(candidate, 320, 240)
+
+        refined, audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 320, 240)
+
+        self.assertIs(refined, candidate)
+        self.assertIsNone(audit)
+        self.assertTrue(np.array_equal(_rasterize(refined, 320, 240), before))
+
     def test_pallet_cleanup_removes_micro_hole_left_by_boundary_smoothing(self):
         mask = np.zeros((100, 140), dtype=np.uint8)
         mask[10:90, 10:130] = 1
@@ -4836,7 +4904,12 @@ class ServerTests(unittest.TestCase):
             candidate_sha = server._sha256_json([pallet])
             prior_run = {
                 "candidate_artifact_sha256": candidate_sha,
-                "candidate_geometry_adjustments": [],
+                # A legacy cleanup receipt lacks the boundary-simplification
+                # field and must not block a one-time upgrade to this version.
+                "candidate_geometry_adjustments": [{
+                    "shape_id": 7,
+                    "reason_code": "pallet_texture_geometry_cleanup",
+                }],
                 "candidate_class_audits": [{"candidate_id": 7}],
                 "candidate_class_audit_status": "complete",
                 "review_queue": [{"source": "candidate_class_audit", "candidate_id": 7}],

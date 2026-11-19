@@ -3863,6 +3863,7 @@ def cleanup_pallet_candidates(index):
                 "candidate_geometry_adjustments", [])
             if isinstance(item, dict)
             and item.get("reason_code") == "pallet_texture_geometry_cleanup"
+            and "boundary_simplification_applied" in item
             and type(item.get("shape_id")) is int
         }
         refreshed, adjustments = [], []

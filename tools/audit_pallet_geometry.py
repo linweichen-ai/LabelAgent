@@ -95,6 +95,18 @@ def audit_candidate(row: dict, width: int, height: int) -> dict:
         "changed_pixels": changed,
         "change_ratio": round(changed / max(area, 1), 6),
         "adjustment_applied": adjustment is not None,
+        "boundary_simplification_applied": bool(
+            adjustment and adjustment.get("boundary_simplification_applied")),
+        "boundary_simplification_epsilon": (
+            adjustment.get("boundary_simplification_epsilon")
+            if adjustment else None),
+        "boundary_vertices_before": (
+            adjustment.get("boundary_vertices_before") if adjustment else None),
+        "boundary_vertices_after": (
+            adjustment.get("boundary_vertices_after") if adjustment else None),
+        "boundary_vertex_reduction_ratio": (
+            adjustment.get("boundary_vertex_reduction_ratio", 0.0)
+            if adjustment else 0.0),
         "components_before": _components(before),
         "components_after": _components(after),
         "holes_before": len(before_holes),
@@ -156,6 +168,20 @@ def run_audit(source: Path, *, width: int, height: int, per_topic: int) -> dict:
         "sample_count": len(results),
         "size_bands": bands,
         "adjusted_count": sum(row["adjustment_applied"] for row in results),
+        "boundary_simplified_count": sum(
+            row["boundary_simplification_applied"] for row in results),
+        "median_boundary_vertex_reduction_ratio": (
+            round(float(np.median([
+                row["boundary_vertex_reduction_ratio"] for row in results
+                if row["boundary_simplification_applied"]])), 6)
+            if any(row["boundary_simplification_applied"] for row in results)
+            else 0.0),
+        "boundary_simplification_epsilon_counts": {
+            str(epsilon): sum(
+                row["boundary_simplification_epsilon"] == epsilon
+                for row in results)
+            for epsilon in (.75, .5)
+        },
         "unchanged_tiny_count": sum(
             row["size_band"] == "tiny_skipped" and row["changed_pixels"] == 0
             for row in results),
@@ -188,7 +214,9 @@ def main() -> int:
         args.output.write_text(rendered + "\n", encoding="utf-8")
     print(json.dumps({key: report[key] for key in (
         "sample_count", "size_bands", "adjusted_count", "unchanged_tiny_count",
-        "holes_before", "holes_after", "gate_passed")}, ensure_ascii=False, indent=2))
+        "boundary_simplified_count", "median_boundary_vertex_reduction_ratio",
+        "boundary_simplification_epsilon_counts", "holes_before", "holes_after",
+        "gate_passed")}, ensure_ascii=False, indent=2))
     return 0 if report["gate_passed"] else 2
 
 

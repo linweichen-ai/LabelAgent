@@ -2666,6 +2666,108 @@ def _fingerprint(shapes):
     return hashlib.sha256(json.dumps(geometry, sort_keys=True).encode()).hexdigest()
 
 
+def _pallet_geometry_vertex_count(shape):
+    return sum(
+        len(part.get("points", []))
+        + sum(len(hole) for hole in part.get("holes", []))
+        for part in (shape.get("parts") or [shape]))
+
+
+def _significant_component_count(mask):
+    count, _, stats, _ = cv2.connectedComponentsWithStats(
+        mask.astype(np.uint8), connectivity=8)
+    return sum(int(stats[index, cv2.CC_STAT_AREA]) >= 9
+               for index in range(1, count))
+
+
+def _structural_hole_masks(mask):
+    background = (mask == 0).astype(np.uint8)
+    count, components, stats, _ = cv2.connectedComponentsWithStats(
+        background, connectivity=8)
+    border_labels = set(np.unique(np.concatenate((
+        components[0, :], components[-1, :],
+        components[:, 0], components[:, -1]))).tolist())
+    output = []
+    for component in range(1, count):
+        if component in border_labels:
+            continue
+        width = int(stats[component, cv2.CC_STAT_WIDTH])
+        height = int(stats[component, cv2.CC_STAT_HEIGHT])
+        area = int(stats[component, cv2.CC_STAT_AREA])
+        if area > 256 or max(width, height) > 32:
+            output.append((components == component, area))
+    return output
+
+
+def _simplify_pallet_boundary(shape, original_mask, width, height, *,
+                              maximum_change_ratio, minimum_hole_retention=.75):
+    """Reduce pixel-staircase vertices under the existing geometry gates."""
+    from .edit_agent import _rasterize
+    before_vertices = _pallet_geometry_vertex_count(shape)
+    if before_vertices < 8:
+        return shape, None, _rasterize(shape, width, height).astype(np.uint8)
+    original_area = int(original_mask.sum())
+    original_components = _significant_component_count(original_mask)
+    structural_holes = _structural_hole_masks(original_mask)
+    baseline_mask = _rasterize(shape, width, height).astype(np.uint8)
+    for epsilon in (.75, .5):
+        proposal = copy.deepcopy(shape)
+        parts = []
+        for part in (shape.get("parts") or [shape]):
+            points = np.asarray(part.get("points", []), dtype=np.float32)
+            if len(points) < 3:
+                continue
+            simplified_points = cv2.approxPolyDP(
+                points.reshape(-1, 1, 2), epsilon, True
+            ).reshape(-1, 2).round().astype(int).tolist()
+            simplified_holes = []
+            for hole in part.get("holes", []):
+                vertices = np.asarray(hole, dtype=np.float32)
+                if len(vertices) < 3:
+                    simplified_holes.append(copy.deepcopy(hole))
+                    continue
+                simplified = cv2.approxPolyDP(
+                    vertices.reshape(-1, 1, 2), epsilon, True
+                ).reshape(-1, 2).round().astype(int).tolist()
+                simplified_holes.append(
+                    simplified if len(simplified) >= 3 else copy.deepcopy(hole))
+            replacement_part = copy.deepcopy(part)
+            replacement_part.update(
+                points=simplified_points, holes=simplified_holes)
+            parts.append(replacement_part)
+        if not parts:
+            continue
+        proposal.update(
+            parts=parts, points=parts[0]["points"], holes=parts[0]["holes"])
+        after_vertices = _pallet_geometry_vertex_count(proposal)
+        if after_vertices >= before_vertices or not valid_shape(proposal, width, height):
+            continue
+        proposal_mask = _rasterize(proposal, width, height).astype(np.uint8)
+        total_changed = int(np.count_nonzero(proposal_mask != original_mask))
+        if total_changed / max(original_area, 1) > maximum_change_ratio:
+            continue
+        if _significant_component_count(proposal_mask) != original_components:
+            continue
+        retention = [
+            int(np.count_nonzero(hole_mask & (proposal_mask == 0))) / hole_area
+            for hole_mask, hole_area in structural_holes]
+        minimum_retention = min(retention) if retention else 1.0
+        if minimum_retention < minimum_hole_retention:
+            continue
+        return proposal, {
+            "boundary_simplification_applied": True,
+            "boundary_simplification_epsilon": epsilon,
+            "boundary_vertices_before": before_vertices,
+            "boundary_vertices_after": after_vertices,
+            "boundary_vertex_reduction_ratio": round(
+                1 - after_vertices / before_vertices, 6),
+            "boundary_simplification_changed_pixels": int(
+                np.count_nonzero(proposal_mask != baseline_mask)),
+            "minimum_structural_hole_retention": round(minimum_retention, 6),
+        }, proposal_mask
+    return shape, None, baseline_mask
+
+
 def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=96,
                                      maximum_hole_span=32,
                                      maximum_texture_hole_area=256,
@@ -2781,14 +2883,34 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         smoothing_applied = False
         smoothing_rejected_by_budget = True
         changed = cleanup_only_changed
-    if not changed or changed / max(area, 1) > maximum_change_ratio:
+    if changed / max(area, 1) > maximum_change_ratio:
         return shape, None
-    replacement = _shape_from_mask(refined, shape["label"], shape["id"])
-    if replacement is None or not valid_shape(replacement, width, height):
+    if changed:
+        replacement = _shape_from_mask(refined, shape["label"], shape["id"])
+        if replacement is None or not valid_shape(replacement, width, height):
+            return shape, None
+        for key, value in shape.items():
+            if key not in {"id", "label", "points", "holes", "parts"}:
+                replacement[key] = copy.deepcopy(value)
+    else:
+        replacement = copy.deepcopy(shape)
+    replacement, boundary_audit, replacement_mask = _simplify_pallet_boundary(
+        replacement, mask, width, height,
+        maximum_change_ratio=maximum_change_ratio)
+    changed = int(np.count_nonzero(replacement_mask != mask))
+    if _significant_component_count(replacement_mask) != _significant_component_count(mask):
         return shape, None
-    for key, value in shape.items():
-        if key not in {"id", "label", "points", "holes", "parts"}:
-            replacement[key] = copy.deepcopy(value)
+    structural_holes = _structural_hole_masks(mask)
+    structural_retention = [
+        int(np.count_nonzero(hole_mask & (replacement_mask == 0))) / hole_area
+        for hole_mask, hole_area in structural_holes]
+    minimum_structural_retention = (
+        min(structural_retention) if structural_retention else None)
+    if (minimum_structural_retention is not None
+            and minimum_structural_retention < .75):
+        return shape, None
+    if not changed and boundary_audit is None:
+        return shape, None
     adjustment = {
         "reason_code": "pallet_texture_geometry_cleanup",
         "shape_id": shape["id"],
@@ -2814,6 +2936,18 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         "preserved_component_count": before_components,
         "route": "candidate_only",
     }
+    adjustment.update(boundary_audit or {
+        "boundary_simplification_applied": False,
+        "boundary_simplification_epsilon": None,
+        "boundary_vertices_before": _pallet_geometry_vertex_count(replacement),
+        "boundary_vertices_after": _pallet_geometry_vertex_count(replacement),
+        "boundary_vertex_reduction_ratio": 0.0,
+        "boundary_simplification_changed_pixels": 0,
+        "minimum_structural_hole_retention": None,
+    })
+    adjustment["minimum_structural_hole_retention"] = (
+        round(minimum_structural_retention, 6)
+        if minimum_structural_retention is not None else None)
     return replacement, adjustment
 
 

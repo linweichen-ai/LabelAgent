@@ -90,7 +90,7 @@
   "version_control": {
     "branch": "codex/workbench-stability-20261117",
     "implementation_commit": "4e7afe716a426b15ba963d64f8790273e9214350",
-    "receipt_commit": null,
+    "receipt_commit": "7d121d1c13489df18e0eb90dbdc246b4c4d79c8a",
     "github_readback": "4e7afe716a426b15ba963d64f8790273e9214350",
     "cnb_readback": "4e7afe716a426b15ba963d64f8790273e9214350",
     "exact_match": true,

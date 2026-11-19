@@ -1,0 +1,30 @@
+{
+  "schema_version": "labelagent.remote-readback.v1",
+  "checked_at": "2026-11-19T14:30:00+08:00",
+  "branch": "codex/workbench-stability-20261117",
+  "local_commit": "41da274ad06992cd041641e78fe10b7ca45742d6",
+  "github": {
+    "remote": "origin",
+    "commit": "41da274ad06992cd041641e78fe10b7ca45742d6",
+    "matches_local": true
+  },
+  "cnb": {
+    "remote": "cnb",
+    "commit": "41da274ad06992cd041641e78fe10b7ca45742d6",
+    "matches_local": true
+  },
+  "contains": [
+    "pallet compact texture-hole cleanup",
+    "bounded close-pallet 7x7 smoothing",
+    "post-smoothing micro-hole cleanup",
+    "instance-to-global-surface human-review gate",
+    "structured decoder unsatisfiable recovery",
+    "production acceptance documentation"
+  ],
+  "excluded": [
+    "factory source images",
+    "machine candidates",
+    "human truth",
+    "raw datasets"
+  ]
+}

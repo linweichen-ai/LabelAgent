@@ -1,0 +1,139 @@
+{
+  "round": 237,
+  "date": "2026-11-19",
+  "status": "deployed_verified_and_dual_remote_synced",
+  "objective": "Prevent stale browser tabs from removing a changed file-list entry or unloading a newer workspace",
+  "versions": {
+    "ui": 152,
+    "app_js": 190
+  },
+  "implementation": {
+    "endpoint": "/api/files/<file_id>",
+    "method": "DELETE",
+    "required_bindings": [
+      "expected_path",
+      "expected_topic",
+      "expected_file_activation_generation",
+      "expected_library_state_sha256",
+      "expected_file_entry_sha256",
+      "expected_loaded"
+    ],
+    "server_atomic_validation": true,
+    "browser_stale_response_guard": true,
+    "browser_bootstrap_readback_after_current_unload": true,
+    "disk_file_deleted": false,
+    "stale_status": 409
+  },
+  "tests": {
+    "python_official_scope": {
+      "passed": 988,
+      "total": 988,
+      "subtests_passed": 186,
+      "scope": "tests/"
+    },
+    "python_agent": {
+      "passed": 209,
+      "total": 209,
+      "subtests_passed": 83
+    },
+    "web": {
+      "passed": 68,
+      "total": 68
+    },
+    "syntax": "passed",
+    "diff_check": "passed",
+    "environment_incidents": [
+      {
+        "stage": "initial test_agent run",
+        "cause": "Windows GBK decoded UTF-8 JSON without PYTHONUTF8=1",
+        "observed_failures": 13,
+        "resolution": "rerun in the project UTF-8 test environment",
+        "functional_gate_relaxed": false
+      },
+      {
+        "stage": "repository-root pytest collection",
+        "cause": "source/sam3/scripts/qualitative_test.py requires optional matplotlib",
+        "resolution": "run the official product test scope tests/ without installing unrelated optional dependencies",
+        "functional_gate_relaxed": false
+      }
+    ],
+    "stale_generation_rejected": true,
+    "wrong_library_sha_rejected": true,
+    "wrong_entry_sha_rejected": true,
+    "wrong_loaded_state_rejected": true,
+    "valid_non_current_removal_keeps_disk_file": true,
+    "valid_current_removal_keeps_disk_file_and_saves_session": true,
+    "browser_stale_response_unload_calls": 0
+  },
+  "production_browser_probe": {
+    "path": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap",
+    "topic": "/capture/camera_1/image",
+    "generation": 0,
+    "library_state_sha256_before_after": "aa19a1746faff4ba6c579e751364958f6fe85927ac3cd09d035c3de7e2116011",
+    "target_entry_sha256": "2fd82ccaee9114706668e79a4f04a439f3507317d20d35ec38e130da205a4a3f",
+    "target_loaded": true,
+    "stale_generation_status": 409,
+    "wrong_library_status": 409,
+    "wrong_entry_status": 409,
+    "wrong_loaded_status": 409,
+    "file_count_before": 8,
+    "file_count_after": 8,
+    "target_still_present": true,
+    "page_errors": 0
+  },
+  "backup": {
+    "path": "D:\\Apps\\LabelAgent\\.local\\backups\\file-library-removal-round237-20261119-122126",
+    "files": 3,
+    "manifest": "manifest.json",
+    "predeploy_hash_match": true
+  },
+  "deployment": {
+    "management_record_pid": 72368,
+    "listener_pid": 72484,
+    "tunnel_pid_4090": 64416,
+    "sam_tunnel_pid_5090": 57760,
+    "worktree_matches_production": true,
+    "startup_vlm_prewarm_without_factory_image_seconds": 0.073,
+    "run_status": "idle",
+    "http_probes": {
+      "workbench": 200,
+      "bootstrap": 200,
+      "model_readiness": 200,
+      "run_readiness": 200,
+      "run_status": 200,
+      "state_summary": 200,
+      "files": 200
+    },
+    "restart_command_incident": {
+      "wrong_entry_attempted": "tools/manage_remote_workbench.py",
+      "production_entry_used": ".local/manage_remote.py",
+      "old_service_stopped_by_wrong_attempt": false,
+      "model_tunnels_restarted": false
+    },
+    "state_sha256_before_after": "1DCD67A8475A8DD1974C9A9B3D4BF68A56E1ABD30CF2A9559C12E849E3D86F96",
+    "file_sessions_sha256_before_after": "202927E295CABC27B1F9583B6438D3E16C020809EE421BCE1342C3AEBC0367F5",
+    "files_json_sha256_before_after": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214"
+  },
+  "production_hashes": {
+    "source/agent/server.py": "CE1900C565A90DCFB076D2C58D33E700C477B3E0C90A36422F4DBFD92435704A",
+    "source/web/app.js": "AADF62510A056370F9F28866BDE0EA5C8FFB1002BDC4EB35B798CC16FDCB6CC9",
+    "source/web/index.html": "87C43CB3009FB8DEFC2E4D909A5D4D17120467F91E72B4DB0B791E590257A7F2"
+  },
+  "safety": {
+    "production_file_library_writes": 0,
+    "disk_data_file_deletes": 0,
+    "production_data_model_requests": 0,
+    "candidate_writes_or_deletes": 0,
+    "human_truth_writes": 0,
+    "reference_frame_writes": 0,
+    "training_approvals": 0,
+    "fine_tuning": false,
+    "post_training": false,
+    "oss_writes": 0,
+    "raw_factory_artifacts_tracked": false
+  },
+  "local_untracked_evidence": "artifacts/round237-file-library-removal/",
+  "implementation_commit": "15ab781160a562eb01a3352600df1e6711e05993",
+  "github_readback_commit": "15ab781160a562eb01a3352600df1e6711e05993",
+  "cnb_readback_commit": "15ab781160a562eb01a3352600df1e6711e05993"
+}

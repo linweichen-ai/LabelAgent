@@ -1,0 +1,69 @@
+{
+  "round": 233,
+  "date": "2026-11-19",
+  "status": "completed_and_verified",
+  "objective": "Restore runtime disk headroom without deleting or semantically changing project content",
+  "before": {
+    "runtime_drive_free_gib_observed_range": [1.47, 1.52],
+    "warning_threshold_gib": 2.0,
+    "warning_active": true
+  },
+  "inventory": {
+    "labelagent_top_level_logical_gib": {
+      "work": 23.29,
+      ".local": 9.50,
+      ".venv": 4.97,
+      "source": 3.28,
+      "backup": 1.85
+    },
+    "protected": ["work/datasets", "work/models", "work/checkpoints", ".venv", "source"],
+    "artifact_store_skipped": {
+      "logical_gib": 1.21,
+      "reason": "One document was open by another process, so a complete pre-change tree hash could not be proven"
+    }
+  },
+  "compression": {
+    "path": "D:\\Apps\\LabelAgent\\backup",
+    "operation": "reversible_ntfs_transparent_compression",
+    "files": 311,
+    "logical_bytes_before_after": 1988581846,
+    "stored_bytes_after": 382743161,
+    "reported_ratio": "5.2:1",
+    "tree_sha256_before": "07981DE390E820475EE96274D9FDFFFE0350B7B1877E73E2C70846106F904523",
+    "tree_sha256_after": "07981DE390E820475EE96274D9FDFFFE0350B7B1877E73E2C70846106F904523",
+    "content_match": true,
+    "files_deleted": 0,
+    "files_moved": 0,
+    "paths_changed": 0
+  },
+  "after": {
+    "runtime_drive_free_bytes": 3148394496,
+    "runtime_drive_free_gib": 2.932,
+    "warning_threshold_cleared": true
+  },
+  "production": {
+    "run_status": "idle",
+    "file_activation_generation": 0,
+    "probes": {
+      "workbench": 200,
+      "run_status": 200,
+      "sam_4090": 200,
+      "sam_5090": 200,
+      "vlm_4090": 200
+    },
+    "state_sha256_before_after": "1DCD67A8475A8DD1974C9A9B3D4BF68A56E1ABD30CF2A9559C12E849E3D86F96",
+    "file_sessions_sha256_before_after": "202927E295CABC27B1F9583B6438D3E16C020809EE421BCE1342C3AEBC0367F5"
+  },
+  "safety": {
+    "service_restart": false,
+    "model_requests": 0,
+    "candidate_writes": 0,
+    "human_truth_writes": 0,
+    "training_approvals": 0,
+    "fine_tuning": false,
+    "post_training": false,
+    "oss_writes": 0
+  },
+  "implementation_commit": null,
+  "remote_readback_commit": null
+}

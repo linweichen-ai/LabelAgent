@@ -52,6 +52,40 @@
     ],
     "finding": "texture holes and short boundary noise decreased while long slat gaps and fork openings remained"
   },
+  "production_live_acceptance": {
+    "task_id": "681b89d6059a41f99fc1fbd55850f8c8",
+    "frame": 120,
+    "mode": "candidate_evaluation",
+    "status": "completed",
+    "elapsed_seconds": 24.4653,
+    "review_rounds": 1,
+    "candidate_count": 12,
+    "review_queue_count": 0,
+    "image_feature_passes": 1,
+    "prompt_count": 8,
+    "pallet_adjustment_count": 11,
+    "notable_adjustments": [
+      {
+        "shape_id": 9,
+        "filled_hole_count": 52,
+        "filled_hole_pixels": 1338,
+        "smoothing_changed_pixels": 322,
+        "changed_pixels": 1661,
+        "change_ratio": 0.013245
+      },
+      {
+        "shape_id": 7,
+        "filled_hole_count": 10,
+        "filled_hole_pixels": 370,
+        "smoothing_changed_pixels": 134,
+        "changed_pixels": 504,
+        "change_ratio": 0.017799
+      }
+    ],
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false
+  },
   "tests": {
     "python": {"passed": 998, "failed": 0},
     "browser": {"passed": 145, "failed": 0}
@@ -60,9 +94,10 @@
     "model_ready": true,
     "sam_ready": true,
     "vlm_ready": true,
-    "run_status": "idle",
+    "run_status": "completed",
+    "last_task_id": "681b89d6059a41f99fc1fbd55850f8c8",
     "workflow_sha256": "5A64B09C4F34C77E5C2D3E65074EE07FCBB0CF4C3CB26DEB15E3983FE4CF90B1",
-    "state_sha256": "4239356B2B0C94C09AFDC77B5CD62870D6066249D7BDDBAC9C8BCD1E2DF29890",
+    "state_sha256": "057CF8355793E560B6A62268CA0A2C14FB467B3364C6C3D6AF3BF4684B1EF012",
     "file_sessions_sha256": "5D719DE280BE0655843346B73B927F8FEED8A73404406AB0BEA782607FF5C69F",
     "files_sha256": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214"
   },

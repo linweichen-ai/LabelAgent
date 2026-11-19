@@ -2162,6 +2162,8 @@ Python998/998、浏览器145/145通过；生产SAM/VLM就绪，`workflow.py`哈�
 
 帧120和122的“原图/修整前/修整后”三联图已保存在本地`artifacts/pallet-geometry-round242/`；肉眼复核确认小孔和短毛刺减少、主要板缝及叉孔保留。因图中含工厂原图，图像未推送GitHub/CNB，远端只保留代码、指标和文字证据。
 
+第二版随后完成生产在线验收：任务`681b89d6059a41f99fc1fbd55850f8c8`以评测/候选模式重新运行第120帧，服务端24.47秒、一轮收敛、12个候选、复核队列为空，8个类别提示只编码一次图像。11个pallet候选均有清理审计；主栈板shape 9填充52个纹理孔并平滑322像素，总变化1.3245%，shape 7填充10个纹理孔并平滑134像素，总变化1.7799%。结果仍为候选，未覆盖人工真值、未批准训练。
+
 部署备份位于 `D:\Apps\LabelAgent\.local\backups\agent-empty-result-rollback-round240-20261119-130115`。完整说明见 [第二百四十轮报告](AGENT_EMPTY_RESULT_ROLLBACK_ROUND240_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/agent-empty-result-rollback-round240.json)。实现提交 `840d9c1f89b7f67132845e6d2d80e34eca82dd39`。过去24小时的通俗汇总见 [工作总结](LABELAGENT_LAST_24_HOURS_SUMMARY_20261119.md)。
 
 Round239、Round240及过去24小时总结已随报告提交 `a5622f6eff19b02fa7e92e82faef0c2d1f990837` 推送，并从 GitHub/CNB 同名分支精确读回；未跟踪厂内图像和本地验收产物未上传。

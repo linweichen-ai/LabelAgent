@@ -91,6 +91,9 @@
     "implementation_commit": "2d397f49db15ba8adc2a5cb6cac01e7bf12d8caf",
     "github_readback": "2d397f49db15ba8adc2a5cb6cac01e7bf12d8caf",
     "cnb_readback": "2d397f49db15ba8adc2a5cb6cac01e7bf12d8caf",
+    "readback_receipt_commit": "cbaa2bbdc3ad20bcfc3904b4c617ab6824e689bd",
+    "receipt_github_readback": "cbaa2bbdc3ad20bcfc3904b4c617ab6824e689bd",
+    "receipt_cnb_readback": "cbaa2bbdc3ad20bcfc3904b4c617ab6824e689bd",
     "all_match": true
   }
 }

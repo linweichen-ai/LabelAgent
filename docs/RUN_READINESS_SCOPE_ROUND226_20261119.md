@@ -120,4 +120,4 @@
 
 ## 证据与同步
 
-机器证据见 `docs/evidence/workbench-stability-20261117/run-readiness-scope-round226.json`。实现、测试、本文和总交接文档提交为 `2d397f49db15ba8adc2a5cb6cac01e7bf12d8caf`；推送后分别从 GitHub 与 CNB 回读同名分支，两端均精确匹配该提交。浏览器脚本、截图、JSON 原始产物和厂内数据保持本地未跟踪，没有上传。
+机器证据见 `docs/evidence/workbench-stability-20261117/run-readiness-scope-round226.json`。实现、测试、本文和总交接文档提交为 `2d397f49db15ba8adc2a5cb6cac01e7bf12d8caf`；推送后分别从 GitHub 与 CNB 回读同名分支，两端均精确匹配。记录该次回读的回执提交为 `cbaa2bbdc3ad20bcfc3904b4c617ab6824e689bd`，随后也已由两端精确回读。浏览器脚本、截图、JSON 原始产物和厂内数据保持本地未跟踪，没有上传。

@@ -2445,3 +2445,15 @@ MCAP；代码只预留“问题包抽样”身份，未把抽样冒充完整数�
 哈希逐项一致；SAM和VLM在线、运行状态idle。回滚点为
 `D:\Apps\LabelAgent\.local\backups\dataset-identity-round293-20261120-043337`。详见
 `DATASET_IDENTITY_DEPLOYMENT_ROUND293_20261120.md`与对应截图、结构化读回。
+
+### Round 294：批次 B 003/004 抽样图加入正式文件列表（2026-11-20）
+
+两张已在本机的1104问题包抽样PNG现已加入正式文件索引，并统一显示“问题包抽样 / SFL-CPD15-Y
+· 批次 B（1104）· 003/004 抽样图”。真实Edge验收两项均存在、可用且`loaded=false`，当前CVAT
+Task3 150帧工作区与人工真值哈希未变，全程没有点击加载或运行推理。
+
+写入前`files.json`已逐哈希备份到
+`D:\Apps\LabelAgent\.local\backups\batchb-smoke-library-round294-20261120-044129`，文件列表由8项
+增至10项。它们仍只是各一张抽样图，不是完整003/004 MCAP，不代表批次B完整落地或完成标注；
+本轮没有修改候选、真值、训练集、模型权重或OSS。详见
+`BATCHB_SMOKE_LIBRARY_ROUND294_20261120.md`与对应截图、结构化读回。

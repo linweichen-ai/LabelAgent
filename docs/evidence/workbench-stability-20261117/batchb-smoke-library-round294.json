@@ -1,0 +1,128 @@
+{
+  "url": "http://127.0.0.1:8765/",
+  "clickedLoad": false,
+  "currentIdentity": {
+    "badge": "旧验证集",
+    "name": "CVAT Task3 · 斜坡复核集",
+    "detail": "CVAT_Task3_SAM3_candidates.mcap · /CVAT/Task3/images · 150 帧 · 1 路图像"
+  },
+  "rows": [
+    {
+      "badge": "已加载数据",
+      "name": "示例-卡车.jpg",
+      "path": "D:\\Apps\\LabelAgent\\work\\uploads\\876e850b573042ea9affcc4ff111177c--.jpg",
+      "loaded": false
+    },
+    {
+      "badge": "旧验证集",
+      "name": "CVAT Task3 · 斜坡复核集",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\CVAT_Task3_20261028\\CVAT_Task3_original_annotations.mcap",
+      "loaded": false
+    },
+    {
+      "badge": "旧验证集",
+      "name": "CVAT Task3 · 斜坡复核集",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\CVAT_Task3_20261028\\CVAT_Task3_SAM3_candidates.mcap",
+      "loaded": true
+    },
+    {
+      "badge": "新实采数据",
+      "name": "Capture_20261103 · 常熟实采 · 四相机",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\Capture_20261103\\常熟0920_四相机与点云.mcap",
+      "loaded": false
+    },
+    {
+      "badge": "新实采数据",
+      "name": "Capture_20261103 · 常熟实采 · 四相机",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\Capture_20261103\\常熟0920_SAM3未确认候选.mcap",
+      "loaded": false
+    },
+    {
+      "badge": "新实采数据",
+      "name": "Capture_20261103 · 常熟实采 · 四相机",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\Capture_20261103\\常熟0920_Qwen2B_Agent未确认候选.mcap",
+      "loaded": false
+    },
+    {
+      "badge": "已加载数据",
+      "name": "capture_reference_draft.mcap",
+      "path": "D:\\Apps\\LabelAgent\\work\\reference_review_20261104\\capture_reference_draft.mcap",
+      "loaded": false
+    },
+    {
+      "badge": "新数据集",
+      "name": "SFL-CPD15-Y · 批次 A（0920）· 000",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap",
+      "loaded": false
+    },
+    {
+      "badge": "问题包抽样",
+      "name": "SFL-CPD15-Y · 批次 B（1104）· 003/004 抽样图",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261104_smoke\\003-1793759959809514987.png",
+      "loaded": false
+    },
+    {
+      "badge": "问题包抽样",
+      "name": "SFL-CPD15-Y · 批次 B（1104）· 003/004 抽样图",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261104_smoke\\004-1793760662042842987.png",
+      "loaded": false
+    }
+  ],
+  "captureRows": [
+    {
+      "badge": "新实采数据",
+      "name": "Capture_20261103 · 常熟实采 · 四相机",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\Capture_20261103\\常熟0920_四相机与点云.mcap",
+      "loaded": false
+    },
+    {
+      "badge": "新实采数据",
+      "name": "Capture_20261103 · 常熟实采 · 四相机",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\Capture_20261103\\常熟0920_SAM3未确认候选.mcap",
+      "loaded": false
+    },
+    {
+      "badge": "新实采数据",
+      "name": "Capture_20261103 · 常熟实采 · 四相机",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\Capture_20261103\\常熟0920_Qwen2B_Agent未确认候选.mcap",
+      "loaded": false
+    }
+  ],
+  "cvatRows": [
+    {
+      "badge": "旧验证集",
+      "name": "CVAT Task3 · 斜坡复核集",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\CVAT_Task3_20261028\\CVAT_Task3_original_annotations.mcap",
+      "loaded": false
+    },
+    {
+      "badge": "旧验证集",
+      "name": "CVAT Task3 · 斜坡复核集",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\CVAT_Task3_20261028\\CVAT_Task3_SAM3_candidates.mcap",
+      "loaded": true
+    }
+  ],
+  "batchARows": [
+    {
+      "badge": "新数据集",
+      "name": "SFL-CPD15-Y · 批次 A（0920）· 000",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap",
+      "loaded": false
+    }
+  ],
+  "batchBRows": [
+    {
+      "badge": "问题包抽样",
+      "name": "SFL-CPD15-Y · 批次 B（1104）· 003/004 抽样图",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261104_smoke\\003-1793759959809514987.png",
+      "loaded": false
+    },
+    {
+      "badge": "问题包抽样",
+      "name": "SFL-CPD15-Y · 批次 B（1104）· 003/004 抽样图",
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261104_smoke\\004-1793760662042842987.png",
+      "loaded": false
+    }
+  ],
+  "passed": true
+}

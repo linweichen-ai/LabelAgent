@@ -34,6 +34,9 @@
 
 ## 1104 批次 B 的真实边界
 
+> 后续状态：Round 294 已将下面两张抽样 PNG 以“问题包抽样”加入正式文件列表，但仍未加载，
+> 也仍然不是完整 MCAP；详见 `BATCHB_SMOKE_LIBRARY_ROUND294_20261120.md`。
+
 本机目录 `D:\Apps\LabelAgent\work\datasets\SFL_CPD15Y_20261104_smoke` 当前只有：
 
 - `003-1793759959809514987.png`，471,700 字节；

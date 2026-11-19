@@ -1,4 +1,4 @@
-# LabelAgent 栈板跨数据审计与语义保护（Round 251–252）
+# LabelAgent 栈板跨数据审计与语义保护（Round 251–253）
 
 ## 1. 用户看到的问题
 
@@ -34,7 +34,9 @@ CVAT 样本最大变化比例为 2.1998%，带结构孔候选的最低保留率�
 - 3 轮任务 `77003b07d9f6453399304857f24e56cf`：47.368 秒，逐轮移除 3 个明确纸箱，12 → 9 个候选；
 - 6 轮任务在第 4 轮无新增操作后停在 `review_required`，没有为了追求轮数继续乱改。
 
-新“箱体形 pallet”门禁在第 132 帧确实只选中 1 个可疑候选做盲审。VLM 仍判断其中能看到蓝色塑料栈板结构，因此安全策略保留候选，没有自动删除。这一结果说明门禁已工作，但也说明“纸箱与下方栈板粘连”的语义拆分仍不是已解决问题；后续应结合实例裁剪或负提示，而不能把这次盲审说成已经完全纠正。
+新“箱体形 pallet”门禁在第 132 帧确实只选中 1 个可疑候选做盲审。首版同时提供原图、着色图和周围环境时，VLM 被旁边的蓝色塑料栈板干扰，错误保留了纸箱。本轮因此增加第三层隔离证据：对箱体形 pallet 只给模型看掩码内部像素，掩码外全部变暗，不允许借用下方或旁边物体作证。
+
+正式工作台复验结果：第 132 帧候选 9 和第 120 帧候选 7 均以 0.98 置信度判为 `conflict`，理由是只有实心箱体、没有板条、承重板、支脚或叉孔，二者都进入 `human_review_required`。候选没有被自动删除，人工真值和训练批准仍未改写。该结果解决了“邻近蓝色栈板把纸箱误保留”的复核干扰；是否进一步把纸箱和下方真实栈板拆成两个实例，仍需受控的 SAM 负提示/ROI 实验。
 
 ## 5. 工作台稳定性修复
 
@@ -44,12 +46,12 @@ CVAT 样本最大变化比例为 2.1998%，带结构孔候选的最低保留率�
 
 ## 6. 验收和安全边界
 
-- Python：1018/1018；
+- Python：1019/1019；
 - 浏览器交互：145/145；
 - 候选结果：是；
 - 人工真值改写：否；
 - 自动批准训练：否；
-- 回滚备份：`D:\Apps\LabelAgent\.local\backups\pallet-semantic-negative-round251-20261119-154109` 与 `D:\Apps\LabelAgent\.local\backups\pallet-semantic-audit-round252-20261119-160829`。
+- 回滚备份：`D:\Apps\LabelAgent\.local\backups\pallet-semantic-negative-round251-20261119-154109`、`D:\Apps\LabelAgent\.local\backups\pallet-semantic-audit-round252-20261119-160829` 与 `D:\Apps\LabelAgent\.local\backups\pallet-isolated-audit-round253-20261119-162925`。
 
 结构化证据见 `docs/evidence/workbench-stability-20261117/pallet-geometry-semantic-rounds251-252.json`。跨数据集原始审计 JSON 和可视化留在本机 `artifacts/pallet-geometry-cross-dataset-round251/`。
 

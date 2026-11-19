@@ -36,7 +36,8 @@ class CandidateClassAuditTests(unittest.TestCase):
         def chat(config, prompt, image, **kwargs):
             self.assertNotIn("current_label", prompt)
             self.assertNotIn('"label": "ego"', prompt)
-            self.assertEqual(len(kwargs["extra_images"]), 1)
+            self.assertEqual(len(kwargs["extra_images"]), 2)
+            self.assertNotEqual(kwargs["extra_images"][0], kwargs["extra_images"][1])
             return self.decision("person")
         result = audit.audit_candidate_class_blind({}, self.image, self.candidate, self.labels, {}, chat)
         self.assertEqual(self.candidate, original)
@@ -80,6 +81,21 @@ class CandidateClassAuditTests(unittest.TestCase):
         prompt = audit.build_blind_candidate_class_prompt(
             suspicious["id"], self.labels + ["pallet"], {})
         self.assertIn("box, container, or stacked cargo is not pallet", prompt)
+
+    def test_box_like_pallet_audit_uses_only_isolated_mask_pixels(self):
+        candidate = {"id": 20, "label": "pallet",
+                     "points": [[0, 0], [149, 0], [149, 99], [0, 99]]}
+        with patch.object(audit, "validate_blind_candidate_class_decision",
+                          side_effect=lambda value, labels: value):
+            def inspect(config, prompt, image, **kwargs):
+                evidence = audit.prepare_candidate_evidence(self.image, candidate)
+                self.assertEqual(image, evidence["isolated"])
+                self.assertEqual(kwargs["extra_images"], ())
+                self.assertIn("Classify only the non-dark pixels", prompt)
+                return self.decision("pallet")
+            result = audit.audit_candidate_class_blind(
+                {}, self.image, candidate, self.labels + ["pallet"], {}, inspect)
+        self.assertEqual(result["route"], "candidate_preserved")
 
     def test_three_clear_candidates_use_independent_batch(self):
         candidates = [{**self.candidate, "id": value} for value in (7, 8, 9)]

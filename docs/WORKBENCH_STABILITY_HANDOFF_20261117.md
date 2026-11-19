@@ -2201,3 +2201,9 @@ Round248的新数据图包含5个人物候选，旧逻辑因数量不等于3而�
 部署期间D盘临时空间曾低于256MiB，管理器现会自动改用`%LOCALAPPDATA%\LabelAgent\runtime-temp\workbench-8765`，同时保留原硬性空间门禁。旧日志和不活动工作树经过哈希校验后迁移，模型、数据、人工真值和Mask2Former恢复包未删除。最终观测C约2.20GiB、D约1.33GiB。工作台、主VLM、5090 SAM通道正常，5090可选VLM仍未启用。
 
 Python1018/1018、网页145/145通过。回滚点为`pallet-semantic-negative-round251-20261119-154109`和`pallet-semantic-audit-round252-20261119-160829`。详细报告见`docs/PALLET_CROSS_DATASET_AND_SEMANTIC_GUARD_ROUNDS251_252_20261119.md`，结构化证据见`docs/evidence/workbench-stability-20261117/pallet-geometry-semantic-rounds251-252.json`；工厂图像未上传远端。
+
+### Round 253：箱体候选隔离视图复核
+
+Round252首版复核仍会被掩码外的蓝色塑料栈板干扰，把纸箱错误解释为pallet。现只对箱体形pallet候选生成隔离视图：掩码内保留原像素，掩码外统一变暗；人物、ego、other_robot仍保留上下文+着色+隔离三视图。隔离提示明确禁止推断下方、后方和邻近物体，并要求`uncertain/conflict`输出保持`candidate_supported=false`与`observed_label=null`一致。
+
+正式工作台第132帧候选9与第120帧候选7均被隔离视图以0.98置信度判为实心箱体、缺少板条/承重板/支脚/叉孔，路由`human_review_required`。两项均未自动删除、未改人工真值、未批准训练。Python1019/1019、网页145/145通过，生产`candidate_class_audit.py`哈希`CB368B4C...2140E`，回滚点`pallet-isolated-audit-round253-20261119-162925`。工作台、主VLM、5090 SAM通道正常。

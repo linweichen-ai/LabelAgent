@@ -99,6 +99,13 @@ def candidate_requires_class_audit(candidate: dict) -> bool:
     return fill_ratio >= 0.82 and width_height_ratio <= 2.10
 
 
+def candidate_audit_images(candidate: dict, evidence: dict) -> tuple[bytes, tuple[bytes, ...]]:
+    """Keep box-like pallet checks free of misleading nearby pallet pixels."""
+    if str(candidate.get("label", "")).casefold() == "pallet":
+        return evidence["isolated"], ()
+    return evidence["original"], (evidence["marked"], evidence["isolated"])
+
+
 def audit_high_risk_candidates(config, image_bytes, candidates, labels, class_definitions,
                                chat, *, check_cancelled=lambda: None,
                                tolerate_errors=False, candidate_ids=None,
@@ -162,12 +169,14 @@ def audit_high_risk_candidates(config, image_bytes, candidates, labels, class_de
             for candidate in group:
                 evidence = prepare_candidate_evidence(image_bytes, candidate)
                 prompt = build_blind_candidate_class_prompt(
-                    candidate["id"], labels, class_definitions)
+                    candidate["id"], labels, class_definitions,
+                    isolated_only=str(candidate.get("label", "")).casefold() == "pallet")
                 prepared.append((candidate, evidence, prompt))
             decisions = batch_chat(
                 config,
-                [{"instruction": prompt, "image": evidence["original"],
-                  "extra_images": (evidence["marked"],)}
+                [{"instruction": prompt,
+                  "image": candidate_audit_images(candidate, evidence)[0],
+                  "extra_images": candidate_audit_images(candidate, evidence)[1]}
                  for _, evidence, prompt in prepared],
                 response_schema=blind_candidate_class_schema(labels),
                 max_tokens=384)
@@ -224,19 +233,25 @@ def prepare_candidate_evidence(image_bytes: bytes, candidate: dict) -> dict:
         for hole in part["holes"]:
             draw.polygon([tuple(p) for p in hole], fill=0)
         mask.paste(255, mask=component)
-    local_mask = mask.crop(box).point(lambda value: 72 if value else 0)
+    local_binary_mask = mask.crop(box)
+    local_mask = local_binary_mask.point(lambda value: 72 if value else 0)
     marked = Image.composite(Image.new("RGB", original.size, (0, 224, 190)), original, local_mask)
+    isolated = Image.composite(
+        original, Image.new("RGB", original.size, (24, 24, 24)), local_binary_mask)
 
     def encode(image):
         output = io.BytesIO()
         image.save(output, "JPEG", quality=92, optimize=False, progressive=False)
         return output.getvalue()
 
-    original_bytes, marked_bytes = encode(original), encode(marked)
+    original_bytes, marked_bytes, isolated_bytes = (
+        encode(original), encode(marked), encode(isolated))
     return {"original": original_bytes, "marked": marked_bytes,
+            "isolated": isolated_bytes,
             "crop_box_xyxy": list(box), "source_size": list(source.size),
             "current_label_shown": False,
-            "original_sha256": _sha256(original_bytes), "marked_sha256": _sha256(marked_bytes)}
+            "original_sha256": _sha256(original_bytes), "marked_sha256": _sha256(marked_bytes),
+            "isolated_sha256": _sha256(isolated_bytes)}
 
 
 def blind_candidate_class_schema(labels: list[str]) -> dict:
@@ -254,7 +269,20 @@ def blind_candidate_class_schema(labels: list[str]) -> dict:
     return {"type": "object", "properties": properties, "required": sorted(properties), "additionalProperties": False}
 
 
-def build_blind_candidate_class_prompt(candidate_id, labels, class_definitions):
+def build_blind_candidate_class_prompt(
+        candidate_id, labels, class_definitions, isolated_only=False):
+    if isolated_only:
+        return (
+            "Classify only the non-dark pixels in this isolated crop. Everything outside the "
+            "candidate mask is darkened and must be ignored. Do not infer an object below, behind, "
+            "or near the visible pixels. A pallet requires visible slats, deck, feet, or fork-entry "
+            "structure inside the non-dark region. A solid shipping box or container is not a "
+            "pallet. If the non-dark pixels mainly show a solid box/container and no allowed class "
+            "fits, return conflict with candidate_supported=false and observed_label=null. "
+            "For uncertain use the same false/null field consistency. Return only the strict JSON "
+            "object. Input: "
+            + json.dumps({"candidate_id": candidate_id, "allowed_labels": labels},
+                         ensure_ascii=False))
     identity_rules = (
         " For person, require visible human anatomy inside the cyan mask; a driver/operator is still person."
         " For ego, require visible host robot body/chassis/forks inside the mask; viewpoint alone never proves ego."
@@ -264,13 +292,20 @@ def build_blind_candidate_class_prompt(candidate_id, labels, class_definitions):
         " If the cyan mask mainly covers cargo instead of the pallet structure, use uncertain or conflict."
         " A mask mixing a person with vehicle/robot structure is uncertain."
     )
+    evidence_rules = (
+        "Image 1 is an uncolored local crop. Image 2 highlights only the candidate mask in cyan; "
+        "holes are excluded. Image 3 keeps only pixels inside that mask and darkens all surrounding "
+        "objects. Cyan is not an object color. Classify the masked pixels, not a nearby object. "
+    )
     return (
-        "Independently classify exactly one highlighted machine candidate. Image 1 is an uncolored "
-        "local crop. Image 2 is the same crop with only the candidate mask highlighted in cyan; "
-        "holes are excluded. Cyan is not an object color. No current class is provided: do not "
+        "Independently classify exactly one highlighted machine candidate. "
+        + evidence_rules
+        + "No current class is provided: do not "
         "guess a previous label. Use known_label only for one visually supported allowed class. "
-        "For tiny, blurred, occluded, mixed or weak evidence use uncertain and observed_label=null. "
-        "If no allowed class fits use conflict and observed_label=null. This is candidate-only "
+        "For tiny, blurred, occluded, mixed or weak evidence use uncertain, observed_label=null, "
+        "candidate_supported=false, and a non-visible_known_label reason_code. "
+        "If no allowed class fits use conflict with the same null/false field consistency. "
+        "This is candidate-only "
         "evidence, never human truth. Return only the strict JSON object."
         + identity_rules + "\nInput: "
         + json.dumps({"candidate_id": candidate_id, "allowed_labels": labels,
@@ -325,6 +360,7 @@ def _candidate_class_audit_result(
                  "source_size": evidence["source_size"],
                  "original_sha256": evidence["original_sha256"],
                  "marked_sha256": evidence["marked_sha256"],
+                 "isolated_sha256": evidence["isolated_sha256"],
                  "current_label_shown_to_model": False},
         "prompt_sha256": _sha256(prompt.encode("utf-8")),
         "decision": decision,
@@ -346,9 +382,12 @@ def audit_candidate_class_blind(config: dict, image_bytes: bytes, candidate: dic
     if candidate["label"] not in labels:
         raise ValueError("候选类别不在注册表中")
     evidence = prepare_candidate_evidence(image_bytes, candidate)
-    prompt = build_blind_candidate_class_prompt(candidate["id"], labels, class_definitions)
+    isolated_only = str(candidate.get("label", "")).casefold() == "pallet"
+    prompt = build_blind_candidate_class_prompt(
+        candidate["id"], labels, class_definitions, isolated_only=isolated_only)
+    primary_image, extra_images = candidate_audit_images(candidate, evidence)
     decision = validate_blind_candidate_class_decision(chat(
-        config, prompt, evidence["original"], extra_images=(evidence["marked"],),
+        config, prompt, primary_image, extra_images=extra_images,
         response_schema=blind_candidate_class_schema(labels)), labels)
     return _candidate_class_audit_result(
         image_bytes, candidate, evidence, prompt, decision,

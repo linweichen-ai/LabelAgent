@@ -1,5 +1,5 @@
 {
-  "schema_version": "labelagent.pallet_geometry_semantic_rounds251_252.v1",
+  "schema_version": "labelagent.pallet_geometry_semantic_rounds251_253.v1",
   "date": "2026-11-19",
   "candidate_only": true,
   "human_truth_modified": false,
@@ -46,9 +46,21 @@
     "frame_132_focused_audit": {
       "candidate_id": 9,
       "audit_total": 1,
-      "route": "candidate_preserved",
+      "route": "human_review_required",
+      "classification": "conflict",
+      "confidence": 0.98,
       "candidate_mutated": false,
-      "note": "The size/shape gate selected the suspicious solid candidate. The VLM still judged visible pallet structure, so the safety policy preserved it instead of auto-deleting it."
+      "isolated_sha256": "4d96b0989f338c1f2628e3a3a60cd2c17e58e6c4408f02e584d9e011812d16a8",
+      "note": "The isolated-mask view removed nearby blue pallets and routed the solid shipping container to human review."
+    },
+    "frame_120_focused_audit": {
+      "candidate_id": 7,
+      "audit_total": 1,
+      "route": "human_review_required",
+      "classification": "conflict",
+      "confidence": 0.98,
+      "candidate_mutated": false,
+      "note": "The isolated-mask view routed the solid box/container candidate to human review."
     }
   },
   "runtime_storage": {
@@ -58,11 +70,11 @@
     "final_d_free_gib": 1.33
   },
   "tests": {
-    "python": {"passed": 1018, "failed": 0},
+    "python": {"passed": 1019, "failed": 0},
     "browser": {"passed": 145, "failed": 0}
   },
   "production_hashes_sha256": {
-    "candidate_class_audit.py": "507EF19D6DBB3F360269ADC32BF90714012E32C8E077B4AF84DAB09F8BB17EFE",
+    "candidate_class_audit.py": "CB368B4CF62E849376E0E37830461B9B9E676B9EE4008252EC65A5B90802140E",
     "server.py": "DC53B31D624ADE784A638307B69B6C647F8C4F62987FCC30168B313016BA1A4B",
     "workflow.py": "B35B31079F412634F533C29F1E76691AF10E6D78D3E0FBFA961BF69A4F6C3668",
     "manage_remote.py": "38A1A87987FDFD2D7929F31A4BB66CD14FA7CAA4FB0F95885487CFED7BE36AD6"

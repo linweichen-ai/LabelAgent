@@ -1,0 +1,84 @@
+{
+  "schema_version": "labelagent.round278.pallet_false_positive_audit.v1",
+  "recorded_at": "2026-11-20T03:06:25.0788523+08:00",
+  "implementation_commit": "d2aa655096251d635813af282cdd1b85eb6cd175",
+  "relation_review_v2": {
+    "capture": {
+      "review_count": 6,
+      "visible_pallet_support_count": 3,
+      "clear_visual_evidence_count": 2,
+      "same_instance_yes_count": 0,
+      "semantic_safe_count": 0,
+      "report_sha256": "0f3066ee096d1ef05e74466d160e09f423b373254c3c54a6429992d148bd015e"
+    },
+    "cvat_original_positive_candidates": {
+      "review_count": 6,
+      "visible_pallet_support_count": 1,
+      "clear_visual_evidence_count": 6,
+      "same_instance_yes_count": 0,
+      "semantic_safe_count": 0,
+      "report_sha256": "1d12eee4a7840a76244bee8a1d06d4a9643fd6d8649d1aa1ef2ca41ba639ed61"
+    },
+    "cvat_negative_controls": {
+      "review_count": 7,
+      "visible_pallet_support_count": 2,
+      "clear_visual_evidence_count": 7,
+      "same_instance_yes_count": 0,
+      "semantic_safe_count": 0,
+      "report_sha256": "1b06431a48e92403ecc1187f003e7843b9f9aee0baefdff016fd9cc6fe660075"
+    },
+    "v1_preview_invalidated": true,
+    "automatic_merge_allowed": false
+  },
+  "thin_candidate_gate": {
+    "minimum_long_side": 120,
+    "minimum_short_side": 4,
+    "maximum_short_to_long_ratio": 0.08,
+    "minimum_foreground_area": 500,
+    "cvat_pallet_candidate_count": 1143,
+    "previous_audit_count": 22,
+    "additional_audit_count": 9,
+    "ordinary_side_view_fast_path_example": {
+      "width": 239,
+      "height": 59,
+      "requires_audit": false
+    }
+  },
+  "live_vlm_pilot": {
+    "review_count": 3,
+    "human_review_required_count": 3,
+    "candidate_preserved_count": 0,
+    "items": [
+      {"frame": 133, "candidate_id": 11, "classification": "conflict", "confidence": 0.0},
+      {"frame": 147, "candidate_id": 5, "classification": "conflict", "confidence": 0.0},
+      {"frame": 94, "candidate_id": 11, "classification": "conflict", "confidence": 0.0}
+    ],
+    "candidate_mutated": false,
+    "human_truth": false,
+    "approved_for_training": false
+  },
+  "tests": {
+    "python_passed": 1073,
+    "python_subtests_passed": 186,
+    "node_passed": 151,
+    "node_failed": 0
+  },
+  "production": {
+    "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\round278-thin-pallet-audit-predeploy-20261120-030524",
+    "candidate_class_audit_sha256": "7C0A3530C27B4A47512B9CEDE85409653798F355F87A8671D17B5BB12163435D",
+    "app_js_sha256": "0EBFB990741D9AAA9A56816DD1DE9FF6CA1ACC2141F82CECE301D222585FA3A8",
+    "index_html_sha256": "FA337D5F681E9FE55B972DB4004F085B842F68C552E11BEB380028AACE818516",
+    "http_status": 200,
+    "run_status": "idle",
+    "ui_asset_version": 194,
+    "dataset_path": "D:\\Apps\\LabelAgent\\work\\datasets\\CVAT_Task3_20261028\\CVAT_Task3_SAM3_candidates.mcap",
+    "topic": "/CVAT/Task3/images",
+    "truth_frames": [44],
+    "vlm_model": "labelagent-vlm8b"
+  },
+  "candidate_only": true,
+  "automatic_apply_allowed": false,
+  "human_truth": false,
+  "approved_for_training": false,
+  "model_weights_changed": false
+}

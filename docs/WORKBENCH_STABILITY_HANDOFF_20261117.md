@@ -2361,3 +2361,11 @@ C盘继续下降到51.38 MiB。只读盘点确认工作树实验产物已实际�
 针对“主体与底梁被分成多个pallet候选”的实例关系问题，新增只读几何配对和本地VLM双色轮廓复核。Capture 19,866个同帧配对中得到680个碎片假设、42个保守门槛配对；CVAT Task3 4,999个配对中得到527个假设、49个保守门槛配对。两个数据源各抽6个疑似同实例样本，VLM 12/12判断同实例；另从CVAT图像人工挑选7个明确不同的栈板/货叉/相邻栈板配对，VLM 7/7拒绝合并，均无busy重试。
 
 几何分离本身不能证明是不同物理实例：Capture自动控制候选中存在堆叠木条。工具因此把过强的“separate instance negative control”口径更正为“disjoint pair control candidate”，要求图像复核后才能作为反例。当前全部结果仍为assistant-review/candidate-only，`automatic_merge_allowed=false`、`human_truth=false`、`approved_for_training=false`；没有修改生产候选、真值、训练集或模型权重。定向6项测试通过。详见`docs/PALLET_FRAGMENT_RELATION_ROUND277_20261120.md`与对应结构化证据。
+
+### Round 278：关系提示纠偏与极细长 pallet 误检复核（2026-11-20）
+
+三联预览确认Round277的v1关系提示把若干细长地面条带、货叉、遮挡和不同栈板也判成可合并；旧12/12结果已明确失效。v2新增“绿色主体确为栈板、橙色确为其部件、画面清楚”三项硬字段；对原12项和7个反例重跑后19/19均拒绝自动合并。自动合并继续关闭，旧预览只保留为失败诊断。
+
+生产类别盲审新增极细长pallet门槛：长边至少120、短边至少4、短长比不超过0.08、前景面积至少500。CVAT Task3的1,143个pallet候选中只额外命中9个；普通239×59侧视栈板仍走快速路径。最极端3项真实本地VLM盲审3/3为conflict并进入人工复核，候选、真值和训练批准均未修改。UTF-8正式Python1073项及186个子测试、前端151项全部通过。
+
+生产仅替换类别复核模块、`app.js`和`index.html`，回滚点`round278-thin-pallet-audit-predeploy-20261120-030524`。上线后HTTP200、idle，页面v194，CVAT Task3、相机、149帧候选计数和第44帧人工真值均保持，主VLM在线。详见`docs/PALLET_FALSE_POSITIVE_AUDIT_ROUND278_20261120.md`与对应结构化证据。

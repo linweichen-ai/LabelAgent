@@ -1,0 +1,61 @@
+{
+  "schema_version": "labelagent.runtime_storage_recovery_round270.v1",
+  "date": "2026-11-20",
+  "status": "recovered_and_runtime_reverified",
+  "before_free_mib": 51.38,
+  "peak_after_free_mib": 697.38,
+  "post_health_check_free_mib": 681.86,
+  "d_drive_post_health_check_free_mib": 3225.29,
+  "action": "ntfs_compress_exact_inactive_log_files",
+  "deleted_files": 0,
+  "moved_files": 0,
+  "terminated_processes": 0,
+  "files": [
+    {
+      "path": "C:\\Users\\seer\\AppData\\Local\\Doubao\\User Data\\sdk_storage\\log\\saman_2026.1119.0.log",
+      "logical_bytes": 478058244,
+      "physical_bytes_after": 144814080,
+      "compression_ratio": "3.3:1"
+    },
+    {
+      "path": "C:\\Users\\seer\\AppData\\Local\\Doubao\\User Data\\sdk_storage\\log\\saman_2026.1119.21.log",
+      "logical_bytes": 265027652,
+      "physical_bytes_after": 77131776,
+      "compression_ratio": "3.4:1"
+    },
+    {
+      "path": "C:\\Users\\seer\\AppData\\Local\\Doubao\\User Data\\sdk_storage\\log\\saman_2026.1119.1.log",
+      "logical_bytes": 184914367,
+      "physical_bytes_after": 50081792,
+      "compression_ratio": "3.7:1"
+    }
+  ],
+  "total_logical_bytes": 928000263,
+  "total_physical_bytes_after": 272027648,
+  "estimated_bytes_recovered": 655972615,
+  "artifacts_junction": {
+    "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\artifacts",
+    "target": "D:\\Apps\\LabelAgent\\.local\\relocated-worktrees\\labelagent_stability_worktree_20261117-artifacts",
+    "files": 3939,
+    "bytes": 1047061833,
+    "changed": false
+  },
+  "runtime_verification": {
+    "workbench_http": 200,
+    "loaded": true,
+    "dataset": "CVAT_Task3_20261028",
+    "topic": "/CVAT/Task3/images",
+    "candidate_audit_protocol_sha256": "3c9a7bb6491dc6b64f1441c7860019290759922ee2de97763ca8d7313937364d",
+    "frame_132_candidate_9_route": "human_review_required",
+    "frame_132_truth_present": false,
+    "primary_sam_ready": true,
+    "primary_vlm_ready": true,
+    "sam_5090_tunnel_ready": true,
+    "optional_vlm_5090_ready": false
+  },
+  "boundaries": [
+    "No dataset, source, model, candidate, human truth, or training approval was changed.",
+    "No large unrelated user file was deleted or moved.",
+    "Available C drive space remains below the preferred 2 GiB safety margin."
+  ]
+}

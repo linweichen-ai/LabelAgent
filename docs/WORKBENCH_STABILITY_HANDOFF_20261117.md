@@ -2061,3 +2061,5 @@ Round232部署时启动器提示D盘低于2 GiB，实测仅余约1.47～1.52 GiB
 D盘可用空间恢复到2.932 GiB，高于2 GiB警戒线。工作台、运行状态、4090 SAM、5090 SAM和4090 VLM五项探针均HTTP200，工作台idle，当前文件、camera 1、代际0及正式状态哈希不变。本轮没有重启、模型请求、候选/真值/训练写入、微调、后训练或OSS写入。
 
 完整说明见 [第二百三十三轮报告](BACKUP_NTFS_HEADROOM_ROUND233_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/backup-ntfs-headroom-round233.json)。
+
+首版报告与证据提交 `a208e15e4abd5374fa3029506d68d07e0570d827` 已推送并分别回读 GitHub/CNB，同名分支两端与本地精确匹配。

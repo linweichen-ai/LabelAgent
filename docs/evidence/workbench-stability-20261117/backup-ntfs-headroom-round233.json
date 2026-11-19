@@ -64,6 +64,6 @@
     "post_training": false,
     "oss_writes": 0
   },
-  "implementation_commit": null,
-  "remote_readback_commit": null
+  "implementation_commit": "a208e15e4abd5374fa3029506d68d07e0570d827",
+  "remote_readback_commit": "a208e15e4abd5374fa3029506d68d07e0570d827"
 }

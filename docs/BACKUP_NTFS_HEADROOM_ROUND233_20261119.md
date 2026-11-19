@@ -62,4 +62,6 @@
 
 本轮没有重启工作台，没有模型请求、候选或人工真值写入、训练批准、微调、后训练、OSS写入，也没有删除文件。被占用的实验说明书及其目录保持原样。
 
+首版报告与证据提交 `a208e15e4abd5374fa3029506d68d07e0570d827` 已分别从 GitHub 与 CNB 精确读回，两端与本地一致。
+
 机器证据见 [`evidence/workbench-stability-20261117/backup-ntfs-headroom-round233.json`](evidence/workbench-stability-20261117/backup-ntfs-headroom-round233.json)。

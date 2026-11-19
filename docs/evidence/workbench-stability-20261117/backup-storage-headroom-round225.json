@@ -1,0 +1,110 @@
+{
+  "schema_version": "labelagent.workbench-stability.round225.v1",
+  "round": 225,
+  "date": "2026-11-19",
+  "objective": "Restore safe LabelAgent runtime disk headroom while preserving every rollback package and historical path.",
+  "status": "backup_preserving_relocation_verified",
+  "initial_risk": {
+    "runtime_temp": "D:\\Apps\\LabelAgent\\.local\\runtime-temp\\workbench-8765",
+    "warning_threshold_bytes": 2147483648,
+    "free_bytes_before": 1977028608,
+    "free_gib_before": 1.841,
+    "below_warning_threshold": true
+  },
+  "large_backup_recovery": {
+    "source": "D:\\Apps\\LabelAgent\\.local\\backups\\mask2former_single_recovery-source-round157-20261118",
+    "initial_move_completed": false,
+    "reason": "cross-volume copy expanded sparse storage and exhausted the target volume",
+    "split_source_files": 1952,
+    "split_target_files": 560,
+    "relative_path_intersection": 0,
+    "union_files": 2512,
+    "union_bytes": 2999265523,
+    "union_aggregate_sha256": "D6701C928055056D5729F53CD7938ADE9F596FE2DCCB0420FCC90AA94031B6DE",
+    "restored_files": 2512,
+    "restored_bytes": 2999265523,
+    "restored_aggregate_sha256": "D6701C928055056D5729F53CD7938ADE9F596FE2DCCB0420FCC90AA94031B6DE",
+    "restored_exactly": true,
+    "ntfs_compressed": true,
+    "post_compression_hash_unchanged": true
+  },
+  "verified_archive": {
+    "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\backups\\LabelAgent\\mask2former_single_recovery-source-round157-20261118-verified-20261119.tar.gz",
+    "bytes": 2738471061,
+    "sha256": "3E6CFB966F7564ACFC2A434073C534A2B8EB8F6E3BC0CDBEACE1F05D7ED884FA",
+    "tar_list_exit": 0,
+    "archive_entries": 2731,
+    "expected_entries": 2731,
+    "source_files": 2512,
+    "source_directories": 218,
+    "filewise_missing": 0,
+    "filewise_extra": 0,
+    "filewise_changed": 0,
+    "exact_filewise_match": true,
+    "uploaded_to_remote": false
+  },
+  "ordinary_backup_relocation": {
+    "target_root": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\backups\\LabelAgent\\production-rollback",
+    "moved_directories": 128,
+    "logical_bytes": 1743631210,
+    "old_paths_preserved_as_junctions": 128,
+    "broken_junctions": 0,
+    "remaining_regular_directories": [
+      "mask2former_single_recovery-source-round157-20261118"
+    ],
+    "per_directory_manifest_checked": true,
+    "round224_readback": {
+      "files": 7,
+      "bytes": 34670842,
+      "aggregate_sha256": "462D686039E7005EF9330E0DB3B15014065527BD8BD7C771B043CCAB561F4CDF",
+      "matches_before": true
+    }
+  },
+  "final_storage": {
+    "runtime_free_bytes": 3245924352,
+    "runtime_free_gib": 3.023,
+    "above_warning_threshold": true,
+    "D_space_recovered_bytes": 1268895744,
+    "D_space_recovered_gib": 1.182,
+    "C_free_gib": 7.582
+  },
+  "empty_staging": {
+    "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\backups\\LabelAgent\\EMPTY-STAGING-mask2former-round157-20261119",
+    "file_count": 0,
+    "is_backup": false
+  },
+  "service_health_after": {
+    "workbench_state_8765": 200,
+    "workbench_run_8765": 200,
+    "sam_4090_28766": 200,
+    "sam_5090_38766": 200,
+    "vlm_4090_28868": 200,
+    "run_status": "idle"
+  },
+  "formal_state_integrity": {
+    "state_sha256_before": "1DCD67A8475A8DD1974C9A9B3D4BF68A56E1ABD30CF2A9559C12E849E3D86F96",
+    "state_sha256_after": "1DCD67A8475A8DD1974C9A9B3D4BF68A56E1ABD30CF2A9559C12E849E3D86F96",
+    "file_sessions_sha256_before": "202927E295CABC27B1F9583B6438D3E16C020809EE421BCE1342C3AEBC0367F5",
+    "file_sessions_sha256_after": "202927E295CABC27B1F9583B6438D3E16C020809EE421BCE1342C3AEBC0367F5",
+    "unchanged": true
+  },
+  "boundaries": {
+    "source_code_changed": false,
+    "production_restarted": false,
+    "model_inference_performed": false,
+    "candidate_changed": false,
+    "human_truth_changed": false,
+    "approved_for_training": false,
+    "model_weights_changed": false,
+    "oss_written": false
+  },
+  "source_sync": {
+    "branch": "codex/workbench-stability-20261117",
+    "documentation_commit": null,
+    "receipt_commit": null,
+    "github_readback": null,
+    "cnb_readback": null,
+    "both_remotes_matched": false,
+    "local_archives_uploaded": false
+  }
+}

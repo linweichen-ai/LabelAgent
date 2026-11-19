@@ -1,0 +1,61 @@
+{
+  "schema_version": "labelagent.dataset-coverage-browser-round280.summary.v1",
+  "date": "2026-11-20",
+  "evidence_preprocessing": {
+    "frame": 94,
+    "audit_targets": 3,
+    "loops": 100,
+    "total_calls": 300,
+    "mean_ms_per_candidate": 2.436,
+    "mean_ms_per_frame": 7.308,
+    "production_change": false,
+    "reason": "negligible compared with approximately 15 seconds of VLM inference"
+  },
+  "current_production": {
+    "passed": true,
+    "elapsed_ms": 2531.0,
+    "identity_kind": "旧验证集",
+    "identity_name": "CVAT Task3 · 斜坡复核集",
+    "topic": "/CVAT/Task3/images",
+    "frame_count": 150,
+    "image_topic_count": 1,
+    "selected_label_count": 8,
+    "coverage_chip_count": 8,
+    "coverage_chips_interactive": true,
+    "current_candidate_count": 14,
+    "page_errors": 0,
+    "http_errors": 0,
+    "failed_requests": 0,
+    "truth_write_requests": 0
+  },
+  "isolated_new_dataset": {
+    "passed": true,
+    "elapsed_ms": 3313.0,
+    "identity_kind": "已加载数据",
+    "identity_name": "capture.mcap",
+    "topic": "/capture/camera_0/image",
+    "frame_count": 152,
+    "image_topic_count": 4,
+    "selected_label_count": 8,
+    "coverage_chip_count": 8,
+    "coverage_chips_interactive": true,
+    "candidate_frames": 0,
+    "current_candidate_count": 0,
+    "all_labels_pending_without_false_absence": true,
+    "page_errors": 0,
+    "http_errors": 0,
+    "failed_requests": 0,
+    "truth_write_requests": 0,
+    "isolated_port_released": true
+  },
+  "production_after_acceptance": {
+    "workbench_http": 200,
+    "sam3_http": 200,
+    "vlm_http": 200
+  },
+  "production_source_changed": false,
+  "candidate_mutated": false,
+  "human_truth": false,
+  "approved_for_training": false,
+  "approved_for_deployment": false
+}

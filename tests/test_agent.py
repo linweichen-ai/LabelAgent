@@ -367,6 +367,42 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(after[41, 81], 0)
         self.assertLessEqual(audit["change_ratio"], 0.025)
 
+    def test_pallet_cleanup_fills_compact_surface_breaks_and_keeps_long_slots(self):
+        mask = np.zeros((480, 640), dtype=np.uint8)
+        mask[245:480, :] = 1
+        # Six compact, irregular surface drop-outs from the close-pallet case.
+        compact_holes = [
+            (274, 247, 10, 22), (292, 397, 27, 17), (299, 229, 22, 20),
+            (301, 174, 19, 51), (301, 335, 19, 51), (303, 125, 19, 21),
+        ]
+        # Four long horizontal board gaps must remain excluded.
+        structural_slots = [
+            (378, 384, 13, 59), (380, 340, 10, 39),
+            (381, 134, 10, 48), (381, 190, 11, 66),
+        ]
+        for y, x, h, w in compact_holes:
+            cv2.ellipse(mask, (x + w // 2, y + h // 2),
+                        (max(w // 2 - 1, 1), max(h // 2 - 1, 1)),
+                        0, 0, 360, 0, thickness=cv2.FILLED)
+        for y, x, h, w in structural_slots:
+            mask[y:y + h, x:x + w] = 0
+        candidate = _shape_from_mask(mask, "pallet", 24)
+
+        refined, audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 640, 480)
+        output = _rasterize(refined, 640, 480)
+
+        self.assertIsNotNone(audit)
+        self.assertEqual(audit["geometry_cleanup_version"], 2)
+        self.assertEqual(audit["filled_hole_count"], 6)
+        self.assertGreaterEqual(audit["filled_compact_texture_hole_count"], 4)
+        for y, x, h, w in compact_holes:
+            self.assertEqual(output[y + h // 2, x + w // 2], 1)
+        for y, x, h, w in structural_slots:
+            self.assertEqual(output[y + h // 2, x + w // 2], 0)
+        self.assertGreaterEqual(audit["minimum_structural_hole_retention"], .75)
+        self.assertLessEqual(audit["change_ratio"], .025)
+
     def test_close_pallet_cleanup_uses_stronger_bounded_boundary_smoothing(self):
         mask = np.zeros((260, 360), dtype=np.uint8)
         mask[20:240, 20:340] = 1

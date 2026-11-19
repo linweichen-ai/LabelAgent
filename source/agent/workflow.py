@@ -2680,6 +2680,15 @@ def _significant_component_count(mask):
                for index in range(1, count))
 
 
+def _compact_pallet_texture_hole(area, width, height, *, maximum_area=768,
+                                 maximum_span=64, maximum_aspect_ratio=3.0):
+    """Identify compact surface drop-outs without swallowing long pallet slots."""
+    short = max(min(width, height), 1)
+    aspect_ratio = max(width, height) / short
+    return (area <= maximum_area and max(width, height) <= maximum_span
+            and aspect_ratio <= maximum_aspect_ratio)
+
+
 def _structural_hole_masks(mask):
     background = (mask == 0).astype(np.uint8)
     count, components, stats, _ = cv2.connectedComponentsWithStats(
@@ -2694,7 +2703,11 @@ def _structural_hole_masks(mask):
         width = int(stats[component, cv2.CC_STAT_WIDTH])
         height = int(stats[component, cv2.CC_STAT_HEIGHT])
         area = int(stats[component, cv2.CC_STAT_AREA])
-        if area > 256 or max(width, height) > 32:
+        micro_hole = area <= 96 and max(width, height) <= 32
+        texture_hole = area <= 256 and max(width, height) <= 24
+        compact_texture_hole = _compact_pallet_texture_hole(
+            area, width, height)
+        if not (micro_hole or texture_hole or compact_texture_hole):
             output.append((components == component, area))
     return output
 
@@ -2772,11 +2785,16 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
                                      maximum_hole_span=32,
                                      maximum_texture_hole_area=256,
                                      maximum_texture_hole_span=24,
+                                     maximum_compact_texture_hole_area=768,
+                                     maximum_compact_texture_hole_span=64,
+                                     maximum_compact_texture_aspect_ratio=3.0,
                                      maximum_change_ratio=0.025):
     """Remove texture-scale pallet mask noise without erasing structural gaps.
 
     The cleanup is deliberately bounded to one already detected instance.  It
     fills enclosed micro holes plus slightly larger, short-span texture holes.
+    Close pallets also receive a compactness gate that fills irregular surface
+    drop-outs while keeping long horizontal slat and fork openings.
     It then applies a size-adaptive median boundary proposal when that proposal
     preserves the connected-component count and stays inside a 2.5 percent
     total-change budget.  Long openings (for example fork slots and inter-slat
@@ -2798,6 +2816,7 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         components[0, :], components[-1, :], components[:, 0], components[:, -1]))).tolist())
     filled_holes = []
     filled_texture_holes = []
+    filled_compact_texture_holes = []
     for component in range(1, count):
         if component in border_labels:
             continue
@@ -2806,12 +2825,19 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
                       and max(w, h) <= maximum_hole_span)
         texture_hole = (component_area <= maximum_texture_hole_area
                         and max(w, h) <= maximum_texture_hole_span)
-        if micro_hole or texture_hole:
+        compact_texture_hole = _compact_pallet_texture_hole(
+            component_area, w, h,
+            maximum_area=maximum_compact_texture_hole_area,
+            maximum_span=maximum_compact_texture_hole_span,
+            maximum_aspect_ratio=maximum_compact_texture_aspect_ratio)
+        if micro_hole or texture_hole or compact_texture_hole:
             refined[components == component] = 1
             record = {"area": component_area, "bbox": [x, y, x + w - 1, y + h - 1]}
             filled_holes.append(record)
             if texture_hole and not micro_hole:
                 filled_texture_holes.append(record)
+            if compact_texture_hole and not (micro_hole or texture_hole):
+                filled_compact_texture_holes.append(record)
 
     foreground_count, foreground, foreground_stats, _ = cv2.connectedComponentsWithStats(
         refined, connectivity=8)
@@ -2919,6 +2945,9 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         "filled_hole_pixels": sum(item["area"] for item in filled_holes),
         "filled_texture_hole_count": len(filled_texture_holes),
         "filled_texture_hole_pixels": sum(item["area"] for item in filled_texture_holes),
+        "filled_compact_texture_hole_count": len(filled_compact_texture_holes),
+        "filled_compact_texture_hole_pixels": sum(
+            item["area"] for item in filled_compact_texture_holes),
         "post_smoothing_filled_hole_count": len(post_smoothing_filled_holes),
         "post_smoothing_filled_hole_pixels": sum(
             item["area"] for item in post_smoothing_filled_holes),
@@ -2933,7 +2962,11 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         "maximum_hole_span": maximum_hole_span,
         "maximum_texture_hole_area": maximum_texture_hole_area,
         "maximum_texture_hole_span": maximum_texture_hole_span,
+        "maximum_compact_texture_hole_area": maximum_compact_texture_hole_area,
+        "maximum_compact_texture_hole_span": maximum_compact_texture_hole_span,
+        "maximum_compact_texture_aspect_ratio": maximum_compact_texture_aspect_ratio,
         "preserved_component_count": before_components,
+        "geometry_cleanup_version": 2,
         "route": "candidate_only",
     }
     adjustment.update(boundary_audit or {

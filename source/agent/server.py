@@ -3868,6 +3868,7 @@ def cleanup_pallet_candidates(index):
             if isinstance(item, dict)
             and item.get("reason_code") == "pallet_texture_geometry_cleanup"
             and "boundary_simplification_applied" in item
+            and int(item.get("geometry_cleanup_version") or 1) >= 2
             and type(item.get("shape_id")) is int
         }
         refreshed, adjustments = [], []
@@ -3909,7 +3910,7 @@ def cleanup_pallet_candidates(index):
                 copy.deepcopy(current_run.get("candidate_geometry_adjustments", []))
                 + adjustments),
             "candidate_geometry_cleanup_refresh": {
-                "schema_version": "labelagent.pallet_geometry_refresh.v1",
+                "schema_version": "labelagent.pallet_geometry_refresh.v2",
                 "adjusted_candidate_count": len(adjustments),
                 "prior_candidate_artifact_sha256": binding["candidate_artifact_sha256"],
                 "candidate_artifact_sha256": new_artifact_sha,

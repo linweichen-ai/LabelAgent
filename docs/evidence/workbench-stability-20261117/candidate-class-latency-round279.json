@@ -1,0 +1,59 @@
+{
+  "schema_version": "labelagent.candidate-class-latency-round279.summary.v1",
+  "date": "2026-11-20",
+  "coverage": {
+    "cvat_pallet_candidates": 1143,
+    "cvat_old_audit_targets": 22,
+    "cvat_current_audit_targets": 31,
+    "cvat_added_extreme_thin_targets": 9,
+    "cvat_affected_frames": [72, 92, 94, 118, 131, 132, 133, 147],
+    "cvat_affected_frame_count": 8,
+    "capture_pallet_candidates": 4423,
+    "capture_old_audit_targets": 7,
+    "capture_current_audit_targets": 7,
+    "capture_added_extreme_thin_targets": 0
+  },
+  "batch2": {
+    "frame92": {
+      "candidate_ids": [10, 14],
+      "sequential_seconds": 17.412,
+      "batch_seconds": 15.91,
+      "latency_reduction_fraction": 0.0863,
+      "semantic_core_matches": 2,
+      "route_matches": 2,
+      "candidate_count": 2,
+      "all_uncached": true
+    },
+    "frame118": {
+      "candidate_ids": [5, 9],
+      "sequential_seconds": 20.228,
+      "batch_seconds": 15.25,
+      "latency_reduction_fraction": 0.2461,
+      "semantic_core_matches": 1,
+      "route_matches": 1,
+      "candidate_count": 2,
+      "all_uncached": true,
+      "regression": "candidate 5 changed from human_review_required to candidate_preserved"
+    },
+    "production_gate": "rejected"
+  },
+  "compact_single_budget": {
+    "frame": 132,
+    "candidate_ids": [5, 9],
+    "baseline_max_tokens": 768,
+    "compact_max_tokens": 384,
+    "baseline_seconds": 14.846,
+    "compact_seconds": 14.674,
+    "latency_reduction_fraction": 0.0116,
+    "semantic_core_matches": 2,
+    "route_matches": 2,
+    "candidate_count": 2,
+    "all_uncached": true,
+    "production_gate": "rejected_insufficient_gain"
+  },
+  "production_source_changed": false,
+  "candidate_mutated": false,
+  "human_truth": false,
+  "approved_for_training": false,
+  "approved_for_deployment": false
+}

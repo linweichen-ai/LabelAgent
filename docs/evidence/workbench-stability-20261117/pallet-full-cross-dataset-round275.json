@@ -1,6 +1,9 @@
 {
   "schema_version": "labelagent.pallet_full_cross_dataset_round275.v1",
   "observed_date": "2026-11-20",
+  "interpretation_status": "superseded_by_round276_string_id_validation_fix",
+  "superseded_by": "docs/PALLET_STRING_ID_GEOMETRY_ROUND276_20261120.md",
+  "correction": "The recorded zero adjustments remain historical evidence, but they do not prove all candidates were intentionally skipped. Imported string IDs were rejected by the legacy integer-only final geometry validator.",
   "source": {
     "candidate_path": "D:\\Apps\\LabelAgent\\work\\datasets\\Capture_20261103\\sam3_baseline\\candidates_by_topic.json",
     "candidate_sha256": "591ebba97aeaca4f58dfcb0eecfd79ec026b4915aa670143d46d9702181b7f92",

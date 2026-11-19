@@ -333,6 +333,22 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(audit["smoothing_kernel"], 5)
         self.assertEqual(audit["filled_texture_hole_count"], 1)
 
+    def test_pallet_cleanup_preserves_imported_string_candidate_id(self):
+        mask = np.zeros((100, 140), dtype=np.uint8)
+        mask[10:90, 10:130] = 1
+        mask[25:30, 25:30] = 0
+        shape = _shape_from_mask(mask, "pallet", 1)
+        shape["id"] = "sam3-camera_0-7-pallet-2"
+
+        refined, audit = workflow.refine_pallet_candidate_geometry(
+            shape, 140, 100)
+
+        self.assertIsNotNone(audit)
+        self.assertEqual(refined["id"], "sam3-camera_0-7-pallet-2")
+        self.assertGreaterEqual(audit["filled_hole_count"], 1)
+        self.assertEqual(audit["geometry_cleanup_version"], 5)
+        self.assertEqual(audit["route"], "candidate_only")
+
     def test_pallet_cleanup_keeps_safe_hole_fill_when_smoothing_exceeds_budget(self):
         mask = np.zeros((480, 640), dtype=np.uint8)
         mask[40:440, 80:560] = 1

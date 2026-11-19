@@ -1,0 +1,97 @@
+{
+  "schema_version": "labelagent.pallet_string_id_geometry_round276.v1",
+  "observed_date": "2026-11-20",
+  "root_cause": {
+    "imported_candidate_id_type": "string",
+    "legacy_final_validator_id_type": "integer_only",
+    "effect": "valid geometry replacements were rejected after proposal generation",
+    "fix_scope": "pallet_geometry_cleanup_internal_validation_only",
+    "interactive_edit_contract_changed": false,
+    "candidate_id_preserved": true
+  },
+  "source": {
+    "candidate_sha256": "591ebba97aeaca4f58dfcb0eecfd79ec026b4915aa670143d46d9702181b7f92",
+    "candidate_count": 4423,
+    "unique_source_image_count": 573,
+    "topic_candidate_counts": {
+      "/capture/camera_0/image": 1593,
+      "/capture/camera_1/image": 1513,
+      "/capture/camera_2/image": 857,
+      "/capture/camera_3/image": 460
+    }
+  },
+  "full_audit": {
+    "size_bands": {
+      "tiny_skipped": {"count": 4, "adjusted": 0, "maximum_change_ratio": 0.0},
+      "small": {"count": 3100, "adjusted": 3082, "maximum_change_ratio": 0.025},
+      "medium": {"count": 1307, "adjusted": 1298, "maximum_change_ratio": 0.019845},
+      "large": {"count": 12, "adjusted": 11, "maximum_change_ratio": 0.008073}
+    },
+    "adjusted_count": 4391,
+    "boundary_simplified_count": 4391,
+    "median_boundary_vertex_reduction_ratio": 0.625,
+    "filled_hole_count": 18,
+    "component_merge_count": 0,
+    "component_count_violation_count": 0,
+    "structural_hole_retention_violation_count": 0,
+    "change_budget_violation_count": 0,
+    "gate_passed": true,
+    "full_report_bytes": 5738032,
+    "full_report_sha256": "04bdb1dab4d2755e5a885172a558ec897854ba0281f9db9a8808b00ccfe4bbd3"
+  },
+  "visual_review": {
+    "complexity_top16": {
+      "adjusted_count": 16,
+      "ids_preserved": true,
+      "minimum_change_ratio": 0.00152672,
+      "maximum_change_ratio": 0.02353381,
+      "contact_sheet_sha256": "cb0c01ae124276442e7a62df86ade259cb00c495d981658aa82d798e9137aa92"
+    },
+    "change_ratio_top16": {
+      "contact_sheet_sha256": "be4cb7c6bfcdb92468f54d35da844d56a11254f44917fdb02957717700e1c98c",
+      "cross_instance_expansion_observed": false,
+      "ground_capture_observed": false
+    },
+    "large_candidates": {
+      "reviewed_count": 12,
+      "maximum_change_ratio": 0.008073,
+      "contact_sheet_sha256": "34b3392dfdaecbf285a14730956aa490f2413e3a17c3f1eb94252482724d70ee",
+      "cross_instance_expansion_observed": false,
+      "ground_capture_observed": false
+    }
+  },
+  "tests": {
+    "pallet_cleanup_focused": 12,
+    "audit_tool_tests": 14,
+    "python_tests": 1064,
+    "python_subtests": 186,
+    "frontend_node_tests": 151,
+    "python_compile_passed": true,
+    "node_syntax_passed": true,
+    "diff_check_passed": true
+  },
+  "deployment": {
+    "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\round276-string-id-pallet-predeploy-20261120-021930",
+    "old_workflow_sha256": "e83b0e6043faa0f48392b27e72c13b59be5c144b5f4549646fd8879644830fa7",
+    "new_workflow_sha256": "d2b6deb9382e61590bc0e8b71a869358b9e94b783fc028aabfed0b8aadf2baf5",
+    "production_matches_worktree": true,
+    "workbench_http_status": 200,
+    "run_status": "idle",
+    "selected_topic_preserved": "/CVAT/Task3/images",
+    "production_smoke": {
+      "string_id_preserved": true,
+      "adjusted": true,
+      "route": "candidate_only",
+      "geometry_cleanup_version": 5
+    }
+  },
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "existing_candidate_files_changed": false,
+    "model_weights_changed": false,
+    "training_started": false,
+    "oss_changed": false
+  }
+}

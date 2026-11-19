@@ -3066,7 +3066,8 @@ def _simplify_pallet_boundary(shape, original_mask, width, height, *,
         proposal.update(
             parts=parts, points=parts[0]["points"], holes=parts[0]["holes"])
         after_vertices = _pallet_geometry_vertex_count(proposal)
-        if after_vertices >= before_vertices or not valid_shape(proposal, width, height):
+        if (after_vertices >= before_vertices
+                or not _valid_pallet_geometry_shape(proposal, width, height)):
             continue
         proposal_mask = _rasterize(proposal, width, height).astype(np.uint8)
         total_changed = int(np.count_nonzero(proposal_mask != original_mask))
@@ -3092,6 +3093,23 @@ def _simplify_pallet_boundary(shape, original_mask, width, height, *,
             "minimum_structural_hole_retention": round(minimum_retention, 6),
         }, proposal_mask
     return shape, None, baseline_mask
+
+
+def _valid_pallet_geometry_shape(shape, width, height):
+    """Validate geometry while preserving imported machine-candidate IDs.
+
+    Interactive edit operations intentionally require integer IDs, but imported
+    SAM candidate collections use stable string IDs.  Geometry cleanup never
+    addresses an edit operation by ID and preserves the identifier verbatim, so
+    validate a shallow probe with a temporary integer rather than rejecting an
+    otherwise valid replacement.
+    """
+    identifier = shape.get("id") if isinstance(shape, dict) else None
+    if type(identifier) is int:
+        return valid_shape(shape, width, height)
+    if not isinstance(identifier, str) or not identifier.strip():
+        return False
+    return valid_shape({**shape, "id": 1}, width, height)
 
 
 def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=96,
@@ -3326,7 +3344,8 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         return shape, None
     if changed:
         replacement = _shape_from_mask(refined, shape["label"], shape["id"])
-        if replacement is None or not valid_shape(replacement, width, height):
+        if (replacement is None
+                or not _valid_pallet_geometry_shape(replacement, width, height)):
             return shape, None
         for key, value in shape.items():
             if key not in {"id", "label", "points", "holes", "parts"}:

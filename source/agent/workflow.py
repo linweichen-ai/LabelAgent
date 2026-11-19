@@ -2677,6 +2677,30 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
     if smoothing_applied:
         refined = smoothed
 
+    # Median smoothing can divide an irregular texture gap into a few tiny
+    # enclosed remnants. Run one conservative micro-hole pass afterwards, but
+    # do not reuse the broader texture-hole allowance here: long structural
+    # openings that were split by visible supports must remain reviewable.
+    post_smoothing_filled_holes = []
+    if smoothing_applied:
+        post_background = (refined == 0).astype(np.uint8)
+        post_count, post_components, post_stats, _ = cv2.connectedComponentsWithStats(
+            post_background, connectivity=8)
+        post_border_labels = set(np.unique(np.concatenate((
+            post_components[0, :], post_components[-1, :],
+            post_components[:, 0], post_components[:, -1]))).tolist())
+        for component in range(1, post_count):
+            if component in post_border_labels:
+                continue
+            x, y, w, h, component_area = [int(value) for value in post_stats[component]]
+            if (component_area <= maximum_hole_area
+                    and max(w, h) <= maximum_hole_span):
+                refined[post_components == component] = 1
+                record = {"area": component_area,
+                          "bbox": [x, y, x + w - 1, y + h - 1]}
+                post_smoothing_filled_holes.append(record)
+        filled_holes.extend(post_smoothing_filled_holes)
+
     changed = int(np.count_nonzero(refined != mask))
     if not changed or changed / max(area, 1) > maximum_change_ratio:
         return shape, None
@@ -2694,6 +2718,9 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         "filled_hole_pixels": sum(item["area"] for item in filled_holes),
         "filled_texture_hole_count": len(filled_texture_holes),
         "filled_texture_hole_pixels": sum(item["area"] for item in filled_texture_holes),
+        "post_smoothing_filled_hole_count": len(post_smoothing_filled_holes),
+        "post_smoothing_filled_hole_pixels": sum(
+            item["area"] for item in post_smoothing_filled_holes),
         "removed_island_pixels": removed_island_pixels,
         "smoothing_applied": smoothing_applied,
         "smoothing_kernel": smoothing_kernel if smoothing_applied else None,

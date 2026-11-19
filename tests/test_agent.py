@@ -287,6 +287,27 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(output[19, 200], 0)
         self.assertLessEqual(audit["change_ratio"], 0.025)
 
+    def test_pallet_cleanup_removes_micro_hole_left_by_boundary_smoothing(self):
+        mask = np.zeros((100, 140), dtype=np.uint8)
+        mask[10:90, 10:130] = 1
+        candidate = _shape_from_mask(mask, "pallet", 9)
+        real_median_blur = workflow.cv2.medianBlur
+
+        def smoothing_with_micro_hole(image, kernel):
+            output = real_median_blur(image, kernel)
+            output[40:45, 40:45] = 0
+            return output
+
+        with patch.object(workflow.cv2, "medianBlur",
+                          side_effect=smoothing_with_micro_hole):
+            refined, audit = workflow.refine_pallet_candidate_geometry(
+                candidate, 140, 100)
+        output = _rasterize(refined, 140, 100)
+
+        self.assertEqual(output[42, 42], 1)
+        self.assertEqual(audit["post_smoothing_filled_hole_count"], 1)
+        self.assertEqual(audit["post_smoothing_filled_hole_pixels"], 25)
+
     def test_pallet_cleanup_skips_small_distant_instances(self):
         candidate = shape(shape_id=3, label="pallet", left=2, right=12)
         refined, audit = workflow.refine_pallet_candidate_geometry(candidate, 40, 40)

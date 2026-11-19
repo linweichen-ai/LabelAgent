@@ -223,6 +223,20 @@ class EditTests(unittest.TestCase):
         self.assertTrue(applied)
         self.assertFalse(queue)
 
+    def test_instance_candidate_cannot_be_reclassified_wholesale_as_floor(self):
+        pallet = shape(label="pallet")
+        updated, applied, queue = apply_operations([pallet], [{
+            "operation": "reclassify", "shape_ids": [1], "label": "floor",
+            "reason": "single visual review guessed that the close pallet is floor",
+        }], ["pallet", "floor"], 40, 40, allow_high_risk_reclassify=True)
+        self.assertEqual(updated, [pallet])
+        self.assertFalse(applied)
+        self.assertEqual(
+            queue[0]["reason_code"],
+            "instance_to_global_surface_requires_human_review")
+        self.assertEqual(queue[0]["source_label"], "pallet")
+        self.assertEqual(queue[0]["target_label"], "floor")
+
 
 class WorkflowTests(unittest.TestCase):
     def test_pallet_cleanup_fills_texture_holes_and_preserves_structural_opening(self):

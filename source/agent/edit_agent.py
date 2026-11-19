@@ -302,6 +302,22 @@ def apply_operations(shapes, operations, labels, width, height, next_id=None, ga
                     "target_label": target_label,
                 })
                 continue
+            # An instance mask carries object-shaped geometry. Turning that
+            # entire mask into floor or slope from one visual review creates a
+            # disconnected global-surface fragment and can erase a real pallet,
+            # person or robot identity. Keep the instance candidate and require
+            # an explicit human decision instead; local boundary edits remain
+            # available to the Agent.
+            if (source_label in INSTANCE_LABELS
+                    and target_label in GLOBAL_TRAVERSABLE_LABELS):
+                review_queue.append({
+                    **item,
+                    "reason": "实例候选不能由单次模型复查整体改成地面或斜坡；已保留原候选并转人工复核",
+                    "reason_code": "instance_to_global_surface_requires_human_review",
+                    "source_label": source_label,
+                    "target_label": target_label,
+                })
+                continue
             area_ratio = (float(np.count_nonzero(_rasterize(current[shape_id], width, height)))
                           / float(width * height))
             # A broad traversable-surface mask often includes a foreground

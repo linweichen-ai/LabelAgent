@@ -112,6 +112,6 @@ Round232 的文件激活代次已经覆盖文件载入和相机切换，但以�
 
 继续沿同一原则审计剩余写接口，优先检查“清除机器结果、类别配置、参考描述和专项复核决定”是否也需要文件载入代次；只对确有跨窗口风险的写操作收紧，避免为了安全增加无意义等待。候选、人工真值和训练集隔离门禁保持不变。
 
-实现提交与双端回读哈希将在提交后写入本报告和总交接文档。
+实现、测试和首版文档提交 `13191364ad02b9223b5c8f3b80b68cd0005b7b70` 已推送 GitHub 与 CNB，并分别通过 `ls-remote` 精确读回；两端分支头与本地完全一致。未跟踪浏览器证据、厂内画面和数据未上传。
 
 机器证据见 [`evidence/workbench-stability-20261117/old-window-write-generation-round234.json`](evidence/workbench-stability-20261117/old-window-write-generation-round234.json)。

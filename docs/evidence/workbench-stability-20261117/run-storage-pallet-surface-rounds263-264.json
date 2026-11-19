@@ -1,0 +1,92 @@
+{
+  "schema_version": "labelagent.rounds263_264.evidence.v1",
+  "recorded_date": "2026-11-19",
+  "round263": {
+    "scope": "run_storage_preflight",
+    "ui_version": 154,
+    "app_js_version": 193,
+    "guide_js_version": 115,
+    "base_reserve_mib": 256,
+    "per_frame_reserve_mib": 8,
+    "warning_below_gib": 2,
+    "live_free_mib": 316.3,
+    "count_1": {
+      "required_mib": 264.0,
+      "ready": true,
+      "warning": true
+    },
+    "count_20": {
+      "required_mib": 416.0,
+      "ready": false,
+      "code": "storage_low",
+      "model_invoked": false
+    },
+    "tests": {
+      "python": "1029/1029",
+      "browser": "71/71"
+    },
+    "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\run-storage-preflight-round263-20261119-192000",
+    "commit": "eff7e6be77e5eb1efa4d7f1bbc33d85b1340367c"
+  },
+  "round264": {
+    "scope": "candidate_only_pallet_surface_cleanup_v2",
+    "dataset": "CVAT_Task3_20261028",
+    "topic": "/CVAT/Task3/images",
+    "frame": 100,
+    "shape_id": 9,
+    "holes_before": 10,
+    "holes_after": 4,
+    "filled_hole_count": 6,
+    "filled_hole_pixels": 2123,
+    "filled_compact_texture_hole_count": 4,
+    "filled_compact_texture_hole_pixels": 1777,
+    "changed_pixels": 2470,
+    "change_ratio": 0.019813,
+    "maximum_change_ratio": 0.025,
+    "minimum_structural_hole_retention": 0.926136,
+    "minimum_required_structural_hole_retention": 0.75,
+    "remaining_structural_holes": [
+      {"area": 580, "width": 64, "height": 11},
+      {"area": 543, "width": 57, "height": 13},
+      {"area": 331, "width": 44, "height": 10},
+      {"area": 310, "width": 36, "height": 10}
+    ],
+    "live_candidate_count": 12,
+    "live_pallet_count": 11,
+    "v2_adjusted_candidate_count": 11,
+    "repeat_request": {
+      "changed": false,
+      "adjusted_candidate_count": 0
+    },
+    "boundaries": {
+      "candidate_only": true,
+      "human_truth": false,
+      "truth_count": 0,
+      "approved_for_training": false,
+      "approved_for_deployment": false
+    },
+    "tests": {
+      "targeted": "3/3",
+      "python": "1030/1030",
+      "browser": "71/71",
+      "compile_and_diff_check": "passed"
+    },
+    "service": {
+      "run_status": "idle",
+      "model_ready": true,
+      "sam_ready": true,
+      "vlm_ready": true
+    },
+    "production_sha256": {
+      "source/agent/server.py": "CD2F557074789A3D8BF0049BAC7EB62F6B8E49FE144E6D095EE95E653ADAB119",
+      "source/agent/workflow.py": "483CCF0853AB2CF19534C5756D3E10D365E8CC52022661BB79E74FDCA087CE73"
+    },
+    "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\pallet-surface-cleanup-round264-20261119-193900",
+    "implementation_commit": "c8785c03cc228410e28df3003e45fecafa523d3a",
+    "local_images_not_published": [
+      "artifacts/pallet-surface-cleanup-round264/frame100-close-pallet-current-v2.jpg",
+      "artifacts/pallet-surface-cleanup-round264/frame100-source-current-v2.jpg",
+      "artifacts/pallet-surface-cleanup-round264/frame100-live-deployed-v2.jpg"
+    ]
+  }
+}

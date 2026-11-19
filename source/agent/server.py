@@ -5300,6 +5300,10 @@ def run_workflow():
                       for target in targets}
         runs = {str(target): copy.deepcopy(state.get("agent_runs", {}).get(str(target)))
                 for target in targets}
+        review_statuses = {
+            str(target): copy.deepcopy(
+                state.get("candidate_review_status", {}).get(str(target)))
+            for target in targets}
         target_truth = {str(target): copy.deepcopy(state.get("truth", {}).get(str(target)))
                         for target in targets}
         failed_frames = []
@@ -5419,8 +5423,49 @@ def run_workflow():
                     bind_merged_candidate_references(result, merged_id_map)
                 candidate_artifact_sha256 = _sha256_json(combined)
                 input_sha256 = hashlib.sha256(target_image).hexdigest()
+                class_audits, class_review_queue = [], []
+                audit_version = candidate_class_audit_version()
+                pallet_audit_ids = [
+                    candidate.get("id") for candidate in combined
+                    if str(candidate.get("label", "")).casefold() == "pallet"
+                    and candidate_requires_class_audit(candidate)
+                ] if not failed else []
+                if pallet_audit_ids and not defer_agent_review:
+                    update_run_status(
+                        phase="candidate_class_audit", frame=target,
+                        completed=len(results), audit_completed=0,
+                        audit_total=len(pallet_audit_ids))
+                    class_audits, class_review_queue = audit_high_risk_candidates(
+                        config, target_image, combined, labels,
+                        VISIBLE_LABEL_DEFINITIONS, chat,
+                        check_cancelled=check_cancelled,
+                        tolerate_errors=True,
+                        candidate_ids=set(pallet_audit_ids),
+                        on_progress=lambda completed, total, candidate, audit: update_run_status(
+                            phase="candidate_class_audit", frame=target,
+                            audit_completed=completed, audit_total=total),
+                        batch_chat=chat_batch)
+                    for audit in class_audits:
+                        audit["audit_version"] = audit_version
+                        audit["audit_sha256"] = _sha256_json({
+                            field: value for field, value in audit.items()
+                            if field != "audit_sha256"})
+                    for entry in class_review_queue:
+                        entry["audit_sha256"] = next(
+                            audit["audit_sha256"] for audit in class_audits
+                            if audit["candidate_id"] == entry["candidate_id"])
+                final_review_queue = list(result["review_queue"]) + class_review_queue
+                class_review_status = {
+                    audit["candidate_sha256"]: {
+                        "candidate_fingerprint": audit["candidate_sha256"],
+                        "candidate_artifact_sha256": candidate_artifact_sha256,
+                        "audit_sha256": audit["audit_sha256"],
+                        "route": audit["route"],
+                    }
+                    for audit in class_audits
+                }
                 replacement_run = result["agent"] | {
-                    "review_queue": result["review_queue"], "applied": result["applied"],
+                    "review_queue": final_review_queue, "applied": result["applied"],
                     "candidates_added": 0 if failed else result["candidates_added"],
                     "existing_candidates_preserved": failed,
                     "agent_review_status": ("pending" if defer_agent_review and not failed
@@ -5430,6 +5475,15 @@ def run_workflow():
                     "candidate_artifact_sha256": candidate_artifact_sha256,
                     "input_sha256": input_sha256,
                     "human_review_required": True,
+                    "candidate_class_audits": class_audits,
+                    "candidate_class_audit_version": audit_version,
+                    "candidate_class_audit_status": (
+                        "blocked_on_agent_review" if defer_agent_review and not failed
+                        else "complete"),
+                    "candidate_class_audit_deferred": bool(
+                        defer_agent_review and not failed),
+                    "candidate_class_audit_total": len(pallet_audit_ids),
+                    "candidate_class_audit_scope": "solid_pallet_after_agent",
                     "inspection_trace": copy.deepcopy([
                         item for item in output["trace"]
                         if item.get("frame") == target
@@ -5456,6 +5510,8 @@ def run_workflow():
                             or state.get("truth", {}).get(key) != target_truth[key]
                             or state.get("candidates", {}).get(key) != candidates[key]
                             or state.get("agent_runs", {}).get(key) != runs[key]
+                            or state.get("candidate_review_status", {}).get(key)
+                            != review_statuses[key]
                             or reference_signature(reference) != reference_signature_snapshot):
                         raise StaleHumanReviewError("数据作用域、配置、标签、参考真值或目标帧已变化，未保存旧推理结果")
                     if failed:
@@ -5463,11 +5519,12 @@ def run_workflow():
                     else:
                         state.setdefault("candidates", {})[key] = combined
                     state.setdefault("agent_runs", {})[key] = replacement_run
+                    state.setdefault("candidate_review_status", {})[key] = class_review_status
                     save()
                     results.append({"frame": target,
                         "candidates_added": 0 if failed else result["candidates_added"],
                         "remaining": len(combined), "applied": result["applied"],
-                        "review_queue": result["review_queue"], "agent": result["agent"],
+                        "review_queue": final_review_queue, "agent": result["agent"],
                         "failed": failed, "existing_candidates_preserved": failed,
                         "agent_review_status": replacement_run["agent_review_status"],
                         "agent_review_deferred": replacement_run["agent_review_deferred"],

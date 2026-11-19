@@ -2754,6 +2754,66 @@ class ServerTests(unittest.TestCase):
             finally:
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work
 
+    def test_main_run_routes_solid_pallet_candidate_through_isolated_audit(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            original_truth = [shape(1, "pallet")]
+            server.state = {
+                "video": FakeVideo(), "topic": "camera0", "labels": ["pallet"],
+                "truth": {"0": copy.deepcopy(original_truth)},
+                "reference_frames": {"camera0": [0]}, "config": {},
+                "candidates": {}, "agent_runs": {}, "candidate_review_status": {},
+            }
+            server.run_status = {"status": "idle"}
+            description = {
+                "description": "pallet only",
+                "prompts": [{"label": "pallet", "text": "pallet"}],
+                "reference_signature": server.reference_signature(0),
+            }
+            inferred = {
+                "shapes": [shape(9, "pallet")], "candidates_added": 1,
+                "applied": [], "review_queue": [],
+                "agent": {"stop_reason": "done", "rounds": 1},
+            }
+            audit = {
+                "schema_version": "labelagent.blind_candidate_class_audit.v1",
+                "candidate_id": 9, "candidate_sha256": "f" * 64,
+                "route": "human_review_required", "candidate_mutated": False,
+                "human_truth": False, "approved_for_training": False,
+                "decision": {"classification": "conflict"},
+                "audit_sha256": "a" * 64,
+            }
+            queue = {
+                "source": "candidate_class_audit", "candidate_id": 9,
+                "shape_ids": [9], "route": "human_review_required",
+                "candidate_sha256": "f" * 64,
+                "candidate_artifact_sha256": "b" * 64,
+                "audit_sha256": "a" * 64, "reason": "solid box",
+            }
+            try:
+                with patch.object(server, "run", return_value=inferred), \
+                     patch.object(server, "candidate_requires_class_audit",
+                                  side_effect=lambda candidate: candidate.get("label") == "pallet"), \
+                     patch.object(server, "audit_high_risk_candidates",
+                                  return_value=([copy.deepcopy(audit)], [copy.deepcopy(queue)])) as focused:
+                    response = server.app.test_client().post("/api/run", json={
+                        "frame": 1, "count": 1, "description": description})
+                self.assertEqual(response.status_code, 200, response.json)
+                focused.assert_called_once()
+                self.assertEqual(response.json["frames"][0]["review_queue"][0]["source"],
+                                 "candidate_class_audit")
+                saved = server.state["agent_runs"]["1"]
+                self.assertEqual(saved["candidate_class_audit_status"], "complete")
+                self.assertEqual(saved["candidate_class_audit_total"], 1)
+                self.assertEqual(saved["candidate_class_audits"][0]["candidate_id"], 9)
+                self.assertEqual(
+                    server.state["candidate_review_status"]["1"]["f" * 64]["route"],
+                    "human_review_required")
+                self.assertEqual(server.state["truth"]["0"], original_truth)
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
     def test_run_summary_is_bounded_scoped_and_recoverable_after_idle_restart(self):
         old_state, old_status, old_work = server.state, server.run_status, server.WORK
         with tempfile.TemporaryDirectory() as directory:

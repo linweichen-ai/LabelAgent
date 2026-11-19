@@ -1,5 +1,5 @@
 {
-  "schema_version": "labelagent.pallet_geometry_semantic_rounds251_253.v1",
+  "schema_version": "labelagent.pallet_geometry_semantic_rounds251_254.v1",
   "date": "2026-11-19",
   "candidate_only": true,
   "human_truth_modified": false,
@@ -61,6 +61,22 @@
       "confidence": 0.98,
       "candidate_mutated": false,
       "note": "The isolated-mask view routed the solid box/container candidate to human review."
+    },
+    "frame_120_main_run_automatic_audit": {
+      "task_id": "5fcd253dd04f4659b97484e9162d9c50",
+      "elapsed_seconds": 13.837,
+      "status": "completed",
+      "remaining_candidates": 11,
+      "candidate_artifact_sha256": "39088b238e50d6472896dd0f5d67c877192a139887a45337cddc88324cb987ec",
+      "audit_total": 1,
+      "candidate_id": 7,
+      "route": "human_review_required",
+      "classification": "conflict",
+      "confidence": 0.98,
+      "candidate_mutated": false,
+      "candidate_only": true,
+      "human_truth_modified": false,
+      "approved_for_training": false
     }
   },
   "runtime_storage": {
@@ -70,12 +86,12 @@
     "final_d_free_gib": 1.33
   },
   "tests": {
-    "python": {"passed": 1019, "failed": 0},
+    "python": {"passed": 1020, "failed": 0},
     "browser": {"passed": 145, "failed": 0}
   },
   "production_hashes_sha256": {
     "candidate_class_audit.py": "CB368B4CF62E849376E0E37830461B9B9E676B9EE4008252EC65A5B90802140E",
-    "server.py": "DC53B31D624ADE784A638307B69B6C647F8C4F62987FCC30168B313016BA1A4B",
+    "server.py": "CED317163CB7E4B3F8417D1AE2525B48304FDED11CB116ADBBA73B954C803CA6",
     "workflow.py": "B35B31079F412634F533C29F1E76691AF10E6D78D3E0FBFA961BF69A4F6C3668",
     "manage_remote.py": "38A1A87987FDFD2D7929F31A4BB66CD14FA7CAA4FB0F95885487CFED7BE36AD6"
   }

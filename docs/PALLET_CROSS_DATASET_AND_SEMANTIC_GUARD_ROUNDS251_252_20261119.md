@@ -1,4 +1,4 @@
-# LabelAgent 栈板跨数据审计与语义保护（Round 251–253）
+# LabelAgent 栈板跨数据审计与语义保护（Round 251–254）
 
 ## 1. 用户看到的问题
 
@@ -38,6 +38,8 @@ CVAT 样本最大变化比例为 2.1998%，带结构孔候选的最低保留率�
 
 正式工作台复验结果：第 132 帧候选 9 和第 120 帧候选 7 均以 0.98 置信度判为 `conflict`，理由是只有实心箱体、没有板条、承重板、支脚或叉孔，二者都进入 `human_review_required`。候选没有被自动删除，人工真值和训练批准仍未改写。该结果解决了“邻近蓝色栈板把纸箱误保留”的复核干扰；是否进一步把纸箱和下方真实栈板拆成两个实例，仍需受控的 SAM 负提示/ROI 实验。
 
+Round 254 将这项隔离复核接入正常的“开始推理”主流程，而不再依赖单独调用复核入口。它只在 Agent 完成后检查满足尺寸、填充率和箱体形状门槛的 pallet 候选；普通细长栈板不增加这项 VLM 请求。失败会产生人工复核记录，不会让整帧推理失败。真实第 120 帧任务 `5fcd253dd04f4659b97484e9162d9c50` 在 13.837 秒完成，保存前自动审计 1 项并把候选 7 以 0.98 置信度路由到人工复核，候选掩码、人工真值和训练批准均未修改。
+
 ## 5. 工作台稳定性修复
 
 部署重启时发现 D 盘临时目录低于 256 MiB 安全线。管理器现在会在 D 盘空间不足时把运行时临时文件自动转到 `%LOCALAPPDATA%\LabelAgent\runtime-temp\workbench-8765`，但仍保留 256 MiB 的硬性停机保护。旧日志和一个不活动工作树已做哈希校验后迁移到 C 盘备份，未删除模型、数据、人工真值或 Mask2Former 恢复包。
@@ -46,12 +48,12 @@ CVAT 样本最大变化比例为 2.1998%，带结构孔候选的最低保留率�
 
 ## 6. 验收和安全边界
 
-- Python：1019/1019；
+- Python：1020/1020；
 - 浏览器交互：145/145；
 - 候选结果：是；
 - 人工真值改写：否；
 - 自动批准训练：否；
-- 回滚备份：`D:\Apps\LabelAgent\.local\backups\pallet-semantic-negative-round251-20261119-154109`、`D:\Apps\LabelAgent\.local\backups\pallet-semantic-audit-round252-20261119-160829` 与 `D:\Apps\LabelAgent\.local\backups\pallet-isolated-audit-round253-20261119-162925`。
+- 回滚备份：`D:\Apps\LabelAgent\.local\backups\pallet-semantic-negative-round251-20261119-154109`、`D:\Apps\LabelAgent\.local\backups\pallet-semantic-audit-round252-20261119-160829`、`D:\Apps\LabelAgent\.local\backups\pallet-isolated-audit-round253-20261119-162925` 与 `D:\Apps\LabelAgent\.local\backups\main-run-pallet-audit-round254-20261119-163945`。
 
 结构化证据见 `docs/evidence/workbench-stability-20261117/pallet-geometry-semantic-rounds251-252.json`。跨数据集原始审计 JSON 和可视化留在本机 `artifacts/pallet-geometry-cross-dataset-round251/`。
 

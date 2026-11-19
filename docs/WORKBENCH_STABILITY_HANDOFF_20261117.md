@@ -2311,3 +2311,5 @@ Round267对Capture_20261103的结论仍主要来自候选尺寸门禁；原有�
 候选审核现在加强字段组合约束，仅在协议错误时最多盲重试一次；对“已经明确不支持候选、但原因码误写为visible_known_label”的唯一窄矛盾，只修正原因码，不改类别、置信度、可见证据、候选或路由。蓝塑料、木质和严重遮挡三类独立样本均一次请求完成，分别为9.168秒、6.877秒和10.544秒；前两项保留pallet，遮挡碎片进入人工复核。
 
 正式工作台CVAT Task3第132帧旧协议记录被正确失效，新协议于8.552秒完成纸箱候选复核：0.98置信度、`human_review_required`、`protocol_retry_count=0`，只执行窄原因码修复。候选仍为14项且候选产物哈希前后相同，人工真值仍不存在，训练批准仍为false。正式测试1044项及186个子测试通过；生产文件哈希`2839A559...8A87E`，回滚点`candidate-audit-protocol-round269-20261119-235846`，实现提交`fe07aac350afeaff75ab5b9ac1f03aaf9edad9b9`。完整报告见`docs/PALLET_MATERIAL_AUDIT_PROTOCOL_ROUND269_20261120.md`，结构化证据见`docs/evidence/workbench-stability-20261117/pallet-material-audit-protocol-round269.json`；厂内图像只保留本机。
+
+收尾盘点确认工作树`artifacts`已是指向D盘归档区的目录联接，3939个文件、1,047,061,833字节并不占用C盘，因此未重复迁移或删除。C盘仍仅约87–99 MiB，后续需继续精确定位其他占用；工作台运行临时目录仍固定在D盘，避免低空间直接打断当前演示链路。

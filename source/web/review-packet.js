@@ -165,8 +165,13 @@
 
   async function refreshCompletion() {
     if (!packet?.ready_to_navigate) { completed = new Map(); render(); return; }
+    const scope = window.currentWorkbenchFrameState?.();
+    const activationGeneration = scope?.file_activation_generation;
+    if (!Number.isInteger(activationGeneration)) {
+      throw new Error('当前文件载入代次不可用，请刷新工作台后重新打开专项复核');
+    }
     const [preparation, reviewData, decisionData] = await Promise.all([
-      request('/api/reference-preparation'),
+      request(`/api/reference-preparation?file_activation_generation=${encodeURIComponent(activationGeneration)}`),
       request(`/api/human_reviews?topic=${encodeURIComponent(packet.topic)}`),
       request(`/api/review_packets/${encodeURIComponent(packet.packet_id)}/decisions`),
     ]);

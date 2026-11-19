@@ -201,8 +201,8 @@ test('候选生成、Agent 精修和类别复核只读回当前帧绑定', () =>
 
 test('参考准备弹窗只读取轻量目录并在选帧后按需读取几何', () => {
   const prep = source('reference-prep.js');
-  assert.match(prep, /fetch\('\/api\/reference-preparation'/);
-  assert.match(prep, /window\.readCompactFrameStateSnapshot\(frameId, expected\.topic, expected\.path\)/);
+  assert.match(prep, /\/api\/reference-preparation\?file_activation_generation=/);
+  assert.match(prep, /window\.readCompactFrameStateSnapshot\(frameId, expected\.topic, expected\.path,[\s\S]*expected\.file_activation_generation\)/);
   assert.doesNotMatch(prep, /fetch\('\/api\/state'/);
   assert.match(prep, /state\?\.truth_index \|\| state\?\.truth/);
   assert.match(prep, /state\?\.candidate_index \|\| state\?\.candidates/);
@@ -339,8 +339,8 @@ test('保存真值和锁定参考帧只读回目标帧且保留强绑定校验',
   const app = source('app.js');
   const lock = app.slice(app.indexOf('async function lockReferenceFrame'), app.indexOf("$('referenceButton').onclick"));
   const save = app.slice(app.indexOf('async function saveCurrentTruth'), app.indexOf("$('truthSave').onclick"));
-  assert.match(lock, /readCompactFrameStateSnapshot\(target,targetTopic,targetPath\)/);
-  assert.match(save, /readCompactFrameStateSnapshot\(targetFrame,targetTopic,targetPath\)/);
+  assert.match(lock, /readCompactFrameStateSnapshot\(target,targetTopic,targetPath,targetGeneration\)/);
+  assert.match(save, /readCompactFrameStateSnapshot\(targetFrame,targetTopic,targetPath,targetGeneration\)/);
   assert.doesNotMatch(lock, /fetch\('\/api\/state'/);
   assert.doesNotMatch(save, /fetch\('\/api\/state'/);
   assert.match(lock, /review\?\.truth_sha256!==expectedHash/);
@@ -1246,7 +1246,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=186/);
+  assert.match(source('index.html'), /app\.js\?v=187/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1307,7 +1307,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{\s*invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=186/);
+  assert.match(source('index.html'), /app\.js\?v=187/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1355,7 +1355,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 3);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=186/);
+  assert.match(source('index.html'), /app\.js\?v=187/);
 });
 
 test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () => {

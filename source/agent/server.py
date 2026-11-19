@@ -106,6 +106,24 @@ def assert_current_file_activation(generation):
             "已有更新的文件选择，本次过期加载未应用；请以最后一次选择为准")
 
 
+def assert_request_file_activation(payload, key="file_activation_generation"):
+    """Bind a read or mutation to the exact browser file activation.
+
+    A path and topic are not sufficient when the same file is reloaded.  The
+    monotonically increasing activation generation prevents an older browser
+    window from reading, promoting, rejecting, or referencing the newly loaded
+    session merely because its path and topic still match.
+    """
+    generation = payload.get(key)
+    if type(generation) is not int:
+        raise ValueError(f"{key} 必须是当前文件载入代次整数")
+    with file_activation_intent_lock:
+        if generation != file_activation_generation:
+            raise StaleHumanReviewError(
+                "数据文件已被重新载入，旧窗口请求已拒绝；请刷新后重新操作")
+    return generation
+
+
 def _normalize_refinement_id(value):
     """Return a canonical UUID for one deferred refinement request."""
     if value is None:
@@ -546,6 +564,7 @@ def _review_scope(frame_sha256, frame):
 
 def _assert_review_binding(body, *, frame, frame_sha256, candidate_sha256):
     """Validate the UI snapshot against values recomputed while holding lock."""
+    assert_request_file_activation(body, "expected_file_activation_generation")
     if body.get("topic") != state.get("topic"):
         raise StaleHumanReviewError("图像源已变化，请重新打开人工复核门禁")
     expected_frame = body.get("expected_frame_sha256")
@@ -1814,6 +1833,13 @@ def get_reference_preparation():
     opening the dialog cheap even when a dataset contains many dense masks.
     """
     with lock:
+        generation_text = request.args.get("file_activation_generation")
+        try:
+            requested_generation = int(generation_text)
+        except (TypeError, ValueError) as error:
+            raise ValueError("file_activation_generation 必须是当前文件载入代次整数") from error
+        assert_request_file_activation({
+            "file_activation_generation": requested_generation})
         recover_pending_human_reviews()
         video = state.get("video")
         topic = state.get("topic")
@@ -1839,6 +1865,7 @@ def get_reference_preparation():
             loaded=video is not None,
             path=str(video.path) if video is not None else "",
             topic=topic,
+            file_activation_generation=requested_generation,
             frame_count=frame_count,
             labels=copy.deepcopy(state.get("labels", [])),
             auto_labels=auto_labels,
@@ -1944,6 +1971,13 @@ def get_frame_state(index):
             raise ValueError("请先加载图像数据")
         requested_topic = request.args.get("topic")
         requested_path = request.args.get("path")
+        generation_text = request.args.get("file_activation_generation")
+        try:
+            requested_generation = int(generation_text)
+        except (TypeError, ValueError) as error:
+            raise ValueError("file_activation_generation 必须是当前文件载入代次整数") from error
+        assert_request_file_activation({
+            "file_activation_generation": requested_generation})
         if requested_topic != state["topic"]:
             raise StaleHumanReviewError("相机已变化，拒绝返回旧帧标注")
         if requested_path != str(state["video"].path):
@@ -1954,6 +1988,7 @@ def get_frame_state(index):
         payload = selected_frame_payload(index)
         payload.update(path=str(state["video"].path), topic=state["topic"],
                        frame=index, compact_geometry=True,
+                       file_activation_generation=requested_generation,
                        reference_frames=copy.deepcopy(state.get("reference_frames", {})))
         return jsonify(payload)
 
@@ -3166,6 +3201,8 @@ def set_auto_labels():
 def set_truth():
     body = request.get_json() or {}
     with lock:
+        assert_request_file_activation(
+            body, "expected_file_activation_generation")
         recover_pending_human_reviews()
         review = _parse_review(body)
         index = int(body["frame"])
@@ -3273,6 +3310,7 @@ def get_human_review_binding():
         index = int(body.get("frame", -1))
         if state["video"] is None or state["topic"] is None:
             raise ValueError("请先加载图像消息")
+        activation_generation = assert_request_file_activation(body)
         if body.get("topic") != state["topic"]:
             raise StaleHumanReviewError("图像源已变化，请刷新后重新复核")
         if not 0 <= index < state["video"].topics[state["topic"]]["count"]:
@@ -3284,6 +3322,7 @@ def get_human_review_binding():
         review_status = state.setdefault("candidate_review_status", {}).get(
             _review_status_key(index))
         return jsonify(frame=index, topic=state["topic"],
+                       file_activation_generation=activation_generation,
                        frame_sha256=frame_sha, candidate_sha256=candidate_sha,
                        dataset_id=scope["dataset_id"],
                        dataset_version=scope["dataset_version"], camera=scope["camera"],
@@ -3299,6 +3338,8 @@ def get_human_review_binding():
 def reject_candidate():
     body = request.get_json() or {}
     with lock:
+        assert_request_file_activation(
+            body, "expected_file_activation_generation")
         recover_pending_human_reviews()
         review = _parse_review(body)
         index = int(body.get("frame", -1))
@@ -3459,6 +3500,8 @@ def clear_auto_result(index):
 def set_reference_frame():
     body = request.get_json() or {}
     with lock:
+        activation_generation = assert_request_file_activation(
+            body, "expected_file_activation_generation")
         index = int(body.get("frame", -1))
         if state["video"] is None or state["topic"] is None or not 0 <= index < state["video"].topics[state["topic"]]["count"]:
             raise ValueError("帧号无效")
@@ -3484,7 +3527,8 @@ def set_reference_frame():
         refs = state.setdefault("reference_frames", {})
         refs[state["topic"]] = [index]
         save()
-        return jsonify(frame=index, topic=state["topic"])
+        return jsonify(frame=index, topic=state["topic"],
+                       file_activation_generation=activation_generation)
 
 
 @app.post("/api/config")

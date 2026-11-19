@@ -10,6 +10,7 @@ function context() {
   const start = source.indexOf('const candidateAuditSnapshots=');
   const end = source.indexOf('function referenceReviewScope', start);
   const scope = vm.createContext({frame: 3, topic: '/camera', loadedDataPath: 'file-a',
+    loadedFileActivationGeneration: 7,
     readCompactFrameStateSnapshot: async target => {
       const response = await scope.fetch(`/api/frame_state/${target}`);
       return response.json();
@@ -104,22 +105,22 @@ for (const scenario of ['命中','多候选','多候选一坏','疑似','冲突'
  if(['原图读取期间候选变化','读回审核变化','重复ID','非整数ID'].includes(scenario)){await assert.rejects(promise);assert.equal(posts,['重复ID','非整数ID'].includes(scenario)?1:0)}else{const result=await promise;assert.equal(posts,['命中','多候选','疑似','冲突'].includes(scenario)?0:1);assert.equal(result.candidate_class_audits.length,audits.length);assert.equal(ctx.referenceReviewedShapeKeys.size,1);assert.equal(ctx.referenceOpenSetReviewed,true)}
 });
 
-for (const scenario of ['success','frame','file','topic','truth','hash','receipt','readback-frame','readback-file','readback-hash','readback-hash-mismatch','readback-unverified','readback-match-false','readback-match-missing','receipt-hash-missing']) test(`保存真值延迟响应 ${scenario}`, async () => {
+for (const scenario of ['success','frame','file','topic','generation','truth','hash','receipt','readback-frame','readback-file','readback-hash','readback-hash-mismatch','readback-unverified','readback-match-false','readback-match-missing','receipt-hash-missing']) test(`保存真值延迟响应 ${scenario}`, async () => {
   const ctx=context(),items=candidates(),snapshot=JSON.stringify(items);
   Object.assign(ctx,{annotationMode:true,loading:false,playing:false,shapes:{},manualDrafts:{'3':items,'9':[{label:'保留'}]},autoDrafts:{},candidates:{'3':items,'9':[{label:'保留'}]},truthReviewStatus:{},truthFrameIndex:new Set(),candidateCountIndex:{'3':1,'9':1},referencePreparationIntent:null,generatedShapeFrame:null,generatedShapeTopic:'',selectedShapes:()=>items,refreshShapeList(){},updateReferenceStatus(){},draw(){},toast(){}});
   const result={saved:1,review:{file:'file-a',topic:'/camera',frame:3,truth_sha256:'truth-hash'},readback:{verified:true,truth_sha256_matches:true}};
   if(scenario==='readback-hash')result.readback.truth_sha256='truth-hash';if(scenario==='readback-hash-mismatch')result.readback.truth_sha256='wrong';if(scenario==='readback-match-false')result.readback.truth_sha256_matches=false;if(scenario==='readback-match-missing')delete result.readback.truth_sha256_matches;if(scenario==='readback-unverified')result.readback.verified=false;if(scenario==='receipt-hash-missing')delete result.review.truth_sha256;
-  ctx.window={workspaceMode:'manual',commitHumanReviewedTruth:async request=>{assert.notEqual(request.shapes,items);if(scenario==='frame')ctx.frame=9;if(scenario==='file')ctx.loadedDataPath='file-b';if(scenario==='topic')ctx.topic='/other';if(scenario==='receipt')result.review.frame=9;return result}};
-  ctx.fetch=async()=>({ok:true,json:async()=>{const value={path:'file-a',topic:'/camera',truth:{'3':JSON.parse(snapshot)},truth_review_status:{'3':{reusable_as_reference:true,truth_sha256:scenario==='hash'?'wrong':'truth-hash'}}};if(scenario==='truth')value.truth['3'][0].label='wrong';if(scenario==='readback-frame')ctx.frame=9;if(scenario==='readback-file')ctx.loadedDataPath='file-b';return value}});
+  ctx.window={workspaceMode:'manual',commitHumanReviewedTruth:async request=>{assert.notEqual(request.shapes,items);assert.equal(request.fileActivationGeneration,7);if(scenario==='frame')ctx.frame=9;if(scenario==='file')ctx.loadedDataPath='file-b';if(scenario==='topic')ctx.topic='/other';if(scenario==='generation')ctx.loadedFileActivationGeneration=8;if(scenario==='receipt')result.review.frame=9;return result}};
+  ctx.fetch=async()=>({ok:true,json:async()=>{const value={path:'file-a',topic:'/camera',file_activation_generation:7,truth:{'3':JSON.parse(snapshot)},truth_review_status:{'3':{reusable_as_reference:true,truth_sha256:scenario==='hash'?'wrong':'truth-hash'}}};if(scenario==='truth')value.truth['3'][0].label='wrong';if(scenario==='readback-frame')ctx.frame=9;if(scenario==='readback-file')ctx.loadedDataPath='file-b';return value}});
   const start=source.indexOf('async function saveCurrentTruth('),end=source.indexOf("$('truthSave').onclick",start);vm.runInContext(source.slice(start,end),ctx);
   if(scenario==='success'||scenario==='readback-hash'){await vm.runInContext('saveCurrentTruth()',ctx);assert.equal(JSON.stringify(ctx.shapes['3']),snapshot);assert.equal(ctx.manualDrafts['3'],undefined)}
   else {await assert.rejects(vm.runInContext('saveCurrentTruth()',ctx));assert.equal(ctx.shapes['3'],undefined);assert.equal(ctx.manualDrafts['3'],items);assert.equal(ctx.candidates['9'][0].label,'保留')}
 });
 
-for(const scenario of ['success','frame','file','content','hash']) test(`参考帧锁定读回 ${scenario}`,async()=>{
+for(const scenario of ['success','frame','file','generation','content','hash']) test(`参考帧锁定读回 ${scenario}`,async()=>{
  const ctx=context(),truth=candidates();Object.assign(ctx,{shapes:{'3':truth},truthReviewStatus:{'3':{truth_sha256:'truth-hash'}},window:{},updateReferenceStatus(){}});
- ctx.api=async()=>{if(scenario==='frame')ctx.frame=9;if(scenario==='file')ctx.loadedDataPath='other'};
- ctx.fetch=async()=>({ok:true,json:async()=>({path:'file-a',topic:'/camera',reference_frames:{'/camera':[3]},truth:{'3':scenario==='content'?[]:truth},truth_review_status:{'3':{truth_sha256:scenario==='hash'?'wrong':'truth-hash',reusable_as_reference:true}}})});
+ ctx.api=async(route,body)=>{assert.equal(body.expected_file_activation_generation,7);if(scenario==='frame')ctx.frame=9;if(scenario==='file')ctx.loadedDataPath='other';if(scenario==='generation')ctx.loadedFileActivationGeneration=8};
+ ctx.fetch=async()=>({ok:true,json:async()=>({path:'file-a',topic:'/camera',file_activation_generation:7,reference_frames:{'/camera':[3]},truth:{'3':scenario==='content'?[]:truth},truth_review_status:{'3':{truth_sha256:scenario==='hash'?'wrong':'truth-hash',reusable_as_reference:true}}})});
  const start=source.indexOf('async function lockReferenceFrame('),end=source.indexOf("$('referenceButton').onclick",start);vm.runInContext(source.slice(start,end),ctx);
  if(scenario==='success')await vm.runInContext('lockReferenceFrame()',ctx);else await assert.rejects(vm.runInContext('lockReferenceFrame()',ctx));
 });

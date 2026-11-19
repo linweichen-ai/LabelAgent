@@ -1,4 +1,5 @@
 import io
+import copy
 import json
 import tempfile
 import unittest
@@ -98,15 +99,23 @@ class ImageImportTests(unittest.TestCase):
             decoded = next(container.decode(video=0))
             self.assertEqual((decoded.width, decoded.height), (42, 34))
         shape = {"label": "车辆", "points": [[1, 1], [30, 1], [30, 25]], "holes": []}
+        with patch.object(server, "frame_image", wraps=server.frame_image) as frame_reader:
+            stale_binding = self.client.post("/api/human_review_binding", json={
+                "frame": 0, "topic": loaded.json["topic"],
+                "file_activation_generation": loaded.json["file_activation_generation"] - 1})
+        self.assertEqual(stale_binding.status_code, 409, stale_binding.json)
+        self.assertEqual(frame_reader.call_count, 0)
         binding_response = self.client.post("/api/human_review_binding", json={
-            "frame": 0, "topic": loaded.json["topic"]})
+            "frame": 0, "topic": loaded.json["topic"],
+            "file_activation_generation": loaded.json["file_activation_generation"]})
         self.assertEqual(binding_response.status_code, 200, binding_response.json)
         binding = binding_response.json
         review = {"reviewer_declared_id": "image-import-test",
                   "started_at": "2026-11-17T00:00:00Z",
                   "decision_idempotency_key": "image-import-persistence-0"}
-        saved = self.client.post("/api/truth", json={"frame": 0,
+        truth_payload = {"frame": 0,
             "shapes": [shape], "review": review, "topic": binding["topic"],
+            "expected_file_activation_generation": binding["file_activation_generation"],
             "expected_frame_sha256": binding["frame_sha256"],
             "expected_candidate_sha256": binding["candidate_sha256"],
             "expected_dataset_id": binding["dataset_id"],
@@ -114,7 +123,16 @@ class ImageImportTests(unittest.TestCase):
             "expected_camera": binding["camera"],
             "expected_dataset_split": binding["dataset_split"],
             "expected_split_policy": binding["split_policy"],
-            "expected_training_return_allowed": binding["training_return_allowed"]})
+            "expected_training_return_allowed": binding["training_return_allowed"]}
+        stale_payload = copy.deepcopy(truth_payload)
+        stale_payload["expected_file_activation_generation"] -= 1
+        stale_payload["review"]["decision_idempotency_key"] = "image-import-stale-generation"
+        with patch.object(server, "frame_image", wraps=server.frame_image) as frame_reader:
+            stale = self.client.post("/api/truth", json=stale_payload)
+        self.assertEqual(stale.status_code, 409, stale.json)
+        self.assertEqual(frame_reader.call_count, 0)
+        self.assertNotIn("0", server.state["truth"])
+        saved = self.client.post("/api/truth", json=truth_payload)
         self.assertEqual(saved.status_code, 200, saved.json)
         self.assertEqual(saved.json["saved"], 1)
         other = self.upload(photograph("JPEG"), "另一个.jpg").json["file"]
@@ -122,7 +140,8 @@ class ImageImportTests(unittest.TestCase):
         again = self.client.post(f"/api/files/{item['id']}/load").json
         self.assertTrue(again["compact_geometry"])
         restored = self.client.get("/api/frame_state/0", query_string={
-            "topic": again["topic"], "path": again["path"]})
+            "topic": again["topic"], "path": again["path"],
+            "file_activation_generation": again["file_activation_generation"]})
         self.assertEqual(restored.status_code, 200, restored.json)
         self.assertEqual(restored.json["truth"]["0"], [shape])
         persisted = json.loads((self.root / "state.json").read_text())

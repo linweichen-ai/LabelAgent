@@ -66,6 +66,7 @@
     const binding = active.binding;
     const payload = {
       topic: binding.topic,
+      expected_file_activation_generation: binding.file_activation_generation,
       expected_frame_sha256: binding.frame_sha256,
       expected_candidate_sha256: binding.candidate_sha256,
       expected_dataset_id: binding.dataset_id,
@@ -162,7 +163,8 @@
   async function openGate(request) {
     if (active) throw new Error('已有人工复核窗口正在处理');
     const startedAt = new Date().toISOString();
-    const bindingRequest = {frame: request.frame, topic: request.topic};
+    const bindingRequest = {frame: request.frame, topic: request.topic,
+      file_activation_generation: request.fileActivationGeneration};
     if (request.candidateSource === 'sam_point_prompt') {
       bindingRequest.draft_candidate = request.shapes;
       bindingRequest.draft_source = 'sam_point_prompt';
@@ -183,6 +185,7 @@
       <span><b>候选 SHA-256</b>${shortHash(binding.candidate_sha256)}</span>
       <span><b>候选来源</b>${binding.candidate_origin === 'browser_sam_point_draft' ? 'SAM 点提示草稿' : binding.candidate_origin === 'server_state' ? '服务器机器候选' : '纯手工绘制'}</span>
       <span><b>数据版本</b>${binding.dataset_version}</span>
+      <span><b>文件载入代次</b>${binding.file_activation_generation}</span>
       <span><b>相机</b>${binding.camera}</span>
       <span><b>数据分区</b>${binding.dataset_split}</span>
       <span><b>回流策略</b>${binding.split_policy}</span>`;

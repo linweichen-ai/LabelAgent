@@ -482,11 +482,17 @@
   }
 
   async function readPreparationState() {
-    const response = await fetch('/api/reference-preparation', { cache: 'no-store' });
+    const scope = window.currentWorkbenchFrameState?.();
+    const expectedGeneration = scope?.file_activation_generation;
+    if (!Number.isInteger(expectedGeneration)) throw new Error('当前文件载入代次不可用，请刷新页面');
+    const response = await fetch(`/api/reference-preparation?file_activation_generation=${encodeURIComponent(expectedGeneration)}`, { cache: 'no-store' });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || '无法读取参考帧目录');
     if (data.schema_version !== 'labelagent.reference-preparation.v1' || data.compact_geometry !== true) {
       throw new Error('参考帧目录版本不兼容，已停止准备');
+    }
+    if (data.file_activation_generation !== expectedGeneration) {
+      throw new Error('参考帧目录属于另一轮文件载入，已停止采用');
     }
     return data;
   }
@@ -494,8 +500,11 @@
   async function readFrameSnapshot(frameId, expected = latestState) {
     if (typeof window.readCompactFrameStateSnapshot !== 'function') throw new Error('单帧按需读取接口不可用，请刷新页面');
     if (!expected?.loaded || !expected?.topic || !expected?.path) throw new Error('请先加载图像或 MCAP');
-    const data = await window.readCompactFrameStateSnapshot(frameId, expected.topic, expected.path);
-    if (data.path !== expected.path || data.topic !== expected.topic || Number(data.frame) !== Number(frameId)) {
+    const data = await window.readCompactFrameStateSnapshot(frameId, expected.topic, expected.path,
+      expected.file_activation_generation);
+    if (data.path !== expected.path || data.topic !== expected.topic
+        || data.file_activation_generation !== expected.file_activation_generation
+        || Number(data.frame) !== Number(frameId)) {
       throw new Error('单帧内容与参考目录不一致，已拒绝采用');
     }
     return data;
@@ -724,7 +733,8 @@
     }
     const response = await fetch('/api/reference_frame', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({frame: frameId, expected_topic: index.topic, expected_path: index.path}),
+      body: JSON.stringify({frame: frameId, expected_topic: index.topic, expected_path: index.path,
+        expected_file_activation_generation: index.file_activation_generation}),
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || '设置参考帧失败');

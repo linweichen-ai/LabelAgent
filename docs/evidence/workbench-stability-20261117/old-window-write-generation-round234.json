@@ -1,0 +1,116 @@
+{
+  "round": 234,
+  "date": "2026-11-19",
+  "status": "deployed_and_verified",
+  "objective": "Reject stale reads and high-risk truth or reference writes from older browser windows after the same file is reloaded",
+  "versions": {
+    "ui": 149,
+    "app_js": 187,
+    "human_review_js": 98,
+    "reference_prep_js": 167,
+    "review_packet_js": 165
+  },
+  "implementation": {
+    "server_generation_guard": true,
+    "generation_required_as_integer": true,
+    "stale_generation_status": 409,
+    "covered_endpoints": [
+      "/api/frame_state/<frame>",
+      "/api/reference-preparation",
+      "/api/human_review_binding",
+      "/api/truth",
+      "/api/human_review",
+      "/api/reference_frame"
+    ],
+    "browser_generation_bound": [
+      "compact frame read",
+      "human review binding and commit",
+      "candidate rejection",
+      "reference preparation",
+      "reference lock",
+      "special review packet completion refresh"
+    ],
+    "old_window_token_refresh_prevented": true
+  },
+  "tests": {
+    "python": {
+      "passed": 983,
+      "total": 983,
+      "subtests_passed": 186
+    },
+    "web": {
+      "passed": 133,
+      "total": 133
+    },
+    "syntax": "passed",
+    "diff_check": "passed",
+    "stale_binding_rejected_before_frame_read": true,
+    "stale_truth_write_status": 409,
+    "stale_truth_write_mutated_truth": false,
+    "stale_reference_write_status": 409,
+    "stale_reference_write_mutated_reference": false
+  },
+  "production_browser_probe": {
+    "current_generation": 0,
+    "stale_generation": -1,
+    "current_reference_preparation_status": 200,
+    "current_frame_state_status": 200,
+    "stale_reference_preparation_status": 409,
+    "stale_frame_state_status": 409,
+    "stale_human_review_binding_status": 409,
+    "stale_reference_write_status": 409,
+    "page_errors": 0,
+    "formal_state_unchanged": true
+  },
+  "backup": {
+    "path": "D:\\Apps\\LabelAgent\\.local\\backups\\old-window-write-generation-round234-20261119-111040",
+    "files": 6,
+    "predeploy_hash_match": true,
+    "manifest": "backup-manifest.json"
+  },
+  "deployment": {
+    "management_pid": 20740,
+    "workbench_pid": 50680,
+    "worktree_matches_production": true,
+    "local_http_probes": {
+      "workbench": 200,
+      "bootstrap": 200,
+      "model_readiness": 200,
+      "run_readiness": 200,
+      "run_status": 200,
+      "state_summary": 200
+    },
+    "initial_invalid_health_probe": {
+      "path": "/api/health",
+      "result": "timeout_after_repeated_404",
+      "service_was_listening": true,
+      "corrected_with_canonical_probes": true
+    },
+    "run_status": "idle",
+    "state_sha256_before_after": "1DCD67A8475A8DD1974C9A9B3D4BF68A56E1ABD30CF2A9559C12E849E3D86F96",
+    "file_sessions_sha256_before_after": "202927E295CABC27B1F9583B6438D3E16C020809EE421BCE1342C3AEBC0367F5",
+    "runtime_drive_free_gib": 2.801
+  },
+  "production_hashes": {
+    "source/agent/server.py": "E62DCA9FDBDA9CADBE495E4B8452BBD0EAD5C92217E0D7C7C96FA05820E8C46B",
+    "source/web/app.js": "4F2D0011F6487A3E0DB2F99682547DFDDE1F52A6F402641BE62DA0150BD0D196",
+    "source/web/human-review.js": "0DE3F8FA7B35D4C7B4B884371855698F196885BE1DEFA2593E960415BC7D9492",
+    "source/web/reference-prep.js": "76B65FC89D6BB7BA66EEA007B8EC815F370571E6056C99FAFEBA354673AE1A70",
+    "source/web/review-packet.js": "B6CE3955972034797A3A7BA1C6CBDCEA0A6CEFBFAB6D2D4AF13A4109DBEACC66",
+    "source/web/index.html": "1B907DCD985EA697323E08F082BFBD11BA7C71D9E9347BD29C9CB35DA1522312"
+  },
+  "safety": {
+    "production_data_model_requests": 0,
+    "startup_readiness_prewarm_without_factory_image": true,
+    "candidate_writes": 0,
+    "human_truth_writes": 0,
+    "reference_frame_writes": 0,
+    "training_approvals": 0,
+    "fine_tuning": false,
+    "post_training": false,
+    "oss_writes": 0,
+    "raw_factory_artifacts_tracked": false
+  },
+  "implementation_commit": null,
+  "remote_readback_commit": null
+}

@@ -3035,11 +3035,16 @@ class ServerTests(unittest.TestCase):
                         "10": {"reusable_as_reference": False,
                                "reason_code": "missing_current_human_review_receipt",
                                "legacy_source_counts": {"auto": 1}}}):
-                    response = server.app.test_client().get("/api/reference-preparation")
+                    response = server.app.test_client().get(
+                        "/api/reference-preparation", query_string={
+                            "file_activation_generation":
+                                server.current_file_activation_generation()})
                 self.assertEqual(response.status_code, 200, response.json)
                 payload = response.json
                 self.assertEqual(payload["schema_version"], "labelagent.reference-preparation.v1")
                 self.assertTrue(payload["compact_geometry"])
+                self.assertEqual(payload["file_activation_generation"],
+                                 server.current_file_activation_generation())
                 self.assertEqual(payload["frame_count"], 3)
                 self.assertEqual(payload["auto_labels"], ["floor"])
                 self.assertEqual(payload["truth_index"], {
@@ -3055,6 +3060,11 @@ class ServerTests(unittest.TestCase):
                 self.assertNotIn("config", payload)
                 self.assertNotIn("points", response.get_data(as_text=True))
                 self.assertLess(len(response.data), 2048)
+                stale = server.app.test_client().get(
+                    "/api/reference-preparation", query_string={
+                        "file_activation_generation":
+                            server.current_file_activation_generation() - 1})
+                self.assertEqual(stale.status_code, 409)
             finally:
                 server.state, server.WORK = old_state, old_work
 
@@ -3126,20 +3136,29 @@ class ServerTests(unittest.TestCase):
             }
             try:
                 client = server.app.test_client()
+                generation = server.current_file_activation_generation()
+                stale_generation = client.post("/api/reference_frame", json={
+                    "frame": 2, "expected_topic": "camera0",
+                    "expected_path": str(FakeVideo.path),
+                    "expected_file_activation_generation": generation - 1})
+                self.assertEqual(stale_generation.status_code, 409)
                 wrong_topic = client.post("/api/reference_frame", json={
                     "frame": 2, "expected_topic": "camera1",
-                    "expected_path": str(FakeVideo.path)})
+                    "expected_path": str(FakeVideo.path),
+                    "expected_file_activation_generation": generation})
                 self.assertEqual(wrong_topic.status_code, 409)
                 wrong_file = client.post("/api/reference_frame", json={
                     "frame": 2, "expected_topic": "camera0",
-                    "expected_path": "C:/stale.mcap"})
+                    "expected_path": "C:/stale.mcap",
+                    "expected_file_activation_generation": generation})
                 self.assertEqual(wrong_file.status_code, 409)
                 self.assertEqual(server.state["reference_frames"], {})
                 with patch.object(server, "current_truth_review_status", return_value={
                         "2": {"reusable_as_reference": True}}):
                     valid = client.post("/api/reference_frame", json={
                         "frame": 2, "expected_topic": "camera0",
-                        "expected_path": str(FakeVideo.path)})
+                        "expected_path": str(FakeVideo.path),
+                        "expected_file_activation_generation": generation})
                 self.assertEqual(valid.status_code, 200, valid.json)
                 self.assertEqual(server.state["reference_frames"], {"camera0": [2]})
             finally:
@@ -4118,7 +4137,8 @@ class ServerTests(unittest.TestCase):
                 self.assertEqual(server.state["topic"], stale_topic)
 
                 lazy = client.get("/api/frame_state/1", query_string={
-                    "topic": "camera0", "path": str(FakeVideo.path)})
+                    "topic": "camera0", "path": str(FakeVideo.path),
+                    "file_activation_generation": server.current_file_activation_generation()})
                 self.assertEqual(lazy.status_code, 200, lazy.json)
                 self.assertEqual(len(lazy.json["candidates"]["1"]), 240)
                 self.assertEqual(lazy.json["agent_runs"], {"1": {"rounds": 2}})
@@ -4133,11 +4153,17 @@ class ServerTests(unittest.TestCase):
                 self.assertEqual(len(audit_version["labels_sha256"]), 64)
 
                 stale = client.get("/api/frame_state/1", query_string={
-                    "topic": "camera1", "path": str(FakeVideo.path)})
+                    "topic": "camera1", "path": str(FakeVideo.path),
+                    "file_activation_generation": server.current_file_activation_generation()})
                 self.assertEqual(stale.status_code, 409)
                 wrong_file = client.get("/api/frame_state/1", query_string={
-                    "topic": "camera0", "path": "/tmp/other.mcap"})
+                    "topic": "camera0", "path": "/tmp/other.mcap",
+                    "file_activation_generation": server.current_file_activation_generation()})
                 self.assertEqual(wrong_file.status_code, 409)
+                old_window = client.get("/api/frame_state/1", query_string={
+                    "topic": "camera0", "path": str(FakeVideo.path),
+                    "file_activation_generation": server.current_file_activation_generation() - 1})
+                self.assertEqual(old_window.status_code, 409)
             finally:
                 server.state, server.WORK = previous_state, previous_work
 

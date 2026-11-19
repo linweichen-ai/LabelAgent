@@ -279,7 +279,12 @@ def build_blind_candidate_class_prompt(
             "structure inside the non-dark region. A solid shipping box or container is not a "
             "pallet. If the non-dark pixels mainly show a solid box/container and no allowed class "
             "fits, return conflict with candidate_supported=false and observed_label=null. "
-            "For uncertain use the same false/null field consistency. Return only the strict JSON "
+            "For uncertain use the same false/null field consistency. "
+            "Field consistency is mandatory: known_label requires an allowed "
+            "observed_label, candidate_supported=true, and reason_code=visible_known_label; "
+            "uncertain or conflict requires observed_label=null, candidate_supported=false, "
+            "and a reason_code other than visible_known_label. Never combine visible support "
+            "for an allowed label with classification=conflict. Return only the strict JSON "
             "object. Input: "
             + json.dumps({"candidate_id": candidate_id, "allowed_labels": labels},
                          ensure_ascii=False))
@@ -305,6 +310,11 @@ def build_blind_candidate_class_prompt(
         "For tiny, blurred, occluded, mixed or weak evidence use uncertain, observed_label=null, "
         "candidate_supported=false, and a non-visible_known_label reason_code. "
         "If no allowed class fits use conflict with the same null/false field consistency. "
+        "Field consistency is mandatory: known_label requires an allowed observed_label, "
+        "candidate_supported=true, and reason_code=visible_known_label; uncertain or conflict "
+        "requires observed_label=null, candidate_supported=false, and a reason_code other than "
+        "visible_known_label. Never combine visible support for an allowed label with "
+        "classification=conflict. "
         "This is candidate-only "
         "evidence, never human truth. Return only the strict JSON object."
         + identity_rules + "\nInput: "
@@ -342,10 +352,33 @@ def validate_blind_candidate_class_decision(value, labels):
     return value
 
 
+def _repair_non_known_reason_code(value):
+    """Normalize only a redundant reason code, never a semantic decision.
+
+    When classification, observed label, and support already agree that the
+    candidate is not a known label, ``visible_known_label`` is structurally
+    impossible.  Replacing only that reason code avoids a second model call
+    without changing the class, label, confidence, cues, or human-review route.
+    Any broader contradiction remains invalid and uses the bounded retry.
+    """
+    if (not isinstance(value, dict)
+            or value.get("classification") not in {"uncertain", "conflict"}
+            or value.get("observed_label") is not None
+            or value.get("candidate_supported") is not False
+            or value.get("reason_code") != "visible_known_label"):
+        return None
+    repaired = dict(value)
+    repaired["reason_code"] = (
+        "ontology_conflict" if value["classification"] == "conflict"
+        else "insufficient_visual_evidence")
+    return repaired
+
+
 def _candidate_class_audit_result(
         image_bytes, candidate, evidence, prompt, decision,
         minimum_confidence=0.90, candidate_artifact_sha256=None,
-        execution_mode="sequential"):
+        execution_mode="sequential", protocol_retry_count=0,
+        protocol_repair=None):
     matches = (decision["classification"] == "known_label"
                and decision["observed_label"] == candidate["label"]
                and decision["confidence"] >= minimum_confidence)
@@ -367,6 +400,8 @@ def _candidate_class_audit_result(
         "route": "candidate_preserved" if matches else "human_review_required",
         "minimum_confidence": minimum_confidence,
         "execution_mode": execution_mode,
+        "protocol_retry_count": protocol_retry_count,
+        "protocol_repair": protocol_repair,
         "operation_proposal": None, "candidate_mutated": False,
         "human_truth": False, "approved_for_training": False,
         "approved_for_deployment": False,
@@ -386,10 +421,45 @@ def audit_candidate_class_blind(config: dict, image_bytes: bytes, candidate: dic
     prompt = build_blind_candidate_class_prompt(
         candidate["id"], labels, class_definitions, isolated_only=isolated_only)
     primary_image, extra_images = candidate_audit_images(candidate, evidence)
-    decision = validate_blind_candidate_class_decision(chat(
-        config, prompt, primary_image, extra_images=extra_images,
-        response_schema=blind_candidate_class_schema(labels)), labels)
+    response_schema = blind_candidate_class_schema(labels)
+    protocol_retry_count = 0
+    protocol_repair = None
+    try:
+        raw_decision = chat(
+            config, prompt, primary_image, extra_images=extra_images,
+            response_schema=response_schema)
+        try:
+            decision = validate_blind_candidate_class_decision(
+                raw_decision, labels)
+        except CandidateClassProtocolError:
+            repaired = _repair_non_known_reason_code(raw_decision)
+            if repaired is None:
+                raise
+            decision = validate_blind_candidate_class_decision(repaired, labels)
+            protocol_repair = "non_known_reason_code_normalized"
+    except CandidateClassProtocolError as error:
+        # One bounded retry repairs contradictory JSON fields without changing
+        # the visual task or inventing a class.  The retry deliberately does
+        # not echo the invalid answer, which could anchor a new decision to an
+        # unsupported label.  A second invalid response still fails closed and
+        # the caller routes it to human review.
+        protocol_retry_count = 1
+        retry_prompt = prompt + (
+            "\nThe previous JSON violated the response-field consistency contract: "
+            + str(error)
+            + ". Discard that JSON and independently return one fresh strict JSON object. "
+              "For classification=known_label, observed_label must be exactly one allowed "
+              "label, candidate_supported must be true, and reason_code must be "
+              "visible_known_label. For classification=uncertain or conflict, "
+              "observed_label must be null, candidate_supported must be false, and "
+              "reason_code must not be visible_known_label. Keep the same visual "
+              "evidence standard; do not change the judgment merely to satisfy fields.")
+        decision = validate_blind_candidate_class_decision(chat(
+            config, retry_prompt, primary_image, extra_images=extra_images,
+            response_schema=response_schema), labels)
     return _candidate_class_audit_result(
         image_bytes, candidate, evidence, prompt, decision,
         minimum_confidence=minimum_confidence,
-        candidate_artifact_sha256=candidate_artifact_sha256)
+        candidate_artifact_sha256=candidate_artifact_sha256,
+        protocol_retry_count=protocol_retry_count,
+        protocol_repair=protocol_repair)

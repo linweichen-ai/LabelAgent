@@ -81,6 +81,7 @@ class CandidateClassAuditTests(unittest.TestCase):
         prompt = audit.build_blind_candidate_class_prompt(
             suspicious["id"], self.labels + ["pallet"], {})
         self.assertIn("box, container, or stacked cargo is not pallet", prompt)
+        self.assertIn("Never combine visible support", prompt)
 
     def test_box_like_pallet_audit_uses_only_isolated_mask_pixels(self):
         candidate = {"id": 20, "label": "pallet",
@@ -96,6 +97,67 @@ class CandidateClassAuditTests(unittest.TestCase):
             result = audit.audit_candidate_class_blind(
                 {}, self.image, candidate, self.labels + ["pallet"], {}, inspect)
         self.assertEqual(result["route"], "candidate_preserved")
+
+    def test_protocol_field_conflict_gets_one_bounded_retry(self):
+        invalid = self.decision("pallet") | {"classification": "conflict"}
+        valid = self.decision("pallet")
+        prompts = []
+
+        def chat(config, prompt, image, **kwargs):
+            prompts.append(prompt)
+            return invalid if len(prompts) == 1 else valid
+
+        candidate = {"id": 20, "label": "pallet",
+                     "points": [[0, 0], [149, 0], [149, 99], [0, 99]]}
+        result = audit.audit_candidate_class_blind(
+            {}, self.image, candidate, self.labels + ["pallet"], {}, chat)
+
+        self.assertEqual(len(prompts), 2)
+        self.assertEqual(result["route"], "candidate_preserved")
+        self.assertEqual(result["protocol_retry_count"], 1)
+        self.assertIn("field consistency contract", prompts[1])
+        self.assertNotIn("current_label", prompts[1])
+        self.assertNotIn('"label": "pallet"', prompts[1])
+
+    def test_second_protocol_field_conflict_still_fails_closed(self):
+        invalid = self.decision("pallet") | {"classification": "conflict"}
+        calls = []
+
+        def chat(*args, **kwargs):
+            calls.append(1)
+            return invalid
+
+        candidate = {"id": 20, "label": "pallet",
+                     "points": [[0, 0], [149, 0], [149, 99], [0, 99]]}
+        with self.assertRaises(audit.CandidateClassProtocolError):
+            audit.audit_candidate_class_blind(
+                {}, self.image, candidate, self.labels + ["pallet"], {}, chat)
+        self.assertEqual(len(calls), 2)
+
+    def test_non_known_reason_code_is_normalized_without_second_model_call(self):
+        invalid_reason_only = self.decision(None, .98, "conflict") | {
+            "reason_code": "visible_known_label"}
+        calls = []
+
+        def chat(*args, **kwargs):
+            calls.append(1)
+            return invalid_reason_only
+
+        candidate = {"id": 20, "label": "pallet",
+                     "points": [[0, 0], [149, 0], [149, 99], [0, 99]]}
+        result = audit.audit_candidate_class_blind(
+            {}, self.image, candidate, self.labels + ["pallet"], {}, chat)
+
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(result["route"], "human_review_required")
+        self.assertEqual(result["protocol_retry_count"], 0)
+        self.assertEqual(
+            result["protocol_repair"], "non_known_reason_code_normalized")
+        self.assertEqual(result["decision"]["reason_code"], "ontology_conflict")
+
+    def test_reason_repair_never_changes_broader_semantic_contradiction(self):
+        contradiction = self.decision("pallet") | {"classification": "conflict"}
+        self.assertIsNone(audit._repair_non_known_reason_code(contradiction))
 
     def test_three_clear_candidates_use_independent_batch(self):
         candidates = [{**self.candidate, "id": value} for value in (7, 8, 9)]

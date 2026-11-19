@@ -185,7 +185,7 @@ def run_audit(source: Path, *, width: int, height: int, per_topic: int) -> dict:
             "maximum_change_ratio": max((row["change_ratio"] for row in subset), default=0.0),
         }
     return {
-        "schema_version": "labelagent.pallet_geometry_cross_dataset_audit.v3",
+        "schema_version": "labelagent.pallet_geometry_cross_dataset_audit.v4",
         "input": str(source.resolve()),
         "input_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
         "width": width,
@@ -197,8 +197,8 @@ def run_audit(source: Path, *, width: int, height: int, per_topic: int) -> dict:
         "sample_count": len(results),
         "size_bands": bands,
         "adjusted_count": sum(row["adjustment_applied"] for row in results),
-        "v3_adjusted_count": sum(
-            row["geometry_cleanup_version"] == 3 for row in results),
+        "v4_adjusted_count": sum(
+            row["geometry_cleanup_version"] == 4 for row in results),
         "filled_hole_count": sum(row["filled_hole_count"] for row in results),
         "filled_compact_texture_hole_count": sum(
             row["filled_compact_texture_hole_count"] for row in results),
@@ -248,7 +248,7 @@ def main() -> int:
         args.output.write_text(rendered + "\n", encoding="utf-8")
     print(json.dumps({key: report[key] for key in (
         "sample_count", "size_bands", "adjusted_count", "unchanged_tiny_count",
-        "v3_adjusted_count", "filled_hole_count", "filled_compact_texture_hole_count",
+        "v4_adjusted_count", "filled_hole_count", "filled_compact_texture_hole_count",
         "boundary_simplified_count", "median_boundary_vertex_reduction_ratio",
         "boundary_simplification_epsilon_counts", "holes_before", "holes_after",
         "gate_passed")}, ensure_ascii=False, indent=2))

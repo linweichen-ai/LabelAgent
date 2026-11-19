@@ -51,7 +51,7 @@ class PalletGeometryAuditTest(unittest.TestCase):
                         result["boundary_vertices_before"])
         self.assertLessEqual(result["change_ratio"], .025)
 
-    def test_audit_uses_v3_compact_hole_contract_without_reclassifying_long_slot(self):
+    def test_audit_uses_v4_compact_hole_contract_without_reclassifying_long_slot(self):
         mask = np.zeros((480, 640), dtype=np.uint8)
         mask[40:440, 80:560] = 1
         # Compact surface drop-out: wider than the old 32-pixel structural rule.
@@ -63,7 +63,7 @@ class PalletGeometryAuditTest(unittest.TestCase):
         result = audit_candidate(
             {"topic": "camera", "frame": "3", "shape": shape}, 640, 480)
 
-        self.assertEqual(result["geometry_cleanup_version"], 3)
+        self.assertEqual(result["geometry_cleanup_version"], 4)
         self.assertGreaterEqual(result["filled_compact_texture_hole_count"], 1)
         self.assertEqual(result["structural_holes_before"], 1)
         self.assertGreaterEqual(result["minimum_structural_hole_retention"], .75)

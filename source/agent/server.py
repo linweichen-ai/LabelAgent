@@ -3862,13 +3862,14 @@ def cleanup_pallet_candidates(index):
         frame_image = state["video"].frame(state["topic"], index)
         with Image.open(io.BytesIO(frame_image)) as decoded:
             width, height = decoded.size
+            frame_rgb = np.asarray(decoded.convert("RGB"))
         already_adjusted = {
             item.get("shape_id") for item in current_run.get(
                 "candidate_geometry_adjustments", [])
             if isinstance(item, dict)
             and item.get("reason_code") == "pallet_texture_geometry_cleanup"
             and "boundary_simplification_applied" in item
-            and int(item.get("geometry_cleanup_version") or 1) >= 2
+            and int(item.get("geometry_cleanup_version") or 1) >= 4
             and type(item.get("shape_id")) is int
         }
         refreshed, adjustments = [], []
@@ -3877,7 +3878,7 @@ def cleanup_pallet_candidates(index):
                 refined, adjustment = candidate, None
             else:
                 refined, adjustment = refine_pallet_candidate_geometry(
-                    candidate, width, height)
+                    candidate, width, height, image_rgb=frame_rgb)
             refreshed.append(refined)
             if adjustment is not None:
                 adjustment = copy.deepcopy(adjustment)
@@ -3910,7 +3911,7 @@ def cleanup_pallet_candidates(index):
                 copy.deepcopy(current_run.get("candidate_geometry_adjustments", []))
                 + adjustments),
             "candidate_geometry_cleanup_refresh": {
-                "schema_version": "labelagent.pallet_geometry_refresh.v3",
+                "schema_version": "labelagent.pallet_geometry_refresh.v4",
                 "adjusted_candidate_count": len(adjustments),
                 "prior_candidate_artifact_sha256": binding["candidate_artifact_sha256"],
                 "candidate_artifact_sha256": new_artifact_sha,

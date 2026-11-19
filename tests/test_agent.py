@@ -393,7 +393,7 @@ class WorkflowTests(unittest.TestCase):
         output = _rasterize(refined, 640, 480)
 
         self.assertIsNotNone(audit)
-        self.assertEqual(audit["geometry_cleanup_version"], 3)
+        self.assertEqual(audit["geometry_cleanup_version"], 4)
         self.assertEqual(audit["filled_hole_count"], 6)
         self.assertGreaterEqual(audit["filled_compact_texture_hole_count"], 4)
         for y, x, h, w in compact_holes:
@@ -415,7 +415,60 @@ class WorkflowTests(unittest.TestCase):
 
         self.assertEqual(output[150, 210], 0)
         self.assertIsNotNone(audit)
-        self.assertEqual(audit["geometry_cleanup_version"], 3)
+        self.assertEqual(audit["geometry_cleanup_version"], 4)
+        self.assertEqual(audit["filled_compact_texture_hole_count"], 0)
+        self.assertGreaterEqual(audit["minimum_structural_hole_retention"], .75)
+
+    def test_image_guided_pallet_cleanup_fills_wood_texture_and_keeps_dark_slots(self):
+        mask = np.zeros((480, 640), dtype=np.uint8)
+        mask[245:480, :] = 1
+        cv2.ellipse(mask, (290, 280), (42, 13), 0, 0, 360, 0,
+                    thickness=cv2.FILLED)
+        mask[378:392, 120:250] = 0
+        mask[378:392, 340:455] = 0
+        image = np.full((480, 640, 3), 24, dtype=np.uint8)
+        image[245:480, :] = np.array([205, 190, 170], dtype=np.uint8)
+        # The SAM drop-out is still visibly the same wooden surface.
+        image[267:294, 248:333] = np.array([198, 183, 164], dtype=np.uint8)
+        # Real openings expose a much darker background.
+        image[378:392, 120:250] = 18
+        image[378:392, 340:455] = 18
+        candidate = _shape_from_mask(mask, "pallet", 26)
+
+        refined, audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 640, 480, image_rgb=image)
+        output = _rasterize(refined, 640, 480)
+
+        self.assertIsNotNone(audit)
+        self.assertEqual(audit["geometry_cleanup_version"], 4)
+        self.assertGreaterEqual(audit["filled_image_texture_hole_count"], 1)
+        self.assertEqual(output[280, 290], 1)
+        self.assertEqual(output[385, 180], 0)
+        self.assertEqual(output[385, 400], 0)
+        self.assertGreaterEqual(audit["minimum_structural_hole_retention"], .75)
+        self.assertLessEqual(audit["change_ratio"], .05)
+
+    def test_image_guided_pallet_cleanup_preserves_dark_plastic_grid_openings(self):
+        mask = np.zeros((480, 640), dtype=np.uint8)
+        mask[180:460, 80:560] = 1
+        openings = [(180, 260), (270, 260), (360, 260), (450, 260)]
+        for x, y in openings:
+            cv2.circle(mask, (x, y), 12, 0, thickness=cv2.FILLED)
+        image = np.full((480, 640, 3), 20, dtype=np.uint8)
+        image[180:460, 80:560] = np.array([25, 90, 165], dtype=np.uint8)
+        for x, y in openings:
+            cv2.circle(image, (x, y), 12, (8, 12, 18), thickness=cv2.FILLED)
+        candidate = _shape_from_mask(mask, "pallet", 27)
+
+        refined, audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 640, 480, image_rgb=image)
+        output = _rasterize(refined, 640, 480)
+
+        for x, y in openings:
+            self.assertEqual(output[y, x], 0)
+        self.assertIsNotNone(audit)
+        self.assertEqual(audit["geometry_cleanup_version"], 4)
+        self.assertEqual(audit["filled_image_texture_hole_count"], 0)
         self.assertEqual(audit["filled_compact_texture_hole_count"], 0)
         self.assertGreaterEqual(audit["minimum_structural_hole_retention"], .75)
 

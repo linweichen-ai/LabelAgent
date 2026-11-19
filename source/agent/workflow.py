@@ -2681,6 +2681,10 @@ def _significant_component_count(mask):
 
 
 PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO = 0.30
+PALLET_IMAGE_TEXTURE_MAXIMUM_AREA = 2048
+PALLET_IMAGE_TEXTURE_MAXIMUM_SPAN = 224
+PALLET_IMAGE_TEXTURE_MAXIMUM_GRAY_DELTA = 45.0
+PALLET_IMAGE_TEXTURE_MAXIMUM_COLOR_DISTANCE = 90.0
 
 
 def _compact_pallet_texture_hole(area, width, height, *, maximum_area=768,
@@ -2692,8 +2696,95 @@ def _compact_pallet_texture_hole(area, width, height, *, maximum_area=768,
             and aspect_ratio <= maximum_aspect_ratio)
 
 
+def _image_guided_pallet_texture_holes(mask, image_rgb, components, stats,
+                                       border_labels, *,
+                                       maximum_area=PALLET_IMAGE_TEXTURE_MAXIMUM_AREA,
+                                       maximum_span=PALLET_IMAGE_TEXTURE_MAXIMUM_SPAN,
+                                       maximum_gray_delta=(
+                                           PALLET_IMAGE_TEXTURE_MAXIMUM_GRAY_DELTA),
+                                       maximum_color_distance=(
+                                           PALLET_IMAGE_TEXTURE_MAXIMUM_COLOR_DISTANCE)):
+    """Classify dense wooden-surface drop-outs while retaining real openings.
+
+    A close pallet can contain dozens of irregular SAM holes caused by paint,
+    wood grain, glare and shallow seams. Geometry alone cannot safely tell
+    these from the regular dark openings of a plastic pallet. This helper
+    requires both a close-instance scale gate and local appearance continuity.
+    Long, rectangular, dark holes establish structural rows; other dark holes
+    in the same row are retained even when fragmented.
+    """
+    if not isinstance(image_rgb, np.ndarray) or image_rgb.ndim != 3:
+        return set(), {}
+    if image_rgb.shape[:2] != mask.shape or image_rgb.shape[2] < 3:
+        return set(), {}
+    candidate_area = int(mask.sum())
+    if (candidate_area / max(mask.size, 1)
+            < PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO):
+        return set(), {}
+
+    kernel = np.ones((5, 5), dtype=np.uint8)
+    rows = []
+    rgb = image_rgb[..., :3].astype(np.float32)
+    for component in range(1, len(stats)):
+        if component in border_labels:
+            continue
+        x, y, width, height, area = [int(value) for value in stats[component]]
+        component_mask = components == component
+        ring = (cv2.dilate(component_mask.astype(np.uint8), kernel, iterations=1).astype(bool)
+                & ~component_mask & (mask > 0))
+        if not ring.any():
+            continue
+        hole_mean = rgb[component_mask].mean(axis=0)
+        ring_mean = rgb[ring].mean(axis=0)
+        gray_delta = float(ring_mean.mean() - hole_mean.mean())
+        color_distance = float(np.linalg.norm(ring_mean - hole_mean))
+        short = max(min(width, height), 1)
+        rows.append({
+            "component": component,
+            "width": width, "height": height, "area": area,
+            "aspect_ratio": max(width, height) / short,
+            "fill_ratio": area / max(width * height, 1),
+            "center_y": y + (height - 1) / 2,
+            "gray_delta": gray_delta,
+            "color_distance": color_distance,
+        })
+
+    anchors = [row for row in rows
+               if row["area"] >= 512
+               and row["aspect_ratio"] >= 6.0
+               and row["fill_ratio"] >= .60
+               and row["gray_delta"] >= 40.0]
+    selected, audit = set(), {}
+    for row in rows:
+        in_structural_band = any(
+            abs(row["center_y"] - anchor["center_y"])
+            <= max(12.0, anchor["height"] * 1.5)
+            and (row["gray_delta"] >= 20.0
+                 or row["aspect_ratio"] >= 3.0
+                 or row["fill_ratio"] >= .60)
+            for anchor in anchors)
+        appearance_continuous = (
+            row["gray_delta"] <= maximum_gray_delta
+            and row["color_distance"] <= maximum_color_distance)
+        is_texture = (
+            row["area"] <= maximum_area
+            and max(row["width"], row["height"]) <= maximum_span
+            and appearance_continuous
+            and not in_structural_band)
+        if is_texture:
+            selected.add(row["component"])
+        audit[row["component"]] = {
+            "gray_delta": round(row["gray_delta"], 3),
+            "color_distance": round(row["color_distance"], 3),
+            "fill_ratio": round(row["fill_ratio"], 6),
+            "structural_band": in_structural_band,
+            "image_texture_hole": is_texture,
+        }
+    return selected, audit
+
+
 def _structural_hole_masks(
-        mask, *,
+        mask, *, image_rgb=None,
         minimum_compact_texture_candidate_area_ratio=(
             PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO)):
     background = (mask == 0).astype(np.uint8)
@@ -2702,6 +2793,11 @@ def _structural_hole_masks(
     border_labels = set(np.unique(np.concatenate((
         components[0, :], components[-1, :],
         components[:, 0], components[:, -1]))).tolist())
+    image_texture_holes, _ = _image_guided_pallet_texture_holes(
+        mask, image_rgb, components, stats, border_labels)
+    image_guidance_available = (
+        isinstance(image_rgb, np.ndarray) and image_rgb.ndim == 3
+        and image_rgb.shape[:2] == mask.shape and image_rgb.shape[2] >= 3)
     output = []
     candidate_area = int(mask.sum())
     for component in range(1, count):
@@ -2715,14 +2811,18 @@ def _structural_hole_masks(
         compact_texture_hole = (
             candidate_area / max(mask.size, 1)
             >= minimum_compact_texture_candidate_area_ratio
-            and _compact_pallet_texture_hole(area, width, height))
-        if not (micro_hole or texture_hole or compact_texture_hole):
+            and _compact_pallet_texture_hole(area, width, height)
+            and (not image_guidance_available
+                 or component in image_texture_holes))
+        if not (micro_hole or texture_hole or compact_texture_hole
+                or component in image_texture_holes):
             output.append((components == component, area))
     return output
 
 
 def _simplify_pallet_boundary(shape, original_mask, width, height, *,
                               maximum_change_ratio, minimum_hole_retention=.75,
+                              image_rgb=None,
                               minimum_compact_texture_candidate_area_ratio=(
                                   PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO)):
     """Reduce pixel-staircase vertices under the existing geometry gates."""
@@ -2733,7 +2833,7 @@ def _simplify_pallet_boundary(shape, original_mask, width, height, *,
     original_area = int(original_mask.sum())
     original_components = _significant_component_count(original_mask)
     structural_holes = _structural_hole_masks(
-        original_mask,
+        original_mask, image_rgb=image_rgb,
         minimum_compact_texture_candidate_area_ratio=(
             minimum_compact_texture_candidate_area_ratio))
     baseline_mask = _rasterize(shape, width, height).astype(np.uint8)
@@ -2804,7 +2904,8 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
                                      maximum_compact_texture_aspect_ratio=3.0,
                                      minimum_compact_texture_candidate_area_ratio=(
                                          PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO),
-                                     maximum_change_ratio=0.025):
+                                     maximum_change_ratio=0.025,
+                                     image_rgb=None):
     """Remove texture-scale pallet mask noise without erasing structural gaps.
 
     The cleanup is deliberately bounded to one already detected instance.  It
@@ -2833,6 +2934,15 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
     filled_holes = []
     filled_texture_holes = []
     filled_compact_texture_holes = []
+    filled_image_texture_holes = []
+    image_texture_holes, image_texture_audit = _image_guided_pallet_texture_holes(
+        mask, image_rgb, components, stats, border_labels)
+    image_guidance_available = (
+        isinstance(image_rgb, np.ndarray) and image_rgb.ndim == 3
+        and image_rgb.shape[:2] == mask.shape and image_rgb.shape[2] >= 3)
+    effective_maximum_change_ratio = (
+        max(maximum_change_ratio, .05) if image_texture_holes else maximum_change_ratio)
+    hole_fill_plans = []
     for component in range(1, count):
         if component in border_labels:
             continue
@@ -2848,15 +2958,55 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
                 component_area, w, h,
                 maximum_area=maximum_compact_texture_hole_area,
                 maximum_span=maximum_compact_texture_hole_span,
-                maximum_aspect_ratio=maximum_compact_texture_aspect_ratio))
-        if micro_hole or texture_hole or compact_texture_hole:
-            refined[components == component] = 1
+                maximum_aspect_ratio=maximum_compact_texture_aspect_ratio)
+            and (not image_guidance_available
+                 or component in image_texture_holes))
+        image_texture_hole = component in image_texture_holes
+        if micro_hole or texture_hole or compact_texture_hole or image_texture_hole:
             record = {"area": component_area, "bbox": [x, y, x + w - 1, y + h - 1]}
-            filled_holes.append(record)
-            if texture_hole and not micro_hole:
-                filled_texture_holes.append(record)
-            if compact_texture_hole and not (micro_hole or texture_hole):
-                filled_compact_texture_holes.append(record)
+            image_metrics = image_texture_audit.get(component, {})
+            hole_fill_plans.append({
+                "component": component,
+                "record": record,
+                "micro_hole": micro_hole,
+                "texture_hole": texture_hole,
+                "compact_texture_hole": compact_texture_hole,
+                "image_texture_hole": image_texture_hole,
+                # Prefer the smallest and most appearance-consistent repairs
+                # when a dense close pallet contains more safe-looking noise
+                # than the hard per-instance change budget permits.
+                "priority": (
+                    0 if micro_hole else 1 if texture_hole else
+                    2 if compact_texture_hole else 3,
+                    float(image_metrics.get("color_distance", 0.0)),
+                    float(image_metrics.get("gray_delta", 0.0)),
+                    component_area),
+                "image_metrics": image_metrics,
+            })
+
+    fill_budget = max(int(area * effective_maximum_change_ratio), 1)
+    used_fill_budget = 0
+    for plan in sorted(hole_fill_plans, key=lambda item: item["priority"]):
+        component_area = plan["record"]["area"]
+        if used_fill_budget + component_area > fill_budget:
+            continue
+        component = plan["component"]
+        refined[components == component] = 1
+        used_fill_budget += component_area
+        record = plan["record"]
+        micro_hole = plan["micro_hole"]
+        texture_hole = plan["texture_hole"]
+        compact_texture_hole = plan["compact_texture_hole"]
+        image_texture_hole = plan["image_texture_hole"]
+        filled_holes.append(record)
+        if texture_hole and not micro_hole:
+            filled_texture_holes.append(record)
+        if compact_texture_hole and not (micro_hole or texture_hole):
+            filled_compact_texture_holes.append(record)
+        if image_texture_hole and not (
+                micro_hole or texture_hole or compact_texture_hole):
+            record.update(plan["image_metrics"])
+            filled_image_texture_holes.append(record)
 
     foreground_count, foreground, foreground_stats, _ = cv2.connectedComponentsWithStats(
         refined, connectivity=8)
@@ -2888,8 +3038,25 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         int(smoothed_stats[component, cv2.CC_STAT_AREA]) >= 9
         for component in range(1, smoothed_count))
     smoothing_pixels = int(np.count_nonzero(smoothed != refined))
-    smoothing_applied = (before_components == after_components
-                         and smoothing_pixels / max(area, 1) <= maximum_change_ratio)
+    smoothing_structural_holes = _structural_hole_masks(
+        mask, image_rgb=image_rgb,
+        minimum_compact_texture_candidate_area_ratio=(
+            minimum_compact_texture_candidate_area_ratio))
+    smoothing_structural_retention = [
+        int(np.count_nonzero(hole_mask & (smoothed == 0))) / hole_area
+        for hole_mask, hole_area in smoothing_structural_holes]
+    smoothing_minimum_structural_retention = (
+        min(smoothing_structural_retention)
+        if smoothing_structural_retention else 1.0)
+    # Dense image-guided repair already targets the real surface drop-outs.
+    # A second median pass can blur the dark structural slots that supplied
+    # the appearance evidence, so keep it disabled for this route and retain
+    # the independently gated polygon simplification below.
+    smoothing_applied = (not image_texture_holes
+                         and before_components == after_components
+                         and smoothing_pixels / max(area, 1)
+                         <= effective_maximum_change_ratio
+                         and smoothing_minimum_structural_retention >= .75)
     if smoothing_applied:
         refined = smoothed
 
@@ -2919,16 +3086,17 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
 
     changed = int(np.count_nonzero(refined != mask))
     smoothing_rejected_by_budget = False
-    if (changed / max(area, 1) > maximum_change_ratio
+    if (changed / max(area, 1) > effective_maximum_change_ratio
             and cleanup_only_changed
-            and cleanup_only_changed / max(area, 1) <= maximum_change_ratio):
+            and cleanup_only_changed / max(area, 1)
+            <= effective_maximum_change_ratio):
         refined = cleanup_only
         filled_holes = cleanup_only_filled_holes
         post_smoothing_filled_holes = []
         smoothing_applied = False
         smoothing_rejected_by_budget = True
         changed = cleanup_only_changed
-    if changed / max(area, 1) > maximum_change_ratio:
+    if changed / max(area, 1) > effective_maximum_change_ratio:
         return shape, None
     if changed:
         replacement = _shape_from_mask(refined, shape["label"], shape["id"])
@@ -2941,14 +3109,15 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         replacement = copy.deepcopy(shape)
     replacement, boundary_audit, replacement_mask = _simplify_pallet_boundary(
         replacement, mask, width, height,
-        maximum_change_ratio=maximum_change_ratio,
+        maximum_change_ratio=effective_maximum_change_ratio,
+        image_rgb=image_rgb,
         minimum_compact_texture_candidate_area_ratio=(
             minimum_compact_texture_candidate_area_ratio))
     changed = int(np.count_nonzero(replacement_mask != mask))
     if _significant_component_count(replacement_mask) != _significant_component_count(mask):
         return shape, None
     structural_holes = _structural_hole_masks(
-        mask,
+        mask, image_rgb=image_rgb,
         minimum_compact_texture_candidate_area_ratio=(
             minimum_compact_texture_candidate_area_ratio))
     structural_retention = [
@@ -2972,6 +3141,9 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         "filled_compact_texture_hole_count": len(filled_compact_texture_holes),
         "filled_compact_texture_hole_pixels": sum(
             item["area"] for item in filled_compact_texture_holes),
+        "filled_image_texture_hole_count": len(filled_image_texture_holes),
+        "filled_image_texture_hole_pixels": sum(
+            item["area"] for item in filled_image_texture_holes),
         "post_smoothing_filled_hole_count": len(post_smoothing_filled_holes),
         "post_smoothing_filled_hole_pixels": sum(
             item["area"] for item in post_smoothing_filled_holes),
@@ -2980,6 +3152,8 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         "smoothing_rejected_by_budget": smoothing_rejected_by_budget,
         "smoothing_kernel": smoothing_kernel if smoothing_applied else None,
         "smoothing_changed_pixels": smoothing_pixels if smoothing_applied else 0,
+        "smoothing_minimum_structural_hole_retention": round(
+            smoothing_minimum_structural_retention, 6),
         "changed_pixels": changed,
         "change_ratio": round(changed / area, 6),
         "maximum_hole_area": maximum_hole_area,
@@ -2989,10 +3163,16 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         "maximum_compact_texture_hole_area": maximum_compact_texture_hole_area,
         "maximum_compact_texture_hole_span": maximum_compact_texture_hole_span,
         "maximum_compact_texture_aspect_ratio": maximum_compact_texture_aspect_ratio,
+        "maximum_image_texture_hole_area": PALLET_IMAGE_TEXTURE_MAXIMUM_AREA,
+        "maximum_image_texture_hole_span": PALLET_IMAGE_TEXTURE_MAXIMUM_SPAN,
+        "maximum_image_texture_gray_delta": PALLET_IMAGE_TEXTURE_MAXIMUM_GRAY_DELTA,
+        "maximum_image_texture_color_distance": (
+            PALLET_IMAGE_TEXTURE_MAXIMUM_COLOR_DISTANCE),
+        "effective_maximum_change_ratio": effective_maximum_change_ratio,
         "minimum_compact_texture_candidate_area_ratio": (
             minimum_compact_texture_candidate_area_ratio),
         "preserved_component_count": before_components,
-        "geometry_cleanup_version": 3,
+        "geometry_cleanup_version": 4,
         "route": "candidate_only",
     }
     adjustment.update(boundary_audit or {
@@ -3068,7 +3248,9 @@ class AnnotationAgent:
             raise ValueError("Agent 最大轮数须为 1～100")
         self.config, self.image, self.description, self.labels = config, image, description, labels
         self.reference = reference
-        self.width, self.height = Image.open(io.BytesIO(image)).size
+        with Image.open(io.BytesIO(image)) as decoded:
+            self.width, self.height = decoded.size
+            self.image_rgb = np.asarray(decoded.convert("RGB"))
         self.max_rounds = max_rounds
         self.on_progress = on_progress or (lambda event: None)
         self.shapes, self.audit, self.queue, self.applied = [], [], [], []
@@ -3106,7 +3288,7 @@ class AnnotationAgent:
                 raise ValueError("SAM 3 返回无效轮廓")
             if str(label).casefold() == "pallet":
                 shape, adjustment = refine_pallet_candidate_geometry(
-                    shape, self.width, self.height)
+                    shape, self.width, self.height, image_rgb=self.image_rgb)
                 if adjustment is not None:
                     self.candidate_geometry_adjustments.append(adjustment)
             shapes.append(shape)

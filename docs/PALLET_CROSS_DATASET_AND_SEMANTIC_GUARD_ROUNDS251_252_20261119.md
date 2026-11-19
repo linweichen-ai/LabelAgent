@@ -1,4 +1,4 @@
-# LabelAgent 栈板跨数据审计与语义保护（Round 251–254）
+# LabelAgent 栈板跨数据审计与语义保护（Round 251–255）
 
 ## 1. 用户看到的问题
 
@@ -40,6 +40,8 @@ CVAT 样本最大变化比例为 2.1998%，带结构孔候选的最低保留率�
 
 Round 254 将这项隔离复核接入正常的“开始推理”主流程，而不再依赖单独调用复核入口。它只在 Agent 完成后检查满足尺寸、填充率和箱体形状门槛的 pallet 候选；普通细长栈板不增加这项 VLM 请求。失败会产生人工复核记录，不会让整帧推理失败。真实第 120 帧任务 `5fcd253dd04f4659b97484e9162d9c50` 在 13.837 秒完成，保存前自动审计 1 项并把候选 7 以 0.98 置信度路由到人工复核，候选掩码、人工真值和训练批准均未修改。
 
+Round 255 补齐前台反馈：推理进度现在明确显示“隔离复核疑似箱体栈板”和已完成/总候选数，落在保存前的 Agent 阶段，不再显示成模糊的“正在处理”。真实浏览器注入相同运行状态后，标题正确、详情显示 `0/1`、进度约 91%、第 4 个阶段高亮。参考帧候选的浏览器读回校验也复刻服务器的尺寸、填充率和长宽比规则，能够接受合法的箱体形 pallet 审核记录，同时细长正常栈板仍走快速路径。`app.js` 缓存版本提升到 192，当前打开页面刷新后即可读取新代码。
+
 ## 5. 工作台稳定性修复
 
 部署重启时发现 D 盘临时目录低于 256 MiB 安全线。管理器现在会在 D 盘空间不足时把运行时临时文件自动转到 `%LOCALAPPDATA%\LabelAgent\runtime-temp\workbench-8765`，但仍保留 256 MiB 的硬性停机保护。旧日志和一个不活动工作树已做哈希校验后迁移到 C 盘备份，未删除模型、数据、人工真值或 Mask2Former 恢复包。
@@ -49,11 +51,11 @@ Round 254 将这项隔离复核接入正常的“开始推理”主流程，而�
 ## 6. 验收和安全边界
 
 - Python：1020/1020；
-- 浏览器交互：145/145；
+- 浏览器交互：147/147；
 - 候选结果：是；
 - 人工真值改写：否；
 - 自动批准训练：否；
-- 回滚备份：`D:\Apps\LabelAgent\.local\backups\pallet-semantic-negative-round251-20261119-154109`、`D:\Apps\LabelAgent\.local\backups\pallet-semantic-audit-round252-20261119-160829`、`D:\Apps\LabelAgent\.local\backups\pallet-isolated-audit-round253-20261119-162925` 与 `D:\Apps\LabelAgent\.local\backups\main-run-pallet-audit-round254-20261119-163945`。
+- 回滚备份：`D:\Apps\LabelAgent\.local\backups\pallet-semantic-negative-round251-20261119-154109`、`D:\Apps\LabelAgent\.local\backups\pallet-semantic-audit-round252-20261119-160829`、`D:\Apps\LabelAgent\.local\backups\pallet-isolated-audit-round253-20261119-162925`、`D:\Apps\LabelAgent\.local\backups\main-run-pallet-audit-round254-20261119-163945` 与 `D:\Apps\LabelAgent\.local\backups\pallet-audit-ui-round255-20261119-164915`。
 
 结构化证据见 `docs/evidence/workbench-stability-20261117/pallet-geometry-semantic-rounds251-252.json`。跨数据集原始审计 JSON 和可视化留在本机 `artifacts/pallet-geometry-cross-dataset-round251/`。
 

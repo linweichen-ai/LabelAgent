@@ -55,6 +55,16 @@ test('文件、话题和帧共同隔离审核', () => {
     assert.notEqual(vm.runInContext(expression, ctx), original);
 });
 
+test('箱体形栈板进入隔离复核而细长正常栈板保持快速路径', () => {
+  const ctx = context();
+  ctx.solid = {id: 8, label: 'pallet', points: [[0,0],[149,0],[149,99],[0,99]]};
+  ctx.normal = {id: 9, label: 'pallet', points: [[0,0],[239,0],[239,59],[0,59]]};
+  ctx.malformed = {id: 10, label: 'pallet', points: [[0,0],[1,1]]};
+  assert.equal(vm.runInContext('candidateClassAuditRequired(solid)', ctx), true);
+  assert.equal(vm.runInContext('candidateClassAuditRequired(normal)', ctx), false);
+  assert.equal(vm.runInContext('candidateClassAuditRequired(malformed)', ctx), true);
+});
+
 for (const scenario of ['success', 'failure', 'stale', 'readback', 'fingerprint', 'image', 'cache-hit']) test(`异步复审 ${scenario}`, async () => {
   const ctx = context();
   ctx.candidates = {'3': candidates()}; ctx.candidateReviewBindings = {};
@@ -87,9 +97,10 @@ for (const scenario of ['success', 'failure', 'stale', 'readback', 'fingerprint'
   else {await assert.rejects(promise);assert.equal(audits,scenario==='failure'?1:1)}
 });
 
-for (const scenario of ['命中','多候选','多候选一坏','疑似','冲突','artifact','image','fingerprint','类别','重复','缺失','失败','过期','配置','协议','缺版本','run-artifact','run-image','版本schema','版本hash','缺决策','异常决策','重复ID','非整数ID','原图读取期间候选变化','读回审核变化']) test(`严格缓存复用 ${scenario}`,async()=>{
+for (const scenario of ['命中','箱体栈板','多候选','多候选一坏','疑似','冲突','artifact','image','fingerprint','类别','重复','缺失','失败','过期','配置','协议','缺版本','run-artifact','run-image','版本schema','版本hash','缺决策','异常决策','重复ID','非整数ID','原图读取期间候选变化','读回审核变化']) test(`严格缓存复用 ${scenario}`,async()=>{
  const ctx=context(),clone=value=>JSON.parse(JSON.stringify(value)),version={schema_version:'labelagent.candidate_class_audit_version.v1',config_sha256:'c'.repeat(64),protocol_sha256:'d'.repeat(64),labels_sha256:'e'.repeat(64)};
  ctx.candidates={'3':candidates()};ctx.candidateReviewBindings={};
+ if(scenario==='箱体栈板')ctx.candidates['3']=[{id:8,label:'pallet',points:[[0,0],[149,0],[149,99],[0,99]]}];
  if(['多候选','多候选一坏','重复ID'].includes(scenario))ctx.candidates['3'].push({...candidates()[0],id:scenario==='重复ID'?1:2,label:'person'},{...candidates()[0],id:3,label:'floor'});
  if(scenario==='非整数ID')ctx.candidates['3'][0].id=1.5;
  const binding={candidate_artifact_sha256:'artifact',candidates:ctx.candidates['3'].map(shape=>({candidate_id:shape.id,candidate_fingerprint_sha256:'fp'+shape.id,candidate_fingerprint:'fp'+shape.id,candidate_sha256:'full'+shape.id}))};
@@ -102,7 +113,7 @@ for (const scenario of ['命中','多候选','多候选一坏','疑似','冲突'
  ctx.fetch=async url=>url.startsWith('/api/frame/')?{ok:true,arrayBuffer:async()=>{if(scenario==='原图读取期间候选变化')ctx.candidates['3'][0].label='person';return new ArrayBuffer(0)}}:{ok:true,json:async()=>{reads++;const value=clone(state);if(scenario==='读回审核变化'&&reads>1)value.agent_runs['3'].candidate_class_audits[0].route='human_review_required';return value}};
  ctx.api=async()=>{posts++;state.agent_runs['3']=clone(valid);return {frame:3,topic:'/camera',candidate_only:true,human_truth:false,candidates:clone(state.candidates['3']),binding:clone(binding),agent:clone(valid),input_sha256:'01',candidate_artifact_sha256:'artifact'}};
  const promise=vm.runInContext("auditReferenceCandidateSnapshot(3,candidates['3'])",ctx);
- if(['原图读取期间候选变化','读回审核变化','重复ID','非整数ID'].includes(scenario)){await assert.rejects(promise);assert.equal(posts,['重复ID','非整数ID'].includes(scenario)?1:0)}else{const result=await promise;assert.equal(posts,['命中','多候选','疑似','冲突'].includes(scenario)?0:1);assert.equal(result.candidate_class_audits.length,audits.length);assert.equal(ctx.referenceReviewedShapeKeys.size,1);assert.equal(ctx.referenceOpenSetReviewed,true)}
+ if(['原图读取期间候选变化','读回审核变化','重复ID','非整数ID'].includes(scenario)){await assert.rejects(promise);assert.equal(posts,['重复ID','非整数ID'].includes(scenario)?1:0)}else{const result=await promise;assert.equal(posts,['命中','箱体栈板','多候选','疑似','冲突'].includes(scenario)?0:1);assert.equal(result.candidate_class_audits.length,audits.length);assert.equal(ctx.referenceReviewedShapeKeys.size,1);assert.equal(ctx.referenceOpenSetReviewed,true)}
 });
 
 for (const scenario of ['success','frame','file','topic','generation','truth','hash','receipt','readback-frame','readback-file','readback-hash','readback-hash-mismatch','readback-unverified','readback-match-false','readback-match-missing','receipt-hash-missing']) test(`保存真值延迟响应 ${scenario}`, async () => {

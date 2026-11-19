@@ -1,5 +1,5 @@
 {
-  "schema_version": "labelagent.pallet_geometry_semantic_rounds251_254.v1",
+  "schema_version": "labelagent.pallet_geometry_semantic_rounds251_255.v1",
   "date": "2026-11-19",
   "candidate_only": true,
   "human_truth_modified": false,
@@ -85,14 +85,25 @@
     "final_c_free_gib": 2.20,
     "final_d_free_gib": 1.33
   },
+  "ui_acceptance": {
+    "phase": "candidate_class_audit",
+    "title": "隔离复核疑似箱体栈板",
+    "detail": "第 120 帧 · 正在隔离检查疑似箱体候选 0/1 · 本阶段已进行 2 秒 · 当前 4090 基线通常约 10 秒",
+    "progress_percent": "约 91%",
+    "active_stage_zero_based": 3,
+    "served_app_cache_version": 192,
+    "reference_candidate_validator_includes_solid_pallet": true
+  },
   "tests": {
     "python": {"passed": 1020, "failed": 0},
-    "browser": {"passed": 145, "failed": 0}
+    "browser": {"passed": 147, "failed": 0}
   },
   "production_hashes_sha256": {
     "candidate_class_audit.py": "CB368B4CF62E849376E0E37830461B9B9E676B9EE4008252EC65A5B90802140E",
     "server.py": "CED317163CB7E4B3F8417D1AE2525B48304FDED11CB116ADBBA73B954C803CA6",
     "workflow.py": "B35B31079F412634F533C29F1E76691AF10E6D78D3E0FBFA961BF69A4F6C3668",
     "manage_remote.py": "38A1A87987FDFD2D7929F31A4BB66CD14FA7CAA4FB0F95885487CFED7BE36AD6"
+    ,"app.js": "C6B2C7F305709D44F7D4E1E09893805E162B241B86E344D728AEE592D2894554"
+    ,"index.html": "65AF75F4C3E953F6A86E87E0FCA4C6046006340297C5B8CCF29A32A762DADA22"
   }
 }

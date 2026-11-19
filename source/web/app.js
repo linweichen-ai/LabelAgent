@@ -323,6 +323,21 @@ const candidateRefinementSnapshots=new Map();
 function candidateAuditScope(target=frame,sourceTopic=topic,sourcePath=loadedDataPath){return JSON.stringify([sourcePath,sourceTopic,Number(target)])}
 function candidateAuditSnapshot(items){return JSON.stringify(items.map(shape=>({id:shape.id,label:shape.label,score:shape.score,points:shape.points||[],holes:shape.holes||[],parts:shape.parts||[]})))}
 function candidateAuditFullSnapshot(value){if(Array.isArray(value))return '['+value.map(candidateAuditFullSnapshot).join(',')+']';if(value&&typeof value==='object')return '{'+Object.keys(value).sort().map(key=>JSON.stringify(key)+':'+candidateAuditFullSnapshot(value[key])).join(',')+'}';return JSON.stringify(value)}
+function candidateClassAuditRequired(shape){
+ if(['ego','person','other_robot'].includes(shape?.label))return true;
+ if(String(shape?.label||'').toLowerCase()!=='pallet')return false;
+ try{
+  const parts=Array.isArray(shape.parts)&&shape.parts.length?shape.parts:[shape],rings=parts.map(part=>({points:part.points,holes:Array.isArray(part.holes)?part.holes:[]}));
+  const validRing=ring=>Array.isArray(ring)&&ring.length>=3&&ring.every(point=>Array.isArray(point)&&point.length===2&&point.every(Number.isFinite));
+  if(rings.some(part=>!validRing(part.points)||part.holes.some(hole=>!validRing(hole))))return true;
+  const points=rings.flatMap(part=>part.points);if(!points.length)return true;
+  const xs=points.map(point=>point[0]),ys=points.map(point=>point[1]),width=Math.max(...xs)-Math.min(...xs)+1,height=Math.max(...ys)-Math.min(...ys)+1,bboxArea=width*height;
+  if(width<120||height<80||bboxArea<5000)return false;
+  const area=ring=>Math.abs(ring.reduce((sum,point,index)=>{const next=ring[(index+1)%ring.length];return sum+point[0]*next[1]-next[0]*point[1]},0)/2);
+  const foreground=rings.reduce((sum,part)=>sum+area(part.points)-part.holes.reduce((holes,hole)=>holes+area(hole),0),0);
+  return foreground/Math.max(1,bboxArea)>=.82&&width/Math.max(1,height)<=2.10;
+ }catch{return true}
+}
 function newCandidateRefinementId(){
  if(typeof crypto.randomUUID==='function')return crypto.randomUUID().replaceAll('-','');
  const bytes=crypto.getRandomValues(new Uint8Array(16));bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;return Array.from(bytes,value=>value.toString(16).padStart(2,'0')).join('');
@@ -348,7 +363,7 @@ async function auditReferenceCandidateSnapshot(target,items){
   const imageResponse=await fetch(`/api/frame/${target}?topic=${encodeURIComponent(sourceTopic)}`,{cache:'no-store'});if(!imageResponse.ok)throw Error('无法读取复审原图');
   const imageHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',await imageResponse.arrayBuffer())),value=>value.toString(16).padStart(2,'0')).join('');assertCurrent();
   const version=fresh.candidate_class_audit_version,validBinding=value=>value?.candidate_artifact_sha256===artifact&&Array.isArray(value?.candidates)&&value.candidates.length===(binding.candidates||[]).length&&(binding.candidates||[]).every(expected=>{const matches=value.candidates.filter(item=>item.candidate_id===expected.candidate_id);return matches.length===1&&(matches[0].candidate_fingerprint_sha256||matches[0].candidate_fingerprint)===(expected.candidate_fingerprint_sha256||expected.candidate_fingerprint)&&matches[0].candidate_sha256===expected.candidate_sha256});
-  const highRisk=items.filter(shape=>['ego','person','other_robot'].includes(shape.label)),validVersion=value=>value?.schema_version==='labelagent.candidate_class_audit_version.v1'&&['config_sha256','protocol_sha256','labels_sha256'].every(name=>typeof value[name]==='string'&&/^[a-f0-9]{64}$/.test(value[name])),validateAudits=run=>{
+  const highRisk=items.filter(candidateClassAuditRequired),validVersion=value=>value?.schema_version==='labelagent.candidate_class_audit_version.v1'&&['config_sha256','protocol_sha256','labels_sha256'].every(name=>typeof value[name]==='string'&&/^[a-f0-9]{64}$/.test(value[name])),validateAudits=run=>{
    const audits=run?.candidate_class_audits;if(run?.candidate_class_audit_status!=='complete'||run.candidate_artifact_sha256!==artifact||run.input_sha256!==imageHash||!validVersion(version)||!validVersion(run.candidate_class_audit_version)||candidateAuditFullSnapshot(run.candidate_class_audit_version)!==candidateAuditFullSnapshot(version)||!Array.isArray(audits))return false;
    const ids=highRisk.map(shape=>shape.id);if(ids.some(id=>!Number.isInteger(id))||new Set(ids).size!==ids.length||audits.length!==highRisk.length)return false;
    return highRisk.every(shape=>{const rows=audits.filter(audit=>audit?.candidate_id===shape.id);if(rows.length!==1)return false;const audit=rows[0],matches=(binding.candidates||[]).filter(item=>item.candidate_id===shape.id),classification=audit.decision?.classification;return matches.length===1&&audit.bound_current_label===shape.label&&audit.candidate_sha256===matches[0].candidate_fingerprint_sha256&&audit.candidate_artifact_sha256===artifact&&audit.source_image_sha256===imageHash&&audit.schema_version==='labelagent.blind_candidate_class_audit.v1'&&candidateAuditFullSnapshot(audit.audit_version)===candidateAuditFullSnapshot(version)&&typeof audit.prompt_sha256==='string'&&/^[a-f0-9]{64}$/.test(audit.prompt_sha256)&&typeof audit.audit_sha256==='string'&&/^[a-f0-9]{64}$/.test(audit.audit_sha256)&&audit.human_truth===false&&!audit.error&&audit.decision&&['known_label','uncertain','conflict'].includes(classification)&&['candidate_preserved','human_review_required'].includes(audit.route)});
@@ -472,7 +487,7 @@ function clearReferenceFinalize(){referencePreparationIntent=null;referenceFinal
 function appendCandidateClassAuditAlerts(alerts,items,run){
  const audits=Array.isArray(run?.candidate_class_audits)?run.candidate_class_audits:[],queue=(Array.isArray(run?.review_queue)?run.review_queue:[]).filter(item=>item?.source==='candidate_class_audit'),records=[...audits];
  for(const item of queue)if(!audits.some(audit=>String(audit.candidate_id)===String(item.candidate_id)))records.push(item);
- for(const item of items)if(['ego','person','other_robot'].includes(item.label)&&!records.some(audit=>String(audit.candidate_id)===String(item.id)))records.push({candidate_id:item.id,bound_current_label:item.label,route:'human_review_required',reason:'缺少类别盲审记录；复用不会触发新的 VLM 盲审，请人工核对类别与外观'});
+ for(const item of items)if(candidateClassAuditRequired(item)&&!records.some(audit=>String(audit.candidate_id)===String(item.id)))records.push({candidate_id:item.id,bound_current_label:item.label,route:'human_review_required',reason:'缺少类别盲审记录；复用不会触发新的 VLM 盲审，请人工核对类别与外观'});
  if(!records.length)return;
  alerts.hidden=false;const heading=document.createElement('strong');heading.textContent='候选类别盲审 · 原类别与 VLM 结果';alerts.append(heading);
  for(const audit of records){
@@ -730,12 +745,12 @@ async function regenerateReferenceDescription(targetFrame=frame){
 }
 window.regenerateReferenceDescription=regenerateReferenceDescription;
 $('describeButton').onclick=async()=>{const button=$('describeButton');if(button.disabled)return;button.disabled=true;button.textContent='生成中…';toast('正在生成真值描述…');try{await regenerateReferenceDescription(frame);toast('描述已生成，可以开始自动标注')}catch(e){toast(e.message)}finally{button.disabled=false;button.textContent='生成真值描述'}};
- const agentPhase={preflight:'检查模型与数据是否就绪',submitting:'请求已提交，等待后台确认',claiming:'后台已接收任务',starting:'准备任务',discovering:'VLM 识别当前帧可见类别',discovering_retry:'VLM 正在重试标签识别',describing:'VLM 生成真值描述',loading:'读取图像',generating:'SAM 3 生成候选',generated:'候选已生成',observing:'VLM 观察图像和候选',agent_refining:'VLM 后台精修候选',vlm_waiting:'VLM 正忙，任务正在排队等待',editing:'执行标注工具',edited:'工具执行结束',finished:'本帧结束',retrying:'服务短暂异常，正在自动重试本帧',saved:'候选已保存',completed:'本次处理结束',stopping:'正在停止',stopped:'已停止',failed:'运行失败'};
+ const agentPhase={preflight:'检查模型与数据是否就绪',submitting:'请求已提交，等待后台确认',claiming:'后台已接收任务',starting:'准备任务',discovering:'VLM 识别当前帧可见类别',discovering_retry:'VLM 正在重试标签识别',describing:'VLM 生成真值描述',loading:'读取图像',generating:'SAM 3 生成候选',generated:'候选已生成',observing:'VLM 观察图像和候选',agent_refining:'VLM 后台精修候选',candidate_class_audit:'隔离复核疑似箱体栈板',vlm_waiting:'VLM 正忙，任务正在排队等待',editing:'执行标注工具',edited:'工具执行结束',finished:'本帧结束',retrying:'服务短暂异常，正在自动重试本帧',saved:'候选已保存',completed:'本次处理结束',stopping:'正在停止',stopped:'已停止',failed:'运行失败'};
 const agentStop={done:'Agent 流程已结束（不代表正确）',needs_review:'旧记录：请求人工复核',max_rounds:'达到最大复查轮数',no_progress:'没有有效修改',cycle:'检测到循环修改',error:'模型或工具调用失败'};
- const agentProgressStage={preflight:0,submitting:0,claiming:0,starting:0,discovering:0,discovering_retry:0,describing:0,loading:0,generating:1,generated:1,observing:2,agent_refining:2,vlm_waiting:2,editing:3,edited:3,finished:4,retrying:1,saved:4,completed:4,stopping:4,stopped:4,failed:4};
- const agentProgressWeight={preflight:0.01,submitting:0.02,claiming:0.03,starting:0.04,discovering:0.06,discovering_retry:0.08,describing:0.10,loading:0.12,generating:0.22,generated:0.38,observing:0.58,agent_refining:0.58,vlm_waiting:0.58,editing:0.74,edited:0.86,finished:0.94,retrying:0.18,saved:1};
- const agentPhaseTypicalSeconds={discovering:16,discovering_retry:16,describing:16,observing:34,agent_refining:34};
- const agentPhaseProgressCeiling={discovering:0.20,discovering_retry:0.20,describing:0.20,observing:0.72,agent_refining:0.72};
+ const agentProgressStage={preflight:0,submitting:0,claiming:0,starting:0,discovering:0,discovering_retry:0,describing:0,loading:0,generating:1,generated:1,observing:2,agent_refining:2,candidate_class_audit:3,vlm_waiting:2,editing:3,edited:3,finished:4,retrying:1,saved:4,completed:4,stopping:4,stopped:4,failed:4};
+ const agentProgressWeight={preflight:0.01,submitting:0.02,claiming:0.03,starting:0.04,discovering:0.06,discovering_retry:0.08,describing:0.10,loading:0.12,generating:0.22,generated:0.38,observing:0.58,agent_refining:0.58,candidate_class_audit:0.90,vlm_waiting:0.58,editing:0.74,edited:0.86,finished:0.94,retrying:0.18,saved:1};
+ const agentPhaseTypicalSeconds={discovering:16,discovering_retry:16,describing:16,observing:34,agent_refining:34,candidate_class_audit:10};
+ const agentPhaseProgressCeiling={discovering:0.20,discovering_retry:0.20,describing:0.20,observing:0.72,agent_refining:0.72,candidate_class_audit:0.94};
 let progressTaskId=null,progressHighWater=0,runStatusConnectionMessage='',runStatusScopeMismatch=null;
 let progressFetching=false,progressFetchPromise=null;
 $('downloadDebug').onclick=async()=>{
@@ -814,6 +829,7 @@ function renderAgentProgressPanel(job,elapsed){
  if(phase==='preflight')details.push('正在确认 SAM、VLM 和数据状态');
  if(phase==='submitting')details.push('请求已提交，请勿重复点击');
  if(phase==='vlm_waiting')details.push(`共享模型正在处理其他请求，系统将自动重试${job.retry_in_seconds?`（约 ${job.retry_in_seconds} 秒后）`:''}`);
+ if(phase==='candidate_class_audit')details.push(`正在隔离检查疑似箱体候选 ${Number(job.audit_completed)||0}/${Number(job.audit_total)||0}`);
  if(latest?.label)details.push(`类别：${latest.label}`);
  const typicalSeconds=agentPhaseTypicalSeconds[phase];
  if(running&&typicalSeconds)details.push(`本阶段已进行 ${formatAgentDuration(phaseElapsed)} · 当前 4090 基线通常约 ${formatAgentDuration(typicalSeconds)}`);

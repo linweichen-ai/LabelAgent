@@ -2561,3 +2561,19 @@ SAM的ego无可用结果，18点补救成功。助理目视确认坡板与地面
 均为0，但旧数据远小目标frame74仍为0。因此该提示词仅保留为候选补救，不部署；下一步先过
 候选级盲审、更多跨序列正负样本和人工确认门槛。Python 1,078项、JavaScript 154项全部通过。
 详见`PROGRESSIVE_NEW_DATA_AND_OTHER_ROBOT_ROUNDS307_309_20261120.md`与结构化证据。
+
+### Round 310–317：other_robot 语义补漏上线（2026-11-20）
+
+旧`robotic pallet truck`补救词的4个新数据候选经8B盲审全部未通过；随后扩展颜色无关提示词，
+`autonomous pallet truck`在基线`robot`为0的frame74找回3个远小设备，并在70–74连续帧随真实
+机器人位置稳定移动。清晰frame71/73共3个候选有2个高置信保留；三个旧负帧和一个Capture
+困难负帧均为0。混合frame76的6个候选中2台远处机器人保留，本车双货叉和混合候选均未自动
+晋级，但全审计耗时143.476秒，因此正式规则只保留SAM分数最高的3个。
+
+正式触发条件为：8B明确发现`other_robot`且基线SAM为0，才追加`autonomous pallet truck`；
+保留候选继续走原有高风险盲审。与Round308相同新数据隔离验收得到3个other_robot候选，其中
+1个保留、2个转人工；首批候选7.929秒可见（含2次缓存命中，不能与冷请求直接归因比较），
+全流程79.631秒，VLM busy为0。Python 1,085项、JavaScript 154项全通过，生产源码已备份后
+部署，工作台/SAM/8B VLM就绪，正式state哈希未变。D盘仅275.85MiB，只允许单帧验收；470MiB
+过期下载残片的精确删除被安全策略拒绝，文件未改动。详见
+`OTHER_ROBOT_SEMANTIC_FALLBACK_ROUNDS310_317_20261120.md`与结构化证据。

@@ -31,6 +31,11 @@ PROMPTS = {
     "robotic_pallet_truck": "robotic pallet truck",
     "forklift_robot": "forklift robot",
     "industrial_mobile_robot": "industrial mobile robot",
+    "automated_guided_vehicle": "automated guided vehicle",
+    "warehouse_amr": "warehouse AMR",
+    "autonomous_pallet_truck": "autonomous pallet truck",
+    "robotic_forklift": "robotic forklift",
+    "floor_cleaning_robot": "floor cleaning robot",
 }
 
 

@@ -1,0 +1,44 @@
+{
+  "schema_version": "labelagent.other_robot_semantic_fallback.v1",
+  "date": "2026-11-20",
+  "status": "deployed_candidate_only",
+  "trigger": {
+    "visible_discovery_requires_other_robot": true,
+    "baseline_robot_candidates_must_be_zero": true,
+    "prompt": "autonomous pallet truck",
+    "maximum_candidates": 3,
+    "blind_class_audit_required": true
+  },
+  "round310": {"raw_candidates": 4, "preserved": 0, "human_review": 4, "result_sha256": "58f7f7c61a95ab84754c2acc7cef4439be54e954f4855921dd8b37ffbdadb52f"},
+  "round311": {"new_data_candidates": 4, "hard_negative_candidates": 0, "frame74_candidates": 3, "result_sha256": "5ca9cee2a1166dc289995d3ab6a89666611e0d4f640c056e15f1c3f0ecd68f27"},
+  "round312": {"frame": 74, "candidates": 3, "preserved": 0, "human_review": 3, "result_sha256": "788486a542c47c3876d105bb0814c1f15612811a8ba803ede6a1f389b445d600"},
+  "round313": {"frames": [70, 71, 72, 73, 74, 75, 76, 77, 78], "result_sha256": "c4af1eda6f38ac6a269cc93a536a3d1eda0d333fd34fbd6eb63705cecc160cdc"},
+  "round314": {"frames": [71, 73], "candidates": 3, "preserved": 2, "human_review": 1, "result_sha256": "1d4712ca2603fe33bf6dba1ade0a65a7a9d67a644ebba3508289d531a0141ffe"},
+  "round315": {"frames": [49, 55, 63], "candidates": 0, "result_sha256": "4cd2e32456bf926b7610d3a713968b740e76d5435f96b4c7208b5b5cf8903d5e"},
+  "round316": {"frame": 76, "candidates": 6, "preserved": 2, "human_review": 4, "bottom_large_ego_risk": 1, "audit_elapsed_ms": 143475.725, "result_sha256": "1c6976a8e86abfd2aa49fc2aff69f6cdf724eba48a67a765c5881df5e92dd5e5"},
+  "round317": {
+    "candidate_visible_elapsed_ms": 7929.289,
+    "full_pipeline_elapsed_ms": 79630.65,
+    "background_elapsed_ms": 71701.0,
+    "agent_elapsed_ms": 7718.241,
+    "audit_elapsed_ms": 63978.878,
+    "candidate_counts": {"pallet": 12, "person": 1, "floor": 1, "ego": 1, "other_robot": 3},
+    "other_robot_preserved": 1,
+    "other_robot_human_review": 2,
+    "vlm_cache_delta": {"hits": 2, "misses": 8, "busy_rejections": 0},
+    "production_state_sha256": "237844f73ff4495e575c6a3f966260b9385efbdf1edee7d0e5177518470ddfab"
+  },
+  "verification": {"python_tests_passed": 1085, "javascript_tests_passed": 154},
+  "deployment": {
+    "backup_path": "D:\\Apps\\LabelAgent\\work\\backups\\round317-other-robot-fallback-20261120",
+    "before_workflow_sha256": "d2b6deb9382e61590bc0e8b71a869358b9e94b783fc028aabfed0b8aadf2baf5",
+    "before_server_sha256": "6247fffed9ed1e00152d3f86594e78a9a391f74347a49fc506f49510cc0fe825",
+    "after_workflow_sha256": "c617e1b89cfa6859067e9d66f4a17236b1d52071513d8cf5d7dd5d822a8676ca",
+    "after_server_sha256": "1988db30720a944f69469cc351cd34d592ae09a94958152d4b745cc7aa1290d7",
+    "workbench_ready": true,
+    "sam_ready": true,
+    "vlm_ready": true
+  },
+  "storage": {"d_free_mib": 275.85, "one_frame_required_mib": 264.0, "one_frame_ready": true, "long_batch_allowed": false, "stale_incomplete_fragment_mib": 470.0, "fragment_removed": false, "removal_blocked_by_policy": true},
+  "boundaries": {"candidate_only": true, "human_truth": false, "approved_for_training": false, "model_modified": false, "oss_modified": false}
+}

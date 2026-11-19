@@ -5241,6 +5241,8 @@ def generate_reference_draft():
                     discovery, labels,
                     probe_missing_selected=probe_missing_selected)
                 discovery["recall_probe_labels"] = recall_probes
+                config["other_robot_semantic_fallback_visible"] = (
+                    "other_robot" in discovery.get("visible_labels", []))
                 if not selected:
                     raise ValueError("VLM 未发现可生成候选的已知类别；请改用单类别起稿或点提示 SAM")
                 update_run_status(phase="describing", visible_labels=selected,
@@ -5282,6 +5284,8 @@ def generate_reference_draft():
                 "sam_prompts": prompt_payload,
                 "ego_bottom_point_fallback": bool(
                     config.get("ego_bottom_point_fallback")),
+                "other_robot_semantic_fallback_visible": bool(
+                    config.get("other_robot_semantic_fallback_visible")),
                 "sam3_point_url": config.get("sam3_point_url"),
                 "auto_detect_visible": auto_detect_visible,
                 "probe_missing_selected": probe_missing_selected,

@@ -1976,6 +1976,62 @@ class WorkflowTests(unittest.TestCase):
                     {"description": "区分相机载体、其他机器人与人员。", "prompts": prompts}, labels)
                 self.assertEqual(result["prompts"], expected)
 
+    def test_other_robot_semantic_fallback_is_bounded_and_candidate_only(self):
+        candidates = []
+        for candidate_id, score in enumerate((0.4, 0.9, 0.8, 0.7), 1):
+            candidate = shape(candidate_id, "other_robot")
+            candidate["score"] = score
+            candidates.append(candidate)
+        baseline = copy.deepcopy(candidates)
+        retained, filtered = workflow.select_other_robot_semantic_fallback_candidates(
+            candidates, maximum=3)
+        self.assertEqual([item["id"] for item in retained], [2, 3, 4])
+        self.assertEqual([item["candidate_id"] for item in filtered], [1])
+        self.assertTrue(all(item["candidate_only"] for item in retained))
+        self.assertTrue(all(item["human_truth"] is False for item in retained))
+        self.assertTrue(all(item["approved_for_training"] is False
+                            for item in retained))
+        self.assertEqual([item["points"] for item in candidates],
+                         [item["points"] for item in baseline])
+
+    def test_other_robot_semantic_fallback_runs_only_after_visible_empty_baseline(self):
+        agent = workflow.AnnotationAgent(
+            {"other_robot_semantic_fallback_visible": True}, image_bytes(),
+            {"prompts": [{"label": "other_robot", "text": "robot"}]},
+            ["other_robot"], 1)
+        with patch.object(workflow, "sam_text", side_effect=[[], [sam_result()]]) as call:
+            agent.generate()
+        self.assertEqual([item.args[1] for item in call.call_args_list],
+                         ["robot", "autonomous pallet truck"])
+        self.assertEqual(len(agent.shapes), 1)
+        self.assertEqual(agent.shapes[0]["source"],
+                         "sam_text_other_robot_semantic_fallback")
+        self.assertEqual(
+            agent.sam_generation["semantic_fallbacks"][0]["trigger"],
+            "visible_label_baseline_empty")
+
+    def test_other_robot_semantic_fallback_stays_off_without_visible_evidence(self):
+        agent = workflow.AnnotationAgent(
+            {}, image_bytes(),
+            {"prompts": [{"label": "other_robot", "text": "robot"}]},
+            ["other_robot"], 1)
+        with patch.object(workflow, "sam_text", return_value=[]) as call:
+            agent.generate()
+        self.assertEqual(call.call_count, 1)
+        self.assertEqual(agent.shapes, [])
+        self.assertNotIn("semantic_fallbacks", agent.sam_generation)
+
+    def test_other_robot_semantic_fallback_does_not_duplicate_baseline(self):
+        agent = workflow.AnnotationAgent(
+            {"other_robot_semantic_fallback_visible": True}, image_bytes(),
+            {"prompts": [{"label": "other_robot", "text": "robot"}]},
+            ["other_robot"], 1)
+        with patch.object(workflow, "sam_text", return_value=[sam_result()]) as call:
+            agent.generate()
+        self.assertEqual(call.call_count, 1)
+        self.assertEqual(len(agent.shapes), 1)
+        self.assertNotIn("semantic_fallbacks", agent.sam_generation)
+
     def test_cargo_floor_prompt_is_overridden_even_when_gpt_returns_ambiguous_text(self):
         result = workflow.restrict_description(
             {"description": "cargo area", "prompts": [{"label": "cargo_floor", "text": "cargo floor"}]},

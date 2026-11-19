@@ -1327,6 +1327,44 @@ SAM_PROMPT_OVERRIDES = {
     "slope": "traversable surface",
 }
 
+OTHER_ROBOT_SEMANTIC_FALLBACK_PROMPT = "autonomous pallet truck"
+OTHER_ROBOT_SEMANTIC_FALLBACK_MAX_CANDIDATES = 3
+
+
+def select_other_robot_semantic_fallback_candidates(
+        candidates, maximum=OTHER_ROBOT_SEMANTIC_FALLBACK_MAX_CANDIDATES):
+    """Bound a recall-only fallback without turning it into class truth.
+
+    The fallback is invoked only after 8B discovery explicitly reports a
+    visible other_robot and the canonical ``robot`` SAM query returns nothing.
+    SAM confidence is used only to cap review cost; every retained proposal is
+    still high-risk and must pass the existing label-blind class audit.
+    """
+    if type(maximum) is not int or not 1 <= maximum <= 8:
+        raise ValueError("other_robot fallback candidate limit must be 1～8")
+    ranked = sorted(
+        candidates,
+        key=lambda item: (-(item.get("score") if isinstance(
+            item.get("score"), (int, float)) else -1), item["id"]))
+    retained, suppressed = ranked[:maximum], ranked[maximum:]
+    for candidate in retained:
+        candidate["source"] = "sam_text_other_robot_semantic_fallback"
+        candidate["source_prompt"] = OTHER_ROBOT_SEMANTIC_FALLBACK_PROMPT
+        candidate["candidate_only"] = True
+        candidate["human_truth"] = False
+        candidate["approved_for_training"] = False
+    filters = [{
+        "candidate_id": candidate["id"],
+        "label": candidate.get("label"),
+        "score": candidate.get("score"),
+        "reason_code": "other_robot_fallback_candidate_limit",
+        "route": "human_review_required",
+        "candidate_mutated": False,
+        "human_truth": False,
+        "approved_for_training": False,
+    } for candidate in suppressed]
+    return retained, filters
+
 
 def fallback_sam_prompt(label):
     return SAM_PROMPT_FALLBACKS.get(label) or (
@@ -3622,6 +3660,32 @@ class AnnotationAgent:
             results = (batched[item["label"]]["results"] if batched is not None else
                        sam_text(self.image, item["text"], self.config))
             shapes = self.candidates(results, item["label"])
+            if (item["label"] == "other_robot" and not shapes
+                    and self.config.get(
+                        "other_robot_semantic_fallback_visible") is True):
+                self.progress(
+                    "generating", prompt=OTHER_ROBOT_SEMANTIC_FALLBACK_PROMPT,
+                    label=item["label"],
+                    operation="other_robot_semantic_fallback")
+                raw_fallback = self.candidates(
+                    sam_text(self.image, OTHER_ROBOT_SEMANTIC_FALLBACK_PROMPT,
+                             self.config), item["label"])
+                shapes, fallback_filters = (
+                    select_other_robot_semantic_fallback_candidates(raw_fallback))
+                self.candidate_filters.extend(fallback_filters)
+                self.sam_generation.setdefault("semantic_fallbacks", []).append({
+                    "label": item["label"],
+                    "trigger": "visible_label_baseline_empty",
+                    "prompt": OTHER_ROBOT_SEMANTIC_FALLBACK_PROMPT,
+                    "raw_candidate_count": len(raw_fallback),
+                    "retained_candidate_count": len(shapes),
+                    "suppressed_candidate_count": len(fallback_filters),
+                    "maximum_candidates":
+                        OTHER_ROBOT_SEMANTIC_FALLBACK_MAX_CANDIDATES,
+                    "candidate_only": True,
+                    "human_truth": False,
+                    "approved_for_training": False,
+                })
             if item["label"] == "slope" and item["text"] == "traversable surface":
                 shapes, filtered = filter_slope_candidate_geometry(shapes, self.height)
                 self.candidate_filters.extend(filtered)

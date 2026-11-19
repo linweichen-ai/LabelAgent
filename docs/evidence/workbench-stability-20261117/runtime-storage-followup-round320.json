@@ -1,0 +1,42 @@
+{
+  "schema_version": "labelagent.runtime_storage_followup.v1",
+  "round": 320,
+  "date": "2026-11-20",
+  "operation": "reversible_ntfs_compression",
+  "stable_before_free_mib": 983.68,
+  "after_free_mib": 1142.89,
+  "freed_mib": 159.21,
+  "files_deleted": 0,
+  "targets": [
+    {
+      "path": "D:\\Apps\\LabelAgent\\.local\\backups",
+      "files": 111,
+      "logical_mib": 60.18,
+      "compressed_after": 111
+    },
+    {
+      "path": "D:\\Apps\\LabelAgent\\work\\datasets\\Capture_20261103\\workbench_before_import",
+      "files": 2,
+      "logical_mib": 163.22,
+      "compressed_after": 2
+    }
+  ],
+  "write_rate_samples_over_one_mib_per_second": 0,
+  "readiness": {
+    "one_frame_ready": true,
+    "one_frame_required_mib": 264.0,
+    "one_hundred_frames_ready": true,
+    "one_hundred_frames_required_mib": 1056.0,
+    "storage_status": "low",
+    "actual_one_hundred_frame_inference_executed": false
+  },
+  "production_state_sha256": "237844f73ff4495e575c6a3f966260b9385efbdf1edee7d0e5177518470ddfab",
+  "boundaries": {
+    "model_weights_modified": false,
+    "dataset_images_modified": false,
+    "mcap_modified": false,
+    "human_truth_modified": false,
+    "training_approval_modified": false,
+    "oss_modified": false
+  }
+}

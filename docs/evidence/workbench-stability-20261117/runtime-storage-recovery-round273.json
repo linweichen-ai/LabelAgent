@@ -1,0 +1,35 @@
+{
+  "round": 273,
+  "date": "2026-11-20",
+  "action": "reversible_ntfs_compression",
+  "target": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\cvat_task430_job423_20261026",
+  "target_is_reparse_point": false,
+  "target_last_write_time": "2026-11-10T01:18:18+08:00",
+  "files_compressed": 42821,
+  "directories_seen": 6275,
+  "logical_bytes": 14686239319,
+  "stored_bytes_after_compression": 6815611054,
+  "compression_ratio": 2.2,
+  "c_free_gib_before": 0.234,
+  "c_free_gib_after": 7.578,
+  "recovered_gib": 7.344,
+  "files_deleted": 0,
+  "files_moved": 0,
+  "post_action_readback": {
+    "home_http_status": 200,
+    "run_status": "idle",
+    "selected_file": "D:\\Apps\\LabelAgent\\work\\datasets\\CVAT_Task3_20261028\\CVAT_Task3_SAM3_candidates.mcap",
+    "selected_topic": "/CVAT/Task3/images",
+    "sam_model_loaded": true,
+    "vlm_model": "labelagent-vlm8b",
+    "c_free_gib": 7.582,
+    "d_free_gib": 1.193
+  },
+  "boundaries": {
+    "production_files_modified": false,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "model_weights_modified": false,
+    "pagefile_configuration_modified": false
+  }
+}

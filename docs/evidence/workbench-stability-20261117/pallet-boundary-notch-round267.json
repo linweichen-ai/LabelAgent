@@ -1,0 +1,90 @@
+{
+  "schema_version": "labelagent.pallet_boundary_notch_round267.v1",
+  "date": "2026-11-19",
+  "implementation_commit": "13603a245eb38f2242dfa62bf12a07ca93a6dd7b",
+  "production_backup": "D:\\Apps\\LabelAgent\\.local\\backups\\pallet-boundary-notch-round267-20261119-233130",
+  "backup_manifest_sha256": "1179E0C5CC2CE460A46025FB3B0625496CCAF9AAC8E7B4F8B1D7C5CA7B93C5EC",
+  "production_hashes": {
+    "source/agent/workflow.py": "AFE8C9D522EE6E5EBF24396B274F8FBD2EC9C69E777A97D64945AFDD7D79D122",
+    "source/agent/server.py": "75B6B423652425F1D28D88E5F2CFF4C96E8F6F0B38257049E38765920C40324E"
+  },
+  "real_frame_audit": {
+    "artifact_sha256": "82C9413C12FA17A8EAC98E625842FE78404D03B20570927AD52878CCE2755769",
+    "visual_sha256": "0B437996DBF287D6D69D69FC860355E1C7EBA107C095F540B34C10C6A4AA6AF0",
+    "frames": [
+      {"frame": 110, "candidate_count": 14, "truth_count": 0, "holes_before": 45, "holes_after": 3, "boundary_notches": 27, "boundary_notch_pixels": 2423, "change_pixels": 5054, "change_ratio": 0.042308, "components_before": 9, "components_after": 8, "component_merges": 1, "structural_retention": 1.0},
+      {"frame": 112, "candidate_count": 14, "truth_count": 0, "holes_before": 41, "holes_after": 3, "boundary_notches": 37, "boundary_notch_pixels": 1828, "change_pixels": 3139, "change_ratio": 0.025615, "components_before": 5, "components_after": 5, "component_merges": 0, "structural_retention": 0.985075},
+      {"frame": 118, "candidate_count": 14, "truth_count": 0, "holes_before": 4, "holes_after": 4, "boundary_notches": 9, "boundary_notch_pixels": 1352, "change_pixels": 1352, "change_ratio": 0.01094, "components_before": 8, "components_after": 6, "component_merges": 2, "structural_retention": 1.0}
+    ],
+    "gate_passed": true
+  },
+  "cvat_full_audit": {
+    "artifact_sha256": "95E3F178D9F2EA43F43A06C87EE15AE6BD789D20C95EAB882E36C86AEA2662B1",
+    "frames": 150,
+    "total_candidates": 1316,
+    "pallet_candidates": 1126,
+    "adjusted": 1055,
+    "boundary_notches": 402,
+    "total_component_merges": 6,
+    "maximum_component_merges_per_candidate": 2,
+    "maximum_change_ratio": 0.048994,
+    "minimum_structural_retention": 0.895911,
+    "violations": 0,
+    "gate_passed": true,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false
+  },
+  "capture_20261103_non_application_check": {
+    "source_round266_artifact_sha256": "B25E4C9A38CCB7C8E0C400D18D8FB7B9A7BF12AE9500ADFA7894672DE57857C9",
+    "sample_count": 160,
+    "round266_adjusted": 0,
+    "maximum_candidate_area_ratio": 0.018783,
+    "v5_boundary_route_minimum_area_ratio": 0.3,
+    "small_distant_pallet_test_passed": true,
+    "claim_scope": "gate_based_non_application_not_full_v5_image_guided_rerun"
+  },
+  "tests": {
+    "python_passed": 1038,
+    "python_subtests_passed": 186,
+    "browser_passed": 149,
+    "targeted_pallet_passed": 14
+  },
+  "production_readback": {
+    "frame": 118,
+    "wrong_binding_rejected_http": 409,
+    "candidate_sha256_before": "bc56b30310ae7da82c9cf7108d09be0f0ef9be8e5dc58df5ce7ba9ca7d4a6933",
+    "agent_sha256_before": "518e83dcba14c323bf7c6c86d00f5660094114f0a231a37e0b2ff3765d742c7c",
+    "candidate_sha256_after": "a5cd053c660a6c1bce3bccea3e57519123ad58a66c6d684701ad5ce50acc17ef",
+    "agent_sha256_after": "2056d2397c70d433c4595957289ffa6e71d77fcd1bde53d5dc887785063087e3",
+    "schema": "labelagent.pallet_geometry_refresh.v5",
+    "changed": true,
+    "adjusted_candidate_count": 12,
+    "candidate_count": 14,
+    "truth_count": 0,
+    "main_shape": {"shape_id": 11, "change_pixels": 1352, "change_ratio": 0.01094, "boundary_notches": 9, "boundary_notch_pixels": 1352, "components_before": 8, "components_after": 6, "component_merges": 2, "structural_retention": 1.0},
+    "second_identical_refresh_changed": false,
+    "second_identical_refresh_adjusted": 0,
+    "candidate_hash_stable_after_second_refresh": true,
+    "agent_hash_stable_after_second_refresh": true,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "approved_for_deployment": false
+  },
+  "runtime": {
+    "page_http": 200,
+    "bootstrap_loaded": true,
+    "sam_ready": true,
+    "main_vlm_ready": true,
+    "optional_fast_vlm_enabled": false,
+    "run_readiness": true,
+    "storage_ready": true,
+    "storage_free_mib": 3805.93,
+    "final_drive_free_mib": {"C": 1084.79, "D": 3293.23},
+    "run_status": "idle",
+    "workbench_listener_pid": 54268,
+    "tunnel_pid": 74360,
+    "sam_tunnel_pid": 12688
+  }
+}

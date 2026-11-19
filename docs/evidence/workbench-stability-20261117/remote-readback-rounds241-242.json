@@ -1,0 +1,21 @@
+{
+  "recorded_at": "2026-11-19T13:40:00+08:00",
+  "branch": "codex/workbench-stability-20261117",
+  "published_commit": "0be96d54b2339fadae129654bc0c5682cea28004",
+  "github": {
+    "remote": "origin",
+    "readback_commit": "0be96d54b2339fadae129654bc0c5682cea28004",
+    "exact_match": true
+  },
+  "cnb": {
+    "remote": "cnb",
+    "readback_commit": "0be96d54b2339fadae129654bc0c5682cea28004",
+    "exact_match": true
+  },
+  "scope": [
+    "review evidence optimization",
+    "pallet geometry cleanup",
+    "tests",
+    "deployment and evidence documentation"
+  ]
+}

@@ -349,6 +349,7 @@ def chat(config, instruction, image, extra_images=(), response_schema=None):
                                                    "busy_retry_count": raw.get("busy_retry_count", 0),
                                                    "model_route": raw.get("model_route"),
                                                    "fast_fallback_reason": raw.get("fast_fallback_reason"),
+                                                   "structured_fallback_reason": raw.get("structured_fallback_reason"),
                                                    "local_vlm": raw.get("local_vlm"),
                                                    "parsed": response})
         return response
@@ -523,6 +524,48 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
                 local_busy = (error.code == 503 and
                               ("local vlm is busy" in detail.lower()
                                or '"busy"' in detail.lower()))
+                structured_constraint_failure = (
+                    error.code == 400 and response_schema is not None
+                    and ("prefix_allowed_tokens_fn" in detail
+                         or "constraint is unsatisfiable" in detail.lower()))
+                if structured_constraint_failure:
+                    # The local decoder can occasionally reach an impossible
+                    # token prefix even though the same prompt can still emit
+                    # valid JSON. Retry exactly once without the transport-level
+                    # grammar; the normal JSON parser and Agent protocol
+                    # validator remain mandatory afterwards.
+                    fallback_payload = copy.deepcopy(payload)
+                    fallback_payload.pop("response_format", None)
+                    fallback_request = urllib.request.Request(
+                        route_config["llm_url"].rstrip("/") + "/chat/completions",
+                        json.dumps(fallback_payload).encode(),
+                        headers={"Content-Type": "application/json",
+                                 "Authorization": "Bearer " + route_config.get("llm_key", "")})
+                    if raw is not None:
+                        raw["structured_fallback_reason"] = "decoder_constraint_unsatisfiable"
+                    try:
+                        with urllib.request.urlopen(
+                                fallback_request, timeout=timeout_seconds) as response:
+                            result = json.load(response)
+                    except (TimeoutError, socket.timeout) as fallback_error:
+                        raise ValueError(
+                            "llm_timeout: 结构化解码恢复请求超过等待上限") from fallback_error
+                    except urllib.error.HTTPError as fallback_error:
+                        try:
+                            fallback_detail = fallback_error.read().decode(
+                                "utf-8", "replace")[:300]
+                        except Exception:
+                            fallback_detail = str(fallback_error.reason)
+                        raise ValueError(
+                            f"大模型结构化解码恢复失败（HTTP {fallback_error.code}）："
+                            f"{fallback_detail}") from fallback_error
+                    except urllib.error.URLError as fallback_error:
+                        raise ValueError(
+                            f"大模型结构化解码恢复失败：{fallback_error.reason}") from fallback_error
+                    final_route = route_name
+                    if route_name == "small_image_fast":
+                        _close_fast_route_circuit(config)
+                    break
                 if route_name == "small_image_fast" and (
                         local_busy or error.code in (408, 429)
                         or 500 <= error.code <= 599):

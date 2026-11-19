@@ -1,0 +1,92 @@
+{
+  "schema_version": "labelagent.pallet_material_audit_protocol_round269.v1",
+  "date": "2026-11-20",
+  "status": "implemented_tested_deployed_and_live_accepted",
+  "implementation_commit": "fe07aac350afeaff75ab5b9ac1f03aaf9edad9b9",
+  "tests": {
+    "pytest_tests_passed": 1044,
+    "subtests_passed": 186
+  },
+  "local_material_review": {
+    "selection": "top12_by_pixel_area_from_round268_stratified160",
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "contact_sheet_sha256": "65A58BAAC264C000B6937F760A43503FA4DEB7A966B275454262E2C7CB2FDBD0",
+    "review_json_sha256": "726E9C9AF1A6EB0D3D22EDBEED3D4D970113E4779FD79C50F4FFC1930B9B728E",
+    "material_three_case_sha256": "D0A8A5678549C2067E047E6ED63C56DCB2EDF65ED46797948065A4B039F225D2",
+    "box_negative_sha256": "7F76908D13635CD92B1A5E47C92329495BC0D8E1C09020C6B1151BE0BCE2D196",
+    "protocol_failure_sha256": "6112B2B710312F77C4D4571B098C7A77F6762F43B62A052555070FFCC65D94F8",
+    "cases": [
+      {
+        "name": "blue_plastic_occluded",
+        "route": "candidate_preserved",
+        "classification": "known_label",
+        "observed_label": "pallet",
+        "confidence": 0.98,
+        "protocol_retry_count": 0,
+        "elapsed_ms": 9168.302
+      },
+      {
+        "name": "wood_clear",
+        "route": "candidate_preserved",
+        "classification": "known_label",
+        "observed_label": "pallet",
+        "confidence": 0.98,
+        "protocol_retry_count": 0,
+        "elapsed_ms": 6876.588
+      },
+      {
+        "name": "severely_occluded_sliver",
+        "route": "human_review_required",
+        "classification": "conflict",
+        "observed_label": null,
+        "confidence": 0.95,
+        "protocol_retry_count": 0,
+        "elapsed_ms": 10544.148
+      }
+    ]
+  },
+  "deployment": {
+    "production_file_sha256": "2839A559E6AAA21E656CE4938D89B61B474D26704CBA3956C949FEBF3AE8A87E",
+    "backup_dir": "D:\\Apps\\LabelAgent\\.local\\backups\\candidate-audit-protocol-round269-20261119-235846",
+    "backup_manifest_sha256": "4856ADCEDEDD62A5AF96E2C15B9DFA58F8ED2B6B7A5F3ED8ABF3BE43CF5F5249",
+    "protocol_sha256": "3c9a7bb6491dc6b64f1441c7860019290759922ee2de97763ca8d7313937364d",
+    "optional_5090_vlm_ready": false
+  },
+  "production_acceptance": {
+    "dataset": "CVAT_Task3_20261028",
+    "topic": "/CVAT/Task3/images",
+    "frame": 132,
+    "candidate_id": 9,
+    "http_status": 200,
+    "elapsed_ms": 8552.4,
+    "cache_hit": false,
+    "old_protocol_sha256": "d9f1da2316ae44787612acecc1dd12b371a2bfae2a78ea177c0b396bdfbff706",
+    "new_protocol_sha256": "3c9a7bb6491dc6b64f1441c7860019290759922ee2de97763ca8d7313937364d",
+    "route": "human_review_required",
+    "classification": "conflict",
+    "observed_label": null,
+    "candidate_supported": false,
+    "reason_code": "ontology_conflict",
+    "confidence": 0.98,
+    "protocol_retry_count": 0,
+    "protocol_repair": "non_known_reason_code_normalized",
+    "candidate_count_before": 14,
+    "candidate_count_after": 14,
+    "candidate_artifact_sha256_before": "7d88c20852f706ee41f7e92ea49d058fd3225e7548ae3b20d20fa2730327619c",
+    "candidate_artifact_sha256_after": "7d88c20852f706ee41f7e92ea49d058fd3225e7548ae3b20d20fa2730327619c",
+    "truth_before": null,
+    "truth_after": null,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "audit_sha256": "232d6819d523d099a9639fead171c5d1f5701ee5b2c9551caf43b67642f3c251"
+  },
+  "limitations": [
+    "The top-12 review is selected visual review, not a random accuracy estimate.",
+    "Cached 55.24 ms box replay is not cold inference latency.",
+    "Candidate audit output is not human truth and is not approved for training or deployment.",
+    "No SAM3 training or post-training was performed in this round."
+  ]
+}

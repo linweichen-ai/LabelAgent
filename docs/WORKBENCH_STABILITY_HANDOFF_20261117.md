@@ -2303,3 +2303,11 @@ Round267对Capture_20261103的结论仍主要来自候选尺寸门禁；原有�
 先对CVAT变化最大的第114/106/116/104/108/67/65帧生成在线前后对比并逐张复核：最大变化4.8994%、最低结构保留96.5517%、最多合并2个局部组件，长叉孔和深色板缝仍保留。随后对Capture四路相机各分层40个、共160个候选执行完整原图路径；160项全部成功读取对应1920×1536图像，调整0、填孔0、边缘凹口修复0、组件合并0、违规0。这把“门禁推断”升级为实际图像调用证据，但仍只代表这160个分层样本，不外推到全部4423个候选或未来新数据。
 
 定向8项、正式Python1040项及186个子测试通过，审计工具实现提交`4dc2d7160fdcccc20f812426ec7364a9151fc097`。生产推理代码未改变，因此没有重启或重新部署；候选、人工真值、训练批准和模型均未写入。详细报告见`docs/PALLET_V5_CROSS_DATA_IMAGE_AUDIT_ROUND268_20261119.md`，结构化证据见`docs/evidence/workbench-stability-20261117/pallet-v5-cross-data-image-audit-round268.json`。厂内对比图和完整160项明细只保留本机`artifacts/pallet-boundary-notch-round268/`。
+
+### Round 269：栈板材质复核与候选审核协议修复（2026-11-20）
+
+从Capture分层样本中选取面积最大的12个候选做原图与隔离视图复核，确认多数蓝色塑料和木质栈板有效，同时发现camera_0第72帧为明显纸箱误检、camera_1第92帧为证据不足的遮挡碎片。旧VLM输出在蓝塑料样本上曾同时给出`classification=conflict`和`candidate_supported=true`，属于字段协议矛盾而非识别失败。
+
+候选审核现在加强字段组合约束，仅在协议错误时最多盲重试一次；对“已经明确不支持候选、但原因码误写为visible_known_label”的唯一窄矛盾，只修正原因码，不改类别、置信度、可见证据、候选或路由。蓝塑料、木质和严重遮挡三类独立样本均一次请求完成，分别为9.168秒、6.877秒和10.544秒；前两项保留pallet，遮挡碎片进入人工复核。
+
+正式工作台CVAT Task3第132帧旧协议记录被正确失效，新协议于8.552秒完成纸箱候选复核：0.98置信度、`human_review_required`、`protocol_retry_count=0`，只执行窄原因码修复。候选仍为14项且候选产物哈希前后相同，人工真值仍不存在，训练批准仍为false。正式测试1044项及186个子测试通过；生产文件哈希`2839A559...8A87E`，回滚点`candidate-audit-protocol-round269-20261119-235846`，实现提交`fe07aac350afeaff75ab5b9ac1f03aaf9edad9b9`。完整报告见`docs/PALLET_MATERIAL_AUDIT_PROTOCOL_ROUND269_20261120.md`，结构化证据见`docs/evidence/workbench-stability-20261117/pallet-material-audit-protocol-round269.json`；厂内图像只保留本机。

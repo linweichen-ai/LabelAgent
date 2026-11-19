@@ -2137,3 +2137,19 @@ Round235 已挡住旧 SAM 点选和区域编辑结果，但继续审计确认三
 完整说明见 [第二百三十八轮报告](CANDIDATE_IMPORT_BINDING_ROUND238_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/candidate-import-binding-round238.json)。HTTP反向脚本和原始JSON只保留本地未跟踪；终端中文乱码只是Windows代码页显示，不影响UTF-8证据与哈希判定。
 
 实现与测试提交 `08d9c98121e9ce68c216fd299315cc068678156e` 已推送并精确回读 GitHub/CNB，两端分支头与本地一致。未跟踪证据和厂内内容未上传。
+
+## 第二百三十九轮模型配置与辅助工具链状态绑定（已部署，2026-11-19）
+
+继续审计全局配置入口后确认：网页、正式启动器、本地VLM连接工具、隔离工作台和新数据集冒烟工具没有统一配置版本绑定；其中隔离启动和新数据脚本的类别写入还停留在旧接口格式。现由配置SHA、路径、相机和文件载入代次共同绑定写入；运行中修改返回503，旧绑定返回409，失败落盘恢复原配置。bootstrap/state同时隐藏主VLM和快速VLM两个密钥原文，但密钥变化仍进入配置指纹。
+
+浏览器升为UI153、`app.js?v=191`。Python994/994、网页69/69、定向7/7和编译/差异检查通过。正式第一次验收恰逢真实任务运行，503门禁正常生效；任务完成后当前绑定保存200、错误SHA 409且错误值未写入，SAM和VLM均就绪。部署备份位于 `D:\Apps\LabelAgent\.local\backups\config-write-binding-round239-20261119-125631`。
+
+完整说明见 [第二百三十九轮报告](CONFIG_WRITE_BINDING_ROUND239_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/config-write-binding-round239.json)。实现提交 `ae9c75d4cc01d761d74f982fdb836f63fa9902ad`。
+
+## 第二百四十轮Agent整帧删空保护（已部署，2026-11-19）
+
+操作者反馈推理完成后没有轮廓。过程证据确认不是画布刷新故障：第78帧SAM先产生13个候选，Agent在6轮中全部删除，最终候选为0。现保留通过几何和候选过滤的SAM初稿；若后续自动修改把非空整帧删空，自动恢复初稿，标记 `empty_result_rollback / agent_empty_result_rollback` 并转人工复核，仍不写人工真值或批准训练。
+
+Python995/995、网页69/69和定向删空回滚1/1通过。修复部署后，操作者对CVAT Task3第85帧发起真实单帧任务，约43.7秒完成，按帧读回15个候选（14 pallet、1 floor），路径、话题、帧和载入代次一致；人工真值与训练批准均为0。该真实任务验证运行、保存和显示链路；整帧回滚分支由确定性测试覆盖。
+
+部署备份位于 `D:\Apps\LabelAgent\.local\backups\agent-empty-result-rollback-round240-20261119-130115`。完整说明见 [第二百四十轮报告](AGENT_EMPTY_RESULT_ROLLBACK_ROUND240_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/agent-empty-result-rollback-round240.json)。实现提交 `840d9c1f89b7f67132845e6d2d80e34eca82dd39`。过去24小时的通俗汇总见 [工作总结](LABELAGENT_LAST_24_HOURS_SUMMARY_20261119.md)。

@@ -1,0 +1,77 @@
+{
+  "round": 239,
+  "date": "2026-11-19",
+  "status": "deployed_and_verified",
+  "objective": "Bind every model configuration write to the exact workspace, file activation generation, and prior full configuration state",
+  "versions": {
+    "ui": 153,
+    "app_js": 191
+  },
+  "implementation": {
+    "binding_fields": [
+      "expected_path",
+      "expected_topic",
+      "expected_file_activation_generation",
+      "expected_config_state_sha256"
+    ],
+    "secret_fields_hidden": [
+      "llm_key",
+      "llm_fast_key"
+    ],
+    "secret_changes_included_in_digest": true,
+    "active_run_block_status": 503,
+    "stale_binding_status": 409,
+    "save_failure_rolls_back_memory": true,
+    "browser_updated": true,
+    "startup_manager_updated": true,
+    "isolated_manager_label_write_repaired": true,
+    "local_vlm_connector_updated": true,
+    "new_dataset_smoke_updated": true
+  },
+  "tests": {
+    "python": {
+      "passed": 994,
+      "total": 994
+    },
+    "web": {
+      "passed": 69,
+      "total": 69
+    },
+    "targeted": {
+      "passed": 7,
+      "total": 7
+    },
+    "compile": "passed",
+    "diff_check": "passed"
+  },
+  "production_probe": {
+    "first_attempt_during_real_active_run_status": 503,
+    "retry_after_terminal_status": 200,
+    "previous_sha_matches": true,
+    "scope_matches": true,
+    "new_sha_readback_matches": true,
+    "stale_sha_status": 409,
+    "stale_value_not_applied": true,
+    "secrets_exposed_by_bootstrap": 0,
+    "ui_153_served": true,
+    "app_191_served": true,
+    "model_ready": true,
+    "sam_ready": true,
+    "vlm_ready": true
+  },
+  "backup": {
+    "path": "D:\\Apps\\LabelAgent\\.local\\backups\\config-write-binding-round239-20261119-125631"
+  },
+  "implementation_commit": "ae9c75d4cc01d761d74f982fdb836f63fa9902ad",
+  "safety": {
+    "human_truth_writes": 0,
+    "reference_frame_writes": 0,
+    "training_approvals": 0,
+    "file_library_writes": 0,
+    "disk_data_file_deletes": 0,
+    "fine_tuning_started_by_round": false,
+    "post_training_started_by_round": false,
+    "oss_writes": 0
+  }
+}
+

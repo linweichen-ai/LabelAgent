@@ -1,0 +1,69 @@
+{
+  "round": 240,
+  "date": "2026-11-19",
+  "status": "deployed_verified_with_live_candidate_readback",
+  "incident": {
+    "frame": 78,
+    "initial_sam_candidates": 13,
+    "final_candidates_before_fix": 0,
+    "review_rounds": 6,
+    "root_cause": "agent_removed_every_sam_candidate",
+    "canvas_or_overlay_failure": false
+  },
+  "implementation": {
+    "preserve_validated_sam_draft": true,
+    "rollback_when_initial_nonempty_and_final_empty": true,
+    "stop_reason": "empty_result_rollback",
+    "review_reason_code": "agent_empty_result_rollback",
+    "route": "human_review_required",
+    "candidate_only": true,
+    "auto_truth": false,
+    "auto_training_approval": false
+  },
+  "tests": {
+    "python": {
+      "passed": 995,
+      "total": 995
+    },
+    "web": {
+      "passed": 69,
+      "total": 69
+    },
+    "targeted_empty_rollback": {
+      "passed": 1,
+      "total": 1
+    }
+  },
+  "live_acceptance": {
+    "task_id": "97ae4fc8f9ae44b58e0714322054ac77",
+    "dataset": "CVAT_Task3_20261028/CVAT_Task3_SAM3_candidates.mcap",
+    "topic": "/CVAT/Task3/images",
+    "frame": 85,
+    "file_activation_generation": 1,
+    "status": "completed",
+    "elapsed_seconds": 43.69225549697876,
+    "candidate_count": 15,
+    "candidate_labels": {
+      "pallet": 14,
+      "floor": 1
+    },
+    "human_truth": false,
+    "approved_for_training": false
+  },
+  "backup": {
+    "path": "D:\\Apps\\LabelAgent\\.local\\backups\\agent-empty-result-rollback-round240-20261119-130115"
+  },
+  "deployment": {
+    "management_pid": 53328,
+    "listener_pid": 53756,
+    "tunnel_pid_4090": 64416,
+    "sam_tunnel_pid_5090": 57760,
+    "workflow_sha256": "257D6B6AD43C7604127B03ADB8CD0BBD4DDCF2A28BAB1C313D4A1F71BBCE4BB7",
+    "model_ready": true,
+    "sam_ready": true,
+    "vlm_ready": true,
+    "final_run_status": "completed"
+  },
+  "implementation_commit": "840d9c1f89b7f67132845e6d2d80e34eca82dd39"
+}
+

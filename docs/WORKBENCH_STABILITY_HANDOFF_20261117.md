@@ -1974,4 +1974,4 @@ Round224 重启时正式启动器提示工作临时目录低于2 GiB。只读盘
 
 部署备份位于 `D:\Apps\LabelAgent\.local\backups\status-scope-round227-20261119-090906`，为指向C盘实体的目录联接。管理器重建后最终管理PID36848、监听PID63940、4090通道PID48488、5090通道PID64852；五项探针均HTTP200，状态idle，状态接口已实测回传当前SFL文件和camera 1。正式状态与文件会话哈希不变；只有无数据图像的启动就绪预热，没有候选、人工真值、训练批准、微调、后训练或OSS写入。
 
-完整说明见 [第二百二十七轮报告](RUN_STATUS_SCOPE_ROUND227_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/run-status-scope-round227.json)。实现、文档与远端精确回读提交号将在本轮同步完成后补入。
+完整说明见 [第二百二十七轮报告](RUN_STATUS_SCOPE_ROUND227_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/run-status-scope-round227.json)。实现、测试和首版文档提交 `199cb19f8b05a862e5208f994ee985ac0fef86c2` 已推送并分别回读 GitHub/CNB，同名分支两端精确匹配。浏览器脚本、截图、原始结果和厂内数据保持本地未跟踪。

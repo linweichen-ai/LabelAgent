@@ -2369,3 +2369,13 @@ C盘继续下降到51.38 MiB。只读盘点确认工作树实验产物已实际�
 生产类别盲审新增极细长pallet门槛：长边至少120、短边至少4、短长比不超过0.08、前景面积至少500。CVAT Task3的1,143个pallet候选中只额外命中9个；普通239×59侧视栈板仍走快速路径。最极端3项真实本地VLM盲审3/3为conflict并进入人工复核，候选、真值和训练批准均未修改。UTF-8正式Python1073项及186个子测试、前端151项全部通过。
 
 生产仅替换类别复核模块、`app.js`和`index.html`，回滚点`round278-thin-pallet-audit-predeploy-20261120-030524`。上线后HTTP200、idle，页面v194，CVAT Task3、相机、149帧候选计数和第44帧人工真值均保持，主VLM在线。详见`docs/PALLET_FALSE_POSITIVE_AUDIT_ROUND278_20261120.md`与对应结构化证据。
+### Round 281–282：真实新数据端到端验收与地面/斜坡互改保护（2026-11-20）
+
+真实 `Capture_20261103/capture.mcap` 已在隔离工作台完成一帧浏览器端到端验收：
+152 帧、4 路图像、8/8 类，SAM3→VLM→Agent→原图候选叠加完整通过。首轮发现无人工
+参考的 Agent 把整片 floor 因叠加色误改为 slope；新增保护后，同帧稳定得到
+`floor=1, slope=1, person=1`，候选约 1.047 秒可见、后台复查约 1.750 秒完成，
+0 页面/HTTP/失败请求且未写人工真值。242/242 完整测试通过，正式只读浏览器验收通过。
+正式状态哈希保持 `65D5D634...26D7E4`，149 帧候选、1 帧真值和 1 帧参考帧均未变化；
+回滚点为 `D:\Apps\LabelAgent\.local\backups\unreferenced-surface-reclass-round282-20261120-034656`。
+完整记录见 `NEW_DATASET_INFERENCE_AND_SURFACE_GUARD_ROUNDS281_282_20261120.md`。

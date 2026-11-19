@@ -1,0 +1,77 @@
+{
+  "schema_version": "labelagent.new-dataset-surface-reclass-round281-282.v1",
+  "created_date": "2026-11-20",
+  "dataset": {
+    "name": "capture.mcap",
+    "topic": "/capture/camera_0/image",
+    "frames": 152,
+    "image_topics": 4,
+    "selected_classes": 8
+  },
+  "round281_before_guard": {
+    "browser_acceptance_passed": true,
+    "first_response_ms": 953.0,
+    "candidate_visible_ms": 953.0,
+    "background_complete_ms": 2125.0,
+    "candidate_counts": {
+      "person": 1,
+      "slope": 2
+    },
+    "visual_result_accepted": false,
+    "failure_mode": "unreferenced Agent reclassified the broad floor candidate as slope",
+    "truth_write_requests": 0,
+    "human_truth": false,
+    "approved_for_training": false
+  },
+  "round282_after_guard": {
+    "browser_acceptance_passed": true,
+    "first_response_ms": 1032.0,
+    "candidate_visible_ms": 1047.0,
+    "background_complete_ms": 1750.0,
+    "total_ms": 3453.0,
+    "candidate_counts": {
+      "floor": 1,
+      "person": 1,
+      "slope": 1
+    },
+    "visual_result_accepted_for_candidate_review": true,
+    "agent_review_status": "complete",
+    "candidate_class_audit_status": "complete",
+    "page_errors": 0,
+    "failed_requests": 0,
+    "http_errors": 0,
+    "truth_write_requests": 0,
+    "human_truth": false,
+    "approved_for_training": false
+  },
+  "tests": {
+    "targeted": 5,
+    "targeted_passed": 5,
+    "full_test_agent": 242,
+    "full_test_agent_passed": 242,
+    "python_utf8": true
+  },
+  "production": {
+    "deployed": true,
+    "workbench_http": 200,
+    "state_summary_http": 200,
+    "model_readiness_http": 200,
+    "run_status_http": 200,
+    "sam_http": 200,
+    "vlm_http": 200,
+    "run_status": "idle",
+    "candidate_frames": 149,
+    "truth_frames": 1,
+    "reference_frames": 1,
+    "edit_agent_sha256": "E589B9633D02C44A88A94A285A042DA993419659291A792217429A5A42A9A20F",
+    "state_sha256_before": "65D5D634F503584B5E668551513A5D78FCC96077BD94F02390E560392C0267E4",
+    "state_sha256_after": "65D5D634F503584B5E668551513A5D78FCC96077BD94F02390E560392C0267E4",
+    "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\unreferenced-surface-reclass-round282-20261120-034656"
+  },
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "full_dataset_generalization_proven": false,
+    "model_weights_changed": false
+  }
+}

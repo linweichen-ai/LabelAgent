@@ -296,6 +296,24 @@ def apply_operations(shapes, operations, labels, width, height, next_id=None, ga
                 continue
             source_label = current[shape_id].get("label")
             target_label = item["label"]
+            # Floor and slope are both broad traversable surfaces.  Without a
+            # reviewed reference, their colored overlays can make one appear
+            # visually identical to the other and an LLM may relabel the
+            # entire warehouse floor as a ramp.  Preserve the independent SAM
+            # proposals and require a human decision for this global semantic
+            # swap; a reference-backed review may still correct the label.
+            if (not allow_high_risk_reclassify
+                    and source_label != target_label
+                    and source_label in GLOBAL_TRAVERSABLE_LABELS
+                    and target_label in GLOBAL_TRAVERSABLE_LABELS):
+                review_queue.append({
+                    **item,
+                    "reason": "无人工参考的新数据不能把整片地面与斜坡自动互改；已保留原候选并转人工复核",
+                    "reason_code": "unreferenced_global_surface_reclassify_requires_human_review",
+                    "source_label": source_label,
+                    "target_label": target_label,
+                })
+                continue
             if (not allow_high_risk_reclassify
                     and source_label != target_label
                     and ({source_label, target_label} & HIGH_RISK_INSTANCE_LABELS)):

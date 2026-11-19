@@ -224,6 +224,30 @@ class EditTests(unittest.TestCase):
         self.assertTrue(applied)
         self.assertFalse(queue)
 
+    def test_unreferenced_floor_to_slope_reclassification_requires_human_review(self):
+        floor = shape(label="floor", left=1, right=38)
+        updated, applied, queue = apply_operations([floor], [{
+            "operation": "reclassify", "shape_ids": [1], "label": "slope",
+            "reason": "overlay color looked like a ramp",
+        }], ["floor", "slope"], 40, 40, allow_high_risk_reclassify=False)
+        self.assertEqual(updated, [floor])
+        self.assertFalse(applied)
+        self.assertEqual(
+            queue[0]["reason_code"],
+            "unreferenced_global_surface_reclassify_requires_human_review")
+        self.assertEqual(queue[0]["source_label"], "floor")
+        self.assertEqual(queue[0]["target_label"], "slope")
+
+    def test_reference_backed_floor_to_slope_reclassification_remains_available(self):
+        floor = shape(label="floor")
+        updated, applied, queue = apply_operations([floor], [{
+            "operation": "reclassify", "shape_ids": [1], "label": "slope",
+            "reason": "reviewed reference confirms the inclined ramp",
+        }], ["floor", "slope"], 40, 40, allow_high_risk_reclassify=True)
+        self.assertEqual(updated[0]["label"], "slope")
+        self.assertTrue(applied)
+        self.assertFalse(queue)
+
     def test_unreferenced_large_floor_expansion_requires_human_review(self):
         mask = np.zeros((40, 40), dtype=np.uint8)
         mask[20:39, 2:39] = 1

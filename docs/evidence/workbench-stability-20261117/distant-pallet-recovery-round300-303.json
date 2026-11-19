@@ -1,0 +1,47 @@
+{
+  "schema_version": "labelagent.distant_pallet_recovery_summary.v1",
+  "date": "2026-11-20",
+  "dataset": "Capture_20261103",
+  "selected_difficult_candidates": 16,
+  "round300_fixed_grid": {
+    "new_model_requests": 0,
+    "formal_matches": 0,
+    "relaxed_boundary_matches": 1,
+    "visual_result": "background_false_expansion",
+    "safe_automatic_replacements": 0,
+    "report_sha256": "dde0b404f32497ef7f36e51a481b71e91d2eb827efbc238cd64b3eec752ef14b"
+  },
+  "round301_candidate_centered": {
+    "real_sam3_requests": 28,
+    "successful_requests": 28,
+    "raw_proposals": 102,
+    "edge_rejected": 29,
+    "mapped_proposals": 73,
+    "geometry_matches": 2,
+    "workbench_writes": 0,
+    "candidate_file_sha256": "64ccdd66d8242d3b1a0fd4215d16ab1470a2718fbb007c49069090a34b9bcaf2",
+    "receipt_sha256": "19fbce17cb3a4442884a339ac6c2f33d10b7790ef6165e566dba2dcbf5f46089"
+  },
+  "round302_axis_guard": {
+    "maximum_minor_axis_ratio": 1.5,
+    "minimum_axis_elongation": 2.0,
+    "matches_after_guard": 1,
+    "rejected_case": "camera_1 frame 89 vertical background expansion",
+    "report_sha256": "16d68ca1e8ac6a74cfd9d814ff53398ad6204089592280209161e24988caf9cd"
+  },
+  "round303_instance_guard": {
+    "maximum_other_baseline_fraction": 0.1,
+    "matches_after_guard": 0,
+    "rejected_case": "camera_0 frame 35 overlaps another pallet candidate",
+    "report_sha256": "db75bfed2f419af86c50b806e3f2d01bd6e2f45bcdca0c779c723d836e13125b",
+    "contact_sheet_sha256": "8e446e25bb76917f5c16a0c96a15b8aec57bbce1f839e9ad6a6f4c6d497d08d6"
+  },
+  "final": {
+    "safe_automatic_replacements": 0,
+    "deploy": false,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "production_state_sha256": "237844f73ff4495e575c6a3f966260b9385efbdf1edee7d0e5177518470ddfab"
+  }
+}

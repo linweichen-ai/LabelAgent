@@ -1,0 +1,38 @@
+{
+  "schema_version": "labelagent.runtime_storage_recovery.v1",
+  "date": "2026-11-20",
+  "before": {
+    "readiness_code": "storage_low",
+    "ready": false,
+    "d_free_mib": 79.91,
+    "required_mib_for_one_frame": 264.0
+  },
+  "artifact_relocation": {
+    "file_count": 6282,
+    "bytes": 1278720015,
+    "sha256_mismatches": 0,
+    "old_target_removed_after_verification": true,
+    "new_target": "C:/Users/seer/Documents/ChatGPT/Seer2clw/cold_storage/labelagent_stability_worktree_20261117-artifacts",
+    "original_worktree_path_preserved_by_junction": true
+  },
+  "stale_diagnostic_logs": {
+    "file_count": 71,
+    "logical_bytes_truncated_after_manifest": 617099264,
+    "active_lenovo_log_touched": false,
+    "manifest": "C:/Users/seer/Documents/ChatGPT/Seer2clw/cold_storage/storage_cleanup_stale_diagnostics_20261120.json"
+  },
+  "after": {
+    "readiness_code": "ready",
+    "ready": true,
+    "d_free_mib": 1154.39,
+    "storage_status": "low",
+    "warning_below_mib": 2048,
+    "workbench_http": 200,
+    "sam_text_http": 200,
+    "sam_point_http": 200,
+    "vlm_models_http": 200,
+    "run_status": "idle"
+  },
+  "production_state_sha256_before": "237844f73ff4495e575c6a3f966260b9385efbdf1edee7d0e5177518470ddfab",
+  "production_state_sha256_after": "237844f73ff4495e575c6a3f966260b9385efbdf1edee7d0e5177518470ddfab"
+}

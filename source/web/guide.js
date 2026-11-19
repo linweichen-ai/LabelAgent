@@ -452,7 +452,27 @@
     };
   }
 
-  function openRunReadiness(event) {
+  function renderRunReadinessChecks(checks) {
+    let passed = 0;
+    for (const [name, result] of Object.entries(checks)) {
+      const item = readinessDialog?.querySelector(`[data-readiness="${name}"]`);
+      if (!item) continue;
+      item.classList.toggle('passed', result.ok === true);
+      item.classList.toggle('blocked', result.ok === false && result.pending !== true);
+      item.querySelector('b').textContent = result.pending ? '检查中' : result.ok ? result.pass : result.fail;
+      if (result.ok === true) passed += 1;
+    }
+    const ready = passed === Object.keys(checks).length;
+    byId('runReadinessSummary').textContent = ready
+      ? `检查通过：将从第 ${byId('frameNumber')?.value || 0} 帧开始处理 ${byId('taskCount')?.value || 1} 帧。`
+      : Object.values(checks).some(result => result.pending)
+        ? '正在核对保存空间，确认不会在任务中途因磁盘不足而失败。'
+        : `还有 ${Object.keys(checks).length - passed} 项未就绪，请先补齐后再运行。`;
+    byId('runReadinessConfirm').disabled = !ready;
+    return ready;
+  }
+
+  async function openRunReadiness(event) {
     if (allowRunOnce) {
       allowRunOnce = false;
       return;
@@ -460,26 +480,31 @@
     if (byId('runButton')?.getAttribute('aria-busy') === 'true') return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    const checks = runReadiness();
+    const checks = {...runReadiness(), storage: {
+      ok: false, pending: true, pass: '', fail: '正在检查保存空间',
+    }};
     readinessScope = currentWorkbenchScope();
-    let passed = 0;
-    for (const [name, result] of Object.entries(checks)) {
-      const item = readinessDialog?.querySelector(`[data-readiness="${name}"]`);
-      if (!item) continue;
-      item.classList.toggle('passed', result.ok);
-      item.classList.toggle('blocked', !result.ok);
-      item.querySelector('b').textContent = result.ok ? result.pass : result.fail;
-      if (result.ok) passed += 1;
-    }
-    const ready = passed === Object.keys(checks).length;
-    byId('runReadinessSummary').textContent = ready
-      ? `检查通过：将从第 ${byId('frameNumber')?.value || 0} 帧开始处理 ${byId('taskCount')?.value || 1} 帧。`
-      : `还有 ${Object.keys(checks).length - passed} 项未就绪，请先补齐后再运行。`;
-    byId('runReadinessConfirm').disabled = !ready;
+    renderRunReadinessChecks(checks);
     const prepare = byId('runReadinessPrepare');
     prepare.hidden = checks.reference.ok && checks.description.ok;
     prepare.textContent = checks.reference.ok ? '生成描述并继续' : '去准备参考帧';
     if (!readinessDialog.open) readinessDialog.showModal();
+    const checkedScope = readinessScope;
+    try {
+      const response = await fetch(`/api/run/readiness?count=${encodeURIComponent(checkedScope.count)}`, {cache: 'no-store'});
+      const result = await response.json();
+      if (!sameReadinessScope(checkedScope, currentWorkbenchScope())) return;
+      const storage = result?.storage;
+      checks.storage = storage ? {
+        ok: storage.ready === true,
+        pass: storage.warning ? `空间偏低但本次可运行 · 剩余 ${storage.free_mib} MiB` : `空间充足 · 剩余 ${storage.free_mib} MiB`,
+        fail: storage.message || '保存空间不足，尚未启动推理',
+      } : {ok: false, pass: '', fail: '无法确认保存空间，尚未启动推理'};
+    } catch (error) {
+      if (!sameReadinessScope(checkedScope, currentWorkbenchScope())) return;
+      checks.storage = {ok: false, pass: '', fail: `保存空间检查失败：${error.message}`};
+    }
+    renderRunReadinessChecks(checks);
   }
 
   function openQuickActions() {

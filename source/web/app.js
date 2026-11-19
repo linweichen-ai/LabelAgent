@@ -902,6 +902,7 @@ async function ensureAutoLabelReadiness(requestedFrames,startFrame,count){
  if(!readiness.sam?.ready)failures.push(`SAM：${readiness.sam?.error||readiness.sam?.status||'未就绪'}`);
  if(!readiness.vlm?.ready)failures.push(`VLM：${readiness.vlm?.error||readiness.vlm?.status||'未就绪'}`);
  if(!data.ready)failures.push(`数据：${data.message||'当前帧无法读取'}`);
+ if(data.ready&&data.storage?.warning)toast(data.storage.message||'保存空间偏低，建议只运行少量帧');
   const descriptionRecoverable=!workflow.ready&&['description_missing','description_stale'].includes(workflow.code);
   if(descriptionRecoverable&&!failures.length){
    if(!Number.isInteger(workflow.reference_frame))throw Error('尚未启动推理。参考描述需要更新，但服务没有返回有效参考帧');

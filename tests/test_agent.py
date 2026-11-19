@@ -7,6 +7,7 @@ import tempfile
 import threading
 import time
 import unittest
+from types import SimpleNamespace
 import cv2
 import numpy as np
 from pathlib import Path
@@ -2536,6 +2537,16 @@ def active_auto_clear_scope(frame):
 
 
 class ServerTests(unittest.TestCase):
+    def setUp(self):
+        # Product code must fail closed on low disk, but unrelated unit tests
+        # must not inherit the developer machine's momentary free-space state.
+        self._disk_usage_patcher = patch.object(
+            server.shutil, "disk_usage",
+            return_value=SimpleNamespace(
+                total=20 * 1024**3, used=10 * 1024**3, free=10 * 1024**3))
+        self._disk_usage_patcher.start()
+        self.addCleanup(self._disk_usage_patcher.stop)
+
     def test_primary_model_prewarm_uses_main_route_without_state_writes(self):
         old_state = server.state
         old_status = server.run_status
@@ -5777,6 +5788,38 @@ class ServerTests(unittest.TestCase):
                 "frame": 3, "count": 1}).json
             self.assertFalse(invalid["ready"])
             self.assertEqual(invalid["code"], "frame_out_of_range")
+        finally:
+            server.state = old_state
+
+    def test_run_data_readiness_blocks_low_storage_before_frame_decode(self):
+        old_state = server.state
+        video = FakeVideo()
+        calls = []
+        original_frame = video.frame
+
+        def tracked_frame(topic, index):
+            calls.append((topic, index))
+            return original_frame(topic, index)
+
+        video.frame = tracked_frame
+        server.state = {"video": video, "topic": "camera0"}
+        try:
+            client = server.app.test_client()
+            with patch.object(server.shutil, "disk_usage", return_value=SimpleNamespace(
+                    total=4 * 1024**3, used=3_700 * 1024**2, free=300 * 1024**2)):
+                blocked = client.post("/api/run/data-readiness", json={
+                    "frame": 1, "count": 10}).json
+                self.assertFalse(blocked["ready"])
+                self.assertEqual(blocked["code"], "storage_low")
+                self.assertIn("尚未启动推理", blocked["message"])
+                self.assertEqual(calls, [])
+
+                allowed = client.post("/api/run/data-readiness", json={
+                    "frame": 1, "count": 1}).json
+                self.assertTrue(allowed["ready"])
+                self.assertTrue(allowed["storage"]["warning"])
+                self.assertEqual(allowed["storage"]["required_mib"], 264.0)
+                self.assertEqual(calls, [("camera0", 1)])
         finally:
             server.state = old_state
 

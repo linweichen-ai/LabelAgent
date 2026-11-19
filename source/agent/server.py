@@ -4,6 +4,7 @@ import copy
 import json
 import math
 import os
+import shutil
 import threading
 import time
 import uuid
@@ -73,6 +74,9 @@ REFINEMENT_CANCEL_TTL_SECONDS = 300
 file_sessions_dirty = False
 batch_review_index_cache = None
 DEFAULT_REVIEW_ROUNDS = 6
+RUN_STORAGE_WARNING_BYTES = 2 * 1024 * 1024 * 1024
+RUN_STORAGE_BASE_RESERVE_BYTES = 256 * 1024 * 1024
+RUN_STORAGE_PER_FRAME_BYTES = 8 * 1024 * 1024
 REVIEW_PACKET_SCHEMA = "labelagent.slope-review-packet.v1"
 REVIEW_PACKET_ASSISTANT_SCHEMA = "labelagent.slope-assistant-review.v1"
 REVIEW_PACKET_DECISION_SCHEMA = "labelagent.slope-review-decision.v1"
@@ -4151,27 +4155,73 @@ def model_readiness():
                    elapsed_ms=round((time.perf_counter() - started) * 1000, 3))
 
 
+def run_storage_readiness(frame_count=1):
+    """Return a conservative, user-visible save-space contract for a run."""
+    if isinstance(frame_count, bool) or not isinstance(frame_count, int) or not 1 <= frame_count <= 100:
+        raise ValueError("处理帧数须为 1～100")
+    required = RUN_STORAGE_BASE_RESERVE_BYTES + frame_count * RUN_STORAGE_PER_FRAME_BYTES
+    try:
+        usage = shutil.disk_usage(WORK)
+    except OSError as error:
+        return {
+            "ready": False, "warning": True, "status": "unavailable",
+            "frame_count": frame_count, "required_bytes": required,
+            "required_mib": round(required / (1024 * 1024), 2),
+            "message": f"无法检查工作目录保存空间：{str(error)[:180]}；尚未启动推理",
+        }
+    free = int(usage.free)
+    ready = free >= required
+    warning = free < RUN_STORAGE_WARNING_BYTES
+    free_mib = round(free / (1024 * 1024), 2)
+    required_mib = round(required / (1024 * 1024), 2)
+    if not ready:
+        message = (f"保存空间不足：工作目录所在磁盘可用 {free_mib:.2f} MiB，"
+                   f"本次 {frame_count} 帧至少预留 {required_mib:.2f} MiB。"
+                   "尚未启动推理，请先释放空间或减少处理帧数")
+    elif warning:
+        message = (f"保存空间偏低：可用 {free_mib:.2f} MiB；"
+                   f"本次 {frame_count} 帧已通过 {required_mib:.2f} MiB 安全门槛，"
+                   "建议只运行少量帧并尽快释放空间")
+    else:
+        message = f"保存空间充足：可用 {free_mib:.2f} MiB"
+    return {
+        "ready": ready, "warning": warning,
+        "status": "blocked" if not ready else "low" if warning else "ok",
+        "frame_count": frame_count, "free_bytes": free,
+        "free_mib": free_mib, "required_bytes": required,
+        "required_mib": required_mib,
+        "warning_below_bytes": RUN_STORAGE_WARNING_BYTES,
+        "message": message,
+    }
+
+
 @app.get("/api/run/readiness")
 def run_readiness():
     """Validate local workflow prerequisites before a long model request starts."""
+    try:
+        requested_count = int(request.args.get("count", "1"))
+        storage = run_storage_readiness(requested_count)
+    except (TypeError, ValueError):
+        return jsonify(ready=False, code="frame_request_invalid",
+                       message="本次处理数量须为 1～100 个整数帧")
     with lock:
         if state.get("video") is None or not state.get("topic"):
             return jsonify(ready=False, code="data_missing",
-                           message="请先加载图像或 MCAP 数据")
+                           message="请先加载图像或 MCAP 数据", storage=storage)
         references = state.get("reference_frames", {}).get(state["topic"], [])
         if not references:
             return jsonify(ready=False, code="reference_missing",
-                           message="请先人工确认并锁定一个参考帧")
+                           message="请先人工确认并锁定一个参考帧", storage=storage)
         reference = references[0]
         if not state.get("truth", {}).get(str(reference)):
             return jsonify(ready=False, code="reference_truth_missing",
                            reference_frame=reference,
-                           message=f"参考帧 {reference} 尚无人工真值")
+                           message=f"参考帧 {reference} 尚无人工真值", storage=storage)
         try:
             allowed_labels = selected_auto_labels(reference)
         except (KeyError, ValueError) as error:
             return jsonify(ready=False, code="label_selection_invalid",
-                           reference_frame=reference, message=str(error))
+                           reference_frame=reference, message=str(error), storage=storage)
         expected_description_path = description_cache_path(reference_signature(reference))
         legacy_description_path = WORK / "description.json"
         description = load_reference_description(reference)
@@ -4183,7 +4233,8 @@ def run_readiness():
                            reference_frame=reference,
                            message=(f"参考帧 {reference} 的描述已失效，请重新生成"
                                     if stale_description_exists else
-                                    f"请打开参考帧 {reference} 并生成真值描述"))
+                                    f"请打开参考帧 {reference} 并生成真值描述"),
+                           storage=storage)
         try:
             prompts = description.get("prompts", []) if isinstance(description, dict) else []
             prompt_labels = [item.get("label") for item in prompts if isinstance(item, dict)]
@@ -4196,10 +4247,16 @@ def run_readiness():
         if not valid:
             return jsonify(ready=False, code="description_stale",
                            reference_frame=reference,
-                           message=f"参考帧 {reference} 的描述已失效，请重新生成")
+                           message=f"参考帧 {reference} 的描述已失效，请重新生成",
+                           storage=storage)
+        if not storage["ready"]:
+            return jsonify(ready=False, code="storage_low",
+                           reference_frame=reference, topic=state["topic"],
+                           labels=allowed_labels, description_ready=True,
+                           message=storage["message"], storage=storage)
         return jsonify(ready=True, code="ready", reference_frame=reference,
                        topic=state["topic"], labels=allowed_labels,
-                       description_ready=True)
+                       description_ready=True, storage=storage)
 
 
 @app.post("/api/run/data-readiness")
@@ -4235,6 +4292,7 @@ def run_data_readiness():
                 return jsonify(ready=False, code="frame_request_invalid",
                                message="待检查帧须为 1～100 个整数帧号")
             probe_frame = requested_frames[0]
+            requested_count = len(requested_frames)
         else:
             probe_frame = body.get("frame")
             count = body.get("count", 1)
@@ -4243,10 +4301,17 @@ def run_data_readiness():
                     or not 1 <= count <= 100):
                 return jsonify(ready=False, code="frame_request_invalid",
                                message="当前帧和处理帧数无效")
+            requested_count = count
         if not 0 <= probe_frame < frame_count:
             return jsonify(ready=False, code="frame_out_of_range",
                            message=f"帧 {probe_frame} 超出当前图像源范围（共 {frame_count} 帧）")
         source_path = str(video.path)
+
+    storage = run_storage_readiness(requested_count)
+    if not storage["ready"]:
+        return jsonify(ready=False, code="storage_low",
+                       message=storage["message"], storage=storage,
+                       frame=probe_frame, frame_count=frame_count)
 
     started = time.perf_counter()
     try:
@@ -4266,7 +4331,7 @@ def run_data_readiness():
                    width=metadata["width"], height=metadata["height"],
                    encoded_bytes=metadata["encoded_bytes"],
                    elapsed_ms=elapsed_ms, cache_warmed=True,
-                   scope="first_requested_frame")
+                   scope="first_requested_frame", storage=storage)
 
 
 @app.post("/api/describe")
@@ -5422,6 +5487,9 @@ def run_workflow():
                 + ("请选择其他帧。" if compare_with_truth else
                    "已保存真值默认不会覆盖；请增大处理帧数，或在评测模式生成独立候选。")
             )
+        storage = run_storage_readiness(len(targets))
+        if not storage["ready"]:
+            raise RuntimeError(storage["message"])
         allowed_labels = selected_auto_labels(reference)
         description = body.get("description")
         if description is None:

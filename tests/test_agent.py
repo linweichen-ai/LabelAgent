@@ -5204,6 +5204,113 @@ class ServerTests(unittest.TestCase):
                 server.state, server.WORK = old_state, old_work
                 server.file_sessions_dirty = old_dirty
 
+    def test_file_removal_requires_current_workspace_library_and_entry_bindings(self):
+        old_state, old_work, old_dirty = server.state, server.WORK, server.file_sessions_dirty
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            current_path = Path(directory) / "current.mcap"
+            other_path = Path(directory) / "other.mcap"
+            current_path.write_bytes(b"current-original")
+            other_path.write_bytes(b"other-original")
+            video = FakeVideo()
+            video.path = current_path
+            server.state = {
+                "video": video, "video_path": str(current_path), "topic": "camera0",
+                "labels": ["a"], "auto_labels": ["a"],
+                "truth": {"0": [shape()]}, "truths_by_topic": {},
+                "reference_frames": {"camera0": [0]}, "config": {},
+                "candidates": {"1": [shape()]}, "candidates_by_topic": {},
+                "agent_runs": {"1": {"rounds": 1}}, "agent_runs_by_topic": {},
+                "candidate_revisions": {}, "candidate_revisions_by_topic": {},
+                "file_sessions": {},
+            }
+            files = [
+                {"id": "current", "path": str(current_path),
+                 "name": current_path.name, "size": current_path.stat().st_size},
+                {"id": "other", "path": str(other_path),
+                 "name": other_path.name, "size": other_path.stat().st_size},
+            ]
+            server.write_library(files)
+            try:
+                client = server.app.test_client()
+
+                def listing():
+                    response = client.get("/api/files")
+                    self.assertEqual(response.status_code, 200, response.json)
+                    return response.json
+
+                def removal_scope(data, item):
+                    return {
+                        "expected_path": str(current_path),
+                        "expected_topic": "camera0",
+                        "expected_file_activation_generation":
+                            server.current_file_activation_generation(),
+                        "expected_library_state_sha256": data["library_state_sha256"],
+                        "expected_file_entry_sha256": item["entry_sha256"],
+                        "expected_loaded": item["loaded"],
+                    }
+
+                first = listing()
+                current = next(item for item in first["files"] if item["id"] == "current")
+                other = next(item for item in first["files"] if item["id"] == "other")
+                self.assertTrue(server._valid_sha256(first["library_state_sha256"]))
+                self.assertTrue(current["loaded"])
+                self.assertFalse(other["loaded"])
+
+                stale_generation = removal_scope(first, other)
+                stale_generation["expected_file_activation_generation"] -= 1
+                response = client.delete("/api/files/other", json=stale_generation)
+                self.assertEqual(response.status_code, 409, response.json)
+                self.assertTrue(other_path.exists())
+
+                wrong_library = removal_scope(first, other)
+                wrong_library["expected_library_state_sha256"] = "0" * 64
+                response = client.delete("/api/files/other", json=wrong_library)
+                self.assertEqual(response.status_code, 409, response.json)
+                self.assertEqual(len(server.read_library()), 2)
+
+                wrong_entry = removal_scope(first, other)
+                wrong_entry["expected_file_entry_sha256"] = "1" * 64
+                response = client.delete("/api/files/other", json=wrong_entry)
+                self.assertEqual(response.status_code, 409, response.json)
+
+                wrong_loaded = removal_scope(first, current)
+                wrong_loaded["expected_loaded"] = False
+                response = client.delete("/api/files/current", json=wrong_loaded)
+                self.assertEqual(response.status_code, 409, response.json)
+                self.assertIs(server.state["video"], video)
+
+                removed_other = client.delete(
+                    "/api/files/other", json=removal_scope(first, other))
+                self.assertEqual(removed_other.status_code, 200, removed_other.json)
+                self.assertFalse(removed_other.json["unloaded"])
+                self.assertFalse(removed_other.json["disk_file_deleted"])
+                self.assertEqual(removed_other.json["removed_file_entry_sha256"],
+                                 other["entry_sha256"])
+                self.assertEqual(removed_other.json["removed_library_state_sha256"],
+                                 first["library_state_sha256"])
+                self.assertTrue(other_path.exists())
+                self.assertIs(server.state["video"], video)
+
+                second = listing()
+                current = second["files"][0]
+                removed_current = client.delete(
+                    "/api/files/current", json=removal_scope(second, current))
+                self.assertEqual(removed_current.status_code, 200, removed_current.json)
+                self.assertTrue(removed_current.json["unloaded"])
+                self.assertEqual(removed_current.json["path"], "")
+                self.assertIsNone(removed_current.json["topic"])
+                self.assertFalse(removed_current.json["disk_file_deleted"])
+                self.assertEqual(removed_current.json["files"], [])
+                self.assertTrue(server._valid_sha256(
+                    removed_current.json["library_state_sha256"]))
+                self.assertIsNone(server.state["video"])
+                self.assertTrue(current_path.exists())
+                self.assertIn(str(current_path), server.state["file_sessions"])
+            finally:
+                server.state, server.WORK = old_state, old_work
+                server.file_sessions_dirty = old_dirty
+
     def test_newer_file_activation_supersedes_older_probe_before_state_mutation(self):
         old_state, old_work, old_dirty = server.state, server.WORK, server.file_sessions_dirty
         with server.file_activation_intent_lock:

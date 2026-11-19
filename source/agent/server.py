@@ -2362,9 +2362,17 @@ def register_file(path, name=None):
     return item
 
 
-def file_list():
+def file_library_state_sha256(files=None):
+    """Version the exact registered-file list shown to one browser window."""
+    return _sha256_json(read_library() if files is None else files)
+
+
+def file_list(files=None):
+    files = read_library() if files is None else files
     current = str(state['video'].path.resolve()) if state['video'] else None
-    return [dict(item, available=Path(item['path']).is_file(), loaded=item['path'] == current) for item in read_library()]
+    return [dict(item, available=Path(item['path']).is_file(),
+                 loaded=item['path'] == current,
+                 entry_sha256=_sha256_json(item)) for item in files]
 
 
 def _review_packet_id(value):
@@ -2899,7 +2907,13 @@ def get_files():
     with lock:
         if state['video']:
             register_file(state['video'].path)
-        return jsonify(files=file_list())
+        files = read_library()
+        video = state.get("video")
+        return jsonify(files=file_list(files),
+                       library_state_sha256=file_library_state_sha256(files),
+                       path=str(video.path) if video is not None else "",
+                       topic=state.get("topic"),
+                       file_activation_generation=current_file_activation_generation())
 
 
 @app.get('/api/files/annotation-sources')
@@ -3159,12 +3173,36 @@ def register_candidate_review_proposal():
 @app.delete('/api/files/<file_id>')
 def remove_file(file_id):
     global file_sessions_dirty
+    body = request.get_json(silent=True) or {}
     with lock:
+        activation_generation, expected_path, expected_topic = assert_request_workspace_scope(
+            body, generation_key="expected_file_activation_generation",
+            path_key="expected_path", topic_key="expected_topic")
         files = read_library()
+        expected_library_sha = body.get("expected_library_state_sha256")
+        if not _valid_sha256(expected_library_sha):
+            raise ValueError("移除文件必须绑定当前文件列表 SHA-256")
+        current_library_sha = file_library_state_sha256(files)
+        if expected_library_sha != current_library_sha:
+            raise StaleHumanReviewError("文件列表已在另一窗口变化，请刷新后重新操作")
         item = next((item for item in files if item['id'] == file_id), None)
         if item is None:
             raise ValueError('文件不在列表中')
-        write_library([entry for entry in files if entry['id'] != file_id])
+        expected_entry_sha = body.get("expected_file_entry_sha256")
+        if not _valid_sha256(expected_entry_sha):
+            raise ValueError("移除文件必须绑定目标条目 SHA-256")
+        current_entry_sha = _sha256_json(item)
+        if expected_entry_sha != current_entry_sha:
+            raise StaleHumanReviewError("目标文件条目已变化，请刷新后重新操作")
+        expected_loaded = body.get("expected_loaded")
+        if type(expected_loaded) is not bool:
+            raise ValueError("expected_loaded 必须是文件列表中的布尔状态")
+        current = str(state['video'].path.resolve()) if state.get('video') else None
+        actually_loaded = item['path'] == current
+        if expected_loaded != actually_loaded:
+            raise StaleHumanReviewError("目标文件的加载状态已变化，请刷新后重新操作")
+        remaining = [entry for entry in files if entry['id'] != file_id]
+        write_library(remaining)
         unloaded = state['video'] is not None and str(state['video'].path.resolve()) == item['path']
         if unloaded:
             sessions = state.setdefault('file_sessions', {})
@@ -3172,7 +3210,16 @@ def remove_file(file_id):
             file_sessions_dirty = True
             state.update(video=None, video_path=None, topic=None, truth={}, truths_by_topic={}, reference_frames={}, candidates={}, candidates_by_topic={}, agent_runs={}, agent_runs_by_topic={}, candidate_revisions={}, candidate_revisions_by_topic={})
             save()
-        return jsonify(files=file_list(), unloaded=unloaded)
+        response_path = "" if unloaded else expected_path
+        response_topic = None if unloaded else expected_topic
+        return jsonify(files=file_list(remaining), unloaded=unloaded,
+                       library_state_sha256=file_library_state_sha256(remaining),
+                       removed_library_state_sha256=current_library_sha,
+                       removed_file_entry_sha256=current_entry_sha,
+                       removed_file_id=file_id, disk_file_deleted=False,
+                       path=response_path, topic=response_topic,
+                       previous_path=expected_path, previous_topic=expected_topic,
+                       file_activation_generation=activation_generation)
 
 
 @app.post("/api/open")

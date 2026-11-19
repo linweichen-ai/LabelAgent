@@ -1101,6 +1101,72 @@ test('加载新数据后明确显示首帧兼容检查结果', () => {
   assert.ok(handler.includes('data.data_compatibility.height'));
 });
 
+test('文件移除绑定当前工作区列表版本和目标条目且旧回执不卸载新页面', async () => {
+  const elements = new Map();
+  function element(id) {
+    if (!elements.has(id)) elements.set(id, {
+      children: [], textContent: '', replaceChildren(...items) { this.children = items; },
+      append(...items) { this.children.push(...items); },
+    });
+    return elements.get(id);
+  }
+  function node(tag) {
+    return {tag,children:[],className:'',textContent:'',title:'',disabled:false,
+      append(...items) { this.children.push(...items); }};
+  }
+  let resolveDelete, clearCount = 0, status = '';
+  const calls = [];
+  const latestLibrary = {files: [], library_state_sha256: 'b'.repeat(64)};
+  const h = harness({
+    document: {hidden:false,addEventListener(){},createElement:node},
+    $(id) { return element(id); },
+    datasetIdentityForPath() { return {kind:'other',badge:'数据',name:'样例'}; },
+    updateDatasetIdentity() {},
+    fileStatus(message) { status = message; },
+    clearLoadedVideo() { clearCount += 1; },
+    async loadVideo() {},
+    fetch(url, options={}) {
+      calls.push({url,options});
+      if (options.method === 'DELETE') {
+        return new Promise(resolve => { resolveDelete = body => resolve({
+          ok:true,status:200,json:async()=>body,
+        }); });
+      }
+      return Promise.resolve({ok:true,status:200,json:async()=>latestLibrary});
+    },
+  });
+  h.run(`let fileManagerBusy=false,fileLibraryStateSha256='',loadedDataPath='/data/a.mcap',
+    topic='/camera0',loadedFileActivationGeneration=7,pendingDatasetLoad=null;`);
+  h.run(section(source('app.js'), 'function applyFileLibrary', 'function clearLoadedVideo'));
+  const file = {id:'file-a',path:'/data/a.mcap',name:'a.mcap',size:1024,
+    available:true,loaded:true,entry_sha256:'e'.repeat(64)};
+  h.context.initialLibrary = {files:[file],library_state_sha256:'a'.repeat(64)};
+  h.run('applyFileLibrary(initialLibrary)');
+  const row = element('fileList').children[0];
+  const remove = row.children[row.children.length - 1];
+  const pending = remove.onclick();
+  await h.flush();
+  assert.equal(calls[0].url, '/api/files/file-a');
+  assert.equal(calls[0].options.method, 'DELETE');
+  assert.deepEqual(JSON.parse(calls[0].options.body), {
+    expected_path:'/data/a.mcap',expected_topic:'/camera0',
+    expected_file_activation_generation:7,
+    expected_library_state_sha256:'a'.repeat(64),
+    expected_file_entry_sha256:'e'.repeat(64),expected_loaded:true,
+  });
+  h.run('loadedFileActivationGeneration=8');
+  resolveDelete({files:[],library_state_sha256:'c'.repeat(64),unloaded:true,
+    removed_library_state_sha256:'a'.repeat(64),
+    removed_file_entry_sha256:'e'.repeat(64),removed_file_id:'file-a',
+    disk_file_deleted:false,file_activation_generation:7,
+    previous_path:'/data/a.mcap',previous_topic:'/camera0',path:'',topic:null});
+  await pending;
+  await h.flush();
+  assert.equal(clearCount, 0);
+  assert.match(status, /当前页面已切换|已从列表移除/);
+  assert.equal(h.run('fileLibraryStateSha256'), 'b'.repeat(64));
+});
+
 test('大文件上传显示实时进度并可在传输阶段取消', async () => {
   const elements = new Map();
   function element(id) {
@@ -1255,7 +1321,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=189/);
+  assert.match(source('index.html'), /app\.js\?v=190/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1314,9 +1380,9 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.equal(h.context.frame, 2);
 
   assert.match(app, /async function loadVideo\(data\)\{\s*invalidateFrameNavigation\(\)/);
-  assert.match(app, /function clearLoadedVideo\(\)\{invalidateFrameNavigation\(\)/);
+  assert.match(app, /function clearLoadedVideo\(currentGeneration=0\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=189/);
+  assert.match(source('index.html'), /app\.js\?v=190/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1375,7 +1441,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 4);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=189/);
+  assert.match(source('index.html'), /app\.js\?v=190/);
 });
 
 test('类别与推理类别保存绑定文件载入代次和类别状态版本', async () => {
@@ -1414,7 +1480,7 @@ test('类别与推理类别保存绑定文件载入代次和类别状态版本',
   assert.deepEqual(applied[0].labels, ['a','b']);
   assert.deepEqual(applied[0].auto_labels, ['b']);
   assert.equal(h.run('currentDescription'), null);
-  assert.match(source('index.html'), /app\.js\?v=189/);
+  assert.match(source('index.html'), /app\.js\?v=190/);
 });
 
 test('清除机器结果绑定文件代次及候选和过程记录哈希并以服务器读回为准', async () => {

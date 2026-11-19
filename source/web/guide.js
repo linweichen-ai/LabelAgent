@@ -375,6 +375,35 @@
 
   const readinessDialog = byId('runReadinessDialog');
   let allowRunOnce = false;
+  let readinessScope = null;
+
+  function currentWorkbenchScope() {
+    const state = typeof window.currentWorkbenchFrameState === 'function'
+      ? window.currentWorkbenchFrameState()
+      : null;
+    return {
+      path: String(state?.path || ''),
+      topic: String(state?.topic || ''),
+      frame: Number(byId('frameNumber')?.value),
+      count: Number(byId('taskCount')?.value),
+    };
+  }
+
+  function sameReadinessScope(left, right) {
+    return Boolean(left && right
+      && left.path === right.path
+      && left.topic === right.topic
+      && left.frame === right.frame
+      && left.count === right.count);
+  }
+
+  function stateMatchesCurrentWorkspace(state) {
+    const current = currentWorkbenchScope();
+    if (!current.path || !current.topic) return true;
+    return Boolean(state?.loaded
+      && String(state.path || '') === current.path
+      && String(state.topic || '') === current.topic);
+  }
 
   function closeRunReadiness() {
     if (!readinessDialog?.open) return;
@@ -384,19 +413,25 @@
 
   function runReadiness() {
     const state = latest.state || {};
-    const topic = state.topic || '';
+    const scopeMatches = stateMatchesCurrentWorkspace(state);
+    const current = currentWorkbenchScope();
+    const topic = scopeMatches ? (state.topic || '') : current.topic;
     const frame = Number(byId('frameNumber')?.value);
     const count = Number(byId('taskCount')?.value);
     const maximum = frameLimit();
-    const topicStatus = state.topic_readiness?.[topic] || {};
-    const referenceFrame = state.reference_frames?.[topic]?.[0];
+    const topicStatus = scopeMatches ? (state.topic_readiness?.[topic] || {}) : {};
+    const referenceFrame = scopeMatches ? state.reference_frames?.[topic]?.[0] : undefined;
     const hasReference = Number.isInteger(referenceFrame);
     const descriptionReady = hasReference && topicStatus.description_ready === true;
     const descriptionFail = topicStatus.code === 'description_stale'
       ? `帧 ${referenceFrame} 的描述已过期`
       : hasReference ? `帧 ${referenceFrame} 尚未生成描述` : '需先准备人工参考帧';
     return {
-      data: { ok: Boolean(state.loaded && topic), pass: '数据已载入', fail: '尚未载入数据' },
+      data: {
+        ok: Boolean(state.loaded && topic && scopeMatches),
+        pass: '当前数据已载入',
+        fail: current.path && current.topic ? '数据集状态正在同步，请稍候重试' : '尚未载入数据',
+      },
       reference: {
         ok: hasReference,
         pass: '参考帧已准备', fail: '缺少人工参考帧',
@@ -426,6 +461,7 @@
     event.preventDefault();
     event.stopImmediatePropagation();
     const checks = runReadiness();
+    readinessScope = currentWorkbenchScope();
     let passed = 0;
     for (const [name, result] of Object.entries(checks)) {
       const item = readinessDialog?.querySelector(`[data-readiness="${name}"]`);
@@ -632,6 +668,12 @@
   byId('runReadinessCancel')?.addEventListener('click', closeRunReadiness);
   byId('runReadinessPrepare')?.addEventListener('click', async () => {
     const button = byId('runReadinessPrepare');
+    if (!sameReadinessScope(readinessScope, currentWorkbenchScope())) {
+      closeRunReadiness();
+      window.labelAgentToast?.('数据集、相机、帧号或处理数量已经变化，请重新点击开始');
+      refreshGuide();
+      return;
+    }
     const checks = runReadiness();
     if (!checks.reference.ok) {
       closeRunReadiness();
@@ -657,6 +699,12 @@
     }
   });
   byId('runReadinessConfirm')?.addEventListener('click', () => {
+    if (!sameReadinessScope(readinessScope, currentWorkbenchScope())) {
+      closeRunReadiness();
+      window.labelAgentToast?.('数据集、相机、帧号或处理数量已经变化，本次未启动；请重新点击开始');
+      refreshGuide();
+      return;
+    }
     closeRunReadiness();
     allowRunOnce = true;
     byId('runButton')?.click();
@@ -732,7 +780,19 @@
   byId('runButton').title = '运行当前帧的 SAM、VLM 与 Agent 完整流程';
   byId('saveCandidate').title = '人工检查后，将机器候选保存为真值';
 
-  byId('frameNumber')?.addEventListener('change', () => setTimeout(refreshGuide, 150));
+  const workspaceChanged = () => {
+    if (latest.state && !stateMatchesCurrentWorkspace(latest.state)) latest.state = null;
+    if (readinessDialog?.open && !sameReadinessScope(readinessScope, currentWorkbenchScope())) {
+      closeRunReadiness();
+      window.labelAgentToast?.('当前数据或帧已切换，运行前检查已自动失效');
+    }
+    if (guideRefreshBusy) guideStatusRefreshPending = true;
+    else refreshGuide();
+  };
+  byId('frameNumber')?.addEventListener('change', workspaceChanged);
+  byId('taskCount')?.addEventListener('change', workspaceChanged);
+  document.addEventListener('labelagent:frame-state', workspaceChanged);
+  document.addEventListener('labelagent:workspace-ready', workspaceChanged);
   document.addEventListener('labelagent:frame-changed', refreshGuide);
   document.addEventListener('labelagent:candidate-state-synced', refreshGuide);
   document.addEventListener('labelagent:reference-draft-loaded', refreshGuide);

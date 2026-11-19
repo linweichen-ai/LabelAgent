@@ -796,6 +796,21 @@ test('运行前弹窗展示参考描述并提供一键恢复入口', () => {
   assert.match(app,/参考描述需要更新，正在自动生成；完成后会继续推理/);
 });
 
+test('运行前弹窗与当前数据集相机帧号和处理数量强绑定', () => {
+  const guide = source('guide.js');
+  assert.match(guide, /function currentWorkbenchScope\(\)/);
+  assert.match(guide, /window\.currentWorkbenchFrameState\(\)/);
+  assert.match(guide, /String\(state\.path \|\| ''\) === current\.path/);
+  assert.match(guide, /String\(state\.topic \|\| ''\) === current\.topic/);
+  assert.match(guide, /readinessScope = currentWorkbenchScope\(\)/);
+  assert.match(guide, /sameReadinessScope\(readinessScope, currentWorkbenchScope\(\)\)/);
+  assert.match(guide, /当前数据或帧已切换，运行前检查已自动失效/);
+  assert.match(guide, /byId\('frameNumber'\)\?\.addEventListener\('change', workspaceChanged\)/);
+  assert.match(guide, /byId\('taskCount'\)\?\.addEventListener\('change', workspaceChanged\)/);
+  assert.match(guide, /document\.addEventListener\('labelagent:frame-state', workspaceChanged\)/);
+  assert.match(guide, /document\.addEventListener\('labelagent:workspace-ready', workspaceChanged\)/);
+});
+
 test('完成与失败帧重试均复用轻量帧计数且不回读完整状态', () => {
   const handler = section(source('app.js'), "$('runButton').onclick", 'let runStatusPollTimer');
   assert.ok(handler.includes('{...runScope,frames:requestedFrames,expected_result_task_id:retryTaskId,max_rounds:maxRounds,defer_agent_review:false,compare_with_truth:comparison}'));

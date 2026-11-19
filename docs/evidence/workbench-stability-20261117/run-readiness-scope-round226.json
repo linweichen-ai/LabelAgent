@@ -1,0 +1,90 @@
+{
+  "schema_version": "labelagent.workbench-stability-evidence.v1",
+  "round": 226,
+  "date": "2026-11-19",
+  "title": "run readiness bound to current dataset, topic, frame and count",
+  "status": "implemented_tested_deployed_browser_verified",
+  "problem": {
+    "verified": true,
+    "production_ui_version": "141",
+    "dataset": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261111\\batchA_0920_000_clean_review.mcap",
+    "topic": "/capture/camera_1/image",
+    "frame": 74,
+    "synthetic_current_path_suffix": ".synthetic-new-scope",
+    "stale_data_check": "passed",
+    "stale_reference_check": "passed: frame 55",
+    "stale_description_check": "passed: frame 55",
+    "confirm_enabled": true,
+    "model_requests": 0,
+    "artifact": "artifacts/round226-readiness-scope/before.json"
+  },
+  "fix": {
+    "workspace_scope_fields": ["path", "topic", "frame", "count"],
+    "stale_summary_rejected": true,
+    "stale_reference_hidden": true,
+    "confirm_rechecks_scope": true,
+    "description_recovery_rechecks_scope": true,
+    "workspace_change_closes_dialog": true,
+    "frame_change_closes_dialog": true,
+    "count_change_closes_dialog": true,
+    "ui_version": "142",
+    "guide_asset_version": "114"
+  },
+  "browser_acceptance": {
+    "base_url": "http://127.0.0.1:8765",
+    "stale_scope": {
+      "data": "blocked: 数据集状态正在同步，请稍候重试",
+      "reference": "blocked: 缺少人工参考帧",
+      "description": "blocked: 需先准备人工参考帧",
+      "confirm_enabled": false
+    },
+    "current_scope": {
+      "data": "当前数据已载入",
+      "reference": "参考帧已准备",
+      "description": "帧 55 的描述可用",
+      "confirm_enabled": true
+    },
+    "count_change": {
+      "before": 1,
+      "after": 2,
+      "dialog_open_after_change": false
+    },
+    "page_errors": 0,
+    "model_requests": 0,
+    "artifact": "artifacts/round226-readiness-scope/after-final-v2.json",
+    "screenshot": "artifacts/round226-readiness-scope/after-final-v2.png"
+  },
+  "tests": {
+    "web": {"passed": 127, "failed": 0},
+    "python": {"passed": 982, "failed": 0, "subtests_passed": 186},
+    "javascript_syntax": "passed",
+    "python_compile": "passed_with_existing_upstream_sam3_assertion_warning",
+    "git_diff_check": "passed"
+  },
+  "deployment": {
+    "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\run-readiness-scope-round226-20261119-084805",
+    "backup_link_type": "Junction",
+    "old_processes": {"manager": 70012, "listener": 71652, "ssh_4090": 60456, "ssh_5090": 8656},
+    "new_processes": {"manager": 65772, "listener": 61124, "ssh_4090": 59620, "ssh_5090": 70988},
+    "health_http": {"workbench": 200, "run_status": 200, "sam_4090": 200, "sam_5090": 200, "vlm_4090": 200},
+    "run_status": "idle",
+    "prewarm": "startup VLM readiness prewarm only; no dataset image inference"
+  },
+  "hashes": {
+    "backup_guide_js": "1887269DEC6F933ACB66DB535DBF24D941C62430A61872F945A44807E194734C",
+    "production_guide_js": "84849688670098285FF41C33B5C4B58D6CE66ACCAC947AF3619D54F52BB44862",
+    "backup_index_html": "158526C9AACB3360C192BCFE235F3B3C5AE0D6F2BBB990A925FB5E23B4205190",
+    "production_index_html": "5C5CF8A2E0FDAE6B03AE4A7ABA51AD9D118B08F7FFF63EA55AAAC43DEE3B85DA",
+    "state_json_before_after": "1DCD67A8475A8DD1974C9A9B3D4BF68A56E1ABD30CF2A9559C12E849E3D86F96",
+    "file_sessions_json_before_after": "202927E295CABC27B1F9583B6438D3E16C020809EE421BCE1342C3AEBC0367F5"
+  },
+  "boundaries": {
+    "formal_candidates_changed": false,
+    "human_truth_changed": false,
+    "training_approval_changed": false,
+    "fine_tuning_run": false,
+    "post_training_run": false,
+    "oss_write": false,
+    "browser_artifacts_tracked": false
+  }
+}

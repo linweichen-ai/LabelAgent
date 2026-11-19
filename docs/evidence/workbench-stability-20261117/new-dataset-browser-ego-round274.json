@@ -1,0 +1,89 @@
+{
+  "round": 274,
+  "date": "2026-11-20",
+  "status": "browser_acceptance_passed_and_ui_fix_deployed",
+  "input": {
+    "file": "003-1793759959809514987.png",
+    "bytes": 471700,
+    "sha256": "B610375B59E67FA8BDE8059F7347867585F1EB2CD9224E23D8CFE6E1C36623E5",
+    "width": 640,
+    "height": 512
+  },
+  "first_run_observation": {
+    "candidate_visible_ms": 18032,
+    "background_complete_ms": 75813,
+    "candidate_count": 17,
+    "stale_guide_title_observed": true,
+    "page_errors": []
+  },
+  "fix": {
+    "event": "labelagent:candidate-state-synced",
+    "terminal_paths_covered": [
+      "audit_complete",
+      "audit_terminal_failure",
+      "refinement_complete",
+      "manual_edit_preserved",
+      "refinement_terminal_failure"
+    ],
+    "candidate_semantics_changed": false,
+    "truth_gate_changed": false
+  },
+  "second_run_warm_cache": {
+    "page_status": 200,
+    "upload_ms": 32,
+    "load_ms": 109,
+    "candidate_visible_ms": 1625,
+    "background_complete_ms": 2750,
+    "candidate_count": 17,
+    "candidate_counts_by_label": {
+      "ego": 1,
+      "floor": 1,
+      "pallet": 13,
+      "person": 2
+    },
+    "ego_fallback_status": "candidate_generated",
+    "ego_fallback_profile": "wide_bottom_chassis",
+    "ego_fallback_score": 0.875,
+    "guide_title_after_background": "已载入 17 个候选，正在逐个检查",
+    "guide_settle_ms": 0,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "truth_frame_created": false,
+    "reference_frame_created": false,
+    "page_errors": [],
+    "result_sha256": "74BE1424A1B9AB5CB97C020BF98226433C700ACD7ABED6D3DBA6E82E61DE942B",
+    "screenshot_sha256": "95AA44E5C260CD5C2B5E93FD37A8114CC3F8C9242CBCC7E6FEFFAA7A2ED8C881"
+  },
+  "tests": {
+    "pytest_passed": 1057,
+    "unittest_subtests_passed": 186,
+    "node_tests_passed": 143,
+    "javascript_syntax_passed": true,
+    "browser_acceptance_passed": true
+  },
+  "browser_dependency": {
+    "package": "playwright",
+    "version": "1.65.2",
+    "environment": "D:\\Apps\\LabelAgent\\.venv",
+    "browser_downloaded": false,
+    "existing_browser_channel": "msedge"
+  },
+  "deployment": {
+    "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\round274-guide-state-predeploy-20261120\\source\\web\\app.js",
+    "previous_sha256": "F476AFD26E9DDCDCA8CE85E2D25D92E5895B38360F92AD4C14BCC7B1BBB4549A",
+    "deployed_sha256": "0154B671AF82803A5803AB37B32808814C3DC941B4A66CD31BA299081F9DC04A",
+    "served_sha256": "0154B671AF82803A5803AB37B32808814C3DC941B4A66CD31BA299081F9DC04A"
+  },
+  "formal_workbench_readback": {
+    "home_http_status": 200,
+    "run_status": "idle",
+    "selected_file": "D:\\Apps\\LabelAgent\\work\\datasets\\CVAT_Task3_20261028\\CVAT_Task3_SAM3_candidates.mcap",
+    "selected_topic": "/CVAT/Task3/images",
+    "formal_candidate_or_truth_modified": false
+  },
+  "limitations": [
+    "The second-run latency is a warm-cache demonstration path and is not cold-start evidence.",
+    "All generated annotations remain machine candidates pending human review."
+  ]
+}

@@ -78,6 +78,15 @@ test('ego 点扫描补救在界面中保持高风险人工复核边界', () => {
   assert.match(app, /该结果已进入高风险复核，仍须逐个检查后才能成为人工真值/);
 });
 
+test('参考帧后台复核结束后立即刷新顶部向导而不继续显示处理中', () => {
+  const app = source('app.js');
+  const guide = source('guide.js');
+  assert.match(app, /signalBackgroundComplete\('reference_background_audit_complete'\)/);
+  assert.match(app, /signalBackgroundComplete\('reference_background_refinement_complete'\)/);
+  assert.match(app, /labelagent:candidate-state-synced/);
+  assert.match(guide, /document\.addEventListener\('labelagent:candidate-state-synced', refreshGuide\)/);
+});
+
 test('参考起稿支持逐类尝试全部已选类别但仍保持候选边界', () => {
   const prep = source('reference-prep.js');
   assert.match(prep, /ALL_SELECTED_LABELS = '__all_selected_labels__'/);
@@ -1011,7 +1020,7 @@ test('人工修改候选会按唯一任务号取消单帧和批量后台精修',
   assert.match(refinement, /entry\.stale/);
   assert.match(refinement, /人工草稿已变化，过时的后台精修已取消/);
   const openDraft = section(app, 'window.prepareReferenceCandidateDraft=async', 'window.prepareReferenceLegacyTruthDraft=async');
-  assert.match(openDraft, /candidateAuditFullSnapshot\(manualDrafts\[key\]\)!==candidateAuditFullSnapshot\(candidate\)\)return false/);
+  assert.match(openDraft, /candidateAuditFullSnapshot\(manualDrafts\[key\]\)!==candidateAuditFullSnapshot\(candidate\)\)\{signalBackgroundComplete\('reference_background_refinement_terminal'\);return false\}/);
   assert.ok(openDraft.indexOf('candidateAuditFullSnapshot(manualDrafts[key])!==candidateAuditFullSnapshot(candidate)')
     < openDraft.lastIndexOf('return finishAudit(candidate)'));
 });

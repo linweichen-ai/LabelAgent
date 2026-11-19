@@ -2236,4 +2236,4 @@ Round257 在主`/api/run`加入严格审核复用：原图、完整候选、逐�
 
 第100帧首版验收发现近景大栈板的安全填孔与可选平滑合计变化2.5977%，略超2.5%总预算，旧算法因此整体放弃。现改为超预算时只回退到安全填孔，不放宽长叉孔/结构缝门槛。同帧最终孔洞97→10（减少89.7%），11个栈板实例数不变；增强步骤只调整1个大栈板、变化2320像素、214 ms，第二次点击8 ms且无修改，人工真值仍0。前后图仅保存在本地`artifacts/pallet-geometry-refresh-round260/frame100-before-after.jpg`。
 
-Python1024/1024通过；Round259页面完整回归140/140，Round260后再次执行网页70/70场景通过。生产SAM3和主VLM均就绪。回滚点为`pallet-candidate-refresh-round259-20261119-174131`及`pallet-cleanup-budget-fallback-round260-20261119-175350`；详细记录见`docs/PALLET_POINT_DIAGNOSTIC_AND_AUDIT_CACHE_ROUNDS256_257_20261119.md`与对应结构化证据。
+Python1024/1024通过；Round259页面完整回归140/140，Round260后再次执行网页70/70场景通过。生产SAM3和主VLM均就绪。回滚点为`pallet-candidate-refresh-round259-20261119-174131`及`pallet-cleanup-budget-fallback-round260-20261119-175350`；实现提交为`92822eecfe5de0ba8baafa4af958de2d45921d4d`。详细记录见`docs/PALLET_POINT_DIAGNOSTIC_AND_AUDIT_CACHE_ROUNDS256_257_20261119.md`与对应结构化证据。

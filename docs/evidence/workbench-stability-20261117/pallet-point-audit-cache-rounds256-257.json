@@ -127,6 +127,7 @@
   },
   "round260": {
     "status": "deployed_and_live_verified",
+    "implementation_commit": "92822eecfe5de0ba8baafa4af958de2d45921d4d",
     "finding": "combined safe hole filling and optional smoothing exceeded the 2.5 percent cap by 0.0977 percentage points, causing the old implementation to reject the whole cleanup",
     "change": "when the combined proposal exceeds the cap, retain the independently bounded hole-only snapshot if it remains within the same cap",
     "tests": {

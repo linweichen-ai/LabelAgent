@@ -89,11 +89,11 @@
   },
   "version_control": {
     "branch": "codex/workbench-stability-20261117",
-    "implementation_commit": null,
+    "implementation_commit": "4e7afe716a426b15ba963d64f8790273e9214350",
     "receipt_commit": null,
-    "github_readback": null,
-    "cnb_readback": null,
-    "exact_match": false,
+    "github_readback": "4e7afe716a426b15ba963d64f8790273e9214350",
+    "cnb_readback": "4e7afe716a426b15ba963d64f8790273e9214350",
+    "exact_match": true,
     "untracked_factory_artifacts_uploaded": false
   },
   "safety_boundaries": {

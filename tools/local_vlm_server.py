@@ -958,8 +958,8 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
         items = body.get("requests") if isinstance(body, dict) else None
         if not isinstance(items, list) or not 2 <= len(items) <= 3:
             raise ValueError("requests must contain two or three request objects")
-        decoded, max_tokens, schema = [], None, None
-        for item in items:
+        max_tokens, schema = None, None
+        for item_index, item in enumerate(items):
             if not isinstance(item, dict):
                 raise ValueError("Every batched request must be an object")
             if item.get("model") != backend.model_id or item.get("stream"):
@@ -991,34 +991,121 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
                     raise ValueError(
                         "response_format must contain a JSON schema")
                 current_schema = wrapper["schema"]
-            if not decoded:
+            if item_index == 0:
                 schema = current_schema
             elif current_schema != schema:
                 raise ValueError(
                     "Every batched request must share one response schema")
-            decoded.append(decode_messages(item.get("messages")))
         if not hasattr(backend, "generate_batch"):
             raise RuntimeError("The configured VLM backend has no batch support")
+
+        keys = [response_cache_key(item) for item in items]
+        cached_rows = [cached_response(key) for key in keys]
+
+        def response_row(stored):
+            local = deepcopy(stored.get("local_vlm") or {})
+            local.pop("max_tokens", None)
+            return {
+                "choices": [{"index": 0,
+                    "message": {"role": "assistant", "content": stored["content"]},
+                    "finish_reason": ("length" if stored["completion_tokens"] >= max_tokens
+                                      else "stop")}],
+                "usage": {"prompt_tokens": stored["prompt_tokens"],
+                    "completion_tokens": stored["completion_tokens"],
+                    "total_tokens": (stored["prompt_tokens"]
+                                     + stored["completion_tokens"])},
+                "local_vlm": local,
+            }
+
+        if all(row is not None for row in cached_rows):
+            for key, row in zip(keys, cached_rows):
+                increment_cache_stat("hits")
+                row["local_vlm"].update(
+                    cache_hit=True, cache_key_sha256=key,
+                    coalesced=False, seconds=0.0)
+            return jsonify(
+                object="chat.batch_completion", model=backend.model_id,
+                results=[response_row(row) for row in cached_rows],
+                local_vlm={
+                    "backend": backend.backend_name,
+                    "batch_size": len(items),
+                    "cache_hit": True,
+                    "cache_hit_count": len(items),
+                    "generated_count": 0,
+                    "seconds": 0.0,
+                    "queue_wait_seconds": 0.0})
+
         queue_wait_seconds = acquire_inference_slot()
         started = time.monotonic()
         try:
-            result, request_stats, cache_release = execute_backend_call(
-                backend.generate_batch, decoded, max_tokens,
-                response_schema=schema)
-            rows = result
+            # Recheck misses only after acquiring the shared slot. A concurrent
+            # single request may have populated the exact cache while this
+            # batch was waiting, in which case duplicate inference is avoided.
+            for index, row in enumerate(cached_rows):
+                if row is None:
+                    cached_rows[index] = cached_response(keys[index])
+            missing = [index for index, row in enumerate(cached_rows)
+                       if row is None]
+            for index, row in enumerate(cached_rows):
+                increment_cache_stat("misses" if row is None else "hits")
+                if row is not None:
+                    row["local_vlm"].update(
+                        cache_hit=True, cache_key_sha256=keys[index],
+                        coalesced=False, seconds=0.0)
+            if missing:
+                decoded = [decode_messages(items[index].get("messages"))
+                           for index in missing]
+                if len(decoded) == 1:
+                    messages, images = decoded[0]
+                    generated, request_stats, cache_release = execute_backend_call(
+                        backend.generate, messages, images, max_tokens,
+                        response_schema=schema)
+                    generated_rows = [generated]
+                else:
+                    generated_rows, request_stats, cache_release = execute_backend_call(
+                        backend.generate_batch, decoded, max_tokens,
+                        response_schema=schema)
+                generated_seconds = round(time.monotonic() - started, 3)
+                for batch_index, (index, generated) in enumerate(
+                        zip(missing, generated_rows)):
+                    content, prompt_count, completion_count = generated
+                    local = {
+                        "backend": backend.backend_name,
+                        "image_count": len(decoded[batch_index][1]),
+                        "quantization": getattr(backend, "quantization", "test_double"),
+                        "model_config_sha256": getattr(
+                            backend, "model_config_sha256", None),
+                        "requested_image_token_budget": None,
+                        "effective_image_token_budget": request_stats.get(
+                            "effective_image_token_budget",
+                            getattr(backend, "image_token_budget", None)),
+                        "actual_image_token_counts": request_stats.get(
+                            "actual_image_token_counts"),
+                        "image_grid_thw": request_stats.get("image_grid_thw"),
+                        "inference_stats": request_stats,
+                        "cache_release": cache_release,
+                        "seconds": generated_seconds,
+                        "queue_wait_seconds": queue_wait_seconds,
+                        "cache_hit": False,
+                        "cache_key_sha256": keys[index],
+                        "coalesced": False,
+                        "batch_size": len(missing),
+                        "batch_index": batch_index,
+                        "max_tokens": max_tokens,
+                    }
+                    stored = {
+                        "content": content,
+                        "prompt_tokens": prompt_count,
+                        "completion_tokens": completion_count,
+                        "local_vlm": local,
+                    }
+                    local["response_cache_entries"] = remember_response(
+                        keys[index], stored)
+                    cached_rows[index] = stored
         finally:
             inference_lock.release()
         elapsed = round(time.monotonic() - started, 3)
-        results = []
-        for content, prompt_count, completion_count in rows:
-            results.append({
-                "choices": [{"index": 0,
-                    "message": {"role": "assistant", "content": content},
-                    "finish_reason": ("length" if completion_count >= max_tokens
-                                      else "stop")}],
-                "usage": {"prompt_tokens": prompt_count,
-                    "completion_tokens": completion_count,
-                    "total_tokens": prompt_count + completion_count}})
+        results = [response_row(row) for row in cached_rows]
         return jsonify(
             object="chat.batch_completion", model=backend.model_id,
             results=results,
@@ -1027,9 +1114,11 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
                 "batch_size": len(results),
                 "seconds": elapsed,
                 "queue_wait_seconds": queue_wait_seconds,
-                "inference_stats": request_stats,
-                "cache_release": cache_release,
-                "cache_hit": False})
+                "inference_stats": request_stats if missing else None,
+                "cache_release": cache_release if missing else None,
+                "cache_hit": not missing,
+                "cache_hit_count": len(items) - len(missing),
+                "generated_count": len(missing)})
 
     @app.errorhandler(ValueError)
     def invalid(error):

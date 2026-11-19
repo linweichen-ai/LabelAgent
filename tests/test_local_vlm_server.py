@@ -307,6 +307,62 @@ class LocalVLMContractTests(unittest.TestCase):
         self.assertEqual(result.json["local_vlm"]["batch_size"], 2)
         self.assertEqual(len(result.json["results"]), 2)
 
+    def test_independent_batch_reuses_exact_single_request_cache(self):
+        first = {"model": self.backend.model_id, "messages": messages(2),
+                 "max_tokens": 32}
+        second = {"model": self.backend.model_id, "messages": messages(3),
+                  "max_tokens": 32}
+        self.assertEqual(self.client.post(
+            "/v1/chat/completions", json=first).status_code, 200)
+        self.assertEqual(self.client.post(
+            "/v1/chat/completions", json=second).status_code, 200)
+        result = self.client.post(
+            "/v1/chat/batch_completions", json={"requests": [first, second]})
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(getattr(self.backend, "generate_batch_calls", 0), 0)
+        self.assertEqual(self.backend.generate_calls, 2)
+        self.assertTrue(result.json["local_vlm"]["cache_hit"])
+        self.assertEqual(result.json["local_vlm"]["cache_hit_count"], 2)
+        self.assertEqual(result.json["local_vlm"]["generated_count"], 0)
+        self.assertTrue(all(row["local_vlm"]["cache_hit"]
+                            for row in result.json["results"]))
+
+    def test_independent_batch_generates_only_one_uncached_request(self):
+        cached = {"model": self.backend.model_id, "messages": messages(2),
+                  "max_tokens": 32}
+        missing = {"model": self.backend.model_id, "messages": messages(3),
+                   "max_tokens": 32}
+        self.assertEqual(self.client.post(
+            "/v1/chat/completions", json=cached).status_code, 200)
+        result = self.client.post(
+            "/v1/chat/batch_completions", json={"requests": [cached, missing]})
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(getattr(self.backend, "generate_batch_calls", 0), 0)
+        self.assertEqual(self.backend.generate_calls, 2)
+        self.assertEqual(result.json["local_vlm"]["cache_hit_count"], 1)
+        self.assertEqual(result.json["local_vlm"]["generated_count"], 1)
+        replay = self.client.post(
+            "/v1/chat/batch_completions", json={"requests": [cached, missing]})
+        self.assertEqual(replay.status_code, 200)
+        self.assertTrue(replay.json["local_vlm"]["cache_hit"])
+        self.assertEqual(self.backend.generate_calls, 2)
+
+    def test_independent_batch_populates_single_request_cache(self):
+        first = {"model": self.backend.model_id, "messages": messages(2),
+                 "max_tokens": 32}
+        second = {"model": self.backend.model_id, "messages": messages(3),
+                  "max_tokens": 32}
+        result = self.client.post(
+            "/v1/chat/batch_completions", json={"requests": [first, second]})
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(self.backend.generate_batch_calls, 1)
+        self.assertEqual(result.json["local_vlm"]["generated_count"], 2)
+        self.assertEqual(self.client.post(
+            "/v1/chat/completions", json=first).status_code, 200)
+        self.assertEqual(self.client.post(
+            "/v1/chat/completions", json=second).status_code, 200)
+        self.assertEqual(getattr(self.backend, "generate_calls", 0), 0)
+
     def test_batch_rejects_mixed_contracts_and_unsafe_sizes(self):
         base = {"model": self.backend.model_id, "messages": messages(),
                 "max_tokens": 32}

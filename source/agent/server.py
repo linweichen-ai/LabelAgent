@@ -1458,6 +1458,52 @@ def label_state_sha256(label_state=None):
     })
 
 
+def _all_topic_state(current_key, by_topic_key):
+    """Canonicalize one current-topic map with its parked topic maps."""
+    values = copy.deepcopy(state.get(by_topic_key, {}))
+    topic = state.get("topic")
+    if topic:
+        values[topic] = copy.deepcopy(state.get(current_key, {}))
+    return values
+
+
+def candidate_import_binding():
+    """Bind an external candidate write to the exact mutable base state."""
+    video = state.get("video")
+    return {
+        "path": str(video.path) if video is not None else "",
+        "topic": state.get("topic"),
+        "file_activation_generation": current_file_activation_generation(),
+        "label_state_sha256": label_state_sha256(),
+        "truth_state_sha256": _sha256_json(
+            _all_topic_state("truth", "truths_by_topic")),
+        "candidate_state_sha256": _sha256_json(
+            _all_topic_state("candidates", "candidates_by_topic")),
+    }
+
+
+def assert_candidate_import_binding(payload):
+    """Reject external candidate output produced for an older workspace."""
+    generation, path, topic = assert_request_data_scope(
+        payload, generation_key="expected_file_activation_generation")
+    current = candidate_import_binding()
+    checks = (
+        ("expected_label_state_sha256", "label_state_sha256",
+         "类别配置已变化，请重新生成或重新读取候选导入绑定"),
+        ("expected_truth_state_sha256", "truth_state_sha256",
+         "人工真值已变化，请重新检查候选后再导入"),
+        ("expected_candidate_state_sha256", "candidate_state_sha256",
+         "机器候选已变化，请重新合并当前候选"),
+    )
+    for request_key, current_key, message in checks:
+        expected = payload.get(request_key)
+        if not _valid_sha256(expected):
+            raise ValueError(f"{request_key} 必须是当前工作区 SHA-256")
+        if expected != current[current_key]:
+            raise StaleHumanReviewError(message)
+    return generation, path, topic, current
+
+
 def assert_request_label_state(payload):
     """Reject label writes based on another file load or an older label list."""
     generation, path, topic = assert_request_workspace_scope(payload)
@@ -2001,6 +2047,7 @@ def _get_bootstrap_locked():
             "labels": state.get("labels", []),
             "auto_labels": auto_labels,
         }),
+        "candidate_import_binding": candidate_import_binding(),
         "reference_frames": copy.deepcopy(state.get("reference_frames", {})),
         "truth": {},
         "truth_review_status": {},
@@ -2990,15 +3037,15 @@ def load_file(file_id):
 
 @app.post('/api/candidates/import')
 def import_candidates():
-    body = request.get_json()
+    body = request.get_json() or {}
     with lock:
         with run_status_lock:
             if run_status.get("status") in {"running", "stopping"}:
                 raise ValueError("自动任务运行中，暂不能导入候选")
-        video = state.get("video")
-        if video is None or not body.get("path") or Path(body["path"]).resolve() != video.path.resolve():
-            raise ValueError("请先加载与候选对应的文件")
+        generation, data_path, topic, before = assert_candidate_import_binding(body)
+        video = state["video"]
         prepared = prepare_candidate_import(video, body.get("candidates_by_topic"), state.get("labels", []))
+        input_sha256 = _sha256_json(body.get("candidates_by_topic"))
         patch = merge_candidate_import(state, prepared)
         previous = {key: state.get(key) for key in patch}
         absent = [key for key in patch if key not in state]
@@ -3010,22 +3057,24 @@ def import_candidates():
             for key in absent:
                 state.pop(key, None)
             raise
+        after = candidate_import_binding()
         return jsonify(imported_frames=sum(len(frames) for frames in prepared.values()),
             imported_shapes=sum(len(shapes) for frames in prepared.values() for shapes in frames.values()),
-            saved_as_truth=False)
+            saved_as_truth=False, input_sha256=input_sha256,
+            path=data_path, topic=topic, file_activation_generation=generation,
+            applied_binding=before, candidate_import_binding=after)
 
 
 @app.post('/api/candidates/merge')
 def merge_candidates():
     """Merge an explicitly authorized label subset without replacing other candidates."""
-    body = request.get_json()
+    body = request.get_json() or {}
     with lock:
         with run_status_lock:
             if run_status.get("status") in {"running", "stopping"}:
                 raise ValueError("自动任务运行中，暂不能合并候选")
-        video = state.get("video")
-        if video is None or not body.get("path") or Path(body["path"]).resolve() != video.path.resolve():
-            raise ValueError("请先加载与候选对应的文件")
+        generation, data_path, topic, before = assert_candidate_import_binding(body)
+        video = state["video"]
         selected = [str(label).strip() for label in body.get("labels", [])
                     if str(label).strip()]
         if (not selected or len(selected) != len(set(selected))
@@ -3033,6 +3082,10 @@ def merge_candidates():
             raise ValueError("候选合并类别无效")
         prepared = prepare_candidate_import(
             video, body.get("candidates_by_topic"), state.get("labels", []))
+        input_sha256 = _sha256_json({
+            "labels": selected,
+            "candidates_by_topic": body.get("candidates_by_topic"),
+        })
         patch = merge_candidate_labels(state, prepared, selected)
         previous = {key: state.get(key) for key in patch}
         absent = [key for key in patch if key not in state]
@@ -3044,9 +3097,13 @@ def merge_candidates():
             for key in absent:
                 state.pop(key, None)
             raise
+        after = candidate_import_binding()
         return jsonify(merged_frames=sum(len(frames) for frames in prepared.values()),
             merged_shapes=sum(len(shapes) for frames in prepared.values() for shapes in frames.values()),
-            labels=selected, preserved_other_labels=True, saved_as_truth=False)
+            labels=selected, preserved_other_labels=True, saved_as_truth=False,
+            input_sha256=input_sha256,
+            path=data_path, topic=topic, file_activation_generation=generation,
+            applied_binding=before, candidate_import_binding=after)
 
 
 @app.post('/api/candidates/review-proposals')

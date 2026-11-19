@@ -20,10 +20,27 @@ def load_candidates(path, candidates_file, base):
     if request("/api/run/status")["status"] != "idle":
         raise ValueError("Workbench is running a task; import was not started")
     entry = request("/api/files", {"path": path})["file"]
-    request(f"/api/files/{entry['id']}/load", {})
-    result = request("/api/candidates/import", {"path": path, "candidates_by_topic": candidates})
+    loaded = request(f"/api/files/{entry['id']}/load", {})
+    binding = loaded.get("candidate_import_binding") or {}
+    required = ("path", "topic", "file_activation_generation", "label_state_sha256",
+                "truth_state_sha256", "candidate_state_sha256")
+    if (binding.get("path") != path or not isinstance(binding.get("topic"), str)
+            or type(binding.get("file_activation_generation")) is not int
+            or any(not isinstance(binding.get(key), str)
+                   or len(binding[key]) != 64 for key in required[3:])):
+        raise ValueError("Workbench did not return a complete candidate import binding")
+    result = request("/api/candidates/import", {
+        "path": binding["path"], "topic": binding["topic"],
+        "expected_file_activation_generation": binding["file_activation_generation"],
+        "expected_label_state_sha256": binding["label_state_sha256"],
+        "expected_truth_state_sha256": binding["truth_state_sha256"],
+        "expected_candidate_state_sha256": binding["candidate_state_sha256"],
+        "candidates_by_topic": candidates,
+    })
     if result.get("saved_as_truth") is not False:
         raise ValueError("Import did not confirm unreviewed-candidate status")
+    if result.get("applied_binding") != binding:
+        raise ValueError("Import receipt did not match the loaded workspace binding")
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return result
 

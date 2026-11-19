@@ -50,6 +50,20 @@
     "human_truth": false,
     "approved_for_training": false
   },
+  "second_live_acceptance": {
+    "task_id": "17786e7f85fe4d0ab88b74e3b7f03b14",
+    "frame": 116,
+    "status": "completed",
+    "elapsed_seconds": 71.25050258636475,
+    "failed_frames": 0,
+    "candidate_count": 15,
+    "candidate_labels": {
+      "pallet": 14,
+      "floor": 1
+    },
+    "human_truth": false,
+    "approved_for_training": false
+  },
   "backup": {
     "path": "D:\\Apps\\LabelAgent\\.local\\backups\\agent-empty-result-rollback-round240-20261119-130115"
   },

@@ -2155,3 +2155,5 @@ Python995/995、网页69/69和定向删空回滚1/1通过。修复部署后，�
 部署备份位于 `D:\Apps\LabelAgent\.local\backups\agent-empty-result-rollback-round240-20261119-130115`。完整说明见 [第二百四十轮报告](AGENT_EMPTY_RESULT_ROLLBACK_ROUND240_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/agent-empty-result-rollback-round240.json)。实现提交 `840d9c1f89b7f67132845e6d2d80e34eca82dd39`。过去24小时的通俗汇总见 [工作总结](LABELAGENT_LAST_24_HOURS_SUMMARY_20261119.md)。
 
 Round239、Round240及过去24小时总结已随报告提交 `a5622f6eff19b02fa7e92e82faef0c2d1f990837` 推送，并从 GitHub/CNB 同名分支精确读回；未跟踪厂内图像和本地验收产物未上传。
+
+Round240部署后又完成第二次连续真实验收：CVAT Task3第116帧约71.3秒完成，失败帧0，按帧读回15个候选（14 pallet、1 floor），人工真值与训练批准仍为0。连续两次均未再出现完成后原图无候选；较长的第二次时延被保留为下一轮优化基线。

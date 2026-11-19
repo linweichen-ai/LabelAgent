@@ -1,0 +1,74 @@
+{
+  "recorded_at": "2026-11-19T13:38:04.9361391+08:00",
+  "status": "deployed_and_verified",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "latency_diagnosis": {
+    "baseline_task_id": "17786e7f85fe4d0ab88b74e3b7f03b14",
+    "baseline_frame": 116,
+    "baseline_seconds": 71.2505,
+    "baseline_candidates": 15,
+    "root_cause": "four destructive review rounds removed 15 candidates to zero before rollback",
+    "same_frame77_before_seconds": 39.161,
+    "same_frame77_after_seconds": 35.6043,
+    "after_task_id": "6c14f54c41de476fbe41cf4e9ab1f8a3",
+    "after_rounds": 2,
+    "after_candidates": 10,
+    "mixed_floor_evidence_images": 6
+  },
+  "pallet_geometry_acceptance": [
+    {
+      "frame": 120,
+      "shape_id": 10,
+      "holes_before": 55,
+      "holes_after": 9,
+      "change_ratio": 0.013851,
+      "smoothing_kernel": 5
+    },
+    {
+      "frame": 122,
+      "shape_id": 12,
+      "holes_before": 58,
+      "holes_after": 9,
+      "change_ratio": 0.015327,
+      "smoothing_kernel": 5
+    },
+    {
+      "frame": 116,
+      "shape_id": 9,
+      "holes_before": 3,
+      "holes_after": 1,
+      "change_ratio": 0.003099,
+      "smoothing_kernel": 5
+    }
+  ],
+  "tests": {
+    "python": {"passed": 998, "failed": 0},
+    "browser": {"passed": 145, "failed": 0}
+  },
+  "production": {
+    "model_ready": true,
+    "sam_ready": true,
+    "vlm_ready": true,
+    "run_status": "idle",
+    "workflow_sha256": "5A64B09C4F34C77E5C2D3E65074EE07FCBB0CF4C3CB26DEB15E3983FE4CF90B1",
+    "state_sha256": "4239356B2B0C94C09AFDC77B5CD62870D6066249D7BDDBAC9C8BCD1E2DF29890",
+    "file_sessions_sha256": "5D719DE280BE0655843346B73B927F8FEED8A73404406AB0BEA782607FF5C69F",
+    "files_sha256": "0D8487CD72B3D29612F67EC351CED54F993E98527D44C7DF59AF6E29196BE214"
+  },
+  "backups": [
+    "D:\\Apps\\LabelAgent\\.local\\backups\\review-and-pallet-geometry-round241-20261119-132623",
+    "D:\\Apps\\LabelAgent\\.local\\backups\\pallet-boundary-smoothing-round242-20261119-133503"
+  ],
+  "commits": [
+    "95184046a4b541ba3a6a777983cff23fdfd9bc33",
+    "211aad4fec2fe6de15b81a4ad03cd07de9731149"
+  ],
+  "disk": {
+    "c_free_gib": 4.416,
+    "d_free_gib": 1.95,
+    "largest_protected_backup_gib": 2.86,
+    "largest_protected_backup_ntfs_compression_ratio": 1.0
+  }
+}

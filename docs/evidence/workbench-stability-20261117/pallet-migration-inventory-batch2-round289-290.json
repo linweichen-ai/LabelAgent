@@ -1,0 +1,76 @@
+{
+  "schema_version": "labelagent.pallet-migration-inventory-batch2.round289-290.v1",
+  "created_local": "2026-11-20T04:21:35+08:00",
+  "status": "full_read_only_inventory_and_targeted_batch2_refresh_verified",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "approved_for_deployment": false,
+  "model_changed": false,
+  "round289_inventory_before": {
+    "frame_count": 150,
+    "candidate_count": 1316,
+    "pallet_candidate_count": 1126,
+    "adjusted_count": 1048,
+    "filled_image_boundary_notch_count": 332,
+    "maximum_change_ratio": 0.048994,
+    "minimum_structural_hole_retention": 0.895911,
+    "maximum_component_merge_count": 2,
+    "violation_count": 0,
+    "change_ratio_above_0_02": {"candidates": 91, "frames": 68},
+    "change_ratio_above_0_03": {"candidates": 5, "frames": 5},
+    "result_sha256": "fdc2d69ad73b1bf2287672a3273058321b6abe0cfbcbff0ea787af18352d7b91"
+  },
+  "round290_backup": {
+    "path": "D:\\Apps\\LabelAgent\\.local\\backups\\pallet-candidate-batch2-round290-20261120-042032\\state.json",
+    "bytes": 4609108,
+    "sha256": "16F9B106A59D8BA7FD73A3C418A75281450AFF33A4D23BC325CAD3C1FB5B39A6",
+    "source_backup_hashes_exact": true
+  },
+  "round290_frames": [
+    {"frame": 114, "candidate_count": 14, "adjusted_candidate_count": 13, "changed_pixels": 6510, "candidate_artifact_sha256": "a9a4a7a9d535f175df718aa3da0429956bd53b245cfe6e5b2950bdf768aff39f", "second_refresh_changed": false},
+    {"frame": 106, "candidate_count": 15, "adjusted_candidate_count": 14, "changed_pixels": 5682, "candidate_artifact_sha256": "1057eef2ccc5ca69aa0f284d0c1b4cc35fac447a8b24d53773fa73f7e2c6075b", "second_refresh_changed": false},
+    {"frame": 116, "candidate_count": 15, "adjusted_candidate_count": 14, "changed_pixels": 5705, "candidate_artifact_sha256": "7d161ff2f95bef4869415f676e962ed3fe29d5151fc3ba05b59755cf6a410817", "second_refresh_changed": false},
+    {"frame": 104, "candidate_count": 13, "adjusted_candidate_count": 12, "changed_pixels": 4557, "candidate_artifact_sha256": "4c01279e32649c762a5609b11427290d29eb4825085ebdb60af9cd307c07fa37", "second_refresh_changed": false},
+    {"frame": 108, "candidate_count": 15, "adjusted_candidate_count": 14, "changed_pixels": 4472, "candidate_artifact_sha256": "9ef0e867ffec929b3cc61a24acd63a59182775672b751b51a5ee0adcf466e10b", "second_refresh_changed": false}
+  ],
+  "round290_totals": {
+    "adjusted_candidate_count": 67,
+    "changed_pixels": 26926,
+    "truth_state_sha256_before": "e35a944554c74c00717de5a4cfdafd8b01f51df20a90781121469eec4f9a70a3",
+    "truth_state_sha256_after": "e35a944554c74c00717de5a4cfdafd8b01f51df20a90781121469eec4f9a70a3",
+    "truth_unchanged": true
+  },
+  "inventory_after_batch2": {
+    "frame_count": 150,
+    "candidate_count": 1316,
+    "pallet_candidate_count": 1126,
+    "adjusted_count": 1042,
+    "filled_image_boundary_notch_count": 103,
+    "maximum_change_ratio": 0.029408,
+    "minimum_structural_hole_retention": 0.895911,
+    "maximum_component_merge_count": 2,
+    "violation_count": 0,
+    "change_ratio_above_0_02": {"candidates": 82, "frames": 64},
+    "change_ratio_above_0_03": {"candidates": 0, "frames": 0},
+    "result_sha256": "dd7f653060822fa4a1492e94705c8ea84a91758ca5b28af886c0deab1f765e86"
+  },
+  "formal_state_sha256_after": "C0FCC1A804525AA0B2A9F3EAACF9300583A273A1E19C088E62405EF278727BD1",
+  "local_visual_readback": {
+    "before_sha256": "9f6adb8d6843fc40c9d0676d9d9967853387b29fd07e988c94edfd5b1c8cabd7",
+    "after_sha256": "53f72ec269c8a1b2b7ba4c5916aae4ace61edfeca4f6d96ee263c705ad61cee13",
+    "uploaded": false
+  },
+  "live_readback": {
+    "workbench_http": 200,
+    "point_sam_status": "ok",
+    "formal_sam_status": "ok",
+    "vlm_status": "ok",
+    "vlm_inflight": 0,
+    "vlm_waiting": 0,
+    "free_space_gib": {"C": 0.399, "D": 1.105}
+  },
+  "next_gate": "Review the remaining 82 candidates above 2 percent by frame-level benefit and visual structure before another small reversible batch.",
+  "boundary": "Only machine candidates for frames 114, 106, 116, 104 and 108 changed. Human truth, model weights, OSS objects and all other frames were preserved."
+}
+

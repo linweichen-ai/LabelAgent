@@ -1,3 +1,5 @@
+import contextlib
+import io
 import json
 import tempfile
 import unittest
@@ -7,7 +9,12 @@ import cv2
 import numpy as np
 
 from source.agent.edit_agent import _shape_from_mask
-from tools.audit_pallet_geometry import audit_candidate, run_audit, select_stratified
+from tools.audit_pallet_geometry import (
+    audit_candidate,
+    order_for_image_reuse,
+    run_audit,
+    select_stratified,
+)
 
 
 class PalletGeometryAuditTest(unittest.TestCase):
@@ -22,6 +29,31 @@ class PalletGeometryAuditTest(unittest.TestCase):
         self.assertEqual([row["shape"]["id"] for row in first],
                          [row["shape"]["id"] for row in second])
         self.assertEqual(len(first), 4)
+
+    def test_image_reuse_order_groups_frames_without_changing_selection(self):
+        rows = [
+            {"topic": "/capture/camera_1/image", "frame": "2",
+             "shape": {"id": "c"}},
+            {"topic": "/capture/camera_0/image", "frame": "10",
+             "shape": {"id": "b"}},
+            {"topic": "/capture/camera_0/image", "frame": "2",
+             "shape": {"id": "a"}},
+            {"topic": "/capture/camera_0/image", "frame": "10",
+             "shape": {"id": "a"}},
+        ]
+
+        ordered = order_for_image_reuse(rows)
+
+        self.assertCountEqual(ordered, rows)
+        self.assertEqual(
+            [(row["topic"], row["frame"], row["shape"]["id"])
+             for row in ordered],
+            [
+                ("/capture/camera_0/image", "2", "a"),
+                ("/capture/camera_0/image", "10", "a"),
+                ("/capture/camera_0/image", "10", "b"),
+                ("/capture/camera_1/image", "2", "c"),
+            ])
 
     def test_audit_preserves_long_slot_and_cleans_micro_hole(self):
         mask = np.zeros((100, 140), dtype=np.uint8)
@@ -134,9 +166,39 @@ class PalletGeometryAuditTest(unittest.TestCase):
             self.assertEqual(source.read_bytes(), before)
             self.assertTrue(result["image_guidance"])
             self.assertEqual(result["sample_count"], 1)
+            self.assertEqual(result["unique_source_image_count"], 1)
             self.assertTrue(result["results"][0]["image_guidance_used"])
             self.assertEqual(
                 Path(result["results"][0]["image_path"]), image_path.resolve())
+
+    def test_audit_progress_reports_first_and_terminal_candidate(self):
+        mask = np.zeros((40, 40), dtype=np.uint8)
+        mask[5:35, 5:35] = 1
+        shape = _shape_from_mask(mask, "pallet", 1)
+        payload = {"/capture/camera_0/image": {
+            "0": [shape], "1": [{**shape, "id": 2}]}}
+        image = np.full((40, 40, 3), 180, dtype=np.uint8)
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "candidates.json"
+            source.write_text(json.dumps(payload), encoding="utf-8")
+            camera = root / "images" / "camera_0"
+            camera.mkdir(parents=True)
+            cv2.imwrite(str(camera / "000.png"), image)
+            cv2.imwrite(str(camera / "001.png"), image)
+            progress = io.StringIO()
+
+            with contextlib.redirect_stderr(progress):
+                run_audit(
+                    source, width=40, height=40, per_topic=0,
+                    image_root=root / "images", progress_every=100)
+
+        events = [json.loads(line) for line in progress.getvalue().splitlines()]
+        self.assertEqual([event["completed"] for event in events], [1, 2])
+        self.assertTrue(all(event["event"] == "pallet_audit_progress"
+                            for event in events))
+        self.assertEqual(events[-1]["percent"], 100.0)
 
     def test_image_guided_audit_rejects_missing_camera_mapping(self):
         payload = {"camera": {"0": []}}

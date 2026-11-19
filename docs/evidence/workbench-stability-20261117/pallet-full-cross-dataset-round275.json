@@ -1,0 +1,73 @@
+{
+  "schema_version": "labelagent.pallet_full_cross_dataset_round275.v1",
+  "observed_date": "2026-11-20",
+  "source": {
+    "candidate_path": "D:\\Apps\\LabelAgent\\work\\datasets\\Capture_20261103\\sam3_baseline\\candidates_by_topic.json",
+    "candidate_sha256": "591ebba97aeaca4f58dfcb0eecfd79ec026b4915aa670143d46d9702181b7f92",
+    "image_root": "D:\\Apps\\LabelAgent\\work\\datasets\\Capture_20261103\\source\\cameras",
+    "width": 1920,
+    "height": 1536,
+    "selection": "all_pallet_candidates_per_topic"
+  },
+  "audit": {
+    "candidate_count": 4423,
+    "unique_source_image_count": 573,
+    "topic_candidate_counts": {
+      "/capture/camera_0/image": 1593,
+      "/capture/camera_1/image": 1513,
+      "/capture/camera_2/image": 857,
+      "/capture/camera_3/image": 460
+    },
+    "size_bands": {
+      "tiny_skipped": 4,
+      "small": 3100,
+      "medium": 1307,
+      "large": 12
+    },
+    "adjusted_count": 0,
+    "holes_before": 16,
+    "holes_after": 16,
+    "component_count_violation_count": 0,
+    "structural_hole_retention_violation_count": 0,
+    "change_budget_violation_count": 0,
+    "gate_passed": true,
+    "elapsed_seconds": 458.551,
+    "full_report_bytes": 5730237,
+    "full_report_sha256": "F62750CE9BE3564A839BE9396CD6BC2584E158525C8AECD6790BB77C29E37716"
+  },
+  "tooling": {
+    "groups_selected_candidates_for_image_reuse": true,
+    "unique_source_image_count_recorded": true,
+    "json_progress_events": true,
+    "default_progress_every_candidates": 100,
+    "focused_test_count": 10,
+    "python_test_count": 1059,
+    "python_subtest_count": 186,
+    "frontend_node_test_count": 143
+  },
+  "storage_recovery": {
+    "deleted_files": 0,
+    "moved_files": 0,
+    "venv_site_packages_recovered_mib": 869.5,
+    "workbuddy_recovered_mib": 0.0,
+    "codex_sessions_recovered_mib": 490.9,
+    "final_observed_d_free_mib": 729.8,
+    "cold_import_verified": {
+      "opencv": "4.11.0",
+      "numpy": "1.26.4",
+      "torch": "2.10.0+cu128"
+    }
+  },
+  "runtime": {
+    "workbench_http_status": 200,
+    "run_status": "idle"
+  },
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "model_weights_changed": false,
+    "training_started": false,
+    "production_candidates_changed": false
+  }
+}

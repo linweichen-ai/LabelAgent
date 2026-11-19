@@ -15,6 +15,7 @@ import functools
 import hashlib
 import json
 import re
+import sys
 from pathlib import Path
 
 import cv2
@@ -48,6 +49,26 @@ def select_stratified(rows: list[dict], limit: int) -> list[dict]:
         return ordered
     indices = np.linspace(0, len(ordered) - 1, num=limit, dtype=int).tolist()
     return [ordered[index] for index in dict.fromkeys(indices)]
+
+
+def order_for_image_reuse(rows: list[dict]) -> list[dict]:
+    """Group selected candidates by source image without changing selection.
+
+    Size-stratified selection deliberately orders candidates by area.  That is
+    useful for sampling, but on a full collection it can revisit the same frame
+    after hundreds of other images and defeat the small decoded-image cache.
+    Grouping the already-selected rows by topic/frame preserves the exact audit
+    population while making image-guided full-collection checks practical.
+    """
+    def frame_key(row: dict):
+        value = row["frame"]
+        try:
+            return (0, int(value))
+        except (TypeError, ValueError):
+            return (1, str(value))
+
+    return sorted(rows, key=lambda row: (
+        str(row["topic"]), frame_key(row), str(row["shape"].get("id", ""))))
 
 
 def enclosed_holes(mask: np.ndarray) -> list[dict]:
@@ -196,7 +217,7 @@ def _image_inventory(image_root: Path, topics: list[str]) -> dict[str, list[Path
 
 
 def run_audit(source: Path, *, width: int, height: int, per_topic: int,
-              image_root: Path | None = None) -> dict:
+              image_root: Path | None = None, progress_every: int = 0) -> dict:
     stored = json.loads(source.read_text(encoding="utf-8"))
     if not isinstance(stored, dict):
         raise ValueError("expected topic-to-frame candidate mapping")
@@ -224,8 +245,13 @@ def run_audit(source: Path, *, width: int, height: int, per_topic: int,
         selected.extend(select_stratified(rows, per_topic))
     images = (_image_inventory(image_root, sorted(payload))
               if image_root is not None else {})
+    if image_root is not None:
+        selected = order_for_image_reuse(selected)
+    unique_source_images = len({
+        (str(row["topic"]), str(row["frame"])) for row in selected
+    }) if image_root is not None else 0
     results = []
-    for row in selected:
+    for completed, row in enumerate(selected, start=1):
         image_rgb = None
         image_path = None
         if image_root is not None:
@@ -245,6 +271,17 @@ def run_audit(source: Path, *, width: int, height: int, per_topic: int,
                     f"do not match requested {width}x{height}: {image_path}")
         results.append(audit_candidate(
             row, width, height, image_rgb=image_rgb, image_path=image_path))
+        if (progress_every > 0
+                and (completed == 1 or completed == len(selected)
+                     or completed % progress_every == 0)):
+            print(json.dumps({
+                "event": "pallet_audit_progress",
+                "completed": completed,
+                "total": len(selected),
+                "percent": round(100 * completed / max(len(selected), 1), 1),
+                "topic": row["topic"],
+                "frame": str(row["frame"]),
+            }, ensure_ascii=False), file=sys.stderr, flush=True)
     component_violations = [row for row in results
                             if not row["component_guard_passed"]]
     structural_violations = [row for row in results
@@ -272,6 +309,7 @@ def run_audit(source: Path, *, width: int, height: int, per_topic: int,
         "image_guidance": image_root is not None,
         "image_root": str(image_root.resolve()) if image_root is not None else None,
         "per_topic_limit": per_topic,
+        "unique_source_image_count": unique_source_images,
         "topic_inventory": topic_inventory,
         "sample_count": len(results),
         "size_bands": bands,
@@ -323,18 +361,23 @@ def main() -> int:
     parser.add_argument("--height", type=int, default=1536)
     parser.add_argument("--per-topic", type=int, default=40)
     parser.add_argument(
+        "--progress-every", type=int, default=100,
+        help="Emit one JSON progress line to stderr every N candidates; 0 disables it.")
+    parser.add_argument(
         "--image-root", type=Path,
         help="Optional root containing camera_0/... PNG directories. When set, "
              "the audit replays the complete image-guided cleanup route.")
     args = parser.parse_args()
     report = run_audit(args.input, width=args.width, height=args.height,
-                       per_topic=args.per_topic, image_root=args.image_root)
+                       per_topic=args.per_topic, image_root=args.image_root,
+                       progress_every=max(0, args.progress_every))
     rendered = json.dumps(report, ensure_ascii=False, indent=2)
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(rendered + "\n", encoding="utf-8")
     print(json.dumps({key: report[key] for key in (
-        "sample_count", "size_bands", "adjusted_count", "unchanged_tiny_count",
+        "sample_count", "unique_source_image_count", "size_bands",
+        "adjusted_count", "unchanged_tiny_count",
         "v5_adjusted_count", "filled_hole_count", "filled_compact_texture_hole_count",
         "filled_image_boundary_notch_count", "component_merge_count",
         "boundary_simplified_count", "median_boundary_vertex_reduction_ratio",

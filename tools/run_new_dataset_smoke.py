@@ -19,6 +19,7 @@ import sys
 import tempfile
 import time
 import urllib.request
+import uuid
 from urllib.parse import urlsplit
 
 
@@ -50,6 +51,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--capture-vlm-cache-stats", action="store_true",
         help="Capture bounded Local VLM cache counters before and after the isolated flow.")
+    parser.add_argument(
+        "--defer-background", action="store_true",
+        help=("Publish the initial machine candidates before Agent refinement and "
+              "high-risk class audit, matching the interactive workbench flow."))
+    parser.add_argument(
+        "--complete-background", action="store_true",
+        help=("After publishing deferred candidates, reproducibly finish Agent "
+              "refinement and high-risk class audit and record both latencies."))
     return parser.parse_args()
 
 
@@ -190,8 +199,40 @@ def summarize_model_trace(trace: object) -> list[dict]:
     return summary
 
 
+def read_model_trace(path: Path, *, stage: str) -> list[dict]:
+    """Read one bounded server trace and label the pipeline stage."""
+    payload = (json.loads(path.read_text(encoding="utf-8"))
+               if path.is_file() else {})
+    rows = summarize_model_trace(payload.get("trace"))
+    for row in rows:
+        row["pipeline_stage"] = stage
+    return rows
+
+
+def grouped_audit_timing(response: dict, elapsed: float) -> dict:
+    """Represent a blind-audit endpoint without inventing per-call traces."""
+    audits = list(((response.get("agent") or {}).get(
+        "candidate_class_audits") or []))
+    return {
+        "sequence": 1,
+        "pipeline_stage": "background_candidate_class_audit",
+        "kind": "candidate_class_blind_audit_group",
+        "service": "GPT",
+        "status": "succeeded",
+        "elapsed_ms": elapsed,
+        "request_count": len(audits),
+        "execution_modes": sorted({
+            str(item.get("execution_mode")) for item in audits
+            if isinstance(item, dict) and item.get("execution_mode")
+        }),
+        "content_free_summary": True,
+    }
+
+
 def main() -> int:
     args = parse_args()
+    if args.complete_background and not args.defer_background:
+        raise ValueError("--complete-background requires --defer-background")
     images = [path.expanduser().resolve() for path in args.images]
     source_state_path = args.source_state.expanduser().resolve()
     output_dir = args.output_dir.expanduser().resolve()
@@ -271,18 +312,94 @@ def main() -> int:
             compatibility = loaded.get("data_compatibility") or {}
 
             infer_started = time.perf_counter()
-            response = checked_json(client.post("/api/reference_draft", json={
+            draft_request = {
                 "frame": 0,
                 "auto_detect_visible": True,
                 "max_rounds": args.max_rounds,
-            }), f"candidate inference {image.name}")
-            inference_ms = elapsed_ms(infer_started)
+            }
+            if args.defer_background:
+                draft_request.update({
+                    "defer_agent_review": True,
+                    "defer_class_audit": True,
+                })
+            response = checked_json(client.post(
+                "/api/reference_draft", json=draft_request),
+                f"candidate inference {image.name}")
+            candidate_visible_ms = elapsed_ms(infer_started)
+            debug_path = isolated_work / "model_debug.json"
+            call_timings = read_model_trace(
+                debug_path, stage="initial_candidate_publication")
+            background = None
+            if args.complete_background:
+                background_started = time.perf_counter()
+                topic = server.state.get("topic")
+                if not isinstance(topic, str):
+                    raise RuntimeError("isolated server lacks an active topic")
+                artifact_sha = response.get("candidate_artifact_sha256")
+                input_sha = response.get("input_sha256")
+                if not isinstance(artifact_sha, str) or not isinstance(input_sha, str):
+                    raise RuntimeError("deferred candidate response lacks binding hashes")
+                refine_started = time.perf_counter()
+                refined = checked_json(client.post(
+                    "/api/reference_candidates/refine", json={
+                        "frame": 0,
+                        "topic": topic,
+                        "refinement_id": uuid.uuid4().hex,
+                        "expected_candidate_artifact_sha256": artifact_sha,
+                        "expected_frame_sha256": input_sha,
+                    }), f"background Agent refinement {image.name}")
+                refine_ms = elapsed_ms(refine_started)
+                call_timings.extend(read_model_trace(
+                    debug_path, stage="background_agent_refinement"))
+                if refined.get("stopped") is True:
+                    raise RuntimeError("background Agent refinement stopped")
+                final_response = copy.deepcopy(response)
+                final_response["candidates"] = refined.get("candidates")
+                final_response["agent"] = refined.get("agent")
+                final_response["candidate_artifact_sha256"] = refined.get(
+                    "candidate_artifact_sha256")
+                final_response["agent_review_deferred"] = False
+                final_response["agent_review_status"] = "complete"
+                audit_ms = 0.0
+                audit_cache_hit = None
+                if ((refined.get("agent") or {}).get(
+                        "candidate_class_audit_status") == "pending"):
+                    audit_started = time.perf_counter()
+                    audited = checked_json(client.post(
+                        "/api/reference_candidates/audit", json={
+                            "frame": 0,
+                            "topic": topic,
+                            "expected_candidate_artifact_sha256": refined.get(
+                                "candidate_artifact_sha256"),
+                            "expected_frame_sha256": refined.get("input_sha256"),
+                        }), f"background candidate audit {image.name}")
+                    audit_ms = elapsed_ms(audit_started)
+                    audit_cache_hit = audited.get(
+                        "candidate_class_audit_cache_hit")
+                    call_timings.append(grouped_audit_timing(audited, audit_ms))
+                    final_response["candidates"] = audited.get("candidates")
+                    final_response["agent"] = audited.get("agent")
+                    final_response["candidate_artifact_sha256"] = audited.get(
+                        "candidate_artifact_sha256")
+                    final_response["candidate_class_audit_deferred"] = False
+                    final_response["candidate_class_audit_status"] = "complete"
+                response = final_response
+                background = {
+                    "completed": True,
+                    "agent_refinement_elapsed_ms": refine_ms,
+                    "candidate_class_audit_elapsed_ms": audit_ms,
+                    "candidate_class_audit_cache_hit": audit_cache_hit,
+                    "elapsed_ms": elapsed_ms(background_started),
+                    "candidate_only": response.get("candidate_only") is True,
+                    "human_truth": response.get("human_truth") is True,
+                    "approved_for_training": response.get(
+                        "approved_for_training") is True,
+                }
+            full_pipeline_ms = elapsed_ms(infer_started)
             candidates = response.get("candidates") or []
             discovery = response.get("visible_label_discovery") or {}
-            debug_path = isolated_work / "model_debug.json"
             debug = (json.loads(debug_path.read_text(encoding="utf-8"))
                      if debug_path.is_file() else {})
-            call_timings = summarize_model_trace(debug.get("trace"))
             audit_reuse = None
             if args.verify_audit_reuse:
                 expected_artifact = response.get("candidate_artifact_sha256")
@@ -339,7 +456,10 @@ def main() -> int:
                 "load_elapsed_ms": load_ms,
                 "load_timings_ms": loaded.get("load_timings_ms"),
                 "compatibility": compatibility,
-                "inference_elapsed_ms": inference_ms,
+                "inference_elapsed_ms": full_pipeline_ms,
+                "candidate_visible_elapsed_ms": candidate_visible_ms,
+                "background_completion": background,
+                "background_deferred": args.defer_background,
                 "model_call_count": len(call_timings),
                 "model_call_elapsed_ms": round(sum(
                     call.get("elapsed_ms") or 0 for call in call_timings), 3),
@@ -386,6 +506,8 @@ def main() -> int:
             "model": config.get("llm_model"),
             "prompt_profile": config.get("llm_prompt_profile"),
             "max_rounds": args.max_rounds,
+            "background_deferred": args.defer_background,
+            "background_completed": args.complete_background,
             "batch_upload_elapsed_ms": upload_ms,
             "vlm_cache_observability": vlm_cache_observability,
             "runs": runs,
@@ -398,6 +520,8 @@ def main() -> int:
         "image_count": len(runs),
         "candidate_counts": [run["candidate_count"] for run in runs],
         "inference_elapsed_ms": [run["inference_elapsed_ms"] for run in runs],
+        "candidate_visible_elapsed_ms": [
+            run["candidate_visible_elapsed_ms"] for run in runs],
         "isolated_workspace_removed": True,
     }, ensure_ascii=False))
     return 0

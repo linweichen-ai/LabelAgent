@@ -1,8 +1,13 @@
+import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 
 from tools.run_new_dataset_smoke import (
     cache_stat_delta,
+    grouped_audit_timing,
     model_config,
+    read_model_trace,
     summarize_model_trace,
     vlm_health_url,
 )
@@ -51,6 +56,30 @@ class NewDatasetSmokeTests(unittest.TestCase):
         self.assertNotIn("instruction", summary[0])
         self.assertNotIn("raw_text", summary[0])
         self.assertEqual(summary[0]["model_route"], "small_image_fast")
+
+    def test_read_model_trace_adds_stage_without_exposing_content(self):
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "model_debug.json"
+            path.write_text(json.dumps({"trace": [{
+                "service": "GPT", "status": "succeeded", "elapsed_ms": 12,
+                "input": {"instruction": "private prompt", "images": [{}]},
+                "output": {"raw_text": "private prose", "parsed": {"ok": True}},
+            }]}), encoding="utf-8")
+            rows = read_model_trace(path, stage="background_agent_refinement")
+        self.assertEqual(rows[0]["pipeline_stage"],
+                         "background_agent_refinement")
+        self.assertNotIn("instruction", rows[0])
+        self.assertNotIn("raw_text", rows[0])
+
+    def test_grouped_audit_timing_is_content_free_and_counts_requests(self):
+        row = grouped_audit_timing({"agent": {"candidate_class_audits": [
+            {"execution_mode": "sequential", "decision": {"reason": "private"}},
+            {"execution_mode": "sequential", "decision": {"reason": "private"}},
+        ]}}, 123.5)
+        self.assertEqual(row["request_count"], 2)
+        self.assertEqual(row["elapsed_ms"], 123.5)
+        self.assertEqual(row["execution_modes"], ["sequential"])
+        self.assertNotIn("decision", row)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,48 @@
+{
+  "schema_version": "labelagent.progressive_newdata_other_robot.v1",
+  "date": "2026-11-20",
+  "status": "candidate_only_not_deployed",
+  "production_state_sha256_before": "237844f73ff4495e575c6a3f966260b9385efbdf1edee7d0e5177518470ddfab",
+  "production_state_sha256_after": "237844f73ff4495e575c6a3f966260b9385efbdf1edee7d0e5177518470ddfab",
+  "round307": {
+    "status": "superseded_by_round308",
+    "note": "System Python failed before inference because werkzeug was absent; the production venv run succeeded, but the first timing trace duplicated or mislabeled audit timing."
+  },
+  "round308": {
+    "input_sha256": "3124a32311471ac3a48806d16b8710592c7c55fc179ca5654633d25cee759bf3",
+    "candidate_visible_elapsed_ms": 22565.975,
+    "agent_refinement_elapsed_ms": 7828.63,
+    "candidate_class_audit_elapsed_ms": 22675.551,
+    "background_elapsed_ms": 30507.837,
+    "full_pipeline_elapsed_ms": 53074.283,
+    "audit_reuse_elapsed_ms": 8.777,
+    "candidate_counts": {"pallet": 12, "person": 1, "floor": 1, "ego": 1},
+    "visible_labels": ["pallet", "person", "floor", "ego", "other_robot"],
+    "other_robot_candidate_count": 0,
+    "review_queue_count": 4,
+    "vlm_cache_delta": {"hits": 0, "misses": 4, "stores": 4, "busy_rejections": 0, "coalesce_reuse_failures": 0, "coalesce_timeouts": 0},
+    "summary_sha256": "1b2c6ba66ad1d9e60c133dae6da64a9aa173de07bcfa4b4fbc0d0a8468ff4dcd",
+    "candidate_sha256": "484694e193290a77a0a31b3c33fc796d5412aff3c39619c2fdb130004dd72c44",
+    "overlay_sha256": "d74f5e7676cfb9f40e130467cdf7a4c4d3406bfcc52678417b7b34da08cf451c"
+  },
+  "round309": {
+    "prompt": "robotic pallet truck",
+    "positive_candidate_count": 4,
+    "positive_visual_review": {"likely_valid": 3, "ego_false_positive": 1},
+    "legacy_negative_images": 3,
+    "legacy_negative_candidates": 0,
+    "hard_negative_images": 1,
+    "hard_negative_candidates": 0,
+    "legacy_positive_frame48_candidates": 2,
+    "legacy_positive_frame74_candidates": 0,
+    "production_deployed": false,
+    "evidence_sha256": {
+      "positive": "8abe97ee1f7c1455bd753b5aa8e1e1187d7ecc5300453221cee11d17311251ec",
+      "legacy_negatives": "04f64b4dc1e22b9ca336de7110b6ddaa1865d3c197ba439d1c0ff0daba09cd9b",
+      "hard_negative": "57ad48da076c17c0291d1c1ff3c872f23121e33d7a96fd12913ad5f56d2a3893",
+      "legacy_positives": "1f4a3ed917d407ad2ee9a0f6a28984b345b997d30d6198c27ed7b090920bb1d9"
+    }
+  },
+  "verification": {"python_tests_passed": 1078, "javascript_tests_passed": 154},
+  "boundaries": {"candidate_only": true, "human_truth": false, "approved_for_training": false, "training_data_modified": false, "production_prompt_modified": false, "model_modified": false}
+}

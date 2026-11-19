@@ -1,0 +1,68 @@
+{
+  "schema_version": "labelagent.new_dataset_runtime_batch2_audit.v1",
+  "date": "2026-11-20",
+  "round305": {
+    "dataset": "Capture_20261103",
+    "camera": "camera_0",
+    "frame_index": 35,
+    "input_sha256": "019489110c39921bfc5df1383dd56b322f9fefd3d9299f70842e2963fb52079a",
+    "inference_elapsed_ms": 56919.555,
+    "model_call_count": 7,
+    "vlm_cache_misses": 4,
+    "vlm_busy_rejections": 0,
+    "candidate_count": 11,
+    "candidate_counts_by_label": {
+      "pallet": 7,
+      "person": 1,
+      "floor": 1,
+      "slope": 1,
+      "ego": 1
+    },
+    "review_queue_count": 1,
+    "ego_text_sam_usable_candidate": false,
+    "ego_point_fallback_status": "candidate_generated",
+    "audit_reuse_verified": true,
+    "audit_reuse_elapsed_ms": 8.524,
+    "isolated_workspace_removed": true,
+    "summary_sha256": "342c09946cfcd23862e2bea768f2820645f5ad8b02df75cd2a4db63753d3b0e4",
+    "candidate_sha256": "e49c2cf420582b6c41a503e78040c9fa244aa12d5c56b52eb5271efb62d0a8c8",
+    "overlay_sha256": "783f7827a0ab570c13a84f19b9fe251632b54b5961101f277f8572b8ba94bedf",
+    "assistant_visual_review": {
+      "slope_separate_from_floor": true,
+      "global_floor_to_slope_reclassification_observed": false,
+      "human_truth": false
+    }
+  },
+  "round306": {
+    "frame92": {
+      "candidate_ids": [10, 14],
+      "sequential_seconds": 17.219,
+      "batch2_seconds": 15.466,
+      "latency_gain_seconds": 1.753,
+      "latency_reduction_fraction": 0.1018,
+      "semantic_matches": 2,
+      "candidate_count": 2,
+      "safe_to_consider_batch2": true,
+      "receipt_sha256": "e82e12678bf10c6497dd8f0fb8f1418a195cff15f5c0daf18311fe6b5be17ee3"
+    },
+    "frame118": {
+      "candidate_ids": [5, 9],
+      "sequential_seconds": 20.017,
+      "batch2_seconds": 15.747,
+      "latency_gain_seconds": 4.27,
+      "latency_reduction_fraction": 0.2133,
+      "semantic_matches": 1,
+      "candidate_count": 2,
+      "safe_to_consider_batch2": false,
+      "receipt_sha256": "d208742c9b41fa7613c43b2c1171d7f46224208b51d6252a46e31c4cfb27c294"
+    },
+    "deploy_batch2": false,
+    "reason": "one frozen candidate changed from human review to automatic preservation"
+  },
+  "production_state_sha256_before": "237844f73ff4495e575c6a3f966260b9385efbdf1edee7d0e5177518470ddfab",
+  "production_state_sha256_after": "237844f73ff4495e575c6a3f966260b9385efbdf1edee7d0e5177518470ddfab",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "approved_for_deployment": false
+}

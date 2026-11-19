@@ -33,6 +33,17 @@
     "vlm_models_http": 200,
     "run_status": "idle"
   },
+  "followup_ntfs_compression": {
+    "cold_artifact_logical_bytes": 1279144581,
+    "cold_artifact_physical_bytes": 919079863,
+    "c_recovered_mib": 342.03,
+    "old_labelagent_worktrees_compressed": 6,
+    "d_recovered_mib_approx": 344.69,
+    "junctions_modified": 0,
+    "final_c_free_mib": 1110.71,
+    "final_d_free_mib": 1460.48,
+    "reversible": true
+  },
   "production_state_sha256_before": "237844f73ff4495e575c6a3f966260b9385efbdf1edee7d0e5177518470ddfab",
   "production_state_sha256_after": "237844f73ff4495e575c6a3f966260b9385efbdf1edee7d0e5177518470ddfab"
 }

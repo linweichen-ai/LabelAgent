@@ -1,0 +1,90 @@
+{
+  "schema_version": "labelagent.candidate-audit-batch-cache-rounds249-250.v1",
+  "date": "2026-11-19T15:06:00+08:00",
+  "boundary": {
+    "candidate_only": true,
+    "human_truth_changed": false,
+    "training_approved": false,
+    "formal_workbench_state_changed_by_smokes": false
+  },
+  "policy": {
+    "accepted_batch_size": 3,
+    "remainder_mode": "sequential",
+    "accept_only_full_protocol_valid_high_confidence_label_matches": true,
+    "failed_group_fallback": "sequential_for_that_triple_only",
+    "candidate_mutation": false
+  },
+  "round249": {
+    "execution_modes": [
+      "independent_batch_3",
+      "independent_batch_3",
+      "independent_batch_3",
+      "sequential",
+      "sequential"
+    ],
+    "audit_routes": [
+      "candidate_preserved",
+      "candidate_preserved",
+      "candidate_preserved",
+      "candidate_preserved",
+      "candidate_preserved"
+    ],
+    "intermediate_elapsed_ms": 28662.705,
+    "diagnosis": "batch endpoint recomputed the triple instead of reusing exact single-request cache entries"
+  },
+  "round250_real_image": {
+    "dataset": "Capture_20261103",
+    "camera": "camera_1",
+    "image": "1789897506782450197.png",
+    "width": 1920,
+    "height": 1536,
+    "old_cold_baseline_ms": 85478.533,
+    "cold": {
+      "elapsed_ms": 70733.771,
+      "cache_hits": 0,
+      "cache_misses": 7,
+      "cache_stores": 7,
+      "busy_rejections": 0,
+      "candidate_count": 17,
+      "geometry_sha256": "4d9d9f1adeefbda85d369d06559b139209d1e50f1b945b3ef902978efe436fa6"
+    },
+    "warm": {
+      "elapsed_ms": 7836.702,
+      "cache_hits": 7,
+      "cache_misses": 0,
+      "cache_stores": 0,
+      "busy_rejections": 0,
+      "candidate_count": 17,
+      "geometry_sha256": "4d9d9f1adeefbda85d369d06559b139209d1e50f1b945b3ef902978efe436fa6"
+    },
+    "cold_improvement_ms": 14744.762,
+    "cold_improvement_fraction": 0.172496,
+    "warm_vs_round250_cold_improvement_fraction": 0.889208,
+    "class_counts": {
+      "floor": 1,
+      "pallet": 11,
+      "person": 5
+    },
+    "agent_rounds": 1,
+    "stop_reason": "no_progress",
+    "surface_guard": "unreferenced_global_surface_large_add_requires_human_review",
+    "remaining_known_issue": "ego visible in discovery but no ego candidate"
+  },
+  "tests": {
+    "python_passed": 1011,
+    "python_subtests_passed": 186,
+    "browser_passed": 145,
+    "failed": 0
+  },
+  "deployment": {
+    "candidate_class_audit_py_sha256": "2FCC6FD5092568DBF00CAC926CEA3CB73A3F56E2C7D74E757A943B576D42B1B7",
+    "local_vlm_server_py_sha256": "2EEA52D7D7FF4A8717AC1937053C89921FDD464EB145BE8D4F6265630D2D6880",
+    "local_backup": "D:\\Apps\\LabelAgent\\.local\\backups\\candidate-audit-full-triples-round249-20261119-145317",
+    "remote_backup": "/home/clw/labelagent_remote_20261110/backups/batch-cache-round250-20261119-150131",
+    "commits": ["a651d16", "6fc2866"]
+  },
+  "local_artifacts_not_published": [
+    "D:\\Apps\\LabelAgent\\.local\\relocated-worktrees\\labelagent_stability_worktree_20261117-artifacts\\new-dataset-smoke-round250-cold",
+    "D:\\Apps\\LabelAgent\\.local\\relocated-worktrees\\labelagent_stability_worktree_20261117-artifacts\\new-dataset-smoke-round250-warm"
+  ]
+}

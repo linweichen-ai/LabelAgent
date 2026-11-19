@@ -2183,3 +2183,11 @@ Round240部署后又完成第二次连续真实验收：CVAT Task3第116帧约71
 同图隔离复跑后，floor 从旧结果 2,117,990 像素回到 984,781 像素，移除 1,133,209 个危险新增像素；与人物重叠降到 63 像素、覆盖比例 0.0155%。热缓存复跑 7.94 秒，17个候选、一轮 `no_progress`，7个VLM请求全部命中缓存；该时延不替代 Round243 约85.5秒冷路径基线。可见类别发现仍认为 ego 存在但未生成 ego 候选，已保留为后续召回问题。
 
 Python1006/1006、186子测试、网页145/145通过；正式工作台、SAM3、主VLM和安全通道正常。备份位于 `D:\Apps\LabelAgent\.local\backups\unreferenced-surface-add-guard-round248-20261119-144022`，正式 workflow/edit_agent 哈希分别为 `57F065B3...E828` 与 `D90786C4...3604`。详细报告见 `docs/NEW_DATASET_SURFACE_EXPANSION_GUARD_ROUND248_20261119.md`，结构化证据见 `docs/evidence/workbench-stability-20261117/unreferenced-surface-expansion-round248.json`；工厂图像只保留本地，未推送远端。实现提交 `0a40214`。
+
+### Round 249–250：5候选三元组调度与批处理精确缓存
+
+Round248的新数据图包含5个人物候选，旧逻辑因数量不等于3而全部逐个盲审。现只复用既有受控结论：完整三元组使用独立batch3，余下1～2项仍逐个审；任一三元组输出不合规或不够确定时，仅该组回退逐个审。部署后执行模式为`independent_batch_3 × 3 + sequential × 2`，5项均`candidate_preserved`。
+
+第一次同图验收发现批处理没有复用单请求缓存，热图仍耗时28.66秒。主VLM端点随后增加逐请求精确缓存：全部命中直接返回，部分命中只生成缺失项，等待模型槽后再检查一次，批处理生成结果也逐项回填单请求缓存。4090服务源码哈希为`2EEA52D7...D6880`，回滚点为`/home/clw/labelagent_remote_20261110/backups/batch-cache-round250-20261119-150131`。
+
+同一真实图全新缓存首跑70.73秒，较Round243旧冷基线85.48秒缩短14.74秒（17.25%）；紧接重复运行7.84秒，7 hit/0 miss。冷/热均为17个候选（1 floor、11 pallet、5 person），几何哈希同为`4d9d9f...436fa6`，5项盲审路由一致，busy rejection为0，地面大矩形继续被拦截。ego可见但无候选仍是待处理问题。Python1011/1011、186子测试、网页145/145通过；详细报告见`docs/CANDIDATE_AUDIT_BATCH_CACHE_ROUNDS249_250_20261119.md`，结构化证据见`docs/evidence/workbench-stability-20261117/candidate-audit-batch-cache-rounds249-250.json`。实现提交`a651d16`与`6fc2866`，真实图像只保留本地。

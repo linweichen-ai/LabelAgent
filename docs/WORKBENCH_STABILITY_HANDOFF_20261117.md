@@ -2019,3 +2019,5 @@ Round228 已保证新旧数据、相机与类别选择不串台，但逐类别�
 部署备份位于 `D:\Apps\LabelAgent\.local\backups\first-load-round230-20261119-100659`。安全通道、4090 SAM、5090 SAM、4090 Qwen和工作台正常；正式 `state.json` 与 `file_sessions.json` 哈希与Round229相同。没有SAM/VLM/Agent推理、候选写入、人工真值、训练批准、微调、后训练或OSS写入。
 
 完整说明见 [第二百三十轮报告](NEW_DATASET_FIRST_LOAD_ROUND230_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/new-dataset-first-load-round230.json)。浏览器脚本、前后回执和截图只保留在本地未跟踪目录。下一轮继续审计快速连续切换文件、失败重试与旧响应晚到，确保最后一次选择始终生效。
+
+实现、测试和首版文档提交 `5200077bec0a8a02183650922640466202f86a01` 已推送并分别回读 GitHub/CNB，同名分支两端与本地精确匹配；未跟踪厂内内容未上传。

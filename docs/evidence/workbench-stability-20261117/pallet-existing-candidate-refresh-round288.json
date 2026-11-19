@@ -1,0 +1,75 @@
+{
+  "schema_version": "labelagent.pallet-existing-candidate-refresh.round288.v1",
+  "created_local": "2026-11-20T04:16:58+08:00",
+  "status": "targeted_production_candidate_refresh_verified",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "approved_for_deployment": false,
+  "model_changed": false,
+  "backup": {
+    "path": "D:\\Apps\\LabelAgent\\.local\\backups\\pallet-candidate-refresh-round288-20261120-041540",
+    "files": {
+      "state.json": {
+        "bytes": 4508608,
+        "sha256": "65D5D634F503584B5E668551513A5D78FCC96077BD94F02390E560392C0267E4"
+      },
+      "file_sessions.json": {
+        "bytes": 30424199,
+        "sha256": "5D719DE280BE0655843346B73B927F8FEED8A73404406AB0BEA782607FF5C69F"
+      }
+    },
+    "source_backup_hashes_exact": true
+  },
+  "truth_state_sha256": {
+    "before": "e35a944554c74c00717de5a4cfdafd8b01f51df20a90781121469eec4f9a70a3",
+    "after": "e35a944554c74c00717de5a4cfdafd8b01f51df20a90781121469eec4f9a70a3",
+    "unchanged": true
+  },
+  "frames": [
+    {
+      "frame": 110,
+      "candidate_count_before": 14,
+      "candidate_count_after": 14,
+      "adjusted_candidate_count": 13,
+      "changed_pixels": 5543,
+      "prior_candidate_artifact_sha256": "4ebfb2430790ec186fefe5759d1b388db464179603a4512f0119ad761c64adbe",
+      "candidate_artifact_sha256": "17fdea31a7295d18b0eef4e73174759872369495f0ad1517647922c250b6cb36",
+      "agent_run_sha256": "82ee30b912288320cf87d3f4ebf2d63d5f612f85993d498e7256e362614d1668",
+      "primary_pallet_holes_before": 45,
+      "primary_pallet_holes_after": 3,
+      "minimum_structural_hole_retention": 0.979798,
+      "second_refresh_changed": false
+    },
+    {
+      "frame": 112,
+      "candidate_count_before": 14,
+      "candidate_count_after": 14,
+      "adjusted_candidate_count": 13,
+      "changed_pixels": 3738,
+      "prior_candidate_artifact_sha256": "1306c1165ee99ea32eb67b4de7460ec3d0cac99bb1c27e76935a005e0330d9c2",
+      "candidate_artifact_sha256": "4e43f34297f99341779c0d62090d762a164a202a9d826b7d350270b4c116c822",
+      "agent_run_sha256": "0766f9ac4c4fef930cf248ac02b3e643bdc7534b401ef5a93ed7d5d376117d8a",
+      "primary_pallet_holes_before": 41,
+      "primary_pallet_holes_after": 3,
+      "minimum_structural_hole_retention": 1.0,
+      "second_refresh_changed": false
+    }
+  ],
+  "formal_state_sha256_after": "16F9B106A59D8BA7FD73A3C418A75281450AFF33A4D23BC325CAD3C1FB5B39A6",
+  "local_visual_readback": {
+    "path": "artifacts/pallet-candidate-refresh-round288/current-vs-residual-proposal.jpg",
+    "sha256": "adf51fb2aa0002b607a6c7cd8ed6cfafc467f2686cd4b864e032ad77d8a9c944",
+    "uploaded": false
+  },
+  "live_readback": {
+    "workbench_http": 200,
+    "vlm_status": "ok",
+    "vlm_inflight": 0,
+    "vlm_waiting": 0,
+    "free_space_gib": {"C": 0.387, "D": 1.123}
+  },
+  "next_gate": "Build a read-only per-frame migration inventory and refresh additional historical candidates only in small reversible batches after structural and storage gates pass.",
+  "boundary": "Only machine candidates for frames 110 and 112 changed. Human truth, training approval, model weights, OSS objects and all other frames were preserved."
+}
+

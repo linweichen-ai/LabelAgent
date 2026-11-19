@@ -1255,7 +1255,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=188/);
+  assert.match(source('index.html'), /app\.js\?v=189/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1316,7 +1316,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{\s*invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=188/);
+  assert.match(source('index.html'), /app\.js\?v=189/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1375,7 +1375,89 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 4);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=188/);
+  assert.match(source('index.html'), /app\.js\?v=189/);
+});
+
+test('类别与推理类别保存绑定文件载入代次和类别状态版本', async () => {
+  const app = source('app.js'), calls = [], pending = [], applied = [], notices = [];
+  const elements = {
+    labelsSave: {}, labelsInput: {value:'a,b'},
+    autoLabelsSave: {disabled:false},
+    autoLabelOptions: {querySelectorAll:()=>[{checked:true,value:'b'}]},
+  };
+  const h = harness({
+    $(id) { return elements[id]; },
+    api(route, body) { calls.push({route,body}); return new Promise(resolve=>pending.push(resolve)); },
+    applyInferenceLabelState(data) { applied.push(JSON.parse(JSON.stringify(data))); },
+    toast(message) { notices.push(message); },
+  });
+  h.run(`let loadedDataPath='file-a',topic='/camera',loadedFileActivationGeneration=7,
+    labelStateSha256='${'a'.repeat(64)}',currentDescription={ready:true};`);
+  h.run(section(app, "$('labelsSave').onclick", "$('autoLabelsAll').onclick"));
+  h.run(section(app, "$('autoLabelsSave').onclick", 'async function lockReferenceFrame'));
+
+  const stale = h.run("$('labelsSave').onclick()");
+  assert.deepEqual(JSON.parse(JSON.stringify(calls[0])), {route:'labels',body:{labels:['a','b'],path:'file-a',topic:'/camera',file_activation_generation:7,expected_label_state_sha256:'a'.repeat(64)}});
+  h.run('loadedFileActivationGeneration=8');
+  pending[0]({labels:['a','b'],auto_labels:['a'],reference_only_labels:[],label_state_sha256:'b'.repeat(64),path:'file-a',topic:'/camera',file_activation_generation:7});
+  await stale;
+  assert.equal(applied.length, 0);
+  assert.ok(notices.includes('类别保存期间数据文件、相机或载入代次已变化，拒绝更新当前页面'));
+
+  h.run("loadedFileActivationGeneration=7;labelStateSha256='"+'c'.repeat(64)+"'");
+  const inference = h.run("$('autoLabelsSave').onclick()");
+  assert.equal(calls[1].route, 'auto_labels');
+  assert.equal(calls[1].body.expected_label_state_sha256, 'c'.repeat(64));
+  pending[1]({labels:['b'],project_labels:['a','b'],auto_labels:['b'],reference_only_labels:['a'],label_state_sha256:'d'.repeat(64),path:'file-a',topic:'/camera',file_activation_generation:7});
+  await inference;
+  assert.equal(applied.length, 1);
+  assert.deepEqual(applied[0].labels, ['a','b']);
+  assert.deepEqual(applied[0].auto_labels, ['b']);
+  assert.equal(h.run('currentDescription'), null);
+  assert.match(source('index.html'), /app\.js\?v=189/);
+});
+
+test('清除机器结果绑定文件代次及候选和过程记录哈希并以服务器读回为准', async () => {
+  const inspection = source('inspection.js');
+  function setup() {
+    const notices = [], requests = [], pending = [], readbacks = [], applied = [];
+    const button = {disabled:false,textContent:'清除本帧候选'};
+    const h = harness({
+      $(id) { return id==='clearAutoResult'?button:{}; },
+      fetch(url, options) { requests.push({url,options}); return new Promise(resolve=>pending.push(resolve)); },
+      async readCompactFrameStateSnapshot(...args) { readbacks.push(args); return {compact_geometry:true,path:'file-a',topic:'/camera',frame:3,file_activation_generation:7,candidates:{},agent_runs:{},candidate_review_bindings:{}}; },
+      applyCompactFrameState(data, ...scope) { applied.push({data,scope}); },
+      resetPrompts() {}, refreshShapeList() {}, draw() {}, updateReferenceStatus() {},
+      renderInspection() {}, async refreshInspection() {}, async refreshAgentProgress() {},
+      toast(message) { notices.push(message); },
+    });
+    h.run(`let frame=3,topic='/camera',loadedDataPath='file-a',loadedFileActivationGeneration=7,
+      candidates={'3':[{}]},agentRuns={'3':{}},autoDrafts={'3':[]},candidateReviewBindings={'3':{}},candidateCountIndex={'3':1},draft=[],
+      inspectionData={clear_auto_result_binding:{path:'file-a',topic:'/camera',frame:3,file_activation_generation:7,candidate_artifact_sha256:'${'a'.repeat(64)}',agent_run_sha256:'${'b'.repeat(64)}'},trace:[],steps:[],frames:[3]};`);
+    h.run(section(inspection, "$('clearAutoResult').onclick", "window.setWorkspaceMode('manual',false)"));
+    return {h,button,notices,requests,pending,readbacks,applied};
+  }
+
+  const current = setup(), operation = current.h.run("$('clearAutoResult').onclick()");
+  const submitted = JSON.parse(current.requests[0].options.body);
+  assert.equal(submitted.path, 'file-a');
+  assert.equal(submitted.file_activation_generation, 7);
+  assert.equal(submitted.expected_candidate_artifact_sha256, 'a'.repeat(64));
+  assert.equal(submitted.expected_agent_run_sha256, 'b'.repeat(64));
+  current.pending[0]({ok:true,json:async()=>({path:'file-a',topic:'/camera',frame:3,file_activation_generation:7,removed_candidate_artifact_sha256:'a'.repeat(64),removed_agent_run_sha256:'b'.repeat(64),truth_preserved:true})});
+  await operation;
+  assert.equal(current.readbacks.length, 1);
+  assert.equal(current.applied.length, 1);
+  assert.ok(current.notices.includes('帧 3 的自动结果已清除，人工真值保留'));
+
+  const stale = setup(), old = stale.h.run("$('clearAutoResult').onclick()");
+  stale.h.run('loadedFileActivationGeneration=8');
+  stale.pending[0]({ok:true,json:async()=>({path:'file-a',topic:'/camera',frame:3,file_activation_generation:7,removed_candidate_artifact_sha256:'a'.repeat(64),removed_agent_run_sha256:'b'.repeat(64),truth_preserved:false})});
+  await old;
+  assert.equal(stale.readbacks.length, 0);
+  assert.equal(stale.applied.length, 0);
+  assert.ok(stale.notices.some(message=>message.includes('载入代次')));
+  assert.match(source('index.html'), /inspection\.js\?v=108/);
 });
 
 test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () => {

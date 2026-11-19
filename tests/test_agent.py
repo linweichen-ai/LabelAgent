@@ -2208,6 +2208,19 @@ def active_request_scope():
             "file_activation_generation": server.current_file_activation_generation()}
 
 
+def active_label_write_scope():
+    return {**active_request_scope(),
+            "expected_label_state_sha256": server.label_state_sha256()}
+
+
+def active_auto_clear_scope(frame):
+    binding = server.auto_result_clear_binding(frame)
+    return {**active_request_scope(),
+            "expected_candidate_artifact_sha256":
+                binding["candidate_artifact_sha256"],
+            "expected_agent_run_sha256": binding["agent_run_sha256"]}
+
+
 class ServerTests(unittest.TestCase):
     def test_primary_model_prewarm_uses_main_route_without_state_writes(self):
         old_state = server.state
@@ -4367,13 +4380,28 @@ class ServerTests(unittest.TestCase):
             server.save_debug([call(1), call(2), call(2, topic="camera1")])
             try:
                 client = server.app.test_client()
-                self.assertEqual(client.delete("/api/auto_result/1", json={"topic": "camera1"}).status_code, 400)
+                wrong_topic = active_auto_clear_scope(1)
+                wrong_topic["topic"] = "camera1"
+                self.assertEqual(client.delete(
+                    "/api/auto_result/1", json=wrong_topic).status_code, 409)
+                stale_activation = active_auto_clear_scope(1)
+                stale_activation["file_activation_generation"] -= 1
+                self.assertEqual(client.delete(
+                    "/api/auto_result/1", json=stale_activation).status_code, 409)
+                self.assertIn("1", server.state["candidates"])
                 server.run_status["status"] = "running"
-                self.assertEqual(client.delete("/api/auto_result/1", json={"topic": "camera0"}).status_code, 503)
+                self.assertEqual(client.delete(
+                    "/api/auto_result/1",
+                    json=active_auto_clear_scope(1)).status_code, 503)
                 server.run_status["status"] = "completed"
-                response = client.delete("/api/auto_result/2", json={"topic": "camera0"})
+                response = client.delete(
+                    "/api/auto_result/2", json=active_auto_clear_scope(2))
                 self.assertEqual(response.status_code, 200, response.json)
                 self.assertTrue(response.json["truth_preserved"])
+                self.assertEqual(response.json["path"], str(FakeVideo.path))
+                self.assertEqual(response.json["topic"], "camera0")
+                self.assertEqual(response.json["file_activation_generation"],
+                                 server.current_file_activation_generation())
                 self.assertEqual(server.state["truth"], original_truth)
                 self.assertEqual(list(server.state["candidates"]), ["1"])
                 self.assertEqual(list(server.state["agent_runs"]), ["1"])
@@ -4399,9 +4427,16 @@ class ServerTests(unittest.TestCase):
                 self.assertEqual(server.run_status["completed"], 1)
                 self.assertTrue((server.WORK / "inspection" / kept_image.rsplit("/", 1)[-1]).exists())
                 self.assertFalse((server.WORK / "inspection" / removed_image.rsplit("/", 1)[-1]).exists())
+                stale_result = active_auto_clear_scope(1)
+                server.state["candidates"]["1"] = [shape(3)]
+                rejected = client.delete("/api/auto_result/1", json=stale_result)
+                self.assertEqual(rejected.status_code, 409, rejected.json)
+                self.assertEqual(server.state["candidates"]["1"], [shape(3)])
                 server.save_run({"trace": [call(1), call(1, topic="camera1")],
                     "frames": [{"frame": 1}], "steps": [{"frame": 1}]})
-                self.assertEqual(client.delete("/api/auto_result/1", json={"topic": "camera0"}).status_code, 200)
+                self.assertEqual(client.delete(
+                    "/api/auto_result/1",
+                    json=active_auto_clear_scope(1)).status_code, 200)
                 self.assertEqual(server.state["candidates"], {})
                 self.assertEqual(server.state["truth"], original_truth)
                 legacy = json.loads((server.WORK / "last_run.json").read_text())
@@ -4630,16 +4665,64 @@ class ServerTests(unittest.TestCase):
             try:
                 before = server.reference_signature(0)
                 client = server.app.test_client()
-                response = client.post("/api/auto_labels", json={"labels": ["a", "b"]})
+                response = client.post("/api/auto_labels", json={
+                    **active_label_write_scope(), "labels": ["a", "b"]})
                 self.assertEqual(response.status_code, 200, response.json)
-                self.assertEqual(response.json["labels"], ["a", "b"])
+                self.assertEqual(response.json["auto_labels"], ["a", "b"])
+                self.assertEqual(response.json["path"], str(FakeVideo.path))
+                self.assertEqual(response.json["topic"], "camera0")
+                self.assertTrue(server._valid_sha256(
+                    response.json["label_state_sha256"]))
                 self.assertNotEqual(before, server.reference_signature(0))
                 state = client.get("/api/state").json
                 self.assertEqual(state["auto_labels"], ["a", "b"])
                 self.assertEqual(state["reference_only_labels"], ["a"])
-                separate = client.post("/api/auto_labels", json={"labels": ["b"]})
+                stale = {**active_request_scope(), "labels": ["b"],
+                         "expected_label_state_sha256":
+                             server.label_state_sha256({
+                                 "labels": ["a", "b"], "auto_labels": ["a"]})}
+                self.assertEqual(client.post(
+                    "/api/auto_labels", json=stale).status_code, 409)
+                separate = client.post("/api/auto_labels", json={
+                    **active_label_write_scope(), "labels": ["b"]})
                 self.assertEqual(separate.status_code, 200, separate.json)
-                self.assertEqual(separate.json["labels"], ["b"])
+                self.assertEqual(separate.json["auto_labels"], ["b"])
+            finally:
+                server.state = previous
+
+    def test_label_writes_reject_old_file_activation_and_old_label_state(self):
+        previous = server.state
+        with tempfile.TemporaryDirectory() as directory, \
+             patch.object(server, "WORK", Path(directory)):
+            server.state = {"video": FakeVideo(), "topic": "camera0",
+                "labels": ["a", "b"], "auto_labels": ["a"],
+                "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
+                "config": {}, "candidates": {}, "agent_runs": {}}
+            try:
+                client = server.app.test_client()
+                stale_generation = {**active_label_write_scope(),
+                    "labels": ["a", "b", "c"]}
+                stale_generation["file_activation_generation"] -= 1
+                response = client.post("/api/labels", json=stale_generation)
+                self.assertEqual(response.status_code, 409, response.json)
+                self.assertEqual(server.state["labels"], ["a", "b"])
+
+                old_state = active_label_write_scope()
+                changed = client.post("/api/auto_labels", json={
+                    **old_state, "labels": ["b"]})
+                self.assertEqual(changed.status_code, 200, changed.json)
+                stale_write = client.post("/api/labels", json={
+                    **old_state, "labels": ["a", "b", "c"]})
+                self.assertEqual(stale_write.status_code, 409, stale_write.json)
+                self.assertEqual(server.state["labels"], ["a", "b"])
+
+                current = client.post("/api/labels", json={
+                    **active_label_write_scope(), "labels": ["a", "b", "c"]})
+                self.assertEqual(current.status_code, 200, current.json)
+                self.assertEqual(current.json["labels"], ["a", "b", "c"])
+                self.assertEqual(current.json["auto_labels"], ["b"])
+                self.assertEqual(current.json["file_activation_generation"],
+                                 server.current_file_activation_generation())
             finally:
                 server.state = previous
 

@@ -271,17 +271,31 @@ document.addEventListener('labelagent:review-selection-changed',refreshReference
 $('describeButton').addEventListener('click',()=>{inspectionStage=0;refreshInspection()});
 $('saveCandidate').onclick=async()=>{try{await saveCurrentTruth(true);renderInspection(true);refreshInspection()}catch(error){toast(error.message)}};
 $('clearAutoResult').onclick=async()=>{
- const selected=frame,selectedTopic=topic,button=$('clearAutoResult');
+ const selected=frame,selectedTopic=topic,selectedPath=loadedDataPath,
+  selectedGeneration=loadedFileActivationGeneration,button=$('clearAutoResult'),
+  binding=inspectionData.clear_auto_result_binding;
  if(button.disabled)return;
  button.disabled=true;button.textContent='清除中…';
  try{
-  const response=await fetch('/api/auto_result/'+selected,{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic:selectedTopic})});
+  if(!binding||binding.path!==selectedPath||binding.topic!==selectedTopic
+    ||Number(binding.frame)!==Number(selected)
+    ||binding.file_activation_generation!==selectedGeneration)throw Error('机器结果绑定尚未刷新，请等待过程记录更新后重试');
+  const response=await fetch('/api/auto_result/'+selected,{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:selectedPath,topic:selectedTopic,file_activation_generation:selectedGeneration,expected_candidate_artifact_sha256:binding.candidate_artifact_sha256,expected_agent_run_sha256:binding.agent_run_sha256})});
   const result=await response.json();
   if(!response.ok)throw Error(result.error||'清除失败');
-  if(topic===selectedTopic){
-   delete candidates[String(selected)];delete agentRuns[String(selected)];delete autoDrafts[String(selected)];
+  if(loadedDataPath!==selectedPath||topic!==selectedTopic
+    ||loadedFileActivationGeneration!==selectedGeneration
+    ||result.path!==selectedPath||result.topic!==selectedTopic
+    ||Number(result.frame)!==Number(selected)
+    ||result.file_activation_generation!==selectedGeneration
+    ||result.removed_candidate_artifact_sha256!==binding.candidate_artifact_sha256
+    ||result.removed_agent_run_sha256!==binding.agent_run_sha256)throw Error('清除期间数据文件、相机、帧、载入代次或机器结果绑定已变化；服务器结果未应用到当前页面');
+  if(topic===selectedTopic&&loadedDataPath===selectedPath){
+   const readback=await readCompactFrameStateSnapshot(selected,selectedTopic,selectedPath,selectedGeneration);
+   if(loadedDataPath!==selectedPath||topic!==selectedTopic||loadedFileActivationGeneration!==selectedGeneration)throw Error('清除结果读回期间数据作用域已变化，拒绝更新当前页面');
+   applyCompactFrameState(readback,selected,selectedTopic,selectedPath);delete autoDrafts[String(selected)];
    if(frame===selected){draft=[];resetPrompts();refreshShapeList();draw();updateReferenceStatus()}
-   inspectionData={...inspectionData,description:null,trace:inspectionData.trace.filter(call=>call.frame!==selected&&call.purpose!=='生成真值描述'),steps:inspectionData.steps.filter(step=>step.frame!==selected),frames:(inspectionData.frames||[]).filter(n=>n!==selected)};
+   inspectionData={...inspectionData,description:null,clear_auto_result_binding:null,trace:inspectionData.trace.filter(call=>call.frame!==selected&&call.purpose!=='生成真值描述'),steps:inspectionData.steps.filter(step=>step.frame!==selected),frames:(inspectionData.frames||[]).filter(n=>n!==selected)};
    inspectionVersion='';renderInspection(true);
    await Promise.all([refreshInspection(),refreshAgentProgress()]);
   }

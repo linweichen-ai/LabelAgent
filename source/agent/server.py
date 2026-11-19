@@ -124,21 +124,35 @@ def assert_request_file_activation(payload, key="file_activation_generation"):
     return generation
 
 
-def assert_request_data_scope(payload, *, generation_key="file_activation_generation",
-                              path_key="path", topic_key="topic"):
-    """Require one request to target the exact active file, topic and load."""
+def assert_request_workspace_scope(payload, *, generation_key="file_activation_generation",
+                                   path_key="path", topic_key="topic"):
+    """Require one request to target the exact active workspace and load."""
     generation = assert_request_file_activation(payload, generation_key)
     expected_path = payload.get(path_key)
     expected_topic = payload.get(topic_key)
-    if not isinstance(expected_path, str) or not expected_path:
-        raise ValueError(f"{path_key} 必须是当前数据文件路径")
-    if not isinstance(expected_topic, str) or not expected_topic:
-        raise ValueError(f"{topic_key} 必须是当前图像相机")
+    if not isinstance(expected_path, str):
+        raise ValueError(f"{path_key} 必须是当前工作区数据路径")
+    if expected_topic is not None and not isinstance(expected_topic, str):
+        raise ValueError(f"{topic_key} 必须是当前图像相机或 null")
     video = state.get("video")
-    if (video is None or expected_path != str(video.path)
+    current_path = str(video.path) if video is not None else ""
+    if (expected_path != current_path
             or expected_topic != state.get("topic")):
         raise StaleHumanReviewError(
             "数据文件或相机已变化，旧窗口请求已拒绝；请刷新后重新操作")
+    return generation, expected_path, expected_topic
+
+
+def assert_request_data_scope(payload, *, generation_key="file_activation_generation",
+                              path_key="path", topic_key="topic"):
+    """Require one request to target the exact active file, topic and load."""
+    generation, expected_path, expected_topic = assert_request_workspace_scope(
+        payload, generation_key=generation_key, path_key=path_key,
+        topic_key=topic_key)
+    if state.get("video") is None or not expected_path:
+        raise ValueError(f"{path_key} 必须是当前数据文件路径")
+    if not isinstance(expected_topic, str) or not expected_topic:
+        raise ValueError(f"{topic_key} 必须是当前图像相机")
     return generation, expected_path, expected_topic
 
 
@@ -501,6 +515,19 @@ def candidate_review_bindings():
     """Return server-canonical hashes so browsers never reinterpret JSON numbers."""
     return {str(frame): binding for frame, candidates in state.get("candidates", {}).items()
             if (binding := candidate_review_binding(candidates)) is not None}
+
+
+def auto_result_clear_binding(index):
+    """Bind a destructive candidate clear to the exact visible machine result."""
+    key = str(index)
+    candidates = state.get("candidates", {})
+    agent_runs = state.get("agent_runs", {})
+    return {
+        "candidate_artifact_sha256": (
+            _sha256_json(candidates[key]) if key in candidates else None),
+        "agent_run_sha256": (
+            _sha256_json(agent_runs[key]) if key in agent_runs else None),
+    }
 
 
 TRUTH_ACCEPT_DECISIONS = {
@@ -1404,6 +1431,46 @@ def selected_auto_labels(reference):
     return selected_auto_labels_for_truth(state["truth"][str(reference)])
 
 
+def current_inference_label_state():
+    """Return the exact label lists shown for the active workspace."""
+    labels = copy.deepcopy(state.get("labels", []))
+    topic = state.get("topic")
+    references = state.get("reference_frames", {}).get(topic, []) if topic else []
+    reference = references[0] if references else None
+    auto_labels = (selected_auto_labels(reference)
+                   if reference is not None else list(labels))
+    reference_only_labels = (
+        reference_labels(state.get("truth", {}).get(str(reference), []), labels)
+        if reference is not None else [])
+    return {
+        "labels": labels,
+        "auto_labels": auto_labels,
+        "reference_only_labels": reference_only_labels,
+    }
+
+
+def label_state_sha256(label_state=None):
+    """Hash the mutable project and inference label selections together."""
+    current = label_state or current_inference_label_state()
+    return _sha256_json({
+        "labels": current["labels"],
+        "auto_labels": current["auto_labels"],
+    })
+
+
+def assert_request_label_state(payload):
+    """Reject label writes based on another file load or an older label list."""
+    generation, path, topic = assert_request_workspace_scope(payload)
+    expected = payload.get("expected_label_state_sha256")
+    if not _valid_sha256(expected):
+        raise ValueError("expected_label_state_sha256 必须是当前类别状态 SHA-256")
+    current = current_inference_label_state()
+    if expected != label_state_sha256(current):
+        raise StaleHumanReviewError(
+            "类别或推理类别已在另一窗口变化，请刷新后重新设置")
+    return generation, path, topic, current
+
+
 def merge_inference_candidates(existing, generated, selected_labels, *, return_id_map=False):
     """Refresh selected classes without deleting candidates from other classes."""
     selected = set(selected_labels)
@@ -1584,6 +1651,10 @@ def compact_topic_payload(index, description):
         "labels": copy.deepcopy(state.get("labels", [])),
         "auto_labels": auto_labels,
         "reference_only_labels": reference_only_labels,
+        "label_state_sha256": label_state_sha256({
+            "labels": state.get("labels", []),
+            "auto_labels": auto_labels,
+        }),
         "description": copy.deepcopy(description),
         "description_cache_hit": description is not None,
     })
@@ -1887,6 +1958,10 @@ def get_reference_preparation():
             frame_count=frame_count,
             labels=copy.deepcopy(state.get("labels", [])),
             auto_labels=auto_labels,
+            label_state_sha256=label_state_sha256({
+                "labels": state.get("labels", []),
+                "auto_labels": auto_labels,
+            }),
             reference_frames=copy.deepcopy(state.get("reference_frames", {})),
             truth_index=_reference_frame_index(state.get("truth", {})),
             truth_review_status=compact_status,
@@ -1922,6 +1997,10 @@ def _get_bootstrap_locked():
         "labels": copy.deepcopy(state.get("labels", [])),
         "auto_labels": auto_labels,
         "reference_only_labels": reference_only_labels,
+        "label_state_sha256": label_state_sha256({
+            "labels": state.get("labels", []),
+            "auto_labels": auto_labels,
+        }),
         "reference_frames": copy.deepcopy(state.get("reference_frames", {})),
         "truth": {},
         "truth_review_status": {},
@@ -1962,7 +2041,12 @@ def _get_state_locked():
         path=str(state["video"].path) if state["video"] else "",
         catalog=state["video"].catalog if state["video"] else {}, duration=state["video"].duration if state["video"] else 0,
         topics=state["video"].topics if state["video"] else {}, topic=state["topic"],
-        labels=state["labels"], auto_labels=auto_labels, reference_only_labels=reference_only_labels,
+        labels=state["labels"], auto_labels=auto_labels,
+        reference_only_labels=reference_only_labels,
+        label_state_sha256=label_state_sha256({
+            "labels": state.get("labels", []),
+            "auto_labels": auto_labels,
+        }),
         truth=state["truth"], truth_review_status=truth_review_status,
         reference_frames=state.get("reference_frames", {}),
         config={k: v for k, v in state["config"].items() if k != "llm_key"},
@@ -3190,27 +3274,26 @@ def set_topic():
             if not 0 <= body["frame"] < count:
                 raise ValueError("帧号无效")
             return jsonify(compact_topic_payload(body["frame"], description))
+        label_state = current_inference_label_state()
         return jsonify(topic=state["topic"], truth=state["truth"],
                        truth_review_status=current_truth_review_status(),
                        candidates=state["candidates"], agent_runs=state["agent_runs"],
                        candidate_revision_summary=candidate_revision_summary(),
                        candidate_review_proposals=state.get("candidate_review_proposals", []),
                        reference_frames=state.get("reference_frames", {}),
-                       labels=state.get("labels", []),
-                       auto_labels=(selected_auto_labels(topic_references[0])
-                                    if topic_references else list(state.get("labels", []))),
-                       reference_only_labels=(
-                           reference_labels(state.get("truth", {}).get(str(topic_references[0]), []),
-                                            state.get("labels", []))
-                           if topic_references else []),
+                       labels=label_state["labels"],
+                       auto_labels=label_state["auto_labels"],
+                       reference_only_labels=label_state["reference_only_labels"],
+                       label_state_sha256=label_state_sha256(label_state),
                        description=description,
                        description_cache_hit=description is not None)
 
 
 @app.post("/api/labels")
 def set_labels():
-    body = request.get_json()
+    body = request.get_json() or {}
     with lock:
+        generation, path, topic, _ = assert_request_label_state(body)
         labels = [x.strip() for x in body["labels"] if x.strip()]
         if len(set(labels)) != len(labels) or not labels:
             raise ValueError("类别不能为空或重复")
@@ -3218,19 +3301,33 @@ def set_labels():
         if state.get("auto_labels"):
             state["auto_labels"] = [label for label in labels if label in state["auto_labels"]]
         save()
-        return jsonify(labels=labels)
+        label_state = current_inference_label_state()
+        return jsonify(**label_state,
+                       label_state_sha256=label_state_sha256(label_state),
+                       path=path, topic=topic,
+                       file_activation_generation=generation,
+                       description_invalidated=True)
 
 
 @app.post("/api/auto_labels")
 def set_auto_labels():
     body = request.get_json() or {}
     with lock:
+        generation, path, topic, _ = assert_request_label_state(body)
         labels = [str(label).strip() for label in body.get("labels", []) if str(label).strip()]
         if not labels or len(labels) != len(set(labels)) or any(label not in state["labels"] for label in labels):
             raise ValueError("请选择有效且不重复的推理类别")
         state["auto_labels"] = [label for label in state["labels"] if label in labels]
         save()
-        return jsonify(labels=state["auto_labels"], description_invalidated=True)
+        label_state = current_inference_label_state()
+        return jsonify(labels=label_state["auto_labels"],
+                       project_labels=label_state["labels"],
+                       auto_labels=label_state["auto_labels"],
+                       reference_only_labels=label_state["reference_only_labels"],
+                       label_state_sha256=label_state_sha256(label_state),
+                       path=path, topic=topic,
+                       file_activation_generation=generation,
+                       description_invalidated=True)
 
 
 @app.post("/api/truth")
@@ -3464,10 +3561,20 @@ def clear_auto_result(index):
     with lock:
         if state["video"] is None or state["topic"] is None:
             raise ValueError("请先加载图像消息")
-        if body.get("topic") != state["topic"]:
-            raise ValueError("图像源已切换，请刷新页面后重试")
+        activation_generation, data_path, topic = assert_request_data_scope(body)
         if not 0 <= index < state["video"].topics[state["topic"]]["count"]:
             raise ValueError("帧号无效")
+        binding = auto_result_clear_binding(index)
+        for field in ("candidate_artifact_sha256", "agent_run_sha256"):
+            expected_key = "expected_" + field
+            if expected_key not in body:
+                raise ValueError(f"清除机器结果必须包含 {expected_key}")
+            expected = body.get(expected_key)
+            if expected is not None and not _valid_sha256(expected):
+                raise ValueError(f"{expected_key} 必须是 SHA-256 或 null")
+            if expected != binding[field]:
+                raise StaleHumanReviewError(
+                    "机器候选或过程记录已变化，旧窗口清除请求已拒绝")
         with run_status_lock:
             if run_status.get("status") in ("running", "stopping"):
                 raise RuntimeError("自动标注仍在运行，请任务结束后再清除")
@@ -3529,8 +3636,14 @@ def clear_auto_result(index):
                     still_used.update(inspection_image_names(json.loads(path.read_text(encoding="utf-8"))))
             for name in removed_images - still_used:
                 (WORK / "inspection" / name).unlink(missing_ok=True)
-        return jsonify(frame=index, candidate_removed=removed_candidate, audit_removed=removed_audit,
-                       truth_preserved=key in state["truth"])
+        return jsonify(frame=index, candidate_removed=removed_candidate,
+                       audit_removed=removed_audit,
+                       truth_preserved=key in state["truth"],
+                       removed_candidate_artifact_sha256=(
+                           binding["candidate_artifact_sha256"]),
+                       removed_agent_run_sha256=binding["agent_run_sha256"],
+                       path=data_path, topic=topic,
+                       file_activation_generation=activation_generation)
 
 @app.post("/api/reference_frame")
 def set_reference_frame():
@@ -5384,9 +5497,20 @@ def get_inspection():
     with run_status_lock:
         job = {key: run_status.get(key) for key in
                ("status", "phase", "frame", "round", "shape_count", "completed", "total")} if belongs(run_status) else {}
+    clear_binding = None
+    if request.args.get("frame") is not None:
+        with lock:
+            current_video = state.get("video")
+            if (current_video is not None and selected_topic == state.get("topic")
+                    and selected_file == str(current_video.path)):
+                clear_binding = auto_result_clear_binding(selected_frame)
+                clear_binding.update(
+                    path=selected_file, topic=selected_topic, frame=selected_frame,
+                    file_activation_generation=current_file_activation_generation())
     return jsonify(trace=trace, steps=steps, description=description,
                    topic=selected_topic, file=selected_file, reference=output.get("reference"), frames=frames,
                    job=job,
+                   clear_auto_result_binding=clear_binding,
                    active_frame=output.get("current", {}).get("frame") if output.get("current") and
                        (belongs(output) or legacy_trace and trace) else None)
 

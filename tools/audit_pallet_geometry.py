@@ -21,6 +21,7 @@ import numpy as np
 from source.agent.edit_agent import _rasterize
 from source.agent.workflow import (
     PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO,
+    PALLET_IMAGE_BOUNDARY_MAXIMUM_COMPONENT_MERGES,
     _compact_pallet_texture_hole,
     refine_pallet_candidate_geometry,
 )
@@ -100,6 +101,18 @@ def audit_candidate(row: dict, width: int, height: int) -> dict:
         retained = int(np.count_nonzero(hole["mask"] & (after == 0)))
         structural_retention.append(round(retained / hole["area"], 6))
     changed = int(np.count_nonzero(before != after))
+    components_before = _components(before)
+    components_after = _components(after)
+    component_merge_count = components_before - components_after
+    boundary_notch_count = (
+        adjustment.get("filled_image_boundary_notch_count", 0)
+        if adjustment else 0)
+    component_guard_passed = (
+        components_after <= components_before
+        and (component_merge_count == 0
+             or (boundary_notch_count > 0
+                 and component_merge_count
+                 <= PALLET_IMAGE_BOUNDARY_MAXIMUM_COMPONENT_MERGES)))
     return {
         "topic": row["topic"],
         "frame": str(row["frame"]),
@@ -130,8 +143,11 @@ def audit_candidate(row: dict, width: int, height: int) -> dict:
         "filled_compact_texture_hole_count": (
             adjustment.get("filled_compact_texture_hole_count", 0)
             if adjustment else 0),
-        "components_before": _components(before),
-        "components_after": _components(after),
+        "components_before": components_before,
+        "components_after": components_after,
+        "component_merge_count": component_merge_count,
+        "component_guard_passed": component_guard_passed,
+        "filled_image_boundary_notch_count": boundary_notch_count,
         "holes_before": len(before_holes),
         "holes_after": len(after_holes),
         "structural_holes_before": len(structural),
@@ -171,7 +187,7 @@ def run_audit(source: Path, *, width: int, height: int, per_topic: int) -> dict:
         selected.extend(select_stratified(rows, per_topic))
     results = [audit_candidate(row, width, height) for row in selected]
     component_violations = [row for row in results
-                            if row["components_before"] != row["components_after"]]
+                            if not row["component_guard_passed"]]
     structural_violations = [row for row in results
                              if row["minimum_structural_hole_retention"] is not None
                              and row["minimum_structural_hole_retention"] < 0.75]
@@ -185,7 +201,7 @@ def run_audit(source: Path, *, width: int, height: int, per_topic: int) -> dict:
             "maximum_change_ratio": max((row["change_ratio"] for row in subset), default=0.0),
         }
     return {
-        "schema_version": "labelagent.pallet_geometry_cross_dataset_audit.v4",
+        "schema_version": "labelagent.pallet_geometry_cross_dataset_audit.v5",
         "input": str(source.resolve()),
         "input_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
         "width": width,
@@ -197,11 +213,15 @@ def run_audit(source: Path, *, width: int, height: int, per_topic: int) -> dict:
         "sample_count": len(results),
         "size_bands": bands,
         "adjusted_count": sum(row["adjustment_applied"] for row in results),
-        "v4_adjusted_count": sum(
-            row["geometry_cleanup_version"] == 4 for row in results),
+        "v5_adjusted_count": sum(
+            row["geometry_cleanup_version"] == 5 for row in results),
         "filled_hole_count": sum(row["filled_hole_count"] for row in results),
         "filled_compact_texture_hole_count": sum(
             row["filled_compact_texture_hole_count"] for row in results),
+        "filled_image_boundary_notch_count": sum(
+            row["filled_image_boundary_notch_count"] for row in results),
+        "component_merge_count": sum(
+            row["component_merge_count"] for row in results),
         "boundary_simplified_count": sum(
             row["boundary_simplification_applied"] for row in results),
         "median_boundary_vertex_reduction_ratio": (
@@ -248,7 +268,8 @@ def main() -> int:
         args.output.write_text(rendered + "\n", encoding="utf-8")
     print(json.dumps({key: report[key] for key in (
         "sample_count", "size_bands", "adjusted_count", "unchanged_tiny_count",
-        "v4_adjusted_count", "filled_hole_count", "filled_compact_texture_hole_count",
+        "v5_adjusted_count", "filled_hole_count", "filled_compact_texture_hole_count",
+        "filled_image_boundary_notch_count", "component_merge_count",
         "boundary_simplified_count", "median_boundary_vertex_reduction_ratio",
         "boundary_simplification_epsilon_counts", "holes_before", "holes_after",
         "gate_passed")}, ensure_ascii=False, indent=2))

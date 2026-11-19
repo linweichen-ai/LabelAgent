@@ -393,7 +393,7 @@ class WorkflowTests(unittest.TestCase):
         output = _rasterize(refined, 640, 480)
 
         self.assertIsNotNone(audit)
-        self.assertEqual(audit["geometry_cleanup_version"], 4)
+        self.assertEqual(audit["geometry_cleanup_version"], 5)
         self.assertEqual(audit["filled_hole_count"], 6)
         self.assertGreaterEqual(audit["filled_compact_texture_hole_count"], 4)
         for y, x, h, w in compact_holes:
@@ -415,7 +415,7 @@ class WorkflowTests(unittest.TestCase):
 
         self.assertEqual(output[150, 210], 0)
         self.assertIsNotNone(audit)
-        self.assertEqual(audit["geometry_cleanup_version"], 4)
+        self.assertEqual(audit["geometry_cleanup_version"], 5)
         self.assertEqual(audit["filled_compact_texture_hole_count"], 0)
         self.assertGreaterEqual(audit["minimum_structural_hole_retention"], .75)
 
@@ -424,6 +424,7 @@ class WorkflowTests(unittest.TestCase):
         mask[245:480, :] = 1
         cv2.ellipse(mask, (290, 280), (42, 13), 0, 0, 360, 0,
                     thickness=cv2.FILLED)
+        mask[245:267, 405:415] = 0
         mask[378:392, 120:250] = 0
         mask[378:392, 340:455] = 0
         image = np.full((480, 640, 3), 24, dtype=np.uint8)
@@ -440,13 +441,15 @@ class WorkflowTests(unittest.TestCase):
         output = _rasterize(refined, 640, 480)
 
         self.assertIsNotNone(audit)
-        self.assertEqual(audit["geometry_cleanup_version"], 4)
+        self.assertEqual(audit["geometry_cleanup_version"], 5)
         self.assertGreaterEqual(audit["filled_image_texture_hole_count"], 1)
+        self.assertGreaterEqual(audit["filled_image_boundary_notch_count"], 1)
         self.assertEqual(output[280, 290], 1)
+        self.assertEqual(output[255, 410], 1)
         self.assertEqual(output[385, 180], 0)
         self.assertEqual(output[385, 400], 0)
         self.assertGreaterEqual(audit["minimum_structural_hole_retention"], .75)
-        self.assertLessEqual(audit["change_ratio"], .05)
+        self.assertLessEqual(audit["change_ratio"], .06)
 
     def test_image_guided_pallet_cleanup_preserves_dark_plastic_grid_openings(self):
         mask = np.zeros((480, 640), dtype=np.uint8)
@@ -454,10 +457,12 @@ class WorkflowTests(unittest.TestCase):
         openings = [(180, 260), (270, 260), (360, 260), (450, 260)]
         for x, y in openings:
             cv2.circle(mask, (x, y), 12, 0, thickness=cv2.FILLED)
+        mask[180:205, 315:325] = 0
         image = np.full((480, 640, 3), 20, dtype=np.uint8)
         image[180:460, 80:560] = np.array([25, 90, 165], dtype=np.uint8)
         for x, y in openings:
             cv2.circle(image, (x, y), 12, (8, 12, 18), thickness=cv2.FILLED)
+        image[180:205, 315:325] = np.array([8, 12, 18], dtype=np.uint8)
         candidate = _shape_from_mask(mask, "pallet", 27)
 
         refined, audit = workflow.refine_pallet_candidate_geometry(
@@ -466,11 +471,83 @@ class WorkflowTests(unittest.TestCase):
 
         for x, y in openings:
             self.assertEqual(output[y, x], 0)
+        self.assertEqual(output[190, 320], 0)
         self.assertIsNotNone(audit)
-        self.assertEqual(audit["geometry_cleanup_version"], 4)
+        self.assertEqual(audit["geometry_cleanup_version"], 5)
         self.assertEqual(audit["filled_image_texture_hole_count"], 0)
+        self.assertEqual(audit["filled_image_boundary_notch_count"], 0)
         self.assertEqual(audit["filled_compact_texture_hole_count"], 0)
         self.assertGreaterEqual(audit["minimum_structural_hole_retention"], .75)
+
+    def test_image_guided_boundary_notch_can_merge_two_local_wood_fragments(self):
+        mask = np.zeros((480, 640), dtype=np.uint8)
+        mask[100:300, 40:320] = 1
+        mask[220:470, 330:600] = 1
+        image = np.full((480, 640, 3), 24, dtype=np.uint8)
+        image[100:300, 40:320] = np.array([205, 190, 170], dtype=np.uint8)
+        image[220:470, 330:600] = np.array([205, 190, 170], dtype=np.uint8)
+        image[220:300, 320:330] = np.array([202, 188, 169], dtype=np.uint8)
+        candidate = _shape_from_mask(mask, "pallet", 28)
+
+        refined, audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 640, 480, image_rgb=image)
+        output = _rasterize(refined, 640, 480)
+
+        self.assertIsNotNone(audit)
+        self.assertEqual(output[260, 325], 1)
+        self.assertGreaterEqual(audit["filled_image_boundary_notch_count"], 1)
+        self.assertEqual(audit["component_count_before"], 2)
+        self.assertEqual(audit["component_count_after"], 1)
+        self.assertEqual(audit["component_merge_count"], 1)
+        self.assertLessEqual(audit["component_merge_count"], 2)
+
+    def test_image_guided_boundary_notch_skips_distant_small_pallet(self):
+        mask = np.zeros((480, 640), dtype=np.uint8)
+        mask[180:260, 100:220] = 1
+        mask[180:260, 230:350] = 1
+        image = np.full((480, 640, 3), 24, dtype=np.uint8)
+        image[180:260, 100:220] = np.array([205, 190, 170], dtype=np.uint8)
+        image[180:260, 230:350] = np.array([205, 190, 170], dtype=np.uint8)
+        image[180:260, 220:230] = np.array([202, 188, 169], dtype=np.uint8)
+        candidate = _shape_from_mask(mask, "pallet", 29)
+
+        refined, audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 640, 480, image_rgb=image)
+        output = _rasterize(refined, 640, 480)
+
+        self.assertIsNotNone(audit)
+        self.assertEqual(output[220, 225], 0)
+        self.assertEqual(audit["filled_image_boundary_notch_count"], 0)
+        self.assertEqual(audit["component_merge_count"], 0)
+
+    def test_image_guided_boundary_notch_never_merges_more_than_two_components(self):
+        mask = np.zeros((480, 640), dtype=np.uint8)
+        regions = [
+            (20, 20, 160, 200),
+            (170, 120, 310, 300),
+            (320, 220, 460, 400),
+            (470, 120, 610, 300),
+        ]
+        image = np.full((480, 640, 3), 24, dtype=np.uint8)
+        for left, top, right, bottom in regions:
+            mask[top:bottom, left:right] = 1
+            image[top:bottom, left:right] = np.array(
+                [205, 190, 170], dtype=np.uint8)
+        image[120:200, 160:170] = np.array([202, 188, 169], dtype=np.uint8)
+        image[220:300, 310:320] = np.array([202, 188, 169], dtype=np.uint8)
+        image[220:300, 460:470] = np.array([202, 188, 169], dtype=np.uint8)
+        candidate = _shape_from_mask(mask, "pallet", 30)
+
+        refined, audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 640, 480, image_rgb=image)
+        output = _rasterize(refined, 640, 480)
+
+        self.assertIsNotNone(audit)
+        self.assertEqual(audit["component_count_before"], 4)
+        self.assertEqual(audit["component_count_after"], 2)
+        self.assertEqual(audit["component_merge_count"], 2)
+        self.assertLessEqual(audit["component_merge_count"], 2)
+        self.assertEqual(workflow._significant_component_count(output), 2)
 
     def test_close_pallet_cleanup_uses_stronger_bounded_boundary_smoothing(self):
         mask = np.zeros((260, 360), dtype=np.uint8)

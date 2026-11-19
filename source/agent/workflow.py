@@ -2685,6 +2685,12 @@ PALLET_IMAGE_TEXTURE_MAXIMUM_AREA = 2048
 PALLET_IMAGE_TEXTURE_MAXIMUM_SPAN = 224
 PALLET_IMAGE_TEXTURE_MAXIMUM_GRAY_DELTA = 45.0
 PALLET_IMAGE_TEXTURE_MAXIMUM_COLOR_DISTANCE = 90.0
+PALLET_IMAGE_BOUNDARY_CLOSE_KERNEL = 17
+PALLET_IMAGE_BOUNDARY_MAXIMUM_AREA = 1024
+PALLET_IMAGE_BOUNDARY_MAXIMUM_SPAN = 96
+PALLET_IMAGE_BOUNDARY_MINIMUM_RING_GRAY = 110.0
+PALLET_IMAGE_BOUNDARY_MAXIMUM_RING_COLOR_SPREAD = 80.0
+PALLET_IMAGE_BOUNDARY_MAXIMUM_COMPONENT_MERGES = 2
 
 
 def _compact_pallet_texture_hole(area, width, height, *, maximum_area=768,
@@ -2781,6 +2787,79 @@ def _image_guided_pallet_texture_holes(mask, image_rgb, components, stats,
             "image_texture_hole": is_texture,
         }
     return selected, audit
+
+
+def _image_guided_pallet_boundary_notches(mask, image_rgb, structural_holes):
+    """Find narrow, light neutral boundary notches without closing real gaps.
+
+    Unlike enclosed holes, these SAM drop-outs remain connected to the outer
+    background.  A small morphological closing only proposes locations; the
+    proposal is accepted component-by-component when it is away from the image
+    edge, does not overlap a protected structural hole, and its original pixels
+    remain locally consistent with a bright, low-colour-spread pallet surface.
+    """
+    if not isinstance(image_rgb, np.ndarray) or image_rgb.ndim != 3:
+        return []
+    if image_rgb.shape[:2] != mask.shape or image_rgb.shape[2] < 3:
+        return []
+    if (int(mask.sum()) / max(mask.size, 1)
+            < PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO):
+        return []
+
+    kernel = cv2.getStructuringElement(
+        cv2.MORPH_ELLIPSE,
+        (PALLET_IMAGE_BOUNDARY_CLOSE_KERNEL,
+         PALLET_IMAGE_BOUNDARY_CLOSE_KERNEL))
+    closed = cv2.morphologyEx(mask.astype(np.uint8), cv2.MORPH_CLOSE, kernel)
+    additions = ((closed > 0) & (mask == 0)).astype(np.uint8)
+    count, components, stats, _ = cv2.connectedComponentsWithStats(
+        additions, connectivity=8)
+    structural_union = np.zeros_like(mask, dtype=bool)
+    for hole_mask, _ in structural_holes:
+        structural_union |= hole_mask
+    rgb = image_rgb[..., :3].astype(np.float32)
+    ring_kernel = np.ones((5, 5), dtype=np.uint8)
+    proposals = []
+    image_height, image_width = mask.shape
+    for component in range(1, count):
+        x, y, width, height, area = [int(value) for value in stats[component]]
+        if area < 9 or area > PALLET_IMAGE_BOUNDARY_MAXIMUM_AREA:
+            continue
+        if max(width, height) > PALLET_IMAGE_BOUNDARY_MAXIMUM_SPAN:
+            continue
+        if x == 0 or y == 0 or x + width >= image_width or y + height >= image_height:
+            continue
+        component_mask = components == component
+        if np.any(component_mask & structural_union):
+            continue
+        ring = (cv2.dilate(component_mask.astype(np.uint8), ring_kernel,
+                           iterations=1).astype(bool)
+                & ~component_mask & (mask > 0))
+        if not ring.any():
+            continue
+        notch_mean = rgb[component_mask].mean(axis=0)
+        ring_mean = rgb[ring].mean(axis=0)
+        ring_gray = float(ring_mean.mean())
+        gray_delta = float(ring_gray - notch_mean.mean())
+        color_distance = float(np.linalg.norm(ring_mean - notch_mean))
+        ring_color_spread = float(ring_mean.max() - ring_mean.min())
+        if not (
+                gray_delta <= PALLET_IMAGE_TEXTURE_MAXIMUM_GRAY_DELTA
+                and color_distance <= PALLET_IMAGE_TEXTURE_MAXIMUM_COLOR_DISTANCE
+                and ring_gray >= PALLET_IMAGE_BOUNDARY_MINIMUM_RING_GRAY
+                and ring_color_spread
+                <= PALLET_IMAGE_BOUNDARY_MAXIMUM_RING_COLOR_SPREAD):
+            continue
+        proposals.append({
+            "mask": component_mask,
+            "area": area,
+            "bbox": [x, y, x + width - 1, y + height - 1],
+            "gray_delta": round(gray_delta, 3),
+            "color_distance": round(color_distance, 3),
+            "ring_gray": round(ring_gray, 3),
+            "ring_color_spread": round(ring_color_spread, 3),
+        })
+    return proposals
 
 
 def _structural_hole_masks(
@@ -2924,6 +3003,7 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
     area = int(mask.sum())
     if area < 400:
         return shape, None
+    original_component_count = _significant_component_count(mask)
 
     refined = mask.copy()
     background = (mask == 0).astype(np.uint8)
@@ -2935,13 +3015,22 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
     filled_texture_holes = []
     filled_compact_texture_holes = []
     filled_image_texture_holes = []
+    filled_image_boundary_notches = []
     image_texture_holes, image_texture_audit = _image_guided_pallet_texture_holes(
         mask, image_rgb, components, stats, border_labels)
     image_guidance_available = (
         isinstance(image_rgb, np.ndarray) and image_rgb.ndim == 3
         and image_rgb.shape[:2] == mask.shape and image_rgb.shape[2] >= 3)
+    protected_structural_holes = _structural_hole_masks(
+        mask, image_rgb=image_rgb,
+        minimum_compact_texture_candidate_area_ratio=(
+            minimum_compact_texture_candidate_area_ratio))
+    image_boundary_notches = _image_guided_pallet_boundary_notches(
+        mask, image_rgb, protected_structural_holes)
     effective_maximum_change_ratio = (
-        max(maximum_change_ratio, .05) if image_texture_holes else maximum_change_ratio)
+        max(maximum_change_ratio, .06) if image_boundary_notches else
+        max(maximum_change_ratio, .05) if image_texture_holes else
+        maximum_change_ratio)
     hole_fill_plans = []
     for component in range(1, count):
         if component in border_labels:
@@ -3008,6 +3097,25 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
             record.update(plan["image_metrics"])
             filled_image_texture_holes.append(record)
 
+    for notch in sorted(
+            image_boundary_notches,
+            key=lambda item: (item["color_distance"], abs(item["gray_delta"]),
+                              item["area"])):
+        if used_fill_budget + notch["area"] > fill_budget:
+            continue
+        proposal = refined.copy()
+        proposal[notch["mask"]] = 1
+        proposal_component_count = _significant_component_count(proposal)
+        if (proposal_component_count > original_component_count
+                or original_component_count - proposal_component_count
+                > PALLET_IMAGE_BOUNDARY_MAXIMUM_COMPONENT_MERGES):
+            continue
+        refined = proposal
+        used_fill_budget += notch["area"]
+        filled_image_boundary_notches.append({
+            key: copy.deepcopy(value) for key, value in notch.items()
+            if key != "mask"})
+
     foreground_count, foreground, foreground_stats, _ = cv2.connectedComponentsWithStats(
         refined, connectivity=8)
     removed_island_pixels = 0
@@ -3038,10 +3146,7 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         int(smoothed_stats[component, cv2.CC_STAT_AREA]) >= 9
         for component in range(1, smoothed_count))
     smoothing_pixels = int(np.count_nonzero(smoothed != refined))
-    smoothing_structural_holes = _structural_hole_masks(
-        mask, image_rgb=image_rgb,
-        minimum_compact_texture_candidate_area_ratio=(
-            minimum_compact_texture_candidate_area_ratio))
+    smoothing_structural_holes = protected_structural_holes
     smoothing_structural_retention = [
         int(np.count_nonzero(hole_mask & (smoothed == 0))) / hole_area
         for hole_mask, hole_area in smoothing_structural_holes]
@@ -3053,6 +3158,7 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
     # the appearance evidence, so keep it disabled for this route and retain
     # the independently gated polygon simplification below.
     smoothing_applied = (not image_texture_holes
+                         and not image_boundary_notches
                          and before_components == after_components
                          and smoothing_pixels / max(area, 1)
                          <= effective_maximum_change_ratio
@@ -3114,12 +3220,16 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         minimum_compact_texture_candidate_area_ratio=(
             minimum_compact_texture_candidate_area_ratio))
     changed = int(np.count_nonzero(replacement_mask != mask))
-    if _significant_component_count(replacement_mask) != _significant_component_count(mask):
+    replacement_component_count = _significant_component_count(replacement_mask)
+    component_merge_count = original_component_count - replacement_component_count
+    if (replacement_component_count > original_component_count
+            or component_merge_count < 0
+            or (component_merge_count
+                and (not filled_image_boundary_notches
+                     or component_merge_count
+                     > PALLET_IMAGE_BOUNDARY_MAXIMUM_COMPONENT_MERGES))):
         return shape, None
-    structural_holes = _structural_hole_masks(
-        mask, image_rgb=image_rgb,
-        minimum_compact_texture_candidate_area_ratio=(
-            minimum_compact_texture_candidate_area_ratio))
+    structural_holes = protected_structural_holes
     structural_retention = [
         int(np.count_nonzero(hole_mask & (replacement_mask == 0))) / hole_area
         for hole_mask, hole_area in structural_holes]
@@ -3144,6 +3254,9 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         "filled_image_texture_hole_count": len(filled_image_texture_holes),
         "filled_image_texture_hole_pixels": sum(
             item["area"] for item in filled_image_texture_holes),
+        "filled_image_boundary_notch_count": len(filled_image_boundary_notches),
+        "filled_image_boundary_notch_pixels": sum(
+            item["area"] for item in filled_image_boundary_notches),
         "post_smoothing_filled_hole_count": len(post_smoothing_filled_holes),
         "post_smoothing_filled_hole_pixels": sum(
             item["area"] for item in post_smoothing_filled_holes),
@@ -3168,11 +3281,23 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         "maximum_image_texture_gray_delta": PALLET_IMAGE_TEXTURE_MAXIMUM_GRAY_DELTA,
         "maximum_image_texture_color_distance": (
             PALLET_IMAGE_TEXTURE_MAXIMUM_COLOR_DISTANCE),
+        "image_boundary_close_kernel": PALLET_IMAGE_BOUNDARY_CLOSE_KERNEL,
+        "maximum_image_boundary_notch_area": PALLET_IMAGE_BOUNDARY_MAXIMUM_AREA,
+        "maximum_image_boundary_notch_span": PALLET_IMAGE_BOUNDARY_MAXIMUM_SPAN,
+        "minimum_image_boundary_ring_gray": (
+            PALLET_IMAGE_BOUNDARY_MINIMUM_RING_GRAY),
+        "maximum_image_boundary_ring_color_spread": (
+            PALLET_IMAGE_BOUNDARY_MAXIMUM_RING_COLOR_SPREAD),
+        "maximum_image_boundary_component_merges": (
+            PALLET_IMAGE_BOUNDARY_MAXIMUM_COMPONENT_MERGES),
         "effective_maximum_change_ratio": effective_maximum_change_ratio,
         "minimum_compact_texture_candidate_area_ratio": (
             minimum_compact_texture_candidate_area_ratio),
-        "preserved_component_count": before_components,
-        "geometry_cleanup_version": 4,
+        "preserved_component_count": replacement_component_count,
+        "component_count_before": original_component_count,
+        "component_count_after": replacement_component_count,
+        "component_merge_count": component_merge_count,
+        "geometry_cleanup_version": 5,
         "route": "candidate_only",
     }
     adjustment.update(boundary_audit or {

@@ -92,4 +92,6 @@
 
 下一步继续检查真正的“两个文件加载请求交叉返回”场景，为文件激活本身增加最后一次选择编号。当前版本已经保证迟到回执不能错误显示、旧页面不能错误切相机，但仍会继续收紧后端文件激活的先后顺序。
 
+实现、测试和首版文档提交 `f8f28e12f10c8313f2827ed5c44938782b79dc09` 已分别从 GitHub 与 CNB 精确读回，两个远端与本地完全一致。
+
 机器可读证据见 [`evidence/workbench-stability-20261117/stale-dataset-load-scope-round231.json`](evidence/workbench-stability-20261117/stale-dataset-load-scope-round231.json)。

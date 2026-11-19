@@ -78,6 +78,6 @@
     "oss_writes": 0,
     "raw_factory_artifacts_tracked": false
   },
-  "implementation_commit": null,
-  "remote_readback_commit": null
+  "implementation_commit": "f8f28e12f10c8313f2827ed5c44938782b79dc09",
+  "remote_readback_commit": "f8f28e12f10c8313f2827ed5c44938782b79dc09"
 }

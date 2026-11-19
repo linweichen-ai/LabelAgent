@@ -2033,3 +2033,5 @@ Round228 已保证新旧数据、相机与类别选择不串台，但逐类别�
 部署备份位于 `D:\Apps\LabelAgent\.local\backups\stale-load-round231-20261119-102453`，五个文件逐一校验；工作树与正式目录哈希一致。工作台、运行状态、4090 SAM、5090 SAM和4090 VLM五项探针均HTTP200，状态idle；`state.json` 与 `file_sessions.json` 哈希不变。本轮没有模型推理、候选写入、人工真值、训练批准、微调、后训练或OSS写入。
 
 完整说明见 [第二百三十一轮报告](STALE_DATASET_LOAD_SCOPE_ROUND231_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/stale-dataset-load-scope-round231.json)。浏览器脚本、原始回执和含厂内画面的截图只保留在本地未跟踪目录。下一轮继续为真正交叉返回的文件激活请求增加最后一次选择编号。
+
+实现、测试和首版文档提交 `f8f28e12f10c8313f2827ed5c44938782b79dc09` 已推送并分别回读 GitHub/CNB，同名分支两端与本地精确匹配。未跟踪厂内内容未上传。

@@ -1,0 +1,94 @@
+{
+  "round": 235,
+  "date": "2026-11-19",
+  "status": "deployed_and_verified",
+  "objective": "Reject stale point-segmentation and region-edit results after the same data file is reloaded",
+  "versions": {
+    "ui": 150,
+    "app_js": 188
+  },
+  "implementation": {
+    "server_data_scope_guard": true,
+    "scope_fields": [
+      "path",
+      "topic",
+      "frame",
+      "file_activation_generation"
+    ],
+    "covered_endpoints": [
+      "/api/segment_points",
+      "/api/edit_region"
+    ],
+    "pre_frame_read_guard": true,
+    "post_compute_guard": true,
+    "browser_response_scope_guard": true,
+    "point_request_coalescing_generation_bound": true,
+    "stale_generation_status": 409
+  },
+  "tests": {
+    "python": {
+      "passed": 986,
+      "total": 986,
+      "subtests_passed": 186
+    },
+    "web": {
+      "passed": 133,
+      "total": 133
+    },
+    "syntax": "passed",
+    "diff_check": "passed",
+    "stale_rejected_before_frame_read": true,
+    "stale_point_model_calls": 0,
+    "same_path_reload_completion_rejected": true,
+    "browser_same_path_reload_result_applied": false
+  },
+  "production_browser_probe": {
+    "current_generation": 0,
+    "stale_generation": -1,
+    "stale_point_segment_status": 409,
+    "stale_region_edit_status": 409,
+    "page_errors": 0,
+    "formal_state_unchanged": true
+  },
+  "backup": {
+    "path": "D:\\Apps\\LabelAgent\\.local\\backups\\interactive-edit-generation-round235-20261119-113658",
+    "files": 3,
+    "predeploy_hash_match": true,
+    "manifest": "manifest.json"
+  },
+  "deployment": {
+    "management_pid": 64404,
+    "workbench_pid": 64708,
+    "worktree_matches_production": true,
+    "local_http_probes": {
+      "workbench": 200,
+      "bootstrap": 200,
+      "model_readiness": 200,
+      "run_readiness": 200,
+      "run_status": 200,
+      "state_summary": 200
+    },
+    "run_status": "idle",
+    "state_sha256_before_after": "1DCD67A8475A8DD1974C9A9B3D4BF68A56E1ABD30CF2A9559C12E849E3D86F96",
+    "file_sessions_sha256_before_after": "202927E295CABC27B1F9583B6438D3E16C020809EE421BCE1342C3AEBC0367F5"
+  },
+  "production_hashes": {
+    "source/agent/server.py": "7645B742C7B9E52246551C8C5BCF8D8EF00D9AD84621505DF5E1CFD308268C6E",
+    "source/web/app.js": "A02042FFCDBC5CC2A2533F31C22812FA8C02AD5A278F9CA82E9010B30E19F2D3",
+    "source/web/index.html": "0776992ECFD1BF4CC191D60FE485DA56BACBA8BD29A820F530CBE49C69EBEB84"
+  },
+  "safety": {
+    "production_data_model_requests": 0,
+    "startup_readiness_prewarm_without_factory_image": true,
+    "candidate_writes": 0,
+    "human_truth_writes": 0,
+    "reference_frame_writes": 0,
+    "training_approvals": 0,
+    "fine_tuning": false,
+    "post_training": false,
+    "oss_writes": 0,
+    "raw_factory_artifacts_tracked": false
+  },
+  "implementation_commit": "680ddb225cce2fbe18347a57cdd238c3ed771c90",
+  "remote_readback_commit": "680ddb225cce2fbe18347a57cdd238c3ed771c90"
+}

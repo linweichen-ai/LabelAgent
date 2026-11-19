@@ -225,6 +225,29 @@ class EditTests(unittest.TestCase):
 
 
 class WorkflowTests(unittest.TestCase):
+    def test_agent_cannot_silently_delete_every_generated_candidate(self):
+        agent = workflow.AnnotationAgent(
+            {}, image_bytes(), {"prompts": []}, ["a"], max_rounds=1)
+
+        def generate():
+            agent.shapes = [shape()]
+            agent.generated = 1
+
+        decision = {"status": "continue", "operations": [{
+            "operation": "remove", "shape_ids": [1],
+            "reason": "model requested full deletion"}],
+            "protocol_repairs": []}
+        with patch.object(agent, "generate", side_effect=generate), \
+             patch.object(workflow, "review", return_value=decision):
+            result = agent.execute()
+        self.assertEqual(result["shapes"], [shape()])
+        self.assertEqual(result["agent"]["stop_reason"],
+                         "empty_result_rollback")
+        rollback = next(item for item in result["review_queue"]
+                        if item.get("reason_code") == "agent_empty_result_rollback")
+        self.assertEqual(rollback["restored_candidate_count"], 1)
+        self.assertEqual(rollback["route"], "human_review_required")
+
     def test_unreferenced_review_forbids_conflicting_same_candidate_operations(self):
         rules = workflow.COMPACT_UNREFERENCED_RULES
         self.assertIn("each candidate ID in at most one operation", rules)

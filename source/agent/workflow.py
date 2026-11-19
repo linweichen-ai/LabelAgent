@@ -2800,9 +2800,14 @@ class AnnotationAgent:
     def execute(self, *, skip_generation=False):
         stop_reason = "max_rounds"
         converged = False
+        generated_shapes = []
         try:
             if not skip_generation:
                 self.generate()
+            # Preserve the last fully validated SAM draft as a review fallback.
+            # VLM edits may remove individual false positives, but an unreviewed
+            # machine decision must never turn a visible draft into a blank frame.
+            generated_shapes = copy.deepcopy(self.shapes)
             seen = {_fingerprint(self.shapes)}
             for number in range(1, self.max_rounds + 1):
                 self.progress("observing", round=number)
@@ -3048,6 +3053,16 @@ class AnnotationAgent:
             self.queue.append({"reason": "SAM 3 点提示结果尚未经过下一轮 GPT 复核，已恢复修改前候选"})
             converged = False
             self.sam_pending = None
+        if generated_shapes and not self.shapes:
+            self.shapes = copy.deepcopy(generated_shapes)
+            self.queue.append({
+                "reason": "Agent 将整帧候选删空；已恢复原始 SAM 候选并转人工复核",
+                "reason_code": "agent_empty_result_rollback",
+                "route": "human_review_required",
+                "restored_candidate_count": len(generated_shapes),
+            })
+            converged = False
+            stop_reason = "empty_result_rollback"
         if self.reference is None:
             self.queue.extend(candidate_class_overlap_conflicts(
                 self.shapes, self.width, self.height))

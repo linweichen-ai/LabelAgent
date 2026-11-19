@@ -1,0 +1,59 @@
+{
+  "schema_version": "labelagent.round277.pallet_fragment_relation.v1",
+  "recorded_at": "2026-11-20T02:47:31.6411036+08:00",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "automatic_merge_allowed": false,
+  "geometry_audits": {
+    "capture_20261103": {
+      "pairs_considered": 19866,
+      "fragment_hypotheses": 680,
+      "conservative_gate_pairs": 42,
+      "candidate_sha256": "591ebba97aeaca4f58dfcb0eecfd79ec026b4915aa670143d46d9702181b7f92",
+      "report_sha256": "25f0e4a0c0568ea195d123a583ad485efb09ad6f7cd480a37977417e0d9a99cd"
+    },
+    "cvat_task3": {
+      "pairs_considered": 4999,
+      "fragment_hypotheses": 527,
+      "conservative_gate_pairs": 49,
+      "candidate_sha256": "a8211937ce29ad9f356a0506ff775c106d44545039577d90c0ff75820c693bf6",
+      "report_sha256": "91720757cfd5c4c0417ccde55de8cc33b13b55bb35172cd0f42b7d797dad6b20"
+    }
+  },
+  "semantic_pilot": {
+    "capture_positive_candidates": {
+      "review_count": 6,
+      "same_instance_yes": 6,
+      "semantic_safe": 6,
+      "report_sha256": "178622fab80037c54ea23b746ac971a5d842cc56e35451d68ec20301249bdecb"
+    },
+    "cvat_positive_candidates": {
+      "review_count": 6,
+      "same_instance_yes": 6,
+      "semantic_safe": 6,
+      "report_sha256": "4bdea64cdd5995d0fda06093a98081657727bcce077f4d3389b133319d7e9aa9"
+    },
+    "cvat_visually_selected_negative_controls": {
+      "ranks": [1, 3, 5, 6, 7, 9, 10],
+      "review_count": 7,
+      "same_instance_yes": 0,
+      "semantic_safe": 0,
+      "confidence": 0.98,
+      "busy_retry_count": 0,
+      "report_sha256": "cc244415d21f41458b472a503053cf6238174d66085478922792a2374bb0a987"
+    }
+  },
+  "evidence_boundary": {
+    "positive_candidates_are_human_truth": false,
+    "negative_controls_are_human_truth": false,
+    "geometry_separation_assigns_semantic_truth": false,
+    "production_changed": false,
+    "model_weights_changed": false
+  },
+  "tests": {
+    "command": "python -m pytest -q tests/test_audit_pallet_instance_fragmentation.py tests/test_review_pallet_pair_semantics.py",
+    "passed": 6,
+    "failed": 0
+  }
+}

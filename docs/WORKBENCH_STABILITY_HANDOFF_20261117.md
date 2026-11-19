@@ -2355,3 +2355,9 @@ C盘继续下降到51.38 MiB。只读盘点确认工作树实验产物已实际�
 栈板几何清理现在只在内部验证阶段适配非空字符串候选ID，最终仍保留原ID；交互编辑的整数ID契约不变。新增三联图审查工具，分别复核轮廓最复杂16项、改动最大16项和全部12个近景大目标。修复后同一4,423项全量审计有4,391项完成受限边界简化，最大改动小/中/大分别为2.5%/1.9845%/0.8073%，组件、结构孔和变化预算违规均为0；目视未见新增跨实例或吞地面。
 
 栈板定向12项、审计工具14项、全量Python1064项及186个子测试、前端151项全部通过。只备份并替换正式`workflow.py`，回滚点为`round276-string-id-pallet-predeploy-20261120-021930`；上线后HTTP200、idle，CVAT Task3文件/topic和已完成结果保留，正式只读烟测确认字符串ID保留且清理真实生效。机器候选、人工真值、训练批准、模型权重和OSS数据均未写入。详见`docs/PALLET_STRING_ID_GEOMETRY_ROUND276_20261120.md`与结构化证据。
+
+### Round 277：栈板碎片关系诊断与正反例门槛（2026-11-20）
+
+针对“主体与底梁被分成多个pallet候选”的实例关系问题，新增只读几何配对和本地VLM双色轮廓复核。Capture 19,866个同帧配对中得到680个碎片假设、42个保守门槛配对；CVAT Task3 4,999个配对中得到527个假设、49个保守门槛配对。两个数据源各抽6个疑似同实例样本，VLM 12/12判断同实例；另从CVAT图像人工挑选7个明确不同的栈板/货叉/相邻栈板配对，VLM 7/7拒绝合并，均无busy重试。
+
+几何分离本身不能证明是不同物理实例：Capture自动控制候选中存在堆叠木条。工具因此把过强的“separate instance negative control”口径更正为“disjoint pair control candidate”，要求图像复核后才能作为反例。当前全部结果仍为assistant-review/candidate-only，`automatic_merge_allowed=false`、`human_truth=false`、`approved_for_training=false`；没有修改生产候选、真值、训练集或模型权重。定向6项测试通过。详见`docs/PALLET_FRAGMENT_RELATION_ROUND277_20261120.md`与对应结构化证据。

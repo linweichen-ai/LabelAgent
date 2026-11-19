@@ -1950,4 +1950,4 @@ Round224 重启时正式启动器提示工作临时目录低于2 GiB。只读盘
 
 正式工作台、运行状态、4090 SAM、5090 SAM和4090 VLM均HTTP200，工作台idle；`state.json` 与 `file_sessions.json` 哈希不变。没有重启生产服务、调用模型、修改候选/人工真值/训练批准、微调、后训练或写OSS。大型归档和回滚实体只保留本地，不进入远端仓库。
 
-完整说明见 [第二百二十五轮报告](BACKUP_STORAGE_HEADROOM_ROUND225_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/backup-storage-headroom-round225.json)。GitHub/CNB 精确提交号将在本轮文档推送与逐端回读后补入。
+完整说明见 [第二百二十五轮报告](BACKUP_STORAGE_HEADROOM_ROUND225_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/backup-storage-headroom-round225.json)。文档提交 `02946e97770c7d153749baa04edea0b9a9f0442a` 已推送并分别回读 GitHub/CNB，同名分支两端精确匹配；回读回执提交将在下一次推送后补入。

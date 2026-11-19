@@ -61,5 +61,7 @@ Agent 在进入复查前保留一份通过几何校验与候选过滤后的 SAM 
 
 实现提交：`840d9c1f89b7f67132845e6d2d80e34eca82dd39`
 
+代码、测试、报告与机器证据已同步到 GitHub 和 CNB；两端分支均精确读回提交 `a5622f6eff19b02fa7e92e82faef0c2d1f990837`。
+
 机器证据见 [`evidence/workbench-stability-20261117/agent-empty-result-rollback-round240.json`](evidence/workbench-stability-20261117/agent-empty-result-rollback-round240.json)。
 

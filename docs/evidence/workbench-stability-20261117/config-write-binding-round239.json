@@ -63,6 +63,12 @@
     "path": "D:\\Apps\\LabelAgent\\.local\\backups\\config-write-binding-round239-20261119-125631"
   },
   "implementation_commit": "ae9c75d4cc01d761d74f982fdb836f63fa9902ad",
+  "remote_readback": {
+    "branch": "codex/workbench-stability-20261117",
+    "receipt_commit": "a5622f6eff19b02fa7e92e82faef0c2d1f990837",
+    "github_match": true,
+    "cnb_match": true
+  },
   "safety": {
     "human_truth_writes": 0,
     "reference_frame_writes": 0,

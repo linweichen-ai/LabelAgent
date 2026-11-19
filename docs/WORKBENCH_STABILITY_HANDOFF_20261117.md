@@ -2153,3 +2153,5 @@ Round235 已挡住旧 SAM 点选和区域编辑结果，但继续审计确认三
 Python995/995、网页69/69和定向删空回滚1/1通过。修复部署后，操作者对CVAT Task3第85帧发起真实单帧任务，约43.7秒完成，按帧读回15个候选（14 pallet、1 floor），路径、话题、帧和载入代次一致；人工真值与训练批准均为0。该真实任务验证运行、保存和显示链路；整帧回滚分支由确定性测试覆盖。
 
 部署备份位于 `D:\Apps\LabelAgent\.local\backups\agent-empty-result-rollback-round240-20261119-130115`。完整说明见 [第二百四十轮报告](AGENT_EMPTY_RESULT_ROLLBACK_ROUND240_20261119.md)，机器证据见 [结构化记录](evidence/workbench-stability-20261117/agent-empty-result-rollback-round240.json)。实现提交 `840d9c1f89b7f67132845e6d2d80e34eca82dd39`。过去24小时的通俗汇总见 [工作总结](LABELAGENT_LAST_24_HOURS_SUMMARY_20261119.md)。
+
+Round239、Round240及过去24小时总结已随报告提交 `a5622f6eff19b02fa7e92e82faef0c2d1f990837` 推送，并从 GitHub/CNB 同名分支精确读回；未跟踪厂内图像和本地验收产物未上传。

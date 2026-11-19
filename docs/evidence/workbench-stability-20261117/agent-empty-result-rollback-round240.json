@@ -64,6 +64,12 @@
     "vlm_ready": true,
     "final_run_status": "completed"
   },
-  "implementation_commit": "840d9c1f89b7f67132845e6d2d80e34eca82dd39"
+  "implementation_commit": "840d9c1f89b7f67132845e6d2d80e34eca82dd39",
+  "remote_readback": {
+    "branch": "codex/workbench-stability-20261117",
+    "receipt_commit": "a5622f6eff19b02fa7e92e82faef0c2d1f990837",
+    "github_match": true,
+    "cnb_match": true
+  }
 }
 

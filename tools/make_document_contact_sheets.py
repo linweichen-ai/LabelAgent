@@ -15,7 +15,10 @@ def main() -> int:
     parser.add_argument("output", type=Path)
     parser.add_argument("--per-sheet", type=int, default=9)
     args = parser.parse_args()
-    pages = sorted(args.input.glob("page-*.png"))
+    pages = sorted(
+        args.input.glob("page-*.png"),
+        key=lambda path: int(path.stem.rsplit("-", 1)[-1]),
+    )
     args.output.mkdir(parents=True, exist_ok=True)
     label_font = ImageFont.truetype(r"C:\Windows\Fonts\msyh.ttc", 24)
     for offset in range(0, len(pages), args.per_sheet):

@@ -45,8 +45,11 @@ def main() -> int:
     )
     parser.add_argument("--frame", default=0, type=int)
     parser.add_argument("--coverage-probe", action="store_true")
+    parser.add_argument("--all-selected", action="store_true")
     parser.add_argument("--timeout-seconds", default=180, type=int)
     args = parser.parse_args()
+    if args.coverage_probe and args.all_selected:
+        raise ValueError("coverage-probe and all-selected are mutually exclusive")
     if args.frame < 0:
         raise ValueError("frame must be non-negative")
 
@@ -149,6 +152,10 @@ def main() -> int:
             if args.coverage_probe:
                 page.locator("#referenceAutoLabel").select_option(
                     "__auto_visible_with_coverage__"
+                )
+            elif args.all_selected:
+                page.locator("#referenceAutoLabel").select_option(
+                    "__all_selected_labels__"
                 )
             page.wait_for_function(
                 "() => { const button=document.getElementById('runReferenceAutoDraft');"
@@ -259,6 +266,8 @@ def main() -> int:
                 "reference_draft_mode": (
                     "auto_visible_with_coverage"
                     if args.coverage_probe
+                    else "all_selected"
+                    if args.all_selected
                     else "auto_visible_fast"
                 ),
                 "selected_labels": final_state["auto_labels"],

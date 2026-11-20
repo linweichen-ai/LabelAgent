@@ -1,0 +1,66 @@
+{
+  "schema_version": "labelagent.all-selected-fast-path.v1",
+  "round": 367,
+  "dataset": "Capture_20261103",
+  "topic": "/capture/camera_1/image",
+  "frame": 12,
+  "experiment_boundary": {
+    "isolated_ports": [8893, 8894, 8895],
+    "production_port_used": false,
+    "candidate_only": true,
+    "human_truth_modified": false,
+    "training_data_modified": false
+  },
+  "baseline": {
+    "receipt": "new-dataset-all-selected-round367.json",
+    "description_source": "vlm_unreferenced_description",
+    "description_vlm_elapsed_ms": 33199,
+    "first_response_ms": 36375,
+    "candidate_visible_ms": 36407,
+    "candidate_count": 16,
+    "candidate_counts_by_label": {"floor": 1, "pallet": 11, "person": 4}
+  },
+  "candidate": {
+    "receipt": "new-dataset-all-selected-fast-same-frame-round367.json",
+    "description_source": "deterministic_all_selected",
+    "first_response_ms": 2718,
+    "candidate_visible_ms": 2750,
+    "candidate_count": 16,
+    "candidate_counts_by_label": {"floor": 1, "pallet": 11, "person": 4}
+  },
+  "comparison": {
+    "first_response_delta_ms": -33657,
+    "first_response_reduction_percent": 92.53,
+    "sam_prompt_equal": true,
+    "initial_geometry_equal": true,
+    "baseline_geometry_sha256": "e7897016487f27af062ed3588780beb18245c6669a438fd0f465a7748e58859c",
+    "candidate_geometry_sha256": "e7897016487f27af062ed3588780beb18245c6669a438fd0f465a7748e58859c",
+    "sam_prompts": [
+      {"label": "车辆", "text": "vehicle"},
+      {"label": "pallet", "text": "pallet"},
+      {"label": "person", "text": "person"},
+      {"label": "floor", "text": "floor"},
+      {"label": "slope", "text": "traversable surface"},
+      {"label": "ego", "text": "ego robot"},
+      {"label": "other_robot", "text": "robot"},
+      {"label": "cargo_floor", "text": "robot cargo platform"}
+    ]
+  },
+  "interpretation": {
+    "accepted": true,
+    "reason": "The removed VLM description produced the exact same eight canonical SAM prompts. On the same frame, the initial candidate geometry is byte-canonical equal while first response latency is materially lower.",
+    "caveat": "The SAM and background model services retain exact-request caches. The 33.199 second removed VLM call is recorded independently; background completion latency is not used as a cold-start claim."
+  },
+  "validation": {
+    "python": "1184 passed, 190 subtests passed",
+    "node": "156 passed",
+    "page_errors": 0,
+    "http_errors": 0,
+    "truth_write_requests": 0
+  },
+  "production_predeploy": {
+    "state_sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115",
+    "visible_vehicle_point_recovery": null,
+    "isolated_ports_stopped": true
+  }
+}

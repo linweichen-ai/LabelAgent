@@ -5406,8 +5406,11 @@ def generate_reference_draft():
             raise ValueError("该帧已有历史标注，请先载入历史标注并完成人工复核")
         auto_detect_visible = body.get("auto_detect_visible") is True
         probe_missing_selected = body.get("probe_missing_selected") is True
+        deterministic_description = body.get("deterministic_description") is True
         if probe_missing_selected and not auto_detect_visible:
             raise ValueError("类别补漏只适用于自动识别参考帧模式")
+        if deterministic_description and auto_detect_visible:
+            raise ValueError("自动识别模式已经使用确定性提示词，无需重复指定")
         defer_class_audit = body.get("defer_class_audit") is True
         defer_agent_review = body.get("defer_agent_review") is True
         max_rounds = requested_review_rounds(body)
@@ -5420,6 +5423,8 @@ def generate_reference_draft():
                 raise ValueError(f"参考类别不在当前标签表中：{label}")
             if label not in selected:
                 selected.append(label)
+        if deterministic_description and selected != list(state.get("labels", [])):
+            raise ValueError("确定性快速起稿只适用于完整的当前标签表")
         storage = run_storage_readiness(1)
         if not storage["ready"]:
             return jsonify(
@@ -5521,14 +5526,16 @@ def generate_reference_draft():
                                   discovery_retry_count=discovery_retry_count,
                                   discovery_prefetch_cache_hit=discovery_prefetch_cache_hit,
                                   error=None)
-            if auto_detect_visible:
-                # Discovery already selected a bounded set of known registry
-                # labels. With no human reference geometry, a second VLM call
-                # cannot add trustworthy annotation rules; use the same
-                # deterministic object prompts that are the fail-safe fallback
-                # for malformed unreferenced descriptions.
+            if auto_detect_visible or deterministic_description:
+                # With no human reference geometry, a second VLM description
+                # cannot add trustworthy annotation rules. Auto discovery has
+                # already bounded the labels; the explicit fast path is only
+                # accepted for the complete registry. Both reuse the same
+                # deterministic project prompts.
                 description = canonical_unreferenced_description(selected)
-                description_source = "deterministic_after_visible_label_discovery"
+                description_source = (
+                    "deterministic_after_visible_label_discovery"
+                    if auto_detect_visible else "deterministic_all_selected")
             else:
                 description = describe(config, target_image, [], selected,
                                        include_unreferenced=True)
@@ -5563,6 +5570,7 @@ def generate_reference_draft():
                 "sam3_point_url": config.get("sam3_point_url"),
                 "auto_detect_visible": auto_detect_visible,
                 "probe_missing_selected": probe_missing_selected,
+                "deterministic_description": deterministic_description,
                 "defer_class_audit": defer_class_audit,
                 "defer_agent_review": defer_agent_review,
                 "discovery_sha256": discovery_sha256,
@@ -5577,6 +5585,7 @@ def generate_reference_draft():
                 "labels": selected,
                 "auto_detect_visible": auto_detect_visible,
                 "probe_missing_selected": probe_missing_selected,
+                "deterministic_description": deterministic_description,
                 "discovery_sha256": discovery_sha256,
                 "pipeline_config_sha256": pipeline_config_sha256,
             })
@@ -5619,6 +5628,7 @@ def generate_reference_draft():
                 "labels": selected,
                 "auto_detect_visible": auto_detect_visible,
                 "probe_missing_selected": probe_missing_selected,
+                "deterministic_description": deterministic_description,
                 "visible_label_discovery": discovery,
                 "discovery_sha256": discovery_sha256,
                 "sam_prompts": prompt_payload,
@@ -5695,6 +5705,7 @@ def generate_reference_draft():
             "sam_prompts": prompt_payload,
             "auto_detect_visible": auto_detect_visible,
             "probe_missing_selected": probe_missing_selected,
+            "deterministic_description": deterministic_description,
             "visible_label_discovery": discovery,
             "description_source": description_source,
             "discovery_sha256": discovery_sha256,
@@ -5742,6 +5753,7 @@ def generate_reference_draft():
                            candidate_revision_count=len(state.get("candidate_revisions", {}).get(str(index), [])),
                            auto_detect_visible=auto_detect_visible,
                             probe_missing_selected=probe_missing_selected,
+                            deterministic_description=deterministic_description,
                            description_source=description_source,
                            visible_label_discovery=discovery,
                            discovery_sha256=discovery_sha256,

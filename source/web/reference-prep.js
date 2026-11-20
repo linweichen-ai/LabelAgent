@@ -113,6 +113,7 @@
     const hint = byId('fullPipelineHint');
     if (!button || !hint) return;
     const existing = currentFrameCandidate();
+    const selectedMode = byId('referenceAutoLabel')?.value;
     const prefetchStatus = discoveryPrefetch.key === discoveryPrefetchKey()
       ? discoveryPrefetch.status : 'idle';
     if (draftBusy) {
@@ -122,14 +123,18 @@
       button.textContent = `已有 ${frameItemCount(existing)} 个候选 · 直接载入复核`;
       hint.textContent = '将复用已有轮廓并轻量复审高风险候选类别，不重新分割；审核通过绑定校验后载入，仍须逐个人工检查。';
     } else {
-      button.textContent = '立即运行整帧 SAM + VLM 全流程';
+      button.textContent = selectedMode === ALL_SELECTED_LABELS
+        ? '快速尝试全部已选类别'
+        : '立即运行整帧 SAM + VLM 全流程';
       hint.textContent = prefetchStatus === 'warming'
         ? '正在后台预备当前图片的 VLM 类别识别，随后会在空闲时预备整图 SAM；现在直接运行也会合并相同请求。'
         : prefetchStatus === 'ready'
           ? discoveryPrefetch.samReady
             ? '当前图片的 VLM 类别识别与整图 SAM 已预备；缓存仍有效时，正式运行会直接复用，再继续几何过滤与 Agent。'
             : '当前图片的 VLM 类别识别已预备；SAM 当时忙碌或不可预热，正式运行会直接复用类别结果后继续分割。'
-          : '无需再点图片；新图首批机器候选通常约 15～25 秒出现，随后 Agent 与高风险复核会在后台继续。';
+          : selectedMode === ALL_SELECTED_LABELS
+            ? '跳过重复的 VLM 提示词生成，直接用项目固定提示词一次尝试全部已选类别；首批仍是机器候选，Agent 与高风险复核会在后台继续。'
+            : '无需再点图片；新图首批机器候选通常约 15～25 秒出现，随后 Agent 与高风险复核会在后台继续。';
     }
   }
 
@@ -461,7 +466,7 @@
     labelSelect.replaceChildren();
     option(labelSelect, AUTO_VISIBLE_LABELS, '自动识别当前帧可见类别（推荐，快速）');
     option(labelSelect, AUTO_COVERAGE_LABELS, '自动识别 + 已选类别补漏（实验，较慢）');
-    option(labelSelect, ALL_SELECTED_LABELS, '逐类尝试全部已选推理类别（更慢，易误检）');
+    option(labelSelect, ALL_SELECTED_LABELS, '快速尝试全部已选推理类别（推荐用于完整覆盖）');
     for (const label of state?.labels || []) option(labelSelect, label, label);
     labelSelect.value = [...labelSelect.options].some(item => item.value === selectedLabel)
       ? selectedLabel : AUTO_VISIBLE_LABELS;
@@ -660,12 +665,12 @@
     draftLastPhaseKey = '';
     draftPhaseChangedAt = draftStartedAt;
     draftProgressFailures = 0;
-    setDraftBusy(true, probeMissingSelected ? '请求已提交 · 正在识别并补漏已选类别…' : autoDetectVisible ? '请求已提交 · VLM 正在识别可见类别…' : tryAllSelected ? `请求已提交 · 正在逐类尝试 ${selectedLabels.length} 个类别…` : '请求已提交 · 正在启动 SAM 与 VLM…');
+    setDraftBusy(true, probeMissingSelected ? '请求已提交 · 正在识别并补漏已选类别…' : autoDetectVisible ? '请求已提交 · VLM 正在识别可见类别…' : tryAllSelected ? `请求已提交 · SAM 正在一次尝试 ${selectedLabels.length} 个类别…` : '请求已提交 · 正在启动 SAM 与 VLM…');
     byId('referenceDraftProgressDetail').textContent = autoDetectVisible
       ? probeMissingSelected
         ? '后台已开始：先生成 VLM 明确认出的类别，再对其余已选类别做 SAM 补漏；结果全部是待复核机器候选，不会自动写入人工真值。'
         : '后台已开始：新图首批机器候选通常约 15～25 秒出现；出现后可立即检查，Agent 与高风险复核会继续后台运行，请不要重复点击。'
-      : tryAllSelected ? `后台将依次尝试：${selectedLabels.join('、')}。没有有效轮廓的类别会明确显示为漏分或未见，不会伪造掩码。`
+      : tryAllSelected ? `首批直接使用项目固定提示词一次尝试：${selectedLabels.join('、')}。无需等待重复的 VLM 提示词生成；没有有效轮廓的类别会明确显示为未生成，不会伪造掩码。`
       : '后台已确认开始一键起稿；首批候选生成后会立即显示，Agent 与高风险复核会继续后台运行，请不要重复点击。';
     draftTimer = setInterval(updateDraftProgress, 1000);
     await updateDraftProgress();
@@ -674,7 +679,9 @@
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(autoDetectVisible
           ? {frame: frameId, auto_detect_visible: true, probe_missing_selected: probeMissingSelected, defer_agent_review: true, defer_class_audit: true}
-          : {frame: frameId, labels: tryAllSelected ? selectedLabels : [label], defer_agent_review: true, defer_class_audit: true}),
+          : {frame: frameId, labels: tryAllSelected ? selectedLabels : [label],
+            deterministic_description: tryAllSelected,
+            defer_agent_review: true, defer_class_audit: true}),
       });
       const responseText = await response.text();
       let result;

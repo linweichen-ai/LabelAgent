@@ -1,0 +1,109 @@
+{
+  "schema_version": "labelagent.new-dataset-inference-browser-acceptance.v1",
+  "passed": true,
+  "base_url": "http://127.0.0.1:8895",
+  "identity": {
+    "kind": "新实采数据",
+    "name": "Capture_20261103 · 常熟实采 · 四相机",
+    "detail": "常熟0920_Qwen2B_Agent未确认候选.mcap · /capture/camera_1/image · 152 帧 · 4 路图像"
+  },
+  "topic": "/capture/camera_1/image",
+  "frame": 12,
+  "reference_draft_mode": "all_selected",
+  "selected_labels": [
+    "车辆",
+    "pallet",
+    "person",
+    "floor",
+    "slope",
+    "ego",
+    "other_robot",
+    "cargo_floor"
+  ],
+  "first_response_ms": 2718.0,
+  "candidate_visible_ms": 2750.0,
+  "background_complete_ms": 4734.0,
+  "candidate_count": 16,
+  "candidate_counts_by_label": {
+    "floor": 1,
+    "pallet": 11,
+    "person": 4
+  },
+  "coverage": {
+    "summary": "自动候选总览 · 已选 8/8 类 · 5 帧有结果 · 当前帧 16 个车辆：尚未评估 / 无有效掩码pallet：已生成 11 个person：已生成 4 个 · 1 个需复核floor：已生成 1 个slope：尚未评估 / 无有效掩码ego：尚未评估 / 无有效掩码other_robot：尚未评估 / 无有效掩码cargo_floor：尚未评估 / 无有效掩码点击任一类别可查看当前帧依据；缺失类别可转人工点选补标，但不会自动运行模型或写入人工真值。",
+    "chips": [
+      {
+        "label": "车辆",
+        "text": "车辆：尚未评估 / 无有效掩码"
+      },
+      {
+        "label": "pallet",
+        "text": "pallet：已生成 11 个"
+      },
+      {
+        "label": "person",
+        "text": "person：已生成 4 个 · 1 个需复核"
+      },
+      {
+        "label": "floor",
+        "text": "floor：已生成 1 个"
+      },
+      {
+        "label": "slope",
+        "text": "slope：尚未评估 / 无有效掩码"
+      },
+      {
+        "label": "ego",
+        "text": "ego：尚未评估 / 无有效掩码"
+      },
+      {
+        "label": "other_robot",
+        "text": "other_robot：尚未评估 / 无有效掩码"
+      },
+      {
+        "label": "cargo_floor",
+        "text": "cargo_floor：尚未评估 / 无有效掩码"
+      }
+    ]
+  },
+  "canvas": {
+    "hidden": false,
+    "width": 1920,
+    "height": 1536,
+    "rect": {
+      "x": 591.75,
+      "y": 273,
+      "width": 576.5,
+      "height": 461.1875,
+      "top": 273,
+      "right": 1168.25,
+      "bottom": 734.1875,
+      "left": 591.75
+    }
+  },
+  "audit_panel": {
+    "hidden": false,
+    "compact_text": "候选类别复核 4 项已检查，其中 1 项必须人工确认；通过项已收起 候选 #13 · person · 模型证据不足 · 必须人工确认 查看候选 #13",
+    "details_present": true,
+    "details_open": false,
+    "detail_row_count": 4
+  },
+  "agent_review_status": "complete",
+  "candidate_class_audit_status": "complete",
+  "inspection_trace_count": 1,
+  "inspection_trace_services": [
+    "GPT"
+  ],
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "truth_frame_created": false,
+  "reference_frame_created": false,
+  "truth_write_requests": [],
+  "page_errors": [],
+  "failed_requests": [],
+  "expected_aborted_requests": [],
+  "http_errors": [],
+  "screenshot": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\docs\\evidence\\workbench-stability-20261117\\new-dataset-all-selected-fast-same-frame-round367.png",
+  "total_ms": 8563.0
+}

@@ -5066,6 +5066,64 @@ class ServerTests(unittest.TestCase):
             finally:
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work
 
+    def test_reference_draft_all_selected_uses_deterministic_prompts_without_vlm_description(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            labels = ["person", "pallet", "slope"]
+            server.state = {"video": FakeVideo(), "topic": "camera0",
+                "labels": labels, "truth": {}, "reference_frames": {}, "config": {},
+                "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            generated = shape(label="person")
+            result = {"shapes": [generated], "candidates_added": 1,
+                "applied": [], "review_queue": [],
+                "agent": {"stop_reason": "done", "rounds": 0, "audit": []}}
+            try:
+                with patch.object(server, "describe") as describe_mock, \
+                     patch.object(server, "generate_only", return_value=result) as generate_mock:
+                    response = server.app.test_client().post("/api/reference_draft", json={
+                        "frame": 1, "labels": labels,
+                        "deterministic_description": True,
+                        "defer_agent_review": True, "defer_class_audit": True})
+                self.assertEqual(response.status_code, 200, response.json)
+                describe_mock.assert_not_called()
+                self.assertEqual(generate_mock.call_args.args[2],
+                                 workflow.canonical_unreferenced_description(labels))
+                self.assertEqual(response.json["description_source"],
+                                 "deterministic_all_selected")
+                self.assertTrue(response.json["deterministic_description"])
+                self.assertTrue(response.json["agent"]["deterministic_description"])
+                provenance = response.json["candidates"][0]["provenance"]
+                self.assertTrue(provenance["deterministic_description"])
+                self.assertFalse(response.json["human_truth"])
+                self.assertEqual(server.state["truth"], {})
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_reference_draft_rejects_deterministic_prompts_for_partial_label_list(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0",
+                "labels": ["person", "pallet"], "truth": {}, "reference_frames": {},
+                "config": {}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            try:
+                with patch.object(server, "describe") as describe_mock, \
+                     patch.object(server, "generate_only") as generate_mock:
+                    response = server.app.test_client().post("/api/reference_draft", json={
+                        "frame": 1, "labels": ["person"],
+                        "deterministic_description": True,
+                        "defer_agent_review": True})
+                self.assertEqual(response.status_code, 400, response.json)
+                self.assertIn("完整的当前标签表", response.json["error"])
+                describe_mock.assert_not_called()
+                generate_mock.assert_not_called()
+                self.assertEqual(server.state["candidates"], {})
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
     def test_stop_endpoint_terminates_active_run_without_saving_partial_frame(self):
         old_state, old_status, old_work, old_stop = server.state, server.run_status, server.WORK, server.run_stop_event
         entered = threading.Event()

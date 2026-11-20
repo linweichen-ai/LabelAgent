@@ -97,13 +97,14 @@ test('参考帧后台复核结束后立即刷新顶部向导而不继续显示�
   assert.match(guide, /document\.addEventListener\('labelagent:candidate-state-synced', refreshGuide\)/);
 });
 
-test('参考起稿支持逐类尝试全部已选类别但仍保持候选边界', () => {
+test('参考起稿支持快速尝试全部已选类别但仍保持候选边界', () => {
   const prep = source('reference-prep.js');
   assert.match(prep, /ALL_SELECTED_LABELS = '__all_selected_labels__'/);
-  assert.match(prep, /逐类尝试全部已选推理类别（更慢，易误检）/);
+  assert.match(prep, /快速尝试全部已选推理类别（推荐用于完整覆盖）/);
   assert.match(prep, /fresh\.auto_labels \|\| \[\]/);
   assert.match(prep, /系统不会用逐类重跑覆盖/);
   assert.match(prep, /labels: tryAllSelected \? selectedLabels : \[label\]/);
+  assert.match(prep, /deterministic_description: tryAllSelected/);
   assert.match(prep, /result\.candidate_only/);
   assert.match(prep, /result\.human_truth !== false/);
 });

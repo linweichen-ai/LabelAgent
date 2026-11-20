@@ -1,0 +1,24 @@
+{
+  "schema_version": "labelagent.candidate-class-batchn-shadow.v1",
+  "frame": 24,
+  "topic": "/capture/camera_2/image",
+  "batch_size": 4,
+  "max_tokens": 385,
+  "endpoint_accepted": false,
+  "http_status": 400,
+  "error": "{\"error\":{\"message\":\"requests must contain two or three request objects\"}}\n",
+  "candidate_ids": [
+    11,
+    12,
+    10,
+    13
+  ],
+  "candidate_artifact_sha256": "f77598af91391c8df58341924baa21a870920ed54f7fe751acf80a9cdd5dad05",
+  "source_image_sha256": "62441a6489fc0e5bc24746ad0bffbea661594928d0704fd7c8ff13d1a3176190",
+  "state_sha256": "d9d4e8893116da416330dc37b5e457feb66c51732e55b33a4528643d3cf4cd59",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "model_inference_started": false,
+  "production_adopted": false
+}

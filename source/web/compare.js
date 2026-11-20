@@ -95,7 +95,7 @@
     if (!syncCanvas(canvas)) return;
     const context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
-    const boundary = Number(controls.boundaryWidth.value || 4);
+    const boundary = Number(controls.boundaryWidth.value || 2);
     shapes.forEach((shape, index) => {
       const color = colorFor(shape, source);
       traceShape(context, shape);

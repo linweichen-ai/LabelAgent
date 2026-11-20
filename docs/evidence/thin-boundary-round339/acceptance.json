@@ -1,0 +1,29 @@
+{
+  "schema_version": "labelagent.thin-boundary-acceptance.v1",
+  "date": "2026-11-20",
+  "ui_version": "158",
+  "production_url": "http://127.0.0.1:8765",
+  "http_status": 200,
+  "boundary_width_before": 4,
+  "boundary_width_default": 2,
+  "boundary_width_min": 1,
+  "boundary_width_max": 10,
+  "manual_adjustment_preserved": true,
+  "mask_geometry_unchanged": true,
+  "console_errors": 0,
+  "page_errors": 0,
+  "javascript_tests": {
+    "passed": 149,
+    "failed": 0
+  },
+  "production_index_sha256": "7E3AAD8A97BB9C5AEB98292E07191294BDFE3EAF7EC24BD75BC5A0577D6C6110",
+  "production_compare_sha256": "DB9DEE30CDB287D1586F0C7487C711555F07AB40250777292FF335B191DCABE8",
+  "production_state_sha256_before_after": "68F734E9CFE86D35783C6DEB54A7ECA7FC3A4FDC3CE2E3E9301482B897C8A49B",
+  "production_files_sha256_before_after": "7EDB40A9BDFCF5577AEA4C2BB183EF556A2B7D70B24564C49EEB46C5D9A8C5C1",
+  "backup_path": "D:\\Apps\\LabelAgent\\.local\\backups\\thin-boundary-round339-20261120-111335",
+  "screenshots_local_only": true,
+  "candidate_only_boundary_unchanged": true,
+  "human_truth_unchanged": true,
+  "training_approval_unchanged": true,
+  "passed": true
+}

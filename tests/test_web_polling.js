@@ -1351,6 +1351,15 @@ test('未通过当前人工门禁的已保存标注仍以待复核图层显示',
   assert.match(compare, /待人工复核标注，已用黄色虚线叠加显示/);
 });
 
+test('结果图层默认使用较细边界并保留手动调节', () => {
+  const html = source('index.html');
+  const compare = source('compare.js');
+  assert.match(html, /id="boundaryWidth"[^>]*min="1"[^>]*max="10"[^>]*value="2"/);
+  assert.match(html, /compare\.js\?v=68/);
+  assert.match(compare, /controls\.boundaryWidth\.value \|\| 2/);
+  assert.match(compare, /Math\.max\(2, canvas\.width \/ 900 \* boundary\)/);
+});
+
 test('拖动工作台高度后所有结果图层会重新贴合原图', () => {
   const compare = source('compare.js');
   assert.match(compare, /new ResizeObserver\(scheduleLayoutRender\)\.observe\(stage\)/);

@@ -5182,14 +5182,70 @@ def prefetch_reference_discovery():
     # it is not part of the deterministic VLM request body or cache key.
     config["llm_busy_retries"] = 0
     started = time.perf_counter()
+    registry_prompt_map = {}
+    registry_sam_prefetch = {
+        "prefetched": False,
+        "code": "not_applicable",
+        "prompt_count": 0,
+        "parallel_with_discovery": False,
+    }
+    registry_future = None
+    registry_executor = None
+    if len(labels) > 1 and config.get("sam_multi_prompt", True):
+        registry_description = canonical_unreferenced_description(labels)
+        registry_prompt_map = {item["label"]: item["text"]
+                               for item in registry_description.get("prompts", [])}
+
+        def prefetch_registry_sam():
+            sam_started = time.perf_counter()
+            response = sam_text_multi_prefetch(target_image, registry_prompt_map, config)
+            return response, round((time.perf_counter() - sam_started) * 1000, 3)
+
+        registry_executor = ThreadPoolExecutor(max_workers=1)
+        registry_future = registry_executor.submit(prefetch_registry_sam)
+        registry_sam_prefetch.update(
+            code="warming", prompt_count=len(registry_prompt_map),
+            parallel_with_discovery=True)
     try:
         discovery, retry_count = discover_reference_labels(config, target_image, labels)
     except ValueError as error:
+        if registry_executor is not None:
+            registry_executor.shutdown(wait=False, cancel_futures=True)
         message = str(error)
         if "Local VLM is busy" in message or "HTTP 503" in message:
             return jsonify(prefetched=False, code="vlm_busy"), 202
         raise
+    except Exception:
+        if registry_executor is not None:
+            registry_executor.shutdown(wait=False, cancel_futures=True)
+        raise
     discovery_elapsed_ms = round((time.perf_counter() - started) * 1000, 3)
+    registry_warmed = None
+    registry_elapsed_ms = None
+    if registry_future is not None:
+        try:
+            registry_warmed, registry_elapsed_ms = registry_future.result()
+            registry_cache = ((registry_warmed.get("diagnostics") or {}).get(
+                "response_cache") if isinstance(registry_warmed, dict) else None) or {}
+            if registry_warmed.get("prefetched") is False:
+                registry_sam_prefetch.update(
+                    code=registry_warmed.get("code", "not_prefetched"),
+                    elapsed_ms=registry_elapsed_ms)
+            else:
+                registry_sam_prefetch.update(
+                    prefetched=True, code="ready", elapsed_ms=registry_elapsed_ms,
+                    prompt_sha256=_sha256_json(registry_prompt_map),
+                    response_sha256=_sha256_json(registry_warmed.get("prompts")),
+                    cache_hit=registry_cache.get("hit"),
+                    coalesced=registry_cache.get("coalesced"),
+                    cache_entries=registry_cache.get("entries"),
+                )
+        except Exception as error:
+            registry_sam_prefetch.update(
+                code="sam_prefetch_unavailable", error=str(error)[:300])
+            registry_warmed = None
+        finally:
+            registry_executor.shutdown(wait=True)
     selected, recall_probes = candidate_labels_with_recall_probes(discovery, labels)
     sam_prefetch = {
         "prefetched": False,
@@ -5204,8 +5260,13 @@ def prefetch_reference_discovery():
         sam_started = time.perf_counter()
         warmed = None
         try:
-            warmed = sam_text_multi_prefetch(target_image, prompt_map, config)
-            sam_elapsed_ms = round((time.perf_counter() - sam_started) * 1000, 3)
+            if prompt_map == registry_prompt_map and registry_warmed is not None:
+                warmed = registry_warmed
+                sam_elapsed_ms = registry_elapsed_ms
+                sam_prefetch["parallel_with_discovery"] = True
+            else:
+                warmed = sam_text_multi_prefetch(target_image, prompt_map, config)
+                sam_elapsed_ms = round((time.perf_counter() - sam_started) * 1000, 3)
             cache = ((warmed.get("diagnostics") or {}).get("response_cache")
                      if isinstance(warmed, dict) else None) or {}
             if warmed.get("prefetched") is False:
@@ -5298,6 +5359,7 @@ def prefetch_reference_discovery():
         retry_count=retry_count,
         discovery_elapsed_ms=discovery_elapsed_ms,
         server_discovery_cache_stored=True,
+        registry_sam_prefetch=registry_sam_prefetch,
         sam_prefetch=sam_prefetch,
         elapsed_ms=elapsed_ms,
         candidate_only=True,

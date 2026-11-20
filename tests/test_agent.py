@@ -4789,6 +4789,10 @@ class ServerTests(unittest.TestCase):
                 self.assertEqual(response.json["visible_labels"], ["person"])
                 self.assertEqual(response.json["uncertain_labels"], ["slope"])
                 self.assertTrue(response.json["sam_prefetch"]["prefetched"])
+                self.assertTrue(response.json["sam_prefetch"]["parallel_with_discovery"])
+                self.assertTrue(response.json["registry_sam_prefetch"]["prefetched"])
+                self.assertTrue(response.json["registry_sam_prefetch"]
+                                ["parallel_with_discovery"])
                 self.assertEqual(response.json["sam_prefetch"]["selected_labels"],
                                  ["person", "slope"])
                 self.assertEqual(response.json["sam_prefetch"]["cache_hit"], False)
@@ -4819,6 +4823,51 @@ class ServerTests(unittest.TestCase):
                 self.assertTrue(stale.json["stale_request_discarded"])
                 self.assertFalse(stale.json["human_truth"])
                 self.assertFalse(stale.json["approved_for_training"])
+            finally:
+                server.clear_reference_discovery_cache()
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_reference_discovery_prefetch_starts_registry_sam_while_vlm_is_running(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        server.clear_reference_discovery_cache()
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0",
+                "labels": ["person", "slope"], "truth": {}, "reference_frames": {},
+                "config": {"sam_multi_prompt": True}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            sam_started, allow_sam_finish = threading.Event(), threading.Event()
+            warmed = {"prefetched": True, "prompts": {
+                "person": {"results": []}, "slope": {"results": []}},
+                "diagnostics": {"response_cache": {"hit": False,
+                    "coalesced": False, "entries": 1}}}
+
+            def blocked_sam(*_args, **_kwargs):
+                sam_started.set()
+                self.assertTrue(allow_sam_finish.wait(2))
+                return warmed
+
+            def concurrent_discovery(*_args, **_kwargs):
+                self.assertTrue(sam_started.wait(1))
+                allow_sam_finish.set()
+                return ({"visible_labels": ["person"], "uncertain_labels": ["slope"],
+                         "unknown_candidates": []}, 0)
+
+            try:
+                with patch.object(server, "sam_text_multi_prefetch",
+                                  side_effect=blocked_sam) as sam_mock, \
+                     patch.object(server, "discover_reference_labels",
+                                  side_effect=concurrent_discovery):
+                    response = server.app.test_client().post(
+                        "/api/reference_discovery/prefetch", json={
+                            "frame": 1, "expected_path": str(FakeVideo.path),
+                            "expected_topic": "camera0"})
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertEqual(sam_mock.call_count, 1)
+                self.assertTrue(response.json["registry_sam_prefetch"]["prefetched"])
+                self.assertTrue(response.json["sam_prefetch"]["parallel_with_discovery"])
+                self.assertEqual(server.state["truth"], {})
+                self.assertEqual(server.state["candidates"], {})
             finally:
                 server.clear_reference_discovery_cache()
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work

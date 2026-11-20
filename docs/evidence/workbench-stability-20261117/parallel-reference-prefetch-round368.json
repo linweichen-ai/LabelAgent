@@ -1,0 +1,64 @@
+{
+  "schema_version": "labelagent.parallel-reference-prefetch-round368.v1",
+  "date": "2026-11-20",
+  "objective": "在 VLM 识别可见类别的同时预热完整标签表的 SAM3 请求，缩短自动识别加全类补漏路径的首批候选等待时间",
+  "baseline": {
+    "implementation": "VLM discovery completes before full-registry SAM3 prefetch",
+    "frames": [14, 16, 18, 20],
+    "draft_seconds": [22.304, 21.554, 20.468, 20.861],
+    "median_draft_seconds": 21.2075
+  },
+  "candidate": {
+    "implementation": "full-registry SAM3 prefetch runs in parallel with VLM discovery",
+    "frames": [15, 17, 19, 21],
+    "draft_seconds": [19.196, 18.921, 18.931, 18.970],
+    "median_draft_seconds": 18.9505,
+    "median_reduction_seconds": 2.257,
+    "median_reduction_percent": 10.64
+  },
+  "latency_scope": "Adjacent-frame cold-route comparison; not a strict same-frame latency A/B",
+  "same_frame_output_parity": {
+    "frame": 22,
+    "baseline_candidate_count": 13,
+    "candidate_candidate_count": 13,
+    "discovery_sha256": "b8038a600e48e0a01a1f876ae98b77f29069494bb405dd59b1c84cfec685c76f",
+    "candidate_output_sha256": "3b439fab891b11ec0eee18cce0d60f81b6e0f46128262c2cf1c78def5b1663e5",
+    "artifact_sha256": "542ad5ea44031f35b625d9e96074470a5cd65e50d372e86098596422ff97dad1",
+    "exact_match": true,
+    "note": "The candidate run reused exact caches, so this pair is used only for output parity, not latency."
+  },
+  "browser_acceptance": {
+    "receipt": "new-dataset-parallel-prefetch-round368.json",
+    "screenshot": "new-dataset-parallel-prefetch-round368.png",
+    "topic": "/capture/camera_1/image",
+    "frame": 23,
+    "passed": true,
+    "first_response_ms": 19282.0,
+    "candidate_visible_ms": 19328.0,
+    "background_complete_ms": 60969.0,
+    "candidate_count": 13,
+    "candidate_counts_by_label": {
+      "floor": 1,
+      "pallet": 10,
+      "person": 2
+    },
+    "page_errors": 0,
+    "failed_requests": 0,
+    "http_errors": 0,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "truth_write_requests": 0
+  },
+  "tests": {
+    "python": "1185 passed, 190 subtests passed",
+    "node": "156 passed",
+    "parallel_start_unit_test": true
+  },
+  "safety": {
+    "writes_human_truth": false,
+    "approves_training": false,
+    "changes_model_outputs": false,
+    "visible_vehicle_point_recovery": null
+  }
+}

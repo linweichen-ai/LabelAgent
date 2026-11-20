@@ -2,14 +2,23 @@
 
 ## 最短复现路径
 
-当前开发与交付分支为 `labelagent`。Windows + NVIDIA GPU 用户可直接执行：
+**从 CNB 复现时只下载 `reproduce` 分支。** `labelagent` 是持续开发分支，其他
+`codex/*` 和 `backup/*` 分支仅保留历史记录，不作为复现入口。
+
+Windows + NVIDIA GPU 用户可直接执行：
 
 ```powershell
-git clone --branch labelagent https://github.com/linweichen-ai/LabelAgent.git
+git clone --branch reproduce --single-branch https://cnb.cool/seer-robotics/EIC/BEV/LabelAgent
 cd LabelAgent
 powershell -ExecutionPolicy Bypass -File tools\setup_windows.ps1
 # 将获得授权的 sam3.pt 放入 source\sam3\weights\
 powershell -ExecutionPolicy Bypass -File tools\start_local.ps1
+```
+
+若使用 GitHub，则当前对应开发分支仍为 `labelagent`：
+
+```powershell
+git clone --branch labelagent --single-branch https://github.com/linweichen-ai/LabelAgent.git
 ```
 
 随后打开 `http://127.0.0.1:8765`。环境、依赖、权重及服务可用性可由 `tools/repro_doctor.py` 读回检查；完整代码回归使用 `tools/verify_checkout.ps1`。详细步骤、VLM 配置边界、验收口径和最小复现记录见 [可复现安装与验收](docs/REPRODUCIBLE_SETUP.md)。模型权重、MCAP、人工真值、运行状态与密钥不随 Git 发布，也不会被启动脚本上传。

@@ -278,6 +278,11 @@ test('新实采数据端到端验收绑定 Capture 身份而不是模糊的新�
     __dirname, '../tools/browser_new_dataset_inference_acceptance.py'), 'utf8');
   assert.match(tool, /identity\["kind"\] == "新实采数据"/);
   assert.match(tool, /Capture_20261103/);
+  assert.match(tool, /parser\.add_argument\("--frame"/);
+  assert.match(tool, /candidates\?\.\[String\(expected\)\]/);
+  assert.match(tool, /"frame": args\.frame/);
+  assert.match(tool, /reference draft request failed/);
+  assert.match(tool, /reference draft returned a non-JSON success response/);
 });
 
 test('人工真值界面提供明确的连续推理入口', () => {

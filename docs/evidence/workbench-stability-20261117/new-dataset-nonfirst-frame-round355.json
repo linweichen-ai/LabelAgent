@@ -1,0 +1,86 @@
+{
+  "schema_version": "labelagent.new-dataset-nonfirst-frame-round355.v1",
+  "observed_at": "2026-11-20T13:54:53+08:00",
+  "passed": true,
+  "change": {
+    "acceptance_tool_supports_arbitrary_frame": true,
+    "negative_frame_rejected": true,
+    "frame_scoped_truth_and_candidate_preconditions": true,
+    "frame_scoped_candidate_and_agent_waits": true,
+    "http_failure_reports_status_and_body": true
+  },
+  "browser_acceptance": {
+    "dataset_kind": "新实采数据",
+    "dataset_name": "Capture_20261103 · 常熟实采 · 四相机",
+    "topic": "/capture/camera_2/image",
+    "frame": 1,
+    "selected_label_count": 8,
+    "first_response_ms": 4360.0,
+    "candidate_visible_ms": 4391.0,
+    "background_complete_ms": 67281.0,
+    "total_ms": 69890.0,
+    "candidate_count": 11,
+    "candidate_counts_by_label": {
+      "ego": 1,
+      "floor": 1,
+      "pallet": 5,
+      "person": 4
+    },
+    "coverage_chip_count": 8,
+    "canvas_visible": true,
+    "canvas_width": 1920,
+    "canvas_height": 1536,
+    "agent_review_status": "complete",
+    "candidate_class_audit_status": "complete",
+    "page_error_count": 0,
+    "failed_request_count": 0,
+    "http_error_count": 0,
+    "screenshot": "docs/evidence/workbench-stability-20261117/new-dataset-frame1-round355.png",
+    "screenshot_sha256": "6DC210CB63EAD5DF08333B221F886F80F5831D8E0982E8AE4C10B3D86CD05424"
+  },
+  "candidate_class_audit": {
+    "total": 5,
+    "execution_modes": {
+      "independent_batch_3": 3,
+      "sequential": 2
+    },
+    "routes": {
+      "candidate_preserved": 3,
+      "human_review_required": 2
+    },
+    "protocol_retry_count": 0,
+    "protocol_repairs": {
+      "non_known_reason_code_normalized": 2
+    },
+    "audited_labels": {
+      "ego": 1,
+      "person": 4
+    }
+  },
+  "safety": {
+    "candidate_only": true,
+    "human_truth": false,
+    "truth_frame_created": false,
+    "reference_frame_created": false,
+    "approved_for_training": false,
+    "approved_for_deployment": false,
+    "truth_write_request_count": 0,
+    "production_state_sha256": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "isolated_port_released": 8891
+  },
+  "tests": {
+    "web_polling_passed": 82,
+    "formal_passed": 1156,
+    "formal_subtests_passed": 186,
+    "python_compile_passed": true
+  },
+  "storage_observation": {
+    "first_attempt_failed_before_completion": true,
+    "observed_write_error": "disk space insufficient",
+    "model_failure_inferred": false,
+    "retry_after_transient_release_passed": true,
+    "c_free_mib_final_observed": 351.7,
+    "d_free_mib_final_observed": 1475.6,
+    "production_assets_deleted": false
+  }
+}

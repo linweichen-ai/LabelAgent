@@ -33,8 +33,11 @@ def main() -> int:
     parser.add_argument(
         "--expected-topic", choices=CAPTURE_TOPICS, default=CAPTURE_TOPICS[0]
     )
+    parser.add_argument("--frame", default=0, type=int)
     parser.add_argument("--timeout-seconds", default=180, type=int)
     args = parser.parse_args()
+    if args.frame < 0:
+        raise ValueError("frame must be non-negative")
 
     base_url = args.base_url.rstrip("/")
     parsed = urlparse(base_url)
@@ -108,12 +111,28 @@ def main() -> int:
             assert args.expected_topic in identity["detail"]
             assert "4 路图像" in identity["detail"]
 
+            page.locator("#frameNumber").fill(str(args.frame))
+            page.locator("#frameNumber").dispatch_event("change")
+            page.wait_for_function(
+                """expected => {
+                    const input=document.getElementById('frameNumber');
+                    const image=document.getElementById('frameImage');
+                    if(Number(input?.value)!==expected || !image?.complete || !image.src)
+                        return false;
+                    return new URL(image.src).pathname===`/api/frame/${expected}`;
+                }""",
+                arg=args.frame,
+                timeout=60_000,
+            )
+            page.wait_for_timeout(300)
+
             initial = page.evaluate("() => window.currentWorkbenchFrameState()")
             assert initial["topic"] == args.expected_topic
             assert len(initial["labels"]) == 8
             assert len(initial["auto_labels"]) == 8
-            assert initial.get("truth") == {}
-            assert initial.get("candidates") == {}
+            frame_key = str(args.frame)
+            assert frame_key not in initial.get("truth", {})
+            assert frame_key not in initial.get("candidates", {})
 
             page.evaluate("() => window.openReferencePreparation()")
             dialog = page.locator("#referencePrepDialog[open]")
@@ -130,32 +149,46 @@ def main() -> int:
             ) as response_info:
                 page.locator("#runReferenceAutoDraft").click()
             draft_response = response_info.value
-            draft_payload = draft_response.json()
-            assert draft_response.status == 200
+            draft_body = draft_response.text()
+            if draft_response.status != 200:
+                raise RuntimeError(
+                    "reference draft request failed: "
+                    f"HTTP {draft_response.status}; body={draft_body[:1200]!r}"
+                )
+            try:
+                draft_payload = json.loads(draft_body)
+            except json.JSONDecodeError as exc:
+                raise RuntimeError(
+                    "reference draft returned a non-JSON success response: "
+                    f"content_type={draft_response.headers.get('content-type')!r}; "
+                    f"body={draft_body[:1200]!r}"
+                ) from exc
             assert draft_payload.get("candidate_only") is True
             assert draft_payload.get("human_truth") is False
             assert draft_payload.get("approved_for_training") is False
             first_response_ms = round((time.monotonic() - draft_started) * 1000, 3)
 
             page.wait_for_function(
-                "() => Array.isArray(window.currentWorkbenchFrameState().candidates?.['0'])"
-                " && window.currentWorkbenchFrameState().candidates['0'].length > 0",
+                "expected => Array.isArray(window.currentWorkbenchFrameState().candidates?.[String(expected)])"
+                " && window.currentWorkbenchFrameState().candidates[String(expected)].length > 0",
+                arg=args.frame,
                 timeout=timeout_ms,
             )
             candidate_visible_ms = round((time.monotonic() - draft_started) * 1000, 3)
             page.wait_for_function(
-                "() => { const run=window.currentWorkbenchFrameState().agent_runs?.['0'];"
+                "expected => { const run=window.currentWorkbenchFrameState().agent_runs?.[String(expected)];"
                 " return run?.agent_review_status==='complete'"
                 " && run?.candidate_class_audit_status==='complete'; }",
+                arg=args.frame,
                 timeout=timeout_ms,
             )
             background_complete_ms = round((time.monotonic() - draft_started) * 1000, 3)
 
             final_state = page.evaluate("() => window.currentWorkbenchFrameState()")
-            candidates = final_state["candidates"]["0"]
-            run = final_state["agent_runs"]["0"]
-            assert "0" not in final_state.get("truth", {})
-            assert 0 not in final_state.get("reference_frames", {}).get(
+            candidates = final_state["candidates"][frame_key]
+            run = final_state["agent_runs"][frame_key]
+            assert frame_key not in final_state.get("truth", {})
+            assert args.frame not in final_state.get("reference_frames", {}).get(
                 final_state["topic"], []
             )
             assert all(item.get("label") in final_state["auto_labels"] for item in candidates)
@@ -194,7 +227,7 @@ def main() -> int:
                 "base_url": base_url,
                 "identity": identity,
                 "topic": final_state["topic"],
-                "frame": 0,
+                "frame": args.frame,
                 "selected_labels": final_state["auto_labels"],
                 "first_response_ms": first_response_ms,
                 "candidate_visible_ms": candidate_visible_ms,
@@ -214,8 +247,8 @@ def main() -> int:
                 "candidate_only": draft_payload.get("candidate_only"),
                 "human_truth": draft_payload.get("human_truth"),
                 "approved_for_training": draft_payload.get("approved_for_training"),
-                "truth_frame_created": "0" in final_state.get("truth", {}),
-                "reference_frame_created": 0 in final_state.get(
+                "truth_frame_created": frame_key in final_state.get("truth", {}),
+                "reference_frame_created": args.frame in final_state.get(
                     "reference_frames", {}
                 ).get(final_state["topic"], []),
                 "truth_write_requests": truth_writes,

@@ -1,0 +1,53 @@
+{
+  "schema_version": "labelagent.reference-prefetch-batch-benchmark.v1",
+  "frames": [
+    2
+  ],
+  "rows": [
+    {
+      "frame": 2,
+      "prefetch_wall_ms": 17404.557,
+      "discovery_elapsed_ms": 15897.613,
+      "sam_prefetch_elapsed_ms": 605.906,
+      "slope_roi_prefetch_elapsed_ms": 847.682,
+      "slope_roi_prefetch_completed": 4,
+      "draft_wall_ms": 2621.851,
+      "candidate_count": 4,
+      "selected_labels": [
+        "车辆",
+        "floor",
+        "slope",
+        "ego",
+        "other_robot"
+      ],
+      "draft_sam_cache_hit": true,
+      "server_discovery_cache_stored": true,
+      "draft_discovery_prefetch_cache_hit": true,
+      "prefetch_state_unchanged": true,
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    }
+  ],
+  "summary": {
+    "frame_count": 1,
+    "prefetch_p50_ms": 17404.557,
+    "prefetch_p95_ms": 17404.557,
+    "discovery_p50_ms": 15897.613,
+    "discovery_p95_ms": 15897.613,
+    "draft_p50_ms": 2621.851,
+    "draft_p95_ms": 2621.851,
+    "draft_min_ms": 2621.851,
+    "draft_max_ms": 2621.851,
+    "all_prefetch_state_unchanged": true,
+    "all_draft_multi_cache_hits": true,
+    "all_server_discovery_cache_stored": true,
+    "all_draft_discovery_prefetch_cache_hits": true,
+    "all_candidate_only": true,
+    "all_human_truth_false": true,
+    "all_training_approval_false": true
+  },
+  "initial_state_sha256": "5832A8CBB69B3BE584357AA2D0DE8E94681759CA9C77DA678C05BDE5851DA3CC",
+  "final_isolated_state_sha256": "9609DC146B157073F55F62E047E3251F1EDC3E06F715BD74A574A0D2A27B88D9",
+  "note": "The final state hash includes isolated machine candidates from this benchmark."
+}

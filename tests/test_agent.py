@@ -4657,6 +4657,7 @@ class ServerTests(unittest.TestCase):
 
     def test_reference_discovery_prefetch_warms_exact_request_without_state_writes(self):
         old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        server.clear_reference_discovery_cache()
         with tempfile.TemporaryDirectory() as directory:
             server.WORK = Path(directory)
             server.state = {"video": FakeVideo(), "topic": "camera0",
@@ -4701,6 +4702,7 @@ class ServerTests(unittest.TestCase):
                     response.json["sam_prefetch"]["slope_roi_prefetch"]["completed"], 4)
                 self.assertEqual(len(response.json["input_sha256"]), 64)
                 self.assertEqual(len(response.json["discovery_sha256"]), 64)
+                self.assertTrue(response.json["server_discovery_cache_stored"])
                 request_config, _, request_labels = discover_mock.call_args.args[:3]
                 self.assertEqual(request_config["llm_busy_retries"], 0)
                 self.assertEqual(request_labels, ["person", "slope"])
@@ -4724,7 +4726,75 @@ class ServerTests(unittest.TestCase):
                 self.assertFalse(stale.json["human_truth"])
                 self.assertFalse(stale.json["approved_for_training"])
             finally:
+                server.clear_reference_discovery_cache()
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_reference_draft_reuses_exact_prefetched_discovery_without_second_vlm_call(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        server.clear_reference_discovery_cache()
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0",
+                "labels": ["person"], "truth": {}, "reference_frames": {},
+                "config": {"llm_model": "test-vlm", "llm_busy_retries": 5},
+                "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            discovery = {"assessments": [{"label": "person", "evidence": "present",
+                "confidence": .95, "reason": "visible"}],
+                "visible_labels": ["person"], "uncertain_labels": [],
+                "candidate_labels": ["person"], "consistency_flags": [],
+                "unknown_candidates": [], "registry_conflicts": [],
+                "open_set_scan_complete": True, "registry_mutated": False}
+            result = {"shapes": [shape(label="person")], "candidates_added": 1,
+                "applied": [], "review_queue": [],
+                "agent": {"stop_reason": "done", "rounds": 0, "audit": []}}
+            try:
+                with patch.object(server, "discover_reference_labels",
+                                  return_value=(discovery, 0)) as discover_mock, \
+                     patch.object(server, "generate_only", return_value=result) as generate_mock:
+                    prefetched = server.app.test_client().post(
+                        "/api/reference_discovery/prefetch", json={
+                            "frame": 1, "expected_path": str(FakeVideo.path),
+                            "expected_topic": "camera0"})
+                    response = server.app.test_client().post(
+                        "/api/reference_draft", json={"frame": 1,
+                            "auto_detect_visible": True,
+                            "defer_agent_review": True})
+                self.assertEqual(prefetched.status_code, 200, prefetched.json)
+                self.assertEqual(response.status_code, 200, response.json)
+                discover_mock.assert_called_once()
+                generate_mock.assert_called_once()
+                self.assertTrue(response.json["discovery_prefetch_cache_hit"])
+                self.assertTrue(response.json["agent"]["discovery_prefetch_cache_hit"])
+                reused = response.json["visible_label_discovery"]
+                self.assertEqual(reused["assessments"], discovery["assessments"])
+                self.assertEqual(reused["visible_labels"], discovery["visible_labels"])
+                self.assertEqual(reused["uncertain_labels"], discovery["uncertain_labels"])
+                self.assertEqual(reused["recall_probe_labels"], [])
+                self.assertEqual(server.state["truth"], {})
+                self.assertFalse(response.json["human_truth"])
+                self.assertFalse(response.json["approved_for_training"])
+            finally:
+                server.clear_reference_discovery_cache()
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_reference_discovery_cache_requires_exact_binding_and_expires(self):
+        server.clear_reference_discovery_cache()
+        video = FakeVideo()
+        base = server.reference_discovery_cache_key(
+            video, "camera0", 1, "a" * 64, ["person"], "b" * 64,
+            activation_generation=7)
+        changed = server.reference_discovery_cache_key(
+            video, "camera0", 1, "a" * 64, ["person", "slope"], "b" * 64,
+            activation_generation=7)
+        discovery = {"visible_labels": ["person"]}
+        server.store_reference_discovery_cache(base, discovery, 0, now=100.0)
+        self.assertEqual(server.get_reference_discovery_cache(base, now=101.0),
+                         (discovery, 0))
+        self.assertIsNone(server.get_reference_discovery_cache(changed, now=101.0))
+        self.assertIsNone(server.get_reference_discovery_cache(
+            base, now=100.0 + server.REFERENCE_DISCOVERY_CACHE_TTL_SECONDS + 1))
+        server.clear_reference_discovery_cache()
 
     def test_reference_discovery_prefetch_does_not_queue_behind_busy_vlm(self):
         old_state, old_status, old_work = server.state, server.run_status, server.WORK

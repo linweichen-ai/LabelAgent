@@ -66,6 +66,10 @@ run_status_lock = threading.Lock()
 run_summary_lock = threading.Lock()
 run_claim_lock = threading.Lock()
 model_prewarm_lock = threading.Lock()
+reference_discovery_cache_lock = threading.Lock()
+reference_discovery_cache = {}
+REFERENCE_DISCOVERY_CACHE_TTL_SECONDS = 300
+REFERENCE_DISCOVERY_CACHE_MAX_ENTRIES = 16
 PRIMARY_MODEL_PREWARM_TOKENS = 2048
 run_status = {"status": "idle"}
 run_stop_event = threading.Event()
@@ -106,6 +110,69 @@ def claim_file_activation():
 def current_file_activation_generation():
     with file_activation_intent_lock:
         return file_activation_generation
+
+
+def reference_discovery_cache_key(video, topic, frame, input_sha256, labels,
+                                  config_sha256, activation_generation=None):
+    """Bind one speculative discovery result to the exact active input.
+
+    This is intentionally stricter than the VLM response cache.  It includes
+    the file-load generation and decoded image digest so a dataset, camera,
+    frame, label-registry or configuration change can never reuse stale
+    machine evidence.
+    """
+    if activation_generation is None:
+        activation_generation = current_file_activation_generation()
+    return _sha256_json({
+        "schema_version": "labelagent.reference-discovery-cache-key.v1",
+        "activation_generation": activation_generation,
+        "video_identity": id(video),
+        "file": str(video.path),
+        "topic": topic,
+        "frame": frame,
+        "input_sha256": input_sha256,
+        "labels": list(labels),
+        "config_sha256": config_sha256,
+    })
+
+
+def _prune_reference_discovery_cache(now=None):
+    now = time.monotonic() if now is None else now
+    expired = [key for key, value in reference_discovery_cache.items()
+               if now - value["stored_at"] > REFERENCE_DISCOVERY_CACHE_TTL_SECONDS]
+    for key in expired:
+        reference_discovery_cache.pop(key, None)
+    while len(reference_discovery_cache) > REFERENCE_DISCOVERY_CACHE_MAX_ENTRIES:
+        oldest = min(reference_discovery_cache,
+                     key=lambda key: reference_discovery_cache[key]["stored_at"])
+        reference_discovery_cache.pop(oldest, None)
+
+
+def store_reference_discovery_cache(key, discovery, retry_count, now=None):
+    now = time.monotonic() if now is None else now
+    with reference_discovery_cache_lock:
+        reference_discovery_cache[key] = {
+            "stored_at": now,
+            "discovery": copy.deepcopy(discovery),
+            "retry_count": int(retry_count),
+        }
+        _prune_reference_discovery_cache(now)
+
+
+def get_reference_discovery_cache(key, now=None):
+    now = time.monotonic() if now is None else now
+    with reference_discovery_cache_lock:
+        _prune_reference_discovery_cache(now)
+        value = reference_discovery_cache.get(key)
+        if value is None:
+            return None
+        return copy.deepcopy(value["discovery"]), value["retry_count"]
+
+
+def clear_reference_discovery_cache():
+    """Test/deployment helper; cached discovery is never authoritative state."""
+    with reference_discovery_cache_lock:
+        reference_discovery_cache.clear()
 
 
 def assert_current_file_activation(generation):
@@ -4968,6 +5035,8 @@ def prefetch_reference_discovery():
         config_sha256 = _sha256_json(config)
         target_image = frame_image(index)
         input_sha256 = hashlib.sha256(target_image).hexdigest()
+        discovery_cache_key = reference_discovery_cache_key(
+            video, selected_topic, index, input_sha256, labels, config_sha256)
     # Speculation must yield immediately when the shared model is serving an
     # unrelated request.  This option only changes HTTP busy retry behaviour;
     # it is not part of the deterministic VLM request body or cache key.
@@ -5073,6 +5142,8 @@ def prefetch_reference_discovery():
                 human_truth=False,
                 approved_for_training=False,
             ), 200
+    store_reference_discovery_cache(
+        discovery_cache_key, discovery, retry_count)
     return jsonify(
         schema_version="labelagent.reference-discovery-prefetch.v1",
         prefetched=True,
@@ -5086,6 +5157,7 @@ def prefetch_reference_discovery():
         uncertain_labels=discovery.get("uncertain_labels", []),
         retry_count=retry_count,
         discovery_elapsed_ms=discovery_elapsed_ms,
+        server_discovery_cache_stored=True,
         sam_prefetch=sam_prefetch,
         elapsed_ms=elapsed_ms,
         candidate_only=True,
@@ -5215,6 +5287,8 @@ def generate_reference_draft():
         input_sha256 = hashlib.sha256(target_image).hexdigest()
         file_name, selected_topic = str(video.path), state["topic"]
         config_sha256 = _sha256_json(config)
+        discovery_cache_key = reference_discovery_cache_key(
+            video, selected_topic, index, input_sha256, labels, config_sha256)
         existing = copy.deepcopy(state.get("candidates", {}).get(str(index), []))
         existing_run = copy.deepcopy(state.get("agent_runs", {}).get(str(index), {}))
         if defer_agent_review and existing:
@@ -5273,12 +5347,19 @@ def generate_reference_draft():
         with cancellation(run_stop_event), trace_calls(on_trace, save_inspection_image):
             discovery = None
             discovery_retry_count = 0
+            discovery_prefetch_cache_hit = False
             if auto_detect_visible:
-                discovery, discovery_retry_count = discover_reference_labels(
-                    config, target_image, selected,
-                    lambda error: update_run_status(
-                        phase="discovering_retry", discovery_attempt=2,
-                        error=f"首次类别结构不合规，正在自动重试：{str(error)[:300]}"))
+                prefetched_discovery = get_reference_discovery_cache(
+                    discovery_cache_key)
+                if prefetched_discovery is not None:
+                    discovery, discovery_retry_count = prefetched_discovery
+                    discovery_prefetch_cache_hit = True
+                else:
+                    discovery, discovery_retry_count = discover_reference_labels(
+                        config, target_image, selected,
+                        lambda error: update_run_status(
+                            phase="discovering_retry", discovery_attempt=2,
+                            error=f"首次类别结构不合规，正在自动重试：{str(error)[:300]}"))
                 selected, recall_probes = candidate_labels_with_recall_probes(
                     discovery, labels,
                     probe_missing_selected=probe_missing_selected)
@@ -5290,7 +5371,9 @@ def generate_reference_draft():
                 update_run_status(phase="describing", visible_labels=selected,
                                   uncertain_labels=discovery["uncertain_labels"],
                                   unknown_candidate_count=len(discovery["unknown_candidates"]),
-                                  discovery_retry_count=discovery_retry_count, error=None)
+                                  discovery_retry_count=discovery_retry_count,
+                                  discovery_prefetch_cache_hit=discovery_prefetch_cache_hit,
+                                  error=None)
             if auto_detect_visible:
                 # Discovery already selected a bounded set of known registry
                 # labels. With no human reference geometry, a second VLM call
@@ -5459,6 +5542,7 @@ def generate_reference_draft():
             "description_source": description_source,
             "discovery_sha256": discovery_sha256,
             "discovery_retry_count": discovery_retry_count,
+            "discovery_prefetch_cache_hit": discovery_prefetch_cache_hit,
             "human_review_required": True,
             "inspection_trace": copy.deepcopy(trace)}
         update_run_status(phase="committing", audit_completed=len(class_audits),
@@ -5504,6 +5588,7 @@ def generate_reference_draft():
                            description_source=description_source,
                            visible_label_discovery=discovery,
                            discovery_sha256=discovery_sha256,
+                           discovery_prefetch_cache_hit=discovery_prefetch_cache_hit,
                            agent_review_deferred=defer_agent_review,
                            agent_review_status=("pending" if defer_agent_review else "complete"),
                            candidate_class_audit_deferred=bool(

@@ -2710,3 +2710,21 @@ Round332在隔离环境将5090快速路由扩大到1920×1536全图。camera0耗
 失败，实验立即停止且未部署。正式工作台仍保持327,680像素/640长边的小图阈值，生产state
 哈希保持`CBA73B2...CD64`，工作台HTTP200、5090 VLM为`ok`，两个隔离端口均已释放。详见
 `FAST_VLM5090_SLOPE_AND_FULLFRAME_GATE_ROUNDS331_332_20261120.md`与结构化证据。
+
+### Round333：预取发现结果严格复用并部署（2026-11-20）
+
+确认参考准备弹窗虽然提前完成VLM可见类别识别，旧服务端却没有保留结构化发现结果，正式起稿
+仍会再次进入VLM调用并依赖模型内部缓存。新增最多16项、5分钟TTL的服务器内存缓存，严格绑定
+文件载入代次、视频对象、路径、相机、帧、图像SHA-256、完整标签表和完整配置SHA-256；任一项
+变化都不复用，缓存不持久化、不写人工真值或训练批准。
+
+Capture camera3真实隔离验收中，后台准备17.405秒，其中VLM发现15.898秒；正式点击2.622秒
+出现4个候选，服务器发现缓存与SAM精确缓存均明确命中。预取状态哈希不变，候选全部保持
+`candidate_only=true`、`human_truth=false`、`approved_for_training=false`。完整Python 1,125项及
+186项子测试、JavaScript 148项通过；首次未设置`PYTHONUTF8=1`的测试运行仅暴露Windows GBK
+读取UTF-8测试文件问题，按正式运行约定复跑后全绿，没有通过安装或改系统Python掩盖问题。
+
+正式源码已备份至`D:\Apps\LabelAgent\.local\backups\reference-discovery-cache-round333-20261120-095021`
+后部署。工作台HTTP200、四个模型通道在线，正式state和files哈希部署前后完全一致；1帧人工
+真值、149帧机器候选和25帧Agent记录均未变化。详见
+`REFERENCE_DISCOVERY_CACHE_ROUND333_20261120.md`及结构化证据。

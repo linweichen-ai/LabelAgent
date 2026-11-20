@@ -1,0 +1,17 @@
+{
+  "schema_version": "labelagent.production-deployment-receipt.v1",
+  "round": 333,
+  "deployed_at_local": "2026-11-20T09:50:00+08:00",
+  "backup_path": "D:\\Apps\\LabelAgent\\.local\\backups\\reference-discovery-cache-round333-20261120-095021",
+  "server_sha256_before": "C929B5D77F047D4C71348C3A3F0B3E6459874B6802FE13A0B9FFE822CC991BCE",
+  "server_sha256_after": "75C6E1A8B76EE0A22C69AFC3E68F9F49C07587EC723B5276DC9F44E4243D4F17",
+  "state_sha256_before": "CBA73B2DBFF671BE73EFFA6B67579C290337C755464EB18D66C0CC789BC7CD64",
+  "state_sha256_after": "CBA73B2DBFF671BE73EFFA6B67579C290337C755464EB18D66C0CC789BC7CD64",
+  "files_sha256_before": "7EDB40A9BDFCF5577AEA4C2BB183EF556A2B7D70B24564C49EEB46C5D9A8C5C1",
+  "files_sha256_after": "7EDB40A9BDFCF5577AEA4C2BB183EF556A2B7D70B24564C49EEB46C5D9A8C5C1",
+  "ui_http_status": 200,
+  "truth_frames": 1,
+  "candidate_frames": 149,
+  "agent_run_frames": 25,
+  "truth_or_candidate_state_changed": false
+}

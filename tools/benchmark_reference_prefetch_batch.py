@@ -103,6 +103,10 @@ def main():
             "candidate_count": len(draft.get("candidates") or []),
             "selected_labels": sam.get("selected_labels") or [],
             "draft_sam_cache_hit": cache.get("hit"),
+            "server_discovery_cache_stored": prefetch.get(
+                "server_discovery_cache_stored"),
+            "draft_discovery_prefetch_cache_hit": draft.get(
+                "discovery_prefetch_cache_hit"),
             "prefetch_state_unchanged": before == after_prefetch,
             "candidate_only": draft.get("candidate_only"),
             "human_truth": draft.get("human_truth"),
@@ -134,6 +138,10 @@ def main():
                 row["prefetch_state_unchanged"] for row in rows),
             "all_draft_multi_cache_hits": all(
                 row["draft_sam_cache_hit"] is True for row in rows),
+            "all_server_discovery_cache_stored": all(
+                row["server_discovery_cache_stored"] is True for row in rows),
+            "all_draft_discovery_prefetch_cache_hits": all(
+                row["draft_discovery_prefetch_cache_hit"] is True for row in rows),
             "all_candidate_only": all(row["candidate_only"] is True for row in rows),
             "all_human_truth_false": all(row["human_truth"] is False for row in rows),
             "all_training_approval_false": all(

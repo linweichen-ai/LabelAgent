@@ -1,0 +1,55 @@
+{
+  "schema_version": "labelagent.new_dataset_ui_round366.v1",
+  "date": "2026-11-20",
+  "production_state_sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115",
+  "isolated_ports_stopped_after_test": [8891, 8892],
+  "truth_write_count": 0,
+  "human_truth_modified": false,
+  "training_data_modified": false,
+  "token_cap_experiment": {
+    "max_tokens": 256,
+    "sample_count": 8,
+    "route_match_count": 8,
+    "classification_match_count": 8,
+    "cache_hit_count": 0,
+    "baseline_p50_seconds": 4.58,
+    "experiment_p50_seconds": 4.738,
+    "decision": "rejected_no_latency_gain",
+    "artifact_sha256": "699482a6288a3f1ead94ba93630aa8d60c81c45192dcec5aa4dea23421f21bfc"
+  },
+  "production_port_guard": {
+    "port": 8765,
+    "rejected_before_navigation": true,
+    "output_artifact_created": false
+  },
+  "before_ui": {
+    "isolated_port": 8891,
+    "frame": 10,
+    "candidate_count": 13,
+    "selected_class_count": 8,
+    "candidate_visible_ms": 20078,
+    "background_complete_ms": 73531,
+    "page_error_count": 0,
+    "http_error_count": 0,
+    "truth_write_count": 0,
+    "receipt_sha256": "05e2175909e1e36f06f6d0b03783ddb3998feb32d3fab509ed4e3641fe3c08d1",
+    "screenshot_sha256": "d110c0d0f7e290595bd5dcba6c70d308dcb835979d3f317f41918ea563b0b78f"
+  },
+  "after_ui": {
+    "isolated_port": 8892,
+    "frame": 11,
+    "candidate_count": 14,
+    "selected_class_count": 8,
+    "candidate_visible_ms": 18906,
+    "background_complete_ms": 69781,
+    "audit_detail_row_count": 4,
+    "audit_details_open_by_default": false,
+    "compact_summary_contains_raw_observed_label": false,
+    "page_error_count": 0,
+    "http_error_count": 0,
+    "truth_write_count": 0,
+    "receipt_sha256": "9a6929e5541045963e0668650f069061322beece1ccc39378ea01a55a7c382d3",
+    "screenshot_sha256": "45598a27ec01388fce66e5e5806b068e2caf9e8e69e1596dc98b29301aab1fda"
+  },
+  "latency_comparison_scope": "different_frames_not_a_paired_performance_claim"
+}

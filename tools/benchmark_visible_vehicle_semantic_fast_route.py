@@ -65,8 +65,12 @@ def main() -> int:
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--overview-max-width", type=int, default=640)
     parser.add_argument("--overview-max-height", type=int, default=512)
+    parser.add_argument("--preserve-overview", action="store_true",
+                        help="Send the original overview bytes without resizing")
     parser.add_argument("--force-primary", action="store_true",
                         help="Keep the compact overview but bypass the fast model")
+    parser.add_argument("--max-tokens", type=int,
+                        help="Experiment-local structured response token cap")
     args = parser.parse_args()
 
     state_path = args.state.resolve()
@@ -98,6 +102,10 @@ def main() -> int:
     if args.force_primary:
         config["llm_fast_url"] = ""
         config["llm_fast_model"] = ""
+    if args.max_tokens is not None:
+        if not 128 <= args.max_tokens <= 4096:
+            raise ValueError("max-tokens must be in [128, 4096]")
+        config["llm_max_tokens"] = args.max_tokens
     labels = list(state.get("labels") or [])
     baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
     baseline_rows = {(row["topic"], row["frame"]): row
@@ -126,7 +134,8 @@ def main() -> int:
                 f"{proposal_evidence.get('status')}")
         candidate = proposals[0]
         evidence = candidate_class_audit.prepare_candidate_evidence(image, candidate)
-        overview = compact_overview(image, overview_maximum)
+        overview = image if args.preserve_overview else compact_overview(
+            image, overview_maximum)
         traces = {}
 
         def capture(event):
@@ -183,9 +192,11 @@ def main() -> int:
         "baseline_sha256": sha256_file(baseline_path),
         "experiment": {
             "overview_maximum": list(overview_maximum),
+            "overview_original_bytes_preserved": args.preserve_overview,
             "fast_primary_max_pixels": config["llm_fast_max_pixels"],
             "fast_primary_max_long_edge": config["llm_fast_max_long_edge"],
             "force_primary": args.force_primary,
+            "max_tokens": config.get("llm_max_tokens"),
             "state_or_production_config_modified": False,
         },
         "rows": rows,

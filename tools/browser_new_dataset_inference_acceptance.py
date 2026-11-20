@@ -14,6 +14,16 @@ from playwright.sync_api import sync_playwright
 
 
 CAPTURE_TOPICS = tuple(f"/capture/camera_{index}/image" for index in range(4))
+PRODUCTION_WORKBENCH_PORT = 8765
+
+
+def validate_isolated_base_url(value: str):
+    parsed = urlparse(value.rstrip("/"))
+    if parsed.scheme != "http" or parsed.hostname not in {"127.0.0.1", "localhost"}:
+        raise ValueError("acceptance is restricted to a loopback isolated workbench")
+    if parsed.port in {None, PRODUCTION_WORKBENCH_PORT}:
+        raise ValueError("acceptance refuses the production workbench on port 8765")
+    return parsed
 
 
 def expected_status_poll_abort(method: str, url: str, failure: str) -> bool:
@@ -41,9 +51,7 @@ def main() -> int:
         raise ValueError("frame must be non-negative")
 
     base_url = args.base_url.rstrip("/")
-    parsed = urlparse(base_url)
-    if parsed.scheme != "http" or parsed.hostname not in {"127.0.0.1", "localhost"}:
-        raise ValueError("acceptance is restricted to a loopback isolated workbench")
+    validate_isolated_base_url(base_url)
     output_json = args.output_json.resolve()
     screenshot = args.screenshot.resolve()
     output_json.parent.mkdir(parents=True, exist_ok=True)
@@ -222,6 +230,21 @@ def main() -> int:
             assert canvas["width"] > 0 and canvas["height"] > 0
             assert canvas["rect"]["width"] > 0 and canvas["rect"]["height"] > 0
 
+            audit_panel = page.evaluate("""() => {
+                const host=document.querySelector('#referenceReviewAlerts');
+                const details=host?.querySelector('.candidateAuditDetails');
+                return {hidden:host?.hidden, compact_text:[...host?.children || []]
+                            .filter(item => item.tagName !== 'DETAILS')
+                            .map(item => item.textContent).join(' '),
+                        details_present:Boolean(details), details_open:details?.open ?? null,
+                        detail_row_count:details?.querySelectorAll('p').length || 0};
+            }""")
+            assert audit_panel["hidden"] is False
+            assert audit_panel["details_present"] is True
+            assert audit_panel["details_open"] is False
+            assert audit_panel["detail_row_count"] > 0
+            assert "VLM observed_label" not in audit_panel["compact_text"]
+
             inspection_trace = run.get("inspection_trace") or []
             assert inspection_trace
             page.screenshot(path=str(screenshot), full_page=True)
@@ -248,6 +271,7 @@ def main() -> int:
                 ).items())),
                 "coverage": coverage,
                 "canvas": canvas,
+                "audit_panel": audit_panel,
                 "agent_review_status": run.get("agent_review_status"),
                 "candidate_class_audit_status": run.get("candidate_class_audit_status"),
                 "inspection_trace_count": len(inspection_trace),

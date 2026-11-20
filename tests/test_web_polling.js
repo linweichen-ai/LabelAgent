@@ -295,6 +295,19 @@ test('新实采数据端到端验收绑定 Capture 身份而不是模糊的新�
   assert.match(tool, /"frame": args\.frame/);
   assert.match(tool, /reference draft request failed/);
   assert.match(tool, /reference draft returned a non-JSON success response/);
+  assert.match(tool, /details_open/);
+  assert.match(tool, /VLM observed_label/);
+});
+
+test('候选类别复核默认显示中文摘要并折叠原始模型依据', () => {
+  const app = source('app.js');
+  const style = source('style.css');
+  assert.match(app, /function candidateClassAuditDisplay/);
+  assert.match(app, /通过项已收起/);
+  assert.match(app, /必须人工确认/);
+  assert.match(app, /candidateAuditDetails/);
+  assert.match(app, /查看全部模型原始依据/);
+  assert.match(style, /\.candidateAuditDetails summary/);
 });
 
 test('人工真值界面提供明确的连续推理入口', () => {

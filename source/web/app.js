@@ -494,19 +494,27 @@ function normalizeReferenceDiscovery(discovery){
 }
 function beginReferenceFinalize(source,target){referencePreparationIntent={source,frame:Number(target),topic,path:loadedDataPath};referenceDismissedMissingLabels=new Set();referenceOriginalSweepVisited=false;referenceOpenSetReviewed=false;const restored=restoreReferenceReviewProgress(selectedShapes(),target,topic);referenceFinalizeNotice=restored||referenceOpenSetReviewed?`已从当前浏览器会话恢复检查进度 ${restored}/${selectedShapes().length}${referenceOpenSetReviewed?'，原图漏标检查已完成':''}`:'';resetReferenceReviewView();updateReferenceFinalizeGuide()}
 function clearReferenceFinalize(){referencePreparationIntent=null;referenceFinalizeNotice='';referenceReviewedShapeKeys=new Set();referenceDismissedMissingLabels=new Set();referenceOriginalSweepVisited=false;referenceOpenSetReviewed=false;resetReferenceReviewView();updateReferenceFinalizeGuide();document.dispatchEvent(new CustomEvent('labelagent:reference-draft-cleared'))}
+function candidateClassAuditDisplay(audit,candidate){
+ const decision=audit?.decision||{},required=audit?.route==='human_review_required'||audit?.human_review_required===true,original=String(audit?.bound_current_label??candidate?.label??'未记录'),observed=String(decision.observed_label??audit?.observed_label??'未确定');let verdict='模型支持当前类别';
+ if(audit?.error)verdict='模型复核失败';
+ else if(decision.classification==='conflict')verdict=observed!=='未确定'?`模型建议重点核对 ${observed}`:'模型认为类别存在冲突';
+ else if(decision.classification==='uncertain')verdict='模型证据不足';
+ else if(decision.candidate_supported===false)verdict='模型未确认当前类别';
+ else if(!decision.classification&&required)verdict='类别复核记录不完整';
+ return {required,original,observed,verdict,reason:decision.reason||audit?.reason||audit?.error||decision.reason_code||audit?.reason_code||'未提供原因'};
+}
 function appendCandidateClassAuditAlerts(alerts,items,run){
  const audits=Array.isArray(run?.candidate_class_audits)?run.candidate_class_audits:[],queue=(Array.isArray(run?.review_queue)?run.review_queue:[]).filter(item=>item?.source==='candidate_class_audit'),records=[...audits];
  for(const item of queue)if(!audits.some(audit=>String(audit.candidate_id)===String(item.candidate_id)))records.push(item);
  for(const item of items)if(candidateClassAuditRequired(item)&&!records.some(audit=>String(audit.candidate_id)===String(item.id)))records.push({candidate_id:item.id,bound_current_label:item.label,route:'human_review_required',reason:'缺少类别盲审记录；复用不会触发新的 VLM 盲审，请人工核对类别与外观'});
  if(!records.length)return;
- alerts.hidden=false;const heading=document.createElement('strong');heading.textContent='候选类别盲审 · 原类别与 VLM 结果';alerts.append(heading);
- for(const audit of records){
-  const index=items.findIndex(item=>String(item.id)===String(audit.candidate_id)),candidate=index>=0?items[index]:null,decision=audit.decision||{},required=audit.route==='human_review_required'||audit.human_review_required===true,note=document.createElement('span');
-  const reason=decision.reason||audit.reason||audit.error||decision.reason_code||audit.reason_code||'未提供原因';
-  note.textContent=`候选 #${audit.candidate_id??'未知'} · 原类别：${audit.bound_current_label??candidate?.label??'未记录'} · VLM observed_label：${decision.observed_label??audit.observed_label??'未确定'} · 原因：${reason} · human_review_required：${required?'true（必须人工复核）':'false（仍需逐个检查）'}${candidate?'':' · 当前草稿中未找到该候选'}`;
-  alerts.append(note);if(required)alerts.classList.add('geometryRisk');
-  if(candidate){const inspect=document.createElement('button');inspect.type='button';inspect.textContent=`查看候选 #${audit.candidate_id}`;inspect.onclick=()=>{selectedShapeIndex=index;referenceReviewOriginalOnly=false;if(referenceReviewFocused)applyReferenceReviewFocus();refreshShapeList();draw();updateReferenceFinalizeGuide();$('shapeList').children[index]?.scrollIntoView({behavior:'smooth',block:'nearest'})};alerts.append(inspect)}
+ const rows=records.map(audit=>{const index=items.findIndex(item=>String(item.id)===String(audit.candidate_id)),candidate=index>=0?items[index]:null;return {audit,index,candidate,...candidateClassAuditDisplay(audit,candidate)}}),requiredRows=rows.filter(row=>row.required);
+ alerts.hidden=false;const heading=document.createElement('strong');heading.textContent='候选类别复核';alerts.append(heading);const overview=document.createElement('span');overview.textContent=requiredRows.length?`${records.length} 项已检查，其中 ${requiredRows.length} 项必须人工确认；通过项已收起`:`${records.length} 项已检查，模型未发现类别冲突；仍需逐个检查轮廓`;alerts.append(overview);
+ for(const row of requiredRows){
+  const note=document.createElement('span');note.textContent=`候选 #${row.audit.candidate_id??'未知'} · ${row.original} · ${row.verdict} · 必须人工确认${row.candidate?'':' · 当前草稿中未找到该候选'}`;alerts.append(note);alerts.classList.add('geometryRisk');
+  if(row.candidate){const inspect=document.createElement('button');inspect.type='button';inspect.textContent=`查看候选 #${row.audit.candidate_id}`;inspect.onclick=()=>{selectedShapeIndex=row.index;referenceReviewOriginalOnly=false;if(referenceReviewFocused)applyReferenceReviewFocus();refreshShapeList();draw();updateReferenceFinalizeGuide();$('shapeList').children[row.index]?.scrollIntoView({behavior:'smooth',block:'nearest'})};alerts.append(inspect)}
  }
+ const details=document.createElement('details');details.className='candidateAuditDetails';const summary=document.createElement('summary');summary.textContent=`查看全部模型原始依据（${records.length}）`;details.append(summary);for(const row of rows){const raw=document.createElement('p');raw.textContent=`候选 #${row.audit.candidate_id??'未知'} · 当前类别：${row.original} · 模型观察：${row.observed} · ${row.reason}`;details.append(raw)}alerts.append(details);
 }
 function updateReferenceFinalizeGuide(){
  if(referencePreparationIntent?.source==='machine_candidate'&&referencePreparationIntent.frame===frame&&referencePreparationIntent.topic===topic)invalidateChangedCandidateAudits(selectedShapes(),frame);

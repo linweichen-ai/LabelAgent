@@ -1,0 +1,102 @@
+{
+  "schema_version": "labelagent.candidate-audit-direct-review-round353.v1",
+  "observed_at": "2026-11-20T13:30:43+08:00",
+  "passed": true,
+  "change": {
+    "valid_non_preserving_batch_decisions_route_directly_to_human_review": true,
+    "repairable_non_known_reason_code_avoids_retry": true,
+    "unrepairable_protocol_errors_still_retry_sequentially": true,
+    "candidate_mutated": false,
+    "human_truth_written": false,
+    "approved_for_training": false
+  },
+  "tests": {
+    "focused": {
+      "passed": 35,
+      "subtests_passed": 11
+    },
+    "formal_tests_directory": {
+      "passed": 1155,
+      "subtests_passed": 186
+    },
+    "unrelated_upstream_demo_collection": {
+      "excluded_from_formal_gate": true,
+      "reason": "source/sam3/scripts/qualitative_test.py requires optional matplotlib and is not part of the project tests directory"
+    }
+  },
+  "browser_acceptance": {
+    "dataset": "Capture_20261103",
+    "topic": "/capture/camera_2/image",
+    "frame": 0,
+    "selected_class_count": 8,
+    "first_response_ms": 4094.0,
+    "candidate_visible_ms": 4109.0,
+    "background_complete_ms": 31031.0,
+    "candidate_count": 8,
+    "candidate_counts_by_label": {
+      "ego": 1,
+      "floor": 1,
+      "pallet": 5,
+      "person": 1
+    },
+    "page_errors": 0,
+    "failed_requests": 0,
+    "http_errors": 0,
+    "truth_write_requests": 0,
+    "truth_frame_created": false,
+    "reference_frame_created": false,
+    "screenshot": "candidate-audit-direct-review-round353.png",
+    "screenshot_sha256": "604D5269B8D5E2D75991A824B48CE7C9C87469A120B70A1112957D38B80DDF50"
+  },
+  "batch_replay_acceptance": {
+    "source": "round352 retained real camera_2 candidate artifact",
+    "candidate_count": 9,
+    "high_risk_audit_count": 3,
+    "elapsed_ms": 1265.0,
+    "cache_caveat": "existing model response cache hit; proves routing only, not cold latency",
+    "execution_modes": [
+      "independent_batch_3",
+      "independent_batch_3",
+      "independent_batch_3"
+    ],
+    "routes": [
+      "candidate_preserved",
+      "candidate_preserved",
+      "human_review_required"
+    ],
+    "classifications": [
+      "known_label",
+      "known_label",
+      "uncertain"
+    ],
+    "protocol_repairs": [
+      null,
+      null,
+      "non_known_reason_code_normalized"
+    ],
+    "protocol_retry_counts": [0, 0, 0],
+    "batch_fallback_reasons": [null, null, null],
+    "human_review_candidates": [9],
+    "human_truth": false,
+    "approved_for_training": false
+  },
+  "deployment": {
+    "source_sha256": "350269120CFCEFB6B7E193FFDBC676675066D720A849DF113E5465BCE7FC7FDE",
+    "production_sha256": "350269120CFCEFB6B7E193FFDBC676675066D720A849DF113E5465BCE7FC7FDE",
+    "backup_path": "D:\\Apps\\LabelAgent\\.local\\backups\\candidate-audit-direct-review-round353-20261120\\candidate_class_audit.py",
+    "backup_sha256": "A5CF3E72849EE47543EF02EB71BF091B5F19EB751B41C0C5D06A434CDBC9A541",
+    "production_state_sha256_before": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "production_state_sha256_after": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "production_status": "idle",
+    "selected_topic": "/capture/camera_1/image",
+    "isolated_ports_released": [8891, 8892]
+  },
+  "storage": {
+    "destructive_deletion": false,
+    "compression_only": true,
+    "c_free_mib_final_observed": 280.2,
+    "d_free_mib_final_observed": 823.4,
+    "c_safe_floor_mib": 256,
+    "d_low_space_advisory_remains": true
+  }
+}

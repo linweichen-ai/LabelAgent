@@ -183,7 +183,7 @@ class CandidateClassAuditTests(unittest.TestCase):
         self.assertTrue(all(item["route"] == "candidate_preserved"
                             for item in audits))
 
-    def test_uncertain_batch_reruns_only_uncertain_item_sequentially(self):
+    def test_uncertain_batch_routes_review_without_sequential_retry(self):
         candidates = [{**self.candidate, "id": value} for value in (7, 8, 9)]
         sequential_calls = []
         def sequential(*args, **kwargs):
@@ -194,14 +194,34 @@ class CandidateClassAuditTests(unittest.TestCase):
             {}, self.image, candidates, self.labels, {}, sequential,
             batch_chat=lambda *args, **kwargs:
                 [self.decision(), uncertain, self.decision()])
-        self.assertEqual(queue, [])
-        self.assertEqual(len(sequential_calls), 1)
+        self.assertEqual(len(queue), 1)
+        self.assertEqual(queue[0]["candidate_id"], 8)
+        self.assertEqual(queue[0]["classification"], "uncertain")
+        self.assertEqual(len(sequential_calls), 0)
         self.assertEqual([item["execution_mode"] for item in audits],
-                         ["independent_batch_3", "sequential",
-                          "independent_batch_3"])
-        self.assertEqual(
-            audits[1]["batch_fallback_reason"],
-            "batch_not_high_confidence_original_class")
+                         ["independent_batch_3"] * 3)
+        self.assertEqual(audits[1]["route"], "human_review_required")
+
+    def test_repairable_uncertain_batch_routes_review_without_retry(self):
+        candidates = [{**self.candidate, "id": value} for value in (7, 8, 9)]
+        sequential_calls = []
+        def sequential(*args, **kwargs):
+            sequential_calls.append(args)
+            return self.decision()
+        inconsistent = self.decision(None, .99, "uncertain")
+        inconsistent["reason_code"] = "visible_known_label"
+        audits, queue = audit.audit_high_risk_candidates(
+            {}, self.image, candidates, self.labels, {}, sequential,
+            batch_chat=lambda *args, **kwargs:
+                [self.decision(), inconsistent, self.decision()])
+        self.assertEqual(sequential_calls, [])
+        self.assertEqual(len(queue), 1)
+        self.assertEqual(queue[0]["candidate_id"], 8)
+        self.assertEqual(audits[1]["route"], "human_review_required")
+        self.assertEqual(audits[1]["decision"]["reason_code"],
+                         "insufficient_visual_evidence")
+        self.assertEqual(audits[1]["protocol_repair"],
+                         "non_known_reason_code_normalized")
 
     def test_one_protocol_invalid_batch_item_reruns_only_that_item(self):
         candidates = [{**self.candidate, "id": value} for value in (7, 8, 9)]
@@ -268,7 +288,7 @@ class CandidateClassAuditTests(unittest.TestCase):
                          [(1, 5, 7), (2, 5, 8), (3, 5, 9),
                           (4, 5, 10), (5, 5, 11)])
 
-    def test_later_uncertain_triple_only_reruns_uncertain_item(self):
+    def test_later_uncertain_triple_routes_review_without_retry(self):
         candidates = [{**self.candidate, "id": value} for value in range(7, 13)]
         sequential_calls = []
         batch_calls = []
@@ -285,12 +305,12 @@ class CandidateClassAuditTests(unittest.TestCase):
         audits, queue = audit.audit_high_risk_candidates(
             {}, self.image, candidates, self.labels, {}, sequential,
             batch_chat=batch)
-        self.assertEqual(queue, [])
+        self.assertEqual(len(queue), 1)
+        self.assertEqual(queue[0]["candidate_id"], 11)
         self.assertEqual(batch_calls, [3, 3])
-        self.assertEqual(sequential_calls, [11])
+        self.assertEqual(sequential_calls, [])
         self.assertEqual([item["execution_mode"] for item in audits],
-                         ["independent_batch_3"] * 4
-                         + ["sequential", "independent_batch_3"])
+                         ["independent_batch_3"] * 6)
 
     def test_holes_and_invalid_coordinates(self):
         self.candidate["holes"] = [[[15, 15], [25, 15], [25, 25], [15, 25]]]

@@ -584,12 +584,23 @@ def isolate_executables():
 
 def isolate_model_config():
     """Bind isolated acceptance to the same verified tunnels as the workbench."""
+    fast_ready = request_ok(FAST_VLM_PORT, "/v1/models")
     return {
         "llm_url": f"http://127.0.0.1:{VLM_PORT}/v1",
         "llm_model": "labelagent-vlm8b",
+        "llm_prompt_profile": "compact",
         "sam3_url": f"http://127.0.0.1:{SAM_PORT}",
         "sam3_point_url": f"http://127.0.0.1:{SAM_PORT}",
         "ego_bottom_point_fallback": True,
+        "llm_fast_url": (f"http://127.0.0.1:{FAST_VLM_PORT}/v1"
+                         if fast_ready else ""),
+        "llm_fast_model": "labelagent-vlm8b" if fast_ready else "",
+        "llm_fast_max_pixels": 640 * 512,
+        "llm_fast_max_long_edge": 640,
+        "llm_fast_max_extra_pixels": 4 * 640 * 512,
+        "llm_fast_max_extra_long_edge": 1280,
+        "llm_fast_timeout_seconds": 60,
+        "llm_fast_cooldown_seconds": 60,
     }
 
 

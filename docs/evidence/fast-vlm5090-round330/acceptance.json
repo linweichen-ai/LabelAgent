@@ -1,0 +1,76 @@
+{
+  "schema_version": "labelagent.fast-vlm5090-acceptance.v1",
+  "date": "2026-11-20",
+  "result": "accepted_for_optional_small-image_route",
+  "service": {
+    "remote_host": "factory-5090",
+    "remote_port": 18878,
+    "local_tunnel_port": 38868,
+    "model": "labelagent-vlm8b",
+    "quantization": "nf4",
+    "image_token_budget": 512,
+    "remote_pid_at_acceptance": 1221856,
+    "real_request_seconds": 1.241
+  },
+  "comparison": {
+    "baseline": "round328 compact prompt, primary 4090 VLM only",
+    "candidate": "round330 compact prompt, optional 5090 VLM for small images",
+    "camera1": {
+      "baseline_candidate_visible_ms": 18797,
+      "candidate_candidate_visible_ms": 4453,
+      "baseline_total_ms": 91500,
+      "candidate_total_ms": 25688,
+      "total_reduction_percent": 71.93,
+      "candidate_counts": {"floor": 1, "pallet": 10, "person": 5},
+      "geometry_sha256": "03d4d439d1c96aaebf73aada120d4d3ef6a94c16bd02c02e94fd7176d8e4db98",
+      "human_review_count": 1
+    },
+    "camera2": {
+      "baseline_candidate_visible_ms": 18016,
+      "candidate_candidate_visible_ms": 3407,
+      "baseline_total_ms": 70204,
+      "candidate_total_ms": 13125,
+      "total_reduction_percent": 81.30,
+      "candidate_counts": {"ego": 1, "floor": 1, "pallet": 5, "person": 2},
+      "geometry_sha256": "d8b16d47453d407c016d21395b52d94903196fad20fbd1ac9fdcf86626380996",
+      "human_review_count": 1
+    }
+  },
+  "invariants": {
+    "candidate_geometry_matches_round328": true,
+    "labels_match_round328": true,
+    "human_review_route_counts_match_round328": true,
+    "truth_unchanged": true,
+    "references_unchanged": true,
+    "production_candidates_unchanged": true,
+    "training_approval_written": false
+  },
+  "tests": {
+    "python": "1123 passed, 186 subtests passed",
+    "javascript": "148 passed",
+    "isolated_browser_camera1": true,
+    "isolated_browser_camera2": true,
+    "page_errors": 0,
+    "http_errors": 0,
+    "truth_write_requests": 0
+  },
+  "backups": {
+    "remote_code": "/home/clw/projects/labelagent-5090/backups/round329-dedicated-vlm-20261120",
+    "local_production_state": "D:/Apps/LabelAgent/.local/backups/fast-vlm5090-round329-20261120"
+  },
+  "screenshots": {
+    "camera1": {
+      "path": "camera1.png",
+      "sha256": "b3698e34b26be4bcfcaa23bf24445f8cada0ca1d1feeada7f11590ba0bc8cc1c"
+    },
+    "camera2": {
+      "path": "camera2.png",
+      "sha256": "8a247dd90c64a4a5856aeb4215086b15295b9ea203e338804af696f678776f13"
+    }
+  },
+  "limitations": [
+    "This is a two-camera, one-frame-per-camera acceptance, not a generalization claim.",
+    "The 5090 route remains optional and the primary 4090 VLM remains the fallback.",
+    "Machine output remains candidate-only until explicit human review."
+  ]
+}

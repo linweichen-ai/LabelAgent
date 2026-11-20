@@ -243,13 +243,30 @@ class RemoteWorkbenchManagerTests(unittest.TestCase):
             self.assertEqual(MODULE.select_standard_sam_port(), MODULE.SAM_PORT)
 
     def test_isolated_acceptance_uses_the_verified_primary_tunnels(self):
-        self.assertEqual(MODULE.isolate_model_config(), {
+        with mock.patch.object(MODULE, "request_ok", return_value=False):
+            config = MODULE.isolate_model_config()
+        self.assertEqual(config, {
             "llm_url": f"http://127.0.0.1:{MODULE.VLM_PORT}/v1",
             "llm_model": "labelagent-vlm8b",
+            "llm_prompt_profile": "compact",
             "sam3_url": f"http://127.0.0.1:{MODULE.SAM_PORT}",
             "sam3_point_url": f"http://127.0.0.1:{MODULE.SAM_PORT}",
             "ego_bottom_point_fallback": True,
+            "llm_fast_url": "",
+            "llm_fast_model": "",
+            "llm_fast_max_pixels": 640 * 512,
+            "llm_fast_max_long_edge": 640,
+            "llm_fast_max_extra_pixels": 4 * 640 * 512,
+            "llm_fast_max_extra_long_edge": 1280,
+            "llm_fast_timeout_seconds": 60,
+            "llm_fast_cooldown_seconds": 60,
         })
+        with mock.patch.object(MODULE, "request_ok", return_value=True) as ready:
+            fast_config = MODULE.isolate_model_config()
+        ready.assert_called_once_with(MODULE.FAST_VLM_PORT, "/v1/models")
+        self.assertEqual(fast_config["llm_fast_url"],
+                         f"http://127.0.0.1:{MODULE.FAST_VLM_PORT}/v1")
+        self.assertEqual(fast_config["llm_fast_model"], "labelagent-vlm8b")
         source = PATH.read_text(encoding="utf-8")
         self.assertNotIn(
             'SAM3_URL="http://127.0.0.1:18766"', source)

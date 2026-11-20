@@ -4872,6 +4872,59 @@ class ServerTests(unittest.TestCase):
                 server.clear_reference_discovery_cache()
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work
 
+    def test_reference_discovery_prefetch_does_not_wait_for_slow_parallel_sam(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        server.clear_reference_discovery_cache()
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0",
+                "labels": ["person", "slope"], "truth": {}, "reference_frames": {},
+                "config": {"sam_multi_prompt": True}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            sam_started, allow_sam_finish, sam_finished = (
+                threading.Event(), threading.Event(), threading.Event())
+            warmed = {"prefetched": True, "prompts": {
+                "person": {"results": []}, "slope": {"results": []}},
+                "diagnostics": {"response_cache": {"hit": False,
+                    "coalesced": False, "entries": 1}}}
+
+            def blocked_sam(*_args, **_kwargs):
+                sam_started.set()
+                self.assertTrue(allow_sam_finish.wait(2))
+                sam_finished.set()
+                return warmed
+
+            try:
+                with patch.object(server, "sam_text_multi_prefetch",
+                                  side_effect=blocked_sam) as sam_mock, \
+                     patch.object(server, "discover_reference_labels",
+                                  return_value=({"visible_labels": ["person"],
+                                      "uncertain_labels": ["slope"],
+                                      "unknown_candidates": []}, 0)):
+                    started = time.perf_counter()
+                    response = server.app.test_client().post(
+                        "/api/reference_discovery/prefetch", json={
+                            "frame": 1, "expected_path": str(FakeVideo.path),
+                            "expected_topic": "camera0"})
+                    elapsed = time.perf_counter() - started
+                self.assertTrue(sam_started.is_set())
+                self.assertLess(elapsed, 0.75)
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertEqual(sam_mock.call_count, 1)
+                self.assertEqual(response.json["registry_sam_prefetch"]["code"],
+                                 "warming")
+                self.assertTrue(response.json["registry_sam_prefetch"]
+                                ["deferred_completion"])
+                self.assertEqual(response.json["sam_prefetch"]["code"],
+                                 "registry_warming")
+                self.assertEqual(server.state["truth"], {})
+                self.assertEqual(server.state["candidates"], {})
+            finally:
+                allow_sam_finish.set()
+                self.assertTrue(sam_finished.wait(1))
+                server.clear_reference_discovery_cache()
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
     def test_reference_draft_reuses_exact_prefetched_discovery_without_second_vlm_call(self):
         old_state, old_status, old_work = server.state, server.run_status, server.WORK
         server.clear_reference_discovery_cache()
@@ -4962,6 +5015,47 @@ class ServerTests(unittest.TestCase):
                 self.assertEqual(server.state["truth"], {})
                 self.assertEqual(server.state["candidates"], {})
             finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
+    def test_reference_discovery_prefetch_busy_vlm_does_not_wait_for_parallel_sam(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0",
+                "labels": ["person", "slope"], "truth": {}, "reference_frames": {},
+                "config": {"sam_multi_prompt": True}, "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            sam_started, allow_sam_finish, sam_finished = (
+                threading.Event(), threading.Event(), threading.Event())
+
+            def blocked_sam(*_args, **_kwargs):
+                sam_started.set()
+                self.assertTrue(allow_sam_finish.wait(2))
+                sam_finished.set()
+                return {"prefetched": True, "prompts": {}, "diagnostics": {}}
+
+            try:
+                with patch.object(server, "discover_reference_labels", side_effect=ValueError(
+                        "大模型请求失败（HTTP 503）：Local VLM is busy")), \
+                     patch.object(server, "sam_text_multi_prefetch",
+                                  side_effect=blocked_sam) as sam_prefetch_mock:
+                    started = time.perf_counter()
+                    response = server.app.test_client().post(
+                        "/api/reference_discovery/prefetch", json={
+                            "frame": 1, "expected_path": str(FakeVideo.path),
+                            "expected_topic": "camera0"})
+                    elapsed = time.perf_counter() - started
+                self.assertTrue(sam_started.is_set())
+                self.assertLess(elapsed, 0.75)
+                self.assertEqual(response.status_code, 202, response.json)
+                self.assertFalse(response.json["prefetched"])
+                self.assertEqual(response.json["code"], "vlm_busy")
+                self.assertEqual(sam_prefetch_mock.call_count, 1)
+                self.assertEqual(server.state["truth"], {})
+                self.assertEqual(server.state["candidates"], {})
+            finally:
+                allow_sam_finish.set()
+                self.assertTrue(sam_finished.wait(1))
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work
 
     def test_reference_discovery_prefetch_scope_change_during_model_is_clean_noop(self):

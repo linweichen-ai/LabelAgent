@@ -1,0 +1,29 @@
+{
+  "schema_version": "labelagent.nonblocking-sam-prefetch-round369.v1",
+  "date": "2026-11-20",
+  "objective": "Prevent an unusually slow or busy speculative SAM3 warm-up from blocking a completed VLM discovery response",
+  "behavior": {
+    "parallel_sam_grace_seconds": 0.1,
+    "normal_ready_result_reused": true,
+    "slow_sam_result_code": "registry_warming",
+    "slow_sam_deferred_completion": true,
+    "vlm_busy_http_status": 202,
+    "does_not_cancel_user_work": true
+  },
+  "tests": {
+    "targeted_reference_discovery_prefetch": "6 passed",
+    "python": "1187 passed, 190 subtests passed",
+    "node": "156 passed",
+    "slow_sam_response_bound_seconds": 0.75,
+    "busy_vlm_response_bound_seconds": 0.75
+  },
+  "safety": {
+    "human_truth_writes": 0,
+    "candidate_writes": 0,
+    "training_approval": false,
+    "model_services_stopped_for_failure_test": false,
+    "failure_paths_tested_with_isolated_mocks": true,
+    "visible_vehicle_point_recovery": null
+  },
+  "scope": "Reliability and responsiveness guard; does not claim normal-path model inference acceleration"
+}

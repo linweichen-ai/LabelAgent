@@ -15,7 +15,7 @@ from urllib.parse import urlsplit
 import base64
 import hashlib
 import marshal
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from functools import wraps
 from datetime import datetime, timezone
 from pathlib import Path
@@ -82,6 +82,7 @@ reference_discovery_cache_lock = threading.Lock()
 reference_discovery_cache = {}
 REFERENCE_DISCOVERY_CACHE_TTL_SECONDS = 300
 REFERENCE_DISCOVERY_CACHE_MAX_ENTRIES = 16
+REFERENCE_DISCOVERY_PARALLEL_SAM_GRACE_SECONDS = 0.1
 PRIMARY_MODEL_PREWARM_TOKENS = 2048
 run_status = {"status": "idle"}
 run_stop_event = threading.Event()
@@ -5222,9 +5223,14 @@ def prefetch_reference_discovery():
     discovery_elapsed_ms = round((time.perf_counter() - started) * 1000, 3)
     registry_warmed = None
     registry_elapsed_ms = None
+    registry_still_warming = False
     if registry_future is not None:
         try:
-            registry_warmed, registry_elapsed_ms = registry_future.result()
+            # VLM discovery normally takes longer than this SAM warm-up.  If
+            # SAM is exceptionally slow or busy, do not turn speculative work
+            # into a new blocking step after the VLM result is already ready.
+            registry_warmed, registry_elapsed_ms = registry_future.result(
+                timeout=REFERENCE_DISCOVERY_PARALLEL_SAM_GRACE_SECONDS)
             registry_cache = ((registry_warmed.get("diagnostics") or {}).get(
                 "response_cache") if isinstance(registry_warmed, dict) else None) or {}
             if registry_warmed.get("prefetched") is False:
@@ -5240,12 +5246,18 @@ def prefetch_reference_discovery():
                     coalesced=registry_cache.get("coalesced"),
                     cache_entries=registry_cache.get("entries"),
                 )
+        except FutureTimeoutError:
+            registry_still_warming = True
+            registry_sam_prefetch.update(
+                code="warming", deferred_completion=True,
+                discovery_elapsed_ms=discovery_elapsed_ms)
         except Exception as error:
             registry_sam_prefetch.update(
                 code="sam_prefetch_unavailable", error=str(error)[:300])
             registry_warmed = None
         finally:
-            registry_executor.shutdown(wait=True)
+            registry_executor.shutdown(wait=not registry_still_warming,
+                                       cancel_futures=False)
     selected, recall_probes = candidate_labels_with_recall_probes(discovery, labels)
     sam_prefetch = {
         "prefetched": False,
@@ -5259,36 +5271,41 @@ def prefetch_reference_discovery():
                       for item in description.get("prompts", [])}
         sam_started = time.perf_counter()
         warmed = None
-        try:
-            if prompt_map == registry_prompt_map and registry_warmed is not None:
-                warmed = registry_warmed
-                sam_elapsed_ms = registry_elapsed_ms
-                sam_prefetch["parallel_with_discovery"] = True
-            else:
-                warmed = sam_text_multi_prefetch(target_image, prompt_map, config)
-                sam_elapsed_ms = round((time.perf_counter() - sam_started) * 1000, 3)
-            cache = ((warmed.get("diagnostics") or {}).get("response_cache")
-                     if isinstance(warmed, dict) else None) or {}
-            if warmed.get("prefetched") is False:
-                sam_prefetch.update(code=warmed.get("code", "not_prefetched"),
-                                    elapsed_ms=sam_elapsed_ms)
-            else:
-                sam_prefetch.update(
-                    prefetched=True,
-                    code="ready",
-                    elapsed_ms=sam_elapsed_ms,
-                    prompt_sha256=_sha256_json(prompt_map),
-                    response_sha256=_sha256_json(warmed.get("prompts")),
-                    cache_hit=cache.get("hit"),
-                    coalesced=cache.get("coalesced"),
-                    cache_entries=cache.get("entries"),
-                )
-        except Exception as error:
-            # VLM discovery is still useful when an older SAM service lacks
-            # speculative prefetch or a transient transport error occurs.
-            sam_prefetch.update(code="sam_prefetch_unavailable",
-                                error=str(error)[:300],
-                                elapsed_ms=round((time.perf_counter() - sam_started) * 1000, 3))
+        if registry_still_warming:
+            sam_prefetch.update(
+                code="registry_warming", parallel_with_discovery=True,
+                deferred_completion=True)
+        else:
+            try:
+                if prompt_map == registry_prompt_map and registry_warmed is not None:
+                    warmed = registry_warmed
+                    sam_elapsed_ms = registry_elapsed_ms
+                    sam_prefetch["parallel_with_discovery"] = True
+                else:
+                    warmed = sam_text_multi_prefetch(target_image, prompt_map, config)
+                    sam_elapsed_ms = round((time.perf_counter() - sam_started) * 1000, 3)
+                cache = ((warmed.get("diagnostics") or {}).get("response_cache")
+                         if isinstance(warmed, dict) else None) or {}
+                if warmed.get("prefetched") is False:
+                    sam_prefetch.update(code=warmed.get("code", "not_prefetched"),
+                                        elapsed_ms=sam_elapsed_ms)
+                else:
+                    sam_prefetch.update(
+                        prefetched=True,
+                        code="ready",
+                        elapsed_ms=sam_elapsed_ms,
+                        prompt_sha256=_sha256_json(prompt_map),
+                        response_sha256=_sha256_json(warmed.get("prompts")),
+                        cache_hit=cache.get("hit"),
+                        coalesced=cache.get("coalesced"),
+                        cache_entries=cache.get("entries"),
+                    )
+            except Exception as error:
+                # VLM discovery is still useful when an older SAM service lacks
+                # speculative prefetch or a transient transport error occurs.
+                sam_prefetch.update(code="sam_prefetch_unavailable",
+                                    error=str(error)[:300],
+                                    elapsed_ms=round((time.perf_counter() - sam_started) * 1000, 3))
         slope_payload = ((warmed.get("prompts") or {}).get("slope")
                          if isinstance(warmed, dict) else None)
         if (sam_prefetch.get("prefetched") is True and "slope" in selected

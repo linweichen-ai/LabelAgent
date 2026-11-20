@@ -51,16 +51,28 @@ def _frame_items(payload: object, frame: int) -> list[dict]:
     return copy.deepcopy(payload) if isinstance(payload, list) else []
 
 
-def _frame_run(payload: object, frame: int) -> dict:
-    if isinstance(payload, dict) and str(frame) in payload:
-        payload = payload[str(frame)]
-    return copy.deepcopy(payload) if isinstance(payload, dict) else {}
+def _frame_run(payload: object, frame: int) -> tuple[dict, bool]:
+    """Return one run and whether the server actually stored that frame key.
+
+    ``/api/frame_state`` returns an empty mapping when a candidate predates the
+    Agent trace.  Treating that absence as a stored empty object changes the
+    optimistic-lock hash from ``null`` to ``sha256({})`` and makes every safe
+    migration of such a frame fail with HTTP 409.
+    """
+    if not isinstance(payload, dict):
+        return {}, False
+    key = str(frame)
+    if key not in payload:
+        return {}, False
+    value = payload[key]
+    return (copy.deepcopy(value), True) if isinstance(value, dict) else ({}, True)
 
 
 def _without_geometry(candidates: list[dict]) -> list[dict]:
     output = copy.deepcopy(candidates)
     for candidate in output:
-        candidate.pop("points", None)
+        for field in ("points", "parts", "holes"):
+            candidate.pop(field, None)
     return output
 
 
@@ -81,7 +93,7 @@ def _read_frame(base_url: str, frame: int, scope: dict) -> dict:
 
 def _frame_binding(frame: int, state: dict) -> dict:
     candidates = _frame_items(state.get("candidates"), frame)
-    run = _frame_run(state.get("agent_runs"), frame)
+    run, run_present = _frame_run(state.get("agent_runs"), frame)
     return {
         "frame": frame,
         "candidate_count": len(candidates),
@@ -89,7 +101,7 @@ def _frame_binding(frame: int, state: dict) -> dict:
             str(item.get("label", "")).casefold() == "pallet"
             for item in candidates),
         "candidate_artifact_sha256": _canonical_sha(candidates),
-        "agent_run_sha256": _canonical_sha(run),
+        "agent_run_sha256": _canonical_sha(run) if run_present else None,
     }
 
 
@@ -189,7 +201,7 @@ def migrate_collection(base_url: str, *, start_frame: int = 0,
         after = _read_frame(base_url, frame, scope)
         after_candidates = _frame_items(after.get("candidates"), frame)
         after_truth = _frame_items(after.get("truth"), frame)
-        after_run = _frame_run(after.get("agent_runs"), frame)
+        after_run, after_run_present = _frame_run(after.get("agent_runs"), frame)
         after_revisions = list((after.get("candidate_revision_summary") or {}).get(
             str(frame), []))
         if prior_truth != after_truth:
@@ -203,6 +215,8 @@ def migrate_collection(base_url: str, *, start_frame: int = 0,
         if len(after_revisions) - len(prior_revisions) != expected_revision_delta:
             raise RuntimeError(f"frame {frame}: revision ledger delta is invalid")
         if changed:
+            if not after_run_present:
+                raise RuntimeError(f"frame {frame}: replacement run is missing")
             if after_run.get("candidate_class_audits") != []:
                 raise RuntimeError(f"frame {frame}: stale class audits were not cleared")
             if after_run.get("human_review_required") is not True:

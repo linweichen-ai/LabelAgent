@@ -2663,3 +2663,18 @@ GET状态轮询`ERR_ABORTED`的预期取消分类，其他错误仍失败。
 `human_truth=false`、`approved_for_training=false`。完整Python 1,102项、JavaScript 148项通过；隔离端口已
 关闭，正式state哈希仍为`237844F7...DDFAB`，工作台、两路SAM和VLM均HTTP200。详见
 `NEW_DATASET_CURRENT_ACCEPTANCE_ROUND325_20261120.md`与结构化证据。
+
+### Round 326–327：四相机复验与 camera3 假坡保护上线（2026-11-20）
+
+在隔离工作台对 Capture 真实 MCAP 的 camera0–3 各跑一帧，4/4 均完成候选生成、原图叠加和
+后台复核，页面/HTTP/真值写入错误均为0。camera1/2首批候选约19秒可见，但后台长尾分别约
+134秒和239秒，仍需优化。camera3发现一个明确假坡：46,382像素中46,334像素落在高置信
+ego内，覆盖率99.8965%。
+
+新增同帧候选冲突保护：仅当ego分数至少0.85且slope至少80%被其覆盖时，将slope移出自动
+叠加并路由人工复核；不声明真值、不批准训练。真实复跑后camera3只保留floor 2和ego 1，
+假坡消失；camera0真实坡仍保留，保护状态`no_conflict`。Python 1,104项、JavaScript 148项、
+ego专项14项和两帧浏览器验收全部通过。正式源码已备份部署，state哈希部署前后均为
+`237844F7...DDFAB`；工作台、4090 VLM、4090/5090 SAM均HTTP200。5090可选VLM未就绪，
+系统继续使用4090。最终复跑还确认假坡的人工复核记录在后台Agent完成后仍保留1条，不再只
+存在隐藏过滤账本中。详见`NEW_DATASET_CROSS_VIEW_SLOPE_GUARD_ROUNDS326_327_20261120.md`。

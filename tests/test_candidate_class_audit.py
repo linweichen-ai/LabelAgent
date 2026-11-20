@@ -347,11 +347,19 @@ class CandidateClassAuditTests(unittest.TestCase):
         candidate = copy.deepcopy(self.candidate)
         artifact = server._sha256_json([candidate])
         image_hash = hashlib.sha256(self.image).hexdigest()
+        slope_guard_review = {
+            "label": "slope",
+            "reason_code": "slope_candidate_current_ego_conflict",
+            "route": "human_review_required",
+            "human_truth": False,
+            "approved_for_training": False,
+        }
         prior_run = {"agent_review_status": "pending", "agent_review_deferred": True,
                      "candidate_class_audit_status": "blocked_on_agent_review",
                      "candidate_artifact_sha256": artifact, "draft_labels": ["ego"],
                      "max_rounds": 1, "candidate_filters": [],
-                     "sam_generation": {"mode": "multi_prompt"}, "review_queue": [],
+                     "sam_generation": {"mode": "multi_prompt"},
+                     "review_queue": [slope_guard_review],
                      "candidate_class_audits": [], "input_sha256": image_hash}
         state = {"video": SimpleNamespace(path=Path("test.png"), topics={"camera": {"count": 1}}),
                  "topic": "camera", "labels": self.labels, "truth": {}, "config": {},
@@ -387,6 +395,8 @@ class CandidateClassAuditTests(unittest.TestCase):
                          "complete")
         self.assertEqual(state["agent_runs"]["0"]["agent_review_status"], "complete")
         self.assertEqual(state["agent_runs"]["0"]["candidate_class_audit_status"], "pending")
+        self.assertEqual(state["agent_runs"]["0"]["review_queue"],
+                         [slope_guard_review])
         review.assert_called_once()
 
     def test_deferred_agent_refinement_restores_bound_reference_context(self):

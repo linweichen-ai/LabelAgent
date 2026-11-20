@@ -1961,6 +1961,29 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(unchanged, [covered])
         self.assertEqual(warnings, [])
 
+    def test_slope_current_ego_guard_requires_strong_nearly_covering_candidate(self):
+        ego = shape(1, "ego", 2, 24)
+        ego["score"] = 0.95
+        covered = shape(2, "slope", 3, 20)
+        disjoint = shape(3, "slope", 27, 38)
+        retained, suppressed = workflow.filter_slope_current_ego_conflicts(
+            [ego, covered, disjoint], 40, 40)
+        self.assertEqual([item["id"] for item in retained], [1, 3])
+        self.assertEqual([item["id"] for item in suppressed], [2])
+        self.assertEqual(suppressed[0]["reason_code"],
+                         "slope_candidate_current_ego_conflict")
+        self.assertEqual(suppressed[0]["route"], "human_review_required")
+        self.assertFalse(suppressed[0]["human_truth"])
+        self.assertFalse(suppressed[0]["approved_for_training"])
+        self.assertGreaterEqual(suppressed[0]["slope_covered_by_current_ego"], 0.8)
+
+        weak_ego = copy.deepcopy(ego)
+        weak_ego["score"] = 0.84
+        unchanged, warnings = workflow.filter_slope_current_ego_conflicts(
+            [weak_ego, covered], 40, 40)
+        self.assertEqual(unchanged, [weak_ego, covered])
+        self.assertEqual(warnings, [])
+
     def test_robot_and_person_prompts_use_exact_canonical_queries(self):
         labels = ["ego", "other_robot", "person"]
         expected = [

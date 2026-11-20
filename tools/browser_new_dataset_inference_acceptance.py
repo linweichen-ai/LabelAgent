@@ -13,6 +13,9 @@ from urllib.parse import urlparse
 from playwright.sync_api import sync_playwright
 
 
+CAPTURE_TOPICS = tuple(f"/capture/camera_{index}/image" for index in range(4))
+
+
 def expected_status_poll_abort(method: str, url: str, failure: str) -> bool:
     """Separate the UI's deliberate stale-poll cancellation from outages."""
     return (
@@ -27,6 +30,9 @@ def main() -> int:
     parser.add_argument("--base-url", required=True)
     parser.add_argument("--output-json", required=True, type=Path)
     parser.add_argument("--screenshot", required=True, type=Path)
+    parser.add_argument(
+        "--expected-topic", choices=CAPTURE_TOPICS, default=CAPTURE_TOPICS[0]
+    )
     parser.add_argument("--timeout-seconds", default=180, type=int)
     args = parser.parse_args()
 
@@ -99,11 +105,11 @@ def main() -> int:
             # pass after the UI regressed back to an ambiguous dataset name.
             assert identity["kind"] == "新实采数据"
             assert "Capture_20261103" in (identity["name"] or "")
-            assert "/capture/camera_0/image" in identity["detail"]
+            assert args.expected_topic in identity["detail"]
             assert "4 路图像" in identity["detail"]
 
             initial = page.evaluate("() => window.currentWorkbenchFrameState()")
-            assert initial["topic"] == "/capture/camera_0/image"
+            assert initial["topic"] == args.expected_topic
             assert len(initial["labels"]) == 8
             assert len(initial["auto_labels"]) == 8
             assert initial.get("truth") == {}

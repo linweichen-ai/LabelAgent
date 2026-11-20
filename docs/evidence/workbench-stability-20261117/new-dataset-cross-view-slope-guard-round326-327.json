@@ -1,0 +1,86 @@
+{
+  "schema_version": "labelagent.new_dataset_cross_view_slope_guard.v1",
+  "date": "2026-11-20",
+  "dataset": {
+    "kind": "新实采数据",
+    "name": "Capture_20261103 · 常熟实采 · 四相机",
+    "frame_count_per_camera": 152,
+    "camera_count": 4,
+    "selected_label_count": 8
+  },
+  "round326": {
+    "workflow_acceptance_passed": 4,
+    "workflow_acceptance_total": 4,
+    "cameras": [
+      {"camera": 0, "candidate_visible_ms": 2312, "background_complete_ms": 3234, "total_ms": 4562, "candidate_counts": {"ego": 1, "floor": 1, "person": 1, "slope": 1}},
+      {"camera": 1, "candidate_visible_ms": 19484, "background_complete_ms": 133891, "total_ms": 135203, "candidate_counts": {"floor": 1, "pallet": 10, "person": 5}},
+      {"camera": 2, "candidate_visible_ms": 19343, "background_complete_ms": 238515, "total_ms": 239797, "candidate_counts": {"ego": 1, "floor": 1, "pallet": 5, "person": 2}},
+      {"camera": 3, "candidate_visible_ms": 19515, "background_complete_ms": 35265, "total_ms": 36562, "candidate_counts": {"ego": 1, "floor": 2, "slope": 1}}
+    ],
+    "quality_finding": {
+      "camera": 3,
+      "finding": "slope false positive inside host ego structure",
+      "slope_area_pixels": 46382,
+      "intersection_pixels": 46334,
+      "slope_covered_by_ego": 0.998965,
+      "ego_score": 0.95703125
+    }
+  },
+  "round327": {
+    "guard": {
+      "reason_code": "slope_candidate_current_ego_conflict",
+      "minimum_ego_score": 0.85,
+      "maximum_slope_covered": 0.8,
+      "route": "human_review_required",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    "camera3_negative": {
+      "passed": true,
+      "candidate_visible_ms": 2656,
+      "background_complete_ms": 3468,
+      "total_ms": 4890,
+      "candidate_counts": {"ego": 1, "floor": 2},
+      "suppressed_slope_count": 1,
+      "recorded_overlap": 0.999,
+      "persisted_human_review_records": 1,
+      "truth_write_count": 0
+    },
+    "camera0_positive": {
+      "passed": true,
+      "candidate_visible_ms": 2906,
+      "background_complete_ms": 3875,
+      "total_ms": 5141,
+      "candidate_counts": {"ego": 1, "floor": 1, "person": 1, "slope": 1},
+      "suppressed_slope_count": 0,
+      "post_guard_status": "no_conflict",
+      "truth_write_count": 0
+    }
+  },
+  "tests": {
+    "python_unittest": {"passed": 1104, "failed": 0},
+    "javascript": {"passed": 148, "failed": 0},
+    "ego_fallback_pytest": {"passed": 14, "failed": 0},
+    "browser_real_frames": {"passed": 2, "failed": 0}
+  },
+  "deployment": {
+    "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\slope-current-ego-guard-round327-20261120-091500",
+    "review_persistence_backup": "D:\\Apps\\LabelAgent\\.local\\backups\\slope-review-persistence-round327-20261120-093000",
+    "state_sha256_before": "237844F73FF4495E575C6A3F966260B9385EFBDF1EDEE7D0E5177518470DDFAB",
+    "state_sha256_after": "237844F73FF4495E575C6A3F966260B9385EFBDF1EDEE7D0E5177518470DDFAB",
+    "workflow_sha256": "72517269BF6733EE6D576062DC2E07EADC0D8C27E4A1758A50487818F7F56407",
+    "server_sha256": "C929B5D77F047D4C71348C3A3F0B3E6459874B6802FE13A0B9FFE822CC991BCE",
+    "workbench_http": 200,
+    "primary_vlm_http": 200,
+    "sam4090_http": 200,
+    "sam5090_http": 200,
+    "optional_vlm5090_ready": false
+  },
+  "storage": {
+    "c_free_gib": 0.48,
+    "d_free_gib": 1.49,
+    "status": "low",
+    "bulk_import_or_training_started": false
+  }
+}

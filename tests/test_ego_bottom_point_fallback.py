@@ -175,6 +175,44 @@ def test_reference_recovery_fails_closed_to_review_queue():
     assert result["review_queue"][-1]["reason_code"] == "ego_point_fallback_failed"
 
 
+def test_post_recovery_guard_routes_slope_inside_strong_ego_to_review():
+    result = {
+        "shapes": [
+            {"id": 1, "label": "slope", "score": 0.66,
+             "points": [[250, 400], [390, 400], [390, 470], [250, 470]],
+             "holes": []},
+            {"id": 2, "label": "ego", "score": 0.96,
+             "points": [[120, 330], [520, 330], [520, 511], [120, 511]],
+             "holes": []},
+            {"id": 3, "label": "floor", "score": 0.98,
+             "points": [[0, 0], [639, 0], [639, 300], [0, 300]],
+             "holes": []},
+        ],
+        "candidates_added": 3,
+        "review_queue": [],
+        "agent": {"candidate_filters": []},
+    }
+
+    status = server.filter_post_recovery_slope_ego_conflicts(
+        image_bytes(), result)
+
+    assert status == {
+        "status": "human_review_required",
+        "suppressed_count": 1,
+        "reason_code": "slope_candidate_current_ego_conflict",
+        "candidate_only": True,
+        "human_truth": False,
+        "approved_for_training": False,
+    }
+    assert [shape["label"] for shape in result["shapes"]] == ["ego", "floor"]
+    assert result["candidates_added"] == 2
+    assert result["agent"]["candidate_filters"][0]["id"] == 1
+    assert result["review_queue"][0]["reason_code"] == (
+        "slope_candidate_current_ego_conflict")
+    assert result["review_queue"][0]["human_truth"] is False
+    assert result["review_queue"][0]["approved_for_training"] is False
+
+
 def test_reference_recovery_candidate_id_follows_final_merge_mapping():
     result = {
         "shapes": [{"id": 4, "label": "ego"}],

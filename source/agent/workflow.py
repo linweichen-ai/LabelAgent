@@ -2785,6 +2785,63 @@ def filter_slope_reference_ego_conflicts(shapes, reference, width, height,
     return retained, suppressed
 
 
+def filter_slope_current_ego_conflicts(shapes, width, height,
+                                       maximum_slope_covered=0.8,
+                                       minimum_ego_score=0.85):
+    """Route slope drafts lying inside a strong same-frame ego draft to review.
+
+    This is a candidate-only mutual-exclusion guard, not an assertion that the
+    machine ``ego`` mask is truth.  It therefore keeps the ego draft and records
+    the conflicting slope as human-review-required instead of deleting evidence
+    or promoting either mask to training data.  Requiring both near-total slope
+    coverage and a strong ego score preserves disjoint ramps ahead of the robot.
+    """
+    from .edit_agent import _rasterize
+    if not 0.0 < maximum_slope_covered <= 1.0:
+        raise ValueError("斜坡与当前自车候选冲突阈值无效")
+    if not 0.0 <= minimum_ego_score <= 1.0:
+        raise ValueError("当前自车候选最低分数无效")
+    egos = []
+    for shape in shapes:
+        score = shape.get("score")
+        if (shape.get("label") == "ego" and not isinstance(score, bool)
+                and isinstance(score, (int, float)) and score >= minimum_ego_score):
+            egos.append((shape, _rasterize(shape, width, height).astype(bool)))
+    if not egos:
+        return list(shapes), []
+    retained, suppressed = [], []
+    for shape in shapes:
+        if shape.get("label") != "slope":
+            retained.append(shape)
+            continue
+        slope_mask = _rasterize(shape, width, height).astype(bool)
+        slope_area = int(slope_mask.sum())
+        conflict = None
+        for ego, ego_mask in egos:
+            covered = (float(np.logical_and(slope_mask, ego_mask).sum()) / slope_area
+                       if slope_area else 0.0)
+            if covered >= maximum_slope_covered and (
+                    conflict is None or covered > conflict[1]):
+                conflict = (ego, covered)
+        if conflict is None:
+            retained.append(shape)
+            continue
+        ego, covered = conflict
+        suppressed.append({
+            "id": shape.get("id"), "label": "slope",
+            "reason": "slope_candidate_covered_by_current_ego_candidate",
+            "reason_code": "slope_candidate_current_ego_conflict",
+            "route": "human_review_required", "ego_id": ego.get("id"),
+            "slope_covered_by_current_ego": round(covered, 4),
+            "maximum_slope_covered": maximum_slope_covered,
+            "ego_score": float(ego.get("score")),
+            "minimum_ego_score": minimum_ego_score,
+            "machine_candidate_only": True, "human_truth": False,
+            "approved_for_training": False,
+        })
+    return retained, suppressed
+
+
 def candidate_class_overlap_conflicts(shapes, width, height, threshold=0.90):
     """Flag ambiguous class pairs without deleting or relabeling either mask."""
     from .edit_agent import _rasterize
@@ -3706,6 +3763,9 @@ class AnnotationAgent:
         self.shapes, slope_ego_filters = filter_slope_reference_ego_conflicts(
             self.shapes, self.reference, self.width, self.height)
         self.candidate_filters.extend(slope_ego_filters)
+        self.shapes, slope_current_ego_filters = filter_slope_current_ego_conflicts(
+            self.shapes, self.width, self.height)
+        self.candidate_filters.extend(slope_current_ego_filters)
         self.shapes, duplicate_filters = suppress_near_duplicate_candidates(
             self.shapes, self.width, self.height,
             preserve_class_conflicts=self.reference is None)

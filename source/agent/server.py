@@ -35,6 +35,7 @@ from .workflow import (DESCRIPTION_INPUT_VERSION, MAX_REVIEW_ROUNDS, RunCancelle
                        candidate_overlay, reference_overlay, chat, chat_batch,
                        refine_pallet_candidate_geometry,
                        ego_bottom_point_candidates,
+                       filter_slope_current_ego_conflicts,
                        sam_text_multi_prefetch, sam_text_prefetch,
                        slope_overlap_crop_images,
                        VISIBLE_LABEL_DEFINITIONS)
@@ -429,6 +430,45 @@ def recover_reference_ego_candidate(config, image, discovery, result):
     })
     return status | {"status": "candidate_generated", "candidate_count": len(recovered),
                      "candidate_id": recovered[0]["id"], "evidence": evidence}
+
+
+def filter_post_recovery_slope_ego_conflicts(image, result):
+    """Apply the same-frame slope/ego guard after late ego recovery.
+
+    Reference-draft generation may add the guarded ego fallback only after the
+    normal SAM generation filters have run.  Repeating this one conservative
+    conflict check here closes that ordering gap without treating either
+    machine mask as truth.  Suppressed slope evidence remains in both the
+    candidate-filter ledger and the human-review queue.
+    """
+    shapes = result.get("shapes") if isinstance(result, dict) else None
+    if not isinstance(shapes, list):
+        raise ValueError("ego 补救后的候选格式无效")
+    if not (any(item.get("label") == "slope" for item in shapes
+                if isinstance(item, dict))
+            and any(item.get("label") == "ego" for item in shapes
+                    if isinstance(item, dict))):
+        return {"status": "not_applicable", "suppressed_count": 0}
+    with Image.open(io.BytesIO(image)) as decoded:
+        width, height = decoded.size
+    retained, suppressed = filter_slope_current_ego_conflicts(
+        shapes, width, height)
+    if not suppressed:
+        return {"status": "no_conflict", "suppressed_count": 0}
+    result["shapes"] = retained
+    result["candidates_added"] = max(
+        0, int(result.get("candidates_added") or 0) - len(suppressed))
+    result.setdefault("agent", {}).setdefault("candidate_filters", []).extend(
+        copy.deepcopy(suppressed))
+    result.setdefault("review_queue", []).extend(copy.deepcopy(suppressed))
+    return {
+        "status": "human_review_required",
+        "suppressed_count": len(suppressed),
+        "reason_code": "slope_candidate_current_ego_conflict",
+        "candidate_only": True,
+        "human_truth": False,
+        "approved_for_training": False,
+    }
 
 
 @app.after_request
@@ -4617,7 +4657,9 @@ def refine_reference_candidates():
         refined_sha = _sha256_json(refined)
         geometry_mutated = refined_geometry_sha != initial_geometry_sha
         preserved_queue = [item for item in previous_run.get("review_queue", [])
-                           if item.get("source") == "visible_label_discovery"]
+                           if (item.get("source") == "visible_label_discovery"
+                               or item.get("reason_code") ==
+                               "slope_candidate_current_ego_conflict")]
         replacement_run = copy.deepcopy(previous_run)
         for name in ("converged", "rounds", "max_rounds", "stop_reason", "audit",
                      "candidate_filters", "sam_generation"):
@@ -5315,6 +5357,8 @@ def generate_reference_draft():
                             on_progress=on_progress, reference=None)
             ego_recovery = recover_reference_ego_candidate(
                 config, target_image, discovery, result)
+            ego_recovery["post_recovery_slope_guard"] = (
+                filter_post_recovery_slope_ego_conflicts(target_image, result))
             result.setdefault("agent", {})["ego_bottom_point_fallback"] = ego_recovery
         if result["agent"].get("stop_reason") == "error":
             raise RuntimeError("SAM/VLM/Agent 未能生成有效参考帧草稿")

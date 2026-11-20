@@ -989,6 +989,7 @@ test('运行前弹窗与正式预检按帧数检查保存空间', () => {
   assert.match(index,/data-readiness="storage"/);
   assert.match(guide,/api\/run\/readiness\?count=/);
   assert.match(guide,/保存空间不足，尚未启动推理/);
+  assert.match(guide,/storage\.max_safe_frames/);
   assert.match(app,/data\.storage\?\.warning/);
   assert.match(app,/保存空间偏低，建议只运行少量帧/);
 });

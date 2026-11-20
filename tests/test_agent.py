@@ -6183,6 +6183,8 @@ class ServerTests(unittest.TestCase):
                 self.assertFalse(blocked["ready"])
                 self.assertEqual(blocked["code"], "storage_low")
                 self.assertIn("尚未启动推理", blocked["message"])
+                self.assertEqual(blocked["storage"]["max_safe_frames"], 5)
+                self.assertIn("最多可安全运行 5 帧", blocked["message"])
                 self.assertEqual(calls, [])
 
                 allowed = client.post("/api/run/data-readiness", json={
@@ -6190,6 +6192,7 @@ class ServerTests(unittest.TestCase):
                 self.assertTrue(allowed["ready"])
                 self.assertTrue(allowed["storage"]["warning"])
                 self.assertEqual(allowed["storage"]["required_mib"], 264.0)
+                self.assertEqual(allowed["storage"]["max_safe_frames"], 5)
                 self.assertEqual(calls, [("camera0", 1)])
         finally:
             server.state = old_state

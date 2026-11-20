@@ -497,7 +497,9 @@
       const storage = result?.storage;
       checks.storage = storage ? {
         ok: storage.ready === true,
-        pass: storage.warning ? `空间偏低但本次可运行 · 剩余 ${storage.free_mib} MiB` : `空间充足 · 剩余 ${storage.free_mib} MiB`,
+        pass: storage.warning
+          ? `空间偏低但本次可运行 · 剩余 ${storage.free_mib} MiB · 当前最多 ${storage.max_safe_frames} 帧`
+          : `空间充足 · 剩余 ${storage.free_mib} MiB`,
         fail: storage.message || '保存空间不足，尚未启动推理',
       } : {ok: false, pass: '', fail: '无法确认保存空间，尚未启动推理'};
     } catch (error) {

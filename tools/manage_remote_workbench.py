@@ -194,8 +194,16 @@ def config_write_payload(port, settings):
     config_sha = bootstrap.get("config_state_sha256")
     if not isinstance(config_sha, str) or len(config_sha) != 64:
         raise RuntimeError("标注页面未返回可核验的配置版本")
+    public_config = bootstrap.get("config")
+    comparable = (isinstance(public_config, dict)
+                  and not any(key.endswith("_key") for key in settings))
+    unchanged = comparable and all(
+        ((key not in public_config or public_config.get(key) in (None, ""))
+         if value in (None, "") else public_config.get(key) == value)
+        for key, value in settings.items())
     return {
         **settings,
+        "_labelagent_config_unchanged": unchanged,
         "expected_path": bootstrap.get("path", ""),
         "expected_topic": bootstrap.get("topic"),
         "expected_file_activation_generation": bootstrap.get(
@@ -208,6 +216,12 @@ def post_bound_config(port, settings, attempts=3):
     """Retry only a stale binding; never reuse an old configuration base."""
     for attempt in range(attempts):
         payload = config_write_payload(port, settings)
+        if payload.pop("_labelagent_config_unchanged", False):
+            return {
+                "saved": False,
+                "unchanged": True,
+                "config_state_sha256": payload["expected_config_state_sha256"],
+            }
         try:
             return post_json(port, "/api/config", payload)
         except urllib.error.HTTPError as error:

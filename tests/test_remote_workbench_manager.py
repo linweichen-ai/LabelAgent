@@ -27,10 +27,41 @@ class RemoteWorkbenchManagerTests(unittest.TestCase):
         self.assertEqual(config["expected_topic"], bootstrap["topic"])
         self.assertEqual(config["expected_file_activation_generation"], 17)
         self.assertEqual(config["expected_config_state_sha256"], "a" * 64)
+        self.assertFalse(config["_labelagent_config_unchanged"])
         self.assertEqual(labels["path"], bootstrap["path"])
         self.assertEqual(labels["topic"], bootstrap["topic"])
         self.assertEqual(labels["file_activation_generation"], 17)
         self.assertEqual(labels["expected_label_state_sha256"], "b" * 64)
+
+    def test_bound_config_skips_identical_public_configuration(self):
+        bootstrap = {
+            "path": "D:/data/example.mcap", "topic": "camera2",
+            "file_activation_generation": 17,
+            "config_state_sha256": "a" * 64,
+            "config": {"llm_model": "model", "llm_fast_url": ""},
+        }
+        with (mock.patch.object(MODULE, "get_json", return_value=bootstrap),
+              mock.patch.object(MODULE, "post_json") as post):
+            result = MODULE.post_bound_config(8765, {
+                "llm_model": "model", "llm_fast_url": ""})
+        self.assertEqual(result, {
+            "saved": False, "unchanged": True,
+            "config_state_sha256": "a" * 64})
+        post.assert_not_called()
+
+    def test_bound_config_never_skips_hidden_secret_update(self):
+        bootstrap = {
+            "path": "D:/data/example.mcap", "topic": "camera2",
+            "file_activation_generation": 17,
+            "config_state_sha256": "a" * 64,
+            "config": {"llm_model": "model"},
+        }
+        with (mock.patch.object(MODULE, "get_json", return_value=bootstrap),
+              mock.patch.object(MODULE, "post_json",
+                                return_value={"saved": True}) as post):
+            result = MODULE.post_bound_config(8765, {"llm_key": "secret"})
+        self.assertEqual(result, {"saved": True})
+        post.assert_called_once()
 
     def test_bound_config_reloads_binding_after_one_conflict(self):
         payloads = [

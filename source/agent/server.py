@@ -4340,16 +4340,22 @@ def run_storage_readiness(frame_count=1):
     free = int(usage.free)
     ready = free >= required
     warning = free < RUN_STORAGE_WARNING_BYTES
+    max_safe_frames = max(0, min(
+        100, (free - RUN_STORAGE_BASE_RESERVE_BYTES)
+        // RUN_STORAGE_PER_FRAME_BYTES))
     free_mib = round(free / (1024 * 1024), 2)
     required_mib = round(required / (1024 * 1024), 2)
     if not ready:
         message = (f"保存空间不足：工作目录所在磁盘可用 {free_mib:.2f} MiB，"
                    f"本次 {frame_count} 帧至少预留 {required_mib:.2f} MiB。"
-                   "尚未启动推理，请先释放空间或减少处理帧数")
+                   + (f"当前最多可安全运行 {max_safe_frames} 帧；"
+                      if max_safe_frames else "当前连 1 帧的安全余量也不足；")
+                   + "尚未启动推理，请先释放空间或减少处理帧数")
     elif warning:
         message = (f"保存空间偏低：可用 {free_mib:.2f} MiB；"
                    f"本次 {frame_count} 帧已通过 {required_mib:.2f} MiB 安全门槛，"
-                   "建议只运行少量帧并尽快释放空间")
+                   f"当前最多可安全运行 {max_safe_frames} 帧，"
+                   "建议不超过该数量并尽快释放空间")
     else:
         message = f"保存空间充足：可用 {free_mib:.2f} MiB"
     return {
@@ -4358,6 +4364,7 @@ def run_storage_readiness(frame_count=1):
         "frame_count": frame_count, "free_bytes": free,
         "free_mib": free_mib, "required_bytes": required,
         "required_mib": required_mib,
+        "max_safe_frames": int(max_safe_frames),
         "warning_below_bytes": RUN_STORAGE_WARNING_BYTES,
         "message": message,
     }

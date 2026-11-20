@@ -145,6 +145,25 @@ class RemoteWorkbenchManagerTests(unittest.TestCase):
             (Path(environment["LOCALAPPDATA"]) / "LabelAgent" / "runtime-temp"
              / "workbench-8765").resolve())
 
+    def test_workbench_temp_prefers_roomier_fallback_before_default_is_critical(self):
+        environment = {"LOCALAPPDATA": "C:/Users/test/AppData/Local"}
+        with mock.patch.object(MODULE, "storage_free_bytes", side_effect=[
+                300 * 1024 ** 2, 800 * 1024 ** 2]):
+            selected = MODULE.select_workbench_runtime_temp(
+                environment, "D:/LabelAgent/runtime-temp/workbench-8765")
+        self.assertEqual(
+            selected,
+            (Path(environment["LOCALAPPDATA"]) / "LabelAgent" / "runtime-temp"
+             / "workbench-8765").resolve())
+
+    def test_workbench_temp_keeps_default_when_it_has_warning_headroom(self):
+        default = Path("D:/LabelAgent/runtime-temp/workbench-8765").resolve()
+        with mock.patch.object(MODULE, "storage_free_bytes", side_effect=[
+                3 * 1024 ** 3, 8 * 1024 ** 3]):
+            selected = MODULE.select_workbench_runtime_temp(
+                {"LOCALAPPDATA": "C:/Users/test/AppData/Local"}, default)
+        self.assertEqual(selected, default)
+
     def test_workbench_temp_override_is_explicit_and_port_scoped(self):
         selected = MODULE.select_workbench_runtime_temp(
             {"LABELAGENT_RUNTIME_TEMP_ROOT": "C:/LabelAgentTemp"},

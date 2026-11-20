@@ -107,19 +107,25 @@ def storage_free_bytes(path):
 
 
 def select_workbench_runtime_temp(environment, default_runtime_temp, *, port=WEB_PORT):
-    """Choose a writable temp volume without weakening the 256 MiB gate."""
+    """Choose the safer temp volume without weakening the 256 MiB gate."""
     override = environment.get("LABELAGENT_RUNTIME_TEMP_ROOT")
     if override:
         return Path(override).resolve() / f"workbench-{port}"
     default_runtime_temp = Path(default_runtime_temp).resolve()
-    if storage_free_bytes(default_runtime_temp) >= STORAGE_CRITICAL_BYTES:
-        return default_runtime_temp
     local_app_data = environment.get("LOCALAPPDATA")
     fallback_root = (Path(local_app_data) if local_app_data
                      else Path.home() / "AppData" / "Local")
     fallback = (fallback_root / "LabelAgent" / "runtime-temp"
                 / f"workbench-{port}").resolve()
-    if storage_free_bytes(fallback) >= STORAGE_CRITICAL_BYTES:
+    default_free = storage_free_bytes(default_runtime_temp)
+    fallback_free = storage_free_bytes(fallback)
+    if default_free >= STORAGE_WARNING_BYTES:
+        return default_runtime_temp
+    if fallback_free >= STORAGE_CRITICAL_BYTES and fallback_free > default_free:
+        return fallback
+    if default_free >= STORAGE_CRITICAL_BYTES:
+        return default_runtime_temp
+    if fallback_free >= STORAGE_CRITICAL_BYTES:
         return fallback
     # Preserve the existing fail-closed error and its exact default path when
     # neither volume has enough space.

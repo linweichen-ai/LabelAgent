@@ -1,0 +1,65 @@
+{
+  "schema_version": "labelagent.model-download-residue-cleanup-round357.v1",
+  "observed_at": "2026-11-20T14:05:00+08:00",
+  "passed": true,
+  "scope": {
+    "root": "D:\\Apps\\LabelAgent\\work\\models\\Qwen3-VL-2B-Instruct",
+    "minimum_age_hours": 24,
+    "extensions": [
+      ".part",
+      ".partial",
+      ".incomplete"
+    ],
+    "recursive_directory_delete": false
+  },
+  "residue_before": {
+    "count": 125,
+    "logical_bytes": 4747971032,
+    "logical_gib": 4.422,
+    "groups": {
+      "range_chunk_part": 123,
+      "huggingface_incomplete": 1,
+      "model_safetensors_partial": 1
+    }
+  },
+  "safety_gate": {
+    "complete_model": "model.safetensors",
+    "complete_model_bytes": 4255140312,
+    "complete_model_sha256": "7DE1838C87A5349B016C26A1C3F7D2BC400A3D485F95EF39A7059FFD734977A0",
+    "official_receipt_sha256": "7DE1838C87A5349B016C26A1C3F7D2BC400A3D485F95EF39A7059FFD734977A0",
+    "hash_match": true,
+    "first_contract_mismatch_stopped_without_deletion": true,
+    "all_targets_resolved_under_model_root": true
+  },
+  "cleanup": {
+    "deleted_file_count": 125,
+    "remaining_residue_count": 0,
+    "free_before_mib": 1564.7,
+    "free_after_mib": 5113.7,
+    "physical_recovered_mib": 3549.1,
+    "complete_model_preserved": true,
+    "recoverability": "deleted fragments are re-downloadable from the official model source; no local fragment backup retained"
+  },
+  "post_cleanup_acceptance": {
+    "sam_4090": "ready",
+    "sam_5090": "ready",
+    "vlm_primary": "ready",
+    "vlm_5090": "ready",
+    "workbench": "ready",
+    "prewarm": {
+      "prewarmed": true,
+      "elapsed_ms": 29.867,
+      "retry_count": 0,
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "state_written": false
+    },
+    "production_state_sha256_before": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "production_state_sha256_after": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115"
+  },
+  "final_storage": {
+    "c_free_mib": 249.4,
+    "d_free_mib": 5113.4
+  }
+}

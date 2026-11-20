@@ -35,6 +35,8 @@ MAX_PROTOCOL_RETRIES = 2
 EGO_BOTTOM_POINT_FALLBACK_VERSION = "labelagent.ego_bottom_point_fallback.v1"
 VISIBLE_VEHICLE_POINT_RECOVERY_VERSION = (
     "labelagent.visible_vehicle_point_recovery.v1")
+VISIBLE_VEHICLE_POINT_MIN_SCORE = 0.55
+VISIBLE_VEHICLE_POINT_HIGH_SCORE = 0.75
 
 
 class ModelOutputError(ValueError):
@@ -445,14 +447,19 @@ def visible_vehicle_point_candidate(config, image, next_id=1):
     evidence.update(score=score, bbox=bbox, area=area,
                     area_ratio=area_ratio)
     if (type(score) not in (int, float) or isinstance(score, bool)
-            or not math.isfinite(score) or score < 0.75
+            or not math.isfinite(score) or score < VISIBLE_VEHICLE_POINT_MIN_SCORE
             or not 0.0001 <= area_ratio <= 0.08
             or bbox[2] - bbox[0] > width * 0.5
             or bbox[3] - bbox[1] > height * 0.5
             or bbox[1] >= height * 0.75):
         return [], evidence | {"status": "geometry_rejected"}
+    confidence_band = (
+        "high" if score >= VISIBLE_VEHICLE_POINT_HIGH_SCORE
+        else "guarded_low")
+    evidence["confidence_band"] = confidence_band
     shape.update(candidate_only=True, human_truth=False,
                  approved_for_training=False,
+                 recovery_confidence_band=confidence_band,
                  recovery_version=VISIBLE_VEHICLE_POINT_RECOVERY_VERSION)
     return [shape], evidence | {"status": "candidate_generated"}
 

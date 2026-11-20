@@ -71,6 +71,24 @@ class VisibleVehiclePointRecoveryTests(unittest.TestCase):
         self.assertEqual(evidence["status"], "foreground_ego_point_rejected")
         sam.assert_not_called()
 
+    def test_compact_guarded_low_score_candidate_still_routes_to_blind_audit(self):
+        located = {
+            "decision": "located",
+            "entity_type": "conventional_vehicle_or_forklift",
+            "x": 500, "y": 300, "evidence": "distant forklift body visible",
+        }
+        point = {"x": 100, "y": 36}
+        with patch.object(workflow, "chat", return_value=located), \
+                patch.object(workflow, "sam_request",
+                             return_value=sam_result(point, score=0.60)):
+            candidates, evidence = workflow.visible_vehicle_point_candidate(
+                {}, image_bytes(), next_id=7)
+        self.assertEqual(len(candidates), 1)
+        self.assertEqual(evidence["confidence_band"], "guarded_low")
+        self.assertEqual(candidates[0]["recovery_confidence_band"],
+                         "guarded_low")
+        self.assertTrue(server.candidate_requires_class_audit(candidates[0]))
+
     def test_server_recovery_requires_high_confidence_visible_miss(self):
         discovery = {"assessments": [{
             "label": "车辆", "evidence": "present", "confidence": 0.95,

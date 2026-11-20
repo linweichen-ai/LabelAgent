@@ -1,0 +1,22 @@
+{
+  "schema_version": "labelagent.visible_vehicle_shadow_samples.v1",
+  "description": "Cross-camera, non-consecutive shadow sweep without human-truth claims.",
+  "samples": [
+    {"topic": "/capture/camera_3/image", "frame": 1},
+    {"topic": "/capture/camera_3/image", "frame": 19},
+    {"topic": "/capture/camera_3/image", "frame": 38},
+    {"topic": "/capture/camera_3/image", "frame": 56},
+    {"topic": "/capture/camera_3/image", "frame": 74},
+    {"topic": "/capture/camera_3/image", "frame": 92},
+    {"topic": "/capture/camera_3/image", "frame": 110},
+    {"topic": "/capture/camera_3/image", "frame": 128},
+    {"topic": "/capture/camera_2/image", "frame": 1},
+    {"topic": "/capture/camera_2/image", "frame": 38},
+    {"topic": "/capture/camera_2/image", "frame": 74},
+    {"topic": "/capture/camera_2/image", "frame": 110},
+    {"topic": "/capture/camera_0/image", "frame": 38},
+    {"topic": "/capture/camera_0/image", "frame": 74},
+    {"topic": "/capture/camera_1/image", "frame": 38},
+    {"topic": "/capture/camera_1/image", "frame": 74}
+  ]
+}

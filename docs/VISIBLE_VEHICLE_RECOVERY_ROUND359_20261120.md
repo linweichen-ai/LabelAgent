@@ -61,4 +61,6 @@
 
 当前结果证明“VLM 定位主体点 + 点提示 SAM + 独立类别盲审”比固定网格扫描更安全，但 3/4 的正样本代理召回还不足以直接默认开启。下一步应扩大不同相机、距离、遮挡和光照条件下的冻结样本，重点检查：漏检率、墙面粘连率、前景 ego 误选率和额外耗时。只有全部门禁通过后，才考虑把该功能默认打开；在此之前仍只作为可追溯机器候选实验。
 
+该扩大样本门禁已在第360轮执行，见 `docs/VISIBLE_VEHICLE_SHADOW_GATE_ROUND360_20261120.md`。
+
 结构化证据见 `docs/evidence/workbench-stability-20261117/visible-vehicle-recovery-round359.json`。

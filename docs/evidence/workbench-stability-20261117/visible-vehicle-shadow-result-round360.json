@@ -1,0 +1,1364 @@
+{
+  "schema_version": "labelagent.visible_vehicle_shadow_evaluation.v1",
+  "read_only": true,
+  "assistant_visual_proxy_only": true,
+  "candidate_only": true,
+  "human_truth_modified": false,
+  "training_data_modified": false,
+  "media": {
+    "path": "D:\\Apps\\LabelAgent\\work\\datasets\\Capture_20261103\\常熟0920_Qwen2B_Agent未确认候选.mcap",
+    "size_bytes": 1620954942,
+    "mtime_ns": 1793678901558551600
+  },
+  "sample_manifest": {
+    "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\docs\\evidence\\workbench-stability-20261117\\visible-vehicle-shadow-samples-round360.json",
+    "sha256": "b92d3949bd82640f1849ba428af3803d8f3e9ede22752cef39f783913ed7f489"
+  },
+  "rows": [
+    {
+      "topic": "/capture/camera_3/image",
+      "frame": 1,
+      "image_sha256": "1467e6fe90d7432a8182a64d752a430629b49d72068d56aa82940578a8a76e55",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 578,
+          "y": 237,
+          "evidence": "A white forklift is visible in the background, partially occluded by a wall and some objects, with a"
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 1109,
+          "y": 364
+        },
+        "score": 0.828125,
+        "bbox": [
+          1031,
+          262,
+          1207,
+          458
+        ],
+        "area": 19029,
+        "area_ratio": 0.006452433268229167,
+        "confidence_band": "high",
+        "status": "candidate_generated"
+      },
+      "candidate_count": 1,
+      "audit": {
+        "schema_version": "labelagent.blind_candidate_class_audit.v1",
+        "candidate_id": 1,
+        "candidate_sha256": "47f25b159069ddabf09e4f77ba89b613d80acc48e5ed499af70b7b24b3435591",
+        "candidate_artifact_sha256": null,
+        "bound_current_label": "车辆",
+        "source_image_sha256": "1467e6fe90d7432a8182a64d752a430629b49d72068d56aa82940578a8a76e55",
+        "crop": {
+          "box_xyxy": [
+            943,
+            174,
+            1295,
+            546
+          ],
+          "source_size": [
+            1920,
+            1536
+          ],
+          "original_sha256": "d6b27755b4da43973cfaf1d2a31650c825977eb6cb6277c65004f08974ca3384",
+          "marked_sha256": "7cd464ae8e79e944be16a2794060a7424aa002ca6c87ad9d9e4ff52c2bb6d5af",
+          "isolated_sha256": "24da1225d3dbe3d40751413de8ffaa6aea683599c45badbacbb3cb15354ec5bb",
+          "current_label_shown_to_model": false
+        },
+        "prompt_sha256": "61c5d454e139c062e94d5227aaa6607df6c4baf1352606de4944b27bb73573bd",
+        "decision": {
+          "candidate_supported": true,
+          "observed_label": "车辆",
+          "reason_code": "visible_known_label",
+          "classification": "known_label",
+          "confidence": 1.0,
+          "visible_cues": [
+            "visible forklift body with forks, cabin, and chassis inside mask",
+            "visible 'SOLAR' branding on side of vehicle",
+            "visible industrial vehicle structure consistent with forklift"
+          ],
+          "reason": "The cyan mask clearly contains the physical body of a forklift, including its chassis, forks, and cabin structure. This matches the definition of 车辆 as a physically visible generic vehicle instance. The mask does not include any human anatomy, autonomous robot hardware, or pallet structure, so it is"
+        },
+        "route": "candidate_preserved",
+        "minimum_confidence": 0.9,
+        "execution_mode": "sequential",
+        "protocol_retry_count": 0,
+        "protocol_repair": null,
+        "operation_proposal": null,
+        "candidate_mutated": false,
+        "human_truth": false,
+        "approved_for_training": false,
+        "approved_for_deployment": false,
+        "audit_sha256": "0682990c96a1271c70f96aa1dc9b17c2fab006e3712c17a3c5eaf68a487caacd"
+      },
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 144,
+          "cache_hit": true,
+          "coalesced": false
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 266,
+          "cache_hit": null,
+          "coalesced": null
+        },
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 31,
+          "cache_hit": true,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 0.489
+    },
+    {
+      "topic": "/capture/camera_3/image",
+      "frame": 19,
+      "image_sha256": "c8d9b1fe2d5a6f829a76dd40d32e85dcea68ced86d021b1403de9c956fffefab",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 712,
+          "y": 237,
+          "evidence": "A parked forklift is visible in the background near the wall, with a clear solid body and cabin."
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 1366,
+          "y": 364
+        },
+        "score": 0.83984375,
+        "bbox": [
+          1258,
+          266,
+          1446,
+          458
+        ],
+        "area": 25795,
+        "area_ratio": 0.008746676974826388,
+        "confidence_band": "high",
+        "status": "candidate_generated"
+      },
+      "candidate_count": 1,
+      "audit": {
+        "schema_version": "labelagent.blind_candidate_class_audit.v1",
+        "candidate_id": 1,
+        "candidate_sha256": "ad3ee9b8e85b1222dc0440576d8bae16a41f933fa427b28bb18e0e3d1cf4de81",
+        "candidate_artifact_sha256": null,
+        "bound_current_label": "车辆",
+        "source_image_sha256": "c8d9b1fe2d5a6f829a76dd40d32e85dcea68ced86d021b1403de9c956fffefab",
+        "crop": {
+          "box_xyxy": [
+            1172,
+            180,
+            1532,
+            544
+          ],
+          "source_size": [
+            1920,
+            1536
+          ],
+          "original_sha256": "90ff755fce296e70afe1e6af7e8e9e2b26e5ca872dc858577deb6dff90ebb2b1",
+          "marked_sha256": "fe8a9a642ce4629f0ba3d956a1661178e3a51c46673fff88274e9c7f28340f5d",
+          "isolated_sha256": "3ae920312d569d4871b96cce40c4c9686717d469e0cb2e1294f5c4efb92100ca",
+          "current_label_shown_to_model": false
+        },
+        "prompt_sha256": "61c5d454e139c062e94d5227aaa6607df6c4baf1352606de4944b27bb73573bd",
+        "decision": {
+          "classification": "known_label",
+          "observed_label": "车辆",
+          "candidate_supported": true,
+          "reason_code": "visible_known_label",
+          "confidence": 0.98,
+          "reason": "The cyan mask covers a physically visible industrial vehicle (forklift) with a driver's cab, forks, and body structure. The vehicle is clearly identifiable as a 车辆 under the definition, as it is a conventional forklift with visible body/chassis/forks. No other robot or person is visible within the c",
+          "visible_cues": [
+            "visible forklift body",
+            "visible forks",
+            "visible driver's cab",
+            "visible vehicle chassis"
+          ]
+        },
+        "route": "candidate_preserved",
+        "minimum_confidence": 0.9,
+        "execution_mode": "sequential",
+        "protocol_retry_count": 0,
+        "protocol_repair": null,
+        "operation_proposal": null,
+        "candidate_mutated": false,
+        "human_truth": false,
+        "approved_for_training": false,
+        "approved_for_deployment": false,
+        "audit_sha256": "53b6183e8430511e1849d5e8ee0ba5c0d930f2162d49f08d50d433340c922e08"
+      },
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 86,
+          "cache_hit": true,
+          "coalesced": false
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 248,
+          "cache_hit": null,
+          "coalesced": null
+        },
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 11,
+          "cache_hit": true,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 0.391
+    },
+    {
+      "topic": "/capture/camera_3/image",
+      "frame": 38,
+      "image_sha256": "36686f3c1b38206d6470a1195d7fa75596d7d9dabd97a9583b4d1709ff19626d",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 820,
+          "y": 230,
+          "evidence": "A parked forklift is visible in the background near the wall, with a clear solid body and cabin."
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 1574,
+          "y": 353
+        },
+        "score": 0.8671875,
+        "bbox": [
+          1415,
+          262,
+          1618,
+          444
+        ],
+        "area": 28849,
+        "area_ratio": 0.009782240125868055,
+        "confidence_band": "high",
+        "status": "candidate_generated"
+      },
+      "candidate_count": 1,
+      "audit": {
+        "schema_version": "labelagent.blind_candidate_class_audit.v1",
+        "candidate_id": 1,
+        "candidate_sha256": "2905988f9ff0a2f540abd089eccdcd93b2a41df1f4cfc41f5b0501a0a3a79f5a",
+        "candidate_artifact_sha256": null,
+        "bound_current_label": "车辆",
+        "source_image_sha256": "36686f3c1b38206d6470a1195d7fa75596d7d9dabd97a9583b4d1709ff19626d",
+        "crop": {
+          "box_xyxy": [
+            1324,
+            171,
+            1709,
+            535
+          ],
+          "source_size": [
+            1920,
+            1536
+          ],
+          "original_sha256": "a54a33b5e4ba785b69fd9be9eb22029532171276d51eb5f1f9d9c38d90cab1ac",
+          "marked_sha256": "360ededbb12d75f85a996d8a413cbeaef5cf79b79bf5eb06c9280becedcf3def",
+          "isolated_sha256": "3e78b236b65fd09ae6f8df4ac47fb4228fa6170b04e3223af7141d2385bc21d3",
+          "current_label_shown_to_model": false
+        },
+        "prompt_sha256": "61c5d454e139c062e94d5227aaa6607df6c4baf1352606de4944b27bb73573bd",
+        "decision": {
+          "candidate_supported": true,
+          "observed_label": "车辆",
+          "reason_code": "visible_known_label",
+          "classification": "known_label",
+          "confidence": 0.98,
+          "visible_cues": [
+            "visible forklift body and chassis inside mask",
+            "visible forks and cabin structure",
+            "industrial vehicle context"
+          ],
+          "reason": "The cyan mask clearly contains the body, chassis, and forks of a forklift, which is a conventional industrial vehicle. The structure is physically visible and matches the definition of 车辆. No human anatomy or other_robot hardware is visible within the mask. The mask does not contain a pallet, floor,"
+        },
+        "route": "candidate_preserved",
+        "minimum_confidence": 0.9,
+        "execution_mode": "sequential",
+        "protocol_retry_count": 0,
+        "protocol_repair": null,
+        "operation_proposal": null,
+        "candidate_mutated": false,
+        "human_truth": false,
+        "approved_for_training": false,
+        "approved_for_deployment": false,
+        "audit_sha256": "e5b707a79eee1ceb88c5b4e24ea77608d418d260af992f5ba87acc0af3a9f23d"
+      },
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 100,
+          "cache_hit": true,
+          "coalesced": false
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 250,
+          "cache_hit": null,
+          "coalesced": null
+        },
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 13,
+          "cache_hit": true,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 0.412
+    },
+    {
+      "topic": "/capture/camera_3/image",
+      "frame": 56,
+      "image_sha256": "7fe9a39eb986d1f6201e1f0e10d43564334de9a555e8eaef0ec5d1cec65e45ec",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 767,
+          "y": 223,
+          "evidence": "A parked forklift is visible in the background near the wall, partially occluded by other objects,  "
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 1472,
+          "y": 342
+        },
+        "score": 0.87890625,
+        "bbox": [
+          1333,
+          254,
+          1498,
+          418
+        ],
+        "area": 20159,
+        "area_ratio": 0.006835598415798611,
+        "confidence_band": "high",
+        "status": "candidate_generated"
+      },
+      "candidate_count": 1,
+      "audit": {
+        "schema_version": "labelagent.blind_candidate_class_audit.v1",
+        "candidate_id": 1,
+        "candidate_sha256": "e2453d1a4dc4573605efa6c987cbc530d1a233adabdcd65839881fa6968a98a9",
+        "candidate_artifact_sha256": null,
+        "bound_current_label": "车辆",
+        "source_image_sha256": "7fe9a39eb986d1f6201e1f0e10d43564334de9a555e8eaef0ec5d1cec65e45ec",
+        "crop": {
+          "box_xyxy": [
+            1259,
+            180,
+            1572,
+            492
+          ],
+          "source_size": [
+            1920,
+            1536
+          ],
+          "original_sha256": "c23c0781edc52c43d3c8eab9c7f00ab64563efebe2cddd6f94cfeebc9f4aba0b",
+          "marked_sha256": "d3873a586b59f511b078bde3d8f938484d9c053569998f463a5876d2dcf6f479",
+          "isolated_sha256": "40b737882aa5485dfa980ddc66362e49292437d3af532a4a0b9457ca28b06506",
+          "current_label_shown_to_model": false
+        },
+        "prompt_sha256": "61c5d454e139c062e94d5227aaa6607df6c4baf1352606de4944b27bb73573bd",
+        "decision": {
+          "candidate_supported": true,
+          "observed_label": "车辆",
+          "reason_code": "visible_known_label",
+          "classification": "known_label",
+          "confidence": 0.98,
+          "visible_cues": [
+            "visible forklift chassis and body structure",
+            "visible operator cabin",
+            "visible forks and platform",
+            "industrial vehicle context"
+          ],
+          "reason": "The cyan mask covers the body of a forklift, which is a conventional industrial vehicle. The visible structure includes the chassis, cabin, and forks, which are sufficient to classify as 车辆. No human anatomy is visible, so person is excluded. The mask does not cover a pallet structure, so pallet is "
+        },
+        "route": "candidate_preserved",
+        "minimum_confidence": 0.9,
+        "execution_mode": "sequential",
+        "protocol_retry_count": 0,
+        "protocol_repair": null,
+        "operation_proposal": null,
+        "candidate_mutated": false,
+        "human_truth": false,
+        "approved_for_training": false,
+        "approved_for_deployment": false,
+        "audit_sha256": "f8ec0e71d100e8f1c13d60790f03962ec39fa02cf089cef6915ac74c8a03c486"
+      },
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 98,
+          "cache_hit": true,
+          "coalesced": false
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 245,
+          "cache_hit": null,
+          "coalesced": null
+        },
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 17,
+          "cache_hit": true,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 0.408
+    },
+    {
+      "topic": "/capture/camera_3/image",
+      "frame": 74,
+      "image_sha256": "c41128349306f8e10595922e40f38bbc9954247e10512a90c718a7b8d0947f54",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 250,
+          "y": 200,
+          "evidence": "A distant forklift is visible in the background, partially occluded by a large black structure, with"
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 480,
+          "y": 307
+        },
+        "score": 0.58984375,
+        "bbox": [
+          470,
+          261,
+          640,
+          414
+        ],
+        "area": 19919,
+        "area_ratio": 0.006754218207465278,
+        "confidence_band": "guarded_low",
+        "status": "candidate_generated"
+      },
+      "candidate_count": 1,
+      "audit": {
+        "schema_version": "labelagent.blind_candidate_class_audit.v1",
+        "candidate_id": 1,
+        "candidate_sha256": "afeded87cbb9e58346b4334941d7c28fabd24ff91b14eb7478b5ed7978236308",
+        "candidate_artifact_sha256": null,
+        "bound_current_label": "车辆",
+        "source_image_sha256": "c41128349306f8e10595922e40f38bbc9954247e10512a90c718a7b8d0947f54",
+        "crop": {
+          "box_xyxy": [
+            394,
+            185,
+            716,
+            490
+          ],
+          "source_size": [
+            1920,
+            1536
+          ],
+          "original_sha256": "c12f06fc7a73acdadb4e9c2f57170d9221d5441ee8b0f252d0bdd5c796de741f",
+          "marked_sha256": "8aa68744280492e17b9180080218783721913fa8d0f95849705204c242d6aaf1",
+          "isolated_sha256": "14cd998247ba942cfcd6df9b2c4fa8a525f8e22c527d63fbc1a30b351c82ae31",
+          "current_label_shown_to_model": false
+        },
+        "prompt_sha256": "61c5d454e139c062e94d5227aaa6607df6c4baf1352606de4944b27bb73573bd",
+        "decision": {
+          "candidate_supported": true,
+          "observed_label": "车辆",
+          "reason_code": "visible_known_label",
+          "classification": "known_label",
+          "confidence": 0.95,
+          "visible_cues": [
+            "visible forklift body and chassis inside mask",
+            "visible forks and cabin structure",
+            "industrial vehicle context"
+          ],
+          "reason": "The cyan mask covers the body, chassis, and forks of a forklift, which is a conventional industrial vehicle. The structure is physically visible and matches the definition of 车辆. No other allowed label fits the visual evidence within the mask. The mask does not include a person, other_robot, pallet,"
+        },
+        "route": "candidate_preserved",
+        "minimum_confidence": 0.9,
+        "execution_mode": "sequential",
+        "protocol_retry_count": 0,
+        "protocol_repair": null,
+        "operation_proposal": null,
+        "candidate_mutated": false,
+        "human_truth": false,
+        "approved_for_training": false,
+        "approved_for_deployment": false,
+        "audit_sha256": "e913e6faceb3b092f89abc1efdc23b7b25d94e0c7405af65aa1cc7baeb6b6366"
+      },
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 105,
+          "cache_hit": true,
+          "coalesced": false
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 238,
+          "cache_hit": null,
+          "coalesced": null
+        },
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 7,
+          "cache_hit": true,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 0.399
+    },
+    {
+      "topic": "/capture/camera_3/image",
+      "frame": 92,
+      "image_sha256": "beaf7ce2694eed93be97b9b9143d425843cc29204a89e60458534b266e85c45c",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 10,
+          "y": 200,
+          "evidence": "A parked forklift is visible in the background on the left side of the image, behind the open cargo."
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 19,
+          "y": 307
+        },
+        "score": 0.8125,
+        "bbox": [
+          0,
+          257,
+          256,
+          454
+        ],
+        "area": 37001,
+        "area_ratio": 0.012546454535590277,
+        "confidence_band": "high",
+        "status": "candidate_generated"
+      },
+      "candidate_count": 1,
+      "audit": {
+        "schema_version": "labelagent.blind_candidate_class_audit.v1",
+        "candidate_id": 1,
+        "candidate_sha256": "02fb41e71c9281ffc7dc589be027878b2e9428fb688b3fea860813d40af24408",
+        "candidate_artifact_sha256": null,
+        "bound_current_label": "车辆",
+        "source_image_sha256": "beaf7ce2694eed93be97b9b9143d425843cc29204a89e60458534b266e85c45c",
+        "crop": {
+          "box_xyxy": [
+            0,
+            142,
+            371,
+            569
+          ],
+          "source_size": [
+            1920,
+            1536
+          ],
+          "original_sha256": "eb84ddb49d2603ba79384d58cb0678070de248bf235c8273c8682eed3c09250c",
+          "marked_sha256": "d98564a3194418155a20d32875d611fff00d0e73d1da88c9b128b8ccc3df41ad",
+          "isolated_sha256": "c33c27bc129c19c3d24e679b42e9d4639bb84fcb2ca61657f169509970353614",
+          "current_label_shown_to_model": false
+        },
+        "prompt_sha256": "61c5d454e139c062e94d5227aaa6607df6c4baf1352606de4944b27bb73573bd",
+        "decision": {
+          "classification": "uncertain",
+          "observed_label": null,
+          "candidate_supported": false,
+          "reason_code": "insufficient_visual_evidence",
+          "confidence": 0.5,
+          "visible_cues": [
+            "The cyan mask covers a blurry, low-resolution object that appears to be part of a vehicle or machine",
+            "The shape suggests a possible vehicle body or chassis, but details are obscured",
+            "No clear evidence of human anatomy, robot hardware, or pallet structure is visible within the mask",
+            "The object is too indistinct to confidently classify as 车辆, person, other_robot, or pallet"
+          ],
+          "reason": "The masked region is too blurred and lacks sufficient visual detail to confidently classify it as any of the allowed labels. While it resembles a vehicle, the lack of visible structural features (like chassis, forks, or body) prevents classification. No human anatomy, robot hardware, or pallet slats"
+        },
+        "route": "human_review_required",
+        "minimum_confidence": 0.9,
+        "execution_mode": "sequential",
+        "protocol_retry_count": 0,
+        "protocol_repair": "non_known_reason_code_normalized",
+        "operation_proposal": null,
+        "candidate_mutated": false,
+        "human_truth": false,
+        "approved_for_training": false,
+        "approved_for_deployment": false,
+        "audit_sha256": "b1ef8e7fca8631435218d9bf82a44a37e31a86df3c11eb980490f52f2f3e4003"
+      },
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 90,
+          "cache_hit": true,
+          "coalesced": false
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 456,
+          "cache_hit": null,
+          "coalesced": null
+        },
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 11,
+          "cache_hit": true,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 0.607
+    },
+    {
+      "topic": "/capture/camera_3/image",
+      "frame": 110,
+      "image_sha256": "1b7a5dba8cce13f439f170b86c162e8292c4a4205ed17e99cf3ea81010376643",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 102,
+          "y": 224,
+          "evidence": "A parked forklift is visible in the background to the left, partially obscured by the container and貨"
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 196,
+          "y": 344
+        },
+        "score": 0.875,
+        "bbox": [
+          46,
+          267,
+          357,
+          465
+        ],
+        "area": 39163,
+        "area_ratio": 0.013279554578993056,
+        "confidence_band": "high",
+        "status": "candidate_generated"
+      },
+      "candidate_count": 1,
+      "audit": {
+        "schema_version": "labelagent.blind_candidate_class_audit.v1",
+        "candidate_id": 1,
+        "candidate_sha256": "4ecb70a0daf8d7f0abb18a15d7802e93a9d38f929842bfa3908db62c369ae913",
+        "candidate_artifact_sha256": null,
+        "bound_current_label": "车辆",
+        "source_image_sha256": "1b7a5dba8cce13f439f170b86c162e8292c4a4205ed17e99cf3ea81010376643",
+        "crop": {
+          "box_xyxy": [
+            0,
+            127,
+            497,
+            605
+          ],
+          "source_size": [
+            1920,
+            1536
+          ],
+          "original_sha256": "68df0dddf5176e577b4345d51b2717d753d58c8b598f9c2208a3489752a16a62",
+          "marked_sha256": "67c5e2b173de1e26eb4f5dea377f99f2ad641e32ea587bf4ab6a81c30fc86e63",
+          "isolated_sha256": "914e3837dc3a9ac1abd8acc2824177ff1aded6c0d97821fd64e78737261acfb1",
+          "current_label_shown_to_model": false
+        },
+        "prompt_sha256": "61c5d454e139c062e94d5227aaa6607df6c4baf1352606de4944b27bb73573bd",
+        "decision": {
+          "candidate_supported": true,
+          "observed_label": "车辆",
+          "reason_code": "visible_known_label",
+          "classification": "known_label",
+          "confidence": 0.95,
+          "visible_cues": [
+            "visible industrial vehicle body with forks and chassis structure",
+            "blurred but identifiable forklift-like structure within cyan mask",
+            "vehicle body is physically present and not occluded by person or other_robot"
+          ],
+          "reason": "The cyan mask covers a physically visible industrial vehicle (forklift) with identifiable chassis, forks, and body structure. This matches the definition of 车辆 as a physically visible generic vehicle instance. The mask does not include a person, ego, or other_robot, and the structure is not a pallet"
+        },
+        "route": "candidate_preserved",
+        "minimum_confidence": 0.9,
+        "execution_mode": "sequential",
+        "protocol_retry_count": 0,
+        "protocol_repair": null,
+        "operation_proposal": null,
+        "candidate_mutated": false,
+        "human_truth": false,
+        "approved_for_training": false,
+        "approved_for_deployment": false,
+        "audit_sha256": "d0c5aefba63395b5f703dfb2408cf8ba28b87f4364125fa7f56c118cac9966d7"
+      },
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 91,
+          "cache_hit": true,
+          "coalesced": false
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 235,
+          "cache_hit": null,
+          "coalesced": null
+        },
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 12,
+          "cache_hit": true,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 0.398
+    },
+    {
+      "topic": "/capture/camera_3/image",
+      "frame": 128,
+      "image_sha256": "17dcd9836632b8d21129cc982c8a1eec18fb8e1de82ab9a20c474e0433ea47d7",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 102,
+          "y": 237,
+          "evidence": "A parked forklift is visible in the background, to the left of the container, with its mast and base"
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 196,
+          "y": 364
+        },
+        "score": 0.8984375,
+        "bbox": [
+          31,
+          287,
+          338,
+          495
+        ],
+        "area": 43692,
+        "area_ratio": 0.014815266927083333,
+        "confidence_band": "high",
+        "status": "candidate_generated"
+      },
+      "candidate_count": 1,
+      "audit": {
+        "schema_version": "labelagent.blind_candidate_class_audit.v1",
+        "candidate_id": 1,
+        "candidate_sha256": "f93e8a2e86300596a3288b14badc142ff21aa3231d8996f5fe0500f1df37df11",
+        "candidate_artifact_sha256": null,
+        "bound_current_label": "车辆",
+        "source_image_sha256": "17dcd9836632b8d21129cc982c8a1eec18fb8e1de82ab9a20c474e0433ea47d7",
+        "crop": {
+          "box_xyxy": [
+            0,
+            149,
+            476,
+            633
+          ],
+          "source_size": [
+            1920,
+            1536
+          ],
+          "original_sha256": "9dfea719761ba84982e5fc59507ac79e18cf584c7162c81f37b8e048f13c89e1",
+          "marked_sha256": "12c0dadb18bf9f69c4689ce6b9497eb9514f75ffbc2db128bec3c542181c997b",
+          "isolated_sha256": "cab1f5399de1ead97c8e948e3e0b263159c1d5f4cf9636319f8714cefdc72508",
+          "current_label_shown_to_model": false
+        },
+        "prompt_sha256": "61c5d454e139c062e94d5227aaa6607df6c4baf1352606de4944b27bb73573bd",
+        "decision": {
+          "candidate_supported": true,
+          "observed_label": "车辆",
+          "reason_code": "visible_known_label",
+          "classification": "known_label",
+          "confidence": 0.98,
+          "visible_cues": [
+            "visible forklift chassis and body structure inside mask",
+            "visible forks and operator seat",
+            "industrial vehicle body with white and black paint"
+          ],
+          "reason": "The cyan mask covers a physically visible forklift, which is a conventional industrial vehicle. The structure includes the chassis, body, and forks, which are sufficient evidence for 车辆. No human anatomy or autonomous robot hardware is visible, so it is not person or other_robot. The mask does not p"
+        },
+        "route": "candidate_preserved",
+        "minimum_confidence": 0.9,
+        "execution_mode": "sequential",
+        "protocol_retry_count": 0,
+        "protocol_repair": null,
+        "operation_proposal": null,
+        "candidate_mutated": false,
+        "human_truth": false,
+        "approved_for_training": false,
+        "approved_for_deployment": false,
+        "audit_sha256": "3bfa3f41b4ce348ccde779dd51db6ff1b84800896d27b05a5a7607be8a7e480d"
+      },
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 91,
+          "cache_hit": true,
+          "coalesced": false
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 242,
+          "cache_hit": null,
+          "coalesced": null
+        },
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 13,
+          "cache_hit": true,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 0.398
+    },
+    {
+      "topic": "/capture/camera_2/image",
+      "frame": 1,
+      "image_sha256": "980de73bacc56590b23e0699557a62b364ccdd50214646d2104bd42f4c8d3bd5",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "ambiguous",
+          "entity_type": "autonomous_robot_or_agv",
+          "x": 100,
+          "y": 100,
+          "evidence": "The image shows an autonomous AGV (autonomous guided vehicle) in the foreground, which is the camera"
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "status": "locator_not_eligible"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 112,
+          "cache_hit": true,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 0.113
+    },
+    {
+      "topic": "/capture/camera_2/image",
+      "frame": 38,
+      "image_sha256": "233584aa2d6ea7da17db24e1ad6321f3920e2913ea9fb364c66e0f4ee517c98f",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "ambiguous",
+          "entity_type": "autonomous_robot_or_agv",
+          "x": 500,
+          "y": 400,
+          "evidence": "The image shows an autonomous AGV (autonomous guided vehicle) in the foreground, which is the only '"
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "status": "locator_not_eligible"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 109,
+          "cache_hit": true,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 0.109
+    },
+    {
+      "topic": "/capture/camera_2/image",
+      "frame": 74,
+      "image_sha256": "0a34b42f41313907e600f5554615b407f6e2cca2397f197107b28c1f6bd34513",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "ambiguous",
+          "entity_type": "autonomous_robot_or_agv",
+          "x": 100,
+          "y": 100,
+          "evidence": "The image shows the camera-carrying ego machine in the foreground, and no conventional industrial or"
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "status": "locator_not_eligible"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 117,
+          "cache_hit": true,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 0.117
+    },
+    {
+      "topic": "/capture/camera_2/image",
+      "frame": 110,
+      "image_sha256": "b6d2ac938e2dd9d484306bae9b3a7f7f0a85b088a8666c97f263052a3a2536f6",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 938,
+          "y": 240,
+          "evidence": "A parked forklift is visible in the background near the right wall, partially occluded by the wall, "
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 1800,
+          "y": 368
+        },
+        "score": 0.94921875,
+        "bbox": [
+          1721,
+          301,
+          1920,
+          502
+        ],
+        "area": 29353,
+        "area_ratio": 0.009953138563368056,
+        "confidence_band": "high",
+        "status": "candidate_generated"
+      },
+      "candidate_count": 1,
+      "audit": {
+        "schema_version": "labelagent.blind_candidate_class_audit.v1",
+        "candidate_id": 1,
+        "candidate_sha256": "6aecd89e1e4f8ab53d65f7391e859fcadb0ee48f6038b282115a9a70072fa9de",
+        "candidate_artifact_sha256": null,
+        "bound_current_label": "车辆",
+        "source_image_sha256": "b6d2ac938e2dd9d484306bae9b3a7f7f0a85b088a8666c97f263052a3a2536f6",
+        "crop": {
+          "box_xyxy": [
+            1631,
+            211,
+            1920,
+            592
+          ],
+          "source_size": [
+            1920,
+            1536
+          ],
+          "original_sha256": "0530537dfce18ad9c1c51acd419f519de8483a85ef73af5cdc091d7064d6a465",
+          "marked_sha256": "099cdb75aa335af5f1d165472e6300e3ff88d99a2f2f13810adf04c2ee094bae",
+          "isolated_sha256": "65e5fe114e19e8da670a658e0bc421aca276440daf8d1a9aa8a363e4c20e3007",
+          "current_label_shown_to_model": false
+        },
+        "prompt_sha256": "61c5d454e139c062e94d5227aaa6607df6c4baf1352606de4944b27bb73573bd",
+        "decision": {
+          "classification": "known_label",
+          "observed_label": "车辆",
+          "candidate_supported": true,
+          "reason_code": "visible_known_label",
+          "confidence": 0.98,
+          "reason": "The cyan mask in Image 2 highlights a portion of a forklift, which is a conventional industrial vehicle. Image 3 confirms the masked region contains the vehicle's body, including visible structural elements like the chassis and forks. This matches the definition of 车辆 as a physically visible generic",
+          "visible_cues": [
+            "visible vehicle body",
+            "chassis structure",
+            "forks",
+            "industrial vehicle context"
+          ]
+        },
+        "route": "candidate_preserved",
+        "minimum_confidence": 0.9,
+        "execution_mode": "sequential",
+        "protocol_retry_count": 0,
+        "protocol_repair": null,
+        "operation_proposal": null,
+        "candidate_mutated": false,
+        "human_truth": false,
+        "approved_for_training": false,
+        "approved_for_deployment": false,
+        "audit_sha256": "3c199973b1c8fff229494b660b18bc08a1ee09807b38e1270784221fb5d1b269"
+      },
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 102,
+          "cache_hit": true,
+          "coalesced": false
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 262,
+          "cache_hit": null,
+          "coalesced": null
+        },
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 16,
+          "cache_hit": true,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 0.426
+    },
+    {
+      "topic": "/capture/camera_0/image",
+      "frame": 38,
+      "image_sha256": "2aab179d71562bcf46a0e9105f90507b8b69e7863ae350d617d8cd5f24310da9",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "ambiguous",
+          "entity_type": "autonomous_robot_or_agv",
+          "x": 500,
+          "y": 500,
+          "evidence": "The image shows the perspective of an autonomous AGV (autonomous guided vehicle) with a person in a "
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "status": "locator_not_eligible"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 90,
+          "cache_hit": true,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 0.09
+    },
+    {
+      "topic": "/capture/camera_0/image",
+      "frame": 74,
+      "image_sha256": "6ec4676df68d424cbe8e59279b71fc3d7d20a3f42de3b6c6be330752075c4ddd",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 312,
+          "y": 327,
+          "evidence": "A parked, unoccupied forklift is visible in the background, partially occluded by other objects, but"
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 599,
+          "y": 502
+        },
+        "score": 0.267578125,
+        "bbox": [
+          0,
+          433,
+          1392,
+          1530
+        ],
+        "area": 964104,
+        "area_ratio": 0.3269124348958333,
+        "status": "geometry_rejected"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 100,
+          "cache_hit": true,
+          "coalesced": false
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 273,
+          "cache_hit": null,
+          "coalesced": null
+        }
+      ],
+      "elapsed_seconds": 0.395
+    },
+    {
+      "topic": "/capture/camera_1/image",
+      "frame": 38,
+      "image_sha256": "15f8657241dbb84d095d3256b4d023344b9630e535854ca244530f7c42271394",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 187,
+          "y": 300,
+          "evidence": "A distant forklift is visible in the background, parked and unoccupied, near the left side of the仓库."
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 359,
+          "y": 460
+        },
+        "score": 0.703125,
+        "bbox": [
+          173,
+          290,
+          453,
+          588
+        ],
+        "area": 23652,
+        "area_ratio": 0.00802001953125,
+        "confidence_band": "guarded_low",
+        "status": "candidate_generated"
+      },
+      "candidate_count": 1,
+      "audit": {
+        "schema_version": "labelagent.blind_candidate_class_audit.v1",
+        "candidate_id": 1,
+        "candidate_sha256": "4659f6f12678bd11d32042f79fa4c16dc2c1fa61d5ac374e0f706f9e3bf67357",
+        "candidate_artifact_sha256": null,
+        "bound_current_label": "车辆",
+        "source_image_sha256": "15f8657241dbb84d095d3256b4d023344b9630e535854ca244530f7c42271394",
+        "crop": {
+          "box_xyxy": [
+            39,
+            156,
+            587,
+            722
+          ],
+          "source_size": [
+            1920,
+            1536
+          ],
+          "original_sha256": "af96993720d16cbd3fce5de7e7f1d1b140f0f04f14dec964cc2b31a8235d53ff",
+          "marked_sha256": "8abb597f952a6eba1e407fa0bbb60eb623ecfda926260e4cfbe10923557d3df6",
+          "isolated_sha256": "e5a547dc6be087f4f13f1d4f35157fe8a5c549bbce4e6552537521c3f03a87eb",
+          "current_label_shown_to_model": false
+        },
+        "prompt_sha256": "61c5d454e139c062e94d5227aaa6607df6c4baf1352606de4944b27bb73573bd",
+        "decision": {
+          "candidate_supported": true,
+          "observed_label": "车辆",
+          "reason_code": "visible_known_label",
+          "classification": "known_label",
+          "confidence": 1.0,
+          "visible_cues": [
+            "visible forklift chassis and forks",
+            "industrial vehicle body",
+            "not a person, ego, or other_robot",
+            "not a pallet or floor"
+          ],
+          "reason": "The cyan mask highlights the body of a forklift, which is a conventional industrial vehicle. The visible structure includes the chassis, forks, and control column, consistent with the definition of 车辆. No autonomous robot hardware is visible, so it is not other_robot. No human anatomy is visible, so"
+        },
+        "route": "candidate_preserved",
+        "minimum_confidence": 0.9,
+        "execution_mode": "sequential",
+        "protocol_retry_count": 0,
+        "protocol_repair": null,
+        "operation_proposal": null,
+        "candidate_mutated": false,
+        "human_truth": false,
+        "approved_for_training": false,
+        "approved_for_deployment": false,
+        "audit_sha256": "8a7b859a1edc8cd4cfea9b5491548a9229a7da5861cdfbf2e42265299ee0b3e5"
+      },
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 115,
+          "cache_hit": true,
+          "coalesced": false
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 258,
+          "cache_hit": null,
+          "coalesced": null
+        },
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 13,
+          "cache_hit": true,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 0.452
+    },
+    {
+      "topic": "/capture/camera_1/image",
+      "frame": 74,
+      "image_sha256": "49dbbc2aebd638b45ed91b617422841572b0d3b44da0365847c3bd35ea6788e3",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "ambiguous",
+          "entity_type": "autonomous_robot_or_agv",
+          "x": 500,
+          "y": 500,
+          "evidence": "The image shows an autonomous AGV (autonomous guided vehicle) in the foreground, which is the only '"
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "status": "locator_not_eligible"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 149,
+          "cache_hit": true,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 0.149
+    }
+  ],
+  "summary": {
+    "sample_count": 16,
+    "candidate_count": 10,
+    "candidate_preserved_count": 9,
+    "human_review_required_count": 1,
+    "no_candidate_count": 6,
+    "error_count": 0,
+    "model_call_count": 37,
+    "model_cache_hit_count": 26,
+    "model_coalesced_count": 0,
+    "elapsed_p50_seconds": 0.398,
+    "elapsed_p95_seconds": 0.518,
+    "source_state_modified": false
+  },
+  "state": {
+    "path": "D:\\Apps\\LabelAgent\\work\\state.json",
+    "sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115"
+  },
+  "contact_sheet": {
+    "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round360-visible-vehicle-shadow16-v3\\contact-sheet.jpg",
+    "sha256": "d834d580fae2f86ba961a5f09869475a00197d12a0cddb45cefcda80cfcad88b"
+  }
+}

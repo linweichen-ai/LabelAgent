@@ -86,6 +86,19 @@ class CandidateClassAuditTests(unittest.TestCase):
         self.assertIn("box, container, or stacked cargo is not pallet", prompt)
         self.assertIn("Never combine visible support", prompt)
 
+    def test_vlm_point_recovered_vehicle_always_routes_blind_class_audit(self):
+        candidate = {
+            "id": 24, "label": "车辆",
+            "source": "sam_vlm_visible_vehicle_point_recovery",
+            "points": [[20, 20], [80, 20], [80, 60], [20, 60]],
+        }
+        self.assertTrue(audit.candidate_requires_class_audit(candidate))
+        prompt = audit.build_blind_candidate_class_prompt(
+            candidate["id"], self.labels + ["车辆"],
+            {"车辆": "a visible conventional vehicle"})
+        self.assertIn("a parked or unoccupied forklift remains 车辆", prompt)
+        self.assertIn("a conventional forklift is 车辆, never other_robot", prompt)
+
     def test_box_like_pallet_audit_uses_only_isolated_mask_pixels(self):
         candidate = {"id": 20, "label": "pallet",
                      "points": [[0, 0], [149, 0], [149, 99], [0, 99]]}

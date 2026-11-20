@@ -36,6 +36,7 @@ from .workflow import (DESCRIPTION_INPUT_VERSION, MAX_REVIEW_ROUNDS, RunCancelle
                        candidate_overlay, reference_overlay, chat, chat_batch,
                        refine_pallet_candidate_geometry,
                        ego_bottom_point_candidates,
+                       visible_vehicle_point_candidate,
                        filter_slope_current_ego_conflicts,
                        sam_text_multi_prefetch, sam_text_prefetch,
                        slope_overlap_crop_images,
@@ -507,6 +508,81 @@ def recover_reference_ego_candidate(config, image, discovery, result):
         "evidence": evidence,
     })
     return status | {"status": "candidate_generated", "candidate_count": len(recovered),
+                     "candidate_id": recovered[0]["id"], "evidence": evidence}
+
+
+def recover_reference_vehicle_candidate(config, image, discovery, result):
+    """Add one guarded, review-only vehicle proposal after a visible SAM miss."""
+    status = {"enabled": config.get("visible_vehicle_point_recovery") is True,
+              "triggered": False, "status": "disabled"}
+    if not status["enabled"]:
+        return status
+    shapes = result.get("shapes") if isinstance(result, dict) else None
+    if not isinstance(shapes, list):
+        raise ValueError("车辆补救前候选格式无效")
+    if any(isinstance(shape, dict) and shape.get("label") == "车辆"
+           for shape in shapes):
+        return status | {"status": "existing_candidate"}
+    assessments = discovery.get("assessments") if isinstance(discovery, dict) else None
+    assessment = next((item for item in assessments or []
+                       if isinstance(item, dict) and item.get("label") == "车辆"), None)
+    coverage_probe = (
+        isinstance(discovery, dict)
+        and "车辆" in (discovery.get("recall_probe_labels") or []))
+    visible_high_confidence = (
+        isinstance(assessment, dict)
+        and assessment.get("evidence") == "present"
+        and type(assessment.get("confidence")) in (int, float)
+        and not isinstance(assessment.get("confidence"), bool)
+        and assessment["confidence"] >= 0.90)
+    if not (visible_high_confidence or coverage_probe):
+        return status | {"status": "discovery_not_eligible"}
+    status.update(
+        triggered=True,
+        trigger_reason=("visible_high_confidence" if visible_high_confidence
+                        else "coverage_probe"),
+        discovery_confidence=(float(assessment["confidence"])
+                              if isinstance(assessment, dict)
+                              and type(assessment.get("confidence")) in (int, float)
+                              and not isinstance(assessment.get("confidence"), bool)
+                              else None),
+    )
+    next_id = max([0] + [shape.get("id", 0) for shape in shapes
+                         if isinstance(shape, dict)
+                         and type(shape.get("id")) is int]) + 1
+    try:
+        recovered, evidence = visible_vehicle_point_candidate(
+            config, image, next_id=next_id)
+    except RunCancelled:
+        raise
+    except Exception as error:
+        result.setdefault("review_queue", []).append({
+            "label": "车辆", "reason_code": "vehicle_point_recovery_failed",
+            "route": "human_review_required",
+            "source": "visible_vehicle_point_recovery",
+            "error": str(error)[:500],
+        })
+        return status | {"status": "failed", "error": str(error)[:500]}
+    if not recovered:
+        result.setdefault("review_queue", []).append({
+            "label": "车辆",
+            "reason_code": "vehicle_point_recovery_no_guarded_candidate",
+            "route": "human_review_required",
+            "source": "visible_vehicle_point_recovery",
+            "evidence": evidence,
+        })
+        return status | {"status": evidence.get("status", "no_guarded_candidate"),
+                         "evidence": evidence}
+    shapes.extend(recovered)
+    result["candidates_added"] = int(result.get("candidates_added") or 0) + 1
+    result.setdefault("review_queue", []).append({
+        "label": "车辆", "reason_code": "vehicle_point_recovery_candidate",
+        "route": "human_review_required",
+        "source": "visible_vehicle_point_recovery",
+        "candidate_available": True, "candidate_id": recovered[0]["id"],
+        "evidence": evidence,
+    })
+    return status | {"status": "candidate_generated", "candidate_count": 1,
                      "candidate_id": recovered[0]["id"], "evidence": evidence}
 
 
@@ -4252,6 +4328,12 @@ def set_config():
                 state["config"]["ego_bottom_point_fallback"] = body[
                     "ego_bottom_point_fallback"]
                 updated_keys.append("ego_bottom_point_fallback")
+            if "visible_vehicle_point_recovery" in body:
+                if type(body["visible_vehicle_point_recovery"]) is not bool:
+                    raise ValueError("visible_vehicle_point_recovery 必须为布尔值")
+                state["config"]["visible_vehicle_point_recovery"] = body[
+                    "visible_vehicle_point_recovery"]
+                updated_keys.append("visible_vehicle_point_recovery")
             for key, value in fast_updates.items():
                 if value is None:
                     state["config"].pop(key, None)
@@ -5463,6 +5545,8 @@ def generate_reference_draft():
                 "sam_prompts": prompt_payload,
                 "ego_bottom_point_fallback": bool(
                     config.get("ego_bottom_point_fallback")),
+                "visible_vehicle_point_recovery": bool(
+                    config.get("visible_vehicle_point_recovery")),
                 "other_robot_semantic_fallback_visible": bool(
                     config.get("other_robot_semantic_fallback_visible")),
                 "sam3_point_url": config.get("sam3_point_url"),
@@ -5494,9 +5578,13 @@ def generate_reference_draft():
                             on_progress=on_progress, reference=None)
             ego_recovery = recover_reference_ego_candidate(
                 config, target_image, discovery, result)
+            vehicle_recovery = recover_reference_vehicle_candidate(
+                config, target_image, discovery, result)
             ego_recovery["post_recovery_slope_guard"] = (
                 filter_post_recovery_slope_ego_conflicts(target_image, result))
             result.setdefault("agent", {})["ego_bottom_point_fallback"] = ego_recovery
+            result.setdefault("agent", {})[
+                "visible_vehicle_point_recovery"] = vehicle_recovery
         if result["agent"].get("stop_reason") == "error":
             raise RuntimeError("SAM/VLM/Agent 未能生成有效参考帧草稿")
         candidate_output_sha256 = _sha256_json(result["shapes"])

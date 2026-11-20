@@ -78,6 +78,15 @@ test('ego 点扫描补救在界面中保持高风险人工复核边界', () => {
   assert.match(app, /该结果已进入高风险复核，仍须逐个检查后才能成为人工真值/);
 });
 
+test('车辆可见漏分补救在界面中保持候选和人工复核边界', () => {
+  const app = source('app.js');
+  assert.match(app, /visible_vehicle_point_recovery/);
+  assert.match(app, /vehicleRecoveryCandidate/);
+  assert.match(app, /VLM 看见车辆，但文本分割漏检/);
+  assert.match(app, /仍是机器候选/);
+  assert.match(app, /必须人工检查边界和类别后才能成为真值/);
+});
+
 test('参考帧后台复核结束后立即刷新顶部向导而不继续显示处理中', () => {
   const app = source('app.js');
   const guide = source('guide.js');
@@ -1153,6 +1162,12 @@ test('主自动标注仅在服务器完成 GPT 复查后宣告完成', () => {
   assert.match(refinement, /human_truth!==false/);
   assert.match(refinement, /approved_for_training!==false/);
   assert.equal(refinement.includes("fetch('/api/state')"), false);
+});
+
+test('可见车辆恢复候选在前后端都必须完成类别盲审', () => {
+  const app = source('app.js');
+  const required = section(app, 'function candidateClassAuditRequired', 'function newCandidateRefinementId');
+  assert.match(required, /shape\?\.source==='sam_vlm_visible_vehicle_point_recovery'/);
 });
 
 test('人工修改候选会按唯一任务号取消单帧和批量后台精修', () => {

@@ -33,6 +33,8 @@ _sam_multi_protocols = {}
 MAX_REVIEW_ROUNDS = 100
 MAX_PROTOCOL_RETRIES = 2
 EGO_BOTTOM_POINT_FALLBACK_VERSION = "labelagent.ego_bottom_point_fallback.v1"
+VISIBLE_VEHICLE_POINT_RECOVERY_VERSION = (
+    "labelagent.visible_vehicle_point_recovery.v1")
 
 
 class ModelOutputError(ValueError):
@@ -340,6 +342,119 @@ def ego_bottom_point_candidates(config, image, next_id=1):
         "service_diagnostics": copy.deepcopy(diagnostics),
     }
     return ([selected] if selected is not None else []), evidence
+
+
+def visible_vehicle_point_candidate(config, image, next_id=1):
+    """Recover one review-only vehicle proposal from a VLM interior point."""
+    if type(next_id) is not int or next_id < 1:
+        raise ValueError("车辆补救候选 ID 无效")
+    with Image.open(io.BytesIO(image)) as decoded:
+        width, height = decoded.size
+    schema = {
+        "type": "object",
+        "properties": {
+            "decision": {"type": "string",
+                         "enum": ["located", "ambiguous", "absent"]},
+            "entity_type": {"type": "string", "enum": [
+                "conventional_vehicle_or_forklift",
+                "autonomous_robot_or_agv", "other"]},
+            "x": {"type": "integer", "minimum": 0, "maximum": 1000},
+            "y": {"type": "integer", "minimum": 0, "maximum": 1000},
+            "evidence": {"type": "string", "minLength": 1,
+                         "maxLength": 100},
+        },
+        "required": ["decision", "entity_type", "x", "y", "evidence"],
+        "additionalProperties": False,
+    }
+    instruction = (
+        "Locate one conventional industrial vehicle or forklift physically "
+        "separate from the camera-carrying ego machine. Ignore every foreground "
+        "black fork or chassis part attached to the camera. Search the distant "
+        "or background image, especially near walls. A parked, unoccupied, or "
+        "partly occluded forklift is still a conventional vehicle; a clear solid "
+        "body, cabin, mast, or base is enough even when the whole vehicle is not "
+        "visible. For decision='located', choose one point strictly inside a "
+        "visible solid vehicle part. The normalized point must have y <= 550; "
+        "if only foreground vehicle pixels exist, return decision='ambiguous'. "
+        "Never select a pallet, person, floor, wall, rack, window, or gap. "
+        "Coordinates are normalized integers 0..1000 from left/top to "
+        "right/bottom. If only an autonomous AGV is visible, return "
+        "entity_type='autonomous_robot_or_agv' and decision='ambiguous'. "
+        "Return compact JSON only."
+    )
+    located = chat(config, instruction, image, response_schema=schema)
+    evidence = {
+        "schema_version": VISIBLE_VEHICLE_POINT_RECOVERY_VERSION,
+        "locator": copy.deepcopy(located),
+        "candidate_only": True,
+        "human_truth": False,
+        "approved_for_training": False,
+    }
+    if (not isinstance(located, dict)
+            or located.get("decision") != "located"
+            or located.get("entity_type")
+            != "conventional_vehicle_or_forklift"):
+        return [], evidence | {"status": "locator_not_eligible"}
+    normalized_x, normalized_y = located.get("x"), located.get("y")
+    if (type(normalized_x) is not int or type(normalized_y) is not int
+            or not 0 <= normalized_x <= 1000
+            or not 0 <= normalized_y <= 1000):
+        raise ValueError("车辆补救定位点格式无效")
+    point = {
+        "x": round(normalized_x * (width - 1) / 1000),
+        "y": round(normalized_y * (height - 1) / 1000),
+    }
+    evidence["point"] = copy.deepcopy(point)
+    if normalized_y > 550:
+        return [], evidence | {"status": "foreground_ego_point_rejected"}
+    response = sam_request(
+        config, "/segment_points_batch", image, points=[point])
+    items = response.get("items") if isinstance(response, dict) else None
+    diagnostics = response.get("diagnostics") if isinstance(response, dict) else None
+    if (not isinstance(items, list) or len(items) != 1
+            or not isinstance(diagnostics, dict)
+            or diagnostics.get("image_encoded_once") is not True
+            or diagnostics.get("point_count") != 1
+            or items[0].get("point") != point):
+        raise ValueError("SAM 3 车辆点补救未证明单次编码和完整点覆盖")
+    result = items[0].get("result")
+    if not isinstance(result, dict) or not result.get("parts"):
+        return [], evidence | {"status": "sam_empty"}
+    shape = {
+        "id": next_id,
+        "label": "车辆",
+        "points": result["parts"][0].get("points", []),
+        "holes": result["parts"][0].get("holes", []),
+        "parts": result["parts"],
+        "score": result.get("score"),
+        "source": "sam_vlm_visible_vehicle_point_recovery",
+        "source_point": copy.deepcopy(point),
+    }
+    if not valid_shape(shape, width, height):
+        return [], evidence | {"status": "invalid_shape"}
+    from .edit_agent import _rasterize
+    mask = _rasterize(shape, width, height)
+    rows, columns = mask.nonzero()
+    if not len(rows):
+        return [], evidence | {"status": "empty_mask"}
+    bbox = [int(columns.min()), int(rows.min()),
+            int(columns.max()) + 1, int(rows.max()) + 1]
+    area = int(len(rows))
+    area_ratio = area / (width * height)
+    score = result.get("score")
+    evidence.update(score=score, bbox=bbox, area=area,
+                    area_ratio=area_ratio)
+    if (type(score) not in (int, float) or isinstance(score, bool)
+            or not math.isfinite(score) or score < 0.75
+            or not 0.0001 <= area_ratio <= 0.08
+            or bbox[2] - bbox[0] > width * 0.5
+            or bbox[3] - bbox[1] > height * 0.5
+            or bbox[1] >= height * 0.75):
+        return [], evidence | {"status": "geometry_rejected"}
+    shape.update(candidate_only=True, human_truth=False,
+                 approved_for_training=False,
+                 recovery_version=VISIBLE_VEHICLE_POINT_RECOVERY_VERSION)
+    return [shape], evidence | {"status": "candidate_generated"}
 
 
 def sam_text_prefetch(image, prompt, config):
@@ -921,7 +1036,7 @@ VISIBLE_LABEL_DEFINITIONS = {
     "floor": "the warehouse ground surface; exclude robot decks, vehicle bodies, pallets, ramps, and elevated cargo platforms",
     "slope": "a visibly inclined ramp or transition surface, kept separate from floor for annotation even though downstream policy may union floor and slope as traversable_area",
     "ego": "visible physical body, hood, chassis, forks, or structure belonging to the camera-carrying host robot; camera viewpoint or camera position alone is never evidence",
-    "other_robot": "a physically visible robot or mobile platform distinct from the camera-carrying ego robot and distinct from any human operator",
+    "other_robot": "a physically visible autonomous unmanned robot or AGV chassis distinct from the camera-carrying ego robot and distinct from any human operator; a conventional forklift, tug, pallet jack, cart, or parked/unoccupied industrial vehicle is still 车辆, never other_robot, unless autonomous robot hardware is visibly supported",
     "cargo_floor": "a visible elevated cargo-carrying deck physically attached to or forming part of a robot/mobile platform; a pallet (including a blue plastic pallet), static raised platform, warehouse ground, or merely saying that a vehicle stands on a floor is never cargo_floor evidence",
 }
 
@@ -1188,6 +1303,39 @@ def discover_visible_labels(config, image, labels):
             "reason_code": "vlm_missing_registry_assessment",
             "route": "human_review_required",
             "reason": "Missing known-label assessment was conservatively downgraded."})
+    # A conventional forklift/vehicle is not project ``other_robot`` merely
+    # because it is parked or no driver is visible.  The local VLM can reuse
+    # one visible forklift as both labels even after receiving the exclusivity
+    # instruction.  Preserve the vehicle assessment, but route the unsupported
+    # robot claim to review instead of presenting it as visible evidence.
+    other_robot = by_label.get("other_robot")
+    if other_robot and other_robot.get("evidence") == "present":
+        robot_reason = " ".join(other_robot.get("reason", "").casefold().split())
+        conventional_terms = (
+            "forklift", "fork lift", "industrial vehicle", "pallet jack",
+            "manual cart", "tug vehicle", "conventional vehicle",
+            "叉车", "工业车辆", "托盘车", "牵引车", "手推车",
+        )
+        autonomous_terms = (
+            "autonomous", "unmanned", "agv", "amr", "robot chassis",
+            "mobile robot", "self-driving", "driverless",
+            "自主", "无人", "机器人底盘", "移动机器人", "自动驾驶",
+        )
+        if (any(term in robot_reason for term in conventional_terms)
+                and not any(term in robot_reason for term in autonomous_terms)):
+            other_robot["evidence"] = "uncertain"
+            consistency_flags.append({
+                "label": "other_robot", "original_evidence": "present",
+                "normalized_evidence": "uncertain",
+                "reason_code": "other_robot_conventional_vehicle_conflict",
+                "route": "human_review_required",
+                "conflicting_labels": [label for label in ("车辆", "other_robot")
+                                       if label in by_label],
+                "reason": (
+                    "The visible evidence names a conventional vehicle without "
+                    "autonomous robot hardware; other_robot requires human review."),
+                "original_reason": other_robot["reason"],
+            })
     # A shared explicit point is suspicious evidence reuse, not proof of object
     # identity. Keep both SAM queries and require a human to resolve the class.
     exclusive_labels = [label for label in ("车辆", "ego", "other_robot")

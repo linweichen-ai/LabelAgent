@@ -1106,6 +1106,40 @@ class WorkflowTests(unittest.TestCase):
         self.assertFalse(any(flag["reason_code"] == "vlm_cross_label_entity_conflict"
                              for flag in result["consistency_flags"]))
 
+    def test_visible_label_discovery_downgrades_conventional_forklift_robot_claim(self):
+        labels = ["车辆", "other_robot"]
+        answer = {"assessments": {
+            "车辆": {"evidence": "present", "confidence": 0.95,
+                     "reason": "A parked forklift body is visible."},
+            "other_robot": {"evidence": "present", "confidence": 0.95,
+                            "reason": "A visible forklift is distinct from ego."}},
+            "unknown_candidates": []}
+        with patch.object(workflow, "chat", return_value=answer):
+            result = workflow.discover_visible_labels({}, image_bytes(), labels)
+        self.assertEqual(result["visible_labels"], ["车辆"])
+        self.assertEqual(result["uncertain_labels"], ["other_robot"])
+        self.assertEqual(result["candidate_labels"], labels)
+        flag = next(flag for flag in result["consistency_flags"]
+                    if flag["reason_code"]
+                    == "other_robot_conventional_vehicle_conflict")
+        self.assertEqual(flag["route"], "human_review_required")
+        self.assertEqual(flag["original_reason"],
+                         "A visible forklift is distinct from ego.")
+
+    def test_visible_label_discovery_keeps_autonomous_robot_hardware_claim(self):
+        answer = {"assessments": {
+            "other_robot": {"evidence": "present", "confidence": 0.92,
+                            "reason": "Autonomous forklift AGV chassis is visible."}},
+            "unknown_candidates": []}
+        with patch.object(workflow, "chat", return_value=answer):
+            result = workflow.discover_visible_labels(
+                {}, image_bytes(), ["other_robot"])
+        self.assertEqual(result["visible_labels"], ["other_robot"])
+        self.assertEqual(result["uncertain_labels"], [])
+        self.assertFalse(any(
+            flag["reason_code"] == "other_robot_conventional_vehicle_conflict"
+            for flag in result["consistency_flags"]))
+
     def test_visible_label_discovery_routes_english_vehicle_alias_to_registry_conflict(self):
         answer = {"assessments": [{"label": "车辆", "evidence": "present",
             "confidence": 0.96, "reason": "A vehicle is visible."}],

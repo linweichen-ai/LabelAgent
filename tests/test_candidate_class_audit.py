@@ -183,7 +183,7 @@ class CandidateClassAuditTests(unittest.TestCase):
         self.assertTrue(all(item["route"] == "candidate_preserved"
                             for item in audits))
 
-    def test_uncertain_batch_is_discarded_and_falls_back_sequentially(self):
+    def test_uncertain_batch_reruns_only_uncertain_item_sequentially(self):
         candidates = [{**self.candidate, "id": value} for value in (7, 8, 9)]
         sequential_calls = []
         def sequential(*args, **kwargs):
@@ -195,8 +195,46 @@ class CandidateClassAuditTests(unittest.TestCase):
             batch_chat=lambda *args, **kwargs:
                 [self.decision(), uncertain, self.decision()])
         self.assertEqual(queue, [])
+        self.assertEqual(len(sequential_calls), 1)
+        self.assertEqual([item["execution_mode"] for item in audits],
+                         ["independent_batch_3", "sequential",
+                          "independent_batch_3"])
+        self.assertEqual(
+            audits[1]["batch_fallback_reason"],
+            "batch_not_high_confidence_original_class")
+
+    def test_one_protocol_invalid_batch_item_reruns_only_that_item(self):
+        candidates = [{**self.candidate, "id": value} for value in (7, 8, 9)]
+        sequential_calls = []
+        def sequential(*args, **kwargs):
+            sequential_calls.append(args)
+            return self.decision()
+        audits, queue = audit.audit_high_risk_candidates(
+            {}, self.image, candidates, self.labels, {}, sequential,
+            batch_chat=lambda *args, **kwargs:
+                [self.decision(), {}, self.decision()])
+        self.assertEqual(queue, [])
+        self.assertEqual(len(sequential_calls), 1)
+        self.assertEqual([item["execution_mode"] for item in audits],
+                         ["independent_batch_3", "sequential",
+                          "independent_batch_3"])
+        self.assertIn("batch_protocol_invalid",
+                      audits[1]["batch_fallback_reason"])
+
+    def test_malformed_batch_still_falls_back_whole_triple(self):
+        candidates = [{**self.candidate, "id": value} for value in (7, 8, 9)]
+        sequential_calls = []
+        def sequential(*args, **kwargs):
+            sequential_calls.append(args)
+            return self.decision()
+        audits, queue = audit.audit_high_risk_candidates(
+            {}, self.image, candidates, self.labels, {}, sequential,
+            batch_chat=lambda *args, **kwargs: [self.decision(), self.decision()])
+        self.assertEqual(queue, [])
         self.assertEqual(len(sequential_calls), 3)
         self.assertTrue(all(item["execution_mode"] == "sequential"
+                            for item in audits))
+        self.assertTrue(all("batch_request_failed" in item["batch_fallback_reason"]
                             for item in audits))
 
     def test_five_candidates_batch_one_triple_and_keep_two_sequential(self):
@@ -230,7 +268,7 @@ class CandidateClassAuditTests(unittest.TestCase):
                          [(1, 5, 7), (2, 5, 8), (3, 5, 9),
                           (4, 5, 10), (5, 5, 11)])
 
-    def test_later_uncertain_triple_only_falls_back_that_group(self):
+    def test_later_uncertain_triple_only_reruns_uncertain_item(self):
         candidates = [{**self.candidate, "id": value} for value in range(7, 13)]
         sequential_calls = []
         batch_calls = []
@@ -249,9 +287,10 @@ class CandidateClassAuditTests(unittest.TestCase):
             batch_chat=batch)
         self.assertEqual(queue, [])
         self.assertEqual(batch_calls, [3, 3])
-        self.assertEqual(sequential_calls, [10, 11, 12])
+        self.assertEqual(sequential_calls, [11])
         self.assertEqual([item["execution_mode"] for item in audits],
-                         ["independent_batch_3"] * 3 + ["sequential"] * 3)
+                         ["independent_batch_3"] * 4
+                         + ["sequential", "independent_batch_3"])
 
     def test_holes_and_invalid_coordinates(self):
         self.candidate["holes"] = [[[15, 15], [25, 15], [25, 25], [15, 25]]]

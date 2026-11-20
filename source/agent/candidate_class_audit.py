@@ -126,7 +126,7 @@ def audit_high_risk_candidates(config, image_bytes, candidates, labels, class_de
     targets = [candidate for candidate in candidates
                if candidate_requires_class_audit(candidate)
                and (candidate_ids is None or candidate.get("id") in candidate_ids)]
-    def run_sequential(candidate, position):
+    def run_sequential(candidate, position, batch_fallback_reason=None):
         check_cancelled()
         try:
             result = audit_candidate_class_blind(
@@ -143,6 +143,8 @@ def audit_high_risk_candidates(config, image_bytes, candidates, labels, class_de
                 "route": "human_review_required", "candidate_mutated": False,
                 "human_truth": False, "error": str(error)[:300]}
         result["candidate_artifact_sha256"] = artifact_sha
+        if batch_fallback_reason:
+            result["batch_fallback_reason"] = str(batch_fallback_reason)[:300]
         result["audit_sha256"] = _sha256(_canonical_bytes({
             key: value for key, value in result.items() if key != "audit_sha256"}))
         audits.append(result)
@@ -166,9 +168,12 @@ def audit_high_risk_candidates(config, image_bytes, candidates, labels, class_de
     # that is the only batch size with measured latency gain and accepted
     # semantic parity.  Longer target lists use as many full triples as they
     # contain; one or two remainders keep the established sequential path.
-    # Each triple fails closed independently, so one uncertain or malformed
-    # group is discarded and rerun sequentially without invalidating earlier
-    # protocol-valid groups.
+    # Malformed triples still fail closed as one unit.  Once all three outputs
+    # pass the response protocol, however, each request remains independent:
+    # retain only high-confidence confirmations of the original class and
+    # rerun uncertain, conflicting, or different-label items sequentially.
+    # This preserves the conservative semantic gate without discarding valid
+    # neighbours merely because one item in the transport batch is uncertain.
     batched_target_count = ((len(targets) // 3) * 3
                             if batch_chat is not None else 0)
     for start in range(0, batched_target_count, 3):
@@ -192,29 +197,43 @@ def audit_high_risk_candidates(config, image_bytes, candidates, labels, class_de
                 max_tokens=384)
             if not isinstance(decisions, list) or len(decisions) != 3:
                 raise CandidateClassProtocolError("批量盲审结果数量不匹配")
-            decisions = [validate_blind_candidate_class_decision(value, labels)
-                         for value in decisions]
-            if not all(
-                    decision["classification"] == "known_label"
-                    and decision["observed_label"] == candidate["label"]
-                    and decision["candidate_supported"]
-                    and decision["confidence"] >= 0.90
-                    for (candidate, _, _), decision in zip(prepared, decisions)):
-                raise CandidateClassProtocolError("批量盲审未全部高置信确认原候选类别")
-            for offset, ((candidate, evidence, prompt), decision) in enumerate(
-                    zip(prepared, decisions)):
-                result = _candidate_class_audit_result(
-                    image_bytes, candidate, evidence, prompt, decision,
-                    candidate_artifact_sha256=artifact_sha,
-                    execution_mode="independent_batch_3")
-                audits.append(result)
-                if on_progress is not None:
-                    on_progress(start + offset + 1, len(targets), candidate, result)
-            check_cancelled()
-        except Exception:
+            validated = []
+            for value in decisions:
+                try:
+                    validated.append((
+                        validate_blind_candidate_class_decision(value, labels), None))
+                except CandidateClassProtocolError as error:
+                    validated.append((None, f"batch_protocol_invalid: {error}"))
+        except Exception as error:
             check_cancelled()
             for offset, candidate in enumerate(group):
-                run_sequential(candidate, start + offset + 1)
+                run_sequential(
+                    candidate, start + offset + 1,
+                    f"batch_request_failed: {error}")
+            continue
+        for offset, ((candidate, evidence, prompt), (decision, invalid_reason)) in enumerate(
+                zip(prepared, validated)):
+            if decision is None:
+                run_sequential(candidate, start + offset + 1, invalid_reason)
+                continue
+            batch_supported = (
+                decision["classification"] == "known_label"
+                and decision["observed_label"] == candidate["label"]
+                and decision["candidate_supported"]
+                and decision["confidence"] >= 0.90)
+            if not batch_supported:
+                run_sequential(
+                    candidate, start + offset + 1,
+                    "batch_not_high_confidence_original_class")
+                continue
+            result = _candidate_class_audit_result(
+                image_bytes, candidate, evidence, prompt, decision,
+                candidate_artifact_sha256=artifact_sha,
+                execution_mode="independent_batch_3")
+            audits.append(result)
+            if on_progress is not None:
+                on_progress(start + offset + 1, len(targets), candidate, result)
+            check_cancelled()
     for position, candidate in enumerate(
             targets[batched_target_count:], batched_target_count + 1):
         run_sequential(candidate, position)

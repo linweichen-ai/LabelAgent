@@ -1,0 +1,102 @@
+{
+  "round": 352,
+  "date": "2026-11-20",
+  "objective": "Avoid rerunning already valid independent candidate-class audit results when another item in the same transport batch is uncertain or protocol-invalid.",
+  "policy": {
+    "batch_size": 3,
+    "retain_batch_result_only_when": [
+      "response passes the complete candidate-class schema",
+      "classification is known_label",
+      "observed_label equals the candidate's existing label",
+      "candidate_supported is true",
+      "confidence is at least 0.90"
+    ],
+    "rerun_sequentially_when": [
+      "that item is uncertain or conflicting",
+      "that item has a protocol-invalid response",
+      "that item proposes a different label"
+    ],
+    "rerun_whole_batch_when": [
+      "the batch request fails",
+      "the response count does not match the request count"
+    ],
+    "candidate_mutation": false,
+    "human_truth_written": false,
+    "training_approval_written": false
+  },
+  "real_new_dataset_acceptance": {
+    "dataset_identity": "Capture_20261103 · 常熟实采 · 四相机",
+    "topic": "/capture/camera_2/image",
+    "frame": 0,
+    "selected_classes": 8,
+    "candidate_count": 9,
+    "candidate_counts_by_label": {
+      "ego": 1,
+      "floor": 1,
+      "pallet": 5,
+      "person": 2
+    },
+    "before_partial_validation": {
+      "first_response_ms": 19172.0,
+      "background_complete_ms": 79313.0,
+      "audit_execution_modes": ["sequential", "sequential", "sequential"],
+      "note": "Cold-content run. One protocol-invalid item caused the entire triple to rerun sequentially."
+    },
+    "after_partial_validation": {
+      "first_response_ms": 3750.0,
+      "background_complete_ms": 5782.0,
+      "audit_execution_modes": [
+        "independent_batch_3",
+        "independent_batch_3",
+        "sequential"
+      ],
+      "sequential_candidate": {
+        "id": 9,
+        "label": "ego",
+        "route": "human_review_required",
+        "fallback_reason": "batch_protocol_invalid: 不确定或冲突不能声明已知类别"
+      },
+      "cache_note": "The exact-image recheck used model response caches. It proves routing and output parity, not an independent cold-latency speedup."
+    },
+    "coverage_feedback": {
+      "generated": ["pallet", "person", "floor", "ego"],
+      "not_seen": ["车辆", "slope", "other_robot", "cargo_floor"],
+      "human_review_required": ["ego"]
+    },
+    "page_errors": 0,
+    "http_errors": 0,
+    "truth_write_requests": 0,
+    "truth_frame_created": false,
+    "reference_frame_created": false,
+    "screenshot": "candidate-audit-partial-fallback-round352.png",
+    "screenshot_sha256": "77ed6c4bb34c98e9545bb9048158d49df4bb499fcd50b5b9c8ddddc08f7b9f06"
+  },
+  "additional_cold_acceptance": {
+    "topic": "/capture/camera_3/image",
+    "first_response_ms": 19672.0,
+    "background_complete_ms": 38203.0,
+    "candidate_count": 3,
+    "high_risk_audit_count": 1,
+    "batch_path_exercised": false,
+    "passed": true
+  },
+  "tests": {
+    "candidate_class_audit": "34 passed, 11 subtests passed",
+    "full_project": "1154 passed, 186 subtests passed"
+  },
+  "production": {
+    "source_sha256": "a5cf3e72849ee47543ef02eb71bf091b5f19eb751b41c0c5d06a434cdbc9a541",
+    "state_sha256_before": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115",
+    "state_sha256_after": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115",
+    "status_after": "idle",
+    "current_topic_after": "/capture/camera_1/image",
+    "services_after": {
+      "workbench": "ready",
+      "sam_4090": "ready",
+      "sam_5090": "ready",
+      "vlm_4090": "ready",
+      "vlm_5090_fast": "ready"
+    },
+    "rollback_backup": "D:\\Apps\\LabelAgent\\.local\\backups\\candidate-audit-partial-fallback-round352-20261120\\candidate_class_audit.py"
+  }
+}

@@ -33,6 +33,8 @@
 - `docs/evidence/workbench-stability-20261117/reference-background-progress-round372/result.json`；
 - `docs/evidence/workbench-stability-20261117/reference-background-progress-round372-production/result.json`。
 
+第一次完整 Python 回归误用了系统 Python 3.14，该解释器没有安装 `pytest`，测试未开始；没有为此安装或污染系统依赖。随后改用项目虚拟环境，1,187项及190个子测试全部通过。
+
 第一次正式浏览器验收在工作台仍处于自动推理模式时尝试滚动隐藏的人工检查区，因此验收脚本超时；这不是产品推理失败。脚本随后显式切回人工检查模式，正式端口复跑通过，并保留“零真值写入”约束。
 
 ## 部署与回滚

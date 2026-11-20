@@ -27,3 +27,9 @@
 本轮没有为了制造故障而停止正式 SAM3/VLM 服务，避免影响工作台；故障路径使用隔离模拟验证。它改善的是异常情况下的响应性和可恢复性，不宣称正常模型推理本身又缩短了多少。
 
 结构化证据见 `docs/evidence/workbench-stability-20261117/nonblocking-sam-prefetch-round369.json`。
+
+## 正式部署
+
+本轮已部署到 `http://127.0.0.1:8765`。部署后首页返回 200，运行状态为 `idle`，SAM3、VLM 和标注页均正常。工作区与正式服务文件 SHA-256 均为 `A2860DAE...A558EC`；正式状态文件部署前后均为 `9EF08118...AB115`，隔离端口 8891～8897 全部关闭。
+
+旧版服务文件备份在 `D:\Apps\LabelAgent\.local\backups\round369-20261120\source\agent\server.py`，可单文件回滚。

@@ -56,11 +56,11 @@ def storage_free_bytes(path):
     return shutil.disk_usage(target).free
 
 
-def select_workbench_runtime_temp(environment, default_runtime_temp):
+def select_workbench_runtime_temp(environment, default_runtime_temp, *, port=WEB_PORT):
     """Choose a writable temp volume without weakening the 256 MiB gate."""
     override = environment.get("LABELAGENT_RUNTIME_TEMP_ROOT")
     if override:
-        return Path(override).resolve() / f"workbench-{WEB_PORT}"
+        return Path(override).resolve() / f"workbench-{port}"
     default_runtime_temp = Path(default_runtime_temp).resolve()
     if storage_free_bytes(default_runtime_temp) >= STORAGE_CRITICAL_BYTES:
         return default_runtime_temp
@@ -68,7 +68,7 @@ def select_workbench_runtime_temp(environment, default_runtime_temp):
     fallback_root = (Path(local_app_data) if local_app_data
                      else Path.home() / "AppData" / "Local")
     fallback = (fallback_root / "LabelAgent" / "runtime-temp"
-                / f"workbench-{WEB_PORT}").resolve()
+                / f"workbench-{port}").resolve()
     if storage_free_bytes(fallback) >= STORAGE_CRITICAL_BYTES:
         return fallback
     # Preserve the existing fail-closed error and its exact default path when
@@ -766,8 +766,10 @@ def isolate(action, port, work, open_browser=False):
                 AUTOLABEL_PORT=str(port),
                 SAM3_URL=f"http://127.0.0.1:{SAM_PORT}",
                 NO_PROXY="127.0.0.1,localhost")
+            runtime_temp = select_workbench_runtime_temp(
+                environment, work / ".runtime-temp", port=port)
             environment, storage = prepare_runtime_environment(
-                environment, work / ".runtime-temp")
+                environment, runtime_temp)
             print_storage_advisory(storage)
             token = uuid.uuid4().hex
             with (log_dir / f"isolated_workbench_{port}.log").open("ab") as output:

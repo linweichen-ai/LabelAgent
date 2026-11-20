@@ -88,9 +88,9 @@ class RemoteWorkbenchManagerTests(unittest.TestCase):
     def test_workbench_temp_override_is_explicit_and_port_scoped(self):
         selected = MODULE.select_workbench_runtime_temp(
             {"LABELAGENT_RUNTIME_TEMP_ROOT": "C:/LabelAgentTemp"},
-            "D:/LabelAgent/runtime-temp/workbench-8765")
+            "D:/LabelAgent/runtime-temp/workbench-8891", port=8891)
         self.assertEqual(selected,
-                         (Path("C:/LabelAgentTemp") / "workbench-8765").resolve())
+                         (Path("C:/LabelAgentTemp") / "workbench-8891").resolve())
 
     def test_low_space_advisory_reports_redirect_without_blocking(self):
         report = {

@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -ne 3 ]]; then
-  echo "usage: $0 PROJECT_ROOT OUTPUT_NAME ADAPTER_RUN_NAME" >&2
+if [[ $# -lt 3 || $# -gt 5 ]]; then
+  echo "usage: $0 PROJECT_ROOT OUTPUT_NAME ADAPTER_RUN_NAME [DATASET_NAME] [REFERENCE_RESULT_NAME]" >&2
   exit 64
 fi
 PROJECT_ROOT=$1
 OUTPUT_NAME=$2
 ADAPTER_RUN_NAME=$3
+DATASET_NAME=${4:-dataset}
+REFERENCE_RESULT_NAME=${5:-generation-eval-train1epoch-production-order-v1}
 GPU_UUID=GPU-8dde4d59-7e14-09ff-46c0-35da2f7177b8
 SAM_PORT=18766
 VLM_PORT=18878
@@ -18,17 +20,19 @@ SERVER_DIR=/home/clw/labelagent_remote_20261110/vlm
 MODEL_DIR=/home/clw/labelagent_vlm_20261104/models/Qwen3-VL-2B-Instruct
 ADAPTER_DIR="$PROJECT_ROOT/$ADAPTER_RUN_NAME/adapter"
 OUTPUT_DIR="$PROJECT_ROOT/$OUTPUT_NAME"
-REFERENCE_RESULT="$PROJECT_ROOT/generation-eval-train1epoch-production-order-v1/result.json"
+REFERENCE_RESULT="$PROJECT_ROOT/$REFERENCE_RESULT_NAME/result.json"
 TRITON_CACHE_DIR="$PROJECT_ROOT/cache/triton-qwen3vl2b-parallel"
 TORCHINDUCTOR_CACHE_DIR="$PROJECT_ROOT/cache/torchinductor-qwen3vl2b-parallel"
 
 case "$PROJECT_ROOT" in /home/clw/projects/sfl-cpd15y/*) ;; *) exit 65 ;; esac
 [[ "$OUTPUT_NAME" =~ ^[A-Za-z0-9._-]+$ ]] || exit 66
 [[ "$ADAPTER_RUN_NAME" =~ ^[A-Za-z0-9._-]+$ ]] || exit 67
+[[ "$DATASET_NAME" =~ ^[A-Za-z0-9._-]+$ ]] || exit 73
+[[ "$REFERENCE_RESULT_NAME" =~ ^[A-Za-z0-9._-]+$ ]] || exit 74
 [[ ! -e "$OUTPUT_DIR" ]] || { echo "evaluation output already exists" >&2; exit 68; }
 for required in "$PROJECT_ROOT/evaluate_qwen3vl_merged_generation.py" \
-  "$PROJECT_ROOT/train_qwen3vl_lora.py" "$PROJECT_ROOT/dataset/dev.jsonl" \
-  "$PROJECT_ROOT/dataset/manifest.json" "$PROJECT_ROOT/dataset/contract.json" \
+  "$PROJECT_ROOT/train_qwen3vl_lora.py" "$PROJECT_ROOT/$DATASET_NAME/dev.jsonl" \
+  "$PROJECT_ROOT/$DATASET_NAME/manifest.json" "$PROJECT_ROOT/$DATASET_NAME/contract.json" \
   "$MODEL_DIR/config.json" "$ADAPTER_DIR/adapter_model.safetensors" \
   "$REFERENCE_RESULT" "$SERVER_DIR/local_vlm_server.py" "$PEFT_OVERLAY"; do
   [[ -e "$required" ]] || { echo "missing required path: $required" >&2; exit 69; }
@@ -53,7 +57,7 @@ env PYTHONPATH="$PEFT_OVERLAY:$PROJECT_ROOT:$SERVER_DIR" \
   TORCHINDUCTOR_CACHE_DIR="$TORCHINDUCTOR_CACHE_DIR" \
   "$PYTHON" evaluate_qwen3vl_merged_generation.py \
     --model-dir "$MODEL_DIR" --adapter-dir "$ADAPTER_DIR" \
-    --dataset-dir dataset --contract dataset/contract.json \
+    --dataset-dir "$DATASET_NAME" --contract "$DATASET_NAME/contract.json" \
     --server-module-dir "$SERVER_DIR" --reference-result "$REFERENCE_RESULT" \
     --cache-implementation static --output "$OUTPUT_NAME"
 

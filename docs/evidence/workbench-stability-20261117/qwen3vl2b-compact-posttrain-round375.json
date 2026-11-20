@@ -47,6 +47,32 @@
       "other_robot": {"tp": 3, "fp": 1, "fn": 1, "tn": 3}
     }
   },
+  "same_prompt_static_cache_ab": {
+    "new_candidate": {
+      "valid_json": "8/8",
+      "teacher_evidence": "62/64",
+      "median_completion_tokens": 182.0,
+      "median_generation_seconds": 4.5935,
+      "max_generation_seconds": 5.021,
+      "result_sha256": "bfff93862a3e245baee12e26ec5363642d385aa0b36d85feb935ca88e27dee29",
+      "slope": {"tp": 2, "fp": 0, "fn": 0, "tn": 6},
+      "pallet": {"tp": 7, "fp": 0, "fn": 1, "tn": 0},
+      "other_robot": {"tp": 4, "fp": 1, "fn": 0, "tn": 3}
+    },
+    "old_best": {
+      "valid_json": "8/8",
+      "teacher_evidence": "61/64",
+      "median_completion_tokens": 199.0,
+      "median_generation_seconds": 5.6025,
+      "max_generation_seconds": 6.258,
+      "result_sha256": "faba49dd61d588cb2b50b45b6226d5bd2bf82234ceb48e5ee83e68d7118e40d2",
+      "slope": {"tp": 2, "fp": 0, "fn": 0, "tn": 6},
+      "pallet": {"tp": 7, "fp": 0, "fn": 1, "tn": 0},
+      "other_robot": {"tp": 3, "fp": 1, "fn": 1, "tn": 3}
+    },
+    "new_candidate_median_speedup_vs_old_best": 0.1801,
+    "new_candidate_median_speedup_vs_dynamic_self": 0.7234
+  },
   "external_shadow": {
     "status": "assistant_candidate_only",
     "samples": 4,
@@ -62,7 +88,7 @@
   "decision": {
     "retain_artifact": true,
     "replace_production_model": false,
-    "reason": "One internal teacher-evidence improvement and shorter output are positive, but latency did not improve and no independent human or unused external gate has passed."
+    "reason": "Internal teacher-evidence, output length, and static-cache latency improved, but no independent human or unused external gate has passed."
   },
   "service_readback": {
     "sam_ok": true,

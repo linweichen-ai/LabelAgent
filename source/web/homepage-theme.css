@@ -1,0 +1,606 @@
+/*
+ * LabelAgent academic-light visual layer.
+ *
+ * This stylesheet deliberately changes presentation only.  The workbench
+ * structure, element ids, interaction order and inference controls remain in
+ * index.html and the existing component stylesheets.
+ *
+ * Palette and visual restraint follow the owner's personal homepage:
+ * white paper, deep blue headings, readable gray text, fine rules and modest
+ * shadows.  Green, amber and red remain reserved for machine-state semantics.
+ */
+
+:root {
+  --la-paper: #ffffff;
+  --la-canvas: #f7f8fa;
+  --la-ink: #404950;
+  --la-heading: #24354a;
+  --la-muted: #626a70;
+  --la-link: #224b8d;
+  --la-link-dark: #16335f;
+  --la-line: #e3e7eb;
+  --la-line-strong: #d4dbe3;
+  --la-blue-soft: #f2f6fb;
+  --la-blue-selected: #e9f0fa;
+  --la-shadow: 0 5px 18px rgba(32, 51, 75, .07);
+  --la-sans: "Trebuchet MS", "Microsoft YaHei", Helvetica, Arial, sans-serif;
+}
+
+html {
+  color: var(--la-ink);
+  background: var(--la-canvas);
+  font-family: var(--la-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  color: var(--la-ink);
+  background: var(--la-canvas);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: var(--la-sans);
+}
+
+button {
+  border-color: var(--la-line-strong);
+  border-radius: 5px;
+  color: var(--la-heading);
+  background: var(--la-paper);
+  box-shadow: none;
+  transition: border-color .15s ease, color .15s ease, background-color .15s ease, box-shadow .15s ease;
+}
+
+button:hover:not(:disabled) {
+  border-color: #9aaabd;
+  color: var(--la-link-dark);
+  background: #f7f9fb;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--la-link);
+  outline-offset: 2px;
+}
+
+button.primary,
+.guideAction,
+.guideAutoDraft,
+.workspaceModes .selected,
+.reviewFilterButtons button.selected,
+.compareModes button.selected {
+  border-color: var(--la-link) !important;
+  color: #fff !important;
+  background: var(--la-link) !important;
+}
+
+button.primary:hover:not(:disabled),
+.guideAction:hover:not(:disabled),
+.guideAutoDraft:hover:not(:disabled) {
+  border-color: var(--la-link-dark) !important;
+  background: var(--la-link-dark) !important;
+}
+
+button.selected:not(.primary):not(.workspaceModes button):not(.reviewFilterButtons button):not(.compareModes button) {
+  border-color: #8299b5;
+  color: var(--la-link);
+  background: var(--la-blue-selected);
+}
+
+input,
+select,
+textarea {
+  border-color: var(--la-line-strong);
+  border-radius: 5px;
+  color: var(--la-ink);
+  background: var(--la-paper);
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: #aab6c3;
+}
+
+/* Top bar: visually mirrors the restrained homepage masthead. */
+.windowToolbar {
+  gap: 10px;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--la-line);
+  background: rgba(255, 255, 255, .97);
+  box-shadow: 0 2px 10px rgba(36, 53, 74, .045);
+}
+
+.productBrand {
+  padding-right: 12px;
+  border-right: 1px solid var(--la-line);
+}
+
+.brandMark {
+  border: 1px solid #183a69;
+  border-radius: 7px;
+  color: #fff;
+  background: var(--la-link);
+  box-shadow: none;
+}
+
+.brandCopy strong {
+  color: var(--la-heading);
+  letter-spacing: -.02em;
+}
+
+.brandCopy small,
+#workspaceModeHint {
+  color: var(--la-muted);
+}
+
+.brandLive {
+  border-color: #cbd9d2;
+  color: #45665b;
+  background: #f7faf8;
+}
+
+.workspaceModes {
+  padding: 2px;
+  border-color: var(--la-line-strong);
+  border-radius: 6px;
+  background: var(--la-paper);
+}
+
+.workspaceModes button {
+  border-radius: 4px;
+}
+
+.modeShortcut {
+  border-color: #9bacc1;
+  color: var(--la-link);
+  background: var(--la-blue-soft);
+  box-shadow: none;
+}
+
+.toolbarActions {
+  gap: 5px;
+}
+
+.toolbarActions button {
+  border-color: transparent;
+  color: #4d5b68;
+  background: transparent;
+}
+
+.toolbarActions button:hover:not(:disabled) {
+  border-color: var(--la-line);
+  background: #f5f7f9;
+}
+
+.reviewPacketsButton,
+.quickActionsButton,
+.tutorialButton {
+  box-shadow: none !important;
+}
+
+/* Dataset identity becomes a clean information strip instead of a banner. */
+.datasetIdentity {
+  min-height: 44px;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--la-line);
+  background: #fbfcfd;
+  box-shadow: none;
+}
+
+.datasetIdentityKind {
+  border: 1px solid #a9b8ca;
+  border-radius: 4px;
+  color: var(--la-link);
+  background: var(--la-paper);
+}
+
+.datasetIdentityCopy strong {
+  color: var(--la-heading);
+  letter-spacing: -.01em;
+}
+
+.datasetIdentityCopy small {
+  color: var(--la-muted);
+}
+
+.datasetIdentity button {
+  border-color: var(--la-line-strong);
+  color: var(--la-link);
+  background: var(--la-paper);
+}
+
+/* Workflow guide: clearer hierarchy, same four steps and actions. */
+.workflowGuide {
+  border-bottom: 1px solid var(--la-line);
+  background: var(--la-paper);
+  box-shadow: none;
+}
+
+.guideSummary {
+  padding: 9px 14px 8px;
+  background: var(--la-paper);
+}
+
+.guideCopy {
+  padding-left: 10px;
+  border-left: 3px solid var(--la-link);
+}
+
+.guideEyebrow {
+  color: var(--la-link);
+  background: transparent;
+  letter-spacing: .035em;
+}
+
+.guideCopy strong,
+.panelHeading h2,
+.candidateReviewHead strong,
+.compareDockHead strong,
+.inspectionHeading strong {
+  color: var(--la-heading);
+}
+
+.guideCopy > span:last-child,
+.guideDetail,
+.guideSafety {
+  color: var(--la-muted);
+}
+
+.guideBadge {
+  border-radius: 4px;
+}
+
+.guideSteps {
+  border-top: 1px solid #eef0f3;
+  background: #fbfcfd;
+}
+
+.guideSteps li:not(:last-child)::after {
+  background: var(--la-line-strong);
+}
+
+.guideSteps li i {
+  border-color: #b4bfcc;
+  color: var(--la-muted);
+  background: var(--la-paper);
+}
+
+.guideSteps li.active i,
+.guideSteps li.done i {
+  border-color: var(--la-link);
+  background: var(--la-link);
+}
+
+.guideSteps b {
+  color: var(--la-heading);
+}
+
+.guideSteps small {
+  color: var(--la-muted);
+}
+
+.guideSafety {
+  border-top-color: var(--la-line);
+  background: #fff;
+}
+
+/* The image remains the visual focus; chrome is quieter and more precise. */
+.windowGrid {
+  gap: 7px;
+  padding: 8px;
+  background: #182129;
+}
+
+.sensorWindow {
+  border-color: #44515d;
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(8, 18, 27, .18);
+}
+
+.windowHeader,
+.primaryWindow .windowHeader {
+  color: #edf2f6;
+  background: rgba(28, 42, 55, .94);
+}
+
+.playbackBar {
+  padding: 7px 11px;
+  border-color: var(--la-line);
+  background: var(--la-paper);
+}
+
+.playbackControls button,
+.frameStepButton {
+  border-color: var(--la-line-strong) !important;
+  border-radius: 4px !important;
+  color: var(--la-heading) !important;
+  background: var(--la-paper) !important;
+}
+
+.timeSeek input,
+.compareSliders input[type="range"] {
+  accent-color: var(--la-link);
+}
+
+.timeSeek output,
+.frameJumpLabel,
+.playbackControls #frameTotal {
+  color: var(--la-muted);
+}
+
+#workbenchSplitter {
+  background: #eef1f4;
+}
+
+#workbenchSplitter::after {
+  background: #aeb9c5;
+}
+
+#workbench {
+  border-top-color: var(--la-line);
+  background: var(--la-paper);
+}
+
+.panel {
+  background: var(--la-paper);
+}
+
+.panelHeading {
+  border-bottom: 1px solid var(--la-line);
+}
+
+.panelHeading h2 {
+  letter-spacing: -.015em;
+}
+
+.truthSettings,
+.toolrow,
+.autoLabelBar,
+.candidateSummary,
+.inspectionHeading,
+.inspectionStages,
+.candidateReviewHead {
+  border-color: var(--la-line);
+  background: var(--la-paper);
+}
+
+.shapeList {
+  border-top-color: var(--la-line);
+}
+
+.shapeItem {
+  border-bottom-color: var(--la-line);
+}
+
+.shapeItem:hover {
+  background: #f7f9fb;
+}
+
+.shapeItem.selected {
+  color: var(--la-link);
+  background: var(--la-blue-selected);
+}
+
+/* Cards and floating panels borrow the homepage's thin-rule language. */
+.candidateReviewPanel,
+#inspectionPanel {
+  border-color: var(--la-line);
+  background: #fafbfc;
+}
+
+.candidateReviewItem,
+.candidateStat,
+.inspectionCard,
+.compareLayers,
+.candidateCoverageDetail,
+.referenceReviewDockEvidencePanel {
+  border-color: var(--la-line);
+  border-radius: 5px;
+  background: var(--la-paper);
+  box-shadow: 0 2px 8px rgba(32, 51, 75, .035);
+}
+
+.candidateReviewItem:hover,
+.candidateReviewItem:focus-visible {
+  border-color: #9aaabd;
+  box-shadow: var(--la-shadow);
+  transform: translateY(-1px);
+}
+
+.candidateNumber {
+  border-radius: 4px;
+  color: var(--la-link);
+  background: var(--la-blue-selected);
+}
+
+.reviewEyebrow,
+.compareEyebrow {
+  border-radius: 3px;
+  background: var(--la-heading);
+}
+
+.candidateEvidence,
+.compareLegend {
+  border-radius: 4px;
+  background: #f6f8fa;
+}
+
+.compareDock {
+  border-color: #aeb9c5;
+  border-radius: 7px;
+  color: var(--la-ink);
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 12px 34px rgba(20, 33, 53, .18);
+}
+
+.compareDockHead {
+  border-bottom: 1px solid var(--la-line);
+  background: #fbfcfd;
+}
+
+.referenceReviewDock {
+  border-color: #aeb9c5;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 12px 32px rgba(20, 33, 53, .15);
+}
+
+.referenceReviewDockCopy strong {
+  color: var(--la-heading);
+}
+
+.referenceReviewDockCopy small {
+  color: var(--la-muted);
+}
+
+/* Dialogs retain their behavior but look like the homepage's figure preview. */
+dialog,
+#addWindowDialog,
+.runReadinessDialog,
+.inspectionZoom {
+  border-color: var(--la-line-strong);
+  border-radius: 7px;
+  color: var(--la-ink);
+  background: var(--la-paper);
+  box-shadow: 0 16px 60px rgba(20, 33, 53, .22);
+}
+
+dialog::backdrop,
+#addWindowDialog::backdrop,
+.runReadinessDialog::backdrop,
+.inspectionZoom::backdrop {
+  background: rgba(23, 35, 51, .62);
+  backdrop-filter: blur(3px);
+}
+
+.readinessHead,
+.readinessSummary {
+  background: #fbfcfd;
+}
+
+.readinessHead {
+  border-bottom: 1px solid var(--la-line);
+}
+
+.readinessHead h2 {
+  color: var(--la-heading);
+}
+
+.readinessHead span {
+  border-radius: 3px;
+  background: var(--la-heading);
+}
+
+.readinessList li {
+  border-color: var(--la-line);
+  border-radius: 5px;
+}
+
+.readinessActions {
+  border-color: var(--la-line);
+  background: #f8f9fb;
+}
+
+/* Dark mode remains available and coherent; semantic colors stay untouched. */
+body.darkTheme {
+  --la-paper: #121a22;
+  --la-canvas: #0e151c;
+  --la-ink: #d9e1e8;
+  --la-heading: #edf2f6;
+  --la-muted: #a8b2bc;
+  --la-link: #8fb4e8;
+  --la-link-dark: #b5cef0;
+  --la-line: #2c3946;
+  --la-line-strong: #3a4856;
+  --la-blue-soft: #17263a;
+  --la-blue-selected: #1a2e47;
+  background: var(--la-canvas);
+}
+
+body.darkTheme .windowToolbar,
+body.darkTheme .datasetIdentity,
+body.darkTheme .workflowGuide,
+body.darkTheme .guideSummary,
+body.darkTheme .guideSafety,
+body.darkTheme .playbackBar,
+body.darkTheme #workbench,
+body.darkTheme .panel,
+body.darkTheme .candidateReviewHead,
+body.darkTheme .inspectionHeading,
+body.darkTheme .inspectionStages,
+body.darkTheme .autoLabelBar,
+body.darkTheme .candidateSummary {
+  border-color: var(--la-line);
+  background: var(--la-paper);
+}
+
+body.darkTheme .guideSteps,
+body.darkTheme .compareDockHead,
+body.darkTheme .readinessHead,
+body.darkTheme .readinessSummary,
+body.darkTheme .readinessActions {
+  border-color: var(--la-line);
+  background: #151f29;
+}
+
+body.darkTheme .toolbarActions button {
+  color: #c4cdd6;
+}
+
+body.darkTheme .toolbarActions button:hover:not(:disabled) {
+  border-color: var(--la-line-strong);
+  background: #1a2530;
+}
+
+body.darkTheme .candidateReviewItem,
+body.darkTheme .candidateStat,
+body.darkTheme .inspectionCard,
+body.darkTheme .compareLayers,
+body.darkTheme .candidateCoverageDetail,
+body.darkTheme .referenceReviewDockEvidencePanel,
+body.darkTheme .readinessList li,
+body.darkTheme input,
+body.darkTheme select,
+body.darkTheme textarea,
+body.darkTheme button {
+  border-color: var(--la-line-strong);
+  color: var(--la-ink);
+  background: var(--la-paper);
+}
+
+body.darkTheme .compareDock,
+body.darkTheme .referenceReviewDock,
+body.darkTheme dialog,
+body.darkTheme .runReadinessDialog {
+  border-color: var(--la-line-strong);
+  color: var(--la-ink);
+  background: rgba(18, 26, 34, .97);
+}
+
+@media (max-width: 900px) {
+  .productBrand {
+    padding-right: 0;
+    border-right: 0;
+  }
+
+  .toolbarActions {
+    width: 100%;
+    padding-top: 5px;
+    border-top: 1px solid var(--la-line);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  .candidateReviewItem {
+    transition: none;
+  }
+}

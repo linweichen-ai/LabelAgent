@@ -1,0 +1,25 @@
+{
+  "schema_version": "labelagent.homepage-theme-acceptance.v1",
+  "date": "2026-11-20",
+  "reference_style": "https://linweichen-ai.github.io/",
+  "visual_only": true,
+  "ui_version": "155",
+  "theme_loaded": true,
+  "production_url": "http://127.0.0.1:8765",
+  "http_status": 200,
+  "auto_workspace_switch": true,
+  "required_controls_present": true,
+  "console_errors": 0,
+  "page_errors": 0,
+  "javascript_tests": {
+    "passed": 148,
+    "failed": 0
+  },
+  "production_state_unchanged": true,
+  "production_files_unchanged": true,
+  "candidate_only_boundary_unchanged": true,
+  "human_truth_unchanged": true,
+  "training_approval_unchanged": true,
+  "screenshots_local_only": true,
+  "passed": true
+}

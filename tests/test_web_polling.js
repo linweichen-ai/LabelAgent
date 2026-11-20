@@ -130,6 +130,7 @@ test('工作台持续显示新旧数据集身份和逐类别覆盖状态', () =>
   assert.match(app, /function candidateReviewCountsByLabel\(/);
   assert.match(app, /candidateNeedsReview/);
   assert.match(html, /style\.css\?v=119/);
+  assert.match(html, /homepage-theme\.css\?v=1/);
   assert.match(html, /app\.js\?v=198/);
   assert.match(app, /action\.dataset\.coverageRepair=label/);
   assert.match(app, /startCandidateCoverageRepair\(label\)/);

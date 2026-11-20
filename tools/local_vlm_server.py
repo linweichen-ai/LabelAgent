@@ -663,7 +663,10 @@ def create_app(backend, response_cache_entries=DEFAULT_RESPONSE_CACHE_ENTRIES,
             return
         record = {"schema_version": "labelagent.vlm-response-cache.v1",
                   "cache_key_sha256": key, "item": item}
-        temporary = path.with_name(f".{key}.{uuid.uuid4().hex}.tmp")
+        # The final file already carries the full request hash.  Repeating that
+        # 64-character key in the temporary name can cross the traditional
+        # Windows MAX_PATH limit in an otherwise valid deep checkout.
+        temporary = path.with_name(f".{uuid.uuid4().hex}.tmp")
         try:
             with temporary.open("x", encoding="utf-8", newline="\n") as output:
                 json.dump(record, output, ensure_ascii=False, sort_keys=True,

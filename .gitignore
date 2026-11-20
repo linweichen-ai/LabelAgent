@@ -16,3 +16,6 @@ __pycache__/
 /node_modules/
 *.pcd
 *.zip
+*.log
+*.pid
+/.repro/

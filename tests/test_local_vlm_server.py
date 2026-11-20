@@ -181,6 +181,27 @@ class LocalVLMContractTests(unittest.TestCase):
             self.assertEqual(len([path for path in Path(directory).iterdir()
                                   if path.is_dir()]), 2)
 
+    def test_persistent_response_cache_supports_deep_windows_checkout(self):
+        with tempfile.TemporaryDirectory() as directory:
+            deep = Path(directory)
+            # Keep the final hashed cache path valid while making the old
+            # duplicated-hash temporary name exceed a typical MAX_PATH.
+            while len(str(deep)) < 100:
+                deep /= "deep-checkout"
+            deep.mkdir(parents=True, exist_ok=True)
+            body = {"model": ContractBackend.model_id,
+                    "messages": messages(), "max_tokens": 23}
+            backend = ContractBackend()
+            backend.model_assets_sha256 = "b" * 64
+            app = MODULE.create_app(
+                backend, persistent_response_cache_dir=deep)
+            response = app.test_client().post(
+                "/v1/chat/completions", json=body)
+            self.assertEqual(response.status_code, 200)
+            records = list(deep.glob("*/*.json"))
+            self.assertEqual(len(records), 1)
+            self.assertLessEqual(len(records[0].name), 69)
+
     def test_persistent_cache_write_failure_never_fails_inference(self):
         with tempfile.TemporaryDirectory() as directory:
             backend = ContractBackend()

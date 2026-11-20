@@ -4,7 +4,7 @@
 
 ## 1. 获取同一份代码
 
-CNB 对外复现入口固定为 `reproduce`。`labelagent` 是持续开发分支，历史
+CNB 与 GitHub 的对外复现入口都固定为 `reproduce`。`labelagent` 是持续开发分支，历史
 `codex/*` 与 `backup/*` 分支不作为复现入口：
 
 ```powershell
@@ -13,10 +13,10 @@ cd LabelAgent
 git rev-parse HEAD
 ```
 
-如需从 GitHub 获取同一开发线，可使用：
+如需从 GitHub 获取同一复现版本，可使用：
 
 ```powershell
-git clone --branch labelagent --single-branch https://github.com/linweichen-ai/LabelAgent.git
+git clone --branch reproduce --single-branch https://github.com/linweichen-ai/LabelAgent.git
 ```
 
 若团队提供了指定提交号，请使用 `git checkout <commit>` 固定版本，不要只记录“最新版”。

@@ -1,4 +1,4 @@
-# CNB 分支说明
+# CNB / GitHub 分支说明
 
 ## 复现入口
 
@@ -6,6 +6,12 @@
 
 ```powershell
 git clone --branch reproduce --single-branch https://cnb.cool/seer-robotics/EIC/BEV/LabelAgent
+```
+
+GitHub 使用同名入口：
+
+```powershell
+git clone --branch reproduce --single-branch https://github.com/linweichen-ai/LabelAgent.git
 ```
 
 该分支用于提供当前经过测试、带复现说明的版本。首次运行请继续阅读仓库首页和

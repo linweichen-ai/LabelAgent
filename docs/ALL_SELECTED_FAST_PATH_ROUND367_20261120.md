@@ -45,4 +45,10 @@
 - Node：156 项通过；
 - 正式状态在部署前仍为 `9ef08118...ab115`，隔离端口均已关闭。
 
+## 5. 部署与回滚
+
+本轮已部署到正式工作台，页面版本为 164，`reference-prep.js` 缓存版本为 168。部署后正式状态 SHA-256 仍为 `9ef08118...ab115`，SAM、VLM 与工作台均正常，运行状态为空闲；隔离端口 8891～8895 均已关闭。
+
+正式代码、GitHub 与 CNB 的 `labelagent` 分支均指向提交 `0e4373276844d034c13ed9de1d1b22b1a54a6a0f`。部署前文件备份位于 `D:\Apps\LabelAgent\.local\backups\round367-20261120`。
+
 结构化证据见 `docs/evidence/workbench-stability-20261117/all-selected-fast-path-round367.json`。

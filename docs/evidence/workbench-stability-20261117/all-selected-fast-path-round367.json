@@ -62,5 +62,21 @@
     "state_sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115",
     "visible_vehicle_point_recovery": null,
     "isolated_ports_stopped": true
+  },
+  "production_postdeploy": {
+    "deployed": true,
+    "commit": "0e4373276844d034c13ed9de1d1b22b1a54a6a0f",
+    "ui_version": 164,
+    "reference_prep_cache_version": 168,
+    "state_sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115",
+    "model_ready": true,
+    "sam_ready": true,
+    "vlm_ready": true,
+    "run_status": "idle",
+    "visible_vehicle_point_recovery": null,
+    "backup": "D:/Apps/LabelAgent/.local/backups/round367-20261120",
+    "github_branch_matches": true,
+    "cnb_branch_matches": true,
+    "isolated_ports_stopped": true
   }
 }

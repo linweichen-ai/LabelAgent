@@ -1,0 +1,47 @@
+{
+  "schema_version": "labelagent.fast-vlm5090-slope-acceptance.v1",
+  "date": "2026-11-20",
+  "result": "accepted",
+  "configuration": {
+    "fast_route_scope": "small_images_only",
+    "max_pixels": 327680,
+    "max_long_edge": 640,
+    "primary_vlm": "4090 BF16",
+    "fast_vlm": "5090 NF4"
+  },
+  "camera0_true_slope": {
+    "passed": true,
+    "candidate_visible_ms": 17875,
+    "background_complete_ms": 53515,
+    "total_ms": 55813,
+    "candidate_counts": {"ego": 1, "floor": 1, "person": 1, "slope": 1},
+    "geometry_sha256": "eeb8f81b7bf0132b8b04ee9b0c8ea96e74f31a563303f950d989c1190356093b",
+    "baseline_geometry_match": true,
+    "true_slope_preserved": true,
+    "truth_write_requests": 0,
+    "page_errors": 0,
+    "http_errors": 0
+  },
+  "camera3_false_slope": {
+    "passed": true,
+    "candidate_visible_ms": 18250,
+    "background_complete_ms": 37359,
+    "total_ms": 39703,
+    "candidate_counts": {"ego": 1, "floor": 2},
+    "geometry_sha256": "ad19045f5651819b90e92db1251c8e150415b0e68553697fe028b54f0b3df928",
+    "baseline_geometry_match": true,
+    "slope_candidate_removed": true,
+    "conflict_reason": "slope_candidate_current_ego_conflict",
+    "slope_covered_by_current_ego": 0.999,
+    "ego_score": 0.95703125,
+    "conflict_review_record_preserved": true,
+    "truth_write_requests": 0,
+    "page_errors": 0,
+    "http_errors": 0
+  },
+  "production_state_sha256_after_test": "cba73b2dbff671be73effa6b67579c290337c755464eb18d66c0cc789bc7cd64",
+  "isolated_port_released": true,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false
+}

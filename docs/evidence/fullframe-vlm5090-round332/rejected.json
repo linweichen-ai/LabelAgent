@@ -1,0 +1,30 @@
+{
+  "schema_version": "labelagent.fast-vlm5090-fullframe-gate.v1",
+  "date": "2026-11-20",
+  "result": "rejected_not_deployed",
+  "configuration": {
+    "max_pixels": 2949120,
+    "max_long_edge": 1920,
+    "max_extra_pixels": 2949120,
+    "max_extra_long_edge": 1920
+  },
+  "camera0": {
+    "small_image_only_total_ms": 55813,
+    "fullframe_fast_total_ms": 36093,
+    "runtime_reduction_percent": 35.33,
+    "candidate_counts_unchanged": true,
+    "true_slope_preserved": true,
+    "small_image_only_person_route": "human_review_required",
+    "fullframe_fast_person_route": "candidate_preserved",
+    "semantic_gate_passed": false
+  },
+  "rejection_reason": "The faster NF4 full-frame route removed a conservative human-review requirement from a mixed person/control-panel candidate.",
+  "production_configuration_unchanged": true,
+  "production_max_pixels": 327680,
+  "production_max_long_edge": 640,
+  "production_state_sha256_after_test": "cba73b2dbff671be73effa6b67579c290337c755464eb18d66c0cc789bc7cd64",
+  "isolated_port_released": true,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false
+}

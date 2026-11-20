@@ -2697,3 +2697,16 @@ Round326 的 camera1/2 长尾来自隔离验收未复用正式环境的 compact 
 确认标签、真值、候选、参考帧、数据集和人工复核记录均未变化，只有5090加速URL与模型名新增。
 隔离端口已关闭，工作台HTTP200、5090 VLM健康状态`ok`。详见
 `FAST_VLM5090_ACCELERATION_ROUNDS328_330_20261120.md`与结构化证据。
+
+### Round 331–332：四相机斜坡闭环通过，大图5090路由被拒绝（2026-11-20）
+
+Round331用当前小图5090加速配置补齐camera0/3：camera0仍保留ego/floor/person/slope各1个，
+真实坡与Round326几何哈希完全一致；camera3只保留ego 1和floor 2，假坡仍因99.9%被高置信
+ego覆盖而移出自动叠加，冲突人工复核记录在后台完成后仍存在，几何哈希与Round327一致。
+两路页面、HTTP和真值写入错误均为0。
+
+Round332在隔离环境将5090快速路由扩大到1920×1536全图。camera0耗时55.813→36.093秒，
+但原本`human_review_required`的人体/控制台混合候选变成`candidate_preserved`，因此严格语义门禁
+失败，实验立即停止且未部署。正式工作台仍保持327,680像素/640长边的小图阈值，生产state
+哈希保持`CBA73B2...CD64`，工作台HTTP200、5090 VLM为`ok`，两个隔离端口均已释放。详见
+`FAST_VLM5090_SLOPE_AND_FULLFRAME_GATE_ROUNDS331_332_20261120.md`与结构化证据。

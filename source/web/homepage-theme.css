@@ -12,7 +12,7 @@
 
 :root {
   --la-paper: #ffffff;
-  --la-canvas: #f7f8fa;
+  --la-canvas: #f1f4f8;
   --la-ink: #404950;
   --la-heading: #24354a;
   --la-muted: #626a70;
@@ -24,6 +24,7 @@
   --la-blue-selected: #e9f0fa;
   --la-shadow: 0 5px 18px rgba(32, 51, 75, .07);
   --la-shadow-raised: 0 10px 28px rgba(32, 51, 75, .105);
+  --la-shadow-card: 0 1px 2px rgba(30, 45, 65, .04), 0 8px 24px rgba(30, 45, 65, .055);
   --la-radius: 9px;
   --la-radius-large: 12px;
   --la-sans: "Segoe UI Variable", "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;
@@ -126,6 +127,7 @@ textarea:hover {
   gap: 10px;
   min-height: 50px;
   padding: 7px 14px;
+  border-top: 3px solid var(--la-link);
   border-bottom: 1px solid var(--la-line);
   background: rgba(255, 255, 255, .94);
   box-shadow: 0 4px 18px rgba(36, 53, 74, .055);
@@ -183,10 +185,16 @@ textarea:hover {
 
 .toolbarActions {
   gap: 5px;
+  padding: 3px;
+  border: 1px solid #e8ecf1;
+  border-radius: 10px;
+  background: rgba(247, 249, 252, .88);
 }
 
 .toolbarActions button {
   border-color: transparent;
+  min-height: 30px;
+  border-radius: 7px;
   color: #4d5b68;
   background: transparent;
 }
@@ -207,7 +215,7 @@ textarea:hover {
   min-height: 44px;
   padding: 7px 14px;
   border-bottom: 1px solid var(--la-line);
-  background: linear-gradient(90deg, #fbfcfd, #f6f8fb);
+  background: linear-gradient(90deg, #fbfcfd, #f4f7fb);
   box-shadow: none;
 }
 
@@ -237,7 +245,7 @@ textarea:hover {
 .workflowGuide {
   border-bottom: 1px solid var(--la-line);
   background: linear-gradient(180deg, #fff, #fbfcfe);
-  box-shadow: 0 3px 14px rgba(32, 51, 75, .045);
+  box-shadow: 0 4px 18px rgba(32, 51, 75, .05);
 }
 
 .guideSummary {
@@ -291,11 +299,13 @@ textarea:hover {
 
 .guideSteps li {
   border-radius: var(--la-radius);
-  transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
+  background: linear-gradient(180deg, #fff, #fafbfd);
+  transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease, transform .15s ease;
 }
 
 .guideSteps li.active {
   box-shadow: 0 0 0 3px rgba(34, 75, 141, .09), 0 4px 12px rgba(32, 51, 75, .06);
+  transform: translateY(-1px);
 }
 
 .guideSteps li.active i,
@@ -321,14 +331,18 @@ textarea:hover {
 .windowGrid {
   gap: 7px;
   padding: 8px;
-  background: linear-gradient(145deg, #eef1f4, #e5eaf0);
+  background-color: #e7ecf2;
+  background-image:
+    radial-gradient(circle, rgba(116, 136, 157, .24) .7px, transparent .8px),
+    linear-gradient(145deg, rgba(246, 248, 251, .95), rgba(226, 232, 239, .95));
+  background-size: 16px 16px, auto;
 }
 
 .sensorWindow {
-  border-color: #c5cfd9;
+  border-color: rgba(255, 255, 255, .92);
   border-radius: var(--la-radius-large);
   background: #e7ecf1;
-  box-shadow: 0 12px 30px rgba(32, 51, 75, .14);
+  box-shadow: 0 16px 38px rgba(32, 51, 75, .16), 0 0 0 1px rgba(120, 138, 157, .16);
   overflow: hidden;
 }
 
@@ -389,8 +403,11 @@ textarea:hover {
 
 /* Product-polish layer for the automatic annotation desk. */
 #inspectionPanel {
-  gap: 8px;
-  padding: 10px;
+  gap: 10px;
+  padding: 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background:
     radial-gradient(circle at 100% 0, rgba(34, 75, 141, .055), transparent 32%),
     #f4f6f9;
@@ -405,14 +422,15 @@ textarea:hover {
 .inspectionStages,
 #inspectionBody:not(:empty) {
   border: 1px solid var(--la-line);
-  border-radius: var(--la-radius);
+  border-radius: var(--la-radius-large);
   background: rgba(255, 255, 255, .96);
-  box-shadow: 0 4px 14px rgba(32, 51, 75, .045);
+  box-shadow: var(--la-shadow-card);
 }
 
 .inspectionHeading {
   flex: 0 0 auto;
-  padding: 10px 12px;
+  padding: 11px 13px;
+  border-left: 4px solid var(--la-link);
   background: linear-gradient(120deg, #fff, #f8fafd 72%, #f2f6fb);
 }
 
@@ -431,7 +449,8 @@ textarea:hover {
   border: 1px solid var(--la-line);
   border-radius: 7px;
   color: var(--la-muted);
-  background: rgba(255, 255, 255, .82);
+  background: rgba(255, 255, 255, .9);
+  box-shadow: 0 1px 2px rgba(32, 51, 75, .035);
 }
 
 .inspectionActions label input {
@@ -445,7 +464,8 @@ textarea:hover {
   padding: 3px;
   border: 1px solid var(--la-line);
   border-radius: 9px;
-  background: #f1f4f8;
+  background: #edf1f6;
+  box-shadow: inset 0 1px 2px rgba(32, 51, 75, .045);
 }
 
 .runActions button {
@@ -469,6 +489,12 @@ textarea:hover {
   padding: 9px 11px;
 }
 
+.autoLabelBar > strong,
+.candidateSummary > strong {
+  color: var(--la-heading);
+  letter-spacing: -.01em;
+}
+
 .autoLabelOptions label {
   border-color: #d8e0e8;
   background: #f8fafc;
@@ -484,6 +510,13 @@ textarea:hover {
 .candidateCoverageChip {
   border: 1px solid rgba(128, 145, 160, .18);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
+  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+
+.candidateCoverageChip:hover {
+  border-color: #9eafc0;
+  box-shadow: 0 4px 10px rgba(32, 51, 75, .07);
+  transform: translateY(-1px);
 }
 
 .batchReviewPanel,
@@ -491,12 +524,21 @@ textarea:hover {
   overflow: hidden;
 }
 
+.candidateReviewPanel:has(.candidateReviewEmpty) {
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+.candidateReviewPanel:has(.candidateReviewEmpty) .candidateReviewEmpty {
+  min-height: 72px;
+}
+
 .batchReviewHead,
 .candidateReviewHead {
   min-height: 48px;
   padding: 9px 11px;
   border-bottom-color: var(--la-line);
-  background: linear-gradient(90deg, #fff, #f9fafc);
+  background: linear-gradient(90deg, #fff, #f7f9fc);
 }
 
 .batchReviewEyebrow,
@@ -507,8 +549,34 @@ textarea:hover {
 .candidateStat,
 .batchReviewStat,
 .runProgressStats > span {
+  position: relative;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(32, 51, 75, .035);
+  overflow: hidden;
+  box-shadow: 0 2px 9px rgba(32, 51, 75, .04);
+}
+
+.candidateStat::before,
+.batchReviewStat::before,
+.runProgressStats > span::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: #cbd5df;
+}
+
+.candidateStat.warning::before,
+.batchReviewStat.warning::before {
+  background: #d89a27;
+}
+
+.candidateStat.safe::before,
+.batchReviewStat.safe::before {
+  background: #2c9b78;
+}
+
+.candidateStat.pending::before {
+  background: #3d86b1;
 }
 
 .candidateStat b,
@@ -520,6 +588,7 @@ textarea:hover {
 
 .candidateReviewItem {
   border-radius: 10px;
+  box-shadow: 0 3px 12px rgba(32, 51, 75, .045);
 }
 
 .candidateReviewItem.selected {
@@ -529,7 +598,9 @@ textarea:hover {
 .runProgress {
   flex: 0 0 auto;
   padding: 11px 12px;
-  background: linear-gradient(125deg, #fbfdfc, #f4f8fb);
+  background:
+    radial-gradient(circle at 100% 0, rgba(34, 75, 141, .07), transparent 34%),
+    linear-gradient(125deg, #fbfdfc, #f4f8fb);
 }
 
 .runProgressBar {
@@ -539,7 +610,7 @@ textarea:hover {
 .inspectionStages {
   flex: 0 0 auto;
   padding: 5px;
-  background: #f7f9fc;
+  background: #f4f7fb;
 }
 
 .inspectionStages button {
@@ -553,6 +624,27 @@ textarea:hover {
   color: var(--la-link);
   background: var(--la-paper);
   box-shadow: 0 3px 9px rgba(32, 51, 75, .08);
+}
+
+.reviewFilterButtons button,
+.batchReviewFilters button {
+  border-color: #dce3eb;
+  color: #536274;
+  background: #f8fafc;
+}
+
+.reviewFilterButtons button:hover:not(:disabled),
+.batchReviewFilters button:hover:not(:disabled) {
+  border-color: #9fb0c4;
+  background: #f1f5fa;
+}
+
+.reviewFilterButtons button.selected,
+.batchReviewFilters button.selected {
+  border-color: var(--la-link) !important;
+  color: #fff !important;
+  background: linear-gradient(135deg, #315f9f, var(--la-link)) !important;
+  box-shadow: 0 4px 11px rgba(34, 75, 141, .16);
 }
 
 #inspectionBody:not(:empty) {
@@ -618,6 +710,37 @@ textarea:hover {
   .toolbarActions button {
     padding-right: 7px;
     padding-left: 7px;
+  }
+}
+
+@media (min-width: 1800px) {
+  .brandCopy strong {
+    font-size: 15px;
+  }
+
+  .inspectionTitle strong {
+    font-size: 16px;
+  }
+
+  .inspectionHeading button,
+  .inspectionHeading label,
+  .inspectionHeading input,
+  .inspectionHeading select,
+  .autoLabelBar {
+    font-size: 13px;
+  }
+
+  .candidateSummary,
+  .candidateReviewHead strong,
+  .batchReviewHead strong,
+  .runProgressHeadline > strong {
+    font-size: 13px;
+  }
+
+  .candidateStat b,
+  .batchReviewStat b,
+  .runProgressStats b {
+    font-size: 15px;
   }
 }
 

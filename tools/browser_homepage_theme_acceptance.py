@@ -126,7 +126,7 @@ def main() -> None:
         metrics["passed"] = bool(
             metrics["http_status"] == 200
             and metrics["theme_loaded"]
-            and metrics["ui_version"] == "158"
+            and metrics["ui_version"] == "159"
             and all(metrics["controls"].values())
             and metrics["auto_workspace"] == "auto"
             and not console_errors

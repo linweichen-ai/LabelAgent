@@ -1,0 +1,49 @@
+{
+  "schema_version": "labelagent.premium-interface-polish-acceptance.v1",
+  "date": "2026-11-20",
+  "ui_version": "159",
+  "theme_version": "4",
+  "production_url": "http://127.0.0.1:8765",
+  "http_status": 200,
+  "visual_only": true,
+  "source_image_uncropped": true,
+  "source_image_unstretched": true,
+  "measurements": {
+    "2560x1112": {
+      "toolbar_height_px": 62,
+      "image_width_px": 975,
+      "candidate_panel_height_px": 230,
+      "inspection_client_height_px": 828,
+      "inspection_scroll_height_px": 875,
+      "inspection_overflow_y": "auto",
+      "console_errors": 0,
+      "page_errors": 0,
+      "passed": true
+    },
+    "1280x720": {
+      "toolbar_height_px": 62,
+      "image_width_px": 485,
+      "candidate_panel_height_px": 230,
+      "inspection_client_height_px": 436,
+      "inspection_scroll_height_px": 994,
+      "inspection_overflow_y": "auto",
+      "console_errors": 0,
+      "page_errors": 0,
+      "passed": true
+    }
+  },
+  "javascript_tests": {
+    "passed": 149,
+    "failed": 0
+  },
+  "production_index_sha256": "A005F5208172BA0C61127A3958E44FD664BD523F72D52A362BEF575C991AA823",
+  "production_theme_sha256": "A3A6D0B13904090D60EEC481E782EFAD74826E5F90B98DD493FE3659B96AB5A7",
+  "production_state_sha256_before_after": "5C118231F5E72B4C22CC17FD02AA345BCE6D94EEB64D84971FC7D8582B3F0369",
+  "production_files_sha256_before_after": "7EDB40A9BDFCF5577AEA4C2BB183EF556A2B7D70B24564C49EEB46C5D9A8C5C1",
+  "backup_path": "D:\\Apps\\LabelAgent\\.local\\backups\\premium-polish-round340-20261120-112218",
+  "screenshots_local_only": true,
+  "candidate_only_boundary_unchanged": true,
+  "human_truth_unchanged": true,
+  "training_approval_unchanged": true,
+  "passed": true
+}

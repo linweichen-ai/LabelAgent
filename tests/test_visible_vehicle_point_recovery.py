@@ -15,15 +15,16 @@ def image_bytes(width=200, height=120):
 
 
 def sam_result(point, *, score=0.9):
+    points = [[40, 20], [60, 20], [60, 35], [40, 35]]
     return {
         "items": [{
             "point": copy.deepcopy(point),
             "result": {
                 "score": score,
-                "points": [[40, 20], [80, 20], [80, 50], [40, 50]],
+                "points": points,
                 "holes": [],
                 "parts": [{
-                    "points": [[40, 20], [80, 20], [80, 50], [40, 50]],
+                    "points": points,
                     "holes": [],
                 }],
             },
@@ -42,7 +43,11 @@ class VisibleVehiclePointRecoveryTests(unittest.TestCase):
         point = {"x": 100, "y": 36}
         with patch.object(workflow, "chat", return_value=located), \
                 patch.object(workflow, "sam_request",
-                             return_value=sam_result(point)) as sam:
+                             return_value=sam_result(point)) as sam, \
+                patch.object(workflow, "classify_visible_vehicle_candidate",
+                             return_value={"classification": "conventional_vehicle",
+                                           "confidence": 0.98,
+                                           "reason": "forklift cab visible"}):
             candidates, evidence = workflow.visible_vehicle_point_candidate(
                 {}, image_bytes(), next_id=4)
         self.assertEqual(len(candidates), 1)
@@ -80,7 +85,11 @@ class VisibleVehiclePointRecoveryTests(unittest.TestCase):
         point = {"x": 100, "y": 36}
         with patch.object(workflow, "chat", return_value=located), \
                 patch.object(workflow, "sam_request",
-                             return_value=sam_result(point, score=0.60)):
+                             return_value=sam_result(point, score=0.60)), \
+                patch.object(workflow, "classify_visible_vehicle_candidate",
+                             return_value={"classification": "conventional_vehicle",
+                                           "confidence": 0.96,
+                                           "reason": "forklift mast and cab visible"}):
             candidates, evidence = workflow.visible_vehicle_point_candidate(
                 {}, image_bytes(), next_id=7)
         self.assertEqual(len(candidates), 1)
@@ -88,6 +97,75 @@ class VisibleVehiclePointRecoveryTests(unittest.TestCase):
         self.assertEqual(candidates[0]["recovery_confidence_band"],
                          "guarded_low")
         self.assertTrue(server.candidate_requires_class_audit(candidates[0]))
+
+    def test_cabinet_style_agv_is_rejected_when_robot_label_is_not_allowed(self):
+        located = {
+            "decision": "located",
+            "entity_type": "conventional_vehicle_or_forklift",
+            "x": 500, "y": 300, "evidence": "orange industrial machine",
+        }
+        point = {"x": 100, "y": 36}
+        semantic = {
+            "classification": "autonomous_robot_or_agv",
+            "confidence": 0.99,
+            "reason": "SEER cabinet on a low autonomous mobile base",
+        }
+        with patch.object(workflow, "chat", return_value=located), \
+                patch.object(workflow, "sam_request",
+                             return_value=sam_result(point, score=0.92)), \
+                patch.object(workflow, "classify_visible_vehicle_candidate",
+                             return_value=semantic):
+            candidates, evidence = workflow.visible_vehicle_point_candidate(
+                {}, image_bytes(), allowed_labels=["车辆"])
+        self.assertEqual(candidates, [])
+        self.assertEqual(evidence["status"], "semantic_guard_rejected")
+        self.assertEqual(evidence["semantic_guard"], semantic)
+
+    def test_cabinet_style_agv_routes_to_other_robot_candidate(self):
+        located = {
+            "decision": "located",
+            "entity_type": "conventional_vehicle_or_forklift",
+            "x": 500, "y": 300, "evidence": "orange industrial machine",
+        }
+        point = {"x": 100, "y": 36}
+        semantic = {
+            "classification": "autonomous_robot_or_agv",
+            "confidence": 0.99,
+            "reason": "SEER cabinet on a low autonomous mobile base",
+        }
+        with patch.object(workflow, "chat", return_value=located), \
+                patch.object(workflow, "sam_request",
+                             return_value=sam_result(point, score=0.92)), \
+                patch.object(workflow, "classify_visible_vehicle_candidate",
+                             return_value=semantic):
+            candidates, evidence = workflow.visible_vehicle_point_candidate(
+                {}, image_bytes(), allowed_labels=["车辆", "other_robot"])
+        self.assertEqual(candidates[0]["label"], "other_robot")
+        self.assertEqual(candidates[0]["semantic_route"],
+                         "autonomous_robot_or_agv")
+        self.assertEqual(evidence["routed_label"], "other_robot")
+        self.assertTrue(server.candidate_requires_class_audit(candidates[0]))
+
+    def test_background_recovery_rejects_large_seven_percent_machine_fragment(self):
+        located = {
+            "decision": "located",
+            "entity_type": "conventional_vehicle_or_forklift",
+            "x": 500, "y": 300, "evidence": "background machine",
+        }
+        point = {"x": 100, "y": 36}
+        large = sam_result(point, score=0.93)
+        large_points = [[40, 20], [90, 20], [90, 54], [40, 54]]
+        large["items"][0]["result"]["points"] = large_points
+        large["items"][0]["result"]["parts"][0]["points"] = large_points
+        with patch.object(workflow, "chat", return_value=located), \
+                patch.object(workflow, "sam_request", return_value=large), \
+                patch.object(workflow, "classify_visible_vehicle_candidate") as semantic:
+            candidates, evidence = workflow.visible_vehicle_point_candidate(
+                {}, image_bytes())
+        self.assertEqual(candidates, [])
+        self.assertEqual(evidence["status"], "geometry_rejected")
+        self.assertGreater(evidence["area_ratio"], 0.03)
+        semantic.assert_not_called()
 
     def test_server_recovery_requires_high_confidence_visible_miss(self):
         discovery = {"assessments": [{
@@ -110,7 +188,8 @@ class VisibleVehiclePointRecoveryTests(unittest.TestCase):
         self.assertEqual(result["review_queue"][0]["route"],
                          "human_review_required")
         recover.assert_called_once_with(
-            {"visible_vehicle_point_recovery": True}, b"image", next_id=1)
+            {"visible_vehicle_point_recovery": True}, b"image", next_id=1,
+            allowed_labels=["车辆"])
 
     def test_server_recovery_is_disabled_by_default(self):
         result = {"shapes": [], "review_queue": []}

@@ -82,7 +82,8 @@ test('车辆可见漏分补救在界面中保持候选和人工复核边界', ()
   const app = source('app.js');
   assert.match(app, /visible_vehicle_point_recovery/);
   assert.match(app, /vehicleRecoveryCandidate/);
-  assert.match(app, /VLM 看见车辆，但文本分割漏检/);
+  assert.match(app, /VLM 看见远处机器，但文本分割漏检/);
+  assert.match(app, /routedLabel/);
   assert.match(app, /仍是机器候选/);
   assert.match(app, /必须人工检查边界和类别后才能成为真值/);
 });

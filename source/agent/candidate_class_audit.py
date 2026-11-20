@@ -328,8 +328,8 @@ def build_blind_candidate_class_prompt(
     identity_rules = (
         " For person, require visible human anatomy inside the cyan mask; a driver/operator is still person."
         " For ego, require visible host robot body/chassis/forks inside the mask; viewpoint alone never proves ego."
-        " For 车辆, a conventional forklift, tug, or industrial vehicle body inside the mask is sufficient; a parked or unoccupied forklift remains 车辆."
-        " For other_robot, require visible autonomous robot or AGV hardware inside the mask, separate from ego and people; a conventional forklift is 车辆, never other_robot merely because it is parked."
+        " For 车辆, require conventional operated vehicle evidence such as an operator cab/seat, steering area, counterweight, or mast-and-fork assembly attached to a forklift truck chassis; a parked or unoccupied conventional forklift remains 车辆."
+        " For other_robot, a compact low mobile base with a tall upright orange/black cabinet, SEER branding, lidar/safety scanners, or no operator compartment is autonomous robot/AGV hardware; never call that cabinet-style robot 车辆. A conventional forklift with an operator compartment is 车辆, never other_robot merely because it is parked."
         " For pallet, require visible load-bearing pallet slats, deck, feet, or fork-entry structure inside the cyan mask;"
         " a box, container, or stacked cargo is not pallet merely because a pallet is nearby or underneath it."
         " If the cyan mask mainly covers cargo instead of the pallet structure, use uncertain or conflict."

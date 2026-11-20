@@ -96,8 +96,9 @@ class CandidateClassAuditTests(unittest.TestCase):
         prompt = audit.build_blind_candidate_class_prompt(
             candidate["id"], self.labels + ["车辆"],
             {"车辆": "a visible conventional vehicle"})
-        self.assertIn("a parked or unoccupied forklift remains 车辆", prompt)
-        self.assertIn("a conventional forklift is 车辆, never other_robot", prompt)
+        self.assertIn("a parked or unoccupied conventional forklift remains 车辆", prompt)
+        self.assertIn("SEER branding", prompt)
+        self.assertIn("never call that cabinet-style robot 车辆", prompt)
 
     def test_box_like_pallet_audit_uses_only_isolated_mask_pixels(self):
         candidate = {"id": 20, "label": "pallet",

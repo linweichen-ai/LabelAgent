@@ -551,8 +551,12 @@ def recover_reference_vehicle_candidate(config, image, discovery, result):
                          if isinstance(shape, dict)
                          and type(shape.get("id")) is int]) + 1
     try:
+        recovery_labels = [item.get("label") for item in assessments or []
+                           if isinstance(item, dict)
+                           and isinstance(item.get("label"), str)]
         recovered, evidence = visible_vehicle_point_candidate(
-            config, image, next_id=next_id)
+            config, image, next_id=next_id,
+            allowed_labels=recovery_labels)
     except RunCancelled:
         raise
     except Exception as error:
@@ -573,17 +577,24 @@ def recover_reference_vehicle_candidate(config, image, discovery, result):
         })
         return status | {"status": evidence.get("status", "no_guarded_candidate"),
                          "evidence": evidence}
+    routed_label = recovered[0].get("label")
+    if any(isinstance(shape, dict) and shape.get("label") == routed_label
+           for shape in shapes):
+        return status | {"status": "routed_label_existing_candidate",
+                         "routed_label": routed_label, "evidence": evidence}
     shapes.extend(recovered)
     result["candidates_added"] = int(result.get("candidates_added") or 0) + 1
     result.setdefault("review_queue", []).append({
-        "label": "车辆", "reason_code": "vehicle_point_recovery_candidate",
+        "label": routed_label,
+        "reason_code": "visible_machine_point_recovery_candidate",
         "route": "human_review_required",
         "source": "visible_vehicle_point_recovery",
         "candidate_available": True, "candidate_id": recovered[0]["id"],
         "evidence": evidence,
     })
     return status | {"status": "candidate_generated", "candidate_count": 1,
-                     "candidate_id": recovered[0]["id"], "evidence": evidence}
+                     "candidate_id": recovered[0]["id"],
+                     "routed_label": routed_label, "evidence": evidence}
 
 
 def filter_post_recovery_slope_ego_conflicts(image, result):

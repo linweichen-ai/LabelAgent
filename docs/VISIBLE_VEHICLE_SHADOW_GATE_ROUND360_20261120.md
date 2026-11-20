@@ -78,6 +78,8 @@
 
 下一步应换用另一批录包和不同厂区画面，构造至少包含：无车辆、远处车辆、遮挡车辆、前景主机、墙板和AGV的人工复核集，再给出候选级precision/recall和额外耗时分布。
 
+独立CVAT Task3录包的AGV专项门禁已在第361轮执行，见 `docs/VISIBLE_MACHINE_SEMANTIC_ROUTING_ROUND361_20261120.md`。
+
 结构化结果见：
 
 - `docs/evidence/workbench-stability-20261117/visible-vehicle-shadow-result-round360.json`

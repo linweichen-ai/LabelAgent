@@ -1,0 +1,16 @@
+{
+  "schema_version": "labelagent.visible_vehicle_shadow_samples.v1",
+  "description": "Non-consecutive shadow sweep on the independent CVAT Task3 recording.",
+  "samples": [
+    {"topic": "/CVAT/Task3/images", "frame": 0},
+    {"topic": "/CVAT/Task3/images", "frame": 15},
+    {"topic": "/CVAT/Task3/images", "frame": 30},
+    {"topic": "/CVAT/Task3/images", "frame": 45},
+    {"topic": "/CVAT/Task3/images", "frame": 60},
+    {"topic": "/CVAT/Task3/images", "frame": 75},
+    {"topic": "/CVAT/Task3/images", "frame": 90},
+    {"topic": "/CVAT/Task3/images", "frame": 105},
+    {"topic": "/CVAT/Task3/images", "frame": 120},
+    {"topic": "/CVAT/Task3/images", "frame": 135}
+  ]
+}

@@ -37,6 +37,7 @@ VISIBLE_VEHICLE_POINT_RECOVERY_VERSION = (
     "labelagent.visible_vehicle_point_recovery.v1")
 VISIBLE_VEHICLE_POINT_MIN_SCORE = 0.55
 VISIBLE_VEHICLE_POINT_HIGH_SCORE = 0.75
+VISIBLE_VEHICLE_POINT_MAX_AREA_RATIO = 0.03
 
 
 class ModelOutputError(ValueError):
@@ -346,8 +347,9 @@ def ego_bottom_point_candidates(config, image, next_id=1):
     return ([selected] if selected is not None else []), evidence
 
 
-def visible_vehicle_point_candidate(config, image, next_id=1):
-    """Recover one review-only vehicle proposal from a VLM interior point."""
+def visible_vehicle_point_candidate(config, image, next_id=1,
+                                    allowed_labels=None):
+    """Recover and semantically route one review-only visible machine proposal."""
     if type(next_id) is not int or next_id < 1:
         raise ValueError("车辆补救候选 ID 无效")
     with Image.open(io.BytesIO(image)) as decoded:
@@ -448,7 +450,7 @@ def visible_vehicle_point_candidate(config, image, next_id=1):
                     area_ratio=area_ratio)
     if (type(score) not in (int, float) or isinstance(score, bool)
             or not math.isfinite(score) or score < VISIBLE_VEHICLE_POINT_MIN_SCORE
-            or not 0.0001 <= area_ratio <= 0.08
+            or not 0.0001 <= area_ratio <= VISIBLE_VEHICLE_POINT_MAX_AREA_RATIO
             or bbox[2] - bbox[0] > width * 0.5
             or bbox[3] - bbox[1] > height * 0.5
             or bbox[1] >= height * 0.75):
@@ -461,7 +463,66 @@ def visible_vehicle_point_candidate(config, image, next_id=1):
                  approved_for_training=False,
                  recovery_confidence_band=confidence_band,
                  recovery_version=VISIBLE_VEHICLE_POINT_RECOVERY_VERSION)
+    semantic_guard = classify_visible_vehicle_candidate(
+        config, image, shape)
+    evidence["semantic_guard"] = semantic_guard
+    classification = semantic_guard.get("classification")
+    confidence = semantic_guard.get("confidence")
+    allowed = set(allowed_labels or ("车辆", "other_robot"))
+    if (type(confidence) not in (int, float)
+            or isinstance(semantic_guard.get("confidence"), bool)
+            or confidence < 0.90):
+        return [], evidence | {"status": "semantic_guard_rejected"}
+    if classification == "conventional_vehicle" and "车辆" in allowed:
+        routed_label = "车辆"
+    elif (classification == "autonomous_robot_or_agv"
+          and "other_robot" in allowed):
+        routed_label = "other_robot"
+    else:
+        return [], evidence | {"status": "semantic_guard_rejected"}
+    shape["label"] = routed_label
+    shape["semantic_route"] = classification
+    evidence["routed_label"] = routed_label
     return [shape], evidence | {"status": "candidate_generated"}
+
+
+def classify_visible_vehicle_candidate(config, image, candidate):
+    """Separate conventional vehicles from cabinet-style AGV/AMR robots."""
+    from .candidate_class_audit import prepare_candidate_evidence
+
+    candidate_evidence = prepare_candidate_evidence(image, candidate)
+    schema = {
+        "type": "object",
+        "properties": {
+            "classification": {"type": "string", "enum": [
+                "conventional_vehicle", "autonomous_robot_or_agv",
+                "ambiguous"]},
+            "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+            "reason": {"type": "string", "minLength": 1, "maxLength": 180},
+        },
+        "required": ["classification", "confidence", "reason"],
+        "additionalProperties": False,
+    }
+    instruction = (
+        "Decide whether the highlighted candidate is a conventional operated "
+        "industrial vehicle or an autonomous mobile robot/AGV. Image 1 is the "
+        "full original for context. Image 2 highlights the exact candidate in "
+        "cyan. Image 3 keeps only candidate pixels. A conventional forklift "
+        "needs visible forklift-truck evidence such as an operator cab/seat, "
+        "steering area, counterweight, or a mast-and-fork assembly attached to "
+        "a truck chassis. A compact low mobile base carrying a tall upright "
+        "orange/black cabinet, SEER branding, lidar/safety scanners, or control "
+        "cabinet without an operator compartment is autonomous_robot_or_agv, "
+        "never a conventional vehicle, even if it transports pallets or is "
+        "described as a forklift. A generic body, wheels, or industrial scene "
+        "alone is insufficient. Use ambiguous when decisive pixels are blurred "
+        "or outside the mask. Return strict compact JSON only."
+    )
+    return chat(
+        config, instruction, image,
+        extra_images=(candidate_evidence["marked"],
+                      candidate_evidence["isolated"]),
+        response_schema=schema)
 
 
 def sam_text_prefetch(image, prompt, config):

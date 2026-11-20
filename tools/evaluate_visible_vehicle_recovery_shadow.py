@@ -167,7 +167,7 @@ def main() -> int:
         try:
             with workflow.trace_calls(capture):
                 candidates, evidence = workflow.visible_vehicle_point_candidate(
-                    config, image, next_id=1)
+                    config, image, next_id=1, allowed_labels=labels)
                 row["recovery"] = evidence
                 row["candidate_count"] = len(candidates)
                 if candidates:

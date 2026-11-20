@@ -57,6 +57,9 @@ def main() -> int:
     validate_isolated_base_url(base_url)
     output_json = args.output_json.resolve()
     screenshot = args.screenshot.resolve()
+    live_screenshot = screenshot.with_name(
+        f"{screenshot.stem}-background-progress{screenshot.suffix}"
+    )
     output_json.parent.mkdir(parents=True, exist_ok=True)
     screenshot.parent.mkdir(parents=True, exist_ok=True)
     timeout_ms = max(30, min(900, args.timeout_seconds)) * 1000
@@ -196,6 +199,18 @@ def main() -> int:
             )
             candidate_visible_ms = round((time.monotonic() - draft_started) * 1000, 3)
             page.wait_for_function(
+                "() => { const text=document.querySelector('#referenceFinalizeStatus')?.textContent || '';"
+                " return text.includes('初始候选已显示') || text.includes('后台复核'); }",
+                timeout=15_000,
+            )
+            live_reference_status = page.locator(
+                "#referenceFinalizeStatus"
+            ).inner_text()
+            assert "可先逐个检查" in live_reference_status
+            assert "不会写入人工真值" in live_reference_status
+            page.locator("#referenceFinalizeGuide").scroll_into_view_if_needed()
+            page.screenshot(path=str(live_screenshot), full_page=True)
+            page.wait_for_function(
                 "expected => { const run=window.currentWorkbenchFrameState().agent_runs?.[String(expected)];"
                 " return run?.agent_review_status==='complete'"
                 " && run?.candidate_class_audit_status==='complete'; }",
@@ -273,6 +288,8 @@ def main() -> int:
                 "selected_labels": final_state["auto_labels"],
                 "first_response_ms": first_response_ms,
                 "candidate_visible_ms": candidate_visible_ms,
+                "live_reference_status": live_reference_status,
+                "live_progress_screenshot": str(live_screenshot),
                 "background_complete_ms": background_complete_ms,
                 "candidate_count": len(candidates),
                 "candidate_counts_by_label": dict(sorted(Counter(

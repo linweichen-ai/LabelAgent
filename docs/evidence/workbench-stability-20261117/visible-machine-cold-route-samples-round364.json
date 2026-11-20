@@ -1,0 +1,18 @@
+{
+  "schema_version": "labelagent.visible_vehicle_shadow_samples.v1",
+  "description": "Fixed non-overlapping Capture frames for first-run model-route and latency attribution.",
+  "samples": [
+    {"topic": "/capture/camera_3/image", "frame": 2},
+    {"topic": "/capture/camera_3/image", "frame": 20},
+    {"topic": "/capture/camera_3/image", "frame": 39},
+    {"topic": "/capture/camera_3/image", "frame": 57},
+    {"topic": "/capture/camera_3/image", "frame": 75},
+    {"topic": "/capture/camera_3/image", "frame": 93},
+    {"topic": "/capture/camera_3/image", "frame": 111},
+    {"topic": "/capture/camera_3/image", "frame": 129},
+    {"topic": "/capture/camera_2/image", "frame": 2},
+    {"topic": "/capture/camera_2/image", "frame": 39},
+    {"topic": "/capture/camera_0/image", "frame": 39},
+    {"topic": "/capture/camera_1/image", "frame": 39}
+  ]
+}

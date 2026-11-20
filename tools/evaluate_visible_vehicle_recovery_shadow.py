@@ -96,6 +96,14 @@ def load_reference_session(path: Path, media_path: Path) -> dict:
     raise ValueError("reference session does not contain this media path")
 
 
+def without_fast_route(config: dict) -> dict:
+    primary = dict(config)
+    for key in tuple(primary):
+        if key.startswith("llm_fast_"):
+            primary.pop(key)
+    return primary
+
+
 def polygon_mask(points: list, size: tuple[int, int]) -> Image.Image | None:
     normalized = []
     for point in points or []:
@@ -194,6 +202,7 @@ def main() -> int:
     parser.add_argument("--samples", required=True, type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--reference-session", type=Path)
+    parser.add_argument("--disable-fast-route", action="store_true")
     args = parser.parse_args()
 
     state_path = args.state.resolve()
@@ -215,6 +224,8 @@ def main() -> int:
     state_sha256_before = sha256_file(state_path)
     state = json.loads(state_path.read_text(encoding="utf-8"))
     config = dict(state.get("config") or {})
+    if args.disable_fast_route:
+        config = without_fast_route(config)
     labels = list(state.get("labels") or [])
     if (not config.get("llm_url") or not config.get("llm_model")
             or not config.get("sam3_point_url") or "车辆" not in labels):
@@ -268,15 +279,25 @@ def main() -> int:
         except Exception as error:
             row.update(candidate_count=0, error={
                 "type": type(error).__name__, "message": str(error)[:500]})
-        row["model_calls"] = [{
-            "service": event.get("service"),
-            "status": event.get("status"),
-            "elapsed_ms": event.get("elapsed_ms"),
-            "cache_hit": ((event.get("output") or {}).get("local_vlm") or {}).get(
-                "cache_hit"),
-            "coalesced": ((event.get("output") or {}).get("local_vlm") or {}).get(
-                "coalesced"),
-        } for event in trace_by_id.values()]
+        row["model_calls"] = []
+        for event in trace_by_id.values():
+            output_record = event.get("output") or {}
+            local_vlm = output_record.get("local_vlm") or {}
+            row["model_calls"].append({
+                "service": event.get("service"),
+                "status": event.get("status"),
+                "elapsed_ms": event.get("elapsed_ms"),
+                "model_route": output_record.get("model_route"),
+                "fast_fallback_reason": output_record.get("fast_fallback_reason"),
+                "cache_hit": local_vlm.get("cache_hit"),
+                "coalesced": local_vlm.get("coalesced"),
+                "image_count": local_vlm.get("image_count"),
+                "actual_image_token_counts": local_vlm.get(
+                    "actual_image_token_counts"),
+                "preprocess_seconds": local_vlm.get("preprocess_seconds"),
+                "generation_seconds": local_vlm.get("generation_seconds"),
+                "total_seconds": local_vlm.get("seconds"),
+            })
         row["elapsed_seconds"] = round(time.perf_counter() - started, 3)
         if reference_session is not None:
             with Image.open(io.BytesIO(image)) as source_image:
@@ -314,6 +335,7 @@ def main() -> int:
         "read_only": True,
         "assistant_visual_proxy_only": True,
         "candidate_only": True,
+        "fast_route_disabled": args.disable_fast_route,
         "human_truth_modified": False,
         "training_data_modified": False,
         "media": {"path": str(media_path), "size_bytes": media_path.stat().st_size,

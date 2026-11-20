@@ -83,6 +83,18 @@ class VisibleVehicleShadowEvaluationTests(unittest.TestCase):
         self.assertEqual(result["target_count"], 1)
         self.assertEqual(result["best_same_label_iou"], 0.0)
 
+    def test_without_fast_route_does_not_mutate_source_config(self):
+        source = {
+            "llm_url": "http://primary/v1", "llm_model": "primary",
+            "llm_fast_url": "http://fast/v1", "llm_fast_model": "fast",
+            "llm_fast_timeout_seconds": 30,
+        }
+        primary = shadow.without_fast_route(source)
+        self.assertEqual(primary, {
+            "llm_url": "http://primary/v1", "llm_model": "primary",
+        })
+        self.assertEqual(source["llm_fast_model"], "fast")
+
 
 if __name__ == "__main__":
     unittest.main()

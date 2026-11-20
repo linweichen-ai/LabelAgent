@@ -1,0 +1,45 @@
+{
+  "round": 364,
+  "date": "2026-11-20",
+  "experiment": "cold_route_attribution_and_forced_primary_audit_ab",
+  "cold_route": {
+    "sample_count": 12,
+    "candidate_count": 2,
+    "candidate_preserved_count": 2,
+    "human_review_required_count": 0,
+    "error_count": 0,
+    "model_call_count": 32,
+    "model_cache_hit_count": 0,
+    "elapsed_p50_seconds": 8.185,
+    "elapsed_p95_seconds": 14.651,
+    "route_groups": [
+      {"route": "primary", "image_count": 1, "count": 12, "typical_seconds": 3.542},
+      {"route": "primary", "image_count": 3, "count": 8, "typical_seconds": 4.574},
+      {"route": "small_image_fast", "image_count": 3, "count": 2, "seconds": [6.798, 5.964]}
+    ]
+  },
+  "forced_primary_audit": {
+    "sample_count": 12,
+    "output_difference_count": 0,
+    "candidate_audit_seconds": [13.578, 10.723],
+    "decision": "rejected_for_production",
+    "reason": "The 5090 three-image blind audit was about twice as fast with identical bounded decisions."
+  },
+  "tests": {
+    "python_passed": 1163,
+    "node_passed": 155,
+    "python_environment": "PYTHONUTF8=1"
+  },
+  "boundaries": {
+    "production_inference_changed": false,
+    "source_state_modified": false,
+    "candidate_only": true,
+    "human_truth_modified": false,
+    "training_data_modified": false
+  },
+  "evidence": {
+    "sample_manifest": "visible-machine-cold-route-samples-round364.json",
+    "cold_result": "visible-machine-cold-route-result-round364.json",
+    "forced_primary_result": "visible-machine-primary-audit-result-round364.json"
+  }
+}

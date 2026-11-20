@@ -1,0 +1,1146 @@
+{
+  "schema_version": "labelagent.visible_vehicle_shadow_evaluation.v1",
+  "read_only": true,
+  "assistant_visual_proxy_only": true,
+  "candidate_only": true,
+  "human_truth_modified": false,
+  "training_data_modified": false,
+  "media": {
+    "path": "D:\\Apps\\LabelAgent\\work\\datasets\\Capture_20261103\\常熟0920_Qwen2B_Agent未确认候选.mcap",
+    "size_bytes": 1620954942,
+    "mtime_ns": 1793678901558551600
+  },
+  "sample_manifest": {
+    "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\docs\\evidence\\workbench-stability-20261117\\visible-machine-cold-route-samples-round364.json",
+    "sha256": "4d550f25b709d5a5257c4eb60502fc6542e3cbbbf35db84712eac00e9cb32bf1"
+  },
+  "rows": [
+    {
+      "topic": "/capture/camera_3/image",
+      "frame": 2,
+      "image_sha256": "806df206ac087b26bd5617de9064aaa81ed08a4be5ff0051c6c403e138a83460",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 575,
+          "y": 242,
+          "evidence": "A white forklift is visible in the background, parked near a wall and partially occluded by other杂物."
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 1103,
+          "y": 371
+        },
+        "score": 0.8515625,
+        "bbox": [
+          1031,
+          262,
+          1206,
+          458
+        ],
+        "area": 20318,
+        "area_ratio": 0.006889512803819445,
+        "confidence_band": "high",
+        "semantic_guard": {
+          "classification": "conventional_vehicle",
+          "reason": "The highlighted candidate shows a machine with a visible operator cab/seat, steering area, and mast-and-fork assembly attached to a truck chassis, which are definitive features ofa",
+          "confidence": 0.98
+        },
+        "routed_label": "车辆",
+        "status": "candidate_generated"
+      },
+      "candidate_count": 1,
+      "audit": {
+        "schema_version": "labelagent.blind_candidate_class_audit.v1",
+        "candidate_id": 1,
+        "candidate_sha256": "a1817a33cfe38dc4a0ecd211104e2a5bb781b6d50e6c7b5438e94af436a39d31",
+        "candidate_artifact_sha256": null,
+        "bound_current_label": "车辆",
+        "source_image_sha256": "806df206ac087b26bd5617de9064aaa81ed08a4be5ff0051c6c403e138a83460",
+        "crop": {
+          "box_xyxy": [
+            943,
+            174,
+            1294,
+            546
+          ],
+          "source_size": [
+            1920,
+            1536
+          ],
+          "original_sha256": "50bf67ed634d917810d9dd520b4d37a28535d4a1ac43a086deb632609d0f6327",
+          "marked_sha256": "3bc84d73b516bec1b1a2e441d66aa3576d3663b51698fe92deffce9fb95628bf",
+          "isolated_sha256": "bc4f48ead85c74d735eaf8898c43312f5a0315a5ac5863de9da9925ac6839d82",
+          "current_label_shown_to_model": false
+        },
+        "prompt_sha256": "3e0742cce1e9d3f3ca123976b325aabf7ca1410518087a0f8ce3bf4e5ce49893",
+        "decision": {
+          "classification": "known_label",
+          "observed_label": "车辆",
+          "candidate_supported": true,
+          "reason_code": "visible_known_label",
+          "confidence": 0.98,
+          "reason": "The cyan mask covers a forklift truck with visible operator cab, steering area, and mast-and-fork assembly attached to a chassis, which meets the definition of 车辆. The mask includes the physical structure of the vehicle, not just cargo or surrounding floor. No other allowed label fits the evidence. ",
+          "visible_cues": [
+            "operator cab visible inside mask",
+            "steering area visible",
+            "mast-and-fork assembly visible",
+            "chassis structure visible",
+            "vehicle body visible"
+          ]
+        },
+        "route": "candidate_preserved",
+        "minimum_confidence": 0.9,
+        "execution_mode": "sequential",
+        "protocol_retry_count": 0,
+        "protocol_repair": null,
+        "operation_proposal": null,
+        "candidate_mutated": false,
+        "human_truth": false,
+        "approved_for_training": false,
+        "approved_for_deployment": false,
+        "audit_sha256": "ab3763723f1de934145193434dc41716f3211fce9cb571da610b103923972243"
+      },
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 3372,
+          "model_route": "primary",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 1,
+          "actual_image_token_counts": [
+            238
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 3.212
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 262,
+          "model_route": null,
+          "fast_fallback_reason": null,
+          "cache_hit": null,
+          "coalesced": null,
+          "image_count": null,
+          "actual_image_token_counts": null,
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": null
+        },
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 4574,
+          "model_route": "primary",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 3,
+          "actual_image_token_counts": [
+            238,
+            132,
+            132
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 4.439
+        },
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 6798,
+          "model_route": "small_image_fast",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 3,
+          "actual_image_token_counts": [
+            132,
+            132,
+            132
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 6.782
+        }
+      ],
+      "elapsed_seconds": 15.072
+    },
+    {
+      "topic": "/capture/camera_3/image",
+      "frame": 20,
+      "image_sha256": "a7ea596e0b5857c0e2f3042f0309d0a9990656a96f23101907448590771253c7",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 730,
+          "y": 220,
+          "evidence": "A parked, unoccupied forklift is visible in the background near the wall, with a clear solid body, a"
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 1401,
+          "y": 338
+        },
+        "score": 0.87890625,
+        "bbox": [
+          1276,
+          266,
+          1466,
+          457
+        ],
+        "area": 27271,
+        "area_ratio": 0.00924716525607639,
+        "confidence_band": "high",
+        "semantic_guard": {
+          "classification": "conventional_vehicle",
+          "reason": "The highlighted candidate shows a machine with a visible operator cab/seat and steering area, which are definitive features of a conventional forklift. The cyan mask covers a full,",
+          "confidence": 0.98
+        },
+        "routed_label": "车辆",
+        "status": "candidate_generated"
+      },
+      "candidate_count": 1,
+      "audit": {
+        "schema_version": "labelagent.blind_candidate_class_audit.v1",
+        "candidate_id": 1,
+        "candidate_sha256": "2abe4dfaf825d533f4cb4226a7eebb7510d9304484a0a50724032b2c474b4871",
+        "candidate_artifact_sha256": null,
+        "bound_current_label": "车辆",
+        "source_image_sha256": "a7ea596e0b5857c0e2f3042f0309d0a9990656a96f23101907448590771253c7",
+        "crop": {
+          "box_xyxy": [
+            1190,
+            180,
+            1552,
+            543
+          ],
+          "source_size": [
+            1920,
+            1536
+          ],
+          "original_sha256": "3de590a8ffde78a49b1f8da12d376711c9788b552eeec329ce47ddb5a262190c",
+          "marked_sha256": "f4e2a0ca2bbce10b2c1b024243dca13796c84cfdb129970cf85a651ce195cedd",
+          "isolated_sha256": "0d12a050205b75403bef4e2dc372a997880a9fee5adb580a11244658172915ae",
+          "current_label_shown_to_model": false
+        },
+        "prompt_sha256": "3e0742cce1e9d3f3ca123976b325aabf7ca1410518087a0f8ce3bf4e5ce49893",
+        "decision": {
+          "classification": "known_label",
+          "observed_label": "车辆",
+          "candidate_supported": true,
+          "reason_code": "visible_known_label",
+          "confidence": 0.98,
+          "reason": "The cyan mask covers a forklift with visible operator cab, steering area, and mast-and-fork assembly attached to a truck chassis, which meets the definition of 车辆. The evidence is visually supported and consistent with the allowed label definition. No other label is more appropriate given the clear,",
+          "visible_cues": [
+            "operator cab",
+            "steering area",
+            "mast-and-fork assembly",
+            "truck chassis"
+          ]
+        },
+        "route": "candidate_preserved",
+        "minimum_confidence": 0.9,
+        "execution_mode": "sequential",
+        "protocol_retry_count": 0,
+        "protocol_repair": null,
+        "operation_proposal": null,
+        "candidate_mutated": false,
+        "human_truth": false,
+        "approved_for_training": false,
+        "approved_for_deployment": false,
+        "audit_sha256": "bd53e891305ce01fd7e4c780365f10affcc5a3613801ca6b4d2301abafedba6a"
+      },
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 3429,
+          "model_route": "primary",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 1,
+          "actual_image_token_counts": [
+            238
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 3.289
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 268,
+          "model_route": null,
+          "fast_fallback_reason": null,
+          "cache_hit": null,
+          "coalesced": null,
+          "image_count": null,
+          "actual_image_token_counts": null,
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": null
+        },
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 4586,
+          "model_route": "primary",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 3,
+          "actual_image_token_counts": [
+            238,
+            121,
+            121
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 4.444
+        },
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 5964,
+          "model_route": "small_image_fast",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 3,
+          "actual_image_token_counts": [
+            121,
+            121,
+            121
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 5.954
+        }
+      ],
+      "elapsed_seconds": 14.307
+    },
+    {
+      "topic": "/capture/camera_3/image",
+      "frame": 39,
+      "image_sha256": "cc2a1b90faf6bc375b4684467d6a6803f420a0bf006d59cd1dfbe9b70b268114",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 820,
+          "y": 230,
+          "evidence": "A parked forklift is visible in the background near the wall, with its solid body and cabin discerni"
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 1574,
+          "y": 353
+        },
+        "score": 0.875,
+        "bbox": [
+          1437,
+          263,
+          1640,
+          449
+        ],
+        "area": 28902,
+        "area_ratio": 0.009800211588541666,
+        "confidence_band": "high",
+        "semantic_guard": {
+          "classification": "ambiguous",
+          "reason": "The cyan-highlighted region in Image 2 is too blurry and lacks sufficient detail to definitively identify whether it is a conventional forklift or an autonomous mobile robot/AGV. A",
+          "confidence": 0.7
+        },
+        "status": "semantic_guard_rejected"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 3664,
+          "model_route": "primary",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 1,
+          "actual_image_token_counts": [
+            238
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 3.543
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 255,
+          "model_route": null,
+          "fast_fallback_reason": null,
+          "cache_hit": null,
+          "coalesced": null,
+          "image_count": null,
+          "actual_image_token_counts": null,
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": null
+        },
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 4477,
+          "model_route": "primary",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 3,
+          "actual_image_token_counts": [
+            238,
+            144,
+            144
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 4.335
+        }
+      ],
+      "elapsed_seconds": 8.421
+    },
+    {
+      "topic": "/capture/camera_3/image",
+      "frame": 57,
+      "image_sha256": "69e2cf542f49a3c77e631d19697fdd196b785b5a6ac522fb457bb6c9fd41e868",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 730,
+          "y": 200,
+          "evidence": "A white forklift is visible in the background near the wall, partially occluded by other objects, in"
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 1401,
+          "y": 307
+        },
+        "score": 0.87890625,
+        "bbox": [
+          1305,
+          253,
+          1466,
+          414
+        ],
+        "area": 19283,
+        "area_ratio": 0.006538560655381945,
+        "confidence_band": "high",
+        "semantic_guard": {
+          "classification": "ambiguous",
+          "reason": "The highlighted candidate is too blurry and lacks clear, decisive pixels to definitively identify it as either a conventional operated industrial vehicle or an autonomous mobile/AG",
+          "confidence": 0.85
+        },
+        "status": "semantic_guard_rejected"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 3668,
+          "model_route": "primary",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 1,
+          "actual_image_token_counts": [
+            238
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 3.564
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 248,
+          "model_route": null,
+          "fast_fallback_reason": null,
+          "cache_hit": null,
+          "coalesced": null,
+          "image_count": null,
+          "actual_image_token_counts": null,
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": null
+        },
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 3931,
+          "model_route": "primary",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 3,
+          "actual_image_token_counts": [
+            238,
+            100,
+            100
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 3.797
+        }
+      ],
+      "elapsed_seconds": 7.871
+    },
+    {
+      "topic": "/capture/camera_3/image",
+      "frame": 75,
+      "image_sha256": "7ca19bf77c405fe1ad1c2a0b55283d4df49197d682159810b8e0a123ad52f6d1",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 242,
+          "y": 220,
+          "evidence": "A parked forklift is visible in the background, near the wall, with its mast and cabin partially oc."
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 464,
+          "y": 338
+        },
+        "score": 0.85546875,
+        "bbox": [
+          401,
+          261,
+          582,
+          417
+        ],
+        "area": 19924,
+        "area_ratio": 0.006755913628472222,
+        "confidence_band": "high",
+        "semantic_guard": {
+          "classification": "ambiguous",
+          "reason": "The highlighted cyan mask in Image 2 covers a blurry, indistinct shape that lacks clear evidence of either a conventional forklift (e.g., cab, steering, mast, counterweight) or an ",
+          "confidence": 0.85
+        },
+        "status": "semantic_guard_rejected"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 3344,
+          "model_route": "primary",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 1,
+          "actual_image_token_counts": [
+            238
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 3.196
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 446,
+          "model_route": null,
+          "fast_fallback_reason": null,
+          "cache_hit": null,
+          "coalesced": null,
+          "image_count": null,
+          "actual_image_token_counts": null,
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": null
+        },
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 5238,
+          "model_route": "primary",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 3,
+          "actual_image_token_counts": [
+            238,
+            110,
+            110
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 5.111
+        }
+      ],
+      "elapsed_seconds": 9.056
+    },
+    {
+      "topic": "/capture/camera_3/image",
+      "frame": 93,
+      "image_sha256": "938d4822d313683073fbee63b91d7668d59f79f613b459667fc9e18c9dfd4342",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 40,
+          "y": 200,
+          "evidence": "A parked forklift is visible in the background on the left side of the image, partially obscured by "
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 77,
+          "y": 307
+        },
+        "score": 0.91796875,
+        "bbox": [
+          0,
+          257,
+          245,
+          457
+        ],
+        "area": 36647,
+        "area_ratio": 0.01242641872829861,
+        "confidence_band": "high",
+        "semantic_guard": {
+          "classification": "partial_fragment",
+          "reason": "The cyan mask in Image 2 isolates only a fragment of the forklift's mast and fork assembly, not the full machine including chassis, counterweight, or operator cab. The isolated cut",
+          "confidence": 0.95
+        },
+        "status": "semantic_guard_rejected"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 3542,
+          "model_route": "primary",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 1,
+          "actual_image_token_counts": [
+            238
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 3.441
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 229,
+          "model_route": null,
+          "fast_fallback_reason": null,
+          "cache_hit": null,
+          "coalesced": null,
+          "image_count": null,
+          "actual_image_token_counts": null,
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": null
+        },
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 5016,
+          "model_route": "primary",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 3,
+          "actual_image_token_counts": [
+            238,
+            143,
+            143
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 4.895
+        }
+      ],
+      "elapsed_seconds": 8.811
+    },
+    {
+      "topic": "/capture/camera_3/image",
+      "frame": 111,
+      "image_sha256": "2c99b19730eddaf61d7285b01bd6179df0dffe6d469ba875afe8cff927663590",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 102,
+          "y": 222,
+          "evidence": "A parked, unoccupied forklift is visible in the background, partially occluded by a wall, with its t"
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 196,
+          "y": 341
+        },
+        "score": 0.85546875,
+        "bbox": [
+          40,
+          268,
+          320,
+          468
+        ],
+        "area": 38224,
+        "area_ratio": 0.012961154513888889,
+        "confidence_band": "high",
+        "semantic_guard": {
+          "classification": "partial_fragment",
+          "reason": "The cyan mask in Image 2 isolates only a small, fragmented portion of the machine in the full image (Image 1). The highlighted area does not cover a recognizable core of one full, ",
+          "confidence": 0.95
+        },
+        "status": "semantic_guard_rejected"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 3390,
+          "model_route": "primary",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 1,
+          "actual_image_token_counts": [
+            238
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 3.277
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 240,
+          "model_route": null,
+          "fast_fallback_reason": null,
+          "cache_hit": null,
+          "coalesced": null,
+          "image_count": null,
+          "actual_image_token_counts": null,
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": null
+        },
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 5161,
+          "model_route": "primary",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 3,
+          "actual_image_token_counts": [
+            238,
+            196,
+            196
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 5.034
+        }
+      ],
+      "elapsed_seconds": 8.821
+    },
+    {
+      "topic": "/capture/camera_3/image",
+      "frame": 129,
+      "image_sha256": "79a8ab3ea26ccbeaff591772ede3a856769ad882413c24d4954a8b1084a464df",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 102,
+          "y": 237,
+          "evidence": "A parked forklift is visible in the background to the left, partially obscured by the container, and"
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 196,
+          "y": 364
+        },
+        "score": 0.90625,
+        "bbox": [
+          27,
+          289,
+          338,
+          500
+        ],
+        "area": 44248,
+        "area_ratio": 0.015003797743055556,
+        "confidence_band": "high",
+        "semantic_guard": {
+          "classification": "ambiguous",
+          "reason": "The cyan-highlighted region in Image 2 is too blurry and fragmented to clearly identify any specific machine components. It appears to be a partial view of a white and dark object,",
+          "confidence": 0.85
+        },
+        "status": "semantic_guard_rejected"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 3199,
+          "model_route": "primary",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 1,
+          "actual_image_token_counts": [
+            238
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 3.081
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 243,
+          "model_route": null,
+          "fast_fallback_reason": null,
+          "cache_hit": null,
+          "coalesced": null,
+          "image_count": null,
+          "actual_image_token_counts": null,
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": null
+        },
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 4478,
+          "model_route": "primary",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 3,
+          "actual_image_token_counts": [
+            238,
+            225,
+            225
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 4.305
+        }
+      ],
+      "elapsed_seconds": 7.95
+    },
+    {
+      "topic": "/capture/camera_2/image",
+      "frame": 2,
+      "image_sha256": "0722e5e5bbf18a6ec34b92e55912e3938348580f545a952c84ebc78706b06dbb",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "ambiguous",
+          "entity_type": "autonomous_robot_or_agv",
+          "x": 400,
+          "y": 300,
+          "evidence": "The image shows an autonomous AGV (autonomous guided vehicle) in the foreground, which is the camera"
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "status": "locator_not_eligible"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 4034,
+          "model_route": "primary",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 1,
+          "actual_image_token_counts": [
+            238
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 3.892
+        }
+      ],
+      "elapsed_seconds": 4.034
+    },
+    {
+      "topic": "/capture/camera_2/image",
+      "frame": 39,
+      "image_sha256": "5f51408e41a4f69a42e3a45becebdf7e0e55b58427ab0c6b3651a2372dcb7c62",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 666,
+          "y": 288,
+          "evidence": "A distant forklift is visible in the background near the wall, partially occluded by other objects, "
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 1278,
+          "y": 442
+        },
+        "score": 0.412109375,
+        "bbox": [
+          1261,
+          428,
+          1303,
+          466
+        ],
+        "area": 1153,
+        "area_ratio": 0.0003909640842013889,
+        "status": "geometry_rejected"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 3655,
+          "model_route": "primary",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 1,
+          "actual_image_token_counts": [
+            238
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 3.515
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 324,
+          "model_route": null,
+          "fast_fallback_reason": null,
+          "cache_hit": null,
+          "coalesced": null,
+          "image_count": null,
+          "actual_image_token_counts": null,
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": null
+        }
+      ],
+      "elapsed_seconds": 3.987
+    },
+    {
+      "topic": "/capture/camera_0/image",
+      "frame": 39,
+      "image_sha256": "08d44c5bed6af3940cc02c8a058594e2b0edda88a934ea3997063105dfffe1d4",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "ambiguous",
+          "entity_type": "autonomous_robot_or_agv",
+          "x": 500,
+          "y": 500,
+          "evidence": "The image shows the perspective of an autonomous vehicle (AGV) with a person operating it, and no un"
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "status": "locator_not_eligible"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 3768,
+          "model_route": "primary",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 1,
+          "actual_image_token_counts": [
+            238
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 3.65
+        }
+      ],
+      "elapsed_seconds": 3.769
+    },
+    {
+      "topic": "/capture/camera_1/image",
+      "frame": 39,
+      "image_sha256": "63edbd88809c6266768bf6dbcc676b6e26697d9f6796282afb5b38b6f058cf7f",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 187,
+          "y": 327,
+          "evidence": "A distant forklift is visible in the background, parked and unoccupied, near a wall. It is a solid, "
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 359,
+          "y": 502
+        },
+        "score": 0.37109375,
+        "bbox": [
+          289,
+          427,
+          374,
+          522
+        ],
+        "area": 5055,
+        "area_ratio": 0.0017140706380208333,
+        "status": "geometry_rejected"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 4176,
+          "model_route": "primary",
+          "fast_fallback_reason": null,
+          "cache_hit": false,
+          "coalesced": false,
+          "image_count": 1,
+          "actual_image_token_counts": [
+            238
+          ],
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": 4.016
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 255,
+          "model_route": null,
+          "fast_fallback_reason": null,
+          "cache_hit": null,
+          "coalesced": null,
+          "image_count": null,
+          "actual_image_token_counts": null,
+          "preprocess_seconds": null,
+          "generation_seconds": null,
+          "total_seconds": null
+        }
+      ],
+      "elapsed_seconds": 4.439
+    }
+  ],
+  "summary": {
+    "sample_count": 12,
+    "candidate_count": 2,
+    "candidate_preserved_count": 2,
+    "human_review_required_count": 0,
+    "no_candidate_count": 10,
+    "error_count": 0,
+    "model_call_count": 32,
+    "model_cache_hit_count": 0,
+    "model_coalesced_count": 0,
+    "elapsed_p50_seconds": 8.185,
+    "elapsed_p95_seconds": 14.651,
+    "source_state_modified": false
+  },
+  "state": {
+    "path": "D:\\Apps\\LabelAgent\\work\\state.json",
+    "sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115"
+  },
+  "contact_sheet": {
+    "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round364-visible-machine-cold-route12\\contact-sheet.jpg",
+    "sha256": "665c0a22b895c18dc0ad2209db3a8ebf34051336a568d95306020611997355ae"
+  }
+}

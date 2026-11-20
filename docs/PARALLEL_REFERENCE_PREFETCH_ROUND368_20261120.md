@@ -56,3 +56,9 @@
 - `visible_vehicle_point_recovery` 继续保持未启用。
 
 结构化证据见 `docs/evidence/workbench-stability-20261117/parallel-reference-prefetch-round368.json`，浏览器原始回执见同目录下的 `new-dataset-parallel-prefetch-round368.json`。
+
+## 6. 正式部署与回滚
+
+本轮已经部署到 `http://127.0.0.1:8765`。部署后首页返回 200，运行状态为 `idle`，SAM3、VLM 和标注页均正常；工作区源码与正式源码 SHA-256 均为 `C73BA710...E08304C`。正式人工状态文件在部署前后均为 `9EF08118...AB115`，说明部署没有改动已有标注状态。
+
+隔离验收端口 8891～8897 已全部关闭。旧版服务文件保存在 `D:\Apps\LabelAgent\.local\backups\round368-20261120\source\agent\server.py`，需要时可单文件回滚。

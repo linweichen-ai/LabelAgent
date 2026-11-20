@@ -142,7 +142,7 @@ test('工作台持续显示新旧数据集身份和逐类别覆盖状态', () =>
   assert.match(app, /candidateNeedsReview/);
   assert.match(html, /style\.css\?v=120/);
   assert.match(html, /homepage-theme\.css\?v=4/);
-  assert.match(html, /app\.js\?v=202/);
+  assert.match(html, /app\.js\?v=203/);
   assert.match(app, /action\.dataset\.coverageRepair=label/);
   assert.match(app, /startCandidateCoverageRepair\(label\)/);
   assert.match(app, /不会自动运行模型或写入人工真值/);
@@ -654,6 +654,40 @@ test('高风险类别复核进度区分批量、串行、人工与实际重试',
   assert.ok(element('runProgressDetail').textContent.includes('高风险类别已复核 3/3'));
   assert.ok(element('runProgressDetail').textContent.includes('批量 2 · 串行 1'));
   assert.ok(element('runProgressDetail').textContent.includes('需人工 1 · 实际重试 1'));
+});
+
+test('人工检查区实时显示后台精修且不冒充人工真值', () => {
+  const elements = new Map();
+  function element(id) {
+    if (!elements.has(id)) elements.set(id, {textContent:'轮廓草稿待人工确认',dataset:{baseStatus:'轮廓草稿待人工确认'}});
+    return elements.get(id);
+  }
+  const h = harness({$:element,loadedDataPath:'dataset-a',topic:'/camera3',frame:101});
+  const text = source('app.js');
+  h.run("let latestAgentJob={status:'idle'};let referencePreparationIntent={source:'machine_candidate',path:'dataset-a',topic:'/camera3',frame:101};");
+  h.run(section(text, 'function formatAgentDuration', 'function estimatedAgentPhaseWeight'));
+  h.run(section(text, 'function referenceBackgroundProgressText', 'function updateReferenceFinalizeGuide'));
+  h.run("refreshReferenceBackgroundProgress({status:'running',phase:'agent_refining',frame:101,phase_elapsed_seconds:7})");
+  assert.ok(element('referenceFinalizeStatus').textContent.includes('初始候选已显示'));
+  assert.ok(element('referenceFinalizeStatus').textContent.includes('可先逐个检查'));
+  assert.ok(element('referenceFinalizeStatus').textContent.includes('不会写入人工真值'));
+});
+
+test('人工检查区显示高风险类别复核计数并在任务结束后恢复基础提示', () => {
+  const elements = new Map();
+  function element(id) {
+    if (!elements.has(id)) elements.set(id, {textContent:'轮廓草稿待人工确认',dataset:{baseStatus:'轮廓草稿待人工确认'}});
+    return elements.get(id);
+  }
+  const h = harness({$:element,loadedDataPath:'dataset-a',topic:'/camera2',frame:24});
+  const text = source('app.js');
+  h.run("let latestAgentJob={status:'idle'};let referencePreparationIntent={source:'machine_candidate',path:'dataset-a',topic:'/camera2',frame:24};");
+  h.run(section(text, 'function formatAgentDuration', 'function estimatedAgentPhaseWeight'));
+  h.run(section(text, 'function referenceBackgroundProgressText', 'function updateReferenceFinalizeGuide'));
+  h.run("refreshReferenceBackgroundProgress({status:'running',phase:'candidate_class_audit',frame:24,phase_elapsed_seconds:13,audit_completed:2,audit_total:5})");
+  assert.ok(element('referenceFinalizeStatus').textContent.includes('后台复核 2/5'));
+  h.run("refreshReferenceBackgroundProgress({status:'completed',phase:'completed',frame:24})");
+  assert.equal(element('referenceFinalizeStatus').textContent, '轮廓草稿待人工确认');
 });
 
 test('后台 Agent 精修显示明确阶段而不是看似卡在百分之一', () => {
@@ -1537,7 +1571,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=202/);
+  assert.match(source('index.html'), /app\.js\?v=203/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1598,7 +1632,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{\s*invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(currentGeneration=0\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=202/);
+  assert.match(source('index.html'), /app\.js\?v=203/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1657,7 +1691,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 4);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=202/);
+  assert.match(source('index.html'), /app\.js\?v=203/);
 });
 
 test('类别与推理类别保存绑定文件载入代次和类别状态版本', async () => {
@@ -1696,7 +1730,7 @@ test('类别与推理类别保存绑定文件载入代次和类别状态版本',
   assert.deepEqual(applied[0].labels, ['a','b']);
   assert.deepEqual(applied[0].auto_labels, ['b']);
   assert.equal(h.run('currentDescription'), null);
-  assert.match(source('index.html'), /app\.js\?v=202/);
+  assert.match(source('index.html'), /app\.js\?v=203/);
 });
 
 test('模型配置保存绑定工作区载入代次和配置版本', async () => {

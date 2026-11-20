@@ -1,0 +1,18 @@
+{
+  "schema_version": "labelagent.reference-background-progress-acceptance.v1",
+  "passed": true,
+  "scope": {
+    "path": "D:\\Apps\\LabelAgent\\work\\datasets\\Capture_20261103\\常熟0920_Qwen2B_Agent未确认候选.mcap",
+    "topic": "/capture/camera_1/image",
+    "frame": 0,
+    "uiVersion": "http://127.0.0.1:8765/app.js?v=203"
+  },
+  "refining_text": "轮廓草稿待人工确认 · 初始候选已显示；Agent 正在后台精修（已进行 7 秒），可先逐个检查，不会写入人工真值",
+  "auditing_text": "轮廓草稿待人工确认 · 高风险类别正在后台复核 2/5（已进行 13 秒），可先逐个检查，不会写入人工真值",
+  "completed_text": "轮廓草稿待人工确认",
+  "truth_write_requests": [],
+  "page_errors": [],
+  "failed_requests": [],
+  "http_errors": [],
+  "screenshot": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\docs\\evidence\\workbench-stability-20261117\\reference-background-progress-round372-production\\reference-background-progress.png"
+}

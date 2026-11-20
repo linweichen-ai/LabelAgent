@@ -516,6 +516,22 @@ function appendCandidateClassAuditAlerts(alerts,items,run){
  }
  const details=document.createElement('details');details.className='candidateAuditDetails';const summary=document.createElement('summary');summary.textContent=`查看全部模型原始依据（${records.length}）`;details.append(summary);for(const row of rows){const raw=document.createElement('p');raw.textContent=`候选 #${row.audit.candidate_id??'未知'} · 当前类别：${row.original} · 模型观察：${row.observed} · ${row.reason}`;details.append(raw)}alerts.append(details);
 }
+function referenceBackgroundProgressText(intent,job=latestAgentJob){
+ if(intent?.source!=='machine_candidate'||intent.path!==loadedDataPath||intent.topic!==topic||Number(intent.frame)!==Number(frame)||job?.status!=='running'||Number(job.frame)!==Number(intent.frame))return '';
+ const elapsed=formatAgentDuration(job.phase_elapsed_seconds||0),phase=job.phase;
+ if(phase==='agent_refining'||phase==='observing')return `初始候选已显示；Agent 正在后台精修（已进行 ${elapsed}），可先逐个检查，不会写入人工真值`;
+ if(phase==='vlm_waiting')return `初始候选已显示；共享 VLM 正在排队，系统会自动继续，可先逐个检查`;
+ if(phase==='candidate_class_audit'||phase==='auditing'){
+  const completed=Math.max(0,Number(job.audit_completed)||0),total=Math.max(0,Number(job.audit_total)||0);
+  return `高风险类别正在后台复核 ${completed}/${total}（已进行 ${elapsed}），可先逐个检查，不会写入人工真值`;
+ }
+ return '';
+}
+function refreshReferenceBackgroundProgress(job=latestAgentJob){
+ const status=$('referenceFinalizeStatus');if(!status||!referencePreparationIntent)return;
+ const base=status.dataset.baseStatus||status.textContent,progress=referenceBackgroundProgressText(referencePreparationIntent,job);
+ status.textContent=progress?`${base} · ${progress}`:base;
+}
 function updateReferenceFinalizeGuide(){
  if(referencePreparationIntent?.source==='machine_candidate'&&referencePreparationIntent.frame===frame&&referencePreparationIntent.topic===topic)invalidateChangedCandidateAudits(selectedShapes(),frame);
  const guide=$('referenceFinalizeGuide');if(!guide)return;
@@ -523,7 +539,7 @@ function updateReferenceFinalizeGuide(){
  const same=intent.path===loadedDataPath&&intent.topic===topic&&intent.frame===frame,key=String(intent.frame),items=same?(shapes[key]??manualDrafts[key]??autoDrafts[key]??candidates[key]??[]):[],truthReady=same&&truthIsVerified(intent.frame)&&Array.isArray(shapes[key])&&shapes[key].length>0,draftReady=same&&Array.isArray(items)&&items.length>0,reference=window.referenceFrames?.[intent.topic]?.[0],locked=reference===intent.frame,run=agentRuns[key],openSetIncomplete=run?.visible_label_discovery?.open_set_scan_complete===false||(run?.review_queue||[]).some(item=>item?.reason_code==='vlm_open_set_output_truncated'),unresolvedModelConflicts=items.map((shape,index)=>({index,conflict:unresolvedCandidateModelConflict(shape)})).filter(item=>item.conflict),reviewKeys=referenceReviewKeys(items),reviewedCount=reviewKeys.filter(item=>referenceReviewedShapeKeys.has(item)).length,allReviewed=items.length>0&&reviewedCount===items.length&&unresolvedModelConflicts.length===0;refreshClassColorLegend(items);
  const active=locked?3:truthReady?3:draftReady?2:1;
  for(const [id,step]of[['referenceFinalizeStep1',1],['referenceFinalizeStep2',2],['referenceFinalizeStep3',3]]){const item=$(id);item.classList.toggle('active',step===active&&!locked);item.classList.toggle('done',locked||step<active)}
- const status=referenceFinalizeNotice||(locked?'参考帧已锁定':!same?`正在准备帧 ${intent.frame}，请先返回该帧`:truthReady?'人工真值已保存且回执已核验，最后锁定参考帧':intent.source==='legacy_truth'?'历史标注已载入，请检查/精修后完成人工确认':draftReady?'轮廓草稿待人工确认':'当前没有轮廓，请先完成标注');$('referenceFinalizeStatus').textContent=status;
+ const status=referenceFinalizeNotice||(locked?'参考帧已锁定':!same?`正在准备帧 ${intent.frame}，请先返回该帧`:truthReady?'人工真值已保存且回执已核验，最后锁定参考帧':intent.source==='legacy_truth'?'历史标注已载入，请检查/精修后完成人工确认':draftReady?'轮廓草稿待人工确认':'当前没有轮廓，请先完成标注'),statusNode=$('referenceFinalizeStatus');statusNode.dataset.baseStatus=status;statusNode.textContent=status;refreshReferenceBackgroundProgress();
  const review=$('referenceFinalizeReview'),advice=$('referenceFinalizeAdvice'),navigation=$('referenceReviewNavigation');let unresolvedMissing=[];review.hidden=!same||(!draftReady&&!truthReady);advice.hidden=review.hidden;navigation.hidden=review.hidden||locked;
  if(!review.hidden){
   $('referenceFinalizeCount').textContent=String(items.length);$('referenceReviewProgress').textContent=truthReady||locked?'逐个检查已完成':`已检查 ${reviewedCount} / ${items.length}`;
@@ -898,7 +914,7 @@ function renderRunButton(){
  button.setAttribute('aria-busy',String(pending||running||launchingRefinement));
  renderAgentProgressPanel(job,elapsed||0);
 }
-function renderAgentProgress(job){const changed=latestAgentJob?.status!==job.status||latestAgentJob?.phase!==job.phase||latestAgentJob?.frame!==job.frame;latestAgentJob=job;renderRunButton();if(changed)document.dispatchEvent(new CustomEvent('labelagent:job-status',{detail:job}))}
+function renderAgentProgress(job){const changed=latestAgentJob?.status!==job.status||latestAgentJob?.phase!==job.phase||latestAgentJob?.frame!==job.frame;latestAgentJob=job;renderRunButton();refreshReferenceBackgroundProgress(job);if(changed)document.dispatchEvent(new CustomEvent('labelagent:job-status',{detail:job}))}
 async function fetchAgentStatus(){
  const controller=typeof AbortController==='function'?new AbortController():null,timer=controller?setTimeout(()=>controller.abort(),8000):null;
  try{return await fetch('/api/run/status',{cache:'no-store',...(controller?{signal:controller.signal}:{})})}

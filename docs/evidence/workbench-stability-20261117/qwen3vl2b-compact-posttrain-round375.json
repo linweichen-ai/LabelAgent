@@ -1,0 +1,63 @@
+{
+  "schema_version": "labelagent.qwen3vl2b-compact-posttrain-summary.v1",
+  "round": 375,
+  "date": "2026-11-20",
+  "status": "trained_evaluated_keep_offline",
+  "human_truth": false,
+  "production_deployed": false,
+  "test24_used_for_training": false,
+  "test24_used_for_evaluation": false,
+  "dataset": {
+    "train_samples": 62,
+    "dev_samples": 8,
+    "effective_samples": 104,
+    "slope_positive_sources": 6,
+    "slope_positive_repeat": 8,
+    "target_compaction": "deterministic_schema_preserving_v1",
+    "train_sha256": "acd081d924ca8a494577a77892091a5741012fe83e1a65d9417af7d39705477f",
+    "dev_sha256": "7a49d4261aab41627e559fc8e0c7a6c5811e2a12f2275c44314972ce55e2e73f"
+  },
+  "training": {
+    "steps": 52,
+    "learning_rate": 0.0001,
+    "seed": 3407,
+    "elapsed_seconds": 51.399,
+    "peak_cuda_memory_bytes": 6605922304,
+    "train_loss": 0.1321389998595875,
+    "adapter_sha256": "ad81bd3929ffb915b07986e783fe2116defe51c45d3ff562d86e5d164f59ad4f",
+    "tensor_audit": "passed"
+  },
+  "same_prompt_ab": {
+    "new_candidate": {
+      "valid_json": "8/8",
+      "teacher_evidence": "62/64",
+      "median_completion_tokens": 182.0,
+      "median_generation_seconds": 16.608,
+      "slope": {"tp": 2, "fp": 0, "fn": 0, "tn": 6},
+      "pallet": {"tp": 7, "fp": 0, "fn": 1, "tn": 0},
+      "other_robot": {"tp": 4, "fp": 1, "fn": 0, "tn": 3}
+    },
+    "old_best": {
+      "valid_json": "8/8",
+      "teacher_evidence": "61/64",
+      "median_completion_tokens": 198.5,
+      "median_generation_seconds": 15.712,
+      "slope": {"tp": 2, "fp": 0, "fn": 0, "tn": 6},
+      "pallet": {"tp": 7, "fp": 0, "fn": 1, "tn": 0},
+      "other_robot": {"tp": 3, "fp": 1, "fn": 1, "tn": 3}
+    }
+  },
+  "decision": {
+    "retain_artifact": true,
+    "replace_production_model": false,
+    "reason": "One internal teacher-evidence improvement and shorter output are positive, but latency did not improve and no independent human or unused external gate has passed."
+  },
+  "service_readback": {
+    "sam_ok": true,
+    "sam_inflight": 0,
+    "vlm_ok": true,
+    "vlm_inflight": 0,
+    "training_process_exited": true,
+    "production_state_sha256": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115"
+  }
+}

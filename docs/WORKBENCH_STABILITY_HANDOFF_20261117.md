@@ -2994,3 +2994,24 @@ Round343暴露出一个体验问题：另一个窗口切换服务器当前数据
 `D:\Apps\LabelAgent\.local\backups\cross-window-scope-round346-20261120`；正式state哈希前后均为
 `9EF08118...AB115`，两路SAM和两路VLM保持在线。完整记录见
 `CROSS_WINDOW_SCOPE_NOTICE_ROUND346_20261120.md`。
+
+## Round375：2B短目标后训练、公平A/B与仓库入口统一（2026-11-20）
+
+GitHub与CNB均新增并读回验证`reproduce`分支，和持续开发分支`labelagent`共同指向提交
+`8e664634d6bdf22cacd945fc31ff7d5a69648db9`；README与复现文档统一要求首次复现者只下载
+`reproduce`，历史`codex/*`、`backup/*`和早期`main`不作为入口，历史分支暂不删除以保留回滚。
+
+训练侧没有继续在8B失败路线堆步数，而是将同一62条机器教师训练集确定性压缩为保持八类schema
+的单行短JSON；8条dev保持独立，6条斜坡正例按8倍采样形成104次有效采样，`test24`完全未用。
+两步烟测通过后，在双4090 GPU0完成52步Qwen3-VL-2B LoRA训练，耗时51.399秒、峰值显存
+6,605,922,304字节，适配器SHA-256为`ad81bd39...9ad4f`。392个LoRA张量审计全部通过。
+
+同一短提示下的公平A/B显示：基础2B为7/8合法JSON、48/56教师证据一致；旧最佳LoRA为8/8、
+61/64，中位198.5 token和15.712秒；新候选为8/8、62/64，中位182 token和16.608秒。两者斜坡
+均为TP=2、FP=0、FN=0、TN=6；新候选少1个`other_robot`漏检，但仍有1个pallet漏检和1个
+`other_robot`误报，且速度未改善。因此保留为离线质量候选，不替换正式8B、不进入`test24`。
+
+训练与评测完成后GPU显存已释放，训练进程退出；正式SAM、8B VLM、5090两路加速和工作台均健康，
+在途请求为0，正式state哈希仍为`9EF08118...AB115`，隔离端口8891至8898均未监听。详细报告见
+`QWEN3VL2B_COMPACT_POSTTRAIN_ROUND375_20261120.md`，结构化记录见
+`docs/evidence/workbench-stability-20261117/qwen3vl2b-compact-posttrain-round375.json`。

@@ -1,0 +1,46 @@
+{
+  "round": 363,
+  "date": "2026-11-20",
+  "change_type": "read_only_warm_cache_stability_verification",
+  "capture16": {
+    "cold": {
+      "candidate_count": 3,
+      "candidate_preserved_count": 2,
+      "human_review_required_count": 1,
+      "elapsed_p50_seconds": 5.107,
+      "elapsed_p95_seconds": 5.856
+    },
+    "warm": {
+      "candidate_count": 3,
+      "candidate_preserved_count": 2,
+      "human_review_required_count": 1,
+      "elapsed_p50_seconds": 0.488,
+      "elapsed_p95_seconds": 0.648,
+      "vlm_call_count": 29,
+      "vlm_cache_hit_count": 29
+    },
+    "output_difference_count": 0,
+    "p50_reduction_percent": 90.4,
+    "p95_reduction_percent": 88.9
+  },
+  "task3_10": {
+    "candidate_count": 0,
+    "human_review_required_count": 0,
+    "error_count": 0,
+    "elapsed_p50_seconds": 0.037,
+    "elapsed_p95_seconds": 0.178,
+    "reference_provenance": "legacy_auto_preannotation",
+    "human_truth_verified": false
+  },
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth_modified": false,
+    "training_data_modified": false,
+    "source_state_modified": false,
+    "reference_session_modified": false
+  },
+  "evidence": {
+    "capture": "visible-machine-capture-warm-repeat-round363.json",
+    "task3": "visible-machine-task3-warm-repeat-round363.json"
+  }
+}

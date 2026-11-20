@@ -1,0 +1,54 @@
+{
+  "schema_version": "labelagent.production_browser_acceptance.v1",
+  "round": 324,
+  "date": "2026-11-20",
+  "base_url": "http://127.0.0.1:8765",
+  "dataset_coverage": {
+    "passed": true,
+    "elapsed_ms": 1638,
+    "current_identity": "CVAT Task3 / old validation dataset",
+    "library_row_count": 10,
+    "new_capture_visible": true,
+    "batch_b_003_visible": true,
+    "batch_b_004_visible": true,
+    "selected_label_count": 8,
+    "total_label_count": 8,
+    "candidate_frames": 149,
+    "current_frame_candidates": 14,
+    "current_frame_pallets": 12,
+    "current_frame_floors": 2,
+    "truth_write_requests": 0,
+    "page_errors": 0,
+    "failed_requests": 0,
+    "http_errors": 0,
+    "result_sha256": "a40182888682944f335d7d050c40bbbf3be3f7a1f3b47e50202904bc04177937"
+  },
+  "result_overlay": {
+    "passed": true,
+    "frame": 110,
+    "candidate_count": 14,
+    "candidate_visible_pixels": 257452,
+    "overlay_layout_max_delta_px": 0.015625,
+    "vlm_ready": true,
+    "page_errors": 0,
+    "result_sha256": "6baafefd02c039d3a9942287319331773e1bc1cc5b15535680e6bbf1b9248acc"
+  },
+  "acceptance_tool_fixes": {
+    "playwright_runtime_auto_discovery": true,
+    "workspace_restore_wait": true,
+    "current_class_chip_selector": true,
+    "new_dataset_library_assertions": true
+  },
+  "tests": {
+    "javascript_passed": 147,
+    "python_last_full_passed": 1114,
+    "python_last_full_subtests_passed": 186
+  },
+  "runtime_storage": {
+    "free_mib": 2120.79,
+    "readiness": "ok"
+  },
+  "production_state_sha256": "237844f73ff4495e575c6a3f966260b9385efbdf1edee7d0e5177518470ddfab",
+  "workbench_writes": 0,
+  "production_model_changed": false
+}

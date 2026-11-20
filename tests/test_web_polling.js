@@ -238,6 +238,18 @@ test('结果叠加验收工具跟随当前 Node 运行时寻找 Playwright', () 
   assert.match(tool, /Playwright runtime not found/);
 });
 
+test('数据集覆盖验收跟随当前运行时并等待工作区恢复完成', () => {
+  const tool = fs.readFileSync(path.join(
+    __dirname, '../tools/browser_dataset_coverage_acceptance.cjs'), 'utf8');
+  assert.match(tool, /path\.dirname\(process\.execPath\)/);
+  assert.match(tool, /playwrightCandidates\.find\(candidate => fs\.existsSync\(candidate\)\)/);
+  assert.match(tool, /datasetIdentityKind/);
+  assert.match(tool, /新数据集.*旧验证集.*已加载数据/s);
+  assert.match(tool, /button\[data-coverage-label\]/);
+  assert.match(tool, /问题包 003/);
+  assert.match(tool, /问题包 004/);
+});
+
 test('人工真值界面提供明确的连续推理入口', () => {
   const html = source('index.html');
   const inspection = source('inspection.js');

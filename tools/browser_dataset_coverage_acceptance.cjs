@@ -4,8 +4,16 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
-const {chromium} = require(
-  "C:/Users/seer/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright");
+const playwrightCandidates = [
+  process.env.PLAYWRIGHT_NODE_MODULES,
+  path.resolve(path.dirname(process.execPath), "..", "node_modules", "playwright"),
+  "C:/Users/seer/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright",
+].filter(Boolean);
+const playwrightRoot = playwrightCandidates.find(candidate => fs.existsSync(candidate));
+if (!playwrightRoot) {
+  throw Error(`Playwright runtime not found; checked: ${playwrightCandidates.join(", ")}`);
+}
+const {chromium} = require(playwrightRoot);
 
 const base = (process.env.LABELAGENT_ACCEPTANCE_URL || "http://127.0.0.1:8765").replace(/\/$/, "");
 const output = path.resolve(process.env.LABELAGENT_ACCEPTANCE_OUTPUT || "artifacts/dataset-coverage-browser-acceptance");
@@ -33,18 +41,27 @@ const output = path.resolve(process.env.LABELAGENT_ACCEPTANCE_OUTPUT || "artifac
     const response = await page.goto(base, {waitUntil: "domcontentloaded", timeout: 60000});
     assert.equal(response.status(), 200);
     await page.evaluate(() => window.labelAgentBootstrapReady);
-    await page.waitForFunction(() => !document.querySelector("#datasetIdentity")?.classList.contains("unloaded"));
+    await page.waitForFunction(() => ["新数据集", "旧验证集", "已加载数据"].includes(
+      document.querySelector("#datasetIdentityKind")?.textContent));
     const identity = await page.evaluate(() => ({
       kind: document.querySelector("#datasetIdentityKind")?.textContent,
       name: document.querySelector("#datasetIdentityName")?.textContent,
       detail: document.querySelector("#datasetIdentityDetail")?.textContent,
       title: document.querySelector("#datasetIdentity")?.title,
     }));
-    assert(["新数据集", "旧验证集", "已加载数据"].includes(identity.kind));
+    assert(["新数据集", "旧验证集", "已加载数据"].includes(identity.kind),
+      `unexpected dataset identity: ${JSON.stringify(identity)}`);
     assert(identity.detail.includes("/capture/camera_") || identity.detail.includes("/CVAT/Task3/images"));
 
     await page.locator("#datasetIdentitySwitch").click();
     await page.locator("#fileManager[open]").waitFor({state: "visible"});
+    const libraryRows = await page.locator(".fileRow").allInnerTexts();
+    assert(libraryRows.some(row => row.includes("新实采数据") && row.includes("Capture_20261103")),
+      `new capture dataset is missing from the library: ${JSON.stringify(libraryRows)}`);
+    assert(libraryRows.some(row => row.includes("问题包 003") && row.includes("单图抽样")),
+      "Batch B problem sample 003 is missing from the library");
+    assert(libraryRows.some(row => row.includes("问题包 004") && row.includes("单图抽样")),
+      "Batch B problem sample 004 is missing from the library");
     const currentRow = page.locator(".fileRow", {hasText: "当前已加载"});
     await currentRow.waitFor({state: "visible"});
     const fileRow = await currentRow.innerText();
@@ -65,7 +82,8 @@ const output = path.resolve(process.env.LABELAGENT_ACCEPTANCE_OUTPUT || "artifac
     assert.equal(await page.evaluate(() => document.activeElement?.id), "taskCount");
     assert.equal(await inferenceShortcut.isHidden(), true);
     await page.waitForFunction(() => document.querySelectorAll("#autoLabelOptions input:checked").length === 8);
-    await page.waitForFunction(() => document.querySelectorAll("#candidateSummary > span").length >= 8);
+    await page.waitForFunction(() =>
+      document.querySelectorAll("#candidateSummary button[data-coverage-label]").length === 8);
     const coverage = await page.evaluate(() => ({
       checked: [...document.querySelectorAll("#autoLabelOptions input:checked")].map(item => item.value),
       summary: document.querySelector("#candidateSummary")?.innerText,
@@ -92,6 +110,12 @@ const output = path.resolve(process.env.LABELAGENT_ACCEPTANCE_OUTPUT || "artifac
       elapsed_ms: Date.now() - started,
       identity,
       file_row: fileRow,
+      library: {
+        row_count: libraryRows.length,
+        new_capture_visible: libraryRows.some(row => row.includes("新实采数据") && row.includes("Capture_20261103")),
+        batch_b_003_visible: libraryRows.some(row => row.includes("问题包 003") && row.includes("单图抽样")),
+        batch_b_004_visible: libraryRows.some(row => row.includes("问题包 004") && row.includes("单图抽样")),
+      },
       coverage,
       inference_shortcut: {
         switched_to_auto: true,

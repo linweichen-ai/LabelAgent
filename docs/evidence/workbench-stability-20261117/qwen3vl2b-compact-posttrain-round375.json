@@ -47,6 +47,18 @@
       "other_robot": {"tp": 3, "fp": 1, "fn": 1, "tn": 3}
     }
   },
+  "external_shadow": {
+    "status": "assistant_candidate_only",
+    "samples": 4,
+    "agreements": 3,
+    "disagreements": 1,
+    "positive_agreements": 1,
+    "positive_total": 2,
+    "negative_agreements": 2,
+    "negative_total": 2,
+    "is_accuracy": false,
+    "human_truth": false
+  },
   "decision": {
     "retain_artifact": true,
     "replace_production_model": false,

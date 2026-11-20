@@ -1,0 +1,47 @@
+{
+  "schema_version": "labelagent.wide-workspace-acceptance.v1",
+  "date": "2026-11-20",
+  "ui_version": "156",
+  "theme_version": "2",
+  "production_url": "http://127.0.0.1:8765",
+  "http_status": 200,
+  "visual_only": true,
+  "source_image_uncropped": true,
+  "source_image_unstretched": true,
+  "wide_workspace_two_columns": true,
+  "narrow_workspace_fallback_preserved": true,
+  "measurements": {
+    "2560x1112": {
+      "stage_width_px": 1099.39,
+      "image_width_px": 987.5,
+      "horizontal_letterbox_total_px": 111.89,
+      "batch_review_collapsed_height_px": 53,
+      "console_errors": 0,
+      "page_errors": 0,
+      "passed": true
+    },
+    "1280x720": {
+      "stage_width_px": 536.19,
+      "image_width_px": 440.0,
+      "horizontal_letterbox_total_px": 96.19,
+      "batch_review_collapsed_height_px": 53,
+      "console_errors": 0,
+      "page_errors": 0,
+      "passed": true
+    }
+  },
+  "javascript_tests": {
+    "passed": 148,
+    "failed": 0
+  },
+  "production_index_sha256": "04D22F3D0BF4576C283414B571D9C42C2F63DADEC74227A8A70F2915C4F7E956",
+  "production_theme_sha256": "EDF1DDAA0299591F8876E63E0416E4F129BDC76CF4514CF9F2A00A3357540CD7",
+  "production_state_sha256_before_after": "87A2523BF135D78B4B9AFBFF8E4B42778D46A51913D0F9D1135DA69673257120",
+  "production_files_sha256_before_after": "7EDB40A9BDFCF5577AEA4C2BB183EF556A2B7D70B24564C49EEB46C5D9A8C5C1",
+  "backup_path": "D:\\Apps\\LabelAgent\\.local\\backups\\wide-workspace-round337-20261120-104929",
+  "screenshots_local_only": true,
+  "candidate_only_boundary_unchanged": true,
+  "human_truth_unchanged": true,
+  "training_approval_unchanged": true,
+  "passed": true
+}

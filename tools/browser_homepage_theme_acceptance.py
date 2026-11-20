@@ -23,6 +23,8 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--url", required=True)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--width", type=int, default=1600)
+    parser.add_argument("--height", type=int, default=1000)
     args = parser.parse_args()
 
     output = args.output.resolve()
@@ -33,7 +35,9 @@ def main() -> None:
     with sync_playwright() as runtime:
         executable = installed_browser()
         browser = runtime.chromium.launch(headless=True, executable_path=executable)
-        page = browser.new_page(viewport={"width": 1600, "height": 1000}, device_scale_factor=1)
+        page = browser.new_page(
+            viewport={"width": args.width, "height": args.height}, device_scale_factor=1
+        )
         page.on("console", lambda message: console_errors.append(message.text) if message.type == "error" else None)
         page.on("pageerror", lambda error: page_errors.append(str(error)))
         response = page.goto(args.url, wait_until="domcontentloaded", timeout=30_000)
@@ -50,6 +54,11 @@ def main() -> None:
               const guide = document.querySelector('#workflowGuide')?.getBoundingClientRect();
               const grid = document.querySelector('#windowGrid')?.getBoundingClientRect();
               const workbench = document.querySelector('#workbench')?.getBoundingClientRect();
+              const stage = document.querySelector('#stage')?.getBoundingClientRect();
+              const image = document.querySelector('#frameImage')?.getBoundingClientRect();
+              const viewerStyle = getComputedStyle(document.querySelector('.viewer'));
+              const batchPanel = document.querySelector('#batchReviewPanel');
+              const candidatePanel = document.querySelector('#candidateReviewPanel');
               const theme = [...document.styleSheets].some(sheet => {
                 try { return new URL(sheet.href).pathname.endsWith('/homepage-theme.css'); }
                 catch (_) { return false; }
@@ -70,6 +79,20 @@ def main() -> None:
                   grid_width: grid?.width || 0,
                   grid_height: grid?.height || 0,
                   workbench_height: workbench?.height || 0,
+                  stage_width: stage?.width || 0,
+                  stage_height: stage?.height || 0,
+                  image_width: image?.width || 0,
+                  image_height: image?.height || 0,
+                  horizontal_letterbox: Math.max(0, (stage?.width || 0) - (image?.width || 0)),
+                  vertical_letterbox: Math.max(0, (stage?.height || 0) - (image?.height || 0)),
+                },
+                responsive_layout: {
+                  viewer_display: viewerStyle.display,
+                  viewer_columns: viewerStyle.gridTemplateColumns,
+                  batch_panel_height: batchPanel?.getBoundingClientRect().height || 0,
+                  batch_compact: Boolean(batchPanel?.classList.contains('compact')),
+                  candidate_panel_height: candidatePanel?.getBoundingClientRect().height || 0,
+                  candidate_unavailable: Boolean(candidatePanel?.classList.contains('unavailable')),
                 },
                 controls: {
                   manual_mode: Boolean(document.querySelector('#manualModeButton')),
@@ -99,7 +122,7 @@ def main() -> None:
         metrics["passed"] = bool(
             metrics["http_status"] == 200
             and metrics["theme_loaded"]
-            and metrics["ui_version"] == "155"
+            and metrics["ui_version"] == "156"
             and all(metrics["controls"].values())
             and metrics["auto_workspace"] == "auto"
             and not console_errors

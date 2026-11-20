@@ -296,13 +296,19 @@ textarea:hover {
 .windowGrid {
   gap: 7px;
   padding: 8px;
-  background: #182129;
+  background: linear-gradient(145deg, #eef1f4, #e5eaf0);
 }
 
 .sensorWindow {
-  border-color: #44515d;
+  border-color: #c5cfd9;
   border-radius: 4px;
-  box-shadow: 0 8px 24px rgba(8, 18, 27, .18);
+  background: #e7ecf1;
+  box-shadow: 0 8px 24px rgba(32, 51, 75, .12);
+}
+
+.canvasWrap,
+.imageStage {
+  background: radial-gradient(circle at 50% 38%, #f8fafc 0, #eef2f6 55%, #e3e8ee 100%);
 }
 
 .windowHeader,
@@ -583,6 +589,134 @@ body.darkTheme .runReadinessDialog {
   border-color: var(--la-line-strong);
   color: var(--la-ink);
   background: rgba(18, 26, 34, .97);
+}
+
+body.darkTheme .windowGrid {
+  background: linear-gradient(145deg, #17212a, #101820);
+}
+
+body.darkTheme .sensorWindow,
+body.darkTheme .canvasWrap,
+body.darkTheme .imageStage {
+  border-color: #40505e;
+  background: #101820;
+}
+
+/* Collapsed or unavailable review sections should occupy only their header. */
+.batchReviewPanel.compact,
+.candidateReviewPanel.unavailable,
+.candidateReviewPanel.noCandidates {
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+/*
+ * Wide-screen auto workspace.
+ *
+ * A 4:3 factory image cannot fill an ultra-wide viewport without either
+ * cropping the image or producing large side bars.  On wide monitors we use
+ * those pixels for the operation/review desk instead: image and playback stay
+ * on the left, while the existing workbench occupies the right column.  No
+ * controls are reordered in the DOM and narrower screens retain the original
+ * stacked layout.
+ */
+@media (min-width: 1200px) and (min-height: 680px) {
+  body[data-workspace="auto"] .viewer {
+    display: grid;
+    grid-template-columns: minmax(560px, 44vw) minmax(500px, 1fr);
+    grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "toolbar toolbar"
+      "dataset dataset"
+      "notice notice"
+      "guide guide"
+      "canvas desk"
+      "playback desk";
+    height: 100dvh;
+    overflow: hidden;
+    background: var(--la-canvas);
+  }
+
+  body[data-workspace="auto"] .windowToolbar { grid-area: toolbar; }
+  body[data-workspace="auto"] .datasetIdentity { grid-area: dataset; }
+  body[data-workspace="auto"] .uiVersionNotice { grid-area: notice; }
+  body[data-workspace="auto"] .workflowGuide { grid-area: guide; }
+
+  body[data-workspace="auto"] .windowGrid {
+    grid-area: canvas;
+    min-height: 0;
+    padding: 12px;
+    border-right: 1px solid var(--la-line-strong);
+    overflow: hidden;
+  }
+
+  body[data-workspace="auto"] .playbackBar {
+    grid-area: playback;
+    border-right: 1px solid var(--la-line-strong);
+  }
+
+  body[data-workspace="auto"] #workbenchSplitter {
+    display: none;
+  }
+
+  body[data-workspace="auto"] #workbench {
+    grid-area: desk;
+    width: 100%;
+    height: auto !important;
+    min-height: 0;
+    border-top: 0;
+    border-left: 1px solid var(--la-line);
+    box-shadow: -8px 0 22px rgba(32, 51, 75, .055);
+    overflow: hidden;
+  }
+
+  body[data-workspace="auto"] #autoDesk,
+  body[data-workspace="auto"] #inspectionPanel {
+    height: 100%;
+    min-height: 0;
+  }
+
+  body[data-workspace="auto"] .inspectionHeading {
+    align-items: flex-start;
+  }
+
+  body[data-workspace="auto"] .inspectionActions {
+    justify-content: flex-end;
+  }
+
+  body[data-workspace="auto"] .batchReviewPanel.compact {
+    flex: 0 0 auto;
+    min-height: 0;
+  }
+
+  body[data-workspace="auto"] .candidateReviewPanel.unavailable,
+  body[data-workspace="auto"] .candidateReviewPanel.noCandidates {
+    flex: 0 0 auto;
+    min-height: 0;
+  }
+
+  body[data-workspace="auto"] .candidateReviewStats {
+    grid-template-columns: repeat(4, minmax(72px, 1fr));
+  }
+
+  body[data-workspace="auto"] .candidateReviewList {
+    grid-template-columns: 1fr;
+  }
+
+  body[data-workspace="auto"].workbenchCollapsed .viewer {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "toolbar"
+      "dataset"
+      "notice"
+      "guide"
+      "canvas"
+      "playback";
+  }
+
+  body[data-workspace="auto"].workbenchCollapsed #workbench {
+    display: none;
+  }
 }
 
 @media (max-width: 900px) {

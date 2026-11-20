@@ -146,6 +146,48 @@ class VisibleVehiclePointRecoveryTests(unittest.TestCase):
         self.assertEqual(evidence["routed_label"], "other_robot")
         self.assertTrue(server.candidate_requires_class_audit(candidates[0]))
 
+    def test_partial_machine_fragment_is_rejected_before_blind_audit(self):
+        located = {
+            "decision": "located",
+            "entity_type": "conventional_vehicle_or_forklift",
+            "x": 500, "y": 300, "evidence": "wheel beside an AGV",
+        }
+        point = {"x": 100, "y": 36}
+        semantic = {
+            "classification": "partial_fragment",
+            "confidence": 0.99,
+            "reason": "cyan mask contains only one wheel",
+        }
+        with patch.object(workflow, "chat", return_value=located), \
+                patch.object(workflow, "sam_request",
+                             return_value=sam_result(point, score=0.92)), \
+                patch.object(workflow, "classify_visible_vehicle_candidate",
+                             return_value=semantic):
+            candidates, evidence = workflow.visible_vehicle_point_candidate(
+                {}, image_bytes(), allowed_labels=["车辆", "other_robot"])
+        self.assertEqual(candidates, [])
+        self.assertEqual(evidence["status"], "semantic_guard_rejected")
+        self.assertEqual(evidence["semantic_guard"], semantic)
+
+    def test_semantic_guard_contract_explicitly_rejects_partial_fragments(self):
+        answer = {
+            "classification": "partial_fragment", "confidence": 0.98,
+            "reason": "only a caster is highlighted",
+        }
+        candidate = {
+            "label": "车辆", "points": [[40, 20], [60, 20], [60, 35]],
+            "holes": [], "parts": [],
+        }
+        with patch.object(workflow, "chat", return_value=answer) as chat:
+            result = workflow.classify_visible_vehicle_candidate(
+                {}, image_bytes(), candidate)
+        instruction = chat.call_args.args[1]
+        schema = chat.call_args.kwargs["response_schema"]
+        self.assertEqual(result, answer)
+        self.assertIn("only one such part", instruction)
+        self.assertIn("partial_fragment",
+                      schema["properties"]["classification"]["enum"])
+
     def test_background_recovery_rejects_large_seven_percent_machine_fragment(self):
         located = {
             "decision": "located",

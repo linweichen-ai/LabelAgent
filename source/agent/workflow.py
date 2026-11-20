@@ -496,7 +496,7 @@ def classify_visible_vehicle_candidate(config, image, candidate):
         "properties": {
             "classification": {"type": "string", "enum": [
                 "conventional_vehicle", "autonomous_robot_or_agv",
-                "ambiguous"]},
+                "partial_fragment", "ambiguous"]},
             "confidence": {"type": "number", "minimum": 0, "maximum": 1},
             "reason": {"type": "string", "minLength": 1, "maxLength": 180},
         },
@@ -515,8 +515,12 @@ def classify_visible_vehicle_candidate(config, image, candidate):
         "cabinet without an operator compartment is autonomous_robot_or_agv, "
         "never a conventional vehicle, even if it transports pallets or is "
         "described as a forklift. A generic body, wheels, or industrial scene "
-        "alone is insufficient. Use ambiguous when decisive pixels are blurred "
-        "or outside the mask. Return strict compact JSON only."
+        "alone is insufficient. The highlighted mask must cover a recognizable "
+        "core of one complete machine, not merely a wheel, caster, fork tip, "
+        "bumper, cabinet edge, or small chassis fragment. Use partial_fragment "
+        "whenever the full original contains a machine but the cyan/isolated "
+        "candidate contains only one such part. Use ambiguous when decisive "
+        "pixels are blurred or outside the mask. Return strict compact JSON only."
     )
     return chat(
         config, instruction, image,

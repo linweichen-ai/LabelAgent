@@ -45,6 +45,44 @@ class VisibleVehicleShadowEvaluationTests(unittest.TestCase):
         self.assertEqual(first.size, (640, 300))
         self.assertEqual(sheet.size, (1280, 300))
 
+    def test_load_reference_session_selects_exact_media(self):
+        with tempfile.TemporaryDirectory() as directory:
+            media = Path(directory) / "sample.mcap"
+            media.write_bytes(b"mcap")
+            state = Path(directory) / "sessions.json"
+            session = {"truth": {"3": [{"label": "other_robot"}]}}
+            state.write_text(json.dumps({str(media.resolve()): session}),
+                             encoding="utf-8")
+            self.assertEqual(
+                shadow.load_reference_session(state, media.resolve()), session)
+
+    def test_reference_alignment_reports_same_label_polygon_iou(self):
+        candidate = {
+            "label": "other_robot",
+            "points": [[0, 0], [9, 0], [9, 9], [0, 9]],
+        }
+        truth = [{
+            "label": "other_robot",
+            "points": [[0, 0], [9, 0], [9, 9], [0, 9]],
+        }, {
+            "label": "车辆",
+            "points": [[15, 15], [19, 15], [19, 19], [15, 19]],
+        }]
+        result = shadow.reference_alignment(candidate, truth, (20, 20))
+        self.assertEqual(result["target_count"], 2)
+        self.assertEqual(result["same_label_target_count"], 1)
+        self.assertEqual(result["best_same_label_iou"], 1.0)
+        self.assertEqual(result["best_any_label"], "other_robot")
+
+    def test_reference_alignment_keeps_absent_candidate_explicit(self):
+        result = shadow.reference_alignment(None, [{
+            "label": "other_robot",
+            "points": [[0, 0], [4, 0], [4, 4]],
+        }], (10, 10))
+        self.assertFalse(result["candidate_present"])
+        self.assertEqual(result["target_count"], 1)
+        self.assertEqual(result["best_same_label_iou"], 0.0)
+
 
 if __name__ == "__main__":
     unittest.main()

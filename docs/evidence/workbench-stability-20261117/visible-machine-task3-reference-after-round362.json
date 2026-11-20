@@ -1,0 +1,637 @@
+{
+  "schema_version": "labelagent.visible_vehicle_shadow_evaluation.v1",
+  "read_only": true,
+  "assistant_visual_proxy_only": true,
+  "candidate_only": true,
+  "human_truth_modified": false,
+  "training_data_modified": false,
+  "media": {
+    "path": "D:\\Apps\\LabelAgent\\work\\datasets\\CVAT_Task3_20261028\\CVAT_Task3_original_annotations.mcap",
+    "size_bytes": 67332849,
+    "mtime_ns": 1793181643454220600
+  },
+  "sample_manifest": {
+    "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\docs\\evidence\\workbench-stability-20261117\\visible-vehicle-task3-shadow-samples-round361.json",
+    "sha256": "69e136cdf67c30c45b93444eadd066c529c221bd026f9a3df3a7e0acac5ca60a"
+  },
+  "rows": [
+    {
+      "topic": "/CVAT/Task3/images",
+      "frame": 0,
+      "image_sha256": "df52e925461e43c6123f2fd2fd72550417a85d01de4fcf14fabbf68788e8c630",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "ambiguous",
+          "entity_type": "autonomous_robot_or_agv",
+          "evidence": "No conventional industrial vehicle or forklift is visible in the background or distant areas. The 'e",
+          "y": 549,
+          "x": 500
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "status": "locator_not_eligible"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 62,
+          "cache_hit": true,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 0.062,
+      "reference_alignment": {
+        "target_count": 3,
+        "target_labels": [
+          "other_robot"
+        ],
+        "candidate_present": false,
+        "candidate_label": null,
+        "same_label_target_count": 0,
+        "best_same_label_iou": 0.0,
+        "best_any_label_iou": 0.0,
+        "best_any_label": null
+      }
+    },
+    {
+      "topic": "/CVAT/Task3/images",
+      "frame": 15,
+      "image_sha256": "9d60cd6891949951b24c9449acb2e075cf8c462e35f056ad490c9938ad61d8d0",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 120,
+          "y": 100,
+          "evidence": "The black forklift in the background, partially visible behind blue pallets, has a solid body and is"
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 77,
+          "y": 48
+        },
+        "score": 0.92578125,
+        "bbox": [
+          46,
+          0,
+          275,
+          111
+        ],
+        "area": 21840,
+        "area_ratio": 0.07109375,
+        "status": "geometry_rejected"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 25,
+          "cache_hit": true,
+          "coalesced": false
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 148,
+          "cache_hit": null,
+          "coalesced": null
+        }
+      ],
+      "elapsed_seconds": 0.174,
+      "reference_alignment": {
+        "target_count": 2,
+        "target_labels": [
+          "other_robot"
+        ],
+        "candidate_present": false,
+        "candidate_label": null,
+        "same_label_target_count": 0,
+        "best_same_label_iou": 0.0,
+        "best_any_label_iou": 0.0,
+        "best_any_label": null
+      }
+    },
+    {
+      "topic": "/CVAT/Task3/images",
+      "frame": 30,
+      "image_sha256": "57146c7b388eacdde74b8d8fb32701173b5fcc096a12f28af69981d1c41466e2",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "ambiguous",
+          "entity_type": "autonomous_robot_or_agv",
+          "evidence": "Only foreground black fork or chassis parts attached to the camera are visible. No conventional forl",
+          "y": 550,
+          "x": 500
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "status": "locator_not_eligible"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 10,
+          "cache_hit": true,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 0.011,
+      "reference_alignment": {
+        "target_count": 0,
+        "target_labels": [],
+        "candidate_present": false,
+        "candidate_label": null,
+        "same_label_target_count": 0,
+        "best_same_label_iou": 0.0,
+        "best_any_label_iou": 0.0,
+        "best_any_label": null
+      }
+    },
+    {
+      "topic": "/CVAT/Task3/images",
+      "frame": 45,
+      "image_sha256": "6e90d1a0893b794eaa541d0f8d6cbcbff38df588f36713c64e9c1dfc2fb8a9eb",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 720,
+          "y": 220,
+          "evidence": "A black forklift is visible in the background on the right side of the image, partially occluded by "
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 460,
+          "y": 105
+        },
+        "score": 0.78515625,
+        "bbox": [
+          431,
+          100,
+          475,
+          157
+        ],
+        "area": 1686,
+        "area_ratio": 0.00548828125,
+        "confidence_band": "high",
+        "semantic_guard": {
+          "classification": "partial_fragment",
+          "reason": "The cyan mask isolates only a single wheel with a green cover, which is a fragment of a larger machine. The full image shows a forklift, but the highlighted area does not contain a",
+          "confidence": 0.98
+        },
+        "status": "semantic_guard_rejected"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 12,
+          "cache_hit": true,
+          "coalesced": false
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 188,
+          "cache_hit": null,
+          "coalesced": null
+        },
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 2573,
+          "cache_hit": false,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 2.776,
+      "reference_alignment": {
+        "target_count": 3,
+        "target_labels": [
+          "other_robot"
+        ],
+        "candidate_present": false,
+        "candidate_label": null,
+        "same_label_target_count": 0,
+        "best_same_label_iou": 0.0,
+        "best_any_label_iou": 0.0,
+        "best_any_label": null
+      }
+    },
+    {
+      "topic": "/CVAT/Task3/images",
+      "frame": 60,
+      "image_sha256": "3b98648ec5836204a313ff9e720c13532328789c59251347602378e14d31c0cc",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 100,
+          "y": 120,
+          "evidence": "The orange and black forklift in the background on the left is a conventional industrial vehicle, un"
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 64,
+          "y": 57
+        },
+        "score": 0.9296875,
+        "bbox": [
+          0,
+          0,
+          122,
+          111
+        ],
+        "area": 11681,
+        "area_ratio": 0.03802408854166667,
+        "status": "geometry_rejected"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 14,
+          "cache_hit": true,
+          "coalesced": false
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 124,
+          "cache_hit": null,
+          "coalesced": null
+        }
+      ],
+      "elapsed_seconds": 0.139,
+      "reference_alignment": {
+        "target_count": 1,
+        "target_labels": [
+          "other_robot"
+        ],
+        "candidate_present": false,
+        "candidate_label": null,
+        "same_label_target_count": 0,
+        "best_same_label_iou": 0.0,
+        "best_any_label_iou": 0.0,
+        "best_any_label": null
+      }
+    },
+    {
+      "topic": "/CVAT/Task3/images",
+      "frame": 75,
+      "image_sha256": "30f742f29cbde66b59b80a87a1e76d192f49f9886a27957874af44b550b2938e",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "ambiguous",
+          "entity_type": "autonomous_robot_or_agv",
+          "evidence": "No conventional industrial vehicle or forklift is visible in the background or distant areas. Only a",
+          "x": 300,
+          "y": 400
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "status": "locator_not_eligible"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 21,
+          "cache_hit": true,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 0.022,
+      "reference_alignment": {
+        "target_count": 0,
+        "target_labels": [],
+        "candidate_present": false,
+        "candidate_label": null,
+        "same_label_target_count": 0,
+        "best_same_label_iou": 0.0,
+        "best_any_label_iou": 0.0,
+        "best_any_label": null
+      }
+    },
+    {
+      "topic": "/CVAT/Task3/images",
+      "frame": 90,
+      "image_sha256": "c5f065a092288a35d2072176e75e90c2536ad0c3e5db8a8ab3f58d0fe0ceb654",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "ambiguous",
+          "entity_type": "autonomous_robot_or_agv",
+          "evidence": "No conventional industrial vehicle or forklift is visible in the background or distant areas. The 'e",
+          "y": 549,
+          "x": 500
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "status": "locator_not_eligible"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 52,
+          "cache_hit": true,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 0.052,
+      "reference_alignment": {
+        "target_count": 2,
+        "target_labels": [
+          "other_robot"
+        ],
+        "candidate_present": false,
+        "candidate_label": null,
+        "same_label_target_count": 0,
+        "best_same_label_iou": 0.0,
+        "best_any_label_iou": 0.0,
+        "best_any_label": null
+      }
+    },
+    {
+      "topic": "/CVAT/Task3/images",
+      "frame": 105,
+      "image_sha256": "3fa1533446a4f5570a5191a9e32bafbe9122537050f1ec89d1d61a55ecbd1f3f",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "located",
+          "entity_type": "conventional_vehicle_or_forklift",
+          "x": 131,
+          "y": 120,
+          "evidence": "The red forklift in the background is a conventional industrial vehicle, physically separate from"
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "point": {
+          "x": 84,
+          "y": 57
+        },
+        "score": 0.7890625,
+        "bbox": [
+          45,
+          0,
+          193,
+          124
+        ],
+        "area": 14226,
+        "area_ratio": 0.04630859375,
+        "status": "geometry_rejected"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 12,
+          "cache_hit": true,
+          "coalesced": false
+        },
+        {
+          "service": "SAM 3",
+          "status": "succeeded",
+          "elapsed_ms": 125,
+          "cache_hit": null,
+          "coalesced": null
+        }
+      ],
+      "elapsed_seconds": 0.138,
+      "reference_alignment": {
+        "target_count": 2,
+        "target_labels": [
+          "other_robot"
+        ],
+        "candidate_present": false,
+        "candidate_label": null,
+        "same_label_target_count": 0,
+        "best_same_label_iou": 0.0,
+        "best_any_label_iou": 0.0,
+        "best_any_label": null
+      }
+    },
+    {
+      "topic": "/CVAT/Task3/images",
+      "frame": 120,
+      "image_sha256": "6edeea4d61bd3f08d32f4ff6656b7ef961f82b38995249a059ef06c1e9155275",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "ambiguous",
+          "entity_type": "autonomous_robot_or_agv",
+          "x": 200,
+          "y": 200,
+          "evidence": "no visible conventional industrial vehicle or forklift in background"
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "status": "locator_not_eligible"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 11,
+          "cache_hit": true,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 0.012,
+      "reference_alignment": {
+        "target_count": 1,
+        "target_labels": [
+          "other_robot"
+        ],
+        "candidate_present": false,
+        "candidate_label": null,
+        "same_label_target_count": 0,
+        "best_same_label_iou": 0.0,
+        "best_any_label_iou": 0.0,
+        "best_any_label": null
+      }
+    },
+    {
+      "topic": "/CVAT/Task3/images",
+      "frame": 135,
+      "image_sha256": "0f304675212858548f9a19f678b86a4f3f39f0ce66bd8a5c13c5e669310ac969",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "recovery": {
+        "schema_version": "labelagent.visible_vehicle_point_recovery.v1",
+        "locator": {
+          "decision": "ambiguous",
+          "entity_type": "autonomous_robot_or_agv",
+          "x": 900,
+          "y": 100,
+          "evidence": "The distant black machine in the background appears to be an autonomous AGV, but it is not a forklif"
+        },
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "status": "locator_not_eligible"
+      },
+      "candidate_count": 0,
+      "model_calls": [
+        {
+          "service": "GPT",
+          "status": "succeeded",
+          "elapsed_ms": 13,
+          "cache_hit": true,
+          "coalesced": false
+        }
+      ],
+      "elapsed_seconds": 0.012,
+      "reference_alignment": {
+        "target_count": 1,
+        "target_labels": [
+          "other_robot"
+        ],
+        "candidate_present": false,
+        "candidate_label": null,
+        "same_label_target_count": 0,
+        "best_same_label_iou": 0.0,
+        "best_any_label_iou": 0.0,
+        "best_any_label": null
+      }
+    }
+  ],
+  "summary": {
+    "sample_count": 10,
+    "candidate_count": 0,
+    "candidate_preserved_count": 0,
+    "human_review_required_count": 0,
+    "no_candidate_count": 10,
+    "error_count": 0,
+    "model_call_count": 15,
+    "model_cache_hit_count": 10,
+    "model_coalesced_count": 0,
+    "elapsed_p50_seconds": 0.057,
+    "elapsed_p95_seconds": 1.605,
+    "source_state_modified": false,
+    "reference_target_shape_count": 15,
+    "reference_positive_frame_count": 8,
+    "no_candidate_on_reference_positive_count": 8,
+    "candidate_on_reference_negative_count": 0,
+    "same_label_iou_ge_0_10_count": 0,
+    "same_label_iou_ge_0_25_count": 0,
+    "same_label_iou_ge_0_50_count": 0,
+    "wrong_label_overlap_ge_0_10_count": 0
+  },
+  "state": {
+    "path": "D:\\Apps\\LabelAgent\\work\\state.json",
+    "sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115"
+  },
+  "contact_sheet": {
+    "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round362-visible-machine-task3-reference10-v2\\contact-sheet.jpg",
+    "sha256": "a97019e1d6a0d81995fc39e258e393e090576211a783e571c192561ef2f1241d"
+  },
+  "reference": {
+    "path": "D:\\Apps\\LabelAgent\\work\\file_sessions.json",
+    "sha256": "94e8bee324628585e7532e595348293df1da7b24041a1d4df1c2ec9fb734e02e",
+    "modified": false,
+    "provenance": {
+      "kind": "legacy_auto_preannotation",
+      "human_truth_verified": false,
+      "frame_count": 10,
+      "selected_shape_count": 15,
+      "source_counts": {
+        "manual": 0,
+        "auto": 15,
+        "unknown": 0
+      },
+      "boundary_counts": {
+        "explicit_human_truth_true": 0,
+        "explicit_human_truth_false": 0,
+        "candidate_only_true": 0,
+        "approved_for_training_true": 0
+      },
+      "verified_frames": [],
+      "unverified_frames": [
+        0,
+        15,
+        30,
+        45,
+        60,
+        75,
+        90,
+        105,
+        120,
+        135
+      ],
+      "review_reason_by_frame": {
+        "0": "missing_current_human_review_receipt",
+        "15": "missing_current_human_review_receipt",
+        "30": "missing_current_human_review_receipt",
+        "45": "missing_current_human_review_receipt",
+        "60": "missing_current_human_review_receipt",
+        "75": "missing_current_human_review_receipt",
+        "90": "missing_current_human_review_receipt",
+        "105": "missing_current_human_review_receipt",
+        "120": "missing_current_human_review_receipt",
+        "135": "missing_current_human_review_receipt"
+      },
+      "evidence_note": "All selected targets have legacy CVAT source=auto and lack current human-review receipts; scores measure auto-preannotation consistency, not human-truth accuracy or generalization."
+    },
+    "metric_scope": "recovery_candidate_agreement_only"
+  }
+}

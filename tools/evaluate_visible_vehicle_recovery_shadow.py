@@ -18,7 +18,7 @@ import statistics
 import sys
 import time
 
-from PIL import Image, ImageDraw, ImageOps
+from PIL import Image, ImageChops, ImageDraw, ImageOps
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,6 +26,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from source.agent import candidate_class_audit, workflow
+from source.agent.evaluation_provenance import classify_target_provenance
 from source.agent.media import open_media
 
 
@@ -77,6 +78,80 @@ def load_samples(path: Path) -> list[dict]:
     return normalized
 
 
+def load_reference_session(path: Path, media_path: Path) -> dict:
+    """Load one saved session without treating its ``truth`` key as human truth."""
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    media_key = str(media_path)
+    candidates = []
+    if isinstance(payload, dict):
+        candidates.append(payload.get(media_key))
+        file_sessions = payload.get("file_sessions")
+        if isinstance(file_sessions, dict):
+            candidates.append(file_sessions.get(media_key))
+        if isinstance(payload.get("truth"), dict):
+            candidates.append(payload)
+    for session in candidates:
+        if isinstance(session, dict) and isinstance(session.get("truth"), dict):
+            return session
+    raise ValueError("reference session does not contain this media path")
+
+
+def polygon_mask(points: list, size: tuple[int, int]) -> Image.Image | None:
+    normalized = []
+    for point in points or []:
+        if (isinstance(point, (list, tuple)) and len(point) >= 2
+                and all(isinstance(value, (int, float)) for value in point[:2])):
+            normalized.append((round(point[0]), round(point[1])))
+    if len(normalized) < 3:
+        return None
+    mask = Image.new("1", size, 0)
+    ImageDraw.Draw(mask).polygon(normalized, fill=1)
+    return mask
+
+
+def polygon_iou(left: list, right: list, size: tuple[int, int]) -> float:
+    left_mask = polygon_mask(left, size)
+    right_mask = polygon_mask(right, size)
+    if left_mask is None or right_mask is None:
+        return 0.0
+    intersection = ImageChops.logical_and(left_mask, right_mask).histogram()[255]
+    union = ImageChops.logical_or(left_mask, right_mask).histogram()[255]
+    return intersection / union if union else 0.0
+
+
+def reference_alignment(candidate: dict | None, truth_shapes: list,
+                        image_size: tuple[int, int]) -> dict:
+    """Measure candidate overlap while keeping provenance separate from metrics."""
+    targets = [shape for shape in truth_shapes
+               if isinstance(shape, dict)
+               and shape.get("label") in {"车辆", "other_robot"}]
+    result = {
+        "target_count": len(targets),
+        "target_labels": sorted({shape.get("label") for shape in targets}),
+        "candidate_present": candidate is not None,
+        "candidate_label": candidate.get("label") if candidate else None,
+        "same_label_target_count": 0,
+        "best_same_label_iou": 0.0,
+        "best_any_label_iou": 0.0,
+        "best_any_label": None,
+    }
+    if candidate is None:
+        return result
+    candidate_points = candidate.get("points") or []
+    scored = [(shape, polygon_iou(candidate_points, shape.get("points") or [],
+                                  image_size)) for shape in targets]
+    same_label = [(shape, score) for shape, score in scored
+                  if shape.get("label") == candidate.get("label")]
+    result["same_label_target_count"] = len(same_label)
+    if same_label:
+        result["best_same_label_iou"] = round(max(score for _, score in same_label), 6)
+    if scored:
+        best_shape, best_score = max(scored, key=lambda item: item[1])
+        result["best_any_label_iou"] = round(best_score, 6)
+        result["best_any_label"] = best_shape.get("label")
+    return result
+
+
 def _fit_panel(image: Image.Image, size=(300, 240)) -> Image.Image:
     panel = Image.new("RGB", size, (24, 30, 38))
     fitted = ImageOps.contain(image.convert("RGB"), size)
@@ -118,6 +193,7 @@ def main() -> int:
     parser.add_argument("--media", required=True, type=Path)
     parser.add_argument("--samples", required=True, type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
+    parser.add_argument("--reference-session", type=Path)
     args = parser.parse_args()
 
     state_path = args.state.resolve()
@@ -129,7 +205,10 @@ def main() -> int:
         raise ValueError("output directory must be below repository artifacts")
     if output.exists():
         raise FileExistsError(output)
-    for path in (state_path, media_path, sample_path):
+    required_paths = [state_path, media_path, sample_path]
+    if args.reference_session:
+        required_paths.append(args.reference_session.resolve())
+    for path in required_paths:
         if not path.is_file():
             raise FileNotFoundError(path)
 
@@ -141,6 +220,13 @@ def main() -> int:
             or not config.get("sam3_point_url") or "车辆" not in labels):
         raise ValueError("state lacks production model settings or 车辆 label")
     samples = load_samples(sample_path)
+    reference_path = args.reference_session.resolve() if args.reference_session else None
+    reference_sha256_before = sha256_file(reference_path) if reference_path else None
+    reference_session = (load_reference_session(reference_path, media_path)
+                         if reference_path else None)
+    reference_provenance = (classify_target_provenance(
+        reference_session, [sample["frame"] for sample in samples],
+        ["车辆", "other_robot"]) if reference_session else None)
     output.mkdir(parents=True)
     media = open_media(media_path, output / "media_index")
 
@@ -159,6 +245,7 @@ def main() -> int:
             "approved_for_training": False,
         }
         marked = None
+        candidate = None
         trace_by_id = {}
 
         def capture(event):
@@ -191,6 +278,12 @@ def main() -> int:
                 "coalesced"),
         } for event in trace_by_id.values()]
         row["elapsed_seconds"] = round(time.perf_counter() - started, 3)
+        if reference_session is not None:
+            with Image.open(io.BytesIO(image)) as source_image:
+                image_size = source_image.size
+            row["reference_alignment"] = reference_alignment(
+                candidate, reference_session.get("truth", {}).get(str(frame), []),
+                image_size)
         status = (row.get("recovery") or {}).get("status", "error")
         route = (row.get("audit") or {}).get("route", "not_audited")
         heading = (f"{position:02d} {topic.rsplit('/', 2)[-2]} f{frame} "
@@ -214,6 +307,8 @@ def main() -> int:
               if (row.get("audit") or {}).get("route") == "human_review_required"]
     errors = [row for row in rows if "error" in row]
     model_calls = [call for row in rows for call in row["model_calls"]]
+    alignments = [row["reference_alignment"] for row in rows
+                  if "reference_alignment" in row]
     result = {
         "schema_version": "labelagent.visible_vehicle_shadow_evaluation.v1",
         "read_only": True,
@@ -246,6 +341,36 @@ def main() -> int:
         "contact_sheet": {"path": str(sheet_path),
                           "sha256": sha256_file(sheet_path)},
     }
+    if reference_path:
+        result["reference"] = {
+            "path": str(reference_path),
+            "sha256": reference_sha256_before,
+            "modified": sha256_file(reference_path) != reference_sha256_before,
+            "provenance": reference_provenance,
+            "metric_scope": "recovery_candidate_agreement_only",
+        }
+        result["summary"].update({
+            "reference_target_shape_count": sum(
+                item["target_count"] for item in alignments),
+            "reference_positive_frame_count": sum(
+                item["target_count"] > 0 for item in alignments),
+            "no_candidate_on_reference_positive_count": sum(
+                item["target_count"] > 0 and not item["candidate_present"]
+                for item in alignments),
+            "candidate_on_reference_negative_count": sum(
+                item["target_count"] == 0 and item["candidate_present"]
+                for item in alignments),
+            "same_label_iou_ge_0_10_count": sum(
+                item["best_same_label_iou"] >= 0.10 for item in alignments),
+            "same_label_iou_ge_0_25_count": sum(
+                item["best_same_label_iou"] >= 0.25 for item in alignments),
+            "same_label_iou_ge_0_50_count": sum(
+                item["best_same_label_iou"] >= 0.50 for item in alignments),
+            "wrong_label_overlap_ge_0_10_count": sum(
+                item["best_any_label_iou"] >= 0.10
+                and item["best_any_label"] != item["candidate_label"]
+                for item in alignments),
+        })
     (output / "result.json").write_text(
         json.dumps(result, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8")

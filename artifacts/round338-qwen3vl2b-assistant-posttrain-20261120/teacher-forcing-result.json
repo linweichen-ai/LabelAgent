@@ -1,0 +1,196 @@
+{
+  "schema_version": "labelagent.qwen3vl2b-lora-teacher-forcing.v1",
+  "created_utc": "2026-11-20T03:09:16.724801+00:00",
+  "status": "evaluated",
+  "track": "teacher_distillation",
+  "prompt_order": "text_then_image",
+  "human_truth": false,
+  "production_deployed": false,
+  "test24_used": false,
+  "evaluation_sequence": "008",
+  "evaluation_sequences": [
+    "008"
+  ],
+  "dataset_manifest_sha256": "e3e6d34f42569b02e290f5d3e9cb31b1026be3c838a55a9efe704a6b3240821e",
+  "dev_jsonl_sha256": "6d085b4c263841ae7006f6ae68e3e35bf3dfa23b3ccabb1583098906c16048c6",
+  "adapter_sha256": "631e7f5df58281dcf78925ea8dc7fd324645001b6fd9f8cdbb8f68d5ef312b9d",
+  "base": {
+    "samples": 8,
+    "supervised_tokens": 1633,
+    "mean_nll": 0.9732524840217095,
+    "perplexity": 2.646538299646541,
+    "token_accuracy": 0.8315982853643601,
+    "correct_tokens": 1358,
+    "elapsed_seconds": 1.540452
+  },
+  "adapter": {
+    "samples": 8,
+    "supervised_tokens": 1633,
+    "mean_nll": 0.1279154931470542,
+    "perplexity": 1.1364569602377763,
+    "token_accuracy": 0.9614206981016534,
+    "correct_tokens": 1570,
+    "elapsed_seconds": 1.1626349999999999
+  },
+  "comparison": {
+    "mean_nll_delta": -0.8453369908746553,
+    "mean_nll_relative_change": -0.8685690555666736,
+    "token_accuracy_delta": 0.12982241273729334,
+    "nll_improved": true,
+    "token_accuracy_not_worse": true
+  },
+  "per_sample": {
+    "base": [
+      {
+        "sample_id": "008_1789899740482474075_camera_0",
+        "mode": "base",
+        "supervised_tokens": 206,
+        "correct_tokens": 171,
+        "nll": 0.9803078770637512,
+        "nll_sum": 201.94342267513275,
+        "elapsed_seconds": 0.94536
+      },
+      {
+        "sample_id": "008_1789899740482474075_camera_1",
+        "mode": "base",
+        "supervised_tokens": 205,
+        "correct_tokens": 171,
+        "nll": 1.040753722190857,
+        "nll_sum": 213.35451304912567,
+        "elapsed_seconds": 0.085879
+      },
+      {
+        "sample_id": "008_1789899740482474075_camera_2",
+        "mode": "base",
+        "supervised_tokens": 206,
+        "correct_tokens": 172,
+        "nll": 0.9194968342781067,
+        "nll_sum": 189.41634786128998,
+        "elapsed_seconds": 0.083673
+      },
+      {
+        "sample_id": "008_1789899740482474075_camera_3",
+        "mode": "base",
+        "supervised_tokens": 189,
+        "correct_tokens": 158,
+        "nll": 1.1153377294540405,
+        "nll_sum": 210.79883086681366,
+        "elapsed_seconds": 0.084846
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_0",
+        "mode": "base",
+        "supervised_tokens": 215,
+        "correct_tokens": 180,
+        "nll": 0.8973042368888855,
+        "nll_sum": 192.92041093111038,
+        "elapsed_seconds": 0.085146
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_1",
+        "mode": "base",
+        "supervised_tokens": 203,
+        "correct_tokens": 168,
+        "nll": 0.9416950941085815,
+        "nll_sum": 191.16410410404205,
+        "elapsed_seconds": 0.085508
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_2",
+        "mode": "base",
+        "supervised_tokens": 205,
+        "correct_tokens": 171,
+        "nll": 0.8905537128448486,
+        "nll_sum": 182.56351113319397,
+        "elapsed_seconds": 0.085438
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_3",
+        "mode": "base",
+        "supervised_tokens": 204,
+        "correct_tokens": 167,
+        "nll": 1.015491008758545,
+        "nll_sum": 207.16016578674316,
+        "elapsed_seconds": 0.084602
+      }
+    ],
+    "adapter": [
+      {
+        "sample_id": "008_1789899740482474075_camera_0",
+        "mode": "adapter",
+        "supervised_tokens": 206,
+        "correct_tokens": 197,
+        "nll": 0.15191872417926788,
+        "nll_sum": 31.295257180929184,
+        "elapsed_seconds": 0.135976
+      },
+      {
+        "sample_id": "008_1789899740482474075_camera_1",
+        "mode": "adapter",
+        "supervised_tokens": 205,
+        "correct_tokens": 201,
+        "nll": 0.046355005353689194,
+        "nll_sum": 9.502776097506285,
+        "elapsed_seconds": 0.151589
+      },
+      {
+        "sample_id": "008_1789899740482474075_camera_2",
+        "mode": "adapter",
+        "supervised_tokens": 206,
+        "correct_tokens": 194,
+        "nll": 0.18280866742134094,
+        "nll_sum": 37.658585488796234,
+        "elapsed_seconds": 0.124167
+      },
+      {
+        "sample_id": "008_1789899740482474075_camera_3",
+        "mode": "adapter",
+        "supervised_tokens": 189,
+        "correct_tokens": 182,
+        "nll": 0.14296554028987885,
+        "nll_sum": 27.0204871147871,
+        "elapsed_seconds": 0.156184
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_0",
+        "mode": "adapter",
+        "supervised_tokens": 215,
+        "correct_tokens": 207,
+        "nll": 0.08466777950525284,
+        "nll_sum": 18.20357259362936,
+        "elapsed_seconds": 0.156764
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_1",
+        "mode": "adapter",
+        "supervised_tokens": 203,
+        "correct_tokens": 197,
+        "nll": 0.11286790668964386,
+        "nll_sum": 22.912185057997704,
+        "elapsed_seconds": 0.155964
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_2",
+        "mode": "adapter",
+        "supervised_tokens": 205,
+        "correct_tokens": 193,
+        "nll": 0.16449153423309326,
+        "nll_sum": 33.72076451778412,
+        "elapsed_seconds": 0.123386
+      },
+      {
+        "sample_id": "008_1789899770782473075_camera_3",
+        "mode": "adapter",
+        "supervised_tokens": 204,
+        "correct_tokens": 199,
+        "nll": 0.1400606483221054,
+        "nll_sum": 28.572372257709503,
+        "elapsed_seconds": 0.158605
+      }
+    ]
+  },
+  "peak_cuda_memory_bytes": 6044365312,
+  "torch": "2.10.0+cu128",
+  "transformers": "4.57.6",
+  "peft": "0.18.0"
+}

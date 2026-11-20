@@ -1,0 +1,41 @@
+{
+  "schema_version": "labelagent.assistant_posttrain_summary.v1",
+  "round": 338,
+  "date": "2026-11-20",
+  "status": "trained_evaluated_rejected_as_new_incumbent",
+  "track": "teacher_distillation_with_assistant_authorized_review",
+  "human_truth": false,
+  "production_deployed": false,
+  "test24_used_for_training": false,
+  "training": {
+    "parent_adapter_sha256": "19821da13c99a132c4f5a6cc891006541daa73782ddea0ff7d4dce0620708fd8",
+    "adapter_sha256": "631e7f5df58281dcf78925ea8dc7fd324645001b6fd9f8cdbb8f68d5ef312b9d",
+    "samples_loaded": 104,
+    "steps": 16,
+    "learning_rate": 0.00002,
+    "train_loss": 0.06759107229299843,
+    "trainable_percent": 0.4080184835440853,
+    "peak_cuda_memory_bytes": 6641927168
+  },
+  "internal_dev8": {
+    "valid_json": "8/8",
+    "teacher_evidence_matches": "61/64",
+    "teacher_evidence_accuracy": 0.953125,
+    "slope": {"tp": 2, "fp": 0, "fn": 0, "tn": 6, "f1": 1.0},
+    "pallet_f1": 0.9333333333333333,
+    "other_robot_f1": 0.75,
+    "parent_teacher_evidence_matches": "62/64"
+  },
+  "decision": {
+    "retain_artifact": true,
+    "replace_parent_candidate": false,
+    "replace_production_model": false,
+    "reason": "Slope stayed perfect on internal dev8, but total agreement was 61/64 versus the parent candidate's 62/64; pallet and other_robot errors remain."
+  },
+  "service_readback": {
+    "sam_ok": true,
+    "sam_inflight": 0,
+    "vlm_ok": true,
+    "vlm_inflight": 0
+  }
+}

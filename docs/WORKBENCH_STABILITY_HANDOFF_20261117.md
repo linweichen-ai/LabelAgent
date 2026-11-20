@@ -2648,3 +2648,18 @@ D盘一度仅余1.89MiB。只迁移LabelAgent自身31个、409.03MiB旧回放到
 在线。验收工具同时修复旧Playwright路径、启动恢复中间态和旧span选择器三项陈旧假设，并新增
 新数据文件库断言；前端147/147通过。正式state哈希未变，D盘约2120.79MiB、预检ok。详见
 `PRODUCTION_BROWSER_ACCEPTANCE_ROUND324_20261120.md`与结构化证据。
+
+### Round 325：最新版本真实新数据单帧端到端复验（2026-11-20）
+
+在一次性隔离端口加载`Capture_20261103`真实MCAP，确认152帧、4路相机、8/8类且初始候选和
+真值均为空。验收脚本先暴露两项陈旧假设：没有识别新的“新实采数据”专用身份，并把页面为
+防卡死主动取消的旧`/api/run/status`轮询计成网络故障；现已分别增加Capture身份强断言和仅限
+GET状态轮询`ERR_ABORTED`的预期取消分类，其他错误仍失败。
+
+全新隔离状态最终真实跑通`SAM3→VLM→Agent→原图叠加`，热路径候选2.625秒可见、后台3.532秒
+完成、总计4.953秒，得到`floor/slope/person/ego`各1个；首次冷路径后台45.656秒，不能用热路径
+冒充十倍模型加速。目视确认橙色坡板与蓝色平地分离，没有整片地面误改；person混合人体与
+控制台，继续进入人工复核。页面/HTTP/真实失败请求/真值写入均为0，`candidate_only=true`、
+`human_truth=false`、`approved_for_training=false`。完整Python 1,102项、JavaScript 148项通过；隔离端口已
+关闭，正式state哈希仍为`237844F7...DDFAB`，工作台、两路SAM和VLM均HTTP200。详见
+`NEW_DATASET_CURRENT_ACCEPTANCE_ROUND325_20261120.md`与结构化证据。

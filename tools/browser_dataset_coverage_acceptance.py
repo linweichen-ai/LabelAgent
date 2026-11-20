@@ -87,7 +87,9 @@ def main() -> int:
                 detail: document.querySelector('#datasetIdentityDetail')?.textContent,
                 title: document.querySelector('#datasetIdentity')?.title,
             })""")
-            assert identity["kind"] in {"新数据集", "旧验证集", "已加载数据"}
+            assert identity["kind"] in {
+                "新实采数据", "新数据集", "旧验证集", "已加载数据"
+            }
             assert (
                 "/capture/camera_" in identity["detail"]
                 or "/CVAT/Task3/images" in identity["detail"]

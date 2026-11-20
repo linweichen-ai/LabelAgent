@@ -41,7 +41,7 @@ const output = path.resolve(process.env.LABELAGENT_ACCEPTANCE_OUTPUT || "artifac
     const response = await page.goto(base, {waitUntil: "domcontentloaded", timeout: 60000});
     assert.equal(response.status(), 200);
     await page.evaluate(() => window.labelAgentBootstrapReady);
-    await page.waitForFunction(() => ["新数据集", "旧验证集", "已加载数据"].includes(
+    await page.waitForFunction(() => ["新实采数据", "新数据集", "旧验证集", "已加载数据"].includes(
       document.querySelector("#datasetIdentityKind")?.textContent));
     const identity = await page.evaluate(() => ({
       kind: document.querySelector("#datasetIdentityKind")?.textContent,
@@ -49,7 +49,7 @@ const output = path.resolve(process.env.LABELAGENT_ACCEPTANCE_OUTPUT || "artifac
       detail: document.querySelector("#datasetIdentityDetail")?.textContent,
       title: document.querySelector("#datasetIdentity")?.title,
     }));
-    assert(["新数据集", "旧验证集", "已加载数据"].includes(identity.kind),
+    assert(["新实采数据", "新数据集", "旧验证集", "已加载数据"].includes(identity.kind),
       `unexpected dataset identity: ${JSON.stringify(identity)}`);
     assert(identity.detail.includes("/capture/camera_") || identity.detail.includes("/CVAT/Task3/images"));
 

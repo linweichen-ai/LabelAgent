@@ -13,6 +13,15 @@ from urllib.parse import urlparse
 from playwright.sync_api import sync_playwright
 
 
+def expected_status_poll_abort(method: str, url: str, failure: str) -> bool:
+    """Separate the UI's deliberate stale-poll cancellation from outages."""
+    return (
+        method == "GET"
+        and urlparse(url).path == "/api/run/status"
+        and "ERR_ABORTED" in failure
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base-url", required=True)
@@ -32,6 +41,7 @@ def main() -> int:
     timeout_ms = max(30, min(900, args.timeout_seconds)) * 1000
     page_errors: list[str] = []
     failed_requests: list[str] = []
+    expected_aborted_requests: list[str] = []
     http_errors: list[str] = []
     truth_writes: list[str] = []
     started = time.monotonic()
@@ -47,9 +57,12 @@ def main() -> int:
                     page_errors.append(message.text)
 
             def on_failed(request):
-                failed_requests.append(
-                    f"{request.method} {request.url} {request.failure or ''}"
-                )
+                failure = request.failure or ""
+                record = f"{request.method} {request.url} {failure}"
+                if expected_status_poll_abort(request.method, request.url, failure):
+                    expected_aborted_requests.append(record)
+                else:
+                    failed_requests.append(record)
 
             def on_response(response):
                 if response.status >= 400:
@@ -81,7 +94,11 @@ def main() -> int:
                 name: document.querySelector('#datasetIdentityName')?.textContent,
                 detail: document.querySelector('#datasetIdentityDetail')?.textContent,
             })""")
-            assert identity["kind"] in {"新数据集", "已加载数据"}
+            # Capture_20261103 has a dedicated identity badge.  Keeping the
+            # older generic values here would let this acceptance silently
+            # pass after the UI regressed back to an ambiguous dataset name.
+            assert identity["kind"] == "新实采数据"
+            assert "Capture_20261103" in (identity["name"] or "")
             assert "/capture/camera_0/image" in identity["detail"]
             assert "4 路图像" in identity["detail"]
 
@@ -198,6 +215,7 @@ def main() -> int:
                 "truth_write_requests": truth_writes,
                 "page_errors": page_errors,
                 "failed_requests": failed_requests,
+                "expected_aborted_requests": expected_aborted_requests,
                 "http_errors": http_errors,
                 "screenshot": str(screenshot),
                 "total_ms": round((time.monotonic() - started) * 1000, 3),

@@ -1,0 +1,69 @@
+{
+  "schema_version": "labelagent.new-dataset-current-acceptance.v1",
+  "round": 325,
+  "date": "2026-11-20",
+  "source": {
+    "identity_kind": "新实采数据",
+    "identity_name": "Capture_20261103 · 常熟实采 · 四相机",
+    "topic": "/capture/camera_0/image",
+    "frame": 0,
+    "frame_count": 152,
+    "image_topic_count": 4,
+    "selected_class_count": 8
+  },
+  "attempt_1": {
+    "model_chain_completed": true,
+    "harness_passed": false,
+    "harness_failure": "two deliberate stale /api/run/status poll cancellations were counted as network failures",
+    "candidate_visible_ms": 18047.0,
+    "background_complete_ms": 45656.0,
+    "candidate_counts": {"floor": 1, "slope": 1, "person": 1, "ego": 1},
+    "page_errors": 0,
+    "http_errors": 0,
+    "truth_writes": 0
+  },
+  "final_acceptance": {
+    "passed": true,
+    "first_response_ms": 2610.0,
+    "candidate_visible_ms": 2625.0,
+    "background_complete_ms": 3532.0,
+    "total_ms": 4953.0,
+    "warm_path": true,
+    "candidate_counts": {"floor": 1, "slope": 1, "person": 1, "ego": 1},
+    "inspection_trace_count": 1,
+    "inspection_trace_services": ["GPT"],
+    "page_errors": 0,
+    "http_errors": 0,
+    "failed_requests": 0,
+    "truth_writes": 0,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false
+  },
+  "production_isolation": {
+    "state_sha256_before": "237844f73ff4495e575c6a3f966260b9385efbdf1edee7d0e5177518470ddfab",
+    "state_sha256_after": "237844f73ff4495e575c6a3f966260b9385efbdf1edee7d0e5177518470ddfab",
+    "isolated_port_closed": true,
+    "production_workbench_http": 200,
+    "text_sam_http": 200,
+    "point_sam_http": 200,
+    "vlm_http": 200
+  },
+  "tests": {
+    "browser_abort_classifier": "1/1 passed",
+    "python_full": "1102/1102 passed",
+    "javascript_full": "148/148 passed"
+  },
+  "local_artifacts": {
+    "final_result_sha256": "d834c34c9126d6486ddd0cc800bee42d1fc59ab44d66e05c35ffd4c39a0497b3",
+    "final_screenshot_sha256": "3042623d7c37f7cac013621870b55325902d7787c099f6fe8786db7b5c2e5fda",
+    "attempt_1_result_sha256": "ae06707a287dd5b668f02db3b607ac90190d1bf057bc3c1977d318744ad0c331",
+    "factory_images_committed": false
+  },
+  "claim_boundary": {
+    "single_frame_only": true,
+    "assistant_visual_review_only": true,
+    "generalization_proven": false,
+    "training_or_deployment_approved": false
+  }
+}

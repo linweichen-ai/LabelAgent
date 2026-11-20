@@ -1,0 +1,33 @@
+{
+  "schema_version": "labelagent.qwen3vl8b-posttrain-decision.v1",
+  "created_local_date": "2026-11-20",
+  "candidate": "candidate16-nf4-r8-20261120",
+  "decision": "reject_and_keep_offline",
+  "human_truth": false,
+  "production_deployed": false,
+  "test24_used_for_training": false,
+  "training": {
+    "steps": 16,
+    "effective_samples": 104,
+    "train_loss": 0.3935812,
+    "peak_cuda_memory_bytes": 13281116160,
+    "adapter_sha256": "7cb4daecfc4f2086cca66ab0e258c91e56fbc40a2addeb677adca5a8d208dee4"
+  },
+  "teacher_forcing_dev8": {
+    "base_mean_nll": 0.5101043,
+    "adapter_mean_nll": 0.3358825,
+    "base_token_accuracy": 0.9246785,
+    "adapter_token_accuracy": 0.9344764
+  },
+  "free_generation_dev8": {
+    "base_one_pass_success_rate": 1.0,
+    "adapter_one_pass_success_rate": 0.375,
+    "base_teacher_evidence_accuracy": 0.890625,
+    "adapter_teacher_evidence_accuracy": 0.7916666666666666,
+    "base_generation_seconds_median": 35.8025,
+    "adapter_generation_seconds_median": 59.092,
+    "adapter_invalid_json_samples": 5
+  },
+  "reason": "Teacher-forcing improved, but real free generation regressed in JSON validity, evidence accuracy, and latency. The candidate must not replace the production 8B model.",
+  "next_action": "Train a shorter structured-output candidate with concise JSON targets and explicit one-pass-validity gates before any frozen test evaluation."
+}

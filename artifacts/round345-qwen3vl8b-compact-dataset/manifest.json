@@ -1,0 +1,48 @@
+{
+  "schema_version": "labelagent.qwen3vl-distillation-dataset.compact-targets.v1",
+  "created_utc": "2026-11-20T03:55:39.628313+00:00",
+  "status": "ready_for_isolated_lora_smoke",
+  "track": "teacher_distillation",
+  "human_truth": false,
+  "production_training_approved": false,
+  "requires_acceptance_gate": true,
+  "test24_included": false,
+  "split_policy": "train sequences 000-007; internal dev sequence 008; test24 010-012 remains external evaluation only",
+  "train_samples": 62,
+  "dev_samples": 8,
+  "review_only_samples": 2,
+  "review_only": [
+    {
+      "file_name": "004_1789898294082381197_camera_3.png",
+      "sequence": "004",
+      "reason_codes": [
+        "cargo_floor_missing_robot_attachment_evidence"
+      ]
+    },
+    {
+      "file_name": "004_1789898396982491905_camera_2.png",
+      "sequence": "004",
+      "reason_codes": [
+        "cargo_floor_missing_robot_attachment_evidence"
+      ]
+    }
+  ],
+  "train_jsonl_sha256": "acd081d924ca8a494577a77892091a5741012fe83e1a65d9417af7d39705477f",
+  "dev_jsonl_sha256": "7a49d4261aab41627e559fc8e0c7a6c5811e2a12f2275c44314972ce55e2e73f",
+  "teacher_collection_audit_sha256": "3c369241947965844473738809e284f32e384eb08c2c38f6b998038a8fc67182",
+  "teacher_contract_sha256": "948707da63ba014342d3ee02d80edff67367d3b681a3607f6e1b1caa23d3fe26",
+  "teacher_model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+  "source_image_bytes_copied": 0,
+  "target_compaction": "deterministic_schema_preserving_v1",
+  "source_manifest_sha256": "e3e6d34f42569b02e290f5d3e9cb31b1026be3c838a55a9efe704a6b3240821e",
+  "splits": {
+    "train": {
+      "samples": 62,
+      "sha256": "acd081d924ca8a494577a77892091a5741012fe83e1a65d9417af7d39705477f"
+    },
+    "dev": {
+      "samples": 8,
+      "sha256": "7a49d4261aab41627e559fc8e0c7a6c5811e2a12f2275c44314972ce55e2e73f"
+    }
+  }
+}

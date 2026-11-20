@@ -129,6 +129,7 @@ def main() -> int:
     parser.add_argument("--adapter-dir", required=True, type=Path)
     parser.add_argument("--dataset-dir", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--quantization", default="none", choices=("none", "nf4"))
     args = parser.parse_args()
     if args.output.exists():
         raise FileExistsError(args.output)
@@ -144,10 +145,28 @@ def main() -> int:
         raise RuntimeError("CUDA is required for teacher-forcing evaluation")
     processor = AutoProcessor.from_pretrained(
         args.model_dir, local_files_only=True, trust_remote_code=False)
+    model_kwargs = {
+        "local_files_only": True,
+        "trust_remote_code": False,
+        "dtype": torch.bfloat16,
+        "low_cpu_mem_usage": True,
+        "attn_implementation": "sdpa",
+    }
+    if args.quantization == "nf4":
+        from transformers import BitsAndBytesConfig
+        model_kwargs.update({
+            "quantization_config": BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_use_double_quant=True,
+                bnb_4bit_compute_dtype=torch.bfloat16,
+            ),
+            "device_map": {"": 0},
+        })
     model = Qwen3VLForConditionalGeneration.from_pretrained(
-        args.model_dir, local_files_only=True, trust_remote_code=False,
-        dtype=torch.bfloat16, low_cpu_mem_usage=True, attn_implementation="sdpa")
-    model.to(torch.device("cuda"))
+        args.model_dir, **model_kwargs)
+    if args.quantization == "none":
+        model.to(torch.device("cuda"))
     model.config.use_cache = False
     torch.cuda.reset_peak_memory_stats()
     base_summary, base_rows = evaluate(model, processor, rows, "base")
@@ -165,7 +184,7 @@ def main() -> int:
     }
     evaluation_sequences = manifest.get("dev_source_sequences") or ["008"]
     result = {
-        "schema_version": "labelagent.qwen3vl2b-lora-teacher-forcing.v1",
+        "schema_version": "labelagent.qwen3vl-lora-teacher-forcing.v2",
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "status": "evaluated",
         "track": "teacher_distillation",
@@ -173,6 +192,7 @@ def main() -> int:
         "human_truth": False,
         "production_deployed": False,
         "test24_used": False,
+        "quantization": args.quantization,
         "evaluation_sequence": (evaluation_sequences[0]
                                 if len(evaluation_sequences) == 1 else None),
         "evaluation_sequences": evaluation_sequences,

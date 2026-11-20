@@ -1,4 +1,4 @@
-"""Isolated Qwen3-VL-2B LoRA smoke/full training on audited teacher JSONL."""
+"""Isolated Qwen3-VL LoRA/QLoRA training on audited teacher JSONL."""
 
 from __future__ import annotations
 
@@ -181,6 +181,8 @@ def main() -> int:
     parser.add_argument("--repeat-evidence", default="present",
                         choices=("present", "absent", "uncertain"))
     parser.add_argument("--loss-scope", default="full", choices=("full", "evidence"))
+    parser.add_argument("--quantization", default="none", choices=("none", "nf4"))
+    parser.add_argument("--max-gpu-memory-gib", type=int, default=0)
     parser.add_argument("--init-adapter-dir", type=Path)
     parser.add_argument("--seed", type=int, default=20261118)
     parser.add_argument("--dry-run", action="store_true")
@@ -229,12 +231,33 @@ def main() -> int:
     from transformers import Trainer, TrainingArguments
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is required for LoRA training")
+    model_kwargs = {
+        "local_files_only": True,
+        "trust_remote_code": False,
+        "dtype": torch.bfloat16,
+        "low_cpu_mem_usage": True,
+        "attn_implementation": "sdpa",
+    }
+    if args.quantization == "nf4":
+        from transformers import BitsAndBytesConfig
+        model_kwargs.update({
+            "quantization_config": BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_use_double_quant=True,
+                bnb_4bit_compute_dtype=torch.bfloat16,
+            ),
+            "device_map": {"": 0},
+        })
+        if args.max_gpu_memory_gib:
+            if not 8 <= args.max_gpu_memory_gib <= 30:
+                raise ValueError("max GPU memory must be between 8 and 30 GiB")
+            model_kwargs["max_memory"] = {0: f"{args.max_gpu_memory_gib}GiB"}
+    elif args.max_gpu_memory_gib:
+        raise ValueError("max GPU memory is currently supported only for NF4")
     model = Qwen3VLForConditionalGeneration.from_pretrained(
-        args.model_dir, local_files_only=True, trust_remote_code=False,
-        dtype=torch.bfloat16, low_cpu_mem_usage=True,
-        attn_implementation="sdpa")
+        args.model_dir, **model_kwargs)
     model.config.use_cache = False
-    model.enable_input_require_grads()
     parent_adapter_sha256 = None
     if args.init_adapter_dir:
         parent_adapter = args.init_adapter_dir / "adapter_model.safetensors"
@@ -244,6 +267,12 @@ def main() -> int:
         model = PeftModel.from_pretrained(
             model, args.init_adapter_dir, is_trainable=True)
     else:
+        if args.quantization == "nf4":
+            from peft import prepare_model_for_kbit_training
+            model = prepare_model_for_kbit_training(
+                model, use_gradient_checkpointing=True)
+        else:
+            model.enable_input_require_grads()
         lora = LoraConfig(
             r=8, lora_alpha=16, lora_dropout=0.05, bias="none",
             task_type="CAUSAL_LM",
@@ -278,7 +307,7 @@ def main() -> int:
     processor.save_pretrained(args.output / "adapter")
     adapter_path = args.output / "adapter" / "adapter_model.safetensors"
     receipt = {
-        "schema_version": "labelagent.qwen3vl2b-lora-run.v1",
+        "schema_version": "labelagent.qwen3vl-lora-run.v2",
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "status": "smoke_complete" if args.max_steps <= 2 else "training_complete",
         "track": "teacher_distillation",
@@ -294,6 +323,8 @@ def main() -> int:
         "samples_loaded": len(rows),
         "sampling": sampling,
         "loss_scope": args.loss_scope,
+        "quantization": args.quantization,
+        "max_gpu_memory_gib": args.max_gpu_memory_gib or None,
         "steps": args.max_steps,
         "learning_rate": args.learning_rate,
         "gradient_accumulation_steps": args.gradient_accumulation_steps,

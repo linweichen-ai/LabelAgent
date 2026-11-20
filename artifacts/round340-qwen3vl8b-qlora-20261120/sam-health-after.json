@@ -1,0 +1,1 @@
+{"status":"ok","model_loaded":true,"backend":"remote_4090_sam3","service_version":"labelagent.remote-sam3.v2-exact-response-cache","response_cache":{"entries":24,"bytes":23674,"max_entries":24,"max_bytes":134217728,"in_flight":0,"hits":125,"misses":36,"coalesced_requests":14,"evictions":12,"storage":"cpu_json"}}

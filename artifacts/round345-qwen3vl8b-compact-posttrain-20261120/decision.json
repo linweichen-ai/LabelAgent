@@ -1,0 +1,36 @@
+{
+  "schema_version": "labelagent.qwen3vl8b-posttrain-decision.v1",
+  "created_local_date": "2026-11-20",
+  "candidate": "candidate8-compact-nf4-r8-20261120",
+  "decision": "reject_and_keep_offline",
+  "human_truth": false,
+  "production_deployed": false,
+  "test24_used_for_training": false,
+  "training": {
+    "steps": 8,
+    "effective_samples": 104,
+    "train_loss": 0.7262303307652473,
+    "peak_cuda_memory_bytes": 13232096768,
+    "adapter_sha256": "3426be906fcb097fcf4f77dc6240bdb80b1e58071989cbcb0c3307bf9b769ec6"
+  },
+  "teacher_forcing_dev8": {
+    "base_mean_nll": 0.7622567443893506,
+    "adapter_mean_nll": 0.7339470483935796,
+    "base_token_accuracy": 0.9223901098901099,
+    "adapter_token_accuracy": 0.9258241758241759
+  },
+  "free_generation_dev8": {
+    "base_one_pass_success_rate": 1.0,
+    "adapter_one_pass_success_rate": 1.0,
+    "base_teacher_evidence_accuracy": 0.859375,
+    "adapter_teacher_evidence_accuracy": 0.84375,
+    "base_generation_seconds_median": 35.316,
+    "adapter_generation_seconds_median": 55.823,
+    "base_slope_f1": 0.6666666666666666,
+    "adapter_slope_f1": 0.5,
+    "adapter_slope_false_positives": 1,
+    "adapter_unknown_count_matches": 0
+  },
+  "reason": "Compact targets restored valid JSON but did not improve teacher evidence, slope quality, unknown-candidate behavior, or latency.",
+  "next_action": "Do not add training steps. Build an evidence-first short wire target with constrained decoding and add accepted human review before the next 8B candidate."
+}

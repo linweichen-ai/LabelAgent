@@ -174,6 +174,7 @@ def main() -> int:
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--base-result", type=Path)
     parser.add_argument("--split", default="dev", choices=("dev", "holdout"))
+    parser.add_argument("--quantization", default="none", choices=("none", "nf4"))
     args = parser.parse_args()
     if args.output.exists():
         raise FileExistsError(args.output)
@@ -199,8 +200,8 @@ def main() -> int:
     from local_vlm_server import TransformersBackend
 
     backend = TransformersBackend(
-        args.model_dir, "qwen3vl2b-base", max_pixels=256 * 32 * 32,
-        context_budget=16384, quantization="none",
+        args.model_dir, "qwen3vl-base-eval", max_pixels=256 * 32 * 32,
+        context_budget=16384, quantization=args.quantization,
         generation_cache_implementation="dynamic", startup_prewarm=False)
     if args.base_result:
         prior = json.loads(args.base_result.read_text(encoding="utf-8"))
@@ -237,7 +238,7 @@ def main() -> int:
             > base_summary["teacher_evidence_accuracy"]),
     }
     result = {
-        "schema_version": "labelagent.qwen3vl2b-lora-generation-eval.v1",
+        "schema_version": "labelagent.qwen3vl-lora-generation-eval.v2",
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "status": "evaluated",
         "track": "teacher_distillation",
@@ -245,6 +246,7 @@ def main() -> int:
         "human_truth": False,
         "production_deployed": False,
         "test24_used": False,
+        "quantization": args.quantization,
         "evaluation_split": args.split,
         "evaluation_sequences": manifest.get(
             f"{args.split}_source_sequences",

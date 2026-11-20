@@ -66,7 +66,13 @@ logging.getLogger("werkzeug").setLevel(logging.WARNING)
 state = {"video": None, "topic": None, "labels": [], "truth": {}, "reference_frames": {}, "config": {}, "candidates": {}, "candidates_by_topic": {}, "agent_runs": {}, "agent_runs_by_topic": {}, "candidate_revisions": {}, "candidate_revisions_by_topic": {}, "candidate_review_status": {}, "candidate_review_proposals": [], "human_review_transactions": {}, "rejected_candidates": {}}
 lock = threading.RLock()
 file_activation_intent_lock = threading.RLock()
-file_activation_generation = 0
+# A process-unique, JavaScript-safe base makes every service restart a new
+# activation scope even when the same file and topic are restored.  Existing
+# request bindings therefore fail closed across restarts instead of relying on
+# the old process having already incremented its counter.
+file_activation_generation = int(time.time() * 1000) * 1024 + os.getpid() % 1024
+if file_activation_generation > (1 << 53) - 1:
+    raise RuntimeError("file activation generation exceeds JavaScript safe integer range")
 run_status_lock = threading.Lock()
 run_summary_lock = threading.Lock()
 run_claim_lock = threading.Lock()

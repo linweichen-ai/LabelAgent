@@ -56,6 +56,10 @@ class EditTests(unittest.TestCase):
             server.file_activation_generation,
         )
 
+    def test_process_file_activation_generation_is_positive_and_javascript_safe(self):
+        self.assertGreater(server.file_activation_generation, 0)
+        self.assertLessEqual(server.file_activation_generation, (1 << 53) - 1)
+
     def test_open_line_gap_is_detected_and_fill_preserves_excluded_object(self):
         mask = np.zeros((100, 100), dtype=np.uint8)
         mask[5:95, 5:95] = 1

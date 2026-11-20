@@ -62,6 +62,7 @@ def main() -> int:
                 return {path: data.path, topic: data.topic,
                     file_activation_generation: data.file_activation_generation};
             }""")
+            assert 0 < initial_scope["file_activation_generation"] <= (1 << 53) - 1
             target = page.evaluate("""async () => {
                 const response = await fetch('/api/files', {cache: 'no-store'});
                 const data = await response.json();

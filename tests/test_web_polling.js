@@ -1055,6 +1055,15 @@ test('运行前弹窗与正式预检按帧数检查保存空间', () => {
   assert.match(app,/保存空间偏低，建议只运行少量帧/);
 });
 
+test('参考帧起稿在低空间或非 JSON 服务异常时明确失败且不伪装为模型结果', () => {
+  const source = fs.readFileSync(path.join(__dirname, '../source/web/reference-prep.js'), 'utf8');
+  assert.match(source, /response\.text\(\)/);
+  assert.match(source, /JSON\.parse\(responseText\)/);
+  assert.match(source, /参考帧服务返回异常（HTTP/);
+  assert.match(source, /result\.code === 'storage_low'/);
+  assert.match(source, /保存空间不足，尚未启动推理/);
+});
+
 test('运行前弹窗与当前数据集相机帧号和处理数量强绑定', () => {
   const guide = source('guide.js');
   assert.match(guide, /function currentWorkbenchScope\(\)/);

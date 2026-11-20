@@ -4630,6 +4630,34 @@ class ServerTests(unittest.TestCase):
             finally:
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work
 
+    def test_reference_draft_blocks_low_storage_before_frame_or_model_work(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+                "truth": {}, "reference_frames": {}, "config": {"llm_model": "test-vlm"},
+                "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            try:
+                with patch.object(server.shutil, "disk_usage", return_value=SimpleNamespace(
+                        total=1000, used=1000, free=0)), \
+                     patch.object(server, "frame_image") as frame_image, \
+                     patch.object(server, "run") as run_model:
+                    response = server.app.test_client().post("/api/reference_draft", json={
+                        "frame": 1, "labels": ["person"]})
+                self.assertEqual(response.status_code, 507, response.json)
+                self.assertEqual(response.json["code"], "storage_low")
+                self.assertFalse(response.json["storage"]["ready"])
+                self.assertTrue(response.json["candidate_only"])
+                self.assertFalse(response.json["human_truth"])
+                self.assertFalse(response.json["approved_for_training"])
+                frame_image.assert_not_called()
+                run_model.assert_not_called()
+                self.assertEqual(server.state["candidates"], {})
+                self.assertEqual(server.state["truth"], {})
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
+
     def test_reference_draft_rerun_archives_prior_candidates_and_audit_append_only(self):
         old_state, old_status, old_work = server.state, server.run_status, server.WORK
         with tempfile.TemporaryDirectory() as directory:

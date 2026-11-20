@@ -676,8 +676,17 @@
           ? {frame: frameId, auto_detect_visible: true, probe_missing_selected: probeMissingSelected, defer_agent_review: true, defer_class_audit: true}
           : {frame: frameId, labels: tryAllSelected ? selectedLabels : [label], defer_agent_review: true, defer_class_audit: true}),
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || '参考帧机器草稿生成失败');
+      const responseText = await response.text();
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (error) {
+        throw new Error(`参考帧服务返回异常（HTTP ${response.status}），尚未采用任何结果`);
+      }
+      if (!response.ok) {
+        const detail = result.error || result.message || '参考帧机器草稿生成失败';
+        throw new Error(result.code === 'storage_low' ? `保存空间不足，尚未启动推理：${detail}` : detail);
+      }
       if (result.stopped) throw new Error('已停止生成，未写入人工真值');
       if (!result.candidate_only || result.human_truth !== false) throw new Error('服务器未明确返回 candidate_only，已停止采用');
       if (!Array.isArray(result.candidates) || !result.candidates.length) throw new Error('SAM/VLM 没有生成可精修轮廓');

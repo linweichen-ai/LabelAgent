@@ -1,0 +1,58 @@
+{
+  "schema_version": "labelagent.reference-draft-storage-gate-round356.v1",
+  "observed_at": "2026-11-20T14:01:12+08:00",
+  "passed": true,
+  "backend_contract": {
+    "endpoint": "/api/reference_draft",
+    "checks_storage_before_frame_decode": true,
+    "low_storage_http_status": 507,
+    "low_storage_code": "storage_low",
+    "frame_decode_called_when_blocked": false,
+    "model_called_when_blocked": false,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false
+  },
+  "frontend_contract": {
+    "parses_response_text_defensively": true,
+    "storage_message": "保存空间不足，尚未启动推理",
+    "non_json_response_rejected": true,
+    "non_json_result_adopted": false
+  },
+  "tests": {
+    "backend_focused_passed": 1,
+    "web_polling_passed": 83,
+    "formal_passed": 1157,
+    "formal_subtests_passed": 186
+  },
+  "deployment": {
+    "backup_path": "D:\\Apps\\LabelAgent\\.local\\backups\\reference-draft-storage-gate-round356-20261120",
+    "server_backup_sha256": "7CD189173533DB70871F891182FEBFD26455B1EC4CFC0414F9A7A69372B37340",
+    "reference_prep_backup_sha256": "76B65FC89D6BB7BA66EEA007B8EC815F370571E6056C99FAFEBA354673AE1A70",
+    "server_source_sha256": "62E8B6F87ACB8EB60DE5076E709079E4987433D3C7331A03F62E92783F8EEEE7",
+    "server_production_sha256": "62E8B6F87ACB8EB60DE5076E709079E4987433D3C7331A03F62E92783F8EEEE7",
+    "reference_prep_source_sha256": "6C84E0B97EB546CC1E60C635834A763436F04ECA2E87ECFEC632B0C2573F5B1B",
+    "reference_prep_production_sha256": "6C84E0B97EB546CC1E60C635834A763436F04ECA2E87ECFEC632B0C2573F5B1B",
+    "production_page_http": 200,
+    "production_status": "idle",
+    "served_storage_gate_verified": true,
+    "served_non_json_message_verified": true,
+    "production_state_sha256_before": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "production_state_sha256_after": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115"
+  },
+  "services": {
+    "sam_4090": "ready",
+    "sam_5090": "ready",
+    "vlm_primary": "ready",
+    "vlm_5090": "ready",
+    "workbench": "ready"
+  },
+  "storage": {
+    "c_free_mib_observed": 253.8,
+    "d_free_mib_observed": 1519.6,
+    "warning_remains": true,
+    "stale_model_download_candidate_count": 125,
+    "stale_model_download_candidate_logical_gib": 4.42,
+    "automatic_deletion_performed": false
+  }
+}

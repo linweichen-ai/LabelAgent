@@ -5327,6 +5327,13 @@ def generate_reference_draft():
                 raise ValueError(f"参考类别不在当前标签表中：{label}")
             if label not in selected:
                 selected.append(label)
+        storage = run_storage_readiness(1)
+        if not storage["ready"]:
+            return jsonify(
+                error=storage["message"], code="storage_low",
+                storage=storage, frame=index, candidate_only=True,
+                human_truth=False, approved_for_training=False,
+            ), 507
         video = state["video"]
         config = copy.deepcopy(state["config"])
         labels = list(state["labels"])

@@ -1,0 +1,46 @@
+{
+  "schema_version": "labelagent.lidar_pallet_instance_prompt_summary.v1",
+  "round": 335,
+  "date": "2026-11-20",
+  "scope": "same four frozen difficult pallet candidates as round321",
+  "method": "3D XY low-height component plus ground-ring and tall-background negative prompts",
+  "selected_count": 4,
+  "prompt_ready_count": 3,
+  "sam_frame_count": 3,
+  "sam_attempt_count": 9,
+  "sam_successful_attempt_count": 6,
+  "sam_http_error_count": 3,
+  "sam_other_error_count": 0,
+  "safe_expansion_count": 0,
+  "selected_mask_pixel_comparison": [
+    {"camera": 0, "frame": 39, "round321": 1685, "round335": 1426, "decrease_percent": 15.37},
+    {"camera": 0, "frame": 35, "round321": 2181, "round335": 1500, "decrease_percent": 31.22},
+    {"camera": 1, "frame": 89, "round321": 7697, "round335": 583, "decrease_percent": 92.43}
+  ],
+  "frame89_selected_prompt_checks": {
+    "positive_points_covered": true,
+    "negative_points_clear": true,
+    "tall_background_clear": true,
+    "safe_expansion": false
+  },
+  "reference_labels_used": false,
+  "workbench_writes": 0,
+  "production_state_sha256_before": "d176c227e5d780106377395adfa9dc4d53abdadf7d9fb5c2f8a02d56e23f4d95",
+  "production_state_sha256_after": "d176c227e5d780106377395adfa9dc4d53abdadf7d9fb5c2f8a02d56e23f4d95",
+  "prompt_audit_report_sha256": "b9e461ec7a4258b797451a9248983f998bce424462081ed337d98d744ef33d90",
+  "prompt_contact_sheet_sha256": "e76312f094d2b2d4b2c2bfab37274a8b03ef8db451f2816d048846422a09c509",
+  "sam_report_sha256": "894bc577b7845f0cfce0cd0ec8aa5c5d39d70d72c48c2205ec198360646a59c0",
+  "sam_contact_sheet_sha256": "7cac8b1b3f9d59183c718cb144a3151f8cd1dbf9b3b7a1f27728bd6eeb393a21",
+  "tests": {"targeted_passed": 14},
+  "source_sha256": {
+    "tools/audit_pallet_lidar_instance_prompts.py": "e999f1112a9bec15a30571bb0e35dfbe77502e542b0c971e8dcd658fe349c5b7",
+    "tools/evaluate_pallet_lidar_instance_sam.py": "b48d27837d0dc63e00e18f1aa3b4cc75f120544f82787b44420082a5f6991c1e",
+    "tests/test_audit_pallet_lidar_instance_prompts.py": "63e0b1fd617c6911bd9f8d8532273300c77ce2cae2f8d8132fabdc16bac483bf",
+    "tests/test_evaluate_pallet_lidar_instance_sam.py": "314df307aa05218d79b42c1806cf204b5ac8356c4729795cac467ee6aee620"
+  },
+  "decision": "safety improved, but no automatic expansion passed; do not deploy without independent pixel truth",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false
+}

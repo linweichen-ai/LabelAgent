@@ -347,9 +347,8 @@ def ego_bottom_point_candidates(config, image, next_id=1):
     return ([selected] if selected is not None else []), evidence
 
 
-def visible_vehicle_point_candidate(config, image, next_id=1,
-                                    allowed_labels=None):
-    """Recover and semantically route one review-only visible machine proposal."""
+def visible_vehicle_point_proposal(config, image, next_id=1):
+    """Recover one geometry-guarded proposal before independent class checks."""
     if type(next_id) is not int or next_id < 1:
         raise ValueError("车辆补救候选 ID 无效")
     with Image.open(io.BytesIO(image)) as decoded:
@@ -463,6 +462,17 @@ def visible_vehicle_point_candidate(config, image, next_id=1,
                  approved_for_training=False,
                  recovery_confidence_band=confidence_band,
                  recovery_version=VISIBLE_VEHICLE_POINT_RECOVERY_VERSION)
+    return [shape], evidence | {"status": "proposal_generated"}
+
+
+def visible_vehicle_point_candidate(config, image, next_id=1,
+                                    allowed_labels=None):
+    """Recover and semantically route one review-only visible machine proposal."""
+    recovered, evidence = visible_vehicle_point_proposal(
+        config, image, next_id=next_id)
+    if not recovered:
+        return [], evidence
+    shape = recovered[0]
     semantic_guard = classify_visible_vehicle_candidate(
         config, image, shape)
     evidence["semantic_guard"] = semantic_guard
@@ -486,11 +496,8 @@ def visible_vehicle_point_candidate(config, image, next_id=1,
     return [shape], evidence | {"status": "candidate_generated"}
 
 
-def classify_visible_vehicle_candidate(config, image, candidate):
-    """Separate conventional vehicles from cabinet-style AGV/AMR robots."""
-    from .candidate_class_audit import prepare_candidate_evidence
-
-    candidate_evidence = prepare_candidate_evidence(image, candidate)
+def visible_vehicle_semantic_contract():
+    """Return the shared fail-closed class/completeness review contract."""
     schema = {
         "type": "object",
         "properties": {
@@ -522,6 +529,15 @@ def classify_visible_vehicle_candidate(config, image, candidate):
         "candidate contains only one such part. Use ambiguous when decisive "
         "pixels are blurred or outside the mask. Return strict compact JSON only."
     )
+    return instruction, schema
+
+
+def classify_visible_vehicle_candidate(config, image, candidate):
+    """Separate conventional vehicles from cabinet-style AGV/AMR robots."""
+    from .candidate_class_audit import prepare_candidate_evidence
+
+    candidate_evidence = prepare_candidate_evidence(image, candidate)
+    instruction, schema = visible_vehicle_semantic_contract()
     return chat(
         config, instruction, image,
         extra_images=(candidate_evidence["marked"],

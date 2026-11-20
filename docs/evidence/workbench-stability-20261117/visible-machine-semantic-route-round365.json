@@ -1,0 +1,43 @@
+{
+  "schema_version": "labelagent.visible_machine_semantic_route_round365.v1",
+  "date": "2026-11-20",
+  "read_only": true,
+  "candidate_only": true,
+  "state_sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115",
+  "human_truth_modified": false,
+  "training_data_modified": false,
+  "production_config_modified": false,
+  "experiments": [
+    {
+      "name": "5090_fast_960x768",
+      "sample_count": 8,
+      "route_match_count": 5,
+      "classification_match_count": 3,
+      "cold_cache_hit_count": 0,
+      "elapsed_p50_seconds": 2.647,
+      "artifact_sha256": "5b2c82837c8c231081a8b0334d025ad33707a9b25a83aabcd292dcd19a57fc80",
+      "decision": "rejected"
+    },
+    {
+      "name": "4090_primary_960x768",
+      "sample_count": 8,
+      "route_match_count": 7,
+      "classification_match_count": 7,
+      "cold_cache_hit_count": 0,
+      "elapsed_p50_seconds": 4.546,
+      "artifact_sha256": "13db5ac39181e33e477950dec05a7effb8bb7dc8e4fddb5501005fccb5269241",
+      "decision": "rejected"
+    },
+    {
+      "name": "task3_current_contract_5090_fast_960x768",
+      "sample_count": 1,
+      "route_match_count": 1,
+      "classification_match_count": 1,
+      "cache_hit_count": 1,
+      "cold_decision_elapsed_seconds": 2.596,
+      "artifact_sha256": "2efe027e7ed14a3e10e100c04fbd7dc0432036c1251b47cd02af05f0348462d1",
+      "decision": "insufficient_independent_coverage"
+    }
+  ],
+  "production_decision": "keep_incumbent_original_image_primary_route_and_verified_exact_cache"
+}

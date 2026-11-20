@@ -34,6 +34,25 @@ def sam_result(point, *, score=0.9):
 
 
 class VisibleVehiclePointRecoveryTests(unittest.TestCase):
+    def test_proposal_stops_before_semantic_routing(self):
+        located = {
+            "decision": "located",
+            "entity_type": "conventional_vehicle_or_forklift",
+            "x": 500, "y": 300, "evidence": "forklift body visible",
+        }
+        point = {"x": 100, "y": 36}
+        with patch.object(workflow, "chat", return_value=located), \
+                patch.object(workflow, "sam_request",
+                             return_value=sam_result(point)), \
+                patch.object(workflow, "classify_visible_vehicle_candidate") as semantic:
+            proposals, evidence = workflow.visible_vehicle_point_proposal(
+                {}, image_bytes(), next_id=3)
+        self.assertEqual(len(proposals), 1)
+        self.assertEqual(proposals[0]["id"], 3)
+        self.assertEqual(proposals[0]["label"], "车辆")
+        self.assertEqual(evidence["status"], "proposal_generated")
+        semantic.assert_not_called()
+
     def test_candidate_uses_vlm_anchor_and_stays_review_only(self):
         located = {
             "decision": "located",

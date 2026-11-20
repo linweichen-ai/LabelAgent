@@ -1,6 +1,8 @@
 """Start the local LabelAgent workbench against private services on factory-4090."""
 import argparse
 import base64
+import gzip
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -35,6 +37,54 @@ WEB_PORT = 8765
 SAM_CONTRACT_IMAGE = ROOT / "source" / "sam3" / "assets" / "images" / "test_image.jpg"
 STORAGE_WARNING_BYTES = 2 * 1024 ** 3
 STORAGE_CRITICAL_BYTES = 256 * 1024 ** 2
+WORKBENCH_LOG_ROTATE_BYTES = 8 * 1024 ** 2
+WORKBENCH_LOG_BACKUPS = 2
+
+
+def archive_log_before_launch(path, *, max_bytes=WORKBENCH_LOG_ROTATE_BYTES,
+                              backups=WORKBENCH_LOG_BACKUPS):
+    """Compress an oversized closed log and verify it before removing the source."""
+    path = Path(path)
+    if not path.is_file() or path.stat().st_size <= max_bytes:
+        return None
+    if backups < 1:
+        raise ValueError("log backups must be at least one")
+    oldest = path.with_name(f"{path.name}.{backups}.gz")
+    if oldest.exists():
+        oldest.unlink()
+    for index in range(backups - 1, 0, -1):
+        current = path.with_name(f"{path.name}.{index}.gz")
+        if current.exists():
+            current.replace(path.with_name(f"{path.name}.{index + 1}.gz"))
+    target = path.with_name(f"{path.name}.1.gz")
+    temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
+    source_hash = hashlib.sha256()
+    source_bytes = 0
+    try:
+        with path.open("rb") as source, gzip.open(temporary, "wb", compresslevel=6) as output:
+            while chunk := source.read(1024 * 1024):
+                source_hash.update(chunk)
+                source_bytes += len(chunk)
+                output.write(chunk)
+        restored_hash = hashlib.sha256()
+        restored_bytes = 0
+        with gzip.open(temporary, "rb") as restored:
+            while chunk := restored.read(1024 * 1024):
+                restored_hash.update(chunk)
+                restored_bytes += len(chunk)
+        if restored_bytes != source_bytes or restored_hash.digest() != source_hash.digest():
+            raise RuntimeError("工作台日志压缩回读校验失败；原日志保持不变")
+        temporary.replace(target)
+        path.unlink()
+        return {
+            "source_bytes": source_bytes,
+            "archive_bytes": target.stat().st_size,
+            "sha256": source_hash.hexdigest(),
+            "archive": str(target),
+        }
+    finally:
+        if temporary.exists():
+            temporary.unlink()
 
 
 def optional_fast_wait_seconds(environment=None):
@@ -506,7 +556,14 @@ def start(open_browser):
             workbench_environment, storage = prepare_runtime_environment(
                 environment, runtime_temp)
             print_storage_advisory(storage)
-            with (LOCAL / "logs" / "remote_workbench.log").open("ab") as output:
+            workbench_log = LOCAL / "logs" / "remote_workbench.log"
+            archived_log = archive_log_before_launch(workbench_log)
+            if archived_log:
+                print(
+                    "提示：已无损归档工作台旧日志 "
+                    f"{archived_log['source_bytes'] / 1024 ** 2:.1f} MiB → "
+                    f"{archived_log['archive_bytes'] / 1024 ** 2:.1f} MiB")
+            with workbench_log.open("ab") as output:
                 process = subprocess.Popen(
                     command, cwd=ROOT, env=workbench_environment,
                     stdin=subprocess.DEVNULL,

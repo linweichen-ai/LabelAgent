@@ -1,5 +1,7 @@
 import importlib.util
 from pathlib import Path
+import gzip
+import hashlib
 import json
 import tempfile
 import unittest
@@ -13,6 +15,33 @@ SPEC.loader.exec_module(MODULE)
 
 
 class RemoteWorkbenchManagerTests(unittest.TestCase):
+    def test_oversized_workbench_log_is_verified_and_archived(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            log = Path(temporary) / "remote_workbench.log"
+            original = (b"GET /api/run/status 200\n" * 256)
+            log.write_bytes(original)
+            report = MODULE.archive_log_before_launch(
+                log, max_bytes=1024, backups=2)
+            archive = Path(f"{log}.1.gz")
+            self.assertFalse(log.exists())
+            self.assertTrue(archive.is_file())
+            self.assertEqual(gzip.open(archive, "rb").read(), original)
+            self.assertEqual(report["source_bytes"], len(original))
+            self.assertEqual(report["sha256"], hashlib.sha256(original).hexdigest())
+            second = b"second log\n" * 200
+            log.write_bytes(second)
+            MODULE.archive_log_before_launch(log, max_bytes=1024, backups=2)
+            self.assertEqual(gzip.open(Path(f"{log}.1.gz"), "rb").read(), second)
+            self.assertEqual(gzip.open(Path(f"{log}.2.gz"), "rb").read(), original)
+
+    def test_small_workbench_log_is_left_in_place(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            log = Path(temporary) / "remote_workbench.log"
+            log.write_bytes(b"short")
+            self.assertIsNone(MODULE.archive_log_before_launch(
+                log, max_bytes=1024, backups=2))
+            self.assertEqual(log.read_bytes(), b"short")
+
     def test_config_and_label_writes_use_fresh_server_bindings(self):
         bootstrap = {
             "path": "D:/data/example.mcap", "topic": "camera2",

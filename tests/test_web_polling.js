@@ -131,7 +131,7 @@ test('工作台持续显示新旧数据集身份和逐类别覆盖状态', () =>
   assert.match(app, /candidateNeedsReview/);
   assert.match(html, /style\.css\?v=119/);
   assert.match(html, /homepage-theme\.css\?v=4/);
-  assert.match(html, /app\.js\?v=199/);
+  assert.match(html, /app\.js\?v=200/);
   assert.match(app, /action\.dataset\.coverageRepair=label/);
   assert.match(app, /startCandidateCoverageRepair\(label\)/);
   assert.match(app, /不会自动运行模型或写入人工真值/);
@@ -261,12 +261,14 @@ test('Python 数据集覆盖验收绑定作用域并保存失败收据', () => {
   assert.match(tool, /truth_write_requests/);
 });
 
-test('跨窗口数据切换浏览器验收拒绝正式端口和真值写入', () => {
+test('跨窗口同文件重载浏览器验收拒绝正式端口和真值写入', () => {
   const tool = fs.readFileSync(path.join(
     __dirname, '../tools/browser_cross_window_scope_acceptance.py'), 'utf8');
   assert.match(tool, /refuses the production workbench/);
   assert.match(tool, /parsed\.port in \{None, 8765\}/);
   assert.match(tool, /truth_write_requests/);
+  assert.match(tool, /selected_file_activation_generation/);
+  assert.match(tool, /switched\["path"\] == initial_scope\["path"\]/);
   assert.match(tool, /button_disabled/);
   assert.match(tool, /已安全暂停/);
 });
@@ -883,19 +885,21 @@ test('状态读取超过八秒会解除轮询占用并在主面板提示恢复',
   assert.equal(renders, 1);
 });
 
-test('旧数据集状态回执不会在新数据集显示查看结果或伪装连接失败', async () => {
+test('同一数据重新载入后的旧状态回执会安全暂停且不会伪装连接失败', async () => {
   const button = {disabled:false,textContent:'',title:'',attributes:{},
     setAttribute(name,value){this.attributes[name]=value},removeAttribute(name){delete this[name]}};
   let responseIndex = 0, rendered = 0, scheduled = null, toasts = [];
   const responses = [
     {status:'idle',result_available:true,result_task_id:'old-task',
-      selected_file:'/old.mcap',selected_topic:'camera0'},
+      selected_file:'/new.mcap',selected_topic:'camera0',selected_file_activation_generation:18},
     {status:'idle',result_available:true,result_task_id:'old-task',
-      selected_file:'/old.mcap',selected_topic:'camera0'},
-    {status:'idle',result_available:false,selected_file:'/new.mcap',selected_topic:'camera0'},
+      selected_file:'/new.mcap',selected_topic:'camera0',selected_file_activation_generation:18},
+    {status:'idle',result_available:false,selected_file:'/new.mcap',selected_topic:'camera0',
+      selected_file_activation_generation:17},
   ];
   const h = harness({
-    loadedDataPath:'/new.mcap',topic:'camera0',latestAgentJob:{status:'idle'},
+    loadedDataPath:'/new.mcap',topic:'camera0',loadedFileActivationGeneration:17,
+    latestAgentJob:{status:'idle'},
     progressFetching:false,progressFetchPromise:null,runStatusScopeMismatch:null,
     runStatusConnectionMessage:'',runStatusFailureCount:0,runRequestStartedAt:null,
     bootstrapComplete:true,workspaceRestoreState:'ready',
@@ -914,11 +918,11 @@ test('旧数据集状态回执不会在新数据集显示查看结果或伪装�
   assert.equal(button.disabled, true);
   assert.match(button.textContent, /切换数据/);
   assert.match(button.title, /不会沿用其任务状态/);
-  assert.deepEqual(toasts, ['另一个窗口已切换数据；本页已安全暂停，请点右上“切换数据”同步']);
+  assert.deepEqual(toasts, ['数据已在另一窗口切换或重新载入；本页已安全暂停，请点右上“切换数据”同步']);
   assert.equal(scheduled, 250);
   assert.equal(h.context.runStatusFailureCount, 0);
   assert.equal(await h.context.refreshAgentProgress(), false);
-  assert.deepEqual(toasts, ['另一个窗口已切换数据；本页已安全暂停，请点右上“切换数据”同步']);
+  assert.deepEqual(toasts, ['数据已在另一窗口切换或重新载入；本页已安全暂停，请点右上“切换数据”同步']);
   assert.equal(await h.context.refreshAgentProgress(), true);
   assert.equal(rendered, 1);
   assert.equal(h.context.runStatusScopeMismatch, null);
@@ -1461,7 +1465,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=199/);
+  assert.match(source('index.html'), /app\.js\?v=200/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1522,7 +1526,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{\s*invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(currentGeneration=0\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=199/);
+  assert.match(source('index.html'), /app\.js\?v=200/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1581,7 +1585,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 4);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=199/);
+  assert.match(source('index.html'), /app\.js\?v=200/);
 });
 
 test('类别与推理类别保存绑定文件载入代次和类别状态版本', async () => {
@@ -1620,7 +1624,7 @@ test('类别与推理类别保存绑定文件载入代次和类别状态版本',
   assert.deepEqual(applied[0].labels, ['a','b']);
   assert.deepEqual(applied[0].auto_labels, ['b']);
   assert.equal(h.run('currentDescription'), null);
-  assert.match(source('index.html'), /app\.js\?v=199/);
+  assert.match(source('index.html'), /app\.js\?v=200/);
 });
 
 test('模型配置保存绑定工作区载入代次和配置版本', async () => {

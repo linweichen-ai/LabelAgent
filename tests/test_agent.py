@@ -3,6 +3,7 @@ import io
 import base64
 import copy
 import json
+import logging
 import tempfile
 import threading
 import time
@@ -44,6 +45,17 @@ def sam_result():
 
 
 class EditTests(unittest.TestCase):
+    def test_routine_werkzeug_access_lines_are_suppressed_but_warnings_remain(self):
+        self.assertEqual(logging.getLogger("werkzeug").level, logging.WARNING)
+
+    def test_run_status_exposes_current_file_activation_generation(self):
+        with server.app.test_client() as client:
+            payload = client.get("/api/run/status").get_json()
+        self.assertEqual(
+            payload["selected_file_activation_generation"],
+            server.file_activation_generation,
+        )
+
     def test_open_line_gap_is_detected_and_fill_preserves_excluded_object(self):
         mask = np.zeros((100, 100), dtype=np.uint8)
         mask[5:95, 5:95] = 1

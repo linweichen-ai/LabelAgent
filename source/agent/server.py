@@ -1,6 +1,7 @@
 """Flask workbench for MCAP review and local annotation."""
 import io
 import copy
+import logging
 import json
 import math
 import os
@@ -58,6 +59,10 @@ WEB = ROOT / "source" / "web"
 WORK.mkdir(exist_ok=True)
 app = Flask(__name__, static_folder=str(WEB), static_url_path="")
 app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024 * 1024
+# Keep warnings and failures, but do not append every successful polling and
+# image request to a long-lived disk log.  The browser already exposes live
+# progress, while routine access lines can otherwise exhaust a small volume.
+logging.getLogger("werkzeug").setLevel(logging.WARNING)
 state = {"video": None, "topic": None, "labels": [], "truth": {}, "reference_frames": {}, "config": {}, "candidates": {}, "candidates_by_topic": {}, "agent_runs": {}, "agent_runs_by_topic": {}, "candidate_revisions": {}, "candidate_revisions_by_topic": {}, "candidate_review_status": {}, "candidate_review_proposals": [], "human_review_transactions": {}, "rejected_candidates": {}}
 lock = threading.RLock()
 file_activation_intent_lock = threading.RLock()
@@ -6069,7 +6074,12 @@ def get_run_status():
     with lock:
         selected_file = str(state["video"].path) if state.get("video") else ""
         selected_topic = state.get("topic")
-    snapshot.update(selected_file=selected_file, selected_topic=selected_topic)
+        selected_generation = file_activation_generation
+    snapshot.update(
+        selected_file=selected_file,
+        selected_topic=selected_topic,
+        selected_file_activation_generation=selected_generation,
+    )
     if snapshot.get("status") not in ("running", "stopping"):
         summary = load_run_summary()
         same_scope = (summary and summary.get("file") == selected_file

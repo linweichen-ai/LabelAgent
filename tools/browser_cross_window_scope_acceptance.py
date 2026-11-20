@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""Exercise the cross-window dataset-change warning on an isolated workbench.
+"""Exercise the same-file reload warning on an isolated workbench.
 
-The check intentionally changes the active file through the server API, so it
+The check intentionally reloads the active file through the server API.  Its
+path and topic therefore stay unchanged while its activation generation moves
+forward, exactly as after a service restart or another window reload.  It
 refuses the production port and any non-loopback address.  It never writes
 truth, candidates, model configuration, or training state.
 """
@@ -63,8 +65,8 @@ def main() -> int:
             target = page.evaluate("""async () => {
                 const response = await fetch('/api/files', {cache: 'no-store'});
                 const data = await response.json();
-                const item = (data.files || []).find(file => file.available && !file.loaded);
-                if (!item) throw new Error('isolated workbench has no alternate file');
+                const item = (data.files || []).find(file => file.available && file.loaded);
+                if (!item) throw new Error('isolated workbench has no loaded file');
                 return {id: item.id, path: item.path, name: item.name};
             }""")
             switched = page.evaluate("""async target => {
@@ -72,11 +74,25 @@ def main() -> int:
                     + '/load', {method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: '{}'});
                 const data = await response.json();
-                if (!response.ok) throw new Error(data.error || 'external file switch failed');
+                if (!response.ok) throw new Error(data.error || 'same-file reload failed');
                 return {path: data.path, topic: data.topic,
                     file_activation_generation: data.file_activation_generation};
             }""", target)
-            assert switched["path"] != initial_scope["path"]
+            assert switched["path"] == initial_scope["path"]
+            assert switched["topic"] == initial_scope["topic"]
+            assert switched["file_activation_generation"] > initial_scope[
+                "file_activation_generation"
+            ]
+
+            status_scope = page.evaluate("""async () => {
+                const response = await fetch('/api/run/status', {cache: 'no-store'});
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'run status failed');
+                return {path: data.selected_file, topic: data.selected_topic,
+                    file_activation_generation:
+                        data.selected_file_activation_generation};
+            }""")
+            assert status_scope == switched
 
             page.evaluate("() => refreshAgentProgress()")
             page.wait_for_function(
@@ -99,13 +115,14 @@ def main() -> int:
             screenshot = output / "cross-window-scope-warning.png"
             page.screenshot(path=str(screenshot), full_page=True)
             receipt = {
-                "schema_version": "labelagent.cross-window-scope-acceptance.v1",
+                "schema_version": "labelagent.cross-window-scope-acceptance.v2",
                 "passed": True,
                 "elapsed_ms": round((time.monotonic() - started) * 1000, 1),
                 "base_url": base_url,
                 "initial_scope": initial_scope,
                 "target": target,
                 "server_scope": switched,
+                "run_status_scope": status_scope,
                 "ui": result,
                 "truth_write_requests": truth_writes,
                 "page_errors": errors,

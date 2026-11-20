@@ -38,6 +38,7 @@ def main() -> int:
     http_errors: list[str] = []
     truth_writes: list[str] = []
     started = time.monotonic()
+    initial_scope = None
 
     with sync_playwright() as runtime:
         browser = runtime.chromium.launch(channel="msedge", headless=True)
@@ -94,6 +95,27 @@ def main() -> int:
                 "/capture/camera_" in identity["detail"]
                 or "/CVAT/Task3/images" in identity["detail"]
             )
+            initial_scope = page.evaluate("""async () => {
+                const response = await fetch('/api/bootstrap', {cache: 'no-store'});
+                const data = await response.json();
+                return {path: data.path, topic: data.topic,
+                    file_activation_generation: data.file_activation_generation};
+            }""")
+
+            def read_scope():
+                return page.evaluate("""async () => {
+                    const response = await fetch('/api/bootstrap', {cache: 'no-store'});
+                    const data = await response.json();
+                    return {path: data.path, topic: data.topic,
+                        file_activation_generation: data.file_activation_generation};
+                }""")
+
+            def assert_scope(stage: str):
+                current = read_scope()
+                if current != initial_scope:
+                    raise RuntimeError(
+                        f"workbench scope changed during {stage}: "
+                        f"initial={initial_scope!r}, current={current!r}")
 
             page.locator("#datasetIdentitySwitch").click()
             page.locator("#fileManager[open]").wait_for(state="visible")
@@ -102,6 +124,7 @@ def main() -> int:
             file_row = current_row.inner_text()
             assert "当前已加载" in file_row
             page.locator("#closeFilesDialog").click()
+            assert_scope("file-manager inspection")
 
             page.locator("#manualModeButton").click()
             page.wait_for_function("() => document.body.dataset.workspace === 'manual'")
@@ -111,7 +134,9 @@ def main() -> int:
             page.screenshot(path=str(manual_screenshot), full_page=True)
             shortcut.click()
             page.wait_for_function("() => document.body.dataset.workspace === 'auto'")
-            page.wait_for_function("() => document.activeElement?.id === 'taskCount'")
+            assert_scope("manual-to-inference navigation")
+            page.wait_for_function(
+                "() => document.activeElement?.id === 'taskCount'", timeout=10_000)
             assert page.locator("#taskCount").input_value() == "1"
             assert shortcut.is_hidden()
             page.wait_for_function(
@@ -162,6 +187,7 @@ def main() -> int:
             page.screenshot(path=str(coverage_screenshot), full_page=True)
 
             assert truth_writes == []
+            assert_scope("final acceptance readback")
             assert errors == []
             assert failed_requests == []
             assert http_errors == []
@@ -199,6 +225,30 @@ def main() -> int:
                 encoding="utf-8",
             )
             print(json.dumps(receipt, ensure_ascii=False, separators=(",", ":")))
+        except Exception as error:
+            current_scope = None
+            try:
+                current_scope = page.evaluate("""async () => {
+                    const response = await fetch('/api/bootstrap', {cache: 'no-store'});
+                    const data = await response.json();
+                    return {path: data.path, topic: data.topic,
+                        file_activation_generation: data.file_activation_generation};
+                }""")
+                page.screenshot(path=str(output / "failure.png"), full_page=True)
+            except Exception:
+                pass
+            (output / "failure.json").write_text(json.dumps({
+                "schema_version": "labelagent.dataset-coverage-browser-failure.v1",
+                "passed": False,
+                "error": str(error),
+                "initial_scope": initial_scope,
+                "current_scope": current_scope,
+                "truth_write_requests": truth_writes,
+                "page_errors": errors,
+                "failed_requests": failed_requests,
+                "http_errors": http_errors,
+            }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            raise
         finally:
             browser.close()
     return 0

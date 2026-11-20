@@ -251,6 +251,16 @@ test('数据集覆盖验收跟随当前运行时并等待工作区恢复完成',
   assert.match(tool, /问题包 004/);
 });
 
+test('Python 数据集覆盖验收绑定作用域并保存失败收据', () => {
+  const tool = fs.readFileSync(path.join(
+    __dirname, '../tools/browser_dataset_coverage_acceptance.py'), 'utf8');
+  assert.match(tool, /workbench scope changed during/);
+  assert.match(tool, /dataset-coverage-browser-failure\.v1/);
+  assert.match(tool, /initial_scope/);
+  assert.match(tool, /current_scope/);
+  assert.match(tool, /truth_write_requests/);
+});
+
 test('新实采数据端到端验收绑定 Capture 身份而不是模糊的新数据文案', () => {
   const tool = fs.readFileSync(path.join(
     __dirname, '../tools/browser_new_dataset_inference_acceptance.py'), 'utf8');

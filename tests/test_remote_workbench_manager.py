@@ -126,6 +126,37 @@ class RemoteWorkbenchManagerTests(unittest.TestCase):
         self.assertEqual(report["system_temp_free_bytes"], 12 * 1024 ** 3)
         self.assertEqual(report["runtime_free_bytes"], 12 * 1024 ** 3)
 
+    def test_stale_model_download_residue_is_read_only(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            partial = root / "model.safetensors.partial"
+            part = root / ".range_chunks" / "0-3.part"
+            incomplete = root / ".cache" / "download.incomplete"
+            part.parent.mkdir()
+            incomplete.parent.mkdir()
+            partial.write_bytes(b"old partial")
+            part.write_bytes(b"old range")
+            incomplete.write_bytes(b"old cache")
+            report = MODULE.stale_model_download_residue(
+                root, now=partial.stat().st_mtime + 1,
+                minimum_age_seconds=0)
+            self.assertEqual(report["count"], 3)
+            self.assertEqual(report["bytes"],
+                             len(b"old partialold rangeold cache"))
+            self.assertTrue(partial.is_file())
+            self.assertTrue(part.is_file())
+            self.assertTrue(incomplete.is_file())
+
+    def test_stale_model_download_residue_excludes_fresh_files(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "download.partial"
+            path.write_bytes(b"fresh")
+            report = MODULE.stale_model_download_residue(
+                Path(temporary), now=path.stat().st_mtime + 60,
+                minimum_age_seconds=3600)
+            self.assertEqual(report["count"], 0)
+            self.assertEqual(report["bytes"], 0)
+
     def test_runtime_temp_refuses_critically_low_target_volume(self):
         with (tempfile.TemporaryDirectory() as temporary,
               mock.patch.object(MODULE, "storage_free_bytes", side_effect=[
@@ -187,6 +218,25 @@ class RemoteWorkbenchManagerTests(unittest.TestCase):
         self.assertIn("Windows 系统盘", message)
         self.assertIn("工作台临时文件已固定", message)
         self.assertNotIn("数据盘可用空间低于", message)
+
+    def test_low_space_advisory_surfaces_download_residue_without_deleting(self):
+        report = {
+            "system_volume": "C:\\",
+            "system_volume_free_bytes": 8 * 1024 ** 3,
+            "system_temp": "C:/system-temp",
+            "system_temp_free_bytes": 8 * 1024 ** 3,
+            "runtime_temp": "D:/runtime-temp",
+            "runtime_free_bytes": 512 * 1024 ** 2,
+            "redirected": True,
+        }
+        residue = {"count": 125, "bytes": 4 * 1024 ** 3}
+        with mock.patch("builtins.print") as output:
+            MODULE.print_storage_advisory(
+                report, model_download_residue=residue)
+        message = " ".join(str(call.args[0]) for call in output.call_args_list)
+        self.assertIn("125 个", message)
+        self.assertIn("4.00 GiB", message)
+        self.assertIn("不会自动删除", message)
 
     def test_primary_prewarm_uses_long_timeout_and_accepts_busy_status(self):
         ready = {"prewarmed": True, "elapsed_ms": 15000}

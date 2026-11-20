@@ -1,0 +1,69 @@
+{
+  "round": 351,
+  "date": "2026-11-20",
+  "objective": "Restore LabelAgent data-volume headroom without deleting models, datasets, candidates, or human truth, and surface future stale downloader residue before the volume becomes critical.",
+  "scope": {
+    "model_root": "D:\\Apps\\LabelAgent\\work\\models\\Qwen3-VL-2B-Instruct",
+    "remote_storage_modified": false,
+    "files_deleted": 0,
+    "gpu_jobs_started": 0
+  },
+  "residue": {
+    "range_chunk_files": 123,
+    "range_chunk_bytes": 4108339672,
+    "partial_files": 1,
+    "partial_bytes": 146800640,
+    "incomplete_files": 1,
+    "incomplete_bytes": 492830720,
+    "total_files": 125,
+    "total_logical_bytes": 4747971032,
+    "oldest_modified": "2026-11-03T13:46:17+08:00",
+    "newest_modified": "2026-11-03T14:02:13+08:00"
+  },
+  "verification": {
+    "partial_and_range_chunks_cover_complete_weight_without_gaps": true,
+    "partial_and_range_chunks_equal_complete_weight_byte_for_byte": true,
+    "verified_chain_bytes": 4255140312,
+    "incomplete_file_equals_complete_weight_prefix": true,
+    "verified_incomplete_prefix_bytes": 492830720,
+    "complete_weight_sha256": "7de1838c87a5349b016c26a1c3f7d2bc400a3d485f95ef39a7059ffd734977a0",
+    "official_receipt_hash_match": true,
+    "active_process_using_residue": false
+  },
+  "compression": {
+    "method": "Windows LZX file compression",
+    "reversible": true,
+    "logical_bytes": 4747971032,
+    "stored_bytes_after": 3721412608,
+    "physical_bytes_saved": 1026558424,
+    "free_mib_before": 260.5,
+    "free_mib_after_final_verification": 1219.7,
+    "note": "The live free-space delta is slightly smaller than the compression saving because the running workbench continued writing normal state and inspection artifacts."
+  },
+  "state_isolation": {
+    "state_sha256_before": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "state_sha256_after": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "human_truth_changed": false,
+    "candidate_state_changed": false,
+    "training_approval_changed": false
+  },
+  "guard": {
+    "minimum_age_seconds": 86400,
+    "patterns": ["*.partial", "*.part", "*.incomplete"],
+    "automatic_delete": false,
+    "low_space_warning_threshold_bytes": 2147483648,
+    "production_manager_matches_repository": true,
+    "production_manager_sha256": "9C2699FF9E299EF0EA0891E71F67D9AF65E65964DAF2EE2AF77020103F5B68AD"
+  },
+  "tests": {
+    "manager_tests": "29 passed",
+    "full_project_tests": "1152 passed, 186 subtests passed",
+    "required_environment": "PYTHONUTF8=1",
+    "workbench_status_after": "idle"
+  },
+  "rollback": {
+    "manager_backup": "D:\\Apps\\LabelAgent\\.local\\backups\\download-residue-advisory-round351-20261120\\manage_remote.py",
+    "residue_files_preserved": true,
+    "decompression_supported": true
+  }
+}

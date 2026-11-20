@@ -37,6 +37,7 @@ WEB_PORT = 8765
 SAM_CONTRACT_IMAGE = ROOT / "source" / "sam3" / "assets" / "images" / "test_image.jpg"
 STORAGE_WARNING_BYTES = 2 * 1024 ** 3
 STORAGE_CRITICAL_BYTES = 256 * 1024 ** 2
+DOWNLOAD_RESIDUE_MINIMUM_AGE_SECONDS = 24 * 60 * 60
 WORKBENCH_LOG_ROTATE_BYTES = 8 * 1024 ** 2
 WORKBENCH_LOG_BACKUPS = 2
 
@@ -106,6 +107,29 @@ def storage_free_bytes(path):
     return shutil.disk_usage(target).free
 
 
+def stale_model_download_residue(model_root, *, now=None,
+                                  minimum_age_seconds=DOWNLOAD_RESIDUE_MINIMUM_AGE_SECONDS):
+    """Report old downloader fragments without deleting or reading their contents."""
+    model_root = Path(model_root)
+    now = time.time() if now is None else now
+    candidates = {}
+    if model_root.is_dir():
+        for pattern in ("*.partial", "*.part", "*.incomplete"):
+            for path in model_root.rglob(pattern):
+                try:
+                    stat = path.stat()
+                except OSError:
+                    continue
+                if not path.is_file() or now - stat.st_mtime < minimum_age_seconds:
+                    continue
+                candidates[str(path.resolve())] = stat
+    return {
+        "count": len(candidates),
+        "bytes": sum(stat.st_size for stat in candidates.values()),
+        "minimum_age_seconds": minimum_age_seconds,
+    }
+
+
 def select_workbench_runtime_temp(environment, default_runtime_temp, *, port=WEB_PORT):
     """Choose the safer temp volume without weakening the 256 MiB gate."""
     override = environment.get("LABELAGENT_RUNTIME_TEMP_ROOT")
@@ -163,7 +187,7 @@ def prepare_runtime_environment(environment, runtime_temp):
     }
 
 
-def print_storage_advisory(report):
+def print_storage_advisory(report, *, model_download_residue=None):
     system_volume_free = report["system_volume_free_bytes"]
     runtime_free = report["runtime_free_bytes"]
     if system_volume_free < STORAGE_WARNING_BYTES:
@@ -175,6 +199,12 @@ def print_storage_advisory(report):
         print(
             "提示：工作台数据盘可用空间低于 2 GiB，请先释放可恢复空间，"
             "再导入大批量数据")
+        residue = model_download_residue or {}
+        residue_bytes = residue.get("bytes", 0)
+        if residue_bytes:
+            print(
+                f"提示：发现 {residue.get('count', 0)} 个超过 24 小时的模型下载残片候选，"
+                f"合计 {residue_bytes / 1024 ** 3:.2f} GiB；不会自动删除")
 
 
 def records(path=RECORD):
@@ -561,7 +591,10 @@ def start(open_browser):
                 environment, LOCAL / "runtime-temp" / f"workbench-{WEB_PORT}")
             workbench_environment, storage = prepare_runtime_environment(
                 environment, runtime_temp)
-            print_storage_advisory(storage)
+            print_storage_advisory(
+                storage,
+                model_download_residue=stale_model_download_residue(
+                    ROOT / "work" / "models"))
             workbench_log = LOCAL / "logs" / "remote_workbench.log"
             archived_log = archive_log_before_launch(workbench_log)
             if archived_log:
@@ -847,7 +880,10 @@ def isolate(action, port, work, open_browser=False):
                 environment, work / ".runtime-temp", port=port)
             environment, storage = prepare_runtime_environment(
                 environment, runtime_temp)
-            print_storage_advisory(storage)
+            print_storage_advisory(
+                storage,
+                model_download_residue=stale_model_download_residue(
+                    ROOT / "work" / "models"))
             token = uuid.uuid4().hex
             with (log_dir / f"isolated_workbench_{port}.log").open("ab") as output:
                 process = subprocess.Popen(

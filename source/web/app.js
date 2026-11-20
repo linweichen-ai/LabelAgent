@@ -757,12 +757,12 @@ async function regenerateReferenceDescription(targetFrame=frame){
 }
 window.regenerateReferenceDescription=regenerateReferenceDescription;
 $('describeButton').onclick=async()=>{const button=$('describeButton');if(button.disabled)return;button.disabled=true;button.textContent='生成中…';toast('正在生成真值描述…');try{await regenerateReferenceDescription(frame);toast('描述已生成，可以开始自动标注')}catch(e){toast(e.message)}finally{button.disabled=false;button.textContent='生成真值描述'}};
- const agentPhase={preflight:'检查模型与数据是否就绪',submitting:'请求已提交，等待后台确认',claiming:'后台已接收任务',starting:'准备任务',discovering:'VLM 识别当前帧可见类别',discovering_retry:'VLM 正在重试标签识别',describing:'VLM 生成真值描述',loading:'读取图像',generating:'SAM 3 生成候选',generated:'候选已生成',observing:'VLM 观察图像和候选',agent_refining:'VLM 后台精修候选',candidate_class_audit:'隔离复核疑似箱体栈板',vlm_waiting:'VLM 正忙，任务正在排队等待',editing:'执行标注工具',edited:'工具执行结束',finished:'本帧结束',retrying:'服务短暂异常，正在自动重试本帧',saved:'候选已保存',completed:'本次处理结束',stopping:'正在停止',stopped:'已停止',failed:'运行失败'};
+ const agentPhase={preflight:'检查模型与数据是否就绪',submitting:'请求已提交，等待后台确认',claiming:'后台已接收任务',starting:'准备任务',discovering:'VLM 识别当前帧可见类别',discovering_retry:'VLM 正在重试标签识别',describing:'VLM 生成真值描述',loading:'读取图像',generating:'SAM 3 生成候选',generated:'候选已生成',observing:'VLM 观察图像和候选',agent_refining:'VLM 后台精修候选',auditing:'隔离复核高风险类别候选',candidate_class_audit:'隔离复核高风险类别候选',vlm_waiting:'VLM 正忙，任务正在排队等待',editing:'执行标注工具',edited:'工具执行结束',finished:'本帧结束',retrying:'服务短暂异常，正在自动重试本帧',saved:'候选已保存',completed:'本次处理结束',stopping:'正在停止',stopped:'已停止',failed:'运行失败'};
 const agentStop={done:'Agent 流程已结束（不代表正确）',needs_review:'旧记录：请求人工复核',max_rounds:'达到最大复查轮数',no_progress:'没有有效修改',cycle:'检测到循环修改',error:'模型或工具调用失败'};
- const agentProgressStage={preflight:0,submitting:0,claiming:0,starting:0,discovering:0,discovering_retry:0,describing:0,loading:0,generating:1,generated:1,observing:2,agent_refining:2,candidate_class_audit:3,vlm_waiting:2,editing:3,edited:3,finished:4,retrying:1,saved:4,completed:4,stopping:4,stopped:4,failed:4};
- const agentProgressWeight={preflight:0.01,submitting:0.02,claiming:0.03,starting:0.04,discovering:0.06,discovering_retry:0.08,describing:0.10,loading:0.12,generating:0.22,generated:0.38,observing:0.58,agent_refining:0.58,candidate_class_audit:0.90,vlm_waiting:0.58,editing:0.74,edited:0.86,finished:0.94,retrying:0.18,saved:1};
- const agentPhaseTypicalSeconds={discovering:16,discovering_retry:16,describing:16,observing:34,agent_refining:34,candidate_class_audit:10};
- const agentPhaseProgressCeiling={discovering:0.20,discovering_retry:0.20,describing:0.20,observing:0.72,agent_refining:0.72,candidate_class_audit:0.94};
+ const agentProgressStage={preflight:0,submitting:0,claiming:0,starting:0,discovering:0,discovering_retry:0,describing:0,loading:0,generating:1,generated:1,observing:2,agent_refining:2,auditing:3,candidate_class_audit:3,vlm_waiting:2,editing:3,edited:3,finished:4,retrying:1,saved:4,completed:4,stopping:4,stopped:4,failed:4};
+ const agentProgressWeight={preflight:0.01,submitting:0.02,claiming:0.03,starting:0.04,discovering:0.06,discovering_retry:0.08,describing:0.10,loading:0.12,generating:0.22,generated:0.38,observing:0.58,agent_refining:0.58,auditing:0.90,candidate_class_audit:0.90,vlm_waiting:0.58,editing:0.74,edited:0.86,finished:0.94,retrying:0.18,saved:1};
+ const agentPhaseTypicalSeconds={discovering:16,discovering_retry:16,describing:16,observing:34,agent_refining:34,auditing:10,candidate_class_audit:10};
+ const agentPhaseProgressCeiling={discovering:0.20,discovering_retry:0.20,describing:0.20,observing:0.72,agent_refining:0.72,auditing:0.94,candidate_class_audit:0.94};
 let progressTaskId=null,progressHighWater=0,runStatusConnectionMessage='',runStatusScopeMismatch=null;
 let progressFetching=false,progressFetchPromise=null;
 $('downloadDebug').onclick=async()=>{
@@ -841,7 +841,10 @@ function renderAgentProgressPanel(job,elapsed){
  if(phase==='preflight')details.push('正在确认 SAM、VLM 和数据状态');
  if(phase==='submitting')details.push('请求已提交，请勿重复点击');
  if(phase==='vlm_waiting')details.push(`共享模型正在处理其他请求，系统将自动重试${job.retry_in_seconds?`（约 ${job.retry_in_seconds} 秒后）`:''}`);
- if(phase==='candidate_class_audit')details.push(`正在隔离检查疑似箱体候选 ${Number(job.audit_completed)||0}/${Number(job.audit_total)||0}`);
+ if(phase==='candidate_class_audit'||phase==='auditing'){
+  const auditCompleted=Number(job.audit_completed)||0,auditTotal=Number(job.audit_total)||0,batchCompleted=Number(job.audit_batch_completed)||0,sequentialCompleted=Number(job.audit_sequential_completed)||0,reviewRequired=Number(job.audit_review_required)||0,retryCount=Number(job.audit_retry_count)||0;
+  details.push(`高风险类别已复核 ${auditCompleted}/${auditTotal}；批量 ${batchCompleted} · 串行 ${sequentialCompleted} · 需人工 ${reviewRequired} · 实际重试 ${retryCount}`)
+ }
  if(latest?.label)details.push(`类别：${latest.label}`);
  const typicalSeconds=agentPhaseTypicalSeconds[phase];
  if(running&&typicalSeconds)details.push(`本阶段已进行 ${formatAgentDuration(phaseElapsed)} · 当前 4090 基线通常约 ${formatAgentDuration(typicalSeconds)}`);

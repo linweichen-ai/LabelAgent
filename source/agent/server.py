@@ -1975,6 +1975,23 @@ def candidate_class_audit_version():
     }
 
 
+def candidate_class_audit_progress_metrics(audits):
+    """Return user-facing counters without exposing model payloads."""
+    rows = [item for item in audits if isinstance(item, dict)]
+    return {
+        "audit_batch_completed": sum(
+            item.get("execution_mode") == "independent_batch_3" for item in rows),
+        "audit_sequential_completed": sum(
+            item.get("execution_mode") == "sequential" for item in rows),
+        "audit_review_required": sum(
+            item.get("route") == "human_review_required" for item in rows),
+        "audit_retry_count": sum(
+            max(0, int(item.get("protocol_retry_count") or 0))
+            + (1 if item.get("batch_fallback_reason") else 0)
+            for item in rows),
+    }
+
+
 def reusable_candidate_class_audit(run, review_status, candidates, labels,
                                    artifact_sha, input_sha, audit_version, *,
                                    candidate_ids=None, require_review_bindings=False):
@@ -4918,17 +4935,29 @@ def audit_reference_candidates():
                 candidate_class_audit_cache_hit=True,
                 candidate_only=True, human_truth=False,
                 approved_for_training=False)
-        update_run_status(status="stopping" if run_stop_event.is_set() else "running", phase="candidate_class_audit", frame=index,
-                          completed=0, total=len(ids), topic=topic, error=None)
+        update_run_status(
+            status="stopping" if run_stop_event.is_set() else "running",
+            phase="candidate_class_audit", frame=index, completed=0,
+            total=len(ids), topic=topic, error=None, audit_completed=0,
+            audit_total=len(ids), **candidate_class_audit_progress_metrics([]))
         def check_cancelled():
             if run_stop_event.is_set():
                 raise RunCancelled("用户已停止候选盲审")
+        progress_audits = []
+        def on_audit_progress(completed, total, candidate, audit):
+            progress_audits.append(audit)
+            update_run_status(
+                phase="candidate_class_audit", frame=index,
+                audit_completed=completed, audit_total=total,
+                audit_candidate_id=candidate.get("id"),
+                **candidate_class_audit_progress_metrics(progress_audits))
         try:
             with cancellation(run_stop_event):
                 audits, queue = audit_high_risk_candidates(
                     state["config"], image_bytes, candidates, list(state.get("labels", [])),
                     VISIBLE_LABEL_DEFINITIONS, chat, check_cancelled=check_cancelled,
-                    tolerate_errors=False, batch_chat=chat_batch)
+                    tolerate_errors=False, on_progress=on_audit_progress,
+                    batch_chat=chat_batch)
             check_cancelled()
         except RunCancelled:
             update_run_status(status="stopped", phase="stopped", frame=None, completed=0)
@@ -5504,15 +5533,19 @@ def generate_reference_draft():
         if audit_total and not defer_class_audit and not defer_agent_review:
             update_run_status(phase="auditing", audit_completed=0,
                               audit_total=audit_total, audit_candidate_id=None,
-                              shape_count=len(combined), error=None)
+                              shape_count=len(combined), error=None,
+                              **candidate_class_audit_progress_metrics([]))
+            progress_audits = []
             def check_audit_cancelled():
                 if run_stop_event.is_set():
                     raise RunCancelled("用户已停止参考帧草稿生成")
             def on_audit_progress(completed, total, candidate, audit):
+                progress_audits.append(audit)
                 update_run_status(
                     phase="auditing", audit_completed=completed, audit_total=total,
                     audit_candidate_id=candidate.get("id"),
-                    audit_route=audit.get("route"), shape_count=len(combined), error=None)
+                    audit_route=audit.get("route"), shape_count=len(combined), error=None,
+                    **candidate_class_audit_progress_metrics(progress_audits))
             with cancellation(run_stop_event), trace_calls(on_trace, save_inspection_image):
                 class_audits, class_review_queue = audit_high_risk_candidates(
                     config, target_image, combined, labels,
@@ -5880,7 +5913,8 @@ def run_workflow():
                     update_run_status(
                         phase="candidate_class_audit", frame=target,
                         completed=len(results), audit_completed=0,
-                        audit_total=len(pallet_audit_ids))
+                        audit_total=len(pallet_audit_ids),
+                        **candidate_class_audit_progress_metrics([]))
                     candidate_id_set = set(pallet_audit_ids)
                     previous_run = runs.get(key) or {}
                     previous_review_status = review_statuses.get(key) or {}
@@ -5897,17 +5931,26 @@ def run_workflow():
                         update_run_status(
                             phase="candidate_class_audit", frame=target,
                             audit_completed=len(class_audits),
-                            audit_total=len(pallet_audit_ids), audit_cache_hit=True)
+                            audit_total=len(pallet_audit_ids), audit_cache_hit=True,
+                            **candidate_class_audit_progress_metrics(class_audits))
                     else:
+                        progress_audits = []
+                        def on_candidate_audit_progress(
+                                completed, total, candidate, audit):
+                            progress_audits.append(audit)
+                            update_run_status(
+                                phase="candidate_class_audit", frame=target,
+                                audit_completed=completed, audit_total=total,
+                                audit_candidate_id=candidate.get("id"),
+                                **candidate_class_audit_progress_metrics(
+                                    progress_audits))
                         class_audits, class_review_queue = audit_high_risk_candidates(
                             config, target_image, combined, labels,
                             VISIBLE_LABEL_DEFINITIONS, chat,
                             check_cancelled=check_cancelled,
                             tolerate_errors=True,
                             candidate_ids=candidate_id_set,
-                            on_progress=lambda completed, total, candidate, audit: update_run_status(
-                                phase="candidate_class_audit", frame=target,
-                                audit_completed=completed, audit_total=total),
+                            on_progress=on_candidate_audit_progress,
                             batch_chat=chat_batch)
                         for audit in class_audits:
                             audit["audit_version"] = audit_version

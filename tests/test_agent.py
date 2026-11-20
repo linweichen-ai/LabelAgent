@@ -45,6 +45,22 @@ def sam_result():
 
 
 class EditTests(unittest.TestCase):
+    def test_candidate_class_audit_progress_metrics_are_user_facing_counts(self):
+        audits = [
+            {"execution_mode": "independent_batch_3", "route": "candidate_preserved",
+             "protocol_retry_count": 0},
+            {"execution_mode": "independent_batch_3", "route": "human_review_required",
+             "protocol_retry_count": 0},
+            {"execution_mode": "sequential", "route": "human_review_required",
+             "protocol_retry_count": 1, "batch_fallback_reason": "invalid"},
+        ]
+        self.assertEqual(server.candidate_class_audit_progress_metrics(audits), {
+            "audit_batch_completed": 2,
+            "audit_sequential_completed": 1,
+            "audit_review_required": 2,
+            "audit_retry_count": 2,
+        })
+
     def test_routine_werkzeug_access_lines_are_suppressed_but_warnings_remain(self):
         self.assertEqual(logging.getLogger("werkzeug").level, logging.WARNING)
 

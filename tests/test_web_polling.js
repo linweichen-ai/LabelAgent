@@ -599,6 +599,32 @@ test('VLM 预计进度随等待时间单调前进但不会越过下一阶段', (
   assert.ok(weights.every(value => value < 0.20));
 });
 
+test('高风险类别复核进度区分批量、串行、人工与实际重试', () => {
+  const elements = new Map();
+  function element(id) {
+    if (!elements.has(id)) elements.set(id, {
+      textContent: '', style: {}, hidden: false, attributes: {},
+      className: '', classList: { values: new Set(), toggle(name, enabled) {
+        if (enabled) this.values.add(name); else this.values.delete(name);
+      } },
+      setAttribute(name, value) { this.attributes[name] = value; },
+      children: id === 'runProgressStages' ? Array.from({length: 5}, () => ({
+        classList: { toggle() {} },
+      })) : [],
+    });
+    return elements.get(id);
+  }
+  const h = harness({ $: element });
+  const text = source('app.js');
+  h.run(section(text, ' const agentPhase=', "$('downloadDebug').onclick"));
+  h.run(section(text, 'function formatAgentDuration', 'function renderRunButton'));
+  h.run("renderAgentProgressPanel({task_id:'audit',status:'running',phase:'candidate_class_audit',total:1,completed:0,frame:0,audit_completed:3,audit_total:3,audit_batch_completed:2,audit_sequential_completed:1,audit_review_required:1,audit_retry_count:1,events:[]},4)");
+  assert.equal(element('runProgressTitle').textContent, '隔离复核高风险类别候选');
+  assert.ok(element('runProgressDetail').textContent.includes('高风险类别已复核 3/3'));
+  assert.ok(element('runProgressDetail').textContent.includes('批量 2 · 串行 1'));
+  assert.ok(element('runProgressDetail').textContent.includes('需人工 1 · 实际重试 1'));
+});
+
 test('后台 Agent 精修显示明确阶段而不是看似卡在百分之一', () => {
   const text = source('app.js');
   const phases = section(text, 'const agentPhase=', 'let progressTaskId');

@@ -1,0 +1,77 @@
+{
+  "schema_version": "labelagent.candidate-audit-visible-progress-round354.v1",
+  "observed_at": "2026-11-20T13:43:02+08:00",
+  "passed": true,
+  "ui_contract": {
+    "phase_title": "隔离复核高风险类别候选",
+    "counters": [
+      "audit_completed/audit_total",
+      "audit_batch_completed",
+      "audit_sequential_completed",
+      "audit_review_required",
+      "audit_retry_count"
+    ],
+    "human_truth_boundary_preserved": true,
+    "training_approval_boundary_preserved": true
+  },
+  "tests": {
+    "backend_focused_passed": 1,
+    "web_polling_passed": 82,
+    "formal_passed": 1156,
+    "formal_subtests_passed": 186
+  },
+  "real_candidate_replay": {
+    "dataset": "Capture_20261103",
+    "topic": "/capture/camera_2/image",
+    "frame": 0,
+    "candidate_count": 9,
+    "elapsed_ms": 1688.0,
+    "cache_caveat": "existing model response cache hit; validates progress contract, not cold latency",
+    "terminal_status": {
+      "status": "completed",
+      "phase": "completed",
+      "audit_completed": 3,
+      "audit_total": 3,
+      "audit_batch_completed": 3,
+      "audit_sequential_completed": 0,
+      "audit_review_required": 1,
+      "audit_retry_count": 0
+    },
+    "execution_modes": [
+      "independent_batch_3",
+      "independent_batch_3",
+      "independent_batch_3"
+    ],
+    "routes": [
+      "candidate_preserved",
+      "candidate_preserved",
+      "human_review_required"
+    ],
+    "human_truth": false,
+    "approved_for_training": false,
+    "isolated_port_released": 8892
+  },
+  "deployment": {
+    "server_source_sha256": "7CD189173533DB70871F891182FEBFD26455B1EC4CFC0414F9A7A69372B37340",
+    "server_production_sha256": "7CD189173533DB70871F891182FEBFD26455B1EC4CFC0414F9A7A69372B37340",
+    "app_source_sha256": "B8D199066C1727ADF03756AADC147E8E9E69310A724173187FBA64C9142C50DA",
+    "app_production_sha256": "B8D199066C1727ADF03756AADC147E8E9E69310A724173187FBA64C9142C50DA",
+    "backup_path": "D:\\Apps\\LabelAgent\\.local\\backups\\candidate-audit-progress-round354-20261120",
+    "server_backup_sha256": "E90A157F4873BDF681114C6D4959FD74135364CA2BB7B714ADD65626228A7C43",
+    "app_backup_sha256": "023BCC4330845CA907FEAB04798BCBFE2F56B4034101937EBBFD5CC66E7C139F",
+    "production_state_sha256_before": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "production_state_sha256_after": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "production_status": "idle"
+  },
+  "storage_migration": {
+    "source": "C:\\Users\\seer\\AppData\\Local\\LabelAgent\\artifact-archive",
+    "target": "D:\\Apps\\LabelAgent\\.local\\archives\\artifact-archive-c-volume-20261120",
+    "file_count": 1055,
+    "length_and_sha256_verified": true,
+    "source_replaced_with_junction": true,
+    "production_assets_moved": false,
+    "destructive_data_deletion": false,
+    "c_free_mib_final_observed": 336.2,
+    "d_free_mib_final_observed": 1360.3
+  }
+}

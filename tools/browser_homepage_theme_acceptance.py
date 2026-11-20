@@ -59,6 +59,7 @@ def main() -> None:
               const viewerStyle = getComputedStyle(document.querySelector('.viewer'));
               const batchPanel = document.querySelector('#batchReviewPanel');
               const candidatePanel = document.querySelector('#candidateReviewPanel');
+              const inspectionPanel = document.querySelector('#inspectionPanel');
               const theme = [...document.styleSheets].some(sheet => {
                 try { return new URL(sheet.href).pathname.endsWith('/homepage-theme.css'); }
                 catch (_) { return false; }
@@ -93,6 +94,9 @@ def main() -> None:
                   batch_compact: Boolean(batchPanel?.classList.contains('compact')),
                   candidate_panel_height: candidatePanel?.getBoundingClientRect().height || 0,
                   candidate_unavailable: Boolean(candidatePanel?.classList.contains('unavailable')),
+                  inspection_client_height: inspectionPanel?.clientHeight || 0,
+                  inspection_scroll_height: inspectionPanel?.scrollHeight || 0,
+                  inspection_overflow_y: inspectionPanel ? getComputedStyle(inspectionPanel).overflowY : '',
                 },
                 controls: {
                   manual_mode: Boolean(document.querySelector('#manualModeButton')),
@@ -122,7 +126,7 @@ def main() -> None:
         metrics["passed"] = bool(
             metrics["http_status"] == 200
             and metrics["theme_loaded"]
-            and metrics["ui_version"] == "156"
+            and metrics["ui_version"] == "157"
             and all(metrics["controls"].values())
             and metrics["auto_workspace"] == "auto"
             and not console_errors

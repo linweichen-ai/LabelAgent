@@ -1,0 +1,107 @@
+{
+  "schema_version": "labelagent.cross-camera-coverage-point-scan-round358.v1",
+  "observed_at": "2026-11-20T14:16:36+08:00",
+  "passed": true,
+  "cross_camera_acceptance": {
+    "dataset": "Capture_20261103",
+    "topic": "/capture/camera_3/image",
+    "frame": 37,
+    "first_response_ms": 19687.0,
+    "candidate_visible_ms": 19687.0,
+    "background_complete_ms": 54328.0,
+    "candidate_count": 7,
+    "candidate_counts_by_label": {
+      "ego": 1,
+      "floor": 2,
+      "pallet": 2,
+      "person": 2
+    },
+    "audit_total": 3,
+    "audit_batch": 3,
+    "audit_preserved": 2,
+    "audit_review_required": 1,
+    "audit_retries": 0,
+    "page_error_count": 0,
+    "http_error_count": 0,
+    "screenshot_sha256": "083F509061A3C2AFEC7097EF54D6C02EE825C7B096CDEEB9BECC4E20298FE898"
+  },
+  "coverage_probe_acceptance": {
+    "topic": "/capture/camera_3/image",
+    "frame": 38,
+    "mode": "auto_visible_with_coverage",
+    "first_response_ms": 20860.0,
+    "candidate_visible_ms": 20891.0,
+    "background_complete_ms": 55829.0,
+    "candidate_count": 8,
+    "candidate_counts_by_label": {
+      "ego": 1,
+      "floor": 2,
+      "pallet": 3,
+      "person": 2
+    },
+    "selected_label_attempts": 8,
+    "vehicle_status": "vlm_visible_sam_missed",
+    "other_robot_status": "vlm_visible_sam_missed",
+    "other_robot_semantic_fallback_candidates": 0,
+    "truth_frame_created": false,
+    "reference_frame_created": false,
+    "approved_for_training": false,
+    "screenshot_sha256": "F1B32691D34A4DE5344C754D746D336CF65A702153BBAD683DB79F681B115736"
+  },
+  "text_prompt_probe": {
+    "image_encoded_once": true,
+    "prompt_count": 8,
+    "total_seconds": 0.623432,
+    "all_candidate_counts_zero": true,
+    "prompts": [
+      "robot",
+      "autonomous pallet truck",
+      "forklift",
+      "forklift truck",
+      "industrial vehicle",
+      "mobile robot",
+      "automated guided vehicle",
+      "self-driving forklift"
+    ]
+  },
+  "point_scan": {
+    "service": "sam_4090",
+    "point_count": 184,
+    "scan_seconds": 12.304772,
+    "raw_candidates": 184,
+    "geometric_candidates": 49,
+    "nms_candidates": 19,
+    "known_exclusion_passed": 17,
+    "classified_count": 12,
+    "context_selected_other_robot_ids": [
+      "C03",
+      "C12"
+    ],
+    "context_elapsed_seconds": 43.015981,
+    "isolated_semantic_selected_ids": [],
+    "isolated_semantic_review_required_ids": [
+      "C03",
+      "C12"
+    ],
+    "isolated_semantic_elapsed_seconds": 19.478571,
+    "vehicle_candidate_id": "C02",
+    "production_deployed": false,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false
+  },
+  "service_capability": {
+    "sam_5090_segment_points_batch": "http_404_not_supported",
+    "sam_4090_segment_points_batch": "supported"
+  },
+  "tests": {
+    "web_polling_passed": 83,
+    "formal_passed": 1157,
+    "formal_subtests_passed": 186
+  },
+  "cleanup": {
+    "isolated_port_released": 8891,
+    "production_port_ready": 8765,
+    "production_status": "idle"
+  }
+}

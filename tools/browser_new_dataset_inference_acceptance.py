@@ -34,6 +34,7 @@ def main() -> int:
         "--expected-topic", choices=CAPTURE_TOPICS, default=CAPTURE_TOPICS[0]
     )
     parser.add_argument("--frame", default=0, type=int)
+    parser.add_argument("--coverage-probe", action="store_true")
     parser.add_argument("--timeout-seconds", default=180, type=int)
     args = parser.parse_args()
     if args.frame < 0:
@@ -137,6 +138,10 @@ def main() -> int:
             page.evaluate("() => window.openReferencePreparation()")
             dialog = page.locator("#referencePrepDialog[open]")
             dialog.wait_for(state="visible")
+            if args.coverage_probe:
+                page.locator("#referenceAutoLabel").select_option(
+                    "__auto_visible_with_coverage__"
+                )
             page.wait_for_function(
                 "() => { const button=document.getElementById('runReferenceAutoDraft');"
                 " return button && !button.disabled; }",
@@ -228,6 +233,11 @@ def main() -> int:
                 "identity": identity,
                 "topic": final_state["topic"],
                 "frame": args.frame,
+                "reference_draft_mode": (
+                    "auto_visible_with_coverage"
+                    if args.coverage_probe
+                    else "auto_visible_fast"
+                ),
                 "selected_labels": final_state["auto_labels"],
                 "first_response_ms": first_response_ms,
                 "candidate_visible_ms": candidate_visible_ms,

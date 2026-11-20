@@ -279,6 +279,8 @@ test('新实采数据端到端验收绑定 Capture 身份而不是模糊的新�
   assert.match(tool, /identity\["kind"\] == "新实采数据"/);
   assert.match(tool, /Capture_20261103/);
   assert.match(tool, /parser\.add_argument\("--frame"/);
+  assert.match(tool, /parser\.add_argument\("--coverage-probe"/);
+  assert.match(tool, /select_option\(\s*"__auto_visible_with_coverage__"/);
   assert.match(tool, /candidates\?\.\[String\(expected\)\]/);
   assert.match(tool, /"frame": args\.frame/);
   assert.match(tool, /reference draft request failed/);

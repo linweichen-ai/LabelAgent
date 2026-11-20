@@ -1,0 +1,33 @@
+{
+  "schema_version": "labelagent.runtime_playback_relocation.v1",
+  "round": 323,
+  "date": "2026-11-20",
+  "source": "D:\\Apps\\LabelAgent\\work\\playback",
+  "destination": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent-production-playback-20261120",
+  "junction_target": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent-production-playback-20261120",
+  "file_count": 31,
+  "bytes": 428897429,
+  "mib": 409.03,
+  "tree_sha256": "2f2239fd062ed04e4250f9b655fcd194d89b055af2522d5acea582cdb6762252",
+  "post_move_media_read": {
+    "http_status": 206,
+    "bytes": 1024,
+    "content_type": "video/mp4",
+    "full_media_bytes": 13030277
+  },
+  "playback_index": {
+    "status": "ready",
+    "frame_count": 150
+  },
+  "stable_free_mib_samples": [2142.77, 2142.77, 2142.77, 2142.77, 2142.77],
+  "storage_readiness": {
+    "ready": true,
+    "status": "ok"
+  },
+  "production_state_sha256": "237844f73ff4495e575c6a3f966260b9385efbdf1edee7d0e5177518470ddfab",
+  "files_deleted": 0,
+  "other_project_files_modified": false,
+  "workbench_ready": true,
+  "sam_ready": true,
+  "vlm_ready": true
+}

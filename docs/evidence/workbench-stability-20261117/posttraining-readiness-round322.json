@@ -1,0 +1,48 @@
+{
+  "schema_version": "labelagent.posttraining_readiness_summary.v1",
+  "round": 322,
+  "date": "2026-11-20",
+  "status": "offline_teacher_lora_exists_human_supervised_training_blocked",
+  "integrity_errors": [],
+  "vlm_teacher_lora": {
+    "training_executed": true,
+    "samples_loaded": 62,
+    "steps": 62,
+    "adapter_sha256": "3327bf5e4b32abaf170fcd6a7696ad8d12cd1175d68eade9f87996f6b05fe25a",
+    "test24_used_for_training": false,
+    "test24_teacher_evidence_matches": 180,
+    "test24_teacher_evidence_total": 192,
+    "test24_teacher_evidence_accuracy": 0.9375,
+    "human_truth": false,
+    "production_deployed": false
+  },
+  "human_supervised_training": {
+    "training_authorized": false,
+    "approved_checklist_rows": 0,
+    "total_checklist_rows": 96,
+    "train_human_coco_present": false,
+    "test_human_coco_present": false,
+    "test_split_policy": "evaluation_only_never_train"
+  },
+  "distant_pallet_hard_examples": {
+    "selected_count": 4,
+    "eligible_for_training": 0,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false
+  },
+  "sam3_pixel_finetune_ready": false,
+  "production_model_change_allowed": false,
+  "live_cvat_refresh": {
+    "unauthenticated_task_445_http_status": 401,
+    "unauthenticated_task_446_http_status": 401,
+    "authenticated_readback_completed": false,
+    "credentials_written_to_logs_or_repo": false
+  },
+  "tests": {
+    "targeted_passed": 3,
+    "python_passed": 1114,
+    "python_subtests_passed": 186
+  },
+  "full_report_sha256": "373e90c00d587b81dfa7dc8b9bf691c31ba605ced065df56f322bc30d648e88d"
+}

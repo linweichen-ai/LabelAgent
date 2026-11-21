@@ -86,6 +86,22 @@ class CandidateClassAuditTests(unittest.TestCase):
         self.assertIn("box, container, or stacked cargo is not pallet", prompt)
         self.assertIn("Never combine visible support", prompt)
 
+    def test_low_score_small_pallet_routes_review_without_broadening_gate(self):
+        weak_small = {"id": 30, "label": "pallet", "score": .52,
+                      "points": [[0, 0], [79, 0], [79, 49], [0, 49]]}
+        strong_small = {**weak_small, "id": 31, "score": .53}
+        missing_score = {key: value for key, value in weak_small.items()
+                         if key != "score"} | {"id": 32}
+        too_tiny = {"id": 33, "label": "pallet", "score": .1,
+                    "points": [[0, 0], [19, 0], [19, 18], [0, 18]]}
+        weak_large = {"id": 34, "label": "pallet", "score": .5,
+                      "points": [[0, 0], [239, 0], [239, 29], [0, 29]]}
+        self.assertTrue(audit.candidate_requires_class_audit(weak_small))
+        self.assertFalse(audit.candidate_requires_class_audit(strong_small))
+        self.assertFalse(audit.candidate_requires_class_audit(missing_score))
+        self.assertFalse(audit.candidate_requires_class_audit(too_tiny))
+        self.assertFalse(audit.candidate_requires_class_audit(weak_large))
+
     def test_vlm_point_recovered_vehicle_always_routes_blind_class_audit(self):
         candidate = {
             "id": 24, "label": "车辆",

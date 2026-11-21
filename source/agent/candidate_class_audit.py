@@ -70,8 +70,10 @@ def candidate_requires_class_audit(candidate: dict) -> bool:
     checked when a sizeable, nearly solid, box-like mask could be cargo or a
     container rather than the load-bearing pallet underneath it.  Extremely
     thin, long masks are also checked because the observed failure mode can be
-    a forklift tine, floor seam, tape or shadow carrying a pallet label.  The
-    focused check remains candidate-only and never mutates the mask.
+    a forklift tine, floor seam, tape or shadow carrying a pallet label.  A
+    narrow low-score/small-area gate catches weak pallet proposals that are too
+    ambiguous to pass silently.  The focused check remains candidate-only and
+    never mutates the mask.
     """
     label = str(candidate.get("label", ""))
     if candidate.get("source") == "sam_vlm_visible_vehicle_point_recovery":
@@ -101,6 +103,13 @@ def candidate_requires_class_audit(candidate: dict) -> bool:
         and short_side / max(long_side, 1) <= .08
         and foreground_area >= 500)
     if extreme_thin_artifact:
+        return True
+    score = candidate.get("score")
+    low_score_small_proposal = (
+        isinstance(score, (int, float)) and not isinstance(score, bool)
+        and math.isfinite(score) and score <= .52
+        and 400 <= bbox_area < 5000)
+    if low_score_small_proposal:
         return True
     if width < 120 or height < 80 or bbox_area < 5000:
         return False

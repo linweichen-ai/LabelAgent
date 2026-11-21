@@ -3090,3 +3090,12 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 四份正式状态/历史哈希不变。实现提交`d9f38eb`，回滚点为
 `D:\Apps\LabelAgent\.local\backups\direct-fast-tail-round379-20261121`。详细记录见
 `DIRECT_FAST_AUDIT_TAIL_ROUND379_20261121.md`与对应结构化证据。
+
+## Round380（2026-11-21）：栈板轮廓按尺度自适应平滑
+
+- 把固定亚像素轮廓简化升级为大、中、小栈板分档提议，同时保留像素改动、连通区域和结构孔洞三重安全门。
+- 当前 152 帧中的 34 个栈板候选只读重放：安全调整数 29→33，轮廓顶点 1331→962（相对 v5 再减 27.7%），最大改动 2.48%，实例合并 0，结构孔洞最低保留率 100%。
+- 新逻辑仅作用于机器候选，不写人工真值、不批准训练或部署；新候选自动使用 v6，旧候选可通过受保护按钮刷新。
+- Python 1193 passed + 190 subtests，网页 159 passed；实现提交 `61dcb23`。
+- 正式环境已备份、部署并重启；五个核心接口 HTTP 200，SAM/主 VLM/快速 VLM ready，运行状态 idle，四个状态文件哈希部署前后未变化。
+- 详细说明见 `docs/PALLET_BOUNDARY_SCALE_ADAPTIVE_ROUND380_20261121.md`，证据见 `docs/evidence/workbench-stability-20261117/pallet-boundary-scale-adaptive-round380.json`。

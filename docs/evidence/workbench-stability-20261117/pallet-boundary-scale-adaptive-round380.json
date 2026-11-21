@@ -1,0 +1,57 @@
+{
+  "schema_version": "labelagent.pallet_boundary_scale_adaptive.round380.v1",
+  "date": "2026-11-21",
+  "implementation_commit": "61dcb23",
+  "scope": {
+    "dataset": "Capture_20261103",
+    "frame_count": 152,
+    "pallet_candidate_count": 34,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "approved_for_deployment": false
+  },
+  "comparison": {
+    "v5": {
+      "adjusted_count": 29,
+      "boundary_vertices_before": 1834,
+      "boundary_vertices_after": 1331,
+      "maximum_change_ratio": 0.021374
+    },
+    "v6": {
+      "adjusted_count": 33,
+      "boundary_vertices_before": 1834,
+      "boundary_vertices_after": 962,
+      "boundary_vertex_reduction_ratio": 0.475463,
+      "maximum_change_ratio": 0.024787,
+      "minimum_structural_hole_retention": 1.0,
+      "maximum_component_merge_count": 0,
+      "violation_count": 0,
+      "gate_passed": true
+    }
+  },
+  "tests": {
+    "python_passed": 1193,
+    "python_subtests_passed": 190,
+    "javascript_passed": 159
+  },
+  "deployment": {
+    "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\pallet-boundary-v6-round380-20261121",
+    "workflow_sha256": "C2144E12A9BFF0C69D781D73540FB8B06941D1C11800775CB034746C132ED894",
+    "server_sha256": "749314B0DED546F2B7EFD4F305D827E554A70583E1DA2963E77A36FC912F2F54",
+    "http_200": ["/", "/api/bootstrap", "/api/model_readiness", "/api/run/status", "/api/state/summary"],
+    "sam_ready": true,
+    "main_vlm_ready": true,
+    "fast_vlm_ready": true,
+    "run_status": "idle",
+    "state_hashes_preserved": true
+  },
+  "artifacts": {
+    "collection": "artifacts/round380-pallet-boundary-v6/collection-with-vertices.json",
+    "collection_sha256": "10862D030A0CD0AE38C919C7873355AB5D811EBB842214DE3705369C64BFA620",
+    "selected_live_json": "artifacts/round380-pallet-boundary-v6/selected-live.json",
+    "selected_live_json_sha256": "4DA604DFFF4B351D4C89499BDEC4D8C2D4BD678D955FBEC6FF91D91042BAFB2A",
+    "selected_live_image": "artifacts/round380-pallet-boundary-v6/selected-live.jpg",
+    "selected_live_image_sha256": "FA25257E97DDA04C4D00567F9A607E3D157603952646A9F4F7E8759BE11FB698"
+  }
+}

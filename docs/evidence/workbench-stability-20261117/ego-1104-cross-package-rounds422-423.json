@@ -1,0 +1,80 @@
+{
+  "rounds": [422, 423],
+  "date": "2026-11-22",
+  "status": "candidate_only_frozen_cross_package_diagnostic",
+  "oss_read_only": true,
+  "downloads": {
+    "packages": ["000", "001"],
+    "cameras": ["camera1", "camera3"],
+    "timepoints_per_package": 3,
+    "objects": 12,
+    "bytes": 5476959,
+    "source": "bevpending_data/cameras_640x512",
+    "local_remote_hash_rows_match": true,
+    "local_manifest_sha256": "d41724b4c9b7271faeb7c562ff5b932aaf7ea9582479138a5081bfee690b1b64",
+    "raw_mcap": false,
+    "full_resolution": false
+  },
+  "frozen_specs": {
+    "camera1_sha256": "a24397b6afee1b4f1d8bef16109732adc0399a2d28878079219f50f36670ac36",
+    "camera3_sha256": "99b03001bd844f2dc784afd9a7e98e836a9affbb002ece07f860326e58dcbeb8",
+    "retuned_on_cross_package_samples": false
+  },
+  "component_diagnostic": {
+    "images": 12,
+    "component_trials": 24,
+    "candidate_available": 24,
+    "prompt_constraint_passed": 24,
+    "uncovered_positive_points": 0,
+    "negative_point_violations": 0,
+    "result_manifest_sha256": "12b27c96dc37b47b523f866dbc2af8dd69df0baecbe134d488d440f380cd88fa",
+    "components": {
+      "camera1-left-seat-console-v2": {"passed": 6, "total": 6, "area_ratio_range": [0.088834, 0.09437], "mean_area_ratio": 0.092215},
+      "camera1-right-hood-v2": {"passed": 6, "total": 6, "area_ratio_range": [0.015915, 0.017883], "mean_area_ratio": 0.017093},
+      "camera3-crossbar-core-v2": {"passed": 6, "total": 6, "area_ratio_range": [0.028363, 0.032214], "mean_area_ratio": 0.03049},
+      "camera3-lower-assembly-v2": {"passed": 6, "total": 6, "area_ratio_range": [0.020981, 0.027963], "mean_area_ratio": 0.023219}
+    }
+  },
+  "component_union_review": {
+    "sample_count": 12,
+    "union_available_count": 12,
+    "failed_closed_count": 0,
+    "camera1": {"available": 6, "total": 6, "area_ratio_range": [0.106717, 0.112119], "mean_area_ratio": 0.109308, "max_component_overlap_iou": 0.0},
+    "camera3": {"available": 6, "total": 6, "area_ratio_range": [0.051498, 0.058243], "mean_area_ratio": 0.053706, "max_component_overlap_iou": 0.000314},
+    "review_queue_sha256": "2b02300f3d52e6a0aad2142f53441e0533c31fac000c18d3a092ed9be10d8042",
+    "contact_sheet_sha256": "92265c24e3b8a2935795fb06bdd4b7c9cb13e5e0a36d3d8db1d8799307e5ebae",
+    "assistant_visual_review": "No whole person, cargo, floor, container, or orange load surface was visibly swallowed; masks remain conservative partial ego coverage."
+  },
+  "tests": {
+    "targeted_passed": 17,
+    "subtests_passed": 19
+  },
+  "formal_runtime": {
+    "workbench_status": "idle",
+    "sam_status": "ok",
+    "sam_model_loaded": true,
+    "sam_service_version": "labelagent.remote-sam3.v3-point-groups",
+    "main_vlm_model": "labelagent-vlm8b",
+    "fast_vlm_model": "labelagent-vlm8b",
+    "state_sha256": {
+      "state.json": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+      "file_sessions.json": "94E8BEE324628585E7532E595348293DF1DA7B24041A1D4DF1C2EC9FB734E02E",
+      "last_run.json": "3BECE2513C6F661054AC238AB185527D715A04B3B0C8E073274710BE23E057DA",
+      "last_run_summary.json": "32578D53E70FA6860F3438860B321172B5E8B405BC6BB8A0F19387A6D4B84933"
+    }
+  },
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "human_confirmed": false,
+    "approved_for_training": false,
+    "production_deployed": false,
+    "formal_state_modified": false
+  },
+  "limitations": [
+    "Prompt compliance is necessary but does not measure complete ego pixel recall.",
+    "The 000 and 001 samples are cross-package within the same 1104 collection, not a new factory or device.",
+    "Assistant visual review is not a replacement for independent pixel-level human truth review."
+  ]
+}
+

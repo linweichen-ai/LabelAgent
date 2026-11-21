@@ -1,0 +1,48 @@
+{
+  "schema_version": "labelagent.round396.ego_component_union.v1",
+  "date": "2026-11-22",
+  "camera": "camera1",
+  "strategy": "one_positive_plus_fixed_negatives_per_request_then_union",
+  "color_dependent": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "human_confirmed": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_state_modified": false,
+  "development": {
+    "frames": [0, 38, 76, 114, 151],
+    "sample_count": 5,
+    "baseline_available_count": 0,
+    "component_union_available_count": 1,
+    "mean_baseline_area_ratio": 0.069543,
+    "mean_component_union_area_ratio": 0.04462,
+    "negative_violation_count": 0
+  },
+  "held_out": {
+    "frames": [19, 57, 95, 133],
+    "sample_count": 4,
+    "baseline_available_count": 0,
+    "component_union_available_count": 1,
+    "mean_baseline_area_ratio": 0.063829,
+    "mean_component_union_area_ratio": 0.036015,
+    "negative_violation_count": 0
+  },
+  "local_artifacts": {
+    "results_sha256": "B7D9A1F408D41B8E7B624424D203610AB4A37921F8DC3CC774B2028CC3298550",
+    "contact_sheet_sha256": "26B62F9DF95AB1896AE29828F9167FAE5AA4E64865B4CAD5E607153A92569E56",
+    "real_images_uploaded": false
+  },
+  "tests": {
+    "targeted_python_passed": 4,
+    "full_python_discover_passed": 1230,
+    "web_node_passed": 167
+  },
+  "formal_state_sha256": {
+    "state": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "file_sessions": "94E8BEE324628585E7532E595348293DF1DA7B24041A1D4DF1C2EC9FB734E02E",
+    "last_run": "3BECE2513C6F661054AC238AB185527D715A04B3B0C8E073274710BE23E057DA",
+    "last_run_summary": "32578D53E70FA6860F3438860B321172B5E8B405BC6BB8A0F19387A6D4B84933"
+  },
+  "gate": "candidate_direction_supported_but_2_of_9_only; production_rejected; human_pixel_truth_pending"
+}

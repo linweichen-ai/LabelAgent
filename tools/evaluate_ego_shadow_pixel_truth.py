@@ -18,13 +18,20 @@ import numpy as np
 from PIL import Image
 
 
-MANIFEST_SCHEMA_VERSION = "labelagent.ego_pixel_truth_manifest.v1"
-REPORT_SCHEMA_VERSION = "labelagent.ego_pixel_truth_report.v1"
+MANIFEST_SCHEMA_VERSION = "labelagent.ego_pixel_truth_manifest.v2"
+REPORT_SCHEMA_VERSION = "labelagent.ego_pixel_truth_report.v2"
+REVIEW_PACKET_SCHEMA_VERSION = "labelagent.ego_pixel_truth_review_packet.v1"
+RECEIPT_SCHEMA_VERSION = "labelagent.ego_human_pixel_truth_receipt.v2"
 CAMERAS = {f"camera{index}" for index in range(4)}
 
 
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _valid_sha256(value) -> bool:
+    return (isinstance(value, str) and len(value) == 64
+            and all(character in "0123456789abcdefABCDEF" for character in value))
 
 
 def _bounded_relative_path(root: Path, value, field: str) -> Path:
@@ -65,8 +72,7 @@ def _require_human_truth(manifest: dict, root: Path) -> tuple[dict, str]:
             or provenance.get("human_confirmed") is not True
             or provenance.get("assistant_generated") is not False
             or provenance.get("machine_generated") is not False
-            or not isinstance(receipt, str) or len(receipt) != 64
-            or any(character not in "0123456789abcdefABCDEF" for character in receipt)):
+            or not _valid_sha256(receipt)):
         raise ValueError("pixel truth must have an explicit human confirmation receipt")
     receipt_path = _bounded_relative_path(
         root, provenance.get("confirmation_receipt"), "confirmation_receipt")
@@ -75,7 +81,7 @@ def _require_human_truth(manifest: dict, root: Path) -> tuple[dict, str]:
         raise ValueError("human confirmation receipt hash mismatch")
     payload = json.loads(receipt_path.read_text(encoding="utf-8"))
     if (not isinstance(payload, dict)
-            or payload.get("schema_version") != "labelagent.ego_human_pixel_truth_receipt.v1"
+            or payload.get("schema_version") != RECEIPT_SCHEMA_VERSION
             or payload.get("human_confirmed") is not True
             or payload.get("assistant_generated") is not False
             or payload.get("machine_generated") is not False
@@ -84,7 +90,47 @@ def _require_human_truth(manifest: dict, root: Path) -> tuple[dict, str]:
     return payload, actual_sha256
 
 
-def _verify_receipt(rows: list[dict], receipt: dict) -> None:
+def _require_candidate_packet(manifest: dict, root: Path) -> tuple[dict, str, Path]:
+    provenance = manifest.get("candidate_provenance")
+    required = {"kind", "review_queue", "review_queue_sha256"}
+    if not isinstance(provenance, dict) or set(provenance) != required:
+        raise ValueError("candidate_provenance must bind exactly one review queue")
+    expected_sha256 = provenance.get("review_queue_sha256")
+    if (provenance.get("kind") != "machine_candidate_review_packet"
+            or not _valid_sha256(expected_sha256)):
+        raise ValueError("candidate review queue provenance is invalid")
+    queue_path = _bounded_relative_path(
+        root, provenance.get("review_queue"), "candidate review_queue")
+    actual_sha256 = _sha256(queue_path)
+    if actual_sha256.casefold() != expected_sha256.casefold():
+        raise ValueError("candidate review queue hash mismatch")
+    packet = json.loads(queue_path.read_text(encoding="utf-8"))
+    if (not isinstance(packet, dict)
+            or packet.get("schema_version") != REVIEW_PACKET_SCHEMA_VERSION
+            or packet.get("candidate_only") is not True
+            or packet.get("human_truth") is not False
+            or packet.get("human_confirmed") is not False
+            or packet.get("approved_for_training") is not False
+            or packet.get("production_deployed") is not False
+            or packet.get("formal_state_modified") is not False
+            or not isinstance(packet.get("samples"), list)):
+        raise ValueError("candidate review queue content is invalid")
+    mapping = {}
+    for item in packet["samples"]:
+        sample_id = item.get("sample_id") if isinstance(item, dict) else None
+        if not isinstance(sample_id, str) or not sample_id.strip():
+            raise ValueError("candidate review queue sample entry is invalid")
+        sample_id = sample_id.strip()
+        if sample_id in mapping:
+            raise ValueError("candidate review queue sample IDs must be unique")
+        mapping[sample_id] = item
+    return mapping, actual_sha256, queue_path.parent
+
+
+def _verify_receipt(rows: list[dict], receipt: dict,
+                    candidate_queue_sha256: str) -> None:
+    if receipt.get("candidate_review_queue_sha256") != candidate_queue_sha256:
+        raise ValueError("human confirmation receipt candidate queue hash mismatch")
     reviewed = receipt["reviewed_masks"]
     mapping = {}
     for item in reviewed:
@@ -98,6 +144,7 @@ def _verify_receipt(rows: list[dict], receipt: dict) -> None:
     for row in rows:
         item = mapping[row["sample_id"]]
         expected = {
+            "candidate_mask_sha256": row["candidate_sha256"],
             "ego_truth_sha256": row["ego_truth_sha256"],
             "person_truth_sha256": row["person_truth_sha256"],
             "floor_truth_sha256": row["floor_truth_sha256"],
@@ -135,7 +182,8 @@ def _thresholds(manifest: dict) -> dict:
     return values
 
 
-def _evaluate_sample(root: Path, row: dict) -> dict:
+def _evaluate_sample(root: Path, row: dict, packet_row: dict,
+                     packet_root: Path) -> dict:
     if not isinstance(row, dict):
         raise ValueError("each sample must be an object")
     sample_id, camera = row.get("sample_id"), row.get("camera")
@@ -151,6 +199,28 @@ def _evaluate_sample(root: Path, row: dict) -> dict:
                                          "person_truth_mask")
     floor_path = _bounded_relative_path(root, row.get("floor_truth_mask"),
                                         "floor_truth_mask")
+    paths = (candidate_path, truth_path, person_path, floor_path)
+    if len(set(paths)) != len(paths):
+        raise ValueError(f"candidate and truth mask paths must be distinct for {sample_id}")
+    if (packet_row.get("camera") != camera
+            or packet_row.get("candidate_only") is not True
+            or packet_row.get("human_truth") is not False
+            or packet_row.get("approved_for_training") is not False
+            or packet_row.get("eligible_for_candidate_merge") is not False
+            or packet_row.get("state_written") is not False
+            or packet_row.get("candidate_observed") is not True
+            or type(packet_row.get("candidate_available")) is not bool
+            or not isinstance(packet_row.get("status"), str)
+            or not packet_row["status"].strip()
+            or not _valid_sha256(packet_row.get("candidate_mask_sha256"))):
+        raise ValueError(f"candidate review queue binding is invalid for {sample_id}")
+    packet_candidate_path = _bounded_relative_path(
+        packet_root, packet_row.get("candidate_mask"), "packet candidate_mask")
+    if packet_candidate_path != candidate_path:
+        raise ValueError(f"candidate review queue path mismatch for {sample_id}")
+    candidate_sha256 = _sha256(candidate_path)
+    if candidate_sha256.casefold() != packet_row["candidate_mask_sha256"].casefold():
+        raise ValueError(f"candidate review queue mask hash mismatch for {sample_id}")
     candidate = _binary_mask(candidate_path)
     truth = _binary_mask(truth_path)
     person = _binary_mask(person_path)
@@ -168,7 +238,9 @@ def _evaluate_sample(root: Path, row: dict) -> dict:
         "camera": camera,
         "width": int(candidate.shape[1]),
         "height": int(candidate.shape[0]),
-        "candidate_sha256": _sha256(candidate_path),
+        "candidate_sha256": candidate_sha256,
+        "candidate_status": packet_row["status"],
+        "candidate_available": packet_row["candidate_available"],
         "ego_truth_sha256": _sha256(truth_path),
         "person_truth_sha256": _sha256(person_path),
         "floor_truth_sha256": _sha256(floor_path),
@@ -190,15 +262,27 @@ def evaluate_manifest(path: Path) -> dict:
     if manifest.get("dataset_split") not in {"validation", "test"}:
         raise ValueError("pixel-truth gate is evaluation-only")
     receipt, receipt_sha256 = _require_human_truth(manifest, manifest_path.parent)
+    packet_rows, candidate_queue_sha256, packet_root = _require_candidate_packet(
+        manifest, manifest_path.parent)
     gates = _thresholds(manifest)
     samples = manifest.get("samples")
     if not isinstance(samples, list) or not samples:
         raise ValueError("samples must be a non-empty list")
-    rows = [_evaluate_sample(manifest_path.parent, sample) for sample in samples]
+    rows = []
+    for sample in samples:
+        sample_id = sample.get("sample_id") if isinstance(sample, dict) else None
+        normalized_id = sample_id.strip() if isinstance(sample_id, str) else None
+        packet_row = packet_rows.get(normalized_id)
+        if packet_row is None:
+            raise ValueError("candidate review queue sample scope mismatch")
+        rows.append(_evaluate_sample(
+            manifest_path.parent, sample, packet_row, packet_root))
     ids = [row["sample_id"] for row in rows]
     if len(ids) != len(set(ids)):
         raise ValueError("sample_id values must be unique")
-    _verify_receipt(rows, receipt)
+    if set(packet_rows) != set(ids):
+        raise ValueError("candidate review queue sample scope mismatch")
+    _verify_receipt(rows, receipt, candidate_queue_sha256)
 
     per_camera = {}
     gate_reasons = []
@@ -229,6 +313,7 @@ def evaluate_manifest(path: Path) -> dict:
     return {
         "schema_version": REPORT_SCHEMA_VERSION,
         "manifest_sha256": _sha256(manifest_path),
+        "candidate_review_queue_sha256": candidate_queue_sha256,
         "human_confirmation_receipt_sha256": receipt_sha256,
         "dataset_split": manifest["dataset_split"],
         "evaluation_only": True,

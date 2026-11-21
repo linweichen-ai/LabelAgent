@@ -29,9 +29,27 @@ class EgoShadowPixelTruthTest(unittest.TestCase):
         self.temporary.cleanup()
 
     def manifest(self, samples, **overrides):
+        candidate_rows = []
         reviewed_masks = []
         for sample in samples:
             item = {"sample_id": sample.get("sample_id")}
+            candidate_path = self.root / str(sample.get("candidate_mask", ""))
+            candidate_sha256 = (hashlib.sha256(candidate_path.read_bytes()).hexdigest()
+                                if candidate_path.is_file() else "0" * 64)
+            candidate_rows.append({
+                "sample_id": sample.get("sample_id"),
+                "camera": sample.get("camera"),
+                "candidate_only": True,
+                "human_truth": False,
+                "approved_for_training": False,
+                "eligible_for_candidate_merge": False,
+                "state_written": False,
+                "candidate_observed": True,
+                "candidate_available": True,
+                "status": "human_review_required",
+                "candidate_mask": sample.get("candidate_mask"),
+                "candidate_mask_sha256": candidate_sha256,
+            })
             valid = True
             for manifest_key, receipt_key in (
                     ("ego_truth_mask", "ego_truth_sha256"),
@@ -43,18 +61,37 @@ class EgoShadowPixelTruthTest(unittest.TestCase):
                     break
                 item[receipt_key] = hashlib.sha256(path.read_bytes()).hexdigest()
             if valid:
+                item["candidate_mask_sha256"] = candidate_sha256
                 reviewed_masks.append(item)
+        queue_path = self.root / "candidate-review-queue.json"
+        queue_path.write_text(json.dumps({
+            "schema_version": "labelagent.ego_pixel_truth_review_packet.v1",
+            "candidate_only": True,
+            "human_truth": False,
+            "human_confirmed": False,
+            "approved_for_training": False,
+            "production_deployed": False,
+            "formal_state_modified": False,
+            "samples": candidate_rows,
+        }), encoding="utf-8")
+        queue_sha256 = hashlib.sha256(queue_path.read_bytes()).hexdigest()
         receipt_path = self.root / "human-review-receipt.json"
         receipt_path.write_text(json.dumps({
-            "schema_version": "labelagent.ego_human_pixel_truth_receipt.v1",
+            "schema_version": "labelagent.ego_human_pixel_truth_receipt.v2",
             "human_confirmed": True,
             "assistant_generated": False,
             "machine_generated": False,
+            "candidate_review_queue_sha256": queue_sha256,
             "reviewed_masks": reviewed_masks,
         }), encoding="utf-8")
         payload = {
-            "schema_version": "labelagent.ego_pixel_truth_manifest.v1",
+            "schema_version": "labelagent.ego_pixel_truth_manifest.v2",
             "dataset_split": "validation",
+            "candidate_provenance": {
+                "kind": "machine_candidate_review_packet",
+                "review_queue": queue_path.name,
+                "review_queue_sha256": queue_sha256,
+            },
             "truth_provenance": {
                 "kind": "human_pixel_truth",
                 "human_confirmed": True,
@@ -149,6 +186,70 @@ class EgoShadowPixelTruthTest(unittest.TestCase):
         manifest = self.manifest([self.sample()])
         write_mask(self.root / "truth.png", (3, 2, 10, 10))
         with self.assertRaisesRegex(ValueError, "mask hash mismatch"):
+            evaluate_manifest(manifest)
+
+    def test_candidate_packet_and_receipt_binding_cannot_be_bypassed(self):
+        sample = self.sample()
+        sample["candidate_mask"] = sample["ego_truth_mask"]
+        with self.assertRaisesRegex(ValueError, "paths must be distinct"):
+            evaluate_manifest(self.manifest([sample]))
+
+        manifest = self.manifest([self.sample()])
+        write_mask(self.root / "candidate.png", (1, 1, 9, 9))
+        with self.assertRaisesRegex(ValueError, "mask hash mismatch"):
+            evaluate_manifest(manifest)
+
+        manifest = self.manifest([self.sample()])
+        queue = self.root / "candidate-review-queue.json"
+        queue.write_text(queue.read_text(encoding="utf-8") + " ", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "queue hash mismatch"):
+            evaluate_manifest(manifest)
+
+    def test_human_receipt_must_bind_candidate_queue_and_mask(self):
+        manifest = self.manifest([self.sample()])
+        manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+        receipt = self.root / "human-review-receipt.json"
+        receipt_payload = json.loads(receipt.read_text(encoding="utf-8"))
+        receipt_payload["candidate_review_queue_sha256"] = "f" * 64
+        receipt.write_text(json.dumps(receipt_payload), encoding="utf-8")
+        manifest_payload["truth_provenance"]["confirmation_receipt_sha256"] = (
+            hashlib.sha256(receipt.read_bytes()).hexdigest())
+        manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "candidate queue hash mismatch"):
+            evaluate_manifest(manifest)
+
+        manifest = self.manifest([self.sample()])
+        manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+        receipt_payload = json.loads(receipt.read_text(encoding="utf-8"))
+        receipt_payload["candidate_review_queue_sha256"] = manifest_payload[
+            "candidate_provenance"]["review_queue_sha256"]
+        receipt_payload["reviewed_masks"][0]["candidate_mask_sha256"] = "f" * 64
+        receipt.write_text(json.dumps(receipt_payload), encoding="utf-8")
+        manifest_payload["truth_provenance"]["confirmation_receipt_sha256"] = (
+            hashlib.sha256(receipt.read_bytes()).hexdigest())
+        manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "mask hash mismatch"):
+            evaluate_manifest(manifest)
+
+    def test_legacy_unbound_manifest_and_receipt_are_rejected(self):
+        manifest = self.manifest([self.sample()])
+        payload = json.loads(manifest.read_text(encoding="utf-8"))
+        payload["schema_version"] = "labelagent.ego_pixel_truth_manifest.v1"
+        manifest.write_text(json.dumps(payload), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "unsupported"):
+            evaluate_manifest(manifest)
+
+        manifest = self.manifest([self.sample()])
+        payload = json.loads(manifest.read_text(encoding="utf-8"))
+        receipt = self.root / "human-review-receipt.json"
+        receipt_payload = json.loads(receipt.read_text(encoding="utf-8"))
+        receipt_payload["schema_version"] = (
+            "labelagent.ego_human_pixel_truth_receipt.v1")
+        receipt.write_text(json.dumps(receipt_payload), encoding="utf-8")
+        payload["truth_provenance"]["confirmation_receipt_sha256"] = (
+            hashlib.sha256(receipt.read_bytes()).hexdigest())
+        manifest.write_text(json.dumps(payload), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "receipt content is invalid"):
             evaluate_manifest(manifest)
 
     def test_requires_every_declared_camera_and_unique_sample_ids(self):

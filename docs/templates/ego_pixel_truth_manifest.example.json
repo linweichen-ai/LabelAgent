@@ -1,6 +1,11 @@
 {
-  "schema_version": "labelagent.ego_pixel_truth_manifest.v1",
+  "schema_version": "labelagent.ego_pixel_truth_manifest.v2",
   "dataset_split": "validation",
+  "candidate_provenance": {
+    "kind": "machine_candidate_review_packet",
+    "review_queue": "review_queue.json",
+    "review_queue_sha256": "REPLACE_WITH_64_HEX_SHA256_OF_UNMODIFIED_REVIEW_QUEUE"
+  },
   "truth_provenance": {
     "kind": "human_pixel_truth",
     "human_confirmed": true,

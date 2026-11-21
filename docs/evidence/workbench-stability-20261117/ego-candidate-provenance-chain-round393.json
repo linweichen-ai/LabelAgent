@@ -1,0 +1,59 @@
+{
+  "schema_version": "labelagent.round393.ego_candidate_provenance_chain.v1",
+  "date": "2026-11-22",
+  "human_truth_created": false,
+  "human_truth_gate_executed": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_state_modified": false,
+  "contract": {
+    "manifest_schema": "labelagent.ego_pixel_truth_manifest.v2",
+    "receipt_schema": "labelagent.ego_human_pixel_truth_receipt.v2",
+    "candidate_packet_schema": "labelagent.ego_pixel_truth_review_packet.v1",
+    "manifest_binds_candidate_queue_sha256": true,
+    "queue_binds_candidate_path_and_sha256": true,
+    "receipt_binds_candidate_queue_sha256": true,
+    "receipt_binds_candidate_mask_sha256": true,
+    "receipt_binds_truth_mask_sha256": true,
+    "candidate_and_truth_paths_must_be_distinct": true,
+    "legacy_v1_manifest_rejected": true,
+    "legacy_v1_receipt_rejected": true
+  },
+  "round392_readonly_compatibility": {
+    "review_queue_sha256": "D0D4510D9622BD68943E28FA89E098354F660F2695F4C9C2ECDE0C2AF82E3C19",
+    "sample_count": 20,
+    "candidate_available_count": 14,
+    "blocked_count": 6,
+    "human_truth_created": false,
+    "metrics_gate_executed": false
+  },
+  "rejected_bypasses": [
+    "candidate_path_reuses_ego_truth",
+    "candidate_mask_replaced_after_manifest",
+    "candidate_review_queue_tampered",
+    "receipt_candidate_queue_hash_mismatch",
+    "receipt_candidate_mask_hash_mismatch",
+    "legacy_unbound_manifest",
+    "legacy_unbound_receipt"
+  ],
+  "tests": {
+    "targeted_python_passed": 9,
+    "targeted_subtests_passed": 2,
+    "full_python_passed": 1238,
+    "full_subtests_passed": 219,
+    "web_node_passed": 167
+  },
+  "runtime": {
+    "workbench_http_status": 200,
+    "sam_ready": true,
+    "primary_vlm_ready": true,
+    "fast_vlm_ready": true
+  },
+  "formal_state_sha256": {
+    "state": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "file_sessions": "94E8BEE324628585E7532E595348293DF1DA7B24041A1D4DF1C2EC9FB734E02E",
+    "last_run": "3BECE2513C6F661054AC238AB185527D715A04B3B0C8E073274710BE23E057DA",
+    "last_run_summary": "32578D53E70FA6860F3438860B321172B5E8B405BC6BB8A0F19387A6D4B84933"
+  },
+  "gate": "candidate_provenance_bound; human_pixel_truth_pending; production_rejected"
+}

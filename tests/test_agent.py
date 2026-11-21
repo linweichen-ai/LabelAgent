@@ -2414,6 +2414,22 @@ class WorkflowTests(unittest.TestCase):
         self.assertIs(selected, config)
         self.assertEqual(route, "primary")
 
+    def test_fast_only_chat_never_falls_back_to_busy_primary_lane(self):
+        workflow._reset_fast_route_circuits()
+        self.addCleanup(workflow._reset_fast_route_circuits)
+        busy = workflow.urllib.error.HTTPError(
+            "http://fast/v1/chat/completions", 503, "Service Unavailable", None,
+            io.BytesIO(b'{"error":{"message":"Local VLM is busy"}}'))
+        config = {"llm_url": "http://primary/v1", "llm_model": "primary",
+                  "llm_fast_url": "http://fast/v1", "llm_fast_model": "fast"}
+        with patch.object(workflow.urllib.request, "urlopen", side_effect=busy) as request:
+            with self.assertRaisesRegex(ValueError, "快速通道和主通道均未返回结果"):
+                workflow.chat_fast_only(
+                    config, "inspect", sized_image_bytes(64, 64))
+        self.assertEqual(request.call_count, 1)
+        self.assertEqual(request.call_args.args[0].full_url,
+                         "http://fast/v1/chat/completions")
+
     def test_small_image_fast_busy_falls_back_to_primary_without_waiting(self):
         workflow._reset_fast_route_circuits()
         self.addCleanup(workflow._reset_fast_route_circuits)

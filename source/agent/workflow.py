@@ -696,6 +696,24 @@ def chat_batch(config, requests, response_schema=None, max_tokens=384):
         _chat_batch, config, requests, response_schema, max_tokens)
 
 
+def chat_fast_only(config, instruction, image, extra_images=(), response_schema=None):
+    """Use the independent small-image VLM lane without occupying the primary.
+
+    This helper is intentionally fail-closed: it never falls back to the
+    primary route by itself.  Callers that overlap it with a primary batch can
+    therefore wait for that batch to finish and then perform the established
+    sequential fallback without creating two simultaneous primary requests.
+    """
+    _, route = select_vlm_route(config, image, extra_images=extra_images)
+    if route != "small_image_fast":
+        raise ValueError("快速复核通道不适用于当前图像或尚未配置")
+    isolated = dict(config)
+    isolated["_llm_fast_only"] = True
+    return chat(
+        isolated, instruction, image, extra_images=extra_images,
+        response_schema=response_schema)
+
+
 def _positive_int(value, default):
     if type(value) is not int or value < 1:
         return default
@@ -790,14 +808,19 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
     for data in (image, *extra_images):
         content.append({"type": "image_url", "image_url": {"url":
             "data:image/jpeg;base64," + base64.b64encode(data).decode()}})
+    fast_only = config.get("_llm_fast_only") is True
     fast_fallback_reason = _fast_route_circuit_reason(config)
+    if fast_only and fast_fallback_reason is not None:
+        raise ValueError(f"快速复核通道暂不可用：{fast_fallback_reason}")
     if fast_fallback_reason is None:
         selected_config, selected_route = select_vlm_route(
             config, image, extra_images=extra_images)
     else:
         selected_config, selected_route = config, "primary"
     routes = [(selected_config, selected_route)]
-    if selected_route == "small_image_fast":
+    if fast_only and selected_route != "small_image_fast":
+        raise ValueError("快速复核通道不适用于当前图像或尚未配置")
+    if selected_route == "small_image_fast" and not fast_only:
         routes.append((config, "primary_fallback"))
     busy_retry_count = 0
     result = None

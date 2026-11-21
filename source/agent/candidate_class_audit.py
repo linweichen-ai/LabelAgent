@@ -5,6 +5,9 @@ import hashlib
 import io
 import json
 import math
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import nullcontext
+from contextvars import copy_context
 from typing import Callable
 
 from PIL import Image, ImageDraw
@@ -121,7 +124,8 @@ def candidate_audit_images(candidate: dict, evidence: dict) -> tuple[bytes, tupl
 def audit_high_risk_candidates(config, image_bytes, candidates, labels, class_definitions,
                                chat, *, check_cancelled=lambda: None,
                                tolerate_errors=False, candidate_ids=None,
-                               on_progress=None, batch_chat=None):
+                               on_progress=None, batch_chat=None,
+                               parallel_tail_chat=None):
     """共享盲审流程；仅在明确允许时将失败转为人工复核证据。"""
     artifact_sha = _sha256(_canonical_bytes(candidates))
     audits, queue = [], []
@@ -146,15 +150,16 @@ def audit_high_risk_candidates(config, image_bytes, candidates, labels, class_de
             on_progress(position, len(targets), candidate, result)
         check_cancelled()
 
-    def run_sequential(candidate, position, batch_fallback_reason=None):
+    def sequential_result(candidate, call, *, tolerate_call_errors,
+                          batch_fallback_reason=None, parallel_lane=None):
         check_cancelled()
         try:
             result = audit_candidate_class_blind(
-                config, image_bytes, candidate, labels, class_definitions, chat)
+                config, image_bytes, candidate, labels, class_definitions, call)
             check_cancelled()
         except Exception as error:
             check_cancelled()
-            if not tolerate_errors:
+            if not tolerate_call_errors:
                 raise
             result = {
                 "schema_version": "labelagent.blind_candidate_class_audit.v1",
@@ -165,8 +170,16 @@ def audit_high_risk_candidates(config, image_bytes, candidates, labels, class_de
         result["candidate_artifact_sha256"] = artifact_sha
         if batch_fallback_reason:
             result["batch_fallback_reason"] = str(batch_fallback_reason)[:300]
+        if parallel_lane:
+            result["parallel_lane"] = parallel_lane
         result["audit_sha256"] = _sha256(_canonical_bytes({
             key: value for key, value in result.items() if key != "audit_sha256"}))
+        return result
+
+    def run_sequential(candidate, position, batch_fallback_reason=None):
+        result = sequential_result(
+            candidate, chat, tolerate_call_errors=tolerate_errors,
+            batch_fallback_reason=batch_fallback_reason)
         record_result(candidate, position, result)
 
     # True batching stays restricted to independently encoded groups of three:
@@ -182,69 +195,97 @@ def audit_high_risk_candidates(config, image_bytes, candidates, labels, class_de
     # second model call without weakening the conservative semantic gate.
     batched_target_count = ((len(targets) // 3) * 3
                             if batch_chat is not None else 0)
-    for start in range(0, batched_target_count, 3):
-        group = targets[start:start + 3]
-        check_cancelled()
-        try:
-            prepared = []
-            for candidate in group:
-                evidence = prepare_candidate_evidence(image_bytes, candidate)
-                prompt = build_blind_candidate_class_prompt(
-                    candidate["id"], labels, class_definitions,
-                    isolated_only=str(candidate.get("label", "")).casefold() == "pallet")
-                prepared.append((candidate, evidence, prompt))
-            decisions = batch_chat(
-                config,
-                [{"instruction": prompt,
-                  "image": candidate_audit_images(candidate, evidence)[0],
-                  "extra_images": candidate_audit_images(candidate, evidence)[1]}
-                 for _, evidence, prompt in prepared],
-                response_schema=blind_candidate_class_schema(labels),
-                max_tokens=384)
-            if not isinstance(decisions, list) or len(decisions) != 3:
-                raise CandidateClassProtocolError("批量盲审结果数量不匹配")
-            validated = []
-            for value in decisions:
-                try:
-                    validated.append((
-                        validate_blind_candidate_class_decision(value, labels),
-                        None, None))
-                except CandidateClassProtocolError as error:
-                    repaired = _repair_non_known_reason_code(value)
-                    if repaired is None:
+    tail = list(enumerate(targets[batched_target_count:], batched_target_count + 1))
+
+    def run_parallel_tail():
+        rows = []
+        for position, candidate in tail:
+            try:
+                result = sequential_result(
+                    candidate, parallel_tail_chat, tolerate_call_errors=False,
+                    parallel_lane="independent_fast_tail")
+                rows.append((position, candidate, result, None))
+            except Exception as error:
+                rows.append((position, candidate, None, error))
+        return rows
+
+    parallel_tail = bool(batched_target_count and tail
+                         and parallel_tail_chat is not None)
+    with (ThreadPoolExecutor(max_workers=1)
+          if parallel_tail else nullcontext(None)) as executor:
+        tail_future = (executor.submit(copy_context().run, run_parallel_tail)
+                       if parallel_tail else None)
+        for start in range(0, batched_target_count, 3):
+            group = targets[start:start + 3]
+            check_cancelled()
+            try:
+                prepared = []
+                for candidate in group:
+                    evidence = prepare_candidate_evidence(image_bytes, candidate)
+                    prompt = build_blind_candidate_class_prompt(
+                        candidate["id"], labels, class_definitions,
+                        isolated_only=str(candidate.get("label", "")).casefold() == "pallet")
+                    prepared.append((candidate, evidence, prompt))
+                decisions = batch_chat(
+                    config,
+                    [{"instruction": prompt,
+                      "image": candidate_audit_images(candidate, evidence)[0],
+                      "extra_images": candidate_audit_images(candidate, evidence)[1]}
+                     for _, evidence, prompt in prepared],
+                    response_schema=blind_candidate_class_schema(labels),
+                    max_tokens=384)
+                if not isinstance(decisions, list) or len(decisions) != 3:
+                    raise CandidateClassProtocolError("批量盲审结果数量不匹配")
+                validated = []
+                for value in decisions:
+                    try:
                         validated.append((
-                            None, f"batch_protocol_invalid: {error}", None))
-                    else:
-                        try:
-                            validated.append((
-                                validate_blind_candidate_class_decision(
-                                    repaired, labels),
-                                None, "non_known_reason_code_normalized"))
-                        except CandidateClassProtocolError:
+                            validate_blind_candidate_class_decision(value, labels),
+                            None, None))
+                    except CandidateClassProtocolError as error:
+                        repaired = _repair_non_known_reason_code(value)
+                        if repaired is None:
                             validated.append((
                                 None, f"batch_protocol_invalid: {error}", None))
-        except Exception as error:
-            check_cancelled()
-            for offset, candidate in enumerate(group):
-                run_sequential(
-                    candidate, start + offset + 1,
-                    f"batch_request_failed: {error}")
-            continue
-        for offset, ((candidate, evidence, prompt),
-                     (decision, invalid_reason, protocol_repair)) in enumerate(
-                zip(prepared, validated)):
-            if decision is None:
-                run_sequential(candidate, start + offset + 1, invalid_reason)
+                        else:
+                            try:
+                                validated.append((
+                                    validate_blind_candidate_class_decision(
+                                        repaired, labels),
+                                    None, "non_known_reason_code_normalized"))
+                            except CandidateClassProtocolError:
+                                validated.append((
+                                    None, f"batch_protocol_invalid: {error}", None))
+            except Exception as error:
+                check_cancelled()
+                for offset, candidate in enumerate(group):
+                    run_sequential(
+                        candidate, start + offset + 1,
+                        f"batch_request_failed: {error}")
                 continue
-            result = _candidate_class_audit_result(
-                image_bytes, candidate, evidence, prompt, decision,
-                candidate_artifact_sha256=artifact_sha,
-                execution_mode="independent_batch_3",
-                protocol_repair=protocol_repair)
-            record_result(candidate, start + offset + 1, result)
-    for position, candidate in enumerate(
-            targets[batched_target_count:], batched_target_count + 1):
-        run_sequential(candidate, position)
+            for offset, ((candidate, evidence, prompt),
+                         (decision, invalid_reason, protocol_repair)) in enumerate(
+                    zip(prepared, validated)):
+                if decision is None:
+                    run_sequential(candidate, start + offset + 1, invalid_reason)
+                    continue
+                result = _candidate_class_audit_result(
+                    image_bytes, candidate, evidence, prompt, decision,
+                    candidate_artifact_sha256=artifact_sha,
+                    execution_mode="independent_batch_3",
+                    protocol_repair=protocol_repair)
+                record_result(candidate, start + offset + 1, result)
+        if tail_future is not None:
+            for position, candidate, result, error in tail_future.result():
+                if error is None:
+                    record_result(candidate, position, result)
+                else:
+                    run_sequential(
+                        candidate, position,
+                        f"parallel_fast_tail_failed: {error}")
+        else:
+            for position, candidate in tail:
+                run_sequential(candidate, position)
     return audits, queue
 
 

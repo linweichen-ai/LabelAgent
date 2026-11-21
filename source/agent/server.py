@@ -34,6 +34,7 @@ from .workflow import (DESCRIPTION_INPUT_VERSION, MAX_REVIEW_ROUNDS, RunCancelle
                        discover_visible_labels, reference_labels, restrict_description,
                        generate_only, review_existing, run, trace_calls,
                        candidate_overlay, reference_overlay, chat, chat_batch,
+                       chat_fast_only,
                        refine_pallet_candidate_geometry,
                        ego_bottom_point_candidates,
                        visible_vehicle_point_candidate,
@@ -5051,7 +5052,7 @@ def audit_reference_candidates():
                     state["config"], image_bytes, candidates, list(state.get("labels", [])),
                     VISIBLE_LABEL_DEFINITIONS, chat, check_cancelled=check_cancelled,
                     tolerate_errors=False, on_progress=on_audit_progress,
-                    batch_chat=chat_batch)
+                    batch_chat=chat_batch, parallel_tail_chat=chat_fast_only)
             check_cancelled()
         except RunCancelled:
             update_run_status(status="stopped", phase="stopped", frame=None, completed=0)
@@ -5746,7 +5747,7 @@ def generate_reference_draft():
                     config, target_image, combined, labels,
                     VISIBLE_LABEL_DEFINITIONS, chat, check_cancelled=check_audit_cancelled,
                     tolerate_errors=True, on_progress=on_audit_progress,
-                    batch_chat=chat_batch)
+                    batch_chat=chat_batch, parallel_tail_chat=chat_fast_only)
         for audit in class_audits:
             audit["audit_version"] = audit_version
             audit["audit_sha256"] = _sha256_json({
@@ -6148,7 +6149,8 @@ def run_workflow():
                             tolerate_errors=True,
                             candidate_ids=candidate_id_set,
                             on_progress=on_candidate_audit_progress,
-                            batch_chat=chat_batch)
+                            batch_chat=chat_batch,
+                            parallel_tail_chat=chat_fast_only)
                         for audit in class_audits:
                             audit["audit_version"] = audit_version
                             audit["audit_sha256"] = _sha256_json({

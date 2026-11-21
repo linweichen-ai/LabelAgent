@@ -302,6 +302,72 @@ class CandidateClassAuditTests(unittest.TestCase):
                          [(1, 5, 7), (2, 5, 8), (3, 5, 9),
                           (4, 5, 10), (5, 5, 11)])
 
+    def test_five_candidates_overlap_fast_tail_without_changing_order(self):
+        candidates = [{**self.candidate, "id": value} for value in range(7, 12)]
+        primary_started = threading.Event()
+        release_primary = threading.Event()
+        fast_completed = threading.Event()
+        sequential_ids = []
+
+        def sequential(config, prompt, image, **kwargs):
+            candidate_id = int(prompt.split('"candidate_id": ')[1].split(',')[0])
+            sequential_ids.append(candidate_id)
+            return self.decision()
+
+        def batch(config, requests, **kwargs):
+            primary_started.set()
+            self.assertTrue(fast_completed.wait(1))
+            release_primary.set()
+            return [self.decision() for _ in requests]
+
+        fast_ids = []
+        def fast(config, prompt, image, **kwargs):
+            self.assertTrue(primary_started.wait(1))
+            candidate_id = int(prompt.split('"candidate_id": ')[1].split(',')[0])
+            fast_ids.append(candidate_id)
+            if len(fast_ids) == 2:
+                fast_completed.set()
+            return self.decision()
+
+        audits, queue = audit.audit_high_risk_candidates(
+            {}, self.image, candidates, self.labels, {}, sequential,
+            batch_chat=batch, parallel_tail_chat=fast)
+        self.assertTrue(release_primary.is_set())
+        self.assertEqual(queue, [])
+        self.assertEqual(sequential_ids, [])
+        self.assertEqual(fast_ids, [10, 11])
+        self.assertEqual([item["candidate_id"] for item in audits],
+                         [7, 8, 9, 10, 11])
+        self.assertEqual([item.get("parallel_lane") for item in audits],
+                         [None, None, None, "independent_fast_tail",
+                          "independent_fast_tail"])
+
+    def test_parallel_fast_tail_failure_falls_back_after_primary_batch(self):
+        candidates = [{**self.candidate, "id": value} for value in range(7, 11)]
+        sequential_ids = []
+        batch_finished = threading.Event()
+
+        def sequential(config, prompt, image, **kwargs):
+            self.assertTrue(batch_finished.is_set())
+            candidate_id = int(prompt.split('"candidate_id": ')[1].split(',')[0])
+            sequential_ids.append(candidate_id)
+            return self.decision()
+
+        def batch(config, requests, **kwargs):
+            batch_finished.set()
+            return [self.decision() for _ in requests]
+
+        audits, queue = audit.audit_high_risk_candidates(
+            {}, self.image, candidates, self.labels, {}, sequential,
+            batch_chat=batch,
+            parallel_tail_chat=lambda *args, **kwargs:
+                (_ for _ in ()).throw(RuntimeError("fast offline")))
+        self.assertEqual(queue, [])
+        self.assertEqual(sequential_ids, [10])
+        self.assertEqual([item["candidate_id"] for item in audits], [7, 8, 9, 10])
+        self.assertIn("parallel_fast_tail_failed",
+                      audits[-1]["batch_fallback_reason"])
+
     def test_later_uncertain_triple_routes_review_without_retry(self):
         candidates = [{**self.candidate, "id": value} for value in range(7, 13)]
         sequential_calls = []

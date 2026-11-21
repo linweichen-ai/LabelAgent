@@ -1,0 +1,394 @@
+{
+  "schema_version": "labelagent.visible_discovery_route_comparison.v1",
+  "read_only": true,
+  "candidate_written": false,
+  "human_truth_modified": false,
+  "training_data_modified": false,
+  "primary_is_human_truth": false,
+  "sample_count": 24,
+  "primary_median_ms": 15140.0,
+  "fast_median_ms": 10148.5,
+  "median_speedup_pct": 32.97,
+  "visible_exact_count": 17,
+  "unknown_exact_count": 24,
+  "evidence_exact_count": 13,
+  "label_stats": {
+    "cargo_floor": {
+      "total": 24,
+      "evidence_exact": 24,
+      "primary_present_fast_not": 0,
+      "primary_not_fast_present": 0
+    },
+    "ego": {
+      "total": 24,
+      "evidence_exact": 24,
+      "primary_present_fast_not": 0,
+      "primary_not_fast_present": 0
+    },
+    "floor": {
+      "total": 24,
+      "evidence_exact": 23,
+      "primary_present_fast_not": 1,
+      "primary_not_fast_present": 0
+    },
+    "other_robot": {
+      "total": 24,
+      "evidence_exact": 17,
+      "primary_present_fast_not": 3,
+      "primary_not_fast_present": 0
+    },
+    "pallet": {
+      "total": 24,
+      "evidence_exact": 24,
+      "primary_present_fast_not": 0,
+      "primary_not_fast_present": 0
+    },
+    "person": {
+      "total": 24,
+      "evidence_exact": 24,
+      "primary_present_fast_not": 0,
+      "primary_not_fast_present": 0
+    },
+    "slope": {
+      "total": 24,
+      "evidence_exact": 24,
+      "primary_present_fast_not": 0,
+      "primary_not_fast_present": 0
+    },
+    "车辆": {
+      "total": 24,
+      "evidence_exact": 20,
+      "primary_present_fast_not": 0,
+      "primary_not_fast_present": 4
+    }
+  },
+  "authoritative_replacement_accepted": false,
+  "decision": "rejected_for_authoritative_route",
+  "mismatches": [
+    {
+      "image": "011/camera_0/1789900408315834655.png",
+      "image_sha256": "08f7a5e87a3981866e8628852ffd8146db32b2e30b56c13bb759cc7c01afa3fa",
+      "evidence_exact": false,
+      "visible_exact": false,
+      "unknown_exact": true,
+      "consistency_flags_exact": true,
+      "open_set_complete_exact": true,
+      "evidence_differences": [
+        {
+          "label": "other_robot",
+          "primary": "present",
+          "fast": "absent"
+        },
+        {
+          "label": "车辆",
+          "primary": "absent",
+          "fast": "present"
+        }
+      ],
+      "primary_visible": [
+        "ego",
+        "floor",
+        "other_robot",
+        "pallet",
+        "person"
+      ],
+      "fast_visible": [
+        "ego",
+        "floor",
+        "pallet",
+        "person",
+        "车辆"
+      ]
+    },
+    {
+      "image": "012/camera_3/1789900594415795363.png",
+      "image_sha256": "17a688104a27a3a147370305c0870a1b71b21b616612f3f5136fdcbec0ceae0c",
+      "evidence_exact": false,
+      "visible_exact": false,
+      "unknown_exact": true,
+      "consistency_flags_exact": true,
+      "open_set_complete_exact": true,
+      "evidence_differences": [
+        {
+          "label": "车辆",
+          "primary": "absent",
+          "fast": "present"
+        }
+      ],
+      "primary_visible": [
+        "ego",
+        "floor",
+        "pallet"
+      ],
+      "fast_visible": [
+        "ego",
+        "floor",
+        "pallet",
+        "车辆"
+      ]
+    },
+    {
+      "image": "010/camera_3/1789899951882467655.png",
+      "image_sha256": "1b98aba4387168b7d52a5779e9c16091c5fbef95d06b03cc1d5366b463942464",
+      "evidence_exact": false,
+      "visible_exact": true,
+      "unknown_exact": true,
+      "consistency_flags_exact": false,
+      "open_set_complete_exact": true,
+      "evidence_differences": [
+        {
+          "label": "other_robot",
+          "primary": "absent",
+          "fast": "uncertain"
+        }
+      ],
+      "primary_visible": [
+        "ego",
+        "floor",
+        "pallet",
+        "车辆"
+      ],
+      "fast_visible": [
+        "ego",
+        "floor",
+        "pallet",
+        "车辆"
+      ]
+    },
+    {
+      "image": "010/camera_2/1789899951882467655.png",
+      "image_sha256": "3f70ab649fb35bc9efd4bc59e8e2ad9a24b5fff6192343d768f84c0cff8ec9a0",
+      "evidence_exact": false,
+      "visible_exact": true,
+      "unknown_exact": true,
+      "consistency_flags_exact": false,
+      "open_set_complete_exact": true,
+      "evidence_differences": [
+        {
+          "label": "other_robot",
+          "primary": "absent",
+          "fast": "uncertain"
+        }
+      ],
+      "primary_visible": [
+        "ego",
+        "floor",
+        "pallet",
+        "person",
+        "车辆"
+      ],
+      "fast_visible": [
+        "ego",
+        "floor",
+        "pallet",
+        "person",
+        "车辆"
+      ]
+    },
+    {
+      "image": "012/camera_3/1789900488815784655.png",
+      "image_sha256": "4a26c2843e8fdeee03184d9b7083c8135411c02850eccafb65059e95beca433f",
+      "evidence_exact": false,
+      "visible_exact": false,
+      "unknown_exact": true,
+      "consistency_flags_exact": true,
+      "open_set_complete_exact": true,
+      "evidence_differences": [
+        {
+          "label": "floor",
+          "primary": "present",
+          "fast": "absent"
+        }
+      ],
+      "primary_visible": [
+        "ego",
+        "floor",
+        "pallet",
+        "车辆"
+      ],
+      "fast_visible": [
+        "ego",
+        "pallet",
+        "车辆"
+      ]
+    },
+    {
+      "image": "010/camera_0/1789899969582349655.png",
+      "image_sha256": "5d41e024e09b377aaebfb362211c24ef7ea4666acf12821e28c051956fae1224",
+      "evidence_exact": false,
+      "visible_exact": true,
+      "unknown_exact": true,
+      "consistency_flags_exact": false,
+      "open_set_complete_exact": true,
+      "evidence_differences": [
+        {
+          "label": "other_robot",
+          "primary": "absent",
+          "fast": "uncertain"
+        }
+      ],
+      "primary_visible": [
+        "ego",
+        "floor",
+        "pallet",
+        "person",
+        "车辆"
+      ],
+      "fast_visible": [
+        "ego",
+        "floor",
+        "pallet",
+        "person",
+        "车辆"
+      ]
+    },
+    {
+      "image": "010/camera_0/1789899951882467655.png",
+      "image_sha256": "723aa08fe8e9b64f1736bb10f622371eb80be4f7abb67d63f3511c2b0142c548",
+      "evidence_exact": false,
+      "visible_exact": false,
+      "unknown_exact": true,
+      "consistency_flags_exact": false,
+      "open_set_complete_exact": true,
+      "evidence_differences": [
+        {
+          "label": "other_robot",
+          "primary": "present",
+          "fast": "uncertain"
+        }
+      ],
+      "primary_visible": [
+        "ego",
+        "floor",
+        "other_robot",
+        "pallet",
+        "person",
+        "车辆"
+      ],
+      "fast_visible": [
+        "ego",
+        "floor",
+        "pallet",
+        "person",
+        "车辆"
+      ]
+    },
+    {
+      "image": "012/camera_0/1789900488815784655.png",
+      "image_sha256": "90a4403617a5c040f35c5fc4f7edb533f40f5e1be25abf0c593b0676fb3fa317",
+      "evidence_exact": false,
+      "visible_exact": false,
+      "unknown_exact": true,
+      "consistency_flags_exact": true,
+      "open_set_complete_exact": true,
+      "evidence_differences": [
+        {
+          "label": "车辆",
+          "primary": "absent",
+          "fast": "present"
+        }
+      ],
+      "primary_visible": [
+        "ego",
+        "floor",
+        "pallet",
+        "person"
+      ],
+      "fast_visible": [
+        "ego",
+        "floor",
+        "pallet",
+        "person",
+        "车辆"
+      ]
+    },
+    {
+      "image": "010/camera_3/1789899969582349655.png",
+      "image_sha256": "a28c9930f3a0a25d7efd967d90d873911a8aa40fe3d68694e75139e6880812d6",
+      "evidence_exact": false,
+      "visible_exact": true,
+      "unknown_exact": true,
+      "consistency_flags_exact": false,
+      "open_set_complete_exact": true,
+      "evidence_differences": [
+        {
+          "label": "other_robot",
+          "primary": "absent",
+          "fast": "uncertain"
+        }
+      ],
+      "primary_visible": [
+        "ego",
+        "floor",
+        "pallet",
+        "车辆"
+      ],
+      "fast_visible": [
+        "ego",
+        "floor",
+        "pallet",
+        "车辆"
+      ]
+    },
+    {
+      "image": "010/camera_1/1789899969582349655.png",
+      "image_sha256": "ae52ee0b1beb9af6ce795ea9ff7b8ba959dbcf358147214f10561d7c890c583c",
+      "evidence_exact": false,
+      "visible_exact": false,
+      "unknown_exact": true,
+      "consistency_flags_exact": true,
+      "open_set_complete_exact": true,
+      "evidence_differences": [
+        {
+          "label": "车辆",
+          "primary": "absent",
+          "fast": "present"
+        }
+      ],
+      "primary_visible": [
+        "ego",
+        "floor",
+        "pallet",
+        "person"
+      ],
+      "fast_visible": [
+        "ego",
+        "floor",
+        "pallet",
+        "person",
+        "车辆"
+      ]
+    },
+    {
+      "image": "011/camera_0/1789900388815700364.png",
+      "image_sha256": "ed93e978810637b9615b932c2870c9eb2652b721ceafe44ed100bb71f04643e7",
+      "evidence_exact": false,
+      "visible_exact": false,
+      "unknown_exact": true,
+      "consistency_flags_exact": true,
+      "open_set_complete_exact": true,
+      "evidence_differences": [
+        {
+          "label": "other_robot",
+          "primary": "present",
+          "fast": "absent"
+        }
+      ],
+      "primary_visible": [
+        "ego",
+        "floor",
+        "other_robot",
+        "pallet",
+        "person",
+        "车辆"
+      ],
+      "fast_visible": [
+        "ego",
+        "floor",
+        "pallet",
+        "person",
+        "车辆"
+      ]
+    }
+  ]
+}

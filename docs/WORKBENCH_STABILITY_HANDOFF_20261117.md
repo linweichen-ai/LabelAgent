@@ -3108,3 +3108,14 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 正式状态文件前后不变，没有候选、人工真值或训练批准写入。
 - Python 1195 passed + 190 subtests，网页 159 passed；提交 `2c1e247`。本轮仅补测试和只读工具，无需重启正式工作台。
 - 详细记录见 `docs/FAST_AUDIT_INDEPENDENT_REVIEW_ROUND381_20261122.md`，证据见 `docs/evidence/workbench-stability-20261117/fast-audit-independent-review-round381.json`。
+
+## Round382（2026-11-22）：参考帧快速类别发现未过替换门禁
+
+- 4090 主路与 5090 快路在 24 张、3 个编号目录、4 路相机的 640×512 图像上做了严格配对只读 A/B。
+- 快路中位耗时 10.149 秒，相对主路 15.140 秒缩短 32.97%；但可见类别只有 17/24 完全一致，逐类 evidence 只有 13/24 完全一致。
+- 快路相对主路漏 3 次 `other_robot`、1 次 `floor`，并额外判为可见 4 次 `车辆`；`slope` 和开放集候选在本组分别为 24/24 一致，但不足以抵消其他类别漂移。
+- 自动门禁结论为 `rejected_for_authoritative_route`，没有修改正式类别发现逻辑、模型权重、候选、人工真值或训练批准。
+- 新增 `tools/compare_visible_discovery_routes.py` 及 4 项单测，把图像配对、已知类漏检、开放集漂移和一致性告警变成可复现失败关闭门禁。
+- Python 1199 项及 190 个子测试、网页 159 项完整回归全部通过。
+- WorkBuddy 独立只读审阅确认现有多提示编码复用、范围绑定缓存和相邻帧独立预取；自动“同帧缺失类别补漏”仍需逐类人工真值 A/B，当前只保留已有人工点提示入口。
+- 正式四份状态/历史哈希不变；工作台 idle，SAM、主 VLM、快速 VLM 均 ready。详细记录见 `docs/REFERENCE_DISCOVERY_FAST_ROUTE_REJECTION_ROUND382_20261122.md` 与对应结构化证据。

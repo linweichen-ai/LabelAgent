@@ -1,0 +1,88 @@
+{
+  "schema_version": "labelagent.round_evidence.v1",
+  "round": 382,
+  "date": "2026-11-22",
+  "purpose": "Paired primary/fast visible-label discovery gate for reference-frame preparation",
+  "read_only_experiment": true,
+  "candidate_written": false,
+  "human_truth_modified": false,
+  "training_data_modified": false,
+  "weights_modified": false,
+  "primary_is_human_truth": false,
+  "sample": {
+    "count": 24,
+    "sequences": ["010", "011", "012"],
+    "cameras": ["camera_0", "camera_1", "camera_2", "camera_3"],
+    "resolution": [640, 512]
+  },
+  "result": {
+    "primary_median_ms": 15140.0,
+    "fast_median_ms": 10148.5,
+    "median_speedup_pct": 32.97,
+    "visible_exact_count": 17,
+    "unknown_exact_count": 24,
+    "evidence_exact_count": 13,
+    "authoritative_replacement_accepted": false,
+    "decision": "rejected_for_authoritative_route",
+    "present_misses": {
+      "other_robot": 3,
+      "floor": 1
+    },
+    "present_extras": {
+      "车辆": 4
+    },
+    "slope_evidence_exact": "24/24"
+  },
+  "independent_static_review": {
+    "tool": "WorkBuddy",
+    "writes_performed": false,
+    "confirmed_existing": [
+      "SAM multi-prompt image encoding reuse",
+      "scope-bound short-lived VLM discovery cache",
+      "deterministic prompts after discovery",
+      "independent adjacent-frame prefetch without cross-frame truth reuse"
+    ],
+    "recommended_shadow_candidate": "one bounded same-frame missing-class probe for VLM-visible or uncertain labels with no SAM candidate",
+    "deployment_status": "not implemented automatically; human point-prompt entry already exists"
+  },
+  "artifacts": [
+    {
+      "path": "artifacts/round382-reference-discovery-fast-ab/primary8.json",
+      "sha256": "38043EC346D19AF30770BF71AFE06BE128220DB6AE506756FF47EF11949AC14B"
+    },
+    {
+      "path": "artifacts/round382-reference-discovery-fast-ab/fast8.json",
+      "sha256": "8401809A9A6F463ECDDCF2CE29546FED79FF6F377DD0E8C63A129EEE2DDA54F6"
+    },
+    {
+      "path": "artifacts/round382-reference-discovery-fast-ab/primary16-extra.json",
+      "sha256": "F8FF96ADF6B2E5E32F9D2047495040026D882261E78C615C56802A9A18205CC9"
+    },
+    {
+      "path": "artifacts/round382-reference-discovery-fast-ab/fast16-extra.json",
+      "sha256": "CE4F6C2C1489AFBE83A73C114A075041F3E5A24636669C3043966459B2909734"
+    },
+    {
+      "path": "artifacts/round382-reference-discovery-fast-ab/comparison24.json",
+      "sha256": "ED9A88FD1E2F857ACF93E4D9EBF171FAFD6B834397C11EE20E6637FF32AB9A41"
+    }
+  ],
+  "formal_state_sha256": {
+    "state.json": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "file_sessions.json": "94E8BEE324628585E7532E595348293DF1DA7B24041A1D4DF1C2EC9FB734E02E",
+    "last_run.json": "3BECE2513C6F661054AC238AB185527D715A04B3B0C8E073274710BE23E057DA",
+    "last_run_summary.json": "32578D53E70FA6860F3438860B321172B5E8B405BC6BB8A0F19387A6D4B84933"
+  },
+  "formal_runtime": {
+    "workbench_status": "idle",
+    "sam_ready": true,
+    "primary_vlm_ready": true,
+    "fast_vlm_ready": true
+  },
+  "tests": {
+    "python_passed": 1199,
+    "python_subtests_passed": 190,
+    "web_passed": 159,
+    "git_diff_check": "passed"
+  }
+}

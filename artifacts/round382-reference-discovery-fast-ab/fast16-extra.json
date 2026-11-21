@@ -1,0 +1,1976 @@
+{
+  "schema_version": "labelagent.visible_discovery_benchmark.v1",
+  "read_only": true,
+  "candidate_written": false,
+  "human_truth_modified": false,
+  "training_data_modified": false,
+  "source_state_modified": false,
+  "labels": [
+    "车辆",
+    "pallet",
+    "person",
+    "floor",
+    "slope",
+    "ego",
+    "other_robot",
+    "cargo_floor"
+  ],
+  "model": "labelagent-vlm8b",
+  "image_count": 16,
+  "success_count": 16,
+  "failure_count": 0,
+  "elapsed_ms": {
+    "minimum": 9459.0,
+    "median": 10163.5,
+    "maximum": 10682.0
+  },
+  "runs": [
+    {
+      "position": 1,
+      "image": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\010\\bevannotation_data\\cameras_640x512\\camera_0\\1789899969582349655.png",
+      "image_sha256": "5d41e024e09b377aaebfb362211c24ef7ea4666acf12821e28c051956fae1224",
+      "bytes": 449895,
+      "size": [
+        640,
+        512
+      ],
+      "wall_elapsed_ms": 10685.464,
+      "elapsed_ms": 10682,
+      "model_route": "small_image_fast",
+      "fast_fallback_reason": null,
+      "raw_text_chars": 1153,
+      "local_vlm": {
+        "actual_image_token_counts": [
+          320
+        ],
+        "backend": "transformers_local_cuda",
+        "cache_hit": false,
+        "cache_key_sha256": "dd4bbe8ba7f2b38df8435c8ee2a16af295c88e185ce09114290bb15abe834a81",
+        "coalesced": false,
+        "effective_image_token_budget": 512,
+        "image_count": 1,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            40
+          ]
+        ],
+        "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "quantization": "nf4",
+        "requested_image_token_budget": null,
+        "response_cache_entries": 64,
+        "seconds": 10.112,
+        "inference_stats": {
+          "actual_image_token_counts": [
+            320
+          ],
+          "completion_tokens": 331,
+          "configured_generation_cache_implementation": null,
+          "constraint_setup_seconds": 0.0,
+          "effective_image_token_budget": 512,
+          "generation_cache_fallback_reason": null,
+          "generation_cache_implementation": null,
+          "generation_seconds": 10.086,
+          "image_grid_thw": [
+            [
+              1,
+              32,
+              40
+            ]
+          ],
+          "preprocess_seconds": 0.013,
+          "prompt_tokens": 1017,
+          "structured_output": true
+        },
+        "usage": {
+          "prompt_tokens": 1017,
+          "completion_tokens": 331,
+          "total_tokens": 1348
+        }
+      },
+      "assessments": [
+        {
+          "label": "车辆",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "pallet",
+          "evidence": "present",
+          "confidence": 0.98
+        },
+        {
+          "label": "person",
+          "evidence": "present",
+          "confidence": 0.99
+        },
+        {
+          "label": "floor",
+          "evidence": "present",
+          "confidence": 0.97
+        },
+        {
+          "label": "slope",
+          "evidence": "absent",
+          "confidence": 0.99
+        },
+        {
+          "label": "ego",
+          "evidence": "present",
+          "confidence": 0.99
+        },
+        {
+          "label": "other_robot",
+          "evidence": "uncertain",
+          "confidence": 0.96
+        },
+        {
+          "label": "cargo_floor",
+          "evidence": "absent",
+          "confidence": 0.99
+        }
+      ],
+      "visible_labels": [
+        "车辆",
+        "pallet",
+        "person",
+        "floor",
+        "ego"
+      ],
+      "uncertain_labels": [
+        "other_robot"
+      ],
+      "unknown_candidates": [],
+      "consistency_flags": [
+        {
+          "normalized_evidence": "uncertain",
+          "label": "other_robot",
+          "conflicting_labels": [
+            "车辆",
+            "other_robot"
+          ],
+          "route": "human_review_required",
+          "reason_code": "other_robot_conventional_vehicle_conflict"
+        }
+      ],
+      "open_set_scan_complete": true,
+      "registry_mutated": false,
+      "failure": null
+    },
+    {
+      "position": 2,
+      "image": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\010\\bevannotation_data\\cameras_640x512\\camera_1\\1789899969582349655.png",
+      "image_sha256": "ae52ee0b1beb9af6ce795ea9ff7b8ba959dbcf358147214f10561d7c890c583c",
+      "bytes": 506669,
+      "size": [
+        640,
+        512
+      ],
+      "wall_elapsed_ms": 10600.707,
+      "elapsed_ms": 10597,
+      "model_route": "small_image_fast",
+      "fast_fallback_reason": null,
+      "raw_text_chars": 1240,
+      "local_vlm": {
+        "actual_image_token_counts": [
+          320
+        ],
+        "backend": "transformers_local_cuda",
+        "cache_hit": false,
+        "cache_key_sha256": "dc0a09c9a69404da3e70ac8719e39b1fde617ea79202ded8623a109367533697",
+        "coalesced": false,
+        "effective_image_token_budget": 512,
+        "image_count": 1,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            40
+          ]
+        ],
+        "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "quantization": "nf4",
+        "requested_image_token_budget": null,
+        "response_cache_entries": 64,
+        "seconds": 10.449,
+        "inference_stats": {
+          "actual_image_token_counts": [
+            320
+          ],
+          "completion_tokens": 341,
+          "configured_generation_cache_implementation": null,
+          "constraint_setup_seconds": 0.001,
+          "effective_image_token_budget": 512,
+          "generation_cache_fallback_reason": null,
+          "generation_cache_implementation": null,
+          "generation_seconds": 10.431,
+          "image_grid_thw": [
+            [
+              1,
+              32,
+              40
+            ]
+          ],
+          "preprocess_seconds": 0.005,
+          "prompt_tokens": 1017,
+          "structured_output": true
+        },
+        "usage": {
+          "prompt_tokens": 1017,
+          "completion_tokens": 341,
+          "total_tokens": 1358
+        }
+      },
+      "assessments": [
+        {
+          "label": "车辆",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "pallet",
+          "evidence": "present",
+          "confidence": 0.98
+        },
+        {
+          "label": "person",
+          "evidence": "present",
+          "confidence": 0.99
+        },
+        {
+          "label": "floor",
+          "evidence": "present",
+          "confidence": 0.97
+        },
+        {
+          "label": "slope",
+          "evidence": "absent",
+          "confidence": 0.99
+        },
+        {
+          "label": "ego",
+          "evidence": "present",
+          "confidence": 0.99
+        },
+        {
+          "label": "other_robot",
+          "evidence": "absent",
+          "confidence": 0.99
+        },
+        {
+          "label": "cargo_floor",
+          "evidence": "absent",
+          "confidence": 0.99
+        }
+      ],
+      "visible_labels": [
+        "车辆",
+        "pallet",
+        "person",
+        "floor",
+        "ego"
+      ],
+      "uncertain_labels": [],
+      "unknown_candidates": [],
+      "consistency_flags": [],
+      "open_set_scan_complete": true,
+      "registry_mutated": false,
+      "failure": null
+    },
+    {
+      "position": 3,
+      "image": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\010\\bevannotation_data\\cameras_640x512\\camera_2\\1789899969582349655.png",
+      "image_sha256": "ef52fd86441ebfe3e7a1654b40d1c9b03e40420871756a8e3028b088832ea8c3",
+      "bytes": 454505,
+      "size": [
+        640,
+        512
+      ],
+      "wall_elapsed_ms": 10140.351,
+      "elapsed_ms": 10137,
+      "model_route": "small_image_fast",
+      "fast_fallback_reason": null,
+      "raw_text_chars": 1142,
+      "local_vlm": {
+        "actual_image_token_counts": [
+          320
+        ],
+        "backend": "transformers_local_cuda",
+        "cache_hit": false,
+        "cache_key_sha256": "b7f8388c42336b299278b7b01f2210731652771bbe02a157036679f2a7022e13",
+        "coalesced": false,
+        "effective_image_token_budget": 512,
+        "image_count": 1,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            40
+          ]
+        ],
+        "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "quantization": "nf4",
+        "requested_image_token_budget": null,
+        "response_cache_entries": 64,
+        "seconds": 10.006,
+        "inference_stats": {
+          "actual_image_token_counts": [
+            320
+          ],
+          "completion_tokens": 330,
+          "configured_generation_cache_implementation": null,
+          "constraint_setup_seconds": 0.0,
+          "effective_image_token_budget": 512,
+          "generation_cache_fallback_reason": null,
+          "generation_cache_implementation": null,
+          "generation_seconds": 9.988,
+          "image_grid_thw": [
+            [
+              1,
+              32,
+              40
+            ]
+          ],
+          "preprocess_seconds": 0.005,
+          "prompt_tokens": 1017,
+          "structured_output": true
+        },
+        "usage": {
+          "prompt_tokens": 1017,
+          "completion_tokens": 330,
+          "total_tokens": 1347
+        }
+      },
+      "assessments": [
+        {
+          "label": "车辆",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "pallet",
+          "evidence": "present",
+          "confidence": 0.9
+        },
+        {
+          "label": "person",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "floor",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "slope",
+          "evidence": "absent",
+          "confidence": 0.95
+        },
+        {
+          "label": "ego",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "other_robot",
+          "evidence": "absent",
+          "confidence": 0.95
+        },
+        {
+          "label": "cargo_floor",
+          "evidence": "absent",
+          "confidence": 0.95
+        }
+      ],
+      "visible_labels": [
+        "车辆",
+        "pallet",
+        "person",
+        "floor",
+        "ego"
+      ],
+      "uncertain_labels": [],
+      "unknown_candidates": [],
+      "consistency_flags": [],
+      "open_set_scan_complete": true,
+      "registry_mutated": false,
+      "failure": null
+    },
+    {
+      "position": 4,
+      "image": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\010\\bevannotation_data\\cameras_640x512\\camera_3\\1789899969582349655.png",
+      "image_sha256": "a28c9930f3a0a25d7efd967d90d873911a8aa40fe3d68694e75139e6880812d6",
+      "bytes": 381124,
+      "size": [
+        640,
+        512
+      ],
+      "wall_elapsed_ms": 10169.946,
+      "elapsed_ms": 10167,
+      "model_route": "small_image_fast",
+      "fast_fallback_reason": null,
+      "raw_text_chars": 1140,
+      "local_vlm": {
+        "actual_image_token_counts": [
+          320
+        ],
+        "backend": "transformers_local_cuda",
+        "cache_hit": false,
+        "cache_key_sha256": "d8dd689a49a8298d726be2ca35feb2dd6ff63717d623099d782972af110d4757",
+        "coalesced": false,
+        "effective_image_token_budget": 512,
+        "image_count": 1,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            40
+          ]
+        ],
+        "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "quantization": "nf4",
+        "requested_image_token_budget": null,
+        "response_cache_entries": 64,
+        "seconds": 10.024,
+        "inference_stats": {
+          "actual_image_token_counts": [
+            320
+          ],
+          "completion_tokens": 330,
+          "configured_generation_cache_implementation": null,
+          "constraint_setup_seconds": 0.0,
+          "effective_image_token_budget": 512,
+          "generation_cache_fallback_reason": null,
+          "generation_cache_implementation": null,
+          "generation_seconds": 10.005,
+          "image_grid_thw": [
+            [
+              1,
+              32,
+              40
+            ]
+          ],
+          "preprocess_seconds": 0.005,
+          "prompt_tokens": 1017,
+          "structured_output": true
+        },
+        "usage": {
+          "prompt_tokens": 1017,
+          "completion_tokens": 330,
+          "total_tokens": 1347
+        }
+      },
+      "assessments": [
+        {
+          "label": "车辆",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "pallet",
+          "evidence": "present",
+          "confidence": 0.9
+        },
+        {
+          "label": "person",
+          "evidence": "absent",
+          "confidence": 0.99
+        },
+        {
+          "label": "floor",
+          "evidence": "present",
+          "confidence": 0.98
+        },
+        {
+          "label": "slope",
+          "evidence": "absent",
+          "confidence": 0.99
+        },
+        {
+          "label": "ego",
+          "evidence": "present",
+          "confidence": 0.99
+        },
+        {
+          "label": "other_robot",
+          "evidence": "uncertain",
+          "confidence": 0.9
+        },
+        {
+          "label": "cargo_floor",
+          "evidence": "absent",
+          "confidence": 0.99
+        }
+      ],
+      "visible_labels": [
+        "车辆",
+        "pallet",
+        "floor",
+        "ego"
+      ],
+      "uncertain_labels": [
+        "other_robot"
+      ],
+      "unknown_candidates": [],
+      "consistency_flags": [
+        {
+          "normalized_evidence": "uncertain",
+          "label": "other_robot",
+          "conflicting_labels": [
+            "车辆",
+            "other_robot"
+          ],
+          "route": "human_review_required",
+          "reason_code": "other_robot_conventional_vehicle_conflict"
+        }
+      ],
+      "open_set_scan_complete": true,
+      "registry_mutated": false,
+      "failure": null
+    },
+    {
+      "position": 5,
+      "image": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\011\\bevannotation_data\\cameras_640x512\\camera_0\\1789900408315834655.png",
+      "image_sha256": "08f7a5e87a3981866e8628852ffd8146db32b2e30b56c13bb759cc7c01afa3fa",
+      "bytes": 449993,
+      "size": [
+        640,
+        512
+      ],
+      "wall_elapsed_ms": 10521.977,
+      "elapsed_ms": 10518,
+      "model_route": "small_image_fast",
+      "fast_fallback_reason": null,
+      "raw_text_chars": 1217,
+      "local_vlm": {
+        "actual_image_token_counts": [
+          320
+        ],
+        "backend": "transformers_local_cuda",
+        "cache_hit": false,
+        "cache_key_sha256": "6b91d90fc98f38702fe0efab6a90a8c7cb1bcc60567d7efd0d3a0a1ee33f5845",
+        "coalesced": false,
+        "effective_image_token_budget": 512,
+        "image_count": 1,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            40
+          ]
+        ],
+        "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "quantization": "nf4",
+        "requested_image_token_budget": null,
+        "response_cache_entries": 64,
+        "seconds": 10.344,
+        "inference_stats": {
+          "actual_image_token_counts": [
+            320
+          ],
+          "completion_tokens": 340,
+          "configured_generation_cache_implementation": null,
+          "constraint_setup_seconds": 0.0,
+          "effective_image_token_budget": 512,
+          "generation_cache_fallback_reason": null,
+          "generation_cache_implementation": null,
+          "generation_seconds": 10.325,
+          "image_grid_thw": [
+            [
+              1,
+              32,
+              40
+            ]
+          ],
+          "preprocess_seconds": 0.006,
+          "prompt_tokens": 1017,
+          "structured_output": true
+        },
+        "usage": {
+          "prompt_tokens": 1017,
+          "completion_tokens": 340,
+          "total_tokens": 1357
+        }
+      },
+      "assessments": [
+        {
+          "label": "车辆",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "pallet",
+          "evidence": "present",
+          "confidence": 0.98
+        },
+        {
+          "label": "person",
+          "evidence": "present",
+          "confidence": 0.97
+        },
+        {
+          "label": "floor",
+          "evidence": "present",
+          "confidence": 0.99
+        },
+        {
+          "label": "slope",
+          "evidence": "absent",
+          "confidence": 0.99
+        },
+        {
+          "label": "ego",
+          "evidence": "present",
+          "confidence": 0.99
+        },
+        {
+          "label": "other_robot",
+          "evidence": "absent",
+          "confidence": 0.99
+        },
+        {
+          "label": "cargo_floor",
+          "evidence": "absent",
+          "confidence": 0.99
+        }
+      ],
+      "visible_labels": [
+        "车辆",
+        "pallet",
+        "person",
+        "floor",
+        "ego"
+      ],
+      "uncertain_labels": [],
+      "unknown_candidates": [],
+      "consistency_flags": [],
+      "open_set_scan_complete": true,
+      "registry_mutated": false,
+      "failure": null
+    },
+    {
+      "position": 6,
+      "image": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\011\\bevannotation_data\\cameras_640x512\\camera_1\\1789900408315834655.png",
+      "image_sha256": "cbeae40884c447e3a90a452213ced60f76687ab2ed920e293f9f093e7e27df6a",
+      "bytes": 444960,
+      "size": [
+        640,
+        512
+      ],
+      "wall_elapsed_ms": 9625.251,
+      "elapsed_ms": 9623,
+      "model_route": "small_image_fast",
+      "fast_fallback_reason": null,
+      "raw_text_chars": 1106,
+      "local_vlm": {
+        "actual_image_token_counts": [
+          320
+        ],
+        "backend": "transformers_local_cuda",
+        "cache_hit": false,
+        "cache_key_sha256": "924dc0c6ed8e86e15082d8cfb4b4a15a0c0fe5b1e4508850785ab6082fecac4c",
+        "coalesced": false,
+        "effective_image_token_budget": 512,
+        "image_count": 1,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            40
+          ]
+        ],
+        "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "quantization": "nf4",
+        "requested_image_token_budget": null,
+        "response_cache_entries": 64,
+        "seconds": 9.467,
+        "inference_stats": {
+          "actual_image_token_counts": [
+            320
+          ],
+          "completion_tokens": 313,
+          "configured_generation_cache_implementation": null,
+          "constraint_setup_seconds": 0.001,
+          "effective_image_token_budget": 512,
+          "generation_cache_fallback_reason": null,
+          "generation_cache_implementation": null,
+          "generation_seconds": 9.45,
+          "image_grid_thw": [
+            [
+              1,
+              32,
+              40
+            ]
+          ],
+          "preprocess_seconds": 0.006,
+          "prompt_tokens": 1017,
+          "structured_output": true
+        },
+        "usage": {
+          "prompt_tokens": 1017,
+          "completion_tokens": 313,
+          "total_tokens": 1330
+        }
+      },
+      "assessments": [
+        {
+          "label": "车辆",
+          "evidence": "absent",
+          "confidence": 0.0
+        },
+        {
+          "label": "pallet",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "person",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "floor",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "slope",
+          "evidence": "absent",
+          "confidence": 0.0
+        },
+        {
+          "label": "ego",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "other_robot",
+          "evidence": "absent",
+          "confidence": 0.0
+        },
+        {
+          "label": "cargo_floor",
+          "evidence": "absent",
+          "confidence": 0.0
+        }
+      ],
+      "visible_labels": [
+        "pallet",
+        "person",
+        "floor",
+        "ego"
+      ],
+      "uncertain_labels": [],
+      "unknown_candidates": [],
+      "consistency_flags": [],
+      "open_set_scan_complete": true,
+      "registry_mutated": false,
+      "failure": null
+    },
+    {
+      "position": 7,
+      "image": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\011\\bevannotation_data\\cameras_640x512\\camera_2\\1789900408315834655.png",
+      "image_sha256": "aaa8be3c13d1e9a93a1759dddceeb104a796c3b4d43dce3d5b8dd031cf719e4f",
+      "bytes": 389349,
+      "size": [
+        640,
+        512
+      ],
+      "wall_elapsed_ms": 9463.013,
+      "elapsed_ms": 9460,
+      "model_route": "small_image_fast",
+      "fast_fallback_reason": null,
+      "raw_text_chars": 1063,
+      "local_vlm": {
+        "actual_image_token_counts": [
+          320
+        ],
+        "backend": "transformers_local_cuda",
+        "cache_hit": false,
+        "cache_key_sha256": "dc8cfd6335dd9ff92a21b878d2bfb9aaac2d13fb4184204bb9bca67988dde8aa",
+        "coalesced": false,
+        "effective_image_token_budget": 512,
+        "image_count": 1,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            40
+          ]
+        ],
+        "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "quantization": "nf4",
+        "requested_image_token_budget": null,
+        "response_cache_entries": 64,
+        "seconds": 9.315,
+        "inference_stats": {
+          "actual_image_token_counts": [
+            320
+          ],
+          "completion_tokens": 306,
+          "configured_generation_cache_implementation": null,
+          "constraint_setup_seconds": 0.0,
+          "effective_image_token_budget": 512,
+          "generation_cache_fallback_reason": null,
+          "generation_cache_implementation": null,
+          "generation_seconds": 9.298,
+          "image_grid_thw": [
+            [
+              1,
+              32,
+              40
+            ]
+          ],
+          "preprocess_seconds": 0.006,
+          "prompt_tokens": 1017,
+          "structured_output": true
+        },
+        "usage": {
+          "prompt_tokens": 1017,
+          "completion_tokens": 306,
+          "total_tokens": 1323
+        }
+      },
+      "assessments": [
+        {
+          "label": "车辆",
+          "evidence": "absent",
+          "confidence": 0.0
+        },
+        {
+          "label": "pallet",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "person",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "floor",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "slope",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "ego",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "other_robot",
+          "evidence": "absent",
+          "confidence": 0.0
+        },
+        {
+          "label": "cargo_floor",
+          "evidence": "absent",
+          "confidence": 0.0
+        }
+      ],
+      "visible_labels": [
+        "pallet",
+        "person",
+        "floor",
+        "slope",
+        "ego"
+      ],
+      "uncertain_labels": [],
+      "unknown_candidates": [],
+      "consistency_flags": [],
+      "open_set_scan_complete": true,
+      "registry_mutated": false,
+      "failure": null
+    },
+    {
+      "position": 8,
+      "image": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\011\\bevannotation_data\\cameras_640x512\\camera_3\\1789900408315834655.png",
+      "image_sha256": "c744f199eb0af269e4b7661acb4fdac1ffb5378b941a878388bd6439444b76a0",
+      "bytes": 384488,
+      "size": [
+        640,
+        512
+      ],
+      "wall_elapsed_ms": 10163.246,
+      "elapsed_ms": 10160,
+      "model_route": "small_image_fast",
+      "fast_fallback_reason": null,
+      "raw_text_chars": 1131,
+      "local_vlm": {
+        "actual_image_token_counts": [
+          320
+        ],
+        "backend": "transformers_local_cuda",
+        "cache_hit": false,
+        "cache_key_sha256": "5d5e41ef36364c237e774cad0f835ada370528a97dd991a8fbabdd66b168333a",
+        "coalesced": false,
+        "effective_image_token_budget": 512,
+        "image_count": 1,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            40
+          ]
+        ],
+        "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "quantization": "nf4",
+        "requested_image_token_budget": null,
+        "response_cache_entries": 64,
+        "seconds": 10.037,
+        "inference_stats": {
+          "actual_image_token_counts": [
+            320
+          ],
+          "completion_tokens": 329,
+          "configured_generation_cache_implementation": null,
+          "constraint_setup_seconds": 0.0,
+          "effective_image_token_budget": 512,
+          "generation_cache_fallback_reason": null,
+          "generation_cache_implementation": null,
+          "generation_seconds": 10.02,
+          "image_grid_thw": [
+            [
+              1,
+              32,
+              40
+            ]
+          ],
+          "preprocess_seconds": 0.005,
+          "prompt_tokens": 1017,
+          "structured_output": true
+        },
+        "usage": {
+          "prompt_tokens": 1017,
+          "completion_tokens": 329,
+          "total_tokens": 1346
+        }
+      },
+      "assessments": [
+        {
+          "label": "车辆",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "pallet",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "person",
+          "evidence": "absent",
+          "confidence": 0.99
+        },
+        {
+          "label": "floor",
+          "evidence": "present",
+          "confidence": 0.98
+        },
+        {
+          "label": "slope",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "ego",
+          "evidence": "present",
+          "confidence": 0.99
+        },
+        {
+          "label": "other_robot",
+          "evidence": "absent",
+          "confidence": 0.99
+        },
+        {
+          "label": "cargo_floor",
+          "evidence": "absent",
+          "confidence": 0.99
+        }
+      ],
+      "visible_labels": [
+        "车辆",
+        "pallet",
+        "floor",
+        "slope",
+        "ego"
+      ],
+      "uncertain_labels": [],
+      "unknown_candidates": [],
+      "consistency_flags": [],
+      "open_set_scan_complete": true,
+      "registry_mutated": false,
+      "failure": null
+    },
+    {
+      "position": 9,
+      "image": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\012\\bevannotation_data\\cameras_640x512\\camera_0\\1789900488815784655.png",
+      "image_sha256": "90a4403617a5c040f35c5fc4f7edb533f40f5e1be25abf0c593b0676fb3fa317",
+      "bytes": 459744,
+      "size": [
+        640,
+        512
+      ],
+      "wall_elapsed_ms": 10214.466,
+      "elapsed_ms": 10210,
+      "model_route": "small_image_fast",
+      "fast_fallback_reason": null,
+      "raw_text_chars": 1162,
+      "local_vlm": {
+        "actual_image_token_counts": [
+          320
+        ],
+        "backend": "transformers_local_cuda",
+        "cache_hit": false,
+        "cache_key_sha256": "05b1df4e180d54dd4446da792a34b5a67704a2fc518ba74df5ee9a01af7de189",
+        "coalesced": false,
+        "effective_image_token_budget": 512,
+        "image_count": 1,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            40
+          ]
+        ],
+        "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "quantization": "nf4",
+        "requested_image_token_budget": null,
+        "response_cache_entries": 64,
+        "seconds": 10.065,
+        "inference_stats": {
+          "actual_image_token_counts": [
+            320
+          ],
+          "completion_tokens": 329,
+          "configured_generation_cache_implementation": null,
+          "constraint_setup_seconds": 0.0,
+          "effective_image_token_budget": 512,
+          "generation_cache_fallback_reason": null,
+          "generation_cache_implementation": null,
+          "generation_seconds": 10.047,
+          "image_grid_thw": [
+            [
+              1,
+              32,
+              40
+            ]
+          ],
+          "preprocess_seconds": 0.006,
+          "prompt_tokens": 1017,
+          "structured_output": true
+        },
+        "usage": {
+          "prompt_tokens": 1017,
+          "completion_tokens": 329,
+          "total_tokens": 1346
+        }
+      },
+      "assessments": [
+        {
+          "label": "车辆",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "pallet",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "person",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "floor",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "slope",
+          "evidence": "absent",
+          "confidence": 0.95
+        },
+        {
+          "label": "ego",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "other_robot",
+          "evidence": "uncertain",
+          "confidence": 0.95
+        },
+        {
+          "label": "cargo_floor",
+          "evidence": "absent",
+          "confidence": 0.95
+        }
+      ],
+      "visible_labels": [
+        "车辆",
+        "pallet",
+        "person",
+        "floor",
+        "ego"
+      ],
+      "uncertain_labels": [
+        "other_robot"
+      ],
+      "unknown_candidates": [],
+      "consistency_flags": [
+        {
+          "normalized_evidence": "uncertain",
+          "label": "other_robot",
+          "conflicting_labels": [
+            "车辆",
+            "other_robot"
+          ],
+          "route": "human_review_required",
+          "reason_code": "other_robot_conventional_vehicle_conflict"
+        }
+      ],
+      "open_set_scan_complete": true,
+      "registry_mutated": false,
+      "failure": null
+    },
+    {
+      "position": 10,
+      "image": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\012\\bevannotation_data\\cameras_640x512\\camera_0\\1789900594415795363.png",
+      "image_sha256": "ebffa9761c369f640f7cf951491c7a9a7b73583532028c191016160f4c21a7d3",
+      "bytes": 464062,
+      "size": [
+        640,
+        512
+      ],
+      "wall_elapsed_ms": 10236.714,
+      "elapsed_ms": 10232,
+      "model_route": "small_image_fast",
+      "fast_fallback_reason": null,
+      "raw_text_chars": 1159,
+      "local_vlm": {
+        "actual_image_token_counts": [
+          320
+        ],
+        "backend": "transformers_local_cuda",
+        "cache_hit": false,
+        "cache_key_sha256": "e63e289ce84710121d26a2498359537eca5ae8fe9282c08c39a88f0cdc65331f",
+        "coalesced": false,
+        "effective_image_token_budget": 512,
+        "image_count": 1,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            40
+          ]
+        ],
+        "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "quantization": "nf4",
+        "requested_image_token_budget": null,
+        "response_cache_entries": 64,
+        "seconds": 10.085,
+        "inference_stats": {
+          "actual_image_token_counts": [
+            320
+          ],
+          "completion_tokens": 331,
+          "configured_generation_cache_implementation": null,
+          "constraint_setup_seconds": 0.0,
+          "effective_image_token_budget": 512,
+          "generation_cache_fallback_reason": null,
+          "generation_cache_implementation": null,
+          "generation_seconds": 10.067,
+          "image_grid_thw": [
+            [
+              1,
+              32,
+              40
+            ]
+          ],
+          "preprocess_seconds": 0.005,
+          "prompt_tokens": 1017,
+          "structured_output": true
+        },
+        "usage": {
+          "prompt_tokens": 1017,
+          "completion_tokens": 331,
+          "total_tokens": 1348
+        }
+      },
+      "assessments": [
+        {
+          "label": "车辆",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "pallet",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "person",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "floor",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "slope",
+          "evidence": "absent",
+          "confidence": 0.95
+        },
+        {
+          "label": "ego",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "other_robot",
+          "evidence": "absent",
+          "confidence": 0.95
+        },
+        {
+          "label": "cargo_floor",
+          "evidence": "absent",
+          "confidence": 0.95
+        }
+      ],
+      "visible_labels": [
+        "车辆",
+        "pallet",
+        "person",
+        "floor",
+        "ego"
+      ],
+      "uncertain_labels": [],
+      "unknown_candidates": [],
+      "consistency_flags": [],
+      "open_set_scan_complete": true,
+      "registry_mutated": false,
+      "failure": null
+    },
+    {
+      "position": 11,
+      "image": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\012\\bevannotation_data\\cameras_640x512\\camera_1\\1789900488815784655.png",
+      "image_sha256": "37e3826206c1cb33cd6bbc4281af9a960cdc369eb4805f1c5488b0748b908c29",
+      "bytes": 469294,
+      "size": [
+        640,
+        512
+      ],
+      "wall_elapsed_ms": 9703.182,
+      "elapsed_ms": 9700,
+      "model_route": "small_image_fast",
+      "fast_fallback_reason": null,
+      "raw_text_chars": 1098,
+      "local_vlm": {
+        "actual_image_token_counts": [
+          320
+        ],
+        "backend": "transformers_local_cuda",
+        "cache_hit": false,
+        "cache_key_sha256": "ef67c8f611e2e85561100670937008dfbfbf696154f65a26dd5efb8fdd11417c",
+        "coalesced": false,
+        "effective_image_token_budget": 512,
+        "image_count": 1,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            40
+          ]
+        ],
+        "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "quantization": "nf4",
+        "requested_image_token_budget": null,
+        "response_cache_entries": 64,
+        "seconds": 9.534,
+        "inference_stats": {
+          "actual_image_token_counts": [
+            320
+          ],
+          "completion_tokens": 313,
+          "configured_generation_cache_implementation": null,
+          "constraint_setup_seconds": 0.0,
+          "effective_image_token_budget": 512,
+          "generation_cache_fallback_reason": null,
+          "generation_cache_implementation": null,
+          "generation_seconds": 9.518,
+          "image_grid_thw": [
+            [
+              1,
+              32,
+              40
+            ]
+          ],
+          "preprocess_seconds": 0.005,
+          "prompt_tokens": 1017,
+          "structured_output": true
+        },
+        "usage": {
+          "prompt_tokens": 1017,
+          "completion_tokens": 313,
+          "total_tokens": 1330
+        }
+      },
+      "assessments": [
+        {
+          "label": "车辆",
+          "evidence": "absent",
+          "confidence": 0.0
+        },
+        {
+          "label": "pallet",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "person",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "floor",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "slope",
+          "evidence": "absent",
+          "confidence": 0.0
+        },
+        {
+          "label": "ego",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "other_robot",
+          "evidence": "absent",
+          "confidence": 0.0
+        },
+        {
+          "label": "cargo_floor",
+          "evidence": "absent",
+          "confidence": 0.0
+        }
+      ],
+      "visible_labels": [
+        "pallet",
+        "person",
+        "floor",
+        "ego"
+      ],
+      "uncertain_labels": [],
+      "unknown_candidates": [],
+      "consistency_flags": [],
+      "open_set_scan_complete": true,
+      "registry_mutated": false,
+      "failure": null
+    },
+    {
+      "position": 12,
+      "image": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\012\\bevannotation_data\\cameras_640x512\\camera_1\\1789900594415795363.png",
+      "image_sha256": "5f8aa08919e9046700e506e863924d770ee516d6064bf0951e50930ccd7d1c62",
+      "bytes": 469199,
+      "size": [
+        640,
+        512
+      ],
+      "wall_elapsed_ms": 9724.332,
+      "elapsed_ms": 9721,
+      "model_route": "small_image_fast",
+      "fast_fallback_reason": null,
+      "raw_text_chars": 1098,
+      "local_vlm": {
+        "actual_image_token_counts": [
+          320
+        ],
+        "backend": "transformers_local_cuda",
+        "cache_hit": false,
+        "cache_key_sha256": "a3e064f7269d830c9fff7e6fb411ad9a339ac114d9e7d5d0c49fd786e2600075",
+        "coalesced": false,
+        "effective_image_token_budget": 512,
+        "image_count": 1,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            40
+          ]
+        ],
+        "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "quantization": "nf4",
+        "requested_image_token_budget": null,
+        "response_cache_entries": 64,
+        "seconds": 9.54,
+        "inference_stats": {
+          "actual_image_token_counts": [
+            320
+          ],
+          "completion_tokens": 313,
+          "configured_generation_cache_implementation": null,
+          "constraint_setup_seconds": 0.0,
+          "effective_image_token_budget": 512,
+          "generation_cache_fallback_reason": null,
+          "generation_cache_implementation": null,
+          "generation_seconds": 9.524,
+          "image_grid_thw": [
+            [
+              1,
+              32,
+              40
+            ]
+          ],
+          "preprocess_seconds": 0.005,
+          "prompt_tokens": 1017,
+          "structured_output": true
+        },
+        "usage": {
+          "prompt_tokens": 1017,
+          "completion_tokens": 313,
+          "total_tokens": 1330
+        }
+      },
+      "assessments": [
+        {
+          "label": "车辆",
+          "evidence": "absent",
+          "confidence": 0.0
+        },
+        {
+          "label": "pallet",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "person",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "floor",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "slope",
+          "evidence": "absent",
+          "confidence": 0.0
+        },
+        {
+          "label": "ego",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "other_robot",
+          "evidence": "absent",
+          "confidence": 0.0
+        },
+        {
+          "label": "cargo_floor",
+          "evidence": "absent",
+          "confidence": 0.0
+        }
+      ],
+      "visible_labels": [
+        "pallet",
+        "person",
+        "floor",
+        "ego"
+      ],
+      "uncertain_labels": [],
+      "unknown_candidates": [],
+      "consistency_flags": [],
+      "open_set_scan_complete": true,
+      "registry_mutated": false,
+      "failure": null
+    },
+    {
+      "position": 13,
+      "image": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\012\\bevannotation_data\\cameras_640x512\\camera_2\\1789900488815784655.png",
+      "image_sha256": "ec66fa5bcec0f3ec7b92657c564d0ce01c998f7a124d826233aebda61ce75beb",
+      "bytes": 444274,
+      "size": [
+        640,
+        512
+      ],
+      "wall_elapsed_ms": 9463.483,
+      "elapsed_ms": 9459,
+      "model_route": "small_image_fast",
+      "fast_fallback_reason": null,
+      "raw_text_chars": 1045,
+      "local_vlm": {
+        "actual_image_token_counts": [
+          320
+        ],
+        "backend": "transformers_local_cuda",
+        "cache_hit": false,
+        "cache_key_sha256": "1d2c283a6708d46e9722ddb8f2f4fe55579fb2b973f7a04b1bc0a63acc028f93",
+        "coalesced": false,
+        "effective_image_token_budget": 512,
+        "image_count": 1,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            40
+          ]
+        ],
+        "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "quantization": "nf4",
+        "requested_image_token_budget": null,
+        "response_cache_entries": 64,
+        "seconds": 9.284,
+        "inference_stats": {
+          "actual_image_token_counts": [
+            320
+          ],
+          "completion_tokens": 306,
+          "configured_generation_cache_implementation": null,
+          "constraint_setup_seconds": 0.0,
+          "effective_image_token_budget": 512,
+          "generation_cache_fallback_reason": null,
+          "generation_cache_implementation": null,
+          "generation_seconds": 9.269,
+          "image_grid_thw": [
+            [
+              1,
+              32,
+              40
+            ]
+          ],
+          "preprocess_seconds": 0.006,
+          "prompt_tokens": 1017,
+          "structured_output": true
+        },
+        "usage": {
+          "prompt_tokens": 1017,
+          "completion_tokens": 306,
+          "total_tokens": 1323
+        }
+      },
+      "assessments": [
+        {
+          "label": "车辆",
+          "evidence": "absent",
+          "confidence": 0.0
+        },
+        {
+          "label": "pallet",
+          "evidence": "absent",
+          "confidence": 0.0
+        },
+        {
+          "label": "person",
+          "evidence": "absent",
+          "confidence": 0.0
+        },
+        {
+          "label": "floor",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "slope",
+          "evidence": "absent",
+          "confidence": 0.0
+        },
+        {
+          "label": "ego",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "other_robot",
+          "evidence": "absent",
+          "confidence": 0.0
+        },
+        {
+          "label": "cargo_floor",
+          "evidence": "absent",
+          "confidence": 0.0
+        }
+      ],
+      "visible_labels": [
+        "floor",
+        "ego"
+      ],
+      "uncertain_labels": [],
+      "unknown_candidates": [],
+      "consistency_flags": [],
+      "open_set_scan_complete": true,
+      "registry_mutated": false,
+      "failure": null
+    },
+    {
+      "position": 14,
+      "image": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\012\\bevannotation_data\\cameras_640x512\\camera_2\\1789900594415795363.png",
+      "image_sha256": "527a3c61891e1720fe4c44fbaab37b95f1a6fb8fde0df9f3610e5676eca68581",
+      "bytes": 450405,
+      "size": [
+        640,
+        512
+      ],
+      "wall_elapsed_ms": 9794.24,
+      "elapsed_ms": 9791,
+      "model_route": "small_image_fast",
+      "fast_fallback_reason": null,
+      "raw_text_chars": 1071,
+      "local_vlm": {
+        "actual_image_token_counts": [
+          320
+        ],
+        "backend": "transformers_local_cuda",
+        "cache_hit": false,
+        "cache_key_sha256": "7215048637b4d4ad2c6a257bc54e814c9903a1ac66694c7c6e0e420b99bacc9e",
+        "coalesced": false,
+        "effective_image_token_budget": 512,
+        "image_count": 1,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            40
+          ]
+        ],
+        "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "quantization": "nf4",
+        "requested_image_token_budget": null,
+        "response_cache_entries": 64,
+        "seconds": 9.415,
+        "inference_stats": {
+          "actual_image_token_counts": [
+            320
+          ],
+          "completion_tokens": 309,
+          "configured_generation_cache_implementation": null,
+          "constraint_setup_seconds": 0.0,
+          "effective_image_token_budget": 512,
+          "generation_cache_fallback_reason": null,
+          "generation_cache_implementation": null,
+          "generation_seconds": 9.398,
+          "image_grid_thw": [
+            [
+              1,
+              32,
+              40
+            ]
+          ],
+          "preprocess_seconds": 0.006,
+          "prompt_tokens": 1017,
+          "structured_output": true
+        },
+        "usage": {
+          "prompt_tokens": 1017,
+          "completion_tokens": 309,
+          "total_tokens": 1326
+        }
+      },
+      "assessments": [
+        {
+          "label": "车辆",
+          "evidence": "absent",
+          "confidence": 0.0
+        },
+        {
+          "label": "pallet",
+          "evidence": "absent",
+          "confidence": 0.0
+        },
+        {
+          "label": "person",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "floor",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "slope",
+          "evidence": "absent",
+          "confidence": 0.0
+        },
+        {
+          "label": "ego",
+          "evidence": "present",
+          "confidence": 1.0
+        },
+        {
+          "label": "other_robot",
+          "evidence": "absent",
+          "confidence": 0.0
+        },
+        {
+          "label": "cargo_floor",
+          "evidence": "absent",
+          "confidence": 0.0
+        }
+      ],
+      "visible_labels": [
+        "person",
+        "floor",
+        "ego"
+      ],
+      "uncertain_labels": [],
+      "unknown_candidates": [],
+      "consistency_flags": [],
+      "open_set_scan_complete": true,
+      "registry_mutated": false,
+      "failure": null
+    },
+    {
+      "position": 15,
+      "image": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\012\\bevannotation_data\\cameras_640x512\\camera_3\\1789900488815784655.png",
+      "image_sha256": "4a26c2843e8fdeee03184d9b7083c8135411c02850eccafb65059e95beca433f",
+      "bytes": 416666,
+      "size": [
+        640,
+        512
+      ],
+      "wall_elapsed_ms": 10622.247,
+      "elapsed_ms": 10620,
+      "model_route": "small_image_fast",
+      "fast_fallback_reason": null,
+      "raw_text_chars": 1172,
+      "local_vlm": {
+        "actual_image_token_counts": [
+          320
+        ],
+        "backend": "transformers_local_cuda",
+        "cache_hit": false,
+        "cache_key_sha256": "8ed5b592a4575f8509599379f9cb8530e0ddd6bda1a088cca16c1dc0941954ce",
+        "coalesced": false,
+        "effective_image_token_budget": 512,
+        "image_count": 1,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            40
+          ]
+        ],
+        "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "quantization": "nf4",
+        "requested_image_token_budget": null,
+        "response_cache_entries": 64,
+        "seconds": 10.49,
+        "inference_stats": {
+          "actual_image_token_counts": [
+            320
+          ],
+          "completion_tokens": 341,
+          "configured_generation_cache_implementation": null,
+          "constraint_setup_seconds": 0.0,
+          "effective_image_token_budget": 512,
+          "generation_cache_fallback_reason": null,
+          "generation_cache_implementation": null,
+          "generation_seconds": 10.471,
+          "image_grid_thw": [
+            [
+              1,
+              32,
+              40
+            ]
+          ],
+          "preprocess_seconds": 0.005,
+          "prompt_tokens": 1017,
+          "structured_output": true
+        },
+        "usage": {
+          "prompt_tokens": 1017,
+          "completion_tokens": 341,
+          "total_tokens": 1358
+        }
+      },
+      "assessments": [
+        {
+          "label": "车辆",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "pallet",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "person",
+          "evidence": "absent",
+          "confidence": 0.99
+        },
+        {
+          "label": "floor",
+          "evidence": "absent",
+          "confidence": 0.99
+        },
+        {
+          "label": "slope",
+          "evidence": "absent",
+          "confidence": 0.99
+        },
+        {
+          "label": "ego",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "other_robot",
+          "evidence": "absent",
+          "confidence": 0.99
+        },
+        {
+          "label": "cargo_floor",
+          "evidence": "absent",
+          "confidence": 0.99
+        }
+      ],
+      "visible_labels": [
+        "车辆",
+        "pallet",
+        "ego"
+      ],
+      "uncertain_labels": [],
+      "unknown_candidates": [],
+      "consistency_flags": [],
+      "open_set_scan_complete": true,
+      "registry_mutated": false,
+      "failure": null
+    },
+    {
+      "position": 16,
+      "image": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\012\\bevannotation_data\\cameras_640x512\\camera_3\\1789900594415795363.png",
+      "image_sha256": "17a688104a27a3a147370305c0870a1b71b21b616612f3f5136fdcbec0ceae0c",
+      "bytes": 422875,
+      "size": [
+        640,
+        512
+      ],
+      "wall_elapsed_ms": 10258.571,
+      "elapsed_ms": 10256,
+      "model_route": "small_image_fast",
+      "fast_fallback_reason": null,
+      "raw_text_chars": 1145,
+      "local_vlm": {
+        "actual_image_token_counts": [
+          320
+        ],
+        "backend": "transformers_local_cuda",
+        "cache_hit": false,
+        "cache_key_sha256": "8b1421c4cdeb1326478b823abf25fd5f8fd86cefd5070a67a3a7aa4311365867",
+        "coalesced": false,
+        "effective_image_token_budget": 512,
+        "image_count": 1,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            40
+          ]
+        ],
+        "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "quantization": "nf4",
+        "requested_image_token_budget": null,
+        "response_cache_entries": 64,
+        "seconds": 10.098,
+        "inference_stats": {
+          "actual_image_token_counts": [
+            320
+          ],
+          "completion_tokens": 331,
+          "configured_generation_cache_implementation": null,
+          "constraint_setup_seconds": 0.0,
+          "effective_image_token_budget": 512,
+          "generation_cache_fallback_reason": null,
+          "generation_cache_implementation": null,
+          "generation_seconds": 10.081,
+          "image_grid_thw": [
+            [
+              1,
+              32,
+              40
+            ]
+          ],
+          "preprocess_seconds": 0.005,
+          "prompt_tokens": 1017,
+          "structured_output": true
+        },
+        "usage": {
+          "prompt_tokens": 1017,
+          "completion_tokens": 331,
+          "total_tokens": 1348
+        }
+      },
+      "assessments": [
+        {
+          "label": "车辆",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "pallet",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "person",
+          "evidence": "absent",
+          "confidence": 0.99
+        },
+        {
+          "label": "floor",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "slope",
+          "evidence": "absent",
+          "confidence": 0.99
+        },
+        {
+          "label": "ego",
+          "evidence": "present",
+          "confidence": 0.95
+        },
+        {
+          "label": "other_robot",
+          "evidence": "absent",
+          "confidence": 0.99
+        },
+        {
+          "label": "cargo_floor",
+          "evidence": "absent",
+          "confidence": 0.99
+        }
+      ],
+      "visible_labels": [
+        "车辆",
+        "pallet",
+        "floor",
+        "ego"
+      ],
+      "uncertain_labels": [],
+      "unknown_candidates": [],
+      "consistency_flags": [],
+      "open_set_scan_complete": true,
+      "registry_mutated": false,
+      "failure": null
+    }
+  ]
+}

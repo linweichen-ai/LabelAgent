@@ -18,15 +18,34 @@
     "sequential_image_encodings_for_three_groups": 3
   },
   "tests": {
-    "targeted_passed": 9,
+    "targeted_passed": 11,
     "targeted_subtests_passed": 4,
-    "python_passed": 1273,
+    "python_passed": 1275,
     "python_subtests_passed": 223,
     "node_passed": 167,
     "diff_check_passed": true,
     "sequential_contract_equal_in_unit_test": true,
     "remote_route_static_guard_passed": true,
-    "real_gpu_ab_completed": false
+    "real_gpu_ab_completed": true
+  },
+  "real_gpu_ab": {
+    "backend": "isolated factory-4090 SAM3 with the production checkpoint",
+    "sample_count": 24,
+    "groups_per_frame": 3,
+    "results_exactly_equal_count": 24,
+    "success_counts_equal_count": 24,
+    "all_candidate_responses_encoded_once": true,
+    "sequential_median_seconds": 0.884564,
+    "batch_median_seconds": 0.293334,
+    "median_speedup": 3.0156,
+    "sequential_p95_seconds": 1.323936,
+    "batch_p95_seconds": 0.356512,
+    "cold_start_timeout_observed": true,
+    "cold_start_excluded_from_measurement": true,
+    "isolated_service_stopped_after_test": true,
+    "gpu_memory_released_after_test": true,
+    "local_results_sha256": "E35B0FD1877BC57AE5F8B83761FB904F15888856DA526279DBAAF490AB2FA72A",
+    "real_images_uploaded": false
   },
   "formal_runtime": {
     "sam_health": "ok",
@@ -47,5 +66,5 @@
     "training_approved": false,
     "real_images_uploaded": false
   },
-  "gate": "code_and_contract_tests_passed; isolated_real_gpu_ab_required_before_deployment"
+  "gate": "code_contract_and_isolated_real_gpu_ab_passed; reversible_formal_integration_required"
 }

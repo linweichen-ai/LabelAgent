@@ -1,4 +1,4 @@
-# Round413–418：1104 四路相机 ego 时序补测、多组件约束与留出验证（2026-11-22）
+# Round413–421：1104 四路相机 ego 时序补测、多组件约束与留出验证（2026-11-22）
 
 ## 本轮目的
 
@@ -113,12 +113,17 @@ camera3 把横梁正点向内收，并去掉与下部组件无关的最底部正
 - Round420 像素复核材料：
   `artifacts/round420-1104-camera13-v2-mask-review-20261122/`，20 份结果、38 张二值候选
   mask；另外 2 个遮挡组件失败关闭，因此不生成空壳 mask。
+- Round421 两组件并集复核包：
+  `artifacts/round421-1104-camera13-v2-union-review-20261122/`。20 帧中 18 帧生成并集，
+  2 帧失败关闭；camera1 并集面积约 10.75%～11.09%，camera3 约 4.56%～5.65%。
+  目视未吞入人员、纸箱、黄色地面或橙色承载面，但仍是保守局部轮廓，不能充当完整 ego
+  像素真值。
 - camera1/3 统一门禁：
   `artifacts/round413-1104-camera13-unified18-20261122/results.json`
 - camera2 时序补测：
   `artifacts/round414-1104-camera2-unified18-20261122/results.json`
 - 结构化摘要：
-  `docs/evidence/workbench-stability-20261117/ego-1104-multicomponent-rounds413-418.json`
+  `docs/evidence/workbench-stability-20261117/ego-1104-multicomponent-rounds413-421.json`
 
 本轮结束时工作台为 `idle`，SAM `model_loaded=true`，主 VLM 模型可读；四个正式状态文件
 SHA-256 与 Round412 前完全一致。正式运行目录、人工真值和训练批准均未写入。

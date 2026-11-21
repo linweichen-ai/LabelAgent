@@ -1,5 +1,5 @@
 {
-  "rounds": [413, 414, 415, 416, 417, 418],
+  "rounds": [413, 414, 415, 416, 417, 418, 419, 420, 421],
   "date": "2026-11-22",
   "status": "candidate_only_multicomponent_heldout_diagnostic",
   "oss_read_only": true,
@@ -91,6 +91,31 @@
     "failed_closed_without_mask": 2,
     "result_and_mask_bytes": 165823,
     "manifest_sha256": "2a646564c5dac6b8ea917ae33fc2c61ba60e506fd9ddbe627f44fcc9ef6639c9",
+    "human_truth": false,
+    "approved_for_training": false
+  },
+  "component_union_review": {
+    "round": 421,
+    "sample_count": 20,
+    "union_available_count": 18,
+    "failed_closed_count": 2,
+    "camera1": {
+      "available": 8,
+      "total": 10,
+      "area_ratio_range": [0.107541, 0.110889],
+      "mean_area_ratio": 0.109083,
+      "component_overlap_iou_range": [0.0, 0.0]
+    },
+    "camera3": {
+      "available": 10,
+      "total": 10,
+      "area_ratio_range": [0.04556, 0.056509],
+      "mean_area_ratio": 0.050634,
+      "component_overlap_iou_range": [0.0, 0.003098]
+    },
+    "review_queue_sha256": "bbe04d38a7ee2b789a8743e484f8bc611c9530abc1ab1cb5aa8c96c404a870ed",
+    "contact_sheet_sha256": "ae9148de9b4559c851c9855ea571ce625a5884c6bbc72be06b8055348a9c42b5",
+    "assistant_visual_review": "No person, cardboard, yellow floor, or orange load surface was visibly swallowed; masks remain conservative partial ego coverage.",
     "human_truth": false,
     "approved_for_training": false
   },

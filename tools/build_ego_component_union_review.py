@@ -1,0 +1,265 @@
+#!/usr/bin/env python3
+"""Build a local, fail-closed review packet from ego component masks.
+
+The input is produced by ``diagnose_ego_guided_points.py``.  A union is only
+materialized when the source image, frozen point-set identity, two required
+components, prompt constraints and mask hashes all validate.  The packet is
+assistant-review material, never human truth or a production candidate.
+"""
+
+from __future__ import annotations
+
+import argparse
+from datetime import datetime, timezone
+import hashlib
+import json
+from pathlib import Path
+import re
+
+import numpy as np
+from PIL import Image, ImageDraw, ImageFont
+
+
+EXPECTED_COMPONENTS = {
+    "camera1": (
+        "camera1-left-seat-console-v2",
+        "camera1-right-hood-v2",
+    ),
+    "camera3": (
+        "camera3-crossbar-core-v2",
+        "camera3-lower-assembly-v2",
+    ),
+}
+
+
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _camera_from_sample(sample_id: str) -> str:
+    match = re.search(r"-(camera[13])-", sample_id)
+    if match is None:
+        raise ValueError("sample identity does not contain camera1 or camera3")
+    return match.group(1)
+
+
+def _mask_geometry(mask: np.ndarray) -> dict:
+    rows, columns = mask.nonzero()
+    if not len(rows):
+        raise ValueError("candidate mask is empty")
+    return {
+        "area_pixels": int(mask.sum()),
+        "area_ratio": round(float(mask.mean()), 6),
+        "bbox": [int(columns.min()), int(rows.min()),
+                 int(columns.max()) + 1, int(rows.max()) + 1],
+    }
+
+
+def _write_overlay(image_path: Path, mask: np.ndarray, target: Path) -> None:
+    with Image.open(image_path) as source:
+        base = source.convert("RGBA")
+    if base.size != (mask.shape[1], mask.shape[0]):
+        raise ValueError("source image and candidate mask dimensions differ")
+    color = Image.new("RGBA", base.size, (24, 206, 138, 0))
+    color.putalpha(Image.fromarray(mask.astype(np.uint8) * 104, mode="L"))
+    rendered = Image.alpha_composite(base, color).convert("RGB")
+    rendered.save(target, "JPEG", quality=90)
+
+
+def evaluate_sample(sample_dir: Path, output: Path,
+                    expected_spec_hashes: dict[str, str]) -> dict:
+    sample_id = sample_dir.name
+    row = {
+        "sample_id": sample_id,
+        "candidate_only": True,
+        "human_truth": False,
+        "human_confirmed": False,
+        "approved_for_training": False,
+        "production_deployed": False,
+        "union_available": False,
+        "status": "blocked",
+        "reasons": [],
+    }
+    try:
+        camera = _camera_from_sample(sample_id)
+        row["camera"] = camera
+        report_path = sample_dir / "results.json"
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        if (report.get("candidate_only") is not True
+                or report.get("human_truth") is not False
+                or report.get("approved_for_training") is not False
+                or report.get("production_deployed") is not False
+                or report.get("source_state_modified") is not False):
+            raise ValueError("input safety flags are missing or inconsistent")
+        if report.get("point_sets_sha256") != expected_spec_hashes[camera]:
+            raise ValueError("frozen point-set identity mismatch")
+        image_path = Path(report.get("image", ""))
+        if (not image_path.is_file()
+                or file_sha256(image_path) != report.get("image_sha256")):
+            raise ValueError("source image is missing or hash-mismatched")
+        with Image.open(image_path) as decoded:
+            width, height = decoded.size
+
+        rows = report.get("rows")
+        if not isinstance(rows, list):
+            raise ValueError("component rows are missing")
+        by_name = {item.get("name"): item for item in rows
+                   if isinstance(item, dict) and isinstance(item.get("name"), str)}
+        expected = EXPECTED_COMPONENTS[camera]
+        if len(by_name) != len(rows) or set(by_name) != set(expected):
+            raise ValueError("exact required component rows are missing")
+
+        masks = []
+        component_rows = []
+        for name in expected:
+            component = by_name[name]
+            if (component.get("candidate_available") is not True
+                    or component.get("prompt_constraints_passed") is not True):
+                raise ValueError(f"required component failed closed: {name}")
+            mask_name = component.get("candidate_mask")
+            if not isinstance(mask_name, str) or Path(mask_name).name != mask_name:
+                raise ValueError(f"candidate mask path is invalid: {name}")
+            mask_path = sample_dir / mask_name
+            if (not mask_path.is_file()
+                    or file_sha256(mask_path) != component.get("candidate_mask_sha256")):
+                raise ValueError(f"candidate mask is missing or hash-mismatched: {name}")
+            with Image.open(mask_path) as decoded:
+                if decoded.size != (width, height):
+                    raise ValueError(f"candidate mask dimensions mismatch: {name}")
+                mask = np.asarray(decoded.convert("L")) > 0
+            geometry = _mask_geometry(mask)
+            reported = component.get("geometry") or {}
+            if (geometry["area_pixels"] != reported.get("area")
+                    or geometry["bbox"] != reported.get("bbox")):
+                raise ValueError(f"candidate mask geometry mismatch: {name}")
+            masks.append(mask)
+            component_rows.append({
+                "name": name,
+                "mask_sha256": component["candidate_mask_sha256"],
+                **geometry,
+            })
+
+        union = np.logical_or.reduce(masks)
+        union_geometry = _mask_geometry(union)
+        intersection = np.logical_and(masks[0], masks[1]).sum()
+        overlap_union = np.logical_or(masks[0], masks[1]).sum()
+        union_path = output / f"{sample_id}-union-mask.png"
+        Image.fromarray(union.astype(np.uint8) * 255, mode="L").save(
+            union_path, "PNG", optimize=True)
+        overlay_path = output / f"{sample_id}-union-overlay.jpg"
+        _write_overlay(image_path, union, overlay_path)
+        row.update({
+            "status": "assistant_review_required",
+            "union_available": True,
+            "source_image": str(image_path.resolve()),
+            "source_image_sha256": report["image_sha256"],
+            "point_sets_sha256": report["point_sets_sha256"],
+            "components": component_rows,
+            "component_overlap_iou": round(float(intersection) / overlap_union, 6),
+            "union_geometry": union_geometry,
+            "union_mask": union_path.name,
+            "union_mask_sha256": file_sha256(union_path),
+            "union_overlay": overlay_path.name,
+            "union_overlay_sha256": file_sha256(overlay_path),
+        })
+    except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError) as error:
+        row["reasons"] = [str(error)[:500]]
+    return row
+
+
+def _write_contact_sheet(output: Path, rows: list[dict]) -> Path:
+    cell_width, image_height, label_height, columns = 320, 256, 30, 4
+    count = max(1, len(rows))
+    row_count = (count + columns - 1) // columns
+    canvas = Image.new("RGB", (cell_width * columns,
+                               (image_height + label_height) * row_count),
+                       (15, 23, 31))
+    draw, font = ImageDraw.Draw(canvas), ImageFont.load_default()
+    for index, row in enumerate(rows):
+        left = (index % columns) * cell_width
+        top = (index // columns) * (image_height + label_height)
+        if row.get("union_overlay"):
+            with Image.open(output / row["union_overlay"]) as image:
+                preview = image.convert("RGB")
+                preview.thumbnail((cell_width, image_height))
+            canvas.paste(preview, (left + (cell_width - preview.width) // 2,
+                                   top + (image_height - preview.height) // 2))
+        draw.rectangle((left, top + image_height,
+                        left + cell_width, top + image_height + label_height),
+                       fill=(25, 35, 45))
+        color = (83, 210, 161) if row["union_available"] else (244, 130, 90)
+        draw.text((left + 6, top + image_height + 8),
+                  f"{row['sample_id']} | {row['status']}", fill=color, font=font)
+    path = output / "contact_sheet.jpg"
+    canvas.save(path, "JPEG", quality=88)
+    return path
+
+
+def build_packet(input_root: Path, output: Path,
+                 camera1_spec: Path, camera3_spec: Path) -> dict:
+    if output.exists():
+        raise FileExistsError(output)
+    if not input_root.is_dir():
+        raise FileNotFoundError(input_root)
+    expected_spec_hashes = {
+        "camera1": file_sha256(camera1_spec),
+        "camera3": file_sha256(camera3_spec),
+    }
+    output.mkdir(parents=True)
+    sample_dirs = sorted(path for path in input_root.iterdir()
+                         if path.is_dir() and (path / "results.json").is_file())
+    if not sample_dirs:
+        raise ValueError("no component result directories found")
+    rows = [evaluate_sample(path, output, expected_spec_hashes)
+            for path in sample_dirs]
+    contact_sheet = _write_contact_sheet(output, rows)
+    packet = {
+        "schema_version": "labelagent.ego_component_union_review.v1",
+        "created_utc": datetime.now(timezone.utc).isoformat(),
+        "candidate_only": True,
+        "human_truth": False,
+        "human_confirmed": False,
+        "approved_for_training": False,
+        "production_deployed": False,
+        "formal_state_modified": False,
+        "sample_count": len(rows),
+        "union_available_count": sum(row["union_available"] for row in rows),
+        "failed_closed_count": sum(not row["union_available"] for row in rows),
+        "point_set_sha256": expected_spec_hashes,
+        "contact_sheet": contact_sheet.name,
+        "contact_sheet_sha256": file_sha256(contact_sheet),
+        "samples": rows,
+        "next_step": (
+            "Assistant or human pixel review must compare each union against the source. "
+            "No union is training truth or production-approved."),
+    }
+    target = output / "review_queue.json"
+    target.write_text(json.dumps(packet, ensure_ascii=False, indent=2) + "\n",
+                      encoding="utf-8")
+    return packet
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--input-root", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--camera1-spec", type=Path, required=True)
+    parser.add_argument("--camera3-spec", type=Path, required=True)
+    arguments = parser.parse_args()
+    packet = build_packet(arguments.input_root, arguments.output,
+                          arguments.camera1_spec, arguments.camera3_spec)
+    print(json.dumps({
+        "output": str((arguments.output / "review_queue.json").resolve()),
+        "sample_count": packet["sample_count"],
+        "union_available_count": packet["union_available_count"],
+        "failed_closed_count": packet["failed_closed_count"],
+    }, ensure_ascii=False))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

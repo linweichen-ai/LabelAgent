@@ -1,0 +1,59 @@
+{
+  "round": 412,
+  "date": "2026-11-22",
+  "status": "candidate_only_cross_camera_diagnostic",
+  "oss_read_only": true,
+  "download": {
+    "objects": 6,
+    "bytes": 2632703,
+    "source": "bevpending_data/cameras_640x512/camera_1..3",
+    "raw_mcap": false,
+    "full_resolution": false
+  },
+  "images": {
+    "003-camera1": "84E2C5A52543B3E1CBFBAD55C0ABC32585CB00CBA615A488442642D9ADC47D8E",
+    "003-camera2": "E39993A84ED58B9F4A5A7A6871151530D98D740BEFAC95EE60E5E478876C2D40",
+    "003-camera3": "BB61DDDA7E4CDB36ACA8EF375739B2B16E4C7DD8AB2D84ABE393B020776C8496",
+    "004-camera1": "72897CC44E98217F1F3EBF57A79073228DC743183C922EFF3C3CF9834056A2D6",
+    "004-camera2": "991147EB0C165D7A21AA3908231B9F04052E4916DB8768544DC17D212E845522",
+    "004-camera3": "DA35A1A14D0566BB174E0C5EE176DAA31119001C6128CAF97C16CD75737CE240"
+  },
+  "uniform_bottom_scan": {
+    "result_sha256": "3e620b41a0044a4011f16227a5a1816dd50b156577ce97ecca3caee18b142d69",
+    "assistant_visible_positive_count": 6,
+    "candidate_count": 2,
+    "camera1": {"003_guarded": 0, "004_guarded": 0},
+    "camera2": {
+      "003_guarded": 5,
+      "003_score": 0.9765625,
+      "003_area_ratio": 0.155072,
+      "004_guarded": 4,
+      "004_score": 0.9375,
+      "004_area_ratio": 0.158154,
+      "bbox": [0, 411, 640, 512]
+    },
+    "camera3": {"003_guarded": 0, "004_guarded": 0},
+    "service_seconds_range": [0.30939692188985646, 0.34292912296950817]
+  },
+  "camera_specific_shadow": {
+    "003-camera1": {"broad_score": 0.515625, "broad_area_ratio": 0.087622, "core_score": 0.466796875, "core_area_ratio": 0.033505, "result_sha256": "1959f2ff704cec6c48948dc5cfca238071f824aa266599956e7c4082e4276d32"},
+    "004-camera1": {"broad_score": 0.578125, "broad_area_ratio": 0.087311, "core_score": 0.451171875, "core_area_ratio": 0.08537, "result_sha256": "ad30c4eaf19f1bfaa822a7a8650635555cceb9aff8d80cb87d6cc5aa242a66c0"},
+    "003-camera3": {"broad_score": 0.78515625, "broad_area_ratio": 0.13176, "core_score": 0.7265625, "core_area_ratio": 0.020547, "result_sha256": "fe619bc3126e82fcb290d5bd095780aa3b40783a5da4e8503b21d13cd547a1a5"},
+    "004-camera3": {"broad_score": 0.76953125, "broad_area_ratio": 0.125534, "core_score": 0.68359375, "core_area_ratio": 0.04848, "result_sha256": "3e1e264ea571744f7acf0f9f3f7ab5207d175f13a15a663c5e4d49697cf5f2d1"},
+    "image_encoded_once": true,
+    "production_authorized": false,
+    "camera3_broad_risk": "possible_orange_load_surface_or_floor_inclusion"
+  },
+  "formal_state_modified": false,
+  "formal_state_sha256": {
+    "state.json": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "file_sessions.json": "94E8BEE324628585E7532E595348293DF1DA7B24041A1D4DF1C2EC9FB734E02E",
+    "last_run.json": "3BECE2513C6F661054AC238AB185527D715A04B3B0C8E073274710BE23E057DA",
+    "last_run_summary.json": "32578D53E70FA6860F3438860B321172B5E8B405BC6BB8A0F19387A6D4B84933"
+  },
+  "limitations": [
+    "All six images contain visible host hardware and are not natural negatives.",
+    "Assistant visual review is not pixel-level human truth.",
+    "Camera1 candidates are partial and camera3 broad candidates have a possible traversable-surface conflict."
+  ]
+}

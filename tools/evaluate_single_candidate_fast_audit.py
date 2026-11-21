@@ -48,6 +48,11 @@ def semantic_core(result: dict) -> dict:
     }
 
 
+def endpoint_authority(url: str) -> str:
+    parsed = urllib.parse.urlsplit(str(url or ""))
+    return f"{parsed.scheme}://{parsed.netloc}" if parsed.scheme and parsed.netloc else ""
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--state", required=True, type=Path)
@@ -98,11 +103,32 @@ def main() -> int:
             "audit_sha256": result["audit_sha256"],
         }
 
+    fast_route_probes = []
+
+    def probed_fast_call(route_config, instruction, image, extra_images=(),
+                         response_schema=None):
+        selected, route = workflow.select_vlm_route(
+            route_config, image, extra_images=extra_images)
+        fast_route_probes.append({
+            "route": route,
+            "selected_endpoint_authority": endpoint_authority(
+                selected.get("llm_url")),
+            "configured_fast_endpoint_authority": endpoint_authority(
+                route_config.get("llm_fast_url")),
+            "selected_model": selected.get("llm_model"),
+            "configured_fast_model": route_config.get("llm_fast_model"),
+            "primary_image_bytes": len(image),
+            "extra_image_count": len(extra_images),
+        })
+        return workflow.chat_fast_only(
+            route_config, instruction, image, extra_images=extra_images,
+            response_schema=response_schema)
+
     primary = evaluate("primary", workflow.chat, primary_config)
-    fast = evaluate("fast_only", workflow.chat_fast_only, config)
+    fast = evaluate("fast_only", probed_fast_call, config)
     final_state_bytes = state_path.read_bytes()
     receipt = {
-        "schema_version": "labelagent.single-candidate-fast-audit-ab.v1",
+        "schema_version": "labelagent.single-candidate-fast-audit-ab.v2",
         "state": str(state_path),
         "state_sha256": sha256_bytes(state_bytes),
         "state_unchanged": final_state_bytes == state_bytes,
@@ -114,6 +140,13 @@ def main() -> int:
         "candidate_label": candidate.get("label"),
         "primary": primary,
         "fast": fast,
+        "fast_route_probes": fast_route_probes,
+        "fast_route_bound": bool(fast_route_probes) and all(
+            item["route"] == "small_image_fast"
+            and item["selected_endpoint_authority"]
+            == item["configured_fast_endpoint_authority"]
+            and item["selected_model"] == item["configured_fast_model"]
+            for item in fast_route_probes),
         "semantic_core_match": primary["semantic_core"] == fast["semantic_core"],
         "speedup_percent": round(
             (primary["elapsed_seconds"] - fast["elapsed_seconds"])
@@ -129,7 +162,8 @@ def main() -> int:
         json.dumps(receipt, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8")
     print(json.dumps(receipt, ensure_ascii=False, separators=(",", ":")))
-    return 0 if receipt["semantic_core_match"] and receipt["state_unchanged"] else 2
+    return 0 if (receipt["semantic_core_match"] and receipt["state_unchanged"]
+                 and receipt["fast_route_bound"]) else 2
 
 
 if __name__ == "__main__":

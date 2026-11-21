@@ -429,6 +429,67 @@ class CandidateClassAuditTests(unittest.TestCase):
         self.assertIn("direct_fast_tail_failed",
                       audits[0]["batch_fallback_reason"])
 
+    def test_two_candidate_fast_tail_falls_back_only_failed_item_in_order(self):
+        candidates = [{**self.candidate, "id": value} for value in (7, 8)]
+        primary_ids = []
+        fast_ids = []
+
+        def primary(config, prompt, image, **kwargs):
+            candidate_id = int(prompt.split('"candidate_id": ')[1].split(',')[0])
+            primary_ids.append(candidate_id)
+            return self.decision()
+
+        def fast(config, prompt, image, **kwargs):
+            candidate_id = int(prompt.split('"candidate_id": ')[1].split(',')[0])
+            fast_ids.append(candidate_id)
+            if candidate_id == 8:
+                raise audit.CandidateClassProtocolError("fast protocol mismatch")
+            return self.decision()
+
+        audits, queue = audit.audit_high_risk_candidates(
+            {}, self.image, candidates, self.labels, {}, primary,
+            parallel_tail_chat=fast)
+
+        self.assertEqual(queue, [])
+        # The protocol layer performs its one bounded repair attempt for the
+        # failed item only; the successful first item is never repeated.
+        self.assertEqual(fast_ids, [7, 8, 8])
+        self.assertEqual(primary_ids, [8])
+        self.assertEqual([item["candidate_id"] for item in audits], [7, 8])
+        self.assertEqual(audits[0].get("parallel_lane"),
+                         "independent_fast_tail")
+        self.assertEqual(audits[1]["execution_mode"], "sequential")
+        self.assertIn("direct_fast_tail_failed",
+                      audits[1]["batch_fallback_reason"])
+
+    def test_direct_fast_tail_cancellation_never_retries_primary(self):
+        candidate = {**self.candidate, "id": 7}
+        primary_ids = []
+        cancelled = False
+
+        class Cancelled(RuntimeError):
+            pass
+
+        def primary(config, prompt, image, **kwargs):
+            primary_ids.append(7)
+            return self.decision()
+
+        def check_cancelled():
+            if cancelled:
+                raise Cancelled("stop requested")
+
+        def fast(*args, **kwargs):
+            nonlocal cancelled
+            cancelled = True
+            raise Cancelled("stop requested")
+
+        with self.assertRaisesRegex(Cancelled, "stop requested"):
+            audit.audit_high_risk_candidates(
+                {}, self.image, [candidate], self.labels, {}, primary,
+                check_cancelled=check_cancelled,
+                parallel_tail_chat=fast)
+        self.assertEqual(primary_ids, [])
+
     def test_later_uncertain_triple_routes_review_without_retry(self):
         candidates = [{**self.candidate, "id": value} for value in range(7, 13)]
         sequential_calls = []

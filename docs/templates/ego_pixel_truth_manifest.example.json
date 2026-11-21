@@ -1,5 +1,5 @@
 {
-  "schema_version": "labelagent.ego_pixel_truth_manifest.v2",
+  "schema_version": "labelagent.ego_pixel_truth_manifest.v3",
   "dataset_split": "validation",
   "candidate_provenance": {
     "kind": "machine_candidate_review_packet",
@@ -16,6 +16,7 @@
   },
   "gates": {
     "minimum_mean_iou": 0.85,
+    "minimum_camera_mean_iou": 0.85,
     "minimum_sample_iou": 0.75,
     "maximum_person_overlap": 0.02,
     "maximum_floor_overlap": 0.02,

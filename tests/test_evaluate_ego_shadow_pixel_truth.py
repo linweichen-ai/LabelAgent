@@ -90,7 +90,7 @@ class EgoShadowPixelTruthTest(unittest.TestCase):
             "reviewed_masks": reviewed_masks,
         }), encoding="utf-8")
         payload = {
-            "schema_version": "labelagent.ego_pixel_truth_manifest.v2",
+            "schema_version": "labelagent.ego_pixel_truth_manifest.v3",
             "dataset_split": "validation",
             "candidate_provenance": {
                 "kind": "machine_candidate_review_packet",
@@ -108,6 +108,7 @@ class EgoShadowPixelTruthTest(unittest.TestCase):
             },
             "gates": {
                 "minimum_mean_iou": .85,
+                "minimum_camera_mean_iou": .85,
                 "minimum_sample_iou": .75,
                 "maximum_person_overlap": .02,
                 "maximum_floor_overlap": .02,
@@ -262,7 +263,7 @@ class EgoShadowPixelTruthTest(unittest.TestCase):
     def test_legacy_unbound_manifest_and_receipt_are_rejected(self):
         manifest = self.manifest(self.full_scope(self.sample()))
         payload = json.loads(manifest.read_text(encoding="utf-8"))
-        payload["schema_version"] = "labelagent.ego_pixel_truth_manifest.v1"
+        payload["schema_version"] = "labelagent.ego_pixel_truth_manifest.v2"
         manifest.write_text(json.dumps(payload), encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "unsupported"):
             evaluate_manifest(manifest)
@@ -283,7 +284,8 @@ class EgoShadowPixelTruthTest(unittest.TestCase):
     def test_policy_cannot_be_weakened_and_requires_full_unique_scope(self):
         samples = self.full_scope(self.sample())
         weak_gates = {
-            "minimum_mean_iou": .84, "minimum_sample_iou": .75,
+            "minimum_mean_iou": .84, "minimum_camera_mean_iou": .85,
+            "minimum_sample_iou": .75,
             "maximum_person_overlap": .02, "maximum_floor_overlap": .02,
             "minimum_samples_per_camera": 5,
             "required_cameras": ["camera0", "camera1", "camera2", "camera3"],
@@ -293,7 +295,8 @@ class EgoShadowPixelTruthTest(unittest.TestCase):
 
         report = evaluate_manifest(self.manifest(samples[:-1]))
         self.assertFalse(report["gate"]["passed"])
-        self.assertIn("camera3:insufficient_samples", report["gate"]["reasons"])
+        self.assertIn("camera3:insufficient_available_samples",
+                      report["gate"]["reasons"])
         with self.assertRaisesRegex(ValueError, "unique"):
             evaluate_manifest(self.manifest(samples + [samples[0]]))
 
@@ -318,6 +321,41 @@ class EgoShadowPixelTruthTest(unittest.TestCase):
         manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "source image hashes must be unique"):
             evaluate_manifest(manifest)
+
+    def test_each_camera_mean_must_pass_even_when_global_mean_passes(self):
+        samples = self.full_scope(self.sample())
+        for row in samples[:5]:
+            write_mask(self.root / row["candidate_mask"], (2, 2, 8, 10))
+        report = evaluate_manifest(self.manifest(samples))
+        self.assertEqual(report["summary"]["mean_iou"], .9375)
+        self.assertEqual(report["summary"]["minimum_iou"], .75)
+        self.assertFalse(report["gate"]["passed"])
+        self.assertIn("camera0:mean_iou_below_gate", report["gate"]["reasons"])
+
+    def test_blocked_candidate_cannot_pass_pixel_metrics(self):
+        manifest = self.manifest(self.full_scope(self.sample()))
+        manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+        queue = self.root / "candidate-review-queue.json"
+        queue_payload = json.loads(queue.read_text(encoding="utf-8"))
+        queue_payload["samples"][0]["candidate_available"] = False
+        queue_payload["samples"][0]["status"] = "blocked_prompt_constraint"
+        queue.write_text(json.dumps(queue_payload), encoding="utf-8")
+        queue_sha256 = hashlib.sha256(queue.read_bytes()).hexdigest()
+        receipt = self.root / "human-review-receipt.json"
+        receipt_payload = json.loads(receipt.read_text(encoding="utf-8"))
+        receipt_payload["candidate_review_queue_sha256"] = queue_sha256
+        receipt.write_text(json.dumps(receipt_payload), encoding="utf-8")
+        manifest_payload["candidate_provenance"]["review_queue_sha256"] = queue_sha256
+        manifest_payload["truth_provenance"]["confirmation_receipt_sha256"] = (
+            hashlib.sha256(receipt.read_bytes()).hexdigest())
+        manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
+        report = evaluate_manifest(manifest)
+        self.assertEqual(report["summary"]["mean_iou"], 1.0)
+        self.assertEqual(report["summary"]["blocked_candidate_count"], 1)
+        self.assertFalse(report["gate"]["passed"])
+        self.assertIn("blocked_candidate_present", report["gate"]["reasons"])
+        self.assertIn("camera0:insufficient_available_samples",
+                      report["gate"]["reasons"])
 
 
 if __name__ == "__main__":

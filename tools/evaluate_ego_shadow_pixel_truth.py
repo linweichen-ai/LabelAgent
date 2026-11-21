@@ -18,13 +18,14 @@ import numpy as np
 from PIL import Image
 
 
-MANIFEST_SCHEMA_VERSION = "labelagent.ego_pixel_truth_manifest.v2"
-REPORT_SCHEMA_VERSION = "labelagent.ego_pixel_truth_report.v2"
+MANIFEST_SCHEMA_VERSION = "labelagent.ego_pixel_truth_manifest.v3"
+REPORT_SCHEMA_VERSION = "labelagent.ego_pixel_truth_report.v3"
 REVIEW_PACKET_SCHEMA_VERSION = "labelagent.ego_pixel_truth_review_packet.v1"
 RECEIPT_SCHEMA_VERSION = "labelagent.ego_human_pixel_truth_receipt.v3"
 CAMERAS = {f"camera{index}" for index in range(4)}
 MINIMUM_ACCEPTANCE_POLICY = {
     "minimum_mean_iou": 0.85,
+    "minimum_camera_mean_iou": 0.85,
     "minimum_sample_iou": 0.75,
     "maximum_person_overlap": 0.02,
     "maximum_floor_overlap": 0.02,
@@ -168,13 +169,14 @@ def _thresholds(manifest: dict) -> dict:
     if not isinstance(values, dict):
         raise ValueError("gates are required")
     required = {
-        "minimum_mean_iou", "minimum_sample_iou",
+        "minimum_mean_iou", "minimum_camera_mean_iou", "minimum_sample_iou",
         "maximum_person_overlap", "maximum_floor_overlap",
         "minimum_samples_per_camera", "required_cameras",
     }
     if set(values) != required:
         raise ValueError("gates must contain exactly the documented fields")
-    for name in ("minimum_mean_iou", "minimum_sample_iou",
+    for name in ("minimum_mean_iou", "minimum_camera_mean_iou",
+                 "minimum_sample_iou",
                  "maximum_person_overlap", "maximum_floor_overlap"):
         value = values[name]
         if (isinstance(value, bool) or not isinstance(value, (int, float))
@@ -189,6 +191,8 @@ def _thresholds(manifest: dict) -> dict:
             or any(camera not in CAMERAS for camera in cameras)):
         raise ValueError("required_cameras must be unique supported cameras")
     if (values["minimum_mean_iou"] < MINIMUM_ACCEPTANCE_POLICY["minimum_mean_iou"]
+            or values["minimum_camera_mean_iou"]
+            < MINIMUM_ACCEPTANCE_POLICY["minimum_camera_mean_iou"]
             or values["minimum_sample_iou"]
             < MINIMUM_ACCEPTANCE_POLICY["minimum_sample_iou"]
             or values["maximum_person_overlap"]
@@ -312,16 +316,23 @@ def evaluate_manifest(path: Path) -> dict:
     gate_reasons = []
     for camera in gates["required_cameras"]:
         current = [row for row in rows if row["camera"] == camera]
-        if len(current) < gates["minimum_samples_per_camera"]:
-            gate_reasons.append(f"{camera}:insufficient_samples")
+        available = [row for row in current if row["candidate_available"]]
+        if len(available) < gates["minimum_samples_per_camera"]:
+            gate_reasons.append(f"{camera}:insufficient_available_samples")
         if current:
+            camera_mean_iou = round(
+                float(np.mean([row["iou"] for row in current])), 6)
             per_camera[camera] = {
                 "samples": len(current),
-                "mean_iou": round(float(np.mean([row["iou"] for row in current])), 6),
+                "available_samples": len(available),
+                "blocked_samples": len(current) - len(available),
+                "mean_iou": camera_mean_iou,
                 "minimum_iou": min(row["iou"] for row in current),
                 "maximum_person_overlap": max(row["person_overlap"] for row in current),
                 "maximum_floor_overlap": max(row["floor_overlap"] for row in current),
             }
+            if camera_mean_iou < gates["minimum_camera_mean_iou"]:
+                gate_reasons.append(f"{camera}:mean_iou_below_gate")
     mean_iou = round(float(np.mean([row["iou"] for row in rows])), 6)
     minimum_iou = min(row["iou"] for row in rows)
     maximum_person = max(row["person_overlap"] for row in rows)
@@ -334,6 +345,9 @@ def evaluate_manifest(path: Path) -> dict:
         gate_reasons.append("person_overlap_above_gate")
     if maximum_floor > gates["maximum_floor_overlap"]:
         gate_reasons.append("floor_overlap_above_gate")
+    blocked_candidates = sum(not row["candidate_available"] for row in rows)
+    if blocked_candidates:
+        gate_reasons.append("blocked_candidate_present")
     return {
         "schema_version": REPORT_SCHEMA_VERSION,
         "manifest_sha256": _sha256(manifest_path),
@@ -349,6 +363,8 @@ def evaluate_manifest(path: Path) -> dict:
         "samples": rows,
         "summary": {
             "sample_count": len(rows),
+            "available_candidate_count": len(rows) - blocked_candidates,
+            "blocked_candidate_count": blocked_candidates,
             "mean_iou": mean_iou,
             "minimum_iou": minimum_iou,
             "maximum_person_overlap": maximum_person,

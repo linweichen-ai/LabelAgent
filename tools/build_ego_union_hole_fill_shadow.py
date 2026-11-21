@@ -7,7 +7,10 @@ import argparse
 from datetime import datetime, timezone
 import io
 import json
+import math
+import os
 from pathlib import Path
+import shutil
 
 import cv2
 import numpy as np
@@ -109,6 +112,16 @@ def fill_small_holes(mask: np.ndarray,
     }
 
 
+def added_pixels_within_budget(added_pixels: int, source_pixels: int,
+                               maximum_ratio: float) -> bool:
+    if (type(added_pixels) is not int or type(source_pixels) is not int
+            or added_pixels < 0 or source_pixels <= 0
+            or not math.isfinite(maximum_ratio)
+            or not 0.0 <= maximum_ratio <= 1.0):
+        raise ValueError("addition budget settings are invalid")
+    return added_pixels <= math.floor(source_pixels * maximum_ratio)
+
+
 def _write_overlay(image_bytes: bytes, filled: np.ndarray,
                    added: np.ndarray, target: Path) -> None:
     with Image.open(io.BytesIO(image_bytes)) as decoded:
@@ -186,6 +199,7 @@ def build_shadow(review_queues: list[Path], diagnostic_roots: list[Path],
                 or gates.get("identity_manifest_enabled") is not True
                 or gates.get("identity_manifest_sha256") != identity_sha):
             raise ValueError("review queue was not produced by strict safety gates")
+        allowed_root = Path(gates["allowed_source_root"]).resolve(strict=True)
         for row in packet.get("samples", []):
             sample_id = row.get("sample_id")
             if sample_id in seen:
@@ -202,6 +216,20 @@ def build_shadow(review_queues: list[Path], diagnostic_roots: list[Path],
             if identity is None or identity["image_sha256"] != row.get(
                     "source_image_sha256"):
                 raise ValueError(f"identity binding mismatch: {sample_id}")
+            image_path = Path(row.get("source_image", ""))
+            image_resolved = image_path.resolve(strict=True)
+            try:
+                image_resolved.relative_to(allowed_root)
+            except ValueError as error:
+                raise ValueError(f"source image is outside allowed root: {sample_id}") from error
+            if identity.get("relative_path") is not None:
+                if image_resolved != (allowed_root / identity["relative_path"]).resolve(
+                        strict=True):
+                    raise ValueError(f"source relative path mismatch: {sample_id}")
+            elif (image_resolved.name != f"{identity['frame_id']}.png"
+                  or image_resolved.parent.name != f"camera_{identity['camera'][-1]}"
+                  or image_resolved.parent.parent.name != identity["package"]):
+                raise ValueError(f"source nested path mismatch: {sample_id}")
             diagnostic_dir = diagnostic_dirs.get(sample_id)
             if diagnostic_dir is None:
                 raise ValueError(f"missing diagnostic result: {sample_id}")
@@ -253,7 +281,7 @@ def build_shadow(review_queues: list[Path], diagnostic_roots: list[Path],
             source_union = _decode_mask(_verified_bytes(
                 queue_dir / row.get("union_mask", ""),
                 row.get("union_mask_sha256"), "union mask"))
-            image_bytes = _verified_bytes(Path(row.get("source_image", "")),
+            image_bytes = _verified_bytes(image_resolved,
                                           row.get("source_image_sha256"),
                                           "source image")
             if (source_union.shape[1], source_union.shape[0]) != expected_size:
@@ -302,7 +330,9 @@ def build_shadow(review_queues: list[Path], diagnostic_roots: list[Path],
             filled, metrics = fill_small_holes(
                 component["mask"], component["negative_points"],
                 maximum_hole_pixels, protection)
-            if metrics["added_area_ratio_of_mask"] > maximum_added_ratio:
+            if not added_pixels_within_budget(
+                    metrics["added_pixels"], metrics["source_area_pixels"],
+                    maximum_added_ratio):
                 raise ValueError(
                     f"component addition budget exceeded: {sample['sample_id']}/"
                     f"{component['name']} observed="
@@ -361,15 +391,20 @@ def build_shadow(review_queues: list[Path], diagnostic_roots: list[Path],
         }
         rows.append(row)
         pending_outputs.append((row, filled_union, added, sample["image_bytes"]))
-    output.mkdir(parents=True)
-    for row, filled_union, added, image_bytes in pending_outputs:
-        Image.fromarray(filled_union.astype(np.uint8) * 255, mode="L").save(
-            output / row["mask"], "PNG", optimize=True)
-        _write_overlay(image_bytes, filled_union, added, output / row["overlay"])
-        row["mask_sha256"] = file_sha256(output / row["mask"])
-        row["overlay_sha256"] = file_sha256(output / row["overlay"])
-    contact = _write_contact_sheet(output, rows)
-    packet = {
+    staging = output.with_name(f".{output.name}.staging-{os.getpid()}")
+    if staging.exists():
+        raise FileExistsError(staging)
+    staging.mkdir(parents=True)
+    try:
+        for row, filled_union, added, image_bytes in pending_outputs:
+            Image.fromarray(filled_union.astype(np.uint8) * 255, mode="L").save(
+                staging / row["mask"], "PNG", optimize=True)
+            _write_overlay(image_bytes, filled_union, added,
+                           staging / row["overlay"])
+            row["mask_sha256"] = file_sha256(staging / row["mask"])
+            row["overlay_sha256"] = file_sha256(staging / row["overlay"])
+        contact = _write_contact_sheet(staging, rows)
+        packet = {
         "schema_version": "labelagent.ego_union_hole_fill_shadow.v1",
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "candidate_only": True, "human_truth": False,
@@ -397,10 +432,16 @@ def build_shadow(review_queues: list[Path], diagnostic_roots: list[Path],
         "contact_sheet_sha256": file_sha256(contact),
         "samples": rows,
         "next_step": "Review every magenta added region; never replace source masks or approve training from this shadow packet.",
-    }
-    target = output / "hole_fill_shadow.json"
-    target.write_text(json.dumps(packet, ensure_ascii=False, indent=2) + "\n",
-                      encoding="utf-8")
+        }
+        target = staging / "hole_fill_shadow.json"
+        target.write_text(json.dumps(packet, ensure_ascii=False, indent=2) + "\n",
+                          encoding="utf-8")
+        json.loads(target.read_text(encoding="utf-8"))
+        staging.replace(output)
+    except Exception:
+        if staging.exists() and staging.parent == output.parent:
+            shutil.rmtree(staging)
+        raise
     return packet
 
 

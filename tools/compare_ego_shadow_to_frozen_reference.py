@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -129,8 +130,18 @@ def compare(review_queues: list[Path], identity_manifest_path: Path,
         "next_step": "Accept only after visual review; frozen-reference metrics do not create human truth or training approval.",
     }
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(packet, ensure_ascii=False, indent=2) + "\n",
-                      encoding="utf-8")
+    temporary = output.with_name(f".{output.name}.tmp-{os.getpid()}")
+    if temporary.exists():
+        raise FileExistsError(temporary)
+    try:
+        temporary.write_text(
+            json.dumps(packet, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8")
+        json.loads(temporary.read_text(encoding="utf-8"))
+        temporary.replace(output)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
     return packet
 
 

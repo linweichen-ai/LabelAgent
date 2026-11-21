@@ -1,12 +1,15 @@
+import json
 import tempfile
 from pathlib import Path
 import unittest
+from unittest import mock
 
 import numpy as np
 
 from tests import test_build_ego_union_denoise_shadow as denoise_tests
 from tools.build_ego_component_union_review import file_sha256
-from tools.build_ego_union_hole_fill_shadow import build_shadow, fill_small_holes
+from tools.build_ego_union_hole_fill_shadow import (
+    added_pixels_within_budget, build_shadow, fill_small_holes)
 
 
 class EgoUnionHoleFillShadowTests(unittest.TestCase):
@@ -55,6 +58,12 @@ class EgoUnionHoleFillShadowTests(unittest.TestCase):
         second, _ = fill_small_holes(first, [], maximum_pixels=5)
         self.assertTrue(np.array_equal(first, second))
 
+    def test_integer_budget_does_not_round_up_boundary(self):
+        self.assertTrue(added_pixels_within_budget(299, 29999, 0.01))
+        self.assertFalse(added_pixels_within_budget(300, 29999, 0.01))
+        with self.assertRaisesRegex(ValueError, "settings are invalid"):
+            added_pixels_within_budget(1, 10, float("nan"))
+
     def test_builds_reversible_candidate_only_shadow(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -75,12 +84,44 @@ class EgoUnionHoleFillShadowTests(unittest.TestCase):
             root = Path(directory)
             fixture = denoise_tests.EgoUnionDenoiseShadowTests()
             queue, diagnostic, identity, guard, _ = fixture._fixture(root)
-            with self.assertRaisesRegex(ValueError, "addition budget exceeded"):
+            with self.assertRaisesRegex(ValueError, "settings are invalid"):
                 build_shadow(
                     [queue], [diagnostic], identity, guard, root / "output",
                     maximum_hole_pixels=100, maximum_added_ratio=-1.0,
                     expected_size=(10, 8), require_persistence_context=False)
             self.assertFalse((root / "output").exists())
+
+    def test_write_failure_leaves_no_final_or_staging_directory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fixture = denoise_tests.EgoUnionDenoiseShadowTests()
+            queue, diagnostic, identity, guard, _ = fixture._fixture(root)
+            with mock.patch(
+                    "tools.build_ego_union_hole_fill_shadow._write_overlay",
+                    side_effect=OSError("simulated disk failure")):
+                with self.assertRaisesRegex(OSError, "simulated disk failure"):
+                    build_shadow(
+                        [queue], [diagnostic], identity, guard, root / "output",
+                        maximum_hole_pixels=5, maximum_added_ratio=0.1,
+                        expected_size=(10, 8), require_persistence_context=False)
+            self.assertFalse((root / "output").exists())
+            self.assertEqual(list(root.glob(".output.staging-*")), [])
+
+    def test_rejects_source_outside_declared_allowed_root(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fixture = denoise_tests.EgoUnionDenoiseShadowTests()
+            queue, diagnostic, identity, guard, _ = fixture._fixture(root)
+            packet = json.loads(queue.read_text(encoding="utf-8"))
+            other = root / "other"
+            other.mkdir()
+            packet["safety_gates"]["allowed_source_root"] = str(other.resolve())
+            queue.write_text(json.dumps(packet), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "outside allowed root"):
+                build_shadow(
+                    [queue], [diagnostic], identity, guard, root / "output",
+                    maximum_hole_pixels=5, maximum_added_ratio=0.1,
+                    expected_size=(10, 8), require_persistence_context=False)
 
 
 if __name__ == "__main__":

@@ -12,13 +12,13 @@
   "unchanged_sample_count": 1,
   "reviewed_added_pixel_total": 1764,
   "assistant_visual_review": {
-    "status": "pass",
+    "status": "partial_pass",
     "external_person_swallow_observed": false,
     "external_cargo_swallow_observed": false,
     "external_floor_swallow_observed": false,
     "large_mechanical_opening_fill_observed": false,
-    "review_scope": "all 35 changed-sample zoom crops",
-    "limitation": "Assistant visual review is not independent human pixel truth."
+    "review_scope": "all 35 changed-sample overview crops; each crop covers all additions in one frame",
+    "limitation": "This is not per-micro-hole review or independent human pixel truth. Widely separated additions may reduce effective zoom."
   },
   "reviewed_sample_ids": [
     "000-camera1-1793758297542631987",
@@ -57,6 +57,6 @@
     "004-camera3-idx68-1793760682442792695",
     "004-camera3-idx85-1793760721942855696"
   ],
-  "result": "assistant_zoom_review_pass",
+  "result": "assistant_sample_zoom_overview_partial_pass",
   "default_enabled": false
 }

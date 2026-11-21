@@ -1,0 +1,3202 @@
+{
+  "schema_version": "labelagent.ego_union_hole_fill_shadow.v1",
+  "created_utc": "2026-11-21T23:36:14.035227+00:00",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_state_modified": false,
+  "source_masks_modified": false,
+  "sample_count": 36,
+  "failed_closed_input_count": 2,
+  "failed_closed_inputs": [
+    {
+      "sample_id": "003-camera1-idx68-1793759980309508695",
+      "reasons": [
+        "required component failed closed: camera1-left-seat-console-v2"
+      ]
+    },
+    {
+      "sample_id": "003-camera1-idx85-1793759985409553695",
+      "reasons": [
+        "required component failed closed: camera1-left-seat-console-v2"
+      ]
+    }
+  ],
+  "maximum_hole_pixels_exclusive": 16,
+  "maximum_added_ratio_per_component": 0.01,
+  "connectivity": 8,
+  "expected_size": [
+    640,
+    512
+  ],
+  "persistent_hole_protection": {
+    "enabled": true,
+    "minimum_external_packages": 2,
+    "dilation_radius_pixels": 2
+  },
+  "added_pixel_total": 1764,
+  "filled_hole_total": 245,
+  "removed_pixel_total": 0,
+  "positive_points_preserved_all": true,
+  "negative_points_preserved_all": true,
+  "identity_manifest_sha256": "badc0ae487ea042c410facbee79c1dcd2beabd41c557b9cce4eee9ad2b8df12c",
+  "component_guard_sha256": "0aa319fc6e8ac0c9f5b96d8f8e34c121042ed7b5d9f583397ee100d22d4e12da",
+  "contact_sheet": "hole_fill_shadow_contact_sheet.jpg",
+  "contact_sheet_sha256": "cea92402c3c00bc27df5ee075e85b93c7dc1c1058ca03ff63d87b17ca77aef7d",
+  "samples": [
+    {
+      "sample_id": "000-camera1-1793758297542631987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "c3554967da7e0e4018dd2d526b181e63eeacd94f1935acbcaaa88a3a5e4c4991",
+      "source_union_mask_sha256": "d2e2fbc38df313861263b4c77c746a59bcc6739f123db65f669e38189bf83e91",
+      "source_queue_sha256": "a65f23e474b73a848ba70a0b2613abfda6b1a60fd17405263bcd7fe72b9e53b7",
+      "diagnostic_sha256": "f8b89de9bc1c3276b0358e93c3c29eafb16ccb0807557173cb77acdc2087e40f",
+      "components": [
+        {
+          "name": "camera1-left-seat-console-v2",
+          "source_mask_sha256": "902baf067e398889279d2e6f04cb458123e33b58cfcfcc42578abf813abfe716",
+          "area_ratio_after": 0.089096,
+          "area_guard": {
+            "min_area_ratio": 0.07,
+            "max_area_ratio": 0.12
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 29109,
+          "filled_area_pixels": 29195,
+          "added_pixels": 86,
+          "added_area_ratio_of_mask": 0.002954,
+          "enclosed_hole_count": 32,
+          "filled_hole_count": 11,
+          "filled_hole_sizes": [
+            7,
+            15,
+            12,
+            5,
+            12,
+            5,
+            10,
+            5,
+            5,
+            5,
+            5
+          ],
+          "large_hole_protected_count": 13,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 8,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera1-right-hood-v2",
+          "source_mask_sha256": "bfd74e3a933fcac461e8718386107862d7770ba2a564ae44012bda5200394ca4",
+          "area_ratio_after": 0.017935,
+          "area_guard": {
+            "min_area_ratio": 0.01,
+            "max_area_ratio": 0.03
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 5860,
+          "filled_area_pixels": 5877,
+          "added_pixels": 17,
+          "added_area_ratio_of_mask": 0.002901,
+          "enclosed_hole_count": 5,
+          "filled_hole_count": 2,
+          "filled_hole_sizes": [
+            12,
+            5
+          ],
+          "large_hole_protected_count": 2,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 1,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 34969,
+        "filled_area_pixels": 35072,
+        "added_pixels": 103,
+        "added_area_ratio_of_mask": 0.002945,
+        "filled_hole_count": 13,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "000-camera1-1793758297542631987-hole-fill-shadow-mask.png",
+      "overlay": "000-camera1-1793758297542631987-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "76c85c6f84c3ec1c4e0a8832a2d815b2daacc237191081a3d49d1296b8f77ffa",
+      "overlay_sha256": "77fee0f80cf54045ba6a8dc758f50381586f2bafcdbd828fc7d983edf0996ade"
+    },
+    {
+      "sample_id": "000-camera1-1793758312842576695",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "17e1c32c749246e78a8467d71139aaf1ad5cb49bddec7d582e4b30ce4ce4b37a",
+      "source_union_mask_sha256": "654576bd44a75dee1a84cffad8e3a413a914fd8d714d9a68454abd5d6edf79bc",
+      "source_queue_sha256": "a65f23e474b73a848ba70a0b2613abfda6b1a60fd17405263bcd7fe72b9e53b7",
+      "diagnostic_sha256": "ab765c222ba82f340d8d5a38b9bb52ced8aef6fe48d922b31f79c4d9f06487d6",
+      "components": [
+        {
+          "name": "camera1-left-seat-console-v2",
+          "source_mask_sha256": "8308cf98fc3b6be277c26834815f506e17cdd4295bf0dc629dd378d1f4178e4c",
+          "area_ratio_after": 0.090665,
+          "area_guard": {
+            "min_area_ratio": 0.07,
+            "max_area_ratio": 0.12
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 29699,
+          "filled_area_pixels": 29709,
+          "added_pixels": 10,
+          "added_area_ratio_of_mask": 0.000337,
+          "enclosed_hole_count": 16,
+          "filled_hole_count": 2,
+          "filled_hole_sizes": [
+            5,
+            5
+          ],
+          "large_hole_protected_count": 5,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 9,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera1-right-hood-v2",
+          "source_mask_sha256": "55613a7b6353d98a760de17baeebf918bf87e9026a4ad4a280bde8299124d6bc",
+          "area_ratio_after": 0.01709,
+          "area_guard": {
+            "min_area_ratio": 0.01,
+            "max_area_ratio": 0.03
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 5595,
+          "filled_area_pixels": 5600,
+          "added_pixels": 5,
+          "added_area_ratio_of_mask": 0.000894,
+          "enclosed_hole_count": 5,
+          "filled_hole_count": 1,
+          "filled_hole_sizes": [
+            5
+          ],
+          "large_hole_protected_count": 2,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 2,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 35294,
+        "filled_area_pixels": 35309,
+        "added_pixels": 15,
+        "added_area_ratio_of_mask": 0.000425,
+        "filled_hole_count": 3,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "000-camera1-1793758312842576695-hole-fill-shadow-mask.png",
+      "overlay": "000-camera1-1793758312842576695-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "ecf7e1020db9e7d8e610743b5b2f0c1289d977f3dea960436db85a6e36cff523",
+      "overlay_sha256": "8f90e61376181c58d01faf0b6be9d818e4c2ae484bf05a847b6689282c0ea3b8"
+    },
+    {
+      "sample_id": "000-camera1-1793758356342888404",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "ff5b0eafbfab4271590631e8f5fd3d2a9d5801f22b97f3f45a9dd5103426de07",
+      "source_union_mask_sha256": "68f5a2b74c5ce98d4514d5e44b2d0e83742fced2a8a25bcf6e02b6579a09724b",
+      "source_queue_sha256": "a65f23e474b73a848ba70a0b2613abfda6b1a60fd17405263bcd7fe72b9e53b7",
+      "diagnostic_sha256": "bae79c90f18f00da4c22e590c2786996d447115c561a4b8fe9669c824501e937",
+      "components": [
+        {
+          "name": "camera1-left-seat-console-v2",
+          "source_mask_sha256": "e430cb1958a9778e4ee97dc87456c984000124015770b7c8010285bc0651151f",
+          "area_ratio_after": 0.094394,
+          "area_guard": {
+            "min_area_ratio": 0.07,
+            "max_area_ratio": 0.12
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 30921,
+          "filled_area_pixels": 30931,
+          "added_pixels": 10,
+          "added_area_ratio_of_mask": 0.000323,
+          "enclosed_hole_count": 14,
+          "filled_hole_count": 2,
+          "filled_hole_sizes": [
+            5,
+            5
+          ],
+          "large_hole_protected_count": 7,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 5,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera1-right-hood-v2",
+          "source_mask_sha256": "cf9269a7b348d480423ac2a7c873dbb944faae71a09d380653c4712739a06857",
+          "area_ratio_after": 0.016959,
+          "area_guard": {
+            "min_area_ratio": 0.01,
+            "max_area_ratio": 0.03
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 5552,
+          "filled_area_pixels": 5557,
+          "added_pixels": 5,
+          "added_area_ratio_of_mask": 0.000901,
+          "enclosed_hole_count": 6,
+          "filled_hole_count": 1,
+          "filled_hole_sizes": [
+            5
+          ],
+          "large_hole_protected_count": 2,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 3,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 36473,
+        "filled_area_pixels": 36488,
+        "added_pixels": 15,
+        "added_area_ratio_of_mask": 0.000411,
+        "filled_hole_count": 3,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "000-camera1-1793758356342888404-hole-fill-shadow-mask.png",
+      "overlay": "000-camera1-1793758356342888404-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "ebc0322fde755106a7b56cb3102f3fcc045124d38229633596143e95f4c34d6c",
+      "overlay_sha256": "06cd9bf72dfdc0c4626044dd5d3b1a6752fa8559868534a92e5a7add4ba7888b"
+    },
+    {
+      "sample_id": "000-camera3-1793758297542631987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "126ae6c9e51138c6f17ad793b01a20ed4b884c42ae6034ba2e886116e8a8f8f7",
+      "source_union_mask_sha256": "68eb4beeceb34a2bd82bd210687ad0ef84e0c6458c20461c75cdd7edfadd0363",
+      "source_queue_sha256": "a65f23e474b73a848ba70a0b2613abfda6b1a60fd17405263bcd7fe72b9e53b7",
+      "diagnostic_sha256": "3a82e993f71d471360f81a3ec82047439f85e2647ea8570d0fd17f5ac91ae796",
+      "components": [
+        {
+          "name": "camera3-crossbar-core-v2",
+          "source_mask_sha256": "8561ef8d698cf2b1ba5a70da42c4e25bd996bc2acc9200a9e9618582c0d7f600",
+          "area_ratio_after": 0.031326,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.05
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 10214,
+          "filled_area_pixels": 10265,
+          "added_pixels": 51,
+          "added_area_ratio_of_mask": 0.004993,
+          "enclosed_hole_count": 23,
+          "filled_hole_count": 7,
+          "filled_hole_sizes": [
+            7,
+            7,
+            5,
+            7,
+            7,
+            11,
+            7
+          ],
+          "large_hole_protected_count": 8,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 8,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera3-lower-assembly-v2",
+          "source_mask_sha256": "07820bae978f71b483adde258aea0e5fae73ff8d52f71056fcd27e20542a92f7",
+          "area_ratio_after": 0.022858,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.04
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 7485,
+          "filled_area_pixels": 7490,
+          "added_pixels": 5,
+          "added_area_ratio_of_mask": 0.000668,
+          "enclosed_hole_count": 3,
+          "filled_hole_count": 1,
+          "filled_hole_sizes": [
+            5
+          ],
+          "large_hole_protected_count": 1,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 1,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 17699,
+        "filled_area_pixels": 17755,
+        "added_pixels": 56,
+        "added_area_ratio_of_mask": 0.003164,
+        "filled_hole_count": 8,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "000-camera3-1793758297542631987-hole-fill-shadow-mask.png",
+      "overlay": "000-camera3-1793758297542631987-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "9cc45d184361a79624bb90c665960b9be0b956bbf536d44be408d7ed9c0bb58d",
+      "overlay_sha256": "b0ccdae7d4aa2860a12ec20cd76ad432b76032a3b7de82012544d9dd80f80b3c"
+    },
+    {
+      "sample_id": "000-camera3-1793758312842576695",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "a57f168eab07a6e92826962e3a6ddae8ee0e9de2b1c33268c49ab2cb739d6e3a",
+      "source_union_mask_sha256": "f9822ddfd863bcdec8b3658a56e17d5667725f75bff24b92031cfc45b80e4d97",
+      "source_queue_sha256": "a65f23e474b73a848ba70a0b2613abfda6b1a60fd17405263bcd7fe72b9e53b7",
+      "diagnostic_sha256": "5bcba3409c485548ae1453a9026f70b94495c3e07557fff306df6e46e41890ba",
+      "components": [
+        {
+          "name": "camera3-crossbar-core-v2",
+          "source_mask_sha256": "b31f1d016ec53244e0ac14f9eeb51e5fc2922c321fa6e91c932cde8a65f6510a",
+          "area_ratio_after": 0.031293,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.05
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 10183,
+          "filled_area_pixels": 10254,
+          "added_pixels": 71,
+          "added_area_ratio_of_mask": 0.006972,
+          "enclosed_hole_count": 19,
+          "filled_hole_count": 7,
+          "filled_hole_sizes": [
+            11,
+            5,
+            15,
+            12,
+            11,
+            5,
+            12
+          ],
+          "large_hole_protected_count": 4,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 8,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera3-lower-assembly-v2",
+          "source_mask_sha256": "3309648ded760d59cc08c76af5d4be1416baef71197598e58e6efbe8a4bd276c",
+          "area_ratio_after": 0.022684,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.04
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 7411,
+          "filled_area_pixels": 7433,
+          "added_pixels": 22,
+          "added_area_ratio_of_mask": 0.002969,
+          "enclosed_hole_count": 5,
+          "filled_hole_count": 3,
+          "filled_hole_sizes": [
+            5,
+            7,
+            10
+          ],
+          "large_hole_protected_count": 1,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 1,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 17594,
+        "filled_area_pixels": 17687,
+        "added_pixels": 93,
+        "added_area_ratio_of_mask": 0.005286,
+        "filled_hole_count": 10,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "000-camera3-1793758312842576695-hole-fill-shadow-mask.png",
+      "overlay": "000-camera3-1793758312842576695-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "fbaee0f39dc7b5522bfd54b23c0b598e79cc26e4794c5623581cbe40c94299b1",
+      "overlay_sha256": "252bae6c5cfcc7c80b9d37c380dbfbce06789f181f3b1ba7cc9b88fab0701f09"
+    },
+    {
+      "sample_id": "000-camera3-1793758356342888404",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "85312abff432713da83649d9882eae13e2feddc8d5ad65d2c23e8673e62972f6",
+      "source_union_mask_sha256": "892dd559980150714d2a8bc8054ab76c9d44959e13a06f3c96eb6711937e48cd",
+      "source_queue_sha256": "a65f23e474b73a848ba70a0b2613abfda6b1a60fd17405263bcd7fe72b9e53b7",
+      "diagnostic_sha256": "c6971022f8308315a4e3ae1dd07236cbabf602a24254c0add6185a635e5a20b0",
+      "components": [
+        {
+          "name": "camera3-crossbar-core-v2",
+          "source_mask_sha256": "5e2881b73d2ef997b2769922347877a4bc4a29cff73df86877dfe8859534c031",
+          "area_ratio_after": 0.032343,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.05
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 10556,
+          "filled_area_pixels": 10598,
+          "added_pixels": 42,
+          "added_area_ratio_of_mask": 0.003979,
+          "enclosed_hole_count": 14,
+          "filled_hole_count": 5,
+          "filled_hole_sizes": [
+            5,
+            7,
+            15,
+            5,
+            10
+          ],
+          "large_hole_protected_count": 5,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 4,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera3-lower-assembly-v2",
+          "source_mask_sha256": "0aaff4dcae7ca1548a629fdfea133709d2e8ea1ddca6ab3504ac8c4d10cfecf3",
+          "area_ratio_after": 0.021039,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.04
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 6875,
+          "filled_area_pixels": 6894,
+          "added_pixels": 19,
+          "added_area_ratio_of_mask": 0.002764,
+          "enclosed_hole_count": 5,
+          "filled_hole_count": 2,
+          "filled_hole_sizes": [
+            14,
+            5
+          ],
+          "large_hole_protected_count": 1,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 2,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 17431,
+        "filled_area_pixels": 17492,
+        "added_pixels": 61,
+        "added_area_ratio_of_mask": 0.0035,
+        "filled_hole_count": 7,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "000-camera3-1793758356342888404-hole-fill-shadow-mask.png",
+      "overlay": "000-camera3-1793758356342888404-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "98be92a9a6b7912771ea60877f97be8ed3393284286765a0d903f5a56964d9fa",
+      "overlay_sha256": "8180e7089da3671ede8a6239fe789d7bfe218427bfd221053032cb6a460cdf9f"
+    },
+    {
+      "sample_id": "001-camera1-1793759004609543987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "0dfbf6a2545e2c853caaf463974c656b7f0b87a8fe03fba51f8307dab24b3135",
+      "source_union_mask_sha256": "903f3ee4ff3cb40e05d2bc915ee4a7e1224c5bcd757f1c8735c6a21df3fcbb34",
+      "source_queue_sha256": "a65f23e474b73a848ba70a0b2613abfda6b1a60fd17405263bcd7fe72b9e53b7",
+      "diagnostic_sha256": "afc1a90391fbef4a8cfa3ec35a284ffcb8b0970c34e63782c90670cfa64c9cd2",
+      "components": [
+        {
+          "name": "camera1-left-seat-console-v2",
+          "source_mask_sha256": "47a4789a37ed38258eee32a70ccd3edaa09cd56c87adeddd66e3fa237ca5eb22",
+          "area_ratio_after": 0.092624,
+          "area_guard": {
+            "min_area_ratio": 0.07,
+            "max_area_ratio": 0.12
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 30351,
+          "filled_area_pixels": 30351,
+          "added_pixels": 0,
+          "added_area_ratio_of_mask": 0.0,
+          "enclosed_hole_count": 18,
+          "filled_hole_count": 0,
+          "filled_hole_sizes": [],
+          "large_hole_protected_count": 7,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 11,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera1-right-hood-v2",
+          "source_mask_sha256": "32bacae831d6b3770f6c6ae6489502f7d8e219a1373ca4312a77dadc1a2434cd",
+          "area_ratio_after": 0.016992,
+          "area_guard": {
+            "min_area_ratio": 0.01,
+            "max_area_ratio": 0.03
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 5568,
+          "filled_area_pixels": 5568,
+          "added_pixels": 0,
+          "added_area_ratio_of_mask": 0.0,
+          "enclosed_hole_count": 3,
+          "filled_hole_count": 0,
+          "filled_hole_sizes": [],
+          "large_hole_protected_count": 2,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 1,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 35919,
+        "filled_area_pixels": 35919,
+        "added_pixels": 0,
+        "added_area_ratio_of_mask": 0.0,
+        "filled_hole_count": 0,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "001-camera1-1793759004609543987-hole-fill-shadow-mask.png",
+      "overlay": "001-camera1-1793759004609543987-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "903f3ee4ff3cb40e05d2bc915ee4a7e1224c5bcd757f1c8735c6a21df3fcbb34",
+      "overlay_sha256": "8ec57f5850130db17bdc837ea492629a9205165934f1e3cf6c5b77d683332e7c"
+    },
+    {
+      "sample_id": "001-camera1-1793759034009520987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "80c74affd6c98c69c222ab5d764e144c05ac02533358ef6ca0ab33326a3ad7e9",
+      "source_union_mask_sha256": "02bae345a5d8d53e700b0b444d512d604a6f4daf76fb65795c1c70377b1420fe",
+      "source_queue_sha256": "a65f23e474b73a848ba70a0b2613abfda6b1a60fd17405263bcd7fe72b9e53b7",
+      "diagnostic_sha256": "80396d2e911f4856dd7be329b8b226ca9a154658ad2dfaa47c67f0be6d1fd03e",
+      "components": [
+        {
+          "name": "camera1-left-seat-console-v2",
+          "source_mask_sha256": "8e681647aa7297d6523b05f44fa606c25c04fc637e968c958d30ee61c8f664e7",
+          "area_ratio_after": 0.09451,
+          "area_guard": {
+            "min_area_ratio": 0.07,
+            "max_area_ratio": 0.12
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 30923,
+          "filled_area_pixels": 30969,
+          "added_pixels": 46,
+          "added_area_ratio_of_mask": 0.001488,
+          "enclosed_hole_count": 18,
+          "filled_hole_count": 5,
+          "filled_hole_sizes": [
+            5,
+            14,
+            11,
+            5,
+            11
+          ],
+          "large_hole_protected_count": 6,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 7,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera1-right-hood-v2",
+          "source_mask_sha256": "ed4eef32e0c439c7d5f8ce544a91e50087bc84f75290bf232c1b9ae330932ff4",
+          "area_ratio_after": 0.017801,
+          "area_guard": {
+            "min_area_ratio": 0.01,
+            "max_area_ratio": 0.03
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 5816,
+          "filled_area_pixels": 5833,
+          "added_pixels": 17,
+          "added_area_ratio_of_mask": 0.002923,
+          "enclosed_hole_count": 9,
+          "filled_hole_count": 3,
+          "filled_hole_sizes": [
+            5,
+            7,
+            5
+          ],
+          "large_hole_protected_count": 3,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 3,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 36739,
+        "filled_area_pixels": 36802,
+        "added_pixels": 63,
+        "added_area_ratio_of_mask": 0.001715,
+        "filled_hole_count": 8,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "001-camera1-1793759034009520987-hole-fill-shadow-mask.png",
+      "overlay": "001-camera1-1793759034009520987-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "c73bcc663835e6e56c1959b4ec9b63d435b77b92b7d9b660e9561d5e97750010",
+      "overlay_sha256": "e15e5050d690aa71d976fca154ee1079dfcafc74cb932b241cf69bf16106272c"
+    },
+    {
+      "sample_id": "001-camera1-1793759063409530987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "5c9acd0f48d7f979a094754fc140923ce8fb5b295e05c10ad801e6764fd03ae1",
+      "source_union_mask_sha256": "da6bc76386127a1e702c004ba5aa7d729e348806c9e6a78a79f0231fec902036",
+      "source_queue_sha256": "a65f23e474b73a848ba70a0b2613abfda6b1a60fd17405263bcd7fe72b9e53b7",
+      "diagnostic_sha256": "31e86912e085944948fd45b3194abd91b6bcf882f77a3dbdf0ee4ce757d4217f",
+      "components": [
+        {
+          "name": "camera1-left-seat-console-v2",
+          "source_mask_sha256": "63a1240fb2b798ab491a2f4228c7efaec9c253308d72d539ed1203910a8e93ed",
+          "area_ratio_after": 0.092477,
+          "area_guard": {
+            "min_area_ratio": 0.07,
+            "max_area_ratio": 0.12
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 30298,
+          "filled_area_pixels": 30303,
+          "added_pixels": 5,
+          "added_area_ratio_of_mask": 0.000165,
+          "enclosed_hole_count": 15,
+          "filled_hole_count": 1,
+          "filled_hole_sizes": [
+            5
+          ],
+          "large_hole_protected_count": 5,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 9,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera1-right-hood-v2",
+          "source_mask_sha256": "6ed505c77472825a583d0d675610a54f55235fbde055b4f71152f52a00c2ba19",
+          "area_ratio_after": 0.01593,
+          "area_guard": {
+            "min_area_ratio": 0.01,
+            "max_area_ratio": 0.03
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 5215,
+          "filled_area_pixels": 5220,
+          "added_pixels": 5,
+          "added_area_ratio_of_mask": 0.000959,
+          "enclosed_hole_count": 6,
+          "filled_hole_count": 1,
+          "filled_hole_sizes": [
+            5
+          ],
+          "large_hole_protected_count": 4,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 1,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 35513,
+        "filled_area_pixels": 35523,
+        "added_pixels": 10,
+        "added_area_ratio_of_mask": 0.000282,
+        "filled_hole_count": 2,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "001-camera1-1793759063409530987-hole-fill-shadow-mask.png",
+      "overlay": "001-camera1-1793759063409530987-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "9f52aa08b4de19294c3102f890f39e8d14e3e366f55310ac17725c56130f92e8",
+      "overlay_sha256": "7be67ff3ff1d11115e4f8a84067b23cb0510e0238fdd5780e1900fe992d7f4f5"
+    },
+    {
+      "sample_id": "001-camera3-1793759004609543987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "df1da2698481e2a13aa2a4967bedf9ee52d59492ca9f1b290c1f599102263fe0",
+      "source_union_mask_sha256": "fb53e8eb13c42a6647e31e31dc51e0e080bb75b1a329784e8bb3b0f5638d08af",
+      "source_queue_sha256": "a65f23e474b73a848ba70a0b2613abfda6b1a60fd17405263bcd7fe72b9e53b7",
+      "diagnostic_sha256": "0f7731ceb12459297f742db36847d213f79af533cbcafea229ac24c147826333",
+      "components": [
+        {
+          "name": "camera3-crossbar-core-v2",
+          "source_mask_sha256": "b944a8388aea4061fae49d845c3acb2f453c9ace47c5471cece9ab483ae576e8",
+          "area_ratio_after": 0.028461,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.05
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 9294,
+          "filled_area_pixels": 9326,
+          "added_pixels": 32,
+          "added_area_ratio_of_mask": 0.003443,
+          "enclosed_hole_count": 9,
+          "filled_hole_count": 4,
+          "filled_hole_sizes": [
+            7,
+            5,
+            5,
+            15
+          ],
+          "large_hole_protected_count": 4,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 1,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera3-lower-assembly-v2",
+          "source_mask_sha256": "e31e56f762f1ea26b5ea78547b3a095963fd4576850c74e859518109022c8014",
+          "area_ratio_after": 0.0233,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.04
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 7612,
+          "filled_area_pixels": 7635,
+          "added_pixels": 23,
+          "added_area_ratio_of_mask": 0.003022,
+          "enclosed_hole_count": 5,
+          "filled_hole_count": 3,
+          "filled_hole_sizes": [
+            7,
+            11,
+            5
+          ],
+          "large_hole_protected_count": 2,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 0,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 16906,
+        "filled_area_pixels": 16961,
+        "added_pixels": 55,
+        "added_area_ratio_of_mask": 0.003253,
+        "filled_hole_count": 7,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "001-camera3-1793759004609543987-hole-fill-shadow-mask.png",
+      "overlay": "001-camera3-1793759004609543987-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "ddc43c66f59650ed8387b0860bb91ec0fd182e7e2472cf76bbd3d10d7dde5c45",
+      "overlay_sha256": "714717470f5a893021852cce5d55e26e8dc0ecacdb78212ab44c638f1d0ee81a"
+    },
+    {
+      "sample_id": "001-camera3-1793759034009520987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "12fa6c6a0122bd7c49bd1fa18cdb2f6a8a3e240bdc57d806fef76055e40c8d8e",
+      "source_union_mask_sha256": "4c9fd0af75224d97b8e640038ac2c3a04a812ffc8cc4687479c4e89c281929c0",
+      "source_queue_sha256": "a65f23e474b73a848ba70a0b2613abfda6b1a60fd17405263bcd7fe72b9e53b7",
+      "diagnostic_sha256": "836d530a6c2b396ce264bad1d68c95544b8d6835d1cc63e5c2b2e85d910ade3c",
+      "components": [
+        {
+          "name": "camera3-crossbar-core-v2",
+          "source_mask_sha256": "f438a4a7e950acab7cca634106fcebf591fa0e98d79ec95c57a72382378e02e5",
+          "area_ratio_after": 0.03038,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.05
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 9928,
+          "filled_area_pixels": 9955,
+          "added_pixels": 27,
+          "added_area_ratio_of_mask": 0.00272,
+          "enclosed_hole_count": 16,
+          "filled_hole_count": 3,
+          "filled_hole_sizes": [
+            7,
+            13,
+            7
+          ],
+          "large_hole_protected_count": 6,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 7,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera3-lower-assembly-v2",
+          "source_mask_sha256": "2be4b9be9ce804404349d531e4ab2d5e43d26048a9c75c10a7b0ca80429f6d48",
+          "area_ratio_after": 0.027994,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.04
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 9163,
+          "filled_area_pixels": 9173,
+          "added_pixels": 10,
+          "added_area_ratio_of_mask": 0.001091,
+          "enclosed_hole_count": 1,
+          "filled_hole_count": 1,
+          "filled_hole_sizes": [
+            10
+          ],
+          "large_hole_protected_count": 0,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 0,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 19085,
+        "filled_area_pixels": 19122,
+        "added_pixels": 37,
+        "added_area_ratio_of_mask": 0.001939,
+        "filled_hole_count": 4,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "001-camera3-1793759034009520987-hole-fill-shadow-mask.png",
+      "overlay": "001-camera3-1793759034009520987-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "8289ade0691d8fd8c5a70fc2e090300a1fced46334472a7e900c1c06f16b25eb",
+      "overlay_sha256": "04f6220d80377d4b4824460110b4a1de4492b8e4b936e7fceca5c33782f79d7c"
+    },
+    {
+      "sample_id": "001-camera3-1793759063409530987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "25cd59cd26dbdc36d87b59ada3180d82435a2f0cc7e505cb73d9ac79dd8b405c",
+      "source_union_mask_sha256": "4aba249b84fb854cb7ab27d42da1b2dfffdde8b6527b3edfcf697d0d78190405",
+      "source_queue_sha256": "a65f23e474b73a848ba70a0b2613abfda6b1a60fd17405263bcd7fe72b9e53b7",
+      "diagnostic_sha256": "17b817981befbc727fae33ea0745ab18c64f1b65795e0cda2491304043c2d21f",
+      "components": [
+        {
+          "name": "camera3-crossbar-core-v2",
+          "source_mask_sha256": "a36889d6583f9fd878f81a1e1fd7d6eba4c8fc43c63e4266afad88dbfeb2a70b",
+          "area_ratio_after": 0.029901,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.05
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 9771,
+          "filled_area_pixels": 9798,
+          "added_pixels": 27,
+          "added_area_ratio_of_mask": 0.002763,
+          "enclosed_hole_count": 13,
+          "filled_hole_count": 4,
+          "filled_hole_sizes": [
+            5,
+            7,
+            5,
+            10
+          ],
+          "large_hole_protected_count": 2,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 7,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera3-lower-assembly-v2",
+          "source_mask_sha256": "75f4c996b09ef38550e1e8622912f8cf3e273ff15c0e8a085f8901bf324a40b2",
+          "area_ratio_after": 0.021753,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.04
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 7104,
+          "filled_area_pixels": 7128,
+          "added_pixels": 24,
+          "added_area_ratio_of_mask": 0.003378,
+          "enclosed_hole_count": 4,
+          "filled_hole_count": 3,
+          "filled_hole_sizes": [
+            12,
+            5,
+            7
+          ],
+          "large_hole_protected_count": 0,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 1,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 16875,
+        "filled_area_pixels": 16926,
+        "added_pixels": 51,
+        "added_area_ratio_of_mask": 0.003022,
+        "filled_hole_count": 7,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "001-camera3-1793759063409530987-hole-fill-shadow-mask.png",
+      "overlay": "001-camera3-1793759063409530987-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "b5fa6296aa79cb7264cf2bcc740d134c3a25fac1eadfeb288ac5bebf9af6df12",
+      "overlay_sha256": "4326f354d48e3fbfb9ccea80a2600c8072b0c2156001315d3983dee2d43b6eab"
+    },
+    {
+      "sample_id": "002-camera1-1793759208642855696",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "2b45724809c029d5188073bee908aa1a9d346f043adc2877c5f9a2a145b39029",
+      "source_union_mask_sha256": "ed9ba6e5ebabf925cb095911bb6649d1c6918e6244360e8b131946ac237d739c",
+      "source_queue_sha256": "ef4311b4705d3a55279bfc4f5b825ce9da1d87f07928e6b900f58c998e7d1cdb",
+      "diagnostic_sha256": "3f71ea8b39dd803297c2971f7d10b8a7c1640bb7c8d9f2dcd06e8695bc178051",
+      "components": [
+        {
+          "name": "camera1-left-seat-console-v2",
+          "source_mask_sha256": "3d4d1c44d07a9edbe25649d9c2afa99f6090668be7a25b02dcd9f7c14c2f8d55",
+          "area_ratio_after": 0.091031,
+          "area_guard": {
+            "min_area_ratio": 0.07,
+            "max_area_ratio": 0.12
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 29783,
+          "filled_area_pixels": 29829,
+          "added_pixels": 46,
+          "added_area_ratio_of_mask": 0.001545,
+          "enclosed_hole_count": 17,
+          "filled_hole_count": 7,
+          "filled_hole_sizes": [
+            5,
+            7,
+            7,
+            10,
+            5,
+            7,
+            5
+          ],
+          "large_hole_protected_count": 3,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 7,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera1-right-hood-v2",
+          "source_mask_sha256": "5846b814beaa0768ba352f960d8384824d553d75a873fbc750d8aeeffc36edcf",
+          "area_ratio_after": 0.017145,
+          "area_guard": {
+            "min_area_ratio": 0.01,
+            "max_area_ratio": 0.03
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 5613,
+          "filled_area_pixels": 5618,
+          "added_pixels": 5,
+          "added_area_ratio_of_mask": 0.000891,
+          "enclosed_hole_count": 6,
+          "filled_hole_count": 1,
+          "filled_hole_sizes": [
+            5
+          ],
+          "large_hole_protected_count": 5,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 0,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 35396,
+        "filled_area_pixels": 35447,
+        "added_pixels": 51,
+        "added_area_ratio_of_mask": 0.001441,
+        "filled_hole_count": 8,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "002-camera1-1793759208642855696-hole-fill-shadow-mask.png",
+      "overlay": "002-camera1-1793759208642855696-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "f8a6efe30de0e4253ca434dd3392cc227b27aadca6a0d85fc9c8e92093fe158f",
+      "overlay_sha256": "0aed92d0c91def16bac3dc91238eb09af5e55c7450f0f5ec0b26708dfd3df3db"
+    },
+    {
+      "sample_id": "002-camera1-1793759219742811696",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "f1e414009803a5b953c725cf7a693476357ac74bc68b963ded438ee50725d526",
+      "source_union_mask_sha256": "0758a18cc9f89498b52a7ba5872bd51228f1df53f487bf652fcf9c1450bae224",
+      "source_queue_sha256": "ef4311b4705d3a55279bfc4f5b825ce9da1d87f07928e6b900f58c998e7d1cdb",
+      "diagnostic_sha256": "26f2295711c429c576a9c61704c69e2fd95e4e80905ae2d37875ae91d3ac83ae",
+      "components": [
+        {
+          "name": "camera1-left-seat-console-v2",
+          "source_mask_sha256": "19088cb7160ef466c2eebfa957355b2312c8e6d0ec3817154e14818bb8b9f928",
+          "area_ratio_after": 0.092685,
+          "area_guard": {
+            "min_area_ratio": 0.07,
+            "max_area_ratio": 0.12
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 30361,
+          "filled_area_pixels": 30371,
+          "added_pixels": 10,
+          "added_area_ratio_of_mask": 0.000329,
+          "enclosed_hole_count": 17,
+          "filled_hole_count": 2,
+          "filled_hole_sizes": [
+            5,
+            5
+          ],
+          "large_hole_protected_count": 5,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 10,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera1-right-hood-v2",
+          "source_mask_sha256": "1396d06cdb70246dc206c4b29a796ea2d8ce2182765ca7a0ec1406f695253bf0",
+          "area_ratio_after": 0.017694,
+          "area_guard": {
+            "min_area_ratio": 0.01,
+            "max_area_ratio": 0.03
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 5798,
+          "filled_area_pixels": 5798,
+          "added_pixels": 0,
+          "added_area_ratio_of_mask": 0.0,
+          "enclosed_hole_count": 5,
+          "filled_hole_count": 0,
+          "filled_hole_sizes": [],
+          "large_hole_protected_count": 2,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 3,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 36159,
+        "filled_area_pixels": 36169,
+        "added_pixels": 10,
+        "added_area_ratio_of_mask": 0.000277,
+        "filled_hole_count": 2,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "002-camera1-1793759219742811696-hole-fill-shadow-mask.png",
+      "overlay": "002-camera1-1793759219742811696-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "02a8b0e67761ff6c78a9bae27209d6b868fa90923f5ba60abce997e00e0ea649",
+      "overlay_sha256": "bb23fe117a946735c80ff5d31f1f9a5fba6b3c815a99210fbeaae86a4b19ff75"
+    },
+    {
+      "sample_id": "002-camera1-1793759230842886696",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "992cdc7f2f2921e5d98c711bb28f6613168b48772d716db2dc271f5e660b293d",
+      "source_union_mask_sha256": "7739b06ef90e2c0cada076b35fefd389aaf067716ac6da507e4934e7523eee65",
+      "source_queue_sha256": "ef4311b4705d3a55279bfc4f5b825ce9da1d87f07928e6b900f58c998e7d1cdb",
+      "diagnostic_sha256": "8296a69ddc5904a7f319adf65f3bdbfd8d70f8c6d47c2500ec7ef3394d7684c1",
+      "components": [
+        {
+          "name": "camera1-left-seat-console-v2",
+          "source_mask_sha256": "8a088fed745025cee76805d5702805a49d0933deb07f307cdc47d8ae7fc25ed2",
+          "area_ratio_after": 0.093259,
+          "area_guard": {
+            "min_area_ratio": 0.07,
+            "max_area_ratio": 0.12
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 30516,
+          "filled_area_pixels": 30559,
+          "added_pixels": 43,
+          "added_area_ratio_of_mask": 0.001409,
+          "enclosed_hole_count": 15,
+          "filled_hole_count": 7,
+          "filled_hole_sizes": [
+            5,
+            5,
+            11,
+            7,
+            5,
+            5,
+            5
+          ],
+          "large_hole_protected_count": 5,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 3,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera1-right-hood-v2",
+          "source_mask_sha256": "253d89be2669903cf7336bca478bdbc9cd51d6a817b14c8a34a044687d6fdad8",
+          "area_ratio_after": 0.016928,
+          "area_guard": {
+            "min_area_ratio": 0.01,
+            "max_area_ratio": 0.03
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 5542,
+          "filled_area_pixels": 5547,
+          "added_pixels": 5,
+          "added_area_ratio_of_mask": 0.000902,
+          "enclosed_hole_count": 6,
+          "filled_hole_count": 1,
+          "filled_hole_sizes": [
+            5
+          ],
+          "large_hole_protected_count": 3,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 2,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 36058,
+        "filled_area_pixels": 36106,
+        "added_pixels": 48,
+        "added_area_ratio_of_mask": 0.001331,
+        "filled_hole_count": 8,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "002-camera1-1793759230842886696-hole-fill-shadow-mask.png",
+      "overlay": "002-camera1-1793759230842886696-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "f0eaa0884679317aef24711e0e02df1af7c5442bf3aa8fa78b6a90daea38a0f3",
+      "overlay_sha256": "d4c3001fd02c9c184dfd0d9e665c5e757e9b6545e873a0e850a67236e1bf57bf"
+    },
+    {
+      "sample_id": "002-camera3-1793759208642855696",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "4ec4bdc05153373d11bc0b58e8f76b83b8c62e1f2d8065a32dff58b2de3b7d9c",
+      "source_union_mask_sha256": "0057f95e6b15475cf1f22dc7f1dbcb065a3ca0012105867d73b7f55f3c18c2be",
+      "source_queue_sha256": "ef4311b4705d3a55279bfc4f5b825ce9da1d87f07928e6b900f58c998e7d1cdb",
+      "diagnostic_sha256": "1e1519f020e54291130a6b89455c1a0968874cbe813f74e6c384cfdb2e57793f",
+      "components": [
+        {
+          "name": "camera3-crossbar-core-v2",
+          "source_mask_sha256": "060f7df9c780535d2588a848ea83f5222b95168115064e6d1c8bc73e92020ed5",
+          "area_ratio_after": 0.031192,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.05
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 10152,
+          "filled_area_pixels": 10221,
+          "added_pixels": 69,
+          "added_area_ratio_of_mask": 0.006797,
+          "enclosed_hole_count": 19,
+          "filled_hole_count": 10,
+          "filled_hole_sizes": [
+            5,
+            5,
+            5,
+            12,
+            7,
+            5,
+            5,
+            10,
+            10,
+            5
+          ],
+          "large_hole_protected_count": 4,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 5,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera3-lower-assembly-v2",
+          "source_mask_sha256": "b96c78bec5900cf03326530b500f980c9da4d0dfbe772bbb92b1dd60823abf58",
+          "area_ratio_after": 0.022647,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.04
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 7414,
+          "filled_area_pixels": 7421,
+          "added_pixels": 7,
+          "added_area_ratio_of_mask": 0.000944,
+          "enclosed_hole_count": 4,
+          "filled_hole_count": 1,
+          "filled_hole_sizes": [
+            7
+          ],
+          "large_hole_protected_count": 1,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 2,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 17566,
+        "filled_area_pixels": 17642,
+        "added_pixels": 76,
+        "added_area_ratio_of_mask": 0.004327,
+        "filled_hole_count": 11,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "002-camera3-1793759208642855696-hole-fill-shadow-mask.png",
+      "overlay": "002-camera3-1793759208642855696-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "f9f87c5c908b5e864e2eac9c0c1fea13c7cf6800b984ad673bc9dace2718dd70",
+      "overlay_sha256": "4a408269173309ea9faebe6e93849f551f36c0d761a33132fb568a6723bd359f"
+    },
+    {
+      "sample_id": "002-camera3-1793759219742811696",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "48b18ec572226b58a1b990997db60f29e17d3913e24f851048076af4bc9887b4",
+      "source_union_mask_sha256": "9a0c9d09e7b33822b8763c361973c99f373266ee3d865de98ac8aefb7a853296",
+      "source_queue_sha256": "ef4311b4705d3a55279bfc4f5b825ce9da1d87f07928e6b900f58c998e7d1cdb",
+      "diagnostic_sha256": "bde04d1c7cfbfc594c994ab7eae561d71e0bc651c32979c9489c5dc803091c3c",
+      "components": [
+        {
+          "name": "camera3-crossbar-core-v2",
+          "source_mask_sha256": "940c61390a6be86eeb1b7ab8caad5eec81a45af66c266d11b2aebd92f82345f9",
+          "area_ratio_after": 0.026532,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.05
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 8670,
+          "filled_area_pixels": 8694,
+          "added_pixels": 24,
+          "added_area_ratio_of_mask": 0.002768,
+          "enclosed_hole_count": 11,
+          "filled_hole_count": 3,
+          "filled_hole_sizes": [
+            5,
+            12,
+            7
+          ],
+          "large_hole_protected_count": 3,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 5,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera3-lower-assembly-v2",
+          "source_mask_sha256": "f4979af886da18d7439e4957ee9b187f286d158bf4e00f0ce281d0483c127cd6",
+          "area_ratio_after": 0.021045,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.04
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 6889,
+          "filled_area_pixels": 6896,
+          "added_pixels": 7,
+          "added_area_ratio_of_mask": 0.001016,
+          "enclosed_hole_count": 4,
+          "filled_hole_count": 1,
+          "filled_hole_sizes": [
+            7
+          ],
+          "large_hole_protected_count": 1,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 2,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 15559,
+        "filled_area_pixels": 15590,
+        "added_pixels": 31,
+        "added_area_ratio_of_mask": 0.001992,
+        "filled_hole_count": 4,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "002-camera3-1793759219742811696-hole-fill-shadow-mask.png",
+      "overlay": "002-camera3-1793759219742811696-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "c252e48883924722152eac8fa9634aa4f6f3658dd11d7e3ba9284b9d101cd0eb",
+      "overlay_sha256": "888701981d3c5f308874eae8aac0b1e2a4640e18e93708deb69bde424c23d911"
+    },
+    {
+      "sample_id": "002-camera3-1793759230842886696",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "bf2d0179da5a214f4321bf6267cf7179b90ce624e8d3faae605a0ef368f5e132",
+      "source_union_mask_sha256": "94e7734f7c5647adf11d8946d4471227b028a2cfacc14a619159e22c24e43c97",
+      "source_queue_sha256": "ef4311b4705d3a55279bfc4f5b825ce9da1d87f07928e6b900f58c998e7d1cdb",
+      "diagnostic_sha256": "135aa5c7f51e1c908aba9a3eb9b9097a3c337d20c0184d70bc7056b2c394cf9b",
+      "components": [
+        {
+          "name": "camera3-crossbar-core-v2",
+          "source_mask_sha256": "04513c2bc021e6a87f8d37463681e1f6b496f17adc34156af60bf3b20c36ad4e",
+          "area_ratio_after": 0.024951,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.05
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 8145,
+          "filled_area_pixels": 8176,
+          "added_pixels": 31,
+          "added_area_ratio_of_mask": 0.003806,
+          "enclosed_hole_count": 9,
+          "filled_hole_count": 5,
+          "filled_hole_sizes": [
+            5,
+            7,
+            5,
+            7,
+            7
+          ],
+          "large_hole_protected_count": 1,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 3,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera3-lower-assembly-v2",
+          "source_mask_sha256": "9a60dac498ea0a27cf673a56f34fc57344a03329de5e392a14acea255b99601f",
+          "area_ratio_after": 0.02403,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.04
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 7869,
+          "filled_area_pixels": 7874,
+          "added_pixels": 5,
+          "added_area_ratio_of_mask": 0.000635,
+          "enclosed_hole_count": 2,
+          "filled_hole_count": 1,
+          "filled_hole_sizes": [
+            5
+          ],
+          "large_hole_protected_count": 1,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 0,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 16014,
+        "filled_area_pixels": 16050,
+        "added_pixels": 36,
+        "added_area_ratio_of_mask": 0.002248,
+        "filled_hole_count": 6,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "002-camera3-1793759230842886696-hole-fill-shadow-mask.png",
+      "overlay": "002-camera3-1793759230842886696-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "0d492a5350772730cf1e93c556e37a65fd7bcdf9aa8038d43ca6b9549eaa1069",
+      "overlay_sha256": "41225856ec24d6d357c6314537a44250d87ed7e616c1e4e0d672cd4be6c642fe"
+    },
+    {
+      "sample_id": "003-camera1-idx22-1793759966409522987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "9b0fd9723eb4f8719ee71a6bdd05ca60f201c007522884eb96fd24de06e2f895",
+      "source_union_mask_sha256": "9bff1d42c97cc77c3e496ab65b44e5ac156caf0c924b58113310d4e8e5360ebd",
+      "source_queue_sha256": "a4848c3c9aa7d3e9fef83e59069fe79964b20a8a867854b1bb34eaea5db25c60",
+      "diagnostic_sha256": "79b45a370d9cb180f677f4e40aed2273852064ad1848a5a7ae58b46a0e37813d",
+      "components": [
+        {
+          "name": "camera1-left-seat-console-v2",
+          "source_mask_sha256": "ed5b4e9c5381dc577799220071d1041422195765a93460a403d7e17bde018eaf",
+          "area_ratio_after": 0.091812,
+          "area_guard": {
+            "min_area_ratio": 0.07,
+            "max_area_ratio": 0.12
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 30051,
+          "filled_area_pixels": 30085,
+          "added_pixels": 34,
+          "added_area_ratio_of_mask": 0.001131,
+          "enclosed_hole_count": 22,
+          "filled_hole_count": 6,
+          "filled_hole_sizes": [
+            5,
+            5,
+            5,
+            5,
+            7,
+            7
+          ],
+          "large_hole_protected_count": 7,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 9,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera1-right-hood-v2",
+          "source_mask_sha256": "4f3ff47f226e8d787b495fb6242963156eeb45a090474d76ab74f100e4eb00dc",
+          "area_ratio_after": 0.017401,
+          "area_guard": {
+            "min_area_ratio": 0.01,
+            "max_area_ratio": 0.03
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 5702,
+          "filled_area_pixels": 5702,
+          "added_pixels": 0,
+          "added_area_ratio_of_mask": 0.0,
+          "enclosed_hole_count": 3,
+          "filled_hole_count": 0,
+          "filled_hole_sizes": [],
+          "large_hole_protected_count": 2,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 1,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 35753,
+        "filled_area_pixels": 35787,
+        "added_pixels": 34,
+        "added_area_ratio_of_mask": 0.000951,
+        "filled_hole_count": 6,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "003-camera1-idx22-1793759966409522987-hole-fill-shadow-mask.png",
+      "overlay": "003-camera1-idx22-1793759966409522987-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "d0c2256fc8fce92c63135430f2e3b227ce1400914fd41a4edfb12adf01998f7b",
+      "overlay_sha256": "26000585882de615ff9b08dc9dc02d22ee24d77c94915145907384b13ce5c644"
+    },
+    {
+      "sample_id": "003-camera1-idx5-1793759961309512987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "5b402f2458fd3ff631ec7d925ed7b425291ae479470118c66eb3de41033a89c5",
+      "source_union_mask_sha256": "fdd37f619478a9bfd864df61ab70355831fb73e8658b93b82ecdebd9e6e8b194",
+      "source_queue_sha256": "a4848c3c9aa7d3e9fef83e59069fe79964b20a8a867854b1bb34eaea5db25c60",
+      "diagnostic_sha256": "4fd939f72c176a4b4dc5ae2c6af34b7dba63964310e15fbd1dcde5494a2d031e",
+      "components": [
+        {
+          "name": "camera1-left-seat-console-v2",
+          "source_mask_sha256": "a215680a2fbae7ef456022e5656581f0cb9b62eb9a37ce7fa78ce0fcae4fd151",
+          "area_ratio_after": 0.09122,
+          "area_guard": {
+            "min_area_ratio": 0.07,
+            "max_area_ratio": 0.12
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 29836,
+          "filled_area_pixels": 29891,
+          "added_pixels": 55,
+          "added_area_ratio_of_mask": 0.001843,
+          "enclosed_hole_count": 26,
+          "filled_hole_count": 8,
+          "filled_hole_sizes": [
+            5,
+            5,
+            12,
+            7,
+            9,
+            5,
+            7,
+            5
+          ],
+          "large_hole_protected_count": 10,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 8,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera1-right-hood-v2",
+          "source_mask_sha256": "fdde332da85445b1232b2131f835636b04bffe6947d2f69e09547051f13c54b9",
+          "area_ratio_after": 0.0168,
+          "area_guard": {
+            "min_area_ratio": 0.01,
+            "max_area_ratio": 0.03
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 5493,
+          "filled_area_pixels": 5505,
+          "added_pixels": 12,
+          "added_area_ratio_of_mask": 0.002185,
+          "enclosed_hole_count": 5,
+          "filled_hole_count": 1,
+          "filled_hole_sizes": [
+            12
+          ],
+          "large_hole_protected_count": 2,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 2,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 35329,
+        "filled_area_pixels": 35396,
+        "added_pixels": 67,
+        "added_area_ratio_of_mask": 0.001896,
+        "filled_hole_count": 9,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "003-camera1-idx5-1793759961309512987-hole-fill-shadow-mask.png",
+      "overlay": "003-camera1-idx5-1793759961309512987-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "aad5a8fa6199ebe401a8fd6cd877f0b2703f264f7b8f4d68aafa031340ab5db5",
+      "overlay_sha256": "a5a37a807fde5925126aad0360b16d74e611b52d4aa8e41861bbdca627050bc2"
+    },
+    {
+      "sample_id": "003-camera1-idx52-1793759975409508695",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "83019c211a7bda145cad51e4aa1f20104eaa707e0ec3157691ab33d7e13474b0",
+      "source_union_mask_sha256": "6ec6ec8c186b10e9afc242c9e8f1b86952533a320d4af51d1b831896feb967f2",
+      "source_queue_sha256": "a4848c3c9aa7d3e9fef83e59069fe79964b20a8a867854b1bb34eaea5db25c60",
+      "diagnostic_sha256": "d4774ad748323d4aa19eb3a7c7e31a2f24d4d08a2088a09c88bee77b445e51b9",
+      "components": [
+        {
+          "name": "camera1-left-seat-console-v2",
+          "source_mask_sha256": "758b34cd2b84c86038be6a09b81fb0ef18215350f897b0c35cd9b2e63c1b3877",
+          "area_ratio_after": 0.092816,
+          "area_guard": {
+            "min_area_ratio": 0.07,
+            "max_area_ratio": 0.12
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 30383,
+          "filled_area_pixels": 30414,
+          "added_pixels": 31,
+          "added_area_ratio_of_mask": 0.00102,
+          "enclosed_hole_count": 21,
+          "filled_hole_count": 5,
+          "filled_hole_sizes": [
+            5,
+            7,
+            7,
+            7,
+            5
+          ],
+          "large_hole_protected_count": 7,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 9,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera1-right-hood-v2",
+          "source_mask_sha256": "5570bcbfdf634d1f043345e3542507a9085a14b18b7589dd407559d1a6690810",
+          "area_ratio_after": 0.017493,
+          "area_guard": {
+            "min_area_ratio": 0.01,
+            "max_area_ratio": 0.03
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 5721,
+          "filled_area_pixels": 5732,
+          "added_pixels": 11,
+          "added_area_ratio_of_mask": 0.001923,
+          "enclosed_hole_count": 6,
+          "filled_hole_count": 1,
+          "filled_hole_sizes": [
+            11
+          ],
+          "large_hole_protected_count": 2,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 3,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 36104,
+        "filled_area_pixels": 36146,
+        "added_pixels": 42,
+        "added_area_ratio_of_mask": 0.001163,
+        "filled_hole_count": 6,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "003-camera1-idx52-1793759975409508695-hole-fill-shadow-mask.png",
+      "overlay": "003-camera1-idx52-1793759975409508695-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "170b9081b9c2be1b8753c0bdfeccb90db83199ea66442da8047204824321b0be",
+      "overlay_sha256": "367415afe96391d1c7ce54e0a78a821076f01dd0753e06145af1d6f7893450fd"
+    },
+    {
+      "sample_id": "003-camera3-idx22-1793759966409522987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "64b5a7951fbf03940f24ba279a6fc42b0736c22e372ed7d0d00b305a3413a6df",
+      "source_union_mask_sha256": "0a0c8b4b9eb6aca6015996978ea3e41794b5e2fb24d9f3721b49add112b36fa4",
+      "source_queue_sha256": "a4848c3c9aa7d3e9fef83e59069fe79964b20a8a867854b1bb34eaea5db25c60",
+      "diagnostic_sha256": "b3affe53f170f2e8bc891e87f03a448bf482bb69126502104ec7db3b29088872",
+      "components": [
+        {
+          "name": "camera3-crossbar-core-v2",
+          "source_mask_sha256": "5dca3f57433db577a8d68dfae33ccdbfdbd2a7344f4210e6a8fc74135c34536b",
+          "area_ratio_after": 0.027533,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.05
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 8959,
+          "filled_area_pixels": 9022,
+          "added_pixels": 63,
+          "added_area_ratio_of_mask": 0.007032,
+          "enclosed_hole_count": 17,
+          "filled_hole_count": 8,
+          "filled_hole_sizes": [
+            12,
+            5,
+            14,
+            5,
+            12,
+            5,
+            5,
+            5
+          ],
+          "large_hole_protected_count": 3,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 6,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera3-lower-assembly-v2",
+          "source_mask_sha256": "8d55c6ada01d756b166886ad2138dc82937517928c1bee83affaf6e8743ab11a",
+          "area_ratio_after": 0.024969,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.04
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 8143,
+          "filled_area_pixels": 8182,
+          "added_pixels": 39,
+          "added_area_ratio_of_mask": 0.004789,
+          "enclosed_hole_count": 6,
+          "filled_hole_count": 5,
+          "filled_hole_sizes": [
+            11,
+            11,
+            5,
+            7,
+            5
+          ],
+          "large_hole_protected_count": 1,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 0,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 17102,
+        "filled_area_pixels": 17204,
+        "added_pixels": 102,
+        "added_area_ratio_of_mask": 0.005964,
+        "filled_hole_count": 13,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "003-camera3-idx22-1793759966409522987-hole-fill-shadow-mask.png",
+      "overlay": "003-camera3-idx22-1793759966409522987-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "e9b7fcf9dc753b8aa93968d905106973f94bb5538565b04cafdb283e13cb13ac",
+      "overlay_sha256": "cd8afd3bb957b82da4417b6cb6f5ebc75d9a1601d741eeb8b94f80b46b21271b"
+    },
+    {
+      "sample_id": "003-camera3-idx5-1793759961309512987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "7978b7c71befb9ab26784d9db6352acaaf6d0c1b0ea5d5649b444a8e65c6aa6d",
+      "source_union_mask_sha256": "f972ec322a3ca63fe925a2c83b3cd2382956b870c43b22e5e305996e8fb41a6a",
+      "source_queue_sha256": "a4848c3c9aa7d3e9fef83e59069fe79964b20a8a867854b1bb34eaea5db25c60",
+      "diagnostic_sha256": "79ccdd4b92d6df07bb602f65cac12abc4e697b773c0fd49b45d82355e3002453",
+      "components": [
+        {
+          "name": "camera3-crossbar-core-v2",
+          "source_mask_sha256": "7b805824244d76e46548eedadaef2b19d1c979199095ee650d34dd62eda2d5ab",
+          "area_ratio_after": 0.032089,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.05
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 10429,
+          "filled_area_pixels": 10515,
+          "added_pixels": 86,
+          "added_area_ratio_of_mask": 0.008246,
+          "enclosed_hole_count": 22,
+          "filled_hole_count": 12,
+          "filled_hole_sizes": [
+            5,
+            7,
+            12,
+            5,
+            13,
+            5,
+            5,
+            10,
+            7,
+            5,
+            5,
+            7
+          ],
+          "large_hole_protected_count": 6,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 4,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera3-lower-assembly-v2",
+          "source_mask_sha256": "0b9695cfe888ca3ea5039f8e48903ba3f5d9d62d9f64ff6e23c67cd49efb5ba7",
+          "area_ratio_after": 0.024734,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.04
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 8089,
+          "filled_area_pixels": 8105,
+          "added_pixels": 16,
+          "added_area_ratio_of_mask": 0.001978,
+          "enclosed_hole_count": 4,
+          "filled_hole_count": 2,
+          "filled_hole_sizes": [
+            7,
+            9
+          ],
+          "large_hole_protected_count": 2,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 0,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 18517,
+        "filled_area_pixels": 18619,
+        "added_pixels": 102,
+        "added_area_ratio_of_mask": 0.005508,
+        "filled_hole_count": 14,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "003-camera3-idx5-1793759961309512987-hole-fill-shadow-mask.png",
+      "overlay": "003-camera3-idx5-1793759961309512987-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "4a58f47765214f0e79c6afad31317deadda6696ef89220396da8d10b69db6ff8",
+      "overlay_sha256": "861f29abe166c418641c420975dc905be8cd11e0fcc3aaad463d9e54d1d3e23c"
+    },
+    {
+      "sample_id": "003-camera3-idx52-1793759975409508695",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "683b60ed55d1bf695969eb7acbf6d5464081871ff6a995b30dab4cbd86e81aa1",
+      "source_union_mask_sha256": "63a06a8f6fbeeb06852d258c58b08274829677912bf98ff4c90d85b6b1aeb082",
+      "source_queue_sha256": "a4848c3c9aa7d3e9fef83e59069fe79964b20a8a867854b1bb34eaea5db25c60",
+      "diagnostic_sha256": "3a296a8ab0d7ca9fd38db7b53ebc1bfcdfcbc2796bc25909cde7514db4352d7b",
+      "components": [
+        {
+          "name": "camera3-crossbar-core-v2",
+          "source_mask_sha256": "a1d25d11e2839de7ad50a47efe10ed467c0380dafc0e7b05a1babced81a53c4a",
+          "area_ratio_after": 0.034793,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.05
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 11304,
+          "filled_area_pixels": 11401,
+          "added_pixels": 97,
+          "added_area_ratio_of_mask": 0.008581,
+          "enclosed_hole_count": 25,
+          "filled_hole_count": 17,
+          "filled_hole_sizes": [
+            5,
+            10,
+            7,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            10,
+            7,
+            7,
+            5,
+            1,
+            5
+          ],
+          "large_hole_protected_count": 5,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 3,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera3-lower-assembly-v2",
+          "source_mask_sha256": "a7c0dcae1c7a4a4ce3278ffa75513d59c04042b4628a9858f4d74699cb15ec5a",
+          "area_ratio_after": 0.02041,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.04
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 6671,
+          "filled_area_pixels": 6688,
+          "added_pixels": 17,
+          "added_area_ratio_of_mask": 0.002548,
+          "enclosed_hole_count": 3,
+          "filled_hole_count": 3,
+          "filled_hole_sizes": [
+            5,
+            5,
+            7
+          ],
+          "large_hole_protected_count": 0,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 0,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 17975,
+        "filled_area_pixels": 18089,
+        "added_pixels": 114,
+        "added_area_ratio_of_mask": 0.006342,
+        "filled_hole_count": 20,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "003-camera3-idx52-1793759975409508695-hole-fill-shadow-mask.png",
+      "overlay": "003-camera3-idx52-1793759975409508695-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "11575e19d0fe78824fd7153937fdfac3ecc2149709690b09b6209cdab15fae8a",
+      "overlay_sha256": "8820f70a25b700968e403ef3ae63bdb412ecdb5b670c7482e6b657847149338a"
+    },
+    {
+      "sample_id": "003-camera3-idx68-1793759980309508695",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "064cd29c36bc7442d96f32973f791b228018149efce047a0c7f50c5c7c64fa55",
+      "source_union_mask_sha256": "13b3078ccbb06a68d95ff979c8ac8e42122826e9acf2bcc93e89a5633e41ecae",
+      "source_queue_sha256": "a4848c3c9aa7d3e9fef83e59069fe79964b20a8a867854b1bb34eaea5db25c60",
+      "diagnostic_sha256": "29b5267a1e43c6ec35219183839c2ef0af472d453007e17db7bf1117ccb8d1ab",
+      "components": [
+        {
+          "name": "camera3-crossbar-core-v2",
+          "source_mask_sha256": "ada85b6ed0eaa2dcdb4d40a16dcb12593877b39ae98a253dee763b318da2407a",
+          "area_ratio_after": 0.02225,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.05
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 7286,
+          "filled_area_pixels": 7291,
+          "added_pixels": 5,
+          "added_area_ratio_of_mask": 0.000686,
+          "enclosed_hole_count": 3,
+          "filled_hole_count": 1,
+          "filled_hole_sizes": [
+            5
+          ],
+          "large_hole_protected_count": 0,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 2,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera3-lower-assembly-v2",
+          "source_mask_sha256": "c31b617f2539f0325c73c975f4927842ec0de782df917be625359502e6bf1ffd",
+          "area_ratio_after": 0.025201,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.04
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 8258,
+          "filled_area_pixels": 8258,
+          "added_pixels": 0,
+          "added_area_ratio_of_mask": 0.0,
+          "enclosed_hole_count": 1,
+          "filled_hole_count": 0,
+          "filled_hole_sizes": [],
+          "large_hole_protected_count": 1,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 0,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 15544,
+        "filled_area_pixels": 15549,
+        "added_pixels": 5,
+        "added_area_ratio_of_mask": 0.000322,
+        "filled_hole_count": 1,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "003-camera3-idx68-1793759980309508695-hole-fill-shadow-mask.png",
+      "overlay": "003-camera3-idx68-1793759980309508695-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "d7944731c868dd6c3885675bacbc05092340b2652a851c0fb8eee26e65af59e1",
+      "overlay_sha256": "64784495f85e269b614f8c62fc6c73e4d62832e5a91117a3766984452d859a35"
+    },
+    {
+      "sample_id": "003-camera3-idx85-1793759985409553695",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "785dc264a93397626c8d679efabd7b900eefa821378b77ab0df2f25d191f2568",
+      "source_union_mask_sha256": "4d68bc5f9262135e5c7c1d532c481eac215aea1a7f78c7d62f93fc42086cf2da",
+      "source_queue_sha256": "a4848c3c9aa7d3e9fef83e59069fe79964b20a8a867854b1bb34eaea5db25c60",
+      "diagnostic_sha256": "95ca70c77bf4b418a098e2ee434a6b25075bd48e9c18a0fe1ed0cdc28a3423ec",
+      "components": [
+        {
+          "name": "camera3-crossbar-core-v2",
+          "source_mask_sha256": "c1c1a0f65e273e05ab2140e1ecc64182207811b18c5568400db4ed3834ed62f1",
+          "area_ratio_after": 0.031601,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.05
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 10319,
+          "filled_area_pixels": 10355,
+          "added_pixels": 36,
+          "added_area_ratio_of_mask": 0.003489,
+          "enclosed_hole_count": 9,
+          "filled_hole_count": 6,
+          "filled_hole_sizes": [
+            5,
+            9,
+            5,
+            7,
+            5,
+            5
+          ],
+          "large_hole_protected_count": 2,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 1,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera3-lower-assembly-v2",
+          "source_mask_sha256": "71139ccd057e1799b39a33ad6cb39c06b6f2214321524fbe7dbc0be6363d1c22",
+          "area_ratio_after": 0.022955,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.04
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 7490,
+          "filled_area_pixels": 7522,
+          "added_pixels": 32,
+          "added_area_ratio_of_mask": 0.004272,
+          "enclosed_hole_count": 5,
+          "filled_hole_count": 4,
+          "filled_hole_sizes": [
+            10,
+            5,
+            10,
+            7
+          ],
+          "large_hole_protected_count": 0,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 1,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 17754,
+        "filled_area_pixels": 17822,
+        "added_pixels": 68,
+        "added_area_ratio_of_mask": 0.00383,
+        "filled_hole_count": 10,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "003-camera3-idx85-1793759985409553695-hole-fill-shadow-mask.png",
+      "overlay": "003-camera3-idx85-1793759985409553695-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "434038bcfd9ffd793717ed4ac0ad445ecc3c4b7b0b9d6b5ce5f4a578fa0e93e4",
+      "overlay_sha256": "8a09e2d7202aaa236d249c00c512a048cdaf659e785b826d60a4b9d0c148d5f7"
+    },
+    {
+      "sample_id": "004-camera1-idx22-1793760668642838987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "99e868b3641d45d323b9b9df2a9c0fa6f8f54e28309776aaa882643eed284cdf",
+      "source_union_mask_sha256": "490baf49ca9a4fedfef592402603a9c121caea360d61b979ba536dce4603efd0",
+      "source_queue_sha256": "a4848c3c9aa7d3e9fef83e59069fe79964b20a8a867854b1bb34eaea5db25c60",
+      "diagnostic_sha256": "a20cefa1160d4816c703a81ea4397b87aa408b3278ab5715bf529999431f2bb6",
+      "components": [
+        {
+          "name": "camera1-left-seat-console-v2",
+          "source_mask_sha256": "8afd781eda90009831e2d532326f0f761bf4325d37667fdae1d95e623b772ab4",
+          "area_ratio_after": 0.091104,
+          "area_guard": {
+            "min_area_ratio": 0.07,
+            "max_area_ratio": 0.12
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 29820,
+          "filled_area_pixels": 29853,
+          "added_pixels": 33,
+          "added_area_ratio_of_mask": 0.001107,
+          "enclosed_hole_count": 21,
+          "filled_hole_count": 4,
+          "filled_hole_sizes": [
+            7,
+            5,
+            12,
+            9
+          ],
+          "large_hole_protected_count": 8,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 9,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera1-right-hood-v2",
+          "source_mask_sha256": "c416a6b89d5c08ca6ad1fbe87a2e5e3b12b8d6fde13298bd6806a857e6cdba6f",
+          "area_ratio_after": 0.017831,
+          "area_guard": {
+            "min_area_ratio": 0.01,
+            "max_area_ratio": 0.03
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 5831,
+          "filled_area_pixels": 5843,
+          "added_pixels": 12,
+          "added_area_ratio_of_mask": 0.002058,
+          "enclosed_hole_count": 5,
+          "filled_hole_count": 2,
+          "filled_hole_sizes": [
+            7,
+            5
+          ],
+          "large_hole_protected_count": 2,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 1,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 35651,
+        "filled_area_pixels": 35696,
+        "added_pixels": 45,
+        "added_area_ratio_of_mask": 0.001262,
+        "filled_hole_count": 6,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "004-camera1-idx22-1793760668642838987-hole-fill-shadow-mask.png",
+      "overlay": "004-camera1-idx22-1793760668642838987-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "8a869b6a1372ddb3c6f2f22b09ec169be363e2e55505bcb1b7a2ae30d40cde80",
+      "overlay_sha256": "35ab53a0f4bad7a4939b9133c9f6df69f26a1aba561accbe1b6b53bcdce7f654"
+    },
+    {
+      "sample_id": "004-camera1-idx5-1793760663542839987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "f96e4e58ac807b5020d0d62697cfd58729317c93b4b6d9db7fc804d5fe83de16",
+      "source_union_mask_sha256": "e8af61d270e04f9a7a37627e144fbcc491f749da7cf0d910bed2e99bf8537e84",
+      "source_queue_sha256": "a4848c3c9aa7d3e9fef83e59069fe79964b20a8a867854b1bb34eaea5db25c60",
+      "diagnostic_sha256": "c87ebe57140034a893d8865a95f145465d9f0ed836481e545ae46365abf6f35c",
+      "components": [
+        {
+          "name": "camera1-left-seat-console-v2",
+          "source_mask_sha256": "f16e45a3f4141cbb19cf00ca8f3ec6770fecaf93c8d8499cc1a1c0984f6d5836",
+          "area_ratio_after": 0.093317,
+          "area_guard": {
+            "min_area_ratio": 0.07,
+            "max_area_ratio": 0.12
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 30571,
+          "filled_area_pixels": 30578,
+          "added_pixels": 7,
+          "added_area_ratio_of_mask": 0.000229,
+          "enclosed_hole_count": 16,
+          "filled_hole_count": 1,
+          "filled_hole_sizes": [
+            7
+          ],
+          "large_hole_protected_count": 8,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 7,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera1-right-hood-v2",
+          "source_mask_sha256": "c171291bd3903410b23526ffe5b2d6042147aee035326c6577d48d9df60ceeda",
+          "area_ratio_after": 0.016733,
+          "area_guard": {
+            "min_area_ratio": 0.01,
+            "max_area_ratio": 0.03
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 5466,
+          "filled_area_pixels": 5483,
+          "added_pixels": 17,
+          "added_area_ratio_of_mask": 0.00311,
+          "enclosed_hole_count": 7,
+          "filled_hole_count": 3,
+          "filled_hole_sizes": [
+            5,
+            5,
+            7
+          ],
+          "large_hole_protected_count": 4,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 0,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 36037,
+        "filled_area_pixels": 36061,
+        "added_pixels": 24,
+        "added_area_ratio_of_mask": 0.000666,
+        "filled_hole_count": 4,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "004-camera1-idx5-1793760663542839987-hole-fill-shadow-mask.png",
+      "overlay": "004-camera1-idx5-1793760663542839987-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "3e0ce105d198bfe0226538071a09a5f631e265dbe6855e32531616abc3f1f1f6",
+      "overlay_sha256": "3923679f0087a19d0572e5a1c3f9b6c47cfd0ae41b6c77fa2d8f140878d365f7"
+    },
+    {
+      "sample_id": "004-camera1-idx52-1793760677642756695",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "46b36c747bb0448ad6f144fdac0dc8a9a1d1cb975151998b3808d7de6a9510c6",
+      "source_union_mask_sha256": "aaa4b2a77d40bb0420e7b75c605066858bc2eb5a765a151b3e9033f828efcd41",
+      "source_queue_sha256": "a4848c3c9aa7d3e9fef83e59069fe79964b20a8a867854b1bb34eaea5db25c60",
+      "diagnostic_sha256": "734befd557200a4da8d46bdc32338b15dc1568261d5b6f0a9d7926b95f9aa91c",
+      "components": [
+        {
+          "name": "camera1-left-seat-console-v2",
+          "source_mask_sha256": "96a7c2470617f499dbe75eb97485f33ebcb3435cb963a2d2812be9f9ecfe6d6a",
+          "area_ratio_after": 0.092822,
+          "area_guard": {
+            "min_area_ratio": 0.07,
+            "max_area_ratio": 0.12
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 30394,
+          "filled_area_pixels": 30416,
+          "added_pixels": 22,
+          "added_area_ratio_of_mask": 0.000724,
+          "enclosed_hole_count": 19,
+          "filled_hole_count": 3,
+          "filled_hole_sizes": [
+            5,
+            5,
+            12
+          ],
+          "large_hole_protected_count": 8,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 8,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera1-right-hood-v2",
+          "source_mask_sha256": "751e292ba42ac391bc881e874772c7cd258433d3c63b62ebb25a7c43c60cc96c",
+          "area_ratio_after": 0.018164,
+          "area_guard": {
+            "min_area_ratio": 0.01,
+            "max_area_ratio": 0.03
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 5942,
+          "filled_area_pixels": 5952,
+          "added_pixels": 10,
+          "added_area_ratio_of_mask": 0.001683,
+          "enclosed_hole_count": 3,
+          "filled_hole_count": 1,
+          "filled_hole_sizes": [
+            10
+          ],
+          "large_hole_protected_count": 2,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 0,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 36336,
+        "filled_area_pixels": 36368,
+        "added_pixels": 32,
+        "added_area_ratio_of_mask": 0.000881,
+        "filled_hole_count": 4,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "004-camera1-idx52-1793760677642756695-hole-fill-shadow-mask.png",
+      "overlay": "004-camera1-idx52-1793760677642756695-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "84b31960c98022fb7208e750c863f240c670fa1b287d4166fbe1b5b4d0057ff1",
+      "overlay_sha256": "1586060bbce4eaf0780531ef43773b15643a81e7cd7ee5cc49d77dddd7c7d3f8"
+    },
+    {
+      "sample_id": "004-camera1-idx68-1793760682442792695",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "0a00ee0d7e7a95643e5b1145a31c95439639f3f758f461d53838bf0930578713",
+      "source_union_mask_sha256": "77c942e732ee7e6cc360370e2f31fb3453ce496cb7c9467dee4442d9de50ea18",
+      "source_queue_sha256": "a4848c3c9aa7d3e9fef83e59069fe79964b20a8a867854b1bb34eaea5db25c60",
+      "diagnostic_sha256": "e612436acda3cba7cb4028d47f57a509e07e1a2714442ba5a534ded60189f6d6",
+      "components": [
+        {
+          "name": "camera1-left-seat-console-v2",
+          "source_mask_sha256": "f5013168eea0d1debaca6db5bc3d0bb352d04fc523d48eae8dd42f959f5d7d44",
+          "area_ratio_after": 0.091568,
+          "area_guard": {
+            "min_area_ratio": 0.07,
+            "max_area_ratio": 0.12
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 29993,
+          "filled_area_pixels": 30005,
+          "added_pixels": 12,
+          "added_area_ratio_of_mask": 0.0004,
+          "enclosed_hole_count": 12,
+          "filled_hole_count": 2,
+          "filled_hole_sizes": [
+            7,
+            5
+          ],
+          "large_hole_protected_count": 6,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 4,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera1-right-hood-v2",
+          "source_mask_sha256": "5fcdaa439e2ede7fc80efd02fba667e95860132f7eab6611c92d35b0531db98a",
+          "area_ratio_after": 0.016824,
+          "area_guard": {
+            "min_area_ratio": 0.01,
+            "max_area_ratio": 0.03
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 5513,
+          "filled_area_pixels": 5513,
+          "added_pixels": 0,
+          "added_area_ratio_of_mask": 0.0,
+          "enclosed_hole_count": 6,
+          "filled_hole_count": 0,
+          "filled_hole_sizes": [],
+          "large_hole_protected_count": 6,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 0,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 35506,
+        "filled_area_pixels": 35518,
+        "added_pixels": 12,
+        "added_area_ratio_of_mask": 0.000338,
+        "filled_hole_count": 2,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "004-camera1-idx68-1793760682442792695-hole-fill-shadow-mask.png",
+      "overlay": "004-camera1-idx68-1793760682442792695-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "6941d6182bf605d13c7c0ba52da7ae804ed01356c446697af8c23b3dd99a77a8",
+      "overlay_sha256": "07f404088ee7a1ad50c1f1eb9c1c6d38f0c26a174b48d33d758dd7bb41a70b6a"
+    },
+    {
+      "sample_id": "004-camera1-idx85-1793760721942855696",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "6eaf2d45982bdf3c0288786a508f23ce17df81aaf2dc087cb70e3c7dafe19b86",
+      "source_union_mask_sha256": "dfc46d9c77db99f359bebbb458039dd0d858bb0e2ce3b9d2742e37b0f757b898",
+      "source_queue_sha256": "a4848c3c9aa7d3e9fef83e59069fe79964b20a8a867854b1bb34eaea5db25c60",
+      "diagnostic_sha256": "02cac9dda613ea2cf972d95ac7a31f775fa257ee5bd16d8a399e3fc97ad4a9c2",
+      "components": [
+        {
+          "name": "camera1-left-seat-console-v2",
+          "source_mask_sha256": "f748c1b66d7cc7f3d328f9580fd689a92b353ebdcf367c19180b723b4a4eec7f",
+          "area_ratio_after": 0.091541,
+          "area_guard": {
+            "min_area_ratio": 0.07,
+            "max_area_ratio": 0.12
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 29974,
+          "filled_area_pixels": 29996,
+          "added_pixels": 22,
+          "added_area_ratio_of_mask": 0.000734,
+          "enclosed_hole_count": 13,
+          "filled_hole_count": 4,
+          "filled_hole_sizes": [
+            5,
+            7,
+            5,
+            5
+          ],
+          "large_hole_protected_count": 4,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 5,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera1-right-hood-v2",
+          "source_mask_sha256": "314252c672db395bc86845cd95b398f3ce384d1d2b4fa8c2dad550fe9edb4a59",
+          "area_ratio_after": 0.016122,
+          "area_guard": {
+            "min_area_ratio": 0.01,
+            "max_area_ratio": 0.03
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 5265,
+          "filled_area_pixels": 5283,
+          "added_pixels": 18,
+          "added_area_ratio_of_mask": 0.003419,
+          "enclosed_hole_count": 6,
+          "filled_hole_count": 3,
+          "filled_hole_sizes": [
+            8,
+            5,
+            5
+          ],
+          "large_hole_protected_count": 3,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 0,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 35239,
+        "filled_area_pixels": 35279,
+        "added_pixels": 40,
+        "added_area_ratio_of_mask": 0.001135,
+        "filled_hole_count": 7,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "004-camera1-idx85-1793760721942855696-hole-fill-shadow-mask.png",
+      "overlay": "004-camera1-idx85-1793760721942855696-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "43e197fa6ab04f6850160968765c383fc5cfb1be0cc2b939cf8b579a8efc6a3d",
+      "overlay_sha256": "64fbd71f72b735710b68d6cc397299d0146ae147641705131fd0aca4c2c02246"
+    },
+    {
+      "sample_id": "004-camera3-idx22-1793760668642838987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "43c6e7c5520ae4fe15818e2d62b2ee7161b62db48bbde5e552244bb5c87ff226",
+      "source_union_mask_sha256": "6c0e8bde5ec60dbc1799335efcc87a8a21fccb3b3573212f5eea8f3bf936a888",
+      "source_queue_sha256": "a4848c3c9aa7d3e9fef83e59069fe79964b20a8a867854b1bb34eaea5db25c60",
+      "diagnostic_sha256": "760f9d275eabab4e37630e6666a5aba598a8365d9da4deeec008c885fa8a89de",
+      "components": [
+        {
+          "name": "camera3-crossbar-core-v2",
+          "source_mask_sha256": "335212f55cf669a3affea9c5ab5e4731b2d6f6aef3f08e70cc966494f93bba5d",
+          "area_ratio_after": 0.032333,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.05
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 10541,
+          "filled_area_pixels": 10595,
+          "added_pixels": 54,
+          "added_area_ratio_of_mask": 0.005123,
+          "enclosed_hole_count": 13,
+          "filled_hole_count": 8,
+          "filled_hole_sizes": [
+            7,
+            5,
+            15,
+            5,
+            5,
+            7,
+            5,
+            5
+          ],
+          "large_hole_protected_count": 1,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 4,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera3-lower-assembly-v2",
+          "source_mask_sha256": "2a1dc0434ae947b492f5395db1c2da2958edbdf58c09ebc6396955d9507db99f",
+          "area_ratio_after": 0.021985,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.04
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 7189,
+          "filled_area_pixels": 7204,
+          "added_pixels": 15,
+          "added_area_ratio_of_mask": 0.002087,
+          "enclosed_hole_count": 5,
+          "filled_hole_count": 3,
+          "filled_hole_sizes": [
+            5,
+            5,
+            5
+          ],
+          "large_hole_protected_count": 1,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 1,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 17730,
+        "filled_area_pixels": 17799,
+        "added_pixels": 69,
+        "added_area_ratio_of_mask": 0.003892,
+        "filled_hole_count": 11,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "004-camera3-idx22-1793760668642838987-hole-fill-shadow-mask.png",
+      "overlay": "004-camera3-idx22-1793760668642838987-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "f093cdd69f8029c128c1ffd92986f62fbfdd09ecf6584ed22c40bb0eb495bcfc",
+      "overlay_sha256": "8063b85554ef50fb2214cad8090a033b68e109fe03e65f35b89cd3a7d1f7599c"
+    },
+    {
+      "sample_id": "004-camera3-idx5-1793760663542839987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "e991ceba78b026ce1b809ca7705b912c13619ce42d70351489e9c1ec440bc774",
+      "source_union_mask_sha256": "128610782ca401aff261cd9dde056e2ab459dd903839cde00afe7dea0b0753ad",
+      "source_queue_sha256": "a4848c3c9aa7d3e9fef83e59069fe79964b20a8a867854b1bb34eaea5db25c60",
+      "diagnostic_sha256": "dc81d485ef1eccb79e2872a13a65e19c28dccd7c1ed802a88dc5008736982c2c",
+      "components": [
+        {
+          "name": "camera3-crossbar-core-v2",
+          "source_mask_sha256": "65500e9989c2c8b44146a821796e19d1c65f47b11d09e8e5b5c0d792362da450",
+          "area_ratio_after": 0.026483,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.05
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 8643,
+          "filled_area_pixels": 8678,
+          "added_pixels": 35,
+          "added_area_ratio_of_mask": 0.00405,
+          "enclosed_hole_count": 3,
+          "filled_hole_count": 3,
+          "filled_hole_sizes": [
+            10,
+            15,
+            10
+          ],
+          "large_hole_protected_count": 0,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 0,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera3-lower-assembly-v2",
+          "source_mask_sha256": "d88329048ae39d099d8399d62ed1740eeb131cc935562319bdcf6b267fc5eaa1",
+          "area_ratio_after": 0.019736,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.04
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 6442,
+          "filled_area_pixels": 6467,
+          "added_pixels": 25,
+          "added_area_ratio_of_mask": 0.003881,
+          "enclosed_hole_count": 2,
+          "filled_hole_count": 2,
+          "filled_hole_sizes": [
+            15,
+            10
+          ],
+          "large_hole_protected_count": 0,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 0,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 15085,
+        "filled_area_pixels": 15145,
+        "added_pixels": 60,
+        "added_area_ratio_of_mask": 0.003977,
+        "filled_hole_count": 5,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "004-camera3-idx5-1793760663542839987-hole-fill-shadow-mask.png",
+      "overlay": "004-camera3-idx5-1793760663542839987-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "0150d615bc3a5b6a0cf67535fb7481b0da1b2229d7d6b6d1a2ad8001f57b982d",
+      "overlay_sha256": "514c7907e008ac28c674cd6c74692aa787e65b26a2a02d85e53e917e8570c1c4"
+    },
+    {
+      "sample_id": "004-camera3-idx52-1793760677642756695",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "ffe4a76f12898048e83a5c7b5b4bb520be330cdbc7e54d64680add2fca8f0b7e",
+      "source_union_mask_sha256": "3d52cc14e6af9e16f32287f575917a4a8086e3f3cd343b618a06adb0400de1ed",
+      "source_queue_sha256": "a4848c3c9aa7d3e9fef83e59069fe79964b20a8a867854b1bb34eaea5db25c60",
+      "diagnostic_sha256": "d7f6367213861b83ae115e88835058a0d19848b249d23e7ef8f4e23495fde795",
+      "components": [
+        {
+          "name": "camera3-crossbar-core-v2",
+          "source_mask_sha256": "3b777ecfa7880e2dd2f956af96e9fddfcf010d2cd7f6592113f64edc473e8e47",
+          "area_ratio_after": 0.029904,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.05
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 9730,
+          "filled_area_pixels": 9799,
+          "added_pixels": 69,
+          "added_area_ratio_of_mask": 0.007091,
+          "enclosed_hole_count": 11,
+          "filled_hole_count": 8,
+          "filled_hole_sizes": [
+            5,
+            5,
+            12,
+            13,
+            10,
+            12,
+            7,
+            5
+          ],
+          "large_hole_protected_count": 3,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 0,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera3-lower-assembly-v2",
+          "source_mask_sha256": "caae6e3444763bbdfc337594b799fdc11a8c1c7c3df68ed1662928a79ed0c872",
+          "area_ratio_after": 0.019519,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.04
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 6396,
+          "filled_area_pixels": 6396,
+          "added_pixels": 0,
+          "added_area_ratio_of_mask": 0.0,
+          "enclosed_hole_count": 1,
+          "filled_hole_count": 0,
+          "filled_hole_sizes": [],
+          "large_hole_protected_count": 1,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 0,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 16126,
+        "filled_area_pixels": 16195,
+        "added_pixels": 69,
+        "added_area_ratio_of_mask": 0.004279,
+        "filled_hole_count": 8,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "004-camera3-idx52-1793760677642756695-hole-fill-shadow-mask.png",
+      "overlay": "004-camera3-idx52-1793760677642756695-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "767ffe6500d30e16ca8574e3646040da2f2213c9f0ae28607896d89af5c5a959",
+      "overlay_sha256": "2987e216babd8cfb897ea0a6f83d596f2736c9016df405c5129b51ab5fbd6e0b"
+    },
+    {
+      "sample_id": "004-camera3-idx68-1793760682442792695",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "44cb31a3ad3dcb284c924d1b927134cf1d65d7bf6d58287d73a268c8ad170c00",
+      "source_union_mask_sha256": "c16a5b4523f3189d365f15ab585b15ff657f0b52bec59a30088fb6ec06c4f321",
+      "source_queue_sha256": "a4848c3c9aa7d3e9fef83e59069fe79964b20a8a867854b1bb34eaea5db25c60",
+      "diagnostic_sha256": "91d4aae432972803232f62abc252f4e1096a09afa25751ac92b85293b8ea0cbc",
+      "components": [
+        {
+          "name": "camera3-crossbar-core-v2",
+          "source_mask_sha256": "d91222b9c9a1b54c22f46f4444f6b341b85c2faecb587513e8231db860a636dc",
+          "area_ratio_after": 0.023672,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.05
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 7719,
+          "filled_area_pixels": 7757,
+          "added_pixels": 38,
+          "added_area_ratio_of_mask": 0.004923,
+          "enclosed_hole_count": 11,
+          "filled_hole_count": 4,
+          "filled_hole_sizes": [
+            5,
+            10,
+            12,
+            11
+          ],
+          "large_hole_protected_count": 5,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 2,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera3-lower-assembly-v2",
+          "source_mask_sha256": "e9f69166e7053807f4712c583c6b1acf0871cf4547a0285e58d58b4ea74e396d",
+          "area_ratio_after": 0.022696,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.04
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 7437,
+          "filled_area_pixels": 7437,
+          "added_pixels": 0,
+          "added_area_ratio_of_mask": 0.0,
+          "enclosed_hole_count": 0,
+          "filled_hole_count": 0,
+          "filled_hole_sizes": [],
+          "large_hole_protected_count": 0,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 0,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 15156,
+        "filled_area_pixels": 15194,
+        "added_pixels": 38,
+        "added_area_ratio_of_mask": 0.002507,
+        "filled_hole_count": 4,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "004-camera3-idx68-1793760682442792695-hole-fill-shadow-mask.png",
+      "overlay": "004-camera3-idx68-1793760682442792695-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "81737088d53eac526eea7801df8f1a687e53f6c4d1bf061aafe8b947f0c6fe47",
+      "overlay_sha256": "fe4ccfd3586fd54aacf7d454b196fc6c2c09a991b8db49074877be367607968d"
+    },
+    {
+      "sample_id": "004-camera3-idx85-1793760721942855696",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "review_status": "assistant_review_required",
+      "source_image_sha256": "4bac12c1e9c441f22f18e9eba2d4866fbacf367e9936d9224db24dd3602c1e7b",
+      "source_union_mask_sha256": "c301a78ddb832436657fbfaca8e3a25e6c0dfa4973e39460af9f0c70fb10b894",
+      "source_queue_sha256": "a4848c3c9aa7d3e9fef83e59069fe79964b20a8a867854b1bb34eaea5db25c60",
+      "diagnostic_sha256": "63c9d70530f02e09d39fc367bc78dd03848b9f7f6997efd0105d2bc4bfa8cb98",
+      "components": [
+        {
+          "name": "camera3-crossbar-core-v2",
+          "source_mask_sha256": "e5a4e8ec8347cbfb5688bf9c7971d7763cbf84d12908874ee9245fcf5d367d77",
+          "area_ratio_after": 0.023215,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.05
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 7577,
+          "filled_area_pixels": 7607,
+          "added_pixels": 30,
+          "added_area_ratio_of_mask": 0.003959,
+          "enclosed_hole_count": 11,
+          "filled_hole_count": 4,
+          "filled_hole_sizes": [
+            7,
+            7,
+            9,
+            7
+          ],
+          "large_hole_protected_count": 5,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 2,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        },
+        {
+          "name": "camera3-lower-assembly-v2",
+          "source_mask_sha256": "f50019fb33ac8413032856be3bdc936e872de77568834b1805155ab5b0b44cea",
+          "area_ratio_after": 0.022437,
+          "area_guard": {
+            "min_area_ratio": 0.015,
+            "max_area_ratio": 0.04
+          },
+          "positive_points_preserved": true,
+          "idempotent": true,
+          "maximum_hole_pixels_exclusive": 16,
+          "source_area_pixels": 7352,
+          "filled_area_pixels": 7352,
+          "added_pixels": 0,
+          "added_area_ratio_of_mask": 0.0,
+          "enclosed_hole_count": 1,
+          "filled_hole_count": 0,
+          "filled_hole_sizes": [],
+          "large_hole_protected_count": 0,
+          "negative_point_protected_hole_count": 0,
+          "persistent_protected_hole_count": 1,
+          "negative_point_count": 3,
+          "negative_points_preserved": true
+        }
+      ],
+      "metrics": {
+        "source_area_pixels": 14929,
+        "filled_area_pixels": 14959,
+        "added_pixels": 30,
+        "added_area_ratio_of_mask": 0.00201,
+        "filled_hole_count": 4,
+        "removed_pixels": 0,
+        "positive_points_preserved": true,
+        "negative_points_preserved": true,
+        "component_budget_passed": true,
+        "component_area_guards_passed": true,
+        "idempotent": true
+      },
+      "mask": "004-camera3-idx85-1793760721942855696-hole-fill-shadow-mask.png",
+      "overlay": "004-camera3-idx85-1793760721942855696-hole-fill-shadow-overlay.jpg",
+      "mask_sha256": "5d52d7eb8975c888052e7683e8f81420a7bd6b14ac2cdd4afd58d5b75fe865f8",
+      "overlay_sha256": "dbee42c95f198202745f8d0cfe112efb3f1d740c41eb569ac9e1ba269c431356"
+    }
+  ],
+  "next_step": "Review every magenta added region; never replace source masks or approve training from this shadow packet."
+}

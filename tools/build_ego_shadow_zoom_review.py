@@ -6,16 +6,20 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import os
 from pathlib import Path
+import shutil
 
 import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 try:
-    from tools.build_ego_component_union_review import _verified_bytes, file_sha256
+    from tools.build_ego_component_union_review import (
+        _verified_bytes, file_sha256, load_identity_manifest)
 except ModuleNotFoundError:  # Direct script execution.
-    from build_ego_component_union_review import _verified_bytes, file_sha256  # type: ignore
+    from build_ego_component_union_review import (  # type: ignore
+        _verified_bytes, file_sha256, load_identity_manifest)
 
 
 def _decode_mask(data: bytes) -> np.ndarray:
@@ -92,10 +96,12 @@ def _write_contact_sheet(output: Path, rows: list[dict]) -> Path:
     return target
 
 
-def build_review(review_queues: list[Path], shadow_packet_path: Path,
-                 output: Path) -> dict:
+def build_review(review_queues: list[Path], identity_manifest_path: Path,
+                 shadow_packet_path: Path, output: Path) -> dict:
     if output.exists():
         raise FileExistsError(output)
+    identities = load_identity_manifest(identity_manifest_path)
+    identity_sha = file_sha256(identity_manifest_path)
     originals = {}
     failed = set()
     for queue_path in review_queues:
@@ -103,8 +109,12 @@ def build_review(review_queues: list[Path], shadow_packet_path: Path,
         if (packet.get("candidate_only") is not True
                 or packet.get("human_truth") is not False
                 or packet.get("approved_for_training") is not False
-                or packet.get("production_deployed") is not False):
+                or packet.get("production_deployed") is not False
+                or (packet.get("safety_gates") or {}).get(
+                    "identity_manifest_sha256") != identity_sha):
             raise ValueError("review queue safety flags are inconsistent")
+        allowed_root = Path(packet["safety_gates"]["allowed_source_root"]).resolve(
+            strict=True)
         for row in packet.get("samples", []):
             sample_id = row.get("sample_id")
             if sample_id in originals or sample_id in failed:
@@ -112,8 +122,25 @@ def build_review(review_queues: list[Path], shadow_packet_path: Path,
             if row.get("union_available") is not True:
                 failed.add(sample_id)
                 continue
+            identity = identities.get(sample_id)
+            if identity is None or identity["image_sha256"] != row.get(
+                    "source_image_sha256"):
+                raise ValueError(f"identity binding mismatch: {sample_id}")
+            image_path = Path(row.get("source_image", "")).resolve(strict=True)
+            try:
+                image_path.relative_to(allowed_root)
+            except ValueError as error:
+                raise ValueError(f"source image is outside allowed root: {sample_id}") from error
+            if identity.get("relative_path") is not None:
+                if image_path != (allowed_root / identity["relative_path"]).resolve(
+                        strict=True):
+                    raise ValueError(f"source relative path mismatch: {sample_id}")
+            elif (image_path.name != f"{identity['frame_id']}.png"
+                  or image_path.parent.name != f"camera_{identity['camera'][-1]}"
+                  or image_path.parent.parent.name != identity["package"]):
+                raise ValueError(f"source nested path mismatch: {sample_id}")
             originals[sample_id] = {
-                "image_path": Path(row.get("source_image", "")),
+                "image_path": image_path,
                 "image_sha256": row.get("source_image_sha256"),
                 "mask_path": queue_path.parent / row.get("union_mask", ""),
                 "mask_sha256": row.get("union_mask_sha256"),
@@ -166,17 +193,22 @@ def build_review(review_queues: list[Path], shadow_packet_path: Path,
         }
         rows.append(row)
         pending.append((row, image_bytes, original, shadow_mask, bbox))
-    output.mkdir(parents=True)
-    for row, image_bytes, original, shadow_mask, bbox in pending:
-        _render_crop(image_bytes, original, shadow_mask, bbox,
-                     output / row["crop"])
-        row["crop_sha256"] = file_sha256(output / row["crop"])
-    contact = _write_contact_sheet(output, rows)
-    packet = {
+    staging = output.with_name(f".{output.name}.staging-{os.getpid()}")
+    if staging.exists():
+        raise FileExistsError(staging)
+    staging.mkdir(parents=True)
+    try:
+        for row, image_bytes, original, shadow_mask, bbox in pending:
+            _render_crop(image_bytes, original, shadow_mask, bbox,
+                         staging / row["crop"])
+            row["crop_sha256"] = file_sha256(staging / row["crop"])
+        contact = _write_contact_sheet(staging, rows)
+        packet = {
         "schema_version": "labelagent.ego_shadow_zoom_review.v1",
         "candidate_only": True, "human_truth": False,
         "approved_for_training": False, "production_deployed": False,
         "source_masks_modified": False,
+        "identity_manifest_sha256": identity_sha,
         "shadow_packet_sha256": file_sha256(shadow_packet_path),
         "changed_sample_count": len(rows),
         "unchanged_sample_count": len(originals) - len(rows),
@@ -186,21 +218,28 @@ def build_review(review_queues: list[Path], shadow_packet_path: Path,
         "contact_sheet_sha256": file_sha256(contact),
         "rows": rows,
         "next_step": "Review every magenta zoom region. This packet cannot approve truth, training or deployment.",
-    }
-    target = output / "zoom_review.json"
-    target.write_text(json.dumps(packet, ensure_ascii=False, indent=2) + "\n",
-                      encoding="utf-8")
+        }
+        target = staging / "zoom_review.json"
+        target.write_text(json.dumps(packet, ensure_ascii=False, indent=2) + "\n",
+                          encoding="utf-8")
+        json.loads(target.read_text(encoding="utf-8"))
+        staging.replace(output)
+    except Exception:
+        if staging.exists() and staging.parent == output.parent:
+            shutil.rmtree(staging)
+        raise
     return packet
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--review-queue", action="append", type=Path, required=True)
+    parser.add_argument("--identity-manifest", type=Path, required=True)
     parser.add_argument("--shadow-packet", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     arguments = parser.parse_args()
-    packet = build_review(arguments.review_queue, arguments.shadow_packet,
-                          arguments.output)
+    packet = build_review(arguments.review_queue, arguments.identity_manifest,
+                          arguments.shadow_packet, arguments.output)
     print(json.dumps({
         "changed_sample_count": packet["changed_sample_count"],
         "unchanged_sample_count": packet["unchanged_sample_count"],

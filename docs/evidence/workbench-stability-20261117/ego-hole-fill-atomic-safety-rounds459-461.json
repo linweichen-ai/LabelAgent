@@ -1,0 +1,39 @@
+{
+  "schema_version": "labelagent.ego_hole_fill_atomic_safety_receipt.v1",
+  "date": "2026-11-22",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "default_enabled": false,
+  "safety_fixes": {
+    "atomic_directory_publish": true,
+    "staging_cleanup_on_failure": true,
+    "integer_pixel_budget": true,
+    "allowed_source_root_revalidated": true,
+    "identity_relative_or_nested_path_revalidated": true,
+    "single_file_comparison_atomic_replace": true,
+    "zoom_packet_identity_manifest_bound": true
+  },
+  "round459_shadow": {
+    "sample_count": 36,
+    "failed_closed_input_count": 2,
+    "added_pixel_total": 1764,
+    "filled_hole_total": 245,
+    "shadow_packet_sha256": "65db2577065c6899b2fbf909f0b7a8764bb7f194603d1da3e44b5f327de2e527",
+    "contact_sheet_sha256": "cea92402c3c00bc27df5ee075e85b93c7dc1c1058ca03ff63d87b17ca77aef7d"
+  },
+  "round460_frozen_reference": {
+    "before_alert_count": 4,
+    "after_alert_count": 4,
+    "new_alert_sample_count": 0,
+    "comparison_sha256": "be848ccd91afbaafedd4b4e1001ca853e07ac98b59d14e716d98bedee24050ed"
+  },
+  "round461_zoom": {
+    "identity_manifest_sha256": "badc0ae487ea042c410facbee79c1dcd2beabd41c557b9cce4eee9ad2b8df12c",
+    "zoom_packet_sha256": "90469489ee827e49869ac50a5b6824cf14c4060a1883ac0fafecddb069611e46",
+    "contact_sheet_sha256": "01102917239a459542bd0d570e766ba1fb510a67af11078a3a91260d4b2de3a5"
+  },
+  "visual_review_status": "sample_zoom_overview_partial_pass",
+  "conclusion": "Safety hardening preserved all candidate metrics and visuals while making publication atomic and source-path bound. Per-micro-hole human truth is still missing."
+}

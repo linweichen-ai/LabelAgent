@@ -1,0 +1,684 @@
+{
+  "schema_version": "labelagent.ego_shadow_zoom_review.v1",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "source_masks_modified": false,
+  "identity_manifest_sha256": "badc0ae487ea042c410facbee79c1dcd2beabd41c557b9cce4eee9ad2b8df12c",
+  "shadow_packet_sha256": "65db2577065c6899b2fbf909f0b7a8764bb7f194603d1da3e44b5f327de2e527",
+  "changed_sample_count": 35,
+  "unchanged_sample_count": 1,
+  "failed_closed_input_count": 2,
+  "added_pixel_total": 1764,
+  "contact_sheet": "hole_fill_zoom_contact_sheet.jpg",
+  "contact_sheet_sha256": "01102917239a459542bd0d570e766ba1fb510a67af11078a3a91260d4b2de3a5",
+  "rows": [
+    {
+      "sample_id": "000-camera1-1793758297542631987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 103,
+      "added_component_count": 13,
+      "maximum_added_component_pixels": 15,
+      "bbox_xyxy": [
+        138,
+        325,
+        421,
+        507
+      ],
+      "crop": "000-camera1-1793758297542631987-hole-fill-zoom.png",
+      "crop_sha256": "7b36709135bf67bbd834429fa706d9c1a0dfbafa0ab67a11e922b0979af80977"
+    },
+    {
+      "sample_id": "000-camera1-1793758312842576695",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 15,
+      "added_component_count": 3,
+      "maximum_added_component_pixels": 5,
+      "bbox_xyxy": [
+        181,
+        416,
+        399,
+        512
+      ],
+      "crop": "000-camera1-1793758312842576695-hole-fill-zoom.png",
+      "crop_sha256": "ceec0f5a263d7f544adea0a8ac91f8b8e84ccbc091489943f7ca82132e54cbc6"
+    },
+    {
+      "sample_id": "000-camera1-1793758356342888404",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 15,
+      "added_component_count": 3,
+      "maximum_added_component_pixels": 5,
+      "bbox_xyxy": [
+        301,
+        373,
+        446,
+        512
+      ],
+      "crop": "000-camera1-1793758356342888404-hole-fill-zoom.png",
+      "crop_sha256": "878c2d60a8b4852235f37ba649e04d8a5755efb08bd2fa7d36f49c73c8639a0a"
+    },
+    {
+      "sample_id": "000-camera3-1793758297542631987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 56,
+      "added_component_count": 8,
+      "maximum_added_component_pixels": 11,
+      "bbox_xyxy": [
+        236,
+        339,
+        461,
+        435
+      ],
+      "crop": "000-camera3-1793758297542631987-hole-fill-zoom.png",
+      "crop_sha256": "a92331acc44c224ddf6782f5b3087009ee069b9cf2d99a66ec81f15a7bd06cee"
+    },
+    {
+      "sample_id": "000-camera3-1793758312842576695",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 93,
+      "added_component_count": 10,
+      "maximum_added_component_pixels": 15,
+      "bbox_xyxy": [
+        217,
+        348,
+        466,
+        446
+      ],
+      "crop": "000-camera3-1793758312842576695-hole-fill-zoom.png",
+      "crop_sha256": "470f617ef4af95771f7e36a9628b8d1292084b7952bc246199673808c1f265e2"
+    },
+    {
+      "sample_id": "000-camera3-1793758356342888404",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 61,
+      "added_component_count": 7,
+      "maximum_added_component_pixels": 15,
+      "bbox_xyxy": [
+        332,
+        330,
+        461,
+        426
+      ],
+      "crop": "000-camera3-1793758356342888404-hole-fill-zoom.png",
+      "crop_sha256": "9d99f926f1d8bb0db02558999fea5bbb81a0463fad5cc4657bf5686b0f6e3a50"
+    },
+    {
+      "sample_id": "001-camera1-1793759034009520987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 63,
+      "added_component_count": 8,
+      "maximum_added_component_pixels": 14,
+      "bbox_xyxy": [
+        136,
+        371,
+        446,
+        512
+      ],
+      "crop": "001-camera1-1793759034009520987-hole-fill-zoom.png",
+      "crop_sha256": "e233a6a0bce34e13ced8352e94ba88d9b6fb022175534b77ae58747f54e787fa"
+    },
+    {
+      "sample_id": "001-camera1-1793759063409530987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 10,
+      "added_component_count": 2,
+      "maximum_added_component_pixels": 5,
+      "bbox_xyxy": [
+        136,
+        346,
+        417,
+        443
+      ],
+      "crop": "001-camera1-1793759063409530987-hole-fill-zoom.png",
+      "crop_sha256": "44bfa440e80bec873b974a37deeb17f9da86541c5f05b9fb1f4b7c1582d456c8"
+    },
+    {
+      "sample_id": "001-camera3-1793759004609543987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 55,
+      "added_component_count": 7,
+      "maximum_added_component_pixels": 15,
+      "bbox_xyxy": [
+        301,
+        349,
+        468,
+        445
+      ],
+      "crop": "001-camera3-1793759004609543987-hole-fill-zoom.png",
+      "crop_sha256": "cac565c7c94561461e11a27d0fe6d9de201bc32b55c4e1f2a5ba3d17a9d60b85"
+    },
+    {
+      "sample_id": "001-camera3-1793759034009520987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 37,
+      "added_component_count": 4,
+      "maximum_added_component_pixels": 13,
+      "bbox_xyxy": [
+        214,
+        340,
+        369,
+        436
+      ],
+      "crop": "001-camera3-1793759034009520987-hole-fill-zoom.png",
+      "crop_sha256": "7ae72a9318df389088ed61b99a45eec255b3135372687e75e5d0db0cddc7e876"
+    },
+    {
+      "sample_id": "001-camera3-1793759063409530987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 51,
+      "added_component_count": 7,
+      "maximum_added_component_pixels": 12,
+      "bbox_xyxy": [
+        339,
+        339,
+        462,
+        435
+      ],
+      "crop": "001-camera3-1793759063409530987-hole-fill-zoom.png",
+      "crop_sha256": "19b4740ee2089c5c5e81202baa6c92d6f254e34bddebcc3267d429f6534af5b8"
+    },
+    {
+      "sample_id": "002-camera1-1793759208642855696",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 51,
+      "added_component_count": 8,
+      "maximum_added_component_pixels": 10,
+      "bbox_xyxy": [
+        136,
+        407,
+        399,
+        512
+      ],
+      "crop": "002-camera1-1793759208642855696-hole-fill-zoom.png",
+      "crop_sha256": "59bc38e06bf6cdfd300e7214121d9e11ce601f750c616bdd618c55394bb657f2"
+    },
+    {
+      "sample_id": "002-camera1-1793759219742811696",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 10,
+      "added_component_count": 2,
+      "maximum_added_component_pixels": 5,
+      "bbox_xyxy": [
+        219,
+        377,
+        359,
+        473
+      ],
+      "crop": "002-camera1-1793759219742811696-hole-fill-zoom.png",
+      "crop_sha256": "ffe36444a163645fd9646e55d6ee1157c0fe6631f5a66d98c07a849d272b65cb"
+    },
+    {
+      "sample_id": "002-camera1-1793759230842886696",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 48,
+      "added_component_count": 8,
+      "maximum_added_component_pixels": 11,
+      "bbox_xyxy": [
+        183,
+        378,
+        410,
+        512
+      ],
+      "crop": "002-camera1-1793759230842886696-hole-fill-zoom.png",
+      "crop_sha256": "afd26188e45c96c40f443e2b4a163273b0008d188fbdb6f3d729796ba8651ae1"
+    },
+    {
+      "sample_id": "002-camera3-1793759208642855696",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 76,
+      "added_component_count": 11,
+      "maximum_added_component_pixels": 12,
+      "bbox_xyxy": [
+        230,
+        339,
+        468,
+        435
+      ],
+      "crop": "002-camera3-1793759208642855696-hole-fill-zoom.png",
+      "crop_sha256": "1546b88bcf9fb570d220d2108c68b0fd0474b48b58b244b8fef3cb053e93542f"
+    },
+    {
+      "sample_id": "002-camera3-1793759219742811696",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 31,
+      "added_component_count": 4,
+      "maximum_added_component_pixels": 12,
+      "bbox_xyxy": [
+        196,
+        349,
+        353,
+        445
+      ],
+      "crop": "002-camera3-1793759219742811696-hole-fill-zoom.png",
+      "crop_sha256": "6835e42aa32ebe8e650eb3f970d2c8c9d5db43a135f946fdd1c5ed33b5482ed7"
+    },
+    {
+      "sample_id": "002-camera3-1793759230842886696",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 36,
+      "added_component_count": 6,
+      "maximum_added_component_pixels": 7,
+      "bbox_xyxy": [
+        286,
+        357,
+        382,
+        455
+      ],
+      "crop": "002-camera3-1793759230842886696-hole-fill-zoom.png",
+      "crop_sha256": "eeb13dcc54b1dbf67d40fdeab0eac565823f989cb356e85cc8f78010286cd4a8"
+    },
+    {
+      "sample_id": "003-camera1-idx22-1793759966409522987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 34,
+      "added_component_count": 6,
+      "maximum_added_component_pixels": 7,
+      "bbox_xyxy": [
+        141,
+        330,
+        263,
+        475
+      ],
+      "crop": "003-camera1-idx22-1793759966409522987-hole-fill-zoom.png",
+      "crop_sha256": "8999c7be6538c66ebcacf96ee8f194a0d4e9f5a118085f5b7fd14a5cb404e467"
+    },
+    {
+      "sample_id": "003-camera1-idx5-1793759961309512987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 67,
+      "added_component_count": 9,
+      "maximum_added_component_pixels": 12,
+      "bbox_xyxy": [
+        140,
+        325,
+        398,
+        473
+      ],
+      "crop": "003-camera1-idx5-1793759961309512987-hole-fill-zoom.png",
+      "crop_sha256": "89f5012d63e6601504ce6c2d63322f732f6d495a1e7ab60951050eb1c15cc969"
+    },
+    {
+      "sample_id": "003-camera1-idx52-1793759975409508695",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 42,
+      "added_component_count": 6,
+      "maximum_added_component_pixels": 11,
+      "bbox_xyxy": [
+        150,
+        359,
+        412,
+        466
+      ],
+      "crop": "003-camera1-idx52-1793759975409508695-hole-fill-zoom.png",
+      "crop_sha256": "28f5207cd4e5bf6406cb2cea20d5f3a246429f74680b7db93066f52d31f50342"
+    },
+    {
+      "sample_id": "003-camera3-idx22-1793759966409522987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 102,
+      "added_component_count": 13,
+      "maximum_added_component_pixels": 14,
+      "bbox_xyxy": [
+        221,
+        328,
+        466,
+        453
+      ],
+      "crop": "003-camera3-idx22-1793759966409522987-hole-fill-zoom.png",
+      "crop_sha256": "7eb3ac05e499df860f412328956d4b605675475796fab6589d907709b3cca0b2"
+    },
+    {
+      "sample_id": "003-camera3-idx5-1793759961309512987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 102,
+      "added_component_count": 14,
+      "maximum_added_component_pixels": 13,
+      "bbox_xyxy": [
+        201,
+        327,
+        459,
+        445
+      ],
+      "crop": "003-camera3-idx5-1793759961309512987-hole-fill-zoom.png",
+      "crop_sha256": "b0d7a4c5a20e973579634c88011cf5904d099a6e0d6f3971e28ac67364fe89de"
+    },
+    {
+      "sample_id": "003-camera3-idx52-1793759975409508695",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 114,
+      "added_component_count": 20,
+      "maximum_added_component_pixels": 10,
+      "bbox_xyxy": [
+        214,
+        330,
+        459,
+        456
+      ],
+      "crop": "003-camera3-idx52-1793759975409508695-hole-fill-zoom.png",
+      "crop_sha256": "0849a7d1591adef467a1c2ee5836e682ee702ac7e686b6ef09533ead48964dd2"
+    },
+    {
+      "sample_id": "003-camera3-idx68-1793759980309508695",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 5,
+      "added_component_count": 1,
+      "maximum_added_component_pixels": 5,
+      "bbox_xyxy": [
+        235,
+        363,
+        331,
+        459
+      ],
+      "crop": "003-camera3-idx68-1793759980309508695-hole-fill-zoom.png",
+      "crop_sha256": "1f88f03f6e95d46c6a5d355c6d433579503df7dbe7e055ad621c1f2910922153"
+    },
+    {
+      "sample_id": "003-camera3-idx85-1793759985409553695",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 68,
+      "added_component_count": 10,
+      "maximum_added_component_pixels": 10,
+      "bbox_xyxy": [
+        212,
+        336,
+        474,
+        455
+      ],
+      "crop": "003-camera3-idx85-1793759985409553695-hole-fill-zoom.png",
+      "crop_sha256": "345e92c729a8db534cd637fcca85ea55a246da1384c8142125bd092426e1675b"
+    },
+    {
+      "sample_id": "004-camera1-idx22-1793760668642838987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 45,
+      "added_component_count": 6,
+      "maximum_added_component_pixels": 12,
+      "bbox_xyxy": [
+        180,
+        364,
+        421,
+        511
+      ],
+      "crop": "004-camera1-idx22-1793760668642838987-hole-fill-zoom.png",
+      "crop_sha256": "a9c0244244755c4cb37e6f682bf7f1948b2972ce32c3ae4f8e7d13cab33f34c9"
+    },
+    {
+      "sample_id": "004-camera1-idx5-1793760663542839987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 24,
+      "added_component_count": 4,
+      "maximum_added_component_pixels": 7,
+      "bbox_xyxy": [
+        181,
+        378,
+        450,
+        485
+      ],
+      "crop": "004-camera1-idx5-1793760663542839987-hole-fill-zoom.png",
+      "crop_sha256": "beeecd30e976f3cdeeda3941b3e0ffe4f13c59c0176fa78f5b3dde4e19979c44"
+    },
+    {
+      "sample_id": "004-camera1-idx52-1793760677642756695",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 32,
+      "added_component_count": 4,
+      "maximum_added_component_pixels": 12,
+      "bbox_xyxy": [
+        192,
+        396,
+        423,
+        500
+      ],
+      "crop": "004-camera1-idx52-1793760677642756695-hole-fill-zoom.png",
+      "crop_sha256": "0550ab02213bce4222d4b92de16a089b574e41757e9c53949d3216b332aacf30"
+    },
+    {
+      "sample_id": "004-camera1-idx68-1793760682442792695",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 12,
+      "added_component_count": 2,
+      "maximum_added_component_pixels": 7,
+      "bbox_xyxy": [
+        276,
+        383,
+        372,
+        479
+      ],
+      "crop": "004-camera1-idx68-1793760682442792695-hole-fill-zoom.png",
+      "crop_sha256": "d1b1a95c4e7d03a71ad33a56e25def46cd07f0b0a90c98083254d4bea9bf9927"
+    },
+    {
+      "sample_id": "004-camera1-idx85-1793760721942855696",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 40,
+      "added_component_count": 7,
+      "maximum_added_component_pixels": 8,
+      "bbox_xyxy": [
+        145,
+        366,
+        428,
+        491
+      ],
+      "crop": "004-camera1-idx85-1793760721942855696-hole-fill-zoom.png",
+      "crop_sha256": "7d4e68ee5e9f171c45240fb403d4ba4768ee9ba121d74a6f07c3a61b8c3f0504"
+    },
+    {
+      "sample_id": "004-camera3-idx22-1793760668642838987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 69,
+      "added_component_count": 11,
+      "maximum_added_component_pixels": 15,
+      "bbox_xyxy": [
+        234,
+        354,
+        459,
+        450
+      ],
+      "crop": "004-camera3-idx22-1793760668642838987-hole-fill-zoom.png",
+      "crop_sha256": "bb58fc9124a2cbc980cbd61f3c4154e9ee6b171260e806b9ad1e20ad8057a374"
+    },
+    {
+      "sample_id": "004-camera3-idx5-1793760663542839987",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 60,
+      "added_component_count": 5,
+      "maximum_added_component_pixels": 15,
+      "bbox_xyxy": [
+        230,
+        357,
+        453,
+        457
+      ],
+      "crop": "004-camera3-idx5-1793760663542839987-hole-fill-zoom.png",
+      "crop_sha256": "965321b6e2238b715d45b2feb803befabc2325d359b4555e5ba06856436d58b5"
+    },
+    {
+      "sample_id": "004-camera3-idx52-1793760677642756695",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 69,
+      "added_component_count": 8,
+      "maximum_added_component_pixels": 13,
+      "bbox_xyxy": [
+        250,
+        332,
+        430,
+        428
+      ],
+      "crop": "004-camera3-idx52-1793760677642756695-hole-fill-zoom.png",
+      "crop_sha256": "033f2a9a71ffdb12d2faadd142347e4398c58e7e89069978d7bef2813e1a94bf"
+    },
+    {
+      "sample_id": "004-camera3-idx68-1793760682442792695",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 38,
+      "added_component_count": 4,
+      "maximum_added_component_pixels": 12,
+      "bbox_xyxy": [
+        269,
+        337,
+        365,
+        433
+      ],
+      "crop": "004-camera3-idx68-1793760682442792695-hole-fill-zoom.png",
+      "crop_sha256": "735532ba55a587797d8b3be434af8817448a46c7c5d0a60ae909b0d91856b57d"
+    },
+    {
+      "sample_id": "004-camera3-idx85-1793760721942855696",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "production_deployed": false,
+      "assistant_review": "unreviewed",
+      "added_pixels": 30,
+      "added_component_count": 4,
+      "maximum_added_component_pixels": 9,
+      "bbox_xyxy": [
+        301,
+        332,
+        399,
+        428
+      ],
+      "crop": "004-camera3-idx85-1793760721942855696-hole-fill-zoom.png",
+      "crop_sha256": "11863dad0135e2143808db3590bce2871aaade472a59c0570ed69f87fff0f353"
+    }
+  ],
+  "next_step": "Review every magenta zoom region. This packet cannot approve truth, training or deployment."
+}

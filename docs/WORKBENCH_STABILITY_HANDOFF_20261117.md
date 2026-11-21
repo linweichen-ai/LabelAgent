@@ -3181,3 +3181,12 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 即使指标通过，报告仍固定不批准训练、不允许候选合并；本轮没有创建或冒充人工真值，也没有部署。
 - 完整Python 1230项及219个子测试、网页167项通过；正式工作台idle，三路模型ready，四份正式状态哈希不变。
 - 详细记录见`docs/EGO_PIXEL_TRUTH_ACCEPTANCE_GATE_ROUND389_20261122.md`，输入模板见`docs/templates/ego_pixel_truth_manifest.example.json`与人工收据模板。
+
+## Round390（2026-11-22）：ego 逐像素人工复核包
+
+- 四路相机各固定5帧，共20帧完成本地point-SAM候选、二值掩膜、叠加图、逐帧哈希和四相机×五时点总览图生成。
+- 20/20帧观察到候选，14帧进入人工复核态，6帧因SAM警告阻断，0帧调用失败；camera1五帧全部阻断，camera0 frame151阻断。
+- 助手只做20格总览预检；未见明显整片地面或整个人完整吸入，但这不是逐像素人工真值或IoU证据。
+- 工具不覆盖已有目录、不生成假真值或人工收据、不写正式状态；真实图像、掩膜和叠加图只在本地未跟踪目录保留。
+- 完整Python 1233项及219个子测试、网页167项通过；20次调用前后四份正式状态哈希不变。
+- 详细记录见`docs/EGO_PIXEL_TRUTH_REVIEW_PACKET_ROUND390_20261122.md`与对应结构化证据；本地总览位于`artifacts/round390-ego-pixel-truth-review20-v2-20261122/contact_sheet.jpg`。

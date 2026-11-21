@@ -1,0 +1,55 @@
+{
+  "schema_version": "labelagent.round390.ego_pixel_truth_review_packet.v1",
+  "date": "2026-11-22",
+  "candidate_only": true,
+  "human_truth": false,
+  "human_confirmed": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_state_modified": false,
+  "scope": {
+    "cameras": ["camera0", "camera1", "camera2", "camera3"],
+    "frames": [0, 38, 76, 114, 151],
+    "sample_count": 20,
+    "candidate_observed_count": 20,
+    "candidate_available_count": 14,
+    "blocked_sam_warning_count": 6,
+    "failed_count": 0
+  },
+  "per_camera": {
+    "camera0": {"observed": 5, "available": 4, "blocked": 1, "blocked_frames": [151]},
+    "camera1": {"observed": 5, "available": 0, "blocked": 5, "blocked_frames": [0, 38, 76, 114, 151]},
+    "camera2": {"observed": 5, "available": 5, "blocked": 0, "blocked_frames": []},
+    "camera3": {"observed": 5, "available": 5, "blocked": 0, "blocked_frames": []}
+  },
+  "local_artifacts": {
+    "tracked": false,
+    "uploaded": false,
+    "candidate_mask_count": 20,
+    "overlay_count": 20,
+    "contact_sheet_created": true,
+    "review_queue_sha256": "82A57825F0F4A496052EE865A9CFCFE2D1C70371B2A31477B9BE9BE12A51F07B",
+    "contact_sheet_sha256": "07F3E72A748F8691BD137A1264B55DFDEBE42A7B27F8B1ECD0D84565A1920709"
+  },
+  "assistant_visual_precheck": {
+    "overlays_reviewed": 20,
+    "human_confirmed": false,
+    "whole_floor_capture_observed": false,
+    "whole_person_capture_observed": false,
+    "camera1_person_contact_risk": true,
+    "limitations": ["contact_sheet_resolution", "no_pixel_truth", "no_iou"]
+  },
+  "tests": {
+    "targeted_passed": 3,
+    "full_python_passed": 1233,
+    "full_subtests_passed": 219,
+    "web_node_passed": 167
+  },
+  "formal_state_sha256": {
+    "state": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "file_sessions": "94E8BEE324628585E7532E595348293DF1DA7B24041A1D4DF1C2EC9FB734E02E",
+    "last_run": "3BECE2513C6F661054AC238AB185527D715A04B3B0C8E073274710BE23E057DA",
+    "last_run_summary": "32578D53E70FA6860F3438860B321172B5E8B405BC6BB8A0F19387A6D4B84933"
+  },
+  "gate": "local_review_packet_ready; human_pixel_truth_pending; production_rejected"
+}

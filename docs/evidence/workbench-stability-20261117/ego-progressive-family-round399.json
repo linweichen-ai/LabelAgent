@@ -1,0 +1,61 @@
+{
+  "schema_version": "labelagent.round399.ego_progressive_family.v1",
+  "date": "2026-11-22",
+  "camera": "camera1",
+  "fixed_family": [[3], [0, 2], [1, 3]],
+  "family_derived_from": "development_only",
+  "held_out_used_for_selection": false,
+  "fallback_order_policy": "larger_positive_subsets_first_then_lexicographic",
+  "minimum_baseline_retention": 0.9,
+  "color_dependent": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_state_modified": false,
+  "development": {
+    "frames": [0, 38, 76, 114, 151],
+    "sample_count": 5,
+    "fixed_family_pass_count": 4,
+    "progressive_pass_count": 5,
+    "fallback_used_count": 1,
+    "negative_violation_count": 0,
+    "additional_request_count": 26,
+    "median_additional_request_count": 3,
+    "maximum_additional_request_count": 14,
+    "median_additional_elapsed_seconds": 0.843
+  },
+  "held_out": {
+    "frames": [19, 57, 95, 133],
+    "sample_count": 4,
+    "fixed_family_pass_count": 2,
+    "progressive_pass_count": 2,
+    "fallback_used_count": 2,
+    "negative_violation_count": 0,
+    "additional_request_count": 34,
+    "median_additional_request_count": 8.5,
+    "maximum_additional_request_count": 14,
+    "median_additional_elapsed_seconds": 2.68
+  },
+  "hard_cases": {
+    "camera1-frame019": {"positive_coverage": "4/4", "baseline_retention": 0.48, "passed": false},
+    "camera1-frame057": {"positive_coverage": "4/4", "baseline_retention": 0.89, "passed": false}
+  },
+  "local_artifacts": {
+    "results_sha256": "7605F8171E62D262C1EBCBEB6D205CBDFB0106265E402D634135F17637E7F584",
+    "contact_sheet_sha256": "14729B5DA16DAADA8E2DFE441957B51A7963EE7FA2A18D843C7AC53F0DCCC5CE",
+    "real_images_uploaded": false
+  },
+  "tests": {
+    "targeted_python_passed": 3,
+    "full_python_discover_passed": 1239,
+    "web_node_passed": 167
+  },
+  "formal_state_sha256": {
+    "state": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "file_sessions": "94E8BEE324628585E7532E595348293DF1DA7B24041A1D4DF1C2EC9FB734E02E",
+    "last_run": "3BECE2513C6F661054AC238AB185527D715A04B3B0C8E073274710BE23E057DA",
+    "last_run_summary": "32578D53E70FA6860F3438860B321172B5E8B405BC6BB8A0F19387A6D4B84933"
+  },
+  "gate": "development_recovered_but_heldout_not_improved; prompt_tuning_stopped; production_rejected; independent_truth_required"
+}

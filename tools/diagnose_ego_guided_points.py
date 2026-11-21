@@ -13,6 +13,7 @@ import base64
 from datetime import datetime, timezone
 import hashlib
 import json
+import math
 from pathlib import Path
 import sys
 import time
@@ -39,7 +40,14 @@ def file_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def validate_image_dimensions(width: int, height: int) -> None:
+    if (type(width) is not int or type(height) is not int
+            or width <= 0 or height <= 0):
+        raise ValueError("image dimensions must be positive integers")
+
+
 def validate_point_sets(payload, width: int, height: int) -> list[dict]:
+    validate_image_dimensions(width, height)
     if not isinstance(payload, list) or not 1 <= len(payload) <= 8:
         raise ValueError("point-set file must contain 1 to 8 experiments")
     names = set()
@@ -48,28 +56,34 @@ def validate_point_sets(payload, width: int, height: int) -> list[dict]:
         if not isinstance(item, dict):
             raise ValueError("each point set must be an object")
         name, points = item.get("name"), item.get("points")
-        if (not isinstance(name, str) or not name.strip()
-                or name in names or not isinstance(points, list)
+        clean_name = name.strip() if isinstance(name, str) else ""
+        if (not clean_name or clean_name in names or not isinstance(points, list)
                 or not 1 <= len(points) <= 32):
             raise ValueError("point-set names must be unique and contain 1 to 32 points")
         normalized = []
+        coordinates = set()
         for point in points:
             if not isinstance(point, dict):
                 raise ValueError("every point must be an object")
             x, y, label = point.get("x"), point.get("y"), point.get("label")
-            if (type(x) is not int or type(y) is not int or label not in (0, 1)
+            if (type(x) is not int or type(y) is not int or type(label) is not int
+                    or label not in (0, 1)
                     or not 0 <= x < width or not 0 <= y < height):
                 raise ValueError("point coordinates or labels are invalid")
+            if (x, y) in coordinates:
+                raise ValueError("point coordinates must be unique within a point set")
+            coordinates.add((x, y))
             normalized.append({"x": x, "y": y, "label": label})
         if not any(point["label"] == 1 for point in normalized):
             raise ValueError("each point set requires at least one positive point")
-        names.add(name)
-        validated.append({"name": name.strip(), "points": normalized})
+        names.add(clean_name)
+        validated.append({"name": clean_name, "points": normalized})
     return validated
 
 
 def materialize_normalized_point_sets(payload, width: int, height: int) -> list[dict]:
     """Convert bounded image-relative hints into validated pixel coordinates."""
+    validate_image_dimensions(width, height)
     if not isinstance(payload, list) or not 1 <= len(payload) <= 8:
         raise ValueError("normalized point-set file must contain 1 to 8 experiments")
     materialized = []
@@ -89,7 +103,8 @@ def materialize_normalized_point_sets(payload, width: int, height: int) -> list[
             if (isinstance(x_ratio, bool) or isinstance(y_ratio, bool)
                     or not isinstance(x_ratio, (int, float))
                     or not isinstance(y_ratio, (int, float))
-                    or label not in (0, 1)
+                    or type(label) is not int or label not in (0, 1)
+                    or not math.isfinite(x_ratio) or not math.isfinite(y_ratio)
                     or not 0 <= x_ratio <= 1 or not 0 <= y_ratio <= 1):
                 raise ValueError("normalized point ratios or labels are invalid")
             pixel_points.append({
@@ -116,6 +131,19 @@ def request_points(endpoint: str, image: bytes, points: list[dict]) -> dict:
             f"point SAM returned HTTP {error.code}: {detail or error.reason}") from error
     if not isinstance(payload, dict):
         raise ValueError("point SAM response must be an object")
+    parts = payload.get("parts", [])
+    if not isinstance(parts, list) or len(parts) > 64:
+        raise ValueError("point SAM response parts must be a bounded list")
+    for part in parts:
+        if (not isinstance(part, dict)
+                or not isinstance(part.get("points"), list)
+                or not isinstance(part.get("holes", []), list)):
+            raise ValueError("point SAM response contains invalid mask geometry")
+    score = payload.get("score")
+    if (score is not None and (isinstance(score, bool)
+            or not isinstance(score, (int, float))
+            or not math.isfinite(score))):
+        raise ValueError("point SAM response score must be finite")
     return payload
 
 
@@ -150,28 +178,29 @@ def main() -> int:
     rows = []
     for index, experiment in enumerate(point_sets):
         started = time.monotonic()
-        result = {}
         failure = None
-        try:
-            result = request_points(args.point_sam_url, image, experiment["points"])
-        except Exception as error:  # Shadow diagnostics must preserve the other rows.
-            failure = str(error)[:500]
-        parts = result.get("parts") or []
         shape = None
         geometry = None
-        if parts:
-            shape = {
-                "id": index + 1, "label": "ego",
-                "points": parts[0].get("points", []),
-                "holes": parts[0].get("holes", []),
-                "parts": parts, "score": float(result.get("score") or 0),
-                "source": "shadow_guided_points",
-            }
-            shape["_record"] = mask_record(shape, width, height)
-            shape["point"] = experiment["points"]
-            geometry = bounded_candidate_summary(shape, width, height)
-            shape.pop("_record", None)
-            shape.pop("point", None)
+        try:
+            result = request_points(args.point_sam_url, image, experiment["points"])
+            parts = result.get("parts") or []
+            if parts:
+                shape = {
+                    "id": index + 1, "label": "ego",
+                    "points": parts[0].get("points", []),
+                    "holes": parts[0].get("holes", []),
+                    "parts": parts, "score": float(result.get("score") or 0),
+                    "source": "shadow_guided_points",
+                }
+                shape["_record"] = mask_record(shape, width, height)
+                shape["point"] = experiment["points"]
+                geometry = bounded_candidate_summary(shape, width, height)
+                shape.pop("_record", None)
+                shape.pop("point", None)
+        except Exception as error:  # Shadow diagnostics must preserve the other rows.
+            failure = str(error)[:500]
+            shape = None
+            geometry = None
         overlay = args.output_dir / f"{index:02d}-{experiment['name']}.jpg"
         overlay.write_bytes(candidate_overlay(image, [shape] if shape else []))
         rows.append({

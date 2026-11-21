@@ -1,0 +1,41 @@
+{
+  "round": 386,
+  "date": "2026-11-22",
+  "scope": "ego guided-point shadow diagnostic only",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "workbuddy_review": {
+    "mode": "read-only committed-files review",
+    "reviewed_commit": "139f64ffad048674922389b8cb355d56f53ca00e",
+    "untracked_images_read": false,
+    "files_modified_by_workbuddy": false
+  },
+  "guards_added": [
+    "positive_integer_image_dimensions",
+    "strict_integer_binary_labels",
+    "finite_normalized_ratios",
+    "trimmed_unique_template_names",
+    "unique_coordinates_within_point_set",
+    "bounded_parts_and_geometry_response",
+    "finite_response_score",
+    "per-row_failure_isolation"
+  ],
+  "tests": {
+    "targeted_pytest_passed": 9,
+    "targeted_subtests_passed": 17,
+    "full_pytest_passed": 1211,
+    "full_subtests_passed": 207,
+    "web_node_passed": 167
+  },
+  "runtime_probe_http_200": [
+    "/",
+    "/api/bootstrap",
+    "/api/model_readiness",
+    "/api/run/status",
+    "/api/state/summary"
+  ],
+  "camera1_policy": "occlusion_or_low_coverage_requires_human_review; never auto-expand into person or floor",
+  "next_gate": "default-off state-invariant shadow evaluator plus human pixel-truth A/B"
+}

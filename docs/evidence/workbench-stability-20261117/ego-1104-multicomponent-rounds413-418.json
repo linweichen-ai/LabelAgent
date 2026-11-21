@@ -84,6 +84,16 @@
     "camera1_spec_sha256": "a24397b6afee1b4f1d8bef16109732adc0399a2d28878079219f50f36670ac36",
     "camera3_spec_sha256": "99b03001bd844f2dc784afd9a7e98e836a9affbb002ece07f860326e58dcbeb8"
   },
+  "pixel_review_material": {
+    "round": 420,
+    "result_files": 20,
+    "candidate_mask_files": 38,
+    "failed_closed_without_mask": 2,
+    "result_and_mask_bytes": 165823,
+    "manifest_sha256": "2a646564c5dac6b8ea917ae33fc2c61ba60e506fd9ddbe627f44fcc9ef6639c9",
+    "human_truth": false,
+    "approved_for_training": false
+  },
   "workbuddy_isolated_review": {
     "commit": "c58e3cf1d07fb0e3154be30483549463b7b77355",
     "tests_passed": 11,

@@ -12,6 +12,7 @@ import argparse
 import base64
 from datetime import datetime, timezone
 import hashlib
+import io
 import json
 import math
 from pathlib import Path
@@ -149,6 +150,23 @@ def prompt_constraint_summary(record: dict, points: list[dict]) -> dict:
     }
 
 
+def write_candidate_mask(record: dict, width: int, height: int,
+                         target: Path) -> None:
+    """Persist a full-frame review mask from the bounded in-memory crop."""
+    validate_image_dimensions(width, height)
+    x0, y0, x1, y1 = record["bbox"]
+    mask = record["mask"]
+    if (not 0 <= x0 < x1 <= width or not 0 <= y0 < y1 <= height
+            or getattr(mask, "shape", None) != (y1 - y0, x1 - x0)):
+        raise ValueError("candidate mask crop does not match its bounded bbox")
+    canvas = Image.new("L", (width, height), 0)
+    crop = Image.fromarray(mask.astype("uint8") * 255, mode="L")
+    canvas.paste(crop, (x0, y0))
+    buffer = io.BytesIO()
+    canvas.save(buffer, "PNG", optimize=True)
+    target.write_bytes(buffer.getvalue())
+
+
 def request_points(endpoint: str, image: bytes, points: list[dict]) -> dict:
     body = {"image": base64.b64encode(image).decode("ascii"), "points": points}
     request = urllib.request.Request(
@@ -240,6 +258,7 @@ def main() -> int:
         failure = None
         shape = None
         geometry = None
+        candidate_mask = None
         try:
             if grouped_failure is not None:
                 raise RuntimeError(grouped_failure)
@@ -264,6 +283,10 @@ def main() -> int:
                 geometry = bounded_candidate_summary(shape, width, height)
                 geometry["prompt_constraints"] = prompt_constraint_summary(
                     shape["_record"], experiment["points"])
+                candidate_mask = (args.output_dir
+                                  / f"{index:02d}-{experiment['name']}-mask.png")
+                write_candidate_mask(shape["_record"], width, height,
+                                     candidate_mask)
                 shape.pop("_record", None)
                 shape.pop("point", None)
         except Exception as error:  # Shadow diagnostics must preserve the other rows.
@@ -284,6 +307,9 @@ def main() -> int:
             "prompt_constraints_passed": prompt_constraints_passed,
             "error": failure,
             "geometry": geometry,
+            "candidate_mask": candidate_mask.name if candidate_mask else None,
+            "candidate_mask_sha256": (
+                file_sha256(candidate_mask) if candidate_mask else None),
             "overlay": overlay.name,
             "overlay_sha256": file_sha256(overlay),
         })

@@ -1,14 +1,18 @@
 from io import BytesIO
 import math
+from pathlib import Path
+import tempfile
 import unittest
 from unittest import mock
 import urllib.error
 
 import numpy as np
+from PIL import Image
 
 from tools.diagnose_ego_guided_points import (
     materialize_normalized_point_sets, prompt_constraint_summary,
-    request_point_groups, request_points, validate_point_sets)
+    request_point_groups, request_points, validate_point_sets,
+    write_candidate_mask)
 
 
 class EgoGuidedPointDiagnosticTests(unittest.TestCase):
@@ -146,6 +150,31 @@ class EgoGuidedPointDiagnosticTests(unittest.TestCase):
         ])
         self.assertFalse(summary["passed"])
         self.assertEqual(summary["positive_points_covered"], 1)
+
+    def test_writes_bounded_mask_crop_as_full_frame_png(self):
+        record = {
+            "bbox": [1, 2, 4, 4],
+            "mask": np.array([
+                [True, False, True],
+                [False, True, False],
+            ], dtype=bool),
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "mask.png"
+            write_candidate_mask(record, 5, 6, target)
+            with Image.open(target) as image:
+                pixels = np.asarray(image)
+            self.assertEqual(pixels.shape, (6, 5))
+            self.assertEqual(int((pixels > 0).sum()), 3)
+            self.assertEqual(int(pixels[2, 1]), 255)
+
+    def test_rejects_mask_crop_with_inconsistent_shape(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(ValueError, "bounded bbox"):
+                write_candidate_mask({
+                    "bbox": [1, 2, 4, 4],
+                    "mask": np.ones((1, 3), dtype=bool),
+                }, 5, 6, Path(directory) / "mask.png")
 
     def test_materializes_normalized_points_at_image_bounds(self):
         payload = [{"name": "camera-template", "points": [

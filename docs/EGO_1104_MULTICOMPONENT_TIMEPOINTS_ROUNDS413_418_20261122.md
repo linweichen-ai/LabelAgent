@@ -110,6 +110,9 @@ camera3 把横梁正点向内收，并去掉与下部组件无关的最底部正
   `artifacts/round418-1104-camera13-v2-heldout-20261122/`
   - camera1 总览 SHA-256：`991fed0415a96c10f937f9f05e574a79c1dc940460dc0beb1048fb88d579c0ae`
   - camera3 总览 SHA-256：`8cc5db1536af57b5b81f13fde511147ee3edcda535b94011695f1006f0335a6b`
+- Round420 像素复核材料：
+  `artifacts/round420-1104-camera13-v2-mask-review-20261122/`，20 份结果、38 张二值候选
+  mask；另外 2 个遮挡组件失败关闭，因此不生成空壳 mask。
 - camera1/3 统一门禁：
   `artifacts/round413-1104-camera13-unified18-20261122/results.json`
 - camera2 时序补测：

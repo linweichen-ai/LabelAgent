@@ -344,6 +344,7 @@ function candidateClassAuditRequired(shape){
   const area=ring=>Math.abs(ring.reduce((sum,point,index)=>{const next=ring[(index+1)%ring.length];return sum+point[0]*next[1]-next[0]*point[1]},0)/2);
   const foreground=rings.reduce((sum,part)=>sum+area(part.points)-part.holes.reduce((holes,hole)=>holes+area(hole),0),0);
    const longSide=Math.max(width,height),shortSide=Math.min(width,height);if(longSide>=120&&shortSide>=4&&shortSide/Math.max(1,longSide)<=.08&&foreground>=500)return true;
+   const score=shape?.score,lowScoreSmall=Number.isFinite(score)&&score<=.52&&bboxArea>=400&&bboxArea<5000;if(lowScoreSmall)return true;
    if(width<120||height<80||bboxArea<5000)return false;
   return foreground/Math.max(1,bboxArea)>=.82&&width/Math.max(1,height)<=2.10;
  }catch{return true}

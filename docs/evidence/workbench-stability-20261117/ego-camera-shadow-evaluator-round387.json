@@ -1,0 +1,61 @@
+{
+  "schema_version": "labelagent.round387.ego_camera_shadow_evaluator.v1",
+  "date": "2026-11-22",
+  "default_enabled": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_state_modified": false,
+  "trigger": {
+    "minimum_ego_discovery_confidence": 0.9,
+    "requires_missing_main_ego_candidate": true,
+    "supported_topics": [
+      "/capture/camera_0/image",
+      "/capture/camera_1/image",
+      "/capture/camera_2/image",
+      "/capture/camera_3/image"
+    ]
+  },
+  "safety": {
+    "point_sam_timeout_seconds": 5.0,
+    "returns_mergeable_geometry": false,
+    "eligible_for_candidate_merge": false,
+    "person_overlap_limit": 0.08,
+    "floor_overlap_limit": 0.2,
+    "camera1_low_coverage_area_ratio": 0.06,
+    "cancellation_propagates": true,
+    "model_failure_isolated": true
+  },
+  "independent_local_review_fixes": {
+    "strict_camera_path_segment_matching": true,
+    "rejects_similar_camera_names": [
+      "/capture/front_camera_1/image",
+      "plant-camera-2"
+    ],
+    "person_floor_overlap_uses_union_mask": true
+  },
+  "tests": {
+    "full_python_passed": 1223,
+    "full_subtests_passed": 216,
+    "web_node_passed": 167
+  },
+  "runtime": {
+    "home_http": 200,
+    "bootstrap_http": 200,
+    "model_readiness_http": 200,
+    "run_status_http": 200,
+    "state_summary_http": 200,
+    "status": "idle",
+    "sam_ready": true,
+    "primary_vlm_ready": true,
+    "fast_vlm_ready": true
+  },
+  "formal_state_sha256": {
+    "state": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "file_sessions": "94E8BEE324628585E7532E595348293DF1DA7B24041A1D4DF1C2EC9FB734E02E",
+    "last_run": "3BECE2513C6F661054AC238AB185527D715A04B3B0C8E073274710BE23E057DA",
+    "last_run_summary": "32578D53E70FA6860F3438860B321172B5E8B405BC6BB8A0F19387A6D4B84933"
+  },
+  "gate": "safe_shadow_collection_ready_in_source; rejected_for_production_pending_isolated_runtime_and_human_pixel_truth"
+}

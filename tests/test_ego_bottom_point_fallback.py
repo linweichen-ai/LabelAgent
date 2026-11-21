@@ -126,6 +126,24 @@ def test_point_batch_uses_separate_point_service_route():
     assert opened.call_args.args[0].full_url == "http://point-sam/segment_points_batch"
 
 
+def test_sam_request_supports_a_bounded_shadow_timeout():
+    with patch.object(workflow.urllib.request, "urlopen",
+                      return_value=JsonResponse(json.dumps({}).encode())) as opened:
+        workflow._sam_request(
+            {"sam3_url": "http://sam"}, "/segment_points", b"image",
+            timeout_seconds=5.0, points=[])
+    assert opened.call_args.kwargs["timeout"] == 5.0
+    for invalid in (True, 0, float("nan"), 1201):
+        try:
+            workflow._sam_request(
+                {"sam3_url": "http://sam"}, "/segment_points", b"image",
+                timeout_seconds=invalid, points=[])
+        except ValueError as error:
+            assert "超时设置无效" in str(error)
+        else:
+            raise AssertionError(f"invalid timeout was accepted: {invalid!r}")
+
+
 def discovery(confidence=0.95):
     return {"visible_labels": ["ego"], "assessments": [{
         "label": "ego", "evidence": "present", "confidence": confidence,

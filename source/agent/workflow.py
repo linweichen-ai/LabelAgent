@@ -174,7 +174,7 @@ def _emit_trace(event):
         callback(event.copy())
 
 
-def sam_request(config, endpoint, image, **prompt):
+def sam_request(config, endpoint, image, *, timeout_seconds=None, **prompt):
     trace_prompt = dict(prompt)
     if "mask" in trace_prompt:
         trace_prompt["mask"] = _image_summary(base64.b64decode(trace_prompt["mask"]))
@@ -183,7 +183,9 @@ def sam_request(config, endpoint, image, **prompt):
               "image": _image_summary(image), **trace_prompt}}
     _emit_trace(record)
     try:
-        response = _cancellable_call(_sam_request, config, endpoint, image, **prompt)
+        response = _cancellable_call(
+            _sam_request, config, endpoint, image,
+            timeout_seconds=timeout_seconds, **prompt)
         record.update(status="succeeded", output=_sam_summary(response))
         if _trace_asset.get():
             try:
@@ -204,7 +206,7 @@ def sam_request(config, endpoint, image, **prompt):
         _emit_trace(record)
 
 
-def _sam_request(config, endpoint, image, **prompt):
+def _sam_request(config, endpoint, image, *, timeout_seconds=None, **prompt):
     point_endpoint = endpoint == "/segment_points_batch"
     url = ((config.get("sam3_point_url") if point_endpoint else None)
            or config.get("sam3_url")
@@ -212,8 +214,15 @@ def _sam_request(config, endpoint, image, **prompt):
     payload = json.dumps({"image": base64.b64encode(image).decode("ascii"), **prompt}).encode()
     request = urllib.request.Request(url.rstrip("/") + endpoint, data=payload,
         headers={"Content-Type": "application/json"})
+    if timeout_seconds is None:
+        timeout_seconds = 1200
+    if (isinstance(timeout_seconds, bool)
+            or not isinstance(timeout_seconds, (int, float))
+            or not math.isfinite(timeout_seconds)
+            or not 0.1 <= timeout_seconds <= 1200):
+        raise ValueError("SAM 3 请求超时设置无效")
     try:
-        with urllib.request.urlopen(request, timeout=1200) as response:
+        with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
             return json.load(response)
     except (TimeoutError, socket.timeout) as error:
         raise ValueError(f"SAM 3 请求超时（{endpoint}）") from error

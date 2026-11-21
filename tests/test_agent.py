@@ -3103,6 +3103,32 @@ class ServerTests(unittest.TestCase):
         finally:
             server.state = old_state
 
+    def test_ego_camera_shadow_config_is_explicit_boolean_and_defaults_off(self):
+        old_state, old_status = server.state, server.run_status
+        server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["ego"],
+            "truth": {}, "reference_frames": {}, "config": {},
+            "candidates": {}, "agent_runs": {}}
+        server.run_status = {"status": "idle"}
+        try:
+            client = server.app.test_client()
+            self.assertNotIn("ego_camera_shadow_evaluator",
+                             server.public_model_config())
+            with patch.object(server, "save"):
+                enabled = client.post("/api/config", json={
+                    "ego_camera_shadow_evaluator": True,
+                    **active_config_write_scope()})
+                self.assertEqual(enabled.status_code, 200, enabled.json)
+                self.assertTrue(enabled.json["config"]["ego_camera_shadow_evaluator"])
+                self.assertIn("ego_camera_shadow_evaluator",
+                              enabled.json["updated_keys"])
+                disabled = client.post("/api/config", json={
+                    "ego_camera_shadow_evaluator": False,
+                    **active_config_write_scope()})
+                self.assertEqual(disabled.status_code, 200, disabled.json)
+                self.assertFalse(disabled.json["config"]["ego_camera_shadow_evaluator"])
+        finally:
+            server.state, server.run_status = old_state, old_status
+
     def test_config_write_rejects_stale_active_and_failed_transactions(self):
         old_state, old_status = server.state, server.run_status
         server.state = {"config": {"llm_model": "before"}}
@@ -6775,6 +6801,79 @@ class ServerTests(unittest.TestCase):
                 server.file_sessions_dirty = old_dirty
                 with server.file_activation_intent_lock:
                     server.file_activation_generation = old_generation
+
+    def test_reference_draft_ego_shadow_records_only_diagnostics_and_isolates_failure(self):
+        old_state, old_status, old_work = server.state, server.run_status, server.WORK
+        with tempfile.TemporaryDirectory() as directory:
+            server.WORK = Path(directory)
+            server.state = {"video": FakeVideo(), "topic": "camera0",
+                "labels": ["person", "ego"], "truth": {}, "reference_frames": {},
+                "config": {"ego_camera_shadow_evaluator": True,
+                           "sam3_point_url": "http://point-sam"},
+                "candidates": {}, "agent_runs": {}}
+            server.run_status = {"status": "idle"}
+            discovery = {
+                "assessments": [
+                    {"label": "person", "evidence": "present", "confidence": .96},
+                    {"label": "ego", "evidence": "present", "confidence": .95}],
+                "visible_labels": ["person", "ego"], "candidate_labels": ["person", "ego"],
+                "uncertain_labels": [], "consistency_flags": [],
+                "unknown_candidates": [], "registry_conflicts": [],
+                "open_set_scan_complete": True, "registry_mutated": False,
+            }
+            def generated_result():
+                return {"shapes": [shape(label="person", left=2, right=10)],
+                    "candidates_added": 1, "applied": [], "review_queue": [],
+                    "agent": {"stop_reason": "done", "rounds": 0, "audit": []}}
+            shadow_response = {"parts": [{"points": [
+                [20, 25], [35, 25], [35, 39], [20, 39]], "holes": []}],
+                "score": .8}
+            try:
+                with patch.object(server, "discover_reference_labels",
+                                  return_value=(discovery, 0)), \
+                     patch.object(server, "generate_only",
+                                  side_effect=lambda *_args, **_kwargs: generated_result()), \
+                     patch.object(server, "sam_request",
+                                  return_value=shadow_response) as sam_mock:
+                    first = server.app.test_client().post("/api/reference_draft", json={
+                        "frame": 1, "auto_detect_visible": True,
+                        "defer_agent_review": True, "defer_class_audit": True})
+                self.assertEqual(first.status_code, 200, first.json)
+                diagnostic = first.json["agent"]["ego_camera_shadow_evaluator"]
+                self.assertEqual(diagnostic["status"], "shadow_observed")
+                self.assertTrue(diagnostic["candidate_available"])
+                self.assertFalse(diagnostic["eligible_for_candidate_merge"])
+                self.assertFalse(diagnostic["state_written"])
+                self.assertNotIn("parts", diagnostic)
+                self.assertEqual([item["label"] for item in first.json["candidates"]],
+                                 ["person"])
+                self.assertEqual(server.state["truth"], {})
+                self.assertEqual(server.state["reference_frames"], {})
+                request_config, endpoint, _image = sam_mock.call_args.args[:3]
+                self.assertEqual(endpoint, "/segment_points")
+                self.assertEqual(request_config["sam3_url"], "http://point-sam")
+                self.assertEqual(sam_mock.call_args.kwargs["timeout_seconds"], 5.0)
+
+                with patch.object(server, "discover_reference_labels",
+                                  return_value=(discovery, 0)), \
+                     patch.object(server, "generate_only",
+                                  side_effect=lambda *_args, **_kwargs: generated_result()), \
+                     patch.object(server, "sam_request",
+                                  side_effect=TimeoutError("shadow timeout")):
+                    failed = server.app.test_client().post("/api/reference_draft", json={
+                        "frame": 2, "auto_detect_visible": True,
+                        "defer_agent_review": True, "defer_class_audit": True})
+                self.assertEqual(failed.status_code, 200, failed.json)
+                failed_diagnostic = failed.json["agent"]["ego_camera_shadow_evaluator"]
+                self.assertEqual(failed_diagnostic["status"], "failed")
+                self.assertFalse(failed_diagnostic["candidate_available"])
+                self.assertIn("shadow timeout", failed_diagnostic["error"])
+                self.assertEqual([item["label"] for item in failed.json["candidates"]],
+                                 ["person"])
+                self.assertEqual(server.state["truth"], {})
+                self.assertEqual(server.state["reference_frames"], {})
+            finally:
+                server.state, server.run_status, server.WORK = old_state, old_status, old_work
 
 
 if __name__ == "__main__":

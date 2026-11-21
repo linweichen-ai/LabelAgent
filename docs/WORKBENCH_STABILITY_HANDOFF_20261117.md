@@ -3155,3 +3155,12 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - camera1面积双峰继续按人物遮挡和可见范围变化处理，不用固定面积阈值，不做自动膨胀、填洞或向人物/地面扩张。
 - 定向Python 9项及17个子测试、完整Python 1211项及207个子测试、网页167项全部通过；五个核心接口HTTP200。
 - 本轮仍仅改只读影子诊断和测试，没有部署、没有真实推理、没有修改正式候选/真值/训练批准。详细记录见`docs/EGO_SHADOW_FAIL_CLOSED_REVIEW_ROUND386_20261122.md`与对应结构化证据。
+
+## Round387（2026-11-22）：默认关闭的 ego 相机影子评测器
+
+- 将Round385四路主模板接入参考帧起稿链，但开关`ego_camera_shadow_evaluator`默认关闭；关闭时不调用point-SAM。
+- 只在主VLM高置信认为`ego`可见且主流程没有ego候选时触发；严格支持正式`/capture/camera_0…3/image` topic，`front_camera_1`等相似名称不会误套模板。
+- 成功只保存模板版本、响应哈希、分数、面积、bbox及person/floor重叠摘要，永远不返回可合并轮廓，并明确`eligible_for_candidate_merge=false`、`state_written=false`。
+- 与全部person或floor碎片的联合掩膜分别重叠超过8%或20%时阻断；camera1小面积只标记低覆盖，不做自动膨胀、填洞或邻接扩张；point-SAM硬超时5秒，异常不影响正式草稿，取消向上游传播。
+- 完整Python 1223项及216个子测试、网页167项全部通过；正式工作台五项接口HTTP200、idle、三路模型ready，四份正式状态哈希未变。
+- 本轮未部署、未开启开关、未调用真实影子推理；仍需隔离运行和人工像素真值。详细记录见`docs/EGO_CAMERA_SHADOW_EVALUATOR_ROUND387_20261122.md`与对应结构化证据。

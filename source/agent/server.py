@@ -40,8 +40,9 @@ from .workflow import (DESCRIPTION_INPUT_VERSION, MAX_REVIEW_ROUNDS, RunCancelle
                        visible_vehicle_point_candidate,
                        filter_slope_current_ego_conflicts,
                        sam_text_multi_prefetch, sam_text_prefetch,
-                       slope_overlap_crop_images,
+                       slope_overlap_crop_images, sam_request,
                        VISIBLE_LABEL_DEFINITIONS)
+from .ego_shadow import evaluate_camera_ego_shadow
 from .candidate_class_audit import (audit_candidate_class_blind, candidate_fingerprint,
                                     audit_high_risk_candidates,
                                     candidate_requires_class_audit,
@@ -4353,6 +4354,12 @@ def set_config():
                 state["config"]["ego_bottom_point_fallback"] = body[
                     "ego_bottom_point_fallback"]
                 updated_keys.append("ego_bottom_point_fallback")
+            if "ego_camera_shadow_evaluator" in body:
+                if type(body["ego_camera_shadow_evaluator"]) is not bool:
+                    raise ValueError("ego_camera_shadow_evaluator 必须为布尔值")
+                state["config"]["ego_camera_shadow_evaluator"] = body[
+                    "ego_camera_shadow_evaluator"]
+                updated_keys.append("ego_camera_shadow_evaluator")
             if "visible_vehicle_point_recovery" in body:
                 if type(body["visible_vehicle_point_recovery"]) is not bool:
                     raise ValueError("visible_vehicle_point_recovery 必须为布尔值")
@@ -5655,6 +5662,8 @@ def generate_reference_draft():
                 "sam_prompts": prompt_payload,
                 "ego_bottom_point_fallback": bool(
                     config.get("ego_bottom_point_fallback")),
+                "ego_camera_shadow_evaluator": bool(
+                    config.get("ego_camera_shadow_evaluator")),
                 "visible_vehicle_point_recovery": bool(
                     config.get("visible_vehicle_point_recovery")),
                 "other_robot_semantic_fallback_visible": bool(
@@ -5688,6 +5697,20 @@ def generate_reference_draft():
             result = runner(config, target_image, description, selected,
                             max_rounds=max_rounds,
                             on_progress=on_progress, reference=None)
+            def check_ego_shadow_cancelled():
+                if run_stop_event.is_set():
+                    raise RunCancelled("用户已停止 ego 影子诊断")
+            shadow_config = copy.deepcopy(config)
+            if shadow_config.get("sam3_point_url"):
+                shadow_config["sam3_url"] = shadow_config["sam3_point_url"]
+            ego_shadow = evaluate_camera_ego_shadow(
+                config, target_image, selected_topic, discovery,
+                result.get("shapes") if isinstance(result, dict) else None,
+                lambda points: sam_request(
+                    shadow_config, "/segment_points", target_image,
+                    timeout_seconds=5.0, points=points),
+                check_cancelled=check_ego_shadow_cancelled,
+                cancelled_error_type=RunCancelled)
             ego_recovery = recover_reference_ego_candidate(
                 config, target_image, discovery, result)
             vehicle_recovery = recover_reference_vehicle_candidate(
@@ -5695,6 +5718,7 @@ def generate_reference_draft():
             ego_recovery["post_recovery_slope_guard"] = (
                 filter_post_recovery_slope_ego_conflicts(target_image, result))
             result.setdefault("agent", {})["ego_bottom_point_fallback"] = ego_recovery
+            result.setdefault("agent", {})["ego_camera_shadow_evaluator"] = ego_shadow
             result.setdefault("agent", {})[
                 "visible_vehicle_point_recovery"] = vehicle_recovery
         if result["agent"].get("stop_reason") == "error":

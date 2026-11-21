@@ -21,6 +21,7 @@ from .edit_agent import _rasterize, valid_shape
 
 EGO_CAMERA_SHADOW_SCHEMA_VERSION = "labelagent.ego_camera_shadow.v1"
 EGO_CAMERA_SHADOW_TEMPLATE_VERSION = "sfl_cpd15y_camera_templates.round385.v1"
+EGO_CAMERA_SHADOW_SOURCE_SCOPE = "capture_20261103"
 EGO_CAMERA_SHADOW_PERSON_OVERLAP_LIMIT = 0.08
 EGO_CAMERA_SHADOW_FLOOR_OVERLAP_LIMIT = 0.20
 
@@ -70,6 +71,7 @@ def _base_status(enabled: bool) -> dict:
     return {
         "schema_version": EGO_CAMERA_SHADOW_SCHEMA_VERSION,
         "template_version": EGO_CAMERA_SHADOW_TEMPLATE_VERSION,
+        "template_source_scope": EGO_CAMERA_SHADOW_SOURCE_SCOPE,
         "enabled": enabled,
         "triggered": False,
         "status": "disabled" if not enabled else "not_triggered",
@@ -124,12 +126,26 @@ def _maximum_overlap(mask, shapes, label, width, height) -> float:
 
 def evaluate_camera_ego_shadow(config, image: bytes, topic: str, discovery,
                                existing_shapes, request_points,
-                               *, check_cancelled=None, cancelled_error_type=()) -> dict:
+                               *, source_identity=None, check_cancelled=None,
+                               cancelled_error_type=()) -> dict:
     """Evaluate one camera template without returning or mutating a candidate."""
     enabled = isinstance(config, dict) and config.get("ego_camera_shadow_evaluator") is True
     status = _base_status(enabled)
     if not enabled:
         return status
+    if source_identity is not None:
+        normalized_source = (source_identity.strip().lower()
+                             if isinstance(source_identity, str) else "")
+        source_parts = [part for part in re.split(r"[\\/]+", normalized_source)
+                        if part]
+        if EGO_CAMERA_SHADOW_SOURCE_SCOPE not in source_parts:
+            identity_digest = (hashlib.sha256(
+                normalized_source.encode("utf-8")).hexdigest()
+                if normalized_source else None)
+            return status | {
+                "status": "source_scope_mismatch",
+                "source_identity_sha256": identity_digest,
+            }
     if not isinstance(existing_shapes, list):
         return status | {"status": "invalid_existing_candidates"}
     if any(isinstance(shape, dict) and shape.get("label") == "ego"

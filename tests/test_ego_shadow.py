@@ -78,6 +78,24 @@ class EgoCameraShadowTests(unittest.TestCase):
             discovery(0.89), [], request)["status"], "discovery_not_eligible")
         request.assert_not_called()
 
+    def test_runtime_source_scope_requires_exact_dataset_path_component(self):
+        request = mock.Mock(return_value=point_response())
+        mismatched = evaluate_camera_ego_shadow(
+            {"ego_camera_shadow_evaluator": True}, image_bytes(), "camera0",
+            discovery(), [], request,
+            source_identity=r"D:\\data\\SFL_CPD15Y_20261104_smoke\\sample.mcap")
+        self.assertEqual(mismatched["status"], "source_scope_mismatch")
+        self.assertEqual(mismatched["template_source_scope"], "capture_20261103")
+        self.assertEqual(len(mismatched["source_identity_sha256"]), 64)
+        request.assert_not_called()
+
+        matched = evaluate_camera_ego_shadow(
+            {"ego_camera_shadow_evaluator": True}, image_bytes(), "camera0",
+            discovery(), [], request,
+            source_identity=r"D:\\data\\Capture_20261103\\sample.mcap")
+        self.assertEqual(matched["status"], "shadow_observed")
+        request.assert_called_once()
+
     def test_success_returns_summary_but_never_mergeable_geometry(self):
         shapes = [polygon_shape("person", 1, 1, 6, 6)]
         before = copy.deepcopy(shapes)

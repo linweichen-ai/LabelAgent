@@ -5709,6 +5709,7 @@ def generate_reference_draft():
                 lambda points: sam_request(
                     shadow_config, "/segment_points", target_image,
                     timeout_seconds=5.0, points=points),
+                source_identity=file_name,
                 check_cancelled=check_ego_shadow_cancelled,
                 cancelled_error_type=RunCancelled)
             ego_recovery = recover_reference_ego_candidate(

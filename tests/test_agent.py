@@ -6806,7 +6806,9 @@ class ServerTests(unittest.TestCase):
         old_state, old_status, old_work = server.state, server.run_status, server.WORK
         with tempfile.TemporaryDirectory() as directory:
             server.WORK = Path(directory)
-            server.state = {"video": FakeVideo(), "topic": "camera0",
+            scoped_video = FakeVideo()
+            scoped_video.path = Path(directory) / "Capture_20261103" / "test.mcap"
+            server.state = {"video": scoped_video, "topic": "camera0",
                 "labels": ["person", "ego"], "truth": {}, "reference_frames": {},
                 "config": {"ego_camera_shadow_evaluator": True,
                            "sam3_point_url": "http://point-sam"},

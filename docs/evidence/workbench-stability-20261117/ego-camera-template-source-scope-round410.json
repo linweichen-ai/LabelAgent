@@ -1,0 +1,47 @@
+{
+  "round": 410,
+  "date": "2026-11-22",
+  "status": "deployed_disabled_by_default",
+  "template_source_scope": "capture_20261103",
+  "runtime_contract": {
+    "exact_path_component_required": true,
+    "mismatch_status": "source_scope_mismatch",
+    "mismatch_calls_sam": false,
+    "full_source_path_persisted": false,
+    "source_identity_sha256_persisted": true,
+    "candidate_merge_eligible": false,
+    "human_truth_written": false,
+    "training_approved": false
+  },
+  "tests": {
+    "targeted_passed": 13,
+    "targeted_subtests_passed": 10,
+    "full_python_passed": 1284,
+    "full_python_subtests_passed": 225
+  },
+  "deployment": {
+    "backup_path": "D:\\Apps\\LabelAgent\\.local\\backups\\ego-shadow-scope-round410-20261122",
+    "runtime_server_sha256": "CD836E0FDA7A25862D96ED801D2448A8FE188B7C92AF7E682589D25E375E9306",
+    "runtime_ego_shadow_sha256": "83386C82A7AB96317623043D61CD6B55F795F8C9F8CB68E234D5DC8D09D58D79",
+    "source_runtime_hash_equal": true
+  },
+  "live_readback": {
+    "workbench_http": 200,
+    "run_status": "idle",
+    "ego_camera_shadow_evaluator_enabled": false,
+    "primary_vlm_model": "labelagent-vlm8b",
+    "fast_vlm_model": "labelagent-vlm8b",
+    "sam_status": "ok",
+    "sam_backend": "remote_4090_sam3",
+    "sam_service_version": "labelagent.remote-sam3.v3-point-groups",
+    "sam_model_loaded": true,
+    "sam_in_flight": 0,
+    "runtime_1104_probe_status": "source_scope_mismatch"
+  },
+  "formal_state_sha256": {
+    "state.json": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "file_sessions.json": "94E8BEE324628585E7532E595348293DF1DA7B24041A1D4DF1C2EC9FB734E02E",
+    "last_run.json": "3BECE2513C6F661054AC238AB185527D715A04B3B0C8E073274710BE23E057DA",
+    "last_run_summary.json": "32578D53E70FA6860F3438860B321172B5E8B405BC6BB8A0F19387A6D4B84933"
+  }
+}

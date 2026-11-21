@@ -3340,3 +3340,12 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
   能保留连通座椅；结果仍是候选态，不是人工真值或训练批准。
 - 正式工作台状态文件哈希未变化，页面 HTTP 200、运行状态 `idle`。
 - 详见 `docs/EGO_CROSS_BATCH_GROUP_DIAGNOSTIC_ROUNDS408_409_20261122.md`。
+
+## 2026-11-22 Round410 补充：相机模板数据身份隔离
+
+- Round385 相机模板现在只允许路径组件精确包含 `Capture_20261103` 的数据进入影子诊断。
+- 1104 或其他数据身份在调用 SAM 前返回 `source_scope_mismatch`，且只记录路径哈希。
+- 功能默认关闭，仍不产生可合并候选、人工真值或训练批准。
+- 完整 Python 回归 1284 项、225 个子测试通过；运行版已备份并部署。
+- 重启后工作台 HTTP 200、`idle`，主/快速 VLM 和 4090 SAM 全部在线，正式状态哈希未变。
+- 详见 `docs/EGO_CAMERA_TEMPLATE_SOURCE_SCOPE_ROUND410_20261122.md`。

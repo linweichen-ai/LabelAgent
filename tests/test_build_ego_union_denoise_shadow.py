@@ -88,6 +88,7 @@ class EgoUnionDenoiseShadowTests(unittest.TestCase):
             },
             "samples": [{
                 "sample_id": sample_id,
+                "union_available": True,
                 "source_image": str(image_path),
                 "source_image_sha256": image_sha,
                 "union_mask": union_path.name,

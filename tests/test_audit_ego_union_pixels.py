@@ -7,7 +7,8 @@ import numpy as np
 from PIL import Image
 
 from tools.audit_ego_union_pixels import (
-    DEFAULT_THRESHOLDS, build_audit, mask_metrics, threshold_alerts)
+    DEFAULT_THRESHOLDS, build_audit, mask_metrics,
+    package_balanced_reference, threshold_alerts)
 from tools.build_ego_component_union_review import file_sha256
 
 
@@ -47,6 +48,7 @@ class EgoUnionPixelAuditTests(unittest.TestCase):
                     }
                     rows.append({
                         "sample_id": sample_id,
+                        "union_available": True,
                         "source_image": str(image_path),
                         "source_image_sha256": image_sha,
                         "union_mask": mask_path.name,
@@ -100,6 +102,23 @@ class EgoUnionPixelAuditTests(unittest.TestCase):
         alerts = threshold_alerts(metrics, "camera1", DEFAULT_THRESHOLDS)
         self.assertEqual(len(alerts), 5)
 
+    def test_package_balanced_reference_does_not_overweight_more_frames(self):
+        base = np.zeros((4, 4), dtype=bool)
+        common = base.copy()
+        common[1:3, 1:3] = True
+        noisy = common.copy()
+        noisy[0, 0] = True
+        reference, required, counts = package_balanced_reference({
+            "001": [common],
+            "002": [common],
+            "003": [noisy, noisy, noisy, noisy, noisy],
+        })
+        self.assertEqual(required, 2)
+        self.assertEqual(counts, {"001": 1, "002": 1, "003": 5})
+        self.assertFalse(reference[0, 0])
+        self.assertTrue(np.array_equal(reference[1:3, 1:3],
+                                       np.ones((2, 2), dtype=bool)))
+
     def test_builds_candidate_only_audit_and_images(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -110,6 +129,9 @@ class EgoUnionPixelAuditTests(unittest.TestCase):
             self.assertFalse(audit["human_truth"])
             self.assertFalse(audit["approved_for_training"])
             self.assertFalse(audit["production_deployed"])
+            self.assertEqual(
+                audit["reference_strategy"],
+                "package_balanced_two_stage_majority")
             self.assertTrue((root / "audit" / "audit.json").is_file())
             self.assertTrue((root / "audit" / audit["contact_sheet"]).is_file())
 

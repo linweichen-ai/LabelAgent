@@ -46,7 +46,8 @@ DEFAULT_THRESHOLDS = {
 
 
 def _sample_parts(sample_id: str) -> tuple[str, str, str]:
-    match = re.fullmatch(r"(\d{3})-(camera[13])-(\d+)", sample_id)
+    match = re.fullmatch(r"(\d{3})-(camera[13])-(?:[A-Za-z0-9_]+-)?(\d+)",
+                         sample_id)
     if match is None:
         raise ValueError(f"invalid sample identity: {sample_id}")
     return match.group(1), match.group(2), match.group(3)
@@ -126,6 +127,36 @@ def _decode_mask(data: bytes) -> np.ndarray:
         return np.asarray(decoded.convert("L")) > 0
 
 
+def package_balanced_reference(
+        masks_by_package: dict[str, list[np.ndarray]]) -> tuple[np.ndarray, int, dict[str, int]]:
+    """Build a two-stage reference where every external package has one vote.
+
+    Timepoints are first reduced to an in-package majority mask.  The resulting
+    package masks are then combined with the same two-thirds rule used by the
+    earlier audit.  This prevents packages with more sampled frames from
+    dominating the leave-one-package-out reference.
+    """
+    if len(masks_by_package) < 2:
+        raise ValueError("at least two external packages are required")
+    package_masks = []
+    counts = {}
+    shape = None
+    for package in sorted(masks_by_package):
+        masks = masks_by_package[package]
+        if not masks:
+            raise ValueError(f"external package has no masks: {package}")
+        counts[package] = len(masks)
+        if shape is None:
+            shape = masks[0].shape
+        if any(mask.shape != shape for mask in masks):
+            raise ValueError("reference mask dimensions differ")
+        votes = np.sum(np.stack(masks, axis=0), axis=0)
+        package_masks.append(votes >= ((len(masks) + 1) // 2))
+    package_votes = np.sum(np.stack(package_masks, axis=0), axis=0)
+    required_package_votes = (2 * len(package_masks) + 2) // 3
+    return package_votes >= required_package_votes, required_package_votes, counts
+
+
 def _write_difference(image_bytes: bytes, candidate: np.ndarray,
                       reference: np.ndarray, target: Path) -> None:
     with Image.open(io.BytesIO(image_bytes)) as decoded:
@@ -185,6 +216,7 @@ def build_audit(review_queues: list[Path], identity_manifest_path: Path,
     identities = load_identity_manifest(identity_manifest_path)
     samples = []
     seen = set()
+    failed_closed_inputs = []
     for queue_path in review_queues:
         packet = json.loads(queue_path.read_text(encoding="utf-8"))
         if (packet.get("candidate_only") is not True
@@ -204,11 +236,23 @@ def build_audit(review_queues: list[Path], identity_manifest_path: Path,
             if sample_id in seen:
                 raise ValueError(f"duplicate sample identity: {sample_id}")
             seen.add(sample_id)
+            if row.get("union_available") is not True:
+                reasons = row.get("reasons")
+                if not isinstance(reasons, list) or not reasons:
+                    raise ValueError(
+                        f"failed-closed input lacks reasons: {sample_id}")
+                failed_closed_inputs.append({
+                    "sample_id": sample_id,
+                    "reasons": reasons,
+                })
+                continue
             package, camera, frame_id = _sample_parts(sample_id)
             identity = identities.get(sample_id)
-            if identity is None or identity != {
-                    "package": package, "camera": camera, "frame_id": frame_id,
-                    "image_sha256": row.get("source_image_sha256")}:
+            if (identity is None
+                    or identity["package"] != package
+                    or identity["camera"] != camera
+                    or identity["frame_id"] != frame_id
+                    or identity["image_sha256"] != row.get("source_image_sha256")):
                 raise ValueError(f"identity binding mismatch: {sample_id}")
             queue_dir = queue_path.parent
             mask_path = queue_dir / row.get("union_mask", "")
@@ -232,21 +276,20 @@ def build_audit(review_queues: list[Path], identity_manifest_path: Path,
     output.mkdir(parents=True)
     rows = []
     for sample in sorted(samples, key=lambda item: item["sample_id"]):
-        external = [other["mask"] for other in samples
-                    if other["camera"] == sample["camera"]
-                    and other["package"] != sample["package"]]
-        external_packages = {other["package"] for other in samples
-                             if other["camera"] == sample["camera"]
-                             and other["package"] != sample["package"]}
-        if len(external_packages) < 2 or len(external) < 4:
+        external_by_package: dict[str, list[np.ndarray]] = {}
+        for other in samples:
+            if (other["camera"] == sample["camera"]
+                    and other["package"] != sample["package"]):
+                external_by_package.setdefault(other["package"], []).append(
+                    other["mask"])
+        external_count = sum(len(masks) for masks in external_by_package.values())
+        if len(external_by_package) < 2 or external_count < 4:
             raise ValueError(
                 f"insufficient external-package reference masks: {sample['sample_id']}")
-        shape = sample["mask"].shape
-        if any(mask.shape != shape for mask in external):
+        reference, required_votes, external_counts = package_balanced_reference(
+            external_by_package)
+        if reference.shape != sample["mask"].shape:
             raise ValueError("reference mask dimensions differ")
-        votes = np.sum(np.stack(external, axis=0), axis=0)
-        required_votes = (2 * len(external) + 2) // 3
-        reference = votes >= required_votes
         metrics = mask_metrics(sample["mask"], reference, small_island_pixels)
         alerts = threshold_alerts(metrics, sample["camera"], thresholds)
         difference_name = f"{sample['sample_id']}-gap-excess.jpg"
@@ -263,9 +306,11 @@ def build_audit(review_queues: list[Path], identity_manifest_path: Path,
             "production_deployed": False,
             "review_status": "high_priority_review" if alerts else "review_required",
             "threshold_alerts": alerts,
-            "external_package_count": len(external_packages),
-            "external_mask_count": len(external),
-            "reference_required_votes": required_votes,
+            "reference_strategy": "package_balanced_two_stage_majority",
+            "external_package_count": len(external_by_package),
+            "external_mask_count": external_count,
+            "external_masks_per_package": external_counts,
+            "reference_required_package_votes": required_votes,
             "source_image_sha256": sample["source_image_sha256"],
             "union_mask_sha256": sample["union_mask_sha256"],
             "source_queue": sample["source_queue"],
@@ -282,7 +327,7 @@ def build_audit(review_queues: list[Path], identity_manifest_path: Path,
         })
     contact = _write_contact_sheet(output, rows)
     audit = {
-        "schema_version": "labelagent.ego_union_pixel_audit.v1",
+        "schema_version": "labelagent.ego_union_pixel_audit.v2",
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "candidate_only": True,
         "human_truth": False,
@@ -290,8 +335,11 @@ def build_audit(review_queues: list[Path], identity_manifest_path: Path,
         "production_deployed": False,
         "formal_state_modified": False,
         "sample_count": len(rows),
+        "failed_closed_input_count": len(failed_closed_inputs),
+        "failed_closed_inputs": failed_closed_inputs,
         "threshold_alert_count": sum(bool(row["threshold_alerts"]) for row in rows),
         "thresholds_are_review_triage_only": True,
+        "reference_strategy": "package_balanced_two_stage_majority",
         "thresholds": thresholds,
         "small_island_pixels": small_island_pixels,
         "identity_manifest_sha256": file_sha256(identity_manifest_path),

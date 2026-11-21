@@ -1,0 +1,84 @@
+{
+  "schema_version": "labelagent.ego_five_package_audit_receipt.v1",
+  "date": "2026-11-22",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_state_modified": false,
+  "source_masks_modified": false,
+  "dataset": "20261104_cs-seer_Dev_P2605901028248",
+  "packages": ["000", "001", "002", "003", "004"],
+  "identity_manifest": {
+    "sample_count": 38,
+    "sha256": "badc0ae487ea042c410facbee79c1dcd2beabd41c557b9cce4eee9ad2b8df12c"
+  },
+  "strict_replay": {
+    "union_available": 36,
+    "failed_closed": 2,
+    "failed_closed_samples": [
+      "003-camera1-idx68-1793759980309508695",
+      "003-camera1-idx85-1793759985409553695"
+    ]
+  },
+  "round443_frame_weighted_audit": {
+    "sample_count": 36,
+    "threshold_alert_count": 8,
+    "audit_sha256": "d8d65175097e29c7902431b7794244aaad71932d020e0ec7826bda1a2fbe5000",
+    "contact_sheet_sha256": "67c80d8f368b448e709331e4d082562167787acd54d2b8d7129a6047074ca9b2"
+  },
+  "round444_denoise_shadow": {
+    "sample_count": 36,
+    "failed_closed_input_count": 2,
+    "removed_pixel_total": 3,
+    "removed_component_total": 3,
+    "protected_component_total": 175,
+    "persistent_protected_component_total": 72,
+    "added_pixel_total": 0,
+    "positive_points_preserved_all": true,
+    "negative_points_preserved_all": true,
+    "audit_sha256": "cf550fbd9e1aaba17595025a885d2668e8b996374681c7db10fb68cc3aeab63a",
+    "contact_sheet_sha256": "f9f1cf89bcd5207f9f0ad54d8c4252d88e6e1a8f40506bd778668d5c692b9bb9"
+  },
+  "round445_package_balanced_audit": {
+    "reference_strategy": "package_balanced_two_stage_majority",
+    "sample_count": 36,
+    "failed_closed_input_count": 2,
+    "threshold_alert_count": 4,
+    "camera1": {
+      "sample_count": 17,
+      "alert_count": 0,
+      "reference_iou_range": [0.949323, 0.974879],
+      "reference_recall_range": [0.964138, 0.993712],
+      "candidate_excess_range": [0.013317, 0.036528],
+      "max_hole_ratio": 0.047871
+    },
+    "camera3": {
+      "sample_count": 19,
+      "alert_count": 4,
+      "reference_iou_range": [0.746651, 0.893957],
+      "reference_recall_range": [0.862286, 0.99022],
+      "candidate_excess_range": [0.029168, 0.19717],
+      "max_hole_ratio": 0.092726
+    },
+    "alert_samples": [
+      "001-camera3-1793759034009520987",
+      "003-camera3-idx5-1793759961309512987",
+      "003-camera3-idx52-1793759975409508695",
+      "003-camera3-idx85-1793759985409553695"
+    ],
+    "audit_sha256": "0e3f3d06836753cd81589a1212158c65588502d83f003c54bff9dc07e8ddcd96",
+    "contact_sheet_sha256": "0a85d6bb4c688ee020ffa9a1ede687c0633832260d1dbe457aed5747080a544d"
+  },
+  "tests": {
+    "passed": 50,
+    "skipped": 1,
+    "skip_reason": "Windows ordinary token cannot create the symlink used by the escape test"
+  },
+  "local_coverage_limit": {
+    "packages_005_to_012_present": false,
+    "ossutil_available": false,
+    "oss_access_attempted_after_missing_tool": false
+  },
+  "conclusion": "The package-balanced audit removes frame-count bias without relaxing thresholds. Camera1 is stable on the five local packages; camera3 remains the hard view and requires non-circular appearance or pose subtyping."
+}

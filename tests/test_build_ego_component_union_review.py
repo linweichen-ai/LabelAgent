@@ -301,6 +301,31 @@ class EgoComponentUnionReviewTests(unittest.TestCase):
                 identity_manifest=self._identity(sample))
             self.assertTrue(row["union_available"])
 
+    def test_identity_manifest_accepts_flat_tagged_sample_with_relative_path(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            sample, specs = self._fixture(root)
+            tagged = sample.with_name("003-camera1-idx22-12345")
+            sample.rename(tagged)
+            report = json.loads((tagged / "results.json").read_text(encoding="utf-8"))
+            identity = {
+                tagged.name: {
+                    "package": "003", "camera": "camera1",
+                    "frame_id": "12345",
+                    "image_sha256": report["image_sha256"],
+                    "relative_path": "003/camera_1/12345.png",
+                }
+            }
+            output = root / "output"
+            output.mkdir()
+            row = evaluate_sample(
+                tagged, output,
+                {camera: file_sha256(path) for camera, path in specs.items()},
+                allowed_source_root=root,
+                component_guard=self._guard(),
+                identity_manifest=identity)
+            self.assertTrue(row["union_available"])
+
     def test_identity_manifest_rejects_in_root_image_substitution(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -331,6 +356,18 @@ class EgoComponentUnionReviewTests(unittest.TestCase):
                 "003-camera1-bad": {
                     "package": "003", "camera": "camera1",
                     "frame_id": "bad", "image_sha256": "0" * 64,
+                }}}), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "invalid identity manifest entry"):
+                load_identity_manifest(path)
+
+    def test_identity_manifest_rejects_parent_relative_path(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "identity.json"
+            path.write_text(json.dumps({"samples": {
+                "003-camera1-idx22-12345": {
+                    "package": "003", "camera": "camera1",
+                    "frame_id": "12345", "image_sha256": "0" * 64,
+                    "relative_path": "../12345.png",
                 }}}), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "invalid identity manifest entry"):
                 load_identity_manifest(path)

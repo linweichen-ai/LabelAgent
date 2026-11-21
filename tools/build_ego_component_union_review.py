@@ -107,12 +107,17 @@ def load_identity_manifest(path: Path) -> dict[str, dict[str, str]]:
         camera = item.get("camera")
         frame_id = item.get("frame_id")
         image_sha256 = item.get("image_sha256")
-        expected_sample_id = f"{package}-{camera}-{frame_id}"
-        if (sample_id != expected_sample_id
+        sample_pattern = rf"{re.escape(str(package))}-{camera}-(?:[A-Za-z0-9_]+-)?{re.escape(str(frame_id))}"
+        relative_path = item.get("relative_path")
+        relative = Path(relative_path) if isinstance(relative_path, str) else None
+        if (re.fullmatch(sample_pattern, sample_id) is None
                 or not re.fullmatch(r"\d{3}", str(package))
                 or camera not in EXPECTED_COMPONENTS
                 or not re.fullmatch(r"\d+", str(frame_id))
-                or not re.fullmatch(r"[0-9a-f]{64}", str(image_sha256))):
+                or not re.fullmatch(r"[0-9a-f]{64}", str(image_sha256))
+                or (relative is not None
+                    and (relative.is_absolute() or ".." in relative.parts
+                         or relative.name == ""))):
             raise ValueError(f"invalid identity manifest entry: {sample_id}")
         validated[sample_id] = {
             "package": str(package),
@@ -120,6 +125,8 @@ def load_identity_manifest(path: Path) -> dict[str, dict[str, str]]:
             "frame_id": str(frame_id),
             "image_sha256": str(image_sha256),
         }
+        if relative is not None:
+            validated[sample_id]["relative_path"] = relative.as_posix()
     return validated
 
 
@@ -179,12 +186,23 @@ def evaluate_sample(sample_dir: Path, output: Path,
             identity = identity_manifest.get(sample_id)
             if identity is None:
                 raise ValueError("sample is missing from identity manifest")
-            expected_parent = f"camera_{camera[-1]}"
+            path_bound = False
+            if identity.get("relative_path") is not None:
+                if allowed_source_root is None:
+                    raise ValueError(
+                        "relative identity binding requires allowed source root")
+                expected_path = (allowed_resolved / identity["relative_path"]).resolve(
+                    strict=True)
+                path_bound = image_resolved == expected_path
+            else:
+                expected_parent = f"camera_{camera[-1]}"
+                path_bound = (image_resolved.name == f"{identity['frame_id']}.png"
+                              and image_resolved.parent.name == expected_parent
+                              and image_resolved.parent.parent.name
+                              == identity["package"])
             if (identity["camera"] != camera
                     or identity["image_sha256"] != report.get("image_sha256")
-                    or image_resolved.name != f"{identity['frame_id']}.png"
-                    or image_resolved.parent.name != expected_parent
-                    or image_resolved.parent.parent.name != identity["package"]):
+                    or not path_bound):
                 raise ValueError("sample identity manifest binding mismatch")
         with Image.open(io.BytesIO(image_bytes)) as decoded:
             width, height = decoded.size

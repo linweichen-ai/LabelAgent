@@ -152,6 +152,7 @@ def build_shadow(review_queues: list[Path], diagnostic_roots: list[Path],
                 diagnostic_dirs[path.name] = path
     samples = []
     seen = set()
+    failed_closed_inputs = []
     for queue_path in review_queues:
         packet = json.loads(queue_path.read_text(encoding="utf-8"))
         gates = packet.get("safety_gates") or {}
@@ -169,6 +170,16 @@ def build_shadow(review_queues: list[Path], diagnostic_roots: list[Path],
             if sample_id in seen:
                 raise ValueError(f"duplicate sample identity: {sample_id}")
             seen.add(sample_id)
+            if row.get("union_available") is not True:
+                reasons = row.get("reasons")
+                if not isinstance(reasons, list) or not reasons:
+                    raise ValueError(
+                        f"failed-closed input lacks reasons: {sample_id}")
+                failed_closed_inputs.append({
+                    "sample_id": sample_id,
+                    "reasons": reasons,
+                })
+                continue
             identity = identities.get(sample_id)
             if identity is None or identity["image_sha256"] != row.get("source_image_sha256"):
                 raise ValueError(f"identity binding mismatch: {sample_id}")
@@ -373,6 +384,8 @@ def build_shadow(review_queues: list[Path], diagnostic_roots: list[Path],
         "formal_state_modified": False,
         "source_masks_modified": False,
         "sample_count": len(rows),
+        "failed_closed_input_count": len(failed_closed_inputs),
+        "failed_closed_inputs": failed_closed_inputs,
         "minimum_pixels": minimum_pixels,
         "connectivity": 8,
         "expected_size": list(expected_size),

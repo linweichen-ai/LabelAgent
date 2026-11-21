@@ -1,0 +1,259 @@
+{
+  "schema_version": "labelagent.ego_sample_identity_manifest.v2",
+  "dataset": "20261104_cs-seer_Dev_P2605901028248",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "sample_count": 38,
+  "samples": {
+    "000-camera1-1793758297542631987": {
+      "package": "000",
+      "camera": "camera1",
+      "frame_id": "1793758297542631987",
+      "image_sha256": "c3554967da7e0e4018dd2d526b181e63eeacd94f1935acbcaaa88a3a5e4c4991"
+    },
+    "000-camera1-1793758312842576695": {
+      "package": "000",
+      "camera": "camera1",
+      "frame_id": "1793758312842576695",
+      "image_sha256": "17e1c32c749246e78a8467d71139aaf1ad5cb49bddec7d582e4b30ce4ce4b37a"
+    },
+    "000-camera1-1793758356342888404": {
+      "package": "000",
+      "camera": "camera1",
+      "frame_id": "1793758356342888404",
+      "image_sha256": "ff5b0eafbfab4271590631e8f5fd3d2a9d5801f22b97f3f45a9dd5103426de07"
+    },
+    "000-camera3-1793758297542631987": {
+      "package": "000",
+      "camera": "camera3",
+      "frame_id": "1793758297542631987",
+      "image_sha256": "126ae6c9e51138c6f17ad793b01a20ed4b884c42ae6034ba2e886116e8a8f8f7"
+    },
+    "000-camera3-1793758312842576695": {
+      "package": "000",
+      "camera": "camera3",
+      "frame_id": "1793758312842576695",
+      "image_sha256": "a57f168eab07a6e92826962e3a6ddae8ee0e9de2b1c33268c49ab2cb739d6e3a"
+    },
+    "000-camera3-1793758356342888404": {
+      "package": "000",
+      "camera": "camera3",
+      "frame_id": "1793758356342888404",
+      "image_sha256": "85312abff432713da83649d9882eae13e2feddc8d5ad65d2c23e8673e62972f6"
+    },
+    "001-camera1-1793759004609543987": {
+      "package": "001",
+      "camera": "camera1",
+      "frame_id": "1793759004609543987",
+      "image_sha256": "0dfbf6a2545e2c853caaf463974c656b7f0b87a8fe03fba51f8307dab24b3135"
+    },
+    "001-camera1-1793759034009520987": {
+      "package": "001",
+      "camera": "camera1",
+      "frame_id": "1793759034009520987",
+      "image_sha256": "80c74affd6c98c69c222ab5d764e144c05ac02533358ef6ca0ab33326a3ad7e9"
+    },
+    "001-camera1-1793759063409530987": {
+      "package": "001",
+      "camera": "camera1",
+      "frame_id": "1793759063409530987",
+      "image_sha256": "5c9acd0f48d7f979a094754fc140923ce8fb5b295e05c10ad801e6764fd03ae1"
+    },
+    "001-camera3-1793759004609543987": {
+      "package": "001",
+      "camera": "camera3",
+      "frame_id": "1793759004609543987",
+      "image_sha256": "df1da2698481e2a13aa2a4967bedf9ee52d59492ca9f1b290c1f599102263fe0"
+    },
+    "001-camera3-1793759034009520987": {
+      "package": "001",
+      "camera": "camera3",
+      "frame_id": "1793759034009520987",
+      "image_sha256": "12fa6c6a0122bd7c49bd1fa18cdb2f6a8a3e240bdc57d806fef76055e40c8d8e"
+    },
+    "001-camera3-1793759063409530987": {
+      "package": "001",
+      "camera": "camera3",
+      "frame_id": "1793759063409530987",
+      "image_sha256": "25cd59cd26dbdc36d87b59ada3180d82435a2f0cc7e505cb73d9ac79dd8b405c"
+    },
+    "002-camera1-1793759208642855696": {
+      "package": "002",
+      "camera": "camera1",
+      "frame_id": "1793759208642855696",
+      "image_sha256": "2b45724809c029d5188073bee908aa1a9d346f043adc2877c5f9a2a145b39029"
+    },
+    "002-camera1-1793759219742811696": {
+      "package": "002",
+      "camera": "camera1",
+      "frame_id": "1793759219742811696",
+      "image_sha256": "f1e414009803a5b953c725cf7a693476357ac74bc68b963ded438ee50725d526"
+    },
+    "002-camera1-1793759230842886696": {
+      "package": "002",
+      "camera": "camera1",
+      "frame_id": "1793759230842886696",
+      "image_sha256": "992cdc7f2f2921e5d98c711bb28f6613168b48772d716db2dc271f5e660b293d"
+    },
+    "002-camera3-1793759208642855696": {
+      "package": "002",
+      "camera": "camera3",
+      "frame_id": "1793759208642855696",
+      "image_sha256": "4ec4bdc05153373d11bc0b58e8f76b83b8c62e1f2d8065a32dff58b2de3b7d9c"
+    },
+    "002-camera3-1793759219742811696": {
+      "package": "002",
+      "camera": "camera3",
+      "frame_id": "1793759219742811696",
+      "image_sha256": "48b18ec572226b58a1b990997db60f29e17d3913e24f851048076af4bc9887b4"
+    },
+    "002-camera3-1793759230842886696": {
+      "package": "002",
+      "camera": "camera3",
+      "frame_id": "1793759230842886696",
+      "image_sha256": "bf2d0179da5a214f4321bf6267cf7179b90ce624e8d3faae605a0ef368f5e132"
+    },
+    "003-camera1-idx22-1793759966409522987": {
+      "package": "003",
+      "camera": "camera1",
+      "frame_id": "1793759966409522987",
+      "image_sha256": "9b0fd9723eb4f8719ee71a6bdd05ca60f201c007522884eb96fd24de06e2f895",
+      "relative_path": "003-camera1-idx22-1793759966409522987.png"
+    },
+    "003-camera1-idx5-1793759961309512987": {
+      "package": "003",
+      "camera": "camera1",
+      "frame_id": "1793759961309512987",
+      "image_sha256": "5b402f2458fd3ff631ec7d925ed7b425291ae479470118c66eb3de41033a89c5",
+      "relative_path": "003-camera1-idx5-1793759961309512987.png"
+    },
+    "003-camera1-idx52-1793759975409508695": {
+      "package": "003",
+      "camera": "camera1",
+      "frame_id": "1793759975409508695",
+      "image_sha256": "83019c211a7bda145cad51e4aa1f20104eaa707e0ec3157691ab33d7e13474b0",
+      "relative_path": "003-camera1-idx52-1793759975409508695.png"
+    },
+    "003-camera1-idx68-1793759980309508695": {
+      "package": "003",
+      "camera": "camera1",
+      "frame_id": "1793759980309508695",
+      "image_sha256": "fc7871bdfff794c7cd0ccdf6b7779a941c89c4c89175591a85f3924b9d5a858b",
+      "relative_path": "003-camera1-idx68-1793759980309508695.png"
+    },
+    "003-camera1-idx85-1793759985409553695": {
+      "package": "003",
+      "camera": "camera1",
+      "frame_id": "1793759985409553695",
+      "image_sha256": "3dcfe2d0e741b899b88002ec74840e662d8c31d9affa3f600f1c07877bbb4c42",
+      "relative_path": "003-camera1-idx85-1793759985409553695.png"
+    },
+    "003-camera3-idx22-1793759966409522987": {
+      "package": "003",
+      "camera": "camera3",
+      "frame_id": "1793759966409522987",
+      "image_sha256": "64b5a7951fbf03940f24ba279a6fc42b0736c22e372ed7d0d00b305a3413a6df",
+      "relative_path": "003-camera3-idx22-1793759966409522987.png"
+    },
+    "003-camera3-idx5-1793759961309512987": {
+      "package": "003",
+      "camera": "camera3",
+      "frame_id": "1793759961309512987",
+      "image_sha256": "7978b7c71befb9ab26784d9db6352acaaf6d0c1b0ea5d5649b444a8e65c6aa6d",
+      "relative_path": "003-camera3-idx5-1793759961309512987.png"
+    },
+    "003-camera3-idx52-1793759975409508695": {
+      "package": "003",
+      "camera": "camera3",
+      "frame_id": "1793759975409508695",
+      "image_sha256": "683b60ed55d1bf695969eb7acbf6d5464081871ff6a995b30dab4cbd86e81aa1",
+      "relative_path": "003-camera3-idx52-1793759975409508695.png"
+    },
+    "003-camera3-idx68-1793759980309508695": {
+      "package": "003",
+      "camera": "camera3",
+      "frame_id": "1793759980309508695",
+      "image_sha256": "064cd29c36bc7442d96f32973f791b228018149efce047a0c7f50c5c7c64fa55",
+      "relative_path": "003-camera3-idx68-1793759980309508695.png"
+    },
+    "003-camera3-idx85-1793759985409553695": {
+      "package": "003",
+      "camera": "camera3",
+      "frame_id": "1793759985409553695",
+      "image_sha256": "785dc264a93397626c8d679efabd7b900eefa821378b77ab0df2f25d191f2568",
+      "relative_path": "003-camera3-idx85-1793759985409553695.png"
+    },
+    "004-camera1-idx22-1793760668642838987": {
+      "package": "004",
+      "camera": "camera1",
+      "frame_id": "1793760668642838987",
+      "image_sha256": "99e868b3641d45d323b9b9df2a9c0fa6f8f54e28309776aaa882643eed284cdf",
+      "relative_path": "004-camera1-idx22-1793760668642838987.png"
+    },
+    "004-camera1-idx5-1793760663542839987": {
+      "package": "004",
+      "camera": "camera1",
+      "frame_id": "1793760663542839987",
+      "image_sha256": "f96e4e58ac807b5020d0d62697cfd58729317c93b4b6d9db7fc804d5fe83de16",
+      "relative_path": "004-camera1-idx5-1793760663542839987.png"
+    },
+    "004-camera1-idx52-1793760677642756695": {
+      "package": "004",
+      "camera": "camera1",
+      "frame_id": "1793760677642756695",
+      "image_sha256": "46b36c747bb0448ad6f144fdac0dc8a9a1d1cb975151998b3808d7de6a9510c6",
+      "relative_path": "004-camera1-idx52-1793760677642756695.png"
+    },
+    "004-camera1-idx68-1793760682442792695": {
+      "package": "004",
+      "camera": "camera1",
+      "frame_id": "1793760682442792695",
+      "image_sha256": "0a00ee0d7e7a95643e5b1145a31c95439639f3f758f461d53838bf0930578713",
+      "relative_path": "004-camera1-idx68-1793760682442792695.png"
+    },
+    "004-camera1-idx85-1793760721942855696": {
+      "package": "004",
+      "camera": "camera1",
+      "frame_id": "1793760721942855696",
+      "image_sha256": "6eaf2d45982bdf3c0288786a508f23ce17df81aaf2dc087cb70e3c7dafe19b86",
+      "relative_path": "004-camera1-idx85-1793760721942855696.png"
+    },
+    "004-camera3-idx22-1793760668642838987": {
+      "package": "004",
+      "camera": "camera3",
+      "frame_id": "1793760668642838987",
+      "image_sha256": "43c6e7c5520ae4fe15818e2d62b2ee7161b62db48bbde5e552244bb5c87ff226",
+      "relative_path": "004-camera3-idx22-1793760668642838987.png"
+    },
+    "004-camera3-idx5-1793760663542839987": {
+      "package": "004",
+      "camera": "camera3",
+      "frame_id": "1793760663542839987",
+      "image_sha256": "e991ceba78b026ce1b809ca7705b912c13619ce42d70351489e9c1ec440bc774",
+      "relative_path": "004-camera3-idx5-1793760663542839987.png"
+    },
+    "004-camera3-idx52-1793760677642756695": {
+      "package": "004",
+      "camera": "camera3",
+      "frame_id": "1793760677642756695",
+      "image_sha256": "ffe4a76f12898048e83a5c7b5b4bb520be330cdbc7e54d64680add2fca8f0b7e",
+      "relative_path": "004-camera3-idx52-1793760677642756695.png"
+    },
+    "004-camera3-idx68-1793760682442792695": {
+      "package": "004",
+      "camera": "camera3",
+      "frame_id": "1793760682442792695",
+      "image_sha256": "44cb31a3ad3dcb284c924d1b927134cf1d65d7bf6d58287d73a268c8ad170c00",
+      "relative_path": "004-camera3-idx68-1793760682442792695.png"
+    },
+    "004-camera3-idx85-1793760721942855696": {
+      "package": "004",
+      "camera": "camera3",
+      "frame_id": "1793760721942855696",
+      "image_sha256": "4bac12c1e9c441f22f18e9eba2d4866fbacf367e9936d9224db24dd3602c1e7b",
+      "relative_path": "004-camera3-idx85-1793760721942855696.png"
+    }
+  }
+}

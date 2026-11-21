@@ -51,9 +51,11 @@
     "web": {"passed": 158, "failed": 0}
   },
   "deployment": {
-    "commit": "a3f37d5",
+    "implementation_commits": ["a3f37d5", "8d6090e"],
     "backup": "D:/Apps/LabelAgent/.local/backups/weak-small-pallet-audit-round377-20261121",
-    "deployed_sha256": "8B8DEF355ABD5DA063E6E16C6549F45CAA1BE22DDFF44247A7D62602B0D0EDE7",
+    "candidate_audit_sha256": "8B8DEF355ABD5DA063E6E16C6549F45CAA1BE22DDFF44247A7D62602B0D0EDE7",
+    "web_app_sha256": "44D4121ACF3008C9C7EB6B4E720EA6A454279F51BFECF0BDEA27AD2D753867A6",
+    "served_web_gate_verified": true,
     "status": "idle",
     "sam_ready": true,
     "vlm_ready": true,

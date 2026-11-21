@@ -3051,8 +3051,8 @@ VLM在同一时间逐个处理尾项；快速通道忙、离线、超时或协�
 仍被确认保留。跨7个会话共11,592个栈板候选，仅304个新增复核，占2.62%。当前三帧没有
 人工真值，因此不宣称人工准确率提升，只确认风险拦截更完整。
 
-定向Python 39项、完整Python 1177项、网页158项全部通过。实现提交`a3f37d5`，正式只替换
-`candidate_class_audit.py`；回滚点为
+定向Python 39项、完整Python 1177项、网页158项全部通过。实现提交`a3f37d5`与`8d6090e`，
+正式只替换`candidate_class_audit.py`与`app.js`，使后端判定和页面待复核计数一致；回滚点为
 `D:\Apps\LabelAgent\.local\backups\weak-small-pallet-audit-round377-20261121`。部署前后四份正式
 状态/历史文件哈希不变，工作台idle，两路SAM和两路VLM均ready。详细记录见
 `WEAK_SMALL_PALLET_AUDIT_ROUND377_20261121.md`与对应结构化证据。

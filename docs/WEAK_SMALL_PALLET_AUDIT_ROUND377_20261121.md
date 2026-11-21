@@ -23,7 +23,8 @@
 ## 验收与边界
 
 - 定向 Python：39/39；完整 Python：1177/1177；网页交互：158/158。
-- 正式工作台只替换 `candidate_class_audit.py`，运行文件与源码 SHA-256 一致。
+- 正式工作台只替换 `candidate_class_audit.py` 与 `app.js`，后端判定和页面待复核计数保持一致；
+  两份运行文件与源码 SHA-256 一致，在线 `app.js` 已读回新门禁。
 - 工作台 idle，两路 SAM 和两路 VLM 均就绪；四份正式状态/历史文件哈希部署前后不变。
 - 当前三帧没有人工真值，所以本轮只能证明“风险候选被更稳地拦截”，不能宣称人工准确率提升。
 - 回滚点：`D:\Apps\LabelAgent\.local\backups\weak-small-pallet-audit-round377-20261121`。

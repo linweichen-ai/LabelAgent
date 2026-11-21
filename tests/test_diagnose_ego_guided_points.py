@@ -5,7 +5,8 @@ from unittest import mock
 import urllib.error
 
 from tools.diagnose_ego_guided_points import (
-    materialize_normalized_point_sets, request_points, validate_point_sets)
+    materialize_normalized_point_sets, request_point_groups, request_points,
+    validate_point_sets)
 
 
 class EgoGuidedPointDiagnosticTests(unittest.TestCase):
@@ -81,6 +82,26 @@ class EgoGuidedPointDiagnosticTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, message):
                     request_points("http://127.0.0.1:28766", b"image", [
                         {"x": 1, "y": 2, "label": 1}])
+
+    def test_group_request_forwards_all_sets_to_shared_encoding_helper(self):
+        point_sets = [
+            {"name": "first", "points": [{"x": 1, "y": 2, "label": 1}]},
+            {"name": "second", "points": [{"x": 3, "y": 4, "label": 1}]},
+        ]
+        expected = {"items": [], "diagnostics": {"image_encoded_once": True}}
+        with mock.patch(
+                "tools.diagnose_ego_guided_points.sam_point_groups",
+                return_value=expected) as grouped:
+            self.assertIs(
+                request_point_groups(
+                    "http://127.0.0.1:28766", b"image", point_sets),
+                expected)
+        grouped.assert_called_once_with(
+            b"image",
+            [point_sets[0]["points"], point_sets[1]["points"]],
+            {"sam3_point_url": "http://127.0.0.1:28766",
+             "sam3_url": "http://127.0.0.1:28766"},
+        )
 
     def test_materializes_normalized_points_at_image_bounds(self):
         payload = [{"name": "camera-template", "points": [

@@ -1,0 +1,68 @@
+{
+  "rounds": [408, 409],
+  "date": "2026-11-22",
+  "status": "candidate_only_cross_batch_diagnostic",
+  "source_dataset": "SFL_CPD15Y_20261104_smoke",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_state_modified": false,
+  "grouped_diagnostic_change": {
+    "tool": "tools/diagnose_ego_guided_points.py",
+    "endpoint": "/segment_point_groups_batch",
+    "fallback_only_on_http_404": true,
+    "busy_timeout_and_malformed_response_hidden": false
+  },
+  "samples": {
+    "003": {
+      "image_sha256": "b610375b59e67fa8bde8059f7347867585f1eb2cd9224e23d8cfe6e1c36623e5",
+      "person_occlusion": true,
+      "fixed_template_candidates": 2,
+      "grouped_image_encoded_once": true,
+      "grouped_prompt_group_count": 2,
+      "grouped_service_seconds": 0.105749133974314,
+      "grouped_client_seconds": 0.36,
+      "sequential_geometry_equal": true,
+      "production_fallback_raw_candidates": 18,
+      "production_fallback_guarded_candidates": 1,
+      "selected_profile": "wide_bottom_chassis",
+      "selected_score": 0.875,
+      "selected_area_ratio": 0.125775,
+      "selected_bbox": [0, 399, 523, 512]
+    },
+    "004": {
+      "image_sha256": "6f02428b05f0463fc925503faab998133b2f2c4d3ade58ae28514c76a2011c7b",
+      "person_occlusion": false,
+      "fixed_template_candidates": 0,
+      "fixed_template_failure": "negative_point_conflict",
+      "grouped_image_encoded_once": true,
+      "grouped_prompt_group_count": 2,
+      "grouped_service_seconds": 0.0967224061023444,
+      "grouped_client_seconds": 0.313,
+      "grouped_failure_semantics_equal": true,
+      "production_fallback_raw_candidates": 18,
+      "production_fallback_guarded_candidates": 7,
+      "selected_profile": "wide_bottom_chassis",
+      "selected_score": 0.96875,
+      "selected_area_ratio": 0.178857,
+      "selected_bbox": [0, 375, 640, 512]
+    }
+  },
+  "result_sha256": {
+    "003_grouped": "9ba575197f83f5c64c4e82062ad9f6c14d172e74a3afc0ad3264328ecfb62083",
+    "004_grouped": "ba3bf341304984a447fac931ecc3b796f760b9069865d2bbe6a86940f74c8b0b",
+    "production_fallback": "5dc202f8d6879d7437b48a5598995ba4fd30f829abe833d96952d57b659d2af8"
+  },
+  "formal_state_sha256": {
+    "state.json": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "file_sessions.json": "94E8BEE324628585E7532E595348293DF1DA7B24041A1D4DF1C2EC9FB734E02E",
+    "last_run.json": "3BECE2513C6F661054AC238AB185527D715A04B3B0C8E073274710BE23E057DA",
+    "last_run_summary.json": "32578D53E70FA6860F3438860B321172B5E8B405BC6BB8A0F19387A6D4B84933"
+  },
+  "limitations": [
+    "Both cross-batch samples contain visible host-robot structure and are positive examples.",
+    "Assistant visual review is not pixel-level human truth.",
+    "No cross-batch IoU or false-positive rate is claimed.",
+    "The fixed normalized positive-negative template is not authorized for cross-batch production use."
+  ]
+}

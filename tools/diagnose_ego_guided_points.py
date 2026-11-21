@@ -27,7 +27,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
-from source.agent.workflow import candidate_overlay
+from source.agent.workflow import candidate_overlay, sam_point_groups
 from tools.diagnose_ego_bottom_point_fallback import (
     bounded_candidate_summary, mask_record)
 
@@ -147,6 +147,21 @@ def request_points(endpoint: str, image: bytes, points: list[dict]) -> dict:
     return payload
 
 
+def request_point_groups(endpoint: str, image: bytes,
+                         point_sets: list[dict]) -> dict:
+    """Evaluate every point set with one encoding when the service supports it.
+
+    ``sam_point_groups`` validates the response contract and only falls back to
+    the legacy per-group route when the grouped route is genuinely absent
+    (HTTP 404).  Busy, timeout and malformed responses remain visible.
+    """
+    return sam_point_groups(
+        image,
+        [experiment["points"] for experiment in point_sets],
+        {"sam3_point_url": endpoint, "sam3_url": endpoint},
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("image", type=Path)
@@ -175,14 +190,33 @@ def main() -> int:
         point_sets = validate_point_sets(point_payload, width, height)
         point_coordinate_mode = "absolute_pixel"
     args.output_dir.mkdir(parents=True)
+    batch_started = time.monotonic()
+    try:
+        grouped = request_point_groups(args.point_sam_url, image, point_sets)
+        grouped_items = grouped["items"]
+        request_diagnostics = grouped["diagnostics"]
+        grouped_failure = None
+    except Exception as error:
+        grouped_items = [None] * len(point_sets)
+        request_diagnostics = None
+        grouped_failure = str(error)[:500]
+    batch_elapsed = round(time.monotonic() - batch_started, 4)
+
     rows = []
-    for index, experiment in enumerate(point_sets):
-        started = time.monotonic()
+    for index, (experiment, item) in enumerate(zip(point_sets, grouped_items)):
         failure = None
         shape = None
         geometry = None
         try:
-            result = request_points(args.point_sam_url, image, experiment["points"])
+            if grouped_failure is not None:
+                raise RuntimeError(grouped_failure)
+            if not isinstance(item, dict):
+                raise ValueError("point SAM group item is invalid")
+            if "error" in item:
+                raise RuntimeError(str(item["error"])[:500])
+            result = item.get("result")
+            if not isinstance(result, dict):
+                raise ValueError("point SAM group result is invalid")
             parts = result.get("parts") or []
             if parts:
                 shape = {
@@ -206,7 +240,8 @@ def main() -> int:
         rows.append({
             "name": experiment["name"],
             "points": experiment["points"],
-            "elapsed_seconds": round(time.monotonic() - started, 4),
+            "elapsed_seconds": batch_elapsed,
+            "elapsed_seconds_shared_batch": True,
             "candidate_available": shape is not None,
             "error": failure,
             "geometry": geometry,
@@ -227,6 +262,8 @@ def main() -> int:
         "image_sha256": hashlib.sha256(image).hexdigest(),
         "point_sets_sha256": file_sha256(point_sets_path),
         "point_coordinate_mode": point_coordinate_mode,
+        "request_diagnostics": request_diagnostics,
+        "client_batch_elapsed_seconds": batch_elapsed,
         "rows": rows,
         "evidence_note": (
             "Point sets are bounded assistant-authored development hints. "

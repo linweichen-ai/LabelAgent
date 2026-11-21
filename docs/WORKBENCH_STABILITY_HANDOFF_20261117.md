@@ -3330,3 +3330,13 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - Python全量1282项与225个子测试通过；正式状态、真值、候选和训练批准未改。当前只证明同序列高精度失败关闭，下一门是跨相机或跨批次验证。
 - 详细记录见`docs/EGO_MAJOR_COMPONENT_AREA_GUARD_ROUNDS406_407_20261122.md`及对应结构化证据。
 - 详细记录见`docs/EGO_POINT_GROUP_BATCH_ROUND404_20261122.md`与`docs/evidence/workbench-stability-20261117/ego-point-group-batch-round404.json`。
+# 2026-11-22 Round408–409 补充：ego 跨批次诊断
+
+- 用 1104 批次 003/004 两张独立图验证 Round385 camera0 固定正负模板：003 为 2/2
+  候选，004 为 0/2 严格负点冲突，确认固定模板不能跨批次直接推广。
+- 影子诊断工具已切换到一次编码多提示组；003/004 均证明
+  `image_encoded_once=true`，客户端批量请求约 0.360/0.313 秒。
+- 已上线的 18 点扫描 + 几何门禁重新只读验证为 2/2，003 未吞入近距离人物，004
+  能保留连通座椅；结果仍是候选态，不是人工真值或训练批准。
+- 正式工作台状态文件哈希未变化，页面 HTTP 200、运行状态 `idle`。
+- 详见 `docs/EGO_CROSS_BATCH_GROUP_DIAGNOSTIC_ROUNDS408_409_20261122.md`。

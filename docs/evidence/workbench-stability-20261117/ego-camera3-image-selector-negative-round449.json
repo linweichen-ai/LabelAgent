@@ -1,0 +1,22 @@
+{
+  "schema_version": "labelagent.ego_camera3_image_selector_receipt.v1",
+  "date": "2026-11-22",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_state_modified": false,
+  "selector": "image_ego_roi_v2",
+  "selector_uses_candidate_mask": false,
+  "all_external_packages_keep_one_vote": true,
+  "query_count": 19,
+  "distance_outlier_warning_count": 10,
+  "baseline_alert_count": 4,
+  "experimental_alert_count": 5,
+  "new_alert_sample": "003-camera3-idx22-1793759966409522987",
+  "accepted_for_default": false,
+  "selector_config_sha256": "13e884a61342b45321829335d14e803b780024118016462cc49c931f45c54c5a",
+  "audit_sha256": "85c0680e428b29b4930e6eb4e4439bcd002811a427b5aedaffb20438745b19b8",
+  "contact_sheet_sha256": "cbd3e6e5ffb5d2c90e9a99d90b099779a89b6a6094e8c55a4aaacd60e701192a",
+  "conclusion": "Rejected. Raw-image ROI neighbour selection increased camera3 alerts from four to five and produced distance warnings on ten of nineteen queries."
+}

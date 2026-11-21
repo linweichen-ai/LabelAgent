@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
+import hashlib
 import io
 import json
 from pathlib import Path
@@ -42,6 +43,16 @@ DEFAULT_THRESHOLDS = {
         "max_small_island_ratio": 0.01,
         "max_hole_ratio": 0.06,
     },
+}
+
+IMAGE_SELECTOR_CONFIG = {
+    "selector": "image_ego_roi_v2",
+    "expected_size": [640, 512],
+    "roi_xyxy_fraction": [0.18, 0.55, 0.82, 0.98],
+    "pooled_size": [16, 12],
+    "histogram_bins": 8,
+    "nearest_per_package": 3,
+    "distance_reject_mad_multiplier": 3.0,
 }
 
 
@@ -157,6 +168,88 @@ def package_balanced_reference(
     return package_votes >= required_package_votes, required_package_votes, counts
 
 
+def image_fixed_roi_feature(image_bytes: bytes) -> np.ndarray:
+    """Extract a deterministic raw-image feature without consulting any mask."""
+    with Image.open(io.BytesIO(image_bytes)) as decoded:
+        rgb = np.asarray(decoded.convert("RGB"), dtype=np.float32)
+    expected_width, expected_height = IMAGE_SELECTOR_CONFIG["expected_size"]
+    if rgb.shape[:2] != (expected_height, expected_width):
+        raise ValueError("image selector requires 640x512 source images")
+    x0f, y0f, x1f, y1f = IMAGE_SELECTOR_CONFIG["roi_xyxy_fraction"]
+    x0, x1 = round(x0f * expected_width), round(x1f * expected_width)
+    y0, y1 = round(y0f * expected_height), round(y1f * expected_height)
+    roi = rgb[y0:y1, x0:x1]
+    pooled_width, pooled_height = IMAGE_SELECTOR_CONFIG["pooled_size"]
+    pooled = cv2.resize(roi, (pooled_width, pooled_height),
+                        interpolation=cv2.INTER_AREA)
+    channel_mean = pooled.mean(axis=(0, 1), keepdims=True)
+    channel_std = pooled.std(axis=(0, 1), keepdims=True)
+    normalized_rgb = (pooled - channel_mean) / np.maximum(channel_std, 1.0)
+    gray = cv2.cvtColor(pooled.astype(np.uint8), cv2.COLOR_RGB2GRAY).astype(np.float32)
+    gradient = cv2.magnitude(cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3),
+                             cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3))
+    gradient = (gradient - gradient.mean()) / max(float(gradient.std()), 1.0)
+    histograms = []
+    bins = IMAGE_SELECTOR_CONFIG["histogram_bins"]
+    for channel in range(3):
+        histogram, _ = np.histogram(roi[:, :, channel], bins=bins,
+                                    range=(0, 256))
+        histograms.extend((histogram / max(histogram.sum(), 1)).tolist())
+    return np.concatenate((normalized_rgb.ravel(), gradient.ravel(),
+                           np.asarray(histograms, dtype=np.float32))).astype(np.float32)
+
+
+def image_selected_reference(
+        query_feature: np.ndarray,
+        external_by_package: dict[str, list[dict]]) -> tuple[np.ndarray, int, dict]:
+    """Select raw-image neighbours per package, then give every package one vote."""
+    if len(external_by_package) < 3:
+        raise ValueError("image selector requires at least three external packages")
+    ranked = {}
+    nearest_distances = []
+    for package in sorted(external_by_package):
+        candidates = external_by_package[package]
+        if len(candidates) < IMAGE_SELECTOR_CONFIG["nearest_per_package"]:
+            raise ValueError(f"image selector needs three samples in package {package}")
+        scored = sorted(
+            ((float(np.sqrt(np.mean(np.square(query_feature - item["feature"])))),
+              item) for item in candidates),
+            key=lambda pair: (pair[0], pair[1]["sample_id"]))
+        ranked[package] = scored
+        nearest_distances.append(scored[0][0])
+    median = float(np.median(nearest_distances))
+    mad = float(np.median(np.abs(np.asarray(nearest_distances) - median)))
+    reject_threshold = median + IMAGE_SELECTOR_CONFIG[
+        "distance_reject_mad_multiplier"] * max(mad, 1e-9)
+    package_masks = []
+    selection = {"selector": "image_ego_roi_v2", "accepted_packages": {},
+                 "distance_outlier_packages": {}, "nearest_distance_median": median,
+                 "nearest_distance_mad": mad, "reject_threshold": reject_threshold}
+    count = IMAGE_SELECTOR_CONFIG["nearest_per_package"]
+    for package, scored in ranked.items():
+        if scored[0][0] > reject_threshold:
+            selection["distance_outlier_packages"][package] = {
+                "warning": "nearest_raw_image_distance_outlier",
+                "nearest_distance": scored[0][0],
+            }
+        chosen = scored[:count]
+        masks = [item["mask"] for _, item in chosen]
+        votes = np.sum(np.stack(masks, axis=0), axis=0)
+        package_masks.append(votes >= (len(masks) // 2 + 1))
+        selection["accepted_packages"][package] = [
+            {"sample_id": item["sample_id"], "distance": distance}
+            for distance, item in chosen]
+    if len(package_masks) != len(external_by_package):
+        raise ValueError("image selector did not preserve every external package vote")
+    package_votes = np.sum(np.stack(package_masks, axis=0), axis=0)
+    required_votes = (2 * len(package_masks) + 2) // 3
+    reference = package_votes >= required_votes
+    selection_json = json.dumps(selection, sort_keys=True, separators=(",", ":"))
+    selection["selection_sha256"] = hashlib.sha256(
+        selection_json.encode("utf-8")).hexdigest()
+    return reference, required_votes, selection
+
+
 def _write_difference(image_bytes: bytes, candidate: np.ndarray,
                       reference: np.ndarray, target: Path) -> None:
     with Image.open(io.BytesIO(image_bytes)) as decoded:
@@ -207,7 +300,8 @@ def _write_contact_sheet(output: Path, rows: list[dict]) -> Path:
 
 def build_audit(review_queues: list[Path], identity_manifest_path: Path,
                 output: Path, thresholds: dict | None = None,
-                small_island_pixels: int = 100) -> dict:
+                small_island_pixels: int = 100,
+                camera3_reference_selector: str = "package_balanced_all") -> dict:
     if output.exists():
         raise FileExistsError(output)
     if len(review_queues) < 2:
@@ -265,6 +359,10 @@ def build_audit(review_queues: list[Path], identity_manifest_path: Path,
                 "sample_id": sample_id, "package": package, "camera": camera,
                 "frame_id": frame_id, "mask": _decode_mask(mask_bytes),
                 "image_bytes": image_bytes,
+                "feature": (image_fixed_roi_feature(image_bytes)
+                            if camera == "camera3"
+                            and camera3_reference_selector == "image_ego_roi_v2"
+                            else None),
                 "source_image_sha256": row["source_image_sha256"],
                 "union_mask_sha256": row["union_mask_sha256"],
                 "source_queue": str(queue_path.resolve()),
@@ -282,18 +380,27 @@ def build_audit(review_queues: list[Path], identity_manifest_path: Path,
     output.mkdir(parents=True)
     rows = []
     for sample in sorted(samples, key=lambda item: item["sample_id"]):
-        external_by_package: dict[str, list[np.ndarray]] = {}
+        external_by_package: dict[str, list[dict]] = {}
         for other in samples:
             if (other["camera"] == sample["camera"]
                     and other["package"] != sample["package"]):
-                external_by_package.setdefault(other["package"], []).append(
-                    other["mask"])
+                external_by_package.setdefault(other["package"], []).append(other)
         external_count = sum(len(masks) for masks in external_by_package.values())
         if len(external_by_package) < 2 or external_count < 4:
             raise ValueError(
                 f"insufficient external-package reference masks: {sample['sample_id']}")
-        reference, required_votes, external_counts = package_balanced_reference(
-            external_by_package)
+        selection = None
+        if sample["camera"] == "camera3" and camera3_reference_selector == "image_ego_roi_v2":
+            reference, required_votes, selection = image_selected_reference(
+                sample["feature"], external_by_package)
+            external_counts = {package: len(items)
+                               for package, items in external_by_package.items()}
+            reference_strategy = "image_selected_package_balanced_two_stage_majority"
+        else:
+            reference, required_votes, external_counts = package_balanced_reference(
+                {package: [item["mask"] for item in items]
+                 for package, items in external_by_package.items()})
+            reference_strategy = "package_balanced_two_stage_majority"
         if reference.shape != sample["mask"].shape:
             raise ValueError("reference mask dimensions differ")
         metrics = mask_metrics(sample["mask"], reference, small_island_pixels)
@@ -312,11 +419,12 @@ def build_audit(review_queues: list[Path], identity_manifest_path: Path,
             "production_deployed": False,
             "review_status": "high_priority_review" if alerts else "review_required",
             "threshold_alerts": alerts,
-            "reference_strategy": "package_balanced_two_stage_majority",
+            "reference_strategy": reference_strategy,
             "external_package_count": len(external_by_package),
             "external_mask_count": external_count,
             "external_masks_per_package": external_counts,
             "reference_required_package_votes": required_votes,
+            "image_selection": selection,
             "source_image_sha256": sample["source_image_sha256"],
             "union_mask_sha256": sample["union_mask_sha256"],
             "source_queue": sample["source_queue"],
@@ -333,7 +441,7 @@ def build_audit(review_queues: list[Path], identity_manifest_path: Path,
         })
     contact = _write_contact_sheet(output, rows)
     audit = {
-        "schema_version": "labelagent.ego_union_pixel_audit.v2",
+        "schema_version": "labelagent.ego_union_pixel_audit.v3",
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "candidate_only": True,
         "human_truth": False,
@@ -345,7 +453,22 @@ def build_audit(review_queues: list[Path], identity_manifest_path: Path,
         "failed_closed_inputs": failed_closed_inputs,
         "threshold_alert_count": sum(bool(row["threshold_alerts"]) for row in rows),
         "thresholds_are_review_triage_only": True,
-        "reference_strategy": "package_balanced_two_stage_majority",
+        "reference_strategy": (
+            "camera3_image_selected_camera1_package_balanced"
+            if camera3_reference_selector == "image_ego_roi_v2"
+            else "package_balanced_two_stage_majority"),
+        "camera3_reference_selector": camera3_reference_selector,
+        "experimental_reference_selector": (
+            camera3_reference_selector != "package_balanced_all"),
+        "reference_selector_accepted_for_default": (
+            camera3_reference_selector == "package_balanced_all"),
+        "image_selector_config": (IMAGE_SELECTOR_CONFIG
+                                  if camera3_reference_selector == "image_ego_roi_v2"
+                                  else None),
+        "image_selector_config_sha256": (
+            hashlib.sha256(json.dumps(IMAGE_SELECTOR_CONFIG, sort_keys=True,
+                                     separators=(",", ":")).encode("utf-8")).hexdigest()
+            if camera3_reference_selector == "image_ego_roi_v2" else None),
         "thresholds": thresholds,
         "small_island_pixels": small_island_pixels,
         "identity_manifest_sha256": file_sha256(identity_manifest_path),
@@ -353,8 +476,9 @@ def build_audit(review_queues: list[Path], identity_manifest_path: Path,
         "contact_sheet_sha256": file_sha256(contact),
         "samples": rows,
         "next_step": (
-            "Review every difference image. Metrics can prioritize review but cannot "
-            "approve truth, training or deployment."),
+            "Review every difference image. Experimental selectors remain rejected "
+            "for default use until independent evidence improves over the package-"
+            "balanced baseline. Metrics cannot approve truth, training or deployment."),
     }
     target = output / "audit.json"
     target.write_text(json.dumps(audit, ensure_ascii=False, indent=2) + "\n",
@@ -368,12 +492,16 @@ def main() -> int:
     parser.add_argument("--identity-manifest", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--small-island-pixels", type=int, default=100)
+    parser.add_argument("--camera3-reference-selector",
+                        choices=("package_balanced_all", "image_ego_roi_v2"),
+                        default="package_balanced_all")
     arguments = parser.parse_args()
     if arguments.small_island_pixels <= 0:
         parser.error("--small-island-pixels must be positive")
     audit = build_audit(arguments.review_queue, arguments.identity_manifest,
                         arguments.output,
-                        small_island_pixels=arguments.small_island_pixels)
+                        small_island_pixels=arguments.small_island_pixels,
+                        camera3_reference_selector=arguments.camera3_reference_selector)
     print(json.dumps({
         "output": str((arguments.output / "audit.json").resolve()),
         "sample_count": audit["sample_count"],

@@ -7,8 +7,9 @@ import numpy as np
 from PIL import Image
 
 from tools.audit_ego_union_pixels import (
-    DEFAULT_THRESHOLDS, build_audit, mask_metrics,
-    package_balanced_reference, threshold_alerts)
+    DEFAULT_THRESHOLDS, build_audit, image_fixed_roi_feature,
+    image_selected_reference, mask_metrics, package_balanced_reference,
+    threshold_alerts)
 from tools.build_ego_component_union_review import file_sha256
 
 
@@ -128,6 +129,51 @@ class EgoUnionPixelAuditTests(unittest.TestCase):
             "002": [clear, marked],
         })
         self.assertFalse(reference[0, 0])
+
+    def test_image_feature_is_deterministic_and_requires_frozen_size(self):
+        image = Image.new("RGB", (640, 512), (80, 100, 120))
+        from io import BytesIO
+        buffer = BytesIO()
+        image.save(buffer, format="PNG")
+        first = image_fixed_roi_feature(buffer.getvalue())
+        second = image_fixed_roi_feature(buffer.getvalue())
+        self.assertTrue(np.array_equal(first, second))
+        small = BytesIO()
+        Image.new("RGB", (32, 24)).save(small, format="PNG")
+        with self.assertRaisesRegex(ValueError, "640x512"):
+            image_fixed_roi_feature(small.getvalue())
+
+    def test_image_selection_is_mask_independent_and_package_balanced(self):
+        query = np.array([0.0, 0.0], dtype=np.float32)
+        packages = {}
+        for package_index, package in enumerate(("001", "002", "003")):
+            items = []
+            for index, distance in enumerate((0.1, 0.2, 0.3)):
+                mask = np.zeros((3, 3), dtype=bool)
+                mask[1, 1] = True
+                items.append({
+                    "sample_id": f"{package}-camera3-{index}",
+                    "feature": np.array([distance + package_index * 0.01, 0.0],
+                                        dtype=np.float32),
+                    "mask": mask,
+                })
+            packages[package] = items
+        reference, required, selection = image_selected_reference(query, packages)
+        selected_ids = {
+            package: [item["sample_id"] for item in rows]
+            for package, rows in selection["accepted_packages"].items()}
+        for rows in packages.values():
+            for item in rows:
+                item["mask"] = ~item["mask"]
+        _, _, changed = image_selected_reference(query, packages)
+        changed_ids = {
+            package: [item["sample_id"] for item in rows]
+            for package, rows in changed["accepted_packages"].items()}
+        self.assertEqual(selected_ids, changed_ids)
+        self.assertEqual(selection["selection_sha256"],
+                         changed["selection_sha256"])
+        self.assertEqual(required, 2)
+        self.assertTrue(reference[1, 1])
 
     def test_builds_candidate_only_audit_and_images(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -372,6 +372,29 @@ class EgoComponentUnionReviewTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "invalid identity manifest entry"):
                 load_identity_manifest(path)
 
+    def test_identity_manifest_rejects_duplicate_tuple_or_path(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            base = {
+                "package": "003", "camera": "camera1", "frame_id": "12345",
+                "image_sha256": "0" * 64, "relative_path": "003/frame.png",
+            }
+            tuple_path = root / "tuple.json"
+            tuple_path.write_text(json.dumps({"samples": {
+                "003-camera1-idx22-12345": base,
+                "003-camera1-idx23-12345": {**base, "relative_path": "003/other.png"},
+            }}), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "duplicate identity manifest tuple"):
+                load_identity_manifest(tuple_path)
+            duplicate_path = root / "path.json"
+            duplicate_path.write_text(json.dumps({"samples": {
+                "003-camera1-idx22-12345": base,
+                "004-camera1-idx22-54321": {
+                    **base, "package": "004", "frame_id": "54321"},
+            }}), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "duplicate identity manifest path"):
+                load_identity_manifest(duplicate_path)
+
     def test_cli_requires_all_safety_gates_by_default(self):
         arguments = [
             "build_ego_component_union_review.py",

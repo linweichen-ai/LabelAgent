@@ -119,6 +119,16 @@ class EgoUnionPixelAuditTests(unittest.TestCase):
         self.assertTrue(np.array_equal(reference[1:3, 1:3],
                                        np.ones((2, 2), dtype=bool)))
 
+    def test_package_internal_tie_fails_closed(self):
+        clear = np.zeros((2, 2), dtype=bool)
+        marked = clear.copy()
+        marked[0, 0] = True
+        reference, _, _ = package_balanced_reference({
+            "001": [clear, marked],
+            "002": [clear, marked],
+        })
+        self.assertFalse(reference[0, 0])
+
     def test_builds_candidate_only_audit_and_images(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -171,6 +181,16 @@ class EgoUnionPixelAuditTests(unittest.TestCase):
             packet["samples"][0]["sample_id"] = "000-camera1-99999"
             queues[0].write_text(json.dumps(packet), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "identity binding mismatch"):
+                build_audit(queues, manifest, root / "audit")
+
+    def test_rejects_manifest_sample_not_present_in_queues(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            queues, manifest, _ = self._fixture(root)
+            packet = json.loads(queues[0].read_text(encoding="utf-8"))
+            packet["samples"].pop()
+            queues[0].write_text(json.dumps(packet), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "identity manifest differ"):
                 build_audit(queues, manifest, root / "audit")
 
     def test_preserves_all_input_hashes(self):

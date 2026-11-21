@@ -100,6 +100,8 @@ def load_identity_manifest(path: Path) -> dict[str, dict[str, str]]:
     if not isinstance(samples, dict) or not samples:
         raise ValueError("identity manifest must contain a non-empty samples object")
     validated = {}
+    seen_identities = set()
+    seen_relative_paths = set()
     for sample_id, item in samples.items():
         if not isinstance(sample_id, str) or not isinstance(item, dict):
             raise ValueError("identity manifest sample entries must be objects")
@@ -119,6 +121,15 @@ def load_identity_manifest(path: Path) -> dict[str, dict[str, str]]:
                     and (relative.is_absolute() or ".." in relative.parts
                          or relative.name == ""))):
             raise ValueError(f"invalid identity manifest entry: {sample_id}")
+        identity_key = (str(package), camera, str(frame_id))
+        if identity_key in seen_identities:
+            raise ValueError(f"duplicate identity manifest tuple: {sample_id}")
+        seen_identities.add(identity_key)
+        if relative is not None:
+            normalized_relative = relative.as_posix()
+            if normalized_relative in seen_relative_paths:
+                raise ValueError(f"duplicate identity manifest path: {sample_id}")
+            seen_relative_paths.add(normalized_relative)
         validated[sample_id] = {
             "package": str(package),
             "camera": str(camera),
@@ -126,7 +137,7 @@ def load_identity_manifest(path: Path) -> dict[str, dict[str, str]]:
             "image_sha256": str(image_sha256),
         }
         if relative is not None:
-            validated[sample_id]["relative_path"] = relative.as_posix()
+            validated[sample_id]["relative_path"] = normalized_relative
     return validated
 
 

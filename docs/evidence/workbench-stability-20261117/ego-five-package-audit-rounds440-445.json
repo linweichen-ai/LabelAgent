@@ -71,7 +71,7 @@
     "contact_sheet_sha256": "0a85d6bb4c688ee020ffa9a1ede687c0633832260d1dbe457aed5747080a544d"
   },
   "tests": {
-    "passed": 50,
+    "passed": 53,
     "skipped": 1,
     "skip_reason": "Windows ordinary token cannot create the symlink used by the escape test"
   },
@@ -80,5 +80,5 @@
     "ossutil_available": false,
     "oss_access_attempted_after_missing_tool": false
   },
-  "conclusion": "The package-balanced audit removes frame-count bias without relaxing thresholds. Camera1 is stable on the five local packages; camera3 remains the hard view and requires non-circular appearance or pose subtyping."
+  "conclusion": "The package-balanced audit removes frame-count bias without relaxing thresholds. All 17 usable camera1 candidates are alert-free while two risky camera1 inputs fail closed; camera3 remains the hard view and requires non-circular appearance or pose subtyping."
 }

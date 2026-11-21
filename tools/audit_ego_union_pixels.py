@@ -151,7 +151,7 @@ def package_balanced_reference(
         if any(mask.shape != shape for mask in masks):
             raise ValueError("reference mask dimensions differ")
         votes = np.sum(np.stack(masks, axis=0), axis=0)
-        package_masks.append(votes >= ((len(masks) + 1) // 2))
+        package_masks.append(votes >= (len(masks) // 2 + 1))
     package_votes = np.sum(np.stack(package_masks, axis=0), axis=0)
     required_package_votes = (2 * len(package_masks) + 2) // 3
     return package_votes >= required_package_votes, required_package_votes, counts
@@ -270,6 +270,12 @@ def build_audit(review_queues: list[Path], identity_manifest_path: Path,
                 "source_queue": str(queue_path.resolve()),
                 "source_queue_sha256": file_sha256(queue_path),
             })
+    if seen != set(identities):
+        missing = sorted(set(identities) - seen)
+        unexpected = sorted(seen - set(identities))
+        raise ValueError(
+            "review queues and identity manifest differ: "
+            f"missing={missing}, unexpected={unexpected}")
     packages = {sample["package"] for sample in samples}
     if len(packages) < 3:
         raise ValueError("at least three packages are required for leave-one-package-out audit")

@@ -1861,7 +1861,7 @@ test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () =
 test('专业简约模式默认收起向导且保留用户展开选择', () => {
   const guide = source('guide.js'), html = source('index.html'), theme = source('homepage-theme.css');
   assert.match(guide, /function recalled\(key, fallback = false\)/);
-  assert.match(guide, /setGuideCompact\(recalled\('labelagentGuideCompact', true\), false\)/);
+  assert.match(guide, /setGuideCompact\(recalled\('labelagentGuideCompactV165', true\), false\)/);
   assert.match(html, /连续推理 · N 帧/);
   assert.match(html, /homepage-theme\.css\?v=5/);
   assert.match(theme, /Professional compact layer/);

@@ -307,7 +307,7 @@
     guide.classList.toggle('compact', compact);
     byId('guideToggle').textContent = compact ? '展开步骤' : '收起步骤';
     byId('guideToggle').setAttribute('aria-expanded', String(!compact));
-    if (persist) remember('labelagentGuideCompact', compact);
+    if (persist) remember('labelagentGuideCompactV165', compact);
   }
 
   function setFocusMode(enabled, persist = true) {
@@ -851,7 +851,7 @@
   window.addEventListener('focus', () => { refreshGuide(); checkUiVersion(); });
   window.addEventListener('pageshow', refreshGuide);
 
-  setGuideCompact(recalled('labelagentGuideCompact', true), false);
+  setGuideCompact(recalled('labelagentGuideCompactV165', true), false);
   setFocusMode(recalled('labelagentFocusMode'), false);
   setCanvasMode(recalled('labelagentCanvasMode'), false);
   setDarkTheme(recalled('labelagentDarkTheme'), false);

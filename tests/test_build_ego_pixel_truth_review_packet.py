@@ -42,6 +42,11 @@ class EgoPixelTruthReviewPacketTest(unittest.TestCase):
         row = packet["samples"][0]
         self.assertFalse(row["eligible_for_candidate_merge"])
         self.assertNotIn("parts", row)
+        self.assertEqual(Path(row["overlay"]).suffix, ".png")
+        self.assertTrue((output / row["overlay"]).is_file())
+        self.assertTrue(all(point["satisfied"] for point in row["prompt_points"]))
+        self.assertEqual(packet["prompt_overlay_legend"]["positive_missed"],
+                         "red_circle_cross")
         mask = np.asarray(Image.open(output / row["candidate_mask"]))
         self.assertEqual(set(np.unique(mask)), {0, 255})
 
@@ -74,6 +79,8 @@ class EgoPixelTruthReviewPacketTest(unittest.TestCase):
         self.assertEqual(row["status"], "blocked_prompt_constraint")
         self.assertFalse(row["candidate_available"])
         self.assertEqual(packet["blocked_prompt_constraint_count"], 1)
+        self.assertTrue(any(point["label"] == 1 and not point["satisfied"]
+                            for point in row["prompt_points"]))
 
     def test_scope_and_existing_output_fail_closed(self):
         with self.assertRaisesRegex(ValueError, "cameras"):

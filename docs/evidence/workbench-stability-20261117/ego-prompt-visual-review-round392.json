@@ -1,0 +1,54 @@
+{
+  "schema_version": "labelagent.round392.ego_prompt_visual_review.v1",
+  "date": "2026-11-22",
+  "candidate_only": true,
+  "human_truth": false,
+  "human_confirmed": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_state_modified": false,
+  "visualization": {
+    "positive_covered": "green_circle",
+    "positive_missed": "red_circle_cross",
+    "negative_excluded": "cyan_circle",
+    "negative_violated": "magenta_circle_cross",
+    "lossless_overlay_format": "png",
+    "structured_point_satisfaction": true
+  },
+  "review_packet": {
+    "cameras": ["camera0", "camera1", "camera2", "camera3"],
+    "frames": [0, 38, 76, 114, 151],
+    "sample_count": 20,
+    "candidate_observed_count": 20,
+    "candidate_available_count": 14,
+    "blocked_prompt_constraint_count": 6,
+    "failed_count": 0,
+    "visualized_prompt_point_count": 130,
+    "all_samples_have_prompt_points": true,
+    "tracked": false,
+    "uploaded": false,
+    "review_queue_sha256": "D0D4510D9622BD68943E28FA89E098354F660F2695F4C9C2ECDE0C2AF82E3C19",
+    "contact_sheet_sha256": "0BE6658D16324826FD5C981C7C65A7D195C28F48F33A8792AFEF911040FA4EA4"
+  },
+  "assistant_visual_precheck": {
+    "contact_sheet_reviewed": true,
+    "prompt_markers_visible": true,
+    "human_confirmed": false,
+    "pixel_truth_created": false
+  },
+  "tests": {
+    "targeted_python_passed": 15,
+    "targeted_subtests_passed": 10,
+    "full_python_passed": 1235,
+    "full_subtests_passed": 219,
+    "web_node_passed": 167,
+    "python_utf8_required_on_windows": true
+  },
+  "formal_state_sha256": {
+    "state": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "file_sessions": "94E8BEE324628585E7532E595348293DF1DA7B24041A1D4DF1C2EC9FB734E02E",
+    "last_run": "3BECE2513C6F661054AC238AB185527D715A04B3B0C8E073274710BE23E057DA",
+    "last_run_summary": "32578D53E70FA6860F3438860B321172B5E8B405BC6BB8A0F19387A6D4B84933"
+  },
+  "gate": "local_prompt_visual_review_ready; human_pixel_truth_pending; production_rejected"
+}

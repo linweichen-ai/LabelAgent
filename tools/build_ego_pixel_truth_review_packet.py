@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 import hashlib
+import io
 import json
 from pathlib import Path
 import sys
@@ -37,6 +38,31 @@ def _find_image(root: Path, camera: int, frame: int) -> Path:
     if len(matches) != 1:
         raise ValueError(f"expected exactly one image for camera{camera} frame{frame}")
     return matches[0]
+
+
+def _write_prompt_overlay(image: bytes, shape: dict, points: list[dict],
+                          mask: np.ndarray, target: Path) -> None:
+    """Write a local review overlay with prompt satisfaction made visible."""
+    rendered = Image.open(io.BytesIO(candidate_overlay(image, [shape]))).convert("RGB")
+    draw = ImageDraw.Draw(rendered)
+    radius = max(4, min(rendered.size) // 90)
+    for point in points:
+        x, y, label = point["x"], point["y"], point["label"]
+        inside = bool(mask[y, x])
+        # green: covered positive; red: missed positive; cyan: excluded negative;
+        # magenta: violated negative.  A black outer ring keeps points visible on
+        # both bright factory floors and dark vehicle surfaces.
+        color = ((58, 216, 132) if inside else (255, 82, 82)) if label == 1 else (
+            (255, 70, 210) if inside else (72, 205, 255))
+        box = (x - radius, y - radius, x + radius, y + radius)
+        draw.ellipse(box, outline=(8, 12, 18), width=5)
+        draw.ellipse(box, outline=color, width=3)
+        if (label == 1 and not inside) or (label == 0 and inside):
+            draw.line((x - radius, y - radius, x + radius, y + radius),
+                      fill=color, width=3)
+            draw.line((x - radius, y + radius, x + radius, y - radius),
+                      fill=color, width=3)
+    rendered.save(target, "PNG")
 
 
 def _validate_scope(cameras, frames) -> tuple[list[int], list[int]]:
@@ -147,8 +173,16 @@ def build_packet(image_root: Path, output: Path, request_points, *,
                                   or negative_violated > 0)
                 mask_path = mask_root / f"{sample_id}.png"
                 Image.fromarray(mask.astype(np.uint8) * 255, "L").save(mask_path)
-                overlay_path = overlay_root / f"{sample_id}.jpg"
-                overlay_path.write_bytes(candidate_overlay(image, [shape]))
+                overlay_path = overlay_root / f"{sample_id}.png"
+                _write_prompt_overlay(image, shape, points, mask, overlay_path)
+                prompt_points = [{
+                    "x": point["x"],
+                    "y": point["y"],
+                    "label": point["label"],
+                    "satisfied": (bool(mask[point["y"], point["x"]])
+                                  if point["label"] == 1 else
+                                  not bool(mask[point["y"], point["x"]])),
+                } for point in points]
                 row.update({
                     "status": ("blocked_prompt_constraint" if blocked_prompt
                                else "blocked_sam_warning" if warnings
@@ -162,6 +196,7 @@ def build_packet(image_root: Path, output: Path, request_points, *,
                     "positive_points_covered": positive_covered,
                     "negative_point_count": len(negative_points),
                     "negative_points_violated": negative_violated,
+                    "prompt_points": prompt_points,
                     "sam_warning_sha256": (hashlib.sha256(json.dumps(
                         warnings, ensure_ascii=False, separators=(",", ":")).encode(
                             "utf-8")).hexdigest() if warnings else None),
@@ -196,6 +231,12 @@ def build_packet(image_root: Path, output: Path, request_points, *,
         "blocked_prompt_constraint_count": sum(
             row["status"] == "blocked_prompt_constraint" for row in rows),
         "failed_count": sum(row["status"] == "failed" for row in rows),
+        "prompt_overlay_legend": {
+            "positive_covered": "green_circle",
+            "positive_missed": "red_circle_cross",
+            "negative_excluded": "cyan_circle",
+            "negative_violated": "magenta_circle_cross",
+        },
         "contact_sheet": contact_sheet.name,
         "contact_sheet_sha256": _sha256(contact_sheet),
         "samples": rows,

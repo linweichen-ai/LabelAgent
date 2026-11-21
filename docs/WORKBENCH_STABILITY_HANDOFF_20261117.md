@@ -3024,3 +3024,19 @@ GitHub与CNB均新增并读回验证`reproduce`分支，和持续开发分支`la
 在途请求为0，正式state哈希仍为`9EF08118...AB115`，隔离端口8891至8898均未监听。详细报告见
 `QWEN3VL2B_COMPACT_POSTTRAIN_ROUND375_20261120.md`，结构化记录见
 `docs/evidence/workbench-stability-20261117/qwen3vl2b-compact-posttrain-round375.json`。
+
+## Round376：双 VLM 并行完成类别复核尾部（2026-11-21）
+
+高风险类别复核原来先由4090执行三候选批审，再串行处理剩余1～2个候选。本轮让独立5090
+VLM在同一时间逐个处理尾项；快速通道忙、离线、超时或协议失败时，等主批审结束后自动回到
+原顺序复核，不会同时争抢主VLM，也没有启用曾误保留困难负样本的batch-2。
+
+正式常熟实采第0帧5候选配对实测从37.475秒降到24.045秒，缩短35.84%，5/5类别和路由
+完全一致。历史CVAT Task3第118帧候选5在快速通道上仍为`conflict`并路由
+`human_review_required`，候选、人工真值和训练批准均未修改。
+
+定向179项、完整Python 1176项和网页166项全部通过。实现提交`aa98dc5`，正式只替换
+`workflow.py`、`candidate_class_audit.py`和`server.py`；回滚点为
+`D:\Apps\LabelAgent\.local\backups\parallel-fast-tail-round376-20261121`。部署前后8份正式
+状态文件哈希变化数为0，页面HTTP 200、工作台idle，两路SAM和两路8B VLM均为ok。详细记录见
+`PARALLEL_FAST_CANDIDATE_AUDIT_ROUND376_20261121.md`与对应结构化证据。

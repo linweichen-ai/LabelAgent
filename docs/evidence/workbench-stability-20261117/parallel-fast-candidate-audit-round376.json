@@ -1,0 +1,71 @@
+{
+  "schema_version": "labelagent.parallel-fast-candidate-audit-round376.v1",
+  "recorded_date": "2026-11-21",
+  "implementation_commit": "aa98dc5",
+  "paired_live_ab": {
+    "dataset_scope": "Capture_20261103",
+    "topic": "/capture/camera_1/image",
+    "frame": 0,
+    "candidate_ids": [16, 17, 15, 13, 14],
+    "candidate_count": 5,
+    "baseline_seconds": 37.475,
+    "parallel_seconds": 24.045,
+    "latency_reduction_percent": 35.84,
+    "baseline_execution": ["independent_batch_3", "independent_batch_3", "independent_batch_3", "sequential", "sequential"],
+    "parallel_lanes": [null, null, null, "independent_fast_tail", "independent_fast_tail"],
+    "routes": ["candidate_preserved", "candidate_preserved", "candidate_preserved", "candidate_preserved", "candidate_preserved"],
+    "observed_labels": ["person", "person", "person", "person", "person"],
+    "decisions_identical": true,
+    "review_queue_ids": []
+  },
+  "historical_hard_negative": {
+    "dataset_scope": "CVAT_Task3_20261028",
+    "topic": "/CVAT/Task3/images",
+    "frame": 118,
+    "candidate_id": 5,
+    "candidate_sha256": "5792302edefc41cf9d7d22c304ece51b961391d80d6227c48357e36b775761f2",
+    "route": "human_review_required",
+    "classification": "conflict",
+    "observed_label": null,
+    "confidence": 0.0,
+    "reason_code": "ontology_conflict",
+    "elapsed_seconds": 5.787,
+    "required_route_preserved": true,
+    "candidate_mutated": false,
+    "human_truth": false,
+    "approved_for_training": false
+  },
+  "tests": {
+    "targeted_python_passed": 179,
+    "full_python_passed": 1176,
+    "web_passed": 166,
+    "javascript_syntax_passed": true,
+    "diff_check_passed": true,
+    "first_non_utf8_run": "failed_on_windows_gbk_file_reads",
+    "authoritative_utf8_rerun": "passed"
+  },
+  "deployment": {
+    "production_deployed": true,
+    "backup": "D:\\Apps\\LabelAgent\\.local\\backups\\parallel-fast-tail-round376-20261121",
+    "runtime_sha256": {
+      "workflow.py": "5608807E3AF1AA303DAD4A7E2A6E699EB20B0946951810D5D420181788B8E479",
+      "candidate_class_audit.py": "472AB22593A81E3E28A63A18BF835EA59A3772B1D78B4277E93A54120C0011BE",
+      "server.py": "992EDE92478D14553C9937DE8AE8A6F077100F3DC066A088E3BF10ABC04B14D5"
+    },
+    "state_files_checked": 8,
+    "state_hash_changes": 0,
+    "page_http": 200,
+    "workbench_status": "idle",
+    "model_readiness": true,
+    "sam_4090": "ok",
+    "vlm_4090": "ok",
+    "sam_5090": "ok",
+    "vlm_5090": "ok",
+    "primary_model": "labelagent-vlm8b",
+    "fast_model": "labelagent-vlm8b"
+  },
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "accuracy_claimed": false
+}

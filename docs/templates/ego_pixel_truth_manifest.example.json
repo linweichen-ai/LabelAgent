@@ -1,0 +1,30 @@
+{
+  "schema_version": "labelagent.ego_pixel_truth_manifest.v1",
+  "dataset_split": "validation",
+  "truth_provenance": {
+    "kind": "human_pixel_truth",
+    "human_confirmed": true,
+    "assistant_generated": false,
+    "machine_generated": false,
+    "confirmation_receipt": "human-review-receipt.json",
+    "confirmation_receipt_sha256": "REPLACE_WITH_64_HEX_SHA256_OF_SIGNED_REVIEW_RECEIPT"
+  },
+  "gates": {
+    "minimum_mean_iou": 0.85,
+    "minimum_sample_iou": 0.75,
+    "maximum_person_overlap": 0.02,
+    "maximum_floor_overlap": 0.02,
+    "minimum_samples_per_camera": 5,
+    "required_cameras": ["camera0", "camera1", "camera2", "camera3"]
+  },
+  "samples": [
+    {
+      "sample_id": "camera0-frame000",
+      "camera": "camera0",
+      "candidate_mask": "masks/camera0-frame000-candidate.png",
+      "ego_truth_mask": "masks/camera0-frame000-ego-human.png",
+      "person_truth_mask": "masks/camera0-frame000-person-human.png",
+      "floor_truth_mask": "masks/camera0-frame000-floor-human.png"
+    }
+  ]
+}

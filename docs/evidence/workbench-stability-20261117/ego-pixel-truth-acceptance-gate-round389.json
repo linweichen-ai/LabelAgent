@@ -1,0 +1,55 @@
+{
+  "schema_version": "labelagent.round389.ego_pixel_truth_acceptance_gate.v1",
+  "date": "2026-11-22",
+  "tool": "tools/evaluate_ego_shadow_pixel_truth.py",
+  "human_truth_created": false,
+  "human_truth_gate_executed": false,
+  "production_deployed": false,
+  "formal_state_modified": false,
+  "contract": {
+    "evaluation_splits": ["validation", "test"],
+    "requires_human_confirmed": true,
+    "rejects_assistant_generated_truth": true,
+    "rejects_machine_generated_truth": true,
+    "receipt_file_hash_verified": true,
+    "receipt_binds_all_truth_mask_hashes": true,
+    "requires_ego_person_floor_truth": true,
+    "paths_confined_to_manifest_directory": true,
+    "binary_masks_required": true
+  },
+  "metrics": [
+    "ego_iou",
+    "ego_precision",
+    "ego_recall",
+    "person_overlap",
+    "floor_overlap"
+  ],
+  "example_gates": {
+    "minimum_mean_iou": 0.85,
+    "minimum_sample_iou": 0.75,
+    "maximum_person_overlap": 0.02,
+    "maximum_floor_overlap": 0.02,
+    "minimum_samples_per_camera": 5,
+    "required_cameras": ["camera0", "camera1", "camera2", "camera3"]
+  },
+  "tests": {
+    "targeted_passed": 6,
+    "targeted_subtests_passed": 2,
+    "full_python_passed": 1230,
+    "full_subtests_passed": 219,
+    "web_node_passed": 167
+  },
+  "runtime": {
+    "status": "idle",
+    "sam_ready": true,
+    "primary_vlm_ready": true,
+    "fast_vlm_ready": true
+  },
+  "formal_state_sha256": {
+    "state": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "file_sessions": "94E8BEE324628585E7532E595348293DF1DA7B24041A1D4DF1C2EC9FB734E02E",
+    "last_run": "3BECE2513C6F661054AC238AB185527D715A04B3B0C8E073274710BE23E057DA",
+    "last_run_summary": "32578D53E70FA6860F3438860B321172B5E8B405BC6BB8A0F19387A6D4B84933"
+  },
+  "gate": "acceptance_tool_ready; human_pixel_truth_missing; production_rejected"
+}

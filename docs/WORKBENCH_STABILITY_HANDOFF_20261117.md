@@ -3172,3 +3172,12 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 四路均`eligible_for_candidate_merge=false`、`state_written=false`；正式候选、人工真值、审核状态、训练批准和四份正式状态哈希均未变化。
 - 完整Python 1224项及217个子测试、网页167项通过；正式工作台idle，SAM和两路VLM均ready。
 - 本轮仍未部署、未开启正式开关；逐像素人工真值前继续拒绝生产。详细记录见`docs/EGO_CAMERA_SHADOW_LIVE_GATE_ROUND388_20261122.md`与对应结构化证据。
+
+## Round389（2026-11-22）：ego 逐像素人工真值验收门禁
+
+- 新增只读验收工具，计算ego IoU、precision/recall及person/floor误纳率，并按整体、单样本和逐相机样本数执行显式阈值门禁。
+- 工具只接受validation/test；人工确认收据必须存在且哈希匹配，并逐样本绑定ego/person/floor三类真值掩膜哈希。
+- 助手/机器生成真值、伪造收据字符串、收据篡改、替换掩膜、路径逃逸、非二值掩膜和训练划分均失败关闭。
+- 即使指标通过，报告仍固定不批准训练、不允许候选合并；本轮没有创建或冒充人工真值，也没有部署。
+- 完整Python 1230项及219个子测试、网页167项通过；正式工作台idle，三路模型ready，四份正式状态哈希不变。
+- 详细记录见`docs/EGO_PIXEL_TRUTH_ACCEPTANCE_GATE_ROUND389_20261122.md`，输入模板见`docs/templates/ego_pixel_truth_manifest.example.json`与人工收据模板。

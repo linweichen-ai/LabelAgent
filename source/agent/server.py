@@ -388,15 +388,27 @@ def requested_review_rounds(body):
 
 
 def discover_reference_labels(config, image, labels, on_retry=None):
-    """Retry one structurally invalid VLM registry response, then fail closed."""
+    """Use the authoritative route and retry one invalid registry response.
+
+    Small-image fast routing is useful for bounded candidate review, but a
+    paired reference-discovery gate found known-label drift. Reference-frame
+    discovery controls which classes reach SAM and therefore must stay on the
+    primary route even when the input itself is only 640x512. Work on a copy
+    so the persisted project configuration and independent fast review path
+    remain unchanged.
+    """
+    authoritative_config = copy.deepcopy(config or {})
+    for key in tuple(authoritative_config):
+        if key.startswith("llm_fast_"):
+            authoritative_config.pop(key, None)
     try:
-        return discover_visible_labels(config, image, labels), 0
+        return discover_visible_labels(authoritative_config, image, labels), 0
     except ValueError as error:
         if not any(marker in str(error) for marker in REFERENCE_DISCOVERY_RETRY_ERRORS):
             raise
         if on_retry is not None:
             on_retry(error)
-        return discover_visible_labels(config, image, labels), 1
+        return discover_visible_labels(authoritative_config, image, labels), 1
 
 
 def reference_visibility_review_queue(discovery, candidates):

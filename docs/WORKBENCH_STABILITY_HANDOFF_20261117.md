@@ -3119,3 +3119,12 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - Python 1199 项及 190 个子测试、网页 159 项完整回归全部通过。
 - WorkBuddy 独立只读审阅确认现有多提示编码复用、范围绑定缓存和相邻帧独立预取；自动“同帧缺失类别补漏”仍需逐类人工真值 A/B，当前只保留已有人工点提示入口。
 - 正式四份状态/历史哈希不变；工作台 idle，SAM、主 VLM、快速 VLM 均 ready。详细记录见 `docs/REFERENCE_DISCOVERY_FAST_ROUTE_REJECTION_ROUND382_20261122.md` 与对应结构化证据。
+
+## Round383（2026-11-22）：参考帧类别发现固定权威主路
+
+- Round382 已证明小图快路存在类别漂移；本轮阻止未来 640×512 新数据的参考帧类别发现静默选中该快路。
+- `discover_reference_labels()` 现在只在内存副本移除 `llm_fast_*`，首次请求和结构重试都固定走主 VLM；项目配置、候选类别复核快路和其他调用均不变。
+- 新增 2 项定向测试；完整 Python 1201 项及 190 个子测试、网页 159 项全部通过。
+- 部署后一张真实 640×512 常熟图只读回执明确为 `model_route=primary`；489.962 ms 来自热响应缓存，只证明路由，不宣称冷速度。
+- 正式 `server.py` SHA-256 为 `E56E7B02...0F0BF6`；五个核心接口 HTTP 200，工作台 idle，SAM 和两路 VLM ready，四份状态/历史哈希不变。
+- 回滚点为 `D:\Apps\LabelAgent\.local\backups\reference-discovery-primary-route-round383-20261122`。详细记录见 `docs/REFERENCE_DISCOVERY_PRIMARY_ROUTE_ROUND383_20261122.md` 与对应结构化证据。

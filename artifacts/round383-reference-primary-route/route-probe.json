@@ -1,0 +1,13 @@
+{
+  "schema_version": "labelagent.reference-discovery-route-probe.v1",
+  "input_size": [640, 512],
+  "model_route": "primary",
+  "fast_fallback_reason": null,
+  "visible_labels": ["车辆", "pallet", "person", "floor", "ego", "other_robot"],
+  "retry_count": 0,
+  "elapsed_ms": 489.962,
+  "latency_interpretation": "warm response cache hit; route proof only",
+  "candidate_written": false,
+  "human_truth_modified": false,
+  "training_data_modified": false
+}

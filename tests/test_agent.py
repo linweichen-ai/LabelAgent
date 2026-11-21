@@ -1029,6 +1029,41 @@ class WorkflowTests(unittest.TestCase):
                     {"llm_prompt_profile": "compact"}, image_bytes(), labels)
         self.assertEqual(chat.call_count, 1)
 
+    def test_reference_discovery_forces_primary_route_without_mutating_config(self):
+        config = {
+            "llm_url": "http://primary/v1", "llm_model": "primary",
+            "llm_fast_url": "http://fast/v1", "llm_fast_model": "fast",
+            "llm_fast_key": "private", "llm_fast_timeout_seconds": 20,
+        }
+        expected = {"llm_url": "http://primary/v1", "llm_model": "primary"}
+        discovery = {"visible_labels": ["pallet"]}
+        with patch.object(server, "discover_visible_labels",
+                          return_value=discovery) as discover:
+            self.assertEqual(server.discover_reference_labels(
+                config, image_bytes(), ["pallet"]), (discovery, 0))
+        self.assertEqual(discover.call_args.args[0], expected)
+        self.assertEqual(config, {
+            "llm_url": "http://primary/v1", "llm_model": "primary",
+            "llm_fast_url": "http://fast/v1", "llm_fast_model": "fast",
+            "llm_fast_key": "private", "llm_fast_timeout_seconds": 20,
+        })
+
+    def test_reference_discovery_retry_remains_on_primary_route(self):
+        config = {"llm_url": "http://primary/v1", "llm_model": "primary",
+                  "llm_fast_url": "http://fast/v1", "llm_fast_model": "fast"}
+        discovery = {"visible_labels": ["floor"]}
+        retry_events = []
+        with patch.object(server, "discover_visible_labels", side_effect=[
+                ValueError("大模型未返回有效 JSON"), discovery]) as discover:
+            result = server.discover_reference_labels(
+                config, image_bytes(), ["floor"], retry_events.append)
+        self.assertEqual(result, (discovery, 1))
+        self.assertEqual(len(retry_events), 1)
+        self.assertEqual(discover.call_count, 2)
+        for call in discover.call_args_list:
+            self.assertNotIn("llm_fast_url", call.args[0])
+            self.assertEqual(call.args[0]["llm_url"], "http://primary/v1")
+
     def test_visible_label_discovery_routes_contradictory_absent_to_uncertain_candidate(self):
         answer = {"assessments": [
             {"label": "person", "evidence": "absent", "confidence": 0.8,

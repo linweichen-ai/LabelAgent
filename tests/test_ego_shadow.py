@@ -27,7 +27,7 @@ def discovery(confidence=0.95):
     }]}
 
 
-def point_response(left=20, top=25, right=35, bottom=39, score=0.8):
+def point_response(left=6, top=32, right=25, bottom=39, score=0.8):
     return {"parts": [{"points": [
         [left, top], [right, top], [right, bottom], [left, bottom],
     ], "holes": []}], "score": score}
@@ -95,8 +95,8 @@ class EgoCameraShadowTests(unittest.TestCase):
         self.assertEqual(shapes, before)
 
     def test_camera1_low_coverage_and_person_overlap_are_review_only(self):
-        response = point_response(20, 30, 27, 38)
-        person = polygon_shape("person", 20, 30, 27, 38)
+        response = point_response(22, 28, 28, 38)
+        person = polygon_shape("person", 22, 28, 28, 38)
         result = evaluate_camera_ego_shadow(
             {"ego_camera_shadow_evaluator": True}, image_bytes(),
             "/capture/camera_1/image",
@@ -110,10 +110,10 @@ class EgoCameraShadowTests(unittest.TestCase):
         self.assertFalse(result["eligible_for_candidate_merge"])
 
     def test_overlap_guard_uses_union_of_fragmented_shapes(self):
-        response = point_response(10, 10, 30, 30)
+        response = point_response()
         floor_fragments = [
-            polygon_shape("floor", 10, 10, 14, 30),
-            polygon_shape("floor", 26, 10, 30, 30),
+            polygon_shape("floor", 6, 32, 10, 39),
+            polygon_shape("floor", 21, 32, 25, 39),
         ]
         result = evaluate_camera_ego_shadow(
             {"ego_camera_shadow_evaluator": True}, image_bytes(), "camera0",
@@ -123,7 +123,7 @@ class EgoCameraShadowTests(unittest.TestCase):
         self.assertFalse(result["candidate_available"])
 
     def test_sam_warning_keeps_bounded_diagnostics_but_blocks_candidate(self):
-        response = point_response() | {
+        response = point_response(22, 28, 28, 38) | {
             "warnings": ["positive point was not covered"],
         }
         result = evaluate_camera_ego_shadow(
@@ -137,6 +137,16 @@ class EgoCameraShadowTests(unittest.TestCase):
         self.assertEqual(len(result["sam_warning_sha256"]), 64)
         self.assertNotIn("warnings", result)
         self.assertFalse(result["eligible_for_candidate_merge"])
+
+    def test_prompt_constraint_is_verified_even_without_service_warning(self):
+        result = evaluate_camera_ego_shadow(
+            {"ego_camera_shadow_evaluator": True}, image_bytes(), "camera0",
+            discovery(), [], lambda _points: point_response(20, 25, 35, 39))
+        self.assertEqual(result["status"], "shadow_observed")
+        self.assertEqual(result["guard_status"], "blocked_prompt_constraint")
+        self.assertLess(result["positive_points_covered"],
+                        result["positive_point_count"])
+        self.assertFalse(result["candidate_available"])
 
     def test_bad_responses_and_request_failures_become_non_candidates(self):
         cases = (

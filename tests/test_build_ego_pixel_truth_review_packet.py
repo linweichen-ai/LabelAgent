@@ -23,7 +23,7 @@ class EgoPixelTruthReviewPacketTest(unittest.TestCase):
     @staticmethod
     def response(_image, _points, *, warnings=None):
         return {
-            "parts": [{"points": [[10, 20], [30, 20], [30, 39], [10, 39]],
+            "parts": [{"points": [[6, 32], [25, 32], [25, 39], [6, 39]],
                        "holes": []}],
             "score": .8,
             "warnings": warnings or [],
@@ -58,6 +58,22 @@ class EgoPixelTruthReviewPacketTest(unittest.TestCase):
         self.assertEqual(row["status"], "blocked_sam_warning")
         self.assertEqual(row["sam_warning_count"], 1)
         self.assertNotIn("warnings", row)
+
+    def test_prompt_constraint_blocks_candidate_without_service_warning(self):
+        output = self.root / "packet"
+        packet = build_packet(
+            self.images, output,
+            lambda _image, _points: {
+                "parts": [{"points": [[20, 25], [35, 25], [35, 39], [20, 39]],
+                           "holes": []}],
+                "score": .8,
+                "warnings": [],
+            },
+            cameras=(0,), frames=(0,))
+        row = packet["samples"][0]
+        self.assertEqual(row["status"], "blocked_prompt_constraint")
+        self.assertFalse(row["candidate_available"])
+        self.assertEqual(packet["blocked_prompt_constraint_count"], 1)
 
     def test_scope_and_existing_output_fail_closed(self):
         with self.assertRaisesRegex(ValueError, "cameras"):

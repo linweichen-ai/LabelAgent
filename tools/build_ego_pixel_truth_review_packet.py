@@ -137,17 +137,31 @@ def build_packet(image_root: Path, output: Path, request_points, *,
                 mask = _rasterize(shape, width, height).astype(bool)
                 if not mask.any():
                     raise ValueError("point response mask is empty")
+                positive_points = [point for point in points if point["label"] == 1]
+                negative_points = [point for point in points if point["label"] == 0]
+                positive_covered = sum(
+                    bool(mask[point["y"], point["x"]]) for point in positive_points)
+                negative_violated = sum(
+                    bool(mask[point["y"], point["x"]]) for point in negative_points)
+                blocked_prompt = (positive_covered != len(positive_points)
+                                  or negative_violated > 0)
                 mask_path = mask_root / f"{sample_id}.png"
                 Image.fromarray(mask.astype(np.uint8) * 255, "L").save(mask_path)
                 overlay_path = overlay_root / f"{sample_id}.jpg"
                 overlay_path.write_bytes(candidate_overlay(image, [shape]))
                 row.update({
-                    "status": "blocked_sam_warning" if warnings else "human_review_required",
+                    "status": ("blocked_prompt_constraint" if blocked_prompt
+                               else "blocked_sam_warning" if warnings
+                               else "human_review_required"),
                     "candidate_observed": True,
-                    "candidate_available": not warnings,
+                    "candidate_available": not blocked_prompt and not warnings,
                     "score": round(float(score), 6),
                     "area_ratio": round(float(mask.mean()), 6),
                     "sam_warning_count": len(warnings),
+                    "positive_point_count": len(positive_points),
+                    "positive_points_covered": positive_covered,
+                    "negative_point_count": len(negative_points),
+                    "negative_points_violated": negative_violated,
                     "sam_warning_sha256": (hashlib.sha256(json.dumps(
                         warnings, ensure_ascii=False, separators=(",", ":")).encode(
                             "utf-8")).hexdigest() if warnings else None),
@@ -177,7 +191,10 @@ def build_packet(image_root: Path, output: Path, request_points, *,
         "sample_count": len(rows),
         "candidate_observed_count": sum(row["candidate_observed"] for row in rows),
         "candidate_available_count": sum(row["candidate_available"] for row in rows),
-        "blocked_warning_count": sum(row["status"] == "blocked_sam_warning" for row in rows),
+        "blocked_warning_count": sum(
+            int(row.get("sam_warning_count") or 0) > 0 for row in rows),
+        "blocked_prompt_constraint_count": sum(
+            row["status"] == "blocked_prompt_constraint" for row in rows),
         "failed_count": sum(row["status"] == "failed" for row in rows),
         "contact_sheet": contact_sheet.name,
         "contact_sheet_sha256": _sha256(contact_sheet),
@@ -214,6 +231,8 @@ def main() -> int:
         "candidate_observed_count": packet["candidate_observed_count"],
         "candidate_available_count": packet["candidate_available_count"],
         "blocked_warning_count": packet["blocked_warning_count"],
+        "blocked_prompt_constraint_count": packet[
+            "blocked_prompt_constraint_count"],
         "failed_count": packet["failed_count"],
     }, ensure_ascii=False))
     return 0 if packet["failed_count"] == 0 else 2

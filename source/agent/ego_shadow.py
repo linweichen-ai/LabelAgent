@@ -172,6 +172,14 @@ def evaluate_camera_ego_shadow(config, image: bytes, topic: str, discovery,
             raise ValueError("ego shadow mask is empty")
         area = int(mask.sum())
         area_ratio = area / (width * height)
+        positive_points = [point for point in points if point["label"] == 1]
+        negative_points = [point for point in points if point["label"] == 0]
+        positive_points_covered = sum(
+            bool(mask[point["y"], point["x"]]) for point in positive_points)
+        negative_points_violated = sum(
+            bool(mask[point["y"], point["x"]]) for point in negative_points)
+        blocked_prompt = (positive_points_covered != len(positive_points)
+                          or negative_points_violated > 0)
         bbox = [int(columns.min()), int(rows.min()),
                 int(columns.max()) + 1, int(rows.max()) + 1]
         person_overlap = _maximum_overlap(mask, existing_shapes, "person", width, height)
@@ -182,7 +190,8 @@ def evaluate_camera_ego_shadow(config, image: bytes, topic: str, discovery,
         coverage_band = ("camera1_low_coverage" if camera_key == "camera1" and area_ratio < 0.06
                          else "camera1_broad_coverage" if camera_key == "camera1"
                          else "camera_specific_observation")
-        guard_status = ("blocked_sam_warning" if blocked_warning
+        guard_status = ("blocked_prompt_constraint" if blocked_prompt
+                        else "blocked_sam_warning" if blocked_warning
                         else "blocked_person_floor_overlap" if blocked_overlap
                         else "human_review_required")
         response_sha256 = hashlib.sha256(json.dumps(
@@ -197,7 +206,8 @@ def evaluate_camera_ego_shadow(config, image: bytes, topic: str, discovery,
             "point_count": len(points),
             "discovery_confidence": confidence,
             "geometry_observed": True,
-            "candidate_available": not blocked_warning and not blocked_overlap,
+            "candidate_available": (
+                not blocked_prompt and not blocked_warning and not blocked_overlap),
             "score": round(float(score), 6),
             "geometry": {
                 "bbox": bbox,
@@ -209,6 +219,10 @@ def evaluate_camera_ego_shadow(config, image: bytes, topic: str, discovery,
             "person_overlap_ratio": round(person_overlap, 6),
             "floor_overlap_ratio": round(floor_overlap, 6),
             "guard_status": guard_status,
+            "positive_point_count": len(positive_points),
+            "positive_points_covered": positive_points_covered,
+            "negative_point_count": len(negative_points),
+            "negative_points_violated": negative_points_violated,
             "sam_warning_count": len(warnings),
             "sam_warning_sha256": (hashlib.sha256(json.dumps(
                 warnings, ensure_ascii=False, sort_keys=True,

@@ -6826,7 +6826,7 @@ class ServerTests(unittest.TestCase):
                     "candidates_added": 1, "applied": [], "review_queue": [],
                     "agent": {"stop_reason": "done", "rounds": 0, "audit": []}}
             shadow_response = {"parts": [{"points": [
-                [20, 25], [35, 25], [35, 39], [20, 39]], "holes": []}],
+                [6, 32], [25, 32], [25, 39], [6, 39]], "holes": []}],
                 "score": .8}
             try:
                 with patch.object(server, "discover_reference_labels",

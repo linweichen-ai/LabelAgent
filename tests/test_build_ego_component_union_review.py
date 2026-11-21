@@ -1,13 +1,16 @@
 import json
 from pathlib import Path
+import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 from PIL import Image
 
 from tools.build_ego_component_union_review import (
-    build_packet, evaluate_sample, file_sha256, load_component_guard)
+    build_packet, evaluate_sample, file_sha256, load_component_guard,
+    load_identity_manifest, main)
 
 
 def _write_mask(path: Path, points: list[tuple[int, int]]) -> dict:
@@ -46,9 +49,10 @@ class EgoComponentUnionReviewTests(unittest.TestCase):
             path = root / f"{camera}-spec.json"
             path.write_text(f'{{"camera":"{camera}"}}\n', encoding="utf-8")
             specs[camera] = path
-        image = root / "003-camera1-idx5-test.png"
+        image = root / "003" / "camera_1" / "12345.png"
+        image.parent.mkdir(parents=True)
         Image.new("RGB", (10, 8), (80, 90, 100)).save(image)
-        sample = root / "input" / "003-camera1-idx5-test"
+        sample = root / "input" / "003-camera1-12345"
         sample.mkdir(parents=True)
         names = ("camera1-left-seat-console-v2", "camera1-right-hood-v2")
         points = ([(1, 1), (2, 1)], [(7, 5), (8, 5)])
@@ -79,6 +83,18 @@ class EgoComponentUnionReviewTests(unittest.TestCase):
         (sample / "results.json").write_text(
             json.dumps(report), encoding="utf-8")
         return sample, specs
+
+    @staticmethod
+    def _identity(sample: Path):
+        report = json.loads((sample / "results.json").read_text(encoding="utf-8"))
+        return {
+            sample.name: {
+                "package": "003",
+                "camera": "camera1",
+                "frame_id": "12345",
+                "image_sha256": report["image_sha256"],
+            }
+        }
 
     def test_builds_union_only_after_all_hash_and_constraint_checks(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -121,15 +137,19 @@ class EgoComponentUnionReviewTests(unittest.TestCase):
     def test_packet_records_enabled_safety_gates(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            _, specs = self._fixture(root)
+            sample, specs = self._fixture(root)
             guard_path = root / "guard.json"
             guard_path.write_text(
                 json.dumps({"components": self._guard()}), encoding="utf-8")
+            manifest_path = root / "identity.json"
+            manifest_path.write_text(
+                json.dumps({"samples": self._identity(sample)}), encoding="utf-8")
             packet = build_packet(
                 root / "input", root / "packet",
                 specs["camera1"], specs["camera3"],
                 allowed_source_root=root,
-                component_guard_path=guard_path)
+                component_guard_path=guard_path,
+                identity_manifest_path=manifest_path)
             self.assertEqual(
                 packet["safety_gates"]["allowed_source_root"],
                 str(root.resolve()))
@@ -138,6 +158,11 @@ class EgoComponentUnionReviewTests(unittest.TestCase):
             self.assertEqual(
                 packet["safety_gates"]["component_area_guard_sha256"],
                 file_sha256(guard_path))
+            self.assertTrue(
+                packet["safety_gates"]["identity_manifest_enabled"])
+            self.assertEqual(
+                packet["safety_gates"]["identity_manifest_sha256"],
+                file_sha256(manifest_path))
 
     def test_allowed_source_root_accepts_contained_image(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -170,7 +195,7 @@ class EgoComponentUnionReviewTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             sample, specs = self._fixture(root)
-            allowed = root / "allowed"
+            allowed = root / "003" / "camera_1" / "allowed"
             allowed.mkdir()
             report_path = sample / "results.json"
             report = json.loads(report_path.read_text(encoding="utf-8"))
@@ -193,7 +218,7 @@ class EgoComponentUnionReviewTests(unittest.TestCase):
             allowed.mkdir()
             link = allowed / "linked-image.png"
             try:
-                link.symlink_to(root / "003-camera1-idx5-test.png")
+                link.symlink_to(root / "003" / "camera_1" / "12345.png")
             except OSError as error:
                 self.skipTest(f"symlink creation unavailable: {error}")
             report_path = sample / "results.json"
@@ -261,6 +286,65 @@ class EgoComponentUnionReviewTests(unittest.TestCase):
                 encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "invalid component area guard"):
                 load_component_guard(guard_path)
+
+    def test_identity_manifest_accepts_exact_binding(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            sample, specs = self._fixture(root)
+            output = root / "output"
+            output.mkdir()
+            row = evaluate_sample(
+                sample, output,
+                {camera: file_sha256(path) for camera, path in specs.items()},
+                allowed_source_root=root,
+                component_guard=self._guard(),
+                identity_manifest=self._identity(sample))
+            self.assertTrue(row["union_available"])
+
+    def test_identity_manifest_rejects_in_root_image_substitution(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            sample, specs = self._fixture(root)
+            identity = self._identity(sample)
+            replacement = root / "003" / "camera_1" / "99999.png"
+            Image.new("RGB", (10, 8), (30, 40, 50)).save(replacement)
+            report_path = sample / "results.json"
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            report["image"] = str(replacement)
+            report["image_sha256"] = file_sha256(replacement)
+            report_path.write_text(json.dumps(report), encoding="utf-8")
+            output = root / "output"
+            output.mkdir()
+            row = evaluate_sample(
+                sample, output,
+                {camera: file_sha256(path) for camera, path in specs.items()},
+                allowed_source_root=root,
+                component_guard=self._guard(),
+                identity_manifest=identity)
+            self.assertFalse(row["union_available"])
+            self.assertIn("identity manifest binding mismatch", row["reasons"][0])
+
+    def test_malformed_identity_manifest_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "identity.json"
+            path.write_text(json.dumps({"samples": {
+                "003-camera1-bad": {
+                    "package": "003", "camera": "camera1",
+                    "frame_id": "bad", "image_sha256": "0" * 64,
+                }}}), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "invalid identity manifest entry"):
+                load_identity_manifest(path)
+
+    def test_cli_requires_all_safety_gates_by_default(self):
+        arguments = [
+            "build_ego_component_union_review.py",
+            "--input-root", "input", "--output", "output",
+            "--camera1-spec", "camera1.json",
+            "--camera3-spec", "camera3.json",
+        ]
+        with patch.object(sys, "argv", arguments), self.assertRaises(SystemExit) as caught:
+            main()
+        self.assertEqual(caught.exception.code, 2)
 
 
 if __name__ == "__main__":

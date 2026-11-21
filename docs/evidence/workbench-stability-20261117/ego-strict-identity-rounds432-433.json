@@ -1,0 +1,54 @@
+{
+  "schema_version": "labelagent.ego_strict_identity.v1",
+  "date": "2026-11-22",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_state_modified": false,
+  "implementation": {
+    "tool_sha256": "8a8f2824cafb98ce8da35483ece483796a85a80698dcac12fe6781ac3b4168fc",
+    "test_sha256": "3f1ef75a842ab298a18b1885fbf50410d463aaeb7fe181b61b3908985d560927",
+    "identity_manifest_sha256": "75095dc9bf858702fab49c40d6ba237ecd10ad9249d2e3702f57b859c53bced9",
+    "component_guard_sha256": "0aa319fc6e8ac0c9f5b96d8f8e34c121042ed7b5d9f583397ee100d22d4e12da"
+  },
+  "resolved_review_findings": [
+    "CLI now requires source root, component area guard and identity manifest by default.",
+    "Identity manifest binds sample id, package, camera, frame id and image sha256.",
+    "Image and mask bytes are read once and reused for hashing and decoding."
+  ],
+  "tests": {
+    "guard_suite_passed": 16,
+    "combined_regression_passed": 30,
+    "skipped": 1,
+    "skip_reason": "Windows standard token cannot create a symlink."
+  },
+  "replays": [
+    {
+      "round": 432,
+      "dataset": "1104 packages 000 and 001",
+      "sample_count": 12,
+      "union_available_count": 12,
+      "failed_closed_count": 0,
+      "review_queue_sha256": "f03b0383e97d45a85664082a4aeeb45d9a737fd5eee578f1bfb08b1e7c5ca69b",
+      "contact_sheet_sha256": "92265c24e3b8a2935795fb06bdd4b7c9cb13e5e0a36d3d8db1d8799307e5ebae"
+    },
+    {
+      "round": 433,
+      "dataset": "1104 package 002",
+      "sample_count": 6,
+      "union_available_count": 6,
+      "failed_closed_count": 0,
+      "review_queue_sha256": "a01b75e09e228d78da2e8f85638176558c1dfa25a3aa14dcba25c4f885e02f16",
+      "contact_sheet_sha256": "e86e94f1ccb113d6127a1268c78ca02a1e1896f3f329c4701645bb4e67b9261d"
+    }
+  ],
+  "runtime_read_only_check": {
+    "home_http_status": 200,
+    "run_status": "idle",
+    "sam_ready": true,
+    "sam_model_loaded": true,
+    "vlm_ready": true,
+    "fast_vlm_ready": true
+  }
+}

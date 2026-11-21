@@ -86,4 +86,3 @@ Round417 冻结的 camera1/3 两组件 v2 方案此前只在 003、004 两个包
 - SAM：`ok`、`model_loaded=true`、`labelagent.remote-sam3.v3-point-groups`；
 - 主/快速 VLM：均返回 `labelagent-vlm8b`；
 - 四个正式状态文件 SHA-256 与 Round421 前一致，正式状态、人工真值、训练批准均未修改。
-

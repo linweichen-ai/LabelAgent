@@ -1,0 +1,54 @@
+{
+  "rounds": [424, 425],
+  "date": "2026-11-22",
+  "status": "candidate_only_frozen_third_package_diagnostic",
+  "oss_read_only": true,
+  "downloads": {
+    "packages": ["002"],
+    "cameras": ["camera1", "camera3"],
+    "timepoints": [1793759208642855696, 1793759219742811696, 1793759230842886696],
+    "objects": 6,
+    "bytes": 2746966,
+    "local_remote_hash_rows_match": true,
+    "local_manifest_sha256": "e8da7f061398c6758526243f4dc165d910447c1b32f26baf54c44c16ebe4a412",
+    "raw_mcap": false,
+    "full_resolution": false
+  },
+  "frozen_specs": {
+    "camera1_sha256": "a24397b6afee1b4f1d8bef16109732adc0399a2d28878079219f50f36670ac36",
+    "camera3_sha256": "99b03001bd844f2dc784afd9a7e98e836a9affbb002ece07f860326e58dcbeb8",
+    "retuned_on_package002": false
+  },
+  "component_diagnostic": {
+    "images": 6,
+    "component_trials": 12,
+    "candidate_available": 12,
+    "prompt_constraint_passed": 12,
+    "uncovered_positive_points": 0,
+    "negative_point_violations": 0,
+    "result_manifest_sha256": "9b2451fb6658e7c622992b73c2ef0c1e9bca5b8d550652693bab7c0413464c9a"
+  },
+  "component_union_review": {
+    "sample_count": 6,
+    "union_available_count": 6,
+    "failed_closed_count": 0,
+    "camera1": {"available": 3, "total": 3, "area_ratio_range": [0.10802, 0.110349], "mean_area_ratio": 0.10947, "max_component_overlap_iou": 0.0},
+    "camera3": {"available": 3, "total": 3, "area_ratio_range": [0.047482, 0.053607], "mean_area_ratio": 0.049987, "max_component_overlap_iou": 0.0},
+    "review_queue_sha256": "f6cac232ddc6164e2fa605c6867519b1b9dc287d38331faed61537f2078bfb8c",
+    "contact_sheet_sha256": "e86e94f1ccb113d6127a1268c78ca02a1e1896f3f329c4701645bb4e67b9261d",
+    "assistant_visual_review": "No whole person, cardboard, container wall, floor, or orange load surface was visibly swallowed; masks remain conservative partial ego coverage."
+  },
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "human_confirmed": false,
+    "approved_for_training": false,
+    "production_deployed": false,
+    "formal_state_modified": false
+  },
+  "limitations": [
+    "The third package is still from the same 1104 collection.",
+    "Strict prompt compliance does not measure complete ego pixel recall.",
+    "Assistant visual review is not independent human pixel truth."
+  ]
+}

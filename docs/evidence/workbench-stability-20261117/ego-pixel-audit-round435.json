@@ -1,0 +1,45 @@
+{
+  "schema_version": "labelagent.ego_pixel_audit_evidence.v1",
+  "date": "2026-11-22",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_state_modified": false,
+  "tool_sha256": "6349a47328753c57a30379e3ab2b1503443765ece45a94aa24a6ab209c062159",
+  "test_sha256": "fb3794c9094290933eb550874f91f34b35b368767a90bfc54feb9a4defa485ba",
+  "audit_sha256": "86445be92007bfad83bf4ad054087676f5fb69ab3c1035523e9d860c6dfa14dd",
+  "contact_sheet_sha256": "2250a592352321b878cb7829f9c68cea9197ccce95783d50dca9b1c9d062b8b4",
+  "sample_count": 18,
+  "threshold_alert_count": 0,
+  "tests_passed": 10,
+  "runtime_seconds": 0.81,
+  "prototype_runtime_seconds": 15.8,
+  "camera_metrics": {
+    "camera1": {
+      "count": 9,
+      "reference_iou": [0.944165, 0.971035],
+      "reference_recall": [0.959743, 0.993656],
+      "candidate_excess": [0.011985, 0.040829],
+      "max_small_island_area_ratio": 0.002774,
+      "max_hole_area_ratio": 0.047871
+    },
+    "camera3": {
+      "count": 9,
+      "reference_iou": [0.828601, 0.901062],
+      "reference_recall": [0.878791, 0.986177],
+      "candidate_excess": [0.019796, 0.143987],
+      "max_small_island_area_ratio": 0.0054,
+      "max_hole_area_ratio": 0.029041
+    }
+  },
+  "assistant_visual_review": {
+    "reviewed_sample_count": 18,
+    "major_external_swallow_count": 0,
+    "major_component_gap_count": 0,
+    "uncertain_count": 0,
+    "minor_edge_or_hole_variation_present": true,
+    "scope": "Contact-sheet assistant review only; not pixel truth or training approval."
+  },
+  "conclusion": "All 18 candidates remain within shadow triage thresholds. Camera3 varies more than camera1. No candidate is automatically approved."
+}

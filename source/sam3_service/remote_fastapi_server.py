@@ -37,7 +37,7 @@ except ImportError:  # Direct script execution in the remote deployment folder.
     from sam_multi_helpers import evaluate_prompt_states, validate_prompt_map
 
 
-SERVICE_VERSION = "labelagent.remote-sam3.v2-exact-response-cache"
+SERVICE_VERSION = "labelagent.remote-sam3.v3-point-groups"
 app = FastAPI(title="LabelAgent remote SAM3", version="2.0")
 request_lock = threading.Lock()
 response_cache = ExactResponseCoordinator(

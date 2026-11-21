@@ -3128,3 +3128,12 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 部署后一张真实 640×512 常熟图只读回执明确为 `model_route=primary`；489.962 ms 来自热响应缓存，只证明路由，不宣称冷速度。
 - 正式 `server.py` SHA-256 为 `E56E7B02...0F0BF6`；五个核心接口 HTTP 200，工作台 idle，SAM 和两路 VLM ready，四份状态/历史哈希不变。
 - 回滚点为 `D:\Apps\LabelAgent\.local\backups\reference-discovery-primary-route-round383-20261122`。详细记录见 `docs/REFERENCE_DISCOVERY_PRIMARY_ROUTE_ROUND383_20261122.md` 与对应结构化证据。
+
+## Round384（2026-11-22）：ego 正负点补漏影子复核
+
+- 正式第0帧主VLM高置信判断`ego`可见，但7种文字提示均无候选，原有18个单正点原始候选也全部被现有guard正确拒绝。
+- 新增只读正负点诊断工具；四个车体正点加三个负点在camera1的0、1、2、5、10、76、151七个时点都能定位前景车体，单次约0.31～0.67秒。
+- 结果仍有孔洞和缺口，第5/10帧面积从约9.2%降到约3.8%；同一坐标模板迁移到其它相机后会欠分割、混入人或被point-SAM拒绝，因此不能作为通用自动补漏上线。
+- point-SAM HTTP错误现在会显示服务端原因，单组失败不再中断其它影子实验；所有结果保持`candidate_only`，不写正式候选、真值、审核状态或训练批准。
+- Python 1205 passed + 190 subtests，网页167 passed；五个核心接口HTTP200，工作台idle，SAM和两路VLM ready，四份正式状态/历史哈希与Round383一致。
+- 真实帧和含人物叠加图只保存在本地，不上传GitHub/CNB。详细记录见`docs/EGO_GUIDED_POINT_SHADOW_ROUND384_20261122.md`与对应结构化证据。

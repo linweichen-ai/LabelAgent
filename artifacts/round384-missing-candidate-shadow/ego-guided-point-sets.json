@@ -1,0 +1,31 @@
+[
+  {
+    "name": "red-chassis-one-positive",
+    "points": [
+      {"x": 1200, "y": 1110, "label": 1},
+      {"x": 760, "y": 980, "label": 0},
+      {"x": 1450, "y": 800, "label": 0},
+      {"x": 500, "y": 600, "label": 0}
+    ]
+  },
+  {
+    "name": "red-chassis-two-positive",
+    "points": [
+      {"x": 1200, "y": 1110, "label": 1},
+      {"x": 1320, "y": 1260, "label": 1},
+      {"x": 760, "y": 980, "label": 0},
+      {"x": 1450, "y": 800, "label": 0},
+      {"x": 500, "y": 600, "label": 0}
+    ]
+  },
+  {
+    "name": "chassis-and-control-positive",
+    "points": [
+      {"x": 1200, "y": 1110, "label": 1},
+      {"x": 1460, "y": 1360, "label": 1},
+      {"x": 760, "y": 980, "label": 0},
+      {"x": 1450, "y": 800, "label": 0},
+      {"x": 500, "y": 600, "label": 0}
+    ]
+  }
+]

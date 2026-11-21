@@ -1,0 +1,51 @@
+[
+  {
+    "name": "vehicle-red-core",
+    "points": [
+      {"x": 1200, "y": 1110, "label": 1},
+      {"x": 1240, "y": 1320, "label": 1},
+      {"x": 820, "y": 1120, "label": 0},
+      {"x": 880, "y": 820, "label": 0},
+      {"x": 1580, "y": 930, "label": 0}
+    ]
+  },
+  {
+    "name": "vehicle-broad-three-positive",
+    "points": [
+      {"x": 1200, "y": 1110, "label": 1},
+      {"x": 1390, "y": 1370, "label": 1},
+      {"x": 1230, "y": 1490, "label": 1},
+      {"x": 820, "y": 1120, "label": 0},
+      {"x": 880, "y": 820, "label": 0},
+      {"x": 1580, "y": 930, "label": 0}
+    ]
+  },
+  {
+    "name": "vehicle-broad-four-positive",
+    "points": [
+      {"x": 1080, "y": 1280, "label": 1},
+      {"x": 1200, "y": 1110, "label": 1},
+      {"x": 1390, "y": 1370, "label": 1},
+      {"x": 1230, "y": 1490, "label": 1},
+      {"x": 820, "y": 1120, "label": 0},
+      {"x": 880, "y": 820, "label": 0},
+      {"x": 1580, "y": 930, "label": 0}
+    ]
+  },
+  {
+    "name": "negative-control-person",
+    "points": [
+      {"x": 820, "y": 1120, "label": 1},
+      {"x": 1200, "y": 1110, "label": 0},
+      {"x": 1390, "y": 1370, "label": 0}
+    ]
+  },
+  {
+    "name": "negative-control-floor",
+    "points": [
+      {"x": 880, "y": 820, "label": 1},
+      {"x": 820, "y": 1120, "label": 0},
+      {"x": 1200, "y": 1110, "label": 0}
+    ]
+  }
+]

@@ -1,0 +1,74 @@
+{
+  "schema_version": "labelagent.round384.ego_guided_point_shadow.v1",
+  "date": "2026-11-22",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_state_modified": false,
+  "baseline": {
+    "text_prompts_tested": 7,
+    "text_prompt_candidates": 0,
+    "single_point_raw_candidates": 18,
+    "single_point_guarded_candidates": 0
+  },
+  "guided_point_v2_frame0": {
+    "name": "vehicle-broad-four-positive",
+    "positive_points": 4,
+    "negative_points": 3,
+    "score": 0.51953125,
+    "bbox": [968, 905, 1605, 1536],
+    "area_ratio": 0.092263,
+    "assistant_visual_review": "partial_positive_with_holes_and_boundary_gaps"
+  },
+  "camera1_cross_frame": [
+    {"frame": 0, "score": 0.51953125, "area_ratio": 0.092263, "bbox": [968, 905, 1605, 1536], "elapsed_seconds": 0.312},
+    {"frame": 1, "score": 0.515625, "area_ratio": 0.091633, "bbox": [974, 905, 1604, 1536], "elapsed_seconds": 0.328},
+    {"frame": 2, "score": 0.494140625, "area_ratio": 0.09022, "bbox": [966, 906, 1605, 1536], "elapsed_seconds": 0.671},
+    {"frame": 5, "score": 0.478515625, "area_ratio": 0.039686, "bbox": [1048, 1030, 1545, 1536], "elapsed_seconds": 0.359},
+    {"frame": 10, "score": 0.46875, "area_ratio": 0.038123, "bbox": [1047, 1032, 1558, 1536], "elapsed_seconds": 0.343},
+    {"frame": 76, "score": 0.453125, "area_ratio": 0.088653, "bbox": [982, 913, 1600, 1536], "elapsed_seconds": 0.344},
+    {"frame": 151, "score": 0.5390625, "area_ratio": 0.090877, "bbox": [962, 918, 1612, 1536], "elapsed_seconds": 0.329}
+  ],
+  "cross_camera": {
+    "camera0": "candidate_returned_but_incomplete_and_person_overlap_risk",
+    "camera2": "candidate_returned_but_incomplete_and_person_overlap_risk",
+    "camera3": "three_vehicle_point_sets_rejected_by_point_sam",
+    "decision": "fixed_camera1_coordinates_are_not_transferable"
+  },
+  "diagnostic_improvements": [
+    "bounded raw candidate geometry summaries",
+    "positive and negative point-set validation",
+    "loopback-only point SAM endpoint",
+    "per-experiment HTTP failure isolation",
+    "bounded service error detail"
+  ],
+  "tests": {
+    "targeted_pytest": {"passed": 4, "failed": 0},
+    "full_python": {"passed": 1205, "subtests_passed": 190, "failed": 0},
+    "web_node": {"passed": 167, "failed": 0}
+  },
+  "runtime": {
+    "core_http_status": {"home": 200, "bootstrap": 200, "model_readiness": 200, "run_status": 200, "state_summary": 200},
+    "status": "idle",
+    "sam_ready": true,
+    "primary_vlm_ready": true,
+    "fast_vlm_ready": true
+  },
+  "formal_state_sha256": {
+    "state": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "file_sessions": "94E8BEE324628585E7532E595348293DF1DA7B24041A1D4DF1C2EC9FB734E02E",
+    "last_run": "3BECE2513C6F661054AC238AB185527D715A04B3B0C8E073274710BE23E057DA",
+    "last_run_summary": "32578D53E70FA6860F3438860B321172B5E8B405BC6BB8A0F19387A6D4B84933"
+  },
+  "tool_sha256": {
+    "diagnose_ego_bottom_point_fallback.py": "9E573C03E874C6EFEF4D314F55BC4A94658F92FF064C4FF6BD2BCE0B01A7485B",
+    "diagnose_ego_guided_points.py": "6AE445C86ACF56A39FB552675845856D366484741E950762D6EE2024DDCF6AA9"
+  },
+  "privacy": {
+    "real_images_committed": false,
+    "real_overlays_committed": false,
+    "local_visual_artifacts_retained": true
+  },
+  "gate": "rejected_for_production_pending_camera_specific_human_truth_ab"
+}

@@ -77,6 +77,24 @@ def mask_iou(first: dict, second: dict) -> float:
     return intersection / max(first["area"] + second["area"] - intersection, 1)
 
 
+def bounded_candidate_summary(shape: dict, width: int, height: int) -> dict:
+    """Keep enough geometry to explain a rejected shadow candidate."""
+    record = shape["_record"]
+    x0, y0, x1, y1 = record["bbox"]
+    return {
+        "point": shape["point"],
+        "score": shape["score"],
+        "guard_profile": shape.get("guard_profile"),
+        "bbox": record["bbox"],
+        "area": record["area"],
+        "area_ratio": round(record["area"] / (width * height), 6),
+        "width_ratio": round((x1 - x0) / width, 6),
+        "height_ratio": round((y1 - y0) / height, 6),
+        "bottom_gap": height - y1,
+        "center_ratio": round(((x0 + x1) / 2) / width, 6),
+    }
+
+
 def evaluate(image_path: Path, expected: bool, endpoint: str,
              output_dir: Path, index: int) -> dict:
     image = image_path.read_bytes()
@@ -118,15 +136,6 @@ def evaluate(image_path: Path, expected: bool, endpoint: str,
         image, [{key: value for key, value in shape.items() if key != "_record"}
                 for shape in selected]))
 
-    def summary(shape: dict) -> dict:
-        record = shape["_record"]
-        return {
-            "point": shape["point"], "score": shape["score"],
-            "guard_profile": shape["guard_profile"],
-            "bbox": record["bbox"], "area": record["area"],
-            "area_ratio": round(record["area"] / (width * height), 6),
-        }
-
     return {
         "image": str(image_path.resolve()),
         "image_sha256": hashlib.sha256(image).hexdigest(),
@@ -137,7 +146,11 @@ def evaluate(image_path: Path, expected: bool, endpoint: str,
         "service_diagnostics": batch["diagnostics"],
         "raw_candidate_count": len(raw),
         "guarded_candidate_count": len(guarded),
-        "selected": [summary(shape) for shape in selected],
+        "raw_candidates": [bounded_candidate_summary(shape, width, height)
+                           for shape in sorted(
+                               raw, key=lambda item: item["score"], reverse=True)],
+        "selected": [bounded_candidate_summary(shape, width, height)
+                     for shape in selected],
         "predicted_visible_ego": bool(selected),
         "matches_assistant_review": bool(selected) is expected,
         "overlay": str(overlay.resolve()),

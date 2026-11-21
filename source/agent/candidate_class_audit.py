@@ -220,6 +220,8 @@ def audit_high_risk_candidates(config, image_bytes, candidates, labels, class_de
 
     parallel_tail = bool(batched_target_count and tail
                          and parallel_tail_chat is not None)
+    direct_fast_tail = bool(not batched_target_count and tail
+                            and parallel_tail_chat is not None)
     with (ThreadPoolExecutor(max_workers=1)
           if parallel_tail else nullcontext(None)) as executor:
         tail_future = (executor.submit(copy_context().run, run_parallel_tail)
@@ -294,7 +296,19 @@ def audit_high_risk_candidates(config, image_bytes, candidates, labels, class_de
                         f"parallel_fast_tail_failed: {error}")
         else:
             for position, candidate in tail:
-                run_sequential(candidate, position)
+                if direct_fast_tail:
+                    try:
+                        result = sequential_result(
+                            candidate, parallel_tail_chat,
+                            tolerate_call_errors=False,
+                            parallel_lane="independent_fast_tail")
+                        record_result(candidate, position, result)
+                    except Exception as error:
+                        run_sequential(
+                            candidate, position,
+                            f"direct_fast_tail_failed: {error}")
+                else:
+                    run_sequential(candidate, position)
     return audits, queue
 
 

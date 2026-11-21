@@ -384,6 +384,51 @@ class CandidateClassAuditTests(unittest.TestCase):
         self.assertIn("parallel_fast_tail_failed",
                       audits[-1]["batch_fallback_reason"])
 
+    def test_two_candidates_use_fast_tail_without_primary_batch(self):
+        candidates = [{**self.candidate, "id": value} for value in (7, 8)]
+        primary_ids = []
+        fast_ids = []
+
+        def primary(config, prompt, image, **kwargs):
+            primary_ids.append(
+                int(prompt.split('"candidate_id": ')[1].split(',')[0]))
+            return self.decision()
+
+        def fast(config, prompt, image, **kwargs):
+            fast_ids.append(
+                int(prompt.split('"candidate_id": ')[1].split(',')[0]))
+            return self.decision()
+
+        audits, queue = audit.audit_high_risk_candidates(
+            {}, self.image, candidates, self.labels, {}, primary,
+            batch_chat=lambda *args, **kwargs: self.fail("batch must not run"),
+            parallel_tail_chat=fast)
+        self.assertEqual(queue, [])
+        self.assertEqual(primary_ids, [])
+        self.assertEqual(fast_ids, [7, 8])
+        self.assertEqual([item["candidate_id"] for item in audits], [7, 8])
+        self.assertEqual([item.get("parallel_lane") for item in audits],
+                         ["independent_fast_tail", "independent_fast_tail"])
+
+    def test_direct_fast_tail_failure_falls_back_to_primary(self):
+        candidate = {**self.candidate, "id": 7}
+        primary_ids = []
+
+        def primary(config, prompt, image, **kwargs):
+            primary_ids.append(
+                int(prompt.split('"candidate_id": ')[1].split(',')[0]))
+            return self.decision()
+
+        audits, queue = audit.audit_high_risk_candidates(
+            {}, self.image, [candidate], self.labels, {}, primary,
+            parallel_tail_chat=lambda *args, **kwargs:
+                (_ for _ in ()).throw(RuntimeError("fast offline")))
+        self.assertEqual(queue, [])
+        self.assertEqual(primary_ids, [7])
+        self.assertEqual(audits[0]["execution_mode"], "sequential")
+        self.assertIn("direct_fast_tail_failed",
+                      audits[0]["batch_fallback_reason"])
+
     def test_later_uncertain_triple_routes_review_without_retry(self):
         candidates = [{**self.candidate, "id": value} for value in range(7, 13)]
         sequential_calls = []

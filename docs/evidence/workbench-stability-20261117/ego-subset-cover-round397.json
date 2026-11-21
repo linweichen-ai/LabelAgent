@@ -1,0 +1,52 @@
+{
+  "schema_version": "labelagent.round397.ego_subset_cover.v1",
+  "date": "2026-11-22",
+  "camera": "camera1",
+  "strategy": "all_positive_subsets_then_deterministic_minimum_set_cover",
+  "positive_subset_attempts_per_frame": 15,
+  "color_dependent": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "human_confirmed": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_state_modified": false,
+  "development": {
+    "frames": [0, 38, 76, 114, 151],
+    "sample_count": 5,
+    "baseline_available_count": 0,
+    "subset_cover_available_count": 5,
+    "mean_subset_cover_area_ratio": 0.086347,
+    "negative_violation_count": 0
+  },
+  "held_out": {
+    "frames": [19, 57, 95, 133],
+    "sample_count": 4,
+    "baseline_available_count": 0,
+    "subset_cover_available_count": 4,
+    "mean_subset_cover_area_ratio": 0.068775,
+    "negative_violation_count": 0
+  },
+  "assistant_visual_review": {
+    "obvious_whole_person_or_floor_absorption_seen": false,
+    "pixel_truth_review": false,
+    "noted_risks": ["frame19_low_area", "frame38_low_baseline_iou", "frame57_low_baseline_iou"]
+  },
+  "local_artifacts": {
+    "results_sha256": "942E9E9B3C65C52B52242293E3C0E6A74ECA8163B3496AFBA4782EFBE17279CF",
+    "contact_sheet_sha256": "08C265854CF6DC67607E134277D5D1E2B7FE66887D61E43F2F73FD7C21A9C43E",
+    "real_images_uploaded": false
+  },
+  "tests": {
+    "targeted_python_passed": 3,
+    "full_python_discover_passed": 1233,
+    "web_node_passed": 167
+  },
+  "formal_state_sha256": {
+    "state": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "file_sessions": "94E8BEE324628585E7532E595348293DF1DA7B24041A1D4DF1C2EC9FB734E02E",
+    "last_run": "3BECE2513C6F661054AC238AB185527D715A04B3B0C8E073274710BE23E057DA",
+    "last_run_summary": "32578D53E70FA6860F3438860B321172B5E8B405BC6BB8A0F19387A6D4B84933"
+  },
+  "gate": "prompt_constraints_9_of_9; quality_and_latency_not_accepted; production_rejected; human_pixel_truth_pending"
+}

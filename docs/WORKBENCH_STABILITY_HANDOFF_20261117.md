@@ -3243,3 +3243,12 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 2/9仍不足以上线，且没有人工逐像素真值和person/floor重叠证据，因此未替换正式模板、未部署、未训练或写人工真值。
 - 定向Python 4项、完整`unittest discover`1230项、网页167项通过。真实含人员叠加图只在本地保留，不上传远端。
 - 详细记录见`docs/EGO_COMPONENT_UNION_ROUND396_20261122.md`，结构化证据见`docs/evidence/workbench-stability-20261117/ego-component-union-round396.json`。
+
+## Round397（2026-11-22）：camera1 正点子集覆盖候选
+
+- 固定枚举四个正点的15个非空子集，每次携带同一组三个负点；只接受请求正点全部命中、负点未侵入、无警告且几何有效的响应，再做确定性的最少掩膜覆盖。
+- 开发集从0/5提升为5/5，四个留出帧从0/4提升为4/4，九帧合计0/9→9/9，负点侵入为0；策略不读取颜色。
+- 助手只读总览未见明显整片地面或完整人物吸入，但frame19面积仅2.0%，frame38/57与原候选IoU约0.39，仍有欠分割与接触边界风险；这不是人工像素真值。
+- 每帧15次point-SAM只适合作为离线候选发现器，尚不满足工作台实时效率；本轮未部署、未训练、未写人工真值或正式状态。
+- 定向Python 3项、完整`unittest discover`1233项、网页167项通过；真实含人员叠加图只在本地保留。
+- 详细记录见`docs/EGO_SUBSET_COVER_ROUND397_20261122.md`，结构化证据见`docs/evidence/workbench-stability-20261117/ego-subset-cover-round397.json`。

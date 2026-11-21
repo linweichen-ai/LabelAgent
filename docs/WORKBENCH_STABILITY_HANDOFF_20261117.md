@@ -3099,3 +3099,12 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - Python 1193 passed + 190 subtests，网页 159 passed；实现提交 `61dcb23`。
 - 正式环境已备份、部署并重启；五个核心接口 HTTP 200，SAM/主 VLM/快速 VLM ready，运行状态 idle，四个状态文件哈希部署前后未变化。
 - 详细说明见 `docs/PALLET_BOUNDARY_SCALE_ADAPTIVE_ROUND380_20261121.md`，证据见 `docs/evidence/workbench-stability-20261117/pallet-boundary-scale-adaptive-round380.json`。
+
+## Round381（2026-11-22）：快速类别复核独立审阅补强
+
+- WorkBuddy 只读审阅指出双候选局部失败、取消语义和生产端点绑定三项证据缺口，本轮均已补齐。
+- 双候选中快速通道仅对失败项做一次协议修复并回退主 VLM，成功项不重复、结果顺序不变；取消信号不会触发主路重试。
+- 正式候选 5 新一轮 A/B：主路 8.550 秒、快速路 5.098 秒，提速 40.37%，语义核心一致；脚本确认实际选择 `small_image_fast` 和本地 38868 快速端点，正式管理器将该端点绑定到 `factory-5090`。
+- 正式状态文件前后不变，没有候选、人工真值或训练批准写入。
+- Python 1195 passed + 190 subtests，网页 159 passed；提交 `2c1e247`。本轮仅补测试和只读工具，无需重启正式工作台。
+- 详细记录见 `docs/FAST_AUDIT_INDEPENDENT_REVIEW_ROUND381_20261122.md`，证据见 `docs/evidence/workbench-stability-20261117/fast-audit-independent-review-round381.json`。

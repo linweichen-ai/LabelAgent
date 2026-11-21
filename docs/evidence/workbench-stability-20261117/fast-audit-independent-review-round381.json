@@ -1,0 +1,50 @@
+{
+  "schema_version": "labelagent.fast_audit_independent_review.round381.v1",
+  "date": "2026-11-22",
+  "commit": "2c1e247",
+  "review_source": "WorkBuddy read-only independent review",
+  "added_checks": {
+    "mixed_two_candidate_fast_failure": {
+      "successful_candidate_repeated": false,
+      "failed_candidate_fast_attempts": 2,
+      "primary_fallback_candidate_ids": [8],
+      "result_order": [7, 8]
+    },
+    "cancellation": {
+      "propagated": true,
+      "primary_retry_count": 0,
+      "partial_evidence_published": false
+    }
+  },
+  "real_ab": {
+    "frame": 0,
+    "source_candidate_id": 5,
+    "synthetic_candidate_id": 791005,
+    "primary_seconds": 8.55,
+    "fast_seconds": 5.098,
+    "speedup_percent": 40.37,
+    "semantic_core_match": true,
+    "fast_route_bound": true,
+    "route": "small_image_fast",
+    "selected_endpoint_authority": "http://127.0.0.1:38868",
+    "configured_fast_endpoint_authority": "http://127.0.0.1:38868",
+    "model": "labelagent-vlm8b",
+    "manager_fast_remote_host": "factory-5090",
+    "manager_fast_local_port": 38868,
+    "manager_sha256": "9C2699FF9E299EF0EA0891E71F67D9AF65E65964DAF2EE2AF77020103F5B68AD",
+    "state_unchanged": true,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "formal_workbench_writes": false
+  },
+  "tests": {
+    "python_passed": 1195,
+    "python_subtests_passed": 190,
+    "javascript_passed": 159
+  },
+  "artifact": {
+    "path": "artifacts/round381-fast-route-proof/candidate5-ab-v2.json",
+    "sha256": "13B8FAEB564692570BE1215950014668B493C4EDE8F829D85CB018E0AF8AFEE6"
+  }
+}

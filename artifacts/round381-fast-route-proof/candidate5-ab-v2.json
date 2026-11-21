@@ -1,0 +1,81 @@
+{
+  "schema_version": "labelagent.single-candidate-fast-audit-ab.v2",
+  "state": "D:\\Apps\\LabelAgent\\work\\state.json",
+  "state_sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115",
+  "state_unchanged": true,
+  "image_url": "http://127.0.0.1:8765/api/frame/0",
+  "image_sha256": "0c7d2fd26538538ea39e743f812989ce316dcd74b3da092f8cd9979dae503f14",
+  "frame": 0,
+  "source_candidate_id": 5,
+  "synthetic_candidate_id": 791005,
+  "candidate_label": "pallet",
+  "primary": {
+    "route": "primary",
+    "elapsed_seconds": 8.55,
+    "semantic_core": {
+      "classification": "conflict",
+      "observed_label": null,
+      "candidate_supported": false,
+      "reason_code": "ontology_conflict",
+      "route": "human_review_required"
+    },
+    "decision": {
+      "observed_label": null,
+      "candidate_supported": false,
+      "reason_code": "ontology_conflict",
+      "classification": "conflict",
+      "confidence": 0.99,
+      "reason": "The non-dark pixels show a solid, box-like shape with no visible slats, deck, feet, or fork-entry structure characteristic of a pallet. It does not match any allowed label, so classification is conflict with candidate_supported=false and observed_label=null as per the rules. The reason_code is set, ",
+      "visible_cues": [
+        "solid box-like shape",
+        "no visible pallet structure"
+      ]
+    },
+    "candidate_sha256": "039dfd8dba114c800920571377154a82ed72d992978812ee03cd5e0ab1a79615",
+    "audit_sha256": "8b1e4864a47ebff82df94fd7ee076e6db078ba8226637e4c0531ed7d7720b323"
+  },
+  "fast": {
+    "route": "fast_only",
+    "elapsed_seconds": 5.098,
+    "semantic_core": {
+      "classification": "conflict",
+      "observed_label": null,
+      "candidate_supported": false,
+      "reason_code": "ontology_conflict",
+      "route": "human_review_required"
+    },
+    "decision": {
+      "observed_label": null,
+      "candidate_supported": false,
+      "reason_code": "ontology_conflict",
+      "classification": "conflict",
+      "confidence": 0.99,
+      "reason": "The non-dark region shows a solid, box-like object with no visible slats, deck, feet, or fork-entry structure characteristic of a pallet. It matches a solid shipping container or box, which is not an allowed label for classification as a pallet. Therefore, conflict with candidate_supported=false and",
+      "visible_cues": [
+        "solid rectangular shape",
+        "no visible pallet structure"
+      ]
+    },
+    "candidate_sha256": "039dfd8dba114c800920571377154a82ed72d992978812ee03cd5e0ab1a79615",
+    "audit_sha256": "3ee41d48bace72f631f1d5d900a571c90daf1e4ec324a610e2901a39d630d9ed"
+  },
+  "fast_route_probes": [
+    {
+      "route": "small_image_fast",
+      "selected_endpoint_authority": "http://127.0.0.1:38868",
+      "configured_fast_endpoint_authority": "http://127.0.0.1:38868",
+      "selected_model": "labelagent-vlm8b",
+      "configured_fast_model": "labelagent-vlm8b",
+      "primary_image_bytes": 1800,
+      "extra_image_count": 0
+    }
+  ],
+  "fast_route_bound": true,
+  "semantic_core_match": true,
+  "speedup_percent": 40.37,
+  "candidate_only": true,
+  "candidate_mutated": false,
+  "human_truth": false,
+  "approved_for_training": false,
+  "formal_workbench_writes": false
+}

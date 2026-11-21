@@ -14,6 +14,7 @@ import numpy as np
 from source.agent.edit_agent import _rasterize
 from source.agent.workflow import (
     PALLET_IMAGE_BOUNDARY_MAXIMUM_COMPONENT_MERGES,
+    _pallet_geometry_vertex_count,
     _significant_component_count,
     refine_pallet_candidate_geometry,
 )
@@ -72,6 +73,8 @@ def audit_collection(base_url: str, *, start_frame: int = 0,
             retention = _minimum_structural_retention(
                 before, after, image_rgb)
             area = int(before.sum())
+            vertices_before = _pallet_geometry_vertex_count(shape)
+            vertices_after = _pallet_geometry_vertex_count(refined)
             gate_passed = (
                 changed / max(area, 1) <= .06
                 and retention >= .75
@@ -87,6 +90,14 @@ def audit_collection(base_url: str, *, start_frame: int = 0,
                 "pixel_area": area,
                 "geometry_cleanup_version": adjustment.get(
                     "geometry_cleanup_version"),
+                "boundary_simplification_epsilon": adjustment.get(
+                    "boundary_simplification_epsilon"),
+                "boundary_simplification_scale_band": adjustment.get(
+                    "boundary_simplification_scale_band"),
+                "boundary_vertices_before": vertices_before,
+                "boundary_vertices_after": vertices_after,
+                "boundary_vertex_reduction_ratio": round(
+                    1 - vertices_after / max(vertices_before, 1), 6),
                 "changed_pixels": changed,
                 "change_ratio": round(changed / max(area, 1), 6),
                 "filled_image_boundary_notch_count": notch_count,
@@ -112,12 +123,19 @@ def audit_collection(base_url: str, *, start_frame: int = 0,
         "candidate_count": sum(row["candidate_count"] for row in frame_inventory),
         "pallet_candidate_count": len(results),
         "adjusted_count": len(adjusted),
-        "v5_adjusted_count": sum(
-            row["geometry_cleanup_version"] == 5 for row in adjusted),
+        "v6_adjusted_count": sum(
+            row["geometry_cleanup_version"] == 6 for row in adjusted),
         "filled_image_boundary_notch_count": sum(
             row["filled_image_boundary_notch_count"] for row in results),
         "component_merge_count": sum(
             row["component_merge_count"] for row in results),
+        "boundary_vertices_before": sum(
+            row["boundary_vertices_before"] for row in results),
+        "boundary_vertices_after": sum(
+            row["boundary_vertices_after"] for row in results),
+        "boundary_vertex_reduction_ratio": round(
+            1 - sum(row["boundary_vertices_after"] for row in results)
+            / max(sum(row["boundary_vertices_before"] for row in results), 1), 6),
         "maximum_change_ratio": max(
             (row["change_ratio"] for row in results), default=0),
         "minimum_structural_hole_retention": min(
@@ -154,8 +172,10 @@ def main() -> int:
         args.output.write_text(rendered, encoding="utf-8")
     summary = {key: report[key] for key in (
         "frame_count", "candidate_count", "pallet_candidate_count",
-        "adjusted_count", "v5_adjusted_count",
+        "adjusted_count", "v6_adjusted_count",
         "filled_image_boundary_notch_count", "component_merge_count",
+        "boundary_vertices_before", "boundary_vertices_after",
+        "boundary_vertex_reduction_ratio",
         "maximum_change_ratio", "minimum_structural_hole_retention",
         "maximum_component_merge_count", "violation_count", "gate_passed",
     )}

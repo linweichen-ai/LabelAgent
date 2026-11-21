@@ -40,8 +40,8 @@ def merge(inputs: list[Path]) -> dict:
         "candidate_count": sum(row["candidate_count"] for row in inventory),
         "pallet_candidate_count": len(results),
         "adjusted_count": len(adjusted),
-        "v5_adjusted_count": sum(
-            row["geometry_cleanup_version"] == 5 for row in adjusted),
+        "v6_adjusted_count": sum(
+            row["geometry_cleanup_version"] == 6 for row in adjusted),
         "filled_image_boundary_notch_count": sum(
             row["filled_image_boundary_notch_count"] for row in results),
         "component_merge_count": sum(
@@ -87,7 +87,7 @@ def main() -> int:
         encoding="utf-8")
     summary = {key: report[key] for key in (
         "frame_count", "candidate_count", "pallet_candidate_count",
-        "adjusted_count", "v5_adjusted_count",
+        "adjusted_count", "v6_adjusted_count",
         "filled_image_boundary_notch_count", "component_merge_count",
         "maximum_change_ratio", "minimum_structural_hole_retention",
         "maximum_component_merge_count", "violation_count", "gate_passed",

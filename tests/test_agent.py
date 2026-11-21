@@ -402,7 +402,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertIsNotNone(audit)
         self.assertEqual(refined["id"], "sam3-camera_0-7-pallet-2")
         self.assertGreaterEqual(audit["filled_hole_count"], 1)
-        self.assertEqual(audit["geometry_cleanup_version"], 5)
+        self.assertEqual(audit["geometry_cleanup_version"], 6)
         self.assertEqual(audit["route"], "candidate_only")
 
     def test_pallet_cleanup_keeps_safe_hole_fill_when_smoothing_exceeds_budget(self):
@@ -465,7 +465,7 @@ class WorkflowTests(unittest.TestCase):
         output = _rasterize(refined, 640, 480)
 
         self.assertIsNotNone(audit)
-        self.assertEqual(audit["geometry_cleanup_version"], 5)
+        self.assertEqual(audit["geometry_cleanup_version"], 6)
         self.assertEqual(audit["filled_hole_count"], 6)
         self.assertGreaterEqual(audit["filled_compact_texture_hole_count"], 4)
         for y, x, h, w in compact_holes:
@@ -487,7 +487,7 @@ class WorkflowTests(unittest.TestCase):
 
         self.assertEqual(output[150, 210], 0)
         self.assertIsNotNone(audit)
-        self.assertEqual(audit["geometry_cleanup_version"], 5)
+        self.assertEqual(audit["geometry_cleanup_version"], 6)
         self.assertEqual(audit["filled_compact_texture_hole_count"], 0)
         self.assertGreaterEqual(audit["minimum_structural_hole_retention"], .75)
 
@@ -513,7 +513,7 @@ class WorkflowTests(unittest.TestCase):
         output = _rasterize(refined, 640, 480)
 
         self.assertIsNotNone(audit)
-        self.assertEqual(audit["geometry_cleanup_version"], 5)
+        self.assertEqual(audit["geometry_cleanup_version"], 6)
         self.assertGreaterEqual(audit["filled_image_texture_hole_count"], 1)
         self.assertGreaterEqual(audit["filled_image_boundary_notch_count"], 1)
         self.assertEqual(output[280, 290], 1)
@@ -545,7 +545,7 @@ class WorkflowTests(unittest.TestCase):
             self.assertEqual(output[y, x], 0)
         self.assertEqual(output[190, 320], 0)
         self.assertIsNotNone(audit)
-        self.assertEqual(audit["geometry_cleanup_version"], 5)
+        self.assertEqual(audit["geometry_cleanup_version"], 6)
         self.assertEqual(audit["filled_image_texture_hole_count"], 0)
         self.assertEqual(audit["filled_image_boundary_notch_count"], 0)
         self.assertEqual(audit["filled_compact_texture_hole_count"], 0)
@@ -655,7 +655,9 @@ class WorkflowTests(unittest.TestCase):
 
         self.assertIsNotNone(audit)
         self.assertTrue(audit["boundary_simplification_applied"])
-        self.assertIn(audit["boundary_simplification_epsilon"], (.75, .5))
+        self.assertIn(audit["boundary_simplification_epsilon"],
+                      (2.0, 1.5, 1.0, .75, .5))
+        self.assertEqual(audit["boundary_simplification_scale_band"], "large")
         self.assertLess(audit["boundary_vertices_after"],
                         audit["boundary_vertices_before"])
         self.assertGreater(audit["boundary_vertex_reduction_ratio"], .1)

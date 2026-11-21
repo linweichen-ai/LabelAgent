@@ -3390,7 +3390,22 @@ def _simplify_pallet_boundary(shape, original_mask, width, height, *,
         minimum_compact_texture_candidate_area_ratio=(
             minimum_compact_texture_candidate_area_ratio))
     baseline_mask = _rasterize(shape, width, height).astype(np.uint8)
-    for epsilon in (.75, .5):
+    # One sub-pixel epsilon was sufficient for small/distant masks, but it
+    # leaves close pallets with visibly stepped outlines because their contour
+    # can span hundreds of pixels.  Try a size-adaptive proposal first and keep
+    # the existing raster-change, component and structural-hole gates below as
+    # the final authority.  The descending order means the cleanest safe
+    # contour wins; unsafe proposals still fall back to the legacy values.
+    if original_area >= 50000:
+        epsilon_candidates = (2.0, 1.5, 1.0, .75, .5)
+        simplification_scale_band = "large"
+    elif original_area >= 5000:
+        epsilon_candidates = (1.5, 1.0, .75, .5)
+        simplification_scale_band = "medium"
+    else:
+        epsilon_candidates = (1.0, .75, .5)
+        simplification_scale_band = "small"
+    for epsilon in epsilon_candidates:
         proposal = copy.deepcopy(shape)
         parts = []
         for part in (shape.get("parts") or [shape]):
@@ -3438,6 +3453,7 @@ def _simplify_pallet_boundary(shape, original_mask, width, height, *,
         return proposal, {
             "boundary_simplification_applied": True,
             "boundary_simplification_epsilon": epsilon,
+            "boundary_simplification_scale_band": simplification_scale_band,
             "boundary_vertices_before": before_vertices,
             "boundary_vertices_after": after_vertices,
             "boundary_vertex_reduction_ratio": round(
@@ -3790,12 +3806,14 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         "component_count_before": original_component_count,
         "component_count_after": replacement_component_count,
         "component_merge_count": component_merge_count,
-        "geometry_cleanup_version": 5,
+        "geometry_cleanup_version": 6,
         "route": "candidate_only",
     }
     adjustment.update(boundary_audit or {
         "boundary_simplification_applied": False,
         "boundary_simplification_epsilon": None,
+        "boundary_simplification_scale_band": (
+            "large" if area >= 50000 else "medium" if area >= 5000 else "small"),
         "boundary_vertices_before": _pallet_geometry_vertex_count(replacement),
         "boundary_vertices_after": _pallet_geometry_vertex_count(replacement),
         "boundary_vertex_reduction_ratio": 0.0,

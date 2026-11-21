@@ -95,7 +95,7 @@ class PalletGeometryAuditTest(unittest.TestCase):
         result = audit_candidate(
             {"topic": "camera", "frame": "3", "shape": shape}, 640, 480)
 
-        self.assertEqual(result["geometry_cleanup_version"], 5)
+        self.assertEqual(result["geometry_cleanup_version"], 6)
         self.assertGreaterEqual(result["filled_compact_texture_hole_count"], 1)
         self.assertEqual(result["structural_holes_before"], 1)
         self.assertGreaterEqual(result["minimum_structural_hole_retention"], .75)

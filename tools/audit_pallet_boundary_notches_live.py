@@ -147,7 +147,7 @@ def audit(base_url: str, frames: list[int]) -> tuple[dict, np.ndarray]:
         panels.extend([
             _panel(image_rgb, before, f"frame {frame} before"),
             _panel(image_rgb, after, (
-                f"frame {frame} v5 | change {result['change_ratio']:.2%} | "
+                f"frame {frame} v6 | change {result['change_ratio']:.2%} | "
                 f"merge {result['component_merge_count']}")),
         ])
     sheet = np.vstack([

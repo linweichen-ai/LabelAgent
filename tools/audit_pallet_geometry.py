@@ -315,8 +315,8 @@ def run_audit(source: Path, *, width: int, height: int, per_topic: int,
         "sample_count": len(results),
         "size_bands": bands,
         "adjusted_count": sum(row["adjustment_applied"] for row in results),
-        "v5_adjusted_count": sum(
-            row["geometry_cleanup_version"] == 5 for row in results),
+        "v6_adjusted_count": sum(
+            row["geometry_cleanup_version"] == 6 for row in results),
         "filled_hole_count": sum(row["filled_hole_count"] for row in results),
         "filled_compact_texture_hole_count": sum(
             row["filled_compact_texture_hole_count"] for row in results),
@@ -379,7 +379,7 @@ def main() -> int:
     print(json.dumps({key: report[key] for key in (
         "sample_count", "unique_source_image_count", "size_bands",
         "adjusted_count", "unchanged_tiny_count",
-        "v5_adjusted_count", "filled_hole_count", "filled_compact_texture_hole_count",
+        "v6_adjusted_count", "filled_hole_count", "filled_compact_texture_hole_count",
         "filled_image_boundary_notch_count", "component_merge_count",
         "boundary_simplified_count", "median_boundary_vertex_reduction_ratio",
         "boundary_simplification_epsilon_counts", "holes_before", "holes_after",

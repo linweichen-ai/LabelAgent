@@ -36,8 +36,12 @@ Round402 的 ego 影子评测对同一帧发送 3 次 SAM 点提示。每次请�
 
 隔离服务、临时 tmux 进程和本地 SSH 通道已在测量后关闭，GPU0 显存从 12.8 GiB 回落到 8.3 GiB；正式 28766 服务继续健康。详细本地结果为 `artifacts/round404-point-group-real-ab-20261122/results.json`，SHA-256 为 `E35B0FD1877BC57AE5F8B83761FB904F15888856DA526279DBAAF490AB2FA72A`，不包含原始图像。
 
-## 当前边界与决定
+## 正式服务接入
 
-本轮仍是隔离候选，不是正式部署。真实 GPU 等价与速度门禁已经通过，但当前 4090 正式服务仍是 `labelagent.remote-sam3.v2-exact-response-cache`，没有重启或替换；正式工作台也还没有调用新接口。不批准训练或自动真值。
+在隔离 A/B 通过后，远端正式点提示服务已按“先上传临时文件、校验哈希、备份旧文件、原子替换、重启、真实探针”的顺序升级为 `labelagent.remote-sam3.v3-point-groups`。远端回滚目录为 `/home/clw/labelagent_remote_20261110/backups/point-groups-round404-20261122`；本地运行目录回滚点为 `D:\Apps\LabelAgent\.local\backups\point-groups-round404-20261122-0435`。
 
-下一步是做可回滚接入：先备份远端点提示服务和本地调用代码，部署新接口但保持旧接口不变；健康检查和契约探针通过后，让参考几何候选路径使用组批接口。若新接口不可用，调用方必须显式回退到逐组请求，且不能吞掉质量错误。
+正式服务真实探针结果：旧 `/segment_points` 正常，冷启动 25.131 秒；旧 `/segment_points_batch` 正常，热态 0.320 秒；新 `/segment_point_groups_batch` 正常，热态 0.320 秒且两组均成功、`image_encoded_once=true`。工作台在明确空闲时受控重启，重启前后 `state.json`、`file_sessions.json`、`last_run.json`、`last_run_summary.json` 四个 SHA-256 完全一致；重启后页面、VLM、SAM 和点提示绑定均正常。
+
+这里部署的是兼容性接口和本地路由能力，没有改变自动候选策略，没有把影子候选写入真值，也没有批准训练。现有旧调用不变，因此用户页面不会因本轮突然改变标注内容。
+
+下一步是在调用方增加只针对“接口不存在”的显式旧路径回退，再让参考几何候选路径使用组批接口；服务繁忙、响应畸形和质量门禁失败不能被回退逻辑吞掉。

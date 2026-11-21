@@ -30,6 +30,8 @@ _fast_route_lock = threading.Lock()
 _fast_route_circuits = {}
 _sam_multi_protocol_lock = threading.Lock()
 _sam_multi_protocols = {}
+_sam_point_group_protocol_lock = threading.Lock()
+_sam_point_group_protocols = {}
 MAX_REVIEW_ROUNDS = 100
 MAX_PROTOCOL_RETRIES = 2
 EGO_BOTTOM_POINT_FALLBACK_VERSION = "labelagent.ego_bottom_point_fallback.v1"
@@ -60,6 +62,15 @@ class ReviewProtocolError(ValueError):
 
 class RunCancelled(Exception):
     """The user terminated this annotation run."""
+
+
+class SamHttpError(ValueError):
+    """A SAM HTTP failure with a machine-readable status for safe fallback."""
+
+    def __init__(self, status_code, message):
+        super().__init__(f"SAM 3 请求失败：{message}")
+        self.status_code = status_code
+        self.service_message = str(message)
 
 
 def check_cancelled():
@@ -229,16 +240,94 @@ def _sam_request(config, endpoint, image, *, timeout_seconds=None, **prompt):
         raise ValueError(f"SAM 3 请求超时（{endpoint}）") from error
     except urllib.error.HTTPError as error:
         try:
-            message = json.load(error).get("error")
+            payload = json.load(error)
+            message = payload.get("error") or payload.get("detail")
         except (ValueError, AttributeError):
             message = None
-        raise ValueError(f"SAM 3 请求失败：{message or error.reason}") from error
+        raise SamHttpError(error.code, message or error.reason) from error
     except urllib.error.URLError as error:
         raise ValueError(f"SAM 3 请求失败：{error.reason}") from error
 
 
 def sam_text(image, prompt, config):
     return sam_request(config, "/segment_text", image, prompt=prompt).get("results", [])
+
+
+def _point_group_endpoint_key(config):
+    return ((config.get("sam3_point_url") or config.get("sam3_url")
+             or os.environ.get("SAM3_URL", "http://127.0.0.1:8766"))
+            .rstrip("/"))
+
+
+def _validate_point_group_response(response, prompt_groups):
+    items = response.get("items") if isinstance(response, dict) else None
+    diagnostics = response.get("diagnostics") if isinstance(response, dict) else None
+    if (not isinstance(items, list) or len(items) != len(prompt_groups)
+            or not isinstance(diagnostics, dict)
+            or diagnostics.get("image_encoded_once") is not True
+            or diagnostics.get("prompt_group_count") != len(prompt_groups)):
+        raise ValueError("SAM 3 正负提示组响应未证明单次编码和完整组覆盖")
+    for index, (item, points) in enumerate(zip(items, prompt_groups)):
+        if (not isinstance(item, dict) or item.get("index") != index
+                or item.get("points") != points
+                or (("result" in item) == ("error" in item))):
+            raise ValueError("SAM 3 正负提示组响应顺序或结果格式无效")
+        if "result" in item and not isinstance(item["result"], dict):
+            raise ValueError("SAM 3 正负提示组成功结果格式无效")
+        if "error" in item and not isinstance(item["error"], str):
+            raise ValueError("SAM 3 正负提示组失败结果格式无效")
+    return response
+
+
+def _sam_point_groups_sequential(image, prompt_groups, config):
+    """Preserve the batch item contract on a service without the new route."""
+    started = time.perf_counter()
+    items = []
+    for index, points in enumerate(prompt_groups):
+        try:
+            result = sam_request(
+                config, "/segment_points", image, points=points)
+            items.append({"index": index, "points": points, "result": result})
+        except SamHttpError as error:
+            if error.status_code != 400:
+                raise
+            items.append({"index": index, "points": points,
+                          "error": error.service_message[:200]})
+    return {"items": items, "diagnostics": {
+        "image_encoded_once": False,
+        "prompt_group_count": len(prompt_groups),
+        "successful_count": sum("result" in item for item in items),
+        "mode": "sequential_endpoint_fallback",
+        "fallback_reason": "point_group_endpoint_not_found",
+        "total_seconds": time.perf_counter() - started,
+    }}
+
+
+def sam_point_groups(image, prompt_groups, config):
+    """Use one-encoding point groups and fall back only for a missing route."""
+    if (not isinstance(prompt_groups, list) or not 1 <= len(prompt_groups) <= 64
+            or any(not isinstance(group, list) or not 1 <= len(group) <= 32
+                   for group in prompt_groups)):
+        raise ValueError("SAM 3 正负提示组须包含 1～64 组、每组 1～32 个点")
+    endpoint_key = _point_group_endpoint_key(config)
+    with _sam_point_group_protocol_lock:
+        protocol = _sam_point_group_protocols.get(endpoint_key)
+    if protocol == "sequential":
+        return _sam_point_groups_sequential(image, prompt_groups, config)
+    try:
+        response = sam_request(
+            config, "/segment_point_groups_batch", image,
+            prompt_groups=prompt_groups)
+    except SamHttpError as error:
+        if error.status_code != 404:
+            raise
+        with _sam_point_group_protocol_lock:
+            _sam_point_group_protocols[endpoint_key] = "sequential"
+        return _sam_point_groups_sequential(image, prompt_groups, config)
+    validated = _validate_point_group_response(response, prompt_groups)
+    with _sam_point_group_protocol_lock:
+        _sam_point_group_protocols[endpoint_key] = "batch"
+    return validated
 
 
 def ego_bottom_points(width, height):

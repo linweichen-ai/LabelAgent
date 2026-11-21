@@ -21,7 +21,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
-from source.agent.workflow import _sam_request
+from source.agent.workflow import sam_point_groups
 from tools.evaluate_ego_component_union import (
     MAXIMUM_AREA_RATIO,
     _decode_response,
@@ -118,18 +118,39 @@ def reference_prompt_contract(ego: np.ndarray, floor: np.ndarray,
 
 
 def evaluate_reference_image(image: bytes, contract: dict,
-                             request_points) -> tuple[dict, dict]:
+                             request_points=None, request_groups=None) -> tuple[dict, dict]:
     with Image.open(io.BytesIO(image)) as opened:
         width, height = opened.size
     positives = contract["positive_points"]
     negatives = contract["negative_points"]
     masks, parts, attempts = [], [], []
     started = time.monotonic()
+    grouped_items, grouped_error = None, None
+    if request_groups is not None:
+        groups = [[positive, *negatives] for positive in positives]
+        try:
+            grouped = request_groups(image, groups)
+            grouped_items = grouped.get("items") if isinstance(grouped, dict) else None
+            if not isinstance(grouped_items, list) or len(grouped_items) != len(groups):
+                raise ValueError("grouped point response is incomplete")
+        except Exception as error:
+            grouped_error = error
+    elif request_points is None:
+        raise ValueError("one point request strategy is required")
     for index, positive in enumerate(positives):
         row = {"positive_index": index, "point": positive}
         try:
+            if grouped_error is not None:
+                raise grouped_error
+            if grouped_items is not None:
+                item = grouped_items[index]
+                if "error" in item:
+                    raise ValueError(item["error"])
+                response = item.get("result")
+            else:
+                response = request_points(image, [positive, *negatives])
             shape, mask, warnings = _decode_response(
-                request_points(image, [positive, *negatives]), width, height)
+                response, width, height)
             requested_covered = bool(mask[positive["y"], positive["x"]])
             prompt = _prompt_metrics(mask, positives, negatives)
             row.update(_geometry(mask) | {
@@ -198,7 +219,8 @@ def _contact_sheet(output: Path, rows: list[dict], columns: int = 4) -> Path:
 
 
 def evaluate_scope(image_directory: Path, annotation_path: Path,
-                   import_manifest_path: Path, output: Path, request_points,
+                   import_manifest_path: Path, output: Path, request_points=None,
+                   request_groups=None,
                    *, reference_frame: int = 0, sample_count: int = 24) -> dict:
     if output.exists():
         raise FileExistsError(output)
@@ -228,7 +250,7 @@ def evaluate_scope(image_directory: Path, annotation_path: Path,
         person = render_label_mask(shapes, "person", size)
         floor = render_label_mask(shapes, "floor", size)
         evaluated, candidate = evaluate_reference_image(
-            image_bytes, contract, request_points)
+            image_bytes, contract, request_points, request_groups)
         accepted = (candidate if evaluated["result"]["candidate_available"]
                     else np.zeros_like(candidate))
         comparison = output / f"cvat-frame{frame:03d}-truth-reference.jpg"
@@ -308,8 +330,8 @@ def main() -> int:
     report = evaluate_scope(
         arguments.image_directory, arguments.annotations,
         arguments.import_manifest, arguments.output,
-        lambda image, points: _sam_request(
-            config, "/segment_points", image, timeout_seconds=8.0, points=points),
+        request_groups=lambda image, groups: sam_point_groups(
+            image, groups, config),
         reference_frame=arguments.reference_frame,
         sample_count=arguments.sample_count)
     print(json.dumps({

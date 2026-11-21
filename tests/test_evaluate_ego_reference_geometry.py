@@ -1,10 +1,15 @@
+import io
 import unittest
+from unittest import mock
 
 import numpy as np
+from PIL import Image
 
+from tools import evaluate_ego_reference_geometry as evaluator
 from tools.evaluate_ego_reference_geometry import (
     component_anchor,
     connected_components,
+    evaluate_reference_image,
     reference_prompt_contract,
 )
 
@@ -43,6 +48,72 @@ class EgoReferenceGeometryTest(unittest.TestCase):
         empty = np.zeros((4, 4), dtype=bool)
         with self.assertRaisesRegex(ValueError, "reference masks"):
             reference_prompt_contract(empty, empty)
+
+    def test_grouped_request_runs_once_and_preserves_per_group_results(self):
+        output = io.BytesIO()
+        Image.new("RGB", (20, 20), "gray").save(output, "PNG")
+        contract = {
+            "positive_points": [
+                {"x": 3, "y": 15, "label": 1},
+                {"x": 16, "y": 15, "label": 1},
+            ],
+            "negative_points": [{"x": 10, "y": 3, "label": 0}],
+        }
+        groups = [[positive, *contract["negative_points"]]
+                  for positive in contract["positive_points"]]
+        response = {"items": [
+            {"index": 0, "points": groups[0], "result": {"id": 0}},
+            {"index": 1, "points": groups[1], "result": {"id": 1}},
+        ]}
+        masks = []
+        for positive in contract["positive_points"]:
+            mask = np.zeros((20, 20), dtype=bool)
+            mask[14:20, max(0, positive["x"] - 2):positive["x"] + 3] = True
+            masks.append(mask)
+        decoded = [
+            ({"score": .9, "parts": [{"points": [[1, 1], [2, 1], [2, 2]],
+                                       "holes": []}]}, mask, [])
+            for mask in masks
+        ]
+        request_groups = mock.Mock(return_value=response)
+        with mock.patch.object(evaluator, "_decode_response",
+                               side_effect=decoded):
+            result, _ = evaluate_reference_image(
+                output.getvalue(), contract, request_groups=request_groups)
+        request_groups.assert_called_once_with(output.getvalue(), groups)
+        self.assertEqual(len(result["attempts"]), 2)
+        self.assertEqual(result["result"]["request_count"], 2)
+        self.assertNotIn("error", result["attempts"][0])
+        self.assertNotIn("error", result["attempts"][1])
+
+    def test_grouped_item_error_fails_only_its_own_attempt(self):
+        output = io.BytesIO()
+        Image.new("RGB", (20, 20), "gray").save(output, "PNG")
+        contract = {
+            "positive_points": [
+                {"x": 3, "y": 15, "label": 1},
+                {"x": 16, "y": 15, "label": 1},
+            ],
+            "negative_points": [{"x": 10, "y": 3, "label": 0}],
+        }
+        groups = [[positive, *contract["negative_points"]]
+                  for positive in contract["positive_points"]]
+        response = {"items": [
+            {"index": 0, "points": groups[0], "error": "occluded"},
+            {"index": 1, "points": groups[1], "result": {"id": 1}},
+        ]}
+        mask = np.zeros((20, 20), dtype=bool)
+        mask[14:20, 14:19] = True
+        decoded = ({"score": .9, "parts": [{
+            "points": [[1, 1], [2, 1], [2, 2]], "holes": []}]}, mask, [])
+        with mock.patch.object(evaluator, "_decode_response",
+                               return_value=decoded):
+            result, _ = evaluate_reference_image(
+                output.getvalue(), contract,
+                request_groups=mock.Mock(return_value=response))
+        self.assertIn("occluded", result["attempts"][0]["error"])
+        self.assertNotIn("error", result["attempts"][1])
+        self.assertFalse(result["result"]["candidate_available"])
 
 
 if __name__ == "__main__":

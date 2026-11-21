@@ -1,0 +1,56 @@
+{
+  "schema_version": "labelagent.round405.point_group_formal.v1",
+  "date": "2026-11-22",
+  "formal_service_version": "labelagent.remote-sam3.v3-point-groups",
+  "deployment": {
+    "remote_backup": "/home/clw/labelagent_remote_20261110/backups/point-groups-round404-20261122",
+    "local_backup": "D:\\Apps\\LabelAgent\\.local\\backups\\point-groups-round404-20261122-0435",
+    "old_single_endpoint_probe": "passed",
+    "old_batch_endpoint_probe": "passed",
+    "new_group_batch_endpoint_probe": "passed",
+    "workbench_was_idle_before_restart": true,
+    "formal_state_hashes_unchanged_after_restart": true,
+    "sam_in_flight_after_restart": 0
+  },
+  "fallback_contract": {
+    "fallback_only_on_http_404": true,
+    "protocol_capability_cached": true,
+    "http_503_not_hidden": true,
+    "malformed_response_not_hidden": true,
+    "legacy_http_400_isolated_to_its_group": true
+  },
+  "frozen_24_frame_rerun": {
+    "reference_frame": 0,
+    "sample_count": 24,
+    "candidate_available_count": 15,
+    "request_failure_count": 9,
+    "old_median_elapsed_seconds": 0.883,
+    "new_median_elapsed_seconds": 0.3125,
+    "speedup": 2.8256,
+    "geometry_summary_equal": true,
+    "available_geometry_summary_equal": true,
+    "accepted_candidate_summary_equal": true,
+    "mean_iou_all_frames": 0.6899,
+    "mean_iou_available_frames": 0.9218,
+    "minimum_iou_available_frames": 0.849209,
+    "maximum_person_overlap": 0.0,
+    "maximum_floor_overlap": 0.000414,
+    "results_sha256": "D143FB72897F534733EB502755E77B0E343D8EB0146D58D8D5AE6D6711FE607F"
+  },
+  "tests": {
+    "targeted_passed": 20,
+    "targeted_subtests_passed": 6,
+    "python_passed": 1280,
+    "python_subtests_passed": 225,
+    "node_passed": 167,
+    "diff_check_passed": true
+  },
+  "boundary": {
+    "automatic_candidate_policy_changed": false,
+    "candidate_only": true,
+    "human_truth_modified": false,
+    "training_approved": false,
+    "real_images_uploaded": false
+  },
+  "gate": "formal_endpoint_and_strict_fallback_passed; heldout_occlusion_coverage_improvement_required"
+}

@@ -1,0 +1,2720 @@
+{
+  "schema_version": "labelagent.ego_reference_geometry_shadow.v1",
+  "created_utc": "2026-11-21T20:22:01.260654+00:00",
+  "dataset": "CVAT Task3 local reviewed snapshot",
+  "reference_frame": 0,
+  "reference_frame_excluded_from_evaluation": true,
+  "reference_truth_source": "existing_workbench_cvat_polygon",
+  "formal_human_receipt_v3": false,
+  "diagnostic_only": true,
+  "color_dependent": false,
+  "candidate_only": true,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_state_modified": false,
+  "contract": {
+    "reference_component_count": 3,
+    "positive_points": [
+      {
+        "x": 397,
+        "y": 375,
+        "label": 1
+      },
+      {
+        "x": 187,
+        "y": 375,
+        "label": 1
+      },
+      {
+        "x": 627,
+        "y": 448,
+        "label": 1
+      }
+    ],
+    "negative_points": [
+      {
+        "x": 128,
+        "y": 360,
+        "label": 0
+      },
+      {
+        "x": 320,
+        "y": 360,
+        "label": 0
+      },
+      {
+        "x": 512,
+        "y": 360,
+        "label": 0
+      }
+    ],
+    "points": [
+      {
+        "x": 397,
+        "y": 375,
+        "label": 1
+      },
+      {
+        "x": 187,
+        "y": 375,
+        "label": 1
+      },
+      {
+        "x": 627,
+        "y": 448,
+        "label": 1
+      },
+      {
+        "x": 128,
+        "y": 360,
+        "label": 0
+      },
+      {
+        "x": 320,
+        "y": 360,
+        "label": 0
+      },
+      {
+        "x": 512,
+        "y": 360,
+        "label": 0
+      }
+    ]
+  },
+  "selected_frames": [
+    1,
+    7,
+    14,
+    20,
+    27,
+    33,
+    40,
+    46,
+    52,
+    59,
+    65,
+    72,
+    78,
+    85,
+    91,
+    98,
+    104,
+    110,
+    117,
+    123,
+    130,
+    136,
+    143,
+    149
+  ],
+  "sample_count": 24,
+  "candidate_available_count": 15,
+  "request_failure_count": 9,
+  "negative_violation_count": 0,
+  "geometry": {
+    "mean_iou": 0.6899,
+    "median_iou": 0.906462,
+    "minimum_iou": 0.040592,
+    "mean_precision": 0.820935,
+    "mean_recall": 0.839265,
+    "maximum_person_overlap": 0.0,
+    "maximum_floor_overlap": 0.000414,
+    "sample_iou_at_least_0_75": 16
+  },
+  "available_geometry": {
+    "mean_iou": 0.9218,
+    "median_iou": 0.932513,
+    "minimum_iou": 0.849209,
+    "mean_precision": 0.998628,
+    "mean_recall": 0.923004,
+    "maximum_person_overlap": 0.0,
+    "maximum_floor_overlap": 0.000414,
+    "sample_iou_at_least_0_75": 15
+  },
+  "accepted_candidate": {
+    "mean_iou": 0.576125,
+    "median_iou": 0.906462,
+    "minimum_iou": 0.0,
+    "mean_precision": 0.624142,
+    "mean_recall": 0.576878,
+    "maximum_person_overlap": 0.0,
+    "maximum_floor_overlap": 0.000414,
+    "sample_iou_at_least_0_75": 15
+  },
+  "median_elapsed_seconds": 0.3125,
+  "annotation_snapshot_sha256": "381a8f2e76a4d58d013302cd416842eaed88cb720b8cfc42185efe6e0e0f6c8a",
+  "import_manifest_sha256": "e6fed22bfd3b26d32260da2cb5d592041c0bdc3cee3eba72572f9034ffaac961",
+  "contact_sheet": "contact_sheet.jpg",
+  "contact_sheet_sha256": "f1805d60da49e66fe3c0b8c9dd8a3e445edb4fcd056c1cfde1e8c7f1268e8308",
+  "samples": [
+    {
+      "sample_id": "cvat-task3-frame001",
+      "frame": 1,
+      "source_image_sha256": "d94a9a91581a1a4ae32d99d9ccb7c630c307aa3d41d134552e089772225e992f",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 33791,
+        "area_ratio": 0.109997,
+        "bbox": [
+          98,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.344,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16077,
+          "area_ratio": 0.052334,
+          "bbox": [
+            351,
+            239,
+            471,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.945312,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16392,
+          "area_ratio": 0.053359,
+          "bbox": [
+            98,
+            240,
+            257,
+            479
+          ],
+          "touches_bottom": true,
+          "score": 0.9375,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1322,
+          "area_ratio": 0.004303,
+          "bbox": [
+            612,
+            423,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.851562,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 33791,
+        "truth_area_pixels": 35760,
+        "iou": 0.934498,
+        "precision": 0.994288,
+        "recall": 0.939541,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 33791,
+        "truth_area_pixels": 35760,
+        "iou": 0.934498,
+        "precision": 0.994288,
+        "recall": 0.939541,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame001-truth-reference.jpg",
+      "comparison_overlay_sha256": "774c31637a78392eaa1d5a8c9b1ca9b0eb02a8af0dcb95e1ec47864808e42841"
+    },
+    {
+      "sample_id": "cvat-task3-frame007",
+      "frame": 7,
+      "source_image_sha256": "031260edba61c4d3eae0f827b2ec96e34d16a54846c224d4789a3fb0608bbdd2",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 33948,
+        "area_ratio": 0.110508,
+        "bbox": [
+          97,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.297,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16193,
+          "area_ratio": 0.052712,
+          "bbox": [
+            351,
+            239,
+            471,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.9375,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16459,
+          "area_ratio": 0.053577,
+          "bbox": [
+            97,
+            240,
+            257,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.9375,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1296,
+          "area_ratio": 0.004219,
+          "bbox": [
+            612,
+            423,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.835938,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 33948,
+        "truth_area_pixels": 35722,
+        "iou": 0.933291,
+        "precision": 0.990721,
+        "recall": 0.941521,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 33948,
+        "truth_area_pixels": 35722,
+        "iou": 0.933291,
+        "precision": 0.990721,
+        "recall": 0.941521,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame007-truth-reference.jpg",
+      "comparison_overlay_sha256": "215d8bdf43e29909a116083b38fd8e6f9dea856dd7b33fe3bd78d270af84a52b"
+    },
+    {
+      "sample_id": "cvat-task3-frame014",
+      "frame": 14,
+      "source_image_sha256": "e0401858f67f2734ba87ed13d534f2bf4be2a95ee4e01584b844aa52272a1fb8",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 33851,
+        "area_ratio": 0.110192,
+        "bbox": [
+          97,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.281,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16248,
+          "area_ratio": 0.052891,
+          "bbox": [
+            349,
+            239,
+            471,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.945312,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16230,
+          "area_ratio": 0.052832,
+          "bbox": [
+            97,
+            239,
+            257,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.941406,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1373,
+          "area_ratio": 0.004469,
+          "bbox": [
+            611,
+            424,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.703125,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 33851,
+        "truth_area_pixels": 37198,
+        "iou": 0.909303,
+        "precision": 0.999586,
+        "recall": 0.909646,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.000414
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 33851,
+        "truth_area_pixels": 37198,
+        "iou": 0.909303,
+        "precision": 0.999586,
+        "recall": 0.909646,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.000414
+      },
+      "comparison_overlay": "cvat-frame014-truth-reference.jpg",
+      "comparison_overlay_sha256": "de17543af303b17a53dc6f4a3bf4dd8ce4e36680107887f62be7f6a3df7db5f7"
+    },
+    {
+      "sample_id": "cvat-task3-frame020",
+      "frame": 20,
+      "source_image_sha256": "40476f737b88ca18a0c0fc93419b2fffa8189b589a4212029caf243ca4149353",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 33946,
+        "area_ratio": 0.110501,
+        "bbox": [
+          98,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.328,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16003,
+          "area_ratio": 0.052093,
+          "bbox": [
+            349,
+            239,
+            471,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.941406,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16687,
+          "area_ratio": 0.05432,
+          "bbox": [
+            98,
+            239,
+            258,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.945312,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1256,
+          "area_ratio": 0.004089,
+          "bbox": [
+            612,
+            424,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.796875,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 33946,
+        "truth_area_pixels": 37554,
+        "iou": 0.903621,
+        "precision": 0.999823,
+        "recall": 0.903765,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 33946,
+        "truth_area_pixels": 37554,
+        "iou": 0.903621,
+        "precision": 0.999823,
+        "recall": 0.903765,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame020-truth-reference.jpg",
+      "comparison_overlay_sha256": "2eec03e6d2e2e85bff4253f25d01d34cc65108e4047f22009dece62444eb95d5"
+    },
+    {
+      "sample_id": "cvat-task3-frame027",
+      "frame": 27,
+      "source_image_sha256": "04844a61c40199c7c41114f8a6e787b5d0f828a2809e2c67e4bb9028302bc920",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 35138,
+        "area_ratio": 0.114382,
+        "bbox": [
+          98,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.266,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16765,
+          "area_ratio": 0.054574,
+          "bbox": [
+            350,
+            239,
+            471,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.945312,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 17036,
+          "area_ratio": 0.055456,
+          "bbox": [
+            98,
+            239,
+            258,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.941406,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1337,
+          "area_ratio": 0.004352,
+          "bbox": [
+            611,
+            423,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.769531,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 35138,
+        "truth_area_pixels": 36866,
+        "iou": 0.952333,
+        "precision": 0.999573,
+        "recall": 0.952721,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 35138,
+        "truth_area_pixels": 36866,
+        "iou": 0.952333,
+        "precision": 0.999573,
+        "recall": 0.952721,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame027-truth-reference.jpg",
+      "comparison_overlay_sha256": "e3fdf82cbdaff40e8b29efeaf088c661125462de2e4e86468ff35b759419356c"
+    },
+    {
+      "sample_id": "cvat-task3-frame033",
+      "frame": 33,
+      "source_image_sha256": "b1af263238820431e807b7b7003056e3db9a3dbbf3ca292afa57683f795f158c",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 34528,
+        "area_ratio": 0.112396,
+        "bbox": [
+          97,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.297,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16461,
+          "area_ratio": 0.053584,
+          "bbox": [
+            351,
+            239,
+            471,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.9375,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16779,
+          "area_ratio": 0.054619,
+          "bbox": [
+            97,
+            239,
+            259,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.945312,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1288,
+          "area_ratio": 0.004193,
+          "bbox": [
+            611,
+            423,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.796875,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 34528,
+        "truth_area_pixels": 36963,
+        "iou": 0.933652,
+        "precision": 0.999739,
+        "recall": 0.93388,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 34528,
+        "truth_area_pixels": 36963,
+        "iou": 0.933652,
+        "precision": 0.999739,
+        "recall": 0.93388,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame033-truth-reference.jpg",
+      "comparison_overlay_sha256": "dfbdba1fcb38aface7106857e2bae90da41d09204c409e95f49c6b99dfb71f37"
+    },
+    {
+      "sample_id": "cvat-task3-frame040",
+      "frame": 40,
+      "source_image_sha256": "a1302da817b18ec947a5caa63d23defdd388d4ea0e75ac923269cc69c00c3612",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 33067,
+        "area_ratio": 0.10764,
+        "bbox": [
+          98,
+          250,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.297,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 15498,
+          "area_ratio": 0.050449,
+          "bbox": [
+            350,
+            255,
+            470,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.929688,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16265,
+          "area_ratio": 0.052946,
+          "bbox": [
+            98,
+            250,
+            257,
+            479
+          ],
+          "touches_bottom": true,
+          "score": 0.929688,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1304,
+          "area_ratio": 0.004245,
+          "bbox": [
+            612,
+            422,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.773438,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 33067,
+        "truth_area_pixels": 35368,
+        "iou": 0.934449,
+        "precision": 0.999728,
+        "recall": 0.934687,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 33067,
+        "truth_area_pixels": 35368,
+        "iou": 0.934449,
+        "precision": 0.999728,
+        "recall": 0.934687,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame040-truth-reference.jpg",
+      "comparison_overlay_sha256": "b39225a21005f7060292d4e8e5959a1170fd0e8af3afe8f03c7003e05067aea3"
+    },
+    {
+      "sample_id": "cvat-task3-frame046",
+      "frame": 46,
+      "source_image_sha256": "dc390df1df51e8754785a262781fad15a53c14aaf71e3edc23f5ffbb8995a21b",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 32968,
+        "area_ratio": 0.107318,
+        "bbox": [
+          98,
+          241,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.312,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 15551,
+          "area_ratio": 0.050622,
+          "bbox": [
+            350,
+            251,
+            470,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.921875,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16084,
+          "area_ratio": 0.052357,
+          "bbox": [
+            98,
+            241,
+            257,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.933594,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1333,
+          "area_ratio": 0.004339,
+          "bbox": [
+            612,
+            421,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.804688,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 32968,
+        "truth_area_pixels": 35809,
+        "iou": 0.918305,
+        "precision": 0.998665,
+        "recall": 0.919434,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 32968,
+        "truth_area_pixels": 35809,
+        "iou": 0.918305,
+        "precision": 0.998665,
+        "recall": 0.919434,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame046-truth-reference.jpg",
+      "comparison_overlay_sha256": "99d768f872f8d3d4f7ee17d562811be32ddce64d3d6935d88b945f5aca03677f"
+    },
+    {
+      "sample_id": "cvat-task3-frame052",
+      "frame": 52,
+      "source_image_sha256": "8b9390c48169399e64b6695a6e5e75260215a729bf5be9a3856848b599ec2d20",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 35129,
+        "area_ratio": 0.114352,
+        "bbox": [
+          96,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.313,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16772,
+          "area_ratio": 0.054596,
+          "bbox": [
+            350,
+            239,
+            471,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.929688,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 17092,
+          "area_ratio": 0.055638,
+          "bbox": [
+            96,
+            239,
+            258,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.9375,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1265,
+          "area_ratio": 0.004118,
+          "bbox": [
+            612,
+            423,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.824219,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 35129,
+        "truth_area_pixels": 36730,
+        "iou": 0.955719,
+        "precision": 0.99963,
+        "recall": 0.956058,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 35129,
+        "truth_area_pixels": 36730,
+        "iou": 0.955719,
+        "precision": 0.99963,
+        "recall": 0.956058,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame052-truth-reference.jpg",
+      "comparison_overlay_sha256": "cca7d26056546e992c7c353b396bc9a09f50fe22aea13272bac3a94fc47163c0"
+    },
+    {
+      "sample_id": "cvat-task3-frame059",
+      "frame": 59,
+      "source_image_sha256": "7e3f4916e9925ddf32e29ceb94ddc1f5938af97be0564e4055d6a039c94e78df",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 2,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": false,
+        "area_pixels": 17701,
+        "area_ratio": 0.05762,
+        "bbox": [
+          140,
+          250,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 2,
+        "elapsed_seconds": 0.282,
+        "candidate_available": false
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "attempt_available": false,
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16813,
+          "area_ratio": 0.05473,
+          "bbox": [
+            140,
+            250,
+            311,
+            400
+          ],
+          "touches_bottom": false,
+          "score": 0.390625,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 888,
+          "area_ratio": 0.002891,
+          "bbox": [
+            618,
+            423,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.597656,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 17701,
+        "truth_area_pixels": 970,
+        "iou": 0.047579,
+        "precision": 0.047907,
+        "recall": 0.874227,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 0,
+        "truth_area_pixels": 970,
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame059-truth-reference.jpg",
+      "comparison_overlay_sha256": "785c568bd083040a745ae301c27d8d6da20e07de04244a6bf31e0321447da467"
+    },
+    {
+      "sample_id": "cvat-task3-frame065",
+      "frame": 65,
+      "source_image_sha256": "2780eeb3eed3663be0e447f3e8128b7503c9dfaf39f35be93daf6e22bcaff3da",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 2,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": false,
+        "area_pixels": 20175,
+        "area_ratio": 0.065674,
+        "bbox": [
+          117,
+          223,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 2,
+        "elapsed_seconds": 0.657,
+        "candidate_available": false
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "attempt_available": false,
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 19310,
+          "area_ratio": 0.062858,
+          "bbox": [
+            117,
+            223,
+            316,
+            386
+          ],
+          "touches_bottom": false,
+          "score": 0.710938,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 865,
+          "area_ratio": 0.002816,
+          "bbox": [
+            620,
+            418,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.365234,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 20175,
+        "truth_area_pixels": 974,
+        "iou": 0.040592,
+        "precision": 0.040892,
+        "recall": 0.847023,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 0,
+        "truth_area_pixels": 974,
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame065-truth-reference.jpg",
+      "comparison_overlay_sha256": "37f64011f76434380e135c723a2e6ca1144482349b305414f14fa2bb54ffb7df"
+    },
+    {
+      "sample_id": "cvat-task3-frame072",
+      "frame": 72,
+      "source_image_sha256": "e1bd8b29ea3deaf7fe9934c9965ad2cb3e1d451fe8f4d8b10725d75a1de686fb",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 34530,
+        "area_ratio": 0.112402,
+        "bbox": [
+          96,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.281,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16454,
+          "area_ratio": 0.053561,
+          "bbox": [
+            349,
+            239,
+            470,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.933594,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16856,
+          "area_ratio": 0.05487,
+          "bbox": [
+            96,
+            239,
+            257,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.949219,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1220,
+          "area_ratio": 0.003971,
+          "bbox": [
+            612,
+            424,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.824219,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 34530,
+        "truth_area_pixels": 36726,
+        "iou": 0.939625,
+        "precision": 0.999681,
+        "recall": 0.939906,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 34530,
+        "truth_area_pixels": 36726,
+        "iou": 0.939625,
+        "precision": 0.999681,
+        "recall": 0.939906,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame072-truth-reference.jpg",
+      "comparison_overlay_sha256": "6bbff70913151dec49568c8ae464e11535b275e6ce7c7807181f68d64e0ac396"
+    },
+    {
+      "sample_id": "cvat-task3-frame078",
+      "frame": 78,
+      "source_image_sha256": "a9431e169fa8ea150702a67e9132f7d9037a5fda764628e2df96e33d2db6cbfa",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 33764,
+        "area_ratio": 0.109909,
+        "bbox": [
+          97,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.39,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16059,
+          "area_ratio": 0.052275,
+          "bbox": [
+            351,
+            239,
+            471,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.949219,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16390,
+          "area_ratio": 0.053353,
+          "bbox": [
+            97,
+            239,
+            257,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.949219,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1315,
+          "area_ratio": 0.004281,
+          "bbox": [
+            611,
+            422,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.785156,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 33764,
+        "truth_area_pixels": 37399,
+        "iou": 0.902398,
+        "precision": 0.999763,
+        "recall": 0.902591,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 33764,
+        "truth_area_pixels": 37399,
+        "iou": 0.902398,
+        "precision": 0.999763,
+        "recall": 0.902591,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame078-truth-reference.jpg",
+      "comparison_overlay_sha256": "559ccf1aa2a545d6821a6b2e1da4863350fc7cb25c00f497bbdee22345a12d2f"
+    },
+    {
+      "sample_id": "cvat-task3-frame085",
+      "frame": 85,
+      "source_image_sha256": "b05497ad317abd287b1de571e735cdbfd6bd4f4fca5f42468f241daa40aef478",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 33261,
+        "area_ratio": 0.108271,
+        "bbox": [
+          98,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.328,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16176,
+          "area_ratio": 0.052656,
+          "bbox": [
+            350,
+            239,
+            473,
+            479
+          ],
+          "touches_bottom": true,
+          "score": 0.941406,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16201,
+          "area_ratio": 0.052738,
+          "bbox": [
+            98,
+            239,
+            258,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.941406,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 884,
+          "area_ratio": 0.002878,
+          "bbox": [
+            619,
+            426,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.363281,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 33261,
+        "truth_area_pixels": 36351,
+        "iou": 0.914311,
+        "precision": 0.999609,
+        "recall": 0.914638,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 33261,
+        "truth_area_pixels": 36351,
+        "iou": 0.914311,
+        "precision": 0.999609,
+        "recall": 0.914638,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame085-truth-reference.jpg",
+      "comparison_overlay_sha256": "1de010be1e7edf99bcac90618b5c86c884be04b365c6265a4e667c60807f0781"
+    },
+    {
+      "sample_id": "cvat-task3-frame091",
+      "frame": 91,
+      "source_image_sha256": "6d21fad0c4b1f35967cd2714a1e7b3d954e96c747951d8e87949bf7baff65ce6",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 34276,
+        "area_ratio": 0.111576,
+        "bbox": [
+          98,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.344,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16453,
+          "area_ratio": 0.053558,
+          "bbox": [
+            350,
+            239,
+            471,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.941406,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16487,
+          "area_ratio": 0.053669,
+          "bbox": [
+            98,
+            239,
+            258,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.929688,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1336,
+          "area_ratio": 0.004349,
+          "bbox": [
+            612,
+            423,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.820312,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 34276,
+        "truth_area_pixels": 36682,
+        "iou": 0.932513,
+        "precision": 0.99895,
+        "recall": 0.933428,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 34276,
+        "truth_area_pixels": 36682,
+        "iou": 0.932513,
+        "precision": 0.99895,
+        "recall": 0.933428,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame091-truth-reference.jpg",
+      "comparison_overlay_sha256": "9db1cf7f53bdc9452f06b951b0093e4af2d15baff492352a1a3a9f1a18d48d3a"
+    },
+    {
+      "sample_id": "cvat-task3-frame098",
+      "frame": 98,
+      "source_image_sha256": "7b935a96dc25e716c779e6a6951373f024ddb0debca9c6ab2b8887f403af6797",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 1,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": false,
+        "area_pixels": 842,
+        "area_ratio": 0.002741,
+        "bbox": [
+          618,
+          417,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 1,
+        "elapsed_seconds": 0.297,
+        "candidate_available": false
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "attempt_available": false,
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "attempt_available": false,
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 842,
+          "area_ratio": 0.002741,
+          "bbox": [
+            618,
+            417,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.632812,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 842,
+        "truth_area_pixels": 1034,
+        "iou": 0.810811,
+        "precision": 0.997625,
+        "recall": 0.812379,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 0,
+        "truth_area_pixels": 1034,
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame098-truth-reference.jpg",
+      "comparison_overlay_sha256": "6ea579fc450ee1b8b8311c2958fef02ab2f728b5019ac4851959440a91ac36a1"
+    },
+    {
+      "sample_id": "cvat-task3-frame104",
+      "frame": 104,
+      "source_image_sha256": "ec14d1f3b25eb1c2927caf67e36504dc84b136fcc575b028c4d84d33c36cbea4",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 1,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": false,
+        "area_pixels": 788,
+        "area_ratio": 0.002565,
+        "bbox": [
+          620,
+          417,
+          640,
+          472
+        ],
+        "touches_bottom": false,
+        "request_count": 3,
+        "accepted_request_count": 1,
+        "elapsed_seconds": 0.328,
+        "candidate_available": false
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "attempt_available": false,
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "attempt_available": false,
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 788,
+          "area_ratio": 0.002565,
+          "bbox": [
+            620,
+            417,
+            640,
+            472
+          ],
+          "touches_bottom": false,
+          "score": 0.214844,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 788,
+        "truth_area_pixels": 5603,
+        "iou": 0.139216,
+        "precision": 0.991117,
+        "recall": 0.13939,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 0,
+        "truth_area_pixels": 5603,
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame104-truth-reference.jpg",
+      "comparison_overlay_sha256": "99a92cd4055b3b2422162bb8128708dd4849315c21006be07de272817a373a45"
+    },
+    {
+      "sample_id": "cvat-task3-frame110",
+      "frame": 110,
+      "source_image_sha256": "790d94f10a8a08459665480e3a5edd316dab51a6dff55a9e8bf3c65e6fc0e372",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 1,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": false,
+        "area_pixels": 755,
+        "area_ratio": 0.002458,
+        "bbox": [
+          620,
+          417,
+          640,
+          472
+        ],
+        "touches_bottom": false,
+        "request_count": 3,
+        "accepted_request_count": 1,
+        "elapsed_seconds": 0.297,
+        "candidate_available": false
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "attempt_available": false,
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "attempt_available": false,
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 755,
+          "area_ratio": 0.002458,
+          "bbox": [
+            620,
+            417,
+            640,
+            472
+          ],
+          "touches_bottom": false,
+          "score": 0.147461,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 755,
+        "truth_area_pixels": 5779,
+        "iou": 0.128692,
+        "precision": 0.986755,
+        "recall": 0.128915,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 0,
+        "truth_area_pixels": 5779,
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame110-truth-reference.jpg",
+      "comparison_overlay_sha256": "c4978e3d71cdd72e8ed3e09a82e6576900d8a9319d9f5b034b687f9fe20360a0"
+    },
+    {
+      "sample_id": "cvat-task3-frame117",
+      "frame": 117,
+      "source_image_sha256": "f87fe496b86278d8ffacb532a3da8e79f710277ae593badf7dce2c2d21afb644",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 2,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": false,
+        "area_pixels": 2728,
+        "area_ratio": 0.00888,
+        "bbox": [
+          349,
+          361,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 2,
+        "elapsed_seconds": 0.328,
+        "candidate_available": false
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 1442,
+          "area_ratio": 0.004694,
+          "bbox": [
+            349,
+            361,
+            464,
+            408
+          ],
+          "touches_bottom": false,
+          "score": 0.621094,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "attempt_available": false,
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1286,
+          "area_ratio": 0.004186,
+          "bbox": [
+            612,
+            423,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.8125,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 2728,
+        "truth_area_pixels": 1471,
+        "iou": 0.431152,
+        "precision": 0.46371,
+        "recall": 0.859959,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 0,
+        "truth_area_pixels": 1471,
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame117-truth-reference.jpg",
+      "comparison_overlay_sha256": "be24c05d687c9d269eac80c5b44ff1087e9344d7b58b16cec532c574367a52d1"
+    },
+    {
+      "sample_id": "cvat-task3-frame123",
+      "frame": 123,
+      "source_image_sha256": "aec2ac63df70d34227ae1d632a0ba4689cebc450aa4178e39caf4308db73281e",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 2,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": false,
+        "area_pixels": 5799,
+        "area_ratio": 0.018877,
+        "bbox": [
+          351,
+          354,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 2,
+        "elapsed_seconds": 0.328,
+        "candidate_available": false
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 4534,
+          "area_ratio": 0.014759,
+          "bbox": [
+            351,
+            354,
+            485,
+            419
+          ],
+          "touches_bottom": false,
+          "score": 0.585938,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "attempt_available": false,
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1265,
+          "area_ratio": 0.004118,
+          "bbox": [
+            612,
+            424,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.8125,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 5799,
+        "truth_area_pixels": 1451,
+        "iou": 0.204719,
+        "precision": 0.21245,
+        "recall": 0.84907,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 0,
+        "truth_area_pixels": 1451,
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame123-truth-reference.jpg",
+      "comparison_overlay_sha256": "62ceb089084e1dcf1182c67838dd28cbea65a46a3c4f65f2cad163dfceda32da"
+    },
+    {
+      "sample_id": "cvat-task3-frame130",
+      "frame": 130,
+      "source_image_sha256": "f29617c2d252cf478225159053a95082e29ea9c21afdedddcbd71d708da098e5",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 33058,
+        "area_ratio": 0.107611,
+        "bbox": [
+          98,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.313,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 15998,
+          "area_ratio": 0.052077,
+          "bbox": [
+            351,
+            239,
+            474,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.933594,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16087,
+          "area_ratio": 0.052367,
+          "bbox": [
+            98,
+            239,
+            259,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.933594,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 973,
+          "area_ratio": 0.003167,
+          "bbox": [
+            617,
+            423,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.026733,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 33058,
+        "truth_area_pixels": 36161,
+        "iou": 0.913766,
+        "precision": 0.999758,
+        "recall": 0.913968,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 33058,
+        "truth_area_pixels": 36161,
+        "iou": 0.913766,
+        "precision": 0.999758,
+        "recall": 0.913968,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame130-truth-reference.jpg",
+      "comparison_overlay_sha256": "f220c825c7e72e6e7966f122be4816852e9121df56cf530faf99473b3788e92a"
+    },
+    {
+      "sample_id": "cvat-task3-frame136",
+      "frame": 136,
+      "source_image_sha256": "2b42a3852888ea13e56b9365387f77110ca9d3e10c68020a3af1d939ccda90ba",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 2,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": false,
+        "area_pixels": 1565,
+        "area_ratio": 0.005094,
+        "bbox": [
+          388,
+          365,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 2,
+        "elapsed_seconds": 0.328,
+        "candidate_available": false
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 741,
+          "area_ratio": 0.002412,
+          "bbox": [
+            388,
+            365,
+            424,
+            390
+          ],
+          "touches_bottom": false,
+          "score": 0.061035,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "attempt_available": false,
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 824,
+          "area_ratio": 0.002682,
+          "bbox": [
+            615,
+            427,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.265625,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 1565,
+        "truth_area_pixels": 898,
+        "iou": 0.447972,
+        "precision": 0.486901,
+        "recall": 0.848552,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 0,
+        "truth_area_pixels": 898,
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame136-truth-reference.jpg",
+      "comparison_overlay_sha256": "9d84728866c3d5fc3ad9bb4d796a55e620990f7ab012ad68809a2ee2f2ddd82b"
+    },
+    {
+      "sample_id": "cvat-task3-frame143",
+      "frame": 143,
+      "source_image_sha256": "810d764ff5fe1c945392aea356b86ed8a0f45a1b14a99bb3b613dd73b7b6e9af",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 2,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": false,
+        "area_pixels": 1612,
+        "area_ratio": 0.005247,
+        "bbox": [
+          389,
+          364,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 2,
+        "elapsed_seconds": 0.296,
+        "candidate_available": false
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 743,
+          "area_ratio": 0.002419,
+          "bbox": [
+            389,
+            364,
+            424,
+            390
+          ],
+          "touches_bottom": false,
+          "score": 0.147461,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "attempt_available": false,
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 869,
+          "area_ratio": 0.002829,
+          "bbox": [
+            614,
+            427,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.271484,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 1612,
+        "truth_area_pixels": 852,
+        "iou": 0.47988,
+        "precision": 0.495658,
+        "recall": 0.937793,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 0,
+        "truth_area_pixels": 852,
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame143-truth-reference.jpg",
+      "comparison_overlay_sha256": "da84a5bfc8194f241157baf358478274bb91489efa5e693eddf5aee1cea6ae6c"
+    },
+    {
+      "sample_id": "cvat-task3-frame149",
+      "frame": 149,
+      "source_image_sha256": "006ddc3507731fe9f1968fa10c1b7e500e16b9873dfc24fecaaa748aa30eee35",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 31045,
+        "area_ratio": 0.101058,
+        "bbox": [
+          107,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.281,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 15578,
+          "area_ratio": 0.05071,
+          "bbox": [
+            350,
+            249,
+            471,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.847656,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 14194,
+          "area_ratio": 0.046204,
+          "bbox": [
+            107,
+            239,
+            258,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.910156,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1273,
+          "area_ratio": 0.004144,
+          "bbox": [
+            612,
+            424,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.726562,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 31045,
+        "truth_area_pixels": 36551,
+        "iou": 0.849209,
+        "precision": 0.999903,
+        "recall": 0.849279,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 31045,
+        "truth_area_pixels": 36551,
+        "iou": 0.849209,
+        "precision": 0.999903,
+        "recall": 0.849279,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame149-truth-reference.jpg",
+      "comparison_overlay_sha256": "c64a3a70d74fb4a174165b0bae6312f8a22209b881349b7af40dcf061a80d024"
+    }
+  ],
+  "decision_boundary": "One CVAT reference frame derives prompts and is excluded from evaluation. The snapshot lacks the formal v3 human receipt, so results remain diagnostic."
+}

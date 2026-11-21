@@ -1,0 +1,60 @@
+{
+  "schema_version": "labelagent.round385.ego_camera_normalized_template_shadow.v1",
+  "date": "2026-11-22",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_state_modified": false,
+  "coordinate_mode": "normalized_image_ratio",
+  "frames_per_camera": [0, 19, 38, 57, 76, 95, 114, 133, 151],
+  "primary_template_summary": [
+    {"camera": 0, "candidates": 9, "frames": 9, "mean_score": 0.72, "min_area_ratio": 0.0957, "max_area_ratio": 0.1127, "mean_area_ratio": 0.105, "median_elapsed_seconds": 0.375},
+    {"camera": 1, "candidates": 9, "frames": 9, "mean_score": 0.49, "min_area_ratio": 0.0355, "max_area_ratio": 0.0924, "mean_area_ratio": 0.068, "median_elapsed_seconds": 0.422},
+    {"camera": 2, "candidates": 9, "frames": 9, "mean_score": 0.59, "min_area_ratio": 0.0993, "max_area_ratio": 0.1092, "mean_area_ratio": 0.106, "median_elapsed_seconds": 0.391},
+    {"camera": 3, "candidates": 9, "frames": 9, "mean_score": 0.80, "min_area_ratio": 0.1198, "max_area_ratio": 0.1267, "mean_area_ratio": 0.123, "median_elapsed_seconds": 0.359}
+  ],
+  "control_template_summary": [
+    {"camera": 0, "candidates": 9, "frames": 9, "mean_score": 0.85, "min_area_ratio": 0.10, "max_area_ratio": 0.12, "mean_area_ratio": 0.11},
+    {"camera": 1, "candidates": 9, "frames": 9, "mean_score": 0.45, "min_area_ratio": 0.01, "max_area_ratio": 0.03, "mean_area_ratio": 0.02},
+    {"camera": 2, "candidates": 9, "frames": 9, "mean_score": 0.77, "min_area_ratio": 0.10, "max_area_ratio": 0.12, "mean_area_ratio": 0.11},
+    {"camera": 3, "candidates": 8, "frames": 9, "mean_score_including_failure_as_zero": 0.49, "min_area_ratio": 0.0, "max_area_ratio": 0.10, "mean_area_ratio": 0.06, "failure_frame": 114}
+  ],
+  "assistant_visual_review": {
+    "overlays_reviewed": 17,
+    "human_confirmed": false,
+    "observed": "primary templates stayed on camera-host vehicle regions; no obvious whole-floor or whole-person capture in reviewed overlays",
+    "limitations": ["internal holes", "fine boundary gaps", "person-contact ambiguity", "camera1 occlusion-dependent visible area"]
+  },
+  "tests": {
+    "targeted_unittest": {"passed": 5, "failed": 0},
+    "full_python": {"passed": 1207, "subtests_passed": 194, "failed": 0, "utf8_required_on_windows": true},
+    "web_node": {"passed": 167, "failed": 0}
+  },
+  "runtime": {
+    "core_http_status": {"home": 200, "bootstrap": 200, "model_readiness": 200, "run_status": 200, "state_summary": 200},
+    "status": "idle",
+    "sam_ready": true,
+    "primary_vlm_ready": true,
+    "fast_vlm_ready": true
+  },
+  "formal_state_sha256": {
+    "state": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "file_sessions": "94E8BEE324628585E7532E595348293DF1DA7B24041A1D4DF1C2EC9FB734E02E",
+    "last_run": "3BECE2513C6F661054AC238AB185527D715A04B3B0C8E073274710BE23E057DA",
+    "last_run_summary": "32578D53E70FA6860F3438860B321172B5E8B405BC6BB8A0F19387A6D4B84933"
+  },
+  "sha256": {
+    "diagnose_ego_guided_points.py": "E12389537593BD52C426DB61F461F13F8C75DAA34C71399F68A707066166AB16",
+    "camera0-normalized-points.json": "A73C8DA3D63EED0E4FEA2DD13344DCDD3019BD013B8A7FC6B30A75182755F99B",
+    "camera1-normalized-points.json": "EB37F84AA5BE2B291666AB00CEE293A17E054BAC7A8B00CABA2F011AECC6FFF0",
+    "camera2-normalized-points.json": "FF2B8FB01D0D880889E19130B467C9AAAA67863E2267C3FFEE94D9207B2193D0",
+    "camera3-normalized-points.json": "61653B2F2FCA886FC7F4972807A6075C81F9DFFEBF370C7D1F8B24220E3212F9"
+  },
+  "privacy": {
+    "real_images_committed": false,
+    "real_overlays_committed": false,
+    "local_visual_artifacts_retained": true
+  },
+  "gate": "promising_shadow_candidate_rejected_for_production_pending_human_truth_and_camera1_occlusion_ab"
+}

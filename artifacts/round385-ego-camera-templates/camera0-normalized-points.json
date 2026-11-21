@@ -1,0 +1,23 @@
+[
+  {
+    "name": "camera0-ego-broad",
+    "points": [
+      {"x_ratio": 0.20, "y_ratio": 0.90, "label": 1},
+      {"x_ratio": 0.45, "y_ratio": 0.94, "label": 1},
+      {"x_ratio": 0.60, "y_ratio": 0.88, "label": 1},
+      {"x_ratio": 0.78, "y_ratio": 0.88, "label": 0},
+      {"x_ratio": 0.50, "y_ratio": 0.68, "label": 0},
+      {"x_ratio": 0.30, "y_ratio": 0.75, "label": 0}
+    ]
+  },
+  {
+    "name": "camera0-ego-low-core",
+    "points": [
+      {"x_ratio": 0.15, "y_ratio": 0.96, "label": 1},
+      {"x_ratio": 0.48, "y_ratio": 0.98, "label": 1},
+      {"x_ratio": 0.62, "y_ratio": 0.92, "label": 1},
+      {"x_ratio": 0.78, "y_ratio": 0.88, "label": 0},
+      {"x_ratio": 0.50, "y_ratio": 0.68, "label": 0}
+    ]
+  }
+]

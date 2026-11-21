@@ -68,6 +68,39 @@ def validate_point_sets(payload, width: int, height: int) -> list[dict]:
     return validated
 
 
+def materialize_normalized_point_sets(payload, width: int, height: int) -> list[dict]:
+    """Convert bounded image-relative hints into validated pixel coordinates."""
+    if not isinstance(payload, list) or not 1 <= len(payload) <= 8:
+        raise ValueError("normalized point-set file must contain 1 to 8 experiments")
+    materialized = []
+    for item in payload:
+        if not isinstance(item, dict):
+            raise ValueError("each normalized point set must be an object")
+        points = item.get("points")
+        if not isinstance(points, list):
+            raise ValueError("normalized point sets require a points list")
+        pixel_points = []
+        for point in points:
+            if not isinstance(point, dict):
+                raise ValueError("every normalized point must be an object")
+            x_ratio = point.get("x_ratio")
+            y_ratio = point.get("y_ratio")
+            label = point.get("label")
+            if (isinstance(x_ratio, bool) or isinstance(y_ratio, bool)
+                    or not isinstance(x_ratio, (int, float))
+                    or not isinstance(y_ratio, (int, float))
+                    or label not in (0, 1)
+                    or not 0 <= x_ratio <= 1 or not 0 <= y_ratio <= 1):
+                raise ValueError("normalized point ratios or labels are invalid")
+            pixel_points.append({
+                "x": round(float(x_ratio) * (width - 1)),
+                "y": round(float(y_ratio) * (height - 1)),
+                "label": label,
+            })
+        materialized.append({"name": item.get("name"), "points": pixel_points})
+    return validate_point_sets(materialized, width, height)
+
+
 def request_points(endpoint: str, image: bytes, points: list[dict]) -> dict:
     body = {"image": base64.b64encode(image).decode("ascii"), "points": points}
     request = urllib.request.Request(
@@ -89,7 +122,9 @@ def request_points(endpoint: str, image: bytes, points: list[dict]) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("image", type=Path)
-    parser.add_argument("--point-sets", required=True, type=Path)
+    point_source = parser.add_mutually_exclusive_group(required=True)
+    point_source.add_argument("--point-sets", type=Path)
+    point_source.add_argument("--normalized-point-sets", type=Path)
     parser.add_argument("--point-sam-url", default="http://127.0.0.1:28766")
     parser.add_argument("--output-dir", required=True, type=Path)
     args = parser.parse_args()
@@ -97,14 +132,20 @@ def main() -> int:
         raise FileExistsError(args.output_dir)
     if not args.point_sam_url.startswith("http://127.0.0.1:"):
         raise ValueError("point SAM URL must be a loopback endpoint")
-    if not args.image.is_file() or not args.point_sets.is_file():
+    point_sets_path = args.point_sets or args.normalized_point_sets
+    if not args.image.is_file() or not point_sets_path.is_file():
         raise FileNotFoundError("image and point-set file are required")
 
     image = args.image.read_bytes()
     with Image.open(args.image) as decoded:
         width, height = decoded.size
-    point_sets = validate_point_sets(
-        json.loads(args.point_sets.read_text(encoding="utf-8")), width, height)
+    point_payload = json.loads(point_sets_path.read_text(encoding="utf-8"))
+    if args.normalized_point_sets:
+        point_sets = materialize_normalized_point_sets(point_payload, width, height)
+        point_coordinate_mode = "normalized_image_ratio"
+    else:
+        point_sets = validate_point_sets(point_payload, width, height)
+        point_coordinate_mode = "absolute_pixel"
     args.output_dir.mkdir(parents=True)
     rows = []
     for index, experiment in enumerate(point_sets):
@@ -155,7 +196,8 @@ def main() -> int:
         "source_state_modified": False,
         "image": str(args.image.resolve()),
         "image_sha256": hashlib.sha256(image).hexdigest(),
-        "point_sets_sha256": file_sha256(args.point_sets),
+        "point_sets_sha256": file_sha256(point_sets_path),
+        "point_coordinate_mode": point_coordinate_mode,
         "rows": rows,
         "evidence_note": (
             "Point sets are bounded assistant-authored development hints. "

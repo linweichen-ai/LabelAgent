@@ -3,7 +3,8 @@ import unittest
 from unittest import mock
 import urllib.error
 
-from tools.diagnose_ego_guided_points import request_points, validate_point_sets
+from tools.diagnose_ego_guided_points import (
+    materialize_normalized_point_sets, request_points, validate_point_sets)
 
 
 class EgoGuidedPointDiagnosticTests(unittest.TestCase):
@@ -36,6 +37,29 @@ class EgoGuidedPointDiagnosticTests(unittest.TestCase):
                     RuntimeError, "negative point outside promptable region"):
                 request_points("http://127.0.0.1:28766", b"image", [
                     {"x": 1, "y": 2, "label": 1}])
+
+    def test_materializes_normalized_points_at_image_bounds(self):
+        payload = [{"name": "camera-template", "points": [
+            {"x_ratio": 0, "y_ratio": 0, "label": 0},
+            {"x_ratio": 0.5, "y_ratio": 0.5, "label": 1},
+            {"x_ratio": 1, "y_ratio": 1, "label": 1},
+        ]}]
+        self.assertEqual(materialize_normalized_point_sets(payload, 11, 21), [{
+            "name": "camera-template", "points": [
+                {"x": 0, "y": 0, "label": 0},
+                {"x": 5, "y": 10, "label": 1},
+                {"x": 10, "y": 20, "label": 1},
+            ]}])
+
+    def test_rejects_invalid_normalized_ratios(self):
+        for invalid in (-0.01, 1.01, True, "0.5"):
+            with self.subTest(invalid=invalid), self.assertRaisesRegex(
+                    ValueError, "ratios"):
+                materialize_normalized_point_sets([{
+                    "name": "invalid", "points": [{
+                        "x_ratio": invalid, "y_ratio": 0.5, "label": 1,
+                    }],
+                }], 10, 10)
 
 
 if __name__ == "__main__":

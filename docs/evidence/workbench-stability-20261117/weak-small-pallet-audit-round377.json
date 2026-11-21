@@ -1,0 +1,64 @@
+{
+  "round": 377,
+  "date": "2026-11-21",
+  "change": "Route weak small pallet proposals to label-blind semantic review without mutating candidates or truth.",
+  "gate": {
+    "label": "pallet",
+    "maximum_score_inclusive": 0.52,
+    "minimum_bbox_area_inclusive": 400,
+    "maximum_bbox_area_exclusive": 5000,
+    "action": "candidate class audit only",
+    "automatic_delete": false,
+    "automatic_relabel": false,
+    "truth_write": false
+  },
+  "inventory": {
+    "sessions_with_pallets": 7,
+    "candidates": 15354,
+    "pallet_candidates": 11592,
+    "newly_routed_for_review": 304,
+    "share_of_pallet_candidates_percent": 2.62
+  },
+  "current_new_dataset": {
+    "file": "Capture_20261103/常熟0920_Qwen2B_Agent未确认候选.mcap",
+    "topic": "/capture/camera_1/image",
+    "frames_checked": [0, 76, 151],
+    "pallet_candidates": 34,
+    "newly_routed_for_review": [
+      {"frame": 0, "candidate_id": 5, "score": 0.5078125, "route": "human_review_required"},
+      {"frame": 0, "candidate_id": 6, "score": 0.50390625, "route": "human_review_required"},
+      {"frame": 76, "candidate_id": 9, "score": 0.51171875, "route": "human_review_required"},
+      {"frame": 151, "candidate_id": 14, "score": 0.50390625, "route": "human_review_required"}
+    ],
+    "large_low_score_controls": [
+      {"frame": 76, "candidate_id": 1, "score": 0.50390625, "route": "candidate_preserved"},
+      {"frame": 151, "candidate_id": 7, "score": 0.50390625, "route": "candidate_preserved"}
+    ],
+    "human_truth_frames": 0,
+    "accuracy_claimed": false
+  },
+  "visual_boundary_audit": {
+    "pallet_candidates": 34,
+    "masks_with_holes": 0,
+    "bounded_cleanup_candidates": 29,
+    "maximum_pixel_change_percent": 2.1374,
+    "outer_vertices_before": 1834,
+    "outer_vertices_after": 1331
+  },
+  "tests": {
+    "focused_python": {"passed": 39, "failed": 0},
+    "full_python": {"passed": 1177, "failed": 0},
+    "web": {"passed": 158, "failed": 0}
+  },
+  "deployment": {
+    "commit": "a3f37d5",
+    "backup": "D:/Apps/LabelAgent/.local/backups/weak-small-pallet-audit-round377-20261121",
+    "deployed_sha256": "8B8DEF355ABD5DA063E6E16C6549F45CAA1BE22DDFF44247A7D62602B0D0EDE7",
+    "status": "idle",
+    "sam_ready": true,
+    "vlm_ready": true,
+    "fast_sam_ready": true,
+    "fast_vlm_ready": true,
+    "formal_state_hashes_unchanged": true
+  }
+}

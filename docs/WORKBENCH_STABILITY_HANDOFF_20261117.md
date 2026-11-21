@@ -3040,3 +3040,19 @@ VLM在同一时间逐个处理尾项；快速通道忙、离线、超时或协�
 `D:\Apps\LabelAgent\.local\backups\parallel-fast-tail-round376-20261121`。部署前后8份正式
 状态文件哈希变化数为0，页面HTTP 200、工作台idle，两路SAM和两路8B VLM均为ok。详细记录见
 `PARALLEL_FAST_CANDIDATE_AUDIT_ROUND376_20261121.md`与对应结构化证据。
+
+## Round377：小型低置信栈板误检拦截（2026-11-21）
+
+在当前常熟实采三帧的34个栈板候选上，既有边界清理没有制造孔洞，最大像素改变量为2.1374%；
+更值得处理的是少量小面积、低置信候选的类别误检风险。本轮新增窄门禁：仅`pallet`、分数
+不高于0.52且外接框面积为400至4999像素时送入类别盲审；不会自动删除、改类或写成人工真值。
+
+实测新增命中4个候选，5090隔离盲审均路由`human_review_required`；两个大面积低分控制样本
+仍被确认保留。跨7个会话共11,592个栈板候选，仅304个新增复核，占2.62%。当前三帧没有
+人工真值，因此不宣称人工准确率提升，只确认风险拦截更完整。
+
+定向Python 39项、完整Python 1177项、网页158项全部通过。实现提交`a3f37d5`，正式只替换
+`candidate_class_audit.py`；回滚点为
+`D:\Apps\LabelAgent\.local\backups\weak-small-pallet-audit-round377-20261121`。部署前后四份正式
+状态/历史文件哈希不变，工作台idle，两路SAM和两路VLM均ready。详细记录见
+`WEAK_SMALL_PALLET_AUDIT_ROUND377_20261121.md`与对应结构化证据。

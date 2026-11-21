@@ -3056,3 +3056,21 @@ VLM在同一时间逐个处理尾项；快速通道忙、离线、超时或协�
 `D:\Apps\LabelAgent\.local\backups\weak-small-pallet-audit-round377-20261121`。部署前后四份正式
 状态/历史文件哈希不变，工作台idle，两路SAM和两路VLM均ready。详细记录见
 `WEAK_SMALL_PALLET_AUDIT_ROUND377_20261121.md`与对应结构化证据。
+
+## Round378：专业精简工作台与微调门禁复核（2026-11-21）
+
+正式页面升至UI 165并换用v5主题层：顶部只保留高频模式与连续推理文字入口，低频功能改为图标；
+四步引导默认收起但可展开，数据身份、风险状态、人工真值、候选复核和原图区域全部保留。为避免
+旧浏览器已保存的展开状态抵消新默认，紧凑偏好迁移到独立的`labelagentGuideCompactV165`键。
+实机Edge刷新后图片正常显示，引导默认收起，原有操作入口可见。
+
+质量侧没有把“尝试微调”理解为无门槛占卡。现有Round375 2B LoRA是真实训练候选，内部dev8为
+8/8合法JSON、62/64机器教师证据一致、静态中位4.594秒，但不是人工真值且仍漏远处机器人；
+因此不部署、不继续在同一dev8堆步数。SAM3像素微调仍受0/96人工签核和缺少human_verified
+COCO阻止，正式8B/SAM3权重保持不变；当前继续采用有界栈板清理与小型低分栈板盲审改善候选质量。
+
+网页159项、维护范围Python 1191项及190个子测试全部通过；首页、bootstrap、模型就绪、运行
+状态和状态摘要均HTTP200，工作台idle，SAM和两路VLM均ready。部署前后四份正式状态/历史
+哈希不变。实现提交`dd8a6a9`、`1c9683c`，回滚点为
+`D:\Apps\LabelAgent\.local\backups\professional-compact-ui-round378-20261121`。详细记录见
+`PROFESSIONAL_COMPACT_UI_AND_FINETUNE_GATE_ROUND378_20261121.md`与对应结构化证据。

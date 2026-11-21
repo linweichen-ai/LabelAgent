@@ -1,0 +1,53 @@
+{
+  "round": 378,
+  "date": "2026-11-21",
+  "change": "Simplify the production workbench while preserving the labeling workflow and re-audit fine-tuning readiness.",
+  "ui": {
+    "version": 165,
+    "theme_asset_version": 5,
+    "compact_guide_default": true,
+    "preference_key": "labelagentGuideCompactV165",
+    "controls_removed": false,
+    "workflow_changed": false,
+    "browser_visual_acceptance": true,
+    "backup": "D:/Apps/LabelAgent/.local/backups/professional-compact-ui-round378-20261121",
+    "commits": ["dd8a6a9", "1c9683c"]
+  },
+  "quality": {
+    "qwen3vl2b_compact_lora_exists": true,
+    "qwen3vl2b_human_truth": false,
+    "qwen3vl2b_production_deployed": false,
+    "internal_dev8_valid_json": "8/8",
+    "internal_dev8_teacher_evidence": "62/64",
+    "internal_static_median_seconds": 4.594,
+    "sam3_pixel_finetune_ready": false,
+    "human_pixel_reviews": "0/96",
+    "machine_candidates_promoted_to_truth": false,
+    "production_model_changed": false,
+    "active_improvements": [
+      "bounded pallet boundary cleanup",
+      "weak small pallet label-blind semantic review"
+    ]
+  },
+  "tests": {
+    "web": {"passed": 159, "failed": 0},
+    "python": {"passed": 1191, "failed": 0, "subtests_passed": 190},
+    "python_scope": "tests with PYTHONUTF8=1"
+  },
+  "deployment": {
+    "home_http_status": 200,
+    "bootstrap_http_status": 200,
+    "model_readiness_http_status": 200,
+    "run_status_http_status": 200,
+    "state_summary_http_status": 200,
+    "workbench_status": "idle",
+    "sam_ready": true,
+    "vlm_ready": true,
+    "fast_vlm_ready": true,
+    "state_sha256": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "file_sessions_sha256": "94E8BEE324628585E7532E595348293DF1DA7B24041A1D4DF1C2EC9FB734E02E",
+    "last_run_sha256": "3BECE2513C6F661054AC238AB185527D715A04B3B0C8E073274710BE23E057DA",
+    "last_run_summary_sha256": "32578D53E70FA6860F3438860B321172B5E8B405BC6BB8A0F19387A6D4B84933",
+    "formal_state_hashes_unchanged": true
+  }
+}

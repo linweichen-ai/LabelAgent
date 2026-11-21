@@ -25,12 +25,14 @@ from PIL import Image
 
 try:  # Package import for tests and repository use.
     from .point_segment import (
-        _model_lock, _predictor, model_loaded, segment, segment_many)
+        _model_lock, _predictor, model_loaded, segment, segment_many,
+        segment_prompt_groups)
     from .response_cache import ExactResponseCoordinator
     from .sam_multi_helpers import evaluate_prompt_states, validate_prompt_map
 except ImportError:  # Direct script execution in the remote deployment folder.
     from point_segment import (
-        _model_lock, _predictor, model_loaded, segment, segment_many)
+        _model_lock, _predictor, model_loaded, segment, segment_many,
+        segment_prompt_groups)
     from response_cache import ExactResponseCoordinator
     from sam_multi_helpers import evaluate_prompt_states, validate_prompt_map
 
@@ -202,6 +204,20 @@ def segment_points_batch(body: dict):
             raise ValueError("points must be a list")
         with request_lock:
             return segment_many(image, points)
+    except (ValueError, TypeError) as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+
+@app.post("/segment_point_groups_batch")
+def segment_point_groups_batch(body: dict):
+    """Generate independent positive/negative groups with one feature pass."""
+    try:
+        image = decode_image(body.get("image"))
+        prompt_groups = body.get("prompt_groups")
+        if not isinstance(prompt_groups, list):
+            raise ValueError("prompt_groups must be a list")
+        with request_lock:
+            return segment_prompt_groups(image, prompt_groups)
     except (ValueError, TypeError) as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
 

@@ -4,7 +4,8 @@ from time import perf_counter
 
 from flask import Flask, jsonify, request
 
-from .point_segment import model_loaded, segment, segment_many
+from .point_segment import (
+    model_loaded, segment, segment_many, segment_prompt_groups)
 from .sam_multi_helpers import evaluate_prompt_states, validate_prompt_map
 
 app = Flask(__name__)
@@ -49,6 +50,24 @@ def segment_points_batch():
 
         image_bytes = base64.b64decode(image, validate=True)
         return jsonify(segment_many(image_bytes, points))
+    except (ValueError, TypeError) as error:
+        return jsonify(error=str(error)), 400
+
+
+@app.post("/segment_point_groups_batch")
+def segment_point_groups_batch():
+    """Generate independent positive/negative prompt groups with one encoding."""
+    body = request.get_json(silent=True) or {}
+    image = body.get("image")
+    prompt_groups = body.get("prompt_groups")
+    if not isinstance(image, str) or not isinstance(prompt_groups, list):
+        return jsonify(
+            error="image (base64) and prompt_groups are required"), 400
+    try:
+        import base64
+
+        image_bytes = base64.b64decode(image, validate=True)
+        return jsonify(segment_prompt_groups(image_bytes, prompt_groups))
     except (ValueError, TypeError) as error:
         return jsonify(error=str(error)), 400
 

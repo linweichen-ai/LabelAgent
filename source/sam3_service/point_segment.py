@@ -14,6 +14,7 @@ WEIGHTS = SAM3_SOURCE / "weights"
 _model = None
 _model_lock = threading.Lock()
 MAX_BATCH_POINTS = 512
+MAX_BATCH_GROUPS = 64
 
 
 def model_loaded():
@@ -220,6 +221,73 @@ def segment_many(image_bytes, points):
         "image_encoded_once": True,
         "image_encoding_seconds": image_encoding_seconds,
         "point_count": len(normalized),
+        "successful_count": sum("result" in item for item in items),
+        "total_seconds": perf_counter() - started,
+    }}
+
+
+def segment_prompt_groups(image_bytes, prompt_groups):
+    """Evaluate independent positive/negative point groups with one encoding.
+
+    Each group follows the existing ``segment`` point contract.  Invalid input
+    is rejected before model work; a geometry failure in one valid group is
+    isolated to that item and does not discard successful siblings.
+    """
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    width, height = image.size
+    if (not isinstance(prompt_groups, list) or not prompt_groups
+            or len(prompt_groups) > MAX_BATCH_GROUPS):
+        raise ValueError(
+            f"批量提示组须包含 1～{MAX_BATCH_GROUPS} 组正负点")
+    normalized_groups = []
+    for group in prompt_groups:
+        if (not isinstance(group, list) or not group or len(group) > 32):
+            raise ValueError("每个批量提示组须包含 1～32 个提示点")
+        normalized = []
+        for point in group:
+            if not isinstance(point, dict):
+                raise ValueError("每个批量提示点必须是对象")
+            x, y, label = point.get("x"), point.get("y"), point.get("label")
+            if (type(x) is not int or type(y) is not int
+                    or type(label) is not int or label not in (0, 1)
+                    or not (0 <= x < width and 0 <= y < height)):
+                raise ValueError("批量提示点超出图像范围或类型无效")
+            normalized.append({"x": x, "y": y, "label": label})
+        if not any(point["label"] == 1 for point in normalized):
+            raise ValueError("每个批量提示组至少需要一个目标内的正点")
+        normalized_groups.append(normalized)
+
+    started = perf_counter()
+    items = []
+    with _model_lock:
+        model, processor = _predictor()
+        import torch
+        precision = (torch.autocast("cuda", dtype=torch.bfloat16)
+                     if torch.cuda.is_available() else nullcontext())
+        with torch.inference_mode(), precision:
+            encode_started = perf_counter()
+            state = processor.set_image(image)
+            image_encoding_seconds = perf_counter() - encode_started
+            for index, group in enumerate(normalized_groups):
+                coords = np.asarray(
+                    [[point["x"], point["y"]] for point in group],
+                    dtype=np.float32)
+                labels = np.asarray(
+                    [point["label"] for point in group], dtype=np.int32)
+                try:
+                    masks, scores, _ = model.predict_inst(
+                        state, point_coords=coords, point_labels=labels,
+                        multimask_output=len(coords) == 1)
+                    result = _prediction_result(masks, scores, coords, labels)
+                    items.append({"index": index, "points": group,
+                                  "result": result})
+                except ValueError as error:
+                    items.append({"index": index, "points": group,
+                                  "error": str(error)[:200]})
+    return {"items": items, "diagnostics": {
+        "image_encoded_once": True,
+        "image_encoding_seconds": image_encoding_seconds,
+        "prompt_group_count": len(normalized_groups),
         "successful_count": sum("result" in item for item in items),
         "total_seconds": perf_counter() - started,
     }}

@@ -207,7 +207,8 @@ def sam_request(config, endpoint, image, *, timeout_seconds=None, **prompt):
 
 
 def _sam_request(config, endpoint, image, *, timeout_seconds=None, **prompt):
-    point_endpoint = endpoint == "/segment_points_batch"
+    point_endpoint = endpoint in {
+        "/segment_points_batch", "/segment_point_groups_batch"}
     url = ((config.get("sam3_point_url") if point_endpoint else None)
            or config.get("sam3_url")
            or os.environ.get("SAM3_URL", "http://127.0.0.1:8766"))

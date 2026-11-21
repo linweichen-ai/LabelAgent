@@ -1,0 +1,51 @@
+{
+  "schema_version": "labelagent.round404.point_group_batch.v1",
+  "date": "2026-11-22",
+  "objective": "Reuse one SAM image encoding across independent positive/negative prompt groups without changing the existing point result contract.",
+  "round402_context": {
+    "groups_per_frame": 3,
+    "points_per_group": 4,
+    "positive_points_per_group": 1,
+    "shared_negative_points_per_group": 3
+  },
+  "candidate_contract": {
+    "maximum_groups": 64,
+    "maximum_points_per_group": 32,
+    "requires_positive_point_per_group": true,
+    "validates_all_groups_before_model_work": true,
+    "isolates_geometry_failure_per_group": true,
+    "image_encodings_for_three_groups": 1,
+    "sequential_image_encodings_for_three_groups": 3
+  },
+  "tests": {
+    "targeted_passed": 9,
+    "targeted_subtests_passed": 4,
+    "python_passed": 1273,
+    "python_subtests_passed": 223,
+    "node_passed": 167,
+    "diff_check_passed": true,
+    "sequential_contract_equal_in_unit_test": true,
+    "remote_route_static_guard_passed": true,
+    "real_gpu_ab_completed": false
+  },
+  "formal_runtime": {
+    "sam_health": "ok",
+    "sam_backend": "remote_4090_sam3",
+    "sam_service_version": "labelagent.remote-sam3.v2-exact-response-cache",
+    "sam_model_loaded": true,
+    "sam_in_flight": 0,
+    "state_sha256": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "file_sessions_sha256": "94E8BEE324628585E7532E595348293DF1DA7B24041A1D4DF1C2EC9FB734E02E",
+    "last_run_sha256": "3BECE2513C6F661054AC238AB185527D715A04B3B0C8E073274710BE23E057DA",
+    "last_run_summary_sha256": "32578D53E70FA6860F3438860B321172B5E8B405BC6BB8A0F19387A6D4B84933"
+  },
+  "safety_boundary": {
+    "candidate_only": true,
+    "production_deployed": false,
+    "formal_state_modified": false,
+    "truth_modified": false,
+    "training_approved": false,
+    "real_images_uploaded": false
+  },
+  "gate": "code_and_contract_tests_passed; isolated_real_gpu_ab_required_before_deployment"
+}

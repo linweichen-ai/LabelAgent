@@ -79,5 +79,100 @@ class PointSegmentBatchTests(unittest.TestCase):
         self.assertEqual(response.get_json(), payload)
         self.assertEqual(run.call_args.args[1], [{"x": 8, "y": 8}])
 
+    def test_prompt_groups_reuse_one_encoding_and_preserve_negative_points(self):
+        model, processor = FakeModel(), FakeProcessor()
+        groups = [
+            [{"x": 8, "y": 8, "label": 1},
+             {"x": 24, "y": 20, "label": 0}],
+            [{"x": 24, "y": 8, "label": 1},
+             {"x": 8, "y": 20, "label": 0}],
+        ]
+        with mock.patch.object(
+                point_segment, "_predictor", return_value=(model, processor)):
+            result = point_segment.segment_prompt_groups(image_bytes(), groups)
+
+        self.assertEqual(processor.calls, 1)
+        self.assertEqual(len(model.calls), 2)
+        self.assertEqual(model.calls[0][1].tolist(), [1, 0])
+        self.assertFalse(model.calls[0][2])
+        self.assertTrue(result["diagnostics"]["image_encoded_once"])
+        self.assertEqual(result["diagnostics"]["prompt_group_count"], 2)
+        self.assertEqual(result["diagnostics"]["successful_count"], 2)
+        self.assertEqual([item["points"] for item in result["items"]], groups)
+        self.assertEqual([item["index"] for item in result["items"]], [0, 1])
+
+    def test_prompt_group_results_match_the_existing_sequential_contract(self):
+        groups = [
+            [{"x": 8, "y": 8, "label": 1},
+             {"x": 24, "y": 20, "label": 0}],
+            [{"x": 24, "y": 8, "label": 1},
+             {"x": 8, "y": 20, "label": 0}],
+        ]
+        batch_model, batch_processor = FakeModel(), FakeProcessor()
+        with mock.patch.object(
+                point_segment, "_predictor",
+                return_value=(batch_model, batch_processor)):
+            batch = point_segment.segment_prompt_groups(image_bytes(), groups)
+
+        sequential_model, sequential_processor = FakeModel(), FakeProcessor()
+        with mock.patch.object(
+                point_segment, "_predictor",
+                return_value=(sequential_model, sequential_processor)):
+            sequential = [
+                point_segment.segment(image_bytes(), group) for group in groups
+            ]
+
+        self.assertEqual(
+            [item["result"] for item in batch["items"]], sequential)
+        self.assertEqual(batch_processor.calls, 1)
+        self.assertEqual(sequential_processor.calls, len(groups))
+
+    def test_prompt_groups_fail_closed_before_model_work(self):
+        invalid = [
+            [[{"x": 8, "y": 8, "label": 0}]],
+            [[{"x": 8, "y": 8, "label": 2}]],
+            [[{"x": 32, "y": 8, "label": 1}]],
+            [[]],
+        ]
+        for groups in invalid:
+            with self.subTest(groups=groups), mock.patch.object(
+                    point_segment, "_predictor") as predictor:
+                with self.assertRaises(ValueError):
+                    point_segment.segment_prompt_groups(image_bytes(), groups)
+                predictor.assert_not_called()
+
+    def test_http_prompt_group_endpoint_keeps_groups_bounded(self):
+        payload = {"items": [], "diagnostics": {
+            "image_encoded_once": True, "prompt_group_count": 1,
+            "successful_count": 0, "total_seconds": 0.1}}
+        import base64
+
+        groups = [[{"x": 8, "y": 8, "label": 1},
+                   {"x": 24, "y": 16, "label": 0}]]
+        with mock.patch.object(
+                server, "segment_prompt_groups", return_value=payload) as run:
+            response = server.app.test_client().post(
+                "/segment_point_groups_batch", json={
+                    "image": base64.b64encode(image_bytes()).decode("ascii"),
+                    "prompt_groups": groups,
+                })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), payload)
+        self.assertEqual(run.call_args.args[1], groups)
+
+    def test_remote_http_prompt_group_endpoint_uses_the_same_contract(self):
+        # The local workbench environment intentionally does not install the
+        # remote-only FastAPI stack.  Keep this dependency-free guard so the
+        # remote deployment entrypoint cannot silently omit the new route.
+        remote_source = (
+            point_segment.Path(__file__).resolve().parents[1]
+            / "source" / "sam3_service" / "remote_fastapi_server.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            '@app.post("/segment_point_groups_batch")', remote_source)
+        self.assertIn(
+            "with request_lock:\n            return segment_prompt_groups(",
+            remote_source)
+
 if __name__ == "__main__":
     unittest.main()

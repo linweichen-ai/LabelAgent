@@ -1,0 +1,58 @@
+{
+  "schema_version": "labelagent.ego_hole_fill_component_review_receipt.v2",
+  "date": "2026-11-22",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "default_enabled": false,
+  "source_masks_modified": false,
+  "round462": {
+    "status": "intermediate_not_final",
+    "reason": "Micro crops were centered but not upscaled."
+  },
+  "round463": {
+    "status": "assistant_component_review_partial_uncertain",
+    "reason": "One-pixel targets could be covered by the locator and no raw micro panel was present."
+  },
+  "round464": {
+    "review_status": "assistant_component_overview_partial_uncertain",
+    "changed_sample_count": 35,
+    "unchanged_sample_count": 1,
+    "failed_closed_input_count": 2,
+    "component_count": 245,
+    "added_pixel_total": 1764,
+    "minimum_component_pixels": 1,
+    "maximum_component_pixels": 15,
+    "page_count": 11,
+    "component_mask_count": 245,
+    "four_panel_review_image_count": 245,
+    "hash_readback_failure_count": 0,
+    "raw_micro_present": true,
+    "overlay_micro_present": true,
+    "locator_gap_pixels": 3,
+    "component_review_packet_sha256": "62ad809c528bd80a655c5369cfb4e85f357ab59f83ea31b1aa77c601d455c810"
+  },
+  "independent_assistant_review": {
+    "overview_pages_reviewed": 11,
+    "detail_images_reviewed": 12,
+    "obvious_large_error_found": false,
+    "uncertain_component_ids": [
+      "000-camera3-1793758297542631987-c001",
+      "003-camera3-idx85-1793759985409553695-c006",
+      "003-camera1-idx5-1793759961309512987-c004",
+      "004-camera1-idx52-1793760677642756695-c001"
+    ],
+    "human_truth": false
+  },
+  "verification": {
+    "unique_component_id_count": 245,
+    "component_area_sum": 1764,
+    "render_failure_is_atomic": true,
+    "duplicate_sample_rejected": true,
+    "tampered_shadow_mask_rejected": true,
+    "python_tests_passed": 67,
+    "python_tests_skipped": 1
+  },
+  "conclusion": "Round464 makes every micro-fill independently visible with raw and overlay micro views. Four components remain uncertain, so the candidate stays default-disabled and cannot approve truth, training or deployment."
+}

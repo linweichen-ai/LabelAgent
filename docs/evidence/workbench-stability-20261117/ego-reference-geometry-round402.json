@@ -1,0 +1,63 @@
+{
+  "schema_version": "labelagent.round402.ego_reference_geometry.v1",
+  "date": "2026-11-22",
+  "dataset": "CVAT Task3 local reviewed snapshot",
+  "reference_frame": 0,
+  "reference_frame_excluded_from_evaluation": true,
+  "reference_truth_source": "existing_workbench_cvat_polygon",
+  "formal_human_receipt_v3": false,
+  "diagnostic_only": true,
+  "color_dependent": false,
+  "candidate_only": true,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_state_modified": false,
+  "contract": {
+    "reference_component_count": 3,
+    "component_area_fractions": [0.482917, 0.472927, 0.044157],
+    "positive_points": [[397, 375], [187, 375], [627, 448]],
+    "negative_points": [[128, 360], [320, 360], [512, 360]]
+  },
+  "selected_frames": [1, 7, 14, 20, 27, 33, 40, 46, 52, 59, 65, 72, 78, 85, 91, 98, 104, 110, 117, 123, 130, 136, 143, 149],
+  "sample_count": 24,
+  "candidate_available_count": 15,
+  "request_failure_count": 9,
+  "negative_violation_count": 0,
+  "geometry_all_frames": {
+    "mean_iou": 0.6899,
+    "median_iou": 0.906462,
+    "minimum_iou": 0.040592,
+    "mean_precision": 0.820935,
+    "mean_recall": 0.839265,
+    "maximum_person_overlap": 0.0,
+    "maximum_floor_overlap": 0.000414,
+    "sample_iou_at_least_0_75": 16
+  },
+  "geometry_available_frames": {
+    "sample_count": 15,
+    "mean_iou": 0.9218,
+    "median_iou": 0.932513,
+    "minimum_iou": 0.849209,
+    "mean_precision": 0.998628,
+    "mean_recall": 0.923004,
+    "maximum_person_overlap": 0.0,
+    "maximum_floor_overlap": 0.000414,
+    "sample_iou_at_least_0_75": 15
+  },
+  "accepted_candidate_all_frames": {
+    "mean_iou": 0.576125,
+    "median_iou": 0.906462,
+    "minimum_iou": 0.0,
+    "mean_precision": 0.624142,
+    "mean_recall": 0.576878,
+    "maximum_person_overlap": 0.0,
+    "maximum_floor_overlap": 0.000414,
+    "sample_iou_at_least_0_75": 15
+  },
+  "local_artifacts": {
+    "results_sha256": "04A65C93E295639CA0FBC314EAE99BE872CD0882DC4779E15B7B246DDB5FC54A",
+    "contact_sheet_sha256": "F1805D60DA49E66FE3C0B8C9DD8A3E445EDB4FCD056C1CFDE1E8C7F1268E8308",
+    "real_images_uploaded": false
+  },
+  "gate": "promising_high_precision_shadow_only; blocked_frames_remain; production_and_training_rejected; disjoint_visibility_validation_required"
+}

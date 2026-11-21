@@ -1,0 +1,48 @@
+{
+  "schema_version": "labelagent.ego_hole_fill_focused_review.v1",
+  "date": "2026-11-22",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "default_enabled": false,
+  "source_component_review_packet_sha256": "62ad809c528bd80a655c5369cfb4e85f357ab59f83ea31b1aa77c601d455c810",
+  "reviewer_type": "independent_assistant_visual_review",
+  "overall_status": "failed_closed_one_uncertain",
+  "summary": {
+    "assistant_pass": 3,
+    "assistant_uncertain": 1,
+    "assistant_fail": 0
+  },
+  "decisions": [
+    {
+      "component_id": "000-camera3-1793758297542631987-c001",
+      "area_pixels": 7,
+      "decision": "uncertain",
+      "reason": "Low-light and strongly blurred mechanical region; raw pixels cannot distinguish dark surface texture from a real opening.",
+      "review_image_sha256": "5e93f89ed3aab7664ffb0d32812796af525418c222fe4349c8ed25b379180bcd"
+    },
+    {
+      "component_id": "003-camera3-idx85-1793759985409553695-c006",
+      "area_pixels": 5,
+      "decision": "assistant_pass",
+      "reason": "Raw pixels show a reflective fastener or metal surface within the same ego component, not background or a through-hole.",
+      "review_image_sha256": "983d399c92ad15669c66ee9b3e950f21b0cf415952cafd4e46043bb474426b9b"
+    },
+    {
+      "component_id": "003-camera1-idx5-1793759961309512987-c004",
+      "area_pixels": 12,
+      "decision": "assistant_pass",
+      "reason": "The target lies on continuous red ego bodywork near a panel boundary; both sides belong to the ego vehicle.",
+      "review_image_sha256": "fdb938780ca3262a5a5bf646686a6333a8220c462f19091d23fb14a47af2991b"
+    },
+    {
+      "component_id": "004-camera1-idx52-1793760677642756695-c001",
+      "area_pixels": 10,
+      "decision": "assistant_pass",
+      "reason": "Raw pixels clearly show a metal fastener top that is part of the ego vehicle, not an opening or background.",
+      "review_image_sha256": "b0361f8f618a1283eac51cb98b6bf7833ba908b40b0fdc35b581b227158eda3d"
+    }
+  ],
+  "conclusion": "The raw/overlay views resolved three prior uncertainties, but one low-light component remains uncertain. The whole candidate remains default-disabled and cannot become truth or training data."
+}

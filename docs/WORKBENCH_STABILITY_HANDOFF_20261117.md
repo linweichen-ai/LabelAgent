@@ -3549,3 +3549,6 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
   11 页、详看 12 项，未见明确大块误填，但 4 项保留 `uncertain`；总体仅为
   `assistant_component_overview_partial_uncertain`，默认关闭，未改真值、训练、权重或
   正式工作台。详见 `docs/EGO_HOLE_FILL_COMPONENT_REVIEW_ROUNDS462_464_20261122.md`。
+- Round465 用原始/叠加微距复核上述 4 项后，3 项为助手 `pass`、1 项仍 `uncertain`、
+  0 项明确 `fail`；剩余项位于低照度严重模糊机械区域，无法区分纹理和真实开口，因此
+  总体继续失败关闭，不进入真值、训练或默认工作台。

@@ -92,11 +92,23 @@ Round458/461 已证明 35 张变化帧的 1,764 个新增像素都进入了逐�
 其余项也没有被写成逐项人工 `pass`；本轮总体状态只能是
 `assistant_component_overview_partial_uncertain`。
 
+Round465 再用 Round464 的原始/叠加微距逐项复核上述 4 项：3 项降为助手 `pass`，1 项
+仍为 `uncertain`，0 项明确 `fail`。剩余不确定项是
+`000-camera3-1793758297542631987-c001`（7 像素）：原图低照度且严重模糊，不能可靠区分
+暗色表面纹理和真实机械小开口。总体因此继续失败关闭。
+
+四项详细图：
+
+- [仍不确定：000-camera3 c001](../artifacts/round464-1104-hole-fill-component-review-raw-overlay-20261122/000-camera3-1793758297542631987-c001-review.png)
+- [助手通过：003-camera3 idx85 c006](../artifacts/round464-1104-hole-fill-component-review-raw-overlay-20261122/003-camera3-idx85-1793759985409553695-c006-review.png)
+- [助手通过：003-camera1 idx5 c004](../artifacts/round464-1104-hole-fill-component-review-raw-overlay-20261122/003-camera1-idx5-1793759961309512987-c004-review.png)
+- [助手通过：004-camera1 idx52 c001](../artifacts/round464-1104-hole-fill-component-review-raw-overlay-20261122/004-camera1-idx52-1793760677642756695-c001-review.png)
+
 ## 当前边界和下一步
 
 本轮解决的是“每一个微孔是否都能被看见和追溯”，不是把候选提升为人工真值。应继续：
 
-1. 优先复核上述 4 个 `uncertain`；
+1. 优先由独立人工复核剩余 1 个低照度 `uncertain`；
 2. 任一 fail、uncertain 或 unreviewed 都不允许形成总体通过；
 3. 即使助手全过，也仍只可作为候选质量证据，不能自动进入真值、训练或默认工作台；
 4. 只有人工确认和既定完整门禁通过后，才讨论小流量影子对照。

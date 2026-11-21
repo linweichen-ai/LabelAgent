@@ -1,0 +1,119 @@
+{
+  "rounds": [413, 414, 415, 416, 417, 418],
+  "date": "2026-11-22",
+  "status": "candidate_only_multicomponent_heldout_diagnostic",
+  "oss_read_only": true,
+  "downloads": {
+    "development_camera1_camera3": {
+      "objects": 16,
+      "bytes": 7343667,
+      "packages": ["003", "004"],
+      "indices_per_package": [15, 30, 60, 75],
+      "manifest_sha256": "e089689c3e9c0fcc00c712d5e624a4fa35a4ef2780c6fff61665518f49dae541"
+    },
+    "heldout_camera1_camera3": {
+      "objects": 20,
+      "bytes": 9109030,
+      "packages": ["003", "004"],
+      "indices_per_package": [5, 22, 52, 68, 85],
+      "manifest_sha256": "6ba925e90d336f1f9f9a8812f3bfb21c0469252811399f302e4f2625de6e0d1d"
+    },
+    "camera2": {
+      "objects": 8,
+      "bytes": 3449411,
+      "packages": ["003", "004"],
+      "indices_per_package": [15, 30, 60, 75],
+      "manifest_sha256": "9e2111bcf18ca55d2e6168cc5e349633f03fbcf0f09f17336364f5531b570a63"
+    },
+    "source": "bevpending_data/cameras_640x512",
+    "raw_mcap": false,
+    "full_resolution": false
+  },
+  "uniform_bottom_scan": {
+    "camera1_camera3": {
+      "assistant_visible_positive_count": 16,
+      "raw_candidate_count": 288,
+      "guarded_candidate_count": 0,
+      "selected_candidate_count": 0,
+      "result_sha256": "5b47373fad2dc2d558ae37d7fb44be5dbb97d6e1b3e436e480215741ce234aa7",
+      "median_client_elapsed_seconds": 0.61
+    },
+    "camera2": {
+      "assistant_visible_positive_count": 8,
+      "selected_candidate_count": 7,
+      "failed_closed_count": 1,
+      "result_sha256": "e4d9d28dd418c316299092a373175e4c714a027366a699c1eba976555faeb5a7",
+      "selected_area_ratio_range": [0.15, 0.16],
+      "failure_context": "person_left_and_container_wall_right"
+    }
+  },
+  "v1_constraint_correction": {
+    "returned_mask_is_not_equivalent_to_constraint_pass": true,
+    "camera1": {
+      "left_seat_console": {"returned": 8, "passed": 8, "total": 8},
+      "right_hood": {"returned": 8, "passed": 6, "total": 8},
+      "bottom_console": {"returned": 8, "passed": 5, "total": 8}
+    },
+    "camera3": {
+      "top_crossbar": {"returned": 8, "passed": 7, "total": 8},
+      "lower_assembly": {"returned": 8, "passed": 0, "total": 8},
+      "old_broad": {"returned": 8, "passed": 8, "total": 8, "visual_rejected": "includes_orange_load_surface"}
+    }
+  },
+  "frozen_v2": {
+    "development": {
+      "images": 16,
+      "component_trials": 32,
+      "prompt_constraint_passed": 32,
+      "negative_point_violations": 0
+    },
+    "heldout": {
+      "images": 20,
+      "component_trials": 40,
+      "prompt_constraint_passed": 38,
+      "failed_closed": 2,
+      "negative_point_violations": 0,
+      "result_files": 20,
+      "result_manifest_sha256": "6c5a9b2f41b7f4843b380b572b5f46b0d18ab03bb88cd7104a2ffa9fbf4edb2e",
+      "failures": [
+        "003-camera1-idx68-1793759980309508695/camera1-left-seat-console-v2",
+        "003-camera1-idx85-1793759985409553695/camera1-left-seat-console-v2"
+      ],
+      "failure_reason": "SAM could not exclude the supplied negative region under person occlusion"
+    },
+    "camera1_spec_sha256": "a24397b6afee1b4f1d8bef16109732adc0399a2d28878079219f50f36670ac36",
+    "camera3_spec_sha256": "99b03001bd844f2dc784afd9a7e98e836a9affbb002ece07f860326e58dcbeb8"
+  },
+  "workbuddy_isolated_review": {
+    "commit": "c58e3cf1d07fb0e3154be30483549463b7b77355",
+    "tests_passed": 11,
+    "scope": "default-disabled identity-pinned synthetic offline replay gate",
+    "merged": false,
+    "reason_not_merged": "Only four Round412 image pins and synthetic replay are covered; no real pixel hazard regions or heldout replay evidence."
+  },
+  "formal_runtime": {
+    "workbench_status": "idle",
+    "sam_status": "ok",
+    "sam_model_loaded": true,
+    "vlm_model": "labelagent-vlm8b",
+    "state_sha256": {
+      "state.json": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+      "file_sessions.json": "94E8BEE324628585E7532E595348293DF1DA7B24041A1D4DF1C2EC9FB734E02E",
+      "last_run.json": "3BECE2513C6F661054AC238AB185527D715A04B3B0C8E073274710BE23E057DA",
+      "last_run_summary.json": "32578D53E70FA6860F3438860B321172B5E8B405BC6BB8A0F19387A6D4B84933"
+    }
+  },
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "production_deployed": false,
+    "formal_state_modified": false
+  },
+  "limitations": [
+    "Strict prompt compliance is necessary but not pixel-level human truth.",
+    "Development and heldout samples come from the same two packages.",
+    "The fixed vehicle cameras do not provide natural no-ego negatives.",
+    "Component union has not yet passed an independent pixel-truth review gate."
+  ]
+}

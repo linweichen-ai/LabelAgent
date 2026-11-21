@@ -1,0 +1,25 @@
+[
+  {
+    "name": "camera3-crossbar-core-v2",
+    "points": [
+      {"x_ratio": 0.420, "y_ratio": 0.720, "label": 1},
+      {"x_ratio": 0.500, "y_ratio": 0.720, "label": 1},
+      {"x_ratio": 0.580, "y_ratio": 0.720, "label": 1},
+      {"x_ratio": 0.500, "y_ratio": 0.760, "label": 1},
+      {"x_ratio": 0.500, "y_ratio": 0.570, "label": 0},
+      {"x_ratio": 0.180, "y_ratio": 0.750, "label": 0},
+      {"x_ratio": 0.820, "y_ratio": 0.750, "label": 0}
+    ]
+  },
+  {
+    "name": "camera3-lower-assembly-v2",
+    "points": [
+      {"x_ratio": 0.330, "y_ratio": 0.830, "label": 1},
+      {"x_ratio": 0.500, "y_ratio": 0.850, "label": 1},
+      {"x_ratio": 0.670, "y_ratio": 0.830, "label": 1},
+      {"x_ratio": 0.500, "y_ratio": 0.650, "label": 0},
+      {"x_ratio": 0.170, "y_ratio": 0.820, "label": 0},
+      {"x_ratio": 0.830, "y_ratio": 0.820, "label": 0}
+    ]
+  }
+]

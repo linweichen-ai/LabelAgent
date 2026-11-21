@@ -116,6 +116,39 @@ def materialize_normalized_point_sets(payload, width: int, height: int) -> list[
     return validate_point_sets(materialized, width, height)
 
 
+def prompt_constraint_summary(record: dict, points: list[dict]) -> dict:
+    """Report whether a returned mask obeys every supplied point constraint.
+
+    The diagnostic intentionally keeps the mask itself out of ``results.json``.
+    ``mask_record`` already retains a bounded crop in memory, which is enough to
+    check prompt coverage before that crop is discarded.
+    """
+    x0, y0, x1, y1 = record["bbox"]
+    mask = record["mask"]
+
+    def covered(point: dict) -> bool:
+        x, y = point["x"], point["y"]
+        return (x0 <= x < x1 and y0 <= y < y1
+                and bool(mask[y - y0, x - x0]))
+
+    positives = [point for point in points if point["label"] == 1]
+    negatives = [point for point in points if point["label"] == 0]
+    uncovered_positives = [point.copy() for point in positives if not covered(point)]
+    violated_negatives = [point.copy() for point in negatives if covered(point)]
+    positive_points_covered = len(positives) - len(uncovered_positives)
+    negative_points_violated = len(violated_negatives)
+    return {
+        "positive_point_count": len(positives),
+        "positive_points_covered": positive_points_covered,
+        "uncovered_positive_points": uncovered_positives,
+        "negative_point_count": len(negatives),
+        "negative_points_violated": negative_points_violated,
+        "violated_negative_points": violated_negatives,
+        "passed": (positive_points_covered == len(positives)
+                   and negative_points_violated == 0),
+    }
+
+
 def request_points(endpoint: str, image: bytes, points: list[dict]) -> dict:
     body = {"image": base64.b64encode(image).decode("ascii"), "points": points}
     request = urllib.request.Request(
@@ -229,6 +262,8 @@ def main() -> int:
                 shape["_record"] = mask_record(shape, width, height)
                 shape["point"] = experiment["points"]
                 geometry = bounded_candidate_summary(shape, width, height)
+                geometry["prompt_constraints"] = prompt_constraint_summary(
+                    shape["_record"], experiment["points"])
                 shape.pop("_record", None)
                 shape.pop("point", None)
         except Exception as error:  # Shadow diagnostics must preserve the other rows.
@@ -237,12 +272,16 @@ def main() -> int:
             geometry = None
         overlay = args.output_dir / f"{index:02d}-{experiment['name']}.jpg"
         overlay.write_bytes(candidate_overlay(image, [shape] if shape else []))
+        prompt_constraints_passed = bool(
+            geometry
+            and geometry.get("prompt_constraints", {}).get("passed") is True)
         rows.append({
             "name": experiment["name"],
             "points": experiment["points"],
             "elapsed_seconds": batch_elapsed,
             "elapsed_seconds_shared_batch": True,
             "candidate_available": shape is not None,
+            "prompt_constraints_passed": prompt_constraints_passed,
             "error": failure,
             "geometry": geometry,
             "overlay": overlay.name,
@@ -265,6 +304,14 @@ def main() -> int:
         "request_diagnostics": request_diagnostics,
         "client_batch_elapsed_seconds": batch_elapsed,
         "rows": rows,
+        "summary": {
+            "experiment_count": len(rows),
+            "candidate_count": sum(row["candidate_available"] for row in rows),
+            "prompt_constraint_pass_count": sum(
+                row["prompt_constraints_passed"] for row in rows),
+            "failed_closed_count": sum(
+                not row["candidate_available"] for row in rows),
+        },
         "evidence_note": (
             "Point sets are bounded assistant-authored development hints. "
             "Every mask requires independent human review and negative controls."),
@@ -275,6 +322,8 @@ def main() -> int:
     print(json.dumps({
         "output": str(output.resolve()),
         "candidate_count": sum(row["candidate_available"] for row in rows),
+        "prompt_constraint_pass_count": sum(
+            row["prompt_constraints_passed"] for row in rows),
         "experiment_count": len(rows), "sha256": file_sha256(output),
     }, ensure_ascii=False))
     return 0

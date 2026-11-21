@@ -4,9 +4,11 @@ import unittest
 from unittest import mock
 import urllib.error
 
+import numpy as np
+
 from tools.diagnose_ego_guided_points import (
-    materialize_normalized_point_sets, request_point_groups, request_points,
-    validate_point_sets)
+    materialize_normalized_point_sets, prompt_constraint_summary,
+    request_point_groups, request_points, validate_point_sets)
 
 
 class EgoGuidedPointDiagnosticTests(unittest.TestCase):
@@ -102,6 +104,48 @@ class EgoGuidedPointDiagnosticTests(unittest.TestCase):
             {"sam3_point_url": "http://127.0.0.1:28766",
              "sam3_url": "http://127.0.0.1:28766"},
         )
+
+    def test_reports_positive_coverage_and_negative_violations_from_mask_crop(self):
+        record = {
+            "bbox": [10, 20, 14, 23],
+            "mask": np.array([
+                [True, False, False, False],
+                [False, True, True, False],
+                [False, False, False, True],
+            ], dtype=bool),
+        }
+        points = [
+            {"x": 10, "y": 20, "label": 1},
+            {"x": 12, "y": 21, "label": 1},
+            {"x": 9, "y": 20, "label": 1},
+            {"x": 11, "y": 21, "label": 0},
+            {"x": 13, "y": 20, "label": 0},
+        ]
+        self.assertEqual(prompt_constraint_summary(record, points), {
+            "positive_point_count": 3,
+            "positive_points_covered": 2,
+            "uncovered_positive_points": [
+                {"x": 9, "y": 20, "label": 1},
+            ],
+            "negative_point_count": 2,
+            "negative_points_violated": 1,
+            "violated_negative_points": [
+                {"x": 11, "y": 21, "label": 0},
+            ],
+            "passed": False,
+        })
+
+    def test_prompt_constraint_pass_is_stricter_than_mask_availability(self):
+        record = {
+            "bbox": [0, 0, 2, 1],
+            "mask": np.array([[True, False]], dtype=bool),
+        }
+        summary = prompt_constraint_summary(record, [
+            {"x": 0, "y": 0, "label": 1},
+            {"x": 1, "y": 0, "label": 1},
+        ])
+        self.assertFalse(summary["passed"])
+        self.assertEqual(summary["positive_points_covered"], 1)
 
     def test_materializes_normalized_points_at_image_bounds(self):
         payload = [{"name": "camera-template", "points": [

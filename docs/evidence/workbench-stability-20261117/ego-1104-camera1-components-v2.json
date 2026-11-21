@@ -1,0 +1,25 @@
+[
+  {
+    "name": "camera1-left-seat-console-v2",
+    "points": [
+      {"x_ratio": 0.315, "y_ratio": 0.755, "label": 1},
+      {"x_ratio": 0.340, "y_ratio": 0.835, "label": 1},
+      {"x_ratio": 0.285, "y_ratio": 0.900, "label": 1},
+      {"x_ratio": 0.390, "y_ratio": 0.925, "label": 1},
+      {"x_ratio": 0.180, "y_ratio": 0.620, "label": 0},
+      {"x_ratio": 0.470, "y_ratio": 0.625, "label": 0},
+      {"x_ratio": 0.530, "y_ratio": 0.790, "label": 0}
+    ]
+  },
+  {
+    "name": "camera1-right-hood-v2",
+    "points": [
+      {"x_ratio": 0.605, "y_ratio": 0.760, "label": 1},
+      {"x_ratio": 0.660, "y_ratio": 0.820, "label": 1},
+      {"x_ratio": 0.610, "y_ratio": 0.930, "label": 1},
+      {"x_ratio": 0.500, "y_ratio": 0.650, "label": 0},
+      {"x_ratio": 0.820, "y_ratio": 0.700, "label": 0},
+      {"x_ratio": 0.510, "y_ratio": 0.860, "label": 0}
+    ]
+  }
+]

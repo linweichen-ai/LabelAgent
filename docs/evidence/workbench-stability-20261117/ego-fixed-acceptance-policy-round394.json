@@ -1,0 +1,52 @@
+{
+  "schema_version": "labelagent.round394.ego_fixed_acceptance_policy.v1",
+  "date": "2026-11-22",
+  "human_truth_created": false,
+  "human_truth_gate_executed": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_state_modified": false,
+  "minimum_acceptance_policy": {
+    "minimum_mean_iou": 0.85,
+    "minimum_sample_iou": 0.75,
+    "maximum_person_overlap": 0.02,
+    "maximum_floor_overlap": 0.02,
+    "minimum_samples_per_camera": 5,
+    "required_cameras": ["camera0", "camera1", "camera2", "camera3"],
+    "may_be_strengthened": true,
+    "may_be_weakened": false
+  },
+  "independence_contract": {
+    "receipt_schema": "labelagent.ego_human_pixel_truth_receipt.v3",
+    "source_image_sha256_required": true,
+    "receipt_binds_source_image_sha256": true,
+    "source_hashes_unique_across_samples": true,
+    "legacy_v2_receipt_rejected": true
+  },
+  "round392_readonly_check": {
+    "sample_count": 20,
+    "unique_source_image_count": 20,
+    "all_source_hashes_valid": true,
+    "review_queue_sha256": "D0D4510D9622BD68943E28FA89E098354F660F2695F4C9C2ECDE0C2AF82E3C19"
+  },
+  "tests": {
+    "targeted_python_passed": 10,
+    "targeted_subtests_passed": 2,
+    "full_python_passed": 1239,
+    "full_subtests_passed": 219,
+    "web_node_passed": 167
+  },
+  "runtime": {
+    "workbench_http_status": 200,
+    "sam_ready": true,
+    "primary_vlm_ready": true,
+    "fast_vlm_ready": true
+  },
+  "formal_state_sha256": {
+    "state": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "file_sessions": "94E8BEE324628585E7532E595348293DF1DA7B24041A1D4DF1C2EC9FB734E02E",
+    "last_run": "3BECE2513C6F661054AC238AB185527D715A04B3B0C8E073274710BE23E057DA",
+    "last_run_summary": "32578D53E70FA6860F3438860B321172B5E8B405BC6BB8A0F19387A6D4B84933"
+  },
+  "gate": "fixed_policy_enforced; unique_sources_required; human_pixel_truth_pending; production_rejected"
+}

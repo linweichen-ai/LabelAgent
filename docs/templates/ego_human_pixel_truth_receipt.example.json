@@ -1,5 +1,5 @@
 {
-  "schema_version": "labelagent.ego_human_pixel_truth_receipt.v2",
+  "schema_version": "labelagent.ego_human_pixel_truth_receipt.v3",
   "human_confirmed": true,
   "assistant_generated": false,
   "machine_generated": false,
@@ -7,6 +7,7 @@
   "reviewed_masks": [
     {
       "sample_id": "camera0-frame000",
+      "source_image_sha256": "REPLACE_WITH_64_HEX_SHA256",
       "candidate_mask_sha256": "REPLACE_WITH_64_HEX_SHA256",
       "ego_truth_sha256": "REPLACE_WITH_64_HEX_SHA256",
       "person_truth_sha256": "REPLACE_WITH_64_HEX_SHA256",

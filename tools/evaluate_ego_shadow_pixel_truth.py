@@ -21,8 +21,16 @@ from PIL import Image
 MANIFEST_SCHEMA_VERSION = "labelagent.ego_pixel_truth_manifest.v2"
 REPORT_SCHEMA_VERSION = "labelagent.ego_pixel_truth_report.v2"
 REVIEW_PACKET_SCHEMA_VERSION = "labelagent.ego_pixel_truth_review_packet.v1"
-RECEIPT_SCHEMA_VERSION = "labelagent.ego_human_pixel_truth_receipt.v2"
+RECEIPT_SCHEMA_VERSION = "labelagent.ego_human_pixel_truth_receipt.v3"
 CAMERAS = {f"camera{index}" for index in range(4)}
+MINIMUM_ACCEPTANCE_POLICY = {
+    "minimum_mean_iou": 0.85,
+    "minimum_sample_iou": 0.75,
+    "maximum_person_overlap": 0.02,
+    "maximum_floor_overlap": 0.02,
+    "minimum_samples_per_camera": 5,
+    "required_cameras": sorted(CAMERAS),
+}
 
 
 def _sha256(path: Path) -> str:
@@ -144,6 +152,7 @@ def _verify_receipt(rows: list[dict], receipt: dict,
     for row in rows:
         item = mapping[row["sample_id"]]
         expected = {
+            "source_image_sha256": row["source_image_sha256"],
             "candidate_mask_sha256": row["candidate_sha256"],
             "ego_truth_sha256": row["ego_truth_sha256"],
             "person_truth_sha256": row["person_truth_sha256"],
@@ -179,6 +188,16 @@ def _thresholds(manifest: dict) -> dict:
             or len(cameras) != len(set(cameras))
             or any(camera not in CAMERAS for camera in cameras)):
         raise ValueError("required_cameras must be unique supported cameras")
+    if (values["minimum_mean_iou"] < MINIMUM_ACCEPTANCE_POLICY["minimum_mean_iou"]
+            or values["minimum_sample_iou"]
+            < MINIMUM_ACCEPTANCE_POLICY["minimum_sample_iou"]
+            or values["maximum_person_overlap"]
+            > MINIMUM_ACCEPTANCE_POLICY["maximum_person_overlap"]
+            or values["maximum_floor_overlap"]
+            > MINIMUM_ACCEPTANCE_POLICY["maximum_floor_overlap"]
+            or count < MINIMUM_ACCEPTANCE_POLICY["minimum_samples_per_camera"]
+            or set(cameras) != CAMERAS):
+        raise ValueError("gates weaken the minimum acceptance policy")
     return values
 
 
@@ -212,7 +231,8 @@ def _evaluate_sample(root: Path, row: dict, packet_row: dict,
             or type(packet_row.get("candidate_available")) is not bool
             or not isinstance(packet_row.get("status"), str)
             or not packet_row["status"].strip()
-            or not _valid_sha256(packet_row.get("candidate_mask_sha256"))):
+            or not _valid_sha256(packet_row.get("candidate_mask_sha256"))
+            or not _valid_sha256(packet_row.get("source_image_sha256"))):
         raise ValueError(f"candidate review queue binding is invalid for {sample_id}")
     packet_candidate_path = _bounded_relative_path(
         packet_root, packet_row.get("candidate_mask"), "packet candidate_mask")
@@ -239,6 +259,7 @@ def _evaluate_sample(root: Path, row: dict, packet_row: dict,
         "width": int(candidate.shape[1]),
         "height": int(candidate.shape[0]),
         "candidate_sha256": candidate_sha256,
+        "source_image_sha256": packet_row["source_image_sha256"].lower(),
         "candidate_status": packet_row["status"],
         "candidate_available": packet_row["candidate_available"],
         "ego_truth_sha256": _sha256(truth_path),
@@ -280,6 +301,9 @@ def evaluate_manifest(path: Path) -> dict:
     ids = [row["sample_id"] for row in rows]
     if len(ids) != len(set(ids)):
         raise ValueError("sample_id values must be unique")
+    source_hashes = [row["source_image_sha256"] for row in rows]
+    if len(source_hashes) != len(set(source_hashes)):
+        raise ValueError("source image hashes must be unique across samples")
     if set(packet_rows) != set(ids):
         raise ValueError("candidate review queue sample scope mismatch")
     _verify_receipt(rows, receipt, candidate_queue_sha256)

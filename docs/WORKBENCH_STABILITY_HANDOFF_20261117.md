@@ -3074,3 +3074,19 @@ COCO阻止，正式8B/SAM3权重保持不变；当前继续采用有界栈板清
 哈希不变。实现提交`dd8a6a9`、`1c9683c`，回滚点为
 `D:\Apps\LabelAgent\.local\backups\professional-compact-ui-round378-20261121`。详细记录见
 `PROFESSIONAL_COMPACT_UI_AND_FINETUNE_GATE_ROUND378_20261121.md`与对应结构化证据。
+
+## Round379：单/双候选类别复核快速通道（2026-11-21）
+
+Round376已让主VLM三候选批审与5090尾项并行，但总共只有1～2个高风险候选时仍占用主VLM。
+本轮将这种短尾直接送入原有`chat_fast_only`，快速通道忙、离线、超时或协议失败时再显式回退
+主VLM；三候选以上的批处理、质量门槛和失败关闭逻辑均不变。
+
+正式常熟实采第0帧候选5/6只读A/B中，主/快速耗时分别为7.368/5.085秒与6.679/4.261秒，
+缩短30.99%和36.20%；两路语义核心完全一致，均保持`human_review_required`。两次实验均
+`state_unchanged=true`，没有候选、真值或训练批准写入。
+
+定向41项及11个子测试、完整Python 1193项及190个子测试、网页159项全部通过。正式实现与源码
+SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle，SAM和两路VLM均ready，
+四份正式状态/历史哈希不变。实现提交`d9f38eb`，回滚点为
+`D:\Apps\LabelAgent\.local\backups\direct-fast-tail-round379-20261121`。详细记录见
+`DIRECT_FAST_AUDIT_TAIL_ROUND379_20261121.md`与对应结构化证据。

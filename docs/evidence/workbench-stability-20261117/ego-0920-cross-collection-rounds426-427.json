@@ -1,0 +1,51 @@
+{
+  "rounds": [426, 427],
+  "date": "2026-11-22",
+  "status": "candidate_only_cross_collection_negative_result",
+  "dataset": "20260920_cs-heli_Dev_000001",
+  "sequences": ["010", "011", "012"],
+  "cameras": ["camera1", "camera3"],
+  "images": 6,
+  "input_manifest_sha256": "74d2c707c5d388f464312a92ec78868b1f005e58e1ec5756caac33b850ab6125",
+  "input_files_hash_match": 6,
+  "frozen_specs": {
+    "camera1_sha256": "a24397b6afee1b4f1d8bef16109732adc0399a2d28878079219f50f36670ac36",
+    "camera3_sha256": "99b03001bd844f2dc784afd9a7e98e836a9affbb002ece07f860326e58dcbeb8",
+    "retuned_on_0920": false
+  },
+  "component_diagnostic": {
+    "component_trials": 12,
+    "candidate_available": 12,
+    "prompt_constraint_passed": 5,
+    "components": {
+      "camera1-left-seat-console-v2": {"passed": 0, "total": 3},
+      "camera1-right-hood-v2": {"passed": 0, "total": 3},
+      "camera3-crossbar-core-v2": {"passed": 2, "total": 3},
+      "camera3-lower-assembly-v2": {"passed": 3, "total": 3, "max_area_ratio": 0.128387}
+    },
+    "result_manifest_sha256": "b0adc04ada87529cc61711ecadc7fa762c5e4f1bd745875eb51919d3b315064d"
+  },
+  "component_union_review": {
+    "sample_count": 6,
+    "union_available_count": 2,
+    "failed_closed_count": 4,
+    "accepted_samples": [
+      {"sample": "010-camera3-1789899951882467655", "area_ratio": 0.128387, "component_overlap_iou": 0.155527, "geometry_drift_requires_guard": true},
+      {"sample": "012-camera3-1789900488815784655", "area_ratio": 0.046674, "component_overlap_iou": 0.0}
+    ],
+    "review_queue_sha256": "a804b26760e0072eeb2b14bb5929776dd4c5902d348bcfec75d0943d39cc3212",
+    "contact_sheet_sha256": "afe79f92e6d86f5c5b3e5b171812ae8b478b18a0fa6e9925c2bee3412f808c79"
+  },
+  "decision": {
+    "reuse_1104_template_on_0920": false,
+    "required_next_guards": ["allowed_source_root", "per_component_area_ratio"],
+    "relax_prompt_constraints": false
+  },
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "production_deployed": false,
+    "formal_state_modified": false
+  }
+}

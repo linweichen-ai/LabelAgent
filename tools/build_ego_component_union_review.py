@@ -59,6 +59,30 @@ def _mask_geometry(mask: np.ndarray) -> dict:
     }
 
 
+def load_component_guard(path: Path) -> dict[str, dict[str, float]]:
+    """Load and validate fail-closed per-component area-ratio bounds."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    components = data.get("components") if isinstance(data, dict) else None
+    if not isinstance(components, dict) or not components:
+        raise ValueError("component guard must contain a non-empty components object")
+    validated = {}
+    for name, rule in components.items():
+        if not isinstance(name, str) or not isinstance(rule, dict):
+            raise ValueError("component guard names and rules must be objects")
+        minimum = rule.get("min_area_ratio")
+        maximum = rule.get("max_area_ratio")
+        if (isinstance(minimum, bool) or isinstance(maximum, bool)
+                or not isinstance(minimum, (int, float))
+                or not isinstance(maximum, (int, float))
+                or not 0 <= float(minimum) <= float(maximum) <= 1):
+            raise ValueError(f"invalid component area guard: {name}")
+        validated[name] = {
+            "min_area_ratio": float(minimum),
+            "max_area_ratio": float(maximum),
+        }
+    return validated
+
+
 def _write_overlay(image_path: Path, mask: np.ndarray, target: Path) -> None:
     with Image.open(image_path) as source:
         base = source.convert("RGBA")
@@ -71,7 +95,9 @@ def _write_overlay(image_path: Path, mask: np.ndarray, target: Path) -> None:
 
 
 def evaluate_sample(sample_dir: Path, output: Path,
-                    expected_spec_hashes: dict[str, str]) -> dict:
+                    expected_spec_hashes: dict[str, str],
+                    allowed_source_root: Path | None = None,
+                    component_guard: dict[str, dict[str, float]] | None = None) -> dict:
     sample_id = sample_dir.name
     row = {
         "sample_id": sample_id,
@@ -101,6 +127,14 @@ def evaluate_sample(sample_dir: Path, output: Path,
         if (not image_path.is_file()
                 or file_sha256(image_path) != report.get("image_sha256")):
             raise ValueError("source image is missing or hash-mismatched")
+        image_resolved = image_path.resolve(strict=True)
+        if allowed_source_root is not None:
+            allowed_resolved = allowed_source_root.resolve(strict=True)
+            try:
+                image_resolved.relative_to(allowed_resolved)
+            except ValueError as error:
+                raise ValueError(
+                    "source image is outside allowed source root") from error
         with Image.open(image_path) as decoded:
             width, height = decoded.size
 
@@ -136,12 +170,28 @@ def evaluate_sample(sample_dir: Path, output: Path,
             if (geometry["area_pixels"] != reported.get("area")
                     or geometry["bbox"] != reported.get("bbox")):
                 raise ValueError(f"candidate mask geometry mismatch: {name}")
+            guard_rule = None
+            if component_guard is not None:
+                guard_rule = component_guard.get(name)
+                if guard_rule is None:
+                    raise ValueError(f"component area guard missing: {name}")
+                if not (guard_rule["min_area_ratio"]
+                        <= geometry["area_ratio"]
+                        <= guard_rule["max_area_ratio"]):
+                    raise ValueError(
+                        "component area ratio outside guard: "
+                        f"{name}={geometry['area_ratio']:.6f} not in "
+                        f"[{guard_rule['min_area_ratio']:.6f}, "
+                        f"{guard_rule['max_area_ratio']:.6f}]")
             masks.append(mask)
-            component_rows.append({
+            component_row = {
                 "name": name,
                 "mask_sha256": component["candidate_mask_sha256"],
                 **geometry,
-            })
+            }
+            if guard_rule is not None:
+                component_row["area_guard"] = guard_rule
+            component_rows.append(component_row)
 
         union = np.logical_or.reduce(masks)
         union_geometry = _mask_geometry(union)
@@ -155,7 +205,7 @@ def evaluate_sample(sample_dir: Path, output: Path,
         row.update({
             "status": "assistant_review_required",
             "union_available": True,
-            "source_image": str(image_path.resolve()),
+            "source_image": str(image_resolved),
             "source_image_sha256": report["image_sha256"],
             "point_sets_sha256": report["point_sets_sha256"],
             "components": component_rows,
@@ -200,7 +250,9 @@ def _write_contact_sheet(output: Path, rows: list[dict]) -> Path:
 
 
 def build_packet(input_root: Path, output: Path,
-                 camera1_spec: Path, camera3_spec: Path) -> dict:
+                 camera1_spec: Path, camera3_spec: Path,
+                 allowed_source_root: Path | None = None,
+                 component_guard_path: Path | None = None) -> dict:
     if output.exists():
         raise FileExistsError(output)
     if not input_root.is_dir():
@@ -209,12 +261,19 @@ def build_packet(input_root: Path, output: Path,
         "camera1": file_sha256(camera1_spec),
         "camera3": file_sha256(camera3_spec),
     }
+    allowed_resolved = (allowed_source_root.resolve(strict=True)
+                        if allowed_source_root is not None else None)
+    component_guard = (load_component_guard(component_guard_path)
+                       if component_guard_path is not None else None)
+    component_guard_sha256 = (file_sha256(component_guard_path)
+                              if component_guard_path is not None else None)
     output.mkdir(parents=True)
     sample_dirs = sorted(path for path in input_root.iterdir()
                          if path.is_dir() and (path / "results.json").is_file())
     if not sample_dirs:
         raise ValueError("no component result directories found")
-    rows = [evaluate_sample(path, output, expected_spec_hashes)
+    rows = [evaluate_sample(path, output, expected_spec_hashes,
+                            allowed_resolved, component_guard)
             for path in sample_dirs]
     contact_sheet = _write_contact_sheet(output, rows)
     packet = {
@@ -230,6 +289,12 @@ def build_packet(input_root: Path, output: Path,
         "union_available_count": sum(row["union_available"] for row in rows),
         "failed_closed_count": sum(not row["union_available"] for row in rows),
         "point_set_sha256": expected_spec_hashes,
+        "safety_gates": {
+            "allowed_source_root": (
+                str(allowed_resolved) if allowed_resolved is not None else None),
+            "component_area_guard_enabled": component_guard is not None,
+            "component_area_guard_sha256": component_guard_sha256,
+        },
         "contact_sheet": contact_sheet.name,
         "contact_sheet_sha256": file_sha256(contact_sheet),
         "samples": rows,
@@ -249,9 +314,13 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--camera1-spec", type=Path, required=True)
     parser.add_argument("--camera3-spec", type=Path, required=True)
+    parser.add_argument("--allowed-source-root", type=Path)
+    parser.add_argument("--component-guard", type=Path)
     arguments = parser.parse_args()
     packet = build_packet(arguments.input_root, arguments.output,
-                          arguments.camera1_spec, arguments.camera3_spec)
+                          arguments.camera1_spec, arguments.camera3_spec,
+                          arguments.allowed_source_root,
+                          arguments.component_guard)
     print(json.dumps({
         "output": str((arguments.output / "review_queue.json").resolve()),
         "sample_count": packet["sample_count"],

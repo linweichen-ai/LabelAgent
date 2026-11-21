@@ -1,0 +1,72 @@
+{
+  "schema_version": "labelagent.ego_source_and_area_guards.v1",
+  "date": "2026-11-22",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_state_modified": false,
+  "implementation": {
+    "tool": "tools/build_ego_component_union_review.py",
+    "tool_sha256": "b7cd8bbf1da5d2c42b8b8dffad4d6f686e04e71b36bb2acdb1e4c3588b88756d",
+    "test": "tests/test_build_ego_component_union_review.py",
+    "test_sha256": "a0e4064a25d28298d4497c72851aec23beb83220824ecea753e461833fffef72",
+    "component_guard": "docs/evidence/workbench-stability-20261117/ego-1104-component-area-guard-v1.json",
+    "component_guard_sha256": "0aa319fc6e8ac0c9f5b96d8f8e34c121042ed7b5d9f583397ee100d22d4e12da"
+  },
+  "tests": {
+    "guard_suite_passed": 12,
+    "combined_regression_passed": 26,
+    "skipped": 1,
+    "skip_reason": "Windows standard token cannot create a symlink; real-path containment logic is covered by root-in/root-out tests."
+  },
+  "replays": [
+    {
+      "round": 428,
+      "dataset": "1104 packages 000 and 001",
+      "sample_count": 12,
+      "union_available_count": 12,
+      "failed_closed_count": 0,
+      "review_queue_sha256": "d6924efafd1cede7f3131f64c41e24c0b686e1dbbd27984f8c5f8f68ee504684",
+      "contact_sheet_sha256": "92265c24e3b8a2935795fb06bdd4b7c9cb13e5e0a36d3d8db1d8799307e5ebae"
+    },
+    {
+      "round": 429,
+      "dataset": "1104 package 002",
+      "sample_count": 6,
+      "union_available_count": 6,
+      "failed_closed_count": 0,
+      "review_queue_sha256": "51f27fbf9256238299130ae6a290c230dc535e64aaaa9f93a2b3039c59164d90",
+      "contact_sheet_sha256": "e86e94f1ccb113d6127a1268c78ca02a1e1896f3f329c4701645bb4e67b9261d"
+    },
+    {
+      "round": 430,
+      "dataset": "0920 sequences 010, 011 and 012",
+      "allowed_source_root": "1104 round422 local root",
+      "sample_count": 6,
+      "union_available_count": 0,
+      "failed_closed_count": 6,
+      "failure_counts": {
+        "source image is outside allowed source root": 6
+      },
+      "review_queue_sha256": "264ee781f3f42bf33d85f225522d2d00c7f8458c1052764ef5dcf18745780942",
+      "contact_sheet_sha256": "e8816410c03c3dfde30dd8bad0e5b7bc6ac4fcb42bcf65d973788697760cf6c4"
+    },
+    {
+      "round": 431,
+      "dataset": "0920 sequences 010, 011 and 012",
+      "allowed_source_root": "0920 local root for geometry-only diagnosis",
+      "sample_count": 6,
+      "union_available_count": 1,
+      "failed_closed_count": 5,
+      "failure_counts": {
+        "camera1 left component prompt constraints": 3,
+        "camera3 crossbar prompt constraints": 1,
+        "camera3 lower assembly area ratio 0.128387 outside 0.015-0.040": 1
+      },
+      "review_queue_sha256": "7c1e080f316b91ad288bb51aee48188aadbce624c5ffedc2817bff1ad90a9884",
+      "contact_sheet_sha256": "d0c5e302d18d797a86a6137c072f1274bd2b2fd092dd60be5a91e85074d7408f"
+    }
+  ],
+  "conclusion": "The 1104 candidate remains stable on three same-collection held-out packages, while source identity and component area guards fail closed on cross-collection drift. The guard is not training truth and is not yet enabled in the formal workbench."
+}

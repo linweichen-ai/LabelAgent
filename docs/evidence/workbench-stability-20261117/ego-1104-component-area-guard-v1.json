@@ -1,0 +1,27 @@
+{
+  "schema_version": "labelagent.ego_component_area_guard.v1",
+  "scope": "20261104_cs-seer_Dev_P2605901028248 candidate-only shadow review",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "derivation": "Conservative bounds around verified-hash 1104 packages 000, 001 and 002. These bounds are a fail-closed drift detector, not a quality score.",
+  "components": {
+    "camera1-left-seat-console-v2": {
+      "min_area_ratio": 0.07,
+      "max_area_ratio": 0.12
+    },
+    "camera1-right-hood-v2": {
+      "min_area_ratio": 0.01,
+      "max_area_ratio": 0.03
+    },
+    "camera3-crossbar-core-v2": {
+      "min_area_ratio": 0.015,
+      "max_area_ratio": 0.05
+    },
+    "camera3-lower-assembly-v2": {
+      "min_area_ratio": 0.015,
+      "max_area_ratio": 0.04
+    }
+  }
+}

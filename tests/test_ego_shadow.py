@@ -106,6 +106,7 @@ class EgoCameraShadowTests(unittest.TestCase):
         self.assertEqual(result["camera_topic"], "/capture/camera_1/image")
         self.assertEqual(result["guard_status"], "blocked_person_floor_overlap")
         self.assertGreater(result["person_overlap_ratio"], 0.9)
+        self.assertFalse(result["candidate_available"])
         self.assertFalse(result["eligible_for_candidate_merge"])
 
     def test_overlap_guard_uses_union_of_fragmented_shapes(self):
@@ -119,6 +120,23 @@ class EgoCameraShadowTests(unittest.TestCase):
             discovery(), floor_fragments, lambda _points: response)
         self.assertGreater(result["floor_overlap_ratio"], 0.20)
         self.assertEqual(result["guard_status"], "blocked_person_floor_overlap")
+        self.assertFalse(result["candidate_available"])
+
+    def test_sam_warning_keeps_bounded_diagnostics_but_blocks_candidate(self):
+        response = point_response() | {
+            "warnings": ["positive point was not covered"],
+        }
+        result = evaluate_camera_ego_shadow(
+            {"ego_camera_shadow_evaluator": True}, image_bytes(), "camera1",
+            discovery(), [], lambda _points: response)
+        self.assertEqual(result["status"], "shadow_observed")
+        self.assertTrue(result["geometry_observed"])
+        self.assertFalse(result["candidate_available"])
+        self.assertEqual(result["guard_status"], "blocked_sam_warning")
+        self.assertEqual(result["sam_warning_count"], 1)
+        self.assertEqual(len(result["sam_warning_sha256"]), 64)
+        self.assertNotIn("warnings", result)
+        self.assertFalse(result["eligible_for_candidate_merge"])
 
     def test_bad_responses_and_request_failures_become_non_candidates(self):
         cases = (
@@ -129,7 +147,8 @@ class EgoCameraShadowTests(unittest.TestCase):
             point_response(score=True),
             point_response(score=float("nan")),
             point_response(score=1.1),
-            point_response() | {"warnings": ["negative point missed"]},
+            point_response() | {"warnings": "negative point missed"},
+            point_response() | {"warnings": [1]},
             {"parts": [{"points": [[1, 1]], "holes": []}], "score": 0.8},
         )
         for payload in cases:

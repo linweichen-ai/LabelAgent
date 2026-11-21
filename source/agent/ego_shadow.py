@@ -152,11 +152,17 @@ def evaluate_camera_ego_shadow(config, image: bytes, topic: str, discovery,
             raise ValueError("ego shadow point response must be an object")
         parts = response.get("parts")
         score = response.get("score")
+        warnings = response.get("warnings", [])
+        if warnings is None:
+            warnings = []
         if (not isinstance(parts, list) or not parts or len(parts) > 200
                 or isinstance(score, bool) or not isinstance(score, (int, float))
-                or not math.isfinite(score) or not 0 <= score <= 1
-                or response.get("warnings")):
+                or not math.isfinite(score) or not 0 <= score <= 1):
             raise ValueError("ego shadow point response is incomplete")
+        if (not isinstance(warnings, list) or len(warnings) > 20
+                or any(not isinstance(item, str) or not item.strip()
+                       or len(item) > 500 for item in warnings)):
+            raise ValueError("ego shadow point response has malformed warnings")
         shadow_shape = {"id": 1, "label": "ego", "parts": parts, "score": score}
         if not valid_shape(shadow_shape, width, height):
             raise ValueError("ego shadow point response contains invalid geometry")
@@ -172,10 +178,12 @@ def evaluate_camera_ego_shadow(config, image: bytes, topic: str, discovery,
         floor_overlap = _maximum_overlap(mask, existing_shapes, "floor", width, height)
         blocked_overlap = (person_overlap > EGO_CAMERA_SHADOW_PERSON_OVERLAP_LIMIT
                            or floor_overlap > EGO_CAMERA_SHADOW_FLOOR_OVERLAP_LIMIT)
+        blocked_warning = bool(warnings)
         coverage_band = ("camera1_low_coverage" if camera_key == "camera1" and area_ratio < 0.06
                          else "camera1_broad_coverage" if camera_key == "camera1"
                          else "camera_specific_observation")
-        guard_status = ("blocked_person_floor_overlap" if blocked_overlap
+        guard_status = ("blocked_sam_warning" if blocked_warning
+                        else "blocked_person_floor_overlap" if blocked_overlap
                         else "human_review_required")
         response_sha256 = hashlib.sha256(json.dumps(
             response, ensure_ascii=False, sort_keys=True,
@@ -188,7 +196,8 @@ def evaluate_camera_ego_shadow(config, image: bytes, topic: str, discovery,
             "template_name": template_name,
             "point_count": len(points),
             "discovery_confidence": confidence,
-            "candidate_available": True,
+            "geometry_observed": True,
+            "candidate_available": not blocked_warning and not blocked_overlap,
             "score": round(float(score), 6),
             "geometry": {
                 "bbox": bbox,
@@ -200,6 +209,11 @@ def evaluate_camera_ego_shadow(config, image: bytes, topic: str, discovery,
             "person_overlap_ratio": round(person_overlap, 6),
             "floor_overlap_ratio": round(floor_overlap, 6),
             "guard_status": guard_status,
+            "sam_warning_count": len(warnings),
+            "sam_warning_sha256": (hashlib.sha256(json.dumps(
+                warnings, ensure_ascii=False, sort_keys=True,
+                separators=(",", ":")).encode("utf-8")).hexdigest()
+                if warnings else None),
             "response_sha256": response_sha256,
             "human_review_required": True,
         }

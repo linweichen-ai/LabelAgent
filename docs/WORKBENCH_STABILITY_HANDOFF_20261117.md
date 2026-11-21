@@ -3164,3 +3164,11 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 与全部person或floor碎片的联合掩膜分别重叠超过8%或20%时阻断；camera1小面积只标记低覆盖，不做自动膨胀、填洞或邻接扩张；point-SAM硬超时5秒，异常不影响正式草稿，取消向上游传播。
 - 完整Python 1223项及216个子测试、网页167项全部通过；正式工作台五项接口HTTP200、idle、三路模型ready，四份正式状态哈希未变。
 - 本轮未部署、未开启开关、未调用真实影子推理；仍需隔离运行和人工像素真值。详细记录见`docs/EGO_CAMERA_SHADOW_EVALUATOR_ROUND387_20261122.md`与对应结构化证据。
+
+## Round388（2026-11-22）：ego 相机影子评测器隔离实测门禁
+
+- 四路本地固定样本完成真实point-SAM隔离调用；camera0/2/3返回人工复核态摘要，camera1因未覆盖全部正点的SAM警告被明确阻断。
+- 警告响应现在保留面积、bbox和分数等有界诊断，但`candidate_available=false`、`blocked_sam_warning`，不保存警告原文、不返回轮廓、不可自动合并。
+- 四路均`eligible_for_candidate_merge=false`、`state_written=false`；正式候选、人工真值、审核状态、训练批准和四份正式状态哈希均未变化。
+- 完整Python 1224项及217个子测试、网页167项通过；正式工作台idle，SAM和两路VLM均ready。
+- 本轮仍未部署、未开启正式开关；逐像素人工真值前继续拒绝生产。详细记录见`docs/EGO_CAMERA_SHADOW_LIVE_GATE_ROUND388_20261122.md`与对应结构化证据。

@@ -1,0 +1,47 @@
+{
+  "schema_version": "labelagent.round388.ego_camera_shadow_live_gate.v1",
+  "date": "2026-11-22",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_config_enabled": false,
+  "formal_state_modified": false,
+  "sample_scope": {
+    "source": "local_untracked_round385_fixed_samples",
+    "frames": 4,
+    "cameras": ["camera0", "camera1", "camera2", "camera3"],
+    "real_images_committed": false,
+    "real_overlays_committed": false
+  },
+  "results": [
+    {"camera": "camera0", "score": 0.695312, "area_ratio": 0.112744, "guard_status": "human_review_required", "candidate_available": true},
+    {"camera": "camera1", "score": 0.515625, "area_ratio": 0.092353, "guard_status": "blocked_sam_warning", "sam_warning_count": 1, "candidate_available": false},
+    {"camera": "camera2", "score": 0.632812, "area_ratio": 0.105589, "guard_status": "human_review_required", "candidate_available": true},
+    {"camera": "camera3", "score": 0.8125, "area_ratio": 0.122656, "guard_status": "human_review_required", "candidate_available": true}
+  ],
+  "invariants": {
+    "all_eligible_for_candidate_merge": false,
+    "all_state_written": false,
+    "warning_text_persisted": false,
+    "warning_geometry_is_diagnostic_only": true
+  },
+  "tests": {
+    "full_python_passed": 1224,
+    "full_subtests_passed": 217,
+    "web_node_passed": 167
+  },
+  "runtime": {
+    "status": "idle",
+    "sam_ready": true,
+    "primary_vlm_ready": true,
+    "fast_vlm_ready": true
+  },
+  "formal_state_sha256": {
+    "state": "9EF08118DD2BA0760CC93CF57BBEAAE4B3BED062D383DF4E6A454C389D4AB115",
+    "file_sessions": "94E8BEE324628585E7532E595348293DF1DA7B24041A1D4DF1C2EC9FB734E02E",
+    "last_run": "3BECE2513C6F661054AC238AB185527D715A04B3B0C8E073274710BE23E057DA",
+    "last_run_summary": "32578D53E70FA6860F3438860B321172B5E8B405BC6BB8A0F19387A6D4B84933"
+  },
+  "gate": "diagnostic_live_gate_passed; rejected_for_production_pending_human_pixel_truth"
+}

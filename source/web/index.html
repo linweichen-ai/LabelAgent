@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="labelagent-ui-version" content="164">
+  <meta name="labelagent-ui-version" content="165">
   <title>标注 Agent 平台</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23224b8d'/%3E%3Ctext x='32' y='41' text-anchor='middle' font-family='Arial,sans-serif' font-size='26' font-weight='700' fill='white'%3ELA%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="/style.css?v=120">
@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="/reference-prep.css?v=103">
   <link rel="stylesheet" href="/batch-review.css?v=64">
   <link rel="stylesheet" href="/review-packet.css?v=163">
-  <link rel="stylesheet" href="/homepage-theme.css?v=4">
+  <link rel="stylesheet" href="/homepage-theme.css?v=5">
 </head>
 <body>
 <main class="workspace">
@@ -28,7 +28,7 @@
         <button id="autoModeButton" aria-pressed="false" title="进入自动推理，并设置从当前帧向后连续处理多少帧">自动标注 / 候选</button>
       </div>
       <span id="workspaceModeHint">当前是人工真值界面</span>
-      <button id="goToAutoInference" class="modeShortcut" type="button" title="进入自动推理界面，设置从当前帧向后连续处理多少帧">去自动推理 · 设置 N 帧 →</button>
+      <button id="goToAutoInference" class="modeShortcut" type="button" title="进入自动推理界面，设置从当前帧向后连续处理多少帧">连续推理 · N 帧</button>
       <div class="toolbarActions" role="group" aria-label="工作台快捷操作">
         <button id="openReviewPacketsButton" class="reviewPacketsButton" type="button" title="打开绑定原图哈希的专项人工复核队列"><span aria-hidden="true">✓</span>专项复核<em id="reviewPacketBadge" hidden>0</em></button>
         <button id="quickActionsButton" class="quickActionsButton" type="button" title="打开快捷操作面板（Ctrl+K）"><span aria-hidden="true">⌘</span>快捷操作<kbd>Ctrl K</kbd></button>

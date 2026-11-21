@@ -141,7 +141,7 @@ test('工作台持续显示新旧数据集身份和逐类别覆盖状态', () =>
   assert.match(app, /function candidateReviewCountsByLabel\(/);
   assert.match(app, /candidateNeedsReview/);
   assert.match(html, /style\.css\?v=120/);
-  assert.match(html, /homepage-theme\.css\?v=4/);
+  assert.match(html, /homepage-theme\.css\?v=5/);
   assert.match(html, /app\.js\?v=203/);
   assert.match(app, /action\.dataset\.coverageRepair=label/);
   assert.match(app, /startCandidateCoverageRepair\(label\)/);
@@ -315,7 +315,7 @@ test('人工真值界面提供明确的连续推理入口', () => {
   const html = source('index.html');
   const inspection = source('inspection.js');
   assert.match(html, /id="goToAutoInference"/);
-  assert.match(html, /去自动推理 · 设置 N 帧/);
+  assert.match(html, /连续推理 · N 帧/);
   assert.match(inspection, /从当前帧开始，在下方设置“本次处理 N 帧”/);
   assert.match(inspection, /inferenceShortcut\.hidden=mode==='auto'/);
   assert.match(inspection, /count\?\.focus\(\)/);
@@ -1856,4 +1856,14 @@ test('Local VLM 短暂抖动会自动重试并在弹窗打开时自恢复', () =
   assert.match(prep, /setTimeout\(resolve, attempt \? 750 : 250\)/);
   assert.match(prep, /readModelReadiness\(generation\)\.catch\(\(\) => scheduleModelReadinessRetry\(\)\)/);
   assert.match(prep, /dialog\.addEventListener\('close', clearModelReadinessRetry\)/);
+});
+
+test('专业简约模式默认收起向导且保留用户展开选择', () => {
+  const guide = source('guide.js'), html = source('index.html'), theme = source('homepage-theme.css');
+  assert.match(guide, /function recalled\(key, fallback = false\)/);
+  assert.match(guide, /setGuideCompact\(recalled\('labelagentGuideCompact', true\), false\)/);
+  assert.match(html, /连续推理 · N 帧/);
+  assert.match(html, /homepage-theme\.css\?v=5/);
+  assert.match(theme, /Professional compact layer/);
+  assert.match(theme, /\.tutorialButton[\s\S]*display: none/);
 });

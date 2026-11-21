@@ -296,8 +296,11 @@
     try { window.localStorage.setItem(key, value ? '1' : '0'); } catch (_) {}
   }
 
-  function recalled(key) {
-    try { return window.localStorage.getItem(key) === '1'; } catch (_) { return false; }
+  function recalled(key, fallback = false) {
+    try {
+      const value = window.localStorage.getItem(key);
+      return value === null ? fallback : value === '1';
+    } catch (_) { return fallback; }
   }
 
   function setGuideCompact(compact, persist = true) {
@@ -848,7 +851,7 @@
   window.addEventListener('focus', () => { refreshGuide(); checkUiVersion(); });
   window.addEventListener('pageshow', refreshGuide);
 
-  setGuideCompact(recalled('labelagentGuideCompact'), false);
+  setGuideCompact(recalled('labelagentGuideCompact', true), false);
   setFocusMode(recalled('labelagentFocusMode'), false);
   setCanvasMode(recalled('labelagentCanvasMode'), false);
   setDarkTheme(recalled('labelagentDarkTheme'), false);

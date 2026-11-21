@@ -1135,3 +1135,255 @@ body.darkTheme .imageStage {
     transition: none;
   }
 }
+
+/* Professional compact layer: keep every workflow, reduce visual chrome. */
+.windowToolbar {
+  gap: 7px;
+  min-height: 44px;
+  padding: 5px 12px;
+  border-top-width: 2px;
+  box-shadow: none;
+}
+
+.productBrand {
+  gap: 6px;
+  padding-right: 9px;
+}
+
+.brandMark {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  box-shadow: none;
+}
+
+.brandCopy small,
+#workspaceModeHint,
+.tutorialButton {
+  display: none;
+}
+
+.brandLive {
+  padding: 2px 6px;
+  font-size: 10px;
+}
+
+.workspaceModes {
+  padding: 2px;
+  border-radius: 7px;
+  box-shadow: none;
+}
+
+.workspaceModes button {
+  min-height: 28px;
+  padding: 4px 11px;
+}
+
+.modeShortcut {
+  min-height: 30px;
+  padding: 4px 10px;
+  box-shadow: none;
+}
+
+.toolbarActions {
+  gap: 3px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.toolbarActions button {
+  min-height: 30px;
+  box-shadow: none !important;
+}
+
+.focusModeButton,
+.canvasModeButton,
+.themeButton,
+#addWindowButton {
+  width: 32px;
+  min-width: 32px;
+  padding: 0 !important;
+  font-size: 0;
+}
+
+.focusModeButton > span,
+.canvasModeButton > span,
+.themeButton > span,
+#addWindowButton img {
+  width: 14px;
+  height: 14px;
+  font-size: 14px;
+}
+
+button:hover:not(:disabled),
+.candidateCoverageChip:hover,
+.candidateReviewItem:hover,
+.candidateReviewItem:focus-visible,
+.guideSteps li.active {
+  box-shadow: none;
+  transform: none;
+}
+
+.datasetIdentity {
+  min-height: 38px;
+  padding: 5px 12px;
+  box-shadow: none;
+}
+
+.datasetIdentityKind {
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.workflowGuide {
+  padding: 6px 12px;
+  box-shadow: none;
+}
+
+.guideSummary {
+  min-height: 34px;
+  padding: 0;
+}
+
+.guideEyebrow {
+  display: none;
+}
+
+.guideCopy {
+  grid-template-columns: 1fr;
+  gap: 1px;
+  padding-left: 0;
+  border-left: 0;
+}
+
+.guideCopy strong {
+  font-size: 13px;
+}
+
+.guideCopy > span:last-child {
+  font-size: 10.5px;
+}
+
+.guideBadge {
+  min-height: 22px;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.guideSteps {
+  gap: 5px;
+  margin: 6px 0 4px;
+  padding-top: 5px;
+}
+
+.guideSteps li {
+  min-height: 38px;
+  padding: 4px 7px;
+  border-radius: 5px;
+  box-shadow: none;
+}
+
+.guideSteps li i {
+  width: 22px;
+  height: 22px;
+  flex-basis: 22px;
+}
+
+.guideSafety {
+  padding-top: 4px;
+  font-size: 10px;
+}
+
+.shortcutLegend {
+  display: none;
+}
+
+.windowGrid {
+  gap: 4px;
+  padding: 4px;
+  background-image: none;
+}
+
+.sensorWindow {
+  border-radius: 7px;
+  box-shadow: 0 0 0 1px rgba(120, 138, 157, .18);
+}
+
+.playbackBar {
+  padding: 5px 9px;
+  box-shadow: none;
+}
+
+#workbenchSplitter {
+  height: 8px;
+}
+
+#workbench {
+  box-shadow: none;
+}
+
+.panelHeading {
+  min-height: 32px;
+  padding: 5px 12px;
+}
+
+.truthSettings,
+.toolrow,
+.truthActions {
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+.inspectionHeading,
+.autoLabelBar,
+.candidateSummary,
+.batchReviewPanel,
+.candidateReviewPanel,
+.runProgress,
+.inspectionStages,
+#inspectionBody:not(:empty) {
+  border-radius: 7px;
+  box-shadow: none;
+}
+
+.inspectionHeading {
+  padding: 8px 10px;
+  border-left-width: 3px;
+  background-image: none;
+}
+
+.runProgress {
+  padding: 8px 10px;
+  background-image: none;
+}
+
+.candidateReviewItem,
+.candidateStat,
+.batchReviewStat,
+.runProgressStats > span {
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+body:not(.darkTheme) .windowToolbar,
+body:not(.darkTheme) .datasetIdentity,
+body:not(.darkTheme) .workflowGuide,
+body:not(.darkTheme) .guideSummary,
+body:not(.darkTheme) .playbackBar,
+body:not(.darkTheme) #workbench {
+  background: #fff;
+}
+
+body:not(.darkTheme) .windowGrid {
+  background-color: #edf1f5;
+}
+
+@media (max-width: 1180px) {
+  .quickActionsButton kbd,
+  .reviewPacketsButton > span,
+  .brandLive {
+    display: none;
+  }
+}

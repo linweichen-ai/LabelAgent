@@ -1,0 +1,2891 @@
+{
+  "schema_version": "labelagent.ego_reference_geometry_shadow.v1",
+  "created_utc": "2026-11-21T20:25:57.439270+00:00",
+  "dataset": "CVAT Task3 local reviewed snapshot",
+  "reference_frame": 0,
+  "reference_frame_excluded_from_evaluation": true,
+  "excluded_frames": [
+    0,
+    1,
+    2,
+    7,
+    8,
+    14,
+    15,
+    20,
+    21,
+    27,
+    28,
+    33,
+    34,
+    39,
+    40,
+    46,
+    47,
+    52,
+    53,
+    59,
+    60,
+    65,
+    66,
+    71,
+    72,
+    78,
+    79,
+    84,
+    85,
+    90,
+    91,
+    97,
+    98,
+    103,
+    104,
+    110,
+    111,
+    116,
+    117,
+    122,
+    123,
+    129,
+    130,
+    135,
+    136,
+    142,
+    143,
+    148,
+    149
+  ],
+  "exclusion_sources": [
+    {
+      "name": "ego-reference-geometry-round402.json",
+      "sha256": "5a2d715f67d7199248353adb3531f0756b6e1ba49d697b62ef8f8c745bd6efad",
+      "frame_count": 24
+    },
+    {
+      "name": "ego-component-visibility-shadow-round403.json",
+      "sha256": "921062b5e22512315f11610f7aedfbee95e57506b92d6441044baf9be01e383e",
+      "frame_count": 24
+    }
+  ],
+  "reference_truth_source": "existing_workbench_cvat_polygon",
+  "formal_human_receipt_v3": false,
+  "diagnostic_only": true,
+  "color_dependent": false,
+  "candidate_only": true,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_state_modified": false,
+  "contract": {
+    "reference_component_count": 3,
+    "positive_points": [
+      {
+        "x": 397,
+        "y": 375,
+        "label": 1
+      },
+      {
+        "x": 187,
+        "y": 375,
+        "label": 1
+      },
+      {
+        "x": 627,
+        "y": 448,
+        "label": 1
+      }
+    ],
+    "negative_points": [
+      {
+        "x": 128,
+        "y": 360,
+        "label": 0
+      },
+      {
+        "x": 320,
+        "y": 360,
+        "label": 0
+      },
+      {
+        "x": 512,
+        "y": 360,
+        "label": 0
+      }
+    ],
+    "points": [
+      {
+        "x": 397,
+        "y": 375,
+        "label": 1
+      },
+      {
+        "x": 187,
+        "y": 375,
+        "label": 1
+      },
+      {
+        "x": 627,
+        "y": 448,
+        "label": 1
+      },
+      {
+        "x": 128,
+        "y": 360,
+        "label": 0
+      },
+      {
+        "x": 320,
+        "y": 360,
+        "label": 0
+      },
+      {
+        "x": 512,
+        "y": 360,
+        "label": 0
+      }
+    ]
+  },
+  "selected_frames": [
+    3,
+    9,
+    16,
+    22,
+    26,
+    35,
+    41,
+    45,
+    54,
+    58,
+    64,
+    73,
+    77,
+    86,
+    92,
+    96,
+    105,
+    109,
+    115,
+    124,
+    128,
+    134,
+    141,
+    147
+  ],
+  "sample_count": 24,
+  "candidate_available_count": 22,
+  "request_failure_count": 2,
+  "negative_violation_count": 0,
+  "geometry": {
+    "mean_iou": 0.860913,
+    "median_iou": 0.921099,
+    "minimum_iou": 0.064944,
+    "mean_precision": 0.945316,
+    "mean_recall": 0.883227,
+    "maximum_person_overlap": 0.0,
+    "maximum_floor_overlap": 0.000476,
+    "sample_iou_at_least_0_75": 22
+  },
+  "available_geometry": {
+    "mean_iou": 0.883297,
+    "median_iou": 0.922834,
+    "minimum_iou": 0.064944,
+    "mean_precision": 0.966234,
+    "mean_recall": 0.887234,
+    "maximum_person_overlap": 0.0,
+    "maximum_floor_overlap": 0.000476,
+    "sample_iou_at_least_0_75": 21
+  },
+  "accepted_candidate": {
+    "mean_iou": 0.809689,
+    "median_iou": 0.921099,
+    "minimum_iou": 0.0,
+    "mean_precision": 0.885715,
+    "mean_recall": 0.813298,
+    "maximum_person_overlap": 0.0,
+    "maximum_floor_overlap": 0.000476,
+    "sample_iou_at_least_0_75": 21
+  },
+  "median_elapsed_seconds": 0.3125,
+  "annotation_snapshot_sha256": "381a8f2e76a4d58d013302cd416842eaed88cb720b8cfc42185efe6e0e0f6c8a",
+  "import_manifest_sha256": "e6fed22bfd3b26d32260da2cb5d592041c0bdc3cee3eba72572f9034ffaac961",
+  "contact_sheet": "contact_sheet.jpg",
+  "contact_sheet_sha256": "0b809efee0ae9d974cd2d96ea1c7612799f61e72e19413d02ef1c8e53c4c0f51",
+  "samples": [
+    {
+      "sample_id": "cvat-task3-frame003",
+      "frame": 3,
+      "source_image_sha256": "1091e48fb0b1d30819f7a99d83b1a56c04f259a2f9ffbefb7bc9670998b3fa8b",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 34005,
+        "area_ratio": 0.110693,
+        "bbox": [
+          98,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.375,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16186,
+          "area_ratio": 0.052689,
+          "bbox": [
+            351,
+            239,
+            471,
+            479
+          ],
+          "touches_bottom": true,
+          "score": 0.941406,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16506,
+          "area_ratio": 0.05373,
+          "bbox": [
+            98,
+            240,
+            257,
+            479
+          ],
+          "touches_bottom": true,
+          "score": 0.941406,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1313,
+          "area_ratio": 0.004274,
+          "bbox": [
+            612,
+            423,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.84375,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 34005,
+        "truth_area_pixels": 35771,
+        "iou": 0.933442,
+        "precision": 0.990648,
+        "recall": 0.941741,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 34005,
+        "truth_area_pixels": 35771,
+        "iou": 0.933442,
+        "precision": 0.990648,
+        "recall": 0.941741,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame003-truth-reference.jpg",
+      "comparison_overlay_sha256": "fd2ad2140e2673a5514f9cbe425f956125586608623414af8379f495bb3a950f"
+    },
+    {
+      "sample_id": "cvat-task3-frame009",
+      "frame": 9,
+      "source_image_sha256": "07f338ac9a98f8a130f3e6e1d7340cd3ba07cd6650ef36524da674ecdc123369",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 34024,
+        "area_ratio": 0.110755,
+        "bbox": [
+          98,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.344,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16329,
+          "area_ratio": 0.053154,
+          "bbox": [
+            351,
+            239,
+            471,
+            479
+          ],
+          "touches_bottom": true,
+          "score": 0.949219,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16393,
+          "area_ratio": 0.053363,
+          "bbox": [
+            98,
+            240,
+            257,
+            479
+          ],
+          "touches_bottom": true,
+          "score": 0.9375,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1302,
+          "area_ratio": 0.004238,
+          "bbox": [
+            612,
+            423,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.839844,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 34024,
+        "truth_area_pixels": 34333,
+        "iou": 0.919763,
+        "precision": 0.962556,
+        "recall": 0.953893,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 34024,
+        "truth_area_pixels": 34333,
+        "iou": 0.919763,
+        "precision": 0.962556,
+        "recall": 0.953893,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame009-truth-reference.jpg",
+      "comparison_overlay_sha256": "7a4dc85b627816625d3d4ee46fdc515cbbbd3c37036a68ef475b918f7e03c9d1"
+    },
+    {
+      "sample_id": "cvat-task3-frame016",
+      "frame": 16,
+      "source_image_sha256": "0d836758831cd4d9dc0d505e2276ec829decb5d63417d0139a2572ddd354d00b",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 33239,
+        "area_ratio": 0.1082,
+        "bbox": [
+          97,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.297,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 15838,
+          "area_ratio": 0.051556,
+          "bbox": [
+            350,
+            250,
+            472,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.9375,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16063,
+          "area_ratio": 0.052288,
+          "bbox": [
+            97,
+            239,
+            257,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.9375,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1338,
+          "area_ratio": 0.004355,
+          "bbox": [
+            612,
+            423,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.714844,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 33239,
+        "truth_area_pixels": 37122,
+        "iou": 0.895348,
+        "precision": 0.99997,
+        "recall": 0.895372,
+        "person_overlap": 0.0,
+        "floor_overlap": 3e-05
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 33239,
+        "truth_area_pixels": 37122,
+        "iou": 0.895348,
+        "precision": 0.99997,
+        "recall": 0.895372,
+        "person_overlap": 0.0,
+        "floor_overlap": 3e-05
+      },
+      "comparison_overlay": "cvat-frame016-truth-reference.jpg",
+      "comparison_overlay_sha256": "95e96a83478c0ae568cfdf97fd4f2ecbd3fba1da3c7e2b048feacf66594c1bb4"
+    },
+    {
+      "sample_id": "cvat-task3-frame022",
+      "frame": 22,
+      "source_image_sha256": "faa00fc062bc8098fb209130429afc047b81b7a27049edae8240ab0f782bdc4e",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 33455,
+        "area_ratio": 0.108903,
+        "bbox": [
+          106,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.297,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 15992,
+          "area_ratio": 0.052057,
+          "bbox": [
+            349,
+            239,
+            471,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.933594,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16122,
+          "area_ratio": 0.05248,
+          "bbox": [
+            106,
+            239,
+            258,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.941406,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1341,
+          "area_ratio": 0.004365,
+          "bbox": [
+            612,
+            424,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.828125,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 33455,
+        "truth_area_pixels": 37441,
+        "iou": 0.893185,
+        "precision": 0.999791,
+        "recall": 0.893352,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 33455,
+        "truth_area_pixels": 37441,
+        "iou": 0.893185,
+        "precision": 0.999791,
+        "recall": 0.893352,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame022-truth-reference.jpg",
+      "comparison_overlay_sha256": "447604646c8723ec2e503a6b732b01002c95ac16176a2101418d1dfb08b2f04d"
+    },
+    {
+      "sample_id": "cvat-task3-frame026",
+      "frame": 26,
+      "source_image_sha256": "45920bea894c50eb4f063e270367a9b8e218dda1e73cdf31b841b5b0ac2fa95f",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 33976,
+        "area_ratio": 0.110599,
+        "bbox": [
+          98,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.312,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16323,
+          "area_ratio": 0.053135,
+          "bbox": [
+            350,
+            239,
+            472,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.949219,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16254,
+          "area_ratio": 0.05291,
+          "bbox": [
+            98,
+            239,
+            258,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.945312,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1399,
+          "area_ratio": 0.004554,
+          "bbox": [
+            611,
+            423,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.757812,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 33976,
+        "truth_area_pixels": 37641,
+        "iou": 0.902228,
+        "precision": 0.999765,
+        "recall": 0.90242,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 33976,
+        "truth_area_pixels": 37641,
+        "iou": 0.902228,
+        "precision": 0.999765,
+        "recall": 0.90242,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame026-truth-reference.jpg",
+      "comparison_overlay_sha256": "c2a9fc35b1e0d54f75547e925eb227c1b4bdf4cd9ba20c76d1f2e3ba696f0658"
+    },
+    {
+      "sample_id": "cvat-task3-frame035",
+      "frame": 35,
+      "source_image_sha256": "761ba7a22ca49f482ea2f6203a5f12770886431533431d4ca405b6b7f59a9723",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 35224,
+        "area_ratio": 0.114661,
+        "bbox": [
+          96,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.265,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16741,
+          "area_ratio": 0.054495,
+          "bbox": [
+            351,
+            239,
+            471,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.933594,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 17128,
+          "area_ratio": 0.055755,
+          "bbox": [
+            96,
+            239,
+            259,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.945312,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1355,
+          "area_ratio": 0.004411,
+          "bbox": [
+            612,
+            423,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.832031,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 35224,
+        "truth_area_pixels": 36851,
+        "iou": 0.954576,
+        "precision": 0.999319,
+        "recall": 0.955198,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 35224,
+        "truth_area_pixels": 36851,
+        "iou": 0.954576,
+        "precision": 0.999319,
+        "recall": 0.955198,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame035-truth-reference.jpg",
+      "comparison_overlay_sha256": "7d55bc2856996e3423682ba0271b0ae1ca03cea1dd7804f659d6018a6a22d031"
+    },
+    {
+      "sample_id": "cvat-task3-frame041",
+      "frame": 41,
+      "source_image_sha256": "876d254cf96262b0ab41233ca175fce520b39672d4b3f01bed6c2f72ded71fbf",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 32888,
+        "area_ratio": 0.107057,
+        "bbox": [
+          98,
+          250,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.344,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 15684,
+          "area_ratio": 0.051055,
+          "bbox": [
+            350,
+            254,
+            470,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.921875,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 15849,
+          "area_ratio": 0.051592,
+          "bbox": [
+            98,
+            250,
+            257,
+            479
+          ],
+          "touches_bottom": true,
+          "score": 0.933594,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1355,
+          "area_ratio": 0.004411,
+          "bbox": [
+            611,
+            415,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.835938,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 32888,
+        "truth_area_pixels": 35610,
+        "iou": 0.923453,
+        "precision": 0.999939,
+        "recall": 0.923505,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 32888,
+        "truth_area_pixels": 35610,
+        "iou": 0.923453,
+        "precision": 0.999939,
+        "recall": 0.923505,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame041-truth-reference.jpg",
+      "comparison_overlay_sha256": "e0da8514f73856e067bcef1ef3c53965a80d7fe2cd141017170541e4ef118b6a"
+    },
+    {
+      "sample_id": "cvat-task3-frame045",
+      "frame": 45,
+      "source_image_sha256": "52c3cf19a8fe5fd06b3c80f9836ac71f2047172d05e57f89337e3e15a56625b8",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 33179,
+        "area_ratio": 0.108005,
+        "bbox": [
+          98,
+          242,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.328,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 15664,
+          "area_ratio": 0.05099,
+          "bbox": [
+            350,
+            254,
+            471,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.921875,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16097,
+          "area_ratio": 0.052399,
+          "bbox": [
+            98,
+            242,
+            257,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.925781,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1418,
+          "area_ratio": 0.004616,
+          "bbox": [
+            612,
+            403,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.824219,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 33179,
+        "truth_area_pixels": 35796,
+        "iou": 0.925977,
+        "precision": 0.999488,
+        "recall": 0.926416,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 33179,
+        "truth_area_pixels": 35796,
+        "iou": 0.925977,
+        "precision": 0.999488,
+        "recall": 0.926416,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame045-truth-reference.jpg",
+      "comparison_overlay_sha256": "327f22b3581515b7a5dc7aaf895004c4edf6ea0f6685c651c9c1dcde42375dae"
+    },
+    {
+      "sample_id": "cvat-task3-frame054",
+      "frame": 54,
+      "source_image_sha256": "bc10444c716beaa7edc4ac6e04071c99e8a44d6da96270af3338defa9d11e854",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 35036,
+        "area_ratio": 0.114049,
+        "bbox": [
+          97,
+          238,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.312,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16651,
+          "area_ratio": 0.054202,
+          "bbox": [
+            350,
+            238,
+            471,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.917969,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 17023,
+          "area_ratio": 0.055413,
+          "bbox": [
+            97,
+            239,
+            257,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.9375,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1362,
+          "area_ratio": 0.004434,
+          "bbox": [
+            611,
+            423,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.792969,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 35036,
+        "truth_area_pixels": 37015,
+        "iou": 0.944644,
+        "precision": 0.998972,
+        "recall": 0.945563,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 35036,
+        "truth_area_pixels": 37015,
+        "iou": 0.944644,
+        "precision": 0.998972,
+        "recall": 0.945563,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame054-truth-reference.jpg",
+      "comparison_overlay_sha256": "b1d8b27cbf07ee803531efe8ff164c136f47a22077840c58db3d61ecb7c18d61"
+    },
+    {
+      "sample_id": "cvat-task3-frame058",
+      "frame": 58,
+      "source_image_sha256": "1c1aeb1cc17147c3736aca3af59e6071263a3f620b277d3fb93e3429ef6f9d92",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 34193,
+        "area_ratio": 0.111305,
+        "bbox": [
+          97,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.296,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16285,
+          "area_ratio": 0.053011,
+          "bbox": [
+            350,
+            239,
+            471,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.941406,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16636,
+          "area_ratio": 0.054154,
+          "bbox": [
+            97,
+            239,
+            258,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.949219,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1272,
+          "area_ratio": 0.004141,
+          "bbox": [
+            611,
+            423,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.789062,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 34193,
+        "truth_area_pixels": 36911,
+        "iou": 0.924434,
+        "precision": 0.998918,
+        "recall": 0.925361,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 34193,
+        "truth_area_pixels": 36911,
+        "iou": 0.924434,
+        "precision": 0.998918,
+        "recall": 0.925361,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame058-truth-reference.jpg",
+      "comparison_overlay_sha256": "cf619f8bded811544b33ff2c8a4e0a4d2844c33e9c77abc95b97e726316d3800"
+    },
+    {
+      "sample_id": "cvat-task3-frame064",
+      "frame": 64,
+      "source_image_sha256": "d40ab374179ae5118cbb01b0dfed0c5300b5e9e3e76e46b9b0183823e30da08b",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 34065,
+        "area_ratio": 0.110889,
+        "bbox": [
+          98,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.297,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16467,
+          "area_ratio": 0.053604,
+          "bbox": [
+            350,
+            239,
+            471,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.941406,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16407,
+          "area_ratio": 0.053408,
+          "bbox": [
+            98,
+            239,
+            257,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.949219,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1191,
+          "area_ratio": 0.003877,
+          "bbox": [
+            615,
+            423,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.839844,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 34065,
+        "truth_area_pixels": 36883,
+        "iou": 0.923231,
+        "precision": 0.999795,
+        "recall": 0.923406,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 34065,
+        "truth_area_pixels": 36883,
+        "iou": 0.923231,
+        "precision": 0.999795,
+        "recall": 0.923406,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame064-truth-reference.jpg",
+      "comparison_overlay_sha256": "f271dafa932fafa31886c149e5f9ee971f5a4f0ad4fcae24825b05e0260157b9"
+    },
+    {
+      "sample_id": "cvat-task3-frame073",
+      "frame": 73,
+      "source_image_sha256": "8d6b94e221180cf656680c6aa975cff50338c90d98ac8b2ee99cdc353cd462b7",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 33692,
+        "area_ratio": 0.109674,
+        "bbox": [
+          96,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.328,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16383,
+          "area_ratio": 0.05333,
+          "bbox": [
+            350,
+            239,
+            473,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.941406,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16425,
+          "area_ratio": 0.053467,
+          "bbox": [
+            96,
+            239,
+            257,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.941406,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 884,
+          "area_ratio": 0.002878,
+          "bbox": [
+            617,
+            426,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.519531,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 33692,
+        "truth_area_pixels": 36475,
+        "iou": 0.922436,
+        "precision": 0.999288,
+        "recall": 0.923043,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 33692,
+        "truth_area_pixels": 36475,
+        "iou": 0.922436,
+        "precision": 0.999288,
+        "recall": 0.923043,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame073-truth-reference.jpg",
+      "comparison_overlay_sha256": "e56afa22a5fb7dd9c6064041d581797d48667677b149d439ae51a2c9f0a5e41a"
+    },
+    {
+      "sample_id": "cvat-task3-frame077",
+      "frame": 77,
+      "source_image_sha256": "69ad80695574a699f08a9cf4d1786a12040c4d360147c502353f6b4746517101",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 33772,
+        "area_ratio": 0.109935,
+        "bbox": [
+          97,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.406,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16134,
+          "area_ratio": 0.05252,
+          "bbox": [
+            350,
+            239,
+            471,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.941406,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16444,
+          "area_ratio": 0.053529,
+          "bbox": [
+            97,
+            239,
+            257,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.945312,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1194,
+          "area_ratio": 0.003887,
+          "bbox": [
+            612,
+            423,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.71875,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 33772,
+        "truth_area_pixels": 36406,
+        "iou": 0.926697,
+        "precision": 0.999467,
+        "recall": 0.927155,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 33772,
+        "truth_area_pixels": 36406,
+        "iou": 0.926697,
+        "precision": 0.999467,
+        "recall": 0.927155,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame077-truth-reference.jpg",
+      "comparison_overlay_sha256": "57d274e2ecb64e7d10e12cfcff07c373d3af5cbf226ec018def509b3210d5228"
+    },
+    {
+      "sample_id": "cvat-task3-frame086",
+      "frame": 86,
+      "source_image_sha256": "805ceeb50a27ac02f62c113818cceeaab967c58e0f25d82fcd211b338562d0d7",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 33439,
+        "area_ratio": 0.108851,
+        "bbox": [
+          98,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.657,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16121,
+          "area_ratio": 0.052477,
+          "bbox": [
+            350,
+            239,
+            470,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.941406,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16097,
+          "area_ratio": 0.052399,
+          "bbox": [
+            98,
+            239,
+            257,
+            479
+          ],
+          "touches_bottom": true,
+          "score": 0.941406,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1221,
+          "area_ratio": 0.003975,
+          "bbox": [
+            612,
+            423,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.777344,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 33439,
+        "truth_area_pixels": 36505,
+        "iou": 0.915172,
+        "precision": 0.999522,
+        "recall": 0.915573,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 33439,
+        "truth_area_pixels": 36505,
+        "iou": 0.915172,
+        "precision": 0.999522,
+        "recall": 0.915573,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame086-truth-reference.jpg",
+      "comparison_overlay_sha256": "457c27bd46a66de83e6ddd4452f476aa13de7168ff6900eb8edcfbadfbfd2cbd"
+    },
+    {
+      "sample_id": "cvat-task3-frame092",
+      "frame": 92,
+      "source_image_sha256": "6fa0f60c90ee3b6ac7532f9ff5532906c27aa1bf93dded1172055f7f1cc40ab4",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 33221,
+        "area_ratio": 0.108141,
+        "bbox": [
+          98,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.672,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16180,
+          "area_ratio": 0.052669,
+          "bbox": [
+            351,
+            239,
+            473,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.9375,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16116,
+          "area_ratio": 0.052461,
+          "bbox": [
+            98,
+            239,
+            259,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.945312,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 925,
+          "area_ratio": 0.003011,
+          "bbox": [
+            617,
+            423,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.269531,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 33221,
+        "truth_area_pixels": 36650,
+        "iou": 0.905244,
+        "precision": 0.999308,
+        "recall": 0.905812,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 33221,
+        "truth_area_pixels": 36650,
+        "iou": 0.905244,
+        "precision": 0.999308,
+        "recall": 0.905812,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame092-truth-reference.jpg",
+      "comparison_overlay_sha256": "4881b33a695f5fbd308601b7be7c3708ce80e979961d40b5731693a9ace9ed42"
+    },
+    {
+      "sample_id": "cvat-task3-frame096",
+      "frame": 96,
+      "source_image_sha256": "28e823ea2ca0c849855d15d84f4bfcebd0c671486b4d4d567c0e7d8137fc548b",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 25841,
+        "area_ratio": 0.084118,
+        "bbox": [
+          96,
+          315,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.313,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 12291,
+          "area_ratio": 0.04001,
+          "bbox": [
+            360,
+            315,
+            474,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.871094,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 12625,
+          "area_ratio": 0.041097,
+          "bbox": [
+            96,
+            318,
+            239,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.890625,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 925,
+          "area_ratio": 0.003011,
+          "bbox": [
+            618,
+            424,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.478516,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 25841,
+        "truth_area_pixels": 28067,
+        "iou": 0.918639,
+        "precision": 0.998839,
+        "recall": 0.919621,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 25841,
+        "truth_area_pixels": 28067,
+        "iou": 0.918639,
+        "precision": 0.998839,
+        "recall": 0.919621,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame096-truth-reference.jpg",
+      "comparison_overlay_sha256": "d6858da6a249a0c738d0f4b2ef834e89c97ca7ac55aaa7a60c400b67366161d6"
+    },
+    {
+      "sample_id": "cvat-task3-frame105",
+      "frame": 105,
+      "source_image_sha256": "a71e62637f1e63406a9dd12324ca5482bc4fbf0ef2c83f22a3e9d6f2401956e0",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 34884,
+        "area_ratio": 0.113555,
+        "bbox": [
+          96,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.312,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16844,
+          "area_ratio": 0.054831,
+          "bbox": [
+            349,
+            239,
+            469,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.941406,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16808,
+          "area_ratio": 0.054714,
+          "bbox": [
+            96,
+            239,
+            257,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.9375,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1232,
+          "area_ratio": 0.00401,
+          "bbox": [
+            612,
+            424,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.832031,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 34884,
+        "truth_area_pixels": 37049,
+        "iou": 0.940778,
+        "precision": 0.99957,
+        "recall": 0.941159,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 34884,
+        "truth_area_pixels": 37049,
+        "iou": 0.940778,
+        "precision": 0.99957,
+        "recall": 0.941159,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame105-truth-reference.jpg",
+      "comparison_overlay_sha256": "2c227664e5e1874533399fadac58cbf682afffd52abc9198eda3ec5ef728c2a1"
+    },
+    {
+      "sample_id": "cvat-task3-frame109",
+      "frame": 109,
+      "source_image_sha256": "fb8aba54e20b22809017105670093f6329e6876a72eef8bdf8118f7744072392",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 34318,
+        "area_ratio": 0.111712,
+        "bbox": [
+          96,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.281,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16552,
+          "area_ratio": 0.05388,
+          "bbox": [
+            350,
+            239,
+            470,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.9375,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16560,
+          "area_ratio": 0.053906,
+          "bbox": [
+            96,
+            239,
+            257,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.933594,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1206,
+          "area_ratio": 0.003926,
+          "bbox": [
+            612,
+            424,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.804688,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 34318,
+        "truth_area_pixels": 37302,
+        "iou": 0.919593,
+        "precision": 0.999767,
+        "recall": 0.91979,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 34318,
+        "truth_area_pixels": 37302,
+        "iou": 0.919593,
+        "precision": 0.999767,
+        "recall": 0.91979,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame109-truth-reference.jpg",
+      "comparison_overlay_sha256": "62484f1c75713bc2254bc591a732f5ebd8eeeaeacd648d75a38c38b398e19aa8"
+    },
+    {
+      "sample_id": "cvat-task3-frame115",
+      "frame": 115,
+      "source_image_sha256": "0d2b13a6f72ac5344d8237c6bd59333ba1ad79aed8779f5255555e7afc5b7af8",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 1,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": false,
+        "area_pixels": 1170,
+        "area_ratio": 0.003809,
+        "bbox": [
+          613,
+          424,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 1,
+        "elapsed_seconds": 0.344,
+        "candidate_available": false
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "attempt_available": false,
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "attempt_available": false,
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1170,
+          "area_ratio": 0.003809,
+          "bbox": [
+            613,
+            424,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.828125,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 1170,
+        "truth_area_pixels": 1379,
+        "iou": 0.801413,
+        "precision": 0.969231,
+        "recall": 0.822335,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 0,
+        "truth_area_pixels": 1379,
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame115-truth-reference.jpg",
+      "comparison_overlay_sha256": "008a5ae043950fa2bcc95a910a3131fd8c7025fb60510b69edb10d173d577344"
+    },
+    {
+      "sample_id": "cvat-task3-frame124",
+      "frame": 124,
+      "source_image_sha256": "f0fdb5b6b655b28e4344614a367507b6ee095adfeb9a9d183b30d20b50ec0039",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 29587,
+        "area_ratio": 0.096312,
+        "bbox": [
+          96,
+          287,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.313,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 14281,
+          "area_ratio": 0.046488,
+          "bbox": [
+            355,
+            288,
+            474,
+            479
+          ],
+          "touches_bottom": true,
+          "score": 0.929688,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 14347,
+          "area_ratio": 0.046702,
+          "bbox": [
+            96,
+            287,
+            246,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.949219,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 959,
+          "area_ratio": 0.003122,
+          "bbox": [
+            616,
+            424,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.59375,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 29587,
+        "truth_area_pixels": 29954,
+        "iou": 0.931707,
+        "precision": 0.970629,
+        "recall": 0.958737,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 29587,
+        "truth_area_pixels": 29954,
+        "iou": 0.931707,
+        "precision": 0.970629,
+        "recall": 0.958737,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame124-truth-reference.jpg",
+      "comparison_overlay_sha256": "8362fcb5320f59a771346f464eddba5bf8ccf0907b75151ea248f49342d8ab57"
+    },
+    {
+      "sample_id": "cvat-task3-frame128",
+      "frame": 128,
+      "source_image_sha256": "4ea167b14b87f823b9fe1b46faeaadeb55ae05ea3408ef8457c406d5823b5c3a",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 33609,
+        "area_ratio": 0.109404,
+        "bbox": [
+          98,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.265,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16487,
+          "area_ratio": 0.053669,
+          "bbox": [
+            350,
+            239,
+            473,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.941406,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16349,
+          "area_ratio": 0.053219,
+          "bbox": [
+            98,
+            239,
+            258,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.921875,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 773,
+          "area_ratio": 0.002516,
+          "bbox": [
+            618,
+            426,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.425781,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 33609,
+        "truth_area_pixels": 36551,
+        "iou": 0.91867,
+        "precision": 0.999524,
+        "recall": 0.919072,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.000476
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 33609,
+        "truth_area_pixels": 36551,
+        "iou": 0.91867,
+        "precision": 0.999524,
+        "recall": 0.919072,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.000476
+      },
+      "comparison_overlay": "cvat-frame128-truth-reference.jpg",
+      "comparison_overlay_sha256": "adf47113db7d0ed406ba99e7e3dafd706b1465427600a7226a34388d483a952f"
+    },
+    {
+      "sample_id": "cvat-task3-frame134",
+      "frame": 134,
+      "source_image_sha256": "6064c4963e499efeaf42ea8f64b923408d9932ad71463b8510afe05aba4e7c60",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 2318,
+        "area_ratio": 0.007546,
+        "bbox": [
+          180,
+          365,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.297,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 320,
+          "area_ratio": 0.001042,
+          "bbox": [
+            390,
+            368,
+            421,
+            380
+          ],
+          "touches_bottom": false,
+          "score": 0.546875,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 186,
+          "area_ratio": 0.000605,
+          "bbox": [
+            180,
+            365,
+            211,
+            380
+          ],
+          "touches_bottom": false,
+          "score": 0.296875,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1812,
+          "area_ratio": 0.005898,
+          "bbox": [
+            587,
+            426,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.789062,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 2318,
+        "truth_area_pixels": 10702,
+        "iou": 0.064944,
+        "precision": 0.342537,
+        "recall": 0.074192,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 2318,
+        "truth_area_pixels": 10702,
+        "iou": 0.064944,
+        "precision": 0.342537,
+        "recall": 0.074192,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame134-truth-reference.jpg",
+      "comparison_overlay_sha256": "15c13f0b389f6b806ba45429d0ccd2c2602e85ddb169c12072380d76f7c26eb8"
+    },
+    {
+      "sample_id": "cvat-task3-frame141",
+      "frame": 141,
+      "source_image_sha256": "87fe42d1cb158952fbdf1d675b5631956ea8c802bfd210b2cb2f728378acc514",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 2,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": false,
+        "area_pixels": 1572,
+        "area_ratio": 0.005117,
+        "bbox": [
+          388,
+          364,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 2,
+        "elapsed_seconds": 0.359,
+        "candidate_available": false
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 782,
+          "area_ratio": 0.002546,
+          "bbox": [
+            388,
+            364,
+            425,
+            391
+          ],
+          "touches_bottom": false,
+          "score": 0.025513,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "attempt_available": false,
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 790,
+          "area_ratio": 0.002572,
+          "bbox": [
+            614,
+            428,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.546875,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 1572,
+        "truth_area_pixels": 847,
+        "iou": 0.427981,
+        "precision": 0.461196,
+        "recall": 0.855962,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 0,
+        "truth_area_pixels": 847,
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame141-truth-reference.jpg",
+      "comparison_overlay_sha256": "2e0a30eb6e0a444d32dc6a860079883d05a8a367e8629b86026f381b69ba787b"
+    },
+    {
+      "sample_id": "cvat-task3-frame147",
+      "frame": 147,
+      "source_image_sha256": "d32ce498dc0d39ed70522573394fa2a1bc612bb9efe90f8b5980fd7990c2a1a7",
+      "reference_geometry": {
+        "positive_point_count": 3,
+        "positive_points_covered": 3,
+        "negative_point_count": 3,
+        "negative_points_violated": 0,
+        "prompt_satisfied": true,
+        "area_pixels": 34553,
+        "area_ratio": 0.112477,
+        "bbox": [
+          98,
+          239,
+          640,
+          480
+        ],
+        "touches_bottom": true,
+        "request_count": 3,
+        "accepted_request_count": 3,
+        "elapsed_seconds": 0.312,
+        "candidate_available": true
+      },
+      "attempts": [
+        {
+          "positive_index": 0,
+          "point": {
+            "x": 397,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16445,
+          "area_ratio": 0.053532,
+          "bbox": [
+            349,
+            239,
+            471,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.9375,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 1,
+          "point": {
+            "x": 187,
+            "y": 375,
+            "label": 1
+          },
+          "area_pixels": 16767,
+          "area_ratio": 0.05458,
+          "bbox": [
+            98,
+            239,
+            259,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.945312,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        },
+        {
+          "positive_index": 2,
+          "point": {
+            "x": 627,
+            "y": 448,
+            "label": 1
+          },
+          "area_pixels": 1341,
+          "area_ratio": 0.004365,
+          "bbox": [
+            612,
+            425,
+            640,
+            480
+          ],
+          "touches_bottom": true,
+          "score": 0.699219,
+          "sam_warning_count": 0,
+          "requested_point_covered": true,
+          "negative_points_violated": 0,
+          "attempt_available": true
+        }
+      ],
+      "geometry_metrics": {
+        "candidate_area_pixels": 34553,
+        "truth_area_pixels": 37186,
+        "iou": 0.928364,
+        "precision": 0.999537,
+        "recall": 0.928764,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "accepted_candidate_metrics": {
+        "candidate_area_pixels": 34553,
+        "truth_area_pixels": 37186,
+        "iou": 0.928364,
+        "precision": 0.999537,
+        "recall": 0.928764,
+        "person_overlap": 0.0,
+        "floor_overlap": 0.0
+      },
+      "comparison_overlay": "cvat-frame147-truth-reference.jpg",
+      "comparison_overlay_sha256": "f7fddf0f980ec52233da655f203e7b5d3ed3936c9d7bfc4d3ed85dbfbff3d810"
+    }
+  ],
+  "decision_boundary": "One CVAT reference frame derives prompts and is excluded from evaluation. The snapshot lacks the formal v3 human receipt, so results remain diagnostic."
+}

@@ -1,5 +1,8 @@
 import io
+import json
+import tempfile
 import unittest
+from pathlib import Path
 from unittest import mock
 
 import numpy as np
@@ -10,6 +13,7 @@ from tools.evaluate_ego_reference_geometry import (
     component_anchor,
     connected_components,
     evaluate_reference_image,
+    load_exclusion_evidence,
     reference_prompt_contract,
 )
 
@@ -38,6 +42,8 @@ class EgoReferenceGeometryTest(unittest.TestCase):
         self.assertEqual(contract["reference_component_count"], 2)
         self.assertEqual(len(contract["positive_points"]), 2)
         self.assertEqual(len(contract["negative_points"]), 3)
+        self.assertEqual(contract["major_component_indices"], [0, 1])
+        self.assertEqual(len(contract["component_area_ratios"]), 2)
         for point in contract["positive_points"]:
             self.assertTrue(ego[point["y"], point["x"]])
         for point in contract["negative_points"]:
@@ -113,6 +119,52 @@ class EgoReferenceGeometryTest(unittest.TestCase):
                 request_groups=mock.Mock(return_value=response))
         self.assertIn("occluded", result["attempts"][0]["error"])
         self.assertNotIn("error", result["attempts"][1])
+        self.assertFalse(result["result"]["candidate_available"])
+
+    def test_exclusion_evidence_is_hashed_merged_and_validated(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            first, second = root / "first.json", root / "second.json"
+            first.write_text(json.dumps({"selected_frames": [1, 7, 14]}),
+                             encoding="utf-8")
+            second.write_text(json.dumps({"selected_frames": [7, 20]}),
+                              encoding="utf-8")
+            frames, sources = load_exclusion_evidence([first, second])
+            self.assertEqual(frames, {1, 7, 14, 20})
+            self.assertEqual([source["frame_count"] for source in sources], [3, 2])
+            self.assertTrue(all(len(source["sha256"]) == 64 for source in sources))
+            second.write_text(json.dumps({"selected_frames": [150]}),
+                              encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "invalid selected_frames"):
+                load_exclusion_evidence([second])
+
+    def test_major_reference_component_rejects_a_tiny_prompt_fragment(self):
+        output = io.BytesIO()
+        Image.new("RGB", (20, 20), "gray").save(output, "PNG")
+        contract = {
+            "positive_points": [{"x": 3, "y": 15, "label": 1}],
+            "negative_points": [{"x": 10, "y": 3, "label": 0}],
+            "component_area_ratios": [0.10],
+            "major_component_indices": [0],
+        }
+        tiny = np.zeros((20, 20), dtype=bool)
+        tiny[15, 3] = True
+        response = {"items": [{"index": 0,
+                                "points": [contract["positive_points"][0],
+                                           *contract["negative_points"]],
+                                "result": {"id": 0}}]}
+        decoded = ({"score": .95, "parts": [{
+            "points": [[2, 14], [4, 14], [3, 16]], "holes": []}]},
+                   tiny, [])
+        with mock.patch.object(evaluator, "_decode_response",
+                               return_value=decoded):
+            result, _ = evaluate_reference_image(
+                output.getvalue(), contract,
+                request_groups=mock.Mock(return_value=response))
+        attempt = result["attempts"][0]
+        self.assertTrue(attempt["requested_point_covered"])
+        self.assertFalse(attempt["component_area_guard_passed"])
+        self.assertFalse(attempt["attempt_available"])
         self.assertFalse(result["result"]["candidate_available"])
 
 

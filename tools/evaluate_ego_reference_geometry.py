@@ -38,6 +38,36 @@ from tools.evaluate_ego_cvat_truth_shadow import (
 from tools.evaluate_ego_unexposed_timepoints import select_even_unexposed
 
 
+MAJOR_REFERENCE_COMPONENT_FRACTION = 0.10
+MINIMUM_TARGET_TO_REFERENCE_AREA_RATIO = 0.40
+
+
+def load_exclusion_evidence(paths) -> tuple[set[int], list[dict]]:
+    excluded_frames, sources = set(), []
+    for evidence_path in map(Path, paths):
+        evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+        frames = evidence.get("selected_frames")
+        if (not isinstance(frames, list)
+                or any(type(frame) is not int or not 0 <= frame < 150
+                       for frame in frames)):
+            raise ValueError(
+                f"exclude evidence has invalid selected_frames: {evidence_path}")
+        excluded_frames.update(frames)
+        sources.append({"name": evidence_path.name,
+                        "sha256": _sha256(evidence_path),
+                        "frame_count": len(frames)})
+    return excluded_frames, sources
+
+
+def safe_geometry(mask: np.ndarray) -> dict:
+    if not isinstance(mask, np.ndarray) or mask.ndim != 2:
+        raise ValueError("geometry mask is invalid")
+    if not mask.any():
+        return {"area_pixels": 0, "area_ratio": 0.0,
+                "bbox": None, "touches_bottom": False}
+    return _geometry(mask)
+
+
 def connected_components(mask: np.ndarray, *, minimum_area: int = 1) -> list[np.ndarray]:
     if (not isinstance(mask, np.ndarray) or mask.ndim != 2
             or mask.dtype != np.bool_ or type(minimum_area) is not int
@@ -91,6 +121,12 @@ def reference_prompt_contract(ego: np.ndarray, floor: np.ndarray,
     positives = [{"x": x, "y": y, "label": 1}
                  for x, y in map(component_anchor, components)]
     height, width = ego.shape
+    component_area_ratios = [len(component) / (height * width)
+                             for component in components]
+    major_component_indices = [
+        index for index, component in enumerate(components)
+        if len(component) / int(ego.sum())
+        >= MAJOR_REFERENCE_COMPONENT_FRACTION]
     available = np.argwhere(np.logical_and(floor, np.logical_not(ego)))
     if len(available) < negative_count:
         raise ValueError("reference floor has too few safe pixels")
@@ -111,6 +147,8 @@ def reference_prompt_contract(ego: np.ndarray, floor: np.ndarray,
         negatives.append({"x": selected[0], "y": selected[1], "label": 0})
     return {
         "reference_component_count": len(components),
+        "component_area_ratios": component_area_ratios,
+        "major_component_indices": major_component_indices,
         "positive_points": positives,
         "negative_points": negatives,
         "points": [*positives, *negatives],
@@ -123,6 +161,16 @@ def evaluate_reference_image(image: bytes, contract: dict,
         width, height = opened.size
     positives = contract["positive_points"]
     negatives = contract["negative_points"]
+    component_area_ratios = contract.get(
+        "component_area_ratios", [0.0] * len(positives))
+    major_component_indices = set(contract.get("major_component_indices", []))
+    if (not isinstance(component_area_ratios, list)
+            or len(component_area_ratios) != len(positives)
+            or any(type(value) not in (int, float) or value < 0
+                   for value in component_area_ratios)
+            or any(type(index) is not int or not 0 <= index < len(positives)
+                   for index in major_component_indices)):
+        raise ValueError("reference component area contract is invalid")
     masks, parts, attempts = [], [], []
     started = time.monotonic()
     grouped_items, grouped_error = None, None
@@ -153,15 +201,26 @@ def evaluate_reference_image(image: bytes, contract: dict,
                 response, width, height)
             requested_covered = bool(mask[positive["y"], positive["x"]])
             prompt = _prompt_metrics(mask, positives, negatives)
-            row.update(_geometry(mask) | {
+            row.update(safe_geometry(mask) | {
                 "score": round(float(shape["score"]), 6),
                 "sam_warning_count": len(warnings),
                 "requested_point_covered": requested_covered,
                 "negative_points_violated": prompt["negative_points_violated"],
             })
+            minimum_area_ratio = (
+                component_area_ratios[index]
+                * MINIMUM_TARGET_TO_REFERENCE_AREA_RATIO
+                if index in major_component_indices else 0.0)
+            row.update({
+                "major_reference_component": index in major_component_indices,
+                "minimum_area_ratio": round(minimum_area_ratio, 6),
+                "component_area_guard_passed": (
+                    row["area_ratio"] >= minimum_area_ratio),
+            })
             row["attempt_available"] = (
                 requested_covered and not warnings
                 and row["negative_points_violated"] == 0
+                and row["component_area_guard_passed"]
                 and row["area_ratio"] <= MAXIMUM_AREA_RATIO)
             if row["attempt_available"]:
                 masks.append(mask)
@@ -173,7 +232,8 @@ def evaluate_reference_image(image: bytes, contract: dict,
     union = (np.logical_or.reduce(masks) if masks
              else np.zeros((height, width), dtype=bool))
     prompt = _prompt_metrics(union, positives, negatives)
-    result = prompt | _geometry(union) | {
+    union_geometry = safe_geometry(union)
+    result = prompt | union_geometry | {
         "request_count": len(positives),
         "accepted_request_count": len(masks),
         "elapsed_seconds": round(elapsed, 6),
@@ -181,7 +241,7 @@ def evaluate_reference_image(image: bytes, contract: dict,
             len(masks) == len(positives)
             and prompt["prompt_satisfied"]
             and prompt["negative_points_violated"] == 0
-            and _geometry(union)["area_ratio"] <= MAXIMUM_AREA_RATIO),
+            and union_geometry["area_ratio"] <= MAXIMUM_AREA_RATIO),
     }
     return {"result": result, "attempts": attempts,
             "shape": {"id": 1, "label": "ego", "parts": parts,
@@ -221,7 +281,8 @@ def _contact_sheet(output: Path, rows: list[dict], columns: int = 4) -> Path:
 def evaluate_scope(image_directory: Path, annotation_path: Path,
                    import_manifest_path: Path, output: Path, request_points=None,
                    request_groups=None,
-                   *, reference_frame: int = 0, sample_count: int = 24) -> dict:
+                   *, reference_frame: int = 0, sample_count: int = 24,
+                   excluded_frames=(), exclusion_sources=()) -> dict:
     if output.exists():
         raise FileExistsError(output)
     annotations = json.loads(annotation_path.read_text(encoding="utf-8"))
@@ -236,7 +297,8 @@ def evaluate_scope(image_directory: Path, annotation_path: Path,
     reference_ego = render_label_mask(reference_shapes, "ego", size)
     reference_floor = render_label_mask(reference_shapes, "floor", size)
     contract = reference_prompt_contract(reference_ego, reference_floor)
-    selected = select_even_unexposed(150, (reference_frame,), sample_count)
+    excluded = tuple(sorted({reference_frame, *excluded_frames}))
+    selected = select_even_unexposed(150, excluded, sample_count)
     output.mkdir(parents=True)
     rows = []
     for frame in selected:
@@ -276,6 +338,8 @@ def evaluate_scope(image_directory: Path, annotation_path: Path,
         "dataset": "CVAT Task3 local reviewed snapshot",
         "reference_frame": reference_frame,
         "reference_frame_excluded_from_evaluation": True,
+        "excluded_frames": list(excluded),
+        "exclusion_sources": list(exclusion_sources),
         "reference_truth_source": "existing_workbench_cvat_polygon",
         "formal_human_receipt_v3": False,
         "diagnostic_only": True,
@@ -322,18 +386,23 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--reference-frame", type=int, default=0)
     parser.add_argument("--sample-count", type=int, default=24)
+    parser.add_argument("--exclude-evidence", type=Path, action="append", default=[])
     parser.add_argument("--point-sam-url", default="http://127.0.0.1:28766")
     arguments = parser.parse_args()
     if not arguments.point_sam_url.startswith("http://127.0.0.1:"):
         raise ValueError("point SAM URL must be loopback")
     config = {"sam3_url": arguments.point_sam_url.rstrip("/")}
+    excluded_frames, exclusion_sources = load_exclusion_evidence(
+        arguments.exclude_evidence)
     report = evaluate_scope(
         arguments.image_directory, arguments.annotations,
         arguments.import_manifest, arguments.output,
         request_groups=lambda image, groups: sam_point_groups(
             image, groups, config),
         reference_frame=arguments.reference_frame,
-        sample_count=arguments.sample_count)
+        sample_count=arguments.sample_count,
+        excluded_frames=excluded_frames,
+        exclusion_sources=exclusion_sources)
     print(json.dumps({
         "output": str((arguments.output / "results.json").resolve()),
         "reference_frame": report["reference_frame"],

@@ -1,0 +1,61 @@
+{
+  "schema_version": "labelagent.round406_407.ego_major_area_guard.v1",
+  "date": "2026-11-22",
+  "rule": {
+    "major_reference_component_minimum_fraction_of_reference_ego": 0.1,
+    "minimum_target_to_reference_component_area_ratio": 0.4,
+    "color_dependent": false,
+    "target_truth_used_by_inference_rule": false,
+    "failure_action": "reject_candidate_and_route_to_human"
+  },
+  "round406_before_guard": {
+    "selected_frames": [3, 9, 16, 22, 26, 35, 41, 45, 54, 58, 64, 73, 77, 86, 92, 96, 105, 109, 115, 124, 128, 134, 141, 147],
+    "candidate_available_count": 22,
+    "available_mean_iou": 0.883297,
+    "available_minimum_iou": 0.064944,
+    "bad_accepted_frame": 134,
+    "results_sha256": "507274FC46B9EB2AF357A9A8952910611738FAFD3C4157BCB0D9C5ECABD48608"
+  },
+  "round406_after_guard": {
+    "candidate_available_count": 21,
+    "available_mean_iou": 0.922266,
+    "available_minimum_iou": 0.893185,
+    "available_iou_at_least_0_75": 21,
+    "maximum_person_overlap": 0.0,
+    "maximum_floor_overlap": 0.000476,
+    "results_sha256": "6E6CC54544AE04F4B22B9D7C1F4BBA23E4BC6A4A9E4E532848905A249C73D944"
+  },
+  "round402_regression": {
+    "candidate_available_count": 15,
+    "available_mean_iou": 0.9218,
+    "available_minimum_iou": 0.849209,
+    "coverage_regression": false,
+    "results_sha256": "121A3BA858F795E335138CDDBDBE9C8B241E7194AC774A53721E2D1C4BD04AF6"
+  },
+  "round407_independent_validation": {
+    "selected_frames": [4, 10, 17, 23, 29, 36, 42, 48, 51, 61, 67, 70, 80, 83, 89, 99, 102, 108, 114, 121, 127, 133, 140, 146],
+    "sample_count": 24,
+    "candidate_available_count": 16,
+    "coverage": 0.666667,
+    "available_mean_iou": 0.923925,
+    "available_minimum_iou": 0.873481,
+    "available_iou_at_least_0_75": 16,
+    "maximum_person_overlap": 0.0,
+    "maximum_floor_overlap": 0.000397,
+    "median_elapsed_seconds": 0.3045,
+    "results_sha256": "F3FA24759B6599A0E1E2FD0E55EACBB612736B09B70B601703222516179FE2D6"
+  },
+  "tests": {
+    "python_passed": 1282,
+    "python_subtests_passed": 225,
+    "node_passed": 167
+  },
+  "boundary": {
+    "same_sequence_only": true,
+    "automatic_truth_deployed": false,
+    "training_approved": false,
+    "formal_state_modified": false,
+    "real_images_uploaded": false
+  },
+  "gate": "independent_same_sequence_precision_gate_passed; cross_camera_or_cross_batch_validation_required"
+}

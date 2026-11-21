@@ -25,7 +25,9 @@ except ModuleNotFoundError:  # Direct ``python tools/...py`` execution.
 
 def denoise_small_islands(mask: np.ndarray,
                           positive_points: list[tuple[int, int]],
-                          minimum_pixels: int = 100) -> tuple[np.ndarray, dict]:
+                          minimum_pixels: int = 100,
+                          persistent_protection: np.ndarray | None = None
+                          ) -> tuple[np.ndarray, dict]:
     if mask.ndim != 2 or minimum_pixels <= 0:
         raise ValueError("mask must be 2D and minimum_pixels must be positive")
     mask = mask.astype(bool)
@@ -38,6 +40,14 @@ def denoise_small_islands(mask: np.ndarray,
     count, labels, stats, _ = cv2.connectedComponentsWithStats(
         mask.astype(np.uint8), connectivity=8)
     protected_labels = {int(labels[y, x]) for x, y in positive_points}
+    persistent_labels = set()
+    if persistent_protection is not None:
+        if persistent_protection.shape != mask.shape:
+            raise ValueError("persistent protection dimensions differ")
+        persistent_labels = {
+            int(index) for index in np.unique(labels[persistent_protection & mask])
+            if int(index) != 0}
+        protected_labels.update(persistent_labels)
     keep_labels = set()
     removed_components = []
     for index in range(1, count):
@@ -46,6 +56,9 @@ def denoise_small_islands(mask: np.ndarray,
             keep_labels.add(index)
         else:
             removed_components.append(area)
+    persistent_small_count = sum(
+        int(stats[index, cv2.CC_STAT_AREA]) < minimum_pixels
+        for index in persistent_labels)
     cleaned = np.isin(labels, list(keep_labels))
     removed_pixels = int(np.logical_and(mask, ~cleaned).sum())
     if any(not cleaned[y, x] for x, y in positive_points):
@@ -59,6 +72,7 @@ def denoise_small_islands(mask: np.ndarray,
         "removed_component_count": len(removed_components),
         "removed_component_sizes": removed_components,
         "protected_component_count": len(protected_labels),
+        "persistent_protected_component_count": persistent_small_count,
         "positive_point_count": len(positive_points),
         "positive_points_preserved": True,
     }
@@ -117,7 +131,10 @@ def build_shadow(review_queues: list[Path], diagnostic_roots: list[Path],
                  identity_manifest_path: Path, component_guard_path: Path,
                  output: Path, minimum_pixels: int = 100,
                  maximum_removed_ratio: float = 0.01,
-                 expected_size: tuple[int, int] = (640, 512)) -> dict:
+                 expected_size: tuple[int, int] = (640, 512),
+                 temporal_min_packages: int = 2,
+                 temporal_radius_pixels: int = 2,
+                 require_temporal_context: bool = True) -> dict:
     if output.exists():
         raise FileExistsError(output)
     if not review_queues or not diagnostic_roots:
@@ -217,6 +234,8 @@ def build_shadow(review_queues: list[Path], diagnostic_roots: list[Path],
                 raise ValueError(f"component masks do not reconstruct union: {sample_id}")
             samples.append({
                 "sample_id": sample_id,
+                "package": identity["package"],
+                "camera": identity["camera"],
                 "mask": source_union,
                 "image_bytes": image_bytes,
                 "components": components,
@@ -225,6 +244,39 @@ def build_shadow(review_queues: list[Path], diagnostic_roots: list[Path],
                 "source_queue_sha256": file_sha256(queue_path),
                 "diagnostic_sha256": file_sha256(diagnostic_dir / "results.json"),
             })
+    packages = {sample["package"] for sample in samples}
+    if require_temporal_context and len(packages) < temporal_min_packages:
+        raise ValueError("insufficient packages for temporal persistence protection")
+    if temporal_min_packages < 1 or temporal_radius_pixels < 0:
+        raise ValueError("temporal persistence settings are invalid")
+    kernel_size = temporal_radius_pixels * 2 + 1
+    kernel = np.ones((kernel_size, kernel_size), dtype=np.uint8)
+    package_component_masks = {}
+    for sample in samples:
+        for component in sample["components"]:
+            key = (sample["camera"], component["name"], sample["package"])
+            existing = package_component_masks.get(key)
+            package_component_masks[key] = (component["mask"].copy()
+                                             if existing is None
+                                             else np.logical_or(existing,
+                                                                component["mask"]))
+    temporal_support = {}
+    group_keys = {(camera, name) for camera, name, _ in package_component_masks}
+    for camera, name in group_keys:
+        group_masks = []
+        for package in sorted(packages):
+            package_mask = package_component_masks.get((camera, name, package))
+            if package_mask is None:
+                continue
+            expanded = cv2.dilate(
+                package_mask.astype(np.uint8), kernel, iterations=1) > 0
+            group_masks.append(expanded)
+        if len(group_masks) >= temporal_min_packages:
+            votes = np.sum(np.stack(group_masks, axis=0), axis=0)
+            temporal_support[(camera, name)] = votes >= temporal_min_packages
+        else:
+            temporal_support[(camera, name)] = np.zeros(
+                (expected_size[1], expected_size[0]), dtype=bool)
     output.mkdir(parents=True)
     rows = []
     for sample in sorted(samples, key=lambda item: item["sample_id"]):
@@ -232,7 +284,8 @@ def build_shadow(review_queues: list[Path], diagnostic_roots: list[Path],
         component_rows = []
         for component in sample["components"]:
             cleaned, metrics = denoise_small_islands(
-                component["mask"], component["positive_points"], minimum_pixels)
+                component["mask"], component["positive_points"], minimum_pixels,
+                temporal_support[(sample["camera"], component["name"])])
             if metrics["removed_area_ratio_of_mask"] > maximum_removed_ratio:
                 raise ValueError(
                     f"component removal budget exceeded: {sample['sample_id']}/"
@@ -248,7 +301,8 @@ def build_shadow(review_queues: list[Path], diagnostic_roots: list[Path],
                     f"denoised component area outside guard: {sample['sample_id']}/"
                     f"{component['name']}")
             rerun, _ = denoise_small_islands(
-                cleaned, component["positive_points"], minimum_pixels)
+                cleaned, component["positive_points"], minimum_pixels,
+                temporal_support[(sample["camera"], component["name"])])
             if not np.array_equal(rerun, cleaned):
                 raise ValueError(
                     f"denoise is not idempotent: {sample['sample_id']}/"
@@ -323,6 +377,11 @@ def build_shadow(review_queues: list[Path], diagnostic_roots: list[Path],
         "connectivity": 8,
         "expected_size": list(expected_size),
         "maximum_removed_ratio_per_component": maximum_removed_ratio,
+        "temporal_persistence": {
+            "enabled": require_temporal_context,
+            "minimum_distinct_packages": temporal_min_packages,
+            "dilation_radius_pixels": temporal_radius_pixels,
+        },
         "removed_pixel_total": sum(row["metrics"]["removed_pixels"] for row in rows),
         "removed_component_total": sum(
             row["metrics"]["removed_component_count"] for row in rows),
@@ -354,11 +413,15 @@ def main() -> int:
     parser.add_argument("--component-guard", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--minimum-pixels", type=int, default=100)
+    parser.add_argument("--temporal-min-packages", type=int, default=2)
+    parser.add_argument("--temporal-radius-pixels", type=int, default=2)
     arguments = parser.parse_args()
     packet = build_shadow(
         arguments.review_queue, arguments.diagnostic_root,
         arguments.identity_manifest, arguments.component_guard,
-        arguments.output, arguments.minimum_pixels)
+        arguments.output, arguments.minimum_pixels,
+        temporal_min_packages=arguments.temporal_min_packages,
+        temporal_radius_pixels=arguments.temporal_radius_pixels)
     print(json.dumps({
         "output": str((arguments.output / "denoise_shadow.json").resolve()),
         "sample_count": packet["sample_count"],

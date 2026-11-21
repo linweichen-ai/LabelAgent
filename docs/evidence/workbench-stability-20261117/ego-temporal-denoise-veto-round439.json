@@ -1,0 +1,50 @@
+{
+  "schema_version": "labelagent.ego_temporal_denoise_veto_evidence.v1",
+  "date": "2026-11-22",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_state_modified": false,
+  "source_masks_modified": false,
+  "tool_sha256": "6a3c6e76f7f8f1ff18b57663cab09a2499a9b44bd524ced3587bc91745ebe327",
+  "test_sha256": "c9f2e94ecb8fa40e1a7b3d50b49dc1ee1470c5144bbdbe2a862e8411035440ee",
+  "shadow_packet_sha256": "dbbc1d3803e9878ce23dc2d3d4f6acbc85c3258062370185cd231fea9911e0ea",
+  "contact_sheet_sha256": "957e1d1d6bb8bc839477fb86d8628f5b28067b9db38d34b35008e51a68867493",
+  "remaining_overlay_sha256": "68cc6bf1e45cf54ac570dd55488c923b86be7f13a0dee914e13cf98614a3f12b",
+  "sample_count": 18,
+  "removed_pixel_total": 7,
+  "removed_component_total": 2,
+  "persistent_small_component_protected_total": 37,
+  "added_pixel_total": 0,
+  "max_frame_removed_ratio": 0.000402,
+  "max_component_removed_ratio": 0.000663,
+  "positive_points_preserved_all": true,
+  "negative_points_preserved_all": true,
+  "component_area_guards_passed_all": true,
+  "idempotent_all": true,
+  "temporal_persistence": {
+    "minimum_distinct_packages": 2,
+    "dilation_radius_pixels": 2,
+    "connectivity": 8
+  },
+  "previous_blocking_sample": {
+    "sample_id": "000-camera3-1793758312842576695",
+    "previous_removed_pixels": 95,
+    "current_removed_pixels": 0,
+    "persistent_components_protected": 3
+  },
+  "remaining_difference": {
+    "sample_id": "000-camera3-1793758356342888404",
+    "components": [
+      {"area": 4, "bbox": [248, 352, 3, 2]},
+      {"area": 3, "bbox": [253, 353, 3, 1]}
+    ]
+  },
+  "tests_passed": 52,
+  "assistant_visual_review": {
+    "status": "denoise_shadow_review_pass",
+    "note": "The former ambiguous 93-pixel region is preserved. The remaining two isolated regions total seven pixels and show no distinct repeated ego structure in the available frames."
+  },
+  "decision": "Keep as reversible shadow candidate. Do not overwrite source masks or approve training/production."
+}

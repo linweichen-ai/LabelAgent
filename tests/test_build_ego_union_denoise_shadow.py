@@ -132,6 +132,17 @@ class EgoUnionDenoiseShadowTests(unittest.TestCase):
         second, _ = denoise_small_islands(first, [(3, 3)], 5)
         self.assertTrue(np.array_equal(first, second))
 
+    def test_persistent_region_protects_small_component(self):
+        mask = np.zeros((8, 10), dtype=bool)
+        mask[2:5, 2:5] = True
+        mask[0, 9] = True
+        persistent = np.zeros_like(mask)
+        persistent[0, 9] = True
+        cleaned, metrics = denoise_small_islands(
+            mask, [(3, 3)], 5, persistent)
+        self.assertTrue(cleaned[0, 9])
+        self.assertEqual(metrics["persistent_protected_component_count"], 1)
+
     def test_builds_reversible_candidate_only_shadow(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -140,7 +151,7 @@ class EgoUnionDenoiseShadowTests(unittest.TestCase):
             packet = build_shadow(
                 [queue], [diagnostic], identity, guard, root / "output",
                 minimum_pixels=5, maximum_removed_ratio=0.1,
-                expected_size=(10, 8))
+                expected_size=(10, 8), require_temporal_context=False)
             self.assertEqual(packet["sample_count"], 1)
             self.assertEqual(packet["removed_pixel_total"], 1)
             self.assertEqual(packet["added_pixel_total"], 0)
@@ -157,6 +168,16 @@ class EgoUnionDenoiseShadowTests(unittest.TestCase):
                 build_shadow([queue], [diagnostic], identity, guard,
                              root / "output")
 
+    def test_requires_temporal_package_context_by_default(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            queue, diagnostic, identity, guard, _ = self._fixture(root)
+            with self.assertRaisesRegex(ValueError, "insufficient packages"):
+                build_shadow(
+                    [queue], [diagnostic], identity, guard, root / "output",
+                    minimum_pixels=5, maximum_removed_ratio=0.1,
+                    expected_size=(10, 8))
+
     def test_fails_closed_when_component_budget_is_exceeded(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -165,7 +186,7 @@ class EgoUnionDenoiseShadowTests(unittest.TestCase):
                 build_shadow(
                     [queue], [diagnostic], identity, guard, root / "output",
                     minimum_pixels=5, maximum_removed_ratio=0.0,
-                    expected_size=(10, 8))
+                    expected_size=(10, 8), require_temporal_context=False)
 
     def test_rejects_union_not_reconstructed_from_components(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -181,7 +202,7 @@ class EgoUnionDenoiseShadowTests(unittest.TestCase):
                 build_shadow(
                     [queue], [diagnostic], identity, guard, root / "output",
                     minimum_pixels=5, maximum_removed_ratio=0.1,
-                    expected_size=(10, 8))
+                    expected_size=(10, 8), require_temporal_context=False)
 
     def test_contact_sheet_is_reproducible(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -190,11 +211,11 @@ class EgoUnionDenoiseShadowTests(unittest.TestCase):
             first = build_shadow(
                 [queue], [diagnostic], identity, guard, root / "first",
                 minimum_pixels=5, maximum_removed_ratio=0.1,
-                expected_size=(10, 8))
+                expected_size=(10, 8), require_temporal_context=False)
             second = build_shadow(
                 [queue], [diagnostic], identity, guard, root / "second",
                 minimum_pixels=5, maximum_removed_ratio=0.1,
-                expected_size=(10, 8))
+                expected_size=(10, 8), require_temporal_context=False)
             self.assertEqual(first["contact_sheet_sha256"],
                              second["contact_sheet_sha256"])
 

@@ -1,12 +1,17 @@
+from contextlib import redirect_stderr
 import hashlib
+import io
 import json
 from pathlib import Path
+import sys
 import tempfile
 import unittest
+from unittest import mock
 from io import BytesIO
 
 from PIL import Image
 from tools.build_cvat_human_signoff_reviewer import build as build_real
+from tools.build_cvat_human_signoff_reviewer import cli
 
 
 def build(review, template, review_root, output, *args):
@@ -95,6 +100,9 @@ class OfflineHumanSignoffReviewerTests(unittest.TestCase):
             self.assertNotIn("fetch(", page)
             self.assertNotIn("XMLHttpRequest", page)
             self.assertNotIn("<script src=", page)
+            self.assertIn('id="applyIdentity"', page)
+            self.assertIn("function validTime", page)
+            self.assertIn("全部未完成项", page)
             self.assertFalse(result["training_authorized"])
             self.assertFalse(result["human_pass_is_training_authorization"])
 
@@ -158,6 +166,8 @@ class OfflineHumanSignoffReviewerTests(unittest.TestCase):
             repository.mkdir()
             with self.assertRaisesRegex(ValueError, "child of repository .repro"):
                 build(review, template, review_root, root / "outside", repository)
+            with self.assertRaisesRegex(ValueError, "direct child"):
+                build(review, template, review_root, repository / ".repro" / "nested" / "out", repository)
             destination = repository / ".repro" / "existing"
             destination.mkdir(parents=True)
             with self.assertRaisesRegex(ValueError, "fresh"):
@@ -183,6 +193,78 @@ class OfflineHumanSignoffReviewerTests(unittest.TestCase):
             repository.mkdir()
             with self.assertRaisesRegex(ValueError, "already contains human decisions"):
                 build(review, template, review_root, repository / ".repro" / "out", repository)
+
+    def test_template_note_or_signoff_count_fails_closed(self):
+        for mutation in ("note", "count"):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                review, template, review_root, _, value = self.fixture(root)
+                if mutation == "note":
+                    value["rows"][0]["note"] = "prefilled"
+                else:
+                    value["human_signoff_count"] = 1
+                template.write_text(json.dumps(value), encoding="utf-8")
+                repository = root / "repo"
+                repository.mkdir()
+                with self.assertRaisesRegex(ValueError, "already contains"):
+                    build(review, template, review_root, repository / ".repro" / "out", repository)
+
+    def test_json_size_limit_fails_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            review, template, review_root, _, _ = self.fixture(root)
+            review.write_bytes(b"{" + b" " * (4 * 1024 * 1024) + b"}")
+            repository = root / "repo"
+            repository.mkdir()
+            with self.assertRaisesRegex(ValueError, "size limit"):
+                build_real(
+                    review, template, review_root, repository / ".repro" / "out",
+                    sha(review.read_bytes()), sha(template.read_bytes()), repository,
+                )
+
+    def test_write_failure_rolls_back_entire_bundle(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            review, template, review_root, _, _ = self.fixture(root)
+            repository = root / "repo"
+            repository.mkdir()
+            output = repository / ".repro" / "out"
+            original = Path.write_text
+            calls = 0
+
+            def fail_second(path, *args, **kwargs):
+                nonlocal calls
+                calls += 1
+                if calls == 2:
+                    raise OSError("synthetic write failure")
+                return original(path, *args, **kwargs)
+
+            with mock.patch.object(Path, "write_text", new=fail_second):
+                with self.assertRaisesRegex(OSError, "synthetic write failure"):
+                    build(review, template, review_root, output, repository)
+            self.assertFalse(output.exists())
+            private_root = repository / ".repro"
+            self.assertEqual(list(private_root.iterdir()), [])
+
+    def test_cli_hides_missing_input_path_and_traceback(self):
+        private_input = "synthetic-private/review-candidate-id.json"
+        output = Path(__file__).resolve().parents[1] / ".repro" / "cli-missing-input-test"
+        stderr = io.StringIO()
+        argv = [
+            "build_cvat_human_signoff_reviewer.py",
+            "--review-manifest", private_input,
+            "--signoff-template", private_input,
+            "--review-root", r"C:\private",
+            "--output-dir", str(output),
+            "--expected-review-sha256", "0" * 64,
+            "--expected-template-sha256", "0" * 64,
+        ]
+        with mock.patch.object(sys, "argv", argv), redirect_stderr(stderr):
+            self.assertEqual(cli(), 2)
+        message = stderr.getvalue()
+        self.assertNotIn(private_input, message)
+        self.assertNotIn("Traceback", message)
+        self.assertEqual(message.strip(), "error: input or output is unavailable")
 
 
 if __name__ == "__main__":

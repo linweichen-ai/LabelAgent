@@ -6,6 +6,9 @@ import base64
 import hashlib
 import json
 from io import BytesIO
+import shutil
+import sys
+import tempfile
 from pathlib import Path, PurePosixPath
 import re
 from typing import Any
@@ -25,17 +28,34 @@ BINDING_FIELDS = (
 )
 SHA256 = re.compile(r"^[0-9a-fA-F]{64}$")
 DECISIONS = ("pass", "reject", "uncertain")
+MAX_JSON_BYTES = 4 * 1024 * 1024
+MAX_IMAGE_BYTES = 8 * 1024 * 1024
+MAX_TOTAL_IMAGE_BYTES = 128 * 1024 * 1024
 
 
 def _read_json(path: Path, label: str) -> tuple[dict[str, Any], bytes]:
     try:
-        raw = path.read_bytes()
+        with path.open("rb") as handle:
+            raw = handle.read(MAX_JSON_BYTES + 1)
+        if len(raw) > MAX_JSON_BYTES:
+            raise ValueError(f"{label} exceeds the size limit")
         value = json.loads(raw.decode("utf-8"), object_pairs_hook=_unique_object)
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
         raise ValueError(f"{label} is not valid UTF-8 JSON") from error
     if not isinstance(value, dict):
         raise ValueError(f"{label} must be an object")
     return value, raw
+
+
+def _read_image(path: Path, index: int) -> bytes:
+    try:
+        with path.open("rb") as handle:
+            raw = handle.read(MAX_IMAGE_BYTES + 1)
+    except OSError:
+        raise ValueError(f"review item {index} focused image cannot be read") from None
+    if len(raw) > MAX_IMAGE_BYTES:
+        raise ValueError(f"review item {index} focused image exceeds the size limit")
+    return raw
 
 
 def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -90,6 +110,8 @@ def _validate_inputs(
         raise ValueError("signoff template identity differs")
     if template.get("candidate_count") != EXPECTED_COUNT or template.get("allowed_decisions") != list(DECISIONS):
         raise ValueError("signoff template identity differs")
+    if template.get("human_signoff_count") != 0:
+        raise ValueError("signoff template already contains human signoff")
     if template.get("training_authorized") is not False or template.get("automatic_approval") is not False:
         raise ValueError("signoff template crosses the authorization boundary")
     review_items = review.get("review_items")
@@ -110,6 +132,7 @@ def _validate_inputs(
         raise ValueError("signoff template decision set differs")
 
     image_uris = []
+    total_image_bytes = 0
     review_by_id: dict[str, dict[str, Any]] = {}
     for index, item in enumerate(review_items):
         if not isinstance(item, dict):
@@ -124,7 +147,10 @@ def _validate_inputs(
             if not _is_hash(item.get(field)):
                 raise ValueError(f"review item {index} binding is invalid")
         image_path = _safe_image_path(review_root, item.get("focused_image_file"))
-        image_bytes = image_path.read_bytes()
+        image_bytes = _read_image(image_path, index)
+        total_image_bytes += len(image_bytes)
+        if total_image_bytes > MAX_TOTAL_IMAGE_BYTES:
+            raise ValueError("focused images exceed the total bundle size limit")
         image_digest = _sha256_bytes(image_bytes)
         if image_digest != item["focused_image_sha256"].lower():
             raise ValueError(f"review item {index} focused image hash differs")
@@ -153,7 +179,7 @@ def _validate_inputs(
                 expected_value = expected_value.lower()
             if actual != expected_value:
                 raise ValueError(f"template row {index} binding differs")
-        if row.get("decision") is not None or row.get("reviewer") is not None or row.get("reviewed_at") is not None:
+        if any(row.get(field) is not None for field in ("decision", "reviewer", "reviewed_at", "note")):
             raise ValueError("signoff template already contains human decisions")
         template_by_id[candidate_id] = expected
     if set(template_by_id) != set(review_by_id):
@@ -181,16 +207,18 @@ header{{background:var(--panel);border-bottom:1px solid var(--line);padding:12px
 header strong{{font-size:17px}}.toolbar{{display:flex;gap:8px;align-items:center;flex-wrap:wrap}}button,select,input,textarea{{font:inherit;color:inherit}}button,select,input{{min-height:36px;border:1px solid var(--line);background:#fff;border-radius:4px;padding:6px 10px}}button{{cursor:pointer}}button.primary{{background:var(--accent);color:#fff;border-color:var(--accent)}}button:disabled{{opacity:.45;cursor:not-allowed}}.count{{font-weight:650;color:var(--accent)}}main{{max-width:1160px;margin:18px auto;padding:0 16px}}.grid{{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,1fr);gap:18px}}.evidence,.form{{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden}}.evidence img{{display:block;width:100%;max-height:72vh;object-fit:contain;background:#e7ece9}}.meta,.form{{padding:14px}}.meta{{display:flex;gap:20px;flex-wrap:wrap;color:var(--muted)}}.form label{{display:block;font-weight:600;margin:12px 0 5px}}.form input,.form textarea{{width:100%;border:1px solid var(--line);border-radius:4px;padding:8px}}.form textarea{{min-height:90px;resize:vertical}}fieldset{{border:0;padding:0;margin:10px 0}}.choices{{display:flex;gap:8px;flex-wrap:wrap}}.choice{{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:4px;padding:8px 10px;cursor:pointer}}.choice input{{accent-color:var(--accent)}}.notice{{margin:14px 0;padding:10px 12px;border-left:3px solid var(--warn);background:#fff8f2;color:#603616}}.nav{{display:flex;justify-content:space-between;gap:8px;margin-top:12px}}.privacy{{color:var(--muted);font-size:13px}}@media(max-width:760px){{.grid{{grid-template-columns:1fr}}header{{position:static}}}}
 </style></head><body>
 <header><strong>离线人工签字复核台</strong><div class="toolbar"><label for="filter">筛选</label><select id="filter"><option value="all">全部</option><option value="pending">未完成</option><option value="pass">Pass</option><option value="reject">Reject</option><option value="uncertain">Uncertain</option></select><span class="count" id="counter">未完成 81 / 81</span></div><div class="toolbar"><button id="prev" type="button">上一项</button><span id="position">1 / 81</span><button id="next" type="button">下一项</button><button id="export" class="primary" type="button" disabled>导出完整 JSON</button></div></header>
-<main><p class="notice">人工 pass 仅表示人工复核结论，不构成训练授权。此页面不联网、不保存浏览器本地状态；导出前请完成全部 81 项。</p><div class="grid"><section class="evidence"><img id="evidence" alt="聚焦证据图"><div class="meta"><span>frame_id: <b id="frame"></b></span><span>candidate_id: <b id="candidate"></b></span></div></section><section class="form"><fieldset><legend><b>人工结论</b></legend><div class="choices"><label class="choice"><input type="radio" name="decision" value="pass">pass</label><label class="choice"><input type="radio" name="decision" value="reject">reject</label><label class="choice"><input type="radio" name="decision" value="uncertain">uncertain</label></div></fieldset><label for="reviewer">Reviewer（可统一填写）</label><input id="reviewer" autocomplete="off"><label for="reviewedAt">Reviewed at（ISO 时间，可统一填写）</label><input id="reviewedAt" autocomplete="off" placeholder="2026-11-22T10:00:00+08:00"><label for="note">Note</label><textarea id="note"></textarea><p class="privacy">manifest SHA-256: {manifest_sha}<br>template SHA-256: {template_sha}</p></section></div><div class="nav"><button id="prevBottom" type="button">上一项</button><span id="status"></span><button id="nextBottom" type="button">下一项</button></div></main>
+<main><p class="notice">人工 pass 仅表示人工复核结论，不构成训练授权。此页面不联网、不保存浏览器本地状态；导出前请完成全部 81 项。</p><div class="grid"><section class="evidence"><img id="evidence" alt="聚焦证据图"><div class="meta"><span>frame_id: <b id="frame"></b></span><span>candidate_id: <b id="candidate"></b></span></div></section><section class="form"><fieldset><legend><b>人工结论</b></legend><div class="choices"><label class="choice"><input type="radio" name="decision" value="pass">pass</label><label class="choice"><input type="radio" name="decision" value="reject">reject</label><label class="choice"><input type="radio" name="decision" value="uncertain">uncertain</label></div></fieldset><label for="reviewer">Reviewer（可统一填写）</label><input id="reviewer" autocomplete="off"><label for="reviewedAt">Reviewed at（ISO 时间，可统一填写）</label><input id="reviewedAt" autocomplete="off" placeholder="2026-11-22T10:00:00+08:00"><button id="applyIdentity" type="button">将 Reviewer 与时间填入全部未完成项</button><label for="note">Note</label><textarea id="note"></textarea><p class="privacy">manifest SHA-256: {manifest_sha}<br>template SHA-256: {template_sha}</p></section></div><div class="nav"><button id="prevBottom" type="button">上一项</button><span id="status"></span><button id="nextBottom" type="button">下一项</button></div></main>
 <script id="items" type="application/json">{data}</script><script>
 "use strict";
 const items=JSON.parse(document.getElementById("items").textContent);let index=0;const byId=id=>document.getElementById(id);const filter=byId("filter");
-function complete(x){{return Boolean(x.decision&&x.reviewer&&x.reviewer.trim()&&x.reviewed_at&&x.reviewed_at.trim())}}
+function validTime(value){{return typeof value==="string"&&/^\\d{{4}}-\\d{{2}}-\\d{{2}}T\\d{{2}}:\\d{{2}}:\\d{{2}}(?:\\.\\d+)?(?:Z|[+-]\\d{{2}}:\\d{{2}})$/.test(value.trim())&&!Number.isNaN(Date.parse(value))}}
+function complete(x){{return Boolean(["pass","reject","uncertain"].includes(x.decision)&&x.reviewer&&x.reviewer.trim()&&validTime(x.reviewed_at))}}
 function visible(){{return items.map((x,i)=>({{x,i}})).filter(o=>filter.value==="all"||(filter.value==="pending"&&!complete(o.x))||filter.value===o.x.decision).map(o=>o.i)}}
 function save(){{const x=items[index];x.decision=document.querySelector('input[name="decision"]:checked')?.value||null;x.reviewer=byId("reviewer").value;x.reviewed_at=byId("reviewedAt").value;x.note=byId("note").value||null}}
 function render(){{const x=items[index];byId("evidence").src=x.focused_image_file;byId("frame").textContent=x.frame_id;byId("candidate").textContent=x.candidate_id;byId("reviewer").value=x.reviewer||"";byId("reviewedAt").value=x.reviewed_at||"";byId("note").value=x.note||"";document.querySelectorAll('input[name="decision"]').forEach(r=>r.checked=r.value===x.decision);const n=items.filter(x=>!complete(x)).length;byId("counter").textContent=`未完成 ${{n}} / ${{items.length}}`;byId("position").textContent=`${{index+1}} / ${{items.length}}`;byId("status").textContent=x.decision?`已选择 ${{x.decision}}`:"尚未选择";byId("export").disabled=n!==0}}
 function move(direction){{save();const list=visible();if(!list.length)return;let at=list.indexOf(index);if(at<0)at=0;else at=(at+direction+list.length)%list.length;index=list[at];render()}}
 document.querySelectorAll('input[name="decision"]').forEach(r=>r.addEventListener("change",()=>{{save();render()}}));["reviewer","reviewedAt","note"].forEach(id=>byId(id).addEventListener("input",()=>{{save();render()}}));filter.addEventListener("change",()=>{{const list=visible();if(!list.includes(index)&&list.length)index=list[0];render()}});["prev","prevBottom"].forEach(id=>byId(id).addEventListener("click",()=>move(-1)));["next","nextBottom"].forEach(id=>byId(id).addEventListener("click",()=>move(1)));
+byId("applyIdentity").addEventListener("click",()=>{{save();const reviewer=byId("reviewer").value.trim();const reviewedAt=byId("reviewedAt").value.trim();if(!reviewer||!validTime(reviewedAt)){{byId("status").textContent="请先填写 Reviewer 和带时区的合法 ISO 时间";return}}items.filter(x=>!complete(x)).forEach(x=>{{x.reviewer=reviewer;x.reviewed_at=reviewedAt}});render()}});
 byId("export").addEventListener("click",()=>{{save();if(items.some(x=>!complete(x)))return;const rows=items.map(x=>({{candidate_id:x.candidate_id,frame_id:x.frame_id,source_image_sha256:x.source_image_sha256,canonical_geometry_sha256:x.canonical_geometry_sha256,focused_image_sha256:x.focused_image_sha256,decision:x.decision,reviewer:x.reviewer.trim(),reviewed_at:x.reviewed_at.trim(),note:x.note,approved_for_training:false}}));const output={{schema_version:"labelagent.cvat-human-instance-signoff.v1",status:"human_review_complete",review_manifest_sha256:"{manifest_sha}",candidate_count:81,allowed_decisions:["pass","reject","uncertain"],rows,human_signoff_count:81,training_authorized:false,automatic_approval:false,approved_for_training:false,human_pass_count:rows.filter(r=>r.decision==="pass").length,human_pass_is_training_authorization:false}};const blob=new Blob([JSON.stringify(output,null,2)+"\\n"],{{type:"application/json"}});const link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download="human-signoff.json";link.click();URL.revokeObjectURL(link.href)}});render();
 </script></body></html>'''
 
@@ -207,8 +235,8 @@ def build(
     repository_root = (repository_root or Path(__file__).resolve().parents[1]).resolve()
     private_root = (repository_root / ".repro").resolve()
     output_dir = output_dir.resolve()
-    if not output_dir.is_relative_to(private_root) or output_dir == private_root:
-        raise ValueError("output directory must be a new child of repository .repro")
+    if output_dir.parent != private_root:
+        raise ValueError("output directory must be a direct child of repository .repro")
     if output_dir.exists():
         raise ValueError("choose a fresh output directory")
     rows, review_sha, template_sha, image_uris = _validate_inputs(
@@ -230,11 +258,17 @@ def build(
         "html_sha256": _sha256_bytes(page.encode("utf-8")),
         "items": rows,
     }
-    output_dir.mkdir(parents=True)
-    (output_dir / "index.html").write_text(page, encoding="utf-8", newline="\n")
-    (output_dir / "manifest.json").write_text(
-        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n"
-    )
+    private_root.mkdir(parents=True, exist_ok=True)
+    staging = Path(tempfile.mkdtemp(prefix=f".{output_dir.name}.tmp-", dir=private_root))
+    try:
+        (staging / "index.html").write_text(page, encoding="utf-8", newline="\n")
+        (staging / "manifest.json").write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
+        staging.rename(output_dir)
+    except Exception:
+        shutil.rmtree(staging, ignore_errors=True)
+        raise
     return manifest
 
 
@@ -255,5 +289,16 @@ def main() -> int:
     return 0
 
 
+def cli() -> int:
+    try:
+        return main()
+    except ValueError as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 2
+    except OSError:
+        print("error: input or output is unavailable", file=sys.stderr)
+        return 2
+
+
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(cli())

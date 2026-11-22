@@ -1,0 +1,33 @@
+{
+  "schema_version": "labelagent.qwen3vl2b-lora-smoke-audit.v1",
+  "status": "passed",
+  "boundaries": {
+    "status": true,
+    "teacher_distillation": true,
+    "production_prompt_order": true,
+    "human_truth_false": true,
+    "production_deployed_false": true,
+    "test24_training_false": true,
+    "manifest_test24_false": true,
+    "manifest_human_truth_false": true,
+    "manifest_not_production_approved": true,
+    "manifest_hash_matches": true,
+    "train_hash_matches": true,
+    "expected_steps": true,
+    "finite_loss": true,
+    "lora_rank_8": true
+  },
+  "tensor_checks": {
+    "tensor_count": 392,
+    "lora_a_tensors": 196,
+    "nonzero_lora_a_tensors": 196,
+    "lora_b_tensors": 196,
+    "nonzero_lora_b_tensors": 196,
+    "all_finite": true,
+    "all_lora_a_nonzero": true,
+    "all_lora_b_updated": true
+  },
+  "adapter_bytes": 34922600,
+  "adapter_sha256": "ad81bd3929ffb915b07986e783fe2116defe51c45d3ff562d86e5d164f59ad4f",
+  "receipt_sha256": "8517a081569a690715406e0a664e8150d39479dc384cc8a2241e0e812487fb06"
+}

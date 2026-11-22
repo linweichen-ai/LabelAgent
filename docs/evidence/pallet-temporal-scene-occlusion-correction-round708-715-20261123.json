@@ -1,0 +1,79 @@
+{
+  "schema_version": "labelagent.pallet_temporal_scene_occlusion_correction.v1",
+  "date": "2026-11-23",
+  "scope": "offline_same_source_correction_not_deployed",
+  "correction": {
+    "old_gap": "temporal aggregate visibility ignored nearer center-scene returns",
+    "new_definition": "project full center-scene PCD and temporal aggregate together; keep only temporal indices that survive the shared depth grid",
+    "old_opportunities": 7,
+    "corrected_opportunities": 3,
+    "corrected_insufficient": 5,
+    "old_round700_candidates_promoted": 0,
+    "formal_or_training_contamination": false
+  },
+  "corrected_rows": [
+    {"sequence":"006","target_obj_id":"10","old_temporal_voxels":8,"new_temporal_voxels":3,"new_pixels":3,"noncenter_frames":1,"status":"insufficient"},
+    {"sequence":"006","target_obj_id":"12","old_temporal_voxels":7,"new_temporal_voxels":4,"new_pixels":4,"noncenter_frames":2,"status":"opportunity"},
+    {"sequence":"006","target_obj_id":"13","old_temporal_voxels":10,"new_temporal_voxels":10,"new_pixels":8,"noncenter_frames":4,"status":"opportunity"},
+    {"sequence":"008","target_obj_id":"75","old_temporal_voxels":3,"new_temporal_voxels":3,"new_pixels":3,"noncenter_frames":1,"status":"insufficient"},
+    {"sequence":"008","target_obj_id":"76","old_temporal_voxels":6,"new_temporal_voxels":2,"new_pixels":2,"noncenter_frames":1,"status":"insufficient"},
+    {"sequence":"008","target_obj_id":"77","old_temporal_voxels":9,"new_temporal_voxels":2,"new_pixels":2,"noncenter_frames":1,"status":"insufficient"},
+    {"sequence":"008","target_obj_id":"78","old_temporal_voxels":8,"new_temporal_voxels":5,"new_pixels":3,"noncenter_frames":2,"status":"opportunity"},
+    {"sequence":"008","target_obj_id":"79","old_temporal_voxels":9,"new_temporal_voxels":3,"new_pixels":2,"noncenter_frames":3,"status":"insufficient"}
+  ],
+  "post_split_audit": {
+    "evaluated_targets": 7,
+    "evaluated_masks": 36,
+    "post_split_evidence_candidates": 0,
+    "rescued_raw_negative_failures": 0,
+    "obj10_best_final_positive_coverage": 0.75,
+    "obj10_best_final_negative_clear": 1.0,
+    "report_sha256": "e8d921806553f273597c5d848c5caa17cee8eddee1b2f76f5d46c17e5de17063",
+    "historical_protocol_replay": "pre_scene_occlusion_round700",
+    "current_replay_sha256": "b61a352cc72bc4fe58fa8fd5090e9d2b0dd54c57c778c33959acfcbb7faf9c31",
+    "current_replay_byte_exact_repeat": true,
+    "current_replay_paths": [
+      "docs/evidence/pallet-temporal-split-point-audit-round716-20261123.json",
+      "docs/evidence/pallet-temporal-split-point-audit-round717-repeat-20261123.json"
+    ]
+  },
+  "corrected_sam": {
+    "evaluated_targets": ["006/12","006/13","008/78"],
+    "attempts_per_run": 24,
+    "recovered": 0,
+    "repeat_semantic_equal": true,
+    "repeat_mask_sha_equal": true,
+    "normalization": {
+      "format": "parse JSON; recursively omit path-only keys; json.dumps ensure_ascii=false sort_keys=true separators=comma-colon; UTF-8",
+      "omitted_keys": ["contact_sheet", "raw_mask_path", "mask_path"]
+    },
+    "normalized_semantic_sha256": "4ffe3409c396c7a3bd4fd1402b1c0b08260eebea46a4b91557521e900985c08e",
+    "round714_report_sha256": "51af15865358c0d7d1c6919cf246539902f5cbf3c2fc17bcfc764a82bafb3bf4",
+    "round715_report_sha256": "24672d37c7329660ac49eba5045ab262dcda7c2798e7f1942ee26f3ab2afa99b"
+  },
+  "claim_boundary": {
+    "conditioned_on_human_3d_labels": true,
+    "comparison_is_independent_validation": false,
+    "human_pixel_truth": false,
+    "approved_for_training": false,
+    "human_truth_writes": 0,
+    "training_data_writes": 0,
+    "workbench_writes": 0,
+    "oss_writes": 0,
+    "production_deployed": false
+  },
+  "tests": {
+    "full_passed": 1696,
+    "skipped": 1,
+    "subtests_passed": 262
+  },
+  "tool_sha256": {
+    "opportunity": "662197252e7f0cf70fbed49092d1b2fba7a94a358102cd801d4aa08f58d731c8",
+    "sam_runner": "5a29fbfbd6c9628a53ec1a0ffe8a744061ea81c950e5d535632dab5274d1932d",
+    "post_split_audit": "20d032d8d92e231ea5b6c662790f4880244914668057946ed8ab9cc4ee9b1522"
+  },
+  "corrected_opportunity_report_sha256": {
+    "round710": "408c70e69f8f1ea553a54f63e21cf53108e832f6da5bacb37addd53a08d9dd0a",
+    "round711_repeat": "408c70e69f8f1ea553a54f63e21cf53108e832f6da5bacb37addd53a08d9dd0a"
+  }
+}

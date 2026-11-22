@@ -46,7 +46,6 @@ from tools.evaluate_slope_lidar_sam import request_json
 REPORT_SCHEMA = "labelagent.pallet_temporal_local_point_sam.v1"
 OPPORTUNITY_SCHEMA = "labelagent.pallet_temporal_local_point_opportunities.v1"
 BASELINE_SCHEMA = "labelagent.pallet_lidar_conflict_points.v1"
-EXPECTED_OPPORTUNITIES = 7
 ROI_SCALE = 2
 
 
@@ -130,19 +129,39 @@ def validate_reports(opportunity: dict, overlap: dict, baseline: dict) -> list[d
     overlap_jobs = plan_targets(overlap)
     unresolved = {(job["sequence"], job["frame_id"], job["primary_camera"],
                    job["target_obj_id"]) for job in overlap_jobs}
-    rows = [row for row in opportunity.get("rows", [])
-            if row.get("evidence_status") ==
-            "label_conditioned_temporal_local_point_prompt_opportunity"]
-    if (len(rows) != EXPECTED_OPPORTUNITIES
-            or opportunity.get("opportunity_count") != len(rows)):
-        raise ValueError("requires exactly seven frozen opportunity rows")
-    identities, selected = set(), []
-    for row in rows:
+    all_rows = opportunity.get("rows", [])
+    if not isinstance(all_rows, list):
+        raise ValueError("frozen opportunity rows must be a complete list")
+    opportunity_status = (
+        "label_conditioned_temporal_local_point_prompt_opportunity")
+    allowed_statuses = {opportunity_status, "insufficient"}
+    reported_total = opportunity.get("unresolved_target_count")
+    reported_opportunities = opportunity.get("opportunity_count")
+    reported_insufficient = opportunity.get("insufficient_count")
+    statuses = [row.get("evidence_status") for row in all_rows]
+    if (reported_total != len(unresolved)
+            or len(all_rows) != reported_total
+            or any(status not in allowed_statuses for status in statuses)
+            or reported_opportunities != statuses.count(opportunity_status)
+            or reported_insufficient != statuses.count("insufficient")
+            or reported_opportunities + reported_insufficient != reported_total
+            or reported_opportunities < 1):
+        raise ValueError("frozen opportunity report is incomplete or inconsistent")
+    identities, rows_by_identity = set(), {}
+    for row in all_rows:
         identity = (str(row["sequence"]), str(row["frame_id"]),
                     int(row["primary_camera"]), str(row["target_obj_id"]))
         if identity in identities or identity not in unresolved:
             raise ValueError("opportunity row identity is duplicate or not unresolved")
         identities.add(identity)
+        rows_by_identity[identity] = row
+    if identities != unresolved:
+        raise ValueError("opportunity rows do not cover every unresolved target")
+    selected = []
+    for identity in sorted(unresolved):
+        row = rows_by_identity[identity]
+        if row.get("evidence_status") != opportunity_status:
+            continue
         selected.append({
             "sequence": identity[0], "frame_id": identity[1],
             "camera": identity[2], "target_obj_id": identity[3],
@@ -188,11 +207,16 @@ def recompute_temporal_positive_pixels(frames: list[dict], center_frame: str,
         for row in frames]
     unique, origin_sets, _ = temporal_local.voxelize_mapped_points(
         parts, list(range(len(parts))))
+    center_scene_points = frames[center_index]["points"]
     cohorts, pixel_maps = [], []
     for cell_size, depth_slack in temporal_local.VISIBILITY_GRIDS:
         indices, pixels = project_visible(
-            unique, camera, cell_size, depth_slack, near=.2)
-        indices = np.asarray(indices, dtype=np.int64)
+            np.concatenate((center_scene_points, unique), axis=0),
+            camera, cell_size, depth_slack, near=.2)
+        offset = len(center_scene_points)
+        keep = np.asarray(indices) >= offset
+        indices = np.asarray(indices, dtype=np.int64)[keep] - offset
+        pixels = np.asarray(pixels)[keep]
         cohorts.append(indices)
         pixel_maps.append({int(index): tuple(map(int, pixel))
                            for index, pixel in zip(indices, pixels)})

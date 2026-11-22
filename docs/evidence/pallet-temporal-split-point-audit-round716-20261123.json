@@ -1,0 +1,4254 @@
+{
+  "schema_version": "labelagent.pallet_temporal_split_point_evidence_audit.v1",
+  "status": "offline_post_split_point_evidence_candidate_not_deployed",
+  "source_report_sha256": "4b3785076e2236785f7f9295fb7a21d3898773edf52f73c18f951219f86c9b55",
+  "round700_source_runner_sha256": "a7f997323f94598b585da1335554f832cda8e69b31a44da12872636a9fa0270f",
+  "audit_runtime_runner_sha256": "5a29fbfbd6c9628a53ec1a0ffe8a744061ea81c950e5d535632dab5274d1932d",
+  "runtime_runner_may_include_later_protocol_hardening": true,
+  "round700_opportunity_tool_sha256": "921de61165cad1c2d55ca6d3c194941c5ea39c2ebeb64509cb475ab5cab068e3",
+  "audit_runtime_opportunity_tool_sha256": "662197252e7f0cf70fbed49092d1b2fba7a94a358102cd801d4aa08f58d731c8",
+  "historical_positive_protocol": "pre_scene_occlusion_round700",
+  "tool_sha256": "20d032d8d92e231ea5b6c662790f4880244914668057946ed8ab9cc4ee9b1522",
+  "input_sha256": {
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\results.json": "4b3785076e2236785f7f9295fb7a21d3898773edf52f73c18f951219f86c9b55",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\tools\\audit_pallet_temporal_split_point_evidence.py": "20d032d8d92e231ea5b6c662790f4880244914668057946ed8ab9cc4ee9b1522",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\tools\\evaluate_pallet_temporal_local_point_sam.py": "5a29fbfbd6c9628a53ec1a0ffe8a744061ea81c950e5d535632dab5274d1932d",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\tools\\evaluate_pallet_temporal_local_point_opportunities.py": "662197252e7f0cf70fbed49092d1b2fba7a94a358102cd801d4aa08f58d731c8",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round676-fifth-independent6-transitive-depth-split-20261123\\results.json": "c18218c8fb2a1993f56f9d4358999e47d096a7beedcc1bbf977450c30d3a7e48",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round677-fifth-independent6-lidar-recovery-20261123\\results.json": "3b01a13d5b29a47b436844d9090a28183fa5eb130823bdca41d6a2a05b841d4e",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round699-fifth-conflict-temporal-local-point-opportunities-hardened-repeat-20261123\\results.json": "e692be2c918e37cc8e39b00c2dfa900f15286905861edf53f8d06131fd1b1f8d",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\labels\\1789899595982489364.json": "b673375f79eed7b944593176da8790d2c9c9b18fded1bd2a5a9e58ca73389a7a",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\pcd\\1789899595982489364.pcd": "0d1bd06bea0d87b990766c7a4f440f9d8674628321b4b2928294eaab8a5ce33a",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\labels\\1789899596282505364.json": "a3b1d077c846349c4a452aa8e60d4f40fb7561a1d0bc24ecc8b6274994ec552d",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\pcd\\1789899596282505364.pcd": "3daa7116ab18cb996be08a86d4757c39ab88921f0ba3b6fe027119e278cb31ad",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\labels\\1789899601082471364.json": "5f151ce08cd3339a6918b4d6d2433d9efd103738625ff7923af0e32e6fc1c02b",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\pcd\\1789899601082471364.pcd": "1a312a969b6e80b84188172de08e08d288dab3877b9c8327f403cdb47b220d59",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\labels\\1789899601382470364.json": "56651253c4508260d8f3195727b7dd71a97042d51e5b5d57a562ae7d40b119ba",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\pcd\\1789899601382470364.pcd": "cdea0763acdf145a9aea3d0c516348966a190add4ce42f1acb9f7ac9fc3ccb99",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\labels\\1789899601682499364.json": "b4d6529f94a79bfa09a84d91a00e948891e4913506e324f20fb5b2957cfb1f0d",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\pcd\\1789899601682499364.pcd": "85ac543241ebef45d47bf8f1ef6c451d87533f3c10f19da4eb65a9c186035a4c",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\labels\\1789899601982497364.json": "6a4d629c42bbc1da6c0def873356353884cbf745cb506ed70a518860234e802e",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\pcd\\1789899601982497364.pcd": "4c797d0d41dc94366b4758d817ec60fecc361a28fe661bb9bd7965f824a1f038",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\labels\\1789899602282499364.json": "ec46521930d6648e3cacd4d2c440cd3b4e443f812540bfdf693053dac76a06e3",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\pcd\\1789899602282499364.pcd": "406d39f6f9cb1f27722225c6f3b53af71cb1c60f09ba31775bcb13cc050fb71d",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\labels\\1789899602582459364.json": "58c8e62261bc17b813c4ba9e20065e668148a841427ad803ab165f130f3521b8",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\pcd\\1789899602582459364.pcd": "f91db057dfcae63a3ecb5634149b407a0c05ad44ecf40a9030001dede70d0bed",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\labels\\1789899602882456364.json": "56a149827e9682a60f7a061c1a8fb0803fea49465ea85cce59495bed3bd0d594",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\pcd\\1789899602882456364.pcd": "ab0b39b87e3c4eaaf97d261289fd4a3a85a0e71edd89b98e5de10d2d65bbb024",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\labels\\1789899603182450364.json": "fc41c26d45d93b53a49f69c350a7aaea803ac3606fc215a0c042c815b813c212",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\pcd\\1789899603182450364.pcd": "0eaa3cba47d364b39e85b73c1c5318b605e7cf582177c6d00e1687c84f4ecd3e",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\labels\\1789899603482473364.json": "7454a1d5c61841215e661c6c86b67172ea88029b00143db28e49aecc253d68a2",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\006\\pcd\\1789899603482473364.pcd": "454eaf4bce96a04a422fe92d5f968d08c1fd00f149b97fee4ca889006b1174ad",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\labels\\1789899777382479075.json": "4f7b7e9cfde176232f7976c255d0ff760b98b0d6a9a12f0e0250f80231f04106",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\pcd\\1789899777382479075.pcd": "e6e35d0c376a38508b2e84b6d1b6fdfe5426f5aa8bab20879f249fe00b1e09ad",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\labels\\1789899777682477075.json": "25cd1443178fedfa6b3b87439b1cf87d450f7507d279df96f0d8096c4987e933",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\pcd\\1789899777682477075.pcd": "9b9a9fd0c1d2dece22e22c55a28faa50fa4e3b2d70e155c66ebb1a17ea9c1244",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\labels\\1789899777982463075.json": "82d441e4c15112438958927c426265d6030541e6586c28bc71563ec113fd53a8",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\pcd\\1789899777982463075.pcd": "fdae6a59f9820276b2c71d3258228fecfd79f7a2770263df08fda81414b9efdd",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\labels\\1789899778282407075.json": "4b2ddd3e493f0b2d08a5218cd0f640f61926f8851155b0544fa266238e30b535",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\pcd\\1789899778282407075.pcd": "819e12aa5d2ca642e7994eebfb9af60b7d1652387de4b69826c2815165ba75e3",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\labels\\1789899778582404075.json": "91b5077f26a1897d98392fa3ad708eb7004958bcd2f3649f390972e32e7108d5",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\pcd\\1789899778582404075.pcd": "85ddea739bc72892eb051f2dde103925283f2de20b4efd7ca50eb33edf764f61",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\labels\\1789899778882397075.json": "46d94e1704def464f2098109c50d379b7cde65671d70c0fd1021db7592246b82",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\pcd\\1789899778882397075.pcd": "6a18c53e177c438b5fed3fc958b9d64e586be00a42ac4e487d50721dab1f37ec",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\labels\\1789899779182516075.json": "df09fdf11839722d68bdc406dd58c6c8e6edbc0c065bab22105eb4cfacde8407",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\pcd\\1789899779182516075.pcd": "504be545131a6c6e92a40bb221c6504e62349df786b0b5508025ef3fdfd44574",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\labels\\1789899779482509075.json": "26494128b6c4962d875881bcc6feb6872db99981d10e32880d82e62e9d227009",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\pcd\\1789899779482509075.pcd": "c49c93aa34089db5044977e57131eb9d9de9c66dbc41344e7bb910984b155064",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\labels\\1789899779782482075.json": "0a09240aa25d77fc0215b4bc4534ba7ed5d7e5128a05edc305e7fb1deb8ff232",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\pcd\\1789899779782482075.pcd": "b96585f90023cf16a41ca084e292b93141a7dd46e89e84c5fb913fe3596ca64c",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\labels\\1789899780082476075.json": "a4d8f9f98dddd8470381473ffc86c987eb307363b3aa8bc9725dcb995c1db598",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\pcd\\1789899780082476075.pcd": "209768ac0af1bf25daae4eb1b0b92782f16e9984fcd6460a03b9f38bb4ae3123",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\labels\\1789899780382476075.json": "7afe998ec08b0159db5cb41e78e6212ba0074331ae89419e66d00bd5e54f6ef7",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round681-fifth-conflict-temporal-windows-20261123\\008\\pcd\\1789899780382476075.pcd": "5cfa5ba9003875f512e77dce4dff5ac1a4699a98dd9e521f81daaf9f6309d0c7",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\011\\bevannotation_data\\calib_640x512\\camera1_calib.yaml": "8733efc8eeaf3dafcdc996fcfb7e1f353e1a4fdf21759dddde8a289f23a9dcaa",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\011\\bevannotation_data\\calib_640x512\\lidar2camera.yaml": "afe7203f3afe90f0ae14af4019dfbe6ddda6994745694501da25df9efd5843ea",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o10-p3.png": "36334292d5424cfe88f14b38c2693a73b19d5ac2c0855ce6ebf84532114727af",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o10-p4.png": "99ab8877f73e4adec17af4694a7853afef88cd0f874bd392d469aa1c8fffdc17",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o10-p6.png": "5e502d3a8a7999a39081a75357203d3d59012d25b2e3c76f4603a3ffff032b35",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o10-p7.png": "99ab8877f73e4adec17af4694a7853afef88cd0f874bd392d469aa1c8fffdc17",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o12-p1.png": "44d08a76a7f16907391cb0ce3ec6fa18f1bc1831b22bb7949e55783ab0e284fe",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o12-p2.png": "f5b5441c7d3ec939b48b0d758d40aeee69dc60ce20c10103d01ef3386bd014f6",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o12-p3.png": "6b385842dcc5619606226bd23bad909eda8926cdd722b9d2d6707883c3bfe67a",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o12-p4.png": "cda6f1054fa750b90796394a2cf5e44189806c3e5b795e948c15df1cc2a689bb",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o12-p5.png": "61524639079906f61f12eb0da8ce1056ea86ea1999f9a7da36edf50e673b9bcd",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o12-p6.png": "7443c57fe4e29f3acdfe09237d0f8928eacee4af542ce72eaea32ba0a1c1025c",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o12-p7.png": "6b385842dcc5619606226bd23bad909eda8926cdd722b9d2d6707883c3bfe67a",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o13-p1.png": "0c4febac3f8f9d1760c166e595af2cbf5ee9d827d17f254b3104068fad415df8",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o13-p3.png": "8e05e8224460b32c96ddfe4a627cca3f7ea24818eb1f3084739e7c3659bbddc2",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o13-p4.png": "478ba1602bbcd6b484b1960883f81336a00af874852d93e307ee851d2b138b46",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o13-p7.png": "296e659905f6e23dfe144a04b54a64bf8247068b46f66da86a4de9afb661ce5a",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o76-p1.png": "e55a9d601a2aa465161f049ae632fd62bfcd59866e002acee96058fa6388017f",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o76-p2.png": "4489c4cca2958fb99bd8bb9e75b0ffe5811fdf6e35fcc6da38198641bcc64572",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o76-p3.png": "60a6adfd43e46542271bd8885714adcbe3a480c94a79b1b19d83932401f26fd4",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o76-p4.png": "fe4782f886000cf40dc5a5ebda49fdd0318d388809d914a9ee4c89aaff899eaf",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o76-p6.png": "0b12df4c64d4d2527b297d32673129f7e7db62f869d757d226fc2bb0c9110a10",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o76-p7.png": "2bb235435706f2b7c365681b4ee48d4b3106f6d3c29bab2f533a18b7abf79fb4",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o77-p1.png": "31ecbdcd3d82ce46b1036849de2df70dc90fe806e0f9db4c3a9006a5a916e3c2",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o77-p3.png": "969a0b3b63459974ea6a6d0cd425fd1078c34921dede722a0f45c1442f5de769",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o77-p6.png": "0ea025bae22da631444ef81cf5befe86cc657099de3427bddeb8419517c11115",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o78-p0.png": "8794d3857dca8c75aff0585ae87675f5537646a7298298d6c271da8659fdfa76",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o78-p2.png": "3c6cb4c010d154b12f88f3e3510a8eabaf9c28eaea1b5700ac4ede42ecc53cca",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o78-p3.png": "5cd88e2377f84acf0c029a83d741c532ab09d8d3a40b58bd0ddc161333469e53",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o78-p4.png": "6628cf4c8c33c9018951cb9b12ed5df11b14d852c6429d3df47246487b3ad292",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o78-p6.png": "4b927095c75d24b0c801342155a0a06164e63187ebb3f824cf66dac27f1b7fc5",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o78-p7.png": "eebdbe3c0498d641f452a4acb403e41b37b3fcb808f70115d904d3b7c6bd924c",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o79-p1.png": "2dc4c9c7855ec65c6b2e969e4f87ab7b3739ff168d893843fdb967b544e05458",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o79-p2.png": "7423985179cbcf11b2e1d58999a02ec489863a713f8f46b17e538046c15c7f46",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o79-p3.png": "b046f9520d381aeff31dc3577c689a244cd7294288743d5ca8207b47f998af4c",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o79-p4.png": "270b7c3a77da9593aeed6296fc9c0b3e2abb1ce334437a277dee963b78b2254f",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o79-p5.png": "4cf04b87787528938cc5d26497192bdea823e60f4345438f9f3b6595020a3857",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o79-p6.png": "b2d1de42ad39c47e92b9986e38d0590034b5bb51433dae43bd6cda29b97e6dcf"
+  },
+  "evaluated_target_count": 7,
+  "evaluated_final_split_mask_count": 36,
+  "post_split_evidence_candidate_count": 0,
+  "rescued_raw_negative_clear_failure_count": 0,
+  "obj10": [
+    {
+      "sequence": "006",
+      "frame_id": "1789899601982497364",
+      "camera": 1,
+      "target_obj_id": "10",
+      "recomputed_temporal_positive_count": 8,
+      "recomputed_center_conflict_negative_count": 9,
+      "round700_recovered_immutable": false,
+      "attempts": [
+        {
+          "policy": "one_positive_all_negative",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_all_negative",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_two_negative",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_only",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o10-p3.png",
+          "mask_sha256": "36334292d5424cfe88f14b38c2693a73b19d5ac2c0855ce6ebf84532114727af",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.0,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": true,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 10,
+              "camera_depth": 7.535553818461111,
+              "split_pixels": 68,
+              "projected_box_coverage": 0.11129296235679215,
+              "source_mask_retention": 0.20118343195266272,
+              "removed_island_count": 2,
+              "removed_island_pixels": 2,
+              "maximum_nearer_projected_box_overlap": 0.6235679214402619,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 11,
+              "camera_depth": 7.406480943498165,
+              "split_pixels": 39,
+              "projected_box_coverage": 0.06320907617504051,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 14,
+              "camera_depth": 7.466802862597528,
+              "split_pixels": 113,
+              "projected_box_coverage": 0.18739635157545606,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6683250414593698,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 0.75,
+          "final_split_negative_clear": 1.0,
+          "final_minus_raw_positive_coverage": -0.25,
+          "final_minus_raw_negative_clear": 1.0,
+          "final_split_point_gate_pass": false,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 68,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 68,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_0",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o10-p4.png",
+          "mask_sha256": "99ab8877f73e4adec17af4694a7853afef88cd0f874bd392d469aa1c8fffdc17",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.4444444444444444,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": true,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 10,
+              "camera_depth": 7.535553818461111,
+              "split_pixels": 67,
+              "projected_box_coverage": 0.10965630114566285,
+              "source_mask_retention": 0.47183098591549294,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6235679214402619,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 11,
+              "camera_depth": 7.406480943498165,
+              "split_pixels": 39,
+              "projected_box_coverage": 0.06320907617504051,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 14,
+              "camera_depth": 7.466802862597528,
+              "split_pixels": 113,
+              "projected_box_coverage": 0.18739635157545606,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6683250414593698,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 0.75,
+          "final_split_negative_clear": 1.0,
+          "final_minus_raw_positive_coverage": -0.25,
+          "final_minus_raw_negative_clear": 0.5555555555555556,
+          "final_split_point_gate_pass": false,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 67,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 67,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_1",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_one_negative_2",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o10-p6.png",
+          "mask_sha256": "5e502d3a8a7999a39081a75357203d3d59012d25b2e3c76f4603a3ffff032b35",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.5555555555555556,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": true,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 10,
+              "camera_depth": 7.535553818461111,
+              "split_pixels": 66,
+              "projected_box_coverage": 0.10801963993453355,
+              "source_mask_retention": 0.5076923076923077,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6235679214402619,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 11,
+              "camera_depth": 7.406480943498165,
+              "split_pixels": 39,
+              "projected_box_coverage": 0.06320907617504051,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 14,
+              "camera_depth": 7.466802862597528,
+              "split_pixels": 113,
+              "projected_box_coverage": 0.18739635157545606,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6683250414593698,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 0.75,
+          "final_split_negative_clear": 1.0,
+          "final_minus_raw_positive_coverage": -0.25,
+          "final_minus_raw_negative_clear": 0.4444444444444444,
+          "final_split_point_gate_pass": false,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 66,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 66,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_3",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o10-p7.png",
+          "mask_sha256": "99ab8877f73e4adec17af4694a7853afef88cd0f874bd392d469aa1c8fffdc17",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.5555555555555556,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": true,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 10,
+              "camera_depth": 7.535553818461111,
+              "split_pixels": 67,
+              "projected_box_coverage": 0.10965630114566285,
+              "source_mask_retention": 0.4785714285714286,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6235679214402619,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 11,
+              "camera_depth": 7.406480943498165,
+              "split_pixels": 39,
+              "projected_box_coverage": 0.06320907617504051,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 14,
+              "camera_depth": 7.466802862597528,
+              "split_pixels": 113,
+              "projected_box_coverage": 0.18739635157545606,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6683250414593698,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 0.75,
+          "final_split_negative_clear": 1.0,
+          "final_minus_raw_positive_coverage": -0.25,
+          "final_minus_raw_negative_clear": 0.4444444444444444,
+          "final_split_point_gate_pass": false,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 67,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 67,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        }
+      ],
+      "post_split_evidence_candidate_count": 0,
+      "rescued_raw_negative_clear_failure_count": 0
+    }
+  ],
+  "rows": [
+    {
+      "sequence": "006",
+      "frame_id": "1789899601982497364",
+      "camera": 1,
+      "target_obj_id": "10",
+      "recomputed_temporal_positive_count": 8,
+      "recomputed_center_conflict_negative_count": 9,
+      "round700_recovered_immutable": false,
+      "attempts": [
+        {
+          "policy": "one_positive_all_negative",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_all_negative",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_two_negative",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_only",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o10-p3.png",
+          "mask_sha256": "36334292d5424cfe88f14b38c2693a73b19d5ac2c0855ce6ebf84532114727af",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.0,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": true,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 10,
+              "camera_depth": 7.535553818461111,
+              "split_pixels": 68,
+              "projected_box_coverage": 0.11129296235679215,
+              "source_mask_retention": 0.20118343195266272,
+              "removed_island_count": 2,
+              "removed_island_pixels": 2,
+              "maximum_nearer_projected_box_overlap": 0.6235679214402619,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 11,
+              "camera_depth": 7.406480943498165,
+              "split_pixels": 39,
+              "projected_box_coverage": 0.06320907617504051,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 14,
+              "camera_depth": 7.466802862597528,
+              "split_pixels": 113,
+              "projected_box_coverage": 0.18739635157545606,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6683250414593698,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 0.75,
+          "final_split_negative_clear": 1.0,
+          "final_minus_raw_positive_coverage": -0.25,
+          "final_minus_raw_negative_clear": 1.0,
+          "final_split_point_gate_pass": false,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 68,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 68,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_0",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o10-p4.png",
+          "mask_sha256": "99ab8877f73e4adec17af4694a7853afef88cd0f874bd392d469aa1c8fffdc17",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.4444444444444444,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": true,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 10,
+              "camera_depth": 7.535553818461111,
+              "split_pixels": 67,
+              "projected_box_coverage": 0.10965630114566285,
+              "source_mask_retention": 0.47183098591549294,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6235679214402619,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 11,
+              "camera_depth": 7.406480943498165,
+              "split_pixels": 39,
+              "projected_box_coverage": 0.06320907617504051,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 14,
+              "camera_depth": 7.466802862597528,
+              "split_pixels": 113,
+              "projected_box_coverage": 0.18739635157545606,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6683250414593698,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 0.75,
+          "final_split_negative_clear": 1.0,
+          "final_minus_raw_positive_coverage": -0.25,
+          "final_minus_raw_negative_clear": 0.5555555555555556,
+          "final_split_point_gate_pass": false,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 67,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 67,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_1",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_one_negative_2",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o10-p6.png",
+          "mask_sha256": "5e502d3a8a7999a39081a75357203d3d59012d25b2e3c76f4603a3ffff032b35",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.5555555555555556,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": true,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 10,
+              "camera_depth": 7.535553818461111,
+              "split_pixels": 66,
+              "projected_box_coverage": 0.10801963993453355,
+              "source_mask_retention": 0.5076923076923077,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6235679214402619,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 11,
+              "camera_depth": 7.406480943498165,
+              "split_pixels": 39,
+              "projected_box_coverage": 0.06320907617504051,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 14,
+              "camera_depth": 7.466802862597528,
+              "split_pixels": 113,
+              "projected_box_coverage": 0.18739635157545606,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6683250414593698,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 0.75,
+          "final_split_negative_clear": 1.0,
+          "final_minus_raw_positive_coverage": -0.25,
+          "final_minus_raw_negative_clear": 0.4444444444444444,
+          "final_split_point_gate_pass": false,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 66,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 66,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_3",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o10-p7.png",
+          "mask_sha256": "99ab8877f73e4adec17af4694a7853afef88cd0f874bd392d469aa1c8fffdc17",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.5555555555555556,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": true,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 10,
+              "camera_depth": 7.535553818461111,
+              "split_pixels": 67,
+              "projected_box_coverage": 0.10965630114566285,
+              "source_mask_retention": 0.4785714285714286,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6235679214402619,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 11,
+              "camera_depth": 7.406480943498165,
+              "split_pixels": 39,
+              "projected_box_coverage": 0.06320907617504051,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 14,
+              "camera_depth": 7.466802862597528,
+              "split_pixels": 113,
+              "projected_box_coverage": 0.18739635157545606,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6683250414593698,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 0.75,
+          "final_split_negative_clear": 1.0,
+          "final_minus_raw_positive_coverage": -0.25,
+          "final_minus_raw_negative_clear": 0.4444444444444444,
+          "final_split_point_gate_pass": false,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 67,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 67,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        }
+      ],
+      "post_split_evidence_candidate_count": 0,
+      "rescued_raw_negative_clear_failure_count": 0
+    },
+    {
+      "sequence": "006",
+      "frame_id": "1789899601982497364",
+      "camera": 1,
+      "target_obj_id": "12",
+      "recomputed_temporal_positive_count": 7,
+      "recomputed_center_conflict_negative_count": 74,
+      "round700_recovered_immutable": false,
+      "attempts": [
+        {
+          "policy": "one_positive_all_negative",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_all_negative",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o12-p1.png",
+          "mask_sha256": "44d08a76a7f16907391cb0ce3ec6fa18f1bc1831b22bb7949e55783ab0e284fe",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.8378378378378378,
+          "raw_point_gate_pass": true,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 12,
+              "camera_depth": 7.33786684499375,
+              "split_pixels": 137,
+              "projected_box_coverage": 0.22795341098169716,
+              "source_mask_retention": 0.6586538461538461,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.5440931780366056,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 11,
+              "camera_depth": 7.406480943498165,
+              "split_pixels": 39,
+              "projected_box_coverage": 0.06320907617504051,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6077795786061588,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 13,
+              "camera_depth": 7.266393904039379,
+              "split_pixels": 13,
+              "projected_box_coverage": 0.022413793103448276,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.7413793103448276,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 14,
+              "camera_depth": 7.466802862597528,
+              "split_pixels": 84,
+              "projected_box_coverage": 0.13930348258706468,
+              "source_mask_retention": 0.7433628318584071,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6683250414593698,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 23,
+              "camera_depth": 5.645396747098699,
+              "split_pixels": 790,
+              "projected_box_coverage": 0.532345013477089,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.918918918918919,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.08108108108108114,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 137,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 137,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_two_negative",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o12-p2.png",
+          "mask_sha256": "f5b5441c7d3ec939b48b0d758d40aeee69dc60ce20c10103d01ef3386bd014f6",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.8378378378378378,
+          "raw_point_gate_pass": true,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 12,
+              "camera_depth": 7.33786684499375,
+              "split_pixels": 136,
+              "projected_box_coverage": 0.22628951747088186,
+              "source_mask_retention": 0.6153846153846154,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.5440931780366056,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 11,
+              "camera_depth": 7.406480943498165,
+              "split_pixels": 39,
+              "projected_box_coverage": 0.06320907617504051,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6077795786061588,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 13,
+              "camera_depth": 7.266393904039379,
+              "split_pixels": 13,
+              "projected_box_coverage": 0.022413793103448276,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.7413793103448276,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 14,
+              "camera_depth": 7.466802862597528,
+              "split_pixels": 84,
+              "projected_box_coverage": 0.13930348258706468,
+              "source_mask_retention": 0.7433628318584071,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6683250414593698,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 23,
+              "camera_depth": 5.645396747098699,
+              "split_pixels": 790,
+              "projected_box_coverage": 0.532345013477089,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.918918918918919,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.08108108108108114,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 136,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 136,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_only",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o12-p3.png",
+          "mask_sha256": "6b385842dcc5619606226bd23bad909eda8926cdd722b9d2d6707883c3bfe67a",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.7702702702702703,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": false,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 12,
+              "camera_depth": 7.33786684499375,
+              "split_pixels": 143,
+              "projected_box_coverage": 0.23793677204658903,
+              "source_mask_retention": 0.17208182912154033,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.5440931780366056,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 11,
+              "camera_depth": 7.406480943498165,
+              "split_pixels": 39,
+              "projected_box_coverage": 0.06320907617504051,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6077795786061588,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 13,
+              "camera_depth": 7.266393904039379,
+              "split_pixels": 13,
+              "projected_box_coverage": 0.022413793103448276,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.7413793103448276,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 14,
+              "camera_depth": 7.466802862597528,
+              "split_pixels": 83,
+              "projected_box_coverage": 0.13764510779436154,
+              "source_mask_retention": 0.7345132743362832,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6683250414593698,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 23,
+              "camera_depth": 5.645396747098699,
+              "split_pixels": 790,
+              "projected_box_coverage": 0.532345013477089,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.918918918918919,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.14864864864864868,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 143,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 143,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_0",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o12-p4.png",
+          "mask_sha256": "cda6f1054fa750b90796394a2cf5e44189806c3e5b795e948c15df1cc2a689bb",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.7972972972972973,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 12,
+              "camera_depth": 7.33786684499375,
+              "split_pixels": 139,
+              "projected_box_coverage": 0.23128119800332778,
+              "source_mask_retention": 0.34491315136476425,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.5440931780366056,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 11,
+              "camera_depth": 7.406480943498165,
+              "split_pixels": 39,
+              "projected_box_coverage": 0.06320907617504051,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6077795786061588,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 13,
+              "camera_depth": 7.266393904039379,
+              "split_pixels": 13,
+              "projected_box_coverage": 0.022413793103448276,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.7413793103448276,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 14,
+              "camera_depth": 7.466802862597528,
+              "split_pixels": 83,
+              "projected_box_coverage": 0.13764510779436154,
+              "source_mask_retention": 0.7345132743362832,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6683250414593698,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 23,
+              "camera_depth": 5.645396747098699,
+              "split_pixels": 790,
+              "projected_box_coverage": 0.532345013477089,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.918918918918919,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.12162162162162171,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 139,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 139,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_1",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o12-p5.png",
+          "mask_sha256": "61524639079906f61f12eb0da8ce1056ea86ea1999f9a7da36edf50e673b9bcd",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.8243243243243243,
+          "raw_point_gate_pass": true,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 12,
+              "camera_depth": 7.33786684499375,
+              "split_pixels": 137,
+              "projected_box_coverage": 0.22795341098169716,
+              "source_mask_retention": 0.5546558704453441,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.5440931780366056,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 11,
+              "camera_depth": 7.406480943498165,
+              "split_pixels": 39,
+              "projected_box_coverage": 0.06320907617504051,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6077795786061588,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 13,
+              "camera_depth": 7.266393904039379,
+              "split_pixels": 13,
+              "projected_box_coverage": 0.022413793103448276,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.7413793103448276,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 14,
+              "camera_depth": 7.466802862597528,
+              "split_pixels": 84,
+              "projected_box_coverage": 0.13930348258706468,
+              "source_mask_retention": 0.7433628318584071,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6683250414593698,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 23,
+              "camera_depth": 5.645396747098699,
+              "split_pixels": 790,
+              "projected_box_coverage": 0.532345013477089,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.918918918918919,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.09459459459459463,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 137,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 137,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_2",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o12-p6.png",
+          "mask_sha256": "7443c57fe4e29f3acdfe09237d0f8928eacee4af542ce72eaea32ba0a1c1025c",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.7972972972972973,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 12,
+              "camera_depth": 7.33786684499375,
+              "split_pixels": 141,
+              "projected_box_coverage": 0.23460898502495842,
+              "source_mask_retention": 0.40285714285714286,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.5440931780366056,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 11,
+              "camera_depth": 7.406480943498165,
+              "split_pixels": 39,
+              "projected_box_coverage": 0.06320907617504051,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6077795786061588,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 13,
+              "camera_depth": 7.266393904039379,
+              "split_pixels": 13,
+              "projected_box_coverage": 0.022413793103448276,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.7413793103448276,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 14,
+              "camera_depth": 7.466802862597528,
+              "split_pixels": 83,
+              "projected_box_coverage": 0.13764510779436154,
+              "source_mask_retention": 0.7345132743362832,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6683250414593698,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 23,
+              "camera_depth": 5.645396747098699,
+              "split_pixels": 790,
+              "projected_box_coverage": 0.532345013477089,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.918918918918919,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.12162162162162171,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 141,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 141,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_3",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o12-p7.png",
+          "mask_sha256": "6b385842dcc5619606226bd23bad909eda8926cdd722b9d2d6707883c3bfe67a",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.7702702702702703,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": false,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 12,
+              "camera_depth": 7.33786684499375,
+              "split_pixels": 143,
+              "projected_box_coverage": 0.23793677204658903,
+              "source_mask_retention": 0.17417783191230207,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.5440931780366056,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 11,
+              "camera_depth": 7.406480943498165,
+              "split_pixels": 39,
+              "projected_box_coverage": 0.06320907617504051,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6077795786061588,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 13,
+              "camera_depth": 7.266393904039379,
+              "split_pixels": 13,
+              "projected_box_coverage": 0.022413793103448276,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.7413793103448276,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 14,
+              "camera_depth": 7.466802862597528,
+              "split_pixels": 83,
+              "projected_box_coverage": 0.13764510779436154,
+              "source_mask_retention": 0.7345132743362832,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6683250414593698,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 23,
+              "camera_depth": 5.645396747098699,
+              "split_pixels": 790,
+              "projected_box_coverage": 0.532345013477089,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.918918918918919,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.14864864864864868,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 143,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 143,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        }
+      ],
+      "post_split_evidence_candidate_count": 0,
+      "rescued_raw_negative_clear_failure_count": 0
+    },
+    {
+      "sequence": "006",
+      "frame_id": "1789899601982497364",
+      "camera": 1,
+      "target_obj_id": "13",
+      "recomputed_temporal_positive_count": 8,
+      "recomputed_center_conflict_negative_count": 68,
+      "round700_recovered_immutable": false,
+      "attempts": [
+        {
+          "policy": "one_positive_all_negative",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_all_negative",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o13-p1.png",
+          "mask_sha256": "0c4febac3f8f9d1760c166e595af2cbf5ee9d827d17f254b3104068fad415df8",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.9705882352941176,
+          "raw_point_gate_pass": true,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 13,
+              "camera_depth": 7.266393904039379,
+              "split_pixels": 36,
+              "projected_box_coverage": 0.06206896551724138,
+              "source_mask_retention": 0.45,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.7413793103448276,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 12,
+              "camera_depth": 7.33786684499375,
+              "split_pixels": 21,
+              "projected_box_coverage": 0.03494176372712146,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.5440931780366056,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 15,
+              "camera_depth": 7.189363422304997,
+              "split_pixels": 95,
+              "projected_box_coverage": 0.14797507788161993,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.719626168224299,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 23,
+              "camera_depth": 5.645396747098699,
+              "split_pixels": 790,
+              "projected_box_coverage": 0.532345013477089,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 0.625,
+          "final_split_negative_clear": 1.0,
+          "final_minus_raw_positive_coverage": -0.375,
+          "final_minus_raw_negative_clear": 0.02941176470588236,
+          "final_split_point_gate_pass": false,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 36,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 36,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_two_negative",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_only",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o13-p3.png",
+          "mask_sha256": "8e05e8224460b32c96ddfe4a627cca3f7ea24818eb1f3084739e7c3659bbddc2",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.8382352941176471,
+          "raw_point_gate_pass": true,
+          "raw_localization_pass": false,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 13,
+              "camera_depth": 7.266393904039379,
+              "split_pixels": 104,
+              "projected_box_coverage": 0.1793103448275862,
+              "source_mask_retention": 0.13333333333333333,
+              "removed_island_count": 2,
+              "removed_island_pixels": 4,
+              "maximum_nearer_projected_box_overlap": 0.7413793103448276,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 12,
+              "camera_depth": 7.33786684499375,
+              "split_pixels": 21,
+              "projected_box_coverage": 0.03494176372712146,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.5440931780366056,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 15,
+              "camera_depth": 7.189363422304997,
+              "split_pixels": 95,
+              "projected_box_coverage": 0.14797507788161993,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.719626168224299,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 23,
+              "camera_depth": 5.645396747098699,
+              "split_pixels": 790,
+              "projected_box_coverage": 0.532345013477089,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 0.625,
+          "final_split_negative_clear": 0.9705882352941176,
+          "final_minus_raw_positive_coverage": -0.375,
+          "final_minus_raw_negative_clear": 0.13235294117647056,
+          "final_split_point_gate_pass": false,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 104,
+            "component_count_8_connected": 2,
+            "largest_component_pixels": 60,
+            "largest_component_fraction": 0.5769230769230769,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_0",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o13-p4.png",
+          "mask_sha256": "478ba1602bbcd6b484b1960883f81336a00af874852d93e307ee851d2b138b46",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.8382352941176471,
+          "raw_point_gate_pass": true,
+          "raw_localization_pass": false,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 13,
+              "camera_depth": 7.266393904039379,
+              "split_pixels": 109,
+              "projected_box_coverage": 0.1879310344827586,
+              "source_mask_retention": 0.1329268292682927,
+              "removed_island_count": 1,
+              "removed_island_pixels": 3,
+              "maximum_nearer_projected_box_overlap": 0.7413793103448276,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 12,
+              "camera_depth": 7.33786684499375,
+              "split_pixels": 21,
+              "projected_box_coverage": 0.03494176372712146,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.5440931780366056,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 15,
+              "camera_depth": 7.189363422304997,
+              "split_pixels": 95,
+              "projected_box_coverage": 0.14797507788161993,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.719626168224299,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 23,
+              "camera_depth": 5.645396747098699,
+              "split_pixels": 790,
+              "projected_box_coverage": 0.532345013477089,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 0.625,
+          "final_split_negative_clear": 0.9705882352941176,
+          "final_minus_raw_positive_coverage": -0.375,
+          "final_minus_raw_negative_clear": 0.13235294117647056,
+          "final_split_point_gate_pass": false,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 109,
+            "component_count_8_connected": 2,
+            "largest_component_pixels": 60,
+            "largest_component_fraction": 0.5504587155963303,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_1",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_one_negative_2",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_one_negative_3",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s006-f82497364-c1-o13-p7.png",
+          "mask_sha256": "296e659905f6e23dfe144a04b54a64bf8247068b46f66da86a4de9afb661ce5a",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.8382352941176471,
+          "raw_point_gate_pass": true,
+          "raw_localization_pass": false,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 13,
+              "camera_depth": 7.266393904039379,
+              "split_pixels": 114,
+              "projected_box_coverage": 0.19655172413793104,
+              "source_mask_retention": 0.13768115942028986,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.7413793103448276,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 12,
+              "camera_depth": 7.33786684499375,
+              "split_pixels": 21,
+              "projected_box_coverage": 0.03494176372712146,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.5440931780366056,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 15,
+              "camera_depth": 7.189363422304997,
+              "split_pixels": 95,
+              "projected_box_coverage": 0.14797507788161993,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.719626168224299,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 23,
+              "camera_depth": 5.645396747098699,
+              "split_pixels": 790,
+              "projected_box_coverage": 0.532345013477089,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 0.625,
+          "final_split_negative_clear": 0.9705882352941176,
+          "final_minus_raw_positive_coverage": -0.375,
+          "final_minus_raw_negative_clear": 0.13235294117647056,
+          "final_split_point_gate_pass": false,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 114,
+            "component_count_8_connected": 2,
+            "largest_component_pixels": 64,
+            "largest_component_fraction": 0.5614035087719298,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        }
+      ],
+      "post_split_evidence_candidate_count": 0,
+      "rescued_raw_negative_clear_failure_count": 0
+    },
+    {
+      "sequence": "008",
+      "frame_id": "1789899778882397075",
+      "camera": 1,
+      "target_obj_id": "76",
+      "recomputed_temporal_positive_count": 6,
+      "recomputed_center_conflict_negative_count": 45,
+      "round700_recovered_immutable": false,
+      "attempts": [
+        {
+          "policy": "one_positive_all_negative",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_all_negative",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o76-p1.png",
+          "mask_sha256": "e55a9d601a2aa465161f049ae632fd62bfcd59866e002acee96058fa6388017f",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.8666666666666667,
+          "raw_point_gate_pass": true,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 76,
+              "camera_depth": 8.273899306502999,
+              "split_pixels": 76,
+              "projected_box_coverage": 0.15866388308977036,
+              "source_mask_retention": 0.8735632183908046,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.5511482254697286,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 69,
+              "camera_depth": 6.440033895200627,
+              "split_pixels": 524,
+              "projected_box_coverage": 0.7390691114245416,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 75,
+              "camera_depth": 8.18082233057027,
+              "split_pixels": 11,
+              "projected_box_coverage": 0.021696252465483234,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.727810650887574,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 77,
+              "camera_depth": 8.329467926229789,
+              "split_pixels": 1,
+              "projected_box_coverage": 0.0019120458891013384,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.49904397705544934,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.8888888888888888,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.022222222222222143,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 76,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 76,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_two_negative",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o76-p2.png",
+          "mask_sha256": "4489c4cca2958fb99bd8bb9e75b0ffe5811fdf6e35fcc6da38198641bcc64572",
+          "raw_positive_coverage": 0.8333333333333334,
+          "raw_negative_clear": 0.8888888888888888,
+          "raw_point_gate_pass": true,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 76,
+              "camera_depth": 8.273899306502999,
+              "split_pixels": 59,
+              "projected_box_coverage": 0.12317327766179541,
+              "source_mask_retention": 0.9076923076923077,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.5511482254697286,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 69,
+              "camera_depth": 6.440033895200627,
+              "split_pixels": 524,
+              "projected_box_coverage": 0.7390691114245416,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 75,
+              "camera_depth": 8.18082233057027,
+              "split_pixels": 11,
+              "projected_box_coverage": 0.021696252465483234,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.727810650887574,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 77,
+              "camera_depth": 8.329467926229789,
+              "split_pixels": 1,
+              "projected_box_coverage": 0.0019120458891013384,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.49904397705544934,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 0.8333333333333334,
+          "final_split_negative_clear": 0.8888888888888888,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.0,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 59,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 59,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_only",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o76-p3.png",
+          "mask_sha256": "60a6adfd43e46542271bd8885714adcbe3a480c94a79b1b19d83932401f26fd4",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.6444444444444445,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": false,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 76,
+              "camera_depth": 8.273899306502999,
+              "split_pixels": 120,
+              "projected_box_coverage": 0.25052192066805845,
+              "source_mask_retention": 0.1744186046511628,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.5511482254697286,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 69,
+              "camera_depth": 6.440033895200627,
+              "split_pixels": 524,
+              "projected_box_coverage": 0.7390691114245416,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 75,
+              "camera_depth": 8.18082233057027,
+              "split_pixels": 11,
+              "projected_box_coverage": 0.021696252465483234,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.727810650887574,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 77,
+              "camera_depth": 8.329467926229789,
+              "split_pixels": 1,
+              "projected_box_coverage": 0.0019120458891013384,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.49904397705544934,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.8888888888888888,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.24444444444444435,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 120,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 120,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_0",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o76-p4.png",
+          "mask_sha256": "fe4782f886000cf40dc5a5ebda49fdd0318d388809d914a9ee4c89aaff899eaf",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.7333333333333333,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 76,
+              "camera_depth": 8.273899306502999,
+              "split_pixels": 97,
+              "projected_box_coverage": 0.20250521920668058,
+              "source_mask_retention": 0.31699346405228757,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.5511482254697286,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 69,
+              "camera_depth": 6.440033895200627,
+              "split_pixels": 524,
+              "projected_box_coverage": 0.7390691114245416,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 75,
+              "camera_depth": 8.18082233057027,
+              "split_pixels": 11,
+              "projected_box_coverage": 0.021696252465483234,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.727810650887574,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 77,
+              "camera_depth": 8.329467926229789,
+              "split_pixels": 1,
+              "projected_box_coverage": 0.0019120458891013384,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.49904397705544934,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.8888888888888888,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.15555555555555556,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 97,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 97,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_1",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_one_negative_2",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o76-p6.png",
+          "mask_sha256": "0b12df4c64d4d2527b297d32673129f7e7db62f869d757d226fc2bb0c9110a10",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.6444444444444445,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": false,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 76,
+              "camera_depth": 8.273899306502999,
+              "split_pixels": 112,
+              "projected_box_coverage": 0.23382045929018788,
+              "source_mask_retention": 0.17364341085271318,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.5511482254697286,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 69,
+              "camera_depth": 6.440033895200627,
+              "split_pixels": 524,
+              "projected_box_coverage": 0.7390691114245416,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 75,
+              "camera_depth": 8.18082233057027,
+              "split_pixels": 11,
+              "projected_box_coverage": 0.021696252465483234,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.727810650887574,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 77,
+              "camera_depth": 8.329467926229789,
+              "split_pixels": 1,
+              "projected_box_coverage": 0.0019120458891013384,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.49904397705544934,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.8888888888888888,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.24444444444444435,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 112,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 112,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_3",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o76-p7.png",
+          "mask_sha256": "2bb235435706f2b7c365681b4ee48d4b3106f6d3c29bab2f533a18b7abf79fb4",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.7777777777777778,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": true,
+          "reported_split_metrics": [
+            {
+              "obj_id": 76,
+              "camera_depth": 8.273899306502999,
+              "split_pixels": 90,
+              "projected_box_coverage": 0.18789144050104384,
+              "source_mask_retention": 0.6666666666666666,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.5511482254697286,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 69,
+              "camera_depth": 6.440033895200627,
+              "split_pixels": 524,
+              "projected_box_coverage": 0.7390691114245416,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 75,
+              "camera_depth": 8.18082233057027,
+              "split_pixels": 11,
+              "projected_box_coverage": 0.021696252465483234,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.727810650887574,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 77,
+              "camera_depth": 8.329467926229789,
+              "split_pixels": 1,
+              "projected_box_coverage": 0.0019120458891013384,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.49904397705544934,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.8888888888888888,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.11111111111111105,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 90,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 90,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        }
+      ],
+      "post_split_evidence_candidate_count": 0,
+      "rescued_raw_negative_clear_failure_count": 0
+    },
+    {
+      "sequence": "008",
+      "frame_id": "1789899778882397075",
+      "camera": 1,
+      "target_obj_id": "77",
+      "recomputed_temporal_positive_count": 7,
+      "recomputed_center_conflict_negative_count": 11,
+      "round700_recovered_immutable": false,
+      "attempts": [
+        {
+          "policy": "one_positive_all_negative",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_all_negative",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o77-p1.png",
+          "mask_sha256": "31ecbdcd3d82ce46b1036849de2df70dc90fe806e0f9db4c3a9006a5a916e3c2",
+          "raw_positive_coverage": 0.8571428571428571,
+          "raw_negative_clear": 0.9090909090909091,
+          "raw_point_gate_pass": true,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": false,
+          "reported_split_metrics": [
+            {
+              "obj_id": 77,
+              "camera_depth": 8.329467926229789,
+              "split_pixels": 50,
+              "projected_box_coverage": 0.09560229445506692,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.49904397705544934,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 76,
+              "camera_depth": 8.273899306502999,
+              "split_pixels": 22,
+              "projected_box_coverage": 0.04592901878914405,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 78,
+              "camera_depth": 8.481660617682365,
+              "split_pixels": 0,
+              "projected_box_coverage": 0.0,
+              "source_mask_retention": 0.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6346555323590815,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 79,
+              "camera_depth": 8.568891497281786,
+              "split_pixels": 0,
+              "projected_box_coverage": 0.0,
+              "source_mask_retention": 0.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6223628691983122,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 1.0,
+              "separated_at_0_15": false
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 1.0,
+              "separated_at_0_15": false
+            }
+          ],
+          "final_split_positive_coverage": 0.8571428571428571,
+          "final_split_negative_clear": 0.9090909090909091,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.0,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 50,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 50,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_two_negative",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_only",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o77-p3.png",
+          "mask_sha256": "969a0b3b63459974ea6a6d0cd425fd1078c34921dede722a0f45c1442f5de769",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.0,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": false,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": false,
+          "reported_split_metrics": [
+            {
+              "obj_id": 77,
+              "camera_depth": 8.329467926229789,
+              "split_pixels": 128,
+              "projected_box_coverage": 0.2447418738049713,
+              "source_mask_retention": 0.19306184012066366,
+              "removed_island_count": 1,
+              "removed_island_pixels": 2,
+              "maximum_nearer_projected_box_overlap": 0.49904397705544934,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 76,
+              "camera_depth": 8.273899306502999,
+              "split_pixels": 22,
+              "projected_box_coverage": 0.04592901878914405,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 78,
+              "camera_depth": 8.481660617682365,
+              "split_pixels": 0,
+              "projected_box_coverage": 0.0,
+              "source_mask_retention": 0.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6346555323590815,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 79,
+              "camera_depth": 8.568891497281786,
+              "split_pixels": 0,
+              "projected_box_coverage": 0.0,
+              "source_mask_retention": 0.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6223628691983122,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 1.0,
+              "separated_at_0_15": false
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 1.0,
+              "separated_at_0_15": false
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.8181818181818182,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.8181818181818182,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 128,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 128,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_0",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_one_negative_1",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_one_negative_2",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o77-p6.png",
+          "mask_sha256": "0ea025bae22da631444ef81cf5befe86cc657099de3427bddeb8419517c11115",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.45454545454545453,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": false,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": false,
+          "reported_split_metrics": [
+            {
+              "obj_id": 77,
+              "camera_depth": 8.329467926229789,
+              "split_pixels": 93,
+              "projected_box_coverage": 0.17782026768642448,
+              "source_mask_retention": 0.1611785095320624,
+              "removed_island_count": 2,
+              "removed_island_pixels": 2,
+              "maximum_nearer_projected_box_overlap": 0.49904397705544934,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 76,
+              "camera_depth": 8.273899306502999,
+              "split_pixels": 22,
+              "projected_box_coverage": 0.04592901878914405,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 78,
+              "camera_depth": 8.481660617682365,
+              "split_pixels": 0,
+              "projected_box_coverage": 0.0,
+              "source_mask_retention": 0.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6346555323590815,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 79,
+              "camera_depth": 8.568891497281786,
+              "split_pixels": 0,
+              "projected_box_coverage": 0.0,
+              "source_mask_retention": 0.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6223628691983122,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 1.0,
+              "separated_at_0_15": false
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 1.0,
+              "separated_at_0_15": false
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.9090909090909091,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.45454545454545453,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 93,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 93,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_3",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        }
+      ],
+      "post_split_evidence_candidate_count": 0,
+      "rescued_raw_negative_clear_failure_count": 0
+    },
+    {
+      "sequence": "008",
+      "frame_id": "1789899778882397075",
+      "camera": 1,
+      "target_obj_id": "78",
+      "recomputed_temporal_positive_count": 6,
+      "recomputed_center_conflict_negative_count": 6,
+      "round700_recovered_immutable": false,
+      "attempts": [
+        {
+          "policy": "one_positive_all_negative",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o78-p0.png",
+          "mask_sha256": "8794d3857dca8c75aff0585ae87675f5537646a7298298d6c271da8659fdfa76",
+          "raw_positive_coverage": 0.3333333333333333,
+          "raw_negative_clear": 1.0,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": false,
+          "reported_split_metrics": [
+            {
+              "obj_id": 78,
+              "camera_depth": 8.481660617682365,
+              "split_pixels": 28,
+              "projected_box_coverage": 0.05845511482254697,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6346555323590815,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 77,
+              "camera_depth": 8.329467926229789,
+              "split_pixels": 1,
+              "projected_box_coverage": 0.0019120458891013384,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 79,
+              "camera_depth": 8.568891497281786,
+              "split_pixels": 0,
+              "projected_box_coverage": 0.0,
+              "source_mask_retention": 0.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6223628691983122,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 1.0,
+              "separated_at_0_15": false
+            }
+          ],
+          "final_split_positive_coverage": 0.3333333333333333,
+          "final_split_negative_clear": 1.0,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.0,
+          "final_split_point_gate_pass": false,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 28,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 28,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_all_negative",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_two_negative",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o78-p2.png",
+          "mask_sha256": "3c6cb4c010d154b12f88f3e3510a8eabaf9c28eaea1b5700ac4ede42ecc53cca",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.8333333333333334,
+          "raw_point_gate_pass": true,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": false,
+          "reported_split_metrics": [
+            {
+              "obj_id": 78,
+              "camera_depth": 8.481660617682365,
+              "split_pixels": 68,
+              "projected_box_coverage": 0.1419624217118998,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6346555323590815,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 77,
+              "camera_depth": 8.329467926229789,
+              "split_pixels": 1,
+              "projected_box_coverage": 0.0019120458891013384,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 79,
+              "camera_depth": 8.568891497281786,
+              "split_pixels": 0,
+              "projected_box_coverage": 0.0,
+              "source_mask_retention": 0.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6223628691983122,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 1.0,
+              "separated_at_0_15": false
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.8333333333333334,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.0,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 68,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 68,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_only",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o78-p3.png",
+          "mask_sha256": "5cd88e2377f84acf0c029a83d741c532ab09d8d3a40b58bd0ddc161333469e53",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.0,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": false,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": false,
+          "reported_split_metrics": [
+            {
+              "obj_id": 78,
+              "camera_depth": 8.481660617682365,
+              "split_pixels": 119,
+              "projected_box_coverage": 0.24843423799582465,
+              "source_mask_retention": 0.1865203761755486,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6346555323590815,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 77,
+              "camera_depth": 8.329467926229789,
+              "split_pixels": 1,
+              "projected_box_coverage": 0.0019120458891013384,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 79,
+              "camera_depth": 8.568891497281786,
+              "split_pixels": 0,
+              "projected_box_coverage": 0.0,
+              "source_mask_retention": 0.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6223628691983122,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 1.0,
+              "separated_at_0_15": false
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.8333333333333334,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.8333333333333334,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 119,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 119,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_0",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o78-p4.png",
+          "mask_sha256": "6628cf4c8c33c9018951cb9b12ed5df11b14d852c6429d3df47246487b3ad292",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.6666666666666666,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": false,
+          "reported_split_metrics": [
+            {
+              "obj_id": 78,
+              "camera_depth": 8.481660617682365,
+              "split_pixels": 74,
+              "projected_box_coverage": 0.1544885177453027,
+              "source_mask_retention": 0.8043478260869565,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6346555323590815,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 77,
+              "camera_depth": 8.329467926229789,
+              "split_pixels": 1,
+              "projected_box_coverage": 0.0019120458891013384,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 79,
+              "camera_depth": 8.568891497281786,
+              "split_pixels": 0,
+              "projected_box_coverage": 0.0,
+              "source_mask_retention": 0.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6223628691983122,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 1.0,
+              "separated_at_0_15": false
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.8333333333333334,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.16666666666666674,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 74,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 74,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_1",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_one_negative_2",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o78-p6.png",
+          "mask_sha256": "4b927095c75d24b0c801342155a0a06164e63187ebb3f824cf66dac27f1b7fc5",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.8333333333333334,
+          "raw_point_gate_pass": true,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": false,
+          "reported_split_metrics": [
+            {
+              "obj_id": 78,
+              "camera_depth": 8.481660617682365,
+              "split_pixels": 76,
+              "projected_box_coverage": 0.15866388308977036,
+              "source_mask_retention": 0.8,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6346555323590815,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 77,
+              "camera_depth": 8.329467926229789,
+              "split_pixels": 1,
+              "projected_box_coverage": 0.0019120458891013384,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 79,
+              "camera_depth": 8.568891497281786,
+              "split_pixels": 0,
+              "projected_box_coverage": 0.0,
+              "source_mask_retention": 0.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6223628691983122,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 1.0,
+              "separated_at_0_15": false
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.8333333333333334,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.0,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 76,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 76,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_3",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o78-p7.png",
+          "mask_sha256": "eebdbe3c0498d641f452a4acb403e41b37b3fcb808f70115d904d3b7c6bd924c",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.8333333333333334,
+          "raw_point_gate_pass": true,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": false,
+          "reported_split_metrics": [
+            {
+              "obj_id": 78,
+              "camera_depth": 8.481660617682365,
+              "split_pixels": 77,
+              "projected_box_coverage": 0.16075156576200417,
+              "source_mask_retention": 0.8191489361702128,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6346555323590815,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 77,
+              "camera_depth": 8.329467926229789,
+              "split_pixels": 1,
+              "projected_box_coverage": 0.0019120458891013384,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 79,
+              "camera_depth": 8.568891497281786,
+              "split_pixels": 0,
+              "projected_box_coverage": 0.0,
+              "source_mask_retention": 0.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6223628691983122,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 1.0,
+              "separated_at_0_15": false
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.8333333333333334,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.0,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 77,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 77,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        }
+      ],
+      "post_split_evidence_candidate_count": 0,
+      "rescued_raw_negative_clear_failure_count": 0
+    },
+    {
+      "sequence": "008",
+      "frame_id": "1789899778882397075",
+      "camera": 1,
+      "target_obj_id": "79",
+      "recomputed_temporal_positive_count": 8,
+      "recomputed_center_conflict_negative_count": 19,
+      "round700_recovered_immutable": false,
+      "attempts": [
+        {
+          "policy": "one_positive_all_negative",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        },
+        {
+          "policy": "three_positive_all_negative",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o79-p1.png",
+          "mask_sha256": "2dc4c9c7855ec65c6b2e969e4f87ab7b3739ff168d893843fdb967b544e05458",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.9473684210526315,
+          "raw_point_gate_pass": true,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": false,
+          "reported_split_metrics": [
+            {
+              "obj_id": 79,
+              "camera_depth": 8.568891497281786,
+              "split_pixels": 55,
+              "projected_box_coverage": 0.1160337552742616,
+              "source_mask_retention": 0.9322033898305084,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6223628691983122,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 67,
+              "camera_depth": 7.065863365222548,
+              "split_pixels": 164,
+              "projected_box_coverage": 0.15045871559633028,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 77,
+              "camera_depth": 8.329467926229789,
+              "split_pixels": 1,
+              "projected_box_coverage": 0.0019120458891013384,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 78,
+              "camera_depth": 8.481660617682365,
+              "split_pixels": 0,
+              "projected_box_coverage": 0.0,
+              "source_mask_retention": 0.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6346555323590815,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 1.0,
+              "separated_at_0_15": false
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.9473684210526315,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.0,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 55,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 55,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_two_negative",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o79-p2.png",
+          "mask_sha256": "7423985179cbcf11b2e1d58999a02ec489863a713f8f46b17e538046c15c7f46",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.8947368421052632,
+          "raw_point_gate_pass": true,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": false,
+          "reported_split_metrics": [
+            {
+              "obj_id": 79,
+              "camera_depth": 8.568891497281786,
+              "split_pixels": 66,
+              "projected_box_coverage": 0.13924050632911392,
+              "source_mask_retention": 0.9166666666666666,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6223628691983122,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 67,
+              "camera_depth": 7.065863365222548,
+              "split_pixels": 164,
+              "projected_box_coverage": 0.15045871559633028,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 77,
+              "camera_depth": 8.329467926229789,
+              "split_pixels": 1,
+              "projected_box_coverage": 0.0019120458891013384,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 78,
+              "camera_depth": 8.481660617682365,
+              "split_pixels": 0,
+              "projected_box_coverage": 0.0,
+              "source_mask_retention": 0.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6346555323590815,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 1.0,
+              "separated_at_0_15": false
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.8947368421052632,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.0,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 66,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 66,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_only",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o79-p3.png",
+          "mask_sha256": "b046f9520d381aeff31dc3577c689a244cd7294288743d5ca8207b47f998af4c",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.5263157894736842,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": false,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": false,
+          "reported_split_metrics": [
+            {
+              "obj_id": 79,
+              "camera_depth": 8.568891497281786,
+              "split_pixels": 90,
+              "projected_box_coverage": 0.189873417721519,
+              "source_mask_retention": 0.17928286852589642,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6223628691983122,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 67,
+              "camera_depth": 7.065863365222548,
+              "split_pixels": 164,
+              "projected_box_coverage": 0.15045871559633028,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 77,
+              "camera_depth": 8.329467926229789,
+              "split_pixels": 1,
+              "projected_box_coverage": 0.0019120458891013384,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 78,
+              "camera_depth": 8.481660617682365,
+              "split_pixels": 0,
+              "projected_box_coverage": 0.0,
+              "source_mask_retention": 0.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6346555323590815,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 1.0,
+              "separated_at_0_15": false
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.8947368421052632,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.368421052631579,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 90,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 90,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_0",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o79-p4.png",
+          "mask_sha256": "270b7c3a77da9593aeed6296fc9c0b3e2abb1ce334437a277dee963b78b2254f",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.8947368421052632,
+          "raw_point_gate_pass": true,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": false,
+          "reported_split_metrics": [
+            {
+              "obj_id": 79,
+              "camera_depth": 8.568891497281786,
+              "split_pixels": 70,
+              "projected_box_coverage": 0.14767932489451477,
+              "source_mask_retention": 0.8974358974358975,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6223628691983122,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 67,
+              "camera_depth": 7.065863365222548,
+              "split_pixels": 164,
+              "projected_box_coverage": 0.15045871559633028,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 77,
+              "camera_depth": 8.329467926229789,
+              "split_pixels": 1,
+              "projected_box_coverage": 0.0019120458891013384,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 78,
+              "camera_depth": 8.481660617682365,
+              "split_pixels": 0,
+              "projected_box_coverage": 0.0,
+              "source_mask_retention": 0.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6346555323590815,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 1.0,
+              "separated_at_0_15": false
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.9473684210526315,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.05263157894736836,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 70,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 70,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_1",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o79-p5.png",
+          "mask_sha256": "4cf04b87787528938cc5d26497192bdea823e60f4345438f9f3b6595020a3857",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.8947368421052632,
+          "raw_point_gate_pass": true,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": false,
+          "reported_split_metrics": [
+            {
+              "obj_id": 79,
+              "camera_depth": 8.568891497281786,
+              "split_pixels": 69,
+              "projected_box_coverage": 0.14556962025316456,
+              "source_mask_retention": 0.8734177215189873,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6223628691983122,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 67,
+              "camera_depth": 7.065863365222548,
+              "split_pixels": 164,
+              "projected_box_coverage": 0.15045871559633028,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 77,
+              "camera_depth": 8.329467926229789,
+              "split_pixels": 1,
+              "projected_box_coverage": 0.0019120458891013384,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 78,
+              "camera_depth": 8.481660617682365,
+              "split_pixels": 0,
+              "projected_box_coverage": 0.0,
+              "source_mask_retention": 0.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6346555323590815,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 1.0,
+              "separated_at_0_15": false
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.9473684210526315,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.05263157894736836,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 69,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 69,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_2",
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round700-fifth-conflict-temporal-local-point-sam-20261123\\masks\\s008-f82397075-c1-o79-p6.png",
+          "mask_sha256": "b2d1de42ad39c47e92b9986e38d0590034b5bb51433dae43bd6cda29b97e6dcf",
+          "raw_positive_coverage": 1.0,
+          "raw_negative_clear": 0.631578947368421,
+          "raw_point_gate_pass": false,
+          "raw_localization_pass": true,
+          "round700_attempt_accepted_immutable": false,
+          "reported_split_group_pass": false,
+          "reported_separation_pass": false,
+          "reported_split_metrics": [
+            {
+              "obj_id": 79,
+              "camera_depth": 8.568891497281786,
+              "split_pixels": 84,
+              "projected_box_coverage": 0.17721518987341772,
+              "source_mask_retention": 0.6942148760330579,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6223628691983122,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 67,
+              "camera_depth": 7.065863365222548,
+              "split_pixels": 164,
+              "projected_box_coverage": 0.15045871559633028,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 77,
+              "camera_depth": 8.329467926229789,
+              "split_pixels": 1,
+              "projected_box_coverage": 0.0019120458891013384,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 78,
+              "camera_depth": 8.481660617682365,
+              "split_pixels": 0,
+              "projected_box_coverage": 0.0,
+              "source_mask_retention": 0.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6346555323590815,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "reported_separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 1.0,
+              "separated_at_0_15": false
+            }
+          ],
+          "final_split_positive_coverage": 1.0,
+          "final_split_negative_clear": 0.8947368421052632,
+          "final_minus_raw_positive_coverage": 0.0,
+          "final_minus_raw_negative_clear": 0.26315789473684215,
+          "final_split_point_gate_pass": true,
+          "post_split_evidence_candidate": false,
+          "rescues_raw_negative_clear_failure": false,
+          "structure": {
+            "foreground_pixels": 84,
+            "component_count_8_connected": 1,
+            "largest_component_pixels": 84,
+            "largest_component_fraction": 1.0,
+            "small_component_lt_8_count": 0,
+            "small_component_lt_8_pixels": 0
+          }
+        },
+        {
+          "policy": "three_positive_one_negative_3",
+          "source_error": "SAM 3 无法排除当前负点区域，请补充或调整提示点",
+          "post_split_evidence_candidate": false
+        }
+      ],
+      "post_split_evidence_candidate_count": 0,
+      "rescued_raw_negative_clear_failure_count": 0
+    }
+  ],
+  "round700_acceptance_or_recovered_modified": false,
+  "candidate_only": true,
+  "conditioned_on_human_3d_labels": true,
+  "comparison_is_independent_validation": false,
+  "human_pixel_truth": false,
+  "approved_for_training": false,
+  "human_truth_writes": 0,
+  "training_data_writes": 0,
+  "workbench_writes": 0,
+  "oss_writes": 0,
+  "production_deployed": false,
+  "readback_verified": true
+}

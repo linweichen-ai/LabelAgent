@@ -49,8 +49,9 @@ def opportunity():
     rows = [{
         "sequence": "010", "frame_id": "105", "primary_camera": 1,
         "target_obj_id": str(index),
-        "evidence_status":
-            "label_conditioned_temporal_local_point_prompt_opportunity",
+        "evidence_status": (
+            "label_conditioned_temporal_local_point_prompt_opportunity"
+            if index < 3 else "insufficient"),
     } for index in range(7)]
     return {
         "schema_version": "labelagent.pallet_temporal_local_point_opportunities.v1",
@@ -62,7 +63,8 @@ def opportunity():
         "input_sha256": {"frozen": "hash"},
         "tool_sha256": digest(Path(temporal_local.__file__)),
         "overlap_report_sha256": "overlap-hash",
-        "opportunity_count": 7, "rows": rows,
+        "unresolved_target_count": 7, "opportunity_count": 3,
+        "insufficient_count": 4, "rows": rows,
     }
 
 
@@ -102,14 +104,27 @@ class TemporalLocalPointSamTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "loopback"):
                 validate_loopback_sam_url(value)
 
-    def test_only_exactly_seven_opportunity_rows_are_selected(self):
+    def test_only_opportunities_from_complete_report_are_selected(self):
         selected = validate_reports(opportunity(), overlap(), baseline())
-        self.assertEqual(len(selected), 7)
+        self.assertEqual(len(selected), 3)
         changed = opportunity(); changed["rows"][0]["target_obj_id"] = "unknown"
         with self.assertRaisesRegex(ValueError, "not unresolved"):
             validate_reports(changed, overlap(), baseline())
         changed = opportunity(); changed["rows"].pop()
-        with self.assertRaisesRegex(ValueError, "exactly seven"):
+        with self.assertRaisesRegex(ValueError, "incomplete or inconsistent"):
+            validate_reports(changed, overlap(), baseline())
+        subset = opportunity(); subset["rows"] = subset["rows"][:1]
+        subset["opportunity_count"] = 1
+        subset["insufficient_count"] = 0
+        with self.assertRaisesRegex(ValueError, "incomplete or inconsistent"):
+            validate_reports(subset, overlap(), baseline())
+
+    def test_missing_or_mislabeled_unresolved_row_fails_closed(self):
+        changed = opportunity(); changed["rows"][-1]["target_obj_id"] = "0"
+        with self.assertRaisesRegex(ValueError, "duplicate"):
+            validate_reports(changed, overlap(), baseline())
+        changed = opportunity(); changed["rows"][-1]["evidence_status"] = "unknown"
+        with self.assertRaisesRegex(ValueError, "incomplete or inconsistent"):
             validate_reports(changed, overlap(), baseline())
 
     def test_temporal_pixels_are_recomputed_from_bound_frames(self):

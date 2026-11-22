@@ -126,6 +126,23 @@ class TemporalLocalPointOpportunitiesTest(unittest.TestCase):
         self.assertEqual(result["evidence_status"], "insufficient")
         self.assertEqual(result["shared_across_grids_unique_pixel_count"], 1)
 
+    def test_nearer_center_scene_return_suppresses_temporal_point(self):
+        frames = frames_for()
+
+        def projected(points, camera, cell, slack):
+            # The merged array begins with the three center-scene points.
+            # Only those nearer scene returns survive; temporal aggregate
+            # indices are deliberately absent.
+            return np.arange(3, dtype=np.int64), np.array(
+                [[10, 10], [20, 20], [30, 30]], dtype=np.int32)
+
+        with patch(
+                "tools.evaluate_pallet_temporal_local_point_opportunities.project_visible",
+                side_effect=projected):
+            result = analyze_target(frames, "105", {}, "target")
+        self.assertEqual(result["shared_across_grids_unique_voxel_index_count"], 0)
+        self.assertEqual(result["evidence_status"], "insufficient")
+
     def test_one_noncenter_contributing_frame_is_insufficient(self):
         frames = frames_for()
         center_points = np.array([[-1.5, 0, 5], [0, 0, 5], [1.5, 0, 5]],

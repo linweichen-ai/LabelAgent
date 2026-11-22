@@ -197,6 +197,7 @@ def analyze_target(frames: list[dict], center_frame_id: str, camera: dict,
             or minimum_points < 1):
         raise ValueError("invalid temporal multigrid parameters")
     center_target = select_target_object(center_rows[0]["objects"], target_obj_id)
+    center_scene_points = center_rows[0]["points"]
     mapped_parts, frame_rows = [], []
     for frame_index, row in enumerate(frames):
         mapped, metrics = remap_exclusive_target_points(
@@ -220,11 +221,20 @@ def analyze_target(frames: list[dict], center_frame_id: str, camera: dict,
                         if row["frame_id"] == center_frame_id)
     grid_rows, cohorts, pixel_maps = [], [], []
     for cell_size, depth_slack in grids:
+        raw_offset = len(center_scene_points)
         raw_source, raw_pixels = project_visible(
-            raw_aggregate, camera, int(cell_size), float(depth_slack))
+            np.concatenate((center_scene_points, raw_aggregate), axis=0),
+            camera, int(cell_size), float(depth_slack))
+        raw_keep = np.asarray(raw_source) >= raw_offset
+        raw_source = np.asarray(raw_source, dtype=np.int64)[raw_keep] - raw_offset
+        raw_pixels = np.asarray(raw_pixels)[raw_keep]
+        offset = len(center_scene_points)
         source, pixels = project_visible(
-            aggregate, camera, int(cell_size), float(depth_slack))
-        source = np.asarray(source, dtype=np.int64)
+            np.concatenate((center_scene_points, aggregate), axis=0),
+            camera, int(cell_size), float(depth_slack))
+        keep = np.asarray(source) >= offset
+        source = np.asarray(source, dtype=np.int64)[keep] - offset
+        pixels = np.asarray(pixels)[keep]
         order = np.argsort(source)
         source, pixels = source[order], np.asarray(pixels)[order]
         cohorts.append(source)
@@ -357,6 +367,9 @@ def evaluate(overlap_report: Path, window_root: Path, calibration: Path,
         "voxel_definition": (
             "floor(center_global_xyz/0.02m), lexicographic voxel-key order, "
             "arithmetic-centroid representative; gate uses unique voxels only"),
+        "visibility_occlusion_reference": (
+            "each temporal aggregate is projected together with the complete "
+            "center-frame scene PCD; a nearer center-scene return can suppress it"),
         "visibility_grids": [
             {"cell_size_pixels": cell, "depth_slack_m": slack}
             for cell, slack in VISIBILITY_GRIDS],

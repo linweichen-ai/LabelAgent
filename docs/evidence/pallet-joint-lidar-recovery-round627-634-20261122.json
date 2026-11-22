@@ -1,0 +1,66 @@
+{
+  "schema_version": "labelagent.pallet_joint_lidar_recovery_evidence.v1",
+  "date": "2026-11-22",
+  "status": "offline_candidate_partial_success_not_deployed",
+  "independent_sequence": "005",
+  "frame_id": "1789899490482491367",
+  "camera": 1,
+  "component_instance_count": 9,
+  "overlap_edge_count": 12,
+  "joint_recovered_group_count": 1,
+  "joint_group_count": 1,
+  "all_instances_candidate_pass": true,
+  "all_overlap_edges_separated": true,
+  "deterministic_repeat": true,
+  "new_clean_review_candidates": [109, 110],
+  "structural_alert_candidates": [102, 107],
+  "continued_suppression": [107],
+  "candidate_metrics": {
+    "102": {
+      "pixels": 44,
+      "component_count": 1,
+      "hole_count": 0,
+      "perimeter_area_ratio": 0.818182,
+      "alerts": ["high_boundary_complexity"],
+      "sha256": "b92243578c2a7b202f3be0d27125273e0cdfb8874f2d7937de00bc994811b869"
+    },
+    "107": {
+      "pixels": 54,
+      "component_count": 2,
+      "hole_count": 0,
+      "perimeter_area_ratio": 1.185185,
+      "alerts": ["fragmented_components", "high_boundary_complexity"],
+      "sha256": "4880867651f42a2ca1bda0abb19947d087dde5d1ef22931f88e8c2fd3434d906"
+    },
+    "109": {
+      "pixels": 61,
+      "component_count": 1,
+      "hole_count": 0,
+      "perimeter_area_ratio": 0.622951,
+      "alerts": [],
+      "sha256": "63043f5f720adab4cd40ce6723318e7d812e9277be0743b518ecbf5f4f05b042"
+    },
+    "110": {
+      "pixels": 52,
+      "component_count": 1,
+      "hole_count": 0,
+      "perimeter_area_ratio": 0.730769,
+      "alerts": [],
+      "sha256": "7e05795832a5e12b63f5599372b15ca12cef1630610885ef6efd3d3d71e937b8"
+    }
+  },
+  "artifact_sha256": {
+    "raw_receipt_report": "799e34c7f5e1321c34f3cbe2fb5387afdbbe83d69164e17e5c90f9414a2365f1",
+    "joint_structure_report": "b72bc2a0f87f12eb95070e59d3cf587fd39fe9355eb61c415966f7c152c4a6d1",
+    "joint_structure_repeat_report": "46119367cd0f4ea0807e683e68d51169549f492c6f31a90ed2bde2fe335ed047"
+  },
+  "human_truth_writes": 0,
+  "training_data_writes": 0,
+  "workbench_writes": 0,
+  "formal_workbench_deployed": false,
+  "limitations": [
+    "single_difficult_joint_component",
+    "no_independent_human_pixel_truth",
+    "obj107_remains_structurally_rejected"
+  ]
+}

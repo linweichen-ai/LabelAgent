@@ -250,7 +250,10 @@ def evaluate(split_report_path: Path, manifest_path: Path, pcd_manifest_path: Pa
                     split_metrics, separations)
                 # Keep Windows artifact paths below legacy MAX_PATH; the full
                 # policy name remains in the JSON receipt.
-                mask_path = masks_dir / f"f{frame[-8:]}-c{camera_number}-o{target_id}-p{index}.png"
+                stem = f"f{frame[-8:]}-c{camera_number}-o{target_id}-p{index}"
+                raw_mask_path = masks_dir / f"{stem}-raw.png"
+                Image.fromarray(proposal.astype(np.uint8) * 255).save(raw_mask_path)
+                mask_path = masks_dir / f"{stem}.png"
                 Image.fromarray(split_masks[target["obj_id"]].astype(np.uint8) * 255).save(mask_path)
                 attempt = {
                     "policy": policy, "sam_score": value.get("score"),
@@ -263,6 +266,8 @@ def evaluate(split_report_path: Path, manifest_path: Path, pcd_manifest_path: Pa
                     "split_target_pixels": next(
                         row["split_pixels"] for row in split_metrics
                         if str(row["obj_id"]) == target_id),
+                    "raw_mask_path": str(raw_mask_path.resolve()),
+                    "raw_mask_sha256": digest(raw_mask_path),
                     "accepted": accepted, "mask_path": str(mask_path.resolve()),
                     "mask_sha256": digest(mask_path),
                 }

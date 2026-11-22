@@ -108,14 +108,14 @@ def compare(coco, baseline_rows, candidate_rows):
         base_metrics = mask_metrics(base_union, target_union)
         candidate_metrics = mask_metrics(candidate_union, target_union)
         invalid = {
-            "baseline_empty": sum(not _decode_rle(row["segmentation"]).any()
-                                  for row in base_selected),
-            "candidate_empty": sum(not _decode_rle(row["segmentation"]).any()
-                                   for row in candidate_selected),
-            "baseline_full": sum(_decode_rle(row["segmentation"]).mean() > .95
-                                 for row in base_selected),
-            "candidate_full": sum(_decode_rle(row["segmentation"]).mean() > .95
-                                  for row in candidate_selected),
+            "baseline_empty": int(sum(not _decode_rle(row["segmentation"]).any()
+                                      for row in base_selected)),
+            "candidate_empty": int(sum(not _decode_rle(row["segmentation"]).any()
+                                       for row in candidate_selected)),
+            "baseline_full": int(sum(_decode_rle(row["segmentation"]).mean() > .95
+                                     for row in base_selected)),
+            "candidate_full": int(sum(_decode_rle(row["segmentation"]).mean() > .95
+                                      for row in candidate_selected)),
         }
         catastrophic = bool(
             invalid["candidate_empty"] or invalid["candidate_full"]

@@ -250,16 +250,29 @@ def run(output: Path, *, screenshot: bool = False) -> dict:
 
 def cli() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, required=True, help="new output directory")
+    destination = parser.add_mutually_exclusive_group(required=True)
+    destination.add_argument("--output", type=Path, help="new persistent output directory")
+    destination.add_argument(
+        "--ephemeral", action="store_true", help="run in a guarded temporary directory and retain no files"
+    )
     parser.add_argument("--screenshot", action="store_true", help="save a synthetic-only screenshot")
     args = parser.parse_args()
-    try:
-        receipt = run(args.output, screenshot=args.screenshot)
-    except Exception as exc:
-        with suppress(Exception):
-            if args.output.exists() and not any(args.output.iterdir()):
-                args.output.rmdir()
-        parser.error(str(exc))
+    if args.ephemeral:
+        temp_parent = ROOT / ".repro" / "test-temp"
+        temp_parent.mkdir(parents=True, exist_ok=True)
+        try:
+            with tempfile.TemporaryDirectory(prefix="synthetic-signoff-browser-", dir=temp_parent) as temp_name:
+                receipt = run(Path(temp_name) / "result", screenshot=False)
+        except Exception as exc:
+            parser.error(str(exc))
+    else:
+        try:
+            receipt = run(args.output, screenshot=args.screenshot)
+        except Exception as exc:
+            with suppress(Exception):
+                if args.output.exists() and not any(args.output.iterdir()):
+                    args.output.rmdir()
+            parser.error(str(exc))
     print(json.dumps(receipt, ensure_ascii=False, separators=(",", ":")))
     return 0
 

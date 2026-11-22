@@ -8,6 +8,7 @@ param(
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 $Python = Join-Path $Root ".venv\Scripts\python.exe"
+$VenvScripts = Split-Path -Parent $Python
 $TestTemp = Join-Path $Root ".repro\test-temp"
 Set-Location $Root
 
@@ -16,6 +17,7 @@ New-Item -ItemType Directory -Force -Path $TestTemp | Out-Null
 $env:TEMP = $TestTemp
 $env:TMP = $TestTemp
 $env:PYTHONUTF8 = "1"
+$env:PATH = $VenvScripts + [IO.Path]::PathSeparator + $env:PATH
 $free = (Get-Item $TestTemp).PSDrive.Free
 if ($free -lt 512MB) {
     throw "At least 512 MiB free space is required for isolated regression tests: $TestTemp"
@@ -41,8 +43,12 @@ if (-not $SkipWebTests) {
     }
     & node --test tests\test_review_packet_core.js tests\test_web_candidate_audit.js `
         tests\test_web_polling.js tests\test_browser_main_run_acceptance.cjs `
-        tests\test_candidate_audit_web.cjs
+        tests\test_candidate_audit_web.cjs tests\test_browser_cvat_human_signoff_draft_acceptance.cjs `
+        tests\test_cvat_human_signoff_drafts.js
     if ($LASTEXITCODE -ne 0) { throw "Browser logic tests failed" }
+
+    & $Python tools\verify_synthetic_signoff_browser.py --ephemeral
+    if ($LASTEXITCODE -ne 0) { throw "Synthetic offline signoff browser acceptance failed" }
 }
 
 Write-Host "LabelAgent checkout verification passed."

@@ -3883,3 +3883,12 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
   错误0、耗时2.265秒，训练授权/自动批准/批准训练均为false，真实人工决定写入0。
 - 首页和复现指南已加入入口；公开截图只含`synthetic-*`和占位图。详见
   `docs/PUBLIC_SYNTHETIC_SIGNOFF_REPRO_ROUND518_20261122.md`。
+
+## 2026-11-22 Round519 补充：标准一键验收纳入真实浏览器门禁
+
+- Windows安装脚本现默认在项目venv安装浏览器QA依赖；标准验收统一子进程Python环境，并
+  自动运行草稿逻辑门禁和公开合成真实浏览器自检。临时模式结束后残留目录0。
+- 集成过程先后暴露Node误用系统Python、负例依赖TEMP位置两项问题，均已修复并保留失败记录。
+- 最终不带跳过参数的`verify_checkout.ps1`通过：Python共1499项（1498通过、1项按设计跳过）、网页
+  172/172、真实浏览器外部请求0/页面错误0；授权标志仍全false。详见
+  `docs/STANDARD_CHECKOUT_BROWSER_GATE_ROUND519_20261122.md`。

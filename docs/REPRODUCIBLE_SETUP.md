@@ -91,7 +91,7 @@ powershell -ExecutionPolicy Bypass -File tools\stop_local.ps1
 powershell -ExecutionPolicy Bypass -File tools\verify_checkout.ps1 -RequireCuda -RequireWeight
 ```
 
-该命令执行依赖一致性检查、Python 回归和浏览器逻辑测试。若机器没有 Node.js，可明确使用 `-SkipWebTests`，但报告中必须写明网页测试未执行。
+该命令执行依赖一致性检查、Python 回归、浏览器逻辑测试，以及无需私有数据的真实 Edge 浏览器自检。若机器没有 Node.js 或无法运行浏览器验收，可明确使用 `-SkipWebTests`，但报告中必须写明网页逻辑和真实浏览器自检均未执行。
 脚本强制使用 UTF-8，并把测试临时文件隔离在 `.repro/test-temp`；可用空间不足 512 MiB 时会在测试前停止，而不是产生误导性的业务失败。
 
 ### 服务读回
@@ -109,8 +109,9 @@ HTTP 200 只证明服务连通。完整验收还应在一张已授权图片上�
 
 这项自检不需要模型权重、MCAP、人工真值或账号凭证。它生成81项公开合成身份和1像素占位图，在真实 Edge 浏览器中验证：部分草稿下载、刷新后内存清空、草稿文件恢复、哈希篡改整包拒绝、81项完整前正式导出禁用，以及正式导出中的训练授权始终为否。
 
+`tools/setup_windows.ps1` 已默认安装固定版本的浏览器验收依赖。只有在本轮更新前已经创建过 `.venv` 且不重新执行安装脚本时，才需要手动补装 `tools/requirements-browser-qa.txt`。单独运行命令为：
+
 ```powershell
-.\.venv\Scripts\python.exe -m pip install -r tools\requirements-browser-qa.txt
 .\.venv\Scripts\python.exe tools\verify_synthetic_signoff_browser.py `
   --output .repro\synthetic-signoff-browser-check
 ```

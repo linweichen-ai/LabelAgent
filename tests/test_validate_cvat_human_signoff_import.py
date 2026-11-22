@@ -327,13 +327,14 @@ class HumanSignoffImportTests(unittest.TestCase):
                 validate(review, signoff)
 
     def test_private_output_outside_repro_is_rejected(self):
-        with tempfile.TemporaryDirectory() as directory:
+        repository_root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory(prefix="outside-repro-signoff-", dir=repository_root) as directory:
             root = Path(directory).resolve()
             with self.assertRaisesRegex(ValueError, "must stay under"):
                 _validate_output_paths(
                     root / "private.json",
                     root / "receipt.json",
-                    Path(__file__).resolve().parents[1],
+                    repository_root,
                 )
 
     def test_cli_error_hides_sensitive_input_path_and_traceback(self):

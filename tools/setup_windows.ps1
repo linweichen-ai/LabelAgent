@@ -34,6 +34,8 @@ if (-not $SkipTorch) {
 
 & $VenvPython -m pip install -r requirements.txt
 if ($LASTEXITCODE -ne 0) { throw "LabelAgent dependency installation failed" }
+& $VenvPython -m pip install -r tools\requirements-browser-qa.txt
+if ($LASTEXITCODE -ne 0) { throw "Browser acceptance dependency installation failed" }
 & $VenvPython -m pip install -e .\source\sam3
 if ($LASTEXITCODE -ne 0) { throw "SAM3 editable installation failed" }
 

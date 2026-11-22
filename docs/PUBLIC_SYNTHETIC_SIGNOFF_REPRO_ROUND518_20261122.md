@@ -35,7 +35,7 @@ Round517 已证明真实81项私有复核页可以顺畅导出、刷新、恢复
 ## 复现命令
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install -r tools\requirements-browser-qa.txt
+# setup_windows.ps1 已默认安装浏览器验收依赖
 .\.venv\Scripts\python.exe tools\verify_synthetic_signoff_browser.py `
   --output .repro\synthetic-signoff-browser-check --screenshot
 ```

@@ -1,0 +1,22 @@
+{
+  "schema_version": "labelagent.standard-checkout-browser-gate.v1",
+  "passed": true,
+  "command": "powershell -NoProfile -ExecutionPolicy Bypass -File tools\\verify_checkout.ps1",
+  "environment_check_passed": true,
+  "pip_check_passed": true,
+  "python_tests_run": 1499,
+  "python_tests_passed": 1498,
+  "python_tests_skipped": 1,
+  "web_logic_tests_run": 172,
+  "web_logic_tests_passed": 172,
+  "draft_attack_rejections": 39,
+  "synthetic_real_browser_passed": true,
+  "external_requests": 0,
+  "page_errors": [],
+  "ephemeral_directories_before": 0,
+  "ephemeral_directories_after": 0,
+  "training_authorized": false,
+  "automatic_approval": false,
+  "approved_for_training": false,
+  "real_human_decisions_written": 0
+}

@@ -1,0 +1,903 @@
+{
+  "schema_version": "labelagent.pallet_box3d_overlap_pairs.v1",
+  "status": "offline_instance_diagnostic_not_deployed",
+  "selection": "ambiguous",
+  "selected_source_row_count": 2,
+  "skipped_no_conflict_count": 0,
+  "source_report_sha256": "1cff452da73bb01d6441fe6b6920face307775559cd2336c7ff82b07bff405e8",
+  "ambiguous_image_count": 2,
+  "resolved_image_count": 0,
+  "unresolved_image_count": 2,
+  "depth_split_candidate_pass_count": 0,
+  "depth_or_occlusion_handled_candidate_count": 0,
+  "workbench_writes": 0,
+  "human_pixel_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "rows": [
+    {
+      "sequence": "002",
+      "frame_id": "1789898044249193197",
+      "camera": 3,
+      "target_obj_id": 26,
+      "conflict_count": 1,
+      "conflict_pair_count": 1,
+      "conflict_group_mode": "transitive_component",
+      "all_instances_localized": true,
+      "all_conflicts_separated": false,
+      "instances": [
+        {
+          "obj_id": 26,
+          "obj_attr": "empty",
+          "projected_center": [
+            440.0358643359042,
+            184.56624678593505
+          ],
+          "projected_bbox": [
+            407.77136149052444,
+            171.0811854026816,
+            472.002916081574,
+            201.2560274806492
+          ],
+          "selected_prompt": "generic",
+          "score": 0.6171875,
+          "metrics": {
+            "proposal_pixels": 383,
+            "projected_box_pixels": 1409,
+            "projected_box_coverage": 0.23846699787083037,
+            "proposal_inside_projected_box": 0.8772845953002611,
+            "proposal_to_projected_box_area_ratio": 0.2718239886444287,
+            "center_distance_pixels": 17.02461591662757,
+            "maximum_other_projected_box_fraction": 0.6109660574412533
+          },
+          "localization_pass": true,
+          "fallback": null,
+          "elapsed_seconds": 0.078,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\002-frame1789898044249193197-camera3-obj26.png",
+          "mask_sha256": "5cc7b5523a9b45324f5af36993b3a607554e04fb1f18da4ee578cceb1967a367"
+        },
+        {
+          "obj_id": 15,
+          "obj_attr": "empty",
+          "projected_center": [
+            438.55736497400744,
+            190.99340241967087
+          ],
+          "projected_bbox": [
+            406.8656958042359,
+            177.993945203474,
+            469.4893932225598,
+            207.10452885144088
+          ],
+          "selected_prompt": "wooden",
+          "score": 0.69140625,
+          "metrics": {
+            "proposal_pixels": 384,
+            "projected_box_pixels": 1280,
+            "projected_box_coverage": 0.184375,
+            "proposal_inside_projected_box": 0.6145833333333334,
+            "proposal_to_projected_box_area_ratio": 0.3,
+            "center_distance_pixels": 17.18796863882858,
+            "maximum_other_projected_box_fraction": 0.8828125
+          },
+          "localization_pass": true,
+          "fallback": null,
+          "elapsed_seconds": 0.359,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\002-frame1789898044249193197-camera3-obj15.png",
+          "mask_sha256": "61ed872206a59ab7eda1056f0e192bbf1f6b4f850b9a5dba9c96052cfacf80d6"
+        }
+      ],
+      "pairs": [
+        {
+          "target_obj_id": 26,
+          "other_obj_id": 15,
+          "pair_scope": "transitive_component_edge",
+          "projected_target_overlap": 0.6366217175301633,
+          "projected_other_overlap": 0.70078125,
+          "intersection_pixels": 381,
+          "iou": 0.9870466321243523,
+          "intersection_over_smaller": 0.9947780678851175,
+          "separated_at_0_15": false
+        }
+      ],
+      "visual_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\visuals\\002-frame1789898044249193197-camera3.png",
+      "visual_sha256": "ae6395446b78aa9540b1eebfe992845e12aabe38e3b4e4f38815f54876458350",
+      "depth_split_candidate_pass": false,
+      "depth_or_occlusion_handled_candidate": false,
+      "depth_split_metrics": [
+        {
+          "obj_id": 26,
+          "camera_depth": 5.796440650643828,
+          "split_pixels": 336,
+          "projected_box_coverage": 0.23846699787083037,
+          "source_mask_retention": 0.8772845953002611,
+          "removed_island_count": 0,
+          "removed_island_pixels": 0,
+          "maximum_nearer_projected_box_overlap": 0.0,
+          "candidate_pass": true,
+          "occluded_unobservable_candidate": false,
+          "handled_candidate": true
+        },
+        {
+          "obj_id": 15,
+          "camera_depth": 5.872912869739986,
+          "split_pixels": 27,
+          "projected_box_coverage": 0.02109375,
+          "source_mask_retention": 0.0703125,
+          "removed_island_count": 2,
+          "removed_island_pixels": 2,
+          "maximum_nearer_projected_box_overlap": 0.70078125,
+          "candidate_pass": false,
+          "occluded_unobservable_candidate": false,
+          "handled_candidate": false
+        }
+      ],
+      "depth_split_masks": {
+        "26": {
+          "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\002-frame1789898044249193197-camera3-obj26-depth-split.png",
+          "sha256": "4654b8fc03a10a77ad45fb31104bfdc7c6c5b354e4a3f25d54c95d01f6018754"
+        },
+        "15": {
+          "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\002-frame1789898044249193197-camera3-obj15-depth-split.png",
+          "sha256": "79fe03bdc04b6a6057b4c7427cd7dda4c4236b26e89586271e616e4990024dc1"
+        }
+      },
+      "depth_split_visual_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\visuals\\002-frame1789898044249193197-camera3-depth-split.png",
+      "depth_split_visual_sha256": "4c982062e65f12258d4221d8ba3a07af7acc867162320f8d4c39480949c70ef1"
+    },
+    {
+      "sequence": "005",
+      "frame_id": "1789899490482491367",
+      "camera": 1,
+      "target_obj_id": 99,
+      "conflict_count": 8,
+      "conflict_pair_count": 12,
+      "conflict_group_mode": "transitive_component",
+      "all_instances_localized": false,
+      "all_conflicts_separated": false,
+      "instances": [
+        {
+          "obj_id": 99,
+          "obj_attr": "empty",
+          "projected_center": [
+            194.6542447626612,
+            146.90549511120597
+          ],
+          "projected_bbox": [
+            145.7065648967798,
+            137.81686545038735,
+            233.68988265947337,
+            158.14647582523406
+          ],
+          "selected_prompt": "plastic",
+          "score": 0.921875,
+          "metrics": {
+            "proposal_pixels": 977,
+            "projected_box_pixels": 1399,
+            "projected_box_coverage": 0.6111508220157256,
+            "proposal_inside_projected_box": 0.8751279426816786,
+            "proposal_to_projected_box_area_ratio": 0.6983559685489635,
+            "center_distance_pixels": 0.3584380813378895,
+            "maximum_other_projected_box_fraction": 0.35516888433981575
+          },
+          "localization_pass": true,
+          "fallback": null,
+          "elapsed_seconds": 0.031,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\005-frame1789899490482491367-camera1-obj99.png",
+          "mask_sha256": "9631697847d09dbd15d6dd4b3716cd2a573303ceb2962da38e12d3ef5dcbd71d"
+        },
+        {
+          "obj_id": 98,
+          "obj_attr": "loaded",
+          "projected_center": [
+            206.4799090515402,
+            182.13401805977975
+          ],
+          "projected_bbox": [
+            157.23663515042762,
+            168.98524185096107,
+            244.46736311520837,
+            198.99999127371996
+          ],
+          "selected_prompt": "generic",
+          "score": 0.53515625,
+          "metrics": {
+            "proposal_pixels": 2604,
+            "projected_box_pixels": 1833,
+            "projected_box_coverage": 0.7659574468085106,
+            "proposal_inside_projected_box": 0.5391705069124424,
+            "proposal_to_projected_box_area_ratio": 1.420621931260229,
+            "center_distance_pixels": 0.49827054708997864,
+            "maximum_other_projected_box_fraction": 0.20852534562211983
+          },
+          "localization_pass": true,
+          "fallback": null,
+          "elapsed_seconds": 0.375,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\005-frame1789899490482491367-camera1-obj98.png",
+          "mask_sha256": "a4bbce18f9a39e9ca660d5a40fe56a27809bc82a4253b2c65d4ba7034b1cea8c"
+        },
+        {
+          "obj_id": 100,
+          "obj_attr": "empty",
+          "projected_center": [
+            227.58817447922738,
+            136.40863698948976
+          ],
+          "projected_bbox": [
+            194.6466952161346,
+            129.06076149669568,
+            255.36297940797488,
+            144.96630072871938
+          ],
+          "selected_prompt": "wooden",
+          "score": 0.69921875,
+          "metrics": {
+            "proposal_pixels": 991,
+            "projected_box_pixels": 866,
+            "projected_box_coverage": 0.5346420323325635,
+            "proposal_inside_projected_box": 0.467204843592331,
+            "proposal_to_projected_box_area_ratio": 1.1443418013856812,
+            "center_distance_pixels": 0.5801589857434774,
+            "maximum_other_projected_box_fraction": 0.3693239152371342
+          },
+          "localization_pass": true,
+          "fallback": null,
+          "elapsed_seconds": 0.375,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\005-frame1789899490482491367-camera1-obj100.png",
+          "mask_sha256": "8ee2b477fa9d32d67694459312667b7999a48560c4364a16c7e19afd2590b399"
+        },
+        {
+          "obj_id": 101,
+          "obj_attr": "empty",
+          "projected_center": [
+            227.96148220479589,
+            143.55559118906854
+          ],
+          "projected_bbox": [
+            195.974479289486,
+            137.11282274278608,
+            255.14103592082807,
+            151.07982746242388
+          ],
+          "selected_prompt": "generic",
+          "score": 0.578125,
+          "metrics": {
+            "proposal_pixels": 988,
+            "projected_box_pixels": 696,
+            "projected_box_coverage": 0.5244252873563219,
+            "proposal_inside_projected_box": 0.3694331983805668,
+            "proposal_to_projected_box_area_ratio": 1.4195402298850575,
+            "center_distance_pixels": 1.5560679831084019,
+            "maximum_other_projected_box_fraction": 0.4574898785425101
+          },
+          "localization_pass": true,
+          "fallback": null,
+          "elapsed_seconds": 0.359,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\005-frame1789899490482491367-camera1-obj101.png",
+          "mask_sha256": "52255a74e2e17e595297a7654860ed218c6cb486f79ec02f95c283e8fc789580"
+        },
+        {
+          "obj_id": 102,
+          "obj_attr": "empty",
+          "projected_center": [
+            229.05434620524906,
+            148.60348897381624
+          ],
+          "projected_bbox": [
+            197.5675012750251,
+            141.86680047546236,
+            255.85953569961993,
+            156.45652796923275
+          ],
+          "selected_prompt": "plastic",
+          "score": 0.921875,
+          "metrics": {
+            "proposal_pixels": 983,
+            "projected_box_pixels": 715,
+            "projected_box_coverage": 0.48391608391608393,
+            "proposal_inside_projected_box": 0.35198372329603256,
+            "proposal_to_projected_box_area_ratio": 1.3748251748251747,
+            "center_distance_pixels": 0.4002180704444404,
+            "maximum_other_projected_box_fraction": 0.8748728382502543
+          },
+          "localization_pass": true,
+          "fallback": null,
+          "elapsed_seconds": 0.344,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\005-frame1789899490482491367-camera1-obj102.png",
+          "mask_sha256": "03172411d51820cefdad68a30dfcf428c6e989e2ce65b15e2b4c96c898479911"
+        },
+        {
+          "obj_id": 107,
+          "obj_attr": "empty",
+          "projected_center": [
+            230.34338918481194,
+            154.2098416036613
+          ],
+          "projected_bbox": [
+            199.40693948809638,
+            147.16188728762634,
+            256.7349272992539,
+            162.40958526330178
+          ],
+          "selected_prompt": "plastic",
+          "score": 0.90234375,
+          "metrics": {
+            "proposal_pixels": 981,
+            "projected_box_pixels": 739,
+            "projected_box_coverage": 0.3152909336941813,
+            "proposal_inside_projected_box": 0.23751274209989806,
+            "proposal_to_projected_box_area_ratio": 1.327469553450609,
+            "center_distance_pixels": 3.4796232012194315,
+            "maximum_other_projected_box_fraction": 0.8746177370030581
+          },
+          "localization_pass": false,
+          "fallback": {
+            "attempts": [
+              {
+                "policy": "center_only",
+                "score": 0.287109375,
+                "metrics": {
+                  "proposal_pixels": 2617,
+                  "projected_box_pixels": 739,
+                  "projected_box_coverage": 0.39377537212449254,
+                  "proposal_inside_projected_box": 0.11119602598395109,
+                  "proposal_to_projected_box_area_ratio": 3.54127198917456,
+                  "center_distance_pixels": 0.4024296595343716,
+                  "maximum_other_projected_box_fraction": 0.5257928926251433
+                },
+                "localization_pass": false
+              },
+              {
+                "policy": "crop_corners",
+                "score": 0.2431640625,
+                "metrics": {
+                  "proposal_pixels": 2258,
+                  "projected_box_pixels": 739,
+                  "projected_box_coverage": 0.30581867388362655,
+                  "proposal_inside_projected_box": 0.10008857395925598,
+                  "proposal_to_projected_box_area_ratio": 3.0554803788903926,
+                  "center_distance_pixels": 0.4024296595343716,
+                  "maximum_other_projected_box_fraction": 0.5234720992028343
+                },
+                "localization_pass": false
+              },
+              {
+                "policy": "box_ring",
+                "score": 0.37890625,
+                "metrics": {
+                  "proposal_pixels": 32,
+                  "projected_box_pixels": 739,
+                  "projected_box_coverage": 0.04330175913396482,
+                  "proposal_inside_projected_box": 1.0,
+                  "proposal_to_projected_box_area_ratio": 0.04330175913396482,
+                  "center_distance_pixels": 0.4024296595343716,
+                  "maximum_other_projected_box_fraction": 1.0
+                },
+                "localization_pass": false
+              }
+            ],
+            "selected": "plastic"
+          },
+          "elapsed_seconds": 0.469,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\005-frame1789899490482491367-camera1-obj107.png",
+          "mask_sha256": "5e2db1d19a3ca1109ed27f0b4630e0b04152528650bea7c4304332857e460688"
+        },
+        {
+          "obj_id": 108,
+          "obj_attr": "empty",
+          "projected_center": [
+            231.35374959451246,
+            158.87225500966335
+          ],
+          "projected_bbox": [
+            200.91122707639795,
+            151.6570697522519,
+            257.3800856018597,
+            167.25468801720194
+          ],
+          "selected_prompt": "point_center_only",
+          "score": 0.75,
+          "metrics": {
+            "proposal_pixels": 325,
+            "projected_box_pixels": 735,
+            "projected_box_coverage": 0.2054421768707483,
+            "proposal_inside_projected_box": 0.4646153846153846,
+            "proposal_to_projected_box_area_ratio": 0.4421768707482993,
+            "center_distance_pixels": 0.37610843938130983,
+            "maximum_other_projected_box_fraction": 0.6923076923076923
+          },
+          "localization_pass": true,
+          "fallback": {
+            "attempts": [
+              {
+                "policy": "center_only",
+                "score": 0.75,
+                "metrics": {
+                  "proposal_pixels": 325,
+                  "projected_box_pixels": 735,
+                  "projected_box_coverage": 0.2054421768707483,
+                  "proposal_inside_projected_box": 0.4646153846153846,
+                  "proposal_to_projected_box_area_ratio": 0.4421768707482993,
+                  "center_distance_pixels": 0.37610843938130983,
+                  "maximum_other_projected_box_fraction": 0.6923076923076923
+                },
+                "localization_pass": true
+              },
+              {
+                "policy": "crop_corners",
+                "score": 0.435546875,
+                "metrics": {
+                  "proposal_pixels": 2222,
+                  "projected_box_pixels": 735,
+                  "projected_box_coverage": 0.49115646258503404,
+                  "proposal_inside_projected_box": 0.16246624662466247,
+                  "proposal_to_projected_box_area_ratio": 3.0231292517006803,
+                  "center_distance_pixels": 0.37610843938130983,
+                  "maximum_other_projected_box_fraction": 0.5553555355535553
+                },
+                "localization_pass": false
+              },
+              {
+                "policy": "box_ring",
+                "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+              }
+            ],
+            "selected": "point_center_only"
+          },
+          "elapsed_seconds": 0.547,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\005-frame1789899490482491367-camera1-obj108.png",
+          "mask_sha256": "91686184343fd6bcde6c6ad8753fb4342ead9fd3813bb424be61fe8ae1b17c95"
+        },
+        {
+          "obj_id": 109,
+          "obj_attr": "empty",
+          "projected_center": [
+            231.65236559017694,
+            163.5809468882416
+          ],
+          "projected_bbox": [
+            201.4961472783545,
+            156.08092671069883,
+            257.4651160171162,
+            172.2833005547455
+          ],
+          "selected_prompt": "point_box_ring",
+          "score": 0.58984375,
+          "metrics": {
+            "proposal_pixels": 255,
+            "projected_box_pixels": 752,
+            "projected_box_coverage": 0.2393617021276596,
+            "proposal_inside_projected_box": 0.7058823529411765,
+            "proposal_to_projected_box_area_ratio": 0.3390957446808511,
+            "center_distance_pixels": 0.5444769906684888,
+            "maximum_other_projected_box_fraction": 0.7568627450980392
+          },
+          "localization_pass": true,
+          "fallback": {
+            "attempts": [
+              {
+                "policy": "center_only",
+                "score": 0.498046875,
+                "metrics": {
+                  "proposal_pixels": 348,
+                  "projected_box_pixels": 752,
+                  "projected_box_coverage": 0.2925531914893617,
+                  "proposal_inside_projected_box": 0.632183908045977,
+                  "proposal_to_projected_box_area_ratio": 0.4627659574468085,
+                  "center_distance_pixels": 0.5444769906684888,
+                  "maximum_other_projected_box_fraction": 0.6839080459770115
+                },
+                "localization_pass": true
+              },
+              {
+                "policy": "crop_corners",
+                "score": 0.478515625,
+                "metrics": {
+                  "proposal_pixels": 2230,
+                  "projected_box_pixels": 752,
+                  "projected_box_coverage": 0.6183510638297872,
+                  "proposal_inside_projected_box": 0.2085201793721973,
+                  "proposal_to_projected_box_area_ratio": 2.9654255319148937,
+                  "center_distance_pixels": 0.5444769906684888,
+                  "maximum_other_projected_box_fraction": 0.57847533632287
+                },
+                "localization_pass": false
+              },
+              {
+                "policy": "box_ring",
+                "score": 0.58984375,
+                "metrics": {
+                  "proposal_pixels": 255,
+                  "projected_box_pixels": 752,
+                  "projected_box_coverage": 0.2393617021276596,
+                  "proposal_inside_projected_box": 0.7058823529411765,
+                  "proposal_to_projected_box_area_ratio": 0.3390957446808511,
+                  "center_distance_pixels": 0.5444769906684888,
+                  "maximum_other_projected_box_fraction": 0.7568627450980392
+                },
+                "localization_pass": true
+              }
+            ],
+            "selected": "point_box_ring"
+          },
+          "elapsed_seconds": 0.484,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\005-frame1789899490482491367-camera1-obj109.png",
+          "mask_sha256": "d4339fb4968f0f4d8d1b66cb88d58b0f21a338cd5fe85cd6e8f236356596d457"
+        },
+        {
+          "obj_id": 110,
+          "obj_attr": "empty",
+          "projected_center": [
+            232.78329086318496,
+            167.26055251883537
+          ],
+          "projected_bbox": [
+            203.14013874597057,
+            159.9691276872689,
+            258.23549958770025,
+            175.72257838401748
+          ],
+          "selected_prompt": "point_box_ring",
+          "score": 0.734375,
+          "metrics": {
+            "proposal_pixels": 250,
+            "projected_box_pixels": 704,
+            "projected_box_coverage": 0.2741477272727273,
+            "proposal_inside_projected_box": 0.772,
+            "proposal_to_projected_box_area_ratio": 0.35511363636363635,
+            "center_distance_pixels": 0.33889595018320146,
+            "maximum_other_projected_box_fraction": 0.7
+          },
+          "localization_pass": true,
+          "fallback": {
+            "attempts": [
+              {
+                "policy": "center_only",
+                "score": 0.71875,
+                "metrics": {
+                  "proposal_pixels": 362,
+                  "projected_box_pixels": 704,
+                  "projected_box_coverage": 0.3352272727272727,
+                  "proposal_inside_projected_box": 0.6519337016574586,
+                  "proposal_to_projected_box_area_ratio": 0.5142045454545454,
+                  "center_distance_pixels": 0.33889595018320146,
+                  "maximum_other_projected_box_fraction": 0.6132596685082873
+                },
+                "localization_pass": true
+              },
+              {
+                "policy": "crop_corners",
+                "score": 0.53515625,
+                "metrics": {
+                  "proposal_pixels": 2228,
+                  "projected_box_pixels": 704,
+                  "projected_box_coverage": 0.6534090909090909,
+                  "proposal_inside_projected_box": 0.20646319569120286,
+                  "proposal_to_projected_box_area_ratio": 3.164772727272727,
+                  "center_distance_pixels": 0.33889595018320146,
+                  "maximum_other_projected_box_fraction": 0.5798922800718133
+                },
+                "localization_pass": false
+              },
+              {
+                "policy": "box_ring",
+                "score": 0.734375,
+                "metrics": {
+                  "proposal_pixels": 250,
+                  "projected_box_pixels": 704,
+                  "projected_box_coverage": 0.2741477272727273,
+                  "proposal_inside_projected_box": 0.772,
+                  "proposal_to_projected_box_area_ratio": 0.35511363636363635,
+                  "center_distance_pixels": 0.33889595018320146,
+                  "maximum_other_projected_box_fraction": 0.7
+                },
+                "localization_pass": true
+              }
+            ],
+            "selected": "point_box_ring"
+          },
+          "elapsed_seconds": 0.5,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\005-frame1789899490482491367-camera1-obj110.png",
+          "mask_sha256": "8f7e38744c1c3ed6b2ce12e14532cda5d3ab130d197d23066bd7ba600cb65a14"
+        }
+      ],
+      "pairs": [
+        {
+          "target_obj_id": 99,
+          "other_obj_id": 100,
+          "pair_scope": "transitive_component_edge",
+          "projected_target_overlap": 0.18441744102930666,
+          "projected_other_overlap": 0.2979214780600462,
+          "intersection_pixels": 0,
+          "iou": 0.0,
+          "intersection_over_smaller": 0.0,
+          "separated_at_0_15": true
+        },
+        {
+          "target_obj_id": 99,
+          "other_obj_id": 101,
+          "pair_scope": "transitive_component_edge",
+          "projected_target_overlap": 0.27376697641172265,
+          "projected_other_overlap": 0.5502873563218391,
+          "intersection_pixels": 0,
+          "iou": 0.0,
+          "intersection_over_smaller": 0.0,
+          "separated_at_0_15": true
+        },
+        {
+          "target_obj_id": 99,
+          "other_obj_id": 102,
+          "pair_scope": "transitive_component_edge",
+          "projected_target_overlap": 0.23731236597569694,
+          "projected_other_overlap": 0.4643356643356643,
+          "intersection_pixels": 970,
+          "iou": 0.9797979797979798,
+          "intersection_over_smaller": 0.9928352098259979,
+          "separated_at_0_15": false
+        },
+        {
+          "target_obj_id": 98,
+          "other_obj_id": 110,
+          "pair_scope": "transitive_component_edge",
+          "projected_target_overlap": 0.15493726132024005,
+          "projected_other_overlap": 0.4034090909090909,
+          "intersection_pixels": 250,
+          "iou": 0.09600614439324116,
+          "intersection_over_smaller": 1.0,
+          "separated_at_0_15": false
+        },
+        {
+          "target_obj_id": 100,
+          "other_obj_id": 101,
+          "pair_scope": "transitive_component_edge",
+          "projected_target_overlap": 0.394919168591224,
+          "projected_other_overlap": 0.49137931034482757,
+          "intersection_pixels": 952,
+          "iou": 0.9269717624148004,
+          "intersection_over_smaller": 0.9635627530364372,
+          "separated_at_0_15": false
+        },
+        {
+          "target_obj_id": 101,
+          "other_obj_id": 102,
+          "pair_scope": "transitive_component_edge",
+          "projected_target_overlap": 0.5847701149425287,
+          "projected_other_overlap": 0.5692307692307692,
+          "intersection_pixels": 0,
+          "iou": 0.0,
+          "intersection_over_smaller": 0.0,
+          "separated_at_0_15": true
+        },
+        {
+          "target_obj_id": 102,
+          "other_obj_id": 107,
+          "pair_scope": "transitive_component_edge",
+          "projected_target_overlap": 0.5342657342657343,
+          "projected_other_overlap": 0.516914749661705,
+          "intersection_pixels": 973,
+          "iou": 0.9818365287588294,
+          "intersection_over_smaller": 0.9918450560652395,
+          "separated_at_0_15": false
+        },
+        {
+          "target_obj_id": 107,
+          "other_obj_id": 108,
+          "pair_scope": "transitive_component_edge",
+          "projected_target_overlap": 0.6170500676589986,
+          "projected_other_overlap": 0.6204081632653061,
+          "intersection_pixels": 0,
+          "iou": 0.0,
+          "intersection_over_smaller": 0.0,
+          "separated_at_0_15": true
+        },
+        {
+          "target_obj_id": 107,
+          "other_obj_id": 109,
+          "pair_scope": "transitive_component_edge",
+          "projected_target_overlap": 0.2976995940460081,
+          "projected_other_overlap": 0.2925531914893617,
+          "intersection_pixels": 0,
+          "iou": 0.0,
+          "intersection_over_smaller": 0.0,
+          "separated_at_0_15": true
+        },
+        {
+          "target_obj_id": 108,
+          "other_obj_id": 109,
+          "pair_scope": "transitive_component_edge",
+          "projected_target_overlap": 0.6517006802721088,
+          "projected_other_overlap": 0.636968085106383,
+          "intersection_pixels": 255,
+          "iou": 0.7846153846153846,
+          "intersection_over_smaller": 1.0,
+          "separated_at_0_15": false
+        },
+        {
+          "target_obj_id": 108,
+          "other_obj_id": 110,
+          "pair_scope": "transitive_component_edge",
+          "projected_target_overlap": 0.33877551020408164,
+          "projected_other_overlap": 0.3536931818181818,
+          "intersection_pixels": 250,
+          "iou": 0.7692307692307693,
+          "intersection_over_smaller": 1.0,
+          "separated_at_0_15": false
+        },
+        {
+          "target_obj_id": 109,
+          "other_obj_id": 110,
+          "pair_scope": "transitive_component_edge",
+          "projected_target_overlap": 0.6648936170212766,
+          "projected_other_overlap": 0.7102272727272727,
+          "intersection_pixels": 243,
+          "iou": 0.9274809160305344,
+          "intersection_over_smaller": 0.972,
+          "separated_at_0_15": false
+        }
+      ],
+      "visual_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\visuals\\005-frame1789899490482491367-camera1.png",
+      "visual_sha256": "39039282166595f2afc03ca11a8da1e4510fb66aad1924dcd2c431a6659d6003",
+      "depth_split_candidate_pass": false,
+      "depth_or_occlusion_handled_candidate": false,
+      "depth_split_metrics": [
+        {
+          "obj_id": 99,
+          "camera_depth": 5.583644140626777,
+          "split_pixels": 855,
+          "projected_box_coverage": 0.6111508220157256,
+          "source_mask_retention": 0.8751279426816786,
+          "removed_island_count": 0,
+          "removed_island_pixels": 0,
+          "maximum_nearer_projected_box_overlap": 0.0,
+          "candidate_pass": true,
+          "occluded_unobservable_candidate": false,
+          "handled_candidate": true
+        },
+        {
+          "obj_id": 98,
+          "camera_depth": 6.180310094698529,
+          "split_pixels": 1404,
+          "projected_box_coverage": 0.7659574468085106,
+          "source_mask_retention": 0.5391705069124424,
+          "removed_island_count": 0,
+          "removed_island_pixels": 0,
+          "maximum_nearer_projected_box_overlap": 0.0,
+          "candidate_pass": true,
+          "occluded_unobservable_candidate": false,
+          "handled_candidate": true
+        },
+        {
+          "obj_id": 100,
+          "camera_depth": 7.109414952225706,
+          "split_pixels": 463,
+          "projected_box_coverage": 0.5346420323325635,
+          "source_mask_retention": 0.467204843592331,
+          "removed_island_count": 0,
+          "removed_island_pixels": 0,
+          "maximum_nearer_projected_box_overlap": 0.2979214780600462,
+          "candidate_pass": true,
+          "occluded_unobservable_candidate": false,
+          "handled_candidate": true
+        },
+        {
+          "obj_id": 101,
+          "camera_depth": 7.22021964146563,
+          "split_pixels": 119,
+          "projected_box_coverage": 0.17097701149425287,
+          "source_mask_retention": 0.12044534412955465,
+          "removed_island_count": 0,
+          "removed_island_pixels": 0,
+          "maximum_nearer_projected_box_overlap": 0.5502873563218391,
+          "candidate_pass": true,
+          "occluded_unobservable_candidate": false,
+          "handled_candidate": true
+        },
+        {
+          "obj_id": 102,
+          "camera_depth": 7.305528680886941,
+          "split_pixels": 49,
+          "projected_box_coverage": 0.06853146853146853,
+          "source_mask_retention": 0.04984740590030519,
+          "removed_island_count": 0,
+          "removed_island_pixels": 0,
+          "maximum_nearer_projected_box_overlap": 0.5692307692307692,
+          "candidate_pass": false,
+          "occluded_unobservable_candidate": false,
+          "handled_candidate": false
+        },
+        {
+          "obj_id": 107,
+          "camera_depth": 7.400486511368758,
+          "split_pixels": 37,
+          "projected_box_coverage": 0.05006765899864682,
+          "source_mask_retention": 0.03771661569826707,
+          "removed_island_count": 1,
+          "removed_island_pixels": 1,
+          "maximum_nearer_projected_box_overlap": 0.516914749661705,
+          "candidate_pass": false,
+          "occluded_unobservable_candidate": false,
+          "handled_candidate": false
+        },
+        {
+          "obj_id": 108,
+          "camera_depth": 7.486414775095636,
+          "split_pixels": 151,
+          "projected_box_coverage": 0.2054421768707483,
+          "source_mask_retention": 0.4646153846153846,
+          "removed_island_count": 0,
+          "removed_island_pixels": 0,
+          "maximum_nearer_projected_box_overlap": 0.6204081632653061,
+          "candidate_pass": true,
+          "occluded_unobservable_candidate": false,
+          "handled_candidate": true
+        },
+        {
+          "obj_id": 109,
+          "camera_depth": 7.546997845799689,
+          "split_pixels": 24,
+          "projected_box_coverage": 0.031914893617021274,
+          "source_mask_retention": 0.09411764705882353,
+          "removed_island_count": 0,
+          "removed_island_pixels": 0,
+          "maximum_nearer_projected_box_overlap": 0.636968085106383,
+          "candidate_pass": false,
+          "occluded_unobservable_candidate": false,
+          "handled_candidate": false
+        },
+        {
+          "obj_id": 110,
+          "camera_depth": 7.619142751485404,
+          "split_pixels": 0,
+          "projected_box_coverage": 0.0,
+          "source_mask_retention": 0.0,
+          "removed_island_count": 0,
+          "removed_island_pixels": 0,
+          "maximum_nearer_projected_box_overlap": 0.7102272727272727,
+          "candidate_pass": false,
+          "occluded_unobservable_candidate": true,
+          "handled_candidate": true
+        }
+      ],
+      "depth_split_masks": {
+        "99": {
+          "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\005-frame1789899490482491367-camera1-obj99-depth-split.png",
+          "sha256": "5bc666829aa7fd84fe7f48f4399eb679276c6bcbf1aa55fe7eef627b54c9d24d"
+        },
+        "98": {
+          "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\005-frame1789899490482491367-camera1-obj98-depth-split.png",
+          "sha256": "17c1812dad152e9eae15d4c4fbed551b45eb813dc4dbcdf778d78dd024c98db1"
+        },
+        "100": {
+          "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\005-frame1789899490482491367-camera1-obj100-depth-split.png",
+          "sha256": "a7589399ee018473d1fa2ed031fba42133ec5ec9bca0b71db932ba34d7495fa7"
+        },
+        "101": {
+          "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\005-frame1789899490482491367-camera1-obj101-depth-split.png",
+          "sha256": "414110c4477da64c7e594912d8e8b6481e6f7691a39c1eb903a77a6670d7395c"
+        },
+        "102": {
+          "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\005-frame1789899490482491367-camera1-obj102-depth-split.png",
+          "sha256": "df93af27d51e77737b7f409a8071237921da2bfc448362c4d1d9a217b65ce02b"
+        },
+        "107": {
+          "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\005-frame1789899490482491367-camera1-obj107-depth-split.png",
+          "sha256": "96ff53bc34bcc3f6647b2558d58dd54193f97da82a1e2422b08e88ce101b6125"
+        },
+        "108": {
+          "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\005-frame1789899490482491367-camera1-obj108-depth-split.png",
+          "sha256": "d2e3449ca237a1cc29debe6e2ae985e6065b970747e77c59e4d368efe3acca92"
+        },
+        "109": {
+          "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\005-frame1789899490482491367-camera1-obj109-depth-split.png",
+          "sha256": "8607f9d13907eff0aaca1020b7724c1352bc6dcd559d59ab4980692267dc45dc"
+        },
+        "110": {
+          "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\masks\\005-frame1789899490482491367-camera1-obj110-depth-split.png",
+          "sha256": "f15316da6786a2fabf8a88b565164f0473ff4a49352268bc1acf4844060415c2"
+        }
+      },
+      "depth_split_visual_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\visuals\\005-frame1789899490482491367-camera1-depth-split.png",
+      "depth_split_visual_sha256": "fab5f36213314aca734e4e4aa7ea87a686fe4ec65010a39eaba20b609262afad"
+    }
+  ]
+}

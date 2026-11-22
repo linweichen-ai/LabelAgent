@@ -4,6 +4,7 @@ import numpy as np
 
 from tools.evaluate_pallet_box3d_overlap_pairs import (
     depth_split_masks, index_manifest_files, mask_separation,
+    projected_conflict_component, projected_conflict_edges,
     projected_conflicts, remove_tiny_islands, select_source_rows,
 )
 
@@ -77,6 +78,23 @@ class PalletBox3dOverlapPairsTest(unittest.TestCase):
         rows = projected_conflicts(target, [target, {"mask": near, "obj_id": 2},
                                                {"mask": far, "obj_id": 3}])
         self.assertEqual([row[0]["obj_id"] for row in rows], [2])
+
+    def test_conflict_component_includes_transitive_chain(self):
+        first = np.zeros((10, 12), dtype=bool); first[:, :5] = True
+        second = np.zeros_like(first); second[:, 3:8] = True
+        third = np.zeros_like(first); third[:, 6:11] = True
+        rows = [{"mask": first, "obj_id": 1},
+                {"mask": second, "obj_id": 2},
+                {"mask": third, "obj_id": 3}]
+
+        component = projected_conflict_component(rows[0], rows)
+        edges = projected_conflict_edges(component)
+
+        self.assertEqual([row["obj_id"] for row in component], [1, 2, 3])
+        self.assertEqual(
+            {(first["obj_id"], second["obj_id"])
+             for first, second, _, _ in edges},
+            {(1, 2), (2, 3)})
 
     def test_depth_split_assigns_overlap_to_nearest_box(self):
         hull = np.zeros((10, 10), dtype=bool); hull[2:8, 2:8] = True

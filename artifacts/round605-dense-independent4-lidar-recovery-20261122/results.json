@@ -1,0 +1,92 @@
+{
+  "schema_version": "labelagent.pallet_lidar_conflict_points.v1",
+  "status": "offline_candidate_diagnostic_not_deployed",
+  "input_sha256": {
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round604-dense-independent4-transitive-depth-split-20261122\\results.json": "5247c6fbb67d698da1a6b79bf0e4cbf3a1e799ade01a8597acfcc72232afc746",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round599-dense-independent4-20261122\\manifest.json": "0ec03f44c919f795bc273369b6656a2d14b5352a573161e24a05fd4c916e2c7e",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round599-dense-independent4-20261122\\pcd-manifest.json": "e8bf03b5ae6b39e1dad9c66f22b498d9071491addb85fb87d9b305ca2c253a89"
+  },
+  "failed_candidate_count": 1,
+  "recovered_candidate_count": 0,
+  "sam_attempt_count": 0,
+  "health_before": {
+    "status": "ok",
+    "model_loaded": true,
+    "backend": "remote_4090_sam3",
+    "service_version": "labelagent.remote-sam3.v3-point-groups",
+    "response_cache": {
+      "entries": 24,
+      "bytes": 206118,
+      "max_entries": 24,
+      "max_bytes": 134217728,
+      "in_flight": 0,
+      "hits": 130,
+      "misses": 80,
+      "coalesced_requests": 0,
+      "evictions": 56,
+      "storage": "cpu_json"
+    }
+  },
+  "health_after": {
+    "status": "ok",
+    "model_loaded": true,
+    "backend": "remote_4090_sam3",
+    "service_version": "labelagent.remote-sam3.v3-point-groups",
+    "response_cache": {
+      "entries": 24,
+      "bytes": 206118,
+      "max_entries": 24,
+      "max_bytes": 134217728,
+      "in_flight": 0,
+      "hits": 130,
+      "misses": 80,
+      "coalesced_requests": 0,
+      "evictions": 56,
+      "storage": "cpu_json"
+    }
+  },
+  "contact_sheet": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round605-dense-independent4-lidar-recovery-20261122\\lidar-conflict-point-review.jpg",
+  "contact_sheet_sha256": "abe92052fd9e9db35b5a694466f0916613edba256db04785bc49a75f0961e84f",
+  "human_pixel_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "workbench_writes": 0,
+  "training_data_writes": 0,
+  "oss_writes": 0,
+  "rows": [
+    {
+      "sequence": "006",
+      "frame_id": "1789899611282283655",
+      "camera": 0,
+      "target_obj_id": 13,
+      "visible_unique_positive_count": 0,
+      "visible_unique_negative_count": 137,
+      "selected_positive_points": [],
+      "selected_negative_points": [
+        [
+          461,
+          169
+        ],
+        [
+          608,
+          170
+        ],
+        [
+          534,
+          182
+        ],
+        [
+          552,
+          168
+        ]
+      ],
+      "prompt_group_count": 0,
+      "attempts": [],
+      "recovered": false,
+      "selected_policy": null,
+      "selected_mask_path": null,
+      "selected_mask_sha256": null,
+      "selected_mask_pixels": 0
+    }
+  ]
+}

@@ -70,6 +70,36 @@ def projected_conflicts(target, projected, threshold=.25):
     return result
 
 
+def projected_conflict_component(target, projected, threshold=.25):
+    """Return the full transitive overlap component containing ``target``."""
+    selected_ids = {str(target["obj_id"])}
+    frontier = [target]
+    while frontier:
+        current = frontier.pop(0)
+        for other, _, _ in projected_conflicts(current, projected, threshold):
+            identity = str(other["obj_id"])
+            if identity in selected_ids:
+                continue
+            selected_ids.add(identity)
+            frontier.append(other)
+    return [target, *(row for row in projected
+                      if row is not target and str(row["obj_id"]) in selected_ids)]
+
+
+def projected_conflict_edges(component, threshold=.25):
+    """Return every material overlap edge in a component exactly once."""
+    edges, seen = [], set()
+    for first in component:
+        for second, first_fraction, second_fraction in projected_conflicts(
+                first, component, threshold):
+            key = tuple(sorted((str(first["obj_id"]), str(second["obj_id"]))))
+            if key in seen:
+                continue
+            seen.add(key)
+            edges.append((first, second, first_fraction, second_fraction))
+    return edges
+
+
 def mask_separation(first, second):
     first_area, second_area = int(first.sum()), int(second.sum())
     intersection = int((first & second).sum())
@@ -269,11 +299,11 @@ def evaluate(source_report: Path, manifest_path: Path, labels_root: Path,
                      if (value := project_box(obj, camera)) is not None]
         target = next(row for row in projected
                       if str(row["obj_id"]) == str(source_row["target_obj_id"]))
-        conflicts = projected_conflicts(target, projected)
-        if not conflicts:
+        selected = projected_conflict_component(target, projected)
+        conflict_edges = projected_conflict_edges(selected)
+        if not conflict_edges:
             skipped_no_conflict += 1
             continue
-        selected = [target, *(row[0] for row in conflicts)]
         masks, instances = {}, []
         for projected_row in selected:
             mask, instance = infer_target(image, projected_row, projected, sam_url, timeout)
@@ -285,11 +315,17 @@ def evaluate(source_report: Path, manifest_path: Path, labels_root: Path,
             instance.update(mask_path=str(path.resolve()), mask_sha256=digest(path))
             instances.append(instance)
         pairs = []
-        for other, target_fraction, other_fraction in conflicts:
-            metrics = mask_separation(masks[target["obj_id"]], masks[other["obj_id"]])
-            pairs.append({"target_obj_id": target["obj_id"], "other_obj_id": other["obj_id"],
-                          "projected_target_overlap": target_fraction,
-                          "projected_other_overlap": other_fraction, **metrics})
+        for first, second, first_fraction, second_fraction in conflict_edges:
+            metrics = mask_separation(
+                masks[first["obj_id"]], masks[second["obj_id"]])
+            pairs.append({
+                "target_obj_id": first["obj_id"],
+                "other_obj_id": second["obj_id"],
+                "pair_scope": "transitive_component_edge",
+                "projected_target_overlap": first_fraction,
+                "projected_other_overlap": second_fraction,
+                **metrics,
+            })
         visual = visuals / f"{sequence}-frame{frame}-camera{camera_number}.png"
         render(image, selected, masks, visual)
         split_masks, split_metrics = depth_split_masks(selected, masks)
@@ -307,7 +343,10 @@ def evaluate(source_report: Path, manifest_path: Path, labels_root: Path,
         split_pass = bool(split_metrics) and all(row["candidate_pass"] for row in split_metrics)
         handled = bool(split_metrics) and all(row["handled_candidate"] for row in split_metrics)
         rows.append({"sequence": sequence, "frame_id": frame, "camera": camera_number,
-                     "target_obj_id": target["obj_id"], "conflict_count": len(conflicts),
+                     "target_obj_id": target["obj_id"],
+                     "conflict_count": len(selected) - 1,
+                     "conflict_pair_count": len(conflict_edges),
+                     "conflict_group_mode": "transitive_component",
                      "all_instances_localized": all(row["localization_pass"] for row in instances),
                      "all_conflicts_separated": bool(pairs) and all(row["separated_at_0_15"] for row in pairs),
                      "instances": instances, "pairs": pairs,

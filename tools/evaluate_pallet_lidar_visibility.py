@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tools.compare_boxes3d import Box
 from tools.evaluate_pallet_box3d_overlap_pairs import (
-    index_manifest_files, projected_conflicts,
+    index_manifest_files, projected_conflict_component,
 )
 from tools.evaluate_pallet_box3d_roi_sam import digest, load_camera, project_box
 from tools.evaluate_projected_support import project_visible
@@ -142,7 +142,7 @@ def evaluate(source_report: Path, manifest_path: Path, pcd_manifest_path: Path,
                      if (value := project_box(obj, camera)) is not None]
         target = next(row for row in projected
                       if str(row["obj_id"]) == str(source_row["target_obj_id"]))
-        selected = [target, *(row[0] for row in projected_conflicts(target, projected))]
+        selected = projected_conflict_component(target, projected)
         in_frame = in_camera_frame(points, camera)
         visible_by_grid = {}
         for cell, slack in GRID:
@@ -186,6 +186,8 @@ def evaluate(source_report: Path, manifest_path: Path, pcd_manifest_path: Path,
                default_memberships, detail_rows, visual)
         rows.append({"sequence": sequence, "frame_id": frame,
                      "camera": camera_number, "target_obj_id": target["obj_id"],
+                     "conflict_group_mode": "transitive_component",
+                     "conflict_group_instance_count": len(selected),
                      "pcd_path": str(pcd_path.resolve()), "pcd_sha256": digest(pcd_path),
                      "point_count": len(points), "instances": detail_rows,
                      "visual_path": str(visual.resolve()), "visual_sha256": digest(visual)})

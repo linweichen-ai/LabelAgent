@@ -1,0 +1,75 @@
+{
+  "schema_version": "labelagent.pallet_transitive_independent_recovery_receipt.v1",
+  "date": "2026-11-22",
+  "status": "independent_recovery_candidate_verified_structural_review_required",
+  "metadata_frame_count": 72,
+  "metadata_conflict_frame_count": 70,
+  "metadata_conflict_view_count": 102,
+  "downloaded_evaluation_image_count": 10,
+  "downloaded_evaluation_label_count": 10,
+  "downloaded_evaluation_pcd_count": 10,
+  "tuning_frame_overlap_count": 0,
+  "transitive_conflict_group_fix": true,
+  "key_error_reproduced_before_fix": true,
+  "key_error_absent_after_fix": true,
+  "second_batch": {
+    "image_count": 6,
+    "localization_pass_count": 6,
+    "instance_isolation_pass_count": 4,
+    "ambiguous_image_count": 2,
+    "failed_candidate_count": 5,
+    "sam_attempt_count": 15,
+    "recovered_candidate_count": 1
+  },
+  "recovered_candidate": {
+    "sequence": "005",
+    "frame_id": "1789899490482491367",
+    "camera": 1,
+    "obj_id": 102,
+    "visible_unique_positive_count": 5,
+    "visible_unique_negative_count": 71,
+    "selected_policy": "three_positive_all_negative",
+    "positive_coverage": 1.0,
+    "negative_clear_fraction": 1.0,
+    "sam_mask_pixels": 80,
+    "split_mask_pixels": 41,
+    "split_group_pass_count": 4,
+    "separation_pass_count": 3,
+    "mask_sha256": "73601fea12f235588ce8486ec080fc13cd95414128bfba5427586461bef64320",
+    "deterministic_repeat": true,
+    "structural_alerts": ["high_boundary_complexity"],
+    "assistant_review_priority": "high",
+    "human_pixel_truth": false
+  },
+  "final_bundle": {
+    "candidate_count": 11,
+    "mask_count": 6,
+    "suppressed_count": 5,
+    "high_priority_count": 3,
+    "structural_alert_count": 1
+  },
+  "tests": {
+    "passed": 1619,
+    "skipped": 1,
+    "subtests_passed": 262
+  },
+  "artifacts": {
+    "split_report": {"path":"artifacts/round608-dense-independent6-transitive-depth-split-20261122/results.json","sha256":"55a57e6c614986eecd19ce147c24c81ab9bdcbfe557bb6dedcee86b46b0aaf96"},
+    "recovery_report": {"path":"artifacts/round609-dense-independent6-lidar-recovery-20261122/results.json","sha256":"4714a649c41b446c4ecc632105083be33147ba630dbf04c32e1d0e5d2fff581e"},
+    "recovery_repeat_report": {"path":"artifacts/round610-dense-independent6-lidar-recovery-repeat-20261122/results.json","sha256":"339ed4d777b7b50fb65f8c88e4260db8738fea597fee4b26a1ad9a24194268b3"},
+    "visibility_report": {"path":"artifacts/round612-dense-independent6-transitive-lidar-visibility-20261122/results.json","sha256":"661ea4bf714a49dfab21880d303b78aed0629e349366a1889d6f4297f1b3b428"},
+    "bundle": {"path":"artifacts/round614-dense-independent6-candidate-bundle-recovered-20261122/bundle.json","sha256":"0ed577467493a83504940ecee96b249b4f6fc7516712d21ea855fd42566f25ab"},
+    "pixel_audit": {"path":"artifacts/round615-dense-independent6-pixel-audit-recovered-20261122/results.json","sha256":"b25fce9d5219d347743d6ffeed6dbf6947960f186d8e3fd0c6112b510d2dc5e7"}
+  },
+  "workbench_writes": 0,
+  "human_truth_writes": 0,
+  "training_data_writes": 0,
+  "oss_writes": 0,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "formal_state": {
+    "run_status": "idle",
+    "state_sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115",
+    "sam_in_flight_after": 0
+  }
+}

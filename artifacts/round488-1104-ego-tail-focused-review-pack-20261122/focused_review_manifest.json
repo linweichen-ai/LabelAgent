@@ -1,0 +1,239 @@
+{
+  "schema_version": "labelagent.ego_tail_focused_review_pack.v1",
+  "created_utc": "2026-11-22T00:59:16.283413+00:00",
+  "candidate_only": true,
+  "assistant_review_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "default_enabled": false,
+  "automatic_decisions_enabled": false,
+  "policy_sha256": "52e1e4ac4a96f989ecd08c7d96f60c2c735c975edd76f519a06b4d086f1ad0ad",
+  "component_review_sha256": "62ad809c528bd80a655c5369cfb4e85f357ab59f83ea31b1aa77c601d455c810",
+  "review_count": 19,
+  "priority_review": 1,
+  "deferred_manual_review": 18,
+  "rows": [
+    {
+      "component_id": "001-camera1-1793759034009520987-c002",
+      "camera_rank": 73,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "001-camera1-1793759034009520987-c002-review.png",
+      "review_image_sha256": "8b25a8617d62b524a5903af2cea1bc1b0e61dbcf227a8bb2f36ab4debc9563fc",
+      "focused_image": "001-camera1-1793759034009520987-c002-focused.png",
+      "focused_image_sha256": "00d32aa5c489e7220a5c09d5e17d2d5a683e7d4a065d13288a619bc80d36b7b4"
+    },
+    {
+      "component_id": "001-camera1-1793759063409530987-c001",
+      "camera_rank": 74,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "001-camera1-1793759063409530987-c001-review.png",
+      "review_image_sha256": "644dbb3e871943dd4c9ff19d3bff8b831d1b9460db317ee5c96fc444f9b92a8d",
+      "focused_image": "001-camera1-1793759063409530987-c001-focused.png",
+      "focused_image_sha256": "d05858de5455424db341cbba234f52913a00478f32c1fff5cc26ca50dadf3f51"
+    },
+    {
+      "component_id": "000-camera1-1793758297542631987-c009",
+      "camera_rank": 75,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "000-camera1-1793758297542631987-c009-review.png",
+      "review_image_sha256": "32a8525be2174155f1f8ff005070123422c423a63e7da0e76856c6cc700987c5",
+      "focused_image": "000-camera1-1793758297542631987-c009-focused.png",
+      "focused_image_sha256": "19c7c840b4c41276bf40f7ce991411ed5951642f0e3a5a0994dc28999908857f"
+    },
+    {
+      "component_id": "002-camera1-1793759208642855696-c006",
+      "camera_rank": 76,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "002-camera1-1793759208642855696-c006-review.png",
+      "review_image_sha256": "0ae17a6cedd00f6f0370d80d6d9b354822a23d004bcb57c06cc358abb19ad715",
+      "focused_image": "002-camera1-1793759208642855696-c006-focused.png",
+      "focused_image_sha256": "b8a3b8dd5300d5892ba874cae84cf337316172529e6a3ea8c1be74ea6e9f6aba"
+    },
+    {
+      "component_id": "004-camera1-idx5-1793760663542839987-c002",
+      "camera_rank": 77,
+      "policy_queue": "priority_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_not_clear",
+      "review_image": "004-camera1-idx5-1793760663542839987-c002-review.png",
+      "review_image_sha256": "0c7a27c1e2083c41ee88c712d93e81f0f2537eafc5c82566b2227877f1d744d5",
+      "focused_image": "004-camera1-idx5-1793760663542839987-c002-focused.png",
+      "focused_image_sha256": "97e55e8ef3f92781b5d0ba24bde26a4f8a90be594dd7a6ed740dbf462b7b9b21"
+    },
+    {
+      "component_id": "003-camera1-idx5-1793759961309512987-c009",
+      "camera_rank": 78,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "003-camera1-idx5-1793759961309512987-c009-review.png",
+      "review_image_sha256": "220263379417fdc9aa846c7ca294a35cd0e1beeddd295c723b4863efba7e0f39",
+      "focused_image": "003-camera1-idx5-1793759961309512987-c009-focused.png",
+      "focused_image_sha256": "53bfe35010679bb22f921cfc2841c33ded3e82d04ff227bd77554787351ef3a5"
+    },
+    {
+      "component_id": "002-camera1-1793759230842886696-c001",
+      "camera_rank": 79,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "002-camera1-1793759230842886696-c001-review.png",
+      "review_image_sha256": "b311343f5f890e024a1c3350c74e1b0a987935a1154e9e9dbb2729441134e294",
+      "focused_image": "002-camera1-1793759230842886696-c001-focused.png",
+      "focused_image_sha256": "478290d2870c6f504680bbca273e0835359114bbaff9cd7fe47178a49ca8a4b3"
+    },
+    {
+      "component_id": "004-camera1-idx22-1793760668642838987-c003",
+      "camera_rank": 80,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "004-camera1-idx22-1793760668642838987-c003-review.png",
+      "review_image_sha256": "afbabfba765d5c300b82c1aa68f301f3ce460e14caf95b8e98d4a1a3fd3d51f3",
+      "focused_image": "004-camera1-idx22-1793760668642838987-c003-focused.png",
+      "focused_image_sha256": "0dbd020d18c52b442ecbbf024051620af5333b102344be2cca8650282e300bd2"
+    },
+    {
+      "component_id": "003-camera1-idx52-1793759975409508695-c006",
+      "camera_rank": 81,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "003-camera1-idx52-1793759975409508695-c006-review.png",
+      "review_image_sha256": "9f447594b7d14f17f68c0c36f2fd05f9032363a1d3e46e5e2f45b6e6c483d9b8",
+      "focused_image": "003-camera1-idx52-1793759975409508695-c006-focused.png",
+      "focused_image_sha256": "6ca9ed4d6118ddd6597edd5f7d1ffed72229a904aee8b180ea740d8a564280bd"
+    },
+    {
+      "component_id": "003-camera1-idx5-1793759961309512987-c008",
+      "camera_rank": 82,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "003-camera1-idx5-1793759961309512987-c008-review.png",
+      "review_image_sha256": "08cbc4e923e27af49fe802a1c06b7990e69cbe0eb018d75fb81fe204f4c006aa",
+      "focused_image": "003-camera1-idx5-1793759961309512987-c008-focused.png",
+      "focused_image_sha256": "9e3d2fc55b1f2ce37a5a2bb75012439fa0943d12ecdaa7ece8649c32a209ca56"
+    },
+    {
+      "component_id": "002-camera1-1793759230842886696-c003",
+      "camera_rank": 83,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "002-camera1-1793759230842886696-c003-review.png",
+      "review_image_sha256": "6d6c3ee28f3b8f5cbba92b730ac0cc3a9ec7883b0e1fd5ae33c41b3f730455c4",
+      "focused_image": "002-camera1-1793759230842886696-c003-focused.png",
+      "focused_image_sha256": "f95b4a1c73e3be979995f6797ade8746e569759ce193bb2d3bfcfba790ad6169"
+    },
+    {
+      "component_id": "004-camera1-idx85-1793760721942855696-c007",
+      "camera_rank": 84,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "004-camera1-idx85-1793760721942855696-c007-review.png",
+      "review_image_sha256": "e294d96e887b63c6f4ed5c41defca1f5c2873ebf782075a76bb3d77c9ecf6b1b",
+      "focused_image": "004-camera1-idx85-1793760721942855696-c007-focused.png",
+      "focused_image_sha256": "30049e69a0066858047f8132aa589f5d9a8ca5b2654e49c385290ca534b3edd4"
+    },
+    {
+      "component_id": "001-camera1-1793759034009520987-c007",
+      "camera_rank": 85,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "001-camera1-1793759034009520987-c007-review.png",
+      "review_image_sha256": "18d055725bd56ca58b9925c295ce582db336ce5be98ccbcf171ac43091a59af5",
+      "focused_image": "001-camera1-1793759034009520987-c007-focused.png",
+      "focused_image_sha256": "f9067dcbe07d13deef42abc9e0c276bb80800f40483a03448f8ae15c6837717f"
+    },
+    {
+      "component_id": "002-camera1-1793759230842886696-c004",
+      "camera_rank": 86,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "002-camera1-1793759230842886696-c004-review.png",
+      "review_image_sha256": "0c035cb7aa3b97b92e987dc75a72dff7beb79553d672c677f1dc89281e10d369",
+      "focused_image": "002-camera1-1793759230842886696-c004-focused.png",
+      "focused_image_sha256": "abb20e56d1249a094e7132f2e8d711020abc2ae24bde8a01f493ba78cd345d11"
+    },
+    {
+      "component_id": "004-camera1-idx52-1793760677642756695-c002",
+      "camera_rank": 87,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "004-camera1-idx52-1793760677642756695-c002-review.png",
+      "review_image_sha256": "2d69486ed22c6e130f71573ce9f547551dc537c1b8acd9c8e99acc7cb0f897bc",
+      "focused_image": "004-camera1-idx52-1793760677642756695-c002-focused.png",
+      "focused_image_sha256": "9203a4e90d79ef617974fa61f09cc1d166e388dc45e7059962e4ca03ed2dd9bc"
+    },
+    {
+      "component_id": "004-camera1-idx22-1793760668642838987-c005",
+      "camera_rank": 88,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "004-camera1-idx22-1793760668642838987-c005-review.png",
+      "review_image_sha256": "20654453da32c25af3f98f5bcdf0bf37088e6ccb3abdb7e82a9b8417a2e1d74b",
+      "focused_image": "004-camera1-idx22-1793760668642838987-c005-focused.png",
+      "focused_image_sha256": "63582426f499319a0c132157213a897da9567fb77ef4cb90e7321c20893d8708"
+    },
+    {
+      "component_id": "004-camera1-idx85-1793760721942855696-c005",
+      "camera_rank": 89,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "004-camera1-idx85-1793760721942855696-c005-review.png",
+      "review_image_sha256": "74ca504d5753bdd4488d09e07cfaa470c744d7f77ebecfc2c0b0f09352356240",
+      "focused_image": "004-camera1-idx85-1793760721942855696-c005-focused.png",
+      "focused_image_sha256": "0c49b318f6808a9412d5ea6cc3caf85fb7753264621023b1d8dc0d48e4b96cbc"
+    },
+    {
+      "component_id": "004-camera1-idx5-1793760663542839987-c004",
+      "camera_rank": 90,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "004-camera1-idx5-1793760663542839987-c004-review.png",
+      "review_image_sha256": "931dca4e3ce251f228a187b4a9cfe09afebd9a5f92a92cb33019034b240d48b7",
+      "focused_image": "004-camera1-idx5-1793760663542839987-c004-focused.png",
+      "focused_image_sha256": "7f574b5a2f13c1c6629f01fcaf3480d04db645d9138ef695c82e9d1cb86e68e3"
+    },
+    {
+      "component_id": "000-camera1-1793758312842576695-c002",
+      "camera_rank": 91,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "000-camera1-1793758312842576695-c002-review.png",
+      "review_image_sha256": "c36352aee4ebee749972b0a7100eca406f6079c5c0ca0b2578632d6d7ae4b71d",
+      "focused_image": "000-camera1-1793758312842576695-c002-focused.png",
+      "focused_image_sha256": "e4b3534ba6a04ae4de8243de3a2ed1e58d951e58c0e2d9cf86d846f8920a5437"
+    }
+  ],
+  "pages": [
+    {
+      "page": 1,
+      "first_component_index": 1,
+      "last_component_index": 6,
+      "image": "focused_review_page_01.jpg",
+      "sha256": "e7d7f289fcde2c1d233c8b27340a6b910dbe81867dbc0130d59e9cc26e039643"
+    },
+    {
+      "page": 2,
+      "first_component_index": 7,
+      "last_component_index": 12,
+      "image": "focused_review_page_02.jpg",
+      "sha256": "69809653b36ae6082cba10285c9d8dadd7394e5c07285fb0922da4eb13f66804"
+    },
+    {
+      "page": 3,
+      "first_component_index": 13,
+      "last_component_index": 18,
+      "image": "focused_review_page_03.jpg",
+      "sha256": "159daf8d8bd94b67807bcf56798e186b4eca349b34a43a92320d95e172ce39c7"
+    },
+    {
+      "page": 4,
+      "first_component_index": 19,
+      "last_component_index": 19,
+      "image": "focused_review_page_04.jpg",
+      "sha256": "3be208b1539e96de28e66253c1e46be46460e10177dcb7d5fff858b91487256a"
+    }
+  ],
+  "boundary": "This pack improves reviewer legibility only. It does not change masks, truth, training approval, or queue decisions."
+}

@@ -1,0 +1,442 @@
+{
+  "schema_version": "labelagent.ego_tail_vlm_focused_pilot.v1",
+  "created_utc": "2026-11-22T00:56:06.934459+00:00",
+  "candidate_only": true,
+  "assistant_review_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "default_enabled": false,
+  "automatic_decisions_enabled": false,
+  "pilot_only": true,
+  "policy_sha256": "52e1e4ac4a96f989ecd08c7d96f60c2c735c975edd76f519a06b4d086f1ad0ad",
+  "component_review_sha256": "62ad809c528bd80a655c5369cfb4e85f357ab59f83ea31b1aa77c601d455c810",
+  "prompt_sha256": "e5a4ed733724e72bbe3d93f4d77f21bf8ef4203fec41797a8d69d33e35f060cb",
+  "model": "labelagent-vlm8b",
+  "review_count": 5,
+  "vlm_likely_fill_ok": 0,
+  "vlm_uncertain": 5,
+  "vlm_likely_reject": 0,
+  "logical_conflict_abstentions": 0,
+  "rows": [
+    {
+      "component_id": "001-camera1-1793759034009520987-c002",
+      "camera_rank": 73,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "001-camera1-1793759034009520987-c002-review.png",
+      "review_image_sha256": "8b25a8617d62b524a5903af2cea1bc1b0e61dbcf227a8bb2f36ab4debc9563fc",
+      "focused_image": "001-camera1-1793759034009520987-c002-focused.png",
+      "focused_image_sha256": "00d32aa5c489e7220a5c09d5e17d2d5a683e7d4a065d13288a619bc80d36b7b4",
+      "status": "vlm_shadow_candidate_generated",
+      "vlm": {
+        "decision": "uncertain",
+        "reason": "The target is tiny, dark, and blurred in the raw micro crop, making it physically ambiguous whether it lies on a solid ego-vehicle surface or crosses a gap or boundary. The context overlay shows a mag",
+        "confidence": 0.8,
+        "visual_evidence_clear": false,
+        "same_solid_surface": false,
+        "crosses_real_opening_or_background": false
+      },
+      "effective_vlm_decision": "uncertain",
+      "vlm_supports_deferral": false,
+      "validation_error": null,
+      "wall_seconds": 5.352,
+      "usage": {
+        "completion_tokens": 110,
+        "prompt_tokens": 504,
+        "total_tokens": 614
+      },
+      "local_vlm": {
+        "actual_image_token_counts": [
+          256
+        ],
+        "backend": "transformers_local_cuda",
+        "cache_hit": false,
+        "cache_key_sha256": "ced9a1e4356b54d19290666ca493727fa5906532dc3fcd77c96fdad636718d2d",
+        "cache_release": {
+          "enabled": false,
+          "performed": false,
+          "released_reserved_bytes": 0
+        },
+        "coalesced": false,
+        "effective_image_token_budget": 256,
+        "image_count": 1,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            32
+          ]
+        ],
+        "inference_stats": {
+          "actual_image_token_counts": [
+            256
+          ],
+          "completion_tokens": 110,
+          "configured_generation_cache_implementation": "static",
+          "constraint_setup_seconds": 0.0,
+          "effective_image_token_budget": 256,
+          "generation_cache_fallback_reason": null,
+          "generation_cache_implementation": "static",
+          "generation_seconds": 5.249,
+          "image_grid_thw": [
+            [
+              1,
+              32,
+              32
+            ]
+          ],
+          "input_images": 1,
+          "peak_allocated_bytes": 18094132736,
+          "peak_reserved_bytes": 18354274304,
+          "preprocess_seconds": 0.036,
+          "prompt_tokens": 504,
+          "structured_output": true
+        },
+        "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "quantization": "none",
+        "queue_wait_seconds": 0.0,
+        "requested_image_token_budget": null,
+        "response_cache_entries": 64,
+        "seconds": 5.312
+      }
+    },
+    {
+      "component_id": "002-camera1-1793759230842886696-c004",
+      "camera_rank": 86,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "002-camera1-1793759230842886696-c004-review.png",
+      "review_image_sha256": "0c035cb7aa3b97b92e987dc75a72dff7beb79553d672c677f1dc89281e10d369",
+      "focused_image": "002-camera1-1793759230842886696-c004-focused.png",
+      "focused_image_sha256": "abb20e56d1249a094e7132f2e8d711020abc2ae24bde8a01f493ba78cd345d11",
+      "status": "vlm_shadow_candidate_generated",
+      "vlm": {
+        "decision": "uncertain",
+        "reason": "The target is tiny, dark, and blurred in the raw micro evidence, making it physically ambiguous whether it lies on a solid ego-vehicle surface or crosses a gap or boundary. The context overlay does't ",
+        "confidence": 0.8,
+        "visual_evidence_clear": false,
+        "same_solid_surface": false,
+        "crosses_real_opening_or_background": false
+      },
+      "effective_vlm_decision": "uncertain",
+      "vlm_supports_deferral": false,
+      "validation_error": null,
+      "wall_seconds": 5.203,
+      "usage": {
+        "completion_tokens": 109,
+        "prompt_tokens": 504,
+        "total_tokens": 613
+      },
+      "local_vlm": {
+        "actual_image_token_counts": [
+          256
+        ],
+        "backend": "transformers_local_cuda",
+        "cache_hit": false,
+        "cache_key_sha256": "4966be035f003e9bb2c8a65414a61cb186b37296e27a5c6eff15866d6c78b897",
+        "cache_release": {
+          "enabled": false,
+          "performed": false,
+          "released_reserved_bytes": 0
+        },
+        "coalesced": false,
+        "effective_image_token_budget": 256,
+        "image_count": 1,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            32
+          ]
+        ],
+        "inference_stats": {
+          "actual_image_token_counts": [
+            256
+          ],
+          "completion_tokens": 109,
+          "configured_generation_cache_implementation": "static",
+          "constraint_setup_seconds": 0.0,
+          "effective_image_token_budget": 256,
+          "generation_cache_fallback_reason": null,
+          "generation_cache_implementation": "static",
+          "generation_seconds": 5.117,
+          "image_grid_thw": [
+            [
+              1,
+              32,
+              32
+            ]
+          ],
+          "input_images": 1,
+          "peak_allocated_bytes": 18094132736,
+          "peak_reserved_bytes": 18354274304,
+          "preprocess_seconds": 0.025,
+          "prompt_tokens": 504,
+          "structured_output": true
+        },
+        "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "quantization": "none",
+        "queue_wait_seconds": 0.0,
+        "requested_image_token_budget": null,
+        "response_cache_entries": 64,
+        "seconds": 5.168
+      }
+    },
+    {
+      "component_id": "001-camera1-1793759034009520987-c007",
+      "camera_rank": 85,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "001-camera1-1793759034009520987-c007-review.png",
+      "review_image_sha256": "18d055725bd56ca58b9925c295ce582db336ce5be98ccbcf171ac43091a59af5",
+      "focused_image": "001-camera1-1793759034009520987-c007-focused.png",
+      "focused_image_sha256": "f9067dcbe07d13deef42abc9e0c276bb80800f40483a03448f8ae15c6837717f",
+      "status": "vlm_shadow_candidate_generated",
+      "vlm": {
+        "decision": "uncertain",
+        "reason": "The target is tiny, dark, and blurred in the raw micro evidence, making it physically ambiguous whether it lies on a solid ego-vehicle surface or crosses a gap or boundary. The context overlay shows a",
+        "confidence": 0.8,
+        "visual_evidence_clear": false,
+        "same_solid_surface": false,
+        "crosses_real_opening_or_background": false
+      },
+      "effective_vlm_decision": "uncertain",
+      "vlm_supports_deferral": false,
+      "validation_error": null,
+      "wall_seconds": 5.28,
+      "usage": {
+        "completion_tokens": 111,
+        "prompt_tokens": 504,
+        "total_tokens": 615
+      },
+      "local_vlm": {
+        "actual_image_token_counts": [
+          256
+        ],
+        "backend": "transformers_local_cuda",
+        "cache_hit": false,
+        "cache_key_sha256": "5ac066a0c98cbb5139a1193513676bc4180667977b3e0abf281ee17d9c204255",
+        "cache_release": {
+          "enabled": false,
+          "performed": false,
+          "released_reserved_bytes": 0
+        },
+        "coalesced": false,
+        "effective_image_token_budget": 256,
+        "image_count": 1,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            32
+          ]
+        ],
+        "inference_stats": {
+          "actual_image_token_counts": [
+            256
+          ],
+          "completion_tokens": 111,
+          "configured_generation_cache_implementation": "static",
+          "constraint_setup_seconds": 0.001,
+          "effective_image_token_budget": 256,
+          "generation_cache_fallback_reason": null,
+          "generation_cache_implementation": "static",
+          "generation_seconds": 5.187,
+          "image_grid_thw": [
+            [
+              1,
+              32,
+              32
+            ]
+          ],
+          "input_images": 1,
+          "peak_allocated_bytes": 18094132736,
+          "peak_reserved_bytes": 18354274304,
+          "preprocess_seconds": 0.026,
+          "prompt_tokens": 504,
+          "structured_output": true
+        },
+        "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "quantization": "none",
+        "queue_wait_seconds": 0.0,
+        "requested_image_token_budget": null,
+        "response_cache_entries": 64,
+        "seconds": 5.241
+      }
+    },
+    {
+      "component_id": "002-camera1-1793759208642855696-c006",
+      "camera_rank": 76,
+      "policy_queue": "deferred_manual_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_likely_fill_ok",
+      "review_image": "002-camera1-1793759208642855696-c006-review.png",
+      "review_image_sha256": "0ae17a6cedd00f6f0370d80d6d9b354822a23d004bcb57c06cc358abb19ad715",
+      "focused_image": "002-camera1-1793759208642855696-c006-focused.png",
+      "focused_image_sha256": "b8a3b8dd5300d5892ba874cae84cf337316172529e6a3ea8c1be74ea6e9f6aba",
+      "status": "vlm_shadow_candidate_generated",
+      "vlm": {
+        "decision": "uncertain",
+        "reason": "The target is dark, tiny, and physically ambiguous in the raw micro evidence. The context overlay shows a complex surface, but the micro crop lacks sufficient clarity to confirm whether the magenta-hi",
+        "confidence": 0.8,
+        "visual_evidence_clear": false,
+        "same_solid_surface": false,
+        "crosses_real_opening_or_background": false
+      },
+      "effective_vlm_decision": "uncertain",
+      "vlm_supports_deferral": false,
+      "validation_error": null,
+      "wall_seconds": 5.061,
+      "usage": {
+        "completion_tokens": 108,
+        "prompt_tokens": 504,
+        "total_tokens": 612
+      },
+      "local_vlm": {
+        "actual_image_token_counts": [
+          256
+        ],
+        "backend": "transformers_local_cuda",
+        "cache_hit": false,
+        "cache_key_sha256": "b8a350d298650a1e0012fded8deb82bb163cf3385aeef64ffe62d5bd25367fd1",
+        "cache_release": {
+          "enabled": false,
+          "performed": false,
+          "released_reserved_bytes": 0
+        },
+        "coalesced": false,
+        "effective_image_token_budget": 256,
+        "image_count": 1,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            32
+          ]
+        ],
+        "inference_stats": {
+          "actual_image_token_counts": [
+            256
+          ],
+          "completion_tokens": 108,
+          "configured_generation_cache_implementation": "static",
+          "constraint_setup_seconds": 0.001,
+          "effective_image_token_budget": 256,
+          "generation_cache_fallback_reason": null,
+          "generation_cache_implementation": "static",
+          "generation_seconds": 4.976,
+          "image_grid_thw": [
+            [
+              1,
+              32,
+              32
+            ]
+          ],
+          "input_images": 1,
+          "peak_allocated_bytes": 18094132736,
+          "peak_reserved_bytes": 18354274304,
+          "preprocess_seconds": 0.024,
+          "prompt_tokens": 504,
+          "structured_output": true
+        },
+        "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "quantization": "none",
+        "queue_wait_seconds": 0.0,
+        "requested_image_token_budget": null,
+        "response_cache_entries": 64,
+        "seconds": 5.024
+      }
+    },
+    {
+      "component_id": "004-camera1-idx5-1793760663542839987-c002",
+      "camera_rank": 77,
+      "policy_queue": "priority_review",
+      "policy_reason": "camera1_bottom_tail_blind_review_not_clear",
+      "review_image": "004-camera1-idx5-1793760663542839987-c002-review.png",
+      "review_image_sha256": "0c7a27c1e2083c41ee88c712d93e81f0f2537eafc5c82566b2227877f1d744d5",
+      "focused_image": "004-camera1-idx5-1793760663542839987-c002-focused.png",
+      "focused_image_sha256": "97e55e8ef3f92781b5d0ba24bde26a4f8a90be594dd7a6ed740dbf462b7b9b21",
+      "status": "vlm_shadow_candidate_generated",
+      "vlm": {
+        "decision": "uncertain",
+        "reason": "The target is tiny, dark, and blurred in the raw micro crop, making it physically ambiguous whether it lies on a solid ego-vehicle surface or crosses a gap or boundary. The context overlay does not un",
+        "confidence": 0.8,
+        "visual_evidence_clear": false,
+        "same_solid_surface": false,
+        "crosses_real_opening_or_background": false
+      },
+      "effective_vlm_decision": "uncertain",
+      "vlm_supports_deferral": false,
+      "validation_error": null,
+      "wall_seconds": 5.246,
+      "usage": {
+        "completion_tokens": 109,
+        "prompt_tokens": 504,
+        "total_tokens": 613
+      },
+      "local_vlm": {
+        "actual_image_token_counts": [
+          256
+        ],
+        "backend": "transformers_local_cuda",
+        "cache_hit": false,
+        "cache_key_sha256": "b87d8a395398e19a18009decebaafce16aa33e39a3b7eeb6f93f2230f7d72cf6",
+        "cache_release": {
+          "enabled": false,
+          "performed": false,
+          "released_reserved_bytes": 0
+        },
+        "coalesced": false,
+        "effective_image_token_budget": 256,
+        "image_count": 1,
+        "image_grid_thw": [
+          [
+            1,
+            32,
+            32
+          ]
+        ],
+        "inference_stats": {
+          "actual_image_token_counts": [
+            256
+          ],
+          "completion_tokens": 109,
+          "configured_generation_cache_implementation": "static",
+          "constraint_setup_seconds": 0.0,
+          "effective_image_token_budget": 256,
+          "generation_cache_fallback_reason": null,
+          "generation_cache_implementation": "static",
+          "generation_seconds": 5.145,
+          "image_grid_thw": [
+            [
+              1,
+              32,
+              32
+            ]
+          ],
+          "input_images": 1,
+          "peak_allocated_bytes": 18094132736,
+          "peak_reserved_bytes": 18354274304,
+          "preprocess_seconds": 0.021,
+          "prompt_tokens": 504,
+          "structured_output": true
+        },
+        "model_config_sha256": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "quantization": "none",
+        "queue_wait_seconds": 0.0,
+        "requested_image_token_budget": null,
+        "response_cache_entries": 64,
+        "seconds": 5.194
+      }
+    }
+  ],
+  "health_before": {
+    "status": "ok",
+    "exact_requests_inflight": 0
+  },
+  "health_after": {
+    "status": "ok",
+    "exact_requests_inflight": 0
+  },
+  "boundary": "This bounded focused-input result is assistant shadow triage, not truth, training approval, automatic acceptance, or a generalization claim."
+}

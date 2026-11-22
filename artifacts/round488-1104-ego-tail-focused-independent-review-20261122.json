@@ -1,0 +1,52 @@
+{
+  "schema_version": "labelagent.ego_tail_focused_independent_review.v1",
+  "created_date": "2026-11-22",
+  "candidate_only": true,
+  "assistant_review_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "default_enabled": false,
+  "automatic_decisions_enabled": false,
+  "review_scope": "Only the five focused PNG files from Round486 were viewed. JSON, policy, ranking, and earlier decisions were not opened.",
+  "rows": [
+    {
+      "component_id": "001-camera1-1793759034009520987-c002",
+      "judgment": "likely_fill_ok",
+      "reason": "目标落在棕色面板上的线缆与实体交界，两侧均属同一机械结构，未见背景贯通。",
+      "montage_legible": true
+    },
+    {
+      "component_id": "001-camera1-1793759034009520987-c007",
+      "judgment": "likely_fill_ok",
+      "reason": "目标位于黄色控制件旁的连续绿色实体表面，不呈真实开口。",
+      "montage_legible": true
+    },
+    {
+      "component_id": "002-camera1-1793759208642855696-c006",
+      "judgment": "likely_fill_ok",
+      "reason": "原图微距显示目标处为平滑连续面，未见缝隙、孔洞或外部背景。",
+      "montage_legible": true
+    },
+    {
+      "component_id": "002-camera1-1793759230842886696-c004",
+      "judgment": "likely_fill_ok",
+      "reason": "目标在白色环形件下方的连续面板表面，更像局部漏分。",
+      "montage_legible": true
+    },
+    {
+      "component_id": "004-camera1-idx5-1793760663542839987-c002",
+      "judgment": "uncertain",
+      "reason": "目标位于线缆、棕色面板与深红侧壁的交汇处，可能是实体连接，也可能是真实窄缝。",
+      "montage_legible": true
+    }
+  ],
+  "counts": {
+    "reviewed": 5,
+    "likely_fill_ok": 4,
+    "uncertain": 1,
+    "likely_reject": 0,
+    "montage_legible": 5
+  },
+  "boundary": "This independent assistant review validates legibility and reproduces an assistant-only triage pattern. It is not human truth or model accuracy."
+}

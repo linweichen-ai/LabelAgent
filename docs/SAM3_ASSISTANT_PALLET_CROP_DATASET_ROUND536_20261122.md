@@ -38,6 +38,10 @@ COCO 与复核决定只保存在 `.repro/`，不会推送到 GitHub/CNB。
 - `tools/run_sam3_assistant_instance_crop_train.sh`：服务健康、test24 路径和显存门禁；
 - 6 项定向测试全部通过，Python 编译和 Git 差异检查通过。
 
+首次从 GitHub 干净克隆启动时，Hydra 在加载模型前立即发现 Stage-0 基础配置引用少了
+`configs/` 层级；该尝试没有加载模型或占用训练显存。随后已把引用改为仓库内实际存在的
+`/configs/roboflow_v100/...` 并加入干净克隆依赖测试，不隐藏这次失败。
+
 ## 当前边界与下一步
 
 这批数据来自 CVAT 中 `source=manual` 的实例轮廓，但本轮没有伪造 81 项人工签字，所以训练结果仍是

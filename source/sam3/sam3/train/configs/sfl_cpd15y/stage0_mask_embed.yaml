@@ -1,6 +1,6 @@
 # @package _global_
 defaults:
-  - /roboflow_v100/roboflow_v100_full_ft_100_images
+  - /configs/roboflow_v100/roboflow_v100_full_ft_100_images
   - _self_
 
 paths:

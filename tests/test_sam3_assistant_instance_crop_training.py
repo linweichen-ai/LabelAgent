@@ -31,6 +31,19 @@ class AssistantInstanceCropTrainingTests(unittest.TestCase):
         self.assertFalse(trainer["candidate_contract"]["test24_in_training"])
         self.assertTrue(trainer["candidate_contract"]["not_for_deployment"])
 
+        base_path = ROOT / "source/sam3/sam3/train/configs/sfl_cpd15y/stage0_mask_embed.yaml"
+        base_text = base_path.read_text(encoding="utf-8")
+        self.assertIn(
+            "/configs/roboflow_v100/roboflow_v100_full_ft_100_images",
+            base_text,
+        )
+        self.assertTrue(
+            (
+                ROOT
+                / "source/sam3/sam3/train/configs/roboflow_v100/roboflow_v100_full_ft_100_images.yaml"
+            ).is_file()
+        )
+
     def test_launcher_keeps_services_and_test24_guard(self):
         source = (ROOT / "tools/run_sam3_assistant_instance_crop_train.sh").read_text()
         self.assertIn("127.0.0.1:${port}/health", source)

@@ -252,16 +252,20 @@
   }
 
   async function refreshGuide() {
-    if (guideRefreshBusy) return;
+    if (guideRefreshBusy) {
+      if (!document.hidden) guideStatusRefreshPending = true;
+      return;
+    }
     guideRefreshBusy = true;
     try {
-      const [stateResponse, jobResponse] = await Promise.all([
-        fetch('/api/state/summary', { cache: 'no-store' }),
-        fetch('/api/run/status', { cache: 'no-store' }),
-      ]);
-      if (!stateResponse.ok || !jobResponse.ok) throw new Error('status unavailable');
+      const cachedJob = window.labelAgentRunStatusSnapshot || latest.job;
+      const stateRequest = fetch('/api/state/summary', { cache: 'no-store' });
+      const jobRequest = cachedJob ? null : fetch('/api/run/status', { cache: 'no-store' });
+      const [stateResponse, jobResponse] = await Promise.all([stateRequest, jobRequest]);
+      if (!stateResponse.ok || (jobResponse && !jobResponse.ok)) throw new Error('status unavailable');
       const state = await stateResponse.json();
-      const job = await jobResponse.json();
+      const job = cachedJob || await jobResponse.json();
+      window.labelAgentRunStatusSnapshot = job;
       latestRunStatus = job.status || 'idle';
       render(state, job);
     } catch (_) {
@@ -281,7 +285,7 @@
   function scheduleGuidePoll(delay) {
     if (guidePollTimer) clearTimeout(guidePollTimer);
     if (document.hidden) return;
-    const interval = ['running', 'stopping'].includes(latestRunStatus) ? 3000 : 15000;
+    const interval = ['running', 'stopping'].includes(latestRunStatus) ? 15000 : 30000;
     guidePollTimer = window.setTimeout(refreshGuide, delay ?? interval);
   }
 
@@ -828,13 +832,15 @@
   document.addEventListener('labelagent:reference-draft-loaded', refreshGuide);
   document.addEventListener('labelagent:reference-draft-cleared', refreshGuide);
   document.addEventListener('labelagent:job-status', event => {
-    const status = event.detail?.status || 'idle';
-    if (status === latestRunStatus) return;
+    const job = event.detail || { status: 'idle' };
+    const previousStatus = latestRunStatus;
+    const status = job.status || 'idle';
+    window.labelAgentRunStatusSnapshot = job;
     latestRunStatus = status;
-    if (!document.hidden) {
-      if (guideRefreshBusy) guideStatusRefreshPending = true;
-      else refreshGuide();
-    }
+    const wasActive = ['running', 'stopping'].includes(previousStatus);
+    const active = ['running', 'stopping'].includes(status);
+    if (latest.state && stateMatchesCurrentWorkspace(latest.state)) render(latest.state, job);
+    if (!document.hidden && (!latest.state || (wasActive && !active))) refreshGuide();
     scheduleGuidePoll();
   });
   byId('manualModeButton')?.addEventListener('click', () => setTimeout(refreshGuide, 50));

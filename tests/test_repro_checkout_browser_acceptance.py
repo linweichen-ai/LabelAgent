@@ -27,6 +27,18 @@ class ReproCheckoutBrowserAcceptanceTests(unittest.TestCase):
         self.assertLess(doctor, web_start)
         self.assertIn('"--require-sam-port"', source)
 
+    def test_startup_rolls_back_every_spawn_failure(self):
+        source = (ROOT / "tools" / "start_local.ps1").read_text(encoding="utf-8")
+        spawn = source.index("$sam = Start-Process")
+        cleanup = source.index("} catch {\n    foreach ($processId in $pids)", spawn)
+        browser = source.index("if (-not $NoBrowser)")
+        self.assertLess(spawn, cleanup)
+        self.assertLess(cleanup, browser)
+        self.assertIn("$web.HasExited", source[spawn:cleanup])
+        self.assertIn("$sam.HasExited", source[spawn:cleanup])
+        self.assertIn("foreach ($processId in $pids)", source[cleanup:browser])
+        self.assertIn("Remove-Item -LiteralPath $Record", source[cleanup:browser])
+
     def test_checkout_runs_logic_and_real_synthetic_browser_acceptance(self):
         source = (ROOT / "tools" / "verify_checkout.ps1").read_text(encoding="utf-8")
         self.assertIn("$VenvScripts = Split-Path -Parent $Python", source)

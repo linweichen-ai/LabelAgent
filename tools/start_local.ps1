@@ -38,46 +38,53 @@ if ($SamUrl -eq "http://127.0.0.1:8766") {
 & $Python @doctorArgs | Write-Host
 if ($LASTEXITCODE -ne 0) { throw "LabelAgent startup prerequisites are incomplete" }
 
-if ($SamUrl -eq "http://127.0.0.1:8766") {
-    $sam = Start-Process -FilePath $Python -ArgumentList "-m", "source.sam3_service.server" `
-        -WorkingDirectory $Root -RedirectStandardOutput (Join-Path $Logs "sam3.out.log") `
-        -RedirectStandardError (Join-Path $Logs "sam3.err.log") -PassThru -WindowStyle Hidden
-    $pids += $sam.Id
-} else {
-    try {
-        $null = Invoke-RestMethod -Uri ($SamUrl.TrimEnd('/') + "/health") -TimeoutSec 5
-    } catch {
-        throw "Configured SAM3 service is unavailable: $SamUrl"
+try {
+    if ($SamUrl -eq "http://127.0.0.1:8766") {
+        $sam = Start-Process -FilePath $Python -ArgumentList "-m", "source.sam3_service.server" `
+            -WorkingDirectory $Root -RedirectStandardOutput (Join-Path $Logs "sam3.out.log") `
+            -RedirectStandardError (Join-Path $Logs "sam3.err.log") -PassThru -WindowStyle Hidden
+        $pids += $sam.Id
+    } else {
+        try {
+            $null = Invoke-RestMethod -Uri ($SamUrl.TrimEnd('/') + "/health") -TimeoutSec 5
+        } catch {
+            throw "Configured SAM3 service is unavailable: $SamUrl"
+        }
     }
-}
 
-$web = Start-Process -FilePath $Python -ArgumentList "-m", "source.agent.server" `
-    -WorkingDirectory $Root -RedirectStandardOutput (Join-Path $Logs "workbench.out.log") `
-    -RedirectStandardError (Join-Path $Logs "workbench.err.log") -PassThru -WindowStyle Hidden
-$pids += $web.Id
+    $web = Start-Process -FilePath $Python -ArgumentList "-m", "source.agent.server" `
+        -WorkingDirectory $Root -RedirectStandardOutput (Join-Path $Logs "workbench.out.log") `
+        -RedirectStandardError (Join-Path $Logs "workbench.err.log") -PassThru -WindowStyle Hidden
+    $pids += $web.Id
 
-@{ pids = $pids; started_at = (Get-Date).ToString("o"); sam_url = $SamUrl; root = $Root } |
-    ConvertTo-Json | Set-Content -Encoding UTF8 $Record
+    @{ pids = $pids; started_at = (Get-Date).ToString("o"); sam_url = $SamUrl; root = $Root } |
+        ConvertTo-Json | Set-Content -Encoding UTF8 $Record
 
-$ready = $false
-for ($i = 0; $i -lt 60; $i++) {
-    try {
-        $null = Invoke-RestMethod -Uri "http://127.0.0.1:8765/api/run/status" -TimeoutSec 2
-        $ready = $true
-        break
-    } catch { Start-Sleep -Milliseconds 500 }
-}
-if (-not $ready) {
+    $ready = $false
+    for ($i = 0; $i -lt 60; $i++) {
+        if ($web.HasExited -or ($SamUrl -eq "http://127.0.0.1:8766" -and $sam.HasExited)) {
+            break
+        }
+        try {
+            $null = Invoke-RestMethod -Uri "http://127.0.0.1:8765/api/run/status" -TimeoutSec 2
+            $ready = $true
+            break
+        } catch { Start-Sleep -Milliseconds 500 }
+    }
+    if (-not $ready) {
+        throw "Workbench did not become ready. Check .repro\logs\workbench.err.log"
+    }
+
+    & $Python tools\repro_doctor.py --require-services --sam-url $SamUrl
+    if ($LASTEXITCODE -ne 0) {
+        throw "Services started but failed the read-back check"
+    }
+} catch {
     foreach ($processId in $pids) {
         Stop-Process -Id $processId -ErrorAction SilentlyContinue
     }
     Remove-Item -LiteralPath $Record -Force -ErrorAction SilentlyContinue
-    throw "Workbench did not become ready. Check .repro\logs\workbench.err.log"
-}
-
-& $Python tools\repro_doctor.py --require-services --sam-url $SamUrl
-if ($LASTEXITCODE -ne 0) {
-    throw "Services started but failed the read-back check"
+    throw
 }
 
 if (-not $NoBrowser) { Start-Process "http://127.0.0.1:8765" }

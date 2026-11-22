@@ -1,9 +1,11 @@
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 
 from tools.evaluate_pallet_box3d_roi_sam import (
-    localization_gate, point_fallback_groups, project_box, select_target,
+    compatible_multi_prompt_results, localization_gate, point_fallback_groups,
+    project_box, select_target,
 )
 
 
@@ -21,6 +23,22 @@ def camera():
 
 
 class PalletBox3dRoiSamTest(unittest.TestCase):
+    def test_multi_prompt_diagnostic_uses_production_protocol_adapter(self):
+        outputs = {
+            "generic": {"results": [{"score": .9}]},
+            "wooden": {"results": []},
+            "plastic": {"results": [{"score": .8}]},
+            "base": {"results": []},
+        }
+        with patch("tools.evaluate_pallet_box3d_roi_sam.sam_text_multi",
+                   return_value=(outputs, {"legacy_protocol": True})) as adapter:
+            results, diagnostics = compatible_multi_prompt_results(
+                b"image", "http://sam", 45)
+        self.assertEqual([row["prompt_name"] for row in results],
+                         ["generic", "plastic"])
+        self.assertTrue(diagnostics["legacy_protocol"])
+        self.assertEqual(adapter.call_args.kwargs["timeout_seconds"], 45)
+
     def test_projects_visible_box(self):
         row = project_box(pallet(), camera())
         self.assertIsNotNone(row)

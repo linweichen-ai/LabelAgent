@@ -25,6 +25,26 @@ from tools.evaluate_pallet_lidar_centered_roi_sam import (
 )
 from tools.evaluate_projected_support import camera_parameters
 from tools.evaluate_slope_lidar_sam import request_json
+from source.agent.workflow import sam_point_groups, sam_text_multi
+
+
+MULTI_PROMPTS = {
+    "generic": "pallet", "wooden": "wooden pallet",
+    "plastic": "plastic pallet", "base": "pallet base",
+}
+
+
+def compatible_multi_prompt_results(image_bytes: bytes, sam_url: str,
+                                    timeout: float) -> tuple[list[dict], dict]:
+    """Use the production protocol adapter for both 4090 and legacy 5090 SAM."""
+    outputs, diagnostics = sam_text_multi(
+        image_bytes, MULTI_PROMPTS, {"sam3_url": sam_url},
+        timeout_seconds=timeout)
+    results = []
+    for prompt_name, payload in outputs.items():
+        for result in payload.get("results") or []:
+            results.append({**result, "prompt_name": prompt_name})
+    return results, diagnostics
 
 
 def digest(path: Path) -> str:
@@ -232,20 +252,16 @@ def evaluate(manifest_path: Path, labels_root: Path, calibration: Path,
         roi = _crop_box(target["bbox"], width, height, minimum_side=160, padding=16)
         crop = image.crop(tuple(roi)); buffer = io.BytesIO(); crop.save(buffer, "PNG")
         started = time.monotonic()
-        encoded = base64.b64encode(buffer.getvalue()).decode("ascii")
+        crop_bytes = buffer.getvalue()
+        encoded = base64.b64encode(crop_bytes).decode("ascii")
+        protocol_diagnostics = None
         if prompt_mode == "single":
             response = request_json(sam_url.rstrip("/") + "/segment_text", {
                 "image": encoded, "prompt": "pallet"}, timeout=timeout)
             results = response.get("results") or []
         elif prompt_mode == "multi":
-            response = request_json(sam_url.rstrip("/") + "/segment_text_multi", {
-                "image": encoded, "prompts": {
-                    "generic": "pallet", "wooden": "wooden pallet",
-                    "plastic": "plastic pallet", "base": "pallet base"}}, timeout=timeout)
-            results = []
-            for prompt_name, payload in (response.get("prompts") or {}).items():
-                for result in payload.get("results") or []:
-                    results.append({**result, "prompt_name": prompt_name})
+            results, protocol_diagnostics = compatible_multi_prompt_results(
+                crop_bytes, sam_url, timeout)
         else:
             raise ValueError(f"unknown prompt mode: {prompt_mode}")
         elapsed = time.monotonic() - started
@@ -261,7 +277,8 @@ def evaluate(manifest_path: Path, labels_root: Path, calibration: Path,
                     "crop_box": roi, "model_result_count": len(results),
                     "selected_contains_projected_center": contains,
                     "selected_center_distance_pixels": distance,
-                    "candidate_summaries": summaries})
+                    "candidate_summaries": summaries,
+                    "sam_protocol_diagnostics": protocol_diagnostics})
         if selected is not None:
             proposal[roi[1]:roi[3], roi[0]:roi[2]] = local_mask
             other_masks = [item["mask"] for item in projected if item is not target]
@@ -285,10 +302,9 @@ def evaluate(manifest_path: Path, labels_root: Path, calibration: Path,
                     items = [{"index": 0, "points": groups[0][1], "result": payload}]
                     diagnostics = {"image_encoded_once": True, "prompt_group_count": 1}
                 elif point_fallback_mode == "batch":
-                    payload = request_json(
-                        sam_url.rstrip("/") + "/segment_point_groups_batch",
-                        {"image": encoded, "prompt_groups": [points for _, points in groups]},
-                        timeout=timeout)
+                    payload = sam_point_groups(
+                        crop_bytes, [points for _, points in groups],
+                        {"sam3_point_url": sam_url}, timeout_seconds=timeout)
                     items = payload.get("items") or []
                     diagnostics = payload.get("diagnostics") or {}
                 else:

@@ -219,7 +219,8 @@ def sam_request(config, endpoint, image, *, timeout_seconds=None, **prompt):
 
 def _sam_request(config, endpoint, image, *, timeout_seconds=None, **prompt):
     point_endpoint = endpoint in {
-        "/segment_points_batch", "/segment_point_groups_batch"}
+        "/segment_points", "/segment_points_batch",
+        "/segment_point_groups_batch"}
     url = ((config.get("sam3_point_url") if point_endpoint else None)
            or config.get("sam3_url")
            or os.environ.get("SAM3_URL", "http://127.0.0.1:8766"))
@@ -279,14 +280,18 @@ def _validate_point_group_response(response, prompt_groups):
     return response
 
 
-def _sam_point_groups_sequential(image, prompt_groups, config):
+def _sam_point_groups_sequential(
+        image, prompt_groups, config, timeout_seconds=None):
     """Preserve the batch item contract on a service without the new route."""
     started = time.perf_counter()
     items = []
     for index, points in enumerate(prompt_groups):
         try:
+            request_options = {"points": points}
+            if timeout_seconds is not None:
+                request_options["timeout_seconds"] = timeout_seconds
             result = sam_request(
-                config, "/segment_points", image, points=points)
+                config, "/segment_points", image, **request_options)
             items.append({"index": index, "points": points, "result": result})
         except SamHttpError as error:
             if error.status_code != 400:
@@ -303,7 +308,7 @@ def _sam_point_groups_sequential(image, prompt_groups, config):
     }}
 
 
-def sam_point_groups(image, prompt_groups, config):
+def sam_point_groups(image, prompt_groups, config, *, timeout_seconds=None):
     """Use one-encoding point groups and fall back only for a missing route."""
     if (not isinstance(prompt_groups, list) or not 1 <= len(prompt_groups) <= 64
             or any(not isinstance(group, list) or not 1 <= len(group) <= 32
@@ -313,17 +318,22 @@ def sam_point_groups(image, prompt_groups, config):
     with _sam_point_group_protocol_lock:
         protocol = _sam_point_group_protocols.get(endpoint_key)
     if protocol == "sequential":
-        return _sam_point_groups_sequential(image, prompt_groups, config)
+        return _sam_point_groups_sequential(
+            image, prompt_groups, config, timeout_seconds=timeout_seconds)
     try:
+        request_options = {"prompt_groups": prompt_groups}
+        if timeout_seconds is not None:
+            request_options["timeout_seconds"] = timeout_seconds
         response = sam_request(
             config, "/segment_point_groups_batch", image,
-            prompt_groups=prompt_groups)
+            **request_options)
     except SamHttpError as error:
         if error.status_code != 404:
             raise
         with _sam_point_group_protocol_lock:
             _sam_point_group_protocols[endpoint_key] = "sequential"
-        return _sam_point_groups_sequential(image, prompt_groups, config)
+        return _sam_point_groups_sequential(
+            image, prompt_groups, config, timeout_seconds=timeout_seconds)
     validated = _validate_point_group_response(response, prompt_groups)
     with _sam_point_group_protocol_lock:
         _sam_point_group_protocols[endpoint_key] = "batch"
@@ -661,10 +671,13 @@ def _sam_multi_endpoint_key(config):
         "SAM3_URL", "http://127.0.0.1:8766")).rstrip("/")
 
 
-def _sam_text_multi_legacy(image, prompts, config):
+def _sam_text_multi_legacy(image, prompts, config, timeout_seconds=None):
     """Adapt the original list/items contract used by the 5090 SAM worker."""
+    request_options = {"prompts": list(prompts.values())}
+    if timeout_seconds is not None:
+        request_options["timeout_seconds"] = timeout_seconds
     response = sam_request(
-        config, "/segment_text_multi", image, prompts=list(prompts.values()))
+        config, "/segment_text_multi", image, **request_options)
     items = response.get("items") if isinstance(response, dict) else None
     if not isinstance(items, list) or len(items) != len(prompts):
         raise ValueError("SAM 3 旧版多提示响应缺少完整类别结果")
@@ -688,7 +701,7 @@ def _sam_text_multi_legacy(image, prompts, config):
     return outputs, diagnostics
 
 
-def sam_text_multi(image, prompts, config):
+def sam_text_multi(image, prompts, config, *, timeout_seconds=None):
     """Evaluate several label prompts while the service reuses one image encoding."""
     if (not isinstance(prompts, dict) or not 2 <= len(prompts) <= 16
             or any(not isinstance(label, str) or not label.strip()
@@ -699,13 +712,19 @@ def sam_text_multi(image, prompts, config):
     with _sam_multi_protocol_lock:
         protocol = _sam_multi_protocols.get(endpoint_key)
     if protocol == "legacy_list":
-        return _sam_text_multi_legacy(image, prompts, config)
+        return _sam_text_multi_legacy(
+            image, prompts, config, timeout_seconds=timeout_seconds)
     try:
-        response = sam_request(config, "/segment_text_multi", image, prompts=prompts)
+        request_options = {"prompts": prompts}
+        if timeout_seconds is not None:
+            request_options["timeout_seconds"] = timeout_seconds
+        response = sam_request(
+            config, "/segment_text_multi", image, **request_options)
     except ValueError as error:
         if "image (base64) and prompts are required" not in str(error):
             raise
-        outputs, diagnostics = _sam_text_multi_legacy(image, prompts, config)
+        outputs, diagnostics = _sam_text_multi_legacy(
+            image, prompts, config, timeout_seconds=timeout_seconds)
         with _sam_multi_protocol_lock:
             _sam_multi_protocols[endpoint_key] = "legacy_list"
         return outputs, diagnostics

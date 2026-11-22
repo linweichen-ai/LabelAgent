@@ -1788,6 +1788,39 @@ class WorkflowTests(unittest.TestCase):
         self.assertTrue(first_diagnostics["image_encoded_once"])
         self.assertTrue(second_diagnostics["image_encoded_once"])
 
+    def test_multi_prompt_forwards_bounded_timeout_to_both_protocols(self):
+        prompts = {"a": "square", "b": "circle"}
+        config = {"sam3_url": "http://legacy-timeout-sam:18766"}
+        legacy = {"items": [
+            {"prompt": "square", "results": []},
+            {"prompt": "circle", "results": []},
+        ], "diagnostics": {"feature_reuse": True}}
+        with workflow._sam_multi_protocol_lock:
+            workflow._sam_multi_protocols.pop(config["sam3_url"], None)
+        with patch.object(workflow, "sam_request", side_effect=[
+                ValueError("SAM 3 请求失败：image (base64) and prompts are required"),
+                legacy]) as request:
+            workflow.sam_text_multi(
+                image_bytes(), prompts, config, timeout_seconds=37)
+        self.assertEqual(request.call_args_list[0].kwargs["timeout_seconds"], 37)
+        self.assertEqual(request.call_args_list[1].kwargs["timeout_seconds"], 37)
+
+    def test_point_group_fallback_forwards_bounded_timeout(self):
+        groups = [[{"x": 1, "y": 2, "label": 1}]]
+        config = {"sam3_point_url": "http://legacy-point-timeout-sam:18766"}
+        with workflow._sam_point_group_protocol_lock:
+            workflow._sam_point_group_protocols.pop(
+                config["sam3_point_url"], None)
+        with patch.object(workflow, "sam_request", side_effect=[
+                workflow.SamHttpError(404, "missing route"), {"score": .9}
+        ]) as request:
+            response = workflow.sam_point_groups(
+                image_bytes(), groups, config, timeout_seconds=41)
+        self.assertEqual(response["diagnostics"]["mode"],
+                         "sequential_endpoint_fallback")
+        self.assertEqual(request.call_args_list[0].kwargs["timeout_seconds"], 41)
+        self.assertEqual(request.call_args_list[1].kwargs["timeout_seconds"], 41)
+
     def test_multi_prompt_does_not_cache_malformed_legacy_response(self):
         prompts = {"a": "square", "b": "circle"}
         config = {"sam3_url": "http://malformed-legacy-sam:18766"}

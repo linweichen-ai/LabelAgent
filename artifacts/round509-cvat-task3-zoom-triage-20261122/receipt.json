@@ -1,0 +1,17 @@
+{
+  "schema_version": "labelagent.cvat-zoom-assistant-triage.v1",
+  "status": "zoom_triage_complete_human_signoff_pending",
+  "zoom_pack_manifest_sha256": "20606b67436e35807996ca38a1325cf87ba3ebbf15302e703fd287dc200ff29b",
+  "decision_counts": {
+    "likely_ok_after_zoom": 5,
+    "obvious_issue": 0,
+    "uncertain_needs_human": 3
+  },
+  "human_truth": false,
+  "human_signoff_count": 0,
+  "training_authorized": false,
+  "automatic_approval": false,
+  "private_candidate_ids_published": false,
+  "private_reasons_published": false,
+  "private_triage_sha256": "1c9c9ab262977328232bf04d899273c817918c5023432b6ffb4baee750644257"
+}

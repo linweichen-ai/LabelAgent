@@ -3,11 +3,27 @@ import unittest
 import numpy as np
 
 from tools.evaluate_pallet_box3d_overlap_pairs import (
-    depth_split_masks, mask_separation, projected_conflicts, select_source_rows,
+    depth_split_masks, index_manifest_files, mask_separation,
+    projected_conflicts, select_source_rows,
 )
 
 
 class PalletBox3dOverlapPairsTest(unittest.TestCase):
+    def test_manifest_index_preserves_multiple_frames_per_camera(self):
+        rows = [
+            {"sequence": "010", "camera": "camera_0", "frame_id": "100"},
+            {"sequence": "010", "camera": "camera_0", "frame_id": "200"},
+        ]
+        indexed = index_manifest_files(rows)
+        self.assertEqual(len(indexed), 2)
+        self.assertEqual(indexed[("010", 0, "100")]["frame_id"], "100")
+        self.assertEqual(indexed[("010", 0, "200")]["frame_id"], "200")
+
+    def test_manifest_index_rejects_duplicate_frame_identity(self):
+        row = {"sequence": "010", "camera": "camera_0", "frame_id": "100"}
+        with self.assertRaisesRegex(ValueError, "duplicate manifest image identity"):
+            index_manifest_files([row, dict(row)])
+
     def test_mask_separation_uses_smaller_instance(self):
         first = np.zeros((20, 20), dtype=bool); first[2:8, 2:8] = True
         second = np.zeros_like(first); second[7:13, 7:13] = True

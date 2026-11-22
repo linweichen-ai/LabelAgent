@@ -41,6 +41,19 @@ def select_source_rows(source: dict, selection: str) -> list[dict]:
     raise ValueError(f"unknown selection: {selection}")
 
 
+def index_manifest_files(rows: list[dict]) -> dict[tuple[str, int, str], dict]:
+    """Index every frame independently; never collapse temporal samples."""
+    result: dict[tuple[str, int, str], dict] = {}
+    for row in rows:
+        key = (str(row["sequence"]),
+               int(str(row["camera"]).split("_")[-1]),
+               str(row["frame_id"]))
+        if key in result:
+            raise ValueError(f"duplicate manifest image identity: {key}")
+        result[key] = row
+    return result
+
+
 def projected_conflicts(target, projected, threshold=.25):
     result = []
     target_area = int(target["mask"].sum())
@@ -206,8 +219,7 @@ def evaluate(source_report: Path, manifest_path: Path, labels_root: Path,
             or source.get("production_deployed") is not False):
         raise ValueError("requires the frozen non-deployed 3D ROI report")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    files = {(str(row["sequence"]), int(str(row["camera"]).split("_")[-1])): row
-             for row in manifest["files"]}
+    files = index_manifest_files(manifest["files"])
     root = Path(manifest["local_root"])
     output.mkdir(parents=True); masks_dir = output / "masks"; masks_dir.mkdir()
     visuals = output / "visuals"; visuals.mkdir()
@@ -216,7 +228,8 @@ def evaluate(source_report: Path, manifest_path: Path, labels_root: Path,
     skipped_no_conflict = 0
     for source_row in selected_source_rows:
         sequence, camera_number = str(source_row["sequence"]), int(source_row["camera"])
-        item = files[(sequence, camera_number)]; frame = str(item["frame_id"])
+        frame = str(source_row["frame_id"])
+        item = files[(sequence, camera_number, frame)]
         image_path = root / item["relative_path"]
         if digest(image_path) != item["sha256"]:
             raise ValueError("held-out image changed")
@@ -237,7 +250,9 @@ def evaluate(source_report: Path, manifest_path: Path, labels_root: Path,
         for projected_row in selected:
             mask, instance = infer_target(image, projected_row, projected, sam_url, timeout)
             masks[projected_row["obj_id"]] = mask
-            path = masks_dir / f"{sequence}-camera{camera_number}-obj{projected_row['obj_id']}.png"
+            path = masks_dir / (
+                f"{sequence}-frame{frame}-camera{camera_number}-"
+                f"obj{projected_row['obj_id']}.png")
             Image.fromarray(mask.astype(np.uint8) * 255).save(path)
             instance.update(mask_path=str(path.resolve()), mask_sha256=digest(path))
             instances.append(instance)
@@ -247,17 +262,19 @@ def evaluate(source_report: Path, manifest_path: Path, labels_root: Path,
             pairs.append({"target_obj_id": target["obj_id"], "other_obj_id": other["obj_id"],
                           "projected_target_overlap": target_fraction,
                           "projected_other_overlap": other_fraction, **metrics})
-        visual = visuals / f"{sequence}-camera{camera_number}.png"
+        visual = visuals / f"{sequence}-frame{frame}-camera{camera_number}.png"
         render(image, selected, masks, visual)
         split_masks, split_metrics = depth_split_masks(selected, masks)
         split_paths = {}
         for projected_row in selected:
             split_path = masks_dir / (
-                f"{sequence}-camera{camera_number}-obj{projected_row['obj_id']}-depth-split.png")
+                f"{sequence}-frame{frame}-camera{camera_number}-"
+                f"obj{projected_row['obj_id']}-depth-split.png")
             Image.fromarray(split_masks[projected_row["obj_id"]].astype(np.uint8) * 255).save(split_path)
             split_paths[str(projected_row["obj_id"])] = {
                 "path": str(split_path.resolve()), "sha256": digest(split_path)}
-        split_visual = visuals / f"{sequence}-camera{camera_number}-depth-split.png"
+        split_visual = visuals / (
+            f"{sequence}-frame{frame}-camera{camera_number}-depth-split.png")
         render(image, selected, split_masks, split_visual)
         split_pass = bool(split_metrics) and all(row["candidate_pass"] for row in split_metrics)
         handled = bool(split_metrics) and all(row["handled_candidate"] for row in split_metrics)

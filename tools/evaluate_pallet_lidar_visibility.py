@@ -15,7 +15,9 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tools.compare_boxes3d import Box
-from tools.evaluate_pallet_box3d_overlap_pairs import projected_conflicts
+from tools.evaluate_pallet_box3d_overlap_pairs import (
+    index_manifest_files, projected_conflicts,
+)
 from tools.evaluate_pallet_box3d_roi_sam import digest, load_camera, project_box
 from tools.evaluate_projected_support import project_visible
 from tools.slope_lidar_geometry import read_xyz_pcd
@@ -34,6 +36,17 @@ def classify_visibility(box_points: int, in_frame_points: int,
             and nearer_overlap >= .7):
         return "occluded_lidar_supported"
     return "sparse_or_parameter_sensitive"
+
+
+def index_pcd_files(rows: list[dict]) -> dict[tuple[str, str], dict]:
+    """Index LiDAR by sequence and frame without collapsing temporal data."""
+    result: dict[tuple[str, str], dict] = {}
+    for row in rows:
+        key = (str(row["sequence"]), str(row["frame_id"]))
+        if key in result:
+            raise ValueError(f"duplicate PCD identity: {key}")
+        result[key] = row
+    return result
 
 
 def in_camera_frame(points: np.ndarray, camera: dict, near=.2) -> np.ndarray:
@@ -101,9 +114,8 @@ def evaluate(source_report: Path, manifest_path: Path, pcd_manifest_path: Path,
         raise ValueError("requires the frozen non-deployed 3D ROI report")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     pcd_manifest = json.loads(pcd_manifest_path.read_text(encoding="utf-8"))
-    files = {(str(row["sequence"]), int(str(row["camera"]).split("_")[-1])): row
-             for row in manifest["files"]}
-    pcd_files = {str(row["sequence"]): row for row in pcd_manifest["files"]}
+    files = index_manifest_files(manifest["files"])
+    pcd_files = index_pcd_files(pcd_manifest["files"])
     image_root = Path(manifest["local_root"])
     output.mkdir(parents=True); visuals = output / "visuals"; visuals.mkdir()
     rows = []
@@ -111,12 +123,14 @@ def evaluate(source_report: Path, manifest_path: Path, pcd_manifest_path: Path,
                  and not row.get("instance_isolation_pass")]
     for source_row in ambiguous:
         sequence = str(source_row["sequence"]); camera_number = int(source_row["camera"])
-        item = files[(sequence, camera_number)]; frame = str(item["frame_id"])
+        frame = str(source_row["frame_id"])
+        item = files[(sequence, camera_number, frame)]
         image_path = image_root / item["relative_path"]
         if digest(image_path) != item["sha256"]:
             raise ValueError("held-out image changed")
-        pcd_item = pcd_files[sequence]; pcd_path = pcd_root / pcd_item["filename"]
-        if frame != str(pcd_item["frame_id"]) or digest(pcd_path) != pcd_item["sha256"]:
+        pcd_item = pcd_files[(sequence, frame)]
+        pcd_path = pcd_root / pcd_item["filename"]
+        if digest(pcd_path) != pcd_item["sha256"]:
             raise ValueError("PCD does not match frozen manifest")
         points = read_xyz_pcd(pcd_path)
         label = json.loads((labels_root / sequence / f"{frame}.json").read_text(
@@ -166,7 +180,8 @@ def evaluate(source_report: Path, manifest_path: Path, pcd_manifest_path: Path,
                     int(member.sum()), int((member & in_frame).sum()),
                     visible_counts, nearer_overlap),
             })
-        visual = visuals / f"{sequence}-camera{camera_number}-lidar-visibility.png"
+        visual = visuals / (
+            f"{sequence}-frame{frame}-camera{camera_number}-lidar-visibility.png")
         render(Image.open(image_path).convert("RGB"), selected, default_pixels,
                default_memberships, detail_rows, visual)
         rows.append({"sequence": sequence, "frame_id": frame,

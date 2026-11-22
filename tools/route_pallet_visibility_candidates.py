@@ -57,6 +57,38 @@ def route_instance(instance: dict, temporal: dict | None) -> dict:
             "reason": "no_safe_2d_candidate_route"}
 
 
+def split_metric_index(report: dict) -> dict[tuple[str, int, str, str], dict]:
+    if (report.get("schema_version") != "labelagent.pallet_box3d_overlap_pairs.v1"
+            or report.get("production_deployed") is not False):
+        raise ValueError("requires a frozen non-deployed split report")
+    result = {}
+    for image in report.get("rows", []):
+        for metric in image.get("depth_split_metrics", []):
+            key = (str(image["sequence"]), int(image["camera"]),
+                   str(image["frame_id"]), str(metric["obj_id"]))
+            if key in result:
+                raise ValueError(f"duplicate split metric for {key}")
+            result[key] = metric
+    return result
+
+
+def apply_split_gate(decision: dict, metric: dict | None) -> dict:
+    """Suppress a visible instance when its actual split mask is not usable."""
+    if not decision["allow_current_2d_candidate"]:
+        return decision
+    if metric is None:
+        raise ValueError("allowed candidate has no matching split metric")
+    if metric.get("candidate_pass") is True:
+        return decision
+    return {
+        **decision,
+        "route": "split_candidate_failed_review",
+        "allow_current_2d_candidate": False,
+        "suppress_current_2d_candidate": True,
+        "reason": "lidar_visible_but_depth_split_mask_failed_gate",
+    }
+
+
 def validate_single(report: dict) -> None:
     if (report.get("schema_version") != "labelagent.pallet_lidar_visibility.v1"
             or report.get("production_deployed") is not False
@@ -71,7 +103,8 @@ def validate_temporal(report: dict) -> None:
         raise ValueError("requires a frozen non-deployed temporal report")
 
 
-def route(single_path: Path, temporal_paths: list[Path], output: Path) -> dict:
+def route(single_path: Path, temporal_paths: list[Path], output: Path,
+          split_path: Path | None = None) -> dict:
     if output.exists():
         raise ValueError("output already exists")
     single = json.loads(single_path.read_text(encoding="utf-8")); validate_single(single)
@@ -85,6 +118,10 @@ def route(single_path: Path, temporal_paths: list[Path], output: Path) -> dict:
         if key in temporal_map:
             raise ValueError(f"duplicate temporal evidence for {key}")
         temporal_map[key] = {"path": path, "report": report}
+    split_metrics = None
+    if split_path is not None:
+        split_report = json.loads(split_path.read_text(encoding="utf-8"))
+        split_metrics = split_metric_index(split_report)
     rows = []
     for image in single["rows"]:
         sequence, camera, frame = (str(image["sequence"]), int(image["camera"]),
@@ -94,6 +131,8 @@ def route(single_path: Path, temporal_paths: list[Path], output: Path) -> dict:
             temporal_item = temporal_map.get(key)
             decision = route_instance(instance,
                                       temporal_item["report"] if temporal_item else None)
+            if split_metrics is not None:
+                decision = apply_split_gate(decision, split_metrics.get(key))
             rows.append({
                 "sequence": sequence, "camera": camera, "frame_id": frame,
                 "obj_id": instance["obj_id"],
@@ -114,6 +153,7 @@ def route(single_path: Path, temporal_paths: list[Path], output: Path) -> dict:
         "schema_version": "labelagent.pallet_visibility_candidate_routes.v1",
         "status": "offline_candidate_routes_not_deployed",
         "single_frame_report_sha256": digest(single_path),
+        "split_report_sha256": digest(split_path) if split_path else None,
         "temporal_report_count": len(temporal_reports),
         "candidate_count": len(rows), "route_counts": route_counts,
         "current_2d_candidates_allowed": sum(
@@ -135,9 +175,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--single-frame-report", required=True, type=Path)
     parser.add_argument("--temporal-report", action="append", default=[], type=Path)
+    parser.add_argument("--split-report", type=Path)
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
-    report = route(args.single_frame_report, args.temporal_report, args.output)
+    report = route(args.single_frame_report, args.temporal_report, args.output,
+                   args.split_report)
     print(json.dumps({key: report[key] for key in (
         "candidate_count", "route_counts", "current_2d_candidates_allowed",
         "current_2d_candidates_suppressed", "review_required",

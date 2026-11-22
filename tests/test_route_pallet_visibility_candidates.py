@@ -1,11 +1,34 @@
 import unittest
 
 from tools.route_pallet_visibility_candidates import (
-    propagation_sources, route_instance,
+    apply_split_gate, propagation_sources, route_instance, split_metric_index,
 )
 
 
 class PalletVisibilityCandidateRoutesTest(unittest.TestCase):
+    def test_split_gate_suppresses_visible_but_invalid_mask(self):
+        decision = route_instance(
+            {"lidar_visibility_classification": "visible_lidar_supported"}, None)
+        gated = apply_split_gate(decision, {"candidate_pass": False})
+        self.assertEqual(gated["route"], "split_candidate_failed_review")
+        self.assertFalse(gated["allow_current_2d_candidate"])
+        self.assertTrue(gated["suppress_current_2d_candidate"])
+
+    def test_split_metric_index_preserves_frame_identity(self):
+        report = {
+            "schema_version": "labelagent.pallet_box3d_overlap_pairs.v1",
+            "production_deployed": False,
+            "rows": [
+                {"sequence": "010", "camera": 0, "frame_id": "100",
+                 "depth_split_metrics": [{"obj_id": 1, "candidate_pass": True}]},
+                {"sequence": "010", "camera": 0, "frame_id": "200",
+                 "depth_split_metrics": [{"obj_id": 1, "candidate_pass": False}]},
+            ],
+        }
+        indexed = split_metric_index(report)
+        self.assertTrue(indexed[("010", 0, "100", "1")]["candidate_pass"])
+        self.assertFalse(indexed[("010", 0, "200", "1")]["candidate_pass"])
+
     def test_visible_instance_allows_candidate_but_not_truth(self):
         row = route_instance({"lidar_visibility_classification":
                               "visible_lidar_supported"}, None)

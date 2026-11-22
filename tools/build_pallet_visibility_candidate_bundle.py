@@ -16,15 +16,21 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tools.evaluate_pallet_box3d_roi_sam import digest
+from tools.evaluate_pallet_box3d_overlap_pairs import index_manifest_files
 
 
 COLORS = [(35, 210, 125), (255, 160, 35), (90, 125, 255), (220, 75, 180)]
 
 
-def validate_mask(path: Path, expected_pixels: int) -> np.ndarray:
+def preview_filename(sequence: str, camera: int, frame: str) -> str:
+    return f"{sequence}-frame{frame}-camera{camera}-candidate-route.png"
+
+
+def validate_mask(path: Path, expected_pixels: int,
+                  expected_shape: tuple[int, int]) -> np.ndarray:
     value = np.asarray(Image.open(path).convert("L"))
-    if value.shape != (512, 640) or not set(np.unique(value)).issubset({0, 255}):
-        raise ValueError("candidate mask is not a 640x512 binary PNG")
+    if value.shape != expected_shape or not set(np.unique(value)).issubset({0, 255}):
+        raise ValueError("candidate mask shape or binary encoding is invalid")
     mask = value > 0
     if int(mask.sum()) != int(expected_pixels):
         raise ValueError("candidate mask pixel count differs from split report")
@@ -71,8 +77,7 @@ def build(route_path: Path, split_path: Path, split_mask_root: Path,
             or split.get("schema_version") != "labelagent.pallet_box3d_overlap_pairs.v1"
             or split.get("production_deployed") is not False):
         raise ValueError("requires frozen non-deployed route and split reports")
-    image_files = {(str(row["sequence"]), int(str(row["camera"]).split("_")[-1])): row
-                   for row in manifest["files"]}
+    image_files = index_manifest_files(manifest["files"])
     split_rows = {(str(row["sequence"]), int(row["camera"]), str(row["frame_id"])): row
                   for row in split["rows"]}
     output.mkdir(parents=True); masks_dir = output / "masks"; masks_dir.mkdir()
@@ -80,6 +85,14 @@ def build(route_path: Path, split_path: Path, split_mask_root: Path,
     rows = []
     for route in routes["rows"]:
         key = (str(route["sequence"]), int(route["camera"]), str(route["frame_id"]))
+        image_item = image_files.get(key)
+        if image_item is None:
+            raise ValueError(f"route has no matching image: {key}")
+        image_path = Path(manifest["local_root"]) / image_item["relative_path"]
+        if digest(image_path) != image_item["sha256"]:
+            raise ValueError("held-out image changed")
+        with Image.open(image_path) as image:
+            expected_shape = (image.height, image.width)
         split_row = split_rows.get(key)
         if split_row is None:
             raise ValueError(f"route has no matching split row: {key}")
@@ -95,12 +108,20 @@ def build(route_path: Path, split_path: Path, split_mask_root: Path,
             if not metric.get("candidate_pass"):
                 raise ValueError("allowed route lacks a passing split metric")
             name = f"{key[0]}-camera{key[1]}-frame{key[2]}-obj{route['obj_id']}.png"
-            source = split_mask_root / (
-                f"{key[0]}-camera{key[1]}-obj{route['obj_id']}-depth-split.png")
-            expected = split_row["depth_split_masks"][str(route["obj_id"])]["sha256"]
+            split_asset = split_row["depth_split_masks"][str(route["obj_id"])]
+            expected = split_asset["sha256"]
+            recorded_path = split_asset.get("path")
+            if recorded_path:
+                source = Path(recorded_path).resolve()
+                root = split_mask_root.resolve()
+                if root not in source.parents:
+                    raise ValueError("source split mask escaped declared root")
+            else:
+                source = split_mask_root / (
+                    f"{key[0]}-camera{key[1]}-obj{route['obj_id']}-depth-split.png")
             if digest(source) != expected:
                 raise ValueError("source split mask hash mismatch")
-            validate_mask(source, metric["split_pixels"])
+            validate_mask(source, metric["split_pixels"], expected_shape)
             target = masks_dir / name; shutil.copyfile(source, target)
             if digest(target) != expected:
                 raise ValueError("copied candidate mask hash mismatch")
@@ -116,9 +137,7 @@ def build(route_path: Path, split_path: Path, split_mask_root: Path,
     preview_rows = []
     for key in sorted(set((row["sequence"], row["camera"], row["frame_id"])
                           for row in rows)):
-        item = image_files[(key[0], key[1])]
-        if str(item["frame_id"]) != key[2]:
-            raise ValueError("image manifest frame differs from route")
+        item = image_files[key]
         image_path = Path(manifest["local_root"]) / item["relative_path"]
         if digest(image_path) != item["sha256"]:
             raise ValueError("held-out image changed")
@@ -130,7 +149,7 @@ def build(route_path: Path, split_path: Path, split_mask_root: Path,
                 candidates.append({**row,
                                    "absolute_mask_path": str(output / row["mask_path"])})
         suppressed = [row for row in current if not row["mask_path"]]
-        name = f"{key[0]}-camera{key[1]}-candidate-route.png"
+        name = preview_filename(key[0], key[1], key[2])
         preview = previews / name
         render_preview(image_path, candidates, suppressed, preview)
         preview_rows.append({"sequence": key[0], "camera": key[1],

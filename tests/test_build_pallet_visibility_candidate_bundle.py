@@ -6,11 +6,17 @@ import unittest
 import numpy as np
 from PIL import Image
 
-from tools.build_pallet_visibility_candidate_bundle import build
+from tools.build_pallet_visibility_candidate_bundle import build, preview_filename
 from tools.evaluate_pallet_box3d_roi_sam import digest
 
 
 class PalletVisibilityCandidateBundleTest(unittest.TestCase):
+    def test_preview_name_preserves_frame_identity(self):
+        self.assertNotEqual(
+            preview_filename("010", 0, "100"),
+            preview_filename("010", 0, "200"),
+        )
+
     def test_bundle_emits_only_allowed_mask(self):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw); masks = root / "split_masks"; masks.mkdir()
@@ -18,7 +24,7 @@ class PalletVisibilityCandidateBundleTest(unittest.TestCase):
             image = image_root / "frame.png"
             Image.new("RGB", (640, 512), "gray").save(image)
             mask = np.zeros((512, 640), np.uint8); mask[10:20, 10:20] = 255
-            mask_path = masks / "010-camera0-obj1-depth-split.png"
+            mask_path = masks / "010-frame9-camera0-obj1-depth-split.png"
             Image.fromarray(mask).save(mask_path)
             routes = {"schema_version": "labelagent.pallet_visibility_candidate_routes.v1",
                       "production_deployed": False, "rows": [
@@ -36,7 +42,8 @@ class PalletVisibilityCandidateBundleTest(unittest.TestCase):
                 "depth_split_metrics": [
                     {"obj_id": 1, "candidate_pass": True, "split_pixels": 100},
                     {"obj_id": 2, "candidate_pass": False, "split_pixels": 0}],
-                "depth_split_masks": {"1": {"sha256": digest(mask_path)},
+                "depth_split_masks": {"1": {"path": str(mask_path),
+                                                     "sha256": digest(mask_path)},
                                       "2": {"sha256": "unused"}},
             }]}
             manifest = {"local_root": str(image_root), "files": [{

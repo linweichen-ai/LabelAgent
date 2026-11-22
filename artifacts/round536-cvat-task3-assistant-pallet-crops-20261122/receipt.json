@@ -1,0 +1,20 @@
+{
+  "schema_version": "labelagent.sam3-assistant-instance-crop-dataset.v1",
+  "status": "ready_for_isolated_candidate_training",
+  "candidate_manifest_sha256": "1033e8ad16fc0e4c8b03ef246557ae321273b4188b92bc3171c9604558f32f99",
+  "assistant_review_sha256": "aa0a721b0527ce6d193766fc757bd65a5bacd540bd7da8143cc420728c714233",
+  "output_coco_sha256": "76c35b75e12b37e581ff21b9ef781e837057dc1851939764698b4b2050aa2291",
+  "candidate_count": 81,
+  "assistant_pass_count": 71,
+  "assistant_uncertain_count": 10,
+  "assistant_reject_count": 0,
+  "crop_count": 71,
+  "padding_fraction": 0.12,
+  "human_truth": false,
+  "training_authorized": false,
+  "test24_included": false,
+  "production_deployed": false,
+  "auto_deploy": false,
+  "private_candidate_ids_published": false,
+  "raw_images_published": false
+}

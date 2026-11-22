@@ -1,0 +1,32 @@
+# @package _global_
+defaults:
+  - /configs/sfl_cpd15y/stage0_mask_embed
+  - _self_
+
+roboflow_train:
+  num_images: 71
+
+trainer:
+  _target_: sam3.train.assistant_instance_crop_trainer.AssistantInstanceCropTrainer
+  mode: train_only
+  max_epochs: 1
+  max_optimizer_steps: 36
+  skip_first_val: true
+  candidate_contract:
+    assistant_reviewed: true
+    source_manual_instances: true
+    human_truth: false
+    not_for_deployment: true
+    positive_instance_crops: true
+    test24_in_training: false
+  data:
+    train:
+      dataset:
+        limit_ids: 71
+        img_folder: ${paths.stage0_train_root}
+        ann_file: ${paths.stage0_train_root}/_assistant_delegated_pallet_crops.coco.json
+      num_workers: 0
+      shuffle: false
+
+launcher:
+  gpus_per_node: 2

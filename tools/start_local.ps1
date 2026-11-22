@@ -21,7 +21,7 @@ New-Item -ItemType Directory -Force -Path $RuntimeTemp | Out-Null
 if (Test-Path $Record) {
     $old = Get-Content -Raw $Record | ConvertFrom-Json
     $alive = @($old.pids | Where-Object { Get-Process -Id $_ -ErrorAction SilentlyContinue })
-    if ($alive.Count -gt 0) { throw "LabelAgent is already managed by this checkout. Run tools\stop_local.ps1 first." }
+    if ($alive.Count -gt 0) { throw "A live PID is present in this checkout's process record. Run tools\stop_local.ps1; if it reports a stale identity, re-run it with -ArchiveStaleRecord." }
 }
 
 $env:PYTHONUTF8 = "1"

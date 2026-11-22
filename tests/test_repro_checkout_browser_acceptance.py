@@ -48,11 +48,25 @@ class ReproCheckoutBrowserAcceptanceTests(unittest.TestCase):
         self.assertIn("executable_path = [IO.Path]::GetFullPath", start)
         self.assertIn("the process record belongs to another checkout", stop)
         self.assertIn("duplicate PID in the process record", stop)
-        self.assertIn("its executable does not match this checkout", stop)
-        self.assertIn("its creation time no longer matches", stop)
+        self.assertIn("executable mismatch", stop)
+        self.assertIn("creation-time mismatch", stop)
         verify = stop.index("$verified = @()")
         terminate = stop.index("Stop-Process -Id $process.Id")
         self.assertLess(verify, terminate)
+
+    def test_stale_process_record_recovery_is_explicit_and_recoverable(self):
+        start = (ROOT / "tools" / "start_local.ps1").read_text(encoding="utf-8")
+        stop = (ROOT / "tools" / "stop_local.ps1").read_text(encoding="utf-8")
+        self.assertIn("[switch]$ArchiveStaleRecord", stop)
+        self.assertIn("the record mixes matching and stale process identities", stop)
+        self.assertIn("if (-not $ArchiveStaleRecord)", stop)
+        self.assertIn('Join-Path $Root ".repro\\stale-process-records"', stop)
+        self.assertIn("Move-Item -LiteralPath $Record -Destination $archivePath", stop)
+        self.assertIn("without stopping unrelated processes", stop)
+        self.assertIn("-ArchiveStaleRecord", start)
+        archive = stop.index("Move-Item -LiteralPath $Record")
+        terminate = stop.index("Stop-Process -Id $process.Id")
+        self.assertLess(archive, terminate)
 
     def test_checkout_runs_logic_and_real_synthetic_browser_acceptance(self):
         source = (ROOT / "tools" / "verify_checkout.ps1").read_text(encoding="utf-8")

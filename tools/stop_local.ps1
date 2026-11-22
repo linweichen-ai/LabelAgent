@@ -1,3 +1,7 @@
+param(
+    [switch]$ArchiveStaleRecord
+)
+
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 $Python = Join-Path $Root ".venv\Scripts\python.exe"
@@ -35,6 +39,7 @@ if ($data.schema_version -eq "labelagent.local-process-record.v2" -and $data.pro
 }
 
 $verified = @()
+$stale = @()
 $seen = @{}
 foreach ($identity in $identities) {
     $processId = [int]$identity.pid
@@ -51,11 +56,13 @@ foreach ($identity in $identities) {
         throw "Refusing to stop PID $processId because its identity cannot be read."
     }
     if (-not [string]::Equals($actualPath, $expectedPython, [StringComparison]::OrdinalIgnoreCase)) {
-        throw "Refusing to stop PID $processId because its executable does not match this checkout."
+        $stale += "PID $processId executable mismatch"
+        continue
     }
     if ($identity.role -eq "legacy") {
         if ($actualStarted -lt $identity.legacy_min_utc -or $actualStarted -gt $identity.legacy_max_utc) {
-            throw "Refusing to stop PID $processId because the legacy start time does not match."
+            $stale += "PID $processId legacy creation-time mismatch"
+            continue
         }
     } else {
         if (@("sam3", "workbench") -notcontains [string]$identity.role) {
@@ -69,10 +76,30 @@ foreach ($identity in $identities) {
         }
         $recordedStarted = [DateTimeOffset]::Parse([string]$identity.started_at_utc).UtcDateTime
         if ([Math]::Abs(($actualStarted - $recordedStarted).TotalSeconds) -gt 1) {
-            throw "Refusing to stop PID $processId because its creation time no longer matches."
+            $stale += "PID $processId creation-time mismatch"
+            continue
         }
     }
     $verified += $process
+}
+
+if ($stale.Count -gt 0) {
+    if ($verified.Count -gt 0) {
+        throw "Refusing to stop processes: the record mixes matching and stale process identities."
+    }
+    if (-not $ArchiveStaleRecord) {
+        throw "Refusing to stop processes: the record is stale. Re-run with -ArchiveStaleRecord to move the record aside without stopping those unrelated processes."
+    }
+    $archiveDirectory = Join-Path $Root ".repro\stale-process-records"
+    New-Item -ItemType Directory -Force -Path $archiveDirectory | Out-Null
+    $archiveName = "processes-" + (Get-Date).ToUniversalTime().ToString("yyyyMMdd-HHmmss-fff") + ".json"
+    $archivePath = Join-Path $archiveDirectory $archiveName
+    if (Test-Path $archivePath) {
+        throw "Refusing to archive the stale record because the destination already exists."
+    }
+    Move-Item -LiteralPath $Record -Destination $archivePath
+    Write-Host "Stale process record archived without stopping unrelated processes: $archivePath"
+    exit 0
 }
 
 foreach ($process in $verified) {

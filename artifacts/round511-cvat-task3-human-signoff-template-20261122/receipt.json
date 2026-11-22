@@ -1,0 +1,12 @@
+{
+  "schema_version": "labelagent.cvat-human-instance-signoff-template-receipt.v1",
+  "status": "pending_human_review",
+  "review_manifest_sha256": "519250bb839667155dcd55c8591f21f17a125e277a5553832f4a56683358e28a",
+  "candidate_count": 81,
+  "pending_count": 81,
+  "human_signoff_count": 0,
+  "training_authorized": false,
+  "automatic_approval": false,
+  "private_template_sha256": "28c66746d3b7c76117a3eb79b64e54cb3da7c116b5b94df6b37843e3480f066d",
+  "private_candidate_ids_published": false
+}

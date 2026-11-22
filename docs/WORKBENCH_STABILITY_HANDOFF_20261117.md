@@ -4074,3 +4074,10 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 首次隔离生成暴露Windows深目录临时路径过长；生成器现缩短临时目录，并在输出位于`candidate_comparison_packs`时上移临时根，同时把目录创建纳入失败清理边界。补充非整数/负数候选ID写前拒绝。
 - 隔离端口8877在新载入代次下重新生成33项/133文件，真实Edge确认1个包、33条记录、两张预览、同会话偏好保留、新会话隔离；候选API非GET、受保护写入、页面错误和意外HTTP错误均为0。验收后隔离服务已停止，8877端口已释放。
 - 全量Python 1733项通过、1项跳过、272个子测试通过；Node 182/182通过。本轮尚未部署正式工作台；原始manifest含绝对数据路径，保持本地未跟踪，不推送GitHub/CNB。详见`docs/CANDIDATE_COMPARISON_BROWSER_ROUND735_20261123.md`。
+
+## 2026-11-23 Round737 补充：正式候选对比部署
+
+- 正式代码先备份到`D:\Apps\LabelAgent\.local\deploy-backups\candidate-comparison-20261123-064527`，再通过现有受管启动器短暂重启；SAM优先5090验收通过，主VLM预热0.076秒，未启动训练或常驻占卡任务。
+- 重启后按新载入代次`1838476875584112`重新生成正式只读包`pallet-boundary-live-20261123`，包含33项/133文件；旧代次包没有复制到正式WORK。
+- 正式真实Edge验收确认1包、33条、两张预览、同会话保留、新会话隔离、空目录刷新失败关闭；候选API非GET、受保护写入、请求失败、页面错误和意外HTTP错误均为0。
+- 正式`state.json`、`files.json`、`file_sessions.json`哈希与部署前备份完全一致，工作台当前idle、SAM状态ok；候选索引明确`human_truth_writes=false`、`training_data_writes=false`。详见`docs/FORMAL_CANDIDATE_COMPARISON_DEPLOYMENT_ROUND737_20261123.md`。

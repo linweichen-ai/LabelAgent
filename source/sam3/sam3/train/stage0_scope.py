@@ -1,9 +1,12 @@
 """Exact Stage-0 SAM3 model scope used by the supervised PEFT package."""
 from __future__ import annotations
 
+import functools
 import hashlib
 from pathlib import Path
 import re
+
+import torch
 
 
 EXPECTED_PARAMETER_NAMES = (
@@ -17,6 +20,26 @@ EXPECTED_PARAMETER_NAMES = (
 EXPECTED_PARAMETER_COUNT = 197376
 EXPECTED_NAMES_SHA256 = "efacf600a68248109986db8b610f9861a8255e586aa64a2909cfcaeaded686a1"
 HASH = re.compile(r"^[0-9a-f]{64}$")
+
+
+def _freeze_backbone_execution(model):
+    """Run fully frozen image/text encoders without autograd graphs."""
+    backbone = model.backbone
+    if any(parameter.requires_grad for parameter in backbone.parameters()):
+        raise ValueError("Stage-0 backbone unexpectedly has trainable parameters")
+    if getattr(backbone, "_stage0_no_grad_wrapped", False):
+        return model
+    for method_name in ("forward_image", "forward_text"):
+        original = getattr(backbone, method_name)
+
+        @functools.wraps(original)
+        def no_grad_forward(*args, _original=original, **kwargs):
+            with torch.no_grad():
+                return _original(*args, **kwargs)
+
+        setattr(backbone, method_name, no_grad_forward)
+    backbone._stage0_no_grad_wrapped = True
+    return model
 
 
 def _file_sha256(path):
@@ -43,7 +66,7 @@ def apply_exact_stage0_scope(model):
                 if name in EXPECTED_PARAMETER_NAMES)
     if actual != EXPECTED_PARAMETER_NAMES or count != EXPECTED_PARAMETER_COUNT:
         raise ValueError("Stage-0 trainable scope/count drift")
-    return model
+    return _freeze_backbone_execution(model)
 
 
 def build_stage0_image_model(*, checkpoint_path, checkpoint_sha256,

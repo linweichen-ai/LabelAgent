@@ -19,6 +19,16 @@ class AssistantInstanceCropTrainingTests(unittest.TestCase):
         self.assertIn("EXPECTED_STEPS = 36", source)
         self.assertIn("assistant_pallet_crop_mask_embed.pt", source)
 
+    def test_stage0_detaches_the_fully_frozen_backbone(self):
+        source = (
+            ROOT / "source/sam3/sam3/train/stage0_scope.py"
+        ).read_text(encoding="utf-8")
+        ast.parse(source)
+        self.assertIn("_freeze_backbone_execution", source)
+        self.assertIn('(\"forward_image\", \"forward_text\")', source)
+        self.assertIn("with torch.no_grad():", source)
+        self.assertIn("Stage-0 backbone unexpectedly has trainable parameters", source)
+
     def test_config_is_one_epoch_and_candidate_only(self):
         path = ROOT / "source/sam3/sam3/train/configs/sfl_cpd15y/stage0_assistant_instance_crop_epoch.yaml"
         value = yaml.safe_load(path.read_text(encoding="utf-8"))

@@ -6,6 +6,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
+. (Join-Path $PSScriptRoot "resolve_python312.ps1")
 $Venv = Join-Path $Root ".venv"
 $VenvPython = Join-Path $Venv "Scripts\python.exe"
 $ResolvedTemp = if ($TempDir) { [IO.Path]::GetFullPath($TempDir) } else { Join-Path $Root ".repro\setup-temp" }
@@ -16,11 +17,8 @@ $env:TEMP = $ResolvedTemp
 $env:TMP = $ResolvedTemp
 $env:PYTHONUTF8 = "1"
 if (-not (Test-Path $VenvPython)) {
-    if ($Python -eq "py") {
-        & py -3.12 -m venv $Venv
-    } else {
-        & $Python -m venv $Venv
-    }
+    $BootstrapPython = Resolve-LabelAgentPython312 -Requested $Python
+    & $BootstrapPython -m venv $Venv
     if ($LASTEXITCODE -ne 0) { throw "Python 3.12 virtual environment creation failed" }
 }
 

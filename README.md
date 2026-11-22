@@ -25,6 +25,8 @@ git clone --branch reproduce --single-branch https://github.com/linweichen-ai/La
 
 无需模型权重、MCAP 或私有标注，也可用公开合成数据真实验证离线人工复核页的草稿导出、刷新恢复、篡改拦截和训练授权门禁。`tools/setup_windows.ps1` 已安装所需浏览器验收依赖，标准 `tools/verify_checkout.ps1` 会自动执行该真实浏览器自检；该过程只访问本机回环地址，不会产生人工真值或训练批准。
 
+若只想先验证公开复核页面，不准备安装 CUDA/PyTorch、Node.js 或模型权重，可直接运行 `tools/setup_public_browser_check.ps1`。它在 `.repro` 下建立独立的轻量环境，仅安装固定版本的 Pillow 与 Playwright，完成后给出真实 Edge 浏览器回执。
+
 团队内部收到已授权的 LoRA ZIP 时，可用 `tools/verify_qwen3vl_controlled_bundle.py` 独立核对
 整包摘要、逐文件哈希、基座身份和全部 LoRA 张量；公开仓库仍不分发权重。详见
 [受控 LoRA 复现包记录](docs/QWEN3VL2B_CONTROLLED_BUNDLE_ROUND497_20261122.md)。

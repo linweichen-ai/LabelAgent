@@ -31,6 +31,8 @@ powershell -ExecutionPolicy Bypass -File tools\setup_windows.ps1
 
 脚本安装本项目已验证的 CUDA 12.8 PyTorch、根目录固定依赖和仓库内 SAM3 源码。已有正确 PyTorch 时可加 `-SkipTorch`，但之后仍须通过自检。安装包较大；默认临时目录为仓库内 `.repro/setup-temp`，空间不足时用 `-TempDir E:\LabelAgentTemp` 指向有足够空间的本地磁盘。
 
+安装入口会先尝试标准 `py -3.12`，再检查 Python Launcher 已注册的其他3.12运行时（包括 Astral/uv 安装的解释器），并核对实际主次版本。仍无法定位时可显式传入 `-Python C:\path\to\python.exe`。
+
 SAM3 权重不随仓库发布。取得合法授权后，将权重放到：
 
 ```text
@@ -108,6 +110,14 @@ HTTP 200 只证明服务连通。完整验收还应在一张已授权图片上�
 ### 无私有数据的离线复核浏览器自检
 
 这项自检不需要模型权重、MCAP、人工真值或账号凭证。它生成81项公开合成身份和1像素占位图，在真实 Edge 浏览器中验证：部分草稿下载、刷新后内存清空、草稿文件恢复、哈希篡改整包拒绝、81项完整前正式导出禁用，以及正式导出中的训练授权始终为否。
+
+只验证这条公开流程时，不必先安装 CUDA/PyTorch、Node.js 或完整项目环境：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\setup_public_browser_check.ps1
+```
+
+脚本在 `.repro/public-browser-venv` 建立独立环境，仅安装固定版本的 Pillow 与 Playwright，执行依赖一致性检查和真实 Edge 自检。它不会读取模型权重、MCAP、人工真值或本地工作状态，也不会把合成决定写成训练批准。
 
 `tools/setup_windows.ps1` 已默认安装固定版本的浏览器验收依赖。只有在本轮更新前已经创建过 `.venv` 且不重新执行安装脚本时，才需要手动补装 `tools/requirements-browser-qa.txt`。单独运行命令为：
 

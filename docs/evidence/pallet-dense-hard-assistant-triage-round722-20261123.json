@@ -1,0 +1,46 @@
+{
+  "schema_version": "labelagent.pallet_dense_hard_assistant_triage.v1",
+  "date": "2026-11-23",
+  "scope": "assistant_visual_triage_only",
+  "input": {
+    "path": "artifacts/round721-pallet-dense-hard-review-pack-current-tool-20261123/manifest.json",
+    "sha256": "b1670d71a5b1f6e6365a8900578457dd54cfd6aa89b6ef2120b1e6f327682007",
+    "card_count": 15
+  },
+  "summary": {
+    "accept_candidate_for_human_confirmation": 3,
+    "reject_or_redraw": 6,
+    "uncertain_requires_zoomed_review": 6
+  },
+  "decisions": [
+    {"sequence": "006", "obj_id": "10", "decision": "reject_or_redraw", "reason": "one pixel; no valid contour"},
+    {"sequence": "006", "obj_id": "11", "decision": "uncertain", "reason": "very small partial mask; instance ownership unclear"},
+    {"sequence": "006", "obj_id": "12", "decision": "uncertain", "reason": "inside pallet region but coverage too small"},
+    {"sequence": "006", "obj_id": "13", "decision": "uncertain", "reason": "severe occlusion; instance identity unclear"},
+    {"sequence": "006", "obj_id": "14", "decision": "uncertain", "reason": "may mix adjacent stacked instance"},
+    {"sequence": "006", "obj_id": "15", "decision": "reject_or_redraw", "reason": "disconnected line and small fragment"},
+    {"sequence": "006", "obj_id": "16", "decision": "accept_candidate_for_human_confirmation", "reason": "continuous mask on blue pallet top surface"},
+    {"sequence": "006", "obj_id": "23", "decision": "accept_candidate_for_human_confirmation", "reason": "clear independent blue pallet top surface"},
+    {"sequence": "008", "obj_id": "67", "decision": "uncertain", "reason": "fragmented mask and unclear boundary near forklift"},
+    {"sequence": "008", "obj_id": "69", "decision": "accept_candidate_for_human_confirmation", "reason": "concentrated mask on blue pallet top surface"},
+    {"sequence": "008", "obj_id": "75", "decision": "reject_or_redraw", "reason": "eleven-pixel thin line; severe under-coverage"},
+    {"sequence": "008", "obj_id": "76", "decision": "reject_or_redraw", "reason": "two disconnected fragments; severe under-coverage"},
+    {"sequence": "008", "obj_id": "77", "decision": "reject_or_redraw", "reason": "one pixel; invalid candidate"},
+    {"sequence": "008", "obj_id": "78", "decision": "uncertain", "reason": "very small mask; adjacent instance confusion possible"},
+    {"sequence": "008", "obj_id": "79", "decision": "reject_or_redraw", "reason": "empty mask"}
+  ],
+  "review_passes": 2,
+  "assistant_only": true,
+  "human_signoff": false,
+  "human_pixel_truth": false,
+  "approved_for_training": false,
+  "training_authorized": false,
+  "automatic_approval": false,
+  "outside_instance": "ignore",
+  "human_truth_writes": 0,
+  "training_data_writes": 0,
+  "workbench_writes": 0,
+  "oss_writes": 0,
+  "production_deployed": false,
+  "readback_verified": true
+}

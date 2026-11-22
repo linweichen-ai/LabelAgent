@@ -1,0 +1,113 @@
+{
+  "schema_version": "labelagent.pallet_human_pixel_training_readiness.v1",
+  "date": "2026-11-23",
+  "scope": "read_only_local_training_readiness_audit",
+  "formal_inputs": {
+    "state_json": {
+      "path": "D:/Apps/LabelAgent/work/state.json",
+      "bytes": 293018,
+      "sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115"
+    },
+    "file_sessions_json": {
+      "path": "D:/Apps/LabelAgent/work/file_sessions.json",
+      "bytes": 36676378,
+      "sha256": "94e8bee324628585e7532e595348293df1da7b24041a1d4df1c2ec9fb734e02e"
+    },
+    "human_review_receipt_count": 10,
+    "human_review_manifest_sha256": "b49b5d3d728a1b085b0513a1e9c05bcef364bb154dea69ff3a808299ba0fc19c",
+    "human_review_manifest_algorithm": "sort files by name; build array of {name,sha256}; json.dumps ensure_ascii=false sort_keys=true separators=comma-colon; UTF-8; SHA-256",
+    "human_review_files": [
+      {"name": "000001-1eb37ac949d00ceb92a608629b891d64140d7561caeae04b31e736fddeb28211.json", "bytes": 2015, "sha256": "7aa56cd9f1b889875a838092d383f42809600ce7a87c14548d5388c30638fac9"},
+      {"name": "000002-4228f2a4ebfec7ee73a6d6963d28e585b5d6a328f069b792390c8af1f931cef9.json", "bytes": 2075, "sha256": "25b5024ee51ac776b7da38e93dac6ad9aa24cdca738855a9ba93843bb803aece"},
+      {"name": "000003-9f834c63557df303b34f0a42382b0fb06d83d61766c99cc6b71e6fe440ddb5a8.json", "bytes": 1820, "sha256": "bf569e67a8d709d8d73d7c4814bca5aef0c79a9baae2c294cf93c774fdd0b8b5"},
+      {"name": "000004-65cee7dc4e2b26a311ffbc922145950dbbb409dac0542dffce032e095f10622f.json", "bytes": 1813, "sha256": "f530043f490e54b2437f23ffdc821ccc064bd40dc423c201aee3e13fc20dbea9"},
+      {"name": "000005-cf30632064f58a535d6499a6210d0938ed84806e0755c6bf56eef8de67b75d3a.json", "bytes": 2833, "sha256": "e12c9d8c3c71865890523129fa212e63d080e8cf9ad0cd8529ca86d350c91008"},
+      {"name": "000006-ac1821917afb5ef2ee9f3722d0c015884e879ea7f3fc88cded10139bdd313256.json", "bytes": 3200, "sha256": "17ef790ec4c86ad4f3c5e0ec8aeada6c95e8dd5427c733f5c37dbba3d452677e"},
+      {"name": "000007-e5fc6f3591a7b253c2c7df57d1451d22a53c8b5782b5e0bd5345e267126c185b.json", "bytes": 2063, "sha256": "d3d520ac7d3c0612b2a8cd9a314f8cacd6fa07cb4cf479e476af85dbddd4e360"},
+      {"name": "000008-31071db48581dfc753d0eabcb3a162d9959ba03072fdc0314fd547ee85508c7b.json", "bytes": 2045, "sha256": "2dfdf81855e16cd2dc4be09783b79a9ccfc01ae32a7130e04074e1532988b5d4"},
+      {"name": "000009-956f658cdea58368fb227796c54393ae93aefbbda12ccc0601f00fd9441c0076.json", "bytes": 3275, "sha256": "d63f19b5269d081b781226e6474df0066d8e1c50138f19b66462ea7c0848fda3"},
+      {"name": "000010-445035abb21053a54d538ea388fb12e2803a79eb96470a759b704127acc44654.json", "bytes": 3200, "sha256": "f6d1f3b7050f41c987ff5d830d9aa4f8693d28e73bf51b79381b395f8ca58d6d"}
+    ]
+  },
+  "workbench_review_inventory": {
+    "receipt_count": 10,
+    "unique_scopes": 9,
+    "current_hash_matched_committed_unique_frames": 7,
+    "stale_truth_hash_unique_frames": 2,
+    "current_pallet_frames": 6,
+    "current_pallet_shapes": 48,
+    "identity_assurance": "self_declared",
+    "truth_role": "workbench_human_truth_candidate",
+    "dataset_split": "unassigned",
+    "training_return_allowed_count": 0,
+    "training_approved_count": 0,
+    "pallet_distribution": [
+      {"source": "batchA_0920_000_clean_review", "unique_frames": 2, "pallet_shapes": 17},
+      {"source": "CVAT_Task3_SAM3_candidates", "unique_frames": 1, "pallet_shapes": 8},
+      {"source": "SFL_20261104_smoke_003", "unique_frames": 1, "pallet_shapes": 13},
+      {"source": "Capture_0920_four_camera", "unique_frames": 2, "pallet_shapes": 10}
+    ]
+  },
+  "train72_test24_gate": {
+    "scope_note": "0/96 refers to the dedicated frozen train72/test24 gate, not to all workbench review activity",
+    "approved_images": 0,
+    "total_images": 96,
+    "test24_policy": "evaluation_only_never_train"
+  },
+  "task3_imported_truth": {
+    "path": "D:/Apps/LabelAgent/work/datasets/CVAT_Task3_20261028/imported_truth.json",
+    "sha256": "381a8f2e76a4d58d013302cd416842eaed88cb720b8cfc42185efe6e0e0f6c8a",
+    "frames": 150,
+    "shapes": 1550,
+    "auto_shapes": 1469,
+    "manual_shapes": 81,
+    "manual_pallet_shapes": 81,
+    "fully_manual_frames": 0,
+    "human_signoff_count": 0,
+    "signoff_template_sha256": "28c66746d3b7c76117a3eb79b64e54cb3da7c116b5b94df6b37843e3480f066d",
+    "manual_instance_manifest_sha256": "1033e8ad16fc0e4c8b03ef246557ae321273b4188b92bc3171c9604558f32f99",
+    "training_authorized": false
+  },
+  "dense_hard_examples": {
+    "manifest": ".repro/round674-dense-independent6-20261123/manifest.json",
+    "manifest_sha256": "4722afc0e43412ddba87ee989d714fae6214b28e578fbcae9e968aa50e8f2b14",
+    "examples": [
+      {"sequence": "006", "frame_id": "1789899601982497364", "camera": "camera_1", "image_sha256": "7bd1e72762c2e3e8db8c6cb65cd28b87d3405d948cbaff82fae7be07b8bacb98"},
+      {"sequence": "008", "frame_id": "1789899778882397075", "camera": "camera_1", "image_sha256": "8ea653dca15d12fcca165e28d7ae13721d1527ff81b41c07e9f9fc093229afd0"}
+    ],
+    "workbench_review_frame_sha_overlap": 0,
+    "task3_manual_instance_image_sha_overlap": 0,
+    "task3_manual_unique_source_timestamp_count": 81,
+    "task3_source_timestamp_vs_hard_frame_id_overlap": 0,
+    "workbench_review_source_scope_contains_hard_frame_identity": false,
+    "human_pixel_truth_count": 0,
+    "evaluation_only": true,
+    "training_return_allowed": false
+  },
+  "decision": {
+    "formal_sam3_finetune_start_allowed": false,
+    "candidate_only_smoke_allowed": true,
+    "provisional_supervision_policy": {
+      "positive_instance_loss_allowed_after_explicit_train_authorization": true,
+      "outside_instance": "ignore",
+      "full_frame_semantic_loss_allowed": false,
+      "negative_sampling_allowed": false,
+      "unlock_condition": "separate exhaustive-instance and negative-space signoff"
+    },
+    "blockers": [
+      "all current workbench review candidates are split-unassigned",
+      "all current workbench review candidates forbid training return",
+      "006/008 have no human pixel truth",
+      "no independent unexposed holdout is bound for the proposed hard-example training"
+    ]
+  },
+  "claim_boundary": {
+    "human_truth_writes": 0,
+    "training_data_writes": 0,
+    "workbench_writes": 0,
+    "oss_writes": 0,
+    "gpu_training_started": false,
+    "production_deployed": false
+  },
+  "readback_verified": true
+}

@@ -43,6 +43,16 @@ def point_evidence(mask: np.ndarray, positives, negatives) -> dict:
             "point_gate_pass": bool(positive >= .8 and negative >= .8)}
 
 
+def recovery_evidence_points(row: dict) -> tuple[list, list]:
+    """Use full-return validation for new receipts; retain explicit legacy compatibility."""
+    if row.get("acceptance_point_scope") == "all_unique_visible_returns":
+        if ("validation_positive_points" not in row
+                or "validation_negative_points" not in row):
+            raise ValueError("all-return recovery receipt is missing validation points")
+        return row["validation_positive_points"], row["validation_negative_points"]
+    return row["selected_positive_points"], row["selected_negative_points"]
+
+
 def locally_supported(mask, target, component, positives, negatives) -> dict:
     direct_conflicts = [row for row, _, _ in projected_conflicts(target, component)]
     metrics = association_metrics(
@@ -111,8 +121,7 @@ def evaluate(split_report_path: Path, recovery_report_paths: list[Path],
                                  "source_report_index": None})
             for recovery_row in recoveries.get(
                     (sequence, frame, camera_number, obj_id), []):
-                positives = recovery_row["selected_positive_points"]
-                negatives = recovery_row["selected_negative_points"]
+                positives, negatives = recovery_evidence_points(recovery_row)
                 for attempt_index, attempt in enumerate(recovery_row["attempts"]):
                     if not attempt.get("mask_path"):
                         continue

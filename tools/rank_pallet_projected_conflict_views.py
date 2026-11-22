@@ -110,6 +110,11 @@ def run(sample_manifest: Path, metadata_root: Path, calibration: Path,
         exclude_manifests: list[Path], count: int) -> dict:
     manifest = json.loads(sample_manifest.read_text(encoding="utf-8"))
     excluded, used_sequences = excluded_identities(exclude_manifests)
+    frozen_paths = [sample_manifest, *exclude_manifests,
+                    calibration / "lidar2camera.yaml",
+                    *(calibration / f"camera{index}_calib.yaml"
+                      for index in range(4))]
+    inputs = {str(path.resolve()): digest(path) for path in frozen_paths}
     cameras = {index: load_camera(calibration, index) for index in range(4)}
     rows = []
     missing_prediction_count = 0
@@ -120,6 +125,10 @@ def run(sample_manifest: Path, metadata_root: Path, calibration: Path,
             missing_prediction_count += 1
             continue
         label_path = metadata_root / source["relative_path"]
+        label_sha = digest(label_path)
+        if label_sha != source.get("sha256"):
+            raise ValueError(f"selection label changed: {label_path}")
+        inputs[str(label_path.resolve())] = label_sha
         label = json.loads(label_path.read_text(encoding="utf-8"))
         pallets = [obj for obj in label.get("objects") or []
                    if obj.get("obj_type") == "Pallet" and not obj.get("ignore")]
@@ -138,6 +147,8 @@ def run(sample_manifest: Path, metadata_root: Path, calibration: Path,
             })
     rows.sort(key=rank_key)
     selected = select_views(rows, count, used_sequences)
+    if any(digest(Path(path)) != value for path, value in inputs.items()):
+        raise RuntimeError("frozen ranking input changed during evaluation")
     return {
         "schema_version": "labelagent.pallet_projected_conflict_view_ranking.v1",
         "status": "selection_only_not_evaluation",
@@ -149,6 +160,7 @@ def run(sample_manifest: Path, metadata_root: Path, calibration: Path,
         "calibration": str(calibration),
         "exclude_manifests": [str(path) for path in exclude_manifests],
         "exclude_manifest_sha256": {str(path): digest(path) for path in exclude_manifests},
+        "input_sha256": inputs,
         "excluded_view_count": len(excluded),
         "previously_used_sequences": sorted(used_sequences),
         "missing_prediction_frame_count": missing_prediction_count,

@@ -273,24 +273,43 @@ def evaluate(source_report: Path, manifest_path: Path, labels_root: Path,
     if output.exists():
         raise ValueError("output directory already exists")
     source = json.loads(source_report.read_text(encoding="utf-8"))
-    if (source.get("scope") != "3d_box_localization_agreement_not_pixel_boundary_accuracy"
-            or source.get("production_deployed") is not False):
+    if (source.get("schema_version") != "labelagent.pallet_box3d_roi_sam.v1"
+            or source.get("status") != "offline_localization_diagnostic_not_deployed"
+            or source.get("scope") != "3d_box_localization_agreement_not_pixel_boundary_accuracy"
+            or source.get("production_deployed") is not False
+            or source.get("approved_for_training") is not False
+            or source.get("human_pixel_truth") is not False
+            or source.get("workbench_writes") != 0):
         raise ValueError("requires the frozen non-deployed 3D ROI report")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if (manifest.get("evaluation_only") is not True
+            or manifest.get("training_return_allowed") is not False
+            or manifest.get("human_truth_write_allowed") is not False):
+        raise ValueError("requires a frozen evaluation-only manifest")
     files = index_manifest_files(manifest["files"])
     root = Path(manifest["local_root"])
     output.mkdir(parents=True); masks_dir = output / "masks"; masks_dir.mkdir()
     visuals = output / "visuals"; visuals.mkdir()
     rows = []
     selected_source_rows = select_source_rows(source, selection)
+    frozen_paths = [source_report, manifest_path,
+                    calibration / "lidar2camera.yaml",
+                    *(calibration / f"camera{index}_calib.yaml"
+                      for index in range(4))]
+    frozen_paths.extend(
+        labels_root / str(row["sequence"]) / f"{row['frame_id']}.json"
+        for row in selected_source_rows)
+    inputs = {str(path.resolve()): digest(path) for path in frozen_paths}
     skipped_no_conflict = 0
     for source_row in selected_source_rows:
         sequence, camera_number = str(source_row["sequence"]), int(source_row["camera"])
         frame = str(source_row["frame_id"])
         item = files[(sequence, camera_number, frame)]
         image_path = root / item["relative_path"]
-        if digest(image_path) != item["sha256"]:
+        image_digest = digest(image_path)
+        if image_digest != item["sha256"]:
             raise ValueError("held-out image changed")
+        inputs.setdefault(str(image_path.resolve()), image_digest)
         image = Image.open(image_path).convert("RGB")
         label = json.loads((labels_root / sequence / f"{frame}.json").read_text(encoding="utf-8"))
         camera = load_camera(calibration, camera_number)
@@ -357,6 +376,8 @@ def evaluate(source_report: Path, manifest_path: Path, labels_root: Path,
                      "depth_split_masks": split_paths,
                      "depth_split_visual_path": str(split_visual.resolve()),
                      "depth_split_visual_sha256": digest(split_visual)})
+    if any(digest(Path(path)) != value for path, value in inputs.items()):
+        raise RuntimeError("frozen overlap input changed during evaluation")
     report = {
         "schema_version": "labelagent.pallet_box3d_overlap_pairs.v1",
         "status": "offline_instance_diagnostic_not_deployed",
@@ -364,6 +385,7 @@ def evaluate(source_report: Path, manifest_path: Path, labels_root: Path,
         "selected_source_row_count": len(selected_source_rows),
         "skipped_no_conflict_count": skipped_no_conflict,
         "source_report_sha256": digest(source_report),
+        "input_sha256": inputs,
         "ambiguous_image_count": len(rows),
         "resolved_image_count": sum(row["all_conflicts_separated"] for row in rows),
         "unresolved_image_count": sum(not row["all_conflicts_separated"] for row in rows),

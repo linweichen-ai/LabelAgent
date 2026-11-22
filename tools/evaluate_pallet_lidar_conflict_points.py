@@ -132,6 +132,29 @@ def accepted_candidate(metrics: dict, positive_coverage: float,
     )
 
 
+def point_fraction(mask: np.ndarray, points: np.ndarray | list,
+                   expected_present: bool) -> float:
+    """Measure every unique frozen return, never only the prompt subset."""
+    values = np.unique(np.asarray(points, dtype=np.int32), axis=0)
+    if not len(values):
+        return 0.0
+    observed = np.asarray([bool(mask[y, x]) for x, y in values])
+    return float((observed == expected_present).mean())
+
+
+def verify_inputs_unchanged(inputs: dict[str, str]) -> None:
+    changed = [path for path, value in inputs.items()
+               if digest(Path(path)) != value]
+    if changed:
+        raise RuntimeError(f"frozen input changed during evaluation: {changed[0]}")
+
+
+def indexed_prompt_group(groups, index: int):
+    if not 0 <= index < len(groups):
+        raise ValueError(f"SAM returned invalid prompt group index: {index}")
+    return groups[index]
+
+
 DEFAULT_ROI_SCALE = 2
 
 
@@ -178,11 +201,21 @@ def evaluate(split_report_path: Path, manifest_path: Path, pcd_manifest_path: Pa
     split_report = json.loads(split_report_path.read_text(encoding="utf-8"))
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     pcd_manifest = json.loads(pcd_manifest_path.read_text(encoding="utf-8"))
-    if (split_report.get("production_deployed") is not False
-            or manifest.get("evaluation_only") is not True):
+    if (split_report.get("schema_version") != "labelagent.pallet_box3d_overlap_pairs.v1"
+            or split_report.get("status") != "offline_instance_diagnostic_not_deployed"
+            or split_report.get("production_deployed") is not False
+            or split_report.get("approved_for_training") is not False
+            or split_report.get("human_pixel_truth") is not False
+            or manifest.get("evaluation_only") is not True
+            or manifest.get("training_return_allowed") is not False
+            or manifest.get("human_truth_write_allowed") is not False
+            or pcd_manifest.get("schema_version") != "labelagent.pcd_manifest.v1"):
         raise ValueError("requires frozen offline evaluation inputs")
-    inputs = {str(path.resolve()): digest(path) for path in (
-        split_report_path, manifest_path, pcd_manifest_path)}
+    frozen_paths = [split_report_path, manifest_path, pcd_manifest_path,
+                    calibration / "lidar2camera.yaml",
+                    *(calibration / f"camera{index}_calib.yaml"
+                      for index in range(4))]
+    inputs = {str(path.resolve()): digest(path) for path in frozen_paths}
     files = index_manifest_files(manifest["files"])
     pcd_files = index_pcd_files(pcd_manifest["files"])
     image_root = Path(manifest["local_root"])
@@ -199,9 +232,13 @@ def evaluate(split_report_path: Path, manifest_path: Path, pcd_manifest_path: Pa
             image_path = image_root / item["relative_path"]
             pcd_item = pcd_files[(sequence, frame)]
             pcd_path = pcd_root / pcd_item["filename"]
-            if digest(image_path) != item["sha256"] or digest(pcd_path) != pcd_item["sha256"]:
+            image_digest, pcd_digest = digest(image_path), digest(pcd_path)
+            if image_digest != item["sha256"] or pcd_digest != pcd_item["sha256"]:
                 raise ValueError("frozen image or PCD changed")
+            inputs.setdefault(str(image_path.resolve()), image_digest)
+            inputs.setdefault(str(pcd_path.resolve()), pcd_digest)
             label_path = labels_root / sequence / f"{frame}.json"
+            inputs.setdefault(str(label_path.resolve()), digest(label_path))
             label = json.loads(label_path.read_text(encoding="utf-8"))
             objects = {str(obj.get("obj_id")): obj for obj in label["objects"]}
             camera = load_camera(calibration, camera_number)
@@ -244,12 +281,18 @@ def evaluate(split_report_path: Path, manifest_path: Path, pcd_manifest_path: Pa
                 timeout=timeout) if groups else {"items": []}
             other_masks = {}
             for conflict in conflicts:
-                path = Path(split_row["depth_split_masks"][str(conflict["obj_id"])]["path"])
+                receipt = split_row["depth_split_masks"][str(conflict["obj_id"])]
+                path = Path(receipt["path"])
+                mask_digest = digest(path)
+                if mask_digest != receipt.get("sha256"):
+                    raise ValueError(f"frozen split mask changed: {path}")
+                inputs.setdefault(str(path.resolve()), mask_digest)
                 other_masks[conflict["obj_id"]] = cv2.imread(
                     str(path), cv2.IMREAD_GRAYSCALE) > 0
             attempts = []
             for result_item in payload.get("items") or []:
-                index = int(result_item.get("index", 0)); policy = groups[index][0]
+                index = int(result_item.get("index", 0))
+                policy, _ = indexed_prompt_group(groups, index)
                 if "result" not in result_item:
                     attempts.append({"policy": policy, "error": result_item.get("error")})
                     continue
@@ -262,10 +305,10 @@ def evaluate(split_report_path: Path, manifest_path: Path, pcd_manifest_path: Pa
                 metrics = association_metrics(
                     proposal, target["mask"], [row["mask"] for row in conflicts],
                     target["center"])
-                positive_coverage = (sum(proposal[y, x] for x, y in positives)
-                                     / len(positives) if positives else 0.0)
-                negative_clear = (sum(not proposal[y, x] for x, y in negatives)
-                                  / len(negatives) if negatives else 0.0)
+                positive_coverage = point_fraction(
+                    proposal, positive_pixels, expected_present=True)
+                negative_clear = point_fraction(
+                    proposal, negative_pixels, expected_present=False)
                 candidate_masks = {target["obj_id"]: proposal, **other_masks}
                 split_masks, split_metrics = depth_split_masks(selected, candidate_masks)
                 separations = [mask_separation(
@@ -315,8 +358,13 @@ def evaluate(split_report_path: Path, manifest_path: Path, pcd_manifest_path: Pa
                 "model_input_size": [model_crop.width, model_crop.height],
                 "visible_unique_positive_count": int(len(positive_pixels)),
                 "visible_unique_negative_count": int(len(negative_pixels)),
+                "validation_positive_points": np.unique(
+                    np.asarray(positive_pixels, dtype=np.int32), axis=0).tolist(),
+                "validation_negative_points": np.unique(
+                    np.asarray(negative_pixels, dtype=np.int32), axis=0).tolist(),
                 "selected_positive_points": positives,
                 "selected_negative_points": negatives,
+                "acceptance_point_scope": "all_unique_visible_returns",
                 "prompt_group_count": len(groups), "attempts": attempts,
                 "recovered": selected_attempt is not None,
                 "selected_policy": (selected_attempt or {}).get("policy"),
@@ -331,8 +379,7 @@ def evaluate(split_report_path: Path, manifest_path: Path, pcd_manifest_path: Pa
         sheet.paste(panel, (0, top)); top += panel.height
     sheet_path = output / "lidar-conflict-point-review.jpg"; sheet.save(sheet_path, quality=90)
     health_after = request_json(sam_url.rstrip("/") + "/health", timeout=15)
-    if any(digest(Path(path)) != value for path, value in inputs.items()):
-        raise RuntimeError("frozen input changed during evaluation")
+    verify_inputs_unchanged(inputs)
     report = {
         "schema_version": "labelagent.pallet_lidar_conflict_points.v1",
         "status": "offline_candidate_diagnostic_not_deployed",
@@ -340,6 +387,7 @@ def evaluate(split_report_path: Path, manifest_path: Path, pcd_manifest_path: Pa
         "positive_only_fallback": positive_only_fallback,
         "sparse_negative_fallback": sparse_negative_fallback,
         "pairwise_negative_fallback": pairwise_negative_fallback,
+        "acceptance_point_scope": "all_unique_visible_returns",
         "input_sha256": inputs, "failed_candidate_count": len(rows),
         "recovered_candidate_count": sum(row["recovered"] for row in rows),
         "sam_attempt_count": sum(len(row["attempts"]) for row in rows),

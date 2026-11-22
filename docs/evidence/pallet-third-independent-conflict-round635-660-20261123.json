@@ -1,0 +1,82 @@
+{
+  "schema_version": "labelagent.pallet_third_independent_conflict_evidence.v2",
+  "date": "2026-11-23",
+  "supersedes": "pallet-third-independent-conflict-round635-645-20261123.json",
+  "correction": "acceptance now measures all unique visible LiDAR returns rather than the prompt subset; all consumed files are frozen and read back",
+  "scope": "offline_candidate_diagnostic_not_deployed",
+  "selection": {
+    "ranked_unused_views": 278,
+    "projected_conflict_views": 92,
+    "selected_views": 6,
+    "previously_uncovered_sequences": ["001", "004", "010"],
+    "selection_source_is_truth": false,
+    "evaluation_source": "frozen_manifest_human_3d_gt",
+    "all_downloaded_gt_hashes_match_manifest": true,
+    "frozen_input_count": 80
+  },
+  "baseline": {
+    "images": 6,
+    "localization_pass": 6,
+    "raw_instance_isolation_pass": 2,
+    "ambiguous_images": 4,
+    "raw_mask_resolved_after_group_inference": 0,
+    "depth_split_resolved": 3,
+    "remaining_failed_instances": 1,
+    "overlap_frozen_input_count": 15
+  },
+  "remaining_failure": {
+    "sequence": "005",
+    "frame_id": "1789899455082281367",
+    "camera": 0,
+    "obj_id": 39,
+    "baseline_split_pixels": 5,
+    "validation_positive_returns": 11,
+    "validation_negative_returns": 33,
+    "acceptance_point_scope": "all_unique_visible_returns",
+    "roi_scale_1_recovered": false,
+    "roi_scale_2_recovered": false,
+    "roi_scale_4_recovered": false,
+    "positive_only": {"positive_coverage": 1.0, "negative_clear_fraction": 0.0},
+    "sparse_negative_best": {"positive_coverage": 1.0, "negative_clear_count": 22, "negative_clear_fraction": 0.6666666666666666},
+    "pairwise_negative_best": {"positive_coverage": 1.0, "negative_clear_count": 13, "negative_clear_fraction": 0.3939393939393939},
+    "frozen_negative_clear_threshold": 0.8,
+    "accepted": false,
+    "recovery_frozen_input_count": 13
+  },
+  "gates": {
+    "thresholds_changed": false,
+    "positive_coverage_minimum": 0.8,
+    "negative_clear_minimum": 0.8,
+    "maximum_conflict_overlap": 0.15,
+    "fallbacks_default_enabled": false
+  },
+  "tests": {
+    "directed_passed": 27,
+    "full_passed": 1633,
+    "skipped": 1,
+    "subtests_passed": 262,
+    "elapsed_seconds": 97.89
+  },
+  "formal_environment": {
+    "workbench_status": "idle",
+    "state_sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115",
+    "sam_status": "ok",
+    "sam_model_loaded": true,
+    "sam_in_flight": 0,
+    "workbench_writes": 0,
+    "human_truth_writes": 0,
+    "training_data_writes": 0,
+    "oss_writes": 0,
+    "production_deployed": false
+  },
+  "local_report_sha256": {
+    "round646_selection": "7cfc28818d0f05e60ea53a42784d05e89141134f221a8dd790c78755da967eb3",
+    "round654_overlap": "acbe0f4dab8a1c334b5b80290aed992f7b3c564ff76befde2b938693c95e32c1",
+    "round655_incumbent": "62792f606162c85b31cf1c5aec41ab534a61cad07a139f191299ac5b53d8d328",
+    "round656_positive_only": "10e3abb0cf4906cfbabd1734a09be7ba69180f5a1d9da9f1d64087d6bccff4a3",
+    "round657_sparse_negative": "76bfdc0b08052f759e428f0618effab8cd0c3f6b0180a6ad679ee6f134fa3795",
+    "round658_pairwise_negative": "ef6c2d3cf063c53a258315867e24f28c50461ea55d2adc1b118f463e7e554b84",
+    "round659_scale1": "f65b34699cdfc07652670d55390b52866a91a73ff4616bdfa871e2f1e9d78289",
+    "round660_scale4": "d500df1aa122b9192e3513bf417562f88c760da73683074f7418879ce0d3ccc3"
+  }
+}

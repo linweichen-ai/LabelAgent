@@ -1,10 +1,14 @@
+from pathlib import Path
+import tempfile
 import unittest
 
 import numpy as np
 
 from tools.evaluate_pallet_lidar_conflict_points import (
-    DEFAULT_ROI_SCALE, accepted_candidate, downsample_mask, prompt_groups,
+    DEFAULT_ROI_SCALE, accepted_candidate, digest, downsample_mask,
+    indexed_prompt_group, point_fraction, prompt_groups,
     spread_points, unique_instance_pixels,
+    verify_inputs_unchanged,
 )
 
 
@@ -75,6 +79,31 @@ class PalletLidarConflictPointTest(unittest.TestCase):
         sparse = np.zeros((6, 8), dtype=bool)
         sparse[2, 2] = True
         self.assertFalse(downsample_mask(sparse, 4, 3).any())
+
+    def test_point_fraction_checks_unsampled_returns_too(self):
+        mask = np.zeros((8, 8), dtype=bool)
+        mask[1, 1] = True
+        mask[2, 2] = True
+        positives = np.array([[1, 1], [2, 2], [3, 3]])
+        negatives = np.array([[4, 4], [5, 5], [6, 6], [2, 2]])
+        self.assertAlmostEqual(point_fraction(mask, positives, True), 2 / 3)
+        self.assertAlmostEqual(point_fraction(mask, negatives, False), 3 / 4)
+
+    def test_frozen_input_verifier_rejects_drift(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "input.json"
+            path.write_text("before", encoding="utf-8")
+            inputs = {str(path): digest(path)}
+            verify_inputs_unchanged(inputs)
+            path.write_text("after", encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "frozen input changed"):
+                verify_inputs_unchanged(inputs)
+
+    def test_invalid_sam_group_index_fails_closed(self):
+        groups = [("first", [])]
+        self.assertEqual(indexed_prompt_group(groups, 0)[0], "first")
+        with self.assertRaisesRegex(ValueError, "invalid prompt group index"):
+            indexed_prompt_group(groups, 1)
 
     def test_unique_pixels_exclude_points_inside_both_boxes(self):
         points = np.array([[0., 0., 0.], [1., 0., 0.], [2., 0., 0.]])

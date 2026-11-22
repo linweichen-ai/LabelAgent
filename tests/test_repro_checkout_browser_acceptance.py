@@ -79,6 +79,21 @@ class ReproCheckoutBrowserAcceptanceTests(unittest.TestCase):
         self.assertIn('[IO.File]::Move($pendingPath, $recordPath)', writer)
         self.assertIn('Pending process record did not read back exactly', writer)
 
+    def test_startup_mutex_wraps_all_preflight_and_process_creation(self):
+        source = (ROOT / "tools" / "start_local.ps1").read_text(encoding="utf-8")
+        acquire = source.index('$startupMutexAcquired = $startupMutex.WaitOne(0)')
+        record_check = source.index('if (Test-Path $Record)')
+        doctor = source.index('$doctorArgs = @("tools\\repro_doctor.py"')
+        spawn = source.index('$sam = Start-Process')
+        release = source.index('$startupMutex.ReleaseMutex()')
+        browser = source.index('if (-not $NoBrowser)')
+        self.assertLess(acquire, record_check)
+        self.assertLess(record_check, doctor)
+        self.assertLess(doctor, spawn)
+        self.assertLess(spawn, release)
+        self.assertLess(release, browser)
+        self.assertIn('catch [Threading.AbandonedMutexException]', source)
+
     def test_checkout_runs_logic_and_real_synthetic_browser_acceptance(self):
         source = (ROOT / "tools" / "verify_checkout.ps1").read_text(encoding="utf-8")
         self.assertIn("$VenvScripts = Split-Path -Parent $Python", source)

@@ -68,6 +68,17 @@ class ReproCheckoutBrowserAcceptanceTests(unittest.TestCase):
         terminate = stop.index("Stop-Process -Id $process.Id")
         self.assertLess(archive, terminate)
 
+    def test_startup_installs_process_record_atomically_and_removes_only_its_own(self):
+        source = (ROOT / "tools" / "start_local.ps1").read_text(encoding="utf-8")
+        writer = (ROOT / "tools" / "write_process_record_atomic.ps1").read_text(encoding="utf-8")
+        self.assertIn('startup_id = $startupId', source)
+        self.assertIn('write_process_record_atomic.ps1', source)
+        self.assertIn('$recordInstalled = $true', source)
+        self.assertIn('$currentRecord.startup_id -eq $startupId', source)
+        self.assertIn('[IO.File]::Replace($pendingPath, $recordPath', writer)
+        self.assertIn('[IO.File]::Move($pendingPath, $recordPath)', writer)
+        self.assertIn('Pending process record did not read back exactly', writer)
+
     def test_checkout_runs_logic_and_real_synthetic_browser_acceptance(self):
         source = (ROOT / "tools" / "verify_checkout.ps1").read_text(encoding="utf-8")
         self.assertIn("$VenvScripts = Split-Path -Parent $Python", source)

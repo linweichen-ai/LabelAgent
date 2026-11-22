@@ -31,6 +31,8 @@ if ($WorkDir) { $env:LABELAGENT_WORK_DIR = [IO.Path]::GetFullPath($WorkDir) }
 $env:SAM3_URL = $SamUrl
 $pids = @()
 $managedProcesses = @()
+$startupId = [Guid]::NewGuid().ToString("N")
+$recordInstalled = $false
 
 $doctorArgs = @("tools\repro_doctor.py", "--require-web-port")
 if ($SamUrl -eq "http://127.0.0.1:8766") {
@@ -70,15 +72,17 @@ try {
         executable_path = [IO.Path]::GetFullPath($web.Path)
     }
 
-    @{
+    $recordJson = @{
         schema_version = "labelagent.local-process-record.v2"
+        startup_id = $startupId
         processes = $managedProcesses
         pids = $pids
         started_at = (Get-Date).ToUniversalTime().ToString("o")
         sam_url = $SamUrl
         root = [IO.Path]::GetFullPath($Root)
-    } |
-        ConvertTo-Json -Depth 4 | Set-Content -Encoding UTF8 $Record
+    } | ConvertTo-Json -Depth 4
+    & (Join-Path $PSScriptRoot "write_process_record_atomic.ps1") -Record $Record -Json $recordJson
+    $recordInstalled = $true
 
     $ready = $false
     for ($i = 0; $i -lt 60; $i++) {
@@ -103,7 +107,16 @@ try {
     foreach ($processId in $pids) {
         Stop-Process -Id $processId -ErrorAction SilentlyContinue
     }
-    Remove-Item -LiteralPath $Record -Force -ErrorAction SilentlyContinue
+    if ($recordInstalled -and (Test-Path -LiteralPath $Record)) {
+        try {
+            $currentRecord = Get-Content -Raw -LiteralPath $Record | ConvertFrom-Json
+            if ($currentRecord.startup_id -eq $startupId) {
+                Remove-Item -LiteralPath $Record -Force
+            }
+        } catch {
+            Write-Warning "The failed startup could not safely remove its process record; it was preserved for inspection."
+        }
+    }
     throw
 }
 

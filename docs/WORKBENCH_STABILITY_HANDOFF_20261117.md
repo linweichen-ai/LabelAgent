@@ -3899,3 +3899,11 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - Edge 启动失败会直接提示安装或修复 Microsoft Edge；`-SkipWebTests` 的未验收边界保持不变。
 - 完整标准命令通过：Python共1501项（1500通过、1项按设计跳过）、网页172/172、真实浏览器外部请求0、页面错误0，临时目录残留0。详见
   `docs/FAIL_FAST_BROWSER_PREFLIGHT_ROUND520_20261122.md`。
+
+## 2026-11-22 Round521 补充：干净克隆轻量复现
+
+- 新增独立轻量入口`tools/setup_public_browser_check.ps1`，不装CUDA/PyTorch，不需要Node、权重或数据；只安装固定Pillow/Playwright并运行真实Edge合成门禁。
+- Python 3.12解析器同时支持标准`py -3.12`和Launcher已注册的Astral/uv运行时；本机首次实测因此发现并修复原先只认标准Launcher的问题。
+- GitHub `reproduce`全新克隆后首次与重复运行均通过；受跟踪工作区干净，外部请求0、页面错误0、临时目录残留0。
+- CNB全新目录无仓库级专用凭证时返回“仓库不存在”，故文档已改为GitHub是外部首选、CNB仅作需组织权限的内部镜像。详见
+  `docs/CLEAN_CLONE_PUBLIC_BROWSER_ROUND521_20261122.md`。

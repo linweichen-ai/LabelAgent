@@ -1,0 +1,63 @@
+{
+  "schema_version": "labelagent.pallet_temporal_local_point_sam_evidence.v1",
+  "date": "2026-11-23",
+  "scope": "offline_candidate_diagnostic_not_deployed",
+  "protocol": {
+    "evaluated_opportunities": 7,
+    "roi_scale": 2,
+    "strategies_per_target": 8,
+    "acceptance_scope": "all_temporal_positive_and_all_center_conflict_negative_pixels",
+    "requires_localization": true,
+    "requires_depth_split_all_group_members": true,
+    "requires_instance_separation": true,
+    "sam_url_loopback_only": true,
+    "recomputes_temporal_points_from_bound_inputs": true
+  },
+  "result": {
+    "recovered_candidates": 0,
+    "round677_same_source_baseline_recovered": 0,
+    "newly_recovered_vs_round677_same_source": 0,
+    "sam_attempts_per_run": 56,
+    "frozen_input_count": 73,
+    "repeat_semantic_equal": true,
+    "repeat_mask_sha_equal": true,
+    "normalized_semantic_sha256": "768519c32aa938963200c204b97ce40c9bf6e82dfa4bc2119702ebbf680fc0b4"
+  },
+  "rows": [
+    {"sequence":"006","target_obj_id":"10","positive_points":8,"negative_points":9,"positive_negative_overlap_pixels":0,"valid_sam_results":4,"sam_errors":4,"recovered":false},
+    {"sequence":"006","target_obj_id":"12","positive_points":7,"negative_points":74,"positive_negative_overlap_pixels":0,"valid_sam_results":7,"sam_errors":1,"recovered":false},
+    {"sequence":"006","target_obj_id":"13","positive_points":8,"negative_points":68,"positive_negative_overlap_pixels":0,"valid_sam_results":4,"sam_errors":4,"recovered":false},
+    {"sequence":"008","target_obj_id":"76","positive_points":6,"negative_points":45,"positive_negative_overlap_pixels":1,"valid_sam_results":6,"sam_errors":2,"recovered":false},
+    {"sequence":"008","target_obj_id":"77","positive_points":7,"negative_points":11,"positive_negative_overlap_pixels":0,"valid_sam_results":3,"sam_errors":5,"recovered":false},
+    {"sequence":"008","target_obj_id":"78","positive_points":6,"negative_points":6,"positive_negative_overlap_pixels":1,"valid_sam_results":6,"sam_errors":2,"recovered":false},
+    {"sequence":"008","target_obj_id":"79","positive_points":8,"negative_points":19,"positive_negative_overlap_pixels":0,"valid_sam_results":6,"sam_errors":2,"recovered":false}
+  ],
+  "diagnosis": {
+    "obj10_best_negative_clear_fraction": 0.5555555555555556,
+    "obj10_other_gates_passed_for_best_candidate": true,
+    "other_common_failure": "another member of the conflict group retained a failing frozen mask",
+    "next_route": "joint_conflict_group_candidate_selection"
+  },
+  "claim_boundary": {
+    "conditioned_on_human_3d_labels": true,
+    "comparison_is_independent_validation": false,
+    "human_pixel_truth": false,
+    "approved_for_training": false,
+    "human_truth_writes": 0,
+    "training_data_writes": 0,
+    "workbench_writes": 0,
+    "oss_writes": 0,
+    "production_deployed": false
+  },
+  "tests": {
+    "focused_passed": 44,
+    "full_passed": 1676,
+    "skipped": 1,
+    "subtests_passed": 262
+  },
+  "local_report_sha256": {
+    "round700": "4b3785076e2236785f7f9295fb7a21d3898773edf52f73c18f951219f86c9b55",
+    "round701_repeat": "ffc3472bff2a273b7245780d39ab979ddf90ba6c47bc9f5dc42deb3f9fc8feed"
+  },
+  "round700_contact_sheet_sha256": "c842b3caeb6687695c1679753acdeb4af8ed1b676271858f633fc0e29ebdcc3a"
+}

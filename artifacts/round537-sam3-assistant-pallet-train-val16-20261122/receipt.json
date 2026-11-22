@@ -1,0 +1,36 @@
+{
+  "schema_version": "labelagent.sam3-assistant-pallet-round537.v1",
+  "status": "completed_rejected_on_development_gate",
+  "training": {
+    "images": 71,
+    "optimizer_steps": 36,
+    "trainable_parameters": 197376,
+    "checkpoint_bytes": 793381,
+    "checkpoint_sha256": "d530191632db32b02bd8dabdce0a3c8aecd4536f22765bb5ad1aa9fdabfb2363",
+    "human_truth": false,
+    "not_for_deployment": true,
+    "test24_in_training": false
+  },
+  "assistant_val16": {
+    "images": 16,
+    "machine_reference_only": true,
+    "baseline_mean_union_iou": 0.960297069442728,
+    "candidate_mean_union_iou": 0.9574167583136273,
+    "baseline_mean_boundary_f1": 0.9761721589666668,
+    "candidate_mean_boundary_f1": 0.9727511140361378,
+    "baseline_mean_dice": 0.9790842655890272,
+    "candidate_mean_dice": 0.9775863771697182,
+    "catastrophic_frames": []
+  },
+  "decision": {
+    "deploy_candidate": false,
+    "keep_incumbent": true,
+    "run_frozen_test24": false,
+    "next": "lower-update split-train candidate"
+  },
+  "private_evidence_sha256": {
+    "training_evidence": "3f4e2f7856a555944e033bd6991ef37cfc01e8baac67e7cd6737ea3e6a55f17a",
+    "val16_review_receipt": "26a8e8d99b3875097f77055f12cfb269e8c5e77aa5ba8e03fb45148e74cd006c",
+    "val16_mask_comparison": "8d6ffd8924a49a09efe15741be5577395c91a1a5210aa6117e633a4c7ee45b64"
+  }
+}

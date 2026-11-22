@@ -81,6 +81,24 @@ class PalletCandidateReviewTest(unittest.TestCase):
                 self.assertEqual(app.test_client().get(
                     "/api/pallet-candidate-review").status_code, 404)
 
+    def test_verified_bytes_are_cached_but_manifest_change_revalidates(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw); self._fixture(root)
+            with patch.dict(os.environ, {
+                    "LABELAGENT_PALLET_CANDIDATE_REVIEW_DIR": raw}):
+                first = load_review_page()
+                verified = first["assets"]["previews/scene.png"]
+                (root / "previews" / "scene.png").write_bytes(b"tampered")
+                second = load_review_page()
+                self.assertEqual(second["assets"]["previews/scene.png"], verified)
+                second["assets"].clear()
+                self.assertIn("previews/scene.png", load_review_page()["assets"])
+                bundle = root / "bundle.json"
+                bundle.write_text(bundle.read_text(encoding="utf-8") + "\n",
+                                  encoding="utf-8")
+                with self.assertRaisesRegex(CandidateReviewUnavailable, "哈希"):
+                    load_review_page()
+
 
 if __name__ == "__main__":
     unittest.main()

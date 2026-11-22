@@ -6,10 +6,14 @@ import hashlib
 import json
 import os
 from pathlib import Path, PurePosixPath
+import threading
 
 
 SCHEMA = "labelagent.pallet_visibility_candidate_bundle.v1"
 ENV_NAME = "LABELAGENT_PALLET_CANDIDATE_REVIEW_DIR"
+_CACHE_LOCK = threading.Lock()
+_CACHE_TOKEN = None
+_CACHE_PAGE = None
 
 
 class CandidateReviewUnavailable(ValueError):
@@ -48,13 +52,28 @@ def _verified_asset(root: Path, relative: str, expected_sha256: str) -> bytes:
     return data
 
 
+def _copy_cached_page(page: dict) -> dict:
+    copied = dict(page)
+    copied["assets"] = dict(page["assets"])
+    return copied
+
+
 def load_review_page() -> dict:
     """Return verified page bytes and its exact allow-listed image assets."""
+    global _CACHE_TOKEN, _CACHE_PAGE
     root = configured_root()
     try:
-        bundle = json.loads((root / "bundle.json").read_text(encoding="utf-8"))
+        bundle_bytes = (root / "bundle.json").read_bytes()
+        page_bytes = (root / "index.html").read_bytes()
+        bundle = json.loads(bundle_bytes.decode("utf-8"))
+        page_text = page_bytes.decode("utf-8")
     except (OSError, UnicodeError, json.JSONDecodeError) as error:
-        raise CandidateReviewUnavailable("候选清单不可读") from error
+        raise CandidateReviewUnavailable("候选清单或复核页不可读") from error
+    token = (str(root), hashlib.sha256(bundle_bytes).hexdigest(),
+             hashlib.sha256(page_bytes).hexdigest())
+    with _CACHE_LOCK:
+        if token == _CACHE_TOKEN and _CACHE_PAGE is not None:
+            return _copy_cached_page(_CACHE_PAGE)
     if (bundle.get("schema_version") != SCHEMA
             or bundle.get("production_deployed") is not False
             or bundle.get("human_truth_writes") != 0
@@ -83,16 +102,11 @@ def load_review_page() -> dict:
         allowed_assets[relative] = _verified_asset(
             root, relative, row.get("mask_sha256", ""))
 
-    try:
-        page_bytes = (root / "index.html").read_bytes()
-        page_text = page_bytes.decode("utf-8")
-    except (OSError, UnicodeError) as error:
-        raise CandidateReviewUnavailable("候选复核页不可读") from error
     forbidden = ("<script", "<form", "<button", " href=", "http://", "https://")
     if ("离线候选 · 未部署 · 不是真值" not in page_text
             or any(token in page_text.lower() for token in forbidden)):
         raise CandidateReviewUnavailable("候选复核页不是只读页面")
-    return {
+    page = {
         "page_bytes": page_bytes,
         "assets": allowed_assets,
         "candidate_count": len(rows),
@@ -100,4 +114,8 @@ def load_review_page() -> dict:
         "mask_count": sum(row.get("mask_path") is not None for row in rows),
         "suppressed_count": sum(row.get("mask_path") is None for row in rows),
     }
+    with _CACHE_LOCK:
+        _CACHE_TOKEN = token
+        _CACHE_PAGE = page
+    return _copy_cached_page(page)
 

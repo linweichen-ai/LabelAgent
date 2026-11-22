@@ -32,23 +32,30 @@ if ($LASTEXITCODE -ne 0) { throw "Reproducibility self-check failed" }
 & $Python -m pip check
 if ($LASTEXITCODE -ne 0) { throw "Python dependency consistency check failed" }
 
+if (-not $SkipWebTests) {
+    if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+        throw "Node.js is required for the browser logic tests; use -SkipWebTests only when intentionally unavailable"
+    }
+    & node --version
+    if ($LASTEXITCODE -ne 0) { throw "Node.js preflight failed" }
+
+    # Run the small real-browser gate before the long Python suite so a missing
+    # Edge/Playwright dependency fails in seconds instead of after the full run.
+    & $Python tools\verify_synthetic_signoff_browser.py --ephemeral
+    if ($LASTEXITCODE -ne 0) { throw "Synthetic offline signoff browser preflight failed" }
+}
+
 if (-not $SkipPythonTests) {
     & $Python -m unittest discover -s tests -p "test_*.py"
     if ($LASTEXITCODE -ne 0) { throw "Python regression tests failed" }
 }
 
 if (-not $SkipWebTests) {
-    if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
-        throw "Node.js is required for the browser logic tests; use -SkipWebTests only when intentionally unavailable"
-    }
     & node --test tests\test_review_packet_core.js tests\test_web_candidate_audit.js `
         tests\test_web_polling.js tests\test_browser_main_run_acceptance.cjs `
         tests\test_candidate_audit_web.cjs tests\test_browser_cvat_human_signoff_draft_acceptance.cjs `
         tests\test_cvat_human_signoff_drafts.js
     if ($LASTEXITCODE -ne 0) { throw "Browser logic tests failed" }
-
-    & $Python tools\verify_synthetic_signoff_browser.py --ephemeral
-    if ($LASTEXITCODE -ne 0) { throw "Synthetic offline signoff browser acceptance failed" }
 }
 
 Write-Host "LabelAgent checkout verification passed."

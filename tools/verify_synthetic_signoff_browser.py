@@ -113,6 +113,7 @@ def _download_json(page, selector: str, path: Path) -> dict:
 
 def run(output: Path, *, screenshot: bool = False) -> dict:
     try:
+        from playwright.sync_api import Error as PlaywrightError
         from playwright.sync_api import sync_playwright
     except ImportError as exc:
         raise RuntimeError(
@@ -139,7 +140,13 @@ def run(output: Path, *, screenshot: bool = False) -> dict:
         full_path = temp / "full.json"
         official_path = temp / "official.json"
         with _PageServer(html) as server, sync_playwright() as runtime:
-            browser = runtime.chromium.launch(channel="msedge", headless=True)
+            try:
+                browser = runtime.chromium.launch(channel="msedge", headless=True)
+            except PlaywrightError as exc:
+                raise RuntimeError(
+                    "Microsoft Edge could not be started for the browser check; "
+                    "install or repair Edge, then rerun the standard verification"
+                ) from exc
             try:
                 page = browser.new_page(viewport={"width": 1440, "height": 960}, accept_downloads=True)
                 page.on("pageerror", lambda error: page_errors.append(str(error)))

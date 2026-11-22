@@ -3892,3 +3892,10 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 最终不带跳过参数的`verify_checkout.ps1`通过：Python共1499项（1498通过、1项按设计跳过）、网页
   172/172、真实浏览器外部请求0/页面错误0；授权标志仍全false。详见
   `docs/STANDARD_CHECKOUT_BROWSER_GATE_ROUND519_20261122.md`。
+
+## 2026-11-22 Round520 补充：浏览器依赖快速失败
+
+- 标准验收现于长 Python 回归前检查 Node.js 并运行公开合成真实 Edge 门禁；缺少浏览器依赖时不再等待约1500项测试结束。
+- Edge 启动失败会直接提示安装或修复 Microsoft Edge；`-SkipWebTests` 的未验收边界保持不变。
+- 完整标准命令通过：Python共1501项（1500通过、1项按设计跳过）、网页172/172、真实浏览器外部请求0、页面错误0，临时目录残留0。详见
+  `docs/FAIL_FAST_BROWSER_PREFLIGHT_ROUND520_20261122.md`。

@@ -25,6 +25,13 @@ class SyntheticSignoffBrowserTests(unittest.TestCase):
             for field in ("decision", "reviewer", "reviewed_at", "note"):
                 self.assertIsNone(row[field])
 
+    def test_missing_edge_error_is_actionable(self):
+        source = (Path(__file__).resolve().parents[1] / "tools" / "verify_synthetic_signoff_browser.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("Microsoft Edge could not be started for the browser check", source)
+        self.assertIn("install or repair Edge", source)
+
 
 if __name__ == "__main__":
     unittest.main()

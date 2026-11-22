@@ -1,0 +1,23 @@
+{
+  "schema_version": "labelagent.fail-fast-browser-preflight.v1",
+  "passed": true,
+  "command": "powershell -NoProfile -ExecutionPolicy Bypass -File tools\\verify_checkout.ps1",
+  "node_preflight_before_python_suite": true,
+  "synthetic_browser_preflight_before_python_suite": true,
+  "node_version": "v24.22.3",
+  "synthetic_real_browser_passed": true,
+  "synthetic_browser_elapsed_ms": 2515,
+  "external_requests": 0,
+  "page_errors": [],
+  "python_tests_run": 1501,
+  "python_tests_passed": 1500,
+  "python_tests_skipped": 1,
+  "web_logic_tests_run": 172,
+  "web_logic_tests_passed": 172,
+  "draft_attack_rejections": 39,
+  "ephemeral_directories_after": 0,
+  "training_authorized": false,
+  "automatic_approval": false,
+  "approved_for_training": false,
+  "real_human_decisions_written": 0
+}

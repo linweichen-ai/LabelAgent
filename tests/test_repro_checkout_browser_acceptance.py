@@ -18,7 +18,15 @@ class ReproCheckoutBrowserAcceptanceTests(unittest.TestCase):
         self.assertIn("tests\\test_browser_cvat_human_signoff_draft_acceptance.cjs", source)
         self.assertIn("tests\\test_cvat_human_signoff_drafts.js", source)
         self.assertIn("tools\\verify_synthetic_signoff_browser.py --ephemeral", source)
-        self.assertIn("Synthetic offline signoff browser acceptance failed", source)
+        self.assertIn("Synthetic offline signoff browser preflight failed", source)
+
+    def test_browser_dependencies_fail_before_the_long_python_suite(self):
+        source = (ROOT / "tools" / "verify_checkout.ps1").read_text(encoding="utf-8")
+        node_check = source.index("Get-Command node")
+        browser_check = source.index("tools\\verify_synthetic_signoff_browser.py --ephemeral")
+        python_suite = source.index('unittest discover -s tests -p "test_*.py"')
+        self.assertLess(node_check, python_suite)
+        self.assertLess(browser_check, python_suite)
 
     def test_ephemeral_mode_uses_guarded_repo_test_temp(self):
         source = (ROOT / "tools" / "verify_synthetic_signoff_browser.py").read_text(encoding="utf-8")

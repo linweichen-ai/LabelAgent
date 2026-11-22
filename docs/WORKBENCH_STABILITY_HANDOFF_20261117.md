@@ -3745,3 +3745,15 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
   清单哈希。训练策略固定为正实例监督，实例外全部ignore，禁止整帧损失和未标区域采负样本。
 - 状态仍是 `prepared_not_training_authorized`；下一步必须做哈希绑定的逐实例独立复核。
   详见 `docs/CVAT_TASK3_MANUAL_INSTANCE_CANDIDATES_ROUND502_20261122.md`。
+
+## 2026-11-22 Round503 补充：人工栈板实例聚焦复核包
+
+- 81个私有人工实例已渲染为14页原图/叠加对照；每项重新核对图片哈希和manual来源，
+  轮廓固定为2像素，避免遮挡边界。
+- 复核页、坐标和候选ID只保留在 `.repro`；公开回执只含计数与哈希。当前仍是
+  `pending_independent_review`，自动通过数0、训练授权为否。
+- 复核标准固定为对象类别、轮廓完整、无粘连、无大块漏切四项；任一失败即排除。详见
+  `docs/CVAT_TASK3_MANUAL_INSTANCE_REVIEW_PACK_ROUND503_20261122.md`。
+- 独立只读审阅后补齐失败关闭门禁：候选私有清单必须与Round502回执哈希一致，81项逐一
+  复验manual+pallet与身份绑定，为每项生成规范几何/聚焦图哈希；与冻结test24的24张图像
+  做实测SHA交集为0。复核签字和训练授权保持两道独立门。

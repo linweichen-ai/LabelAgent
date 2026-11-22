@@ -1,0 +1,23 @@
+{
+  "schema_version": "labelagent.cvat-manual-instance-review-receipt.v1",
+  "status": "pending_independent_review",
+  "candidate_manifest_sha256": "1033e8ad16fc0e4c8b03ef246557ae321273b4188b92bc3171c9604558f32f99",
+  "candidate_receipt_sha256": "04d353e2b0620dad82b5e92c0d2e39a1f752e03511181973cabb7f9e4bad2f37",
+  "frozen_test24_manifest_sha256": "8ed726bd93585329676dc46da533c02a154501211b1846b9ee3c4b1014bf9ee2",
+  "frozen_test24_image_count": 24,
+  "candidate_image_count": 81,
+  "test24_intersection_count": 0,
+  "review_manifest_sha256": "519250bb839667155dcd55c8591f21f17a125e277a5553832f4a56683358e28a",
+  "page_aggregate_sha256": "c123e091317598035f78b5362db838588413383478bc6572609b025567ea7d62",
+  "candidate_count": 81,
+  "page_count": 14,
+  "line_width_pixels": 2,
+  "training_authorized": false,
+  "automatic_approval": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "production_deployed": false,
+  "private_review_images_published": false,
+  "private_geometry_published": false,
+  "raw_images_published": false
+}

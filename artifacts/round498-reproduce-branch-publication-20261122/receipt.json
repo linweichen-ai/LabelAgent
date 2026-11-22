@@ -1,0 +1,27 @@
+{
+  "schema_version": "labelagent.reproduce-branch-publication.v1",
+  "date": "2026-11-22",
+  "status": "published_and_readback_verified",
+  "tested_commit": "2f24b662c16bccb0db7e18d25d804d7665f6d3f0",
+  "previous_reproduce_commit": "f398675ac893e89d76dcd9953a6eaf255d4e2101",
+  "fast_forward": true,
+  "commits_advanced": 44,
+  "files_changed": 291,
+  "acceptance": {
+    "repro_doctor_ready": true,
+    "pip_check_passed": true,
+    "python_tests_passed": 1425,
+    "python_tests_skipped": 1,
+    "browser_tests_passed": 167,
+    "browser_tests_failed": 0
+  },
+  "published_refs": {
+    "cnb_labelagent": "2f24b662c16bccb0db7e18d25d804d7665f6d3f0",
+    "github_labelagent": "2f24b662c16bccb0db7e18d25d804d7665f6d3f0",
+    "cnb_reproduce": "2f24b662c16bccb0db7e18d25d804d7665f6d3f0",
+    "github_reproduce": "2f24b662c16bccb0db7e18d25d804d7665f6d3f0"
+  },
+  "weights_uploaded": false,
+  "raw_data_uploaded": false,
+  "credentials_uploaded": false
+}

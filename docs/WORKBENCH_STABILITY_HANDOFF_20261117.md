@@ -3701,3 +3701,12 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
   构建/验收共6项定向测试。
 - GitHub 为公开仓库，权重仍只留在 `.repro`，未上传、未部署；公开同步构建器、验收器和
   小型回执。详见 `docs/QWEN3VL2B_CONTROLLED_BUNDLE_ROUND497_20261122.md`。
+
+## 2026-11-22 Round498 补充：公开复现分支同步
+
+- 发现 CNB/GitHub 的 `reproduce` 落后开发线44个提交、涉及291个文件；确认可无冲突快进。
+- 发布前完整验收为 Python 1,425 passed、1 skipped，浏览器逻辑 167/167，`pip check` 无冲突，
+  `repro_doctor` READY。
+- 经测试的 `2f24b662c16bccb0db7e18d25d804d7665f6d3f0` 已同步到两个仓库的
+  `labelagent` 与 `reproduce`，四个远端引用读回一致；权重、原始数据和凭证未上传。详见
+  `docs/REPRODUCE_BRANCH_ACCEPTANCE_ROUND498_20261122.md`。

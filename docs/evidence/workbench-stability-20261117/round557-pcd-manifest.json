@@ -1,0 +1,29 @@
+{
+  "schema_version": "labelagent.round557.pcd_manifest.v1",
+  "source": "read_only_oss_single_file_download",
+  "oss_prefix": "oss://seer-kubeflow/dataset/robot_data/SFL-CPD15-Y/20260920_cs-seer_Dev_P2605901028248",
+  "files": [
+    {
+      "sequence": "010",
+      "frame_id": "1789899951882467655",
+      "filename": "010-1789899951882467655.pcd",
+      "size_bytes": 2337568,
+      "sha256": "e5d49a502e25e2a5233b6024def7f1bf3782ef2d08d4fc883a8309cda8f22f2e"
+    },
+    {
+      "sequence": "011",
+      "frame_id": "1789900388815700364",
+      "filename": "011-1789900388815700364.pcd",
+      "size_bytes": 2338842,
+      "sha256": "9e6aef0bf445100130d610d25ff5fdfb865020898a0f9c6e64e4fa9424e20db7"
+    },
+    {
+      "sequence": "012",
+      "frame_id": "1789900488815784655",
+      "filename": "012-1789900488815784655.pcd",
+      "size_bytes": 2339258,
+      "sha256": "0f15763a580dbb00cb101e3effe2c83da7fd23700820960970109b31fc4d05b9"
+    }
+  ],
+  "oss_writes": 0
+}

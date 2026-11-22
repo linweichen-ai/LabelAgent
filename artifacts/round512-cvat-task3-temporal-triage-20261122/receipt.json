@@ -1,0 +1,18 @@
+{
+  "schema_version": "labelagent.cvat-temporal-assistant-triage.v1",
+  "status": "temporal_triage_complete_human_signoff_pending",
+  "temporal_pack_manifest_sha256": "22b8cb878bb62f22a4fc32298b84d2d1f014c6aef49216191360a4ad0bb1c99c",
+  "decision_counts": {
+    "likely_ok_with_temporal": 3,
+    "obvious_issue": 0,
+    "still_uncertain": 0
+  },
+  "human_truth": false,
+  "human_signoff_count": 0,
+  "training_authorized": false,
+  "automatic_approval": false,
+  "scene_transition_excluded": true,
+  "private_candidate_ids_published": false,
+  "private_reasons_published": false,
+  "private_triage_sha256": "a5fbfdd80999baeef2a8ae9c77598b3e59cb0cb628dd9b353027e841d4611e11"
+}

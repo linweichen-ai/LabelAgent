@@ -32,6 +32,15 @@ PROMPTS = {"generic": "pallet", "wooden": "wooden pallet",
            "plastic": "plastic pallet", "base": "pallet base"}
 
 
+def select_source_rows(source: dict, selection: str) -> list[dict]:
+    localized = [row for row in source["rows"] if row.get("localization_pass")]
+    if selection == "ambiguous":
+        return [row for row in localized if not row.get("instance_isolation_pass")]
+    if selection == "all_localized":
+        return localized
+    raise ValueError(f"unknown selection: {selection}")
+
+
 def projected_conflicts(target, projected, threshold=.25):
     result = []
     target_area = int(target["mask"].sum())
@@ -188,7 +197,8 @@ def render(image, projected, masks, output):
 
 
 def evaluate(source_report: Path, manifest_path: Path, labels_root: Path,
-             calibration: Path, output: Path, sam_url: str, timeout=120):
+             calibration: Path, output: Path, sam_url: str, timeout=120,
+             selection="ambiguous"):
     if output.exists():
         raise ValueError("output directory already exists")
     source = json.loads(source_report.read_text(encoding="utf-8"))
@@ -202,9 +212,9 @@ def evaluate(source_report: Path, manifest_path: Path, labels_root: Path,
     output.mkdir(parents=True); masks_dir = output / "masks"; masks_dir.mkdir()
     visuals = output / "visuals"; visuals.mkdir()
     rows = []
-    ambiguous = [row for row in source["rows"]
-                 if row.get("localization_pass") and not row.get("instance_isolation_pass")]
-    for source_row in ambiguous:
+    selected_source_rows = select_source_rows(source, selection)
+    skipped_no_conflict = 0
+    for source_row in selected_source_rows:
         sequence, camera_number = str(source_row["sequence"]), int(source_row["camera"])
         item = files[(sequence, camera_number)]; frame = str(item["frame_id"])
         image_path = root / item["relative_path"]
@@ -219,6 +229,9 @@ def evaluate(source_report: Path, manifest_path: Path, labels_root: Path,
         target = next(row for row in projected
                       if str(row["obj_id"]) == str(source_row["target_obj_id"]))
         conflicts = projected_conflicts(target, projected)
+        if not conflicts:
+            skipped_no_conflict += 1
+            continue
         selected = [target, *(row[0] for row in conflicts)]
         masks, instances = {}, []
         for projected_row in selected:
@@ -263,6 +276,9 @@ def evaluate(source_report: Path, manifest_path: Path, labels_root: Path,
     report = {
         "schema_version": "labelagent.pallet_box3d_overlap_pairs.v1",
         "status": "offline_instance_diagnostic_not_deployed",
+        "selection": selection,
+        "selected_source_row_count": len(selected_source_rows),
+        "skipped_no_conflict_count": skipped_no_conflict,
         "source_report_sha256": digest(source_report),
         "ambiguous_image_count": len(rows),
         "resolved_image_count": sum(row["all_conflicts_separated"] for row in rows),
@@ -289,9 +305,13 @@ def main():
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--sam-url", default="http://127.0.0.1:28766")
     parser.add_argument("--timeout", type=float, default=120)
+    parser.add_argument("--selection", choices=("ambiguous", "all_localized"),
+                        default="ambiguous",
+                        help="rows to audit; rows without projected conflicts are skipped")
     args = parser.parse_args()
     report = evaluate(args.source_report, args.manifest, args.labels_root,
-                      args.calibration, args.output, args.sam_url, args.timeout)
+                      args.calibration, args.output, args.sam_url, args.timeout,
+                      args.selection)
     print(json.dumps({key: report[key] for key in (
         "ambiguous_image_count", "resolved_image_count", "unresolved_image_count",
         "depth_split_candidate_pass_count",

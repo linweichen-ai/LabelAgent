@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 
 from tools.evaluate_pallet_box3d_overlap_pairs import (
-    depth_split_masks, mask_separation, projected_conflicts,
+    depth_split_masks, mask_separation, projected_conflicts, select_source_rows,
 )
 
 
@@ -39,6 +39,19 @@ class PalletBox3dOverlapPairsTest(unittest.TestCase):
         self.assertFalse(metrics[1]["candidate_pass"])
         self.assertTrue(metrics[1]["occluded_unobservable_candidate"])
         self.assertTrue(metrics[1]["handled_candidate"])
+
+    def test_select_source_rows_preserves_default_and_supports_full_audit(self):
+        source = {"rows": [
+            {"id": 1, "localization_pass": True, "instance_isolation_pass": False},
+            {"id": 2, "localization_pass": True, "instance_isolation_pass": True},
+            {"id": 3, "localization_pass": False, "instance_isolation_pass": False},
+        ]}
+        self.assertEqual([row["id"] for row in select_source_rows(source, "ambiguous")],
+                         [1])
+        self.assertEqual([row["id"] for row in select_source_rows(source, "all_localized")],
+                         [1, 2])
+        with self.assertRaises(ValueError):
+            select_source_rows(source, "unsupported")
 
 
 if __name__ == "__main__":

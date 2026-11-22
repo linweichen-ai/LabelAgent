@@ -1,0 +1,103 @@
+{
+  "schema_version": "labelagent.idle-polling-browser-acceptance.v2",
+  "passed": true,
+  "base_url": "http://127.0.0.1:8765",
+  "duration_seconds": 32.0,
+  "workspace_ready_seconds": 1.187,
+  "ui_version": "171",
+  "run_status_requests": 4,
+  "state_summary_requests": 2,
+  "request_budget": {
+    "run_status": 3,
+    "state_summary": 2
+  },
+  "startup_request_counts": {
+    "run_status": 2,
+    "state_summary": 1
+  },
+  "steady_state_request_counts": {
+    "run_status": 2,
+    "state_summary": 1
+  },
+  "request_times_seconds": {
+    "/api/run/status": [
+      1.016,
+      1.172,
+      16.203,
+      31.203
+    ],
+    "/api/state/summary": [
+      1.187,
+      31.203
+    ]
+  },
+  "external_requests": [],
+  "guarded_writes": [],
+  "allowed_readonly_posts": [
+    "POST /api/topic"
+  ],
+  "page_errors": [],
+  "console_errors": [],
+  "http_errors": [],
+  "request_initiators": [
+    {
+      "path": "/api/run/status",
+      "at_ms": 132.6,
+      "frames": [
+        "<anonymous>",
+        "fetchAgentStatus@/app.js",
+        "refreshAgentProgress@/app.js",
+        "pollRunStatus@/app.js"
+      ]
+    },
+    {
+      "path": "/api/run/status",
+      "at_ms": 301.9,
+      "frames": [
+        "<anonymous>",
+        "fetchAgentStatus@/app.js",
+        "refreshAgentProgress@/app.js"
+      ]
+    },
+    {
+      "path": "/api/state/summary",
+      "at_ms": 309.6,
+      "frames": [
+        "<anonymous>",
+        "refreshGuide@/guide.js",
+        "workspaceChanged@/guide.js",
+        "<anonymous>",
+        "markWorkspaceReady@/app.js",
+        "async@/app.js"
+      ]
+    },
+    {
+      "path": "/api/run/status",
+      "at_ms": 15322.6,
+      "frames": [
+        "<anonymous>",
+        "fetchAgentStatus@/app.js",
+        "refreshAgentProgress@/app.js",
+        "pollRunStatus@/app.js"
+      ]
+    },
+    {
+      "path": "/api/state/summary",
+      "at_ms": 30334.0,
+      "frames": [
+        "<anonymous>",
+        "refreshGuide@/guide.js"
+      ]
+    },
+    {
+      "path": "/api/run/status",
+      "at_ms": 30334.5,
+      "frames": [
+        "<anonymous>",
+        "fetchAgentStatus@/app.js",
+        "refreshAgentProgress@/app.js",
+        "pollRunStatus@/app.js"
+      ]
+    }
+  ]
+}

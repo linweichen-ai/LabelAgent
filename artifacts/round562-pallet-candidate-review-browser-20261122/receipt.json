@@ -1,0 +1,20 @@
+{
+  "schema_version": "labelagent.round562.receipt.v1",
+  "date": "2026-11-22",
+  "implementation_commit": "423dd06",
+  "status": "isolated_read_only_ui_not_deployed",
+  "page_sha256": "f73b505202b3cb3f983adb16beb29a80ee0c9e3b5a3f220e920d6be604fb9c7b",
+  "acceptance_sha256": "770dd138f9d63c08e1e645c44ffd33f2ad50ec3c8e54aef8373cb42e9d93cf8f",
+  "screenshot_sha256": "533e48f58d84cfc0a99b848106a7baaeb188aa41ca07202afc40ce4619f6a32a",
+  "summary_values": [5, 4, 1, 5],
+  "table_rows": 5,
+  "loaded_images": 2,
+  "image_size": [640, 512],
+  "buttons": 0,
+  "browser_acceptance_passed": true,
+  "tests_passed": 28,
+  "workbench_writes": 0,
+  "human_truth_writes": 0,
+  "training_data_writes": 0,
+  "production_deployed": false
+}

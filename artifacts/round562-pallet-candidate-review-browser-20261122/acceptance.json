@@ -1,0 +1,27 @@
+{
+  "schema_version": "labelagent.round562.browser_acceptance.v1",
+  "page_sha256": "f73b505202b3cb3f983adb16beb29a80ee0c9e3b5a3f220e920d6be604fb9c7b",
+  "screenshot_sha256": "533e48f58d84cfc0a99b848106a7baaeb188aa41ca07202afc40ce4619f6a32a",
+  "stat_values": [
+    "5",
+    "4",
+    "1",
+    "5"
+  ],
+  "table_rows": 5,
+  "images": [
+    {
+      "complete": true,
+      "width": 640,
+      "height": 512
+    },
+    {
+      "complete": true,
+      "width": 640,
+      "height": 512
+    }
+  ],
+  "deployment": "not-deployed",
+  "buttons": 0,
+  "passed": true
+}

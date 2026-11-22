@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LabelAgent · 托盘候选复核</title>
+<style>
+:root{--ink:#102a2a;--muted:#687c78;--line:#dce9e5;--paper:#f4f8f6;--card:#fff;--accent:#0f8b68;--warn:#b44d45}
+*{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#edf7f3 0,#f7faf9 280px);color:var(--ink);font:14px/1.55 system-ui,"Microsoft YaHei",sans-serif}
+main{max-width:1320px;margin:auto;padding:30px 28px 56px} .top{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;margin-bottom:22px}
+h1{font-size:28px;margin:4px 0 6px;letter-spacing:-.4px} h2{font-size:16px;margin:2px 0 0} p{margin:0;color:var(--muted)}
+.status{background:#fff3f1;color:#8b3832;border:1px solid #f0cec9;border-radius:12px;padding:10px 14px;font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px} .stat{background:rgba(255,255,255,.88);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:0 8px 24px rgba(27,82,67,.05)}
+.stat span{color:var(--muted)} .stat strong{display:block;font-size:25px;margin-top:2px}
+.scenes{display:grid;grid-template-columns:1fr 1fr;gap:16px} .scene{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 12px 32px rgba(27,82,67,.07)}
+.scene header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px} small{color:var(--muted)} .chip{background:#e9f6f1;color:#087455;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:700}
+.scene img{width:100%;display:block;aspect-ratio:5/4;object-fit:contain;background:#111b21}
+.panel{margin-top:18px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 12px 32px rgba(27,82,67,.06)}
+.panel-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:12px} table{width:100%;border-collapse:collapse} th,td{padding:11px 10px;border-top:1px solid #e7efec;text-align:left;vertical-align:top} th{border-top:0;color:var(--muted);font-size:12px}
+.route{display:inline-block;padding:4px 8px;border-radius:8px;font-weight:700;font-size:12px} .allow{background:#e7f6ef;color:#087455} .suppress{background:#fff0ee;color:#a33f37} .mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;max-width:360px}
+.note{margin-top:14px;padding:12px 14px;border-left:3px solid var(--accent);background:#f0f8f5;color:#47615b}
+@media(max-width:900px){.stats{grid-template-columns:1fr 1fr}.scenes{grid-template-columns:1fr}.top{flex-direction:column}.panel{overflow:auto}table{min-width:850px}}
+</style></head><body><main>
+<header class="top"><div><p>LabelAgent / Pallet Visibility Review</p><h1>托盘可见性候选复核</h1><p>LiDAR、3D 深度与时序证据汇总；仅供人工检查。</p></div><div class="status" data-deployment="not-deployed">离线候选 · 未部署 · 不是真值</div></header>
+<div class="stats"><section class="stat" data-stat="候选实例"><span>候选实例</span><strong>5</strong></section><section class="stat" data-stat="输出掩码"><span>输出掩码</span><strong>4</strong></section><section class="stat" data-stat="抑制掩码"><span>抑制掩码</span><strong>1</strong></section><section class="stat" data-stat="等待复核"><span>等待复核</span><strong>5</strong></section></div><section class="scenes"><article class="scene"><header><div><small>冻结复核场景</small><h2>010 · camera0 · 1789899951882467655</h2></div><span class="chip">只读候选</span></header><img src="previews/010-camera0-candidate-route.png" alt="010 · camera0 · 1789899951882467655候选预览"></article><article class="scene"><header><div><small>冻结复核场景</small><h2>011 · camera1 · 1789900388815700364</h2></div><span class="chip">只读候选</span></header><img src="previews/011-camera1-candidate-route.png" alt="011 · camera1 · 1789900388815700364候选预览"></article></section>
+<section class="panel"><div class="panel-head"><div><small>机器可读路由</small><h2>实例处理清单</h2></div><span class="chip">5 项全部需复核</span></div>
+<table><thead><tr><th>场景</th><th>obj_id</th><th>处理</th><th>掩码像素</th><th>传播源帧</th><th>状态</th></tr></thead><tbody><tr><td>010 / camera0</td><td>7</td><td><span class="route allow">输出候选掩码</span></td><td>3,360</td><td class="mono">—</td><td>必须复核</td></tr><tr><td>010 / camera0</td><td>6</td><td><span class="route allow">输出候选掩码</span></td><td>666</td><td class="mono">—</td><td>必须复核</td></tr><tr><td>010 / camera0</td><td>11</td><td><span class="route allow">输出候选掩码</span></td><td>693</td><td class="mono">—</td><td>必须复核</td></tr><tr><td>011 / camera1</td><td>15</td><td><span class="route allow">输出候选掩码</span></td><td>1,503</td><td class="mono">—</td><td>必须复核</td></tr><tr><td>011 / camera1</td><td>20</td><td><span class="route suppress">抑制二维掩码</span></td><td>0</td><td class="mono">1789900388515701364、1789900390014812364、1789900390315797364</td><td>必须复核</td></tr></tbody></table>
+<div class="note">安全边界：本页没有保存、写回、训练或部署入口。绿色区域仍是候选；红色抑制项只保留 3D 身份与时序证据，不生成当前帧二维掩码。</div></section>
+</main></body></html>

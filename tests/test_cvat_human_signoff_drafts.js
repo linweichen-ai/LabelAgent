@@ -37,7 +37,68 @@ try {
     await fileEvent(" ".repeat(1048577)); assert.equal(element("status").textContent, "草稿导入失败");
     await element("importDraft").listeners.change({ target: { files: [{ size: 10, text: async () => { throw Error("private"); } }], value: "" } }); assert.equal(element("status").textContent, "草稿导入失败");
     assert.equal(html.includes('id="exportDraft"'), true); assert.equal(html.includes('id="importDraft"'), true);
-    console.log("Node draft tests passed");
+    // Execute the actual generated script: reject every identity/authority mutation
+    // and compare the full in-memory state, including the last row, after failure.
+    const state = () => vm.runInNewContext("JSON.stringify(items)", context);
+    let attacks = 0;
+    const mutations = [
+      x => x.rows[0].candidate_id = "unknown",
+      x => x.rows[0].frame_id = 999,
+      x => x.rows[0].source_image_sha256 = "0".repeat(64),
+      x => x.rows[0].canonical_geometry_sha256 = "0".repeat(64),
+      x => x.rows[0].frame_id = false,
+      x => delete x.rows[0].reviewer,
+      x => delete x.signoff_template_sha256,
+      x => x.candidate_count = "81",
+      x => x.rows.push(structuredClone(x.rows[0])),
+      x => x.rows = [x.rows[0]],
+      x => x.schema_version = "other",
+      x => x.rows[0].reviewer = 1,
+      x => x.rows[0].reviewed_at = [],
+      x => x.rows[80].decision = "approve",
+    ];
+    for (const key of ["training_authorized", "automatic_approval", "approved_for_training"]) {
+      for (const value of [false, true, null]) {
+        mutations.push(x => x[key] = value, x => x.rows[80][key] = value);
+      }
+    }
+    for (const mutate of mutations) {
+      const input = structuredClone(blank); mutate(input);
+      const before = state(); await fileEvent(JSON.stringify(input));
+      assert.equal(element("status").textContent, "草稿导入失败");
+      assert.equal(state(), before); attacks++;
+    }
+    for (const text of [
+      JSON.stringify(blank).replace('"decision":null', '"decision":null,"decisi\\u006fn":"pass"'),
+      JSON.stringify(blank).replace('"frame_id":0', '"frame_id":0,"frame_id":0'),
+      JSON.stringify(blank).replace('"candidate_count":81', '"candidate_count":81,"candidate_count":81'),
+      '['.repeat(66) + '0' + ']'.repeat(66),
+    ]) {
+      const before = state(); await fileEvent(text);
+      assert.equal(element("status").textContent, "草稿导入失败");
+      assert.equal(state(), before); attacks++;
+    }
+    // Reordered rows restore by candidate ID; text that looks like HTML remains text.
+    const reordered = structuredClone(blank);
+    reordered.rows[0].note = '<img src="https://invalid.example/">';
+    reordered.rows.reverse(); await fileEvent(JSON.stringify(reordered));
+    assert.equal(element("note").value, reordered.rows[80].note);
+    assert.equal(element("export").disabled, true);
+    const countBefore = downloads.length; element("export").listeners.click();
+    assert.equal(downloads.length, countBefore);
+    element("filter").value = "pending"; element("filter").listeners.change();
+    element("next").listeners.click(); assert.equal(element("frame").textContent, 1);
+    element("prev").listeners.click(); assert.equal(element("frame").textContent, 0);
+    let finishRead;
+    const pending = element("importDraft").listeners.change({target: {value: "", files: [{size: 10, text: () => new Promise(resolve => {finishRead = resolve;})}]}});
+    assert.equal(element("exportDraft").disabled, true);
+    assert.equal(element("reviewer").disabled, true);
+    finishRead(JSON.stringify(blank)); await pending;
+    assert.equal(element("exportDraft").disabled, false);
+    assert.equal(element("export").disabled, true);
+    assert.equal(vm.runInNewContext("items.every(x => x.decision === null)", context), true);
+    for (const forbidden of [/localStorage/, /sessionStorage/, /XMLHttpRequest/, /\bfetch\s*\(/, /<script\s+src=/]) assert.equal(forbidden.test(html), false);
+    console.log(`Node draft tests passed: ${attacks} additional rejection cases; roundtrip, ordering, navigation, import locking and official export gates`);
   })().catch(e => { console.error(e); process.exitCode = 1; });
 } finally {
   process.on("exit", () => fs.rmSync(temp, { recursive: true, force: true }));

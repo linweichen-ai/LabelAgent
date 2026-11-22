@@ -1,0 +1,30 @@
+{
+  "schema_version": "labelagent.sam3-assistant-pallet-round538.v1",
+  "status": "completed_rejected_on_development_gate",
+  "recipe": "all71_step8_lr2e5",
+  "optimizer_steps": 8,
+  "checkpoint_sha256": "3419de5a1b940cdc6bd97225bd4002350403f0734c9fb6db713a5febbc714db8",
+  "human_truth": false,
+  "not_for_deployment": true,
+  "test24_in_training": false,
+  "assistant_val16": {
+    "baseline_iou": 0.960297069442728,
+    "candidate_iou": 0.9598812571404312,
+    "baseline_boundary_f1": 0.9761721589666668,
+    "candidate_boundary_f1": 0.9759890429036989,
+    "baseline_dice": 0.9790842655890272,
+    "candidate_dice": 0.9788708171728238,
+    "catastrophic_frames": []
+  },
+  "decision": {
+    "deploy": false,
+    "run_test24": false,
+    "keep_incumbent": true,
+    "next": "deterministic 57/14 same-domain split"
+  },
+  "private_evidence_sha256": {
+    "training": "401d0351241d520cf9bbdf3c05ceaa9f3529bd7d80c26bdb9841f47fa84f0657",
+    "review": "6b36c4b2946cadbd574ad6620abee251f2ff8e6fd77650dfa3d966bbd32e606c",
+    "comparison": "bfa93ebd85c9fa924e272130184aba153c221f3941c13fd1072ae6c2ca3f5c94"
+  }
+}

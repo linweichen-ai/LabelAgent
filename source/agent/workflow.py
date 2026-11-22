@@ -3272,6 +3272,12 @@ def _significant_component_count(mask):
                for index in range(1, count))
 
 
+def _foreground_component_count(mask):
+    count, _ = cv2.connectedComponents(
+        mask.astype(np.uint8), connectivity=8)
+    return count - 1
+
+
 PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO = 0.30
 PALLET_IMAGE_TEXTURE_MAXIMUM_AREA = 2048
 PALLET_IMAGE_TEXTURE_MAXIMUM_SPAN = 224
@@ -3610,7 +3616,8 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
                                      minimum_compact_texture_candidate_area_ratio=(
                                          PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO),
                                      maximum_change_ratio=0.025,
-                                     image_rgb=None):
+                                     image_rgb=None,
+                                     geometry_policy="full"):
     """Remove texture-scale pallet mask noise without erasing structural gaps.
 
     The cleanup is deliberately bounded to one already detected instance.  It
@@ -3622,6 +3629,8 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
     total-change budget.  Long openings (for example fork slots and inter-slat
     gaps) remain even when their area is modest.
     """
+    if geometry_policy not in {"full", "appearance_evidence_only"}:
+        raise ValueError("unknown pallet geometry cleanup policy")
     if not isinstance(shape, dict) or str(shape.get("label", "")).casefold() != "pallet":
         return shape, None
     from .edit_agent import _rasterize, _shape_from_mask
@@ -3630,8 +3639,10 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
     if area < 400:
         return shape, None
     original_component_count = _significant_component_count(mask)
+    original_foreground_component_count = _foreground_component_count(mask)
 
     refined = mask.copy()
+    authorized_additions = np.zeros_like(mask, dtype=bool)
     background = (mask == 0).astype(np.uint8)
     count, components, stats, _ = cv2.connectedComponentsWithStats(
         background, connectivity=8)
@@ -3642,6 +3653,7 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
     filled_compact_texture_holes = []
     filled_image_texture_holes = []
     filled_image_boundary_notches = []
+    used_image_texture_evidence = False
     image_texture_holes, image_texture_audit = _image_guided_pallet_texture_holes(
         mask, image_rgb, components, stats, border_labels)
     image_guidance_available = (
@@ -3653,10 +3665,15 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
             minimum_compact_texture_candidate_area_ratio))
     image_boundary_notches = _image_guided_pallet_boundary_notches(
         mask, image_rgb, protected_structural_holes)
-    effective_maximum_change_ratio = (
-        max(maximum_change_ratio, .06) if image_boundary_notches else
-        max(maximum_change_ratio, .05) if image_texture_holes else
-        maximum_change_ratio)
+    if geometry_policy == "appearance_evidence_only":
+        # V7 is a local add-only shadow policy.  One supported component must
+        # never unlock the broader five/six-percent v6 budget elsewhere.
+        effective_maximum_change_ratio = min(maximum_change_ratio, .01)
+    else:
+        effective_maximum_change_ratio = (
+            max(maximum_change_ratio, .06) if image_boundary_notches else
+            max(maximum_change_ratio, .05) if image_texture_holes else
+            maximum_change_ratio)
     hole_fill_plans = []
     for component in range(1, count):
         if component in border_labels:
@@ -3677,7 +3694,12 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
             and (not image_guidance_available
                  or component in image_texture_holes))
         image_texture_hole = component in image_texture_holes
-        if micro_hole or texture_hole or compact_texture_hole or image_texture_hole:
+        eligible_hole = (
+            image_texture_hole
+            if geometry_policy == "appearance_evidence_only" else
+            (micro_hole or texture_hole or compact_texture_hole
+             or image_texture_hole))
+        if eligible_hole:
             record = {"area": component_area, "bbox": [x, y, x + w - 1, y + h - 1]}
             image_metrics = image_texture_audit.get(component, {})
             hole_fill_plans.append({
@@ -3700,19 +3722,30 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
             })
 
     fill_budget = max(int(area * effective_maximum_change_ratio), 1)
+    if geometry_policy == "appearance_evidence_only":
+        fill_budget = min(fill_budget, 256)
     used_fill_budget = 0
     for plan in sorted(hole_fill_plans, key=lambda item: item["priority"]):
         component_area = plan["record"]["area"]
+        if (geometry_policy == "appearance_evidence_only"
+                and (not plan["image_texture_hole"]
+                     or component_area > 256)):
+            continue
         if used_fill_budget + component_area > fill_budget:
             continue
         component = plan["component"]
-        refined[components == component] = 1
+        component_mask = components == component
+        refined[component_mask] = 1
+        if geometry_policy == "appearance_evidence_only":
+            authorized_additions |= component_mask
         used_fill_budget += component_area
         record = plan["record"]
         micro_hole = plan["micro_hole"]
         texture_hole = plan["texture_hole"]
         compact_texture_hole = plan["compact_texture_hole"]
         image_texture_hole = plan["image_texture_hole"]
+        used_image_texture_evidence = (
+            used_image_texture_evidence or image_texture_hole)
         filled_holes.append(record)
         if texture_hole and not micro_hole:
             filled_texture_holes.append(record)
@@ -3727,16 +3760,25 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
             image_boundary_notches,
             key=lambda item: (item["color_distance"], abs(item["gray_delta"]),
                               item["area"])):
-        if used_fill_budget + notch["area"] > fill_budget:
+        if (used_fill_budget + notch["area"] > fill_budget
+                or (geometry_policy == "appearance_evidence_only"
+                    and notch["area"] > 256)):
             continue
         proposal = refined.copy()
         proposal[notch["mask"]] = 1
         proposal_component_count = _significant_component_count(proposal)
+        proposal_foreground_component_count = _foreground_component_count(
+            proposal)
         if (proposal_component_count > original_component_count
+                or (geometry_policy == "appearance_evidence_only"
+                    and proposal_foreground_component_count
+                    != original_foreground_component_count)
                 or original_component_count - proposal_component_count
                 > PALLET_IMAGE_BOUNDARY_MAXIMUM_COMPONENT_MERGES):
             continue
         refined = proposal
+        if geometry_policy == "appearance_evidence_only":
+            authorized_additions |= notch["mask"]
         used_fill_budget += notch["area"]
         filled_image_boundary_notches.append({
             key: copy.deepcopy(value) for key, value in notch.items()
@@ -3745,11 +3787,12 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
     foreground_count, foreground, foreground_stats, _ = cv2.connectedComponentsWithStats(
         refined, connectivity=8)
     removed_island_pixels = 0
-    for component in range(1, foreground_count):
-        component_area = int(foreground_stats[component, cv2.CC_STAT_AREA])
-        if component_area < 9:
-            refined[foreground == component] = 0
-            removed_island_pixels += component_area
+    if geometry_policy == "full":
+        for component in range(1, foreground_count):
+            component_area = int(foreground_stats[component, cv2.CC_STAT_AREA])
+            if component_area < 9:
+                refined[foreground == component] = 0
+                removed_island_pixels += component_area
     before_components = sum(
         int(foreground_stats[component, cv2.CC_STAT_AREA]) >= 9
         for component in range(1, foreground_count))
@@ -3783,7 +3826,11 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
     # A second median pass can blur the dark structural slots that supplied
     # the appearance evidence, so keep it disabled for this route and retain
     # the independently gated polygon simplification below.
-    smoothing_applied = (not image_texture_holes
+    appearance_evidence_used = bool(
+        used_image_texture_evidence or filled_image_boundary_notches)
+    smoothing_allowed = geometry_policy == "full"
+    smoothing_applied = (smoothing_allowed
+                         and not image_texture_holes
                          and not image_boundary_notches
                          and before_components == after_components
                          and smoothing_pixels / max(area, 1)
@@ -3840,17 +3887,37 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
                 replacement[key] = copy.deepcopy(value)
     else:
         replacement = copy.deepcopy(shape)
-    replacement, boundary_audit, replacement_mask = _simplify_pallet_boundary(
-        replacement, mask, width, height,
-        maximum_change_ratio=effective_maximum_change_ratio,
-        image_rgb=image_rgb,
-        minimum_compact_texture_candidate_area_ratio=(
-            minimum_compact_texture_candidate_area_ratio))
+    if geometry_policy == "full":
+        replacement, boundary_audit, replacement_mask = _simplify_pallet_boundary(
+            replacement, mask, width, height,
+            maximum_change_ratio=effective_maximum_change_ratio,
+            image_rgb=image_rgb,
+            minimum_compact_texture_candidate_area_ratio=(
+                minimum_compact_texture_candidate_area_ratio))
+    else:
+        # Candidate v7: image evidence only authorizes its own local add-only
+        # component.  It never authorizes median smoothing, island removal or
+        # whole-contour simplification elsewhere.
+        boundary_audit = None
+        replacement_mask = _rasterize(
+            replacement, width, height).astype(np.uint8)
     changed = int(np.count_nonzero(replacement_mask != mask))
     replacement_component_count = _significant_component_count(replacement_mask)
+    replacement_foreground_component_count = _foreground_component_count(
+        replacement_mask)
     component_merge_count = original_component_count - replacement_component_count
+    if geometry_policy == "appearance_evidence_only":
+        additions = (replacement_mask != 0) & (mask == 0)
+        if (np.any((mask != 0) & (replacement_mask == 0))
+                or np.any(additions & ~authorized_additions)
+                or not np.array_equal(replacement_mask, refined)
+                or replacement_foreground_component_count
+                != original_foreground_component_count):
+            return shape, None
     if (replacement_component_count > original_component_count
             or component_merge_count < 0
+            or (geometry_policy == "appearance_evidence_only"
+                and component_merge_count != 0)
             or (component_merge_count
                 and (not filled_image_boundary_notches
                      or component_merge_count
@@ -3862,8 +3929,10 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         for hole_mask, hole_area in structural_holes]
     minimum_structural_retention = (
         min(structural_retention) if structural_retention else None)
+    required_structural_retention = (
+        1.0 if geometry_policy == "appearance_evidence_only" else .75)
     if (minimum_structural_retention is not None
-            and minimum_structural_retention < .75):
+            and minimum_structural_retention < required_structural_retention):
         return shape, None
     if not changed and boundary_audit is None:
         return shape, None
@@ -3918,13 +3987,22 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         "maximum_image_boundary_component_merges": (
             PALLET_IMAGE_BOUNDARY_MAXIMUM_COMPONENT_MERGES),
         "effective_maximum_change_ratio": effective_maximum_change_ratio,
+        "absolute_change_budget_pixels": (
+            256 if geometry_policy == "appearance_evidence_only" else None),
+        "add_only": geometry_policy == "appearance_evidence_only",
+        "required_structural_hole_retention": required_structural_retention,
         "minimum_compact_texture_candidate_area_ratio": (
             minimum_compact_texture_candidate_area_ratio),
         "preserved_component_count": replacement_component_count,
         "component_count_before": original_component_count,
         "component_count_after": replacement_component_count,
+        "foreground_component_count_before": original_foreground_component_count,
+        "foreground_component_count_after": replacement_foreground_component_count,
         "component_merge_count": component_merge_count,
-        "geometry_cleanup_version": 6,
+        "geometry_cleanup_version": (
+            7 if geometry_policy == "appearance_evidence_only" else 6),
+        "geometry_cleanup_policy": geometry_policy,
+        "appearance_evidence_used": appearance_evidence_used,
         "route": "candidate_only",
     }
     adjustment.update(boundary_audit or {

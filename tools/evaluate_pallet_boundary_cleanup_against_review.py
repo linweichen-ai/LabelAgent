@@ -259,15 +259,25 @@ def evaluate(pack_dir: Path, sessions_path: Path, review_path: Path,
     unchanged = sum(abs(row["delta"]["iou"]) <= 1e-12 for row in records)
     regressed = len(records) - improved - unchanged
     gate_failures = sum(row["regression_gate_failed"] for row in records)
+    changed_rows = sum(
+        not np.array_equal(current, refined)
+        for current, refined, _ in render_masks)
+    effect_exercised = changed_rows > 0
     development_gate_passed = bool(
-        gate_failures == 0
+        effect_exercised
+        and gate_failures == 0
         and aggregate["iou"]["delta"] >= 0
         and aggregate["boundary_f1_2px"]["delta"] >= 0)
+    status = (
+        "development_gate_passed" if development_gate_passed else
+        "non_regression_replay_passed" if not effect_exercised else
+        "development_gate_failed")
     report = {
-        "schema_version": "labelagent.pallet-boundary-human-review-comparison.v1",
-        "status": "development_gate_passed" if development_gate_passed
-        else "development_gate_failed",
+        "schema_version": "labelagent.pallet-boundary-human-review-comparison.v2",
+        "status": status,
         "development_gate_passed": development_gate_passed,
+        "non_regression_replay_passed": not effect_exercised,
+        "effect_exercised": effect_exercised,
         "scope": "single_frame_self_declared_human_review_candidate",
         "generalization_claim_allowed": False,
         "independent_human_truth": False,
@@ -288,7 +298,8 @@ def evaluate(pack_dir: Path, sessions_path: Path, review_path: Path,
         "aggregate": aggregate,
         "outcomes": {"improved_iou": improved, "unchanged_iou": unchanged,
                      "regressed_iou": regressed,
-                     "regression_gate_failures": gate_failures},
+                     "regression_gate_failures": gate_failures,
+                     "changed_rows": changed_rows},
         "rows": records,
     }
     output_dir.mkdir(parents=True)
@@ -316,6 +327,7 @@ def evaluate(pack_dir: Path, sessions_path: Path, review_path: Path,
     _contact_sheet(records, render_masks, output_dir / "contact_sheet.png")
     public = {key: report[key] for key in (
         "schema_version", "status", "development_gate_passed", "scope",
+        "non_regression_replay_passed", "effect_exercised",
         "generalization_claim_allowed",
         "independent_human_truth", "training_authorized",
         "production_deployment_authorized", "matching", "aggregate", "outcomes")}

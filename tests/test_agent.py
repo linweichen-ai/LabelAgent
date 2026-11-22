@@ -665,6 +665,160 @@ class WorkflowTests(unittest.TestCase):
         self.assertGreaterEqual(audit["minimum_structural_hole_retention"], .75)
         self.assertEqual(output[115, 150], 0)
 
+    def test_pallet_evidence_only_policy_skips_appearance_agnostic_smoothing(self):
+        mask = np.zeros((300, 420), dtype=np.uint8)
+        for y in range(30, 270):
+            left = 30 + (y % 6)
+            right = 390 - ((y + 2) % 6)
+            mask[y, left:right] = 1
+        candidate = _shape_from_mask(mask, "pallet", 31)
+        before = _rasterize(candidate, 420, 300)
+
+        refined, audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 420, 300,
+            geometry_policy="appearance_evidence_only")
+
+        self.assertIs(refined, candidate)
+        self.assertIsNone(audit)
+        self.assertTrue(np.array_equal(_rasterize(refined, 420, 300), before))
+
+    def test_pallet_evidence_only_policy_keeps_image_supported_repair(self):
+        mask = np.zeros((480, 640), dtype=np.uint8)
+        mask[245:480, :] = 1
+        cv2.circle(mask, (290, 280), 6, 0, thickness=cv2.FILLED)
+        mask[378:392, 120:250] = 0
+        image = np.full((480, 640, 3), 24, dtype=np.uint8)
+        image[245:480, :] = np.array([205, 190, 170], dtype=np.uint8)
+        image[274:287, 284:297] = np.array([198, 183, 164], dtype=np.uint8)
+        image[378:392, 120:250] = 18
+        candidate = _shape_from_mask(mask, "pallet", 32)
+
+        refined, audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 640, 480, image_rgb=image,
+            geometry_policy="appearance_evidence_only")
+        output = _rasterize(refined, 640, 480)
+
+        self.assertIsNotNone(audit)
+        self.assertEqual(audit["geometry_cleanup_version"], 7)
+        self.assertEqual(audit["geometry_cleanup_policy"],
+                         "appearance_evidence_only")
+        self.assertTrue(audit["appearance_evidence_used"])
+        self.assertTrue(audit["add_only"])
+        self.assertFalse(audit["smoothing_applied"])
+        self.assertFalse(audit["boundary_simplification_applied"])
+        self.assertEqual(audit["component_merge_count"], 0)
+        self.assertEqual(audit["minimum_structural_hole_retention"], 1.0)
+        self.assertLessEqual(audit["changed_pixels"], 256)
+        self.assertEqual(output[280, 290], 1)
+        self.assertEqual(output[385, 180], 0)
+        self.assertFalse(np.any((mask != 0) & (output == 0)))
+
+        repeated, repeated_audit = workflow.refine_pallet_candidate_geometry(
+            refined, 640, 480, image_rgb=image,
+            geometry_policy="appearance_evidence_only")
+        self.assertTrue(np.array_equal(_rasterize(repeated, 640, 480), output))
+        self.assertIsNone(repeated_audit)
+
+    def test_pallet_evidence_only_policy_preserves_geometry_only_hole_and_island(self):
+        main = {"points": [[20, 20], [180, 20], [180, 180], [20, 180]],
+                "holes": [[[70, 70], [75, 70], [75, 75], [70, 75]]]}
+        island = {"points": [[5, 5], [6, 5], [6, 6], [5, 6]],
+                  "holes": []}
+        candidate = {"id": 34, "label": "pallet",
+                     "points": main["points"], "holes": main["holes"],
+                     "parts": [main, island]}
+        before = _rasterize(candidate, 200, 200)
+
+        refined, audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 200, 200,
+            geometry_policy="appearance_evidence_only")
+
+        self.assertIs(refined, candidate)
+        self.assertIsNone(audit)
+        self.assertTrue(np.array_equal(_rasterize(refined, 200, 200), before))
+        self.assertEqual(before[72, 72], 0)
+        self.assertEqual(before[5, 5], 1)
+
+    def test_pallet_evidence_only_local_repair_does_not_smooth_remote_boundary(self):
+        mask = np.zeros((300, 420), dtype=np.uint8)
+        for y in range(30, 270):
+            left = 30 + (y % 6)
+            right = 390 - ((y + 2) % 6)
+            mask[y, left:right] = 1
+        cv2.circle(mask, (210, 150), 6, 0, thickness=cv2.FILLED)
+        hole = mask == 0
+        image = np.full((300, 420, 3), 20, dtype=np.uint8)
+        image[mask != 0] = np.array([205, 190, 170], dtype=np.uint8)
+        image[144:157, 204:217] = np.array([198, 183, 164], dtype=np.uint8)
+        candidate = _shape_from_mask(mask, "pallet", 35)
+
+        refined, audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 420, 300, image_rgb=image,
+            geometry_policy="appearance_evidence_only")
+        output = _rasterize(refined, 420, 300)
+        changed = output != mask
+
+        self.assertIsNotNone(audit)
+        self.assertTrue(audit["appearance_evidence_used"])
+        self.assertFalse(audit["smoothing_applied"])
+        self.assertFalse(audit["boundary_simplification_applied"])
+        self.assertFalse(np.any(changed & ~hole))
+        self.assertFalse(np.any((mask != 0) & (output == 0)))
+        self.assertEqual(output[150, 210], 1)
+
+    def test_pallet_evidence_only_policy_forbids_component_merge(self):
+        mask = np.zeros((300, 420), dtype=np.uint8)
+        mask[40:260, 20:205] = 1
+        mask[40:260, 210:400] = 1
+        image = np.full((300, 420, 3), 20, dtype=np.uint8)
+        image[40:260, 20:205] = np.array([205, 190, 170], dtype=np.uint8)
+        image[40:260, 210:400] = np.array([205, 190, 170], dtype=np.uint8)
+        image[130:170, 205:210] = np.array([202, 188, 169], dtype=np.uint8)
+        candidate = _shape_from_mask(mask, "pallet", 36)
+
+        refined, audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 420, 300, image_rgb=image,
+            geometry_policy="appearance_evidence_only")
+
+        self.assertIs(refined, candidate)
+        self.assertIsNone(audit)
+        self.assertTrue(np.array_equal(_rasterize(refined, 420, 300), mask))
+        self.assertEqual(mask[150, 207], 0)
+
+    def test_pallet_evidence_only_policy_forbids_tiny_component_merge(self):
+        main = {"points": [[20, 40], [204, 40], [204, 259], [20, 259]],
+                "holes": []}
+        island = {"points": [[207, 148], [208, 148], [208, 149], [207, 149]],
+                  "holes": []}
+        candidate = {"id": 37, "label": "pallet",
+                     "points": main["points"], "holes": [],
+                     "parts": [main, island]}
+        mask = _rasterize(candidate, 420, 300)
+        image = np.full((300, 420, 3), 20, dtype=np.uint8)
+        image[mask != 0] = np.array([205, 190, 170], dtype=np.uint8)
+        bridge = np.zeros_like(mask, dtype=bool)
+        bridge[148:150, 205:207] = True
+        notch = {"mask": bridge, "area": int(bridge.sum()),
+                 "color_distance": 0.0, "gray_delta": 0.0}
+
+        with patch.object(workflow, "_image_guided_pallet_boundary_notches",
+                          return_value=[notch]):
+            refined, audit = workflow.refine_pallet_candidate_geometry(
+                candidate, 420, 300, image_rgb=image,
+                geometry_policy="appearance_evidence_only")
+
+        self.assertIs(refined, candidate)
+        self.assertIsNone(audit)
+        self.assertTrue(np.array_equal(_rasterize(refined, 420, 300), mask))
+        self.assertEqual(mask[149, 205], 0)
+        self.assertEqual(mask[149, 207], 1)
+
+    def test_pallet_cleanup_rejects_unknown_geometry_policy(self):
+        with self.assertRaisesRegex(ValueError, "unknown pallet geometry"):
+            workflow.refine_pallet_candidate_geometry(
+                shape(shape_id=33, label="pallet"), 40, 40,
+                geometry_policy="unknown")
+
     def test_pallet_boundary_simplification_fails_closed_when_budget_would_break(self):
         mask = np.zeros((240, 320), dtype=np.uint8)
         cv2.circle(mask, (160, 120), 90, 1, thickness=cv2.FILLED)

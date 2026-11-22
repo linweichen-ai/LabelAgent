@@ -136,6 +136,13 @@ def _comparison_roi(before, after, padding=24):
             min(height, int(ys.max()) + padding + 1))
 
 
+def _significant_component_count(mask):
+    count, _, stats, _ = cv2.connectedComponentsWithStats(
+        mask.astype(np.uint8), connectivity=8)
+    return sum(int(stats[index, cv2.CC_STAT_AREA]) >= 9
+               for index in range(1, count))
+
+
 def _candidate_binding(candidates):
     return _sha256(_canonical_bytes(candidates))
 
@@ -201,9 +208,14 @@ def _tree_sha256(folder):
     return _sha256(_canonical_bytes(rows)), rows
 
 
-def build_pack(base_url, frames, output, *, opener=urlopen):
+def build_pack(base_url, frames, output, *, opener=urlopen,
+               geometry_policy="full", include_unchanged=False):
     """Build one deterministic comparison pack without any server mutation."""
     base_url = _safe_base_url(base_url)
+    if geometry_policy not in {"full", "appearance_evidence_only"}:
+        raise ValueError("未知 pallet geometry policy")
+    if not isinstance(include_unchanged, bool):
+        raise ValueError("include_unchanged 必须是布尔值")
     output = Path(output).resolve()
     if output.exists():
         raise FileExistsError(f"输出目录已存在：{output}")
@@ -253,11 +265,14 @@ def build_pack(base_url, frames, output, *, opener=urlopen):
                 before = _rasterize(candidate, width, height).astype(np.uint8)
                 refined, audit = refine_pallet_candidate_geometry(
                     copy.deepcopy(candidate), width, height,
-                    image_rgb=image_rgb)
+                    image_rgb=image_rgb, geometry_policy=geometry_policy)
                 after = _rasterize(refined, width, height).astype(np.uint8)
                 changed = int(np.count_nonzero(before != after))
-                if audit is None or changed == 0:
+                if changed == 0 and not include_unchanged:
                     continue
+                if changed and audit is None:
+                    raise ValueError("几何发生变化但缺少审计记录")
+                audit = audit or {}
                 prefix = f"f{frame:06d}-c{identifier}"
                 current_mask_name = f"{prefix}-current-mask.png"
                 refined_mask_name = f"{prefix}-refined-mask.png"
@@ -281,8 +296,11 @@ def build_pack(base_url, frames, output, *, opener=urlopen):
                                  (25, 210, 120)))
                 before_area = int(before.sum())
                 after_area = int(after.sum())
+                before_components = _significant_component_count(before)
+                after_components = _significant_component_count(after)
                 rows.append({
-                    "comparison_id": f"frame-{frame}-candidate-{identifier}-pallet-boundary-cleanup",
+                    "comparison_id": (
+                        f"frame-{frame}-candidate-{identifier}-pallet-boundary-cleanup"),
                     "frame": frame,
                     "source_frame_sha256": _sha256(encoded_frame),
                     "current_candidate_id": identifier,
@@ -294,15 +312,25 @@ def build_pack(base_url, frames, output, *, opener=urlopen):
                                 "mask_sha256": current_mask_sha},
                     "current_pixel_count": before_area,
                     "current_metrics": {
-                        "component_count": int(audit.get("component_count_before", 0)),
+                        "component_count": int(audit.get(
+                            "component_count_before",
+                            before_components)),
                         "preview_x1": x1, "preview_y1": y1,
                         "preview_x2": x2, "preview_y2": y2,
                     },
                     "variants": [{
-                        "alternative_id": "pallet-boundary-cleanup-v6",
+                        "alternative_id": (
+                            "pallet-boundary-cleanup-v7-evidence-only"
+                            if geometry_policy == "appearance_evidence_only"
+                            else "pallet-boundary-cleanup-v6"),
                         "kind": "alternative",
-                        "label": "pallet boundary cleanup",
-                        "policy": "refine_pallet_candidate_geometry",
+                        "label": (
+                            "pallet evidence-only boundary cleanup"
+                            if geometry_policy == "appearance_evidence_only"
+                            else "pallet boundary cleanup"),
+                        "policy": (
+                            "refine_pallet_candidate_geometry:"
+                            f"{geometry_policy}"),
                         "mask": refined_mask_name,
                         "mask_sha256": refined_mask_sha,
                         "pixel_count": after_area,
@@ -314,9 +342,17 @@ def build_pack(base_url, frames, output, *, opener=urlopen):
                             "pixel_delta": after_area - before_area,
                             "filled_hole_pixels": int(audit.get("filled_hole_pixels", 0)),
                             "removed_island_pixels": int(audit.get("removed_island_pixels", 0)),
-                            "component_count_before": int(audit.get("component_count_before", 0)),
-                            "component_count_after": int(audit.get("component_count_after", 0)),
-                            "geometry_cleanup_version": int(audit.get("geometry_cleanup_version", 0)),
+                            "component_count_before": int(audit.get(
+                                "component_count_before", before_components)),
+                            "component_count_after": int(audit.get(
+                                "component_count_after", after_components)),
+                            "geometry_cleanup_version": int(audit.get(
+                                "geometry_cleanup_version",
+                                7 if geometry_policy ==
+                                "appearance_evidence_only" else 6)),
+                            "geometry_cleanup_policy": geometry_policy,
+                            "appearance_evidence_used": int(bool(
+                                audit.get("appearance_evidence_used", False))),
                         },
                     }],
                 })
@@ -346,6 +382,8 @@ def build_pack(base_url, frames, output, *, opener=urlopen):
             "human_decision": None,
             "source": {"path": source_path, "topic": topic,
                        "file_activation_generation": generation},
+            "geometry_policy": geometry_policy,
+            "include_unchanged": include_unchanged,
             "rows": rows,
         }
         (staging / "manifest.json").write_text(
@@ -364,6 +402,11 @@ def build_pack(base_url, frames, output, *, opener=urlopen):
             "file_count": len(files),
             "requested_frames": normalized_frames,
             "comparison_count": len(rows),
+            "changed_comparison_count": sum(
+                row["variants"][0]["metrics"]["changed_pixels"] > 0
+                for row in rows),
+            "geometry_policy": geometry_policy,
+            "include_unchanged": include_unchanged,
             "candidate_only": True,
             "human_truth": False,
             "approved_for_training": False,
@@ -387,8 +430,15 @@ def main():
     parser.add_argument("--base-url", required=True)
     parser.add_argument("--frames", required=True, type=_parse_frames)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--geometry-policy",
+                        choices=("full", "appearance_evidence_only"),
+                        default="full")
+    parser.add_argument("--include-unchanged", action="store_true")
     args = parser.parse_args()
-    result = build_pack(args.base_url, args.frames, args.output)
+    result = build_pack(
+        args.base_url, args.frames, args.output,
+        geometry_policy=args.geometry_policy,
+        include_unchanged=args.include_unchanged)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0
 

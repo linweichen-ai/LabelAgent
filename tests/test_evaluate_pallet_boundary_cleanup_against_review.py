@@ -97,6 +97,27 @@ class PalletBoundaryReviewComparisonTests(unittest.TestCase):
             self.run_evaluation("frame-drift")
         self.assertFalse((self.root / "frame-drift").exists())
 
+    def test_noop_replay_is_not_reported_as_effect_gate_pass(self):
+        current = np.asarray(Image.open(self.pack / "current.png"))
+        Image.fromarray(current).save(self.pack / "refined.png")
+        value = json.loads(self.manifest.read_text())
+        value["rows"][0]["variants"][0]["mask_sha256"] = digest(
+            self.pack / "refined.png")
+        self.manifest.write_text(json.dumps(value), encoding="utf-8")
+
+        report = self.run_evaluation("noop")
+
+        self.assertEqual(report["status"], "non_regression_replay_passed")
+        self.assertEqual(report["schema_version"],
+                         "labelagent.pallet-boundary-human-review-comparison.v2")
+        self.assertFalse(report["development_gate_passed"])
+        self.assertTrue(report["non_regression_replay_passed"])
+        self.assertFalse(report["effect_exercised"])
+        self.assertEqual(report["outcomes"]["changed_rows"], 0)
+        public = json.loads((self.root / "noop/public_receipt.json").read_text())
+        self.assertEqual(public["status"], "non_regression_replay_passed")
+        self.assertFalse(public["effect_exercised"])
+
 
 if __name__ == "__main__":
     unittest.main()

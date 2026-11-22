@@ -1,0 +1,52 @@
+{
+  "candidate": "pallet-boundary-cleanup-v7-evidence-only",
+  "candidate_only": true,
+  "default_policy_changed": false,
+  "deployment_authorized": false,
+  "effect_exercised": false,
+  "generalization_claim_allowed": false,
+  "human_review_gate": {
+    "aggregate_delta": {
+      "boundary_f1_1px": 0.0,
+      "boundary_f1_2px": 0.0,
+      "dice": 0.0,
+      "iou": 0.0
+    },
+    "changed_rows": 0,
+    "comparison_rows": 11,
+    "development_gate_passed": false,
+    "matched": 11,
+    "non_regression_replay_passed": true,
+    "output_sha256": {
+      "contact_sheet.png": "75fe227d18955effb20d79ba451e1e5ec6ab6c8d3aa1dc577da06450a5848402",
+      "per_instance.csv": "1aa481566f546cc76113bb458376ea00fd47709a8a89a58e22c684cb1618b63b",
+      "public_receipt.json": "e0d5460914099772db11a848472f484548d484daaa4225accafbc09c7096c999",
+      "report.json": "76e5f8c4c8b335c517f8a91db73af91e6b70ec2c1b80bad2f057e5d0d7b3a158"
+    },
+    "repeat_outputs_identical": true,
+    "schema_version": "labelagent.pallet-boundary-human-review-comparison.v2",
+    "status": "non_regression_replay_passed"
+  },
+  "independent_read_only_review": "shadow_candidate_only",
+  "live_replay": {
+    "candidate_count": 34,
+    "changed_count": 0,
+    "file_count": 137,
+    "frames": 3,
+    "manifest_sha256": "ee1f2ff9306d187aedf2bdc75126724b23291aa1c9f8ff45c48c6efa4dc44b59",
+    "mask_sha_equal_count": 34,
+    "repeat_outputs_identical": true,
+    "tree_sha256": "f3c11a999e108d48b9aec90fe4a5f5bf0e70113d4edb5a2387d49174d59be958"
+  },
+  "production_state_unchanged": true,
+  "schema_version": "labelagent.pallet-boundary-evidence-only-v7-round739.v1",
+  "status": "safe_noop_shadow_candidate",
+  "tests": {
+    "directed_passed": 285,
+    "directed_subtests_passed": 83,
+    "formal_passed": 1745,
+    "formal_skipped": 1,
+    "formal_subtests_passed": 272
+  },
+  "training_authorized": false
+}

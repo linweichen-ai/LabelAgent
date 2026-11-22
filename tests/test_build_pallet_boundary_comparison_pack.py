@@ -148,6 +148,38 @@ class BuildPalletBoundaryComparisonPackTests(unittest.TestCase):
         self.assertFalse(output.exists())
         self.assertEqual(list(output.parent.glob(".cc-*")), [])
 
+    def test_evidence_only_policy_can_emit_hash_bound_noop_replay(self):
+        workbench = FakeWorkbench([candidate(False)])
+        output = self.root / "v7" / "replay-pack"
+
+        result = builder.build_pack(
+            "http://example.test", [7], output, opener=workbench,
+            geometry_policy="appearance_evidence_only",
+            include_unchanged=True)
+
+        self.assertEqual(result["comparison_count"], 1)
+        self.assertEqual(result["changed_comparison_count"], 0)
+        self.assertEqual(result["geometry_policy"],
+                         "appearance_evidence_only")
+        manifest = json.loads((output / "manifest.json").read_text(
+            encoding="utf-8"))
+        self.assertTrue(manifest["include_unchanged"])
+        row = manifest["rows"][0]
+        self.assertEqual(row["current"]["mask_sha256"],
+                         row["variants"][0]["mask_sha256"])
+        self.assertEqual(row["variants"][0]["metrics"]["changed_pixels"], 0)
+        self.assertEqual(row["variants"][0]["metrics"][
+            "appearance_evidence_used"], 0)
+        self.assertEqual(row["variants"][0]["alternative_id"],
+                         "pallet-boundary-cleanup-v7-evidence-only")
+        packet_root = self.root / "packet"
+        target = packet_root / "candidate_comparison_packs" / "replay-pack"
+        target.parent.mkdir(parents=True)
+        import shutil
+        shutil.copytree(output, target)
+        self.assertEqual(read_packet(packet_root, "replay-pack")[
+            "comparison_count"], 1)
+
     def test_two_runs_with_same_parameters_are_byte_reproducible(self):
         first = self.root / "first" / "same-pack"
         second = self.root / "second" / "same-pack"

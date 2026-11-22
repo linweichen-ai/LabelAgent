@@ -4093,3 +4093,19 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
   训练数据和模型权重未修改。新增哈希绑定评测器、3项定向测试和不含私有实例ID的公开回执；
   定向组合回归281项、83子测试通过；独立双跑四项输出逐文件SHA一致。详见
   `docs/PALLET_BOUNDARY_HUMAN_REVIEW_GATE_ROUND738_20261123.md`。
+
+## 2026-11-23 Round739 补充：栈板边界 v7 图像证据隔离影子候选
+
+- 针对Round738的10/10退化，新增显式`appearance_evidence_only`影子策略：无局部图像证据
+  完全no-op；禁止平滑、整轮廓简化、小岛删除和任何8连通组件合并，只允许授权区域内add-only
+  修复，总预算不超过候选面积1%且不超过256像素，结构孔保留率100%。默认full/v6 mask路径不变。
+- 正式只读3帧34个栈板两次独立回放均0变化；manifest SHA
+  `ee1f2ff9306d187aedf2bdc75126724b23291aa1c9f8ff45c48c6efa4dc44b59`、规范树SHA
+  `f3c11a999e108d48b9aec90fe4a5f5bf0e70113d4edb5a2387d49174d59be958`完全一致。
+- 人工门schema升级为v2：11/11固定匹配均零变化，正确报告
+  `non_regression_replay_passed`、`effect_exercised=false`、`development_gate_passed=false`，不再把
+  no-op误称效果通过。两次评测四项输出逐文件SHA一致。
+- 定向285项及83子测试、正式`tests/` 1745项通过、1项跳过、272子测试通过；WorkBuddy独立
+  复审允许作为shadow candidate提交，但禁止部署或替代v6。正式数据哈希不变，模型与页面通道
+  全部在线。本轮没有真实正例触发，因此不能宣称质量提升。详见
+  `docs/PALLET_BOUNDARY_EVIDENCE_ONLY_V7_ROUND739_20261123.md`。

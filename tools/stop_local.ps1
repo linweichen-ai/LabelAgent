@@ -7,9 +7,12 @@ $Root = Split-Path -Parent $PSScriptRoot
 $Python = Join-Path $Root ".venv\Scripts\python.exe"
 $Record = Join-Path $Root ".repro\processes.json"
 
+. (Join-Path $PSScriptRoot "lifecycle_mutex.ps1")
+$lifecycleMutex = Enter-LabelAgentLifecycleMutex -Root $Root
+try {
 if (-not (Test-Path $Record)) {
     Write-Host "No locally managed LabelAgent process record was found."
-    exit 0
+    return
 }
 
 $data = Get-Content -Raw $Record | ConvertFrom-Json
@@ -99,7 +102,7 @@ if ($stale.Count -gt 0) {
     }
     Move-Item -LiteralPath $Record -Destination $archivePath
     Write-Host "Stale process record archived without stopping unrelated processes: $archivePath"
-    exit 0
+    return
 }
 
 foreach ($process in $verified) {
@@ -110,3 +113,6 @@ foreach ($process in $verified) {
 }
 Remove-Item -LiteralPath $Record -Force
 Write-Host "Locally managed LabelAgent processes stopped."
+} finally {
+    Exit-LabelAgentLifecycleMutex -Mutex $lifecycleMutex
+}

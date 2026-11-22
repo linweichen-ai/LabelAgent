@@ -18,26 +18,9 @@ New-Item -ItemType Directory -Force -Path $Logs | Out-Null
 $RuntimeTemp = Join-Path $Runtime "temp"
 New-Item -ItemType Directory -Force -Path $RuntimeTemp | Out-Null
 
-$rootBytes = [Text.Encoding]::UTF8.GetBytes(([IO.Path]::GetFullPath($Root).ToLowerInvariant()))
-$sha256 = [Security.Cryptography.SHA256]::Create()
+. (Join-Path $PSScriptRoot "lifecycle_mutex.ps1")
+$lifecycleMutex = Enter-LabelAgentLifecycleMutex -Root $Root
 try {
-    $rootHashBytes = $sha256.ComputeHash($rootBytes)
-} finally {
-    $sha256.Dispose()
-}
-$rootHash = ([BitConverter]::ToString($rootHashBytes)).Replace("-", "").Substring(0, 24)
-$startupMutex = [Threading.Mutex]::new($false, "Local\LabelAgentStart-$rootHash")
-$startupMutexAcquired = $false
-try {
-    try {
-        $startupMutexAcquired = $startupMutex.WaitOne(0)
-    } catch [Threading.AbandonedMutexException] {
-        $startupMutexAcquired = $true
-    }
-    if (-not $startupMutexAcquired) {
-        throw "Another LabelAgent startup action is already running for this checkout."
-    }
-
 if (Test-Path $Record) {
     $old = Get-Content -Raw $Record | ConvertFrom-Json
     $alive = @($old.pids | Where-Object { Get-Process -Id $_ -ErrorAction SilentlyContinue })
@@ -140,10 +123,7 @@ try {
     throw
 }
 } finally {
-    if ($startupMutexAcquired) {
-        $startupMutex.ReleaseMutex()
-    }
-    $startupMutex.Dispose()
+    Exit-LabelAgentLifecycleMutex -Mutex $lifecycleMutex
 }
 
 if (-not $NoBrowser) { Start-Process "http://127.0.0.1:8765" }

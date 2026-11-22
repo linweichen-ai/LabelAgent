@@ -1,0 +1,112 @@
+{
+  "schema_version": "labelagent.pallet_stable_candidate_comparison_acceptance.v1",
+  "date": "2026-11-23",
+  "scope": "candidate_only_same_roi_comparison",
+  "tool": {
+    "path": "tools/build_pallet_stable_candidate_comparison.py",
+    "sha256": "56ace73e1bf7f41ac257a53e97a215f43cbd0ad5324982dee00c40c28cbcb303"
+  },
+  "test": {
+    "path": "tests/test_build_pallet_stable_candidate_comparison.py",
+    "sha256": "c56b9ab40c4d831371145cacd741315807edb12026351077bca6707fde828349",
+    "directed_result": "6 passed",
+    "project_suite_result": "1720 passed, 1 skipped, 262 subtests passed"
+  },
+  "frozen_inputs": {
+    "round721_manifest_sha256": "b1670d71a5b1f6e6365a8900578457dd54cfd6aa89b6ef2120b1e6f327682007",
+    "round728_manifest_sha256": "dde20194fb20fbe18a98d7d8ccbf00d5304f9aec25abba6506d79fd08bbf9c3a",
+    "round674_manifest_sha256": "4722afc0e43412ddba87ee989d714fae6214b28e578fbcae9e968aa50e8f2b14"
+  },
+  "runs": [
+    {
+      "round": 729,
+      "path": "artifacts/round729-pallet-stable-candidate-comparison-20261123",
+      "file_count": 4,
+      "manifest_sha256": "b5424198b265f6851a6817ae7090f9be51445694646f96b9f2faa514a90d867a",
+      "canonical_tree_sha256": "a5ff83a15dc7756841857ac8d67d0216beeff2d8a30342b160eca4dc5509dc9c"
+    },
+    {
+      "round": 730,
+      "path": "artifacts/round730-pallet-stable-candidate-comparison-repeat-20261123",
+      "file_count": 4,
+      "manifest_sha256": "b5424198b265f6851a6817ae7090f9be51445694646f96b9f2faa514a90d867a",
+      "canonical_tree_sha256": "a5ff83a15dc7756841857ac8d67d0216beeff2d8a30342b160eca4dc5509dc9c"
+    },
+    {
+      "round": 731,
+      "path": "artifacts/round731-pallet-stable-candidate-comparison-current-tool-20261123",
+      "file_count": 4,
+      "manifest_sha256": "b5424198b265f6851a6817ae7090f9be51445694646f96b9f2faa514a90d867a",
+      "canonical_tree_sha256": "a5ff83a15dc7756841857ac8d67d0216beeff2d8a30342b160eca4dc5509dc9c"
+    }
+  ],
+  "repeatability": {
+    "run_count": 3,
+    "file_count_per_run": 4,
+    "different_file_count": 0,
+    "canonical_tree_algorithm": "relative/path|bytes|sha256 sorted; UTF-8 no BOM; LF plus trailing LF; SHA-256"
+  },
+  "results": [
+    {
+      "sequence": "006",
+      "obj_id": "12",
+      "current_policy": "three_positive_all_negative",
+      "medoid_policy": "three_positive_one_negative_0",
+      "current_pixels": 62,
+      "medoid_pixels": 136,
+      "current_medoid_iou": 0.445255474452555,
+      "current_medoid_xor_pixels": 76,
+      "medoid_consensus50_iou": 1.0,
+      "medoid_consensus75_iou": 1.0,
+      "assistant_recommendation": "prioritize_medoid_for_human_confirmation"
+    },
+    {
+      "sequence": "006",
+      "obj_id": "13",
+      "current_policy": "three_positive_all_negative",
+      "medoid_policy": "three_positive_one_negative_0",
+      "current_pixels": 36,
+      "medoid_pixels": 109,
+      "current_medoid_iou": 0.330275229357798,
+      "current_medoid_xor_pixels": 73,
+      "medoid_consensus50_iou": 0.990909090909091,
+      "medoid_consensus75_iou": 0.944954128440367,
+      "assistant_recommendation": "uncertain_check_cross_layer_expansion"
+    },
+    {
+      "sequence": "008",
+      "obj_id": "78",
+      "current_policy": "three_positive_two_negative",
+      "medoid_policy": "three_positive_one_negative_0",
+      "current_pixels": 47,
+      "medoid_pixels": 58,
+      "current_medoid_iou": 0.779661016949153,
+      "current_medoid_xor_pixels": 13,
+      "medoid_consensus50_iou": 0.892307692307692,
+      "medoid_consensus75_iou": 0.913793103448276,
+      "assistant_recommendation": "prioritize_medoid_for_human_confirmation"
+    }
+  ],
+  "updated_assistant_triage": {
+    "prioritize_for_human_confirmation": 5,
+    "reject_or_redraw": 7,
+    "uncertain": 3
+  },
+  "source_resolution": [640, 512],
+  "no_new_visual_information": true,
+  "same_source_same_image": true,
+  "independent_validation": false,
+  "candidate_only": true,
+  "human_signoff": false,
+  "human_pixel_truth": false,
+  "approved_for_training": false,
+  "training_authorized": false,
+  "automatic_approval": false,
+  "human_truth_writes": 0,
+  "training_data_writes": 0,
+  "workbench_writes": 0,
+  "oss_writes": 0,
+  "gpu_or_sam_calls": 0,
+  "production_deployed": false,
+  "readback_verified": true
+}

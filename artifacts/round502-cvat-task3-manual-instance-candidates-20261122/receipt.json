@@ -1,0 +1,32 @@
+{
+  "schema_version": "labelagent.cvat-manual-instance-candidate-receipt.v1",
+  "status": "prepared_not_training_authorized",
+  "errors": [],
+  "source": {
+    "truth_name": "imported_truth.json",
+    "truth_sha256": "381a8f2e76a4d58d013302cd416842eaed88cb720b8cfc42185efe6e0e0f6c8a",
+    "import_manifest_name": "import-manifest.json",
+    "import_manifest_sha256": "e6fed22bfd3b26d32260da2cb5d592041c0bdc3cee3eba72572f9034ffaac961"
+  },
+  "policy": {
+    "human_truth_claimed": false,
+    "training_authorized": false,
+    "test24_included": false,
+    "auto_shapes_included": false,
+    "outside_manual_instance": "ignore",
+    "full_frame_semantic_loss_allowed": false,
+    "negative_sampling_allowed": false,
+    "required_next_gate": "hash_bound_independent_instance_review"
+  },
+  "summary": {
+    "candidate_count": 81,
+    "frame_count": 81,
+    "label_counts": {
+      "pallet": 81
+    },
+    "verified_image_count": 81
+  },
+  "private_manifest_sha256": "1033e8ad16fc0e4c8b03ef246557ae321273b4188b92bc3171c9604558f32f99",
+  "private_geometry_published": false,
+  "raw_images_published": false
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": "labelagent.cvat-manual-instance-geometry-priority.v1",
+  "status": "assistant_triage_only",
+  "candidate_manifest_sha256": "1033e8ad16fc0e4c8b03ef246557ae321273b4188b92bc3171c9604558f32f99",
+  "candidate_receipt_sha256": "04d353e2b0620dad82b5e92c0d2e39a1f752e03511181973cabb7f9e4bad2f37",
+  "diversity_audit_sha256": "d6e5a415025636829f46a7eb280e02f35743c2ba6ddf624e92bcf7d6db46c789",
+  "representative_count": 46,
+  "priority_counts": {
+    "high": 12,
+    "medium": 17,
+    "routine": 17
+  },
+  "risk_score_histogram": {
+    "0": 16,
+    "1": 1,
+    "2": 9,
+    "3": 8,
+    "4": 3,
+    "5": 7,
+    "6": 2
+  },
+  "risk_flag_counts": {
+    "high_vertex_density": 4,
+    "multiple_holes": 16,
+    "multiple_parts": 16,
+    "touches_image_edge": 23
+  },
+  "automatic_decisions": false,
+  "human_truth": false,
+  "training_authorized": false,
+  "limitations": [
+    "Geometry flags prioritize review; they do not prove an annotation is wrong.",
+    "Occlusion and pallet structure can legitimately create holes or multiple parts."
+  ],
+  "private_candidate_ids_published": false,
+  "raw_images_published": false,
+  "private_audit_sha256": "022b56b08027a584fa6b4d66e95699e6a3807bfcc1fb474252b8de81288a45e6"
+}

@@ -1,0 +1,52 @@
+{
+  "schema_version": "labelagent.ego_hole_fill_review_exclusion_receipt.v1",
+  "date": "2026-11-22",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "default_enabled": false,
+  "source_masks_modified": false,
+  "round466": {
+    "status": "intermediate_not_final",
+    "reason": "The first exclusion packet omitted the identity-manifest binding required by frozen-reference comparison."
+  },
+  "round467": {
+    "status": "partial_review_exclusions_applied",
+    "decision_count": 4,
+    "assistant_pass_count": 3,
+    "excluded_component_count": 1,
+    "excluded_component_id": "000-camera3-1793758297542631987-c001",
+    "excluded_pixel_total": 7,
+    "source_component_count": 245,
+    "remaining_candidate_component_count": 244,
+    "source_added_pixel_total": 1764,
+    "remaining_candidate_added_pixel_total": 1757,
+    "shadow_packet_sha256": "c2b67c57e317acf11ce9ad42fcb91b68c56a9619fb552f8a2df878484106475a"
+  },
+  "round468_frozen_reference": {
+    "before_alert_count": 4,
+    "after_alert_count": 4,
+    "new_alert_sample_count": 0,
+    "resolved_alert_sample_count": 0,
+    "mean_iou_delta": 0.000773,
+    "mean_recall_delta": 0.001552,
+    "mean_excess_delta": 0.000584,
+    "mean_hole_ratio_delta": -0.002386,
+    "comparison_sha256": "0c3088c5dc5694011944c3af853c2152385cde8db27593f15745a6be11facba8"
+  },
+  "comparison_to_round460": {
+    "mean_iou_delta_before_exclusion": 0.000767,
+    "mean_iou_delta_after_exclusion": 0.000773,
+    "mean_excess_delta_before_exclusion": 0.000592,
+    "mean_excess_delta_after_exclusion": 0.000584,
+    "alert_regression": false
+  },
+  "verification": {
+    "targeted_and_related_tests_passed": 70,
+    "tests_skipped": 1,
+    "tampered_decision_rejected": true,
+    "write_failure_is_atomic": true
+  },
+  "conclusion": "The single uncertain 7-pixel component was reverted without alert regression. The refined result remains a default-disabled partial-review shadow, not truth or training data."
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": "labelagent.pallet_conflict_point_prompt_ab.v1",
+  "date": "2026-11-22",
+  "status": "rejected_negative_experiment",
+  "method": "projected target-only positive point plus conflicting-instance-only negative points",
+  "baseline": {
+    "resolved_conflict_images": 3,
+    "depth_split_pass_images": 3,
+    "total_conflict_images": 4
+  },
+  "candidate": {
+    "resolved_conflict_images": 2,
+    "depth_split_pass_images": 3,
+    "total_conflict_images": 4,
+    "point_prompt_selected_instances": 5,
+    "suppressed_obj48_recovered": false
+  },
+  "decision": "reject_and_revert",
+  "reason": "single-instance localization scoring selected geometrically narrow or oversized masks and regressed pairwise instance separation",
+  "next_method": "actual visible LiDAR return positive and negative prompts with group-level acceptance gates",
+  "artifact": {
+    "path": "artifacts/round585-dense-pallet-conflict-points-ab-20261122/results.json",
+    "sha256": "ba9bcbb70499ce147d9270255152747d58cefb387396355567551818b6a522a8"
+  },
+  "code_merged": false,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "workbench_writes": 0,
+  "training_data_writes": 0,
+  "oss_writes": 0,
+  "formal_workbench": {
+    "run_status": "idle",
+    "state_sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115"
+  }
+}

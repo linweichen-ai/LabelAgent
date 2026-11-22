@@ -1,0 +1,98 @@
+{
+  "schema_version": "labelagent.pallet_fourth_fifth_independent_conflict_evidence.v1",
+  "date": "2026-11-23",
+  "scope": "offline_candidate_diagnostic_not_deployed",
+  "human_pixel_truth": false,
+  "fourth_batch": {
+    "selected_views": 6,
+    "all_downloaded_gt_hashes_match_manifest": true,
+    "localization_pass": 6,
+    "raw_instance_isolation_pass": 1,
+    "ambiguous_images": 5,
+    "depth_split_resolved": 3,
+    "remaining_failed_instances": 5,
+    "incumbent_recovered": 1,
+    "incumbent_attempts": 15,
+    "pairwise_recovered": 2,
+    "pairwise_attempts": 45,
+    "pairwise_added_over_incumbent": 1,
+    "joint_groups": 2,
+    "joint_recovered_groups": 1,
+    "joint_recovered_conflict_edges": 11,
+    "joint_structural_alert_count": 1,
+    "approved_for_training": false
+  },
+  "fifth_batch": {
+    "selected_views": 6,
+    "all_downloaded_gt_hashes_match_manifest": true,
+    "localization_pass": 6,
+    "raw_instance_isolation_pass": 0,
+    "ambiguous_images": 6,
+    "depth_split_resolved": 4,
+    "remaining_failed_instances": 8,
+    "incumbent_recovered": 0,
+    "incumbent_attempts": 22,
+    "incumbent_repeat_recovered": 0,
+    "incumbent_repeat_attempts": 22,
+    "pairwise_recovered": 0,
+    "pairwise_attempts": 64,
+    "joint_search_run": false,
+    "joint_search_skip_reason": "no_locally_supported_recovery_variant",
+    "approved_for_training": false
+  },
+  "structural_guard_correction": {
+    "old_gap": "two similarly sized components could escape the small-island-only alert",
+    "new_fragmented_rule": "component_count > 1 and (small_island_area_ratio > 0.01 or largest_component_ratio < 0.9)",
+    "threshold_comparison": "exact_integer_pixel_counts",
+    "fourth_batch_obj75_pre_joint": {
+      "area_pixels": 488,
+      "component_count": 2,
+      "largest_component_ratio": 0.54918,
+      "small_island_area_ratio": 0.0,
+      "alerts_after_fix": ["fragmented_components"]
+    }
+  },
+  "gates": {
+    "thresholds_changed": false,
+    "positive_coverage_minimum": 0.8,
+    "negative_clear_minimum": 0.8,
+    "maximum_conflict_overlap": 0.15,
+    "fallbacks_default_enabled": false,
+    "pairwise_promoted": false
+  },
+  "tests": {
+    "full_passed": 1637,
+    "skipped": 1,
+    "subtests_passed": 262,
+    "elapsed_seconds": 43.89
+  },
+  "formal_environment": {
+    "workbench_status": "idle",
+    "state_sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115",
+    "sam_status": "ok",
+    "sam_model_loaded": true,
+    "sam_in_flight": 0,
+    "workbench_writes": 0,
+    "human_truth_writes": 0,
+    "training_data_writes": 0,
+    "oss_writes": 0,
+    "production_deployed": false
+  },
+  "local_report_sha256": {
+    "round661_selection": "a3c7183ab67d2178783ba52c687a3cf10686f09c00c3e0b45c4427c868b509ca",
+    "round663_baseline": "3a3e1854aff5e2ae6f5952dfe471681e065494064608e72fb2e34a493e93f611",
+    "round664_overlap": "64b18d599dc21bbb4a2d3baf4db0126477719d2cef5b392dbf2109fc8e3c26f2",
+    "round665_incumbent": "2231fc1ca106e90cfa7a3107648eb51800bdf15ebbb47de51a658c1a4e9e6854",
+    "round667_incumbent_repeat": "d388f429f970588085a5204866029c5acd8dcab9a5390593847552db16f2fc89",
+    "round668_pairwise": "59062db2532de901d05a14a10a1f8c038c99f1531ef48ce20fa4c9b071bcdd6d",
+    "round670_pairwise_repeat": "dfa2f5fe1ef48e41cbf17f064463fa1a6c7ff8b69d49f0c496ef5b3f79d2697f",
+    "round671_joint": "98f6bba17738c37cc91c41899b0bbbc3cc68fdfcf43d25dc64c90a463476c923",
+    "round672_joint_repeat": "5c1b0d7079fd0064b296d06c43051ede324ddb9aafc7cf1d1af55040ecda65c7",
+    "round673_selection": "69916eb8a3eeb0b7b4ba68d981c64ba1de6287d6f9ab88c3bf5d8c7ea310e346",
+    "round675_baseline": "5478d9c9503d98c2c0f5bf1b96b5c73fef76a7ff100c742132140db34c716791",
+    "round676_overlap": "c18218c8fb2a1993f56f9d4358999e47d096a7beedcc1bbf977450c30d3a7e48",
+    "round677_incumbent": "3b01a13d5b29a47b436844d9090a28183fa5eb130823bdca41d6a2a05b841d4e",
+    "round677_incumbent_repeat": "13315797043e755be8f698a72fca931cc63a13fb769ff7fcbd451b806db224f1",
+    "round678_pairwise": "4a775e426aa3fc372be63e77b59ad9240557be5b1e892aa2666a71da323f25ce"
+  }
+}

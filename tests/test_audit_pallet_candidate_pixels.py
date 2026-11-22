@@ -21,6 +21,55 @@ def test_structure_metrics_detect_fragments_and_holes():
     assert "fragmented_components" in structural_alerts(metrics)
 
 
+def test_structure_alerts_detect_two_large_fragments_too():
+    mask = np.zeros((24, 42), dtype=bool)
+    mask[2:14, 2:14] = True
+    mask[2:14, 26:38] = True
+    metrics = structure_metrics(mask)
+    assert metrics["component_count"] == 2
+    assert metrics["small_island_area_ratio"] == 0.0
+    assert metrics["largest_component_ratio"] == 0.5
+    assert "fragmented_components" in structural_alerts(metrics)
+
+
+def test_structure_alerts_use_exact_ninety_percent_boundary():
+    at_boundary = np.zeros((2, 101), dtype=bool)
+    at_boundary[0, :90] = True
+    at_boundary[1, 91:101] = True
+    metrics = structure_metrics(at_boundary, small_island_pixels=1)
+    assert metrics["area_pixels"] == 100
+    assert metrics["largest_component_pixels"] == 90
+    assert "fragmented_components" not in structural_alerts(metrics)
+
+    below_boundary = at_boundary.copy()
+    below_boundary[0, 89] = False
+    below_boundary[1, 90] = True
+    metrics = structure_metrics(below_boundary, small_island_pixels=1)
+    assert metrics["largest_component_pixels"] == 89
+    assert "fragmented_components" in structural_alerts(metrics)
+
+
+def test_structure_alerts_do_not_flag_one_connected_component():
+    mask = np.ones((20, 20), dtype=bool)
+    metrics = structure_metrics(mask)
+    assert metrics["component_count"] == 1
+    assert "fragmented_components" not in structural_alerts(metrics)
+
+
+def test_structure_alerts_keep_legacy_ratio_only_reports_compatible():
+    legacy = {
+        "component_count": 2,
+        "largest_component_ratio": 0.5,
+        "small_island_area_ratio": 0.0,
+        "hole_area_ratio": 0.0,
+        "bbox_fill_ratio": 0.5,
+        "perimeter_area_ratio": 0.5,
+    }
+    assert "fragmented_components" in structural_alerts(legacy)
+    legacy["largest_component_ratio"] = 0.9
+    assert "fragmented_components" not in structural_alerts(legacy)
+
+
 def test_build_preserves_frozen_inputs_and_suppressed_rows(tmp_path: Path):
     source = tmp_path / "source"
     image_path = source / "cameras" / "camera_0" / "100.png"

@@ -77,8 +77,10 @@ def structure_metrics(mask: np.ndarray, *, small_island_pixels: int = 100) -> di
         "bbox_height": bottom - top + 1,
         "bbox_fill_ratio": round(area / bbox_area, 6),
         "component_count": len(components),
+        "largest_component_pixels": components[0],
         "largest_component_ratio": round(components[0] / area, 6),
         "small_island_count": sum(size < small_island_pixels for size in components),
+        "small_island_area_pixels": small_area,
         "small_island_area_ratio": round(small_area / area, 6),
         "hole_count": len(holes),
         "hole_area_ratio": round(sum(holes) / area, 6),
@@ -90,8 +92,18 @@ def structure_metrics(mask: np.ndarray, *, small_island_pixels: int = 100) -> di
 
 def structural_alerts(metrics: dict) -> list[str]:
     alerts = []
+    area = metrics.get("area_pixels")
+    largest = metrics.get("largest_component_pixels")
+    small_area = metrics.get("small_island_area_pixels")
+    if area and largest is not None and small_area is not None:
+        fragmented = small_area * 100 > area or largest * 10 < area * 9
+    else:
+        # Backward-compatible read path for historical reports that only stored
+        # rounded ratios. New reports use exact integer pixel comparisons.
+        fragmented = (metrics["small_island_area_ratio"] > .01
+                      or metrics["largest_component_ratio"] < .9)
     if (metrics["component_count"] > 1
-            and metrics["small_island_area_ratio"] > .01):
+            and fragmented):
         alerts.append("fragmented_components")
     if metrics["hole_area_ratio"] > .08:
         alerts.append("large_internal_holes")

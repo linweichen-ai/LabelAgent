@@ -1,0 +1,16 @@
+{
+  "schema_version": "labelagent.pallet_candidate_review_cache_benchmark.v1",
+  "status": "local_read_only_benchmark_not_deployed",
+  "iterations": 500,
+  "candidate_count": 5,
+  "asset_count": 6,
+  "cold_validation_ms": 4.3756,
+  "warm_median_ms": 0.5657,
+  "warm_p95_ms": 0.7022,
+  "warm_max_ms": 4.3047,
+  "cold_to_warm_median_ratio": 7.735,
+  "verified_content_stable": true,
+  "human_truth_writes": 0,
+  "training_data_writes": 0,
+  "production_deployed": false
+}

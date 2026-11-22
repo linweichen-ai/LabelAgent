@@ -1,0 +1,67 @@
+{
+  "schema_version": "labelagent.pallet_joint_temporal_candidate_evidence.v1",
+  "date": "2026-11-23",
+  "scope": "offline_same_source_joint_candidate_diagnostic_not_deployed",
+  "protocol": {
+    "incumbent_source": "round676_raw_instance_masks",
+    "temporal_source": "round700_intrinsically_eligible_raw_masks",
+    "recompute_depth_split": true,
+    "requires_all_member_candidate_pass": true,
+    "requires_all_pair_separation_at_0_15": true,
+    "deterministic_exhaustive_search": true
+  },
+  "result": {
+    "component_count": 2,
+    "joint_recovered_components": 0,
+    "frozen_input_count": 58,
+    "repeat_report_byte_exact": true,
+    "components": [
+      {
+        "sequence": "006",
+        "members": ["10","11","12","13","14","15","16","23"],
+        "temporal_targets": ["10","12","13"],
+        "combination_count": 8,
+        "passing_combination_count": 0,
+        "best_passed_members": 7,
+        "best_failed_members": ["10"],
+        "best_failed_separation_pairs": [],
+        "member_failure_histogram": {"10":8,"12":2,"13":4}
+      },
+      {
+        "sequence": "008",
+        "members": ["67","69","75","76","77","78","79"],
+        "temporal_targets": ["76","77","78","79"],
+        "combination_count": 120,
+        "passing_combination_count": 0,
+        "best_passed_members": 6,
+        "best_failed_members": ["75"],
+        "best_failed_separation_pairs": [],
+        "member_failure_histogram": {"75":120,"76":40,"77":60,"78":30,"79":24}
+      }
+    ]
+  },
+  "claim_boundary": {
+    "conditioned_on_human_3d_labels": true,
+    "comparison_is_independent_validation": false,
+    "human_pixel_truth": false,
+    "approved_for_training": false,
+    "gpu_requests": 0,
+    "sam_calls": 0,
+    "human_truth_writes": 0,
+    "training_data_writes": 0,
+    "workbench_writes": 0,
+    "oss_writes": 0,
+    "production_deployed": false
+  },
+  "tests": {
+    "focused_passed": 30,
+    "full_passed": 1685,
+    "skipped": 1,
+    "subtests_passed": 262
+  },
+  "tool_sha256": "81eb24a64f9884f2b8fa06848b4f6ad1008d80e2c31cf1d9c98162c60c914ec8",
+  "local_report_sha256": {
+    "round706": "81e395d36bbb97a9e0e4549d7253352ef9eff8aa157976a566053ced39602fec",
+    "round707_repeat": "81e395d36bbb97a9e0e4549d7253352ef9eff8aa157976a566053ced39602fec"
+  }
+}

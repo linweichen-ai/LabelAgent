@@ -1,0 +1,30 @@
+{
+  "rounds": [480, 481, 482, 483],
+  "date": "2026-11-22",
+  "status": "same_dataset_disjoint_assistant_blind_replication",
+  "candidate_only": true,
+  "assistant_review_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "default_enabled": false,
+  "automatic_decisions_enabled": false,
+  "first_sample_count": 60,
+  "second_sample_count": 54,
+  "sample_overlap_count": 0,
+  "combined_sample_count": 114,
+  "combined_review_risk_rate": {
+    "top": 0.815789,
+    "middle": 0.789474,
+    "bottom": 0.421053
+  },
+  "combined_likely_reject_total": 18,
+  "combined_top_plus_middle_likely_reject_capture_rate": 1.0,
+  "combined_bottom_likely_reject_count": 0,
+  "round480_audit_sha256": "25934184b37b830b033f041f80268ca528916ecfc0809a5d570092e21e1068ce",
+  "round480_decisions_sha256": "d385e6d3923dc655a0b922efef458105577f3587b911629c1fec3cd14a9b74b3",
+  "round481_evaluation_sha256": "a5151d7c9140c0b5d38a3ef6b64b4968ddf9530301060e0fa45e25e4fbf0e30b",
+  "round482_combined_sha256": "5f29b4580dd2fe3377f31ce60d7b8f84f3f7817ab3e3fe20f5aaf7712d1ba24a",
+  "round483_policy_sha256": "bbbbba8bdafd3f79a2f6fc5c88ad29cb109416d8de0fa308a37721229ee53d24",
+  "boundary": "Two disjoint assistant-blind samples from one exposed dataset. This is not human truth or new-data generalization."
+}

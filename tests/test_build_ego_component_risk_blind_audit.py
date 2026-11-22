@@ -37,6 +37,39 @@ class EgoComponentRiskBlindAuditTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "sampling settings"):
             stratified_sample([], 1, "")
 
+    def test_excluded_components_never_reappear(self):
+        rows = []
+        for camera in ("camera1", "camera3"):
+            for rank in range(1, 101):
+                rows.append({
+                    "component_id": f"{camera}-{rank:03d}",
+                    "camera": camera,
+                    "camera_review_priority_rank": rank,
+                    "review_priority_rank": rank,
+                    "review_priority_score": 1.0 - rank / 1000.0,
+                })
+        first = stratified_sample(rows, 5, "first")
+        excluded = {row["component_id"] for row in first}
+        second = stratified_sample(rows, 5, "second", excluded)
+        self.assertTrue(excluded.isdisjoint(
+            {row["component_id"] for row in second}))
+        self.assertEqual(len(second), 30)
+
+    def test_exclusion_fails_closed_when_stratum_is_exhausted(self):
+        rows = []
+        for camera in ("camera1", "camera3"):
+            for rank in range(1, 11):
+                rows.append({
+                    "component_id": f"{camera}-{rank:03d}",
+                    "camera": camera,
+                    "camera_review_priority_rank": rank,
+                    "review_priority_rank": rank,
+                    "review_priority_score": 1.0,
+                })
+        excluded = {"camera1-001", "camera1-002"}
+        with self.assertRaisesRegex(ValueError, "insufficient camera1/top"):
+            stratified_sample(rows, 1, "seed", excluded)
+
 
 if __name__ == "__main__":
     unittest.main()

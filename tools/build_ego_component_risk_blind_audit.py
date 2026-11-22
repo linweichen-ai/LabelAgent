@@ -38,9 +38,11 @@ def _band_for_camera_rank(rank: int, count: int) -> str | None:
 
 
 def stratified_sample(rows: list[dict], per_camera_band: int,
-                      seed: str) -> list[dict]:
+                      seed: str,
+                      excluded_component_ids: set[str] | None = None) -> list[dict]:
     if per_camera_band <= 0 or not seed:
         raise ValueError("invalid blind-audit sampling settings")
+    excluded_component_ids = excluded_component_ids or set()
     cameras = sorted({row.get("camera") for row in rows})
     if any(camera not in {"camera1", "camera3"} for camera in cameras):
         raise ValueError("blind audit requires known cameras")
@@ -52,6 +54,7 @@ def stratified_sample(rows: list[dict], per_camera_band: int,
             candidates = [
                 row for row in rows
                 if row["camera"] == camera
+                and row.get("component_id") not in excluded_component_ids
                 and _band_for_camera_rank(
                     int(row["camera_review_priority_rank"]), counts[camera]) == band
             ]
@@ -111,7 +114,8 @@ def _write_pages(staging: Path, selected: list[dict], review_root: Path,
 
 def build_audit(ranking_path: Path, component_review_path: Path,
                 output: Path, per_camera_band: int = 10,
-                seed: str = "ego-risk-blind-audit-v1") -> dict:
+                seed: str = "ego-risk-blind-audit-v1",
+                exclude_audit_path: Path | None = None) -> dict:
     if output.exists():
         raise FileExistsError(output)
     ranking_sha = file_sha256(ranking_path)
@@ -132,8 +136,30 @@ def build_audit(ranking_path: Path, component_review_path: Path,
                    for row in review.get("rows", [])}
     if len(review_rows) != len(review.get("rows", [])):
         raise ValueError("duplicate component review identity")
+    ranking_ids = {row.get("component_id") for row in ranking.get("rows", [])}
+    if None in ranking_ids or len(ranking_ids) != len(ranking.get("rows", [])):
+        raise ValueError("ranking component identities are missing or duplicated")
+    excluded_ids: set[str] = set()
+    excluded_audit_sha = None
+    if exclude_audit_path is not None:
+        excluded_audit_sha = file_sha256(exclude_audit_path)
+        excluded_audit = json.loads(exclude_audit_path.read_text(encoding="utf-8"))
+        if (excluded_audit.get("candidate_only") is not True
+                or excluded_audit.get("human_truth") is not False
+                or excluded_audit.get("automatic_decisions_enabled") is not False
+                or excluded_audit.get("ranking_sha256") != ranking_sha):
+            raise ValueError("excluded audit safety flags or ranking binding mismatch")
+        excluded_rows = excluded_audit.get("mapping")
+        if not isinstance(excluded_rows, list) or not excluded_rows:
+            raise ValueError("excluded audit mapping is missing")
+        excluded_ids = {row.get("component_id") for row in excluded_rows}
+        if (None in excluded_ids or len(excluded_ids) != len(excluded_rows)
+                or not excluded_ids.issubset(ranking_ids)):
+            raise ValueError("excluded audit identities are invalid")
     selected = stratified_sample(
-        ranking.get("rows", []), per_camera_band, seed)
+        ranking.get("rows", []), per_camera_band, seed, excluded_ids)
+    if any(row["component_id"] in excluded_ids for row in selected):
+        raise ValueError("blind audit overlaps excluded audit")
     for row in selected:
         source = review_rows.get(row["component_id"])
         if (source is None
@@ -170,6 +196,9 @@ def build_audit(ranking_path: Path, component_review_path: Path,
             "blinded_for_risk_band": True,
             "ranking_sha256": ranking_sha,
             "component_review_sha256": review_sha,
+            "excluded_audit_sha256": excluded_audit_sha,
+            "excluded_component_count": len(excluded_ids),
+            "disjoint_from_excluded_audit": exclude_audit_path is not None,
             "seed": seed,
             "per_camera_band": per_camera_band,
             "selected_count": len(mapping),
@@ -203,10 +232,11 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--per-camera-band", type=int, default=10)
     parser.add_argument("--seed", default="ego-risk-blind-audit-v1")
+    parser.add_argument("--exclude-audit", type=Path)
     arguments = parser.parse_args()
     packet = build_audit(
         arguments.ranking, arguments.component_review, arguments.output,
-        arguments.per_camera_band, arguments.seed)
+        arguments.per_camera_band, arguments.seed, arguments.exclude_audit)
     print(json.dumps({
         "selected_count": packet["selected_count"],
         "page_count": len(packet["pages"]),

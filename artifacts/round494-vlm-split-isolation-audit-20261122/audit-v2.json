@@ -1,0 +1,79 @@
+{
+  "schema_version": "labelagent.vlm-split-isolation-audit.v1",
+  "created_utc": "2026-11-22T01:39:04.538188+00:00",
+  "status": "passed_exact_isolation",
+  "scope": "exact manifest/hash/source isolation only",
+  "splits": {
+    "train": {
+      "rows": 62,
+      "sequences": [
+        "000",
+        "001",
+        "002",
+        "003",
+        "004",
+        "005",
+        "006",
+        "007"
+      ],
+      "unique_sample_ids": 62,
+      "unique_image_sha256": 62,
+      "unique_source_identities": 62,
+      "jsonl_sha256": "acd081d924ca8a494577a77892091a5741012fe83e1a65d9417af7d39705477f"
+    },
+    "dev": {
+      "rows": 8,
+      "sequences": [
+        "008"
+      ],
+      "unique_sample_ids": 8,
+      "unique_image_sha256": 8,
+      "unique_source_identities": 8,
+      "jsonl_sha256": "7a49d4261aab41627e559fc8e0c7a6c5811e2a12f2275c44314972ce55e2e73f"
+    },
+    "test24": {
+      "rows": 24,
+      "sequences": [
+        "010",
+        "011",
+        "012"
+      ],
+      "unique_sample_ids": 24,
+      "unique_image_sha256": 24,
+      "unique_source_identities": 24,
+      "jsonl_sha256": "8ed726bd93585329676dc46da533c02a154501211b1846b9ee3c4b1014bf9ee2"
+    }
+  },
+  "overlaps": {
+    "train_vs_dev": {
+      "sample_ids": [],
+      "image_sha256": [],
+      "source_identities": [],
+      "sequences": [],
+      "target_sha256_count": 4
+    },
+    "train_vs_test24": {
+      "sample_ids": [],
+      "image_sha256": [],
+      "source_identities": [],
+      "sequences": [],
+      "target_sha256_count": 0
+    },
+    "dev_vs_test24": {
+      "sample_ids": [],
+      "image_sha256": [],
+      "source_identities": [],
+      "sequences": [],
+      "target_sha256_count": 0
+    }
+  },
+  "near_duplicate_audit": {
+    "status": "not_evaluated_without_bound_image_bytes",
+    "passed": null,
+    "reason": "JSONL manifests bind hashes but do not include pixels for perceptual comparison"
+  },
+  "human_truth": false,
+  "production_training_approved": false,
+  "test24_training_return_allowed": false,
+  "errors": []
+}

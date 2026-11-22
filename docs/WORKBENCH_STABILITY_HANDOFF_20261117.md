@@ -3663,3 +3663,14 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 真实浏览器验收通过：同会话 1/19 可恢复，新会话 0/19；页面错误、控制台错误和组件 API
   POST 均为 0。模型服务未重启。详见
   `docs/EGO_COMPONENT_REVIEW_PRODUCTION_ACCEPTANCE_ROUND493_20261122.md`。
+
+## 2026-11-22 Round494 补充：VLM 后训练 split 隔离
+
+- 对当前 62 train、8 dev、24 test24 的冻结 JSONL 做只读、哈希绑定审计；三个 split 内的
+  sample ID、图像 SHA 和来源身份均唯一。
+- train/dev、train/test24、dev/test24 的 sample ID、图像 SHA、来源身份和序列交集全部为0；
+  test24 继续保持只评测、禁止训练回流。
+- train/dev 有4种相同目标答案模式，不是图片泄漏，但说明 dev8 语义多样性有限；冻结清单没有
+  本机像素，因此近似视觉重复明确记为“未验证”，没有冒充通过。
+- 新增失败关闭审计器和3项定向测试。详见
+  `docs/VLM_SPLIT_ISOLATION_AUDIT_ROUND494_20261122.md`。

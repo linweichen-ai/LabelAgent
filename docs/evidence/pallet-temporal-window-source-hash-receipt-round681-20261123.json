@@ -1,0 +1,31 @@
+{
+  "schema_version": "labelagent.pallet_temporal_window_source_hash_receipt.v1",
+  "date": "2026-11-23",
+  "scope": "read_only_source_to_local_hash_comparison",
+  "source": "factory_4090_existing_extracted_copy",
+  "remote_paths_published": false,
+  "window_files": {
+    "sequences": ["006", "008"],
+    "labels": 22,
+    "pcds": 22,
+    "total_files": 44,
+    "total_bytes_local": 51982965,
+    "canonicalization": "sort by basename, then UTF-8 encode one '<basename> <sha256>' line per file joined by LF",
+    "remote_aggregate_sha256": "15da3aee61e58236b1deac8079f58e6d2f8f7cceaabcc6e88510105253a4899d",
+    "local_aggregate_sha256": "15da3aee61e58236b1deac8079f58e6d2f8f7cceaabcc6e88510105253a4899d",
+    "all_entries_match": true
+  },
+  "calibration": {
+    "sequences_checked": ["006", "008"],
+    "files_per_sequence": ["lidar2camera.yaml", "camera1_calib.yaml"],
+    "canonical_aggregate_sha256": "188709ef86278cd47da4ace60e0b0367f00277f7d0a4758e845be77cf45a732a",
+    "lidar2camera_sha256": "afe7203f3afe90f0ae14af4019dfbe6ddda6994745694501da25df9efd5843ea",
+    "camera1_calib_sha256": "8733efc8eeaf3dafcdc996fcfb7e1f353e1a4fdf21759dddde8a289f23a9dcaa",
+    "both_sequences_match_local_shared_calibration": true
+  },
+  "source_writes": 0,
+  "oss_writes": 0,
+  "workbench_writes": 0,
+  "human_truth_writes": 0,
+  "training_data_writes": 0
+}

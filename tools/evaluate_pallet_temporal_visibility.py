@@ -28,6 +28,54 @@ def temporal_occlusion_gate(center_visible: int, visible_before: int,
                 and median_without_overlap >= median_with_overlap + 5)
 
 
+def temporal_presence_gate(center_visible: int, visible_before: int,
+                           visible_after: int, present_frames: int,
+                           total_frames: int, attr_consistent: bool,
+                           scale_max_range: float) -> bool:
+    """Confirm tracked presence only; never infer a pixel boundary."""
+    return bool(center_visible >= 1 and visible_before >= 1 and visible_after >= 1
+                and present_frames == total_frames and attr_consistent
+                and scale_max_range <= 1e-6)
+
+
+def temporal_input_paths(manifest_path: Path, manifest: dict, data_root: Path,
+                         calibration: Path) -> list[Path]:
+    camera_number = int(manifest["camera"])
+    paths = [manifest_path, calibration / "lidar2camera.yaml",
+             calibration / f"camera{camera_number}_calib.yaml"]
+    for item in manifest["frames"]:
+        frame = str(item["frame_id"])
+        paths.extend((data_root / "labels" / f"{frame}.json",
+                      data_root / "pcd" / f"{frame}.pcd"))
+    return paths
+
+
+def freeze_temporal_inputs(manifest_path: Path, manifest: dict, data_root: Path,
+                           calibration: Path) -> dict[str, str]:
+    paths = temporal_input_paths(manifest_path, manifest, data_root, calibration)
+    missing = [str(path) for path in paths if not path.is_file()]
+    if missing:
+        raise ValueError(f"temporal inputs missing: {missing}")
+    return {str(path.resolve()): digest(path) for path in paths}
+
+
+def verify_temporal_inputs(input_sha256: dict[str, str]) -> None:
+    drifted = [path for path, expected in input_sha256.items()
+               if not Path(path).is_file() or digest(Path(path)) != expected]
+    if drifted:
+        raise ValueError(f"temporal inputs changed during evaluation: {drifted}")
+
+
+def temporal_identity_counts(rows: list[dict]) -> tuple[int, int]:
+    return sum(bool(row.get("target_present")) for row in rows), len(rows)
+
+
+def visible_point_median(rows: list[dict]) -> float | None:
+    if not rows:
+        return None
+    return float(np.median([row["target_visible_points"] for row in rows]))
+
+
 def projected_overlap(target: dict | None, other: dict | None) -> float:
     if target is None or other is None:
         return 0.0
@@ -35,7 +83,8 @@ def projected_overlap(target: dict | None, other: dict | None) -> float:
     return int((target["mask"] & other["mask"]).sum()) / area if area else 0.0
 
 
-def render_chart(rows: list[dict], center_frame: str, output: Path) -> None:
+def render_chart(rows: list[dict], center_frame: str, output: Path,
+                 target_id: str, occluder_id: str) -> None:
     width, height = 1000, 480
     canvas = np.full((height, width, 3), 247, np.uint8)
     left, right, top, bottom = 70, 950, 55, 390
@@ -68,9 +117,9 @@ def render_chart(rows: list[dict], center_frame: str, output: Path) -> None:
                   cv2.LINE_AA)
     cv2.polylines(canvas, [np.array(points_overlap)], False, (225, 145, 25), 2,
                   cv2.LINE_AA)
-    cv2.putText(canvas, "obj20 visible LiDAR points", (75, 25),
+    cv2.putText(canvas, f"obj{target_id} visible LiDAR points", (75, 25),
                 cv2.FONT_HERSHEY_SIMPLEX, .55, (20, 130, 80), 2, cv2.LINE_AA)
-    cv2.putText(canvas, "projected overlap with nearer obj15", (390, 25),
+    cv2.putText(canvas, f"projected overlap with nearer obj{occluder_id}", (390, 25),
                 cv2.FONT_HERSHEY_SIMPLEX, .55, (225, 145, 25), 2, cv2.LINE_AA)
     cv2.putText(canvas, "relative annotated frame (0 = center)", (345, 445),
                 cv2.FONT_HERSHEY_SIMPLEX, .5, (55, 65, 72), 1, cv2.LINE_AA)
@@ -84,7 +133,10 @@ def evaluate(manifest_path: Path, data_root: Path, calibration: Path,
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     sequence = str(manifest["sequence"]); camera_number = int(manifest["camera"])
     target_id = str(manifest["target_obj_id"]); occluder_id = str(manifest["occluder_obj_id"])
-    center_frame = str(manifest["center_frame_id"]); camera = load_camera(calibration, camera_number)
+    center_frame = str(manifest["center_frame_id"])
+    input_sha256 = freeze_temporal_inputs(
+        manifest_path, manifest, data_root, calibration)
+    camera = load_camera(calibration, camera_number)
     rows, attrs, scales = [], [], []
     for item in manifest["frames"]:
         frame = str(item["frame_id"]); label_path = data_root / "labels" / f"{frame}.json"
@@ -131,24 +183,36 @@ def evaluate(manifest_path: Path, data_root: Path, calibration: Path,
                     if row["target_occluder_projected_overlap"] >= .5]
     clear_rows = [row for row in evidence_rows
                   if row["target_occluder_projected_overlap"] < .5]
-    median_overlap = float(np.median([row["target_visible_points"]
-                                     for row in overlap_rows]))
-    median_clear = float(np.median([row["target_visible_points"] for row in clear_rows]))
-    present = sum(row.get("target_present", False) for row in rows)
+    median_overlap = visible_point_median(overlap_rows)
+    median_clear = visible_point_median(clear_rows)
+    present, total = temporal_identity_counts(rows)
     eligible_present = len(evidence_rows)
     before = sum(row.get("evidence_eligible") and row.get("target_visible_points", 0) >= 3
                  for row in rows[:center_index])
     after = sum(row.get("evidence_eligible") and row.get("target_visible_points", 0) >= 3
                 for row in rows[center_index + 1:])
-    center_visible = rows[center_index]["target_visible_points"]
-    gate = temporal_occlusion_gate(center_visible, before, after, eligible_present,
-                                   len(evidence_rows), median_overlap, median_clear)
-    output.mkdir(parents=True); chart = output / "obj20-temporal-visibility.png"
-    render_chart(rows, center_frame, chart)
+    center_visible = rows[center_index].get("target_visible_points", 0)
+    attr_consistent = bool(attrs) and len(set(attrs)) == 1
+    scale_max_range = (float(np.ptp(np.asarray(scales), axis=0).max())
+                       if scales else None)
+    gate = bool(median_overlap is not None and median_clear is not None
+                and temporal_occlusion_gate(
+                    center_visible, before, after, present, total,
+                    median_overlap, median_clear))
+    presence_gate = bool(
+        scale_max_range is not None and temporal_presence_gate(
+            center_visible, before, after, present, total,
+            attr_consistent, scale_max_range))
+    verify_temporal_inputs(input_sha256)
+    output.mkdir(parents=True)
+    chart = output / f"obj{target_id}-temporal-visibility.png"
+    render_chart(rows, center_frame, chart, target_id, occluder_id)
     report = {
         "schema_version": "labelagent.pallet_temporal_visibility.v1",
         "status": "offline_temporal_diagnostic_not_deployed",
-        "manifest_sha256": digest(manifest_path),
+        "manifest_sha256": input_sha256[str(manifest_path.resolve())],
+        "input_sha256": input_sha256,
+        "frozen_input_count": len(input_sha256),
         "sequence": sequence, "camera": camera_number,
         "target_obj_id": target_id, "occluder_obj_id": occluder_id,
         "center_frame_id": center_frame, "frame_count": len(rows),
@@ -161,11 +225,14 @@ def evaluate(manifest_path: Path, data_root: Path, calibration: Path,
         "center_visible_points": center_visible,
         "median_visible_points_with_occluder_overlap": median_overlap,
         "median_visible_points_without_occluder_overlap": median_clear,
-        "target_attr_consistent": len(set(attrs)) == 1,
-        "target_scale_max_range": float(np.ptp(np.asarray(scales), axis=0).max()),
+        "target_attr_consistent": attr_consistent,
+        "target_scale_max_range": scale_max_range,
         "temporal_occlusion_supported_for_center": gate,
-        "interpretation": ("temporal_support_for_occlusion_not_pixel_truth" if gate
-                           else "temporal_evidence_insufficient"),
+        "temporal_presence_supported_for_center": presence_gate,
+        "interpretation": (
+            "temporal_support_for_occlusion_not_pixel_truth" if gate else
+            "temporal_support_for_presence_not_pixel_truth" if presence_gate else
+            "temporal_evidence_insufficient"),
         "chart_path": str(chart.resolve()), "chart_sha256": digest(chart),
         "oss_writes": 0, "gpu_requests": 0, "workbench_writes": 0,
         "human_pixel_truth": False, "approved_for_training": False,

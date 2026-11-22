@@ -1,0 +1,86 @@
+{
+  "schema_version": "labelagent.pallet_temporal_conflict_support_evidence.v1",
+  "date": "2026-11-23",
+  "scope": "offline_label_conditioned_temporal_candidate_diagnostic_not_deployed",
+  "safety_fix": {
+    "identity_continuity_before": "eligible_present was compared with len(evidence_rows), making the condition tautological",
+    "identity_continuity_after": "target_present_frames must equal every frozen frame",
+    "calibration_hash_bound": true,
+    "all_inputs_read_back": true,
+    "empty_visibility_partition_fail_closed": true,
+    "dynamic_chart_ids": true
+  },
+  "historical_regression": {
+    "case": "sequence011_camera1_obj20_occluded_by_obj15",
+    "frame_count": 11,
+    "target_present_frames": 11,
+    "center_visible_points": 0,
+    "supported_before": 1,
+    "supported_after": 2,
+    "median_visible_with_overlap": 0.0,
+    "median_visible_without_overlap": 16.0,
+    "occlusion_supported": true,
+    "frozen_input_count": 25,
+    "repeat_core_exact": true
+  },
+  "new_fifth_batch_temporal_windows": {
+    "sequences": ["006", "008"],
+    "frames_per_sequence": 11,
+    "label_files": 22,
+    "pcd_files": 22,
+    "total_bytes": 51982965,
+    "remote_source_hash_match": "44/44",
+    "source_hash_receipt": "docs/evidence/pallet-temporal-window-source-hash-receipt-round681-20261123.json",
+    "source_hash_receipt_sha256": "7f722676d4eecdff4aa71bb604fedb333fa0623d660e9a2bd49f0412dbc64c43",
+    "sequence_calibration_matches_shared_calibration": true,
+    "final_frozen_input_count": 47,
+    "unresolved_targets": 8,
+    "occlusion_support": 0,
+    "label_conditioned_presence_support_only": 7,
+    "insufficient": 1,
+    "repeat_semantic_rows_exact_excluding_output_paths_and_report_hashes": true,
+    "repeat_excluded_fields": [
+      "temporal_manifest_path",
+      "temporal_report_path",
+      "temporal_manifest_sha256",
+      "temporal_report_sha256"
+    ],
+    "five_frame_presence_support_only": 3,
+    "window_sensitive": true
+  },
+  "rows": [
+    {"sequence":"006","target_obj_id":"10","occluder_obj_id":"14","center_visible_points":4,"supported_before":4,"supported_after":1,"status":"label_conditioned_presence_support_only"},
+    {"sequence":"006","target_obj_id":"12","occluder_obj_id":"13","center_visible_points":5,"supported_before":3,"supported_after":1,"status":"label_conditioned_presence_support_only"},
+    {"sequence":"006","target_obj_id":"13","occluder_obj_id":"23","center_visible_points":6,"supported_before":2,"supported_after":1,"status":"label_conditioned_presence_support_only"},
+    {"sequence":"008","target_obj_id":"75","occluder_obj_id":"69","center_visible_points":7,"supported_before":4,"supported_after":2,"status":"label_conditioned_presence_support_only"},
+    {"sequence":"008","target_obj_id":"76","occluder_obj_id":"75","center_visible_points":6,"supported_before":2,"supported_after":3,"status":"label_conditioned_presence_support_only"},
+    {"sequence":"008","target_obj_id":"77","occluder_obj_id":"76","center_visible_points":5,"supported_before":2,"supported_after":2,"status":"label_conditioned_presence_support_only"},
+    {"sequence":"008","target_obj_id":"78","occluder_obj_id":"77","center_visible_points":4,"supported_before":1,"supported_after":2,"status":"label_conditioned_presence_support_only"},
+    {"sequence":"008","target_obj_id":"79","occluder_obj_id":"78","center_visible_points":1,"supported_before":2,"supported_after":0,"status":"insufficient"}
+  ],
+  "claim_boundary": {
+    "conditioned_on_human_3d_labels": true,
+    "not_end_to_end_detection": true,
+    "human_pixel_truth": false,
+    "approved_for_training": false,
+    "mask_propagation": false,
+    "workbench_writes": 0,
+    "human_truth_writes": 0,
+    "training_data_writes": 0,
+    "oss_writes": 0,
+    "production_deployed": false
+  },
+  "tests": {
+    "focused_passed": 12,
+    "full_passed": 1647,
+    "skipped": 1,
+    "subtests_passed": 262
+  },
+  "local_report_sha256": {
+    "round680_historical_hardened": "3f5596a6e79c3d067984cd50b30343e55313f00dc8bcc50c048e45a4aabaed70",
+    "round682_historical_repeat": "851b76541d3f051f55b44068390e1242f036f8bd03e252b1af6d234f6e9deea0",
+    "round684_five_frame_pilot": "539a8edb172118766a39dd5960c4b342b8e871d61503f78528ec76af2a499736",
+    "round690_eleven_frame_final": "e102e01ff20b8f2d129acd0b02094e2ab264c95df907f3b1f70af06e7e1e6d50",
+    "round691_eleven_frame_repeat": "c1f8a7491b5e4fbb807cb9d59b3d247f3f81829a47c2309585a21aecc505ce32"
+  }
+}

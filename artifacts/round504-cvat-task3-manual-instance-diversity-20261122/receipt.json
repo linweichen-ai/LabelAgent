@@ -1,0 +1,36 @@
+{
+  "schema_version": "labelagent.cvat-manual-instance-diversity-audit.v1",
+  "status": "assistant_triage_only",
+  "candidate_manifest_sha256": "1033e8ad16fc0e4c8b03ef246557ae321273b4188b92bc3171c9604558f32f99",
+  "candidate_receipt_sha256": "04d353e2b0620dad82b5e92c0d2e39a1f752e03511181973cabb7f9e4bad2f37",
+  "thresholds": {
+    "phash_hamming_max": 4,
+    "dhash_hamming_max": 4,
+    "thumbnail_mad_max": 0.035
+  },
+  "candidate_count": 81,
+  "pair_count": 3240,
+  "threshold_hit_count": 99,
+  "cluster_count": 46,
+  "representative_count": 46,
+  "cluster_size_histogram": {
+    "1": 35,
+    "2": 5,
+    "3": 2,
+    "5": 1,
+    "8": 2,
+    "9": 1
+  },
+  "candidate_only": true,
+  "human_truth": false,
+  "samples_removed": 0,
+  "training_authorized": false,
+  "automatic_approval": false,
+  "limitations": [
+    "Perceptual similarity is a review-efficiency heuristic, not a semantic duplicate proof.",
+    "Cluster representatives are suggestions only; no candidate is deleted or approved."
+  ],
+  "private_cluster_ids_published": false,
+  "raw_images_published": false,
+  "private_audit_sha256": "d6e5a415025636829f46a7eb280e02f35743c2ba6ddf624e92bcf7d6db46c789"
+}

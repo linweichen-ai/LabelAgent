@@ -1,0 +1,392 @@
+{
+  "schema_version": "labelagent.ego_component_priority_sheet.v1",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "default_enabled": false,
+  "automatic_decisions_enabled": false,
+  "ranking_sha256": "23a6e15bd884e4fcc955019fa48c1fadcf2012d658f4c1aec33ff2d977cf8782",
+  "component_review_sha256": "62ad809c528bd80a655c5369cfb4e85f357ab59f83ea31b1aa77c601d455c810",
+  "selected_count": 25,
+  "requested_top_count": 25,
+  "selection_mode": "camera_proportional",
+  "camera_quotas": {
+    "camera1": 9,
+    "camera3": 16
+  },
+  "sheet": "priority_review_sheet.jpg",
+  "sheet_sha256": "5b5ac3ac36f69b38ac092955e6093b753526560135f2344239e3d2b2a833796a",
+  "rows": [
+    {
+      "component_id": "003-camera3-idx85-1793759985409553695-c001",
+      "review_priority_rank": 1,
+      "review_priority_score": 0.804737,
+      "review_priority_band": "priority_unknown_high",
+      "camera": "camera3",
+      "camera_review_priority_rank": 1,
+      "priority_reasons": [
+        "low_light_and_low_sharpness",
+        "near_background_or_opening",
+        "weak_external_package_support"
+      ],
+      "automatic_decision": null,
+      "review_image": "003-camera3-idx85-1793759985409553695-c001-review.png",
+      "review_image_sha256": "270eaa8a4f64e86ae401f63700d5a4875ae1f3ff29c7d53505dc38d107e7d8f5"
+    },
+    {
+      "component_id": "003-camera3-idx85-1793759985409553695-c008",
+      "review_priority_rank": 2,
+      "review_priority_score": 0.789725,
+      "review_priority_band": "priority_unknown_high",
+      "camera": "camera3",
+      "camera_review_priority_rank": 2,
+      "priority_reasons": [
+        "low_light_and_low_sharpness",
+        "near_background_or_opening",
+        "weak_external_package_support"
+      ],
+      "automatic_decision": null,
+      "review_image": "003-camera3-idx85-1793759985409553695-c008-review.png",
+      "review_image_sha256": "cf0c63c1db014576554294c74e2117bc6500285eacb27294e83e1dc88aaba258"
+    },
+    {
+      "component_id": "003-camera3-idx85-1793759985409553695-c003",
+      "review_priority_rank": 3,
+      "review_priority_score": 0.780974,
+      "review_priority_band": "priority_unknown_high",
+      "camera": "camera3",
+      "camera_review_priority_rank": 3,
+      "priority_reasons": [
+        "low_light_and_low_sharpness",
+        "near_background_or_opening",
+        "weak_external_package_support"
+      ],
+      "automatic_decision": null,
+      "review_image": "003-camera3-idx85-1793759985409553695-c003-review.png",
+      "review_image_sha256": "11f3560c4e166a7cf70c6b8688d7ce7105639acbd11c087918d5017bba69abdf"
+    },
+    {
+      "component_id": "003-camera3-idx85-1793759985409553695-c009",
+      "review_priority_rank": 4,
+      "review_priority_score": 0.635378,
+      "review_priority_band": "priority_unknown_high",
+      "camera": "camera3",
+      "camera_review_priority_rank": 4,
+      "priority_reasons": [
+        "low_light_and_low_sharpness",
+        "near_background_or_opening"
+      ],
+      "automatic_decision": null,
+      "review_image": "003-camera3-idx85-1793759985409553695-c009-review.png",
+      "review_image_sha256": "280ea751295cd9188f98e6631fb314afc1132eb2050c394d5ed2041593a732d1"
+    },
+    {
+      "component_id": "002-camera3-1793759208642855696-c004",
+      "review_priority_rank": 5,
+      "review_priority_score": 0.772494,
+      "review_priority_band": "priority_1",
+      "camera": "camera3",
+      "camera_review_priority_rank": 5,
+      "priority_reasons": [
+        "weak_external_package_support"
+      ],
+      "automatic_decision": null,
+      "review_image": "002-camera3-1793759208642855696-c004-review.png",
+      "review_image_sha256": "3b566405dbbe1cb7e2e2fb887af06f15efdf2d2b1164de730b558ae940121ddd"
+    },
+    {
+      "component_id": "000-camera3-1793758297542631987-c001",
+      "review_priority_rank": 6,
+      "review_priority_score": 0.759578,
+      "review_priority_band": "priority_1",
+      "camera": "camera3",
+      "camera_review_priority_rank": 6,
+      "priority_reasons": [
+        "near_background_or_opening",
+        "weak_external_package_support"
+      ],
+      "automatic_decision": null,
+      "review_image": "000-camera3-1793758297542631987-c001-review.png",
+      "review_image_sha256": "5e93f89ed3aab7664ffb0d32812796af525418c222fe4349c8ed25b379180bcd"
+    },
+    {
+      "component_id": "000-camera3-1793758312842576695-c002",
+      "review_priority_rank": 7,
+      "review_priority_score": 0.734091,
+      "review_priority_band": "priority_1",
+      "camera": "camera3",
+      "camera_review_priority_rank": 7,
+      "priority_reasons": [
+        "near_background_or_opening",
+        "weak_external_package_support"
+      ],
+      "automatic_decision": null,
+      "review_image": "000-camera3-1793758312842576695-c002-review.png",
+      "review_image_sha256": "c08d7fe333d341764f51d803c1d09e388e105d77e7b582d36917ca1870df2185"
+    },
+    {
+      "component_id": "003-camera3-idx5-1793759961309512987-c010",
+      "review_priority_rank": 8,
+      "review_priority_score": 0.726293,
+      "review_priority_band": "priority_1",
+      "camera": "camera3",
+      "camera_review_priority_rank": 8,
+      "priority_reasons": [
+        "near_background_or_opening",
+        "weak_external_package_support"
+      ],
+      "automatic_decision": null,
+      "review_image": "003-camera3-idx5-1793759961309512987-c010-review.png",
+      "review_image_sha256": "d0b4b4f6fe540bee2db7badafa5dc7cdd41f2ae34d4b656c6928b24ff86e865d"
+    },
+    {
+      "component_id": "004-camera3-idx52-1793760677642756695-c002",
+      "review_priority_rank": 9,
+      "review_priority_score": 0.712634,
+      "review_priority_band": "priority_1",
+      "camera": "camera3",
+      "camera_review_priority_rank": 9,
+      "priority_reasons": [
+        "near_background_or_opening",
+        "weak_external_package_support"
+      ],
+      "automatic_decision": null,
+      "review_image": "004-camera3-idx52-1793760677642756695-c002-review.png",
+      "review_image_sha256": "888fa1823fdef4cc706f9bce5c731272bbb3312ac804e1ecc702634a4cb7337c"
+    },
+    {
+      "component_id": "001-camera3-1793759034009520987-c004",
+      "review_priority_rank": 10,
+      "review_priority_score": 0.712459,
+      "review_priority_band": "priority_1",
+      "camera": "camera3",
+      "camera_review_priority_rank": 10,
+      "priority_reasons": [
+        "near_background_or_opening",
+        "weak_external_package_support"
+      ],
+      "automatic_decision": null,
+      "review_image": "001-camera3-1793759034009520987-c004-review.png",
+      "review_image_sha256": "9f5563cee535f9cf242c120533a0bdeb08e3beb34f7ac06ace67d68b237066c6"
+    },
+    {
+      "component_id": "004-camera3-idx52-1793760677642756695-c001",
+      "review_priority_rank": 11,
+      "review_priority_score": 0.711489,
+      "review_priority_band": "priority_1",
+      "camera": "camera3",
+      "camera_review_priority_rank": 11,
+      "priority_reasons": [
+        "near_background_or_opening",
+        "weak_external_package_support"
+      ],
+      "automatic_decision": null,
+      "review_image": "004-camera3-idx52-1793760677642756695-c001-review.png",
+      "review_image_sha256": "9d6b5c16a6a6064ce6ab99d0f5d08666687bd35a0930efb6b65a567ca1e285a2"
+    },
+    {
+      "component_id": "001-camera3-1793759063409530987-c001",
+      "review_priority_rank": 12,
+      "review_priority_score": 0.709187,
+      "review_priority_band": "priority_1",
+      "camera": "camera3",
+      "camera_review_priority_rank": 12,
+      "priority_reasons": [
+        "near_background_or_opening",
+        "weak_external_package_support"
+      ],
+      "automatic_decision": null,
+      "review_image": "001-camera3-1793759063409530987-c001-review.png",
+      "review_image_sha256": "4477e2cce079eaada05fcfa30315731005720258c6891860cc2af01e69070060"
+    },
+    {
+      "component_id": "002-camera3-1793759208642855696-c003",
+      "review_priority_rank": 13,
+      "review_priority_score": 0.691733,
+      "review_priority_band": "priority_1",
+      "camera": "camera3",
+      "camera_review_priority_rank": 13,
+      "priority_reasons": [
+        "weak_external_package_support"
+      ],
+      "automatic_decision": null,
+      "review_image": "002-camera3-1793759208642855696-c003-review.png",
+      "review_image_sha256": "632256fee7e8fb735881203e4a8bacaeca4debfd4de08fd6a53c5054549a8d0b"
+    },
+    {
+      "component_id": "003-camera3-idx22-1793759966409522987-c013",
+      "review_priority_rank": 14,
+      "review_priority_score": 0.682368,
+      "review_priority_band": "priority_1",
+      "camera": "camera3",
+      "camera_review_priority_rank": 14,
+      "priority_reasons": [
+        "weak_external_package_support"
+      ],
+      "automatic_decision": null,
+      "review_image": "003-camera3-idx22-1793759966409522987-c013-review.png",
+      "review_image_sha256": "8bfc519c126db41c2a36e95cf0efdbbc691cde1150c5ed41c9211a13c273c9b6"
+    },
+    {
+      "component_id": "004-camera3-idx22-1793760668642838987-c003",
+      "review_priority_rank": 15,
+      "review_priority_score": 0.675497,
+      "review_priority_band": "priority_1",
+      "camera": "camera3",
+      "camera_review_priority_rank": 15,
+      "priority_reasons": [
+        "weak_external_package_support",
+        "large_or_elongated_micro_component"
+      ],
+      "automatic_decision": null,
+      "review_image": "004-camera3-idx22-1793760668642838987-c003-review.png",
+      "review_image_sha256": "00d48e27e16e7121f198f7f3944fd182f6aadf2c2af643fcd315dbaee7e4bd4e"
+    },
+    {
+      "component_id": "003-camera3-idx22-1793759966409522987-c003",
+      "review_priority_rank": 16,
+      "review_priority_score": 0.674935,
+      "review_priority_band": "priority_1",
+      "camera": "camera3",
+      "camera_review_priority_rank": 16,
+      "priority_reasons": [
+        "weak_external_package_support",
+        "large_or_elongated_micro_component"
+      ],
+      "automatic_decision": null,
+      "review_image": "003-camera3-idx22-1793759966409522987-c003-review.png",
+      "review_image_sha256": "684805e3ab4d2bae698dc2760d01d19197e7e1f233e5e364f4689536222c694e"
+    },
+    {
+      "component_id": "004-camera1-idx52-1793760677642756695-c004",
+      "review_priority_rank": 30,
+      "review_priority_score": 0.641709,
+      "review_priority_band": "priority_2",
+      "camera": "camera1",
+      "camera_review_priority_rank": 1,
+      "priority_reasons": [
+        "weak_external_package_support",
+        "large_or_elongated_micro_component"
+      ],
+      "automatic_decision": null,
+      "review_image": "004-camera1-idx52-1793760677642756695-c004-review.png",
+      "review_image_sha256": "2e14527ad01a37873eeb969d073879eada87c037c0a3ebb2a6ae2346e9e06671"
+    },
+    {
+      "component_id": "002-camera1-1793759230842886696-c006",
+      "review_priority_rank": 33,
+      "review_priority_score": 0.637019,
+      "review_priority_band": "priority_2",
+      "camera": "camera1",
+      "camera_review_priority_rank": 2,
+      "priority_reasons": [
+        "weak_external_package_support"
+      ],
+      "automatic_decision": null,
+      "review_image": "002-camera1-1793759230842886696-c006-review.png",
+      "review_image_sha256": "ee4bc184edff1b5225630c3942f34b698f797ef0f2fd4071f8c3a82dc6c1a0c5"
+    },
+    {
+      "component_id": "000-camera1-1793758297542631987-c006",
+      "review_priority_rank": 40,
+      "review_priority_score": 0.627155,
+      "review_priority_band": "priority_2",
+      "camera": "camera1",
+      "camera_review_priority_rank": 3,
+      "priority_reasons": [
+        "near_background_or_opening",
+        "large_or_elongated_micro_component"
+      ],
+      "automatic_decision": null,
+      "review_image": "000-camera1-1793758297542631987-c006-review.png",
+      "review_image_sha256": "dc8aeb620716b875b732b6f5fe843e7d8a6260572fc6421445bcf79a968a053c"
+    },
+    {
+      "component_id": "001-camera1-1793759034009520987-c004",
+      "review_priority_rank": 43,
+      "review_priority_score": 0.618077,
+      "review_priority_band": "priority_2",
+      "camera": "camera1",
+      "camera_review_priority_rank": 4,
+      "priority_reasons": [
+        "near_background_or_opening"
+      ],
+      "automatic_decision": null,
+      "review_image": "001-camera1-1793759034009520987-c004-review.png",
+      "review_image_sha256": "d3ef47f6b4fbd59143116dde2470ec1c0093c2ce5fafdec8610169c7f64b36e5"
+    },
+    {
+      "component_id": "003-camera1-idx5-1793759961309512987-c006",
+      "review_priority_rank": 46,
+      "review_priority_score": 0.615861,
+      "review_priority_band": "priority_2",
+      "camera": "camera1",
+      "camera_review_priority_rank": 5,
+      "priority_reasons": [
+        "near_background_or_opening"
+      ],
+      "automatic_decision": null,
+      "review_image": "003-camera1-idx5-1793759961309512987-c006-review.png",
+      "review_image_sha256": "4aa381aed6919d7c499217553944e721ab1026678a103bef3b56edb6a20fb987"
+    },
+    {
+      "component_id": "002-camera1-1793759208642855696-c001",
+      "review_priority_rank": 47,
+      "review_priority_score": 0.614599,
+      "review_priority_band": "priority_2",
+      "camera": "camera1",
+      "camera_review_priority_rank": 6,
+      "priority_reasons": [
+        "near_background_or_opening"
+      ],
+      "automatic_decision": null,
+      "review_image": "002-camera1-1793759208642855696-c001-review.png",
+      "review_image_sha256": "7d6839ef2dce8b46b7eb907e534387af6ac8aafe73bb6a1fde6fdf2ce82fcfb0"
+    },
+    {
+      "component_id": "004-camera1-idx52-1793760677642756695-c003",
+      "review_priority_rank": 49,
+      "review_priority_score": 0.61035,
+      "review_priority_band": "priority_2",
+      "camera": "camera1",
+      "camera_review_priority_rank": 7,
+      "priority_reasons": [
+        "weak_external_package_support"
+      ],
+      "automatic_decision": null,
+      "review_image": "004-camera1-idx52-1793760677642756695-c003-review.png",
+      "review_image_sha256": "d91fe2dee58199b43b461fd986a935b29af5e89ade455c3e30dc6a9ff09182dc"
+    },
+    {
+      "component_id": "001-camera1-1793759063409530987-c002",
+      "review_priority_rank": 50,
+      "review_priority_score": 0.607496,
+      "review_priority_band": "priority_2",
+      "camera": "camera1",
+      "camera_review_priority_rank": 8,
+      "priority_reasons": [
+        "near_background_or_opening"
+      ],
+      "automatic_decision": null,
+      "review_image": "001-camera1-1793759063409530987-c002-review.png",
+      "review_image_sha256": "c1a8b26cac44584c0e25f8d3f41709f38832075212a798fdd073805ccd441e82"
+    },
+    {
+      "component_id": "001-camera1-1793759034009520987-c006",
+      "review_priority_rank": 51,
+      "review_priority_score": 0.607493,
+      "review_priority_band": "priority_2",
+      "camera": "camera1",
+      "camera_review_priority_rank": 9,
+      "priority_reasons": [
+        "weak_external_package_support",
+        "large_or_elongated_micro_component"
+      ],
+      "automatic_decision": null,
+      "review_image": "001-camera1-1793759034009520987-c006-review.png",
+      "review_image_sha256": "91484e5f346a7d9b6b0515d4cd68d49de7de8686eb0aade1b3c1749dde03123e"
+    }
+  ],
+  "next_step": "Review in rank order. This sheet cannot make or approve decisions."
+}

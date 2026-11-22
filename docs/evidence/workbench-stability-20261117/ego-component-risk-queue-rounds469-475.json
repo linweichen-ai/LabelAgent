@@ -1,0 +1,51 @@
+{
+  "schema_version": "labelagent.ego_component_risk_queue_receipt.v1",
+  "date": "2026-11-22",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "default_enabled": false,
+  "automatic_decisions_enabled": false,
+  "round469_v1": {
+    "status": "negative_not_adopted",
+    "known_uncertain_rank": 84,
+    "component_count": 245,
+    "packet_sha256": "2f01ebaec16253e81724251a4aac3f5d2d3710eba8c6f6bdbed62cd1962d09dc"
+  },
+  "round473_v2": {
+    "status": "offline_review_priority_candidate",
+    "component_count": 245,
+    "camera1_component_count": 91,
+    "camera3_component_count": 154,
+    "known_uncertain_rank": 6,
+    "known_assistant_pass_ranks": [42, 109, 158],
+    "packet_sha256": "23a6e15bd884e4fcc955019fa48c1fadcf2012d658f4c1aec33ff2d977cf8782"
+  },
+  "round474_stability": {
+    "gamma_090_exact_band_stability": 0.97551,
+    "gamma_090_top_30_membership_stability": 0.991837,
+    "jpeg_q95_exact_band_stability": 0.991837,
+    "jpeg_q95_top_30_membership_stability": 1.0,
+    "known_uncertain_ranks": [6, 7, 6],
+    "receipt_sha256": "1bd4fbf85bc6fbacbae6f4e99240e9f031429a9314338f22591effc44812dbd6"
+  },
+  "round475_sheet": {
+    "selection_mode": "camera_proportional",
+    "selected_count": 25,
+    "camera1_quota": 9,
+    "camera3_quota": 16,
+    "known_uncertain_included": true,
+    "packet_sha256": "c2b7f614d5f059f1bb41e605c57698af42cff39c31651dc43646eafae074bd2d",
+    "sheet_sha256": "5b5ac3ac36f69b38ac092955e6093b753526560135f2344239e3d2b2a833796a"
+  },
+  "verification": {
+    "targeted_and_related_tests_passed": 81,
+    "tests_skipped": 1,
+    "risk_formula_uses_color_categories": false,
+    "camera_stratified_percentiles": true,
+    "priority_sheet_is_atomic": true,
+    "automatic_decision_count": 0
+  },
+  "conclusion": "V2 improves review ordering and is stable to mild perturbations on the exposed development set. It remains offline until blind new-data enrichment is demonstrated."
+}

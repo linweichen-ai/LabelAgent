@@ -1,0 +1,65 @@
+{
+  "schema_version": "labelagent.ego_component_risk_stability.v1",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "default_enabled": false,
+  "automatic_decisions_enabled": false,
+  "component_review_sha256": "62ad809c528bd80a655c5369cfb4e85f357ab59f83ea31b1aa77c601d455c810",
+  "known_review_receipt_sha256": "3384c3ec2b12ef9984ab4e63e929bcab7186820ab04d0c2154282b4796cb547c",
+  "component_count": 245,
+  "comparisons": [
+    {
+      "transform": "gamma_090",
+      "exact_band_stability": 0.97551,
+      "top_30_percent_membership_stability": 0.991837,
+      "median_absolute_rank_shift": 1.0,
+      "maximum_absolute_rank_shift": 49
+    },
+    {
+      "transform": "jpeg_q95",
+      "exact_band_stability": 0.991837,
+      "top_30_percent_membership_stability": 1.0,
+      "median_absolute_rank_shift": 1.0,
+      "maximum_absolute_rank_shift": 9
+    }
+  ],
+  "known_uncertain_component": [
+    {
+      "transform": "baseline",
+      "rank": 6,
+      "band": "priority_1"
+    },
+    {
+      "transform": "gamma_090",
+      "rank": 7,
+      "band": "priority_1"
+    },
+    {
+      "transform": "jpeg_q95",
+      "rank": 6,
+      "band": "priority_1"
+    }
+  ],
+  "all_exact_band_stability_at_least_95_percent": true,
+  "known_uncertain_stays_top_10_percent": true,
+  "run_files": [
+    {
+      "transform": "baseline",
+      "path": "ranking_baseline.json",
+      "sha256": "c4cd7933297a0793e618327f0b8ce00dd347040816d6fb7b72bf07b34c0242f6"
+    },
+    {
+      "transform": "gamma_090",
+      "path": "ranking_gamma_090.json",
+      "sha256": "fff031d563b1e27f53e7b2266e9e9f46673ffcd4b5ec5e4a012e84fcc65667e9"
+    },
+    {
+      "transform": "jpeg_q95",
+      "path": "ranking_jpeg_q95.json",
+      "sha256": "044d93943bd831eae1aa621152012be796203e02d5a3c14e91f687fdaa42b7de"
+    }
+  ],
+  "next_step": "This measures queue stability only and cannot make component decisions."
+}

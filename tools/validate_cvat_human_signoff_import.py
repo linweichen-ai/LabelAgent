@@ -39,9 +39,20 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("JSON object contains duplicate keys")
+        result[key] = value
+    return result
+
+
 def _read_object(path: Path, label: str) -> dict[str, Any]:
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
+        value = json.loads(
+            path.read_text(encoding="utf-8"), object_pairs_hook=_unique_object
+        )
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
         raise ValueError(f"{label} is not valid UTF-8 JSON") from error
     if not isinstance(value, dict):
@@ -56,6 +67,10 @@ def _valid_sha256(value: Any) -> bool:
 def _valid_timestamp(value: Any) -> bool:
     if not isinstance(value, str) or ISO_TIMESTAMP.fullmatch(value) is None:
         return False
+    if not value.endswith("Z"):
+        offset = value[-6:]
+        if int(offset[1:3]) > 23 or int(offset[4:6]) > 59:
+            return False
     normalized = value[:-1] + "+00:00" if value.endswith("Z") else value
     try:
         parsed = datetime.fromisoformat(normalized)
@@ -193,6 +208,9 @@ def validate(
     if missing:
         raise ValueError(f"human signoff is missing {len(missing)} review rows")
 
+    human_pass_candidate_ids = sorted(
+        row["candidate_id"] for row in normalized_rows if row["decision"] == "pass"
+    )
     normalized = {
         "schema_version": "labelagent.cvat-human-instance-signoff-import.v1",
         "status": "validated_human_signoff_not_training_authorized",
@@ -201,6 +219,8 @@ def validate(
         "candidate_count": EXPECTED_COUNT,
         "human_signoff_count": EXPECTED_COUNT,
         "decision_counts": {key: decisions[key] for key in ALLOWED_DECISIONS},
+        "human_pass_candidate_ids": human_pass_candidate_ids,
+        "human_pass_count": len(human_pass_candidate_ids),
         "rows": normalized_rows,
         "approved_for_training": False,
         "training_authorized": False,
@@ -215,6 +235,7 @@ def validate(
         "validated_row_count": EXPECTED_COUNT,
         "human_signoff_count": EXPECTED_COUNT,
         "decision_counts": normalized["decision_counts"],
+        "human_pass_count": normalized["human_pass_count"],
         "approved_for_training": False,
         "training_authorized": False,
         "automatic_approval": False,

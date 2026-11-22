@@ -72,6 +72,8 @@ class HumanSignoffImportTests(unittest.TestCase):
         self.assertEqual(len(normalized["rows"]), 81)
         self.assertEqual(receipt["validated_row_count"], 81)
         self.assertEqual(receipt["human_signoff_count"], 81)
+        self.assertEqual(normalized["human_pass_count"], 27)
+        self.assertEqual(len(normalized["human_pass_candidate_ids"]), 27)
         self.assertEqual(receipt["decision_counts"], {
             "pass": 27, "reject": 27, "uncertain": 27,
         })
@@ -149,6 +151,96 @@ class HumanSignoffImportTests(unittest.TestCase):
             self.write_signoff(signoff, value)
             with self.assertRaisesRegex(ValueError, "unknown candidate id"):
                 validate(review, signoff)
+
+    def test_duplicate_json_keys_fail_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            review, signoff, _ = self.fixture(Path(directory))
+            raw = signoff.read_text(encoding="utf-8")
+            signoff.write_text(
+                raw.replace(
+                    '"candidate_count": 81',
+                    '"candidate_count": 81, "candidate_count": 81',
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "duplicate keys"):
+                validate(review, signoff)
+
+    def test_duplicate_identical_row_fails_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            review, signoff, value = self.fixture(Path(directory))
+            value["rows"][-1] = dict(value["rows"][0])
+            self.write_signoff(signoff, value)
+            with self.assertRaisesRegex(ValueError, "repeated or conflicting"):
+                validate(review, signoff)
+
+    def test_invalid_timezone_offset_fails_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            review, signoff, value = self.fixture(Path(directory))
+            value["rows"][0]["reviewed_at"] = "2026-11-22T12:34:56+24:00"
+            self.write_signoff(signoff, value)
+            with self.assertRaisesRegex(ValueError, "timestamp is invalid"):
+                validate(review, signoff)
+
+    def test_each_binding_is_required_and_hash_bound(self):
+        fields = (
+            "candidate_id",
+            "frame_id",
+            "source_image_sha256",
+            "canonical_geometry_sha256",
+            "focused_image_sha256",
+        )
+        for field in fields:
+            with self.subTest(missing=field), tempfile.TemporaryDirectory() as directory:
+                review, signoff, value = self.fixture(Path(directory))
+                del value["rows"][0][field]
+                self.write_signoff(signoff, value)
+                with self.assertRaises(ValueError):
+                    validate(review, signoff)
+        for field in fields[1:]:
+            with self.subTest(drift=field), tempfile.TemporaryDirectory() as directory:
+                review, signoff, value = self.fixture(Path(directory))
+                value["rows"][0][field] = 999 if field == "frame_id" else "0" * 64
+                self.write_signoff(signoff, value)
+                with self.assertRaisesRegex(ValueError, "binding drift"):
+                    validate(review, signoff)
+
+    def test_human_pass_set_is_private_and_inputs_are_unchanged(self):
+        with tempfile.TemporaryDirectory() as directory:
+            review, signoff, value = self.fixture(Path(directory))
+            before = (review.read_bytes(), signoff.read_bytes())
+            normalized, receipt = validate(review, signoff)
+            expected = sorted(
+                row["candidate_id"] for row in value["rows"] if row["decision"] == "pass"
+            )
+            self.assertEqual(normalized["human_pass_candidate_ids"], expected)
+            self.assertEqual(receipt["human_pass_count"], len(expected))
+            self.assertNotIn("human_pass_candidate_ids", receipt)
+            self.assertEqual(before, (review.read_bytes(), signoff.read_bytes()))
+            self.assertTrue(
+                all(row["approved_for_training"] is False for row in normalized["rows"])
+            )
+
+    def test_invalid_decisions_and_incomplete_signatures_fail_closed(self):
+        invalid_fields = {
+            "decision": (None, "", "approve", True),
+            "reviewer": (None, "", "  ", 42),
+            "reviewed_at": (
+                None,
+                "",
+                "2026-11-22",
+                "2026-11-22T12:00:00",
+                "2026-11-22T12:00:00+01:99",
+            ),
+        }
+        for field, invalid_values in invalid_fields.items():
+            for invalid in invalid_values:
+                with self.subTest(field=field, value=invalid), tempfile.TemporaryDirectory() as directory:
+                    review, signoff, value = self.fixture(Path(directory))
+                    value["rows"][0][field] = invalid
+                    self.write_signoff(signoff, value)
+                    with self.assertRaises(ValueError):
+                        validate(review, signoff)
 
     def test_training_approval_in_input_fails_closed(self):
         with tempfile.TemporaryDirectory() as directory:

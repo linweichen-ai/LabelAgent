@@ -1,0 +1,50 @@
+{
+  "aggregate": {
+    "boundary_f1_1px": {
+      "current": 0.9998140475632507,
+      "delta": -0.0007263338182234014,
+      "refined": 0.9990877137450273
+    },
+    "boundary_f1_2px": {
+      "current": 1.0,
+      "delta": 0.0,
+      "refined": 1.0
+    },
+    "dice": {
+      "current": 0.9915865719331913,
+      "delta": -0.004611935937299139,
+      "refined": 0.9869746359958922
+    },
+    "iou": {
+      "current": 0.9833458904313712,
+      "delta": -0.009019906900798014,
+      "refined": 0.9743259835305732
+    }
+  },
+  "contact_sheet_sha256": "42a8abe9d70da9f1b6bea0fb71addb7f8ac478e1397ffd674e8e16226cc6939f",
+  "development_gate_passed": false,
+  "generalization_claim_allowed": false,
+  "independent_human_truth": false,
+  "matching": {
+    "comparison_rows": 10,
+    "mapping_frozen_before_alternative_scoring": true,
+    "matched": 10,
+    "method": "maximum_total_current_iou_hungarian",
+    "minimum_iou": 0.5,
+    "truth_pallets": 11
+  },
+  "outcomes": {
+    "improved_iou": 0,
+    "regressed_iou": 10,
+    "regression_gate_failures": 5,
+    "unchanged_iou": 0
+  },
+  "private_instance_ids_published": false,
+  "private_paths_published": false,
+  "private_report_sha256": "8ef970aad9569fd0a30d2d9a821c319cc7740773abb90b7b0483a89ad3a1455a",
+  "production_deployment_authorized": false,
+  "schema_version": "labelagent.pallet-boundary-human-review-comparison.v1",
+  "scope": "single_frame_self_declared_human_review_candidate",
+  "status": "development_gate_failed",
+  "training_authorized": false
+}

@@ -4081,3 +4081,15 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 重启后按新载入代次`1838476875584112`重新生成正式只读包`pallet-boundary-live-20261123`，包含33项/133文件；旧代次包没有复制到正式WORK。
 - 正式真实Edge验收确认1包、33条、两张预览、同会话保留、新会话隔离、空目录刷新失败关闭；候选API非GET、受保护写入、请求失败、页面错误和意外HTTP错误均为0。
 - 正式`state.json`、`files.json`、`file_sessions.json`哈希与部署前备份完全一致，工作台当前idle、SAM状态ok；候选索引明确`human_truth_writes=false`、`training_data_writes=false`。详见`docs/FORMAL_CANDIDATE_COMPARISON_DEPLOYMENT_ROUND737_20261123.md`。
+
+## 2026-11-23 Round738 补充：栈板边界清理的人工作用域开发门
+
+- 只读盘点确认Round737的33个变化候选中，只有frame0的10项能与同一原图SHA、同一真值SHA
+  的既有人工复核轮廓严格绑定；其余frame76/151没有可用人工像素作用域，未强行计分。
+- 10项先按当前mask与11个pallet复核轮廓做最大总IoU固定匹配，匹配IoU均大于0.97；清理后
+  不允许重新匹配。mean IoU从0.983346降至0.974326，10/10下降，5/10触发单实例回退门；
+  Boundary-F1@2px饱和为1.0，1px指标下降0.000726。
+- v6候选因此未通过开发门，生产部署、训练授权和泛化声明均为false；正式工作台、人工真值、
+  训练数据和模型权重未修改。新增哈希绑定评测器、3项定向测试和不含私有实例ID的公开回执；
+  定向组合回归281项、83子测试通过；独立双跑四项输出逐文件SHA一致。详见
+  `docs/PALLET_BOUNDARY_HUMAN_REVIEW_GATE_ROUND738_20261123.md`。

@@ -69,6 +69,7 @@ def project_box(obj: dict, camera: dict) -> dict | None:
         "obj_id": obj.get("obj_id"), "obj_attr": obj.get("obj_attr"),
         "bbox": clipped, "raw_bbox": raw,
         "center": [float(center[0]), float(center[1])],
+        "camera_depth": float(center_xyz[2]),
         "clipped_fraction": clipped_area / raw_area,
         "projected_pixels": int(hull.sum()), "mask": hull.astype(bool),
     }
@@ -201,6 +202,8 @@ def evaluate(manifest_path: Path, labels_root: Path, calibration: Path,
     if health_before.get("status") != "ok" or health_before.get("model_loaded") is not True:
         raise ValueError("SAM service is not ready")
     output.mkdir(parents=True)
+    masks_directory = output / "masks"
+    masks_directory.mkdir()
     rows, panels = [], []
     for item in manifest["files"]:
         sequence, frame = str(item["sequence"]), str(item["frame_id"])
@@ -347,6 +350,11 @@ def evaluate(manifest_path: Path, labels_root: Path, calibration: Path,
             f"seq {sequence} camera {camera_number} obj {target['obj_id']} "
             f"attr={target['obj_attr']} loc={row['localization_pass']} "
             f"isolated={row['instance_isolation_pass']}"))
+        mask_path = masks_directory / f"{sequence}-camera{camera_number}-obj{target['obj_id']}.png"
+        Image.fromarray(proposal.astype(np.uint8) * 255).save(mask_path)
+        row.update({"mask_path": str(mask_path.resolve()),
+                    "mask_sha256": digest(mask_path),
+                    "mask_pixels": int(proposal.sum())})
         rows.append(row)
     sheet = Image.new("RGB", (1280, sum(panel.height for panel in panels)), "white")
     top = 0

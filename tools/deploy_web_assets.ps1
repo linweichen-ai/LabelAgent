@@ -13,7 +13,8 @@ $ErrorActionPreference = "Stop"
 $Assets = @(
     "source/web/app.js",
     "source/web/guide.js",
-    "source/web/index.html"
+    "source/web/index.html",
+    "source/web/reference-prep.js"
 )
 
 function Resolve-ExistingDirectory([string]$Path, [string]$Label) {

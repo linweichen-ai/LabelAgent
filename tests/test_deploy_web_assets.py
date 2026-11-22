@@ -13,6 +13,7 @@ ASSETS = (
     "source/web/app.js",
     "source/web/guide.js",
     "source/web/index.html",
+    "source/web/reference-prep.js",
 )
 
 

@@ -293,6 +293,7 @@
       const state = await stateResponse.json();
       const job = cachedJob || await jobResponse.json();
       window.labelAgentRunStatusSnapshot = job;
+      if (!cachedJob) window.labelAgentRunStatusObservedAtMs = Date.now();
       latestRunStatus = job.status || 'idle';
       render(state, job);
     } catch (_) {

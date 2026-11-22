@@ -1,6 +1,10 @@
 import unittest
 
-from tools.browser_idle_polling_acceptance import request_budget, validate_loopback_url
+from tools.browser_idle_polling_acceptance import (
+    request_budget,
+    sanitize_initiators,
+    validate_loopback_url,
+)
 
 
 class BrowserIdlePollingAcceptanceTests(unittest.TestCase):
@@ -17,9 +21,26 @@ class BrowserIdlePollingAcceptanceTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 validate_loopback_url(value)
 
-    def test_budget_preserves_one_startup_fallback_and_recovery_cadence(self):
-        self.assertEqual(request_budget(32), {"run_status": 4, "state_summary": 4})
-        self.assertEqual(request_budget(60), {"run_status": 6, "state_summary": 5})
+    def test_steady_state_budget_preserves_one_interval_boundary(self):
+        self.assertEqual(request_budget(32), {"run_status": 3, "state_summary": 2})
+        self.assertEqual(request_budget(60), {"run_status": 5, "state_summary": 3})
+
+    def test_initiators_keep_only_loopback_paths_and_function_names(self):
+        result = sanitize_initiators([{
+            "target": "http://127.0.0.1:8766/api/run/status?secret=value",
+            "at": 12.3456,
+            "stack": (
+                "Error: fetch initiator\n"
+                " at fetchAgentStatus (http://127.0.0.1:8766/app.js?v=206:1:2)\n"
+                " at leaked (file:///C:/Users/private/script.js:1:2)\n"
+                " at external (https://example.com/remote.js:1:2)"
+            ),
+        }], "http://127.0.0.1:8766")
+        self.assertEqual(result, [{
+            "path": "/api/run/status",
+            "at_ms": 12.346,
+            "frames": ["fetchAgentStatus@/app.js"],
+        }])
 
     def test_too_short_observation_is_rejected(self):
         with self.assertRaises(ValueError):

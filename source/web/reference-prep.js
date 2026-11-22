@@ -410,9 +410,35 @@
       adjacentPrefetchTimer = null;
       if (!stillRelevant()) return;
       try {
-        const statusResponse = await speculativeFetch('/api/run/status', {cache: 'no-store'});
-        const status = await statusResponse.json();
-        if (!statusResponse.ok || status.status !== 'idle') {
+        let status = window.labelAgentRunStatusSnapshot || null;
+        const observedAt = Number(window.labelAgentRunStatusObservedAtMs || 0);
+        const snapshotAge = Date.now() - observedAt;
+        const snapshotMatchesScope = status
+          && status.selected_file === state.path
+          && status.selected_topic === state.topic
+          && Number(status.selected_file_activation_generation)
+            === Number(state.file_activation_generation);
+        const freshSnapshot = snapshotMatchesScope && observedAt > 0
+          && snapshotAge >= 0 && snapshotAge <= 2000;
+        if (!freshSnapshot) {
+          const statusResponse = await speculativeFetch('/api/run/status', {cache: 'no-store'});
+          status = await statusResponse.json();
+          if (!statusResponse.ok) status = null;
+          else if (status
+              && status.selected_file === state.path
+              && status.selected_topic === state.topic
+              && Number(status.selected_file_activation_generation)
+                === Number(state.file_activation_generation)) {
+            window.labelAgentRunStatusSnapshot = status;
+            window.labelAgentRunStatusObservedAtMs = Date.now();
+          }
+        }
+        const statusMatchesScope = status
+          && status.selected_file === state.path
+          && status.selected_topic === state.topic
+          && Number(status.selected_file_activation_generation)
+            === Number(state.file_activation_generation);
+        if (!statusMatchesScope || status.status !== 'idle') {
           if (remaining > 1 && stillRelevant()) {
             adjacentPrefetchTimer = setTimeout(
               () => void attempt(remaining - 1), ADJACENT_PREFETCH_RETRY_MS);

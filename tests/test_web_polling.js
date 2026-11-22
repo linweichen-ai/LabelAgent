@@ -142,7 +142,7 @@ test('工作台持续显示新旧数据集身份和逐类别覆盖状态', () =>
   assert.match(app, /candidateNeedsReview/);
   assert.match(html, /style\.css\?v=120/);
   assert.match(html, /homepage-theme\.css\?v=5/);
-  assert.match(html, /app\.js\?v=205/);
+  assert.match(html, /app\.js\?v=206/);
   assert.match(app, /action\.dataset\.coverageRepair=label/);
   assert.match(app, /startCandidateCoverageRepair\(label\)/);
   assert.match(app, /不会自动运行模型或写入人工真值/);
@@ -394,6 +394,12 @@ test('当前候选返回后只在空闲时预备紧邻下一帧且切帧立即�
   assert.match(adjacent, /nextFrame >= frameCount/);
   assert.match(adjacent, /hasTruthFrame\(state, nextFrame\)/);
   assert.match(adjacent, /currentFrameCandidate\(state, nextFrame\)/);
+  assert.match(adjacent, /window\.labelAgentRunStatusSnapshot \|\| null/);
+  assert.match(adjacent, /window\.labelAgentRunStatusObservedAtMs \|\| 0/);
+  assert.match(adjacent, /snapshotAge >= 0 && snapshotAge <= 2000/);
+  assert.match(adjacent, /status\.selected_file === state\.path/);
+  assert.match(adjacent, /status\.selected_topic === state\.topic/);
+  assert.match(adjacent, /selected_file_activation_generation/);
   assert.match(adjacent, /speculativeFetch\('\/api\/run\/status'/);
   assert.match(adjacent, /status\.status !== 'idle'/);
   assert.match(adjacent, /frame: nextFrame, expected_path: state\.path/);
@@ -415,14 +421,17 @@ test('相邻帧预取在繁忙时低频重试、空闲后只请求下一帧且�
       if (url === '/api/run/status') {
         statusReads += 1;
         return {ok: true, async json() {
-          return {status: statusReads === 1 ? 'running' : 'idle'};
+          return {status: statusReads === 1 ? 'running' : 'idle',
+            selected_file: 'dataset.mcap', selected_topic: '/camera',
+            selected_file_activation_generation: 7};
         }};
       }
       return {ok: true, async json() { return {prefetched: true}; }};
     },
   });
   h.context.currentWorkbenchFrameState = () => ({
-    path: 'dataset.mcap', topic: '/camera', labels: ['floor'],
+    path: 'dataset.mcap', topic: '/camera', file_activation_generation: 7,
+    labels: ['floor'],
   });
   h.run(`
     let adjacentPrefetchTimer = null;
@@ -439,7 +448,8 @@ test('相邻帧预取在繁忙时低频重试、空闲后只请求下一帧且�
     const currentFrameCandidate = (state, frame) => state.candidate_index?.[String(frame)] || null;
     ${adjacent}
   `);
-  const state = {path: 'dataset.mcap', topic: '/camera', labels: ['floor'],
+  const state = {path: 'dataset.mcap', topic: '/camera', file_activation_generation: 7,
+    labels: ['floor'],
     frame_count: 40, truth_index: {}, candidate_index: {}};
   h.context.state = state;
   h.run('scheduleAdjacentFramePrefetch(state, 30)');
@@ -447,6 +457,7 @@ test('相邻帧预取在繁忙时低频重试、空闲后只请求下一帧且�
   assert.equal(calls.length, 0);
   await h.advance(1);
   assert.deepEqual(calls.map(item => item.url), ['/api/run/status']);
+  h.context.window.labelAgentRunStatusObservedAtMs = Date.now() - 5000;
   await h.advance(4999);
   assert.equal(calls.length, 1);
   await h.advance(1);
@@ -459,6 +470,106 @@ test('相邻帧预取在繁忙时低频重试、空闲后只请求下一帧且�
   h.run('scheduleAdjacentFramePrefetch(state, 30); frameValue = 31; cancelAdjacentFramePrefetch()');
   await h.advance(3000);
   assert.equal(calls.length, 0);
+});
+
+test('相邻帧预取复用主工作台运行快照且繁忙转空闲后不重复读取状态', async () => {
+  const prep = source('reference-prep.js');
+  const adjacent = prep.slice(prep.indexOf('function cancelAdjacentFramePrefetch'),
+    prep.indexOf('\n  function render(state)'));
+  const calls = [];
+  const h = harness({
+    frameValue: 30,
+    async fetch(url, options = {}) {
+      calls.push({url, options});
+      return {ok: true, async json() { return {prefetched: true}; }};
+    },
+  });
+  h.context.window.labelAgentRunStatusSnapshot = {status: 'running',
+    selected_file: 'dataset.mcap', selected_topic: '/camera',
+    selected_file_activation_generation: 7};
+  h.context.window.labelAgentRunStatusObservedAtMs = Date.now();
+  h.context.currentWorkbenchFrameState = () => ({
+    path: 'dataset.mcap', topic: '/camera', file_activation_generation: 7,
+    labels: ['floor'],
+  });
+  h.run(`
+    let adjacentPrefetchTimer = null;
+    let adjacentPrefetchGeneration = 0;
+    let adjacentPrefetchSourceFrame = null;
+    const ADJACENT_PREFETCH_DELAY_MS = 3000;
+    const ADJACENT_PREFETCH_RETRY_MS = 5000;
+    const ADJACENT_PREFETCH_MAX_ATTEMPTS = 12;
+    const currentFrame = () => frameValue;
+    const speculativeFetch = fetch;
+    const discoveryPrefetchKey = (state, frame) => state
+      ? [state.path, state.topic, (state.labels || []).join(','), frame].join('|') : '';
+    const hasTruthFrame = (state, frame) => Boolean(state.truth_index?.[String(frame)]);
+    const currentFrameCandidate = (state, frame) => state.candidate_index?.[String(frame)] || null;
+    ${adjacent}
+  `);
+  const state = {path: 'dataset.mcap', topic: '/camera', file_activation_generation: 7,
+    labels: ['floor'],
+    frame_count: 40, truth_index: {}, candidate_index: {}};
+  h.context.state = state;
+  h.run('scheduleAdjacentFramePrefetch(state, 30)');
+  await h.advance(3000);
+  assert.deepEqual(calls, []);
+  h.context.window.labelAgentRunStatusSnapshot = {status: 'idle',
+    selected_file: 'dataset.mcap', selected_topic: '/camera',
+    selected_file_activation_generation: 7};
+  h.context.window.labelAgentRunStatusObservedAtMs = Date.now();
+  await h.advance(5000);
+  assert.deepEqual(calls.map(item => item.url), ['/api/reference_discovery/prefetch']);
+  assert.deepEqual(JSON.parse(calls[0].options.body), {
+    frame: 31, expected_path: 'dataset.mcap', expected_topic: '/camera'});
+});
+
+test('相邻帧预取不信任陈旧或错作用域的空闲快照', async () => {
+  const prep = source('reference-prep.js');
+  const adjacent = prep.slice(prep.indexOf('function cancelAdjacentFramePrefetch'),
+    prep.indexOf('\n  function render(state)'));
+  const calls = [];
+  const h = harness({
+    frameValue: 30,
+    async fetch(url, options = {}) {
+      calls.push({url, options});
+      if (url === '/api/run/status') return {ok: true, async json() {
+        return {status: 'running', selected_file: 'dataset.mcap',
+          selected_topic: '/camera', selected_file_activation_generation: 7};
+      }};
+      return {ok: true, async json() { return {prefetched: true}; }};
+    },
+  });
+  h.context.window.labelAgentRunStatusSnapshot = {status: 'idle',
+    selected_file: 'other.mcap', selected_topic: '/camera',
+    selected_file_activation_generation: 7};
+  h.context.window.labelAgentRunStatusObservedAtMs = Date.now() - 5000;
+  h.context.currentWorkbenchFrameState = () => ({
+    path: 'dataset.mcap', topic: '/camera', file_activation_generation: 7,
+    labels: ['floor'],
+  });
+  h.run(`
+    let adjacentPrefetchTimer = null;
+    let adjacentPrefetchGeneration = 0;
+    let adjacentPrefetchSourceFrame = null;
+    const ADJACENT_PREFETCH_DELAY_MS = 3000;
+    const ADJACENT_PREFETCH_RETRY_MS = 5000;
+    const ADJACENT_PREFETCH_MAX_ATTEMPTS = 12;
+    const currentFrame = () => frameValue;
+    const speculativeFetch = fetch;
+    const discoveryPrefetchKey = (state, frame) => state
+      ? [state.path, state.topic, (state.labels || []).join(','), frame].join('|') : '';
+    const hasTruthFrame = (state, frame) => Boolean(state.truth_index?.[String(frame)]);
+    const currentFrameCandidate = (state, frame) => state.candidate_index?.[String(frame)] || null;
+    ${adjacent}
+  `);
+  const state = {path: 'dataset.mcap', topic: '/camera', file_activation_generation: 7,
+    labels: ['floor'], frame_count: 40, truth_index: {}, candidate_index: {}};
+  h.context.state = state;
+  h.run('scheduleAdjacentFramePrefetch(state, 30)');
+  await h.advance(3000);
+  assert.deepEqual(calls.map(item => item.url), ['/api/run/status']);
+  assert.equal(calls.some(item => item.url === '/api/reference_discovery/prefetch'), false);
 });
 
 test('数据文件或相机切换前取消全部推测性预取且调用方先取消再切换', () => {
@@ -1110,6 +1221,7 @@ test('同一数据重新载入后的旧状态回执会安全暂停且不会伪�
   assert.equal(await h.context.refreshAgentProgress(), true);
   assert.equal(rendered, 1);
   assert.equal(h.context.runStatusScopeMismatch, null);
+  assert.equal(scheduled, 15000);
   assert.equal(button.title, undefined);
 });
 
@@ -1665,7 +1777,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=205/);
+  assert.match(source('index.html'), /app\.js\?v=206/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1673,7 +1785,7 @@ test('页面启动先恢复最终工作帧再开放点选推理', () => {
   assert.match(app, /workspaceRestoreState='booting'/);
   assert.match(app, /window\.labelAgentWorkspaceReady=window\.labelAgentBootstrapReady\.then/);
   assert.match(app, /function sharedRunStatusMatchesCurrentScope/);
-  assert.match(app, /workspaceRestoreState='restoring';bootstrapComplete=true;updateDatasetIdentity\(\);updatePointPromptCoach\(\);await window\.labelAgentInitialRunStatusReady;if\(!sharedRunStatusMatchesCurrentScope\(\)\)await refreshAgentProgress\(\);await workspaceReadyDeferred/);
+  assert.match(app, /workspaceRestoreState='restoring';bootstrapComplete=true;updateDatasetIdentity\(\);updatePointPromptCoach\(\);await window\.labelAgentInitialRunStatusReady;if\(!sharedRunStatusMatchesCurrentScope\(\)\)await refreshAgentProgress\(\);else if\(workspaceRestoreState!=='ready'\)markWorkspaceReady\(\);await workspaceReadyDeferred/);
   assert.match(app, /if\(bootstrapComplete&&runRequestStartedAt===null&&pendingRunResult\(job\)\)await recoverRunResult\(job,\{automatic:true\}\);if\(bootstrapComplete&&workspaceRestoreState!=='ready'\)markWorkspaceReady\(\)/);
   assert.match(app, /正在恢复上次工作帧，请稍候/);
   assert.match(app, /button\.textContent=restoring\?'正在恢复工作帧…'/);
@@ -1727,7 +1839,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{\s*invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(currentGeneration=0\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=205/);
+  assert.match(source('index.html'), /app\.js\?v=206/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1786,7 +1898,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 4);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=205/);
+  assert.match(source('index.html'), /app\.js\?v=206/);
 });
 
 test('类别与推理类别保存绑定文件载入代次和类别状态版本', async () => {
@@ -1825,7 +1937,7 @@ test('类别与推理类别保存绑定文件载入代次和类别状态版本',
   assert.deepEqual(applied[0].labels, ['a','b']);
   assert.deepEqual(applied[0].auto_labels, ['b']);
   assert.equal(h.run('currentDescription'), null);
-  assert.match(source('index.html'), /app\.js\?v=205/);
+  assert.match(source('index.html'), /app\.js\?v=206/);
 });
 
 test('模型配置保存绑定工作区载入代次和配置版本', async () => {

@@ -1,0 +1,23 @@
+{
+  "schema_version": "labelagent.pallet_candidate_review_isolated_integration_receipt.v1",
+  "round": 563,
+  "date": "2026-11-22",
+  "status": "isolated_browser_acceptance_passed_not_deployed",
+  "production_workbench_modified": false,
+  "production_deployed": false,
+  "human_truth_writes": 0,
+  "training_data_writes": 0,
+  "candidate_count": 5,
+  "mask_count": 4,
+  "suppressed_count": 1,
+  "preview_count": 2,
+  "browser_buttons": 0,
+  "browser_acceptance_passed": true,
+  "tests_passed": 24,
+  "subtests_passed": 11,
+  "acceptance_sha256": "f275204371aac9e465d2f8ffcf431d6f97b6779a5a1e979c2b0ef7c6fc72bdbe",
+  "screenshot_sha256": "533e48f58d84cfc0a99b848106a7baaeb188aa41ca07202afc40ce4619f6a32a",
+  "reader_sha256": "493f6260193342097188f54461fe3be378693c3690029aeca56fab528dc691a1",
+  "reader_test_sha256": "e9fe4ef59bf4949628fc198c3f2fbc9a6b56fd6d6c4053683ee2e98235c2124e",
+  "browser_runner_sha256": "a3118c6f92571ada67703f141c5bda6acbd4f0b3dbcfa8785c21f19dce88dba3"
+}

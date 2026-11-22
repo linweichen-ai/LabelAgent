@@ -3770,6 +3770,15 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 两版在序列隔离 val16 仍退化，且36步退化更大，证明当前是域内适配和跨序列泛化冲突。
   两个候选均不部署、不进 test24；正式工作台保持 idle。详见
   `docs/SAM3_ASSISTANT_PALLET_ANTILEAK_HOLDOUT_ROUND539_20261122.md`。
+
+## 2026-11-22 Round540 补充：微调权重回拉扫描无上线交点
+
+- 将36步候选向基线回拉，只保留12.5%/25%/50%/75%微调量；四档在同域留出15均为
+  14胜0负1平，IoU 从基线0.887747依次升至0.890305/0.892117/0.894829/0.896743。
+- 序列隔离val16无任何一档同时满足IoU、边界F1、Dice三项不退；最弱12.5%也仍有IoU和
+  边界F1轻微下降。继续缩小只会无意义逼近基线，故停止该伪真值缩放路线。
+- 全部候选拒绝部署、test24未使用、正式模型保持原始SAM3。下一步转为共同失败帧复核与跨序列
+  人工签核数据补强。详见 `docs/SAM3_ASSISTANT_INTERPOLATION_SWEEP_ROUND540_20261122.md`。
 - 状态仍是 `prepared_not_training_authorized`；下一步必须做哈希绑定的逐实例独立复核。
   详见 `docs/CVAT_TASK3_MANUAL_INSTANCE_CANDIDATES_ROUND502_20261122.md`。
 

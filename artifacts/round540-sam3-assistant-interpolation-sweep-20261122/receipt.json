@@ -1,0 +1,56 @@
+{
+  "schema_version": "labelagent.sam3-assistant-interpolation-sweep.v1",
+  "round": 540,
+  "date": "2026-11-22",
+  "assistant_reviewed": true,
+  "human_truth": false,
+  "not_for_deployment": true,
+  "test24_included": false,
+  "base": {
+    "holdout15": {"iou": 0.8877471204067828, "boundary_f1": 0.9149279240001532, "dice": 0.909940490587871},
+    "val16": {"iou": 0.960297069442728, "boundary_f1": 0.9761721589666668, "dice": 0.9790842655890272}
+  },
+  "candidates": [
+    {
+      "alpha": 0.125,
+      "checkpoint_sha256": "c6cd09b325ae05c6e2c7cbab367cc96d8edcafccfe680c2a9f45223f88d2c4a9",
+      "holdout15": {"iou": 0.8903051918997872, "boundary_f1": 0.9189430033342588, "dice": 0.9112887574716224},
+      "val16": {"iou": 0.960282768870297, "boundary_f1": 0.9760726762219298, "dice": 0.9790850790788892},
+      "gate_passed": false
+    },
+    {
+      "alpha": 0.25,
+      "checkpoint_sha256": "f6c69474bc3a97daee2f5f5de7ef549fda94324c7ff3a0a8f7a1a6e55aa0a334",
+      "holdout15": {"iou": 0.8921172387623241, "boundary_f1": 0.9209369155028483, "dice": 0.9122398810448971},
+      "val16": {"iou": 0.9602253490987235, "boundary_f1": 0.9761976925371507, "dice": 0.9790494275329904},
+      "gate_passed": false
+    },
+    {
+      "alpha": 0.5,
+      "checkpoint_sha256": "b4ebc37d4b03d21ddc2bb1f34266e3d873fba0750a262739394e990a92201947",
+      "holdout15": {"iou": 0.8948286774120068, "boundary_f1": 0.9221753866593451, "dice": 0.9136593224047057},
+      "val16": {"iou": 0.9594350255553944, "boundary_f1": 0.9752656326572382, "dice": 0.978645002420995},
+      "gate_passed": false
+    },
+    {
+      "alpha": 0.75,
+      "checkpoint_sha256": "dd9a16a3ee3bd03f8b41573f9bffb703b29c7cb5c94ef5f2e06c309ebd31c35e",
+      "holdout15": {"iou": 0.8967433874797084, "boundary_f1": 0.9228837827876224, "dice": 0.9146601088154667},
+      "val16": {"iou": 0.9586739314033058, "boundary_f1": 0.9738981677273217, "dice": 0.9782404842531934},
+      "gate_passed": false
+    }
+  ],
+  "evidence_sha256": {
+    "alpha0125_holdout15.json": "9d5243cadc18cfc5dba394e7f46960494f49aa27affe881f5ea02671f8d3ee0e",
+    "alpha0125_val16.json": "ffa360f86ee62785557661030a55fb75e8d44a9f3cac9b2d86fdd58c08faa857",
+    "alpha025_holdout15.json": "0cf0f27ab1723a6e66d18b0e80025f99d7c3eda11967a8cfed96be4aaefd7c8e",
+    "alpha025_val16.json": "3ec9e96cedb916470c21f0e757b324fe92fbcc74bebd791c8a0fbf73e53d394d",
+    "alpha050_holdout15.json": "001a7e0939e6fe55e7b54d6c6afa69c52d8d6edd9022e60aa93725b36d8a188a",
+    "alpha050_val16.json": "05581176dd013e1932e6578b32e06c996b4ff95189a7525aae0c705394f0f4ad",
+    "alpha075_holdout15.json": "dc32532d22065f82f67befc810121d887b510f832327b3dde237be32fd743d16",
+    "alpha075_val16.json": "1c5a826a0a73042ad9ccb261efb3ef36f1ea2a51d810d3ff87a727b9340c3662"
+  },
+  "decision": "reject_all_nonzero_interpolations_keep_base_model",
+  "formal_model_changed": false,
+  "formal_workbench_changed": false
+}

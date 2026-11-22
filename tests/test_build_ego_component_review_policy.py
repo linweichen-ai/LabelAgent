@@ -1,4 +1,3 @@
-import copy
 import unittest
 
 from tools.build_ego_component_review_policy import build_policy
@@ -30,6 +29,14 @@ def fixtures():
         "reviewer_blinded_to_risk_band": True,
         "hard_reject_enrichment_observed": True,
         "top_plus_middle_likely_reject_capture_rate": 1.0,
+        "evaluation_count": 2,
+        "disjoint_component_ids": True,
+        "revealed_rows": [{
+            "component_id": "camera1-5",
+            "camera": "camera1",
+            "hidden_band": "bottom",
+            "decision": "likely_fill_ok",
+        }],
     }
     return ranking, evaluation
 
@@ -47,6 +54,17 @@ class ReviewPolicyTests(unittest.TestCase):
         self.assertEqual(tail["manual_review_queue"], "deferred_manual_review")
         self.assertIsNone(tail["automatic_decision"])
         self.assertFalse(tail["training_eligible"])
+
+    def test_uncertain_camera1_tail_is_forced_back_to_priority(self):
+        ranking, evaluation = fixtures()
+        evaluation["revealed_rows"][0]["decision"] = "uncertain"
+        payload = build_policy(ranking, evaluation,
+                               ranking_sha256="a" * 64,
+                               evaluation_sha256="b" * 64)
+        self.assertEqual(payload["counts"]["priority_review"], 10)
+        self.assertEqual(payload["counts"]["deferred_manual_review"], 0)
+        self.assertEqual(payload["policy"]["forced_priority_component_ids"],
+                         ["camera1-5"])
 
     def test_camera3_is_always_priority_review(self):
         ranking, evaluation = fixtures()
@@ -85,6 +103,22 @@ class ReviewPolicyTests(unittest.TestCase):
         ranking, evaluation = fixtures()
         ranking["camera_component_counts"]["camera1"] = 4
         with self.assertRaisesRegex(ValueError, "counts mismatch"):
+            build_policy(ranking, evaluation,
+                         ranking_sha256="a" * 64,
+                         evaluation_sha256="b" * 64)
+
+    def test_fails_closed_when_camera1_tail_is_not_fully_reviewed(self):
+        ranking, evaluation = fixtures()
+        evaluation["revealed_rows"] = []
+        with self.assertRaisesRegex(ValueError, "rows are missing"):
+            build_policy(ranking, evaluation,
+                         ranking_sha256="a" * 64,
+                         evaluation_sha256="b" * 64)
+
+    def test_fails_closed_when_blind_evaluations_are_not_disjoint(self):
+        ranking, evaluation = fixtures()
+        evaluation["disjoint_component_ids"] = False
+        with self.assertRaisesRegex(ValueError, "not proven disjoint"):
             build_policy(ranking, evaluation,
                          ranking_sha256="a" * 64,
                          evaluation_sha256="b" * 64)

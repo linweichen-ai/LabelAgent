@@ -1,0 +1,27 @@
+{
+  "round": 484,
+  "date": "2026-11-22",
+  "status": "full_tail_coverage_manual_review_order_only",
+  "candidate_only": true,
+  "assistant_review_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "default_enabled": false,
+  "automatic_decisions_enabled": false,
+  "combined_blind_evaluation_sha256": "5f29b4580dd2fe3377f31ce60d7b8f84f3f7817ab3e3fe20f5aaf7712d1ba24a",
+  "policy_sha256": "52e1e4ac4a96f989ecd08c7d96f60c2c735c975edd76f519a06b4d086f1ad0ad",
+  "counts": {
+    "total": 245,
+    "priority_review": 227,
+    "deferred_manual_review": 18,
+    "automatic_decisions": 0,
+    "camera1_bottom_total": 19,
+    "camera1_bottom_likely_fill_ok": 18,
+    "camera1_bottom_uncertain_or_reject": 1
+  },
+  "forced_priority_component_ids": [
+    "004-camera1-idx5-1793760663542839987-c002"
+  ],
+  "boundary": "Deferred remains manual review and never means accepted."
+}

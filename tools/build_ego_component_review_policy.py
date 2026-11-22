@@ -85,17 +85,56 @@ def build_policy(ranking: dict, evaluation: dict, *, ranking_sha256: str,
                  evaluation_sha256: str) -> dict:
     rows, counts = _validate_inputs(ranking, evaluation)
     camera1_defer_after = math.floor(counts["camera1"] * 0.80)
+    _require(isinstance(evaluation.get("evaluation_count"), int)
+             and evaluation["evaluation_count"] >= 2,
+             "at least two blind evaluations are required")
+    _require(evaluation.get("disjoint_component_ids") is True,
+             "blind evaluation components are not proven disjoint")
+    ranking_by_id = {row["component_id"]: row for row in rows}
+    revealed = evaluation.get("revealed_rows")
+    _require(isinstance(revealed, list) and revealed,
+             "blind evaluation rows are missing")
+    evidence_by_id = {}
+    for evidence in revealed:
+        component_id = evidence.get("component_id")
+        _require(component_id in ranking_by_id,
+                 f"blind evaluation has unknown component: {component_id}")
+        _require(component_id not in evidence_by_id,
+                 f"duplicate blind evidence: {component_id}")
+        _require(evidence.get("decision") in {
+            "likely_fill_ok", "uncertain", "likely_reject"},
+            f"invalid blind decision: {component_id}")
+        evidence_by_id[component_id] = evidence
+    camera1_bottom_ids = {
+        row["component_id"] for row in rows
+        if row["camera"] == "camera1"
+        and int(row["camera_review_priority_rank"]) > camera1_defer_after
+    }
+    _require(camera1_bottom_ids.issubset(evidence_by_id),
+             "camera1 bottom tail is not fully blind-reviewed")
+    for component_id in camera1_bottom_ids:
+        evidence = evidence_by_id[component_id]
+        _require(evidence.get("camera") == "camera1"
+                 and evidence.get("hidden_band") == "bottom",
+                 f"camera1 bottom evidence binding mismatch: {component_id}")
+
     policy_rows = []
     for row in rows:
         camera = row["camera"]
         camera_rank = int(row["camera_review_priority_rank"])
-        if camera == "camera1" and camera_rank > camera1_defer_after:
+        evidence = evidence_by_id.get(row["component_id"])
+        if (row["component_id"] in camera1_bottom_ids
+                and evidence["decision"] == "likely_fill_ok"):
             queue = "deferred_manual_review"
-            reason = "camera1_bottom_20pct_assistant_blind_audit"
+            reason = "camera1_bottom_tail_blind_review_likely_fill_ok"
         else:
             queue = "priority_review"
-            reason = ("camera3_all_bands_remain_difficult" if camera == "camera3"
-                      else "camera1_not_in_deferred_tail")
+            if row["component_id"] in camera1_bottom_ids:
+                reason = "camera1_bottom_tail_blind_review_not_clear"
+            else:
+                reason = ("camera3_all_bands_remain_difficult"
+                          if camera == "camera3"
+                          else "camera1_not_in_deferred_tail")
         policy_rows.append({
             "component_id": row["component_id"],
             "sample_id": row.get("sample_id"),
@@ -126,8 +165,14 @@ def build_policy(ranking: dict, evaluation: dict, *, ranking_sha256: str,
         "evaluation_sha256": evaluation_sha256,
         "policy": {
             "camera3": "priority_review_all",
-            "camera1": "defer_bottom_20pct_for_manual_review_only",
+            "camera1": (
+                "defer_only_likely_fill_ok_components_from_fully_reviewed_"
+                "bottom_20pct"),
             "camera1_defer_after_rank": camera1_defer_after,
+            "camera1_bottom_tail_evidence_coverage": "complete",
+            "forced_priority_component_ids": sorted(
+                component_id for component_id in camera1_bottom_ids
+                if evidence_by_id[component_id]["decision"] != "likely_fill_ok"),
             "unseen_or_invalid_input": "fail_closed",
         },
         "counts": {
@@ -136,6 +181,13 @@ def build_policy(ranking: dict, evaluation: dict, *, ranking_sha256: str,
             "deferred_manual_review": deferred,
             "automatic_decisions": 0,
             "by_camera": counts,
+            "camera1_bottom_total": len(camera1_bottom_ids),
+            "camera1_bottom_likely_fill_ok": sum(
+                evidence_by_id[component_id]["decision"] == "likely_fill_ok"
+                for component_id in camera1_bottom_ids),
+            "camera1_bottom_uncertain_or_reject": sum(
+                evidence_by_id[component_id]["decision"] != "likely_fill_ok"
+                for component_id in camera1_bottom_ids),
         },
         "policy_boundary": POLICY_BOUNDARY,
         "rows": policy_rows,

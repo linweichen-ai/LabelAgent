@@ -1,0 +1,18 @@
+{
+  "schema_version": "labelagent.cvat-geometry-priority-review-receipt.v1",
+  "status": "assistant_triage_pending",
+  "review_manifest_sha256": "519250bb839667155dcd55c8591f21f17a125e277a5553832f4a56683358e28a",
+  "priority_audit_sha256": "022b56b08027a584fa6b4d66e95699e6a3807bfcc1fb474252b8de81288a45e6",
+  "private_pack_manifest_sha256": "7603e3d636810b98e16f48004b0c4763c32f2e2bdde341c739e396a1019c0454",
+  "priority_counts": {
+    "high": 12,
+    "medium": 17,
+    "routine": 17
+  },
+  "page_count": 13,
+  "automatic_decisions": false,
+  "human_truth": false,
+  "training_authorized": false,
+  "private_candidate_ids_published": false,
+  "private_review_images_published": false
+}

@@ -105,6 +105,18 @@ powershell -ExecutionPolicy Bypass -File tools\verify_checkout.ps1 -RequireCuda 
 
 HTTP 200 只证明服务连通。完整验收还应在一张已授权图片上完成：加载图片、SAM3 点提示、生成候选、刷新后恢复；若配置了 VLM，再运行一帧自动标注并保存下载记录。机器候选不得自动标记为人工真值。
 
+### 无私有数据的离线复核浏览器自检
+
+这项自检不需要模型权重、MCAP、人工真值或账号凭证。它生成81项公开合成身份和1像素占位图，在真实 Edge 浏览器中验证：部分草稿下载、刷新后内存清空、草稿文件恢复、哈希篡改整包拒绝、81项完整前正式导出禁用，以及正式导出中的训练授权始终为否。
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r tools\requirements-browser-qa.txt
+.\.venv\Scripts\python.exe tools\verify_synthetic_signoff_browser.py `
+  --output .repro\synthetic-signoff-browser-check
+```
+
+输出目录必须预先不存在。成功时 `receipt.json` 中应同时出现 `passed=true`、`synthetic_only=true`、`external_requests=0`、`page_errors=[]`，以及三项授权标志均为 `false`。如需查看合成页面，可加 `--screenshot`；截图只包含公开合成内容。该通过结果只证明离线复核工作流和权限门禁可复现，不证明真实标注质量、模型精度或生产训练通过。
+
 ## 6. 最小复现记录
 
 对外提交结果时至少保留：

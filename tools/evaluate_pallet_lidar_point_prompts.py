@@ -231,7 +231,8 @@ def summarize_sam_attempts(rows: list[dict]) -> dict[str, int]:
 
 
 def _render_panel(image: Image.Image, current: np.ndarray, proposed: np.ndarray,
-                  points: list[dict], title: str) -> Image.Image:
+                  points: list[dict], title: str,
+                  *, proposal_label: str = "lidar-point SAM") -> Image.Image:
     crop = _crop(current, proposed)
     original = image.copy()
     draw = ImageDraw.Draw(original)
@@ -252,7 +253,7 @@ def _render_panel(image: Image.Image, current: np.ndarray, proposed: np.ndarray,
     font = ImageFont.load_default()
     header = ImageDraw.Draw(panel)
     header.text((8, 7), title, fill="black", font=font)
-    header.text((8, 30), "points / current / lidar-point SAM / difference",
+    header.text((8, 30), f"points / current / {proposal_label} / difference",
                 fill="black", font=font)
     header.text((1090, 43), "green kept, yellow added, red missing",
                 fill="black", font=font)

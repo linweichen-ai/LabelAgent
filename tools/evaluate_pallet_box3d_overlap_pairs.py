@@ -367,6 +367,15 @@ def evaluate(source_report: Path, manifest_path: Path, labels_root: Path,
         "ambiguous_image_count": len(rows),
         "resolved_image_count": sum(row["all_conflicts_separated"] for row in rows),
         "unresolved_image_count": sum(not row["all_conflicts_separated"] for row in rows),
+        # The legacy resolved/unresolved fields refer to the raw per-instance
+        # SAM masks.  Name both stages explicitly so reports cannot be read as
+        # if depth splitting had failed whenever the raw masks still overlap.
+        "raw_mask_resolved_image_count": sum(
+            row["all_conflicts_separated"] for row in rows),
+        "raw_mask_unresolved_image_count": sum(
+            not row["all_conflicts_separated"] for row in rows),
+        "depth_split_resolved_image_count": sum(
+            row["depth_split_candidate_pass"] for row in rows),
         "depth_split_candidate_pass_count": sum(row["depth_split_candidate_pass"] for row in rows),
         "depth_or_occlusion_handled_candidate_count": sum(
             row["depth_or_occlusion_handled_candidate"] for row in rows),

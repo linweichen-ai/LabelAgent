@@ -7,6 +7,7 @@ import argparse
 import base64
 import hashlib
 import io
+import itertools
 import json
 from pathlib import Path
 import sys
@@ -68,7 +69,9 @@ def unique_instance_pixels(points: np.ndarray, visible_indices: np.ndarray,
 
 
 def prompt_groups(positive: list[list[int]], negative: list[list[int]], roi,
-                  scale: int = 1):
+                  scale: int = 1, positive_only_fallback: bool = False,
+                  sparse_negative_fallback: bool = False,
+                  pairwise_negative_fallback: bool = False):
     def local(point, label):
         # Preserve the original pixel-center location when the ROI is enlarged.
         x = round((point[0] - roi[0] + .5) * scale - .5)
@@ -85,6 +88,23 @@ def prompt_groups(positive: list[list[int]], negative: list[list[int]], roi,
     if len(positives) >= 2 and len(negatives) >= 2:
         groups.append(("three_positive_two_negative",
                        [*positives[:3], *negatives[:2]]))
+    if positive_only_fallback and len(positives) >= 2:
+        # Some SAM backends reject every mask when tightly clustered negative
+        # prompts land on the same visual surface.  This is proposal generation
+        # only: the unchanged negative-clear, localization, depth and separation
+        # gates below still decide whether the result is usable.
+        groups.append(("three_positive_only", positives[:3]))
+    if sparse_negative_fallback and len(positives) >= 2:
+        # Probe each conflicting return separately.  Acceptance still measures
+        # clearance against the complete frozen negative set, so a mask cannot
+        # pass merely because its prompted negative happened to be easy.
+        for index, negative in enumerate(negatives):
+            groups.append((f"three_positive_one_negative_{index}",
+                           [*positives[:3], negative]))
+    if pairwise_negative_fallback and len(positives) >= 2:
+        for first, second in itertools.combinations(range(len(negatives)), 2):
+            groups.append((f"three_positive_negative_pair_{first}_{second}",
+                           [*positives[:3], negatives[first], negatives[second]]))
     return groups
 
 
@@ -147,7 +167,10 @@ def render_panel(image, proposal, split, positives, negatives, roi, title):
 def evaluate(split_report_path: Path, manifest_path: Path, pcd_manifest_path: Path,
              labels_root: Path, calibration: Path, pcd_root: Path, output: Path,
              sam_url: str, timeout: float = 120,
-             roi_scale: int = DEFAULT_ROI_SCALE) -> dict:
+             roi_scale: int = DEFAULT_ROI_SCALE,
+             positive_only_fallback: bool = False,
+             sparse_negative_fallback: bool = False,
+             pairwise_negative_fallback: bool = False) -> dict:
     if output.exists():
         raise ValueError("output directory already exists")
     if roi_scale not in (1, 2, 4):
@@ -206,7 +229,10 @@ def evaluate(split_report_path: Path, manifest_path: Path, pcd_manifest_path: Pa
                          if roi[0] <= point[0] < roi[2] and roi[1] <= point[1] < roi[3]]
             negatives = [point for point in negatives
                          if roi[0] <= point[0] < roi[2] and roi[1] <= point[1] < roi[3]]
-            groups = prompt_groups(positives, negatives, roi, roi_scale)
+            groups = prompt_groups(positives, negatives, roi, roi_scale,
+                                   positive_only_fallback,
+                                   sparse_negative_fallback,
+                                   pairwise_negative_fallback)
             crop = image.crop(tuple(roi))
             model_crop = (crop if roi_scale == 1 else crop.resize(
                 (crop.width * roi_scale, crop.height * roi_scale),
@@ -311,6 +337,9 @@ def evaluate(split_report_path: Path, manifest_path: Path, pcd_manifest_path: Pa
         "schema_version": "labelagent.pallet_lidar_conflict_points.v1",
         "status": "offline_candidate_diagnostic_not_deployed",
         "roi_scale": roi_scale,
+        "positive_only_fallback": positive_only_fallback,
+        "sparse_negative_fallback": sparse_negative_fallback,
+        "pairwise_negative_fallback": pairwise_negative_fallback,
         "input_sha256": inputs, "failed_candidate_count": len(rows),
         "recovered_candidate_count": sum(row["recovered"] for row in rows),
         "sam_attempt_count": sum(len(row["attempts"]) for row in rows),
@@ -344,11 +373,24 @@ def main() -> int:
         "--roi-scale", type=int, choices=(1, 2, 4), default=DEFAULT_ROI_SCALE,
         help=("enlarge the frozen ROI before SAM; 2x is the independently "
               "repeated offline incumbent and all gates stay unchanged"))
+    parser.add_argument(
+        "--positive-only-fallback", action="store_true",
+        help=("add a positive-only proposal when negative prompts are too "
+              "restrictive; every existing acceptance gate remains active"))
+    parser.add_argument(
+        "--sparse-negative-fallback", action="store_true",
+        help=("probe one conflicting LiDAR return per proposal; acceptance is "
+              "still checked against every frozen negative return"))
+    parser.add_argument(
+        "--pairwise-negative-fallback", action="store_true",
+        help=("probe every pair of conflicting LiDAR returns; acceptance is "
+              "still checked against every frozen negative return"))
     args = parser.parse_args()
     report = evaluate(
         args.split_report, args.manifest, args.pcd_manifest, args.labels_root,
         args.calibration, args.pcd_root, args.output, args.sam_url, args.timeout,
-        args.roi_scale)
+        args.roi_scale, args.positive_only_fallback,
+        args.sparse_negative_fallback, args.pairwise_negative_fallback)
     print(json.dumps({key: report[key] for key in (
         "failed_candidate_count", "recovered_candidate_count", "sam_attempt_count",
         "workbench_writes", "contact_sheet", "contact_sheet_sha256",

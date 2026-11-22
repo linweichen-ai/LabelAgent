@@ -1,0 +1,1487 @@
+{
+  "schema_version": "labelagent.pallet_box3d_roi_sam.v1",
+  "status": "offline_localization_diagnostic_not_deployed",
+  "scope": "3d_box_localization_agreement_not_pixel_boundary_accuracy",
+  "target_selection": "largest_empty",
+  "prompt_mode": "multi",
+  "point_fallback_enabled": true,
+  "point_fallback_mode": "batch",
+  "input_sha256": {
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round636-dense-independent6-20261122\\manifest.json": "ae81c99f5b312cf3ef8fb150490659f4db672c5266759b29075860545e1e5166",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\011\\bevannotation_data\\calib_640x512\\camera0_calib.yaml": "7434c0154a3e1989afca104405450c0ba2729d420f3f3c6a5741a3f7c1f0dcea",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\011\\bevannotation_data\\calib_640x512\\camera1_calib.yaml": "8733efc8eeaf3dafcdc996fcfb7e1f353e1a4fdf21759dddde8a289f23a9dcaa",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\011\\bevannotation_data\\calib_640x512\\camera2_calib.yaml": "66a61e9395c906d8e6f87232a1c58b03c4f14eac9efe827e2ef3048671365bca",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\011\\bevannotation_data\\calib_640x512\\camera3_calib.yaml": "24e5b2064a834d7000985c38773fd408b4b7e435827fe616d61d609190a828e5",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\datasets\\sfl-cpd15y\\20260920_cs-heli_Dev_000001\\011\\bevannotation_data\\calib_640x512\\lidar2camera.yaml": "afe7203f3afe90f0ae14af4019dfbe6ddda6994745694501da25df9efd5843ea",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round636-dense-independent6-20261122\\labels\\000\\1789897567982480905.json": "fcf4abafb744a146d12d28838a59ea483cf91a16c568710a5026c6317d97a4fb",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round636-dense-independent6-20261122\\labels\\001\\1789897681215846197.json": "ac27e00a7c7cabe76b312ad2f9d40a263f069cf747078ebe38289ac23c296961",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round636-dense-independent6-20261122\\labels\\002\\1789898031649020197.json": "a364da5ab9f9e8503718c850927f83fcf348dca7f33ae47e08608f5332cad493",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round636-dense-independent6-20261122\\labels\\004\\1789898405082286905.json": "ec655b507b0a3bebdb962b0316e430c51e922bc815423f3ed1ad0e2ef377f1e2",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round636-dense-independent6-20261122\\labels\\005\\1789899455082281367.json": "ad9f06ee005ea7fb63ab5730f6eaa567ff43c77b64c655b7d31223e784ba11c0",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round636-dense-independent6-20261122\\labels\\010\\1789899952782375655.json": "9b6749942585f89cd2f096a63484da6fb600e720857bd841b8a1811995efa5bc"
+  },
+  "sequence_count": 6,
+  "image_count": 6,
+  "target_available_count": 6,
+  "sam_frame_count": 6,
+  "localization_pass_count": 6,
+  "instance_isolation_pass_count": 2,
+  "point_fallback_call_count": 0,
+  "point_fallback_used_count": 0,
+  "health_before": {
+    "status": "ok",
+    "model_loaded": true,
+    "backend": "remote_4090_sam3",
+    "service_version": "labelagent.remote-sam3.v3-point-groups",
+    "response_cache": {
+      "entries": 24,
+      "bytes": 162112,
+      "max_entries": 24,
+      "max_bytes": 134217728,
+      "in_flight": 0,
+      "hits": 132,
+      "misses": 95,
+      "coalesced_requests": 0,
+      "evictions": 71,
+      "storage": "cpu_json"
+    }
+  },
+  "health_after": {
+    "status": "ok",
+    "model_loaded": true,
+    "backend": "remote_4090_sam3",
+    "service_version": "labelagent.remote-sam3.v3-point-groups",
+    "response_cache": {
+      "entries": 24,
+      "bytes": 163971,
+      "max_entries": 24,
+      "max_bytes": 134217728,
+      "in_flight": 0,
+      "hits": 132,
+      "misses": 101,
+      "coalesced_requests": 0,
+      "evictions": 77,
+      "storage": "cpu_json"
+    }
+  },
+  "reference_labels_used": true,
+  "human_pixel_truth": false,
+  "workbench_writes": 0,
+  "candidate_only": true,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "contact_sheet": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round637-dense-independent6-box3d-roi-sam-20261122\\cross-sequence-box3d-roi-sam.jpg",
+  "contact_sheet_sha256": "22bf45d8b2d4364b2de5e3011d7b7c7c1b9e742e2e46148f0c97a9a78842dd4b",
+  "rows": [
+    {
+      "sequence": "000",
+      "frame_id": "1789897567982480905",
+      "camera": 0,
+      "image_path": ".repro\\round636-dense-independent6-20261122\\images\\000\\camera_0\\1789897567982480905.png",
+      "image_sha256": "90a6ace367f4fe1a305906c310bdf000c75927a8ca59a6255ebe809805bc0473",
+      "target_available": true,
+      "sam_called": true,
+      "localization_pass": true,
+      "instance_isolation_pass": true,
+      "point_fallback_called": false,
+      "point_fallback_used": false,
+      "human_pixel_truth": false,
+      "candidate_only": true,
+      "production_deployed": false,
+      "elapsed_seconds": 0.375,
+      "target_obj_id": 36,
+      "target_obj_attr": "empty",
+      "target_isolation_fraction": 0.9303112313937754,
+      "projected_bbox": [
+        399.1070032444036,
+        136.4886973063143,
+        482.623254339578,
+        156.56761771259744
+      ],
+      "projected_center": [
+        437.0619338968107,
+        145.77464421804171
+      ],
+      "crop_box": [
+        360,
+        66,
+        520,
+        226
+      ],
+      "model_result_count": 27,
+      "selected_contains_projected_center": true,
+      "selected_center_distance_pixels": 0.23371143753822815,
+      "candidate_summaries": [
+        {
+          "index": 0,
+          "score": 0.61328125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 53.15989126687025,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 1,
+          "score": 0.671875,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 57.72093369501287,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 2,
+          "score": 0.6640625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 41.93867157772096,
+          "current_coverage": 0.010148849797023005,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 3,
+          "score": 0.67578125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 54.26234465042568,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 4,
+          "score": 0.8125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 52.50132479554039,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 5,
+          "score": 0.7734375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 48.19237894913399,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 6,
+          "score": 0.515625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 73.07026231991445,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 7,
+          "score": 0.625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 52.83961223692294,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 8,
+          "score": 0.58984375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 51.59789778733898,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 9,
+          "score": 0.54296875,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 57.28595722952195,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 10,
+          "score": 0.734375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 41.33890901484314,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 11,
+          "score": 0.6015625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 53.15989126687025,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 12,
+          "score": 0.703125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 41.33890901484314,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 13,
+          "score": 0.65625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 57.72093369501287,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 14,
+          "score": 0.65234375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 41.93867157772096,
+          "current_coverage": 0.010148849797023005,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 15,
+          "score": 0.66796875,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 54.26234465042568,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 16,
+          "score": 0.84765625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 52.50132479554039,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 17,
+          "score": 0.73828125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 48.19237894913399,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 18,
+          "score": 0.61328125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 52.83961223692294,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 19,
+          "score": 0.578125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 51.59789778733898,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 20,
+          "score": 0.52734375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 57.28595722952195,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 21,
+          "score": 0.80859375,
+          "contains_component_center": true,
+          "component_center_distance_pixels": 0.23371143753822815,
+          "current_coverage": 0.63531799729364,
+          "anchored_to_current": true,
+          "prompt_name": "plastic"
+        },
+        {
+          "index": 22,
+          "score": 0.51953125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 58.353722230788236,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "base"
+        },
+        {
+          "index": 23,
+          "score": 0.578125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 52.50132479554039,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "base"
+        },
+        {
+          "index": 24,
+          "score": 0.76171875,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 48.19237894913399,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "base"
+        },
+        {
+          "index": 25,
+          "score": 0.51171875,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 62.221144318338666,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "base"
+        },
+        {
+          "index": 26,
+          "score": 0.7265625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 43.33366845381675,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "base"
+        }
+      ],
+      "sam_protocol_diagnostics": {
+        "image_encoded_once": true,
+        "image_encoding_seconds": 0.04427254805341363,
+        "prompt_seconds": {
+          "generic": 0.09897052589803934,
+          "wooden": 0.06745417299680412,
+          "plastic": 0.06608633301220834,
+          "base": 0.06608951603993773
+        },
+        "total_seconds": 0.3430501860566437,
+        "response_cache": {
+          "hit": false,
+          "coalesced": false,
+          "coalesced_wait_seconds": 0.0,
+          "key_sha256": "420058ba4d77679029c115aaed1ff661f095f081fc18265db422c56a30aabf13",
+          "entries": 24,
+          "bytes": 164728,
+          "max_entries": 24,
+          "max_bytes": 134217728,
+          "in_flight": 0,
+          "hits": 132,
+          "misses": 96,
+          "coalesced_requests": 0,
+          "evictions": 72,
+          "storage": "cpu_json"
+        }
+      },
+      "sam_score": 0.80859375,
+      "selected_prompt_name": "plastic",
+      "metrics": {
+        "proposal_pixels": 939,
+        "projected_box_pixels": 1478,
+        "projected_box_coverage": 0.63531799729364,
+        "proposal_inside_projected_box": 1.0,
+        "proposal_to_projected_box_area_ratio": 0.63531799729364,
+        "center_distance_pixels": 0.23371143753822815,
+        "maximum_other_projected_box_fraction": 0.04153354632587859
+      },
+      "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round637-dense-independent6-box3d-roi-sam-20261122\\masks\\000-camera0-obj36.png",
+      "mask_sha256": "654c776735544586e6d9ef30245885434629814afbaf7bf76547ab9158aecefb",
+      "mask_pixels": 939
+    },
+    {
+      "sequence": "001",
+      "frame_id": "1789897681215846197",
+      "camera": 1,
+      "image_path": ".repro\\round636-dense-independent6-20261122\\images\\001\\camera_1\\1789897681215846197.png",
+      "image_sha256": "2a861eb17ed37fbd595e36eefcd9cd7d9e8381d97f1035fd7bed1a8d4c0e079d",
+      "target_available": true,
+      "sam_called": true,
+      "localization_pass": true,
+      "instance_isolation_pass": true,
+      "point_fallback_called": false,
+      "point_fallback_used": false,
+      "human_pixel_truth": false,
+      "candidate_only": true,
+      "production_deployed": false,
+      "elapsed_seconds": 0.344,
+      "target_obj_id": 11,
+      "target_obj_attr": "empty",
+      "target_isolation_fraction": 1.0,
+      "projected_bbox": [
+        507.3059644350135,
+        194.52029127931334,
+        622.9284313142949,
+        235.58853358043493
+      ],
+      "projected_center": [
+        558.4479910948304,
+        212.86604081464608
+      ],
+      "crop_box": [
+        480,
+        134,
+        640,
+        294
+      ],
+      "model_result_count": 4,
+      "selected_contains_projected_center": true,
+      "selected_center_distance_pixels": 0.4675907231629226,
+      "candidate_summaries": [
+        {
+          "index": 0,
+          "score": 0.59765625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 73.73096738076225,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 1,
+          "score": 0.9140625,
+          "contains_component_center": true,
+          "component_center_distance_pixels": 0.4675907231629226,
+          "current_coverage": 0.4714524207011686,
+          "anchored_to_current": true,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 2,
+          "score": 0.6640625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 73.73096738076225,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "plastic"
+        },
+        {
+          "index": 3,
+          "score": 0.91796875,
+          "contains_component_center": true,
+          "component_center_distance_pixels": 0.4675907231629226,
+          "current_coverage": 0.4697829716193656,
+          "anchored_to_current": true,
+          "prompt_name": "plastic"
+        }
+      ],
+      "sam_protocol_diagnostics": {
+        "image_encoded_once": true,
+        "image_encoding_seconds": 0.03210972994565964,
+        "prompt_seconds": {
+          "generic": 0.09535117214545608,
+          "wooden": 0.06673922413028777,
+          "plastic": 0.06529656308703125,
+          "base": 0.06484930799342692
+        },
+        "total_seconds": 0.32437931816093624,
+        "response_cache": {
+          "hit": false,
+          "coalesced": false,
+          "coalesced_wait_seconds": 0.0,
+          "key_sha256": "54f47a1bcedfb265654784ba3f49f95bc6ad8cf3d2d47ab560f3b83882efcc62",
+          "entries": 24,
+          "bytes": 159937,
+          "max_entries": 24,
+          "max_bytes": 134217728,
+          "in_flight": 0,
+          "hits": 132,
+          "misses": 97,
+          "coalesced_requests": 0,
+          "evictions": 73,
+          "storage": "cpu_json"
+        }
+      },
+      "sam_score": 0.9140625,
+      "selected_prompt_name": "generic",
+      "metrics": {
+        "proposal_pixels": 1412,
+        "projected_box_pixels": 2995,
+        "projected_box_coverage": 0.4714524207011686,
+        "proposal_inside_projected_box": 1.0,
+        "proposal_to_projected_box_area_ratio": 0.4714524207011686,
+        "center_distance_pixels": 0.4675907231629226,
+        "maximum_other_projected_box_fraction": 0.0
+      },
+      "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round637-dense-independent6-box3d-roi-sam-20261122\\masks\\001-camera1-obj11.png",
+      "mask_sha256": "e59492322dc46c592e111b3a9253975f88a2861c1440a7f1a7737fde8793788f",
+      "mask_pixels": 1412
+    },
+    {
+      "sequence": "002",
+      "frame_id": "1789898031649020197",
+      "camera": 0,
+      "image_path": ".repro\\round636-dense-independent6-20261122\\images\\002\\camera_0\\1789898031649020197.png",
+      "image_sha256": "937f7c346ecebaa42a1e39d26e669400ed53197b1eb9076d65047395f0f17653",
+      "target_available": true,
+      "sam_called": true,
+      "localization_pass": true,
+      "instance_isolation_pass": false,
+      "point_fallback_called": false,
+      "point_fallback_used": false,
+      "human_pixel_truth": false,
+      "candidate_only": true,
+      "production_deployed": false,
+      "elapsed_seconds": 0.375,
+      "target_obj_id": 26,
+      "target_obj_attr": "empty",
+      "target_isolation_fraction": 0.34638329604772555,
+      "projected_bbox": [
+        429.7914161753254,
+        193.97536931534572,
+        529.6507869287029,
+        230.82753495550273
+      ],
+      "projected_center": [
+        473.73257830563404,
+        210.54992376572744
+      ],
+      "crop_box": [
+        399,
+        132,
+        559,
+        292
+      ],
+      "model_result_count": 21,
+      "selected_contains_projected_center": true,
+      "selected_center_distance_pixels": 0.523529349009709,
+      "candidate_summaries": [
+        {
+          "index": 0,
+          "score": 0.54296875,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 21.21426638098727,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 1,
+          "score": 0.5625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 10.790833730659653,
+          "current_coverage": 0.04697986577181208,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 2,
+          "score": 0.55078125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 51.35245149369327,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 3,
+          "score": 0.5546875,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 41.595449537990476,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 4,
+          "score": 0.5234375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 15.103768386380064,
+          "current_coverage": 0.0686055182699478,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 5,
+          "score": 0.59765625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 28.492344894394613,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 6,
+          "score": 0.93359375,
+          "contains_component_center": true,
+          "component_center_distance_pixels": 0.523529349009709,
+          "current_coverage": 0.7863534675615212,
+          "anchored_to_current": true,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 7,
+          "score": 0.58203125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 35.30598604063224,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 8,
+          "score": 0.734375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 48.65974868602138,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 9,
+          "score": 0.53125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 20.73080680951977,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 10,
+          "score": 0.54296875,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 41.82960991518142,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 11,
+          "score": 0.58984375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 28.492344894394613,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 12,
+          "score": 0.52734375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 11.380324221225244,
+          "current_coverage": 0.03803131991051454,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 13,
+          "score": 0.94140625,
+          "contains_component_center": true,
+          "component_center_distance_pixels": 0.523529349009709,
+          "current_coverage": 0.7863534675615212,
+          "anchored_to_current": true,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 14,
+          "score": 0.578125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 35.30598604063224,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 15,
+          "score": 0.71875,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 48.65974868602138,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 16,
+          "score": 0.78515625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 60.031894174921774,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "plastic"
+        },
+        {
+          "index": 17,
+          "score": 0.76171875,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 49.4487560088847,
+          "current_coverage": 0.030947054436987323,
+          "anchored_to_current": false,
+          "prompt_name": "plastic"
+        },
+        {
+          "index": 18,
+          "score": 0.9453125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 51.35245149369327,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "plastic"
+        },
+        {
+          "index": 19,
+          "score": 0.59375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 69.87484630946133,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "plastic"
+        },
+        {
+          "index": 20,
+          "score": 0.65234375,
+          "contains_component_center": true,
+          "component_center_distance_pixels": 0.523529349009709,
+          "current_coverage": 0.7759134973900075,
+          "anchored_to_current": true,
+          "prompt_name": "base"
+        }
+      ],
+      "sam_protocol_diagnostics": {
+        "image_encoded_once": true,
+        "image_encoding_seconds": 0.034475411055609584,
+        "prompt_seconds": {
+          "generic": 0.09098343783989549,
+          "wooden": 0.06682226504199207,
+          "plastic": 0.06603319104760885,
+          "base": 0.0652818710077554
+        },
+        "total_seconds": 0.3236598849762231,
+        "response_cache": {
+          "hit": false,
+          "coalesced": false,
+          "coalesced_wait_seconds": 0.0,
+          "key_sha256": "c06f115fcf016b1f0be1824892a3b203d78881f36f976fe280d9e37b2050c730",
+          "entries": 24,
+          "bytes": 161972,
+          "max_entries": 24,
+          "max_bytes": 134217728,
+          "in_flight": 0,
+          "hits": 132,
+          "misses": 98,
+          "coalesced_requests": 0,
+          "evictions": 74,
+          "storage": "cpu_json"
+        }
+      },
+      "sam_score": 0.94140625,
+      "selected_prompt_name": "wooden",
+      "metrics": {
+        "proposal_pixels": 2477,
+        "projected_box_pixels": 2682,
+        "projected_box_coverage": 0.7863534675615212,
+        "proposal_inside_projected_box": 0.8514331853048042,
+        "proposal_to_projected_box_area_ratio": 0.9235645041014169,
+        "center_distance_pixels": 0.523529349009709,
+        "maximum_other_projected_box_fraction": 0.8259991925716592
+      },
+      "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round637-dense-independent6-box3d-roi-sam-20261122\\masks\\002-camera0-obj26.png",
+      "mask_sha256": "faad7cae26b71e5244f23b9cd199d8b7a1802d04413c4bb1422480bc82abebbd",
+      "mask_pixels": 2477
+    },
+    {
+      "sequence": "004",
+      "frame_id": "1789898405082286905",
+      "camera": 0,
+      "image_path": ".repro\\round636-dense-independent6-20261122\\images\\004\\camera_0\\1789898405082286905.png",
+      "image_sha256": "e0766f20ee29535156bd0c9909fcef5d26b99034606183bee9d0f7c7cdd118fa",
+      "target_available": true,
+      "sam_called": true,
+      "localization_pass": true,
+      "instance_isolation_pass": false,
+      "point_fallback_called": false,
+      "point_fallback_used": false,
+      "human_pixel_truth": false,
+      "candidate_only": true,
+      "production_deployed": false,
+      "elapsed_seconds": 0.359,
+      "target_obj_id": 31,
+      "target_obj_attr": "empty",
+      "target_isolation_fraction": 0.4299363057324841,
+      "projected_bbox": [
+        519.2875445960173,
+        206.03391143605603,
+        639.0,
+        245.32987281839326
+      ],
+      "projected_center": [
+        576.5124374017919,
+        223.90969188525995
+      ],
+      "crop_box": [
+        480,
+        146,
+        640,
+        306
+      ],
+      "model_result_count": 16,
+      "selected_contains_projected_center": true,
+      "selected_center_distance_pixels": 0.49585566726553626,
+      "candidate_summaries": [
+        {
+          "index": 0,
+          "score": 0.55859375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 64.99627970615262,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 1,
+          "score": 0.73828125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 55.92947781973554,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 2,
+          "score": 0.5234375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 39.912669964104815,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 3,
+          "score": 0.58203125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 26.95077660927812,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 4,
+          "score": 0.93359375,
+          "contains_component_center": true,
+          "component_center_distance_pixels": 0.49585566726553626,
+          "current_coverage": 0.9535031847133758,
+          "anchored_to_current": true,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 5,
+          "score": 0.671875,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 15.570392743480257,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 6,
+          "score": 0.5234375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 35.94048989340423,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 7,
+          "score": 0.73046875,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 55.96500347882332,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 8,
+          "score": 0.515625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 39.912669964104815,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 9,
+          "score": 0.5703125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 26.914108468362766,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 10,
+          "score": 0.9296875,
+          "contains_component_center": true,
+          "component_center_distance_pixels": 0.49585566726553626,
+          "current_coverage": 0.9535031847133758,
+          "anchored_to_current": true,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 11,
+          "score": 0.6640625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 15.570392743480257,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 12,
+          "score": 0.515625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 35.913001664877235,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 13,
+          "score": 0.8359375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 64.99627970615262,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "plastic"
+        },
+        {
+          "index": 14,
+          "score": 0.5078125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 15.165911310967386,
+          "current_coverage": 0.04554140127388535,
+          "anchored_to_current": false,
+          "prompt_name": "base"
+        },
+        {
+          "index": 15,
+          "score": 0.59375,
+          "contains_component_center": true,
+          "component_center_distance_pixels": 0.49585566726553626,
+          "current_coverage": 0.9496815286624204,
+          "anchored_to_current": true,
+          "prompt_name": "base"
+        }
+      ],
+      "sam_protocol_diagnostics": {
+        "image_encoded_once": true,
+        "image_encoding_seconds": 0.035174317890778184,
+        "prompt_seconds": {
+          "generic": 0.08915224904194474,
+          "wooden": 0.06708550010807812,
+          "plastic": 0.06595785799436271,
+          "base": 0.06557483808137476
+        },
+        "total_seconds": 0.32301893597468734,
+        "response_cache": {
+          "hit": false,
+          "coalesced": false,
+          "coalesced_wait_seconds": 0.0,
+          "key_sha256": "e73fcbb866fd8018c63680459b29c93501c2fc39154aa39e5baf7b83c70e23d0",
+          "entries": 24,
+          "bytes": 162537,
+          "max_entries": 24,
+          "max_bytes": 134217728,
+          "in_flight": 0,
+          "hits": 132,
+          "misses": 99,
+          "coalesced_requests": 0,
+          "evictions": 75,
+          "storage": "cpu_json"
+        }
+      },
+      "sam_score": 0.93359375,
+      "selected_prompt_name": "generic",
+      "metrics": {
+        "proposal_pixels": 3662,
+        "projected_box_pixels": 3140,
+        "projected_box_coverage": 0.9535031847133758,
+        "proposal_inside_projected_box": 0.817586018569088,
+        "proposal_to_projected_box_area_ratio": 1.1662420382165606,
+        "center_distance_pixels": 0.49585566726553626,
+        "maximum_other_projected_box_fraction": 0.6488257782632442
+      },
+      "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round637-dense-independent6-box3d-roi-sam-20261122\\masks\\004-camera0-obj31.png",
+      "mask_sha256": "3854c61128b8d8e0e2f03ebc70bd15f819e8a96da0794432fdeb50dad5d7e475",
+      "mask_pixels": 3662
+    },
+    {
+      "sequence": "005",
+      "frame_id": "1789899455082281367",
+      "camera": 0,
+      "image_path": ".repro\\round636-dense-independent6-20261122\\images\\005\\camera_0\\1789899455082281367.png",
+      "image_sha256": "e188ab4b9d1b723201631da9c8a52c954bb8d53d2de340481662e143b9d6820e",
+      "target_available": true,
+      "sam_called": true,
+      "localization_pass": true,
+      "instance_isolation_pass": false,
+      "point_fallback_called": false,
+      "point_fallback_used": false,
+      "human_pixel_truth": false,
+      "candidate_only": true,
+      "production_deployed": false,
+      "elapsed_seconds": 0.344,
+      "target_obj_id": 35,
+      "target_obj_attr": "empty",
+      "target_isolation_fraction": 0.4020537124802528,
+      "projected_bbox": [
+        0.0,
+        188.52402539012397,
+        107.18348341705584,
+        225.64142254461876
+      ],
+      "projected_center": [
+        48.63599244641392,
+        204.8622332460718
+      ],
+      "crop_box": [
+        0,
+        126,
+        160,
+        286
+      ],
+      "model_result_count": 14,
+      "selected_contains_projected_center": true,
+      "selected_center_distance_pixels": 0.38920582929297387,
+      "candidate_summaries": [
+        {
+          "index": 0,
+          "score": 0.91015625,
+          "contains_component_center": true,
+          "component_center_distance_pixels": 0.38920582929297387,
+          "current_coverage": 0.8116113744075829,
+          "anchored_to_current": true,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 1,
+          "score": 0.5234375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 20.1922943369925,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 2,
+          "score": 0.69921875,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 83.28950217236375,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 3,
+          "score": 0.5859375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 95.63570811265438,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 4,
+          "score": 0.640625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 87.84760549793093,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 5,
+          "score": 0.6640625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 51.766969403328595,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 6,
+          "score": 0.68359375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 85.7556525300735,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 7,
+          "score": 0.5234375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 9.245952319005962,
+          "current_coverage": 0.05568720379146919,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 8,
+          "score": 0.625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 51.432238444573876,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 9,
+          "score": 0.8984375,
+          "contains_component_center": true,
+          "component_center_distance_pixels": 0.38920582929297387,
+          "current_coverage": 0.8139810426540285,
+          "anchored_to_current": true,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 10,
+          "score": 0.62109375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 83.28950217236375,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "plastic"
+        },
+        {
+          "index": 11,
+          "score": 0.59375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 96.33232417686185,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "plastic"
+        },
+        {
+          "index": 12,
+          "score": 0.59765625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 87.84760549793093,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "plastic"
+        },
+        {
+          "index": 13,
+          "score": 0.61328125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 85.7556525300735,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "plastic"
+        }
+      ],
+      "sam_protocol_diagnostics": {
+        "image_encoded_once": true,
+        "image_encoding_seconds": 0.029316416010260582,
+        "prompt_seconds": {
+          "generic": 0.09269166900776327,
+          "wooden": 0.0658986889757216,
+          "plastic": 0.06655756500549614,
+          "base": 0.06625297083519399
+        },
+        "total_seconds": 0.320771706989035,
+        "response_cache": {
+          "hit": false,
+          "coalesced": false,
+          "coalesced_wait_seconds": 0.0,
+          "key_sha256": "3860bf23c98b0a1d48181f64265d6b3cafaa0085809e8671711b591f4d1af1c4",
+          "entries": 24,
+          "bytes": 162034,
+          "max_entries": 24,
+          "max_bytes": 134217728,
+          "in_flight": 0,
+          "hits": 132,
+          "misses": 100,
+          "coalesced_requests": 0,
+          "evictions": 76,
+          "storage": "cpu_json"
+        }
+      },
+      "sam_score": 0.8984375,
+      "selected_prompt_name": "wooden",
+      "metrics": {
+        "proposal_pixels": 3129,
+        "projected_box_pixels": 2532,
+        "projected_box_coverage": 0.8139810426540285,
+        "proposal_inside_projected_box": 0.6586768935762224,
+        "proposal_to_projected_box_area_ratio": 1.235781990521327,
+        "center_distance_pixels": 0.38920582929297387,
+        "maximum_other_projected_box_fraction": 0.3649728347714925
+      },
+      "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round637-dense-independent6-box3d-roi-sam-20261122\\masks\\005-camera0-obj35.png",
+      "mask_sha256": "fc8f382125fb128ecc17c929dd0e4795f380fcd9fdac3218ff16311f966d7028",
+      "mask_pixels": 3129
+    },
+    {
+      "sequence": "010",
+      "frame_id": "1789899952782375655",
+      "camera": 0,
+      "image_path": ".repro\\round636-dense-independent6-20261122\\images\\010\\camera_0\\1789899952782375655.png",
+      "image_sha256": "08628b03349a1ae0e5a17f8289e2984c526208f1bc42cd8dce3f80481ca0dccf",
+      "target_available": true,
+      "sam_called": true,
+      "localization_pass": true,
+      "instance_isolation_pass": false,
+      "point_fallback_called": false,
+      "point_fallback_used": false,
+      "human_pixel_truth": false,
+      "candidate_only": true,
+      "production_deployed": false,
+      "elapsed_seconds": 0.375,
+      "target_obj_id": 7,
+      "target_obj_attr": "empty",
+      "target_isolation_fraction": 0.3662275449101796,
+      "projected_bbox": [
+        449.92211107315825,
+        203.5089860764447,
+        575.1388037055866,
+        251.5624183651392
+      ],
+      "projected_center": [
+        503.20166790280905,
+        224.49362170799662
+      ],
+      "crop_box": [
+        432,
+        147,
+        592,
+        307
+      ],
+      "model_result_count": 20,
+      "selected_contains_projected_center": true,
+      "selected_center_distance_pixels": 0.5332282190853224,
+      "candidate_summaries": [
+        {
+          "index": 0,
+          "score": 0.6484375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 10.637332562699996,
+          "current_coverage": 0.07616766467065868,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 1,
+          "score": 0.7265625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 57.77766745987595,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 2,
+          "score": 0.72265625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 57.03982395895791,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 3,
+          "score": 0.5859375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 17.463427011699768,
+          "current_coverage": 0.08239520958083832,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 4,
+          "score": 0.65625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 22.81206576053576,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 5,
+          "score": 0.65625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 31.078626632160763,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 6,
+          "score": 0.91796875,
+          "contains_component_center": true,
+          "component_center_distance_pixels": 0.5332282190853224,
+          "current_coverage": 0.6994011976047905,
+          "anchored_to_current": true,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 7,
+          "score": 0.53515625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 16.45840374132891,
+          "current_coverage": 0.019640718562874252,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 8,
+          "score": 0.62109375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 38.75279319828699,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "generic"
+        },
+        {
+          "index": 9,
+          "score": 0.6328125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 10.637332562699996,
+          "current_coverage": 0.07664670658682635,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 10,
+          "score": 0.69921875,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 57.03982395895791,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 11,
+          "score": 0.57421875,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 17.463427011699768,
+          "current_coverage": 0.08239520958083832,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 12,
+          "score": 0.640625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 22.81206576053576,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 13,
+          "score": 0.64453125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 31.078626632160763,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 14,
+          "score": 0.92578125,
+          "contains_component_center": true,
+          "component_center_distance_pixels": 0.5332282190853224,
+          "current_coverage": 0.7005988023952096,
+          "anchored_to_current": true,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 15,
+          "score": 0.53125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 16.45840374132891,
+          "current_coverage": 0.01868263473053892,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 16,
+          "score": 0.61328125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 38.75279319828699,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "wooden"
+        },
+        {
+          "index": 17,
+          "score": 0.93359375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 57.77766745987595,
+          "current_coverage": 0.0,
+          "anchored_to_current": false,
+          "prompt_name": "plastic"
+        },
+        {
+          "index": 18,
+          "score": 0.5078125,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 24.31476415711958,
+          "current_coverage": 0.011736526946107785,
+          "anchored_to_current": false,
+          "prompt_name": "base"
+        },
+        {
+          "index": 19,
+          "score": 0.6015625,
+          "contains_component_center": true,
+          "component_center_distance_pixels": 0.5332282190853224,
+          "current_coverage": 0.6891017964071856,
+          "anchored_to_current": true,
+          "prompt_name": "base"
+        }
+      ],
+      "sam_protocol_diagnostics": {
+        "image_encoded_once": true,
+        "image_encoding_seconds": 0.035476572113111615,
+        "prompt_seconds": {
+          "generic": 0.08957795007154346,
+          "wooden": 0.06997776194475591,
+          "plastic": 0.07014687289483845,
+          "base": 0.07038574595935643
+        },
+        "total_seconds": 0.33562048408202827,
+        "response_cache": {
+          "hit": false,
+          "coalesced": false,
+          "coalesced_wait_seconds": 0.0,
+          "key_sha256": "f49eb3bbc8305229487d4e6bf3a651db6479a09109828a518397b1dbd863be61",
+          "entries": 24,
+          "bytes": 163971,
+          "max_entries": 24,
+          "max_bytes": 134217728,
+          "in_flight": 0,
+          "hits": 132,
+          "misses": 101,
+          "coalesced_requests": 0,
+          "evictions": 77,
+          "storage": "cpu_json"
+        }
+      },
+      "sam_score": 0.92578125,
+      "selected_prompt_name": "wooden",
+      "metrics": {
+        "proposal_pixels": 3792,
+        "projected_box_pixels": 4175,
+        "projected_box_coverage": 0.7005988023952096,
+        "proposal_inside_projected_box": 0.7713607594936709,
+        "proposal_to_projected_box_area_ratio": 0.9082634730538922,
+        "center_distance_pixels": 0.5332282190853224,
+        "maximum_other_projected_box_fraction": 0.9055907172995781
+      },
+      "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round637-dense-independent6-box3d-roi-sam-20261122\\masks\\010-camera0-obj7.png",
+      "mask_sha256": "f8e9936acc0c6745480d15fb5ead13094a79075b87ab155aa4c2a06d100c0989",
+      "mask_pixels": 3792
+    }
+  ]
+}

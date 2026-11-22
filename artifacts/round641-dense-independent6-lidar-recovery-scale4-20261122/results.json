@@ -1,0 +1,124 @@
+{
+  "schema_version": "labelagent.pallet_lidar_conflict_points.v1",
+  "status": "offline_candidate_diagnostic_not_deployed",
+  "roi_scale": 4,
+  "input_sha256": {
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round638-dense-independent6-transitive-depth-split-20261122\\results.json": "54109447d556879dc1c8dafc0bd6bf9823606e277a22c24fa7063014edb8ad85",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round636-dense-independent6-20261122\\manifest.json": "ae81c99f5b312cf3ef8fb150490659f4db672c5266759b29075860545e1e5166",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round636-dense-independent6-20261122\\pcd-manifest.json": "b18c129ef15c3a89b9ce9f4c73ede3a816df0b6cfb11b08e9f195d5f5936d26e"
+  },
+  "failed_candidate_count": 1,
+  "recovered_candidate_count": 0,
+  "sam_attempt_count": 3,
+  "health_before": {
+    "status": "ok",
+    "model_loaded": true,
+    "backend": "remote_4090_sam3",
+    "service_version": "labelagent.remote-sam3.v3-point-groups",
+    "response_cache": {
+      "entries": 24,
+      "bytes": 219381,
+      "max_entries": 24,
+      "max_bytes": 134217728,
+      "in_flight": 0,
+      "hits": 136,
+      "misses": 127,
+      "coalesced_requests": 0,
+      "evictions": 103,
+      "storage": "cpu_json"
+    }
+  },
+  "health_after": {
+    "status": "ok",
+    "model_loaded": true,
+    "backend": "remote_4090_sam3",
+    "service_version": "labelagent.remote-sam3.v3-point-groups",
+    "response_cache": {
+      "entries": 24,
+      "bytes": 219381,
+      "max_entries": 24,
+      "max_bytes": 134217728,
+      "in_flight": 0,
+      "hits": 136,
+      "misses": 127,
+      "coalesced_requests": 0,
+      "evictions": 103,
+      "storage": "cpu_json"
+    }
+  },
+  "contact_sheet": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round641-dense-independent6-lidar-recovery-scale4-20261122\\lidar-conflict-point-review.jpg",
+  "contact_sheet_sha256": "abe92052fd9e9db35b5a694466f0916613edba256db04785bc49a75f0961e84f",
+  "human_pixel_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "workbench_writes": 0,
+  "training_data_writes": 0,
+  "oss_writes": 0,
+  "rows": [
+    {
+      "sequence": "005",
+      "frame_id": "1789899455082281367",
+      "camera": 0,
+      "target_obj_id": 39,
+      "roi_scale": 4,
+      "model_input_size": [
+        960,
+        960
+      ],
+      "visible_unique_positive_count": 11,
+      "visible_unique_negative_count": 33,
+      "selected_positive_points": [
+        [
+          54,
+          167
+        ],
+        [
+          95,
+          164
+        ],
+        [
+          68,
+          169
+        ]
+      ],
+      "selected_negative_points": [
+        [
+          34,
+          164
+        ],
+        [
+          100,
+          171
+        ],
+        [
+          65,
+          176
+        ],
+        [
+          89,
+          154
+        ]
+      ],
+      "prompt_group_count": 3,
+      "attempts": [
+        {
+          "policy": "one_positive_all_negative",
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "policy": "three_positive_all_negative",
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "policy": "three_positive_two_negative",
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        }
+      ],
+      "recovered": false,
+      "selected_policy": null,
+      "selected_mask_path": null,
+      "selected_mask_sha256": null,
+      "selected_mask_pixels": 0
+    }
+  ]
+}

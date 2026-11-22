@@ -1,0 +1,204 @@
+{
+  "schema_version": "labelagent.pallet_lidar_conflict_points.v1",
+  "status": "offline_candidate_diagnostic_not_deployed",
+  "roi_scale": 2,
+  "positive_only_fallback": true,
+  "input_sha256": {
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round638-dense-independent6-transitive-depth-split-20261122\\results.json": "54109447d556879dc1c8dafc0bd6bf9823606e277a22c24fa7063014edb8ad85",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round636-dense-independent6-20261122\\manifest.json": "ae81c99f5b312cf3ef8fb150490659f4db672c5266759b29075860545e1e5166",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round636-dense-independent6-20261122\\pcd-manifest.json": "b18c129ef15c3a89b9ce9f4c73ede3a816df0b6cfb11b08e9f195d5f5936d26e"
+  },
+  "failed_candidate_count": 1,
+  "recovered_candidate_count": 0,
+  "sam_attempt_count": 4,
+  "health_before": {
+    "status": "ok",
+    "model_loaded": true,
+    "backend": "remote_4090_sam3",
+    "service_version": "labelagent.remote-sam3.v3-point-groups",
+    "response_cache": {
+      "entries": 24,
+      "bytes": 219381,
+      "max_entries": 24,
+      "max_bytes": 134217728,
+      "in_flight": 0,
+      "hits": 136,
+      "misses": 127,
+      "coalesced_requests": 0,
+      "evictions": 103,
+      "storage": "cpu_json"
+    }
+  },
+  "health_after": {
+    "status": "ok",
+    "model_loaded": true,
+    "backend": "remote_4090_sam3",
+    "service_version": "labelagent.remote-sam3.v3-point-groups",
+    "response_cache": {
+      "entries": 24,
+      "bytes": 219381,
+      "max_entries": 24,
+      "max_bytes": 134217728,
+      "in_flight": 0,
+      "hits": 136,
+      "misses": 127,
+      "coalesced_requests": 0,
+      "evictions": 103,
+      "storage": "cpu_json"
+    }
+  },
+  "contact_sheet": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round642-dense-independent6-lidar-positive-fallback-20261122\\lidar-conflict-point-review.jpg",
+  "contact_sheet_sha256": "e14f12a1848d85884fcc27971cf411b06c048a0c433439944727b0bb2152b688",
+  "human_pixel_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "workbench_writes": 0,
+  "training_data_writes": 0,
+  "oss_writes": 0,
+  "rows": [
+    {
+      "sequence": "005",
+      "frame_id": "1789899455082281367",
+      "camera": 0,
+      "target_obj_id": 39,
+      "roi_scale": 2,
+      "model_input_size": [
+        480,
+        480
+      ],
+      "visible_unique_positive_count": 11,
+      "visible_unique_negative_count": 33,
+      "selected_positive_points": [
+        [
+          54,
+          167
+        ],
+        [
+          95,
+          164
+        ],
+        [
+          68,
+          169
+        ]
+      ],
+      "selected_negative_points": [
+        [
+          34,
+          164
+        ],
+        [
+          100,
+          171
+        ],
+        [
+          65,
+          176
+        ],
+        [
+          89,
+          154
+        ]
+      ],
+      "prompt_group_count": 4,
+      "attempts": [
+        {
+          "policy": "one_positive_all_negative",
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "policy": "three_positive_all_negative",
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "policy": "three_positive_two_negative",
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "policy": "three_positive_only",
+          "sam_score": 0.8671875,
+          "roi_scale": 2,
+          "model_mask_pixels": 18675,
+          "sam_mask_pixels": 4711,
+          "metrics": {
+            "proposal_pixels": 4711,
+            "projected_box_pixels": 1394,
+            "projected_box_coverage": 0.9261119081779053,
+            "proposal_inside_projected_box": 0.27403948206325623,
+            "proposal_to_projected_box_area_ratio": 3.37948350071736,
+            "center_distance_pixels": 0.38294616075842103,
+            "maximum_other_projected_box_fraction": 0.2799830184674167
+          },
+          "positive_coverage": 1.0,
+          "negative_clear_fraction": 0.0,
+          "split_metrics": [
+            {
+              "obj_id": 39,
+              "camera_depth": 5.610607525127103,
+              "split_pixels": 719,
+              "projected_box_coverage": 0.5157819225251076,
+              "source_mask_retention": 0.15262152409254937,
+              "removed_island_count": 2,
+              "removed_island_pixels": 6,
+              "maximum_nearer_projected_box_overlap": 0.5989956958393113,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 38,
+              "camera_depth": 5.60324991420563,
+              "split_pixels": 77,
+              "projected_box_coverage": 0.0513675783855904,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.12141427618412275,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 40,
+              "camera_depth": 5.410764982336866,
+              "split_pixels": 864,
+              "projected_box_coverage": 0.6153846153846154,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "split_target_pixels": 719,
+          "raw_mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round642-dense-independent6-lidar-positive-fallback-20261122\\masks\\f82281367-c0-o39-p3-raw.png",
+          "raw_mask_sha256": "e0a4511de326d6327b411716488a574b6910dbfc993300e2a6c99f9ee39d887e",
+          "accepted": false,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round642-dense-independent6-lidar-positive-fallback-20261122\\masks\\f82281367-c0-o39-p3.png",
+          "mask_sha256": "a7e2ec4a85848a23e378b921646c177b2e56fcc7cdd425d05963e1d0a02aaee6"
+        }
+      ],
+      "recovered": false,
+      "selected_policy": null,
+      "selected_mask_path": null,
+      "selected_mask_sha256": null,
+      "selected_mask_pixels": 0
+    }
+  ]
+}

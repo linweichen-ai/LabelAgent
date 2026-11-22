@@ -1,0 +1,87 @@
+{
+  "schema_version": "labelagent.pallet_third_independent_conflict_evidence.v1",
+  "date": "2026-11-23",
+  "scope": "offline_candidate_diagnostic_not_deployed",
+  "selection": {
+    "ranked_unused_views": 278,
+    "projected_conflict_views": 92,
+    "selected_views": 6,
+    "previously_uncovered_sequences": ["001", "004", "010"],
+    "selection_source": "ali_label_preannotation_3d_boxes",
+    "selection_source_is_truth": false,
+    "evaluation_source": "frozen_manifest_human_3d_gt",
+    "all_downloaded_gt_hashes_match_manifest": true
+  },
+  "baseline": {
+    "images": 6,
+    "localization_pass": 6,
+    "raw_instance_isolation_pass": 2,
+    "ambiguous_images": 4,
+    "raw_mask_resolved_after_group_inference": 0,
+    "depth_split_resolved": 3,
+    "remaining_failed_instances": 1
+  },
+  "remaining_failure": {
+    "sequence": "005",
+    "frame_id": "1789899455082281367",
+    "camera": 0,
+    "obj_id": 39,
+    "baseline_split_pixels": 5,
+    "visible_unique_positive_returns": 11,
+    "visible_unique_negative_returns": 33,
+    "roi_scale_1_recovered": false,
+    "roi_scale_2_recovered": false,
+    "roi_scale_4_recovered": false,
+    "positive_only_negative_clear_fraction": 0.0,
+    "sparse_negative_best_clear_fraction": 0.75,
+    "pairwise_negative_best_clear_fraction": 0.5,
+    "frozen_negative_clear_threshold": 0.8,
+    "accepted": false
+  },
+  "gates": {
+    "thresholds_changed": false,
+    "positive_coverage_minimum": 0.8,
+    "negative_clear_minimum": 0.8,
+    "maximum_conflict_overlap": 0.15,
+    "fallbacks_default_enabled": false
+  },
+  "determinism": {
+    "round638_round645_core_exact": true,
+    "compared": [
+      "instance_mask_sha256",
+      "depth_split_mask_sha256",
+      "depth_split_metrics",
+      "conflict_edges"
+    ]
+  },
+  "tests": {
+    "passed": 1628,
+    "skipped": 1,
+    "subtests_passed": 262,
+    "elapsed_seconds": 92.68
+  },
+  "formal_environment": {
+    "workbench_status": "idle",
+    "state_sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115",
+    "sam_status": "ok",
+    "sam_model_loaded": true,
+    "sam_in_flight": 0,
+    "workbench_writes": 0,
+    "human_truth_writes": 0,
+    "training_data_writes": 0,
+    "oss_writes": 0,
+    "production_deployed": false
+  },
+  "reports": {
+    "round635": "73d5cdcfbd0ade8667c32dce54d1e993db0e551e167c70b1fbc0fb7089236139",
+    "round637": "52fd803a0be23fa2a4ab3816e9a9c3c62798a0464f3afbce095263256479ab97",
+    "round638": "54109447d556879dc1c8dafc0bd6bf9823606e277a22c24fa7063014edb8ad85",
+    "round639": "d00d4ce98e9ef08e210b3eb7cc6c145fd8fb516368017a7ad11eaf6cf6768b2a",
+    "round640": "f36d544975c93bee05e66b28d01b338e7ebfb5a26104692a5b7eac024e190fbe",
+    "round641": "3bf99944598a98f98f68477c3d64b1b1fb16de2f29b9e0f29d93e6e23ffce6cc",
+    "round642": "dcd8522060a55380be83cca3bc0f3ef8fd5487d15ce638583b3a2baf4f6323a4",
+    "round643": "2fe91ef96c4d39f1809d15daa05bbfda955052e224fff5572af62883da4c7249",
+    "round644": "fff9503443fce0f198f965517d31839e00b42980a70187031f4ea7b5d16c16de",
+    "round645": "8f720540e33cc19c0d46e17f4b2cd4025a9e23b9a053d70f778025ada77b985a"
+  }
+}

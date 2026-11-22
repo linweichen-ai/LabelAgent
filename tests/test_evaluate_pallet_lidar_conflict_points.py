@@ -32,6 +32,40 @@ class PalletLidarConflictPointTest(unittest.TestCase):
                                (100, 200, 300, 400), scale=2)
         self.assertEqual(groups[0][1][0], {"x": 20, "y": 20, "label": 1})
 
+    def test_positive_only_fallback_is_explicit_and_keeps_default_stable(self):
+        default = prompt_groups([[110, 210], [120, 220], [130, 230]],
+                                [[140, 240]], (100, 200, 300, 400))
+        enabled = prompt_groups([[110, 210], [120, 220], [130, 230]],
+                                [[140, 240]], (100, 200, 300, 400),
+                                positive_only_fallback=True)
+        self.assertNotIn("three_positive_only", [name for name, _ in default])
+        self.assertEqual(enabled[-1][0], "three_positive_only")
+        self.assertTrue(all(point["label"] == 1 for point in enabled[-1][1]))
+
+    def test_sparse_negative_fallback_probes_each_negative_separately(self):
+        groups = prompt_groups([[110, 210], [120, 220], [130, 230]],
+                               [[140, 240], [150, 250]],
+                               (100, 200, 300, 400),
+                               sparse_negative_fallback=True)
+        sparse = [(name, points) for name, points in groups
+                  if name.startswith("three_positive_one_negative_")]
+        self.assertEqual(len(sparse), 2)
+        self.assertTrue(all(len(points) == 4 for _, points in sparse))
+        self.assertEqual([points[-1]["label"] for _, points in sparse], [0, 0])
+
+    def test_pairwise_negative_fallback_is_complete_and_deterministic(self):
+        groups = prompt_groups([[110, 210], [120, 220], [130, 230]],
+                               [[140, 240], [150, 250], [160, 260]],
+                               (100, 200, 300, 400),
+                               pairwise_negative_fallback=True)
+        pairs = [name for name, _ in groups
+                 if name.startswith("three_positive_negative_pair_")]
+        self.assertEqual(pairs, [
+            "three_positive_negative_pair_0_1",
+            "three_positive_negative_pair_0_2",
+            "three_positive_negative_pair_1_2",
+        ])
+
     def test_downsample_mask_roundtrip_and_rejects_sparse_spill(self):
         source = np.zeros((3, 4), dtype=bool)
         source[1:, 1:3] = True

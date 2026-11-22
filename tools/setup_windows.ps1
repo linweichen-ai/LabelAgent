@@ -16,6 +16,15 @@ New-Item -ItemType Directory -Force -Path $ResolvedTemp | Out-Null
 $env:TEMP = $ResolvedTemp
 $env:TMP = $ResolvedTemp
 $env:PYTHONUTF8 = "1"
+$free = (Get-Item $ResolvedTemp).PSDrive.Free
+$freshVenv = -not (Test-Path $VenvPython)
+if ($freshVenv -and -not $SkipTorch -and $free -lt 8GB) {
+    throw "A fresh CUDA environment needs at least 8 GiB free space: $ResolvedTemp"
+}
+if ($freshVenv -and -not $SkipTorch) {
+    Write-Host "Preparing the full CUDA environment: about 2.9 GB will be downloaded and the final venv is about 5.1 GiB."
+    Write-Host "The PyTorch download can be quiet for several minutes. For a quick no-GPU check, run tools\setup_public_browser_check.ps1 instead."
+}
 if (-not (Test-Path $VenvPython)) {
     $BootstrapPython = Resolve-LabelAgentPython312 -Requested $Python
     & $BootstrapPython -m venv $Venv

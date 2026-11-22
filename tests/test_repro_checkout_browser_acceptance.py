@@ -11,6 +11,22 @@ class ReproCheckoutBrowserAcceptanceTests(unittest.TestCase):
         self.assertIn("pip install -r tools\\requirements-browser-qa.txt", source)
         self.assertIn("Browser acceptance dependency installation failed", source)
 
+    def test_full_setup_announces_size_and_guards_free_space(self):
+        source = (ROOT / "tools" / "setup_windows.ps1").read_text(encoding="utf-8")
+        self.assertIn("$free -lt 8GB", source)
+        self.assertIn("about 2.9 GB will be downloaded", source)
+        self.assertIn("final venv is about 5.1 GiB", source)
+        self.assertIn("setup_public_browser_check.ps1 instead", source)
+
+    def test_startup_requires_exact_ports_before_spawning(self):
+        source = (ROOT / "tools" / "start_local.ps1").read_text(encoding="utf-8")
+        doctor = source.index('$doctorArgs = @("tools\\repro_doctor.py", "--require-web-port")')
+        sam_start = source.index("$sam = Start-Process")
+        web_start = source.index("$web = Start-Process")
+        self.assertLess(doctor, sam_start)
+        self.assertLess(doctor, web_start)
+        self.assertIn('"--require-sam-port"', source)
+
     def test_checkout_runs_logic_and_real_synthetic_browser_acceptance(self):
         source = (ROOT / "tools" / "verify_checkout.ps1").read_text(encoding="utf-8")
         self.assertIn("$VenvScripts = Split-Path -Parent $Python", source)

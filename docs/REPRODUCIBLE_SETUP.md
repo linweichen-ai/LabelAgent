@@ -31,7 +31,7 @@ git clone --branch reproduce --single-branch https://cnb.cool/seer-robotics/EIC/
 powershell -ExecutionPolicy Bypass -File tools\setup_windows.ps1
 ```
 
-脚本安装本项目已验证的 CUDA 12.8 PyTorch、根目录固定依赖和仓库内 SAM3 源码。已有正确 PyTorch 时可加 `-SkipTorch`，但之后仍须通过自检。安装包较大；默认临时目录为仓库内 `.repro/setup-temp`，空间不足时用 `-TempDir E:\LabelAgentTemp` 指向有足够空间的本地磁盘。
+脚本安装本项目已验证的 CUDA 12.8 PyTorch、根目录固定依赖和仓库内 SAM3 源码。已有正确 PyTorch 时可加 `-SkipTorch`，但之后仍须通过自检。首次完整安装会提前提示：PyTorch约下载2.9 GB，最终虚拟环境实测约5.1 GiB；网络较慢时下载阶段可能数分钟没有新输出。新环境不足8 GiB可用空间会在下载前停止。默认临时目录为仓库内 `.repro/setup-temp`，空间不足时用 `-TempDir E:\LabelAgentTemp` 指向有足够空间的本地磁盘。
 
 安装入口会先尝试标准 `py -3.12`，再检查 Python Launcher 已注册的其他3.12运行时（包括 Astral/uv 安装的解释器），并核对实际主次版本。仍无法定位时可显式传入 `-Python C:\path\to\python.exe`。
 
@@ -70,6 +70,7 @@ powershell -ExecutionPolicy Bypass -File tools\stop_local.ps1
 ```
 
 停止脚本只处理 `.repro/processes.json` 中由当前仓库启动的 PID，不扫描或结束其他用户进程。
+启动前会强制检查工作台8765端口以及本地SAM3使用的8766端口；端口已被其他实例占用时会在创建任何新进程前停止并明确报告。
 
 ## 4. VLM / Agent 配置边界
 

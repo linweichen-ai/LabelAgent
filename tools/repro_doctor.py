@@ -56,7 +56,6 @@ def url_json(url: str, timeout: float = 3.0) -> tuple[bool, str]:
 
 def port_available(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
-        probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             probe.bind(("127.0.0.1", port))
         except OSError:
@@ -117,10 +116,10 @@ def build_report(args: argparse.Namespace) -> dict:
         sam_port_available = port_available(8766)
         checks.append(item("port:8765", web_port_available,
                            "available" if web_port_available else "already in use",
-                           required=False))
+                           required=args.require_web_port))
         checks.append(item("port:8766", sam_port_available,
                            "available" if sam_port_available else "already in use",
-                           required=False))
+                           required=args.require_sam_port))
 
     failed = [check for check in checks if check["required"] and not check["ok"]]
     return {
@@ -141,6 +140,8 @@ def main() -> int:
     parser.add_argument("--web-url", default="http://127.0.0.1:8765")
     parser.add_argument("--require-cuda", action="store_true")
     parser.add_argument("--require-weight", action="store_true")
+    parser.add_argument("--require-web-port", action="store_true")
+    parser.add_argument("--require-sam-port", action="store_true")
     parser.add_argument("--require-services", action="store_true")
     parser.add_argument("--json", action="store_true", dest="as_json")
     args = parser.parse_args()

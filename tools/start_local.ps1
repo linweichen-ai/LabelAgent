@@ -31,9 +31,14 @@ if ($WorkDir) { $env:LABELAGENT_WORK_DIR = [IO.Path]::GetFullPath($WorkDir) }
 $env:SAM3_URL = $SamUrl
 $pids = @()
 
+$doctorArgs = @("tools\repro_doctor.py", "--require-web-port")
 if ($SamUrl -eq "http://127.0.0.1:8766") {
-    & $Python tools\repro_doctor.py --require-cuda --require-weight | Write-Host
-    if ($LASTEXITCODE -ne 0) { throw "Local SAM3 prerequisites are incomplete" }
+    $doctorArgs += @("--require-cuda", "--require-weight", "--require-sam-port")
+}
+& $Python @doctorArgs | Write-Host
+if ($LASTEXITCODE -ne 0) { throw "LabelAgent startup prerequisites are incomplete" }
+
+if ($SamUrl -eq "http://127.0.0.1:8766") {
     $sam = Start-Process -FilePath $Python -ArgumentList "-m", "source.sam3_service.server" `
         -WorkingDirectory $Root -RedirectStandardOutput (Join-Path $Logs "sam3.out.log") `
         -RedirectStandardError (Join-Path $Logs "sam3.err.log") -PassThru -WindowStyle Hidden

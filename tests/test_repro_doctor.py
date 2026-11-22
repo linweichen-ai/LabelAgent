@@ -1,5 +1,6 @@
 import importlib.util
 from pathlib import Path
+import socket
 import tempfile
 import unittest
 from unittest import mock
@@ -30,6 +31,13 @@ class ReproDoctorTests(unittest.TestCase):
         with mock.patch.object(doctor.socket, "socket") as factory:
             factory.return_value.__enter__.return_value.bind.side_effect = OSError("busy")
             self.assertFalse(doctor.port_available(8765))
+
+    def test_port_available_rejects_a_real_windows_listener(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
+            listener.bind(("127.0.0.1", 0))
+            listener.listen()
+            port = listener.getsockname()[1]
+            self.assertFalse(doctor.port_available(port))
 
     def test_work_directory_check_is_reversible(self):
         with tempfile.TemporaryDirectory() as directory:

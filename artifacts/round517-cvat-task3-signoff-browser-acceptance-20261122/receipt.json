@@ -1,0 +1,19 @@
+{
+  "schema_version": "labelagent.cvat-human-signoff-browser-acceptance.v1",
+  "passed": true,
+  "reviewer_page_sha256": "1a682ea7711d0cc165b9984e8016a46df289e6e72e37eb2fdeba46197a417e6d",
+  "candidate_count": 81,
+  "partial_draft_roundtrip": true,
+  "refresh_cleared_memory_before_import": true,
+  "invalid_binding_rejected_without_state_change": true,
+  "official_export_blocked_before_completion": true,
+  "official_export_enabled_after_complete_synthetic_draft": true,
+  "training_authorized": false,
+  "automatic_approval": false,
+  "approved_for_training": false,
+  "external_requests": 0,
+  "page_errors": [],
+  "private_screenshot_published": false,
+  "human_signoff_count": 0,
+  "real_human_decisions_written": 0
+}

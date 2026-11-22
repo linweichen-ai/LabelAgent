@@ -43,6 +43,13 @@ class PalletCandidateReviewTest(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             with self.assertRaises(CandidateReviewUnavailable):
                 load_review_page()
+            client = app.test_client()
+            self.assertEqual(client.get(
+                "/api/pallet-candidate-review").status_code, 404)
+            shell = client.get("/")
+            self.assertIn(b'id="palletCandidateReviewEntry"', shell.data)
+            self.assertIn(b"hidden", shell.data)
+            self.assertIn(b"pallet-candidate-review-entry.js", shell.data)
 
     def test_verified_bundle_is_served_read_only(self):
         with tempfile.TemporaryDirectory() as raw:

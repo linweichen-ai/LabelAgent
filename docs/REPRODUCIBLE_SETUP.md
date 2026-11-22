@@ -134,6 +134,23 @@ powershell -ExecutionPolicy Bypass -File tools\setup_public_browser_check.ps1
 
 输出目录必须预先不存在。成功时 `receipt.json` 中应同时出现 `passed=true`、`synthetic_only=true`、`external_requests=0`、`page_errors=[]`，以及三项授权标志均为 `false`。如需查看合成页面，可加 `--screenshot`；截图只包含公开合成内容。该通过结果只证明离线复核工作流和权限门禁可复现，不证明真实标注质量、模型精度或生产训练通过。
 
+### 可选的只读托盘候选复核页
+
+仓库内 Round 561 示例包可用于复现 3D/LiDAR/时序路由后的只读候选展示。请只在隔离端口启动，不要覆盖正式工作目录：
+
+```powershell
+$env:AUTOLABEL_PORT = "18767"
+$env:LABELAGENT_WORK_DIR = (Join-Path (Get-Location) ".repro\pallet-review-work")
+$env:LABELAGENT_PALLET_CANDIDATE_REVIEW_DIR = `
+  (Resolve-Path "artifacts\round561-pallet-visibility-candidate-bundle-20261122")
+New-Item -ItemType Directory -Force $env:LABELAGENT_WORK_DIR | Out-Null
+.\.venv\Scripts\python.exe -m source.agent.server
+```
+
+打开 `http://127.0.0.1:18767/` 后，顶部应出现“托盘候选 5”；点击后会在新窗口打开 `/pallet-candidate-review/`。该页面没有保存、训练或部署入口。删除 `LABELAGENT_PALLET_CANDIDATE_REVIEW_DIR` 后重新启动同一份代码，入口必须隐藏，`/api/pallet-candidate-review` 必须返回 404。
+
+后端会校验候选清单的只读安全标志、相对路径、PNG 签名和逐文件 SHA-256；任一资源缺失或被篡改都会失败关闭。此示例只证明候选路由与复核入口可复现，不代表候选已经成为人工真值、训练数据或正式部署结果。
+
 ## 6. 最小复现记录
 
 对外提交结果时至少保留：

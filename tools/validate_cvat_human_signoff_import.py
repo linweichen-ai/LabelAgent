@@ -12,8 +12,10 @@ from collections import Counter
 from datetime import datetime
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
+import sys
 from typing import Any
 
 
@@ -33,10 +35,7 @@ ISO_TIMESTAMP = re.compile(
     r"(?:Z|[+-]\d{2}:\d{2})$"
 )
 SHA256 = re.compile(r"^[0-9a-fA-F]{64}$")
-
-
-def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+MAX_INPUT_BYTES = 4 * 1024 * 1024
 
 
 def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -48,16 +47,20 @@ def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     return result
 
 
-def _read_object(path: Path, label: str) -> dict[str, Any]:
+def _read_object(path: Path, label: str) -> tuple[dict[str, Any], str]:
     try:
+        with path.open("rb") as stream:
+            raw = stream.read(MAX_INPUT_BYTES + 1)
+        if len(raw) > MAX_INPUT_BYTES:
+            raise ValueError(f"{label} exceeds the input size limit")
         value = json.loads(
-            path.read_text(encoding="utf-8"), object_pairs_hook=_unique_object
+            raw.decode("utf-8"), object_pairs_hook=_unique_object
         )
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
         raise ValueError(f"{label} is not valid UTF-8 JSON") from error
     if not isinstance(value, dict):
         raise ValueError(f"{label} must be a JSON object")
-    return value
+    return value, hashlib.sha256(raw).hexdigest()
 
 
 def _valid_sha256(value: Any) -> bool:
@@ -120,10 +123,9 @@ def validate(
     """Validate the private signoff and return a normalized private value and safe receipt."""
     review_manifest_path = review_manifest_path.resolve()
     signoff_path = signoff_path.resolve()
-    review = _read_object(review_manifest_path, "review manifest")
+    review, review_digest = _read_object(review_manifest_path, "review manifest")
     expected = _review_identity(review)
-    signoff = _read_object(signoff_path, "human signoff")
-    review_digest = _sha256(review_manifest_path)
+    signoff, signoff_digest = _read_object(signoff_path, "human signoff")
 
     if signoff.get("schema_version") != SIGNOFF_SCHEMA:
         raise ValueError("human signoff schema differs")
@@ -131,6 +133,8 @@ def validate(
         raise ValueError("human signoff review manifest hash differs")
     if signoff.get("candidate_count") != EXPECTED_COUNT:
         raise ValueError("human signoff candidate count differs")
+    if signoff.get("human_signoff_count") != EXPECTED_COUNT:
+        raise ValueError("human signoff count must equal the complete candidate count")
     if signoff.get("allowed_decisions") != list(ALLOWED_DECISIONS):
         raise ValueError("human signoff allowed decisions differ")
     if signoff.get("training_authorized") is not False:
@@ -184,9 +188,16 @@ def validate(
         reviewed_at = row.get("reviewed_at")
         if not _valid_timestamp(reviewed_at):
             raise ValueError(f"human signoff timestamp is invalid at row {index}")
-        row_approved_for_training = row.get("approved_for_training")
-        if row_approved_for_training is not None and row_approved_for_training is not False:
-            raise ValueError(f"human signoff row must not approve training at row {index}")
+        for field in (
+            "approved_for_training",
+            "training_authorized",
+            "automatic_approval",
+        ):
+            value = row.get(field)
+            if value is not None and value is not False:
+                raise ValueError(
+                    f"human signoff row must not approve training at row {index}"
+                )
 
         note = row.get("note")
         if note is not None and not isinstance(note, str):
@@ -215,7 +226,7 @@ def validate(
         "schema_version": "labelagent.cvat-human-instance-signoff-import.v1",
         "status": "validated_human_signoff_not_training_authorized",
         "review_manifest_sha256": review_digest,
-        "source_signoff_sha256": _sha256(signoff_path),
+        "source_signoff_sha256": signoff_digest,
         "candidate_count": EXPECTED_COUNT,
         "human_signoff_count": EXPECTED_COUNT,
         "decision_counts": {key: decisions[key] for key in ALLOWED_DECISIONS},
@@ -247,6 +258,65 @@ def validate(
     return normalized, receipt
 
 
+def _write_fresh_outputs(
+    private_output: Path,
+    receipt_output: Path,
+    normalized: dict[str, Any],
+    receipt: dict[str, Any],
+) -> dict[str, Any]:
+    if private_output == receipt_output:
+        raise ValueError("private and receipt output paths must differ")
+    private_payload = (
+        json.dumps(normalized, ensure_ascii=False, indent=2) + "\n"
+    ).encode("utf-8")
+    final_receipt = {
+        **receipt,
+        "private_import_sha256": hashlib.sha256(private_payload).hexdigest(),
+    }
+    receipt_payload = (
+        json.dumps(final_receipt, ensure_ascii=False, indent=2) + "\n"
+    ).encode("utf-8")
+    created: list[Path] = []
+    try:
+        private_output.parent.mkdir(parents=True, exist_ok=True)
+        receipt_output.parent.mkdir(parents=True, exist_ok=True)
+        with private_output.open("xb") as stream:
+            created.append(private_output)
+            stream.write(private_payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        with receipt_output.open("xb") as stream:
+            created.append(receipt_output)
+            stream.write(receipt_payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+    except Exception as error:
+        rollback_failed = False
+        for path in reversed(created):
+            try:
+                path.unlink(missing_ok=True)
+            except OSError:
+                rollback_failed = True
+        if rollback_failed:
+            raise OSError("output rollback failed") from error
+        raise
+    return final_receipt
+
+
+def _validate_output_paths(
+    private_output: Path,
+    receipt_output: Path,
+    repository_root: Path,
+) -> None:
+    if private_output.exists() or receipt_output.exists():
+        raise ValueError("choose fresh output paths")
+    if private_output == receipt_output:
+        raise ValueError("private and receipt output paths must differ")
+    private_root = (repository_root / ".repro").resolve()
+    if not private_output.is_relative_to(private_root):
+        raise ValueError("private output must stay under the repository .repro directory")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--review-manifest", required=True, type=Path)
@@ -257,29 +327,26 @@ def main() -> int:
 
     private_output = args.private_output.resolve()
     receipt_output = args.receipt_output.resolve()
-    if private_output.exists() or receipt_output.exists():
-        raise ValueError("choose fresh output paths")
     repository_root = Path(__file__).resolve().parents[1]
-    private_root = repository_root / ".repro"
-    if private_output.is_relative_to(repository_root) and not private_output.is_relative_to(
-        private_root
-    ):
-        raise ValueError("private output inside the repository must stay under .repro")
+    _validate_output_paths(private_output, receipt_output, repository_root)
     normalized, receipt = validate(args.review_manifest, args.human_signoff)
-    private_output.parent.mkdir(parents=True, exist_ok=True)
-    receipt_output.parent.mkdir(parents=True, exist_ok=True)
-    private_output.write_text(
-        json.dumps(normalized, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
+    final_receipt = _write_fresh_outputs(
+        private_output, receipt_output, normalized, receipt
     )
-    receipt["private_import_sha256"] = _sha256(private_output)
-    receipt_output.write_text(
-        json.dumps(receipt, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
-    print(json.dumps(receipt, ensure_ascii=False))
+    print(json.dumps(final_receipt, ensure_ascii=False))
     return 0
 
 
+def cli() -> int:
+    try:
+        return main()
+    except ValueError as error:
+        print(f"signoff import rejected: {error}", file=sys.stderr)
+        return 2
+    except OSError:
+        print("signoff import failed during a protected I/O operation", file=sys.stderr)
+        return 3
+
+
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(cli())

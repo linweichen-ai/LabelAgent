@@ -1,10 +1,19 @@
+from contextlib import redirect_stderr
 import hashlib
+import io
 import json
 from pathlib import Path
+from unittest.mock import patch
 import tempfile
 import unittest
 
-from tools.validate_cvat_human_signoff_import import validate
+from tools.validate_cvat_human_signoff_import import (
+    MAX_INPUT_BYTES,
+    _validate_output_paths,
+    _write_fresh_outputs,
+    cli,
+    validate,
+)
 
 
 def digest(value: str) -> str:
@@ -166,6 +175,13 @@ class HumanSignoffImportTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "duplicate keys"):
                 validate(review, signoff)
 
+    def test_oversized_input_fails_before_parsing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            review, signoff, _ = self.fixture(Path(directory))
+            signoff.write_bytes(b" " * (MAX_INPUT_BYTES + 1))
+            with self.assertRaisesRegex(ValueError, "input size limit"):
+                validate(review, signoff)
+
     def test_duplicate_identical_row_fails_closed(self):
         with tempfile.TemporaryDirectory() as directory:
             review, signoff, value = self.fixture(Path(directory))
@@ -216,6 +232,10 @@ class HumanSignoffImportTests(unittest.TestCase):
             self.assertEqual(normalized["human_pass_candidate_ids"], expected)
             self.assertEqual(receipt["human_pass_count"], len(expected))
             self.assertNotIn("human_pass_candidate_ids", receipt)
+            self.assertEqual(
+                normalized["source_signoff_sha256"],
+                hashlib.sha256(before[1]).hexdigest(),
+            )
             self.assertEqual(before, (review.read_bytes(), signoff.read_bytes()))
             self.assertTrue(
                 all(row["approved_for_training"] is False for row in normalized["rows"])
@@ -242,6 +262,46 @@ class HumanSignoffImportTests(unittest.TestCase):
                     with self.assertRaises(ValueError):
                         validate(review, signoff)
 
+    def test_same_output_path_is_rejected_before_writing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "same.json"
+            with self.assertRaisesRegex(ValueError, "paths must differ"):
+                _write_fresh_outputs(output, output, {"private": True}, {"public": True})
+            self.assertFalse(output.exists())
+
+    def test_fresh_outputs_share_the_same_private_payload_hash(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            private = root / "private.json"
+            receipt = root / "receipt.json"
+            final_receipt = _write_fresh_outputs(
+                private,
+                receipt,
+                {"private": True},
+                {"public": True},
+            )
+            self.assertEqual(
+                final_receipt["private_import_sha256"],
+                hashlib.sha256(private.read_bytes()).hexdigest(),
+            )
+            self.assertEqual(json.loads(receipt.read_text(encoding="utf-8")), final_receipt)
+
+    def test_second_output_failure_rolls_back_first_output(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            private = root / "private.json"
+            receipt = root / "existing-receipt.json"
+            receipt.write_text("protected", encoding="utf-8")
+            with self.assertRaises(FileExistsError):
+                _write_fresh_outputs(
+                    private,
+                    receipt,
+                    {"private": True},
+                    {"public": True},
+                )
+            self.assertFalse(private.exists())
+            self.assertEqual(receipt.read_text(encoding="utf-8"), "protected")
+
     def test_training_approval_in_input_fails_closed(self):
         with tempfile.TemporaryDirectory() as directory:
             review, signoff, value = self.fixture(Path(directory))
@@ -249,6 +309,57 @@ class HumanSignoffImportTests(unittest.TestCase):
             self.write_signoff(signoff, value)
             with self.assertRaisesRegex(ValueError, "must not approve training"):
                 validate(review, signoff)
+
+    def test_row_level_training_approval_injection_fails_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            review, signoff, value = self.fixture(Path(directory))
+            value["rows"][0]["training_authorized"] = True
+            self.write_signoff(signoff, value)
+            with self.assertRaisesRegex(ValueError, "must not approve training"):
+                validate(review, signoff)
+
+    def test_contradictory_human_signoff_count_fails_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            review, signoff, value = self.fixture(Path(directory))
+            value["human_signoff_count"] = 0
+            self.write_signoff(signoff, value)
+            with self.assertRaisesRegex(ValueError, "count must equal"):
+                validate(review, signoff)
+
+    def test_private_output_outside_repro_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            with self.assertRaisesRegex(ValueError, "must stay under"):
+                _validate_output_paths(
+                    root / "private.json",
+                    root / "receipt.json",
+                    Path(__file__).resolve().parents[1],
+                )
+
+    def test_cli_error_hides_sensitive_input_path_and_traceback(self):
+        repository_root = Path(__file__).resolve().parents[1]
+        sensitive = Path(tempfile.gettempdir()) / "private-person-name-signoff.json"
+        private = repository_root / ".repro" / "cli-error-private-never-written.json"
+        receipt = repository_root / ".repro" / "cli-error-receipt-never-written.json"
+        stderr = io.StringIO()
+        argv = [
+            "validate_cvat_human_signoff_import.py",
+            "--review-manifest",
+            str(sensitive),
+            "--human-signoff",
+            str(sensitive),
+            "--private-output",
+            str(private),
+            "--receipt-output",
+            str(receipt),
+        ]
+        with patch("sys.argv", argv), redirect_stderr(stderr):
+            self.assertEqual(cli(), 2)
+        message = stderr.getvalue()
+        self.assertNotIn(str(sensitive), message)
+        self.assertNotIn("Traceback", message)
+        self.assertFalse(private.exists())
+        self.assertFalse(receipt.exists())
 
 
 if __name__ == "__main__":

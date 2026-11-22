@@ -3610,3 +3610,12 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 工具要求至少两轮互不重叠盲审及 camera1 尾部 100% 覆盖，否则失败关闭。没有改真值、
   训练、权重或正式工作台。详见
   `docs/EGO_COMPONENT_MANUAL_REVIEW_POLICY_ROUND484_20261122.md`。
+
+## 2026-11-22 Round485 补充：微孔 VLM 门禁负结果
+
+- 用空闲的 `labelagent-vlm8b` 顺序复核 camera1 尾部全部 19 个多尺度组件图；19/19 均
+  返回 `uncertain`，0 个 `likely_fill_ok`、0 个 `likely_reject`，没有逻辑冲突或 busy。
+- 单项平均 5.399 秒，运行前后 VLM 均 `status=ok`、精确在途请求为 0。结果表明当前
+  8B VLM 无法可靠辨认 1–15 像素微孔边界，不适合作为该门禁的第二确认器。
+- 不降低阈值、不接入正式策略；Round484 的 227 优先/18 延后/0 自动决策保持不变。
+  详见 `docs/EGO_TAIL_VLM_GUARD_NEGATIVE_ROUND485_20261122.md`。

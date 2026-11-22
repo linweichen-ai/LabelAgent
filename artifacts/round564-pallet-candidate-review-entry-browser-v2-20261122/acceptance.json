@@ -1,0 +1,43 @@
+{
+  "schema_version": "labelagent.pallet_candidate_review_browser_acceptance.v1",
+  "source": "isolated_http",
+  "page_sha256": null,
+  "screenshot_sha256": "533e48f58d84cfc0a99b848106a7baaeb188aa41ca07202afc40ce4619f6a32a",
+  "workbench_screenshot_sha256": "75253ce9a6090b603648f827d6f622fbd1fcc3f5efe2c37b29333b8a64da19dc",
+  "hidden_workbench_screenshot_sha256": "745ec9696b07a15a9236c7bf699d1e625049bd1f66c36b7e049a5dcfa3925657",
+  "stat_values": [
+    "5",
+    "4",
+    "1",
+    "5"
+  ],
+  "table_rows": 5,
+  "images": [
+    {
+      "complete": true,
+      "width": 640,
+      "height": 512
+    },
+    {
+      "complete": true,
+      "width": 640,
+      "height": 512
+    }
+  ],
+  "deployment": "not-deployed",
+  "buttons": 0,
+  "workbench_entry": {
+    "visible": true,
+    "href": "/pallet-candidate-review/",
+    "badge": "5",
+    "target": "_blank",
+    "opened_read_only_page": true
+  },
+  "hidden_workbench_entry": {
+    "hidden": true,
+    "data_ready": null,
+    "badge": "0",
+    "api_status": 404
+  },
+  "passed": true
+}

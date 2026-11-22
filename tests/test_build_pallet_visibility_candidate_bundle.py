@@ -63,6 +63,49 @@ class PalletVisibilityCandidateBundleTest(unittest.TestCase):
             self.assertEqual(suppressed["propagation_source_frame_ids"], ["8", "10"])
             self.assertEqual(saved["human_truth_writes"], 0)
 
+            recovered_mask = np.zeros((512, 640), np.uint8)
+            recovered_mask[30:35, 30:40] = 255
+            recovered_path = root / "recovered.png"
+            Image.fromarray(recovered_mask).save(recovered_path)
+            recovery = {
+                "schema_version": "labelagent.pallet_lidar_conflict_points.v1",
+                "production_deployed": False, "workbench_writes": 0,
+                "rows": [{"sequence": "010", "camera": 0, "frame_id": "9",
+                          "target_obj_id": 2, "recovered": True,
+                          "selected_policy": "three_positive_all_negative",
+                          "selected_mask_path": str(recovered_path),
+                          "selected_mask_sha256": digest(recovered_path),
+                          "selected_mask_pixels": 50,
+                          "selected_positive_points": [[31, 31], [35, 31]],
+                          "selected_negative_points": [[40, 40]],
+                          "attempts": [{
+                              "policy": "three_positive_all_negative",
+                              "accepted": True,
+                              "split_metrics": [{
+                                  "obj_id": 2, "candidate_pass": True,
+                                  "split_pixels": 50,
+                                  "source_mask_retention": 1.0,
+                                  "projected_box_coverage": .2}]}]}]}
+            recovery_path = root / "recovery.json"
+            recovery_path.write_text(json.dumps(recovery))
+            recovered_output = root / "recovered_bundle"
+            recovered_report = build(
+                route_path, split_path, masks, manifest_path, recovered_output,
+                recovery_path)
+            self.assertEqual(recovered_report["mask_candidates_emitted"], 2)
+            self.assertEqual(recovered_report["current_2d_candidates_suppressed"], 0)
+            recovered_bundle = json.loads(
+                (recovered_output / "bundle.json").read_text())
+            recovered_row = next(
+                row for row in recovered_bundle["rows"] if row["obj_id"] == 2)
+            self.assertEqual(recovered_row["route"],
+                             "lidar_conflict_point_candidate")
+            self.assertEqual(recovered_row["mask_pixels"], 50)
+            self.assertEqual(recovered_row["recovery_policy"],
+                             "three_positive_all_negative")
+            self.assertEqual(recovered_row["recovery_split_metrics"]["split_pixels"], 50)
+            self.assertEqual(recovered_row["recovery_positive_point_count"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()

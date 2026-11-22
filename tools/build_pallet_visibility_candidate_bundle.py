@@ -66,7 +66,8 @@ def render_preview(image_path: Path, candidates: list[dict], suppressed: list[di
 
 
 def build(route_path: Path, split_path: Path, split_mask_root: Path,
-          image_manifest_path: Path, output: Path) -> dict:
+          image_manifest_path: Path, output: Path,
+          recovery_report_path: Path | None = None) -> dict:
     if output.exists():
         raise ValueError("output directory already exists")
     routes = json.loads(route_path.read_text(encoding="utf-8"))
@@ -77,6 +78,20 @@ def build(route_path: Path, split_path: Path, split_mask_root: Path,
             or split.get("schema_version") != "labelagent.pallet_box3d_overlap_pairs.v1"
             or split.get("production_deployed") is not False):
         raise ValueError("requires frozen non-deployed route and split reports")
+    recovery = None
+    recovery_rows = {}
+    if recovery_report_path is not None:
+        recovery = json.loads(recovery_report_path.read_text(encoding="utf-8"))
+        if (recovery.get("schema_version")
+                != "labelagent.pallet_lidar_conflict_points.v1"
+                or recovery.get("production_deployed") is not False
+                or recovery.get("workbench_writes") != 0):
+            raise ValueError("requires a frozen non-deployed LiDAR recovery report")
+        recovery_rows = {
+            (str(row["sequence"]), int(row["camera"]),
+             str(row["frame_id"]), str(row["target_obj_id"])): row
+            for row in recovery.get("rows", []) if row.get("recovered")
+        }
     image_files = index_manifest_files(manifest["files"])
     split_rows = {(str(row["sequence"]), int(row["camera"]), str(row["frame_id"])): row
                   for row in split["rows"]}
@@ -130,10 +145,49 @@ def build(route_path: Path, split_path: Path, split_mask_root: Path,
                          "mask_pixels": metric["split_pixels"],
                          "propagation_source_frame_ids": []})
         else:
-            rows.append({**base, "action": "suppress_current_2d_candidate",
-                         "mask_path": None, "mask_sha256": None, "mask_pixels": 0,
-                         "propagation_source_frame_ids": route[
-                             "propagation_source_frame_ids"]})
+            recovery_row = recovery_rows.get((*key, str(route["obj_id"])))
+            if recovery_row is not None:
+                source = Path(recovery_row["selected_mask_path"])
+                expected = recovery_row["selected_mask_sha256"]
+                pixels = int(recovery_row["selected_mask_pixels"])
+                selected_attempt = next((
+                    item for item in recovery_row.get("attempts", [])
+                    if item.get("policy") == recovery_row.get("selected_policy")
+                    and item.get("accepted") is True), None)
+                if selected_attempt is None:
+                    raise ValueError("recovery report lacks the selected accepted attempt")
+                recovery_split_metric = next((
+                    item for item in selected_attempt.get("split_metrics", [])
+                    if str(item.get("obj_id")) == str(route["obj_id"])), None)
+                if recovery_split_metric is None:
+                    raise ValueError("selected recovery lacks target split metrics")
+                if digest(source) != expected:
+                    raise ValueError("recovered mask hash mismatch")
+                validate_mask(source, pixels, expected_shape)
+                name = (f"{key[0]}-camera{key[1]}-frame{key[2]}-"
+                        f"obj{route['obj_id']}-lidar-recovered.png")
+                target = masks_dir / name; shutil.copyfile(source, target)
+                if digest(target) != expected:
+                    raise ValueError("copied recovery mask hash mismatch")
+                rows.append({
+                    **base, "route": "lidar_conflict_point_candidate",
+                    "action": "emit_review_mask_candidate",
+                    "mask_path": f"masks/{name}", "mask_sha256": expected,
+                    "mask_pixels": pixels,
+                    "recovery_policy": recovery_row["selected_policy"],
+                    "recovery_report_sha256": digest(recovery_report_path),
+                    "recovery_split_metrics": recovery_split_metric,
+                    "recovery_positive_point_count": len(
+                        recovery_row.get("selected_positive_points", [])),
+                    "recovery_negative_point_count": len(
+                        recovery_row.get("selected_negative_points", [])),
+                    "propagation_source_frame_ids": [],
+                })
+            else:
+                rows.append({**base, "action": "suppress_current_2d_candidate",
+                             "mask_path": None, "mask_sha256": None, "mask_pixels": 0,
+                             "propagation_source_frame_ids": route[
+                                 "propagation_source_frame_ids"]})
     preview_rows = []
     for key in sorted(set((row["sequence"], row["camera"], row["frame_id"])
                           for row in rows)):
@@ -160,6 +214,8 @@ def build(route_path: Path, split_path: Path, split_mask_root: Path,
         "status": "review_only_candidate_bundle_not_deployed",
         "route_report_sha256": digest(route_path),
         "split_report_sha256": digest(split_path),
+        "recovery_report_sha256": (
+            digest(recovery_report_path) if recovery_report_path else None),
         "image_manifest_sha256": digest(image_manifest_path),
         "candidate_count": len(rows),
         "mask_candidates_emitted": sum(row["mask_path"] is not None for row in rows),
@@ -183,9 +239,10 @@ def main() -> int:
     parser.add_argument("--split-mask-root", required=True, type=Path)
     parser.add_argument("--image-manifest", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--recovery-report", type=Path)
     args = parser.parse_args()
     report = build(args.route_report, args.split_report, args.split_mask_root,
-                   args.image_manifest, args.output)
+                   args.image_manifest, args.output, args.recovery_report)
     print(json.dumps({key: report[key] for key in (
         "candidate_count", "mask_candidates_emitted",
         "current_2d_candidates_suppressed", "preview_count",

@@ -1,0 +1,65 @@
+{
+  "schema_version": "labelagent.pallet_lidar_conflict_recovery_receipt.v1",
+  "date": "2026-11-22",
+  "status": "offline_candidate_recovered_pending_human_review",
+  "identity": {
+    "sequence": "dense_pallet_5f",
+    "frame_id": "1789897549982491905",
+    "camera": 0,
+    "obj_id": 48
+  },
+  "lidar_evidence": {
+    "visible_unique_target_returns": 29,
+    "visible_unique_conflict_returns": 65,
+    "selected_positive_points": 3,
+    "selected_negative_points": 4
+  },
+  "selected_policy": "three_positive_all_negative",
+  "acceptance": {
+    "positive_coverage": 1.0,
+    "negative_clear_fraction": 1.0,
+    "sam_proposal_pixels": 891,
+    "depth_split_target_pixels": 871,
+    "group_instances_passing_split_gate": 3,
+    "group_instance_count": 3,
+    "conflict_pairs_passing_separation_gate": 2,
+    "conflict_pair_count": 2,
+    "structure_components": 1,
+    "structure_holes": 0,
+    "structure_alerts": 0
+  },
+  "stability": {
+    "independent_repeat_count": 2,
+    "all_attempt_mask_hashes_identical": true,
+    "accepted_policy_iou": 0.941240478781284,
+    "selected_mask_sha256": "42724a6adc06027fe03ed12bea07622525b9281ccbcd8107ed9ee3c98d76054c",
+    "repeat_contact_sheet_sha256": "45dc83e68a09007d72a2e49f3ccf2027e9a2145cd5b3da723fa67f9e4c0a496c"
+  },
+  "bundle": {
+    "candidate_count": 9,
+    "mask_count": 9,
+    "suppressed_count": 0,
+    "high_priority_review_count": 3,
+    "structural_alert_count": 0
+  },
+  "tests": {
+    "focused": "8 passed",
+    "project_utf8": "1615 passed, 1 skipped, 262 subtests passed"
+  },
+  "artifacts": {
+    "recovery_report_sha256": "6ba04a03ae209c84fc6fb49b023c90165a7c8e41ffd6c4775973c392c2bc6cd8",
+    "bundle_sha256": "3225afcc29c70cf8ca846f0b425fb0ceaed63afe2c94cb61c0c8fa7972754273",
+    "pixel_audit_sha256": "bdc4000bc37c9f26d502e99f1c5927532b5f9743be3b3d226c819317b94ccab6",
+    "contact_sheet_sha256": "6bf1e5ef52e60eea58debdaaded2a50b1727c5923f68b67dafd94918796a59e2"
+  },
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "workbench_writes": 0,
+  "training_data_writes": 0,
+  "oss_writes": 0,
+  "formal_workbench": {
+    "run_status": "idle",
+    "state_sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115"
+  }
+}

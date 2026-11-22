@@ -180,13 +180,23 @@ def build(bundle_path: Path, manifest_path: Path, split_path: Path,
         split_metric = split_metrics.get(key)
         if split_metric is None:
             raise ValueError(f"candidate has no split metric: {key}")
+        effective_metric = candidate.get("recovery_split_metrics") or split_metric
         base = {
             "sequence": key[0], "camera": key[1], "frame_id": key[2],
             "obj_id": candidate["obj_id"], "route": candidate["route"],
             "review_required": True, "human_truth": False,
             "approved_for_training": False,
-            "split_metrics": split_metric,
+            "split_metrics": effective_metric,
         }
+        if candidate.get("recovery_split_metrics"):
+            base.update({
+                "baseline_split_metrics": split_metric,
+                "recovery_policy": candidate.get("recovery_policy"),
+                "recovery_positive_point_count": candidate.get(
+                    "recovery_positive_point_count"),
+                "recovery_negative_point_count": candidate.get(
+                    "recovery_negative_point_count"),
+            })
         if not candidate.get("mask_path"):
             rows.append({**base, "mask_available": False,
                          "assistant_triage": "suppressed_no_mask"})
@@ -207,8 +217,8 @@ def build(bundle_path: Path, manifest_path: Path, split_path: Path,
             raise ValueError(f"candidate mask dimensions differ from image: {key}")
         alerts = structural_alerts(metrics)
         priority = ("high" if alerts or
-                    float(split_metric.get("source_mask_retention") or 0) < .5 or
-                    float(split_metric.get("projected_box_coverage") or 0) < .15
+                    float(effective_metric.get("source_mask_retention") or 0) < .5 or
+                    float(effective_metric.get("projected_box_coverage") or 0) < .15
                     else "medium")
         crop = _crop_box(metrics, image.width, image.height)
         views = [_fit(view.crop(crop)) for view in (

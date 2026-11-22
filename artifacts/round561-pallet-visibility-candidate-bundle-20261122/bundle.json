@@ -1,0 +1,117 @@
+{
+  "schema_version": "labelagent.pallet_visibility_candidate_bundle.v1",
+  "status": "review_only_candidate_bundle_not_deployed",
+  "route_report_sha256": "e0db06faacdf4762584c59c80c41a28c9f220f5bff606f46ebf0f55898677496",
+  "split_report_sha256": "6ec7182cc204d282c91fd425e5fbb91af0a6c776fa248f9157f671d02e7402e7",
+  "image_manifest_sha256": "74d2c707c5d388f464312a92ec78868b1f005e58e1ec5756caac33b850ab6125",
+  "candidate_count": 5,
+  "mask_candidates_emitted": 4,
+  "current_2d_candidates_suppressed": 1,
+  "preview_count": 2,
+  "human_truth_writes": 0,
+  "training_data_writes": 0,
+  "workbench_writes": 0,
+  "production_deployed": false,
+  "rows": [
+    {
+      "sequence": "010",
+      "camera": 0,
+      "frame_id": "1789899951882467655",
+      "obj_id": 7,
+      "route": "depth_split_candidate",
+      "review_required": true,
+      "write_human_truth": false,
+      "write_training_data": false,
+      "production_deploy": false,
+      "action": "emit_review_mask_candidate",
+      "mask_path": "masks/010-camera0-frame1789899951882467655-obj7.png",
+      "mask_sha256": "d003bb75b0ab901864f1765007d7548f291dce754bf3c907591a9d9567138e1c",
+      "mask_pixels": 3360,
+      "propagation_source_frame_ids": []
+    },
+    {
+      "sequence": "010",
+      "camera": 0,
+      "frame_id": "1789899951882467655",
+      "obj_id": 6,
+      "route": "depth_split_candidate",
+      "review_required": true,
+      "write_human_truth": false,
+      "write_training_data": false,
+      "production_deploy": false,
+      "action": "emit_review_mask_candidate",
+      "mask_path": "masks/010-camera0-frame1789899951882467655-obj6.png",
+      "mask_sha256": "a1555b1113aa2099bdbf54a7aad0548197896ef02499b884f614200f0550b877",
+      "mask_pixels": 666,
+      "propagation_source_frame_ids": []
+    },
+    {
+      "sequence": "010",
+      "camera": 0,
+      "frame_id": "1789899951882467655",
+      "obj_id": 11,
+      "route": "depth_split_candidate",
+      "review_required": true,
+      "write_human_truth": false,
+      "write_training_data": false,
+      "production_deploy": false,
+      "action": "emit_review_mask_candidate",
+      "mask_path": "masks/010-camera0-frame1789899951882467655-obj11.png",
+      "mask_sha256": "171058a86041fb999c2555703c7b987842a738a72e6d8b7050930ba0bf39cbf9",
+      "mask_pixels": 693,
+      "propagation_source_frame_ids": []
+    },
+    {
+      "sequence": "011",
+      "camera": 1,
+      "frame_id": "1789900388815700364",
+      "obj_id": 15,
+      "route": "depth_split_candidate",
+      "review_required": true,
+      "write_human_truth": false,
+      "write_training_data": false,
+      "production_deploy": false,
+      "action": "emit_review_mask_candidate",
+      "mask_path": "masks/011-camera1-frame1789900388815700364-obj15.png",
+      "mask_sha256": "5677c6a959f954bcc0e619d8a2a1e0cc1a38049ad2846d9c2a8d222e5304121a",
+      "mask_pixels": 1503,
+      "propagation_source_frame_ids": []
+    },
+    {
+      "sequence": "011",
+      "camera": 1,
+      "frame_id": "1789900388815700364",
+      "obj_id": 20,
+      "route": "temporal_occlusion_defer_2d",
+      "review_required": true,
+      "write_human_truth": false,
+      "write_training_data": false,
+      "production_deploy": false,
+      "action": "suppress_current_2d_candidate",
+      "mask_path": null,
+      "mask_sha256": null,
+      "mask_pixels": 0,
+      "propagation_source_frame_ids": [
+        "1789900388515701364",
+        "1789900390014812364",
+        "1789900390315797364"
+      ]
+    }
+  ],
+  "previews": [
+    {
+      "sequence": "010",
+      "camera": 0,
+      "frame_id": "1789899951882467655",
+      "path": "previews/010-camera0-candidate-route.png",
+      "sha256": "611ac944caeedbd46d3a5040725f15de5a75a475fd483b420e4b98cc470f00b0"
+    },
+    {
+      "sequence": "011",
+      "camera": 1,
+      "frame_id": "1789900388815700364",
+      "path": "previews/011-camera1-candidate-route.png",
+      "sha256": "7d735886c92531ce0652f2465f1ecaf4b9e8baeecbed5f47f6bc840922029beb"
+    }
+  ]
+}

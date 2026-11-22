@@ -57,3 +57,7 @@ obj20 只允许以下 3 个传播源帧进入后续候选生成：
 ## 下一步
 
 在隔离环境把路由 JSON 接到候选生成器：`depth_split_candidate` 才允许输出掩码；`temporal_occlusion_defer_2d` 只输出遮挡状态和传播源，不输出中心帧掩码。通过浏览器和文件回读验收后，再评估是否进入正式工作台。
+
+## 后续结果（Round 561）
+
+隔离候选生成器已完成：4 个 `depth_split_candidate` 各输出一个经哈希回读的 640×512 二值 PNG；obj20 没有生成 PNG，只在 bundle 和预览图中保留抑制状态与 3 个传播源帧。详见 `PALLET_VISIBILITY_CANDIDATE_BUNDLE_ROUND561_20261122.md`。

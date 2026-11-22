@@ -48,6 +48,8 @@ from .candidate_class_audit import (audit_candidate_class_blind, candidate_finge
                                     audit_high_risk_candidates,
                                     candidate_requires_class_audit,
                                     validate_blind_candidate_class_decision)
+from .pallet_candidate_review import (CandidateReviewUnavailable,
+                                      load_review_page)
 
 from . import candidate_class_audit as _candidate_audit_module
 
@@ -2065,6 +2067,55 @@ def stale_human_review(error):
 @app.get("/")
 def index():
     return app.send_static_file("index.html")
+
+
+def _candidate_review_response_headers(response):
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; "
+        "base-uri 'none'; form-action 'none'; frame-ancestors 'self'")
+    return response
+
+
+@app.get("/api/pallet-candidate-review")
+def pallet_candidate_review_status():
+    try:
+        page = load_review_page()
+    except CandidateReviewUnavailable as error:
+        return jsonify(available=False, read_only=True, production_deployed=False,
+                       reason=str(error)), 404
+    return jsonify(
+        available=True, read_only=True, production_deployed=False,
+        human_truth_writes=0, training_data_writes=0,
+        candidate_count=page["candidate_count"],
+        preview_count=page["preview_count"], mask_count=page["mask_count"],
+        suppressed_count=page["suppressed_count"],
+        url="/pallet-candidate-review/")
+
+
+@app.get("/pallet-candidate-review/")
+def pallet_candidate_review_index():
+    try:
+        page = load_review_page()
+    except CandidateReviewUnavailable as error:
+        return jsonify(error=str(error), available=False), 404
+    return _candidate_review_response_headers(send_file(
+        io.BytesIO(page["page_bytes"]), mimetype="text/html; charset=utf-8",
+        max_age=0))
+
+
+@app.get("/pallet-candidate-review/<path:asset_name>")
+def pallet_candidate_review_asset(asset_name):
+    try:
+        page = load_review_page()
+        data = page["assets"].get(asset_name)
+        if data is None:
+            raise CandidateReviewUnavailable("候选资源未列入清单")
+    except CandidateReviewUnavailable as error:
+        return jsonify(error=str(error), available=False), 404
+    return _candidate_review_response_headers(send_file(
+        io.BytesIO(data), mimetype="image/png", max_age=0))
 
 
 def candidate_class_audit_version():

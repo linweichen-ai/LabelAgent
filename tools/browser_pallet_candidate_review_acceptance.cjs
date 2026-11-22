@@ -26,7 +26,12 @@ function arg(name) {
 function sha256(file) { return crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex"); }
 
 (async () => {
-  const pagePath = path.resolve(arg("--page"));
+  const urlIndex = process.argv.indexOf("--url");
+  const pagePath = urlIndex < 0 ? path.resolve(arg("--page")) : null;
+  const sourceUrl = pagePath ? pathToFileURL(pagePath).href : arg("--url");
+  if (!sourceUrl.startsWith("file:") && !/^http:\/\/127\.0\.0\.1:\d+\//.test(sourceUrl)) {
+    throw Error("acceptance URL must use a local file or 127.0.0.1 isolated server");
+  }
   const output = path.resolve(arg("--output"));
   if (fs.existsSync(output)) throw Error("output directory already exists");
   fs.mkdirSync(output, {recursive: true});
@@ -34,7 +39,7 @@ function sha256(file) { return crypto.createHash("sha256").update(fs.readFileSyn
   try {
     const context = await browser.newContext({viewport: {width: 1440, height: 1000}, deviceScaleFactor: 1});
     const page = await context.newPage();
-    await page.goto(pathToFileURL(pagePath).href, {waitUntil: "load"});
+    await page.goto(sourceUrl, {waitUntil: "load"});
     const statValues = await page.locator("[data-stat] strong").allTextContents();
     const tableRows = await page.locator("tbody tr").count();
     const images = await page.locator(".scene img").evaluateAll(nodes => nodes.map(node => ({complete: node.complete, width: node.naturalWidth, height: node.naturalHeight})));
@@ -53,8 +58,10 @@ function sha256(file) { return crypto.createHash("sha256").update(fs.readFileSyn
         && images.every(item => item.complete && item.width === 640 && item.height === 512)
         && deployment === "not-deployed" && buttons === 0,
     };
-    const receipt = {schema_version: "labelagent.round562.browser_acceptance.v1",
-      page_sha256: sha256(pagePath), screenshot_sha256: sha256(screenshot), ...checks};
+    const receipt = {schema_version: "labelagent.pallet_candidate_review_browser_acceptance.v1",
+      source: pagePath ? "local_file" : "isolated_http",
+      page_sha256: pagePath ? sha256(pagePath) : null,
+      screenshot_sha256: sha256(screenshot), ...checks};
     fs.writeFileSync(path.join(output, "acceptance.json"), JSON.stringify(receipt, null, 2) + "\n");
     console.log(JSON.stringify(receipt, null, 2));
     if (!checks.passed) process.exitCode = 2;

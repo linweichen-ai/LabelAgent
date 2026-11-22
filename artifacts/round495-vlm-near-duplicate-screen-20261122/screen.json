@@ -1,0 +1,227 @@
+{
+  "schema_version": "labelagent.vlm-near-duplicate-screen.v1",
+  "created_utc": "2026-11-22T01:43:04.323318+00:00",
+  "status": "passed_heuristic_screen",
+  "scope": "read-only cross-split perceptual-hash screen",
+  "host": "factory-4090",
+  "images": 94,
+  "cross_split_pairs": 2176,
+  "thresholds": {
+    "phash_hamming_max": 6,
+    "dhash_hamming_max": 6,
+    "thumbnail_mad_max": 0.08
+  },
+  "threshold_hit_count": 0,
+  "threshold_hits": [],
+  "nearest_pairs": [
+    {
+      "left": "005_1789899371082473367_camera_3",
+      "left_split": "train",
+      "right": "010_1789899969582349655_camera_3",
+      "right_split": "test24",
+      "phash_hamming": 8,
+      "dhash_hamming": 11,
+      "thumbnail_mad": 0.05759,
+      "threshold_hit": false
+    },
+    {
+      "left": "005_1789899371082473367_camera_3",
+      "left_split": "train",
+      "right": "010_1789899951882467655_camera_3",
+      "right_split": "test24",
+      "phash_hamming": 8,
+      "dhash_hamming": 12,
+      "thumbnail_mad": 0.05787,
+      "threshold_hit": false
+    },
+    {
+      "left": "007_1789899639649165367_camera_1",
+      "left_split": "train",
+      "right": "012_1789900488815784655_camera_1",
+      "right_split": "test24",
+      "phash_hamming": 8,
+      "dhash_hamming": 17,
+      "thumbnail_mad": 0.080044,
+      "threshold_hit": false
+    },
+    {
+      "left": "000_1789897567982480905_camera_1",
+      "left_split": "train",
+      "right": "012_1789900488815784655_camera_1",
+      "right_split": "test24",
+      "phash_hamming": 8,
+      "dhash_hamming": 17,
+      "thumbnail_mad": 0.08084,
+      "threshold_hit": false
+    },
+    {
+      "left": "001_1789897699515779197_camera_1",
+      "left_split": "train",
+      "right": "012_1789900488815784655_camera_1",
+      "right_split": "test24",
+      "phash_hamming": 8,
+      "dhash_hamming": 18,
+      "thumbnail_mad": 0.07562,
+      "threshold_hit": false
+    },
+    {
+      "left": "007_1789899639649165367_camera_1",
+      "left_split": "train",
+      "right": "008_1789899740482474075_camera_1",
+      "right_split": "dev",
+      "phash_hamming": 10,
+      "dhash_hamming": 10,
+      "thumbnail_mad": 0.067475,
+      "threshold_hit": false
+    },
+    {
+      "left": "001_1789897794915849905_camera_1",
+      "left_split": "train",
+      "right": "012_1789900488815784655_camera_1",
+      "right_split": "test24",
+      "phash_hamming": 10,
+      "dhash_hamming": 15,
+      "thumbnail_mad": 0.079496,
+      "threshold_hit": false
+    },
+    {
+      "left": "005_1789899371082473367_camera_2",
+      "left_split": "train",
+      "right": "010_1789899969582349655_camera_2",
+      "right_split": "test24",
+      "phash_hamming": 10,
+      "dhash_hamming": 17,
+      "thumbnail_mad": 0.067207,
+      "threshold_hit": false
+    },
+    {
+      "left": "007_1789899639649165367_camera_1",
+      "left_split": "train",
+      "right": "008_1789899770782473075_camera_1",
+      "right_split": "dev",
+      "phash_hamming": 10,
+      "dhash_hamming": 17,
+      "thumbnail_mad": 0.070466,
+      "threshold_hit": false
+    },
+    {
+      "left": "001_1789897699515779197_camera_0",
+      "left_split": "train",
+      "right": "012_1789900594415795363_camera_0",
+      "right_split": "test24",
+      "phash_hamming": 10,
+      "dhash_hamming": 18,
+      "thumbnail_mad": 0.070653,
+      "threshold_hit": false
+    },
+    {
+      "left": "003_1789898134449159197_camera_1",
+      "left_split": "train",
+      "right": "012_1789900488815784655_camera_1",
+      "right_split": "test24",
+      "phash_hamming": 10,
+      "dhash_hamming": 19,
+      "thumbnail_mad": 0.102194,
+      "threshold_hit": false
+    },
+    {
+      "left": "005_1789899475182359367_camera_0",
+      "left_split": "train",
+      "right": "008_1789899740482474075_camera_0",
+      "right_split": "dev",
+      "phash_hamming": 10,
+      "dhash_hamming": 21,
+      "thumbnail_mad": 0.078669,
+      "threshold_hit": false
+    },
+    {
+      "left": "000_1789897567982480905_camera_1",
+      "left_split": "train",
+      "right": "012_1789900594415795363_camera_1",
+      "right_split": "test24",
+      "phash_hamming": 10,
+      "dhash_hamming": 22,
+      "thumbnail_mad": 0.086562,
+      "threshold_hit": false
+    },
+    {
+      "left": "002_1789898036148973197_camera_0",
+      "left_split": "train",
+      "right": "011_1789900408315834655_camera_0",
+      "right_split": "test24",
+      "phash_hamming": 10,
+      "dhash_hamming": 26,
+      "thumbnail_mad": 0.072741,
+      "threshold_hit": false
+    },
+    {
+      "left": "000_1789897567982480905_camera_0",
+      "left_split": "train",
+      "right": "008_1789899740482474075_camera_0",
+      "right_split": "dev",
+      "phash_hamming": 12,
+      "dhash_hamming": 7,
+      "thumbnail_mad": 0.060719,
+      "threshold_hit": false
+    },
+    {
+      "left": "001_1789897699515779197_camera_1",
+      "left_split": "train",
+      "right": "008_1789899740482474075_camera_1",
+      "right_split": "dev",
+      "phash_hamming": 12,
+      "dhash_hamming": 11,
+      "thumbnail_mad": 0.072342,
+      "threshold_hit": false
+    },
+    {
+      "left": "008_1789899740482474075_camera_1",
+      "left_split": "dev",
+      "right": "012_1789900488815784655_camera_1",
+      "right_split": "test24",
+      "phash_hamming": 12,
+      "dhash_hamming": 11,
+      "thumbnail_mad": 0.080844,
+      "threshold_hit": false
+    },
+    {
+      "left": "005_1789899371082473367_camera_0",
+      "left_split": "train",
+      "right": "010_1789899951882467655_camera_0",
+      "right_split": "test24",
+      "phash_hamming": 12,
+      "dhash_hamming": 15,
+      "thumbnail_mad": 0.057625,
+      "threshold_hit": false
+    },
+    {
+      "left": "006_1789899604682346364_camera_1",
+      "left_split": "train",
+      "right": "012_1789900488815784655_camera_1",
+      "right_split": "test24",
+      "phash_hamming": 12,
+      "dhash_hamming": 15,
+      "thumbnail_mad": 0.068555,
+      "threshold_hit": false
+    },
+    {
+      "left": "006_1789899604682346364_camera_2",
+      "left_split": "train",
+      "right": "008_1789899770782473075_camera_2",
+      "right_split": "dev",
+      "phash_hamming": 12,
+      "dhash_hamming": 16,
+      "thumbnail_mad": 0.06327,
+      "threshold_hit": false
+    }
+  ],
+  "remote_writes": false,
+  "pixels_downloaded": false,
+  "human_truth": false,
+  "production_training_approved": false,
+  "limitations": [
+    "Perceptual hashes and 32x32 grayscale MAD are a screening heuristic, not proof of semantic independence.",
+    "No human scene-identity review was performed.",
+    "A threshold miss cannot rule out related routes, objects, or backgrounds."
+  ]
+}

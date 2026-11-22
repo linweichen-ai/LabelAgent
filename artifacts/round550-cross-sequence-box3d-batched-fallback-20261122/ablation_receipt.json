@@ -1,0 +1,52 @@
+{
+  "schema_version": "labelagent.round550.ablation_receipt.v1",
+  "date": "2026-11-22",
+  "implementation_commits": ["d5c0d1d", "84eacec"],
+  "status": "offline_localization_diagnostic_not_deployed",
+  "scope": "3d_box_localization_agreement_not_pixel_boundary_accuracy",
+  "sequences": ["010", "011", "012"],
+  "images": 12,
+  "ablation": {
+    "single_prompt": {
+      "localization_pass": 7,
+      "instance_isolation_pass": 6,
+      "results_sha256": "74bf3ae02f6a252fef81b661207544310ce24c812632ce08c6f98eb91927e1ae"
+    },
+    "multi_prompt_single_encoding": {
+      "localization_pass": 10,
+      "instance_isolation_pass": 8,
+      "results_sha256": "5e8302ba0e71365aebc2fccc3ff3253ed152bd10c7f3fe770926983f3ed14cf1"
+    },
+    "multi_prompt_single_point_fallback": {
+      "localization_pass": 12,
+      "instance_isolation_pass": 10,
+      "point_fallback_calls": 2,
+      "point_fallback_used": 2,
+      "results_sha256": "5b171822ce85df6a781f46000d46390ab3a06c5e732d8ca63d9152486a69cf41"
+    },
+    "multi_prompt_batched_point_fallback": {
+      "localization_pass": 12,
+      "instance_isolation_pass": 10,
+      "point_fallback_calls": 2,
+      "point_prompt_groups": 6,
+      "point_fallback_used": 2,
+      "results_sha256": "b9934869ed57cc1a7b03ce12b20b612e076e2f1cef8ef14aa9784d4f63e3d412"
+    }
+  },
+  "camera2_spill_comparison": {
+    "single_point_proposal_pixels": 954,
+    "single_point_inside_projected_box": 0.45178197064989517,
+    "box_ring_proposal_pixels": 336,
+    "box_ring_inside_projected_box": 1.0
+  },
+  "label_sha256": {
+    "010/1789899951882467655.json": "944385784b8a4eb0c4a335ebeb0fff7b2929f05618f9cd8b7ddf7ba9a0207e63",
+    "011/1789900388815700364.json": "34a91b1f3f47bd8ba33366b310b8bd3806e6328137b61409c2b3852a79810dec",
+    "012/1789900488815784655.json": "23273b4715cec9c18dbca4f9af39d53f0f3ffcb3c75ffe8f43bc335da3ff4f63"
+  },
+  "contact_sheet_sha256": "232130a7169e1f195492a0bd4d8f290007e284e664cf9ca8cd5f3c63c159ffc8",
+  "human_pixel_truth": false,
+  "workbench_writes": 0,
+  "approved_for_training": false,
+  "production_deployed": false
+}

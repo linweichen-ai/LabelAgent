@@ -1,0 +1,15 @@
+{
+  "schema_version": "labelagent.qwen3vl-controlled-bundle-receipt.v1",
+  "status": "built_and_readback_verified",
+  "scope": "local_controlled_candidate",
+  "bundle_name": "labelagent-qwen3vl2b-round375-lora.zip",
+  "bundle_bytes": 36191268,
+  "bundle_sha256": "cde1b62b4537915fe8f426eed8f99bd06d9bccb2657d55ec2394ea01d18dec01",
+  "member_count": 14,
+  "adapter_sha256": "ad81bd3929ffb915b07986e783fe2116defe51c45d3ff562d86e5d164f59ad4f",
+  "base_model": "Qwen3-VL-2B-Instruct",
+  "remote_uploaded": false,
+  "production_deployed": false,
+  "human_truth": false,
+  "test24_used_for_training": false
+}

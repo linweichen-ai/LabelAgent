@@ -118,3 +118,20 @@ HTTP 200 只证明服务连通。完整验收还应在一张已授权图片上�
 7. 机器候选、人工确认真值、训练批准三种状态分别记录。
 
 只有“环境、服务、真实请求、结果读回”四层均通过，才能称为端到端复现；仅能打开页面或 `/health` 正常不能替代真实推理验收。
+
+## 7. 受控 LoRA 候选交付与验收
+
+模型权重不进入公开 Git。团队内部获得已授权的受控 ZIP 后，先核对提供方给出的整包
+SHA-256，再运行独立验收：
+
+```powershell
+.\.venv\Scripts\python.exe tools\verify_qwen3vl_controlled_bundle.py `
+  D:\AuthorizedArtifacts\labelagent-qwen3vl2b-round375-lora.zip `
+  --expected-sha256 <提供方给出的64位SHA-256> --tensor-scan `
+  --output .repro\qwen3vl2b-bundle-verification.json
+```
+
+只有输出 `status=passed`、整包摘要一致、逐成员哈希一致且张量扫描通过，才能称为“权重包
+完整复现”。这仍不等于模型精度或生产部署通过；还需要相同基座、依赖、输入数据和独立人工
+评测。构建端使用 `tools/build_qwen3vl_controlled_bundle.py`，它只接受已经通过发布完整性门禁的
+候选，并生成确定性 ZIP 与回执。

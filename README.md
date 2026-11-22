@@ -23,6 +23,10 @@ git clone --branch reproduce --single-branch https://github.com/linweichen-ai/La
 
 随后打开 `http://127.0.0.1:8765`。环境、依赖、权重及服务可用性可由 `tools/repro_doctor.py` 读回检查；完整代码回归使用 `tools/verify_checkout.ps1`。详细步骤、VLM 配置边界、验收口径和最小复现记录见 [可复现安装与验收](docs/REPRODUCIBLE_SETUP.md)。模型权重、MCAP、人工真值、运行状态与密钥不随 Git 发布，也不会被启动脚本上传。
 
+团队内部收到已授权的 LoRA ZIP 时，可用 `tools/verify_qwen3vl_controlled_bundle.py` 独立核对
+整包摘要、逐文件哈希、基座身份和全部 LoRA 张量；公开仓库仍不分发权重。详见
+[受控 LoRA 复现包记录](docs/QWEN3VL2B_CONTROLLED_BUNDLE_ROUND497_20261122.md)。
+
 本机 8GB 显卡可通过按需进程轮换运行 Qwen3-VL-2B NF4 与 SAM3，工作台保持在线。两帧真实功能验收、候选导入及原始数据保护已经完成；本轮没有实际修改候选，不代表准确率提升。见 [本机运行说明](docs/local-gpu.md)、[结果与局限](docs/test-results/local_gpu_results.md) 和 [当前进度](docs/progress/dataset-comparison.md)。
 
 仓库已经包含 `source/sam3` 的 SAM 3 源码，克隆后无需再初始化子模块。安装依赖需要 Python 3.12 和支持 CUDA 的 NVIDIA 显卡：

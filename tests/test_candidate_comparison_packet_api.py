@@ -41,8 +41,12 @@ class CandidateComparisonPacketApiTests(unittest.TestCase):
         self.frame_payload = png_bytes()
         self.current_image = png_bytes((30, 60, 90))
         self.alt_image = png_bytes((90, 60, 30))
+        self.current_mask = png_bytes((0, 0, 0))
+        self.alt_mask = png_bytes((255, 255, 255))
         (self.packet / "current.png").write_bytes(self.current_image)
         (self.packet / "alternative.png").write_bytes(self.alt_image)
+        (self.packet / "current-mask.png").write_bytes(self.current_mask)
+        (self.packet / "alternative-mask.png").write_bytes(self.alt_mask)
         self.candidate = {
             "id": 991, "label": "arbitrary-class", "score": 0.7,
             "points": [[1, 1], [10, 1], [10, 8], [1, 8]], "holes": [],
@@ -57,7 +61,8 @@ class CandidateComparisonPacketApiTests(unittest.TestCase):
             "automatic_approval": False,
             "assistant_decision": None,
             "human_decision": None,
-            "source": {"path": self.source_path, "topic": "/camera-x"},
+            "source": {"path": self.source_path, "topic": "/camera-x",
+                       "file_activation_generation": 42},
             "rows": [{
                 "comparison_id": "any-frame-any-object",
                 "frame": 7,
@@ -65,13 +70,15 @@ class CandidateComparisonPacketApiTests(unittest.TestCase):
                 "current_candidate_id": 991,
                 "current_candidate_artifact_sha256": binding["candidate_artifact_sha256"],
                 "current_candidate_fingerprint": binding["candidates"][0]["candidate_fingerprint"],
-                "current": {"image": "current.png", "image_sha256": hashlib.sha256(self.current_image).hexdigest()},
+                "current": {"image": "current.png", "image_sha256": hashlib.sha256(self.current_image).hexdigest(),
+                            "mask": "current-mask.png", "mask_sha256": hashlib.sha256(self.current_mask).hexdigest()},
                 "current_pixel_count": 77,
                 "current_metrics": {"iou": 1.0},
                 "variants": [{
                     "alternative_id": "policy-alpha", "kind": "alternative",
                     "label": "alpha", "policy": "generic-policy",
-                    "mask_sha256": "a" * 64, "pixel_count": 79,
+                    "mask_sha256": hashlib.sha256(self.alt_mask).hexdigest(),
+                    "mask": "alternative-mask.png", "pixel_count": 79,
                     "preview": {"image": "alternative.png", "image_sha256": hashlib.sha256(self.alt_image).hexdigest()},
                     "metrics": {"iou_to_current": 0.8},
                 }],

@@ -143,9 +143,13 @@ def read_packet(work_root, packet_id):
         raise ValueError("候选对比包缺少源作用域")
     source_path = source.get("path")
     source_topic = source.get("topic")
+    source_generation = source.get("file_activation_generation")
     if (not isinstance(source_path, str) or not Path(source_path).is_absolute()
             or not isinstance(source_topic, str) or not source_topic.strip()
-            or len(source_topic) > 500):
+            or len(source_topic) > 500
+            or isinstance(source_generation, bool)
+            or not isinstance(source_generation, int)
+            or source_generation < 1 or source_generation > (1 << 53) - 1):
         raise ValueError("候选对比包源作用域无效")
     rows = value.get("rows")
     if not isinstance(rows, list) or not 1 <= len(rows) <= 200:
@@ -195,6 +199,13 @@ def read_packet(work_root, packet_id):
         current = _asset(row.get("current"), label="当前候选",
                          manifest_dir=path.parent, allowed_images=allowed_images,
                          total_bytes=total_bytes)
+        current_value = row.get("current")
+        current_mask = _asset({
+            "image": current_value.get("mask") if isinstance(current_value, dict) else None,
+            "image_sha256": (current_value.get("mask_sha256")
+                              if isinstance(current_value, dict) else None),
+        }, label="当前候选 mask", manifest_dir=path.parent,
+            allowed_images=allowed_images, total_bytes=total_bytes)
         variants = row.get("variants")
         if not isinstance(variants, list) or not 1 <= len(variants) <= 8:
             raise ValueError("候选对比记录替代候选为空或过多")
@@ -217,12 +228,18 @@ def read_packet(work_root, packet_id):
             asset = _asset(variant.get("preview"), label="替代候选",
                            manifest_dir=path.parent, allowed_images=allowed_images,
                            total_bytes=total_bytes)
+            mask_asset = _asset({
+                "image": variant.get("mask"),
+                "image_sha256": mask_sha,
+            }, label="替代候选 mask", manifest_dir=path.parent,
+                allowed_images=allowed_images, total_bytes=total_bytes)
             normalized_variants.append({
                 "alternative_id": variant_id,
                 "kind": kind,
                 "label": _scalar(variant.get("label"), "替代候选标签"),
                 "policy": _scalar(variant.get("policy"), "替代候选策略"),
                 "mask_sha256": mask_sha,
+                "mask": mask_asset["image"],
                 "pixel_count": pixels,
                 "preview": asset,
                 "metrics": _metrics(variant.get("metrics")),
@@ -235,7 +252,9 @@ def read_packet(work_root, packet_id):
             "source_frame_sha256": row["source_frame_sha256"],
             "current_candidate_artifact_sha256": row["current_candidate_artifact_sha256"],
             "current_candidate_fingerprint": row["current_candidate_fingerprint"],
-            "current": dict(current, pixel_count=current_pixel_count,
+            "current": dict(current, mask=current_mask["image"],
+                            mask_sha256=current_mask["image_sha256"],
+                            pixel_count=current_pixel_count,
                             metrics=_metrics(row.get("current_metrics"))),
             "variants": normalized_variants,
             "candidate_only": True,
@@ -255,6 +274,7 @@ def read_packet(work_root, packet_id):
         "manifest_sha256": hashlib.sha256(raw).hexdigest(),
         "source_topic": source_topic,
         "source_path_internal": source_path,
+        "source_file_activation_generation": source_generation,
         "comparison_count": len(normalized),
         "rows": normalized,
         "read_only_packet": True,
@@ -276,16 +296,25 @@ def public_packet(packet):
             f"/api/candidate_comparison_packs/{packet_id}/images/"
             f"{row['current']['image']}?manifest_sha256={manifest_sha}"
             f"&image_sha256={row['current']['image_sha256']}")
+        row["current"]["mask_url"] = (
+            f"/api/candidate_comparison_packs/{packet_id}/images/"
+            f"{row['current']['mask']}?manifest_sha256={manifest_sha}"
+            f"&image_sha256={row['current']['mask_sha256']}")
         for variant in row["variants"]:
             variant["preview"]["image_url"] = (
                 f"/api/candidate_comparison_packs/{packet_id}/images/"
                 f"{variant['preview']['image']}?manifest_sha256={manifest_sha}"
                 f"&image_sha256={variant['preview']['image_sha256']}")
+            variant["mask_url"] = (
+                f"/api/candidate_comparison_packs/{packet_id}/images/"
+                f"{variant['mask']}?manifest_sha256={manifest_sha}"
+                f"&image_sha256={variant['mask_sha256']}")
     return result
 
 
 def packet_summary(packet):
     return copy.deepcopy({key: packet[key] for key in (
         "schema_version", "packet_id", "manifest_sha256", "source_topic",
+        "source_file_activation_generation",
         "comparison_count", "read_only_packet", "session_preferences_only",
         "human_truth_writes", "training_data_writes", "automatic_approval")})

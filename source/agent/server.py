@@ -3483,7 +3483,8 @@ def get_candidate_comparison_scope(packet_id, comparison_id):
             raise StaleHumanReviewError("候选对比清单已变化，旧窗口请求已拒绝")
         assert_request_data_scope(payload)
         if (packet["source_path_internal"] != payload["path"]
-                or packet["source_topic"] != payload["topic"]):
+                or packet["source_topic"] != payload["topic"]
+                or packet["source_file_activation_generation"] != generation):
             raise StaleHumanReviewError("候选对比包与当前文件或相机不一致")
         matches = [row for row in packet["rows"]
                    if row["comparison_id"] == comparison_id]

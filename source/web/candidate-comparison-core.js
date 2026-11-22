@@ -11,6 +11,7 @@
       current_candidate_artifact_sha256: row?.current_candidate_artifact_sha256 || '',
       current_candidate_fingerprint: row?.current_candidate_fingerprint || '',
       current_image_sha256: row?.current?.image_sha256 || '',
+      current_mask_sha256: row?.current?.mask_sha256 || '',
       alternative_id: variant?.alternative_id || '',
       variant_mask_sha256: variant?.mask_sha256 || '',
       variant_image_sha256: variant?.preview?.image_sha256 || '',
@@ -21,7 +22,8 @@
     const current = binding(packet, row, null);
     return [current.manifest_sha256, current.comparison_id,
       current.source_frame_sha256, current.current_candidate_artifact_sha256,
-      current.current_candidate_fingerprint, current.current_image_sha256].join('|');
+      current.current_candidate_fingerprint, current.current_image_sha256,
+      current.current_mask_sha256].join('|');
   }
 
   function validPreference(packet, row, value) {

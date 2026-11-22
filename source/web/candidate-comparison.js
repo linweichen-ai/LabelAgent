@@ -31,6 +31,14 @@
     node.className = `candidateComparisonStatus ${tone}`.trim();
     node.textContent = message;
   }
+  function invalidateView({clearCatalog = false} = {}) {
+    packet = null; row = null; scope = null;
+    loadedImages = new Set(); currentImageLoaded = false;
+    preferenceButtons = [];
+    content.replaceChildren();
+    rowSelect.replaceChildren();
+    if (clearCatalog) packSelect.replaceChildren();
+  }
   async function getJson(url) {
     const response = await fetch(url, {method: 'GET', cache: 'no-store'});
     const value = await response.json().catch(() => ({}));
@@ -182,7 +190,7 @@
   async function loadPack(generation = ++requestGeneration) {
     if (!packSelect.value) return;
     const selectedPacketId = packSelect.value;
-    scope = null; content.replaceChildren();
+    invalidateView();
     setStatus('正在读取并校验候选对比包…', 'checking');
     try {
       const value = await getJson(`/api/candidate_comparison_packs/${encodeURIComponent(selectedPacketId)}`);
@@ -200,12 +208,13 @@
       if (row) await verifySelected(generation);
     } catch (error) {
       if (generation !== requestGeneration || selectedPacketId !== packSelect.value) return;
-      packet = null; row = null; rowSelect.replaceChildren();
+      invalidateView();
       setStatus(error.message || '候选对比包载入失败', 'error');
     }
   }
   async function refreshCatalog() {
     const generation = ++requestGeneration;
+    invalidateView({clearCatalog: true});
     setStatus('正在检查本机候选对比包…', 'checking');
     try {
       const value = await getJson('/api/candidate_comparison_packs');
@@ -219,10 +228,13 @@
       byId('candidateComparisonBadge').textContent = String(value.packets.length);
       openButton.classList.toggle('ready', value.packets.length > 0);
       if (value.packets.length) await loadPack(generation);
-      else setStatus('没有发现可用的候选对比包。', 'empty');
+      else {
+        invalidateView({clearCatalog: true});
+        setStatus('没有发现可用的候选对比包。', 'empty');
+      }
     } catch (error) {
       if (generation !== requestGeneration) return;
-      packSelect.replaceChildren(); rowSelect.replaceChildren();
+      invalidateView({clearCatalog: true});
       byId('candidateComparisonBadge').textContent = '!';
       openButton.classList.remove('ready');
       setStatus(error.message || '无法读取候选对比包', 'error');
@@ -238,12 +250,12 @@
   }
   openButton.addEventListener('click', async () => { dialog.showModal(); await refreshCatalog(); });
   byId('candidateComparisonClose').addEventListener('click', () => {
-    requestGeneration += 1; scope = null; content.replaceChildren(); dialog.close();
+    requestGeneration += 1; invalidateView(); dialog.close();
   });
   byId('candidateComparisonRefresh').addEventListener('click', refreshCatalog);
   byId('candidateComparisonLoad').addEventListener('click', loadPack);
   packSelect.addEventListener('change', () => {
-    requestGeneration += 1; scope = null; content.replaceChildren();
+    requestGeneration += 1; invalidateView();
     setStatus('已切换对比包；请点击“载入”重新校验。', 'checking');
   });
   rowSelect.addEventListener('change', async () => {

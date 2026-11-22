@@ -56,6 +56,9 @@ try {
       x => x.rows[0].reviewer = 1,
       x => x.rows[0].reviewed_at = [],
       x => x.rows[80].decision = "approve",
+      x => x.rows[0].reviewer = "x".repeat(513),
+      x => x.rows[0].reviewed_at = "x".repeat(129),
+      x => x.rows[0].note = "x".repeat(20001),
     ];
     for (const key of ["training_authorized", "automatic_approval", "approved_for_training"]) {
       for (const value of [false, true, null]) {

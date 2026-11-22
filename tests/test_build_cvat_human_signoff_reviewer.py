@@ -106,6 +106,28 @@ class OfflineHumanSignoffReviewerTests(unittest.TestCase):
             self.assertFalse(result["training_authorized"])
             self.assertFalse(result["human_pass_is_training_authorization"])
 
+    def test_page_exposes_fail_closed_offline_draft_contract(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            review, template, review_root, _, _ = self.fixture(root)
+            repository = root / "repository"
+            repository.mkdir()
+            output = repository / ".repro" / "review-session"
+            build(review, template, review_root, output, repository)
+            page = (output / "index.html").read_text(encoding="utf-8")
+            self.assertIn('id="exportDraft"', page)
+            self.assertIn('id="importDraft" type="file"', page)
+            self.assertIn("labelagent.cvat-human-signoff-draft.v1", page)
+            self.assertIn("signoff_template_sha256", page)
+            self.assertIn("rejectDuplicateKeys", page)
+            self.assertIn("function setBusy", page)
+            self.assertIn("草稿人工字段过长", page)
+            self.assertIn('byId("export").disabled=n!==0', page)
+            self.assertNotIn("localStorage", page)
+            self.assertNotIn("sessionStorage", page)
+            self.assertNotIn("XMLHttpRequest", page)
+            self.assertNotIn("fetch(", page)
+
     def test_manifest_hash_drift_fails_closed(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

@@ -69,7 +69,7 @@ powershell -ExecutionPolicy Bypass -File tools\start_local.ps1 -SamUrl http://12
 powershell -ExecutionPolicy Bypass -File tools\stop_local.ps1
 ```
 
-停止脚本只处理 `.repro/processes.json` 中由当前仓库启动的 PID，不扫描或结束其他用户进程。
+停止脚本只处理 `.repro/processes.json` 中由当前仓库启动的进程，并在停止前联合核对仓库根目录、PID、进程创建时间、Python可执行文件和服务角色。旧PID被Windows复用、记录属于另一份克隆或任一身份不匹配时会失败关闭，不扫描或结束其他用户进程。
 启动前会强制检查工作台8765端口以及本地SAM3使用的8766端口；端口已被其他实例占用时会在创建任何新进程前停止并明确报告。预检之后如遇端口竞态、子进程提前退出、健康检查失败或服务读回失败，启动脚本会清理本轮已创建的进程和进程记录，不接管或停止其他实例。
 
 ## 4. VLM / Agent 配置边界

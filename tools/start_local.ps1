@@ -30,6 +30,7 @@ $env:TMP = $RuntimeTemp
 if ($WorkDir) { $env:LABELAGENT_WORK_DIR = [IO.Path]::GetFullPath($WorkDir) }
 $env:SAM3_URL = $SamUrl
 $pids = @()
+$managedProcesses = @()
 
 $doctorArgs = @("tools\repro_doctor.py", "--require-web-port")
 if ($SamUrl -eq "http://127.0.0.1:8766") {
@@ -44,6 +45,12 @@ try {
             -WorkingDirectory $Root -RedirectStandardOutput (Join-Path $Logs "sam3.out.log") `
             -RedirectStandardError (Join-Path $Logs "sam3.err.log") -PassThru -WindowStyle Hidden
         $pids += $sam.Id
+        $managedProcesses += @{
+            pid = $sam.Id
+            role = "sam3"
+            started_at_utc = $sam.StartTime.ToUniversalTime().ToString("o")
+            executable_path = [IO.Path]::GetFullPath($sam.Path)
+        }
     } else {
         try {
             $null = Invoke-RestMethod -Uri ($SamUrl.TrimEnd('/') + "/health") -TimeoutSec 5
@@ -56,9 +63,22 @@ try {
         -WorkingDirectory $Root -RedirectStandardOutput (Join-Path $Logs "workbench.out.log") `
         -RedirectStandardError (Join-Path $Logs "workbench.err.log") -PassThru -WindowStyle Hidden
     $pids += $web.Id
+    $managedProcesses += @{
+        pid = $web.Id
+        role = "workbench"
+        started_at_utc = $web.StartTime.ToUniversalTime().ToString("o")
+        executable_path = [IO.Path]::GetFullPath($web.Path)
+    }
 
-    @{ pids = $pids; started_at = (Get-Date).ToString("o"); sam_url = $SamUrl; root = $Root } |
-        ConvertTo-Json | Set-Content -Encoding UTF8 $Record
+    @{
+        schema_version = "labelagent.local-process-record.v2"
+        processes = $managedProcesses
+        pids = $pids
+        started_at = (Get-Date).ToUniversalTime().ToString("o")
+        sam_url = $SamUrl
+        root = [IO.Path]::GetFullPath($Root)
+    } |
+        ConvertTo-Json -Depth 4 | Set-Content -Encoding UTF8 $Record
 
     $ready = $false
     for ($i = 0; $i -lt 60; $i++) {

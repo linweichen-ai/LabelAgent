@@ -39,6 +39,21 @@ class ReproCheckoutBrowserAcceptanceTests(unittest.TestCase):
         self.assertIn("foreach ($processId in $pids)", source[cleanup:browser])
         self.assertIn("Remove-Item -LiteralPath $Record", source[cleanup:browser])
 
+    def test_process_record_and_stop_are_identity_bound(self):
+        start = (ROOT / "tools" / "start_local.ps1").read_text(encoding="utf-8")
+        stop = (ROOT / "tools" / "stop_local.ps1").read_text(encoding="utf-8")
+        self.assertIn('schema_version = "labelagent.local-process-record.v2"', start)
+        self.assertIn("started_at_utc = $sam.StartTime", start)
+        self.assertIn("started_at_utc = $web.StartTime", start)
+        self.assertIn("executable_path = [IO.Path]::GetFullPath", start)
+        self.assertIn("the process record belongs to another checkout", stop)
+        self.assertIn("duplicate PID in the process record", stop)
+        self.assertIn("its executable does not match this checkout", stop)
+        self.assertIn("its creation time no longer matches", stop)
+        verify = stop.index("$verified = @()")
+        terminate = stop.index("Stop-Process -Id $process.Id")
+        self.assertLess(verify, terminate)
+
     def test_checkout_runs_logic_and_real_synthetic_browser_acceptance(self):
         source = (ROOT / "tools" / "verify_checkout.ps1").read_text(encoding="utf-8")
         self.assertIn("$VenvScripts = Split-Path -Parent $Python", source)

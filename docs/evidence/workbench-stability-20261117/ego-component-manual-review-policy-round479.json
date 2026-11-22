@@ -1,0 +1,24 @@
+{
+  "round": 479,
+  "date": "2026-11-22",
+  "status": "offline_manual_review_order_only",
+  "candidate_only": true,
+  "assistant_review_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "default_enabled": false,
+  "automatic_decisions_enabled": false,
+  "ranking_sha256": "23a6e15bd884e4fcc955019fa48c1fadcf2012d658f4c1aec33ff2d977cf8782",
+  "blind_evaluation_sha256": "1ecb43e024730b3b7cab491056a26acdfe90cf65a0caa3a10c849304c3cbe7a6",
+  "policy_sha256": "4b22306de7ec1bd5386e3a0279487ed22eed13677d1f750d38a9f42da2a64141",
+  "counts": {
+    "total": 245,
+    "priority_review": 226,
+    "deferred_manual_review": 19,
+    "automatic_decisions": 0,
+    "camera1": 91,
+    "camera3": 154
+  },
+  "boundary": "The policy only orders manual review. Deferred never means accepted, and no row is human truth or training-approved."
+}

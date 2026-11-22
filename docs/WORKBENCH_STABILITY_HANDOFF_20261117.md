@@ -3581,3 +3581,12 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
   `docs/EGO_COMPONENT_RISK_BLIND_AUDIT_ROUNDS476_478_20261122.md`。
 - 同轮只读运行态：页面 200、任务 idle、SAM/主 VLM/快速 VLM 均 ready；运行前检查只因
   未锁参考帧返回 `reference_missing`，正式状态未被本轮实验修改。
+
+## 2026-11-22 Round479 补充：人工复核顺序固化
+
+- 将 Round476–478 的结论固化成离线、哈希绑定的人工复核队列：camera3 全部优先复核；
+  camera1 末 20% 共 19 项只允许延后人工复核，其余 226 项优先复核。
+- 245 项自动决策全部为 `null`；延后不等于接受。输入门禁、相机计数、连续排名或盲审证据
+  任一异常均失败关闭，默认不接正式工作台。
+- 该策略只优化审阅顺序，没有改候选 mask、人工真值、训练批准、权重、参考帧或线上配置。
+  详见 `docs/EGO_COMPONENT_MANUAL_REVIEW_POLICY_ROUND479_20261122.md`。

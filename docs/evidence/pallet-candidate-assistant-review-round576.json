@@ -1,0 +1,90 @@
+{
+  "schema_version": "labelagent.pallet_candidate_assistant_review.v1",
+  "date": "2026-11-22",
+  "source_pixel_audit_sha256": "2237bc091f1e37002586ae95dca82d9282723c0c9009eec820dcec9cec54243b",
+  "scope": "assistant visual triage of seven emitted masks and two suppressed candidates",
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "workbench_writes": 0,
+  "summary": {
+    "assistant_visual_pass_candidate": 3,
+    "partial_visible_sliver_needs_more_evidence": 3,
+    "reject_fragmented_mask": 1,
+    "keep_suppressed": 2
+  },
+  "rows": [
+    {
+      "frame_id": "1789897549682498905",
+      "camera": 0,
+      "obj_id": 47,
+      "decision": "partial_visible_sliver_needs_more_evidence",
+      "reason": "Only a thin lower visible strip is segmented; it cannot establish the full instance boundary.",
+      "next_route": "temporal_or_manual_boundary_review"
+    },
+    {
+      "frame_id": "1789897549682498905",
+      "camera": 0,
+      "obj_id": 48,
+      "decision": "assistant_visual_pass_candidate",
+      "reason": "One connected pallet-shaped region; eight openings are visually consistent with pallet structure, but still require human confirmation.",
+      "next_route": "priority_human_confirmation"
+    },
+    {
+      "frame_id": "1789897549682498905",
+      "camera": 1,
+      "obj_id": 47,
+      "decision": "partial_visible_sliver_needs_more_evidence",
+      "reason": "The mask is a single very thin strip with low projected-box coverage and does not prove a complete instance.",
+      "next_route": "temporal_or_manual_boundary_review"
+    },
+    {
+      "frame_id": "1789897549682498905",
+      "camera": 1,
+      "obj_id": 48,
+      "decision": "assistant_visual_pass_candidate",
+      "reason": "Two coherent visible components follow the pallet surfaces; likely occlusion-related separation, pending human confirmation.",
+      "next_route": "priority_human_confirmation"
+    },
+    {
+      "frame_id": "1789897549982491905",
+      "camera": 0,
+      "obj_id": 48,
+      "decision": "keep_suppressed",
+      "reason": "The split gate failed and no two-dimensional mask was emitted.",
+      "next_route": "manual_only"
+    },
+    {
+      "frame_id": "1789897549982491905",
+      "camera": 0,
+      "obj_id": 47,
+      "decision": "partial_visible_sliver_needs_more_evidence",
+      "reason": "Only a narrow visible strip is retained; temporal evidence or manual boundary work is required.",
+      "next_route": "temporal_or_manual_boundary_review"
+    },
+    {
+      "frame_id": "1789897549982491905",
+      "camera": 0,
+      "obj_id": 49,
+      "decision": "assistant_visual_pass_candidate",
+      "reason": "One coherent component with no holes or fragments and a plausible pallet silhouette, pending human confirmation.",
+      "next_route": "priority_human_confirmation"
+    },
+    {
+      "frame_id": "1789897549982491905",
+      "camera": 1,
+      "obj_id": 47,
+      "decision": "keep_suppressed",
+      "reason": "The split gate produced no usable mask and suppression remains correct.",
+      "next_route": "manual_only"
+    },
+    {
+      "frame_id": "1789897549982491905",
+      "camera": 1,
+      "obj_id": 48,
+      "decision": "reject_fragmented_mask",
+      "reason": "The mask contains 29 components and five holes with visible speckle fragmentation.",
+      "next_route": "rerun_segmentation_or_manual_redraw"
+    }
+  ]
+}

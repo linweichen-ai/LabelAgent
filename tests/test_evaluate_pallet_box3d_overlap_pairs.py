@@ -4,11 +4,48 @@ import numpy as np
 
 from tools.evaluate_pallet_box3d_overlap_pairs import (
     depth_split_masks, index_manifest_files, mask_separation,
-    projected_conflicts, select_source_rows,
+    projected_conflicts, remove_tiny_islands, select_source_rows,
 )
 
 
 class PalletBox3dOverlapPairsTest(unittest.TestCase):
+    def test_tiny_island_cleanup_only_removes_small_disconnected_specks(self):
+        mask = np.zeros((40, 60), dtype=bool)
+        mask[5:25, 5:25] = True
+        mask[8:13, 35:40] = True
+        mask[30:32, 50:52] = True
+
+        refined, metrics = remove_tiny_islands(mask)
+
+        self.assertTrue(refined[10, 10])
+        self.assertTrue(refined[10, 37])
+        self.assertFalse(refined[30, 50])
+        self.assertFalse((refined & ~mask).any())
+        self.assertEqual(metrics["removed_island_count"], 1)
+        self.assertEqual(metrics["removed_island_pixels"], 4)
+
+    def test_depth_split_never_transfers_other_instance_only_pixels(self):
+        shape = (20, 30)
+        projected_mask = np.zeros(shape, dtype=bool)
+        projected_mask[2:18, 2:28] = True
+        far_source = np.zeros(shape, dtype=bool)
+        far_source[5:10, 4:10] = True
+        far_source[8:13, 13:18] = True
+        near_source = np.zeros(shape, dtype=bool)
+        near_source[8:13, 13:18] = True
+        near_source[10:15, 20:26] = True
+        projected = [
+            {"obj_id": 1, "mask": projected_mask, "camera_depth": 8.0},
+            {"obj_id": 2, "mask": projected_mask, "camera_depth": 7.0},
+        ]
+
+        split, _ = depth_split_masks(
+            projected, {1: far_source, 2: near_source})
+
+        self.assertFalse((split[2] & far_source & ~near_source).any())
+        self.assertTrue(np.array_equal(split[2], near_source))
+        self.assertTrue(np.array_equal(split[1], far_source & ~near_source))
+
     def test_manifest_index_preserves_multiple_frames_per_camera(self):
         rows = [
             {"sequence": "010", "camera": "camera_0", "frame_id": "100"},

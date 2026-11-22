@@ -1,0 +1,65 @@
+{
+  "schema_version": "labelagent.pallet_source_owned_depth_split_receipt.v1",
+  "date": "2026-11-22",
+  "status": "offline_candidate_quality_improved_not_deployed",
+  "scope": "five frozen frames and twenty images from dense_pallet_5f",
+  "changes": {
+    "source_owned_depth_split": true,
+    "cross_instance_unique_pixel_transfer_allowed": false,
+    "tiny_island_cleanup": {
+      "relative_area_threshold": 0.01,
+      "minimum_area_pixels": 8,
+      "adds_pixels": false,
+      "fills_holes": false,
+      "connects_components": false
+    }
+  },
+  "before_after": {
+    "depth_split_pass_images": {"before": 2, "after": 3, "total": 4},
+    "emitted_masks": {"before": 7, "after": 8, "total": 9},
+    "suppressed_candidates": {"before": 2, "after": 1, "total": 9},
+    "high_priority_reviews": {"before": 4, "after": 2},
+    "structural_alerts": {"before": 1, "after": 0},
+    "worst_case": {
+      "frame_id": "1789897549982491905",
+      "camera": 1,
+      "obj_id": 48,
+      "before": {"pixels": 2879, "components": 29, "holes": 5},
+      "after_source_owned_split": {"pixels": 1650, "components": 26, "holes": 3},
+      "after_tiny_island_cleanup": {"pixels": 1592, "components": 2, "holes": 3},
+      "assistant_review_priority": "high",
+      "human_confirmation_required": true
+    }
+  },
+  "remaining_suppressed": {
+    "frame_id": "1789897549982491905",
+    "camera": 0,
+    "obj_id": 48,
+    "split_pixels": 152,
+    "reason": "split_candidate_failed_review"
+  },
+  "tests": {
+    "targeted": "17 passed",
+    "project_utf8": "1611 passed, 1 skipped, 262 subtests passed",
+    "windows_default_locale_note": "15 existing Chinese UTF-8 persistence tests fail under the GBK default read_text locale; all pass with python -X utf8",
+    "repository_collection_note": "unfiltered repository collection includes the optional SAM3 qualitative_test.py and requires matplotlib"
+  },
+  "artifacts": {
+    "split_report_sha256": "f5a8890e4b3c527dd544142b4ec178d9babe1a558281b774b3781dc51f9daaa7",
+    "route_report_sha256": "7191bb0d3258968705e9ce71b9263a32b8cd5f1591a326a39cc3e3b84c87e9ae",
+    "bundle_sha256": "b4b27277412642ae954257319f710d7fc3ae9c992eb7230cd0e8e17e62c801b5",
+    "pixel_audit_sha256": "b95a6c3d051aa4ff91f0661135c3226fcb36bd058b0c5c4f207248c929d48c5b",
+    "contact_sheet_sha256": "9117e214c43319d81b1fe6909c85fb172d3ed417bd51af1248ce5d4c1e1bd50f"
+  },
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "workbench_writes": 0,
+  "training_data_writes": 0,
+  "oss_writes": 0,
+  "formal_workbench": {
+    "page_http_status": 200,
+    "run_status": "idle",
+    "state_sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115"
+  }
+}

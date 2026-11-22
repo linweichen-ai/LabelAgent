@@ -8,6 +8,7 @@ import base64
 import hashlib
 import io
 import json
+import math
 from pathlib import Path
 import sys
 import time
@@ -85,22 +86,48 @@ def mask_separation(first, second):
     }
 
 
+def remove_tiny_islands(mask, relative_area=.01, minimum_area=8):
+    """Remove only disconnected specks; never expand or fill the mask."""
+    source = mask.astype(np.uint8)
+    total = int(source.sum())
+    if not total:
+        return mask.copy(), {"removed_island_count": 0,
+                             "removed_island_pixels": 0}
+    count, labels, stats, _ = cv2.connectedComponentsWithStats(source, 8)
+    if count <= 2:
+        return mask.copy(), {"removed_island_count": 0,
+                             "removed_island_pixels": 0}
+    threshold = max(int(minimum_area), int(math.ceil(total * relative_area)))
+    component_areas = stats[1:, cv2.CC_STAT_AREA]
+    largest_label = int(np.argmax(component_areas)) + 1
+    keep_labels = [
+        label for label in range(1, count)
+        if label == largest_label or int(stats[label, cv2.CC_STAT_AREA]) >= threshold
+    ]
+    refined = np.isin(labels, keep_labels)
+    return refined, {
+        "removed_island_count": int((count - 1) - len(keep_labels)),
+        "removed_island_pixels": int(total - refined.sum()),
+    }
+
+
 def depth_split_masks(projected, masks):
     if not projected:
         return {}, []
     shape = next(iter(masks.values())).shape
-    union = np.zeros(shape, dtype=bool)
-    for row in projected:
-        union |= masks[row["obj_id"]]
     owner = np.full(shape, -1, dtype=np.int16)
     depth = np.full(shape, np.inf, dtype=float)
     for index, row in enumerate(projected):
-        eligible = union & row["mask"] & (float(row["camera_depth"]) < depth)
+        # Resolve only pixels predicted for this instance.  A nearer projected
+        # box may win pixels shared by two source masks, but it must never
+        # inherit pixels that exist only in another instance's mask.
+        eligible = (masks[row["obj_id"]] & row["mask"]
+                    & (float(row["camera_depth"]) < depth))
         owner[eligible] = index
         depth[eligible] = float(row["camera_depth"])
     split, metrics = {}, []
     for index, row in enumerate(projected):
-        value = owner == index
+        value, cleanup = remove_tiny_islands(owner == index)
         original = masks[row["obj_id"]]
         pixels, projected_pixels, original_pixels = (
             int(value.sum()), int(row["mask"].sum()), int(original.sum()))
@@ -123,6 +150,7 @@ def depth_split_masks(projected, masks):
             "obj_id": row["obj_id"], "camera_depth": row["camera_depth"],
             "split_pixels": pixels, "projected_box_coverage": projected_coverage,
             "source_mask_retention": source_retention,
+            **cleanup,
             "maximum_nearer_projected_box_overlap": maximum_nearer_overlap,
             "candidate_pass": candidate_pass,
             "occluded_unobservable_candidate": occluded_candidate,

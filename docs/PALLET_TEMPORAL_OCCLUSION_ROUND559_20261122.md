@@ -51,3 +51,7 @@
 ## 下一步
 
 把该时序门控接入离线候选流水线：单帧 `no-return` 时自动查找同一 obj_id 的前后有效帧；只有门控通过才标记为“时序支持遮挡”，仍将二维边界留给可见帧传播或人工复核。
+
+## 后续结果（Round 560）
+
+已完成离线候选路由器。它将 Round 558 的单帧 LiDAR 结果与本轮时序报告自动关联：4 个稳定可见实例进入深度拆分候选；obj20 进入 `temporal_occlusion_defer_2d`，保留 3D 身份、抑制当前帧二维候选，并只列出 3 个非 ignore、可见点不少于 3 的传播源帧。详见 `PALLET_VISIBILITY_CANDIDATE_ROUTING_ROUND560_20261122.md`。

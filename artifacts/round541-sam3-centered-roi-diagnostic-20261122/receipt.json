@@ -1,0 +1,32 @@
+{
+  "schema_version": "labelagent.sam3-centered-roi-diagnostic.v1",
+  "round": 541,
+  "date": "2026-11-22",
+  "assistant_reviewed": true,
+  "human_truth": false,
+  "evaluation_only": true,
+  "not_for_deployment": true,
+  "test24_included": false,
+  "selection_policy": "prefer_prediction_bbox_containing_crop_center_then_score",
+  "uses_color": false,
+  "uses_reference_geometry_for_selection": false,
+  "common_failure_frame": {
+    "image_id": 2,
+    "wrong_top_score": 0.73047,
+    "wrong_top_bbox": [-0.88, -1.12, 210.92, 46.41],
+    "correct_second_score": 0.71484,
+    "correct_second_bbox": [49.30, 48.96, 411.35, 126.59],
+    "base_correct_proposal_iou": 0.881759,
+    "candidate_correct_proposal_iou": 0.897401
+  },
+  "center_prior_holdout15": {
+    "baseline": {"iou": 0.9465310279668476, "boundary_f1": 0.974116951466181, "dice": 0.9724181188462825},
+    "candidate_step36": {"iou": 0.9580908241308561, "boundary_f1": 0.9846245654831314, "dice": 0.9785141245724275},
+    "catastrophic_frames": 0
+  },
+  "comparison_sha256": "d05d0350b37a2eb1df8bd1219e2c2eae31f16465e6a0ad50f8f152982304ba9f",
+  "private_visual_sha256": "537ec311e0330a6a1c005eb2b3fc849bd83c133de2e87dbdb8305179e04fadd0",
+  "decision": "promote_centered_roi_association_to_isolated_cross_sequence_candidate_not_production",
+  "formal_model_changed": false,
+  "formal_workbench_changed": false
+}

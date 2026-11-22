@@ -10,6 +10,12 @@
   "depth_split_pass_frame_count": 1,
   "depth_or_occlusion_handled_frame_count": 2,
   "independent_candidate_gate_pass": true,
+  "independent_pcd_count": 3,
+  "lidar_visible_supported_instance_count": 4,
+  "lidar_insufficient_evidence_instance_count": 1,
+  "lidar_recovery_failed_candidate_count": 1,
+  "lidar_recovery_sam_attempt_count": 0,
+  "lidar_recovered_candidate_count": 0,
   "human_pixel_accuracy_measurable": false,
   "false_positive_rate_measurable": false,
   "workbench_writes": 0,
@@ -26,6 +32,15 @@
     "path": "artifacts/round595-independent-cross-sequence-audit-20261122.json",
     "sha256": "a128dfd78b8ef59ebd1fb88e77109d36bfbfc18b99a193bd075432946526284d"
   },
+  "lidar_visibility_report": {
+    "path": "artifacts/round596-independent-cross-sequence-lidar-visibility-20261122/results.json",
+    "sha256": "aa173773ecedcd9c82abe726b184e0904eb87c788249b53a1f8abb4cf44f95c8"
+  },
+  "lidar_recovery_report": {
+    "path": "artifacts/round597-independent-lidar-conflict-recovery-20261122/results.json",
+    "sha256": "43f56489fcb5476c073d51149fe0b4773ca3446713feb81fc662361f6ace7460"
+  },
+  "pcd_manifest_sha256": "c616e211ac663ed34e2d68758a1731fd4ea82246fc89bb457e25a6b24c8a7441",
   "formal_state": {
     "run_status": "idle",
     "state_sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115",
@@ -34,7 +49,7 @@
   "limitations": [
     "only two independently sampled images contained projected pallet conflicts",
     "3D box labels are not human pixel masks",
-    "independent PCD was unavailable for the LiDAR prompt recovery subpath",
+    "the only failed independent candidate had zero target LiDAR returns, so no positive-point SAM attempt was allowed",
     "no training or production decision is authorized by this receipt"
   ]
 }

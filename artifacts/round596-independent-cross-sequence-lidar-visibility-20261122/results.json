@@ -1,0 +1,196 @@
+{
+  "schema_version": "labelagent.pallet_lidar_visibility.v1",
+  "status": "offline_lidar_visibility_diagnostic_not_deployed",
+  "source_report_sha256": "5e8302ba0e71365aebc2fccc3ff3253ed152bd10c7f3fe770926983f3ed14cf1",
+  "pcd_manifest_sha256": "c616e211ac663ed34e2d68758a1731fd4ea82246fc89bb457e25a6b24c8a7441",
+  "grid": [
+    {
+      "cell_size": 2,
+      "depth_slack": 0.05
+    },
+    {
+      "cell_size": 2,
+      "depth_slack": 0.12
+    },
+    {
+      "cell_size": 2,
+      "depth_slack": 0.2
+    },
+    {
+      "cell_size": 4,
+      "depth_slack": 0.05
+    },
+    {
+      "cell_size": 4,
+      "depth_slack": 0.12
+    },
+    {
+      "cell_size": 4,
+      "depth_slack": 0.2
+    },
+    {
+      "cell_size": 8,
+      "depth_slack": 0.05
+    },
+    {
+      "cell_size": 8,
+      "depth_slack": 0.12
+    },
+    {
+      "cell_size": 8,
+      "depth_slack": 0.2
+    }
+  ],
+  "ambiguous_image_count": 2,
+  "visible_lidar_supported_instances": 4,
+  "occluded_lidar_supported_instances": 0,
+  "insufficient_evidence_instances": 1,
+  "workbench_writes": 0,
+  "gpu_requests": 0,
+  "human_pixel_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "rows": [
+    {
+      "sequence": "010",
+      "frame_id": "1789899951882467655",
+      "camera": 0,
+      "target_obj_id": 7,
+      "pcd_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round596-independent-cross-sequence-pcd-20261122\\010\\1789899951882467655.pcd",
+      "pcd_sha256": "e5d49a502e25e2a5233b6024def7f1bf3782ef2d08d4fc883a8309cda8f22f2e",
+      "point_count": 89751,
+      "instances": [
+        {
+          "obj_id": 7,
+          "camera_depth": 4.079824337458163,
+          "box_points": 232,
+          "in_frame_box_points": 232,
+          "default_visible_points": 219,
+          "default_visible_pixels": 214,
+          "visible_counts_grid_order": [
+            219,
+            226,
+            231,
+            165,
+            219,
+            228,
+            113,
+            176,
+            220
+          ],
+          "minimum_visible_points": 113,
+          "maximum_visible_points": 231,
+          "maximum_nearer_projected_box_overlap": 0.0,
+          "lidar_visibility_classification": "visible_lidar_supported"
+        },
+        {
+          "obj_id": 6,
+          "camera_depth": 4.181349923757786,
+          "box_points": 89,
+          "in_frame_box_points": 89,
+          "default_visible_points": 80,
+          "default_visible_pixels": 76,
+          "visible_counts_grid_order": [
+            85,
+            86,
+            89,
+            67,
+            80,
+            88,
+            38,
+            66,
+            86
+          ],
+          "minimum_visible_points": 38,
+          "maximum_visible_points": 89,
+          "maximum_nearer_projected_box_overlap": 0.6500493583415597,
+          "lidar_visibility_classification": "visible_lidar_supported"
+        },
+        {
+          "obj_id": 11,
+          "camera_depth": 5.362268463786312,
+          "box_points": 33,
+          "in_frame_box_points": 33,
+          "default_visible_points": 23,
+          "default_visible_pixels": 23,
+          "visible_counts_grid_order": [
+            26,
+            28,
+            29,
+            13,
+            23,
+            27,
+            3,
+            12,
+            16
+          ],
+          "minimum_visible_points": 3,
+          "maximum_visible_points": 29,
+          "maximum_nearer_projected_box_overlap": 0.3013918629550321,
+          "lidar_visibility_classification": "visible_lidar_supported"
+        }
+      ],
+      "visual_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round596-independent-cross-sequence-lidar-visibility-20261122\\visuals\\010-frame1789899951882467655-camera0-lidar-visibility.png",
+      "visual_sha256": "c03afa7feef7f5c542f9fe57994f4efd38af1ec54db6de5e1c6aaf45b904c5be"
+    },
+    {
+      "sequence": "011",
+      "frame_id": "1789900388815700364",
+      "camera": 1,
+      "target_obj_id": 15,
+      "pcd_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round596-independent-cross-sequence-pcd-20261122\\011\\1789900388815700364.pcd",
+      "pcd_sha256": "9e6aef0bf445100130d610d25ff5fdfb865020898a0f9c6e64e4fa9424e20db7",
+      "point_count": 89714,
+      "instances": [
+        {
+          "obj_id": 15,
+          "camera_depth": 4.617823565807648,
+          "box_points": 133,
+          "in_frame_box_points": 133,
+          "default_visible_points": 103,
+          "default_visible_pixels": 97,
+          "visible_counts_grid_order": [
+            123,
+            125,
+            130,
+            89,
+            103,
+            120,
+            50,
+            75,
+            88
+          ],
+          "minimum_visible_points": 50,
+          "maximum_visible_points": 130,
+          "maximum_nearer_projected_box_overlap": 0.0,
+          "lidar_visibility_classification": "visible_lidar_supported"
+        },
+        {
+          "obj_id": 20,
+          "camera_depth": 6.149417667915412,
+          "box_points": 0,
+          "in_frame_box_points": 0,
+          "default_visible_points": 0,
+          "default_visible_pixels": 0,
+          "visible_counts_grid_order": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "minimum_visible_points": 0,
+          "maximum_visible_points": 0,
+          "maximum_nearer_projected_box_overlap": 0.7230046948356808,
+          "lidar_visibility_classification": "no_lidar_return_insufficient_evidence"
+        }
+      ],
+      "visual_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round596-independent-cross-sequence-lidar-visibility-20261122\\visuals\\011-frame1789900388815700364-camera1-lidar-visibility.png",
+      "visual_sha256": "71f37415b4ce65877eac58cb06ed1922c045390ea3ceb078456f00be6dfffb83"
+    }
+  ]
+}

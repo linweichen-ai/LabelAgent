@@ -3,11 +3,15 @@ import unittest
 import numpy as np
 
 from tools.evaluate_pallet_lidar_conflict_points import (
-    accepted_candidate, prompt_groups, spread_points, unique_instance_pixels,
+    DEFAULT_ROI_SCALE, accepted_candidate, downsample_mask, prompt_groups,
+    spread_points, unique_instance_pixels,
 )
 
 
 class PalletLidarConflictPointTest(unittest.TestCase):
+    def test_independently_repeated_offline_default_is_two_x(self):
+        self.assertEqual(DEFAULT_ROI_SCALE, 2)
+
     def test_spread_points_is_deterministic_and_keeps_extent(self):
         points = np.array([[0, 0], [0, 0], [5, 0], [10, 0], [5, 5]])
         selected = spread_points(points, 3)
@@ -22,6 +26,21 @@ class PalletLidarConflictPointTest(unittest.TestCase):
         self.assertEqual(groups[0][1][0], {"x": 10, "y": 10, "label": 1})
         self.assertEqual(groups[0][1][1], {"x": 30, "y": 30, "label": 0})
         self.assertEqual(len(groups), 3)
+
+    def test_prompt_groups_preserve_pixel_centers_when_scaled(self):
+        groups = prompt_groups([[110, 210], [120, 220]], [],
+                               (100, 200, 300, 400), scale=2)
+        self.assertEqual(groups[0][1][0], {"x": 20, "y": 20, "label": 1})
+
+    def test_downsample_mask_roundtrip_and_rejects_sparse_spill(self):
+        source = np.zeros((3, 4), dtype=bool)
+        source[1:, 1:3] = True
+        enlarged = np.kron(source, np.ones((2, 2), dtype=bool))
+        self.assertTrue(np.array_equal(downsample_mask(enlarged, 4, 3), source))
+
+        sparse = np.zeros((6, 8), dtype=bool)
+        sparse[2, 2] = True
+        self.assertFalse(downsample_mask(sparse, 4, 3).any())
 
     def test_unique_pixels_exclude_points_inside_both_boxes(self):
         points = np.array([[0., 0., 0.], [1., 0., 0.], [2., 0., 0.]])

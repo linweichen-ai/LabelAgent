@@ -67,9 +67,13 @@ def unique_instance_pixels(points: np.ndarray, visible_indices: np.ndarray,
     return positive, negative
 
 
-def prompt_groups(positive: list[list[int]], negative: list[list[int]], roi):
+def prompt_groups(positive: list[list[int]], negative: list[list[int]], roi,
+                  scale: int = 1):
     def local(point, label):
-        return {"x": int(point[0] - roi[0]), "y": int(point[1] - roi[1]),
+        # Preserve the original pixel-center location when the ROI is enlarged.
+        x = round((point[0] - roi[0] + .5) * scale - .5)
+        y = round((point[1] - roi[1] + .5) * scale - .5)
+        return {"x": int(x), "y": int(y),
                 "label": label}
     positives = [local(point, 1) for point in positive]
     negatives = [local(point, 0) for point in negative]
@@ -84,6 +88,16 @@ def prompt_groups(positive: list[list[int]], negative: list[list[int]], roi):
     return groups
 
 
+def downsample_mask(mask: np.ndarray, width: int, height: int,
+                    threshold: float = .5) -> np.ndarray:
+    """Map a model-scale mask back without accepting sparse subpixel spill."""
+    if mask.shape == (height, width):
+        return mask.astype(bool, copy=True)
+    coverage = cv2.resize(mask.astype(np.float32), (width, height),
+                          interpolation=cv2.INTER_AREA)
+    return coverage >= threshold
+
+
 def accepted_candidate(metrics: dict, positive_coverage: float,
                        negative_clear_fraction: float, split_metrics: list[dict],
                        separations: list[dict]) -> bool:
@@ -96,6 +110,9 @@ def accepted_candidate(metrics: dict, positive_coverage: float,
         and separations
         and all(row["separated_at_0_15"] for row in separations)
     )
+
+
+DEFAULT_ROI_SCALE = 2
 
 
 def render_panel(image, proposal, split, positives, negatives, roi, title):
@@ -129,9 +146,12 @@ def render_panel(image, proposal, split, positives, negatives, roi, title):
 
 def evaluate(split_report_path: Path, manifest_path: Path, pcd_manifest_path: Path,
              labels_root: Path, calibration: Path, pcd_root: Path, output: Path,
-             sam_url: str, timeout: float = 120) -> dict:
+             sam_url: str, timeout: float = 120,
+             roi_scale: int = DEFAULT_ROI_SCALE) -> dict:
     if output.exists():
         raise ValueError("output directory already exists")
+    if roi_scale not in (1, 2, 4):
+        raise ValueError("roi_scale must be one of 1, 2 or 4")
     split_report = json.loads(split_report_path.read_text(encoding="utf-8"))
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     pcd_manifest = json.loads(pcd_manifest_path.read_text(encoding="utf-8"))
@@ -186,8 +206,12 @@ def evaluate(split_report_path: Path, manifest_path: Path, pcd_manifest_path: Pa
                          if roi[0] <= point[0] < roi[2] and roi[1] <= point[1] < roi[3]]
             negatives = [point for point in negatives
                          if roi[0] <= point[0] < roi[2] and roi[1] <= point[1] < roi[3]]
-            groups = prompt_groups(positives, negatives, roi)
-            crop = image.crop(tuple(roi)); stream = io.BytesIO(); crop.save(stream, "PNG")
+            groups = prompt_groups(positives, negatives, roi, roi_scale)
+            crop = image.crop(tuple(roi))
+            model_crop = (crop if roi_scale == 1 else crop.resize(
+                (crop.width * roi_scale, crop.height * roi_scale),
+                Image.Resampling.LANCZOS))
+            stream = io.BytesIO(); model_crop.save(stream, "PNG")
             encoded = base64.b64encode(stream.getvalue()).decode("ascii")
             payload = request_json(sam_url.rstrip("/") + "/segment_point_groups_batch", {
                 "image": encoded, "prompt_groups": [points for _, points in groups]},
@@ -204,7 +228,9 @@ def evaluate(split_report_path: Path, manifest_path: Path, pcd_manifest_path: Pa
                     attempts.append({"policy": policy, "error": result_item.get("error")})
                     continue
                 value = result_item["result"]
-                local = _result_mask(value, crop.width, crop.height)
+                model_local = _result_mask(
+                    value, model_crop.width, model_crop.height)
+                local = downsample_mask(model_local, crop.width, crop.height)
                 proposal = np.zeros((height, width), dtype=bool)
                 proposal[roi[1]:roi[3], roi[0]:roi[2]] = local
                 metrics = association_metrics(
@@ -228,6 +254,8 @@ def evaluate(split_report_path: Path, manifest_path: Path, pcd_manifest_path: Pa
                 Image.fromarray(split_masks[target["obj_id"]].astype(np.uint8) * 255).save(mask_path)
                 attempt = {
                     "policy": policy, "sam_score": value.get("score"),
+                    "roi_scale": roi_scale,
+                    "model_mask_pixels": int(model_local.sum()),
                     "sam_mask_pixels": int(proposal.sum()), "metrics": metrics,
                     "positive_coverage": positive_coverage,
                     "negative_clear_fraction": negative_clear,
@@ -252,6 +280,8 @@ def evaluate(split_report_path: Path, manifest_path: Path, pcd_manifest_path: Pa
             rows.append({
                 "sequence": sequence, "frame_id": frame, "camera": camera_number,
                 "target_obj_id": failed_metric["obj_id"],
+                "roi_scale": roi_scale,
+                "model_input_size": [model_crop.width, model_crop.height],
                 "visible_unique_positive_count": int(len(positive_pixels)),
                 "visible_unique_negative_count": int(len(negative_pixels)),
                 "selected_positive_points": positives,
@@ -275,6 +305,7 @@ def evaluate(split_report_path: Path, manifest_path: Path, pcd_manifest_path: Pa
     report = {
         "schema_version": "labelagent.pallet_lidar_conflict_points.v1",
         "status": "offline_candidate_diagnostic_not_deployed",
+        "roi_scale": roi_scale,
         "input_sha256": inputs, "failed_candidate_count": len(rows),
         "recovered_candidate_count": sum(row["recovered"] for row in rows),
         "sam_attempt_count": sum(len(row["attempts"]) for row in rows),
@@ -304,10 +335,15 @@ def main() -> int:
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--sam-url", default="http://127.0.0.1:28766")
     parser.add_argument("--timeout", type=float, default=120)
+    parser.add_argument(
+        "--roi-scale", type=int, choices=(1, 2, 4), default=DEFAULT_ROI_SCALE,
+        help=("enlarge the frozen ROI before SAM; 2x is the independently "
+              "repeated offline incumbent and all gates stay unchanged"))
     args = parser.parse_args()
     report = evaluate(
         args.split_report, args.manifest, args.pcd_manifest, args.labels_root,
-        args.calibration, args.pcd_root, args.output, args.sam_url, args.timeout)
+        args.calibration, args.pcd_root, args.output, args.sam_url, args.timeout,
+        args.roi_scale)
     print(json.dumps({key: report[key] for key in (
         "failed_candidate_count", "recovered_candidate_count", "sam_attempt_count",
         "workbench_writes", "contact_sheet", "contact_sheet_sha256",

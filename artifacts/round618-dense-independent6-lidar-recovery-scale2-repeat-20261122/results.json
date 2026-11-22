@@ -1,0 +1,1186 @@
+{
+  "schema_version": "labelagent.pallet_lidar_conflict_points.v1",
+  "status": "offline_candidate_diagnostic_not_deployed",
+  "roi_scale": 2,
+  "input_sha256": {
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round608-dense-independent6-transitive-depth-split-20261122\\results.json": "55a57e6c614986eecd19ce147c24c81ab9bdcbfe557bb6dedcee86b46b0aaf96",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round606-dense-independent6-20261122\\manifest.json": "9d679d94c5be5ae9aad4c7e5fe1855e7328e8d4f2d046e4287ae57fadc23d645",
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\.repro\\round606-dense-independent6-20261122\\pcd-manifest.json": "6302c863fdacb7bc52c791b656f12fb037e64f852454143e32886fdcb3b4779a"
+  },
+  "failed_candidate_count": 5,
+  "recovered_candidate_count": 2,
+  "sam_attempt_count": 15,
+  "health_before": {
+    "status": "ok",
+    "model_loaded": true,
+    "backend": "remote_4090_sam3",
+    "service_version": "labelagent.remote-sam3.v3-point-groups",
+    "response_cache": {
+      "entries": 24,
+      "bytes": 162112,
+      "max_entries": 24,
+      "max_bytes": 134217728,
+      "in_flight": 0,
+      "hits": 132,
+      "misses": 95,
+      "coalesced_requests": 0,
+      "evictions": 71,
+      "storage": "cpu_json"
+    }
+  },
+  "health_after": {
+    "status": "ok",
+    "model_loaded": true,
+    "backend": "remote_4090_sam3",
+    "service_version": "labelagent.remote-sam3.v3-point-groups",
+    "response_cache": {
+      "entries": 24,
+      "bytes": 162112,
+      "max_entries": 24,
+      "max_bytes": 134217728,
+      "in_flight": 0,
+      "hits": 132,
+      "misses": 95,
+      "coalesced_requests": 0,
+      "evictions": 71,
+      "storage": "cpu_json"
+    }
+  },
+  "contact_sheet": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round618-dense-independent6-lidar-recovery-scale2-repeat-20261122\\lidar-conflict-point-review.jpg",
+  "contact_sheet_sha256": "910f78c079e4cf03397fc22f5a410286513eec064d4fa5255f13289407f5deee",
+  "human_pixel_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "workbench_writes": 0,
+  "training_data_writes": 0,
+  "oss_writes": 0,
+  "rows": [
+    {
+      "sequence": "002",
+      "frame_id": "1789898044249193197",
+      "camera": 3,
+      "target_obj_id": 15,
+      "roi_scale": 2,
+      "model_input_size": [
+        480,
+        480
+      ],
+      "visible_unique_positive_count": 12,
+      "visible_unique_negative_count": 8,
+      "selected_positive_points": [
+        [
+          464,
+          205
+        ],
+        [
+          466,
+          200
+        ],
+        [
+          468,
+          203
+        ]
+      ],
+      "selected_negative_points": [
+        [
+          468,
+          196
+        ],
+        [
+          470,
+          187
+        ],
+        [
+          469,
+          191
+        ],
+        [
+          468,
+          199
+        ]
+      ],
+      "prompt_group_count": 3,
+      "attempts": [
+        {
+          "policy": "one_positive_all_negative",
+          "sam_score": 0.11572265625,
+          "roi_scale": 2,
+          "model_mask_pixels": 122,
+          "sam_mask_pixels": 35,
+          "metrics": {
+            "proposal_pixels": 35,
+            "projected_box_pixels": 1280,
+            "projected_box_coverage": 0.02734375,
+            "proposal_inside_projected_box": 1.0,
+            "proposal_to_projected_box_area_ratio": 0.02734375,
+            "center_distance_pixels": 22.00657111314556,
+            "maximum_other_projected_box_fraction": 0.0
+          },
+          "positive_coverage": 0.3333333333333333,
+          "negative_clear_fraction": 1.0,
+          "split_metrics": [
+            {
+              "obj_id": 15,
+              "camera_depth": 5.872912869739986,
+              "split_pixels": 35,
+              "projected_box_coverage": 0.02734375,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.70078125,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 26,
+              "camera_depth": 5.796440650643828,
+              "split_pixels": 336,
+              "projected_box_coverage": 0.23846699787083037,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "split_target_pixels": 35,
+          "accepted": false,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round618-dense-independent6-lidar-recovery-scale2-repeat-20261122\\masks\\f49193197-c3-o15-p0.png",
+          "mask_sha256": "eaaa27ec3646122430343f56780ea97805b2943920f2687f50f9974deddd123e"
+        },
+        {
+          "policy": "three_positive_all_negative",
+          "sam_score": 0.6484375,
+          "roi_scale": 2,
+          "model_mask_pixels": 364,
+          "sam_mask_pixels": 95,
+          "metrics": {
+            "proposal_pixels": 95,
+            "projected_box_pixels": 1280,
+            "projected_box_coverage": 0.0734375,
+            "proposal_inside_projected_box": 0.9894736842105263,
+            "proposal_to_projected_box_area_ratio": 0.07421875,
+            "center_distance_pixels": 19.192475647068427,
+            "maximum_other_projected_box_fraction": 0.37894736842105264
+          },
+          "positive_coverage": 1.0,
+          "negative_clear_fraction": 1.0,
+          "split_metrics": [
+            {
+              "obj_id": 15,
+              "camera_depth": 5.872912869739986,
+              "split_pixels": 58,
+              "projected_box_coverage": 0.0453125,
+              "source_mask_retention": 0.6105263157894737,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.70078125,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 26,
+              "camera_depth": 5.796440650643828,
+              "split_pixels": 336,
+              "projected_box_coverage": 0.23846699787083037,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "split_target_pixels": 58,
+          "accepted": true,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round618-dense-independent6-lidar-recovery-scale2-repeat-20261122\\masks\\f49193197-c3-o15-p1.png",
+          "mask_sha256": "f786282c7ba8babc70646ef829765c3e81d26f6c0c3481c8e6a6d7729c1670fc"
+        },
+        {
+          "policy": "three_positive_two_negative",
+          "sam_score": 0.416015625,
+          "roi_scale": 2,
+          "model_mask_pixels": 390,
+          "sam_mask_pixels": 103,
+          "metrics": {
+            "proposal_pixels": 103,
+            "projected_box_pixels": 1280,
+            "projected_box_coverage": 0.07890625,
+            "proposal_inside_projected_box": 0.9805825242718447,
+            "proposal_to_projected_box_area_ratio": 0.08046875,
+            "center_distance_pixels": 19.24817502343134,
+            "maximum_other_projected_box_fraction": 0.3106796116504854
+          },
+          "positive_coverage": 1.0,
+          "negative_clear_fraction": 1.0,
+          "split_metrics": [
+            {
+              "obj_id": 15,
+              "camera_depth": 5.872912869739986,
+              "split_pixels": 69,
+              "projected_box_coverage": 0.05390625,
+              "source_mask_retention": 0.6699029126213593,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.70078125,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 26,
+              "camera_depth": 5.796440650643828,
+              "split_pixels": 336,
+              "projected_box_coverage": 0.23846699787083037,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "split_target_pixels": 69,
+          "accepted": true,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round618-dense-independent6-lidar-recovery-scale2-repeat-20261122\\masks\\f49193197-c3-o15-p2.png",
+          "mask_sha256": "f3c9ab8e219ce3b755f5358a7ee685d1a81c7aaa3d8bae20bc806fdb12bfe10b"
+        }
+      ],
+      "recovered": true,
+      "selected_policy": "three_positive_all_negative",
+      "selected_mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round618-dense-independent6-lidar-recovery-scale2-repeat-20261122\\masks\\f49193197-c3-o15-p1.png",
+      "selected_mask_sha256": "f786282c7ba8babc70646ef829765c3e81d26f6c0c3481c8e6a6d7729c1670fc",
+      "selected_mask_pixels": 58
+    },
+    {
+      "sequence": "005",
+      "frame_id": "1789899490482491367",
+      "camera": 1,
+      "target_obj_id": 102,
+      "roi_scale": 2,
+      "model_input_size": [
+        480,
+        480
+      ],
+      "visible_unique_positive_count": 5,
+      "visible_unique_negative_count": 71,
+      "selected_positive_points": [
+        [
+          244,
+          149
+        ],
+        [
+          244,
+          153
+        ],
+        [
+          246,
+          148
+        ]
+      ],
+      "selected_negative_points": [
+        [
+          155,
+          150
+        ],
+        [
+          246,
+          157
+        ],
+        [
+          204,
+          142
+        ],
+        [
+          229,
+          141
+        ]
+      ],
+      "prompt_group_count": 3,
+      "attempts": [
+        {
+          "policy": "one_positive_all_negative",
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "policy": "three_positive_all_negative",
+          "sam_score": 0.43359375,
+          "roi_scale": 2,
+          "model_mask_pixels": 301,
+          "sam_mask_pixels": 77,
+          "metrics": {
+            "proposal_pixels": 77,
+            "projected_box_pixels": 715,
+            "projected_box_coverage": 0.0993006993006993,
+            "proposal_inside_projected_box": 0.922077922077922,
+            "proposal_to_projected_box_area_ratio": 0.1076923076923077,
+            "center_distance_pixels": 9.953554661472907,
+            "maximum_other_projected_box_fraction": 0.8961038961038961
+          },
+          "positive_coverage": 1.0,
+          "negative_clear_fraction": 1.0,
+          "split_metrics": [
+            {
+              "obj_id": 102,
+              "camera_depth": 7.305528680886941,
+              "split_pixels": 44,
+              "projected_box_coverage": 0.06153846153846154,
+              "source_mask_retention": 0.5714285714285714,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.5692307692307692,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 99,
+              "camera_depth": 5.583644140626777,
+              "split_pixels": 855,
+              "projected_box_coverage": 0.6111508220157256,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 101,
+              "camera_depth": 7.22021964146563,
+              "split_pixels": 119,
+              "projected_box_coverage": 0.17097701149425287,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.5502873563218391,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 107,
+              "camera_depth": 7.400486511368758,
+              "split_pixels": 37,
+              "projected_box_coverage": 0.05006765899864682,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.516914749661705,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            }
+          ],
+          "separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "split_target_pixels": 44,
+          "accepted": true,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round618-dense-independent6-lidar-recovery-scale2-repeat-20261122\\masks\\f82491367-c1-o102-p1.png",
+          "mask_sha256": "b92243578c2a7b202f3be0d27125273e0cdfb8874f2d7937de00bc994811b869"
+        },
+        {
+          "policy": "three_positive_two_negative",
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        }
+      ],
+      "recovered": true,
+      "selected_policy": "three_positive_all_negative",
+      "selected_mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round618-dense-independent6-lidar-recovery-scale2-repeat-20261122\\masks\\f82491367-c1-o102-p1.png",
+      "selected_mask_sha256": "b92243578c2a7b202f3be0d27125273e0cdfb8874f2d7937de00bc994811b869",
+      "selected_mask_pixels": 44
+    },
+    {
+      "sequence": "005",
+      "frame_id": "1789899490482491367",
+      "camera": 1,
+      "target_obj_id": 107,
+      "roi_scale": 2,
+      "model_input_size": [
+        480,
+        480
+      ],
+      "visible_unique_positive_count": 3,
+      "visible_unique_negative_count": 19,
+      "selected_positive_points": [
+        [
+          245,
+          156
+        ],
+        [
+          246,
+          157
+        ]
+      ],
+      "selected_negative_points": [
+        [
+          244,
+          149
+        ],
+        [
+          247,
+          168
+        ],
+        [
+          246,
+          158
+        ],
+        [
+          247,
+          163
+        ]
+      ],
+      "prompt_group_count": 3,
+      "attempts": [
+        {
+          "policy": "one_positive_all_negative",
+          "sam_score": 0.2490234375,
+          "roi_scale": 2,
+          "model_mask_pixels": 101,
+          "sam_mask_pixels": 29,
+          "metrics": {
+            "proposal_pixels": 29,
+            "projected_box_pixels": 739,
+            "projected_box_coverage": 0.03924221921515562,
+            "proposal_inside_projected_box": 1.0,
+            "proposal_to_projected_box_area_ratio": 0.03924221921515562,
+            "center_distance_pixels": 10.685864698642206,
+            "maximum_other_projected_box_fraction": 1.0
+          },
+          "positive_coverage": 0.5,
+          "negative_clear_fraction": 1.0,
+          "split_metrics": [
+            {
+              "obj_id": 107,
+              "camera_depth": 7.400486511368758,
+              "split_pixels": 29,
+              "projected_box_coverage": 0.03924221921515562,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.516914749661705,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 102,
+              "camera_depth": 7.305528680886941,
+              "split_pixels": 49,
+              "projected_box_coverage": 0.06853146853146853,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 108,
+              "camera_depth": 7.486414775095636,
+              "split_pixels": 151,
+              "projected_box_coverage": 0.2054421768707483,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6204081632653061,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 109,
+              "camera_depth": 7.546997845799689,
+              "split_pixels": 24,
+              "projected_box_coverage": 0.031914893617021274,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.636968085106383,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "split_target_pixels": 29,
+          "accepted": false,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round618-dense-independent6-lidar-recovery-scale2-repeat-20261122\\masks\\f82491367-c1-o107-p0.png",
+          "mask_sha256": "be7f3824b17eb4fd5e012a2d36a32d82ace235ae5e7b751d6c4c78b14d0d5658"
+        },
+        {
+          "policy": "three_positive_all_negative",
+          "sam_score": 0.392578125,
+          "roi_scale": 2,
+          "model_mask_pixels": 67,
+          "sam_mask_pixels": 18,
+          "metrics": {
+            "proposal_pixels": 18,
+            "projected_box_pixels": 739,
+            "projected_box_coverage": 0.02435723951285521,
+            "proposal_inside_projected_box": 1.0,
+            "proposal_to_projected_box_area_ratio": 0.02435723951285521,
+            "center_distance_pixels": 11.793271080609536,
+            "maximum_other_projected_box_fraction": 1.0
+          },
+          "positive_coverage": 1.0,
+          "negative_clear_fraction": 1.0,
+          "split_metrics": [
+            {
+              "obj_id": 107,
+              "camera_depth": 7.400486511368758,
+              "split_pixels": 18,
+              "projected_box_coverage": 0.02435723951285521,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.516914749661705,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            },
+            {
+              "obj_id": 102,
+              "camera_depth": 7.305528680886941,
+              "split_pixels": 49,
+              "projected_box_coverage": 0.06853146853146853,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 108,
+              "camera_depth": 7.486414775095636,
+              "split_pixels": 151,
+              "projected_box_coverage": 0.2054421768707483,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6204081632653061,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 109,
+              "camera_depth": 7.546997845799689,
+              "split_pixels": 24,
+              "projected_box_coverage": 0.031914893617021274,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.636968085106383,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "split_target_pixels": 18,
+          "accepted": false,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round618-dense-independent6-lidar-recovery-scale2-repeat-20261122\\masks\\f82491367-c1-o107-p1.png",
+          "mask_sha256": "0bb80329bf7d4e23288769ed4622b3bd1517d4bb8a5b0a72ffb6845c99c6238b"
+        },
+        {
+          "policy": "three_positive_two_negative",
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        }
+      ],
+      "recovered": false,
+      "selected_policy": null,
+      "selected_mask_path": null,
+      "selected_mask_sha256": null,
+      "selected_mask_pixels": 0
+    },
+    {
+      "sequence": "005",
+      "frame_id": "1789899490482491367",
+      "camera": 1,
+      "target_obj_id": 109,
+      "roi_scale": 2,
+      "model_input_size": [
+        480,
+        480
+      ],
+      "visible_unique_positive_count": 6,
+      "visible_unique_negative_count": 13,
+      "selected_positive_points": [
+        [
+          247,
+          163
+        ],
+        [
+          248,
+          167
+        ],
+        [
+          247,
+          165
+        ]
+      ],
+      "selected_negative_points": [
+        [
+          245,
+          156
+        ],
+        [
+          247,
+          171
+        ],
+        [
+          247,
+          162
+        ],
+        [
+          246,
+          159
+        ]
+      ],
+      "prompt_group_count": 3,
+      "attempts": [
+        {
+          "policy": "one_positive_all_negative",
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "policy": "three_positive_all_negative",
+          "sam_score": 0.5625,
+          "roi_scale": 2,
+          "model_mask_pixels": 163,
+          "sam_mask_pixels": 44,
+          "metrics": {
+            "proposal_pixels": 44,
+            "projected_box_pixels": 752,
+            "projected_box_coverage": 0.05851063829787234,
+            "proposal_inside_projected_box": 1.0,
+            "proposal_to_projected_box_area_ratio": 0.05851063829787234,
+            "center_distance_pixels": 10.35611623099261,
+            "maximum_other_projected_box_fraction": 1.0
+          },
+          "positive_coverage": 1.0,
+          "negative_clear_fraction": 0.75,
+          "split_metrics": [
+            {
+              "obj_id": 109,
+              "camera_depth": 7.546997845799689,
+              "split_pixels": 44,
+              "projected_box_coverage": 0.05851063829787234,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.636968085106383,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 107,
+              "camera_depth": 7.400486511368758,
+              "split_pixels": 37,
+              "projected_box_coverage": 0.05006765899864682,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 108,
+              "camera_depth": 7.486414775095636,
+              "split_pixels": 151,
+              "projected_box_coverage": 0.2054421768707483,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6204081632653061,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 110,
+              "camera_depth": 7.619142751485404,
+              "split_pixels": 0,
+              "projected_box_coverage": 0.0,
+              "source_mask_retention": 0.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.7102272727272727,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": true,
+              "handled_candidate": true
+            }
+          ],
+          "separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 1.0,
+              "separated_at_0_15": false
+            }
+          ],
+          "split_target_pixels": 44,
+          "accepted": false,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round618-dense-independent6-lidar-recovery-scale2-repeat-20261122\\masks\\f82491367-c1-o109-p1.png",
+          "mask_sha256": "92cf4af64ccd0987cc1ea6733b3a7e2a255d95716c20a178c24439f251894326"
+        },
+        {
+          "policy": "three_positive_two_negative",
+          "sam_score": 0.40234375,
+          "roi_scale": 2,
+          "model_mask_pixels": 231,
+          "sam_mask_pixels": 61,
+          "metrics": {
+            "proposal_pixels": 61,
+            "projected_box_pixels": 752,
+            "projected_box_coverage": 0.08111702127659574,
+            "proposal_inside_projected_box": 1.0,
+            "proposal_to_projected_box_area_ratio": 0.08111702127659574,
+            "center_distance_pixels": 9.454733248151385,
+            "maximum_other_projected_box_fraction": 0.9508196721311475
+          },
+          "positive_coverage": 1.0,
+          "negative_clear_fraction": 0.75,
+          "split_metrics": [
+            {
+              "obj_id": 109,
+              "camera_depth": 7.546997845799689,
+              "split_pixels": 61,
+              "projected_box_coverage": 0.08111702127659574,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.636968085106383,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 107,
+              "camera_depth": 7.400486511368758,
+              "split_pixels": 37,
+              "projected_box_coverage": 0.05006765899864682,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 108,
+              "camera_depth": 7.486414775095636,
+              "split_pixels": 151,
+              "projected_box_coverage": 0.2054421768707483,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.6204081632653061,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 110,
+              "camera_depth": 7.619142751485404,
+              "split_pixels": 0,
+              "projected_box_coverage": 0.0,
+              "source_mask_retention": 0.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.7102272727272727,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": true,
+              "handled_candidate": true
+            }
+          ],
+          "separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 1.0,
+              "separated_at_0_15": false
+            }
+          ],
+          "split_target_pixels": 61,
+          "accepted": false,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round618-dense-independent6-lidar-recovery-scale2-repeat-20261122\\masks\\f82491367-c1-o109-p2.png",
+          "mask_sha256": "63043f5f720adab4cd40ce6723318e7d812e9277be0743b518ecbf5f4f05b042"
+        }
+      ],
+      "recovered": false,
+      "selected_policy": null,
+      "selected_mask_path": null,
+      "selected_mask_sha256": null,
+      "selected_mask_pixels": 0
+    },
+    {
+      "sequence": "005",
+      "frame_id": "1789899490482491367",
+      "camera": 1,
+      "target_obj_id": 110,
+      "roi_scale": 2,
+      "model_input_size": [
+        480,
+        480
+      ],
+      "visible_unique_positive_count": 4,
+      "visible_unique_negative_count": 40,
+      "selected_positive_points": [
+        [
+          247,
+          170
+        ],
+        [
+          249,
+          170
+        ],
+        [
+          248,
+          169
+        ]
+      ],
+      "selected_negative_points": [
+        [
+          185,
+          196
+        ],
+        [
+          246,
+          158
+        ],
+        [
+          225,
+          189
+        ],
+        [
+          236,
+          175
+        ]
+      ],
+      "prompt_group_count": 3,
+      "attempts": [
+        {
+          "policy": "one_positive_all_negative",
+          "error": "SAM 3 无法排除当前负点区域，请补充或调整提示点"
+        },
+        {
+          "policy": "three_positive_all_negative",
+          "sam_score": 0.578125,
+          "roi_scale": 2,
+          "model_mask_pixels": 343,
+          "sam_mask_pixels": 86,
+          "metrics": {
+            "proposal_pixels": 86,
+            "projected_box_pixels": 704,
+            "projected_box_coverage": 0.10511363636363637,
+            "proposal_inside_projected_box": 0.8604651162790697,
+            "proposal_to_projected_box_area_ratio": 0.12215909090909091,
+            "center_distance_pixels": 8.3988086404412,
+            "maximum_other_projected_box_fraction": 0.3372093023255814
+          },
+          "positive_coverage": 1.0,
+          "negative_clear_fraction": 1.0,
+          "split_metrics": [
+            {
+              "obj_id": 110,
+              "camera_depth": 7.619142751485404,
+              "split_pixels": 74,
+              "projected_box_coverage": 0.10511363636363637,
+              "source_mask_retention": 0.8604651162790697,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.7102272727272727,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 98,
+              "camera_depth": 6.180310094698529,
+              "split_pixels": 1404,
+              "projected_box_coverage": 0.7659574468085106,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 108,
+              "camera_depth": 7.486414775095636,
+              "split_pixels": 151,
+              "projected_box_coverage": 0.2054421768707483,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 109,
+              "camera_depth": 7.546997845799689,
+              "split_pixels": 24,
+              "projected_box_coverage": 0.031914893617021274,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.636968085106383,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "split_target_pixels": 74,
+          "accepted": false,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round618-dense-independent6-lidar-recovery-scale2-repeat-20261122\\masks\\f82491367-c1-o110-p1.png",
+          "mask_sha256": "8275741a9f8d827f18fa897eeca50f0e5e6bd63d53149d9d95074ff5494ee61c"
+        },
+        {
+          "policy": "three_positive_two_negative",
+          "sam_score": 0.546875,
+          "roi_scale": 2,
+          "model_mask_pixels": 354,
+          "sam_mask_pixels": 91,
+          "metrics": {
+            "proposal_pixels": 91,
+            "projected_box_pixels": 704,
+            "projected_box_coverage": 0.11221590909090909,
+            "proposal_inside_projected_box": 0.8681318681318682,
+            "proposal_to_projected_box_area_ratio": 0.12926136363636365,
+            "center_distance_pixels": 8.3988086404412,
+            "maximum_other_projected_box_fraction": 0.37362637362637363
+          },
+          "positive_coverage": 1.0,
+          "negative_clear_fraction": 1.0,
+          "split_metrics": [
+            {
+              "obj_id": 110,
+              "camera_depth": 7.619142751485404,
+              "split_pixels": 79,
+              "projected_box_coverage": 0.11221590909090909,
+              "source_mask_retention": 0.8681318681318682,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.7102272727272727,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 98,
+              "camera_depth": 6.180310094698529,
+              "split_pixels": 1404,
+              "projected_box_coverage": 0.7659574468085106,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 108,
+              "camera_depth": 7.486414775095636,
+              "split_pixels": 151,
+              "projected_box_coverage": 0.2054421768707483,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.0,
+              "candidate_pass": true,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": true
+            },
+            {
+              "obj_id": 109,
+              "camera_depth": 7.546997845799689,
+              "split_pixels": 24,
+              "projected_box_coverage": 0.031914893617021274,
+              "source_mask_retention": 1.0,
+              "removed_island_count": 0,
+              "removed_island_pixels": 0,
+              "maximum_nearer_projected_box_overlap": 0.636968085106383,
+              "candidate_pass": false,
+              "occluded_unobservable_candidate": false,
+              "handled_candidate": false
+            }
+          ],
+          "separations": [
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            },
+            {
+              "intersection_pixels": 0,
+              "iou": 0.0,
+              "intersection_over_smaller": 0.0,
+              "separated_at_0_15": true
+            }
+          ],
+          "split_target_pixels": 79,
+          "accepted": false,
+          "mask_path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round618-dense-independent6-lidar-recovery-scale2-repeat-20261122\\masks\\f82491367-c1-o110-p2.png",
+          "mask_sha256": "8850fbfaa4388f2cc9843c5c66e54ebc96b5989ce5dc002cab01baa8bedfa140"
+        }
+      ],
+      "recovered": false,
+      "selected_policy": null,
+      "selected_mask_path": null,
+      "selected_mask_sha256": null,
+      "selected_mask_pixels": 0
+    }
+  ]
+}

@@ -368,7 +368,7 @@ def build():
     secondary(doc, "A", "VLM后训练")
     paragraph(doc, "train72与test24已创建，分别包含72张和24张图像，文件名与内容哈希零交集。2B VLM LoRA完成两步冒烟、一轮62步和两轮62步训练，权重张量审计确认发生真实更新。一轮候选在受控dev8上将合法结构化输出由0/8提高到8/8；但冻结test24候选与8B教师在slope上仅18/24一致，而且教师一致率不等于人工准确率，因此2B模型没有部署。")
     secondary(doc, "B", "SAM3微调")
-    paragraph(doc, "SAM3目前使用预训练权重、工程提示、ROI、几何门禁和轮廓后处理，尚未完成项目人工像素真值上的微调。主要原因是96张CVAT任务仍缺少完整人工COCO导出和逐图签核。下一步优先只训练mask decoder或采用轻量LoRA，训练样本覆盖木纹孔洞、远处薄栈板、局部坡板、普通地面困难负样本和ego重叠假坡；test24永久只评测。")
+    paragraph(doc, "SAM3目前使用预训练权重、工程提示、ROI、几何门禁和轮廓后处理。项目曾执行投影伪真值候选训练至81步，但冻结test24平均union IoU由基线0.969289降至0.963695并出现灾难帧，因此停止且未部署；这不等于人工真值微调。96张CVAT任务仍缺少完整人工COCO导出和逐图签核。下一步优先只训练mask decoder或采用轻量LoRA，训练样本覆盖木纹孔洞、远处薄栈板、局部坡板、普通地面困难负样本和ego重叠假坡；test24永久只评测。")
     figure(doc, OUT / "manual-assets/training-status.png", "图8  当前训练与部署状态", 6.2)
 
     primary(doc, "IX", "消融、负结果与部署决策")

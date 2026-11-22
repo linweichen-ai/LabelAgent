@@ -1,0 +1,55 @@
+{
+  "schema_version": "labelagent.sam3-projection-training-audit.v1",
+  "status": "passed_negative_result_audit",
+  "errors": [],
+  "training": {
+    "kind": "projection_filtered_pseudo_truth",
+    "human_truth": false,
+    "candidate_only": true,
+    "deployed": false,
+    "rounds": [
+      {
+        "optimizer_steps": 54,
+        "checkpoint_sha256": "25d49d2a020a7e8de7d0d651554eaa8b295139465bfc24d61a64a6c46112f333",
+        "elapsed_seconds": 30.379
+      },
+      {
+        "optimizer_steps": 81,
+        "checkpoint_sha256": "c7c2d10a5b35aa11a7960c0b1db05bc232a919214426e8829a6c8f0a2c5f6202",
+        "elapsed_seconds": 30.337
+      }
+    ]
+  },
+  "frozen_test24": {
+    "images": 24,
+    "optimizer_steps": 0,
+    "machine_reference_only": true,
+    "training_return_allowed": false,
+    "base_mean_union_iou": 0.9692886005076463,
+    "best_projection_mean_union_iou": 0.9645166252660315,
+    "step81_mean_union_iou": 0.9636949738956746,
+    "step81_minus_base_iou": -0.005593626611971714,
+    "step81_minus_best_iou": -0.0008216513703569461,
+    "base_mean_boundary_f1": 0.9783895859659624,
+    "step81_mean_boundary_f1": 0.9769486067495929,
+    "catastrophic_frames": [
+      "012_1789900488815784655_camera_1.png"
+    ]
+  },
+  "decision": {
+    "keep_incumbent_base_sam3": true,
+    "deploy_projection_candidate": false,
+    "continue_pseudo_truth_long_training": false,
+    "human_truth_microtuning_completed": false,
+    "human_truth_microtuning_next_gate": "approved train masks plus frozen independent evaluation",
+    "reason": "Both projection checkpoints regress against the frozen base; step81 also has a catastrophic frame."
+  },
+  "source_sha256": {
+    "round54": "43960120f43678c8dc5da6d33617227a69ea29906cf540558556339fcd6b44b7",
+    "round81": "9f64fe1ba705c9235d3e9ba3f5cb4b82d70a51091dc9e0ce447742b2db241e58",
+    "compare54": "4facdef560cb72c2474685ae2c67c0f9b0fa73f3fda8c563f13378429548cbcd",
+    "compare81": "9a61bd5dcc648285b523a47be0f3ae964f2f6d0e76ddd4e1d497259822aaaaea",
+    "threeway": "9d109c8cec38fe54e8e2323586d115fcc65451442e609dad8155de4fdf9388ec",
+    "review81": "16d130a3e6b29bac4709dce67aef089a73b9032be5f1c0b5b5dc40da1e06b2b4"
+  }
+}

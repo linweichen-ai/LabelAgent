@@ -3710,3 +3710,13 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 经测试的 `2f24b662c16bccb0db7e18d25d804d7665f6d3f0` 已同步到两个仓库的
   `labelagent` 与 `reproduce`，四个远端引用读回一致；权重、原始数据和凭证未上传。详见
   `docs/REPRODUCE_BRANCH_ACCEPTANCE_ROUND498_20261122.md`。
+
+## 2026-11-22 Round499 补充：SAM3 投影训练状态校正
+
+- 5090 `projection_night` 确实完成 54/81 步 SAM3 参数训练，但输入是
+  `projection_filtered` 伪真值，不是 train72 人工像素真值；两轮均未部署且 test24 未训练。
+- 冻结 test24 上基线/最佳投影/step81 平均 union IoU 为
+  0.969289/0.964517/0.963695；step81 相对基线下降0.005594并有1个灾难帧。
+- 固化为负结果：保留原始基线，停止伪真值长训练，不让 test24 回流；下一次 SAM3 训练必须
+  使用 train-only 人工签核掩码。详见
+  `docs/SAM3_PROJECTION_TRAINING_RECONCILIATION_ROUND499_20261122.md`。

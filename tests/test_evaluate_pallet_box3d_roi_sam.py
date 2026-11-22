@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 
 from tools.evaluate_pallet_box3d_roi_sam import (
-    localization_gate, project_box, select_target,
+    localization_gate, point_fallback_groups, project_box, select_target,
 )
 
 
@@ -55,6 +55,16 @@ class PalletBox3dRoiSamTest(unittest.TestCase):
                    "proposal_inside_projected_box": .8}
         self.assertTrue(localization_gate(metrics))
         self.assertFalse(localization_gate({**metrics, "center_distance_pixels": 25}))
+
+    def test_point_fallback_groups_keep_all_points_in_crop(self):
+        target = {"center": [50., 40.], "bbox": [30., 25., 70., 55.]}
+        groups = point_fallback_groups(target, [10, 10, 110, 90], 100, 80)
+        self.assertEqual([name for name, _ in groups],
+                         ["center_only", "crop_corners", "box_ring"])
+        self.assertTrue(all(any(point["label"] == 1 for point in points)
+                            for _, points in groups))
+        self.assertTrue(all(0 <= point["x"] < 100 and 0 <= point["y"] < 80
+                            for _, points in groups for point in points))
 
 
 if __name__ == "__main__":

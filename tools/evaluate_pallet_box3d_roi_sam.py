@@ -133,6 +133,34 @@ def localization_gate(metrics):
         and metrics["proposal_inside_projected_box"] >= .3)
 
 
+def point_fallback_groups(target, roi, crop_width, crop_height):
+    cx = int(round(target["center"][0] - roi[0]))
+    cy = int(round(target["center"][1] - roi[1]))
+    positive = {"x": min(crop_width - 1, max(0, cx)),
+                "y": min(crop_height - 1, max(0, cy)), "label": 1}
+    corner_negatives = [
+        {"x": 4, "y": 4, "label": 0},
+        {"x": max(0, crop_width - 5), "y": 4, "label": 0},
+        {"x": 4, "y": max(0, crop_height - 5), "label": 0},
+        {"x": max(0, crop_width - 5), "y": max(0, crop_height - 5), "label": 0},
+    ]
+    x0, y0, x1, y1 = target["bbox"]
+    x0, x1 = int(round(x0 - roi[0])), int(round(x1 - roi[0]))
+    y0, y1 = int(round(y0 - roi[1])), int(round(y1 - roi[1]))
+    margin = 8
+    ring_negatives = [
+        {"x": positive["x"], "y": max(0, y0 - margin), "label": 0},
+        {"x": positive["x"], "y": min(crop_height - 1, y1 + margin), "label": 0},
+        {"x": max(0, x0 - margin), "y": positive["y"], "label": 0},
+        {"x": min(crop_width - 1, x1 + margin), "y": positive["y"], "label": 0},
+    ]
+    return [
+        ("center_only", [positive]),
+        ("crop_corners", [positive, *corner_negatives]),
+        ("box_ring", [positive, *ring_negatives]),
+    ]
+
+
 def render_panel(image, projected, proposal, crop_box, title):
     base = np.asarray(image).copy()
     overlay = base.copy(); overlay[projected] = (45, 210, 135)
@@ -156,7 +184,8 @@ def render_panel(image, projected, proposal, crop_box, title):
 def evaluate(manifest_path: Path, labels_root: Path, calibration: Path,
              output: Path, sam_url: str, *, timeout: float = 120,
              target_policy: str = "largest_empty", prompt_mode: str = "single",
-             point_fallback: bool = False) -> dict:
+             point_fallback: bool = False,
+             point_fallback_mode: str = "single") -> dict:
     if output.exists():
         raise ValueError("output directory already exists")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -246,29 +275,62 @@ def evaluate(manifest_path: Path, labels_root: Path, calibration: Path,
             row["point_fallback_called"] = True
             fallback_started = time.monotonic()
             try:
-                point_result = request_json(sam_url.rstrip("/") + "/segment_points", {
-                    "image": encoded,
-                    "points": [{"x": int(round(cx)), "y": int(round(cy)), "label": 1}],
-                }, timeout=timeout)
-                point_local = _result_mask(point_result, crop.width, crop.height)
-                point_proposal = np.zeros((height, width), dtype=bool)
-                point_proposal[roi[1]:roi[3], roi[0]:roi[2]] = point_local
-                point_metrics = association_metrics(
-                    point_proposal, target["mask"],
-                    [item["mask"] for item in projected if item is not target],
-                    target["center"])
-                point_pass = localization_gate(point_metrics)
+                groups = point_fallback_groups(target, roi, crop.width, crop.height)
+                if point_fallback_mode == "single":
+                    payload = request_json(sam_url.rstrip("/") + "/segment_points", {
+                        "image": encoded, "points": groups[0][1]}, timeout=timeout)
+                    items = [{"index": 0, "points": groups[0][1], "result": payload}]
+                    diagnostics = {"image_encoded_once": True, "prompt_group_count": 1}
+                elif point_fallback_mode == "batch":
+                    payload = request_json(
+                        sam_url.rstrip("/") + "/segment_point_groups_batch",
+                        {"image": encoded, "prompt_groups": [points for _, points in groups]},
+                        timeout=timeout)
+                    items = payload.get("items") or []
+                    diagnostics = payload.get("diagnostics") or {}
+                else:
+                    raise ValueError(f"unknown point fallback mode: {point_fallback_mode}")
+                attempts, successful = [], []
+                other_masks = [item["mask"] for item in projected if item is not target]
+                for item in items:
+                    index = int(item.get("index", 0))
+                    policy = groups[index][0] if 0 <= index < len(groups) else f"group_{index}"
+                    if "result" not in item:
+                        attempts.append({"policy": policy, "error": item.get("error", "missing result")})
+                        continue
+                    point_result = item["result"]
+                    point_local = _result_mask(point_result, crop.width, crop.height)
+                    point_proposal = np.zeros((height, width), dtype=bool)
+                    point_proposal[roi[1]:roi[3], roi[0]:roi[2]] = point_local
+                    point_metrics = association_metrics(
+                        point_proposal, target["mask"], other_masks, target["center"])
+                    point_pass = localization_gate(point_metrics)
+                    attempt = {"policy": policy, "score": point_result.get("score"),
+                               "metrics": point_metrics, "localization_pass": point_pass,
+                               "warnings": point_result.get("warnings") or []}
+                    attempts.append(attempt)
+                    successful.append((
+                        point_pass,
+                        float(point_metrics["proposal_inside_projected_box"] or 0),
+                        float(point_metrics["projected_box_coverage"] or 0),
+                        -float(point_metrics["maximum_other_projected_box_fraction"] or 0),
+                        float(point_result.get("score", 0) or 0),
+                        policy, point_result, point_proposal, point_metrics))
+                successful.sort(key=lambda item: item[:5], reverse=True)
+                selected_point = successful[0] if successful else None
                 row["point_fallback"] = {
+                    "mode": point_fallback_mode,
                     "elapsed_seconds": round(time.monotonic() - fallback_started, 4),
-                    "score": point_result.get("score"), "metrics": point_metrics,
-                    "localization_pass": point_pass,
-                    "warnings": point_result.get("warnings") or [],
+                    "diagnostics": diagnostics, "attempts": attempts,
+                    "selected_policy": selected_point[5] if selected_point else None,
+                    "localization_pass": bool(selected_point and selected_point[0]),
                 }
-                if point_pass:
+                if selected_point and selected_point[0]:
+                    policy, point_result, point_proposal, point_metrics = selected_point[5:]
                     proposal = point_proposal
                     row.update({
                         "point_fallback_used": True,
-                        "selected_prompt_name": "projected_center_point_fallback",
+                        "selected_prompt_name": f"projected_center_point_{policy}",
                         "sam_score": point_result.get("score"), "metrics": point_metrics,
                         "localization_pass": True,
                         "instance_isolation_pass": (
@@ -300,6 +362,7 @@ def evaluate(manifest_path: Path, labels_root: Path, calibration: Path,
         "target_selection": target_policy,
         "prompt_mode": prompt_mode,
         "point_fallback_enabled": point_fallback,
+        "point_fallback_mode": point_fallback_mode,
         "input_sha256": inputs, "sequence_count": len(set(row["sequence"] for row in rows)),
         "image_count": len(rows), "target_available_count": sum(row["target_available"] for row in rows),
         "sam_frame_count": sum(row["sam_called"] for row in rows),
@@ -333,11 +396,14 @@ def main() -> int:
                         default="largest_empty")
     parser.add_argument("--prompt-mode", choices=("single", "multi"), default="single")
     parser.add_argument("--point-fallback", action="store_true")
+    parser.add_argument("--point-fallback-mode", choices=("single", "batch"),
+                        default="single")
     args = parser.parse_args()
     report = evaluate(args.manifest, args.labels_root, args.calibration, args.output,
                       args.sam_url, timeout=args.timeout,
                       target_policy=args.target_policy, prompt_mode=args.prompt_mode,
-                      point_fallback=args.point_fallback)
+                      point_fallback=args.point_fallback,
+                      point_fallback_mode=args.point_fallback_mode)
     keys = ("sequence_count", "image_count", "target_available_count", "sam_frame_count",
             "localization_pass_count", "instance_isolation_pass_count",
             "point_fallback_call_count", "point_fallback_used_count",

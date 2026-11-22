@@ -1,0 +1,19 @@
+{
+  "schema_version": "labelagent.cvat-assistant-triage.v1",
+  "status": "assistant_triage_complete_human_review_pending",
+  "review_pack_manifest_sha256": "7603e3d636810b98e16f48004b0c4763c32f2e2bdde341c739e396a1019c0454",
+  "reviewer_kind": "independent_assistant_visual_review",
+  "decision_counts": {
+    "likely_ok": 4,
+    "needs_human_review": 8,
+    "obvious_issue": 0
+  },
+  "human_truth": false,
+  "human_signoff_count": 0,
+  "training_authorized": false,
+  "automatic_approval": false,
+  "next_gate": "human_review_of_needs_human_review_and_all_training_candidates",
+  "private_candidate_ids_published": false,
+  "private_reasons_published": false,
+  "private_triage_sha256": "3c865ccd5ca8d869fb2e1bb5378d4addf7752d380fccc3e59d20b3941b7f1102"
+}

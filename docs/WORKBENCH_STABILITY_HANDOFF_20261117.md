@@ -3780,3 +3780,11 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - Round503复核manifest、Round505优先级审计和每张聚焦图均做哈希绑定；图像漂移或门禁变化
   时整包失败。当前仍无自动决策、人工真值或训练授权。详见
   `docs/CVAT_TASK3_PRIORITY_REVIEW_PACK_ROUND506_20261122.md`。
+
+## 2026-11-22 Round507 补充：高优先级助手初筛
+
+- 独立只读视觉初筛12项：初看可接受4、需人工放大复核8、明显问题0；页面足以排大漏切/
+  粘连，但不足以正式签字。
+- 完整ID和理由只在 `.repro`；公开仅汇总。人工签字数0、自动批准否、训练授权否。下一步为
+  8个遮挡/触边项生成raw/mask-only/overlay三联图。详见
+  `docs/CVAT_TASK3_HIGH_PRIORITY_TRIAGE_ROUND507_20261122.md`。

@@ -77,7 +77,7 @@ def _review_identity(review: dict[str, Any]) -> dict[str, dict[str, Any]]:
         raise ValueError(f"review manifest must contain exactly {EXPECTED_COUNT} items")
 
     result: dict[str, dict[str, Any]] = {}
-    for item in items:
+    for index, item in enumerate(items):
         if not isinstance(item, dict):
             raise ValueError("review item must be an object")
         candidate_id = item.get("candidate_id")
@@ -87,7 +87,7 @@ def _review_identity(review: dict[str, Any]) -> dict[str, dict[str, Any]]:
             raise ValueError("review candidate id is repeated")
         frame_id = item.get("frame_id")
         if isinstance(frame_id, bool) or not isinstance(frame_id, int) or frame_id < 0:
-            raise ValueError(f"review candidate frame id is invalid: {candidate_id}")
+            raise ValueError(f"review candidate frame id is invalid at row {index}")
         for field in BOUND_FIELDS[1:]:
             if not _valid_sha256(item.get(field)):
                 raise ValueError(f"review candidate binding is invalid: {field}")
@@ -133,16 +133,16 @@ def validate(
     normalized_rows: list[dict[str, Any]] = []
     seen: set[str] = set()
     decisions: Counter[str] = Counter()
-    for row in rows:
+    for index, row in enumerate(rows):
         if not isinstance(row, dict):
             raise ValueError("human signoff row must be an object")
         candidate_id = row.get("candidate_id")
         if not isinstance(candidate_id, str) or not candidate_id.strip():
             raise ValueError("human signoff candidate id is invalid")
         if candidate_id in seen:
-            raise ValueError(f"human signoff candidate is repeated or conflicting: {candidate_id}")
+            raise ValueError(f"human signoff candidate is repeated or conflicting at row {index}")
         if candidate_id not in expected:
-            raise ValueError(f"human signoff contains unknown candidate id: {candidate_id}")
+            raise ValueError(f"human signoff contains unknown candidate id at row {index}")
         seen.add(candidate_id)
 
         identity = expected[candidate_id]
@@ -151,31 +151,31 @@ def validate(
             if field == "frame_id":
                 if isinstance(actual, bool) or not isinstance(actual, int) or actual < 0:
                     raise ValueError(
-                        f"human signoff binding is invalid: {candidate_id} {field}"
+                        f"human signoff binding is invalid at row {index}: {field}"
                     )
             else:
                 if not _valid_sha256(actual):
-                    raise ValueError(f"human signoff binding is invalid: {candidate_id} {field}")
+                    raise ValueError(f"human signoff binding is invalid at row {index}: {field}")
                 actual = actual.lower()
             if actual != identity[field]:
-                raise ValueError(f"human signoff binding drift: {candidate_id} {field}")
+                raise ValueError(f"human signoff binding drift at row {index}: {field}")
 
         decision = row.get("decision")
         if decision not in ALLOWED_DECISIONS:
-            raise ValueError(f"human signoff decision is absent or invalid: {candidate_id}")
+            raise ValueError(f"human signoff decision is absent or invalid at row {index}")
         reviewer = row.get("reviewer")
         if not isinstance(reviewer, str) or not reviewer.strip():
-            raise ValueError(f"human signoff reviewer is absent: {candidate_id}")
+            raise ValueError(f"human signoff reviewer is absent at row {index}")
         reviewed_at = row.get("reviewed_at")
         if not _valid_timestamp(reviewed_at):
-            raise ValueError(f"human signoff timestamp is invalid: {candidate_id}")
+            raise ValueError(f"human signoff timestamp is invalid at row {index}")
         row_approved_for_training = row.get("approved_for_training")
         if row_approved_for_training is not None and row_approved_for_training is not False:
-            raise ValueError(f"human signoff row must not approve training: {candidate_id}")
+            raise ValueError(f"human signoff row must not approve training at row {index}")
 
         note = row.get("note")
         if note is not None and not isinstance(note, str):
-            raise ValueError(f"human signoff note is invalid: {candidate_id}")
+            raise ValueError(f"human signoff note is invalid at row {index}")
         decisions[decision] += 1
         normalized_rows.append(
             {
@@ -199,6 +199,7 @@ def validate(
         "review_manifest_sha256": review_digest,
         "source_signoff_sha256": _sha256(signoff_path),
         "candidate_count": EXPECTED_COUNT,
+        "human_signoff_count": EXPECTED_COUNT,
         "decision_counts": {key: decisions[key] for key in ALLOWED_DECISIONS},
         "rows": normalized_rows,
         "approved_for_training": False,
@@ -212,6 +213,7 @@ def validate(
         "source_signoff_sha256": normalized["source_signoff_sha256"],
         "candidate_count": EXPECTED_COUNT,
         "validated_row_count": EXPECTED_COUNT,
+        "human_signoff_count": EXPECTED_COUNT,
         "decision_counts": normalized["decision_counts"],
         "approved_for_training": False,
         "training_authorized": False,

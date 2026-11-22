@@ -71,6 +71,7 @@ class HumanSignoffImportTests(unittest.TestCase):
             normalized, receipt = validate(review, signoff)
         self.assertEqual(len(normalized["rows"]), 81)
         self.assertEqual(receipt["validated_row_count"], 81)
+        self.assertEqual(receipt["human_signoff_count"], 81)
         self.assertEqual(receipt["decision_counts"], {
             "pass": 27, "reject": 27, "uncertain": 27,
         })
@@ -79,6 +80,17 @@ class HumanSignoffImportTests(unittest.TestCase):
         self.assertNotIn("rows", receipt)
         self.assertFalse(receipt["reviewer_identities_published"])
         self.assertNotIn("rows", receipt)
+
+    def test_error_messages_do_not_publish_private_candidate_ids(self):
+        with tempfile.TemporaryDirectory() as directory:
+            review, signoff, value = self.fixture(Path(directory))
+            private_id = value["rows"][0]["candidate_id"]
+            value["rows"][0]["decision"] = None
+            self.write_signoff(signoff, value)
+            with self.assertRaises(ValueError) as captured:
+                validate(review, signoff)
+        self.assertNotIn(private_id, str(captured.exception))
+        self.assertIn("row 0", str(captured.exception))
 
     def test_empty_signature_fails_closed(self):
         with tempfile.TemporaryDirectory() as directory:

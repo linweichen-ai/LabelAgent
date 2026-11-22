@@ -1,0 +1,19 @@
+{
+  "schema_version": "labelagent.cvat-human-signoff-import-development-receipt.v1",
+  "status": "validator_implemented_and_tested_no_human_signoff_imported",
+  "review_candidate_count": 81,
+  "importer_test_count": 10,
+  "combined_gate_test_count": 14,
+  "human_signoff_count": 0,
+  "training_authorized": false,
+  "automatic_approval": false,
+  "validates_complete_row_coverage": true,
+  "validates_hash_bound_identity": true,
+  "validates_reviewer_and_timezone_aware_timestamp": true,
+  "rejects_training_approval_injection": true,
+  "private_ids_absent_from_error_messages": true,
+  "private_candidate_ids_published": false,
+  "private_geometry_published": false,
+  "reviewer_identities_published": false,
+  "raw_images_published": false
+}

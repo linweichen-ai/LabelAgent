@@ -1,0 +1,19 @@
+{
+  "schema_version": "labelagent.round544.receipt.v1",
+  "date": "2026-11-22",
+  "code_commit": "622b0e7",
+  "status": "offline_candidate_not_deployed",
+  "sample_count": 4,
+  "prompt_ready_count": 3,
+  "sam_frame_count": 3,
+  "diagnostic_pass_count": 3,
+  "reference_labels_used": false,
+  "workbench_writes": 0,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "production_state_before_sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115",
+  "production_state_after_sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115",
+  "results_sha256": "71ef71abece894897a28802bc85d4ea7743dc1b3b3a59f83aa8d97e9c9f69881",
+  "contact_sheet_sha256": "65f62987b7be2b05864e0cac564a0363e81a58e739077ecaad2b6c6651ee36d7"
+}

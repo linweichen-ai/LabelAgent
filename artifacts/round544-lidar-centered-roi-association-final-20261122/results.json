@@ -1,0 +1,387 @@
+{
+  "schema_version": "labelagent.pallet_lidar_centered_roi_sam.v1",
+  "status": "offline_candidate_not_deployed",
+  "input_sha256": {
+    "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\pallet-lidar-instance-prompts-round335\\results.json": "b9e461ec7a4258b797451a9248983f998bce424462081ed337d98d744ef33d90",
+    "D:\\Apps\\LabelAgent\\work\\datasets\\Capture_20261103\\sam3_baseline\\candidates_by_topic.json": "591ebba97aeaca4f58dfcb0eecfd79ec026b4915aa670143d46d9702181b7f92"
+  },
+  "selected_count": 4,
+  "prompt_ready_count": 3,
+  "sam_frame_count": 3,
+  "center_associated_count": 1,
+  "diagnostic_pass_count": 3,
+  "health_before": {
+    "status": "ok",
+    "model_loaded": true,
+    "backend": "remote_4090_sam3",
+    "service_version": "labelagent.remote-sam3.v3-point-groups",
+    "response_cache": {
+      "entries": 3,
+      "bytes": 6836,
+      "max_entries": 24,
+      "max_bytes": 134217728,
+      "in_flight": 0,
+      "hits": 3,
+      "misses": 3,
+      "coalesced_requests": 0,
+      "evictions": 0,
+      "storage": "cpu_json"
+    }
+  },
+  "health_after": {
+    "status": "ok",
+    "model_loaded": true,
+    "backend": "remote_4090_sam3",
+    "service_version": "labelagent.remote-sam3.v3-point-groups",
+    "response_cache": {
+      "entries": 3,
+      "bytes": 6836,
+      "max_entries": 24,
+      "max_bytes": 134217728,
+      "in_flight": 0,
+      "hits": 6,
+      "misses": 3,
+      "coalesced_requests": 0,
+      "evictions": 0,
+      "storage": "cpu_json"
+    }
+  },
+  "reference_labels_used": false,
+  "workbench_writes": 0,
+  "production_state_before_sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115",
+  "production_state_after_sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115",
+  "contact_sheet": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round544-lidar-centered-roi-association-final-20261122\\lidar-centered-roi-sam-review.jpg",
+  "contact_sheet_sha256": "65f62987b7be2b05864e0cac564a0363e81a58e739077ecaad2b6c6651ee36d7",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "rows": [
+    {
+      "topic": "/capture/camera_0/image",
+      "frame": "39",
+      "shape_id": "sam3-camera_0-39-pallet-0",
+      "prompt_ready": true,
+      "sam_called": true,
+      "diagnostic_pass": true,
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "elapsed_seconds": 0.094,
+      "crop_box": [
+        1123,
+        221,
+        1590,
+        618
+      ],
+      "crop_size": [
+        467,
+        397
+      ],
+      "model_result_count": 3,
+      "component_center_local": [
+        213.5,
+        190.0
+      ],
+      "selected_contains_component_center": false,
+      "selected_component_center_distance_pixels": 4.031128874149275,
+      "candidate_summaries": [
+        {
+          "index": 0,
+          "score": 0.66796875,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 66.5,
+          "current_coverage": 0.0,
+          "anchored_to_current": false
+        },
+        {
+          "index": 1,
+          "score": 0.546875,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 188.26908933757554,
+          "current_coverage": 0.0,
+          "anchored_to_current": false
+        },
+        {
+          "index": 2,
+          "score": 0.76171875,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 4.031128874149275,
+          "current_coverage": 0.86125,
+          "anchored_to_current": true
+        }
+      ],
+      "diagnostics": {
+        "confidence_threshold": 0.5,
+        "model_mask_count": 3,
+        "returned_count": 3,
+        "scores": [
+          0.66796875,
+          0.546875,
+          0.76171875
+        ],
+        "min_contour_area": 9,
+        "discarded_contours": 0,
+        "empty_reason": null,
+        "response_cache": {
+          "hit": true,
+          "coalesced": false,
+          "coalesced_wait_seconds": 0.0,
+          "key_sha256": "2408e3ebdeb1cff1ad1e4e0e8f06280614e2974c56cc34ee184a2754bc784538",
+          "entries": 3,
+          "bytes": 6836,
+          "max_entries": 24,
+          "max_bytes": 134217728,
+          "in_flight": 0,
+          "hits": 4,
+          "misses": 3,
+          "coalesced_requests": 0,
+          "evictions": 0,
+          "storage": "cpu_json"
+        }
+      },
+      "sam_score": 0.76171875,
+      "metrics": {
+        "proposal_pixels": 742,
+        "current_pixels": 800,
+        "area_ratio": 0.9275,
+        "current_coverage": 0.86125,
+        "proposal_current_iou": 0.8077373974208675,
+        "positive_points": 4,
+        "positive_points_covered": 1,
+        "positive_coverage": 0.25,
+        "negative_points": 6,
+        "negative_points_clear": 6,
+        "negative_clear_fraction": 1.0,
+        "maximum_other_candidate_fraction": 0.0
+      }
+    },
+    {
+      "topic": "/capture/camera_0/image",
+      "frame": "35",
+      "shape_id": "sam3-camera_0-35-pallet-1",
+      "prompt_ready": true,
+      "sam_called": true,
+      "diagnostic_pass": true,
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "elapsed_seconds": 0.094,
+      "crop_box": [
+        1329,
+        212,
+        1900,
+        669
+      ],
+      "crop_size": [
+        571,
+        457
+      ],
+      "model_result_count": 5,
+      "component_center_local": [
+        248.5,
+        220.5
+      ],
+      "selected_contains_component_center": true,
+      "selected_component_center_distance_pixels": 0.7071067811865476,
+      "candidate_summaries": [
+        {
+          "index": 0,
+          "score": 0.875,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 177.32033160356994,
+          "current_coverage": 0.0,
+          "anchored_to_current": false
+        },
+        {
+          "index": 1,
+          "score": 0.6171875,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 36.50342449688796,
+          "current_coverage": 0.0,
+          "anchored_to_current": false
+        },
+        {
+          "index": 2,
+          "score": 0.62109375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 153.31177384662928,
+          "current_coverage": 0.0,
+          "anchored_to_current": false
+        },
+        {
+          "index": 3,
+          "score": 0.62109375,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 0.7071067811865476,
+          "current_coverage": 0.6427656850192062,
+          "anchored_to_current": true
+        },
+        {
+          "index": 4,
+          "score": 0.67578125,
+          "contains_component_center": true,
+          "component_center_distance_pixels": 0.7071067811865476,
+          "current_coverage": 0.7074263764404609,
+          "anchored_to_current": true
+        }
+      ],
+      "diagnostics": {
+        "confidence_threshold": 0.5,
+        "model_mask_count": 5,
+        "returned_count": 5,
+        "scores": [
+          0.875,
+          0.6171875,
+          0.62109375,
+          0.62109375,
+          0.67578125
+        ],
+        "min_contour_area": 9,
+        "discarded_contours": 1,
+        "empty_reason": null,
+        "response_cache": {
+          "hit": true,
+          "coalesced": false,
+          "coalesced_wait_seconds": 0.0,
+          "key_sha256": "bb68ee1ad5c8e249ab2b399af826e9ac3ba88d9cea43ed754b8a1f5aade45b39",
+          "entries": 3,
+          "bytes": 6836,
+          "max_entries": 24,
+          "max_bytes": 134217728,
+          "in_flight": 0,
+          "hits": 5,
+          "misses": 3,
+          "coalesced_requests": 0,
+          "evictions": 0,
+          "storage": "cpu_json"
+        }
+      },
+      "sam_score": 0.67578125,
+      "metrics": {
+        "proposal_pixels": 1198,
+        "current_pixels": 1562,
+        "area_ratio": 0.7669654289372599,
+        "current_coverage": 0.7074263764404609,
+        "proposal_current_iou": 0.6676737160120846,
+        "positive_points": 4,
+        "positive_points_covered": 1,
+        "positive_coverage": 0.25,
+        "negative_points": 6,
+        "negative_points_clear": 6,
+        "negative_clear_fraction": 1.0,
+        "maximum_other_candidate_fraction": 0.00333889816360601
+      }
+    },
+    {
+      "topic": "/capture/camera_1/image",
+      "frame": "89",
+      "shape_id": "sam3-camera_1-89-pallet-0",
+      "prompt_ready": true,
+      "sam_called": true,
+      "diagnostic_pass": true,
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "elapsed_seconds": 0.047,
+      "crop_box": [
+        924,
+        421,
+        1180,
+        677
+      ],
+      "crop_size": [
+        256,
+        256
+      ],
+      "model_result_count": 3,
+      "component_center_local": [
+        118.0,
+        101.5
+      ],
+      "selected_contains_component_center": false,
+      "selected_component_center_distance_pixels": 12.776932339180638,
+      "candidate_summaries": [
+        {
+          "index": 0,
+          "score": 0.50390625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 21.523243250030884,
+          "current_coverage": 0.5517241379310345,
+          "anchored_to_current": true
+        },
+        {
+          "index": 1,
+          "score": 0.90625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 58.670691149840735,
+          "current_coverage": 0.0,
+          "anchored_to_current": false
+        },
+        {
+          "index": 2,
+          "score": 0.6640625,
+          "contains_component_center": false,
+          "component_center_distance_pixels": 12.776932339180638,
+          "current_coverage": 0.6915708812260536,
+          "anchored_to_current": true
+        }
+      ],
+      "diagnostics": {
+        "confidence_threshold": 0.5,
+        "model_mask_count": 3,
+        "returned_count": 3,
+        "scores": [
+          0.50390625,
+          0.90625,
+          0.6640625
+        ],
+        "min_contour_area": 9,
+        "discarded_contours": 0,
+        "empty_reason": null,
+        "response_cache": {
+          "hit": true,
+          "coalesced": false,
+          "coalesced_wait_seconds": 0.0,
+          "key_sha256": "4c3d5fdc8da394d562c17732017a38fa7ef4126cb0a477709bce460e3dc994aa",
+          "entries": 3,
+          "bytes": 6836,
+          "max_entries": 24,
+          "max_bytes": 134217728,
+          "in_flight": 0,
+          "hits": 6,
+          "misses": 3,
+          "coalesced_requests": 0,
+          "evictions": 0,
+          "storage": "cpu_json"
+        }
+      },
+      "sam_score": 0.6640625,
+      "metrics": {
+        "proposal_pixels": 605,
+        "current_pixels": 522,
+        "area_ratio": 1.1590038314176245,
+        "current_coverage": 0.6915708812260536,
+        "proposal_current_iou": 0.47127937336814624,
+        "positive_points": 4,
+        "positive_points_covered": 1,
+        "positive_coverage": 0.25,
+        "negative_points": 6,
+        "negative_points_clear": 6,
+        "negative_clear_fraction": 1.0,
+        "maximum_other_candidate_fraction": 0.0
+      }
+    },
+    {
+      "topic": "/capture/camera_2/image",
+      "frame": "64",
+      "shape_id": "sam3-camera_2-64-pallet-1",
+      "prompt_ready": false,
+      "sam_called": false,
+      "diagnostic_pass": false,
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    }
+  ]
+}

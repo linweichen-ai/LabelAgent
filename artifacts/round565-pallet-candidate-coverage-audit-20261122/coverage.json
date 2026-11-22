@@ -1,0 +1,173 @@
+{
+  "schema_version": "labelagent.pallet_candidate_coverage_audit.v1",
+  "status": "offline_cross_view_coverage_not_deployed",
+  "localization_report_sha256": "933aabf5f6ad018506fd97d1b9e8870b9da49269d7564adbff80d5845a772546",
+  "conflict_report_sha256": "5d3d13a4e785864ca5a040fd35620a3c966882c51dbd079e7d2b68491c4ce136",
+  "route_report_sha256": "e0db06faacdf4762584c59c80c41a28c9f220f5bff606f46ebf0f55898677496",
+  "contact_sheet_sha256": "232130a7169e1f195492a0bd4d8f290007e284e664cf9ca8cd5f3c63c159ffc8",
+  "sequence_count": 3,
+  "camera_count": 4,
+  "image_count": 12,
+  "safe_skip_count": 10,
+  "trigger_count": 2,
+  "false_trigger_count": 0,
+  "missed_trigger_count": 0,
+  "candidate_count": 5,
+  "human_truth_writes": 0,
+  "training_data_writes": 0,
+  "workbench_writes": 0,
+  "production_deployed": false,
+  "rows": [
+    {
+      "sequence": "010",
+      "camera": 0,
+      "frame_id": "1789899951882467655",
+      "target_obj_id": 7,
+      "maximum_other_projected_box_fraction": 0.8394543546694648,
+      "localization_pass": true,
+      "instance_isolation_pass": false,
+      "conflict_triggered": true,
+      "route_candidate_count": 3,
+      "route_names": [
+        "depth_split_candidate",
+        "depth_split_candidate",
+        "depth_split_candidate"
+      ]
+    },
+    {
+      "sequence": "010",
+      "camera": 1,
+      "frame_id": "1789899951882467655",
+      "target_obj_id": 6,
+      "maximum_other_projected_box_fraction": 0.0,
+      "localization_pass": true,
+      "instance_isolation_pass": true,
+      "conflict_triggered": false,
+      "route_candidate_count": 0,
+      "route_names": []
+    },
+    {
+      "sequence": "010",
+      "camera": 2,
+      "frame_id": "1789899951882467655",
+      "target_obj_id": 22,
+      "maximum_other_projected_box_fraction": 0.0,
+      "localization_pass": true,
+      "instance_isolation_pass": true,
+      "conflict_triggered": false,
+      "route_candidate_count": 0,
+      "route_names": []
+    },
+    {
+      "sequence": "010",
+      "camera": 3,
+      "frame_id": "1789899951882467655",
+      "target_obj_id": 2,
+      "maximum_other_projected_box_fraction": 0.0,
+      "localization_pass": true,
+      "instance_isolation_pass": true,
+      "conflict_triggered": false,
+      "route_candidate_count": 0,
+      "route_names": []
+    },
+    {
+      "sequence": "011",
+      "camera": 0,
+      "frame_id": "1789900388815700364",
+      "target_obj_id": 12,
+      "maximum_other_projected_box_fraction": 0.0,
+      "localization_pass": true,
+      "instance_isolation_pass": true,
+      "conflict_triggered": false,
+      "route_candidate_count": 0,
+      "route_names": []
+    },
+    {
+      "sequence": "011",
+      "camera": 1,
+      "frame_id": "1789900388815700364",
+      "target_obj_id": 15,
+      "maximum_other_projected_box_fraction": 0.4611842105263158,
+      "localization_pass": true,
+      "instance_isolation_pass": false,
+      "conflict_triggered": true,
+      "route_candidate_count": 2,
+      "route_names": [
+        "depth_split_candidate",
+        "temporal_occlusion_defer_2d"
+      ]
+    },
+    {
+      "sequence": "011",
+      "camera": 2,
+      "frame_id": "1789900388815700364",
+      "target_obj_id": 24,
+      "maximum_other_projected_box_fraction": 0.0,
+      "localization_pass": true,
+      "instance_isolation_pass": true,
+      "conflict_triggered": false,
+      "route_candidate_count": 0,
+      "route_names": []
+    },
+    {
+      "sequence": "011",
+      "camera": 3,
+      "frame_id": "1789900388815700364",
+      "target_obj_id": 5,
+      "maximum_other_projected_box_fraction": 0.0,
+      "localization_pass": true,
+      "instance_isolation_pass": true,
+      "conflict_triggered": false,
+      "route_candidate_count": 0,
+      "route_names": []
+    },
+    {
+      "sequence": "012",
+      "camera": 0,
+      "frame_id": "1789900488815784655",
+      "target_obj_id": 12,
+      "maximum_other_projected_box_fraction": 0.0,
+      "localization_pass": true,
+      "instance_isolation_pass": true,
+      "conflict_triggered": false,
+      "route_candidate_count": 0,
+      "route_names": []
+    },
+    {
+      "sequence": "012",
+      "camera": 1,
+      "frame_id": "1789900488815784655",
+      "target_obj_id": 12,
+      "maximum_other_projected_box_fraction": 0.0,
+      "localization_pass": true,
+      "instance_isolation_pass": true,
+      "conflict_triggered": false,
+      "route_candidate_count": 0,
+      "route_names": []
+    },
+    {
+      "sequence": "012",
+      "camera": 2,
+      "frame_id": "1789900488815784655",
+      "target_obj_id": 35,
+      "maximum_other_projected_box_fraction": 0.0,
+      "localization_pass": true,
+      "instance_isolation_pass": true,
+      "conflict_triggered": false,
+      "route_candidate_count": 0,
+      "route_names": []
+    },
+    {
+      "sequence": "012",
+      "camera": 3,
+      "frame_id": "1789900488815784655",
+      "target_obj_id": 29,
+      "maximum_other_projected_box_fraction": 0.0,
+      "localization_pass": true,
+      "instance_isolation_pass": true,
+      "conflict_triggered": false,
+      "route_candidate_count": 0,
+      "route_names": []
+    }
+  ]
+}

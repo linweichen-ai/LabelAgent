@@ -1,0 +1,22 @@
+{
+  "schema_version": "labelagent.pallet_candidate_coverage_browser_acceptance.v1",
+  "page_sha256": "394efc3103131535ae678b7910245f03fb6d3214a484b89c1f238f31ad60273b",
+  "screenshot_sha256": "02e65df40e44b36ab95994d51a2c881a3b712a0b72e0b405764ea6b987058ef5",
+  "stats": [
+    "12",
+    "10",
+    "2",
+    "0 / 0"
+  ],
+  "rows": 12,
+  "safe_skips": 10,
+  "triggers": 2,
+  "buttons": 0,
+  "contact_sheet": {
+    "complete": true,
+    "width": 1280,
+    "height": 3456
+  },
+  "external_requests": [],
+  "passed": true
+}

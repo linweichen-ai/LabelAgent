@@ -1,0 +1,159 @@
+{
+  "schema_version": "labelagent.pallet_box3d_conflict_margin.v1",
+  "status": "offline_geometry_audit_not_deployed",
+  "source_report_sha256": "933aabf5f6ad018506fd97d1b9e8870b9da49269d7564adbff80d5845a772546",
+  "manifest_sha256": "74d2c707c5d388f464312a92ec78868b1f005e58e1ec5756caac33b850ab6125",
+  "localized_row_count": 12,
+  "source_isolated_row_count": 10,
+  "source_failed_isolation_row_count": 2,
+  "maximum_overlap_among_source_isolated": 0.0377906976744186,
+  "minimum_overlap_among_source_failed": 0.6500493583415597,
+  "separation_margin": 0.6122586606671412,
+  "trigger_counts_by_threshold": {
+    "0.10": 2,
+    "0.15": 2,
+    "0.20": 2,
+    "0.25": 2,
+    "0.30": 2,
+    "0.40": 2,
+    "0.50": 2
+  },
+  "workbench_writes": 0,
+  "human_pixel_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "rows": [
+    {
+      "sequence": "010",
+      "frame_id": "1789899951882467655",
+      "camera": 0,
+      "target_obj_id": 7,
+      "source_instance_isolation_pass": false,
+      "maximum_overlap": 0.6500493583415597,
+      "other_obj_id": 6,
+      "target_overlap": 0.6452719255267026,
+      "other_overlap": 0.6500493583415597
+    },
+    {
+      "sequence": "010",
+      "frame_id": "1789899951882467655",
+      "camera": 1,
+      "target_obj_id": 6,
+      "source_instance_isolation_pass": true,
+      "maximum_overlap": 0.0377906976744186,
+      "other_obj_id": 11,
+      "target_overlap": 0.016960208741030658,
+      "other_overlap": 0.0377906976744186
+    },
+    {
+      "sequence": "010",
+      "frame_id": "1789899951882467655",
+      "camera": 2,
+      "target_obj_id": 22,
+      "source_instance_isolation_pass": true,
+      "maximum_overlap": 0.0,
+      "other_obj_id": null,
+      "target_overlap": 0.0,
+      "other_overlap": 0.0
+    },
+    {
+      "sequence": "010",
+      "frame_id": "1789899951882467655",
+      "camera": 3,
+      "target_obj_id": 2,
+      "source_instance_isolation_pass": true,
+      "maximum_overlap": 0.0,
+      "other_obj_id": null,
+      "target_overlap": 0.0,
+      "other_overlap": 0.0
+    },
+    {
+      "sequence": "011",
+      "frame_id": "1789900388815700364",
+      "camera": 0,
+      "target_obj_id": 12,
+      "source_instance_isolation_pass": true,
+      "maximum_overlap": 0.0,
+      "other_obj_id": null,
+      "target_overlap": 0.0,
+      "other_overlap": 0.0
+    },
+    {
+      "sequence": "011",
+      "frame_id": "1789900388815700364",
+      "camera": 1,
+      "target_obj_id": 15,
+      "source_instance_isolation_pass": false,
+      "maximum_overlap": 0.7230046948356808,
+      "other_obj_id": 20,
+      "target_overlap": 0.3219063545150502,
+      "other_overlap": 0.7230046948356808
+    },
+    {
+      "sequence": "011",
+      "frame_id": "1789900388815700364",
+      "camera": 2,
+      "target_obj_id": 24,
+      "source_instance_isolation_pass": true,
+      "maximum_overlap": 0.0,
+      "other_obj_id": null,
+      "target_overlap": 0.0,
+      "other_overlap": 0.0
+    },
+    {
+      "sequence": "011",
+      "frame_id": "1789900388815700364",
+      "camera": 3,
+      "target_obj_id": 5,
+      "source_instance_isolation_pass": true,
+      "maximum_overlap": 0.0,
+      "other_obj_id": null,
+      "target_overlap": 0.0,
+      "other_overlap": 0.0
+    },
+    {
+      "sequence": "012",
+      "frame_id": "1789900488815784655",
+      "camera": 0,
+      "target_obj_id": 12,
+      "source_instance_isolation_pass": true,
+      "maximum_overlap": 0.0,
+      "other_obj_id": null,
+      "target_overlap": 0.0,
+      "other_overlap": 0.0
+    },
+    {
+      "sequence": "012",
+      "frame_id": "1789900488815784655",
+      "camera": 1,
+      "target_obj_id": 12,
+      "source_instance_isolation_pass": true,
+      "maximum_overlap": 0.0,
+      "other_obj_id": null,
+      "target_overlap": 0.0,
+      "other_overlap": 0.0
+    },
+    {
+      "sequence": "012",
+      "frame_id": "1789900488815784655",
+      "camera": 2,
+      "target_obj_id": 35,
+      "source_instance_isolation_pass": true,
+      "maximum_overlap": 0.0,
+      "other_obj_id": null,
+      "target_overlap": 0.0,
+      "other_overlap": 0.0
+    },
+    {
+      "sequence": "012",
+      "frame_id": "1789900488815784655",
+      "camera": 3,
+      "target_obj_id": 29,
+      "source_instance_isolation_pass": true,
+      "maximum_overlap": 0.0,
+      "other_obj_id": null,
+      "target_overlap": 0.0,
+      "other_overlap": 0.0
+    }
+  ]
+}

@@ -3788,3 +3788,10 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 完整ID和理由只在 `.repro`；公开仅汇总。人工签字数0、自动批准否、训练授权否。下一步为
   8个遮挡/触边项生成raw/mask-only/overlay三联图。详见
   `docs/CVAT_TASK3_HIGH_PRIORITY_TRIAGE_ROUND507_20261122.md`。
+
+## 2026-11-22 Round508 补充：疑难项放大三联图
+
+- 8个需人工复核项已生成RAW/MASK ONLY/OVERLAY单项图及4张汇总页；独立掩码清楚展示
+  多部件、孔洞和遮挡切口，轮廓维持2像素。
+- 构建严格绑定候选、复核包、助手初筛及公开回执哈希；图片和ID只留 `.repro`。当前仍为
+  人工复核待定、签字0、训练未授权。详见 `docs/CVAT_TASK3_TRIAGE_ZOOM_ROUND508_20261122.md`。

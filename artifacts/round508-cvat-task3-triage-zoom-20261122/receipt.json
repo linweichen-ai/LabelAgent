@@ -1,0 +1,16 @@
+{
+  "schema_version": "labelagent.cvat-triage-zoom-pack.v1",
+  "status": "human_review_pending",
+  "candidate_manifest_sha256": "1033e8ad16fc0e4c8b03ef246557ae321273b4188b92bc3171c9604558f32f99",
+  "review_pack_manifest_sha256": "7603e3d636810b98e16f48004b0c4763c32f2e2bdde341c739e396a1019c0454",
+  "assistant_triage_sha256": "3c865ccd5ca8d869fb2e1bb5378d4addf7752d380fccc3e59d20b3941b7f1102",
+  "item_count": 8,
+  "page_count": 4,
+  "human_truth": false,
+  "human_signoff_count": 0,
+  "training_authorized": false,
+  "automatic_approval": false,
+  "private_manifest_sha256": "20606b67436e35807996ca38a1325cf87ba3ebbf15302e703fd287dc200ff29b",
+  "private_candidate_ids_published": false,
+  "private_review_images_published": false
+}

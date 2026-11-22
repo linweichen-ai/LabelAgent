@@ -1,0 +1,23 @@
+{
+  "schema_version": "labelagent.cvat-uncertain-temporal-context.v1",
+  "status": "assistant_review_pending",
+  "candidate_manifest_sha256": "1033e8ad16fc0e4c8b03ef246557ae321273b4188b92bc3171c9604558f32f99",
+  "zoom_triage_sha256": "1c9c9ab262977328232bf04d899273c817918c5023432b6ffb4baee750644257",
+  "import_manifest_sha256": "e6fed22bfd3b26d32260da2cb5d592041c0bdc3cee3eba72572f9034ffaac961",
+  "offsets": [
+    -4,
+    -2,
+    0,
+    2,
+    4
+  ],
+  "same_parity_only": true,
+  "item_count": 3,
+  "human_truth": false,
+  "human_signoff_count": 0,
+  "training_authorized": false,
+  "automatic_approval": false,
+  "private_manifest_sha256": "22b8cb878bb62f22a4fc32298b84d2d1f014c6aef49216191360a4ad0bb1c99c",
+  "private_candidate_ids_published": false,
+  "private_images_published": false
+}

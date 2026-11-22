@@ -67,6 +67,7 @@ def select_associated_result(results, current, center_x, center_y, width, height
             "index": index, "score": score, "contains_component_center": contains,
             "component_center_distance_pixels": distance,
             "current_coverage": coverage, "anchored_to_current": anchored,
+            "prompt_name": result.get("prompt_name"),
         })
         ranked.append((anchored, near_center, coverage, score, -index,
                        result, mask, contains, distance))

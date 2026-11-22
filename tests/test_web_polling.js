@@ -635,6 +635,29 @@ test('引导台在工作区恢复完成前合并启动事件且只首次读取�
   assert.deepEqual(calls, ['/api/state/summary']);
 });
 
+test('隐藏工作台暂停版本探针且切回可见时立即补查', async () => {
+  const calls = [];
+  const h = harness({
+    currentUiVersion: '169',
+    showUiVersionNotice() {},
+    async fetch(url) {
+      calls.push(url);
+      return {ok: true, async text() {
+        return '<meta name="labelagent-ui-version" content="169">';
+      }};
+    },
+  });
+  const text = source('guide.js');
+  h.run(section(text, '  async function checkUiVersion()', '\n  function objectKeys'));
+  h.context.document.hidden = true;
+  await h.run('checkUiVersion()');
+  assert.deepEqual(calls, []);
+  h.context.document.hidden = false;
+  await h.run('checkUiVersion()');
+  assert.equal(calls.length, 1);
+  assert.match(calls[0], /^\/\?ui_version_probe=/);
+});
+
 test('引导台直接消费任务事件且只在任务结束时同步摘要', async () => {
   let refreshes = 0, renders = 0;
   const h = harness({

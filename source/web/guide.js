@@ -108,6 +108,7 @@
   }
 
   async function checkUiVersion() {
+    if (document.hidden) return;
     try {
       const response = await fetch(`/?ui_version_probe=${Date.now()}`, {cache: 'no-store'});
       if (!response.ok) return;

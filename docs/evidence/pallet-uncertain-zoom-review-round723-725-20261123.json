@@ -1,0 +1,87 @@
+{
+  "schema_version": "labelagent.pallet_uncertain_zoom_review_acceptance.v1",
+  "date": "2026-11-23",
+  "scope": "candidate_only_zoom_review",
+  "tool": {
+    "path": "tools/build_pallet_uncertain_zoom_review.py",
+    "sha256": "8e23f6e30feeefb1764d4acb30ac4339302165f61d75a4491826f3317600f689"
+  },
+  "test": {
+    "path": "tests/test_build_pallet_uncertain_zoom_review.py",
+    "sha256": "9305ed1d0fcf02b5cc5367805a815b9c413b280ec4deb74be9b6aa0a7482db49",
+    "directed_result": "6 passed",
+    "project_suite_result": "1707 passed, 1 skipped, 262 subtests passed"
+  },
+  "frozen_inputs": {
+    "round721_manifest_sha256": "b1670d71a5b1f6e6365a8900578457dd54cfd6aa89b6ef2120b1e6f327682007",
+    "round674_manifest_sha256": "4722afc0e43412ddba87ee989d714fae6214b28e578fbcae9e968aa50e8f2b14",
+    "source_image_006_sha256": "7bd1e72762c2e3e8db8c6cb65cd28b87d3405d948cbaff82fae7be07b8bacb98",
+    "source_image_008_sha256": "8ea653dca15d12fcca165e28d7ae13721d1527ff81b41c07e9f9fc093229afd0"
+  },
+  "runs": [
+    {
+      "round": 723,
+      "path": "artifacts/round723-pallet-uncertain-zoom-review-20261123",
+      "file_count": 7,
+      "manifest_sha256": "64d6755091e913a5f7b6b367c4cb2ea1a01348c364a38f7bd71efa27b2ea1409",
+      "canonical_tree_sha256": "e6a404dc51aabd96b6273e3a6df0dccf5c0a6118db1384fe13bc388aee018b1a"
+    },
+    {
+      "round": 724,
+      "path": "artifacts/round724-pallet-uncertain-zoom-review-repeat-20261123",
+      "file_count": 7,
+      "manifest_sha256": "64d6755091e913a5f7b6b367c4cb2ea1a01348c364a38f7bd71efa27b2ea1409",
+      "canonical_tree_sha256": "e6a404dc51aabd96b6273e3a6df0dccf5c0a6118db1384fe13bc388aee018b1a"
+    },
+    {
+      "round": 725,
+      "path": "artifacts/round725-pallet-uncertain-zoom-review-current-tool-20261123",
+      "file_count": 7,
+      "manifest_sha256": "64d6755091e913a5f7b6b367c4cb2ea1a01348c364a38f7bd71efa27b2ea1409",
+      "canonical_tree_sha256": "e6a404dc51aabd96b6273e3a6df0dccf5c0a6118db1384fe13bc388aee018b1a"
+    }
+  ],
+  "repeatability": {
+    "run_count": 3,
+    "file_count_per_run": 7,
+    "different_file_count": 0,
+    "canonical_tree_algorithm": "relative/path|bytes|sha256 sorted; UTF-8 no BOM; LF plus trailing LF; SHA-256"
+  },
+  "source_resolution": [640, 512],
+  "no_new_visual_information": true,
+  "items": [
+    {"sequence": "006", "obj_id": "11", "nearest_scale": 3, "post_zoom_decision": "uncertain"},
+    {"sequence": "006", "obj_id": "12", "nearest_scale": 3, "post_zoom_decision": "uncertain"},
+    {"sequence": "006", "obj_id": "13", "nearest_scale": 3, "post_zoom_decision": "uncertain"},
+    {"sequence": "006", "obj_id": "14", "nearest_scale": 3, "post_zoom_decision": "uncertain"},
+    {"sequence": "008", "obj_id": "67", "nearest_scale": 4, "post_zoom_decision": "reject_or_redraw", "reason": "mask falls on forklift body/cockpit region"},
+    {"sequence": "008", "obj_id": "78", "nearest_scale": 4, "post_zoom_decision": "uncertain"}
+  ],
+  "updated_assistant_triage": {
+    "accept_candidate_for_human_confirmation": 3,
+    "reject_or_redraw": 7,
+    "uncertain": 5
+  },
+  "oss_read_attempt": {
+    "status": "stopped_before_remote_access",
+    "reason": "ossutil is not installed on this computer",
+    "credentials_guessed": false,
+    "access_key_attempted": false,
+    "downloads": 0,
+    "writes": 0
+  },
+  "candidate_only": true,
+  "assistant_only": true,
+  "human_signoff": false,
+  "human_pixel_truth": false,
+  "approved_for_training": false,
+  "training_authorized": false,
+  "automatic_approval": false,
+  "human_truth_writes": 0,
+  "training_data_writes": 0,
+  "workbench_writes": 0,
+  "oss_writes": 0,
+  "gpu_or_sam_calls": 0,
+  "production_deployed": false,
+  "readback_verified": true
+}

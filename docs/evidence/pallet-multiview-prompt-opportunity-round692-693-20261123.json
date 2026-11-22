@@ -1,0 +1,62 @@
+{
+  "schema_version": "labelagent.pallet_multiview_prompt_opportunity_evidence.v1",
+  "date": "2026-11-23",
+  "scope": "offline_label_conditioned_cross_view_prompt_opportunity_not_deployed",
+  "protocol": {
+    "visibility_grids": [
+      {"cell_size_pixels": 4, "depth_slack_m": 0.10},
+      {"cell_size_pixels": 8, "depth_slack_m": 0.15}
+    ],
+    "minimum_exclusive_target_points_per_grid": 3,
+    "minimum_same_indices_shared_across_grids": 3,
+    "requires_nonprimary_camera": true,
+    "ambiguous_3d_box_points_excluded": true,
+    "shared_index_definition": "position in one finite-nonzero center-frame XYZ array read once per PCD"
+  },
+  "result": {
+    "unresolved_targets": 8,
+    "cross_view_prompt_opportunities": 0,
+    "insufficient": 8,
+    "center_frame_pcd_reads": 2,
+    "frozen_input_count": 10,
+    "repeat_report_byte_exact": true,
+    "parse_time_input_drift_guarded": true,
+    "hardened_rerun_matches_pre_hardening_result": true
+  },
+  "rows": [
+    {"sequence":"006","target_obj_id":"10","primary_camera":1,"minimum_points_by_camera":{"0":0,"1":3,"2":0,"3":0},"status":"insufficient"},
+    {"sequence":"006","target_obj_id":"12","primary_camera":1,"minimum_points_by_camera":{"0":0,"1":2,"2":0,"3":0},"status":"insufficient"},
+    {"sequence":"006","target_obj_id":"13","primary_camera":1,"minimum_points_by_camera":{"0":0,"1":5,"2":0,"3":0},"status":"insufficient"},
+    {"sequence":"008","target_obj_id":"75","primary_camera":1,"minimum_points_by_camera":{"0":0,"1":5,"2":0,"3":0},"status":"insufficient"},
+    {"sequence":"008","target_obj_id":"76","primary_camera":1,"minimum_points_by_camera":{"0":0,"1":3,"2":0,"3":0},"status":"insufficient"},
+    {"sequence":"008","target_obj_id":"77","primary_camera":1,"minimum_points_by_camera":{"0":0,"1":5,"2":0,"3":0},"status":"insufficient"},
+    {"sequence":"008","target_obj_id":"78","primary_camera":1,"minimum_points_by_camera":{"0":0,"1":0,"2":0,"3":0},"status":"insufficient"},
+    {"sequence":"008","target_obj_id":"79","primary_camera":1,"minimum_points_by_camera":{"0":0,"1":1,"2":0,"3":0},"status":"insufficient"}
+  ],
+  "claim_boundary": {
+    "conditioned_on_human_3d_labels": true,
+    "not_segmentation_support": true,
+    "not_a_pass_decision": true,
+    "other_camera_images_downloaded": 0,
+    "sam_calls": 0,
+    "human_pixel_truth": false,
+    "approved_for_training": false,
+    "workbench_writes": 0,
+    "human_truth_writes": 0,
+    "training_data_writes": 0,
+    "oss_writes": 0,
+    "production_deployed": false
+  },
+  "tests": {
+    "focused_passed": 23,
+    "full_passed": 1654,
+    "skipped": 1,
+    "subtests_passed": 262
+  },
+  "local_report_sha256": {
+    "round692": "9a3e50d7a0623260f55fade7a7b3a8cad190095aca75c5d15ab0dcbd1f08981f",
+    "round693_repeat": "9a3e50d7a0623260f55fade7a7b3a8cad190095aca75c5d15ab0dcbd1f08981f",
+    "round694_hardened": "9a3e50d7a0623260f55fade7a7b3a8cad190095aca75c5d15ab0dcbd1f08981f",
+    "round695_hardened_repeat": "9a3e50d7a0623260f55fade7a7b3a8cad190095aca75c5d15ab0dcbd1f08981f"
+  }
+}

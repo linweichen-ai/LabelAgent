@@ -1,0 +1,18 @@
+{
+  "schema_version": "labelagent.ego_uncertain_temporal_independent_review.v1",
+  "created_date": "2026-11-22",
+  "candidate_only": true,
+  "assistant_review_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "default_enabled": false,
+  "automatic_decisions_enabled": false,
+  "review_scope": "The independent reviewer viewed only the single five-frame temporal PNG and did not read JSON, policy, ranking, or prior decisions.",
+  "component_id": "004-camera1-idx5-1793760663542839987-c002",
+  "judgment": "likely_fill_ok",
+  "reason": "五帧中黄色框内始终是同一条深色线缆或接缝与实体面板的稳定交汇，位置和走向一致，没有显露可透视背景或真实开口。",
+  "conservative_adjudication": "uncertain",
+  "adjudication_reason": "Temporal persistence establishes a stable dark structure but does not independently prove whether the five pixels belong to a solid cable surface or a boundary that should remain unfilled. Keep priority human review.",
+  "boundary": "This is assistant-only temporal evidence, not human truth or automatic acceptance."
+}

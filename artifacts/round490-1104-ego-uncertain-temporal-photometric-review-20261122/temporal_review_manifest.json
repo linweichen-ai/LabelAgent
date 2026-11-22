@@ -1,0 +1,104 @@
+{
+  "schema_version": "labelagent.ego_component_temporal_review.v1",
+  "created_utc": "2026-11-22T01:05:42.837872+00:00",
+  "candidate_only": true,
+  "assistant_review_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "default_enabled": false,
+  "automatic_decisions_enabled": false,
+  "component_review_sha256": "62ad809c528bd80a655c5369cfb4e85f357ab59f83ea31b1aa77c601d455c810",
+  "component_id": "004-camera1-idx5-1793760663542839987-c002",
+  "bbox_xyxy": [
+    435,
+    398,
+    438,
+    401
+  ],
+  "crop_box_xyxy": [
+    388,
+    351,
+    484,
+    447
+  ],
+  "same_pixel_location_only": true,
+  "motion_compensation_applied": false,
+  "temporal_frame_count": 5,
+  "photometric_dark_delta_all_frames": true,
+  "rows": [
+    {
+      "index": 5,
+      "frame_id": "1793760663542839987",
+      "delta_seconds": 0.0,
+      "source_image": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261104_round418\\004-camera1-idx5-1793760663542839987.png",
+      "source_image_sha256": "f96e4e58ac807b5020d0d62697cfd58729317c93b4b6d9db7fc804d5fe83de16",
+      "photometric": {
+        "target_pixels": 5,
+        "ring_pixels": 40,
+        "target_luma_mean": 70.041,
+        "ring_luma_mean": 84.583,
+        "target_minus_ring_luma": -14.542
+      }
+    },
+    {
+      "index": 22,
+      "frame_id": "1793760668642838987",
+      "delta_seconds": 5.099999,
+      "source_image": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261104_round418\\004-camera1-idx22-1793760668642838987.png",
+      "source_image_sha256": "99e868b3641d45d323b9b9df2a9c0fa6f8f54e28309776aaa882643eed284cdf",
+      "photometric": {
+        "target_pixels": 5,
+        "ring_pixels": 40,
+        "target_luma_mean": 64.553,
+        "ring_luma_mean": 83.147,
+        "target_minus_ring_luma": -18.595
+      }
+    },
+    {
+      "index": 52,
+      "frame_id": "1793760677642756695",
+      "delta_seconds": 14.099917,
+      "source_image": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261104_round418\\004-camera1-idx52-1793760677642756695.png",
+      "source_image_sha256": "46b36c747bb0448ad6f144fdac0dc8a9a1d1cb975151998b3808d7de6a9510c6",
+      "photometric": {
+        "target_pixels": 5,
+        "ring_pixels": 40,
+        "target_luma_mean": 65.179,
+        "ring_luma_mean": 79.755,
+        "target_minus_ring_luma": -14.576
+      }
+    },
+    {
+      "index": 68,
+      "frame_id": "1793760682442792695",
+      "delta_seconds": 18.899953,
+      "source_image": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261104_round418\\004-camera1-idx68-1793760682442792695.png",
+      "source_image_sha256": "0a00ee0d7e7a95643e5b1145a31c95439639f3f758f461d53838bf0930578713",
+      "photometric": {
+        "target_pixels": 5,
+        "ring_pixels": 40,
+        "target_luma_mean": 63.266,
+        "ring_luma_mean": 76.641,
+        "target_minus_ring_luma": -13.376
+      }
+    },
+    {
+      "index": 85,
+      "frame_id": "1793760721942855696",
+      "delta_seconds": 58.400016,
+      "source_image": "D:\\Apps\\LabelAgent\\work\\datasets\\SFL_CPD15Y_20261104_round418\\004-camera1-idx85-1793760721942855696.png",
+      "source_image_sha256": "6eaf2d45982bdf3c0288786a508f23ce17df81aaf2dc087cb70e3c7dafe19b86",
+      "photometric": {
+        "target_pixels": 5,
+        "ring_pixels": 40,
+        "target_luma_mean": 63.407,
+        "ring_luma_mean": 72.078,
+        "target_minus_ring_luma": -8.671
+      }
+    }
+  ],
+  "sheet": "004-camera1-idx5-1793760663542839987-c002-temporal-review.png",
+  "sheet_sha256": "a314789ec2dbc529bba340233ac07887b182a768777a58f86ae02f0e2c47b6a0",
+  "boundary": "This sheet provides same-camera, same-pixel temporal context for a fixed ego structure. Any visible drift or ambiguity must remain uncertain; it is not truth or registration."
+}

@@ -107,6 +107,8 @@ REVIEW_PACKET_ACCEPT_DECISIONS = {
     "no_slope_present",
     "uncertain",
 }
+COMPONENT_REVIEW_PACKET_SCHEMA = "labelagent.ego_tail_focused_review_pack.v1"
+COMPONENT_REVIEW_PACKET_QUEUES = {"priority_review", "deferred_manual_review"}
 
 
 def claim_file_activation():
@@ -2799,6 +2801,144 @@ def _review_packet_id(value):
     return value
 
 
+def _component_review_packet_path(packet_id):
+    packet_id = _review_packet_id(packet_id)
+    root = (WORK / "component_review_packs").resolve()
+    path = (root / packet_id / "focused_review_manifest.json").resolve()
+    if path.parent.parent != root:
+        raise ValueError("组件复核包路径越界")
+    if not path.is_file():
+        raise ValueError("组件复核包不存在")
+    return path
+
+
+def _read_component_review_packet(packet_id):
+    """Read one hash-bound, image-only component review pack."""
+    path = _component_review_packet_path(packet_id)
+    raw = path.read_bytes()
+    if len(raw) > 4 * 1024 * 1024:
+        raise ValueError("组件复核包清单过大")
+    try:
+        value = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError("组件复核包清单不是有效 UTF-8 JSON") from error
+    if (not isinstance(value, dict)
+            or value.get("schema_version") != COMPONENT_REVIEW_PACKET_SCHEMA):
+        raise ValueError("组件复核包版本不受支持")
+    if (value.get("candidate_only") is not True
+            or value.get("assistant_review_only") is not True
+            or value.get("human_truth") is not False
+            or value.get("approved_for_training") is not False
+            or value.get("production_deployed") is not False
+            or value.get("default_enabled") is not False
+            or value.get("automatic_decisions_enabled") is not False
+            or value.get("human_decision") is not None
+            or value.get("reviewer_declared_id") is not None
+            or value.get("training_return_allowed") not in {None, False}):
+        raise ValueError("组件复核包越过候选/训练隔离门禁")
+    rows = value.get("rows")
+    review_count = value.get("review_count")
+    if (not isinstance(rows, list) or not 1 <= len(rows) <= 500
+            or isinstance(review_count, bool) or review_count != len(rows)):
+        raise ValueError("组件复核包组件数无效")
+    normalized_rows = []
+    allowed_images = {}
+    seen_ids = set()
+    queue_counts = {queue: 0 for queue in COMPONENT_REVIEW_PACKET_QUEUES}
+    for row in rows:
+        if not isinstance(row, dict):
+            raise ValueError("组件复核包记录无效")
+        component_id = row.get("component_id")
+        queue = row.get("policy_queue")
+        image_name = row.get("focused_image")
+        image_sha256 = row.get("focused_image_sha256")
+        camera_rank = row.get("camera_rank")
+        policy_reason = row.get("policy_reason")
+        if (not isinstance(component_id, str) or not component_id.strip()
+                or len(component_id) > 200 or component_id in seen_ids):
+            raise ValueError("组件复核包包含无效或重复组件")
+        if queue not in COMPONENT_REVIEW_PACKET_QUEUES:
+            raise ValueError("组件复核包包含未知复核队列")
+        if (isinstance(camera_rank, bool) or not isinstance(camera_rank, int)
+                or camera_rank <= 0):
+            raise ValueError("组件复核包包含无效相机排名")
+        if (not isinstance(policy_reason, str) or not policy_reason.strip()
+                or len(policy_reason) > 200):
+            raise ValueError("组件复核包包含无效策略理由")
+        if (row.get("human_truth") not in {None, False}
+                or row.get("approved_for_training") not in {None, False}
+                or row.get("training_return_allowed") not in {None, False}
+                or row.get("automatic_decision") is not None
+                or row.get("human_decision") is not None
+                or row.get("reviewer_declared_id") is not None):
+            raise ValueError("组件复核包记录越过候选/训练隔离门禁")
+        if (not isinstance(image_name, str) or Path(image_name).name != image_name
+                or Path(image_name).suffix.lower() not in {".png", ".jpg", ".jpeg"}
+                or not _valid_sha256(image_sha256)):
+            raise ValueError("组件复核包图片绑定无效")
+        image_path = (path.parent / image_name).resolve()
+        if image_path.parent != path.parent or not image_path.is_file():
+            raise ValueError("组件复核包图片不存在或路径越界")
+        image_bytes = image_path.read_bytes()
+        if len(image_bytes) > 4 * 1024 * 1024:
+            raise ValueError("组件复核包图片过大")
+        if hashlib.sha256(image_bytes).hexdigest() != image_sha256.lower():
+            raise ValueError("组件复核包图片哈希不一致")
+        try:
+            with Image.open(io.BytesIO(image_bytes)) as decoded:
+                decoded.verify()
+            with Image.open(io.BytesIO(image_bytes)) as decoded:
+                if (decoded.format not in {"PNG", "JPEG"}
+                        or decoded.width <= 0 or decoded.height <= 0
+                        or decoded.width > 4096 or decoded.height > 4096
+                        or decoded.width * decoded.height > 16_000_000):
+                    raise ValueError("组件复核包图片格式或尺寸无效")
+        except (OSError, Image.DecompressionBombError) as error:
+            raise ValueError("组件复核包图片无法安全解码") from error
+        if image_name in allowed_images:
+            raise ValueError("组件复核包重复使用图片")
+        seen_ids.add(component_id)
+        queue_counts[queue] += 1
+        allowed_images[image_name] = image_path
+        normalized_rows.append({
+            "component_id": component_id,
+            "camera_rank": camera_rank,
+            "policy_queue": queue,
+            "policy_reason": policy_reason.strip(),
+            "focused_image": image_name,
+            "focused_image_sha256": image_sha256.lower(),
+            "candidate_only": True,
+            "human_truth": False,
+            "approved_for_training": False,
+            "automatic_decision": None,
+        })
+    if (value.get("priority_review") != queue_counts["priority_review"]
+            or value.get("deferred_manual_review") !=
+            queue_counts["deferred_manual_review"]):
+        raise ValueError("组件复核包队列汇总与清单不一致")
+    return {
+        "schema_version": COMPONENT_REVIEW_PACKET_SCHEMA,
+        "packet_id": _review_packet_id(packet_id),
+        "manifest_sha256": hashlib.sha256(raw).hexdigest(),
+        "review_count": len(normalized_rows),
+        "priority_review": queue_counts["priority_review"],
+        "deferred_manual_review": queue_counts["deferred_manual_review"],
+        "rows": normalized_rows,
+        "read_only_packet": True,
+        "session_drafts_only": True,
+        "submits_human_truth": False,
+        "training_data_writes": False,
+        "allowed_images": allowed_images,
+    }
+
+
+def _component_review_packet_summary(packet):
+    return {key: copy.deepcopy(packet[key]) for key in (
+        "schema_version", "packet_id", "manifest_sha256", "review_count",
+        "priority_review", "deferred_manual_review", "read_only_packet",
+        "session_drafts_only", "submits_human_truth", "training_data_writes")}
+
+
 def _review_packet_path(packet_id):
     packet_id = _review_packet_id(packet_id)
     root = (WORK / "review_packets").resolve()
@@ -3138,6 +3278,53 @@ def get_review_packets():
     return jsonify(schema_version="labelagent.review-packet-index.v1",
                    packets=packets, rejected_packets=rejected,
                    raw_images_served=False, auto_truth_submission=False)
+
+
+@app.get('/api/component_review_packs')
+def get_component_review_packs():
+    """List verified, image-only component packs without exposing disk paths."""
+    packets = []
+    rejected = 0
+    root = WORK / "component_review_packs"
+    if root.is_dir():
+        for folder in sorted(root.iterdir(), key=lambda item: item.name):
+            if not folder.is_dir():
+                continue
+            try:
+                packets.append(_component_review_packet_summary(
+                    _read_component_review_packet(folder.name)))
+            except (OSError, ValueError):
+                rejected += 1
+    return jsonify(
+        schema_version="labelagent.component-review-pack-index.v1",
+        packets=packets, rejected_packets=rejected,
+        session_drafts_only=True, human_truth_writes=False,
+        training_data_writes=False, automatic_decisions=False)
+
+
+@app.get('/api/component_review_packs/<packet_id>')
+def get_component_review_pack(packet_id):
+    packet = _read_component_review_packet(packet_id)
+    packet.pop("allowed_images", None)
+    for row in packet["rows"]:
+        row["image_url"] = (
+            f"/api/component_review_packs/{packet['packet_id']}/images/"
+            f"{row['focused_image']}")
+    return jsonify(packet)
+
+
+@app.get('/api/component_review_packs/<packet_id>/images/<image_name>')
+def get_component_review_pack_image(packet_id, image_name):
+    packet = _read_component_review_packet(packet_id)
+    image_path = packet["allowed_images"].get(image_name)
+    if image_path is None:
+        raise ValueError("组件复核图片未绑定当前清单")
+    mimetype = "image/png" if image_path.suffix.lower() == ".png" else "image/jpeg"
+    response = send_file(image_path, mimetype=mimetype, conditional=True,
+                         max_age=0)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
 
 
 @app.get('/api/review_packets/<packet_id>')

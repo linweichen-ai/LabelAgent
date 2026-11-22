@@ -328,7 +328,10 @@
                 <span class="reviewEyebrow">V53 风险复核</span>
                 <div><strong id="candidateReviewTitle">候选复核工作台</strong><small id="candidateReviewContext">读取当前帧候选中…</small></div>
               </div>
-              <button id="candidateReviewToggle" type="button" aria-expanded="true">收起复核台</button>
+              <div class="candidateReviewHeadActions">
+                <button id="componentReviewOpen" type="button" title="打开哈希校验后的微孔聚焦复核包">微孔聚焦复核 <span id="componentReviewBadge">—</span></button>
+                <button id="candidateReviewToggle" type="button" aria-expanded="true">收起复核台</button>
+              </div>
             </div>
             <div class="candidateReviewBody">
               <div id="candidateReviewStats" class="candidateReviewStats" aria-label="当前帧候选统计"></div>
@@ -605,6 +608,41 @@
     <button id="referencePrepCancel" type="button">暂不准备</button>
   </div>
 </dialog>
+<dialog id="componentReviewDialog" class="componentReviewDialog" aria-labelledby="componentReviewTitle">
+  <div class="componentReviewDialogHead">
+    <div><span>只读 · 会话草稿</span><h2 id="componentReviewTitle">微孔聚焦复核</h2></div>
+    <button id="componentReviewClose" type="button" aria-label="关闭微孔聚焦复核">×</button>
+  </div>
+  <div class="componentReviewToolbar">
+    <label>复核包<select id="componentReviewSelect" aria-label="选择微孔聚焦复核包"></select></label>
+    <button id="componentReviewLoad" type="button" class="primary">载入复核包</button>
+    <button id="componentReviewRefresh" type="button">刷新</button>
+  </div>
+  <div id="componentReviewStatus" class="componentReviewStatus" role="status" aria-live="polite">正在检查本机复核包…</div>
+  <div id="componentReviewBody" class="componentReviewBody" hidden>
+    <div class="componentReviewSummary">
+      <div><strong id="componentReviewProgressTitle">0 / 0 项已暂存</strong><span id="componentReviewProgressDetail">判断只保存在当前浏览器会话</span></div>
+      <b id="componentReviewProgressPercent">0%</b>
+    </div>
+    <div id="componentReviewStats" class="componentReviewStats" aria-label="微孔复核统计"></div>
+    <div class="componentReviewControls">
+      <div class="componentReviewFilters" role="group" aria-label="微孔复核筛选">
+        <button type="button" class="selected" data-component-filter="all">全部</button>
+        <button type="button" data-component-filter="priority">优先复核</button>
+        <button type="button" data-component-filter="deferred">延后复核</button>
+        <button type="button" data-component-filter="pending">待判断</button>
+        <button type="button" data-component-filter="reviewed">已暂存</button>
+      </div>
+      <div class="componentReviewPager">
+        <button id="componentReviewPrevious" type="button">← 上一页</button>
+        <span id="componentReviewPage">第 1 / 1 页</span>
+        <button id="componentReviewNext" type="button">下一页 →</button>
+      </div>
+    </div>
+    <div id="componentReviewGrid" class="componentReviewGrid" aria-live="polite"></div>
+    <p class="componentReviewBoundary"><b>严格隔离：</b>这里的“倾向可补 / 不确定 / 倾向驳回”只保存为当前浏览器会话草稿；不会修改 mask、写入人工真值、训练集、正式审核记录或触发自动审批。</p>
+  </div>
+</dialog>
 <dialog id="reviewPacketDialog" class="reviewPacketDialog" aria-labelledby="reviewPacketTitle">
   <div class="reviewPacketHead">
     <div><span>人工复核队列</span><h2 id="reviewPacketTitle">斜坡专项复核</h2></div>
@@ -655,6 +693,6 @@
   </div>
 </div>
 <div id="toast" role="status"></div>
-<script src="/pointcloud.js?v=64"></script><script src="/app.js?v=203"></script><script src="/inspection.js?v=109"></script><script src="/guide.js?v=116"></script><script src="/review.js?v=67"></script><script src="/batch-review.js?v=65"></script><script src="/compare.js?v=68"></script><script src="/human-review.js?v=98"></script><script src="/reference-prep.js?v=168"></script><script src="/review-packet-core.js?v=163"></script><script src="/review-packet.js?v=165"></script>
+<script src="/pointcloud.js?v=64"></script><script src="/app.js?v=203"></script><script src="/inspection.js?v=109"></script><script src="/guide.js?v=116"></script><script src="/review.js?v=68"></script><script src="/batch-review.js?v=65"></script><script src="/compare.js?v=68"></script><script src="/human-review.js?v=98"></script><script src="/reference-prep.js?v=168"></script><script src="/component-review-core.js?v=1"></script><script src="/component-review.js?v=1"></script><script src="/review-packet-core.js?v=163"></script><script src="/review-packet.js?v=165"></script>
 </body>
 </html>

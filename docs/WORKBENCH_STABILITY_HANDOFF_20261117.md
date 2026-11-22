@@ -3639,3 +3639,14 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
   独立区分实体线缆表面与应保留的真实边界。因缺少人工真值，保守裁决仍为 `uncertain`。
 - 该项继续保持 `priority_review`；不自动填补、不进入训练、不改 Round484 策略或工作台。
   详见 `docs/EGO_UNCERTAIN_TEMPORAL_REVIEW_ROUNDS489_490_20261122.md`。
+
+## 2026-11-22 Round491 补充：微孔只读复核工作台
+
+- 把 Round488 的 19 项聚焦证据包接入独立“微孔复核”弹窗；支持队列/状态筛选、分页和
+  浏览器会话草稿，不再要求人工逐文件寻找证据。
+- 服务端仅提供 GET；会话草稿绑定 manifest SHA、组件 ID 与图片 SHA，证据变化后不复用。
+  没有候选 mask、人工真值、训练集、正式审核或自动审批写入通路。
+- 隔离浏览器验收通过：徽标 19、首屏 4 卡片、同会话 1/19 可恢复、新会话 0/19，页面/
+  控制台错误和组件 API POST 均为 0。
+- 回归为 Python 259 passed、1 skipped、42 subtests passed；JavaScript 160 passed、0 failed。
+  详见 `docs/EGO_COMPONENT_REVIEW_WORKBENCH_ROUND491_20261122.md`。

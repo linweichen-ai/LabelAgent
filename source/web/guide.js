@@ -18,9 +18,13 @@
   let latest = { action: 'load', state: null, job: null };
   let autoDraftSubmitting = false;
   let guidePollTimer = null;
+  let guideDeferredRefreshTimer = null;
   let guideRefreshBusy = false;
   let guideStatusRefreshPending = false;
+  let guideLastRefreshAt = 0;
+  let guideWorkspaceReady = false;
   let latestRunStatus = 'idle';
+  const GUIDE_REFRESH_COOLDOWN_MS = 1000;
   const tutorial = byId('tutorialCoach');
   const tutorialSteps = [
     {
@@ -251,14 +255,36 @@
     latest.action = 'refresh';
   }
 
-  async function refreshGuide() {
+  function deferGuideRefresh(delay) {
+    if (document.hidden || guideDeferredRefreshTimer) return;
+    guideDeferredRefreshTimer = window.setTimeout(() => {
+      guideDeferredRefreshTimer = null;
+      refreshGuide(true);
+    }, Math.max(0, delay));
+  }
+
+  async function refreshGuide(force = false) {
+    if (!guideWorkspaceReady) {
+      guideStatusRefreshPending = true;
+      return;
+    }
+    const explicitForce = force === true;
     if (guideRefreshBusy) {
       if (!document.hidden) guideStatusRefreshPending = true;
       return;
     }
+    const sinceLastRefresh = Date.now() - guideLastRefreshAt;
+    if (!explicitForce && guideLastRefreshAt && sinceLastRefresh < GUIDE_REFRESH_COOLDOWN_MS) {
+      deferGuideRefresh(GUIDE_REFRESH_COOLDOWN_MS - sinceLastRefresh);
+      return;
+    }
     guideRefreshBusy = true;
     try {
-      const cachedJob = window.labelAgentRunStatusSnapshot || latest.job;
+      let cachedJob = window.labelAgentRunStatusSnapshot || latest.job;
+      if (!cachedJob && window.labelAgentInitialRunStatusReady) {
+        try { await window.labelAgentInitialRunStatusReady; } catch (_) {}
+        cachedJob = window.labelAgentRunStatusSnapshot || latest.job;
+      }
       const stateRequest = fetch('/api/state/summary', { cache: 'no-store' });
       const jobRequest = cachedJob ? null : fetch('/api/run/status', { cache: 'no-store' });
       const [stateResponse, jobResponse] = await Promise.all([stateRequest, jobRequest]);
@@ -271,10 +297,11 @@
     } catch (_) {
       renderUnavailable();
     } finally {
+      guideLastRefreshAt = Date.now();
       guideRefreshBusy = false;
       if (guideStatusRefreshPending && !document.hidden) {
         guideStatusRefreshPending = false;
-        refreshGuide();
+        deferGuideRefresh(GUIDE_REFRESH_COOLDOWN_MS);
       } else {
         guideStatusRefreshPending = false;
         scheduleGuidePoll();
@@ -826,7 +853,11 @@
   byId('frameNumber')?.addEventListener('change', workspaceChanged);
   byId('taskCount')?.addEventListener('change', workspaceChanged);
   document.addEventListener('labelagent:frame-state', workspaceChanged);
-  document.addEventListener('labelagent:workspace-ready', workspaceChanged);
+  document.addEventListener('labelagent:workspace-ready', () => {
+    guideWorkspaceReady = true;
+    guideStatusRefreshPending = false;
+    workspaceChanged();
+  });
   document.addEventListener('labelagent:frame-changed', refreshGuide);
   document.addEventListener('labelagent:candidate-state-synced', refreshGuide);
   document.addEventListener('labelagent:reference-draft-loaded', refreshGuide);
@@ -840,7 +871,7 @@
     const wasActive = ['running', 'stopping'].includes(previousStatus);
     const active = ['running', 'stopping'].includes(status);
     if (latest.state && stateMatchesCurrentWorkspace(latest.state)) render(latest.state, job);
-    if (!document.hidden && (!latest.state || (wasActive && !active))) refreshGuide();
+    if (!document.hidden && (!latest.state || (wasActive && !active))) refreshGuide(wasActive && !active);
     scheduleGuidePoll();
   });
   byId('manualModeButton')?.addEventListener('click', () => setTimeout(refreshGuide, 50));
@@ -849,6 +880,8 @@
     if (document.hidden) {
       if (guidePollTimer) clearTimeout(guidePollTimer);
       guidePollTimer = null;
+      if (guideDeferredRefreshTimer) clearTimeout(guideDeferredRefreshTimer);
+      guideDeferredRefreshTimer = null;
     } else {
       refreshGuide();
       checkUiVersion();
@@ -861,8 +894,16 @@
   setFocusMode(recalled('labelagentFocusMode'), false);
   setCanvasMode(recalled('labelagentCanvasMode'), false);
   setDarkTheme(recalled('labelagentDarkTheme'), false);
-  refreshGuide();
+  Promise.resolve(window.labelAgentWorkspaceReady).then(() => {
+    if (guideWorkspaceReady) return;
+    guideWorkspaceReady = true;
+    guideStatusRefreshPending = false;
+    refreshGuide();
+  }, () => {
+    guideWorkspaceReady = true;
+    guideStatusRefreshPending = false;
+    refreshGuide();
+  });
   checkUiVersion();
-  scheduleGuidePoll();
   window.setInterval(checkUiVersion, 30000);
 })();

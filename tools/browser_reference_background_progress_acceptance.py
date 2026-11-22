@@ -75,7 +75,7 @@ def main() -> int:
                 path: loadedDataPath, topic, frame,
                 uiVersion: document.querySelector('script[src^="/app.js"]')?.src,
             })""")
-            assert "app.js?v=204" in scope["uiVersion"]
+            assert "app.js?v=205" in scope["uiVersion"]
             page.evaluate("""() => {
                 referencePreparationIntent={source:'machine_candidate',path:loadedDataPath,topic,frame};
                 const guide=document.querySelector('#referenceFinalizeGuide');

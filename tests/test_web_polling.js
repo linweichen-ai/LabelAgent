@@ -142,7 +142,7 @@ test('工作台持续显示新旧数据集身份和逐类别覆盖状态', () =>
   assert.match(app, /candidateNeedsReview/);
   assert.match(html, /style\.css\?v=120/);
   assert.match(html, /homepage-theme\.css\?v=5/);
-  assert.match(html, /app\.js\?v=204/);
+  assert.match(html, /app\.js\?v=205/);
   assert.match(app, /action\.dataset\.coverageRepair=label/);
   assert.match(app, /startCandidateCoverageRepair\(label\)/);
   assert.match(app, /不会自动运行模型或写入人工真值/);
@@ -582,7 +582,10 @@ test('引导台复用主工作台运行快照且并发刷新只补读一次', as
   const calls = [];
   const h = harness({
     latest: { state: null, job: {status: 'idle'} }, latestRunStatus: 'idle',
-    guidePollTimer: null, guideRefreshBusy: false, guideStatusRefreshPending: false,
+    guidePollTimer: null, guideDeferredRefreshTimer: null, guideRefreshBusy: false,
+    guideStatusRefreshPending: false, guideLastRefreshAt: 0,
+    guideWorkspaceReady: true,
+    GUIDE_REFRESH_COOLDOWN_MS: 1000,
     async fetch(url) {
       calls.push(url);
       return {ok: true, async json() { return url === '/api/state/summary'
@@ -592,12 +595,44 @@ test('引导台复用主工作台运行快照且并发刷新只补读一次', as
   });
   h.context.window.labelAgentRunStatusSnapshot = {status: 'idle'};
   const text = source('guide.js');
-  h.run(section(text, '  async function refreshGuide()', '\n  function scheduleGuidePoll'));
+  h.run(section(text, '  function deferGuideRefresh(', '\n  function scheduleGuidePoll'));
   await h.run('refreshGuide()');
   assert.deepEqual(calls, ['/api/state/summary']);
+  await h.run('refreshGuide()');
+  assert.deepEqual(calls, ['/api/state/summary']);
+  assert.equal(h.timers.size, 1);
+  await h.advance(1000);
+  assert.deepEqual(calls, ['/api/state/summary', '/api/state/summary']);
+  assert.match(text, /await window\.labelAgentInitialRunStatusReady/);
   h.context.guideRefreshBusy = true;
   await h.run('refreshGuide()');
   assert.equal(h.context.guideStatusRefreshPending, true);
+});
+
+test('引导台在工作区恢复完成前合并启动事件且只首次读取一次摘要', async () => {
+  const calls = [];
+  const h = harness({
+    latest: { state: null, job: {status: 'idle'} }, latestRunStatus: 'idle',
+    guidePollTimer: null, guideDeferredRefreshTimer: null, guideRefreshBusy: false,
+    guideStatusRefreshPending: false, guideLastRefreshAt: 0,
+    guideWorkspaceReady: false, GUIDE_REFRESH_COOLDOWN_MS: 1000,
+    async fetch(url) {
+      calls.push(url);
+      return {ok: true, async json() { return {loaded: false}; }};
+    },
+    render() {}, renderUnavailable() {}, scheduleGuidePoll() {},
+  });
+  h.context.window.labelAgentRunStatusSnapshot = {status: 'idle'};
+  const text = source('guide.js');
+  h.run(section(text, '  function deferGuideRefresh(', '\n  function scheduleGuidePoll'));
+  await h.run('refreshGuide()');
+  await h.run('refreshGuide()');
+  assert.deepEqual(calls, []);
+  assert.equal(h.context.guideStatusRefreshPending, true);
+  h.context.guideWorkspaceReady = true;
+  h.context.guideStatusRefreshPending = false;
+  await h.run('refreshGuide()');
+  assert.deepEqual(calls, ['/api/state/summary']);
 });
 
 test('引导台直接消费任务事件且只在任务结束时同步摘要', async () => {
@@ -1171,7 +1206,8 @@ test('运行前弹窗与当前数据集相机帧号和处理数量强绑定', ()
   assert.match(guide, /byId\('frameNumber'\)\?\.addEventListener\('change', workspaceChanged\)/);
   assert.match(guide, /byId\('taskCount'\)\?\.addEventListener\('change', workspaceChanged\)/);
   assert.match(guide, /document\.addEventListener\('labelagent:frame-state', workspaceChanged\)/);
-  assert.match(guide, /document\.addEventListener\('labelagent:workspace-ready', workspaceChanged\)/);
+  assert.match(guide, /document\.addEventListener\('labelagent:workspace-ready', \(\) => \{/);
+  assert.match(guide, /guideWorkspaceReady = true;[\s\S]*workspaceChanged\(\)/);
 });
 
 test('完成与失败帧重试均复用轻量帧计数且不回读完整状态', () => {
@@ -1606,14 +1642,15 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=204/);
+  assert.match(source('index.html'), /app\.js\?v=205/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
   const app = source('app.js');
   assert.match(app, /workspaceRestoreState='booting'/);
   assert.match(app, /window\.labelAgentWorkspaceReady=window\.labelAgentBootstrapReady\.then/);
-  assert.match(app, /workspaceRestoreState='restoring';bootstrapComplete=true;updateDatasetIdentity\(\);updatePointPromptCoach\(\);await refreshAgentProgress\(\);await workspaceReadyDeferred/);
+  assert.match(app, /function sharedRunStatusMatchesCurrentScope/);
+  assert.match(app, /workspaceRestoreState='restoring';bootstrapComplete=true;updateDatasetIdentity\(\);updatePointPromptCoach\(\);await window\.labelAgentInitialRunStatusReady;if\(!sharedRunStatusMatchesCurrentScope\(\)\)await refreshAgentProgress\(\);await workspaceReadyDeferred/);
   assert.match(app, /if\(bootstrapComplete&&runRequestStartedAt===null&&pendingRunResult\(job\)\)await recoverRunResult\(job,\{automatic:true\}\);if\(bootstrapComplete&&workspaceRestoreState!=='ready'\)markWorkspaceReady\(\)/);
   assert.match(app, /正在恢复上次工作帧，请稍候/);
   assert.match(app, /button\.textContent=restoring\?'正在恢复工作帧…'/);
@@ -1667,7 +1704,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{\s*invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(currentGeneration=0\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=204/);
+  assert.match(source('index.html'), /app\.js\?v=205/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1726,7 +1763,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 4);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=204/);
+  assert.match(source('index.html'), /app\.js\?v=205/);
 });
 
 test('类别与推理类别保存绑定文件载入代次和类别状态版本', async () => {
@@ -1765,7 +1802,7 @@ test('类别与推理类别保存绑定文件载入代次和类别状态版本',
   assert.deepEqual(applied[0].labels, ['a','b']);
   assert.deepEqual(applied[0].auto_labels, ['b']);
   assert.equal(h.run('currentDescription'), null);
-  assert.match(source('index.html'), /app\.js\?v=204/);
+  assert.match(source('index.html'), /app\.js\?v=205/);
 });
 
 test('模型配置保存绑定工作区载入代次和配置版本', async () => {

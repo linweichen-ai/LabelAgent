@@ -1,0 +1,43 @@
+{
+  "schema_version": "labelagent.pallet_negative_point_budget_ab.v1",
+  "date": "2026-11-22",
+  "status": "negative_result_keep_four_point_incumbent",
+  "roi_scale": 2,
+  "frozen_failed_candidate_count": 5,
+  "comparison": [
+    {
+      "negative_point_limit": 4,
+      "recovered_candidate_count": 2,
+      "obj109_positive_coverage": 1.0,
+      "obj109_negative_clear_fraction": 0.75,
+      "obj109_target_candidate_pass": true
+    },
+    {
+      "negative_point_limit": 6,
+      "recovered_candidate_count": 2,
+      "obj109_positive_coverage": 0.666666666666667,
+      "obj109_negative_clear_fraction": 0.833333333333333,
+      "obj109_target_candidate_pass": true
+    },
+    {
+      "negative_point_limit": 8,
+      "recovered_candidate_count": 2,
+      "obj109_positive_coverage": 0.666666666666667,
+      "obj109_negative_clear_fraction": 0.875,
+      "obj109_target_candidate_pass": false
+    }
+  ],
+  "decision": {
+    "selected_negative_point_limit": 4,
+    "reason": "six_and_eight_points_added_no_recovery_and_reduced_positive_coverage",
+    "code_change_retained": false,
+    "formal_workbench_deployed": false
+  },
+  "artifact_sha256": {
+    "negative6_report": "0506655a80a76a44b3184b43b717fd600a09ab18716e8aa8dde7b42fc41cd6d1",
+    "negative8_report": "6f6220ca756ff63b28946745f67fd68af869b7f28e0b7cd1e76d6435152616f5"
+  },
+  "human_truth_writes": 0,
+  "training_data_writes": 0,
+  "workbench_writes": 0
+}

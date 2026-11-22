@@ -1,0 +1,21 @@
+{
+  "checks": {
+    "http_status": 200,
+    "initial": {
+      "badge": "19",
+      "progress": "0 / 19 项已暂存",
+      "cards": 4,
+      "boundary": "严格隔离：这里的“倾向可补 / 不确定 / 倾向驳回”只保存为当前浏览器会话草稿；不会修改 mask、写入人工真值、训练集、正式审核记录或触发自动审批。",
+      "status": "已校验 19 项聚焦证据；只读图片，判断仅存于当前浏览器会话。"
+    },
+    "priority_component_id": "004-camera1-idx5-1793760663542839987-c002",
+    "session_storage_written": true,
+    "same_session_reload_progress": "1 / 19 项已暂存",
+    "new_session_progress": "0 / 19 项已暂存",
+    "screenshot": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round492-component-review-browser-acceptance-v4-20261122\\component-review-session-draft.png"
+  },
+  "page_errors": [],
+  "console_errors": [],
+  "component_api_posts": [],
+  "passed": true
+}

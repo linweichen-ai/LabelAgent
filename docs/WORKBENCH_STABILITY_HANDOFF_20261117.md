@@ -3650,3 +3650,6 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
   控制台错误和组件 API POST 均为 0。
 - 回归为 Python 259 passed、1 skipped、42 subtests passed；JavaScript 160 passed、0 failed。
   详见 `docs/EGO_COMPONENT_REVIEW_WORKBENCH_ROUND491_20261122.md`。
+- 部署前独立审阅补强：证据图成功显示前判断按钮禁用；草稿必须带图片已加载门禁；图片失败
+  项不计入当前统计。服务端直接返回本次哈希校验过的同一份字节，并限制安全文件名、唯一
+  连续排名。Round492 浏览器复验继续通过。

@@ -123,8 +123,26 @@ class ComponentReviewPacketApiTests(unittest.TestCase):
         manifest.write_text(json.dumps(changed), encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "相机排名"):
             server._read_component_review_packet("ego-tail")
+        second = json.loads(json.dumps(self.value["rows"][0]))
+        second["component_id"] = "004-camera1-c002"
+        second["focused_image"] = "c2-focused.png"
+        second["camera_rank"] = 3
+        (self.packet / "c2-focused.png").write_bytes(png_bytes())
+        second["focused_image_sha256"] = hashlib.sha256(png_bytes()).hexdigest()
+        changed = json.loads(json.dumps(self.value))
+        changed["review_count"] = 2
+        changed["priority_review"] = 2
+        changed["rows"].append(second)
+        manifest.write_text(json.dumps(changed), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "排名不连续"):
+            server._read_component_review_packet("ego-tail")
         changed = json.loads(json.dumps(self.value))
         changed["rows"][0]["focused_image"] = "../escape.png"
+        manifest.write_text(json.dumps(changed), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "图片绑定"):
+            server._read_component_review_packet("ego-tail")
+        changed = json.loads(json.dumps(self.value))
+        changed["rows"][0]["focused_image"] = "unsafe%23.png"
         manifest.write_text(json.dumps(changed), encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "图片绑定"):
             server._read_component_review_packet("ego-tail")

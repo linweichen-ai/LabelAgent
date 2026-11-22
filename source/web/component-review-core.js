@@ -11,6 +11,7 @@
 
   function validDraft(packet, row, value) {
     return Boolean(value && decisions.has(value.status) && value.local_only === true
+      && value.evidence_loaded === true
       && value.manifest_sha256 === packet.manifest_sha256
       && value.image_sha256 === row.focused_image_sha256);
   }

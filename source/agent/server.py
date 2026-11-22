@@ -5,6 +5,7 @@ import logging
 import json
 import math
 import os
+import re
 import shutil
 import threading
 import time
@@ -2844,6 +2845,7 @@ def _read_component_review_packet(packet_id):
     normalized_rows = []
     allowed_images = {}
     seen_ids = set()
+    seen_ranks = set()
     queue_counts = {queue: 0 for queue in COMPONENT_REVIEW_PACKET_QUEUES}
     for row in rows:
         if not isinstance(row, dict):
@@ -2860,7 +2862,7 @@ def _read_component_review_packet(packet_id):
         if queue not in COMPONENT_REVIEW_PACKET_QUEUES:
             raise ValueError("组件复核包包含未知复核队列")
         if (isinstance(camera_rank, bool) or not isinstance(camera_rank, int)
-                or camera_rank <= 0):
+                or camera_rank <= 0 or camera_rank in seen_ranks):
             raise ValueError("组件复核包包含无效相机排名")
         if (not isinstance(policy_reason, str) or not policy_reason.strip()
                 or len(policy_reason) > 200):
@@ -2873,6 +2875,7 @@ def _read_component_review_packet(packet_id):
                 or row.get("reviewer_declared_id") is not None):
             raise ValueError("组件复核包记录越过候选/训练隔离门禁")
         if (not isinstance(image_name, str) or Path(image_name).name != image_name
+                or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,199}", image_name) is None
                 or Path(image_name).suffix.lower() not in {".png", ".jpg", ".jpeg"}
                 or not _valid_sha256(image_sha256)):
             raise ValueError("组件复核包图片绑定无效")
@@ -2898,8 +2901,13 @@ def _read_component_review_packet(packet_id):
         if image_name in allowed_images:
             raise ValueError("组件复核包重复使用图片")
         seen_ids.add(component_id)
+        seen_ranks.add(camera_rank)
         queue_counts[queue] += 1
-        allowed_images[image_name] = image_path
+        allowed_images[image_name] = {
+            "bytes": image_bytes,
+            "mimetype": "image/png" if image_path.suffix.lower() == ".png"
+            else "image/jpeg",
+        }
         normalized_rows.append({
             "component_id": component_id,
             "camera_rank": camera_rank,
@@ -2912,6 +2920,9 @@ def _read_component_review_packet(packet_id):
             "approved_for_training": False,
             "automatic_decision": None,
         })
+    ordered_ranks = sorted(seen_ranks)
+    if ordered_ranks != list(range(ordered_ranks[0], ordered_ranks[-1] + 1)):
+        raise ValueError("组件复核包相机排名不连续")
     if (value.get("priority_review") != queue_counts["priority_review"]
             or value.get("deferred_manual_review") !=
             queue_counts["deferred_manual_review"]):
@@ -3316,12 +3327,13 @@ def get_component_review_pack(packet_id):
 @app.get('/api/component_review_packs/<packet_id>/images/<image_name>')
 def get_component_review_pack_image(packet_id, image_name):
     packet = _read_component_review_packet(packet_id)
-    image_path = packet["allowed_images"].get(image_name)
-    if image_path is None:
+    image_asset = packet["allowed_images"].get(image_name)
+    if image_asset is None:
         raise ValueError("组件复核图片未绑定当前清单")
-    mimetype = "image/png" if image_path.suffix.lower() == ".png" else "image/jpeg"
-    response = send_file(image_path, mimetype=mimetype, conditional=True,
-                         max_age=0)
+    # Serve the exact bytes that passed the hash and decode checks above.  This
+    # closes the check/use gap that would exist if send_file reopened the path.
+    response = send_file(io.BytesIO(image_asset["bytes"]),
+                         mimetype=image_asset["mimetype"], max_age=0)
     response.headers["Cache-Control"] = "no-store"
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response

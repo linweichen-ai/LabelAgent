@@ -11,6 +11,7 @@ const packet = {
 const key = core.draftKey(packet.manifest_sha256, 'c1');
 const drafts = {[key]: {
   status: 'uncertain', local_only: true,
+  evidence_loaded: true,
   manifest_sha256: packet.manifest_sha256, image_sha256: '1'.repeat(64),
 }};
 
@@ -29,6 +30,7 @@ const stalePacket = {...packet, manifest_sha256: 'b'.repeat(64)};
 assert.equal(core.rowDraft(stalePacket, stalePacket.rows[0], drafts), null);
 assert.equal(core.summarize(stalePacket, drafts).reviewed, 0);
 assert.equal(core.validDraft(packet, packet.rows[0], {...drafts[key], local_only: false}), false);
+assert.equal(core.validDraft(packet, packet.rows[0], {...drafts[key], evidence_loaded: false}), false);
 assert.equal(core.validDraft(packet, packet.rows[0], {...drafts[key], image_sha256: 'x'.repeat(64)}), false);
 
 console.log('component review core tests passed');

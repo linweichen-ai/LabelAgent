@@ -80,6 +80,10 @@ def main() -> None:
             "document.querySelectorAll('#componentReviewGrid .componentReviewCard').length === 1")
         priority_id = page.locator(
             "#componentReviewGrid .componentReviewCardHead strong").inner_text()
+        page.wait_for_function("""() => {
+          const buttons = [...document.querySelectorAll('#componentReviewGrid .componentReviewActions button')];
+          return buttons.length === 4 && buttons.every(button => !button.disabled);
+        }""")
         page.locator("#componentReviewGrid .componentReviewActions button",
                      has_text="不确定").click()
         page.wait_for_function(

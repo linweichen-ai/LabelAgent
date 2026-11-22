@@ -17,6 +17,8 @@
   let activeFilter = 'all';
   let page = 0;
   let loading = false;
+  let loadedImages = new Set();
+  let failedImages = new Set();
 
   function readDrafts() {
     try { return JSON.parse(sessionStorage.getItem(storageKey) || '{}'); } catch (_) { return {}; }
@@ -56,7 +58,8 @@
   }
 
   function saveDraft(row, decision) {
-    if (!packet) return;
+    if (!packet || !loadedImages.has(row.component_id)
+        || failedImages.has(row.component_id)) return;
     const drafts = readDrafts();
     const key = core.draftKey(packet.manifest_sha256, row.component_id);
     if (!decision) delete drafts[key];
@@ -64,6 +67,7 @@
       status: decision,
       recorded_at: new Date().toISOString(),
       local_only: true,
+      evidence_loaded: true,
       manifest_sha256: packet.manifest_sha256,
       image_sha256: row.focused_image_sha256,
     };
@@ -117,29 +121,47 @@
       const button = document.createElement('button');
       button.type = 'button';
       button.textContent = label;
+      button.disabled = true;
       button.classList.toggle('selected', Boolean(value) && draft?.status === value);
       button.addEventListener('click', () => saveDraft(row, value));
       buttons.push(button);
       actions.append(button);
     });
+    image.addEventListener('load', () => {
+      loadedImages.add(row.component_id);
+      failedImages.delete(row.component_id);
+      buttons.forEach(button => { button.disabled = false; });
+    }, {once: true});
     image.addEventListener('error', () => {
+      loadedImages.delete(row.component_id);
+      failedImages.add(row.component_id);
       card.classList.add('assetError');
       caption.textContent = '图片校验或读取失败；本项草稿按钮已禁用。';
       buttons.forEach(button => { button.disabled = true; });
+      badge.className = 'componentDraftBadge pending';
+      badge.textContent = '图片不可用';
+      renderSummary();
     }, {once: true});
 
     card.append(head, figure, actions);
     return card;
   }
 
-  function render() {
-    if (!packet) return;
+  function effectiveDrafts() {
     const drafts = readDrafts();
-    const summary = core.summarize(packet, drafts);
-    const rows = core.filterRows(packet, drafts, activeFilter);
-    const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
-    page = Math.min(page, pageCount - 1);
-    const visible = rows.slice(page * pageSize, (page + 1) * pageSize);
+    if (!packet || !failedImages.size) return drafts;
+    const usable = {...drafts};
+    packet.rows.forEach(row => {
+      if (failedImages.has(row.component_id)) {
+        delete usable[core.draftKey(packet.manifest_sha256, row.component_id)];
+      }
+    });
+    return usable;
+  }
+
+  function renderSummary() {
+    if (!packet) return;
+    const summary = core.summarize(packet, effectiveDrafts());
     const percent = summary.total ? Math.round(summary.reviewed / summary.total * 100) : 0;
     byId('componentReviewProgressTitle').textContent = `${summary.reviewed} / ${summary.total} 项已暂存`;
     byId('componentReviewProgressDetail').textContent = `仅当前会话 · 待判断 ${summary.pending} · 清单 ${packet.manifest_sha256.slice(0, 12)}…`;
@@ -151,6 +173,16 @@
       stat('不确定', summary.uncertain, 'warning'),
       stat('倾向驳回', summary.likely_reject, 'danger'),
     );
+  }
+
+  function render() {
+    if (!packet) return;
+    const drafts = effectiveDrafts();
+    const rows = core.filterRows(packet, drafts, activeFilter);
+    const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
+    page = Math.min(page, pageCount - 1);
+    const visible = rows.slice(page * pageSize, (page + 1) * pageSize);
+    renderSummary();
     grid.replaceChildren(...visible.map(row => renderCard(row, drafts)));
     if (!visible.length) {
       const empty = document.createElement('div');
@@ -176,6 +208,8 @@
         throw new Error('复核包隔离边界不完整，已拒绝载入');
       }
       packet = value;
+      loadedImages = new Set();
+      failedImages = new Set();
       page = 0;
       body.hidden = false;
       render();

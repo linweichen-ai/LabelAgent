@@ -27,6 +27,11 @@ class AssistantCropHoldoutTests(unittest.TestCase):
         self.assertEqual(trainer["data"]["val"]["dataset"]["limit_ids"], 15)
         self.assertFalse(trainer["evaluation_contract"]["human_truth"])
         self.assertFalse(trainer["evaluation_contract"]["test24_included"])
+        self.assertIsNone(
+            trainer["meters"]["val"]["roboflow100"]["detection"][
+                "pred_file_evaluators"
+            ]
+        )
 
 
 if __name__ == "__main__":

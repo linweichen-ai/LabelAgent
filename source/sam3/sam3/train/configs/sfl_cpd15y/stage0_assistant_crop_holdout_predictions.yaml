@@ -66,6 +66,8 @@ trainer:
   meters:
     val:
       roboflow100:
+        detection:
+          pred_file_evaluators: null
         segmentation:
           _target_: sam3.eval.coco_writer.PredictionDumper
           iou_type: segm

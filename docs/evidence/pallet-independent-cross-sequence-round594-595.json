@@ -1,0 +1,40 @@
+{
+  "schema_version": "labelagent.pallet_independent_cross_sequence_receipt.v1",
+  "date": "2026-11-22",
+  "status": "independent_candidate_gate_pass_not_pixel_truth",
+  "tuning_frame_count": 5,
+  "frozen_sequence_count": 3,
+  "frozen_image_count": 12,
+  "evaluated_conflict_frame_count": 2,
+  "overlapping_tuning_frame_count": 0,
+  "depth_split_pass_frame_count": 1,
+  "depth_or_occlusion_handled_frame_count": 2,
+  "independent_candidate_gate_pass": true,
+  "human_pixel_accuracy_measurable": false,
+  "false_positive_rate_measurable": false,
+  "workbench_writes": 0,
+  "human_truth_writes": 0,
+  "training_writes": 0,
+  "oss_writes": 0,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "result_report": {
+    "path": "artifacts/round594-independent-cross-sequence-depth-split-20261122/results.json",
+    "sha256": "73a4ec1e59af782970d7e17150d7d8bfb3e52ba53fc344e7f804ef53dd4dd8ef"
+  },
+  "independent_audit": {
+    "path": "artifacts/round595-independent-cross-sequence-audit-20261122.json",
+    "sha256": "a128dfd78b8ef59ebd1fb88e77109d36bfbfc18b99a193bd075432946526284d"
+  },
+  "formal_state": {
+    "run_status": "idle",
+    "state_sha256": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115",
+    "sam_in_flight_after": 0
+  },
+  "limitations": [
+    "only two independently sampled images contained projected pallet conflicts",
+    "3D box labels are not human pixel masks",
+    "independent PCD was unavailable for the LiDAR prompt recovery subpath",
+    "no training or production decision is authorized by this receipt"
+  ]
+}

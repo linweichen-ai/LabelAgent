@@ -1,0 +1,55 @@
+{
+  "schema_version": "labelagent.pallet_independent_split_audit.v1",
+  "status": "independent_candidate_audit_not_pixel_truth",
+  "excluded_tuning_frame_count": 5,
+  "evaluated_sequence_count": 2,
+  "evaluated_frame_count": 2,
+  "evaluated_row_count": 2,
+  "overlapping_tuning_frames": [],
+  "all_instances_localized": true,
+  "depth_split_pass_row_count": 1,
+  "depth_or_occlusion_handled_row_count": 2,
+  "all_rows_safely_handled": true,
+  "independent_candidate_gate_pass": true,
+  "human_pixel_accuracy_measurable": false,
+  "false_positive_rate_measurable": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "row_summaries": [
+    {
+      "sequence": "010",
+      "frame_id": "1789899951882467655",
+      "camera": 0,
+      "all_instances_localized": true,
+      "raw_conflicts_separated": false,
+      "depth_split_candidate_pass": true,
+      "depth_or_occlusion_handled_candidate": true,
+      "instance_count": 3,
+      "failed_obj_ids": [],
+      "occluded_unobservable_obj_ids": []
+    },
+    {
+      "sequence": "011",
+      "frame_id": "1789900388815700364",
+      "camera": 1,
+      "all_instances_localized": true,
+      "raw_conflicts_separated": false,
+      "depth_split_candidate_pass": false,
+      "depth_or_occlusion_handled_candidate": true,
+      "instance_count": 2,
+      "failed_obj_ids": [
+        "20"
+      ],
+      "occluded_unobservable_obj_ids": [
+        "20"
+      ]
+    }
+  ],
+  "limitations": [
+    "3D boxes localize instances but are not human pixel masks",
+    "occluded-unobservable candidates stay suppressed for human review",
+    "passing this audit does not authorize training or deployment"
+  ],
+  "input_report": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\cold_storage\\labelagent_stability_worktree_20261117-artifacts\\round594-independent-cross-sequence-depth-split-20261122\\results.json",
+  "input_report_sha256": "73a4ec1e59af782970d7e17150d7d8bfb3e52ba53fc344e7f804ef53dd4dd8ef"
+}

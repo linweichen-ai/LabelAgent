@@ -1,0 +1,23 @@
+{
+  "schema_version": "labelagent.round558.receipt.v1",
+  "date": "2026-11-22",
+  "implementation_commit": "f308322",
+  "status": "offline_lidar_visibility_diagnostic_not_deployed",
+  "pcd_files": 3,
+  "pcd_total_bytes": 7015668,
+  "ambiguous_images": 2,
+  "evaluated_instances": 5,
+  "visible_lidar_supported_instances": 4,
+  "occluded_lidar_supported_instances": 0,
+  "insufficient_evidence_instances": 1,
+  "results_sha256": "b6870f55d4ec8c99578f0f7c41506e98de030912d9e190d03c198e3eca62a99e",
+  "visual_010_camera0_sha256": "c03afa7feef7f5c542f9fe57994f4efd38af1ec54db6de5e1c6aaf45b904c5be",
+  "visual_011_camera1_sha256": "71f37415b4ce65877eac58cb06ed1922c045390ea3ceb078456f00be6dfffb83",
+  "tests_passed": 21,
+  "oss_writes": 0,
+  "gpu_requests": 0,
+  "workbench_writes": 0,
+  "human_pixel_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false
+}

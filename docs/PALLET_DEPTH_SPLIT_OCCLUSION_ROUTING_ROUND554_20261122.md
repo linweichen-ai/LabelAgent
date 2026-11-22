@@ -53,3 +53,7 @@ obj15 位于 4.618 m，obj20 位于 6.149 m；obj20 投影框的 72.30% 被更�
 ## 下一步
 
 用带逐像素深度或原始 LiDAR 点投影的可见性判断替换“框中心深度近似”；在获得对应 PCD 或人工二维边界前，不部署该拆分候选。
+
+## 后续校正（Round 558）
+
+已取得对应的冻结 PCD 并完成 LiDAR 可见性检查。010/camera0 的 obj7、obj6、obj11 均有稳定可见点，支持深度拆分；011/camera1 的 obj20 在 3D 框内为 0 个 LiDAR 回波，不能用点云独立证明“被遮挡”。因此 Round 554 的 `occluded_unobservable_candidate` 应进一步降级为“无 LiDAR 回波、证据不足”，仍不生成二维伪掩码。详见 `PALLET_LIDAR_VISIBILITY_ROUND558_20261122.md`。

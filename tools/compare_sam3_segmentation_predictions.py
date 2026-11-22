@@ -73,21 +73,35 @@ def _by_image(rows):
     return result
 
 
-def _selected_union(rows, target_counts, height, width):
+def _center_prior_key(row, height, width):
+    bbox = row.get("bbox")
+    if not isinstance(bbox, list) or len(bbox) != 4:
+        raise ValueError("center-prior selection requires bbox on every prediction")
+    x, y, box_width, box_height = (float(value) for value in bbox)
+    center_x, center_y = width / 2.0, height / 2.0
+    contains_center = x <= center_x <= x + box_width and y <= center_y <= y + box_height
+    return (-int(contains_center), -float(row["score"]), row.get("id", 0))
+
+
+def _selected_union(rows, target_counts, height, width, selection_mode="score"):
     union = np.zeros((height, width), dtype=bool)
     selected = []
     for category_id, count in target_counts.items():
-        candidates = sorted(
-            (row for row in rows if row["category_id"] == category_id),
-            key=lambda row: (-row["score"], row.get("id", 0)),
-        )[:count]
+        category_rows = (row for row in rows if row["category_id"] == category_id)
+        if selection_mode == "score":
+            key = lambda row: (-row["score"], row.get("id", 0))
+        elif selection_mode == "center_prior":
+            key = lambda row: _center_prior_key(row, height, width)
+        else:
+            raise ValueError(f"unknown selection mode: {selection_mode}")
+        candidates = sorted(category_rows, key=key)[:count]
         selected.extend(candidates)
         for row in candidates:
             union |= _decode_rle(row["segmentation"])
     return union, selected
 
 
-def compare(coco, baseline_rows, candidate_rows):
+def compare(coco, baseline_rows, candidate_rows, selection_mode="score"):
     annotations = _by_image(coco["annotations"])
     baseline = _by_image(baseline_rows)
     candidate = _by_image(candidate_rows)
@@ -102,9 +116,9 @@ def compare(coco, baseline_rows, candidate_rows):
         for row in targets:
             target_union |= _decode_segmentation(row["segmentation"], height, width)
         base_union, base_selected = _selected_union(
-            baseline.get(image_id, []), counts, height, width)
+            baseline.get(image_id, []), counts, height, width, selection_mode)
         candidate_union, candidate_selected = _selected_union(
-            candidate.get(image_id, []), counts, height, width)
+            candidate.get(image_id, []), counts, height, width, selection_mode)
         base_metrics = mask_metrics(base_union, target_union)
         candidate_metrics = mask_metrics(candidate_union, target_union)
         invalid = {
@@ -133,6 +147,7 @@ def compare(coco, baseline_rows, candidate_rows):
         means[label] = {metric: float(np.mean([row[label][metric] for row in frames]))
                         for metric in ("iou", "dice", "boundary_f1")}
     return {"images": len(frames), "means": means,
+            "selection_mode": selection_mode,
             "catastrophic_frames": [row["file_name"] for row in frames
                                     if row["catastrophic_regression"]],
             "frames": frames}
@@ -149,12 +164,14 @@ def main():
     parser.add_argument("--candidate", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--split", required=True)
+    parser.add_argument("--selection-mode", choices=("score", "center_prior"),
+                        default="score")
     args = parser.parse_args()
     if args.output.exists():
         raise FileExistsError(args.output)
     values = [json.loads(path.read_text(encoding="utf-8"))
               for path in (args.coco, args.baseline, args.candidate)]
-    result = compare(*values)
+    result = compare(*values, selection_mode=args.selection_mode)
     result.update({
         "schema_version": "labelagent.sam3-segmentation-comparison.v1",
         "split": args.split,

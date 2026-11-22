@@ -3,7 +3,9 @@ import unittest
 
 import numpy as np
 
-from tools.compare_sam3_segmentation_predictions import compare, mask_metrics
+from tools.compare_sam3_segmentation_predictions import (
+    _center_prior_key, compare, mask_metrics,
+)
 
 
 class SegmentationComparisonTests(unittest.TestCase):
@@ -37,6 +39,14 @@ class SegmentationComparisonTests(unittest.TestCase):
         value = compare(coco, prediction, prediction)
         json.dumps(value)
         self.assertEqual(value["catastrophic_frames"], [])
+
+    def test_center_prior_prefers_box_containing_crop_center(self):
+        rows = [
+            {"id": 1, "score": 0.9, "bbox": [0, 0, 20, 20]},
+            {"id": 2, "score": 0.7, "bbox": [20, 20, 60, 60]},
+        ]
+        ordered = sorted(rows, key=lambda row: _center_prior_key(row, 100, 100))
+        self.assertEqual([row["id"] for row in ordered], [2, 1])
 
 
 if __name__ == "__main__":

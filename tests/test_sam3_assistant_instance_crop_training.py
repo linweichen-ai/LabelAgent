@@ -18,6 +18,9 @@ class AssistantInstanceCropTrainingTests(unittest.TestCase):
         self.assertIn('"test24_in_training": False', source)
         self.assertIn("EXPECTED_STEPS = 36", source)
         self.assertIn("assistant_pallet_crop_mask_embed.pt", source)
+        self.assertIn("LowUpdateAssistantInstanceCropTrainer", source)
+        self.assertIn("all71_step8_lr2e5", source)
+        self.assertIn("assistant_pallet_crop_step8_lr2e5.pt", source)
 
     def test_stage0_detaches_the_fully_frozen_backbone(self):
         source = (
@@ -61,6 +64,13 @@ class AssistantInstanceCropTrainingTests(unittest.TestCase):
         self.assertIn("memory.free", source)
         self.assertNotIn("kill ", source)
         self.assertNotIn("systemctl", source)
+        self.assertIn("stage0_assistant_instance_crop_step8_lr2e5.yaml", source)
+
+    def test_low_update_recipe_is_eight_steps_at_two_e_minus_five(self):
+        path = ROOT / "source/sam3/sam3/train/configs/sfl_cpd15y/stage0_assistant_instance_crop_step8_lr2e5.yaml"
+        value = yaml.safe_load(path.read_text(encoding="utf-8"))
+        self.assertEqual(value["trainer"]["max_optimizer_steps"], 8)
+        self.assertEqual(value["trainer"]["optim"]["options"]["lr"][0]["scheduler"]["value"], 2e-5)
 
 
 if __name__ == "__main__":

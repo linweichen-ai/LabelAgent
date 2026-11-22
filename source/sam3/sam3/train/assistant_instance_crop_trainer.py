@@ -35,11 +35,16 @@ class _LimitedLoader:
 class AssistantInstanceCropTrainer(Stage0MaskEmbedTrainer):
     """Train exactly one two-GPU epoch on 71 positive pallet crops."""
 
+    allowed_optimizer_steps = (EXPECTED_STEPS,)
+    recipe_name = "all71_step36_lr1e4"
+    checkpoint_name = "assistant_pallet_crop_mask_embed.pt"
+
     def __init__(self, *, max_optimizer_steps, candidate_contract, **kwargs):
         if os.environ.get("SAM3_ASSISTANT_INSTANCE_ACK") != ACK:
             raise PermissionError("assistant-review acknowledgement is absent")
-        if max_optimizer_steps != EXPECTED_STEPS:
-            raise ValueError("assistant crop run is limited to exactly 36 steps")
+        if max_optimizer_steps not in self.allowed_optimizer_steps:
+            raise ValueError(
+                f"assistant crop run only allows steps {self.allowed_optimizer_steps}")
         expected = {
             "assistant_reviewed": True,
             "source_manual_instances": True,
@@ -108,9 +113,10 @@ class AssistantInstanceCropTrainer(Stage0MaskEmbedTrainer):
             "not_for_deployment": True,
             "test24_in_training": False,
             "optimizer_steps": steps,
+            "recipe": self.recipe_name,
             "state_dict": state,
         }
-        target = checkpoint_dir / "assistant_pallet_crop_mask_embed.pt"
+        target = checkpoint_dir / self.checkpoint_name
         temporary = target.with_suffix(".pt.tmp")
         torch.save(checkpoint, temporary)
         os.replace(temporary, target)
@@ -124,6 +130,7 @@ class AssistantInstanceCropTrainer(Stage0MaskEmbedTrainer):
                 "not_for_deployment",
                 "test24_in_training",
                 "optimizer_steps",
+                "recipe",
             )
         }
         evidence["train_stats"] = self._candidate_train_stats
@@ -132,3 +139,11 @@ class AssistantInstanceCropTrainer(Stage0MaskEmbedTrainer):
             json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
+
+
+class LowUpdateAssistantInstanceCropTrainer(AssistantInstanceCropTrainer):
+    """Eight-step, low-learning-rate diagnostic after the 36-step regression."""
+
+    allowed_optimizer_steps = (8,)
+    recipe_name = "all71_step8_lr2e5"
+    checkpoint_name = "assistant_pallet_crop_step8_lr2e5.pt"

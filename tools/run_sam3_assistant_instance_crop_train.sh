@@ -17,6 +17,12 @@ EXPECTED_ACK=I_ACKNOWLEDGE_ASSISTANT_REVIEW_IS_NOT_HUMAN_TRUTH
 [[ -f "$SAM3_STAGE0_BPE_PATH" ]]
 
 python_bin=${SAM3_TRAIN_PYTHON:-python}
+config=${SAM3_ASSISTANT_CONFIG:-configs/sfl_cpd15y/stage0_assistant_instance_crop_epoch.yaml}
+case "$config" in
+  configs/sfl_cpd15y/stage0_assistant_instance_crop_epoch.yaml|\
+  configs/sfl_cpd15y/stage0_assistant_instance_crop_step8_lr2e5.yaml) ;;
+  *) echo "unsupported assistant crop config: $config" >&2; exit 2 ;;
+esac
 for port in 18766 18878; do
   curl --fail --silent --show-error --max-time 5 "http://127.0.0.1:${port}/health" >/dev/null
 done
@@ -27,5 +33,5 @@ mkdir -p "$SAM3_STAGE0_OUTPUT_ROOT"
 export PYTHONPATH="$LABELAGENT_ROOT:$LABELAGENT_ROOT/source/sam3${PYTHONPATH:+:$PYTHONPATH}"
 cd "$LABELAGENT_ROOT/source/sam3"
 exec "$python_bin" -m sam3.train.train \
-  -c configs/sfl_cpd15y/stage0_assistant_instance_crop_epoch.yaml \
+  -c "$config" \
   --use-cluster 0 --num-gpus 2

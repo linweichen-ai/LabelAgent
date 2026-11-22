@@ -1,0 +1,63 @@
+{
+  "schema_version": "labelagent.pallet_temporal_local_point_opportunity_evidence.v1",
+  "date": "2026-11-23",
+  "scope": "offline_label_conditioned_prompt_opportunity_not_deployed",
+  "protocol": {
+    "window_frames": 11,
+    "voxel_size_meters": 0.02,
+    "visibility_grids": [
+      {"cell_size_pixels": 4, "depth_slack_m": 0.10},
+      {"cell_size_pixels": 8, "depth_slack_m": 0.15}
+    ],
+    "minimum_shared_unique_voxels": 3,
+    "minimum_shared_unique_pixels": 3,
+    "minimum_temporal_new_voxels": 3,
+    "minimum_noncenter_contributing_frames": 2,
+    "requires_consistent_attribute_and_scale": true,
+    "ambiguous_3d_box_points_excluded": true
+  },
+  "result": {
+    "unresolved_targets": 8,
+    "prompt_opportunities": 7,
+    "insufficient": 1,
+    "frozen_input_count": 47,
+    "total_pcd_reads": 22,
+    "repeat_report_byte_exact": true
+  },
+  "rows": [
+    {"sequence":"006","target_obj_id":"10","raw_points":38,"unique_voxels":37,"shared_voxels":8,"temporal_new_voxels":8,"temporal_new_pixels":8,"noncenter_frames":3,"status":"opportunity"},
+    {"sequence":"006","target_obj_id":"12","raw_points":43,"unique_voxels":43,"shared_voxels":13,"temporal_new_voxels":7,"temporal_new_pixels":7,"noncenter_frames":2,"status":"opportunity"},
+    {"sequence":"006","target_obj_id":"13","raw_points":42,"unique_voxels":39,"shared_voxels":14,"temporal_new_voxels":10,"temporal_new_pixels":8,"noncenter_frames":4,"status":"opportunity"},
+    {"sequence":"008","target_obj_id":"75","raw_points":41,"unique_voxels":41,"shared_voxels":8,"temporal_new_voxels":3,"temporal_new_pixels":3,"noncenter_frames":1,"status":"insufficient"},
+    {"sequence":"008","target_obj_id":"76","raw_points":35,"unique_voxels":35,"shared_voxels":10,"temporal_new_voxels":6,"temporal_new_pixels":6,"noncenter_frames":4,"status":"opportunity"},
+    {"sequence":"008","target_obj_id":"77","raw_points":29,"unique_voxels":29,"shared_voxels":13,"temporal_new_voxels":9,"temporal_new_pixels":7,"noncenter_frames":4,"status":"opportunity"},
+    {"sequence":"008","target_obj_id":"78","raw_points":25,"unique_voxels":25,"shared_voxels":9,"temporal_new_voxels":8,"temporal_new_pixels":6,"noncenter_frames":3,"status":"opportunity"},
+    {"sequence":"008","target_obj_id":"79","raw_points":32,"unique_voxels":31,"shared_voxels":10,"temporal_new_voxels":9,"temporal_new_pixels":8,"noncenter_frames":3,"status":"opportunity"}
+  ],
+  "claim_boundary": {
+    "conditioned_on_human_3d_labels": true,
+    "not_segmentation_support": true,
+    "not_a_pass_decision": true,
+    "images_read": 0,
+    "sam_calls": 0,
+    "gpu_requests": 0,
+    "human_pixel_truth": false,
+    "approved_for_training": false,
+    "human_truth_writes": 0,
+    "training_data_writes": 0,
+    "workbench_writes": 0,
+    "oss_writes": 0,
+    "production_deployed": false
+  },
+  "tests": {
+    "focused_passed": 33,
+    "full_passed": 1664,
+    "skipped": 1,
+    "subtests_passed": 262
+  },
+  "tool_sha256": "921de61165cad1c2d55ca6d3c194941c5ea39c2ebeb64509cb475ab5cab068e3",
+  "local_report_sha256": {
+    "round698_hardened": "e692be2c918e37cc8e39b00c2dfa900f15286905861edf53f8d06131fd1b1f8d",
+    "round699_hardened_repeat": "e692be2c918e37cc8e39b00c2dfa900f15286905861edf53f8d06131fd1b1f8d"
+  }
+}

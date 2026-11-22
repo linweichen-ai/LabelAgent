@@ -1,0 +1,30 @@
+{
+  "schema_version": "labelagent.idle-polling-browser-acceptance.v1",
+  "passed": true,
+  "base_url": "http://127.0.0.1:8765",
+  "duration_seconds": 32.0,
+  "ui_version": "168",
+  "run_status_requests": 4,
+  "state_summary_requests": 2,
+  "request_budget": {
+    "run_status": 4,
+    "state_summary": 4
+  },
+  "request_times_seconds": {
+    "/api/run/status": [
+      1.031,
+      16.062,
+      31.062,
+      46.078
+    ],
+    "/api/state/summary": [
+      16.062,
+      46.078
+    ]
+  },
+  "external_requests": [],
+  "guarded_writes": [],
+  "page_errors": [],
+  "console_errors": [],
+  "http_errors": []
+}

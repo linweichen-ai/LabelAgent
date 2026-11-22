@@ -1,0 +1,45 @@
+{
+  "schema_version": "labelagent.sam3-assistant-pallet-antileak-holdout.v1",
+  "round": 539,
+  "date": "2026-11-22",
+  "assistant_reviewed": true,
+  "human_truth": false,
+  "machine_reference_only": true,
+  "not_for_deployment": true,
+  "test24_included": false,
+  "training_images": 56,
+  "holdout_images": 15,
+  "split_policy": "whole_earliest_temporal_group_holdout",
+  "holdout_coco_sha256": "6de38a9771acb3ff4f9088c4a49a8066f6410d519f81325efd24216ff2f7e31d",
+  "same_domain_holdout": {
+    "baseline": {
+      "iou": 0.8877471204067828,
+      "boundary_f1": 0.9149279240001532,
+      "dice": 0.909940490587871
+    },
+    "step8_lr2e5": {
+      "iou": 0.8898874545788906,
+      "boundary_f1": 0.918471990404967,
+      "dice": 0.911070059362904,
+      "iou_wins_losses_ties": [14, 0, 1],
+      "catastrophic_frames": 0,
+      "comparison_sha256": "aff6aab42ded4b381b9f26615ef94c84cb383b25fc35c853c3cf6eb87d17b952"
+    },
+    "step36_lr1e4": {
+      "iou": 0.8982640606308632,
+      "boundary_f1": 0.9236523909872274,
+      "dice": 0.915452337177705,
+      "iou_wins_losses_ties": [14, 0, 1],
+      "catastrophic_frames": 0,
+      "comparison_sha256": "9bd451ed991ad5e5e144e311e32bc253352d15551fc6fb832aa7f2d4a7fcec35"
+    }
+  },
+  "sequence_disjoint_val16": {
+    "baseline": {"iou": 0.960297069442728, "boundary_f1": 0.9761721589666668, "dice": 0.9790842655890272},
+    "step8_lr2e5": {"iou": 0.9598812571404312, "boundary_f1": 0.9759890429036989, "dice": 0.9788708171728238},
+    "step36_lr1e4": {"iou": 0.9574167583136273, "boundary_f1": 0.9727511140361378, "dice": 0.9775863771697182}
+  },
+  "decision": "reject_both_for_deployment_domain_gain_with_cross_sequence_regression",
+  "formal_workbench_changed": false,
+  "formal_model_changed": false
+}

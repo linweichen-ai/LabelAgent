@@ -1,0 +1,50 @@
+{
+  "schema_version": "labelagent.ego_component_risk_blind_audit_receipt.v1",
+  "date": "2026-11-22",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "default_enabled": false,
+  "assistant_review_only": true,
+  "reviewer_blinded_to_risk_band": true,
+  "round476": {
+    "selected_count": 60,
+    "per_camera_band": 10,
+    "page_count": 3,
+    "blind_audit_sha256": "1dc62aaa60d71231828b10b641f6c3bc23186bd5cc6809ab0a163527a2810061",
+    "decision_receipt_sha256": "cd1d455b03baba5b95c6915f93c91df3529dbecfb1212c5e3c4bab78d9f357e3"
+  },
+  "round478": {
+    "top": {"total": 20, "fill_ok": 4, "uncertain": 12, "likely_reject": 4, "review_risk_rate": 0.8},
+    "middle": {"total": 20, "fill_ok": 4, "uncertain": 11, "likely_reject": 5, "review_risk_rate": 0.8},
+    "bottom": {"total": 20, "fill_ok": 11, "uncertain": 9, "likely_reject": 0, "review_risk_rate": 0.45},
+    "top_minus_bottom_review_risk_rate": 0.35,
+    "top_plus_middle_review_share": 0.666667,
+    "likely_reject_total": 9,
+    "top_plus_middle_likely_reject_capture_rate": 1.0,
+    "hard_reject_enrichment_observed": true,
+    "evaluation_sha256": "1ecb43e024730b3b7cab491056a26acdfe90cf65a0caa3a10c849304c3cbe7a6"
+  },
+  "camera_breakdown": {
+    "camera1_review_risk_rates": {"top": 0.7, "middle": 0.6, "bottom": 0.1},
+    "camera3_review_risk_rates": {"top": 0.9, "middle": 1.0, "bottom": 0.8}
+  },
+  "runtime_readback": {
+    "observed_at": "2026-11-22T08:19:48+08:00",
+    "page_http_200": true,
+    "run_status": "idle",
+    "sam_ready": true,
+    "sam_model_loaded": true,
+    "vlm_ready": true,
+    "fast_vlm_ready": true,
+    "run_readiness_code": "reference_missing",
+    "storage_ready": true
+  },
+  "verification": {
+    "targeted_and_related_tests_passed": 88,
+    "tests_skipped": 1,
+    "formal_state_modified": false
+  },
+  "conclusion": "The queue concentrates all assistant-likely-reject cases in the top two bands and separates a safer camera1 tail, but does not distinguish top from middle and does not safely defer camera3."
+}

@@ -1,0 +1,801 @@
+{
+  "schema_version": "labelagent.ego_component_risk_blind_evaluation.v1",
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false,
+  "default_enabled": false,
+  "assistant_review_only": true,
+  "blind_audit_sha256": "1dc62aaa60d71231828b10b641f6c3bc23186bd5cc6809ab0a163527a2810061",
+  "decision_receipt_sha256": "cd1d455b03baba5b95c6915f93c91df3529dbecfb1212c5e3c4bab78d9f357e3",
+  "reviewer_blinded_to_risk_band": true,
+  "selected_count": 60,
+  "by_band": {
+    "top": {
+      "total": 20,
+      "likely_fill_ok": 4,
+      "uncertain": 12,
+      "likely_reject": 4,
+      "review_risk_count": 16,
+      "review_risk_rate": 0.8,
+      "review_risk_rate_wilson95": [
+        0.583978,
+        0.919344
+      ]
+    },
+    "middle": {
+      "total": 20,
+      "likely_fill_ok": 4,
+      "uncertain": 11,
+      "likely_reject": 5,
+      "review_risk_count": 16,
+      "review_risk_rate": 0.8,
+      "review_risk_rate_wilson95": [
+        0.583978,
+        0.919344
+      ]
+    },
+    "bottom": {
+      "total": 20,
+      "likely_fill_ok": 11,
+      "uncertain": 9,
+      "likely_reject": 0,
+      "review_risk_count": 9,
+      "review_risk_rate": 0.45,
+      "review_risk_rate_wilson95": [
+        0.258195,
+        0.657918
+      ]
+    }
+  },
+  "by_camera_band": {
+    "camera1": {
+      "top": {
+        "total": 10,
+        "likely_fill_ok": 3,
+        "uncertain": 6,
+        "likely_reject": 1,
+        "review_risk_count": 7,
+        "review_risk_rate": 0.7,
+        "review_risk_rate_wilson95": [
+          0.396773,
+          0.892211
+        ]
+      },
+      "middle": {
+        "total": 10,
+        "likely_fill_ok": 4,
+        "uncertain": 6,
+        "likely_reject": 0,
+        "review_risk_count": 6,
+        "review_risk_rate": 0.6,
+        "review_risk_rate_wilson95": [
+          0.31267,
+          0.831822
+        ]
+      },
+      "bottom": {
+        "total": 10,
+        "likely_fill_ok": 9,
+        "uncertain": 1,
+        "likely_reject": 0,
+        "review_risk_count": 1,
+        "review_risk_rate": 0.1,
+        "review_risk_rate_wilson95": [
+          0.017876,
+          0.404156
+        ]
+      }
+    },
+    "camera3": {
+      "top": {
+        "total": 10,
+        "likely_fill_ok": 1,
+        "uncertain": 6,
+        "likely_reject": 3,
+        "review_risk_count": 9,
+        "review_risk_rate": 0.9,
+        "review_risk_rate_wilson95": [
+          0.595844,
+          0.982124
+        ]
+      },
+      "middle": {
+        "total": 10,
+        "likely_fill_ok": 0,
+        "uncertain": 5,
+        "likely_reject": 5,
+        "review_risk_count": 10,
+        "review_risk_rate": 1.0,
+        "review_risk_rate_wilson95": [
+          0.72246,
+          1.0
+        ]
+      },
+      "bottom": {
+        "total": 10,
+        "likely_fill_ok": 2,
+        "uncertain": 8,
+        "likely_reject": 0,
+        "review_risk_count": 8,
+        "review_risk_rate": 0.8,
+        "review_risk_rate_wilson95": [
+          0.490157,
+          0.943319
+        ]
+      }
+    }
+  },
+  "top_minus_bottom_review_risk_rate": 0.35,
+  "top_minus_middle_review_risk_rate": 0.0,
+  "likely_reject_total": 9,
+  "top_likely_reject_capture_rate": 0.444444,
+  "top_plus_middle_likely_reject_capture_rate": 1.0,
+  "bottom_likely_reject_count": 0,
+  "top_plus_middle_review_share": 0.666667,
+  "hard_reject_enrichment_observed": true,
+  "monotonic_enrichment_observed": true,
+  "revealed_rows": [
+    {
+      "audit_id": "A001",
+      "component_id": "001-camera3-1793759004609543987-c005",
+      "camera": "camera3",
+      "hidden_band": "bottom",
+      "global_rank": 223,
+      "camera_rank": 141,
+      "score": 0.26518,
+      "decision": "uncertain",
+      "reason": "深色低照且模糊，孔或表面难分"
+    },
+    {
+      "audit_id": "A002",
+      "component_id": "003-camera3-idx52-1793759975409508695-c012",
+      "camera": "camera3",
+      "hidden_band": "bottom",
+      "global_rank": 220,
+      "camera_rank": 138,
+      "score": 0.271047,
+      "decision": "likely_fill_ok",
+      "reason": "目标位于连续斜纹实体表面"
+    },
+    {
+      "audit_id": "A003",
+      "component_id": "003-camera3-idx85-1793759985409553695-c008",
+      "camera": "camera3",
+      "hidden_band": "top",
+      "global_rank": 2,
+      "camera_rank": 2,
+      "score": 0.789725,
+      "decision": "uncertain",
+      "reason": "几乎全黑，缺少可判纹理"
+    },
+    {
+      "audit_id": "A004",
+      "component_id": "004-camera1-idx22-1793760668642838987-c005",
+      "camera": "camera1",
+      "hidden_band": "bottom",
+      "global_rank": 241,
+      "camera_rank": 88,
+      "score": 0.21304,
+      "decision": "likely_fill_ok",
+      "reason": "位于白色环形机械件表面"
+    },
+    {
+      "audit_id": "A005",
+      "component_id": "003-camera3-idx5-1793759961309512987-c007",
+      "camera": "camera3",
+      "hidden_band": "middle",
+      "global_rank": 121,
+      "camera_rank": 79,
+      "score": 0.457286,
+      "decision": "uncertain",
+      "reason": "贴近灰黑结构边界"
+    },
+    {
+      "audit_id": "A006",
+      "component_id": "004-camera1-idx52-1793760677642756695-c004",
+      "camera": "camera1",
+      "hidden_band": "top",
+      "global_rank": 30,
+      "camera_rank": 1,
+      "score": 0.641709,
+      "decision": "uncertain",
+      "reason": "圆形暗部可能是凹槽或孔"
+    },
+    {
+      "audit_id": "A007",
+      "component_id": "002-camera1-1793759208642855696-c007",
+      "camera": "camera1",
+      "hidden_band": "middle",
+      "global_rank": 138,
+      "camera_rank": 54,
+      "score": 0.429244,
+      "decision": "likely_fill_ok",
+      "reason": "连续平滑车体面内的小漏点"
+    },
+    {
+      "audit_id": "A008",
+      "component_id": "002-camera1-1793759230842886696-c004",
+      "camera": "camera1",
+      "hidden_band": "bottom",
+      "global_rank": 239,
+      "camera_rank": 86,
+      "score": 0.225182,
+      "decision": "likely_fill_ok",
+      "reason": "落在环形机械件邻接实体面"
+    },
+    {
+      "audit_id": "A009",
+      "component_id": "003-camera1-idx5-1793759961309512987-c002",
+      "camera": "camera1",
+      "hidden_band": "middle",
+      "global_rank": 118,
+      "camera_rank": 41,
+      "score": 0.461306,
+      "decision": "uncertain",
+      "reason": "深色平面细节不足"
+    },
+    {
+      "audit_id": "A010",
+      "component_id": "002-camera3-1793759230842886696-c006",
+      "camera": "camera3",
+      "hidden_band": "top",
+      "global_rank": 22,
+      "camera_rank": 22,
+      "score": 0.660532,
+      "decision": "likely_reject",
+      "reason": "紧邻水平黑色开口边界"
+    },
+    {
+      "audit_id": "A011",
+      "component_id": "002-camera1-1793759208642855696-c001",
+      "camera": "camera1",
+      "hidden_band": "top",
+      "global_rank": 47,
+      "camera_rank": 6,
+      "score": 0.614599,
+      "decision": "likely_fill_ok",
+      "reason": "连续绿色实体边面内"
+    },
+    {
+      "audit_id": "A012",
+      "component_id": "004-camera1-idx22-1793760668642838987-c006",
+      "camera": "camera1",
+      "hidden_band": "top",
+      "global_rank": 80,
+      "camera_rank": 18,
+      "score": 0.555331,
+      "decision": "uncertain",
+      "reason": "圆形暗色控制件边缘含糊"
+    },
+    {
+      "audit_id": "A013",
+      "component_id": "002-camera1-1793759208642855696-c005",
+      "camera": "camera1",
+      "hidden_band": "middle",
+      "global_rank": 125,
+      "camera_rank": 45,
+      "score": 0.448537,
+      "decision": "uncertain",
+      "reason": "环形件边缘与凹槽难分"
+    },
+    {
+      "audit_id": "A014",
+      "component_id": "003-camera3-idx52-1793759975409508695-c017",
+      "camera": "camera3",
+      "hidden_band": "top",
+      "global_rank": 23,
+      "camera_rank": 23,
+      "score": 0.660392,
+      "decision": "likely_reject",
+      "reason": "位于明显深色机械开口旁"
+    },
+    {
+      "audit_id": "A015",
+      "component_id": "001-camera1-1793759034009520987-c008",
+      "camera": "camera1",
+      "hidden_band": "top",
+      "global_rank": 60,
+      "camera_rank": 12,
+      "score": 0.582409,
+      "decision": "likely_fill_ok",
+      "reason": "金属环形件表面连续"
+    },
+    {
+      "audit_id": "A016",
+      "component_id": "004-camera3-idx5-1793760663542839987-c005",
+      "camera": "camera3",
+      "hidden_band": "middle",
+      "global_rank": 148,
+      "camera_rank": 88,
+      "score": 0.406939,
+      "decision": "likely_reject",
+      "reason": "水平黑色缝隙边缘疑似真空隙"
+    },
+    {
+      "audit_id": "A017",
+      "component_id": "003-camera3-idx52-1793759975409508695-c011",
+      "camera": "camera3",
+      "hidden_band": "middle",
+      "global_rank": 92,
+      "camera_rank": 69,
+      "score": 0.534668,
+      "decision": "uncertain",
+      "reason": "低照电控区纹理模糊"
+    },
+    {
+      "audit_id": "A018",
+      "component_id": "000-camera3-1793758356342888404-c001",
+      "camera": "camera3",
+      "hidden_band": "middle",
+      "global_rank": 111,
+      "camera_rank": 76,
+      "score": 0.485219,
+      "decision": "likely_reject",
+      "reason": "目标贴近物体外缘和浅色背景"
+    },
+    {
+      "audit_id": "A019",
+      "component_id": "002-camera3-1793759208642855696-c002",
+      "camera": "camera3",
+      "hidden_band": "bottom",
+      "global_rank": 238,
+      "camera_rank": 153,
+      "score": 0.226658,
+      "decision": "likely_fill_ok",
+      "reason": "斜纹机械表面连续"
+    },
+    {
+      "audit_id": "A020",
+      "component_id": "000-camera1-1793758297542631987-c003",
+      "camera": "camera1",
+      "hidden_band": "middle",
+      "global_rank": 113,
+      "camera_rank": 37,
+      "score": 0.482162,
+      "decision": "uncertain",
+      "reason": "暗色表面无足够细节"
+    },
+    {
+      "audit_id": "A021",
+      "component_id": "000-camera3-1793758312842576695-c007",
+      "camera": "camera3",
+      "hidden_band": "bottom",
+      "global_rank": 211,
+      "camera_rank": 134,
+      "score": 0.291968,
+      "decision": "uncertain",
+      "reason": "电控区低清晰度且偏暗"
+    },
+    {
+      "audit_id": "A022",
+      "component_id": "003-camera1-idx5-1793759961309512987-c008",
+      "camera": "camera1",
+      "hidden_band": "bottom",
+      "global_rank": 217,
+      "camera_rank": 82,
+      "score": 0.281976,
+      "decision": "likely_fill_ok",
+      "reason": "白色机械环表面内漏点"
+    },
+    {
+      "audit_id": "A023",
+      "component_id": "002-camera1-1793759230842886696-c001",
+      "camera": "camera1",
+      "hidden_band": "bottom",
+      "global_rank": 214,
+      "camera_rank": 79,
+      "score": 0.288319,
+      "decision": "likely_fill_ok",
+      "reason": "面板实体表面且远离开口"
+    },
+    {
+      "audit_id": "A024",
+      "component_id": "003-camera3-idx22-1793759966409522987-c002",
+      "camera": "camera3",
+      "hidden_band": "middle",
+      "global_rank": 87,
+      "camera_rank": 67,
+      "score": 0.539346,
+      "decision": "uncertain",
+      "reason": "灰黑结构边缘难判内外"
+    },
+    {
+      "audit_id": "A025",
+      "component_id": "002-camera1-1793759230842886696-c005",
+      "camera": "camera1",
+      "hidden_band": "middle",
+      "global_rank": 139,
+      "camera_rank": 55,
+      "score": 0.428487,
+      "decision": "uncertain",
+      "reason": "圆形暗部可能为真实凹槽"
+    },
+    {
+      "audit_id": "A026",
+      "component_id": "003-camera1-idx52-1793759975409508695-c003",
+      "camera": "camera1",
+      "hidden_band": "top",
+      "global_rank": 69,
+      "camera_rank": 15,
+      "score": 0.567111,
+      "decision": "uncertain",
+      "reason": "处于灰绿外轮廓交界"
+    },
+    {
+      "audit_id": "A027",
+      "component_id": "002-camera3-1793759208642855696-c009",
+      "camera": "camera3",
+      "hidden_band": "bottom",
+      "global_rank": 231,
+      "camera_rank": 148,
+      "score": 0.256939,
+      "decision": "uncertain",
+      "reason": "低照板面过于模糊"
+    },
+    {
+      "audit_id": "A028",
+      "component_id": "004-camera3-idx52-1793760677642756695-c001",
+      "camera": "camera3",
+      "hidden_band": "top",
+      "global_rank": 11,
+      "camera_rank": 11,
+      "score": 0.711489,
+      "decision": "uncertain",
+      "reason": "暗色电控纹理不可辨"
+    },
+    {
+      "audit_id": "A029",
+      "component_id": "003-camera3-idx22-1793759966409522987-c006",
+      "camera": "camera3",
+      "hidden_band": "top",
+      "global_rank": 27,
+      "camera_rank": 27,
+      "score": 0.652302,
+      "decision": "uncertain",
+      "reason": "目标紧贴灰绿外边界"
+    },
+    {
+      "audit_id": "A030",
+      "component_id": "003-camera3-idx5-1793759961309512987-c011",
+      "camera": "camera3",
+      "hidden_band": "bottom",
+      "global_rank": 234,
+      "camera_rank": 151,
+      "score": 0.242503,
+      "decision": "uncertain",
+      "reason": "深色板面细节不足"
+    },
+    {
+      "audit_id": "A031",
+      "component_id": "004-camera1-idx85-1793760721942855696-c001",
+      "camera": "camera1",
+      "hidden_band": "top",
+      "global_rank": 73,
+      "camera_rank": 16,
+      "score": 0.561962,
+      "decision": "uncertain",
+      "reason": "落在外缘明暗过渡处"
+    },
+    {
+      "audit_id": "A032",
+      "component_id": "002-camera1-1793759219742811696-c001",
+      "camera": "camera1",
+      "hidden_band": "middle",
+      "global_rank": 126,
+      "camera_rank": 46,
+      "score": 0.446718,
+      "decision": "likely_fill_ok",
+      "reason": "棕色面板实体区域连续"
+    },
+    {
+      "audit_id": "A033",
+      "component_id": "002-camera3-1793759208642855696-c003",
+      "camera": "camera3",
+      "hidden_band": "top",
+      "global_rank": 13,
+      "camera_rank": 13,
+      "score": 0.691733,
+      "decision": "uncertain",
+      "reason": "黑色机械件内部结构复杂"
+    },
+    {
+      "audit_id": "A034",
+      "component_id": "004-camera1-idx52-1793760677642756695-c003",
+      "camera": "camera1",
+      "hidden_band": "top",
+      "global_rank": 49,
+      "camera_rank": 7,
+      "score": 0.61035,
+      "decision": "uncertain",
+      "reason": "靠近浅色背景与车体边缘"
+    },
+    {
+      "audit_id": "A035",
+      "component_id": "001-camera1-1793759034009520987-c004",
+      "camera": "camera1",
+      "hidden_band": "top",
+      "global_rank": 43,
+      "camera_rank": 4,
+      "score": 0.618077,
+      "decision": "likely_reject",
+      "reason": "位于圆形深黑凹孔区域"
+    },
+    {
+      "audit_id": "A036",
+      "component_id": "004-camera1-idx5-1793760663542839987-c002",
+      "camera": "camera1",
+      "hidden_band": "bottom",
+      "global_rank": 197,
+      "camera_rank": 77,
+      "score": 0.3249,
+      "decision": "uncertain",
+      "reason": "暗色横向机械结构模糊"
+    },
+    {
+      "audit_id": "A037",
+      "component_id": "001-camera3-1793759034009520987-c004",
+      "camera": "camera3",
+      "hidden_band": "top",
+      "global_rank": 10,
+      "camera_rank": 10,
+      "score": 0.712459,
+      "decision": "likely_fill_ok",
+      "reason": "红棕面板和线缆均属实体"
+    },
+    {
+      "audit_id": "A038",
+      "component_id": "000-camera3-1793758297542631987-c001",
+      "camera": "camera3",
+      "hidden_band": "top",
+      "global_rank": 6,
+      "camera_rank": 6,
+      "score": 0.759578,
+      "decision": "uncertain",
+      "reason": "外侧灰黑圆角边界含糊"
+    },
+    {
+      "audit_id": "A039",
+      "component_id": "004-camera1-idx85-1793760721942855696-c003",
+      "camera": "camera1",
+      "hidden_band": "middle",
+      "global_rank": 123,
+      "camera_rank": 43,
+      "score": 0.450609,
+      "decision": "likely_fill_ok",
+      "reason": "面板小五金点位属实体"
+    },
+    {
+      "audit_id": "A040",
+      "component_id": "003-camera3-idx52-1793759975409508695-c008",
+      "camera": "camera3",
+      "hidden_band": "top",
+      "global_rank": 26,
+      "camera_rank": 26,
+      "score": 0.65547,
+      "decision": "likely_reject",
+      "reason": "目标靠近外缘浅色背景"
+    },
+    {
+      "audit_id": "A041",
+      "component_id": "003-camera3-idx52-1793759975409508695-c018",
+      "camera": "camera3",
+      "hidden_band": "middle",
+      "global_rank": 99,
+      "camera_rank": 74,
+      "score": 0.517057,
+      "decision": "uncertain",
+      "reason": "水平面与黑色下沿交界"
+    },
+    {
+      "audit_id": "A042",
+      "component_id": "001-camera3-1793759063409530987-c007",
+      "camera": "camera3",
+      "hidden_band": "middle",
+      "global_rank": 143,
+      "camera_rank": 86,
+      "score": 0.419122,
+      "decision": "uncertain",
+      "reason": "灰色外侧区域归属不清"
+    },
+    {
+      "audit_id": "A043",
+      "component_id": "003-camera3-idx52-1793759975409508695-c013",
+      "camera": "camera3",
+      "hidden_band": "bottom",
+      "global_rank": 230,
+      "camera_rank": 147,
+      "score": 0.257901,
+      "decision": "uncertain",
+      "reason": "低照电控板纹理模糊"
+    },
+    {
+      "audit_id": "A044",
+      "component_id": "002-camera1-1793759230842886696-c003",
+      "camera": "camera1",
+      "hidden_band": "bottom",
+      "global_rank": 224,
+      "camera_rank": 83,
+      "score": 0.264318,
+      "decision": "likely_fill_ok",
+      "reason": "环形控制件实体表面"
+    },
+    {
+      "audit_id": "A045",
+      "component_id": "003-camera3-idx52-1793759975409508695-c003",
+      "camera": "camera3",
+      "hidden_band": "middle",
+      "global_rank": 95,
+      "camera_rank": 71,
+      "score": 0.527259,
+      "decision": "likely_reject",
+      "reason": "落在上沿浅色背景带"
+    },
+    {
+      "audit_id": "A046",
+      "component_id": "002-camera1-1793759230842886696-c002",
+      "camera": "camera1",
+      "hidden_band": "top",
+      "global_rank": 84,
+      "camera_rank": 19,
+      "score": 0.548263,
+      "decision": "likely_fill_ok",
+      "reason": "清晰黄色控制件邻接实体面"
+    },
+    {
+      "audit_id": "A047",
+      "component_id": "000-camera1-1793758297542631987-c008",
+      "camera": "camera1",
+      "hidden_band": "middle",
+      "global_rank": 131,
+      "camera_rank": 49,
+      "score": 0.43784,
+      "decision": "uncertain",
+      "reason": "绿色车体与灰背景交界"
+    },
+    {
+      "audit_id": "A048",
+      "component_id": "001-camera3-1793759063409530987-c005",
+      "camera": "camera3",
+      "hidden_band": "middle",
+      "global_rank": 146,
+      "camera_rank": 87,
+      "score": 0.409765,
+      "decision": "likely_reject",
+      "reason": "灰色外部区域被掩膜包围"
+    },
+    {
+      "audit_id": "A049",
+      "component_id": "001-camera1-1793759034009520987-c005",
+      "camera": "camera1",
+      "hidden_band": "middle",
+      "global_rank": 132,
+      "camera_rank": 50,
+      "score": 0.435964,
+      "decision": "likely_fill_ok",
+      "reason": "红色操纵杆实体表面"
+    },
+    {
+      "audit_id": "A050",
+      "component_id": "003-camera1-idx52-1793759975409508695-c006",
+      "camera": "camera1",
+      "hidden_band": "bottom",
+      "global_rank": 216,
+      "camera_rank": 81,
+      "score": 0.284104,
+      "decision": "likely_fill_ok",
+      "reason": "清晰方形控制件表面"
+    },
+    {
+      "audit_id": "A051",
+      "component_id": "000-camera1-1793758297542631987-c013",
+      "camera": "camera1",
+      "hidden_band": "middle",
+      "global_rank": 115,
+      "camera_rank": 39,
+      "score": 0.479278,
+      "decision": "uncertain",
+      "reason": "深色圆形件可能含真实凹槽"
+    },
+    {
+      "audit_id": "A052",
+      "component_id": "002-camera3-1793759230842886696-c004",
+      "camera": "camera3",
+      "hidden_band": "bottom",
+      "global_rank": 210,
+      "camera_rank": 133,
+      "score": 0.292587,
+      "decision": "uncertain",
+      "reason": "电控区低照且细节不足"
+    },
+    {
+      "audit_id": "A053",
+      "component_id": "004-camera1-idx22-1793760668642838987-c003",
+      "camera": "camera1",
+      "hidden_band": "bottom",
+      "global_rank": 215,
+      "camera_rank": 80,
+      "score": 0.28471,
+      "decision": "likely_fill_ok",
+      "reason": "白色机械环连续实体"
+    },
+    {
+      "audit_id": "A054",
+      "component_id": "000-camera1-1793758297542631987-c007",
+      "camera": "camera1",
+      "hidden_band": "top",
+      "global_rank": 64,
+      "camera_rank": 14,
+      "score": 0.576304,
+      "decision": "uncertain",
+      "reason": "外缘黑缝与车体难分"
+    },
+    {
+      "audit_id": "A055",
+      "component_id": "000-camera1-1793758297542631987-c009",
+      "camera": "camera1",
+      "hidden_band": "bottom",
+      "global_rank": 189,
+      "camera_rank": 75,
+      "score": 0.344489,
+      "decision": "likely_fill_ok",
+      "reason": "金属紧固件顶部实体"
+    },
+    {
+      "audit_id": "A056",
+      "component_id": "003-camera3-idx5-1793759961309512987-c012",
+      "camera": "camera3",
+      "hidden_band": "bottom",
+      "global_rank": 227,
+      "camera_rank": 144,
+      "score": 0.261719,
+      "decision": "uncertain",
+      "reason": "暗色板面模糊无纹理依据"
+    },
+    {
+      "audit_id": "A057",
+      "component_id": "003-camera3-idx85-1793759985409553695-c003",
+      "camera": "camera3",
+      "hidden_band": "top",
+      "global_rank": 3,
+      "camera_rank": 3,
+      "score": 0.780974,
+      "decision": "uncertain",
+      "reason": "深色外侧机械区归属不清"
+    },
+    {
+      "audit_id": "A058",
+      "component_id": "001-camera1-1793759034009520987-c002",
+      "camera": "camera1",
+      "hidden_band": "bottom",
+      "global_rank": 185,
+      "camera_rank": 73,
+      "score": 0.349347,
+      "decision": "likely_fill_ok",
+      "reason": "棕色面板连续实体表面"
+    },
+    {
+      "audit_id": "A059",
+      "component_id": "003-camera3-idx5-1793759961309512987-c008",
+      "camera": "camera3",
+      "hidden_band": "middle",
+      "global_rank": 110,
+      "camera_rank": 75,
+      "score": 0.49006,
+      "decision": "likely_reject",
+      "reason": "贴近灰黑外缘及背景"
+    },
+    {
+      "audit_id": "A060",
+      "component_id": "003-camera3-idx52-1793759975409508695-c014",
+      "camera": "camera3",
+      "hidden_band": "bottom",
+      "global_rank": 236,
+      "camera_rank": 152,
+      "score": 0.229047,
+      "decision": "uncertain",
+      "reason": "低照电控区无法可靠辨孔"
+    }
+  ],
+  "conclusion_boundary": "Assistant blind-review enrichment is not human truth, model quality, or new-data generalization."
+}

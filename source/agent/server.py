@@ -50,6 +50,13 @@ from .candidate_class_audit import (audit_candidate_class_blind, candidate_finge
                                     validate_blind_candidate_class_decision)
 from .pallet_candidate_review import (CandidateReviewUnavailable,
                                       load_review_page)
+from .candidate_comparison import (
+    INDEX_SCHEMA_VERSION as CANDIDATE_COMPARISON_INDEX_SCHEMA,
+    manifest_sha256 as candidate_comparison_manifest_sha256,
+    packet_summary as candidate_comparison_packet_summary,
+    public_packet as public_candidate_comparison_packet,
+    read_packet as read_candidate_comparison_packet,
+)
 
 from . import candidate_class_audit as _candidate_audit_module
 
@@ -3388,6 +3395,136 @@ def get_component_review_pack_image(packet_id, image_name):
     response.headers["Cache-Control"] = "no-store"
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response
+
+
+@app.get('/api/candidate_comparison_packs')
+def get_candidate_comparison_packs():
+    """List only verified read-only comparison packs; never expose disk paths."""
+    packets = []
+    rejected = 0
+    root = WORK / "candidate_comparison_packs"
+    if root.is_dir():
+        for folder in sorted(root.iterdir(), key=lambda item: item.name):
+            if not folder.is_dir():
+                continue
+            try:
+                packets.append(candidate_comparison_packet_summary(
+                    read_candidate_comparison_packet(WORK, folder.name)))
+            except (OSError, ValueError):
+                rejected += 1
+    return jsonify(
+        schema_version=CANDIDATE_COMPARISON_INDEX_SCHEMA,
+        packets=packets, rejected_packets=rejected,
+        read_only=True, session_preferences_only=True,
+        human_truth_writes=False, training_data_writes=False,
+        automatic_approval=False)
+
+
+@app.get('/api/candidate_comparison_packs/<packet_id>')
+def get_candidate_comparison_pack(packet_id):
+    return jsonify(public_candidate_comparison_packet(
+        read_candidate_comparison_packet(WORK, packet_id)))
+
+
+@app.get('/api/candidate_comparison_packs/<packet_id>/images/<image_name>')
+def get_candidate_comparison_pack_image(packet_id, image_name):
+    packet = read_candidate_comparison_packet(WORK, packet_id)
+    asset = packet["allowed_images"].get(image_name)
+    if asset is None:
+        raise ValueError("候选对比图片未绑定当前清单")
+    expected_manifest = request.args.get("manifest_sha256")
+    expected_image = request.args.get("image_sha256")
+    if not _valid_sha256(expected_manifest) or not _valid_sha256(expected_image):
+        raise ValueError("候选对比图片请求缺少有效哈希绑定")
+    if (expected_manifest != packet["manifest_sha256"]
+            or expected_image != hashlib.sha256(asset["bytes"]).hexdigest()):
+        raise StaleHumanReviewError("候选对比清单或图片已变化，旧图片请求已拒绝")
+    response = send_file(io.BytesIO(asset["bytes"]),
+                         mimetype=asset["mimetype"], max_age=0)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
+@app.get('/api/candidate_comparison_packs/<packet_id>/<comparison_id>/scope')
+def get_candidate_comparison_scope(packet_id, comparison_id):
+    """Verify one comparison against the exact live frame and candidate state."""
+    try:
+        frame = int(request.args.get("frame", ""))
+        generation = int(request.args.get("file_activation_generation", ""))
+    except (TypeError, ValueError) as error:
+        raise ValueError("frame 与 file_activation_generation 必须是整数") from error
+    payload = {
+        "path": request.args.get("path"),
+        "topic": request.args.get("topic"),
+        "frame": frame,
+        "file_activation_generation": generation,
+    }
+    expected_manifest = request.args.get("expected_manifest_sha256")
+    if not _valid_sha256(expected_manifest):
+        raise ValueError("expected_manifest_sha256 必须是当前清单 SHA-256")
+    # Validate image-heavy pack data outside the shared workbench lock, then
+    # re-check the bounded manifest identity while holding the lock.
+    try:
+        packet = read_candidate_comparison_packet(WORK, packet_id)
+    except (OSError, ValueError) as error:
+        raise StaleHumanReviewError(
+            "候选对比包已变化或无法重新验证，旧窗口请求已拒绝") from error
+    if packet["manifest_sha256"] != expected_manifest:
+        raise StaleHumanReviewError("候选对比清单已变化，旧窗口请求已拒绝")
+    with lock:
+        try:
+            current_manifest_sha = candidate_comparison_manifest_sha256(
+                WORK, packet_id)
+        except (OSError, ValueError) as error:
+            raise StaleHumanReviewError(
+                "候选对比清单已变化，旧窗口请求已拒绝") from error
+        if current_manifest_sha != packet["manifest_sha256"]:
+            raise StaleHumanReviewError("候选对比清单已变化，旧窗口请求已拒绝")
+        assert_request_data_scope(payload)
+        if (packet["source_path_internal"] != payload["path"]
+                or packet["source_topic"] != payload["topic"]):
+            raise StaleHumanReviewError("候选对比包与当前文件或相机不一致")
+        matches = [row for row in packet["rows"]
+                   if row["comparison_id"] == comparison_id]
+        if len(matches) != 1:
+            raise ValueError("候选对比记录不存在或不唯一")
+        row = matches[0]
+        if row["frame"] != frame:
+            raise StaleHumanReviewError("候选对比记录与当前帧不一致")
+        try:
+            frame_payload = frame_image(frame)
+        except (IndexError, KeyError, OSError, ValueError) as error:
+            raise StaleHumanReviewError(
+                "当前帧已不可用，旧候选对比已拒绝") from error
+        if hashlib.sha256(frame_payload).hexdigest() != row["source_frame_sha256"]:
+            raise StaleHumanReviewError("当前帧图像已变化，旧候选对比已拒绝")
+        binding = candidate_review_binding(
+            state.get("candidates", {}).get(str(frame)))
+        if (binding is None or binding["candidate_artifact_sha256"] !=
+                row["current_candidate_artifact_sha256"]):
+            raise StaleHumanReviewError("当前帧候选集合已变化，旧候选对比已拒绝")
+        candidate_matches = [item for item in binding["candidates"]
+                             if (type(item.get("candidate_id")) is
+                                 type(row["current_candidate_id"])
+                                 and item.get("candidate_id") ==
+                                 row["current_candidate_id"])]
+        if (len(candidate_matches) != 1
+                or candidate_matches[0].get("candidate_fingerprint") !=
+                row["current_candidate_fingerprint"]):
+            raise StaleHumanReviewError("当前候选身份或几何已变化，旧候选对比已拒绝")
+        return jsonify(
+            schema_version="labelagent.candidate-comparison-scope.v1",
+            packet_id=packet["packet_id"], comparison_id=comparison_id,
+            manifest_sha256=packet["manifest_sha256"],
+            topic=packet["source_topic"], frame=frame,
+            file_activation_generation=generation,
+            source_frame_sha256=row["source_frame_sha256"],
+            current_candidate_artifact_sha256=row["current_candidate_artifact_sha256"],
+            current_candidate_fingerprint=row["current_candidate_fingerprint"],
+            scope_verified=True, read_only=True,
+            human_truth_writes=False, training_data_writes=False,
+            automatic_approval=False)
 
 
 @app.get('/api/review_packets/<packet_id>')

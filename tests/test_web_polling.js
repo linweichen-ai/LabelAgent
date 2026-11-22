@@ -142,7 +142,7 @@ test('工作台持续显示新旧数据集身份和逐类别覆盖状态', () =>
   assert.match(app, /candidateNeedsReview/);
   assert.match(html, /style\.css\?v=120/);
   assert.match(html, /homepage-theme\.css\?v=5/);
-  assert.match(html, /app\.js\?v=206/);
+  assert.match(html, /app\.js\?v=207/);
   assert.match(app, /action\.dataset\.coverageRepair=label/);
   assert.match(app, /startCandidateCoverageRepair\(label\)/);
   assert.match(app, /不会自动运行模型或写入人工真值/);
@@ -1777,7 +1777,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=206/);
+  assert.match(source('index.html'), /app\.js\?v=207/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1839,7 +1839,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{\s*invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(currentGeneration=0\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=206/);
+  assert.match(source('index.html'), /app\.js\?v=207/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1898,7 +1898,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 4);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=206/);
+  assert.match(source('index.html'), /app\.js\?v=207/);
 });
 
 test('类别与推理类别保存绑定文件载入代次和类别状态版本', async () => {
@@ -1937,7 +1937,7 @@ test('类别与推理类别保存绑定文件载入代次和类别状态版本',
   assert.deepEqual(applied[0].labels, ['a','b']);
   assert.deepEqual(applied[0].auto_labels, ['b']);
   assert.equal(h.run('currentDescription'), null);
-  assert.match(source('index.html'), /app\.js\?v=206/);
+  assert.match(source('index.html'), /app\.js\?v=207/);
 });
 
 test('模型配置保存绑定工作区载入代次和配置版本', async () => {

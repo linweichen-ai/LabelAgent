@@ -331,6 +331,7 @@
                 <div><strong id="candidateReviewTitle">候选复核工作台</strong><small id="candidateReviewContext">读取当前帧候选中…</small></div>
               </div>
               <div class="candidateReviewHeadActions">
+                <button id="candidateComparisonOpen" type="button" title="只读比较当前候选、替代候选与共识">候选对比 <span id="candidateComparisonBadge">—</span></button>
                 <button id="componentReviewOpen" type="button" title="打开哈希校验后的微孔聚焦复核包">微孔聚焦复核 <span id="componentReviewBadge">—</span></button>
                 <button id="candidateReviewToggle" type="button" aria-expanded="true">收起复核台</button>
               </div>
@@ -645,6 +646,21 @@
     <p class="componentReviewBoundary"><b>严格隔离：</b>这里的“倾向可补 / 不确定 / 倾向驳回”只保存为当前浏览器会话草稿；不会修改 mask、写入人工真值、训练集、正式审核记录或触发自动审批。</p>
   </div>
 </dialog>
+<dialog id="candidateComparisonDialog" class="candidateComparisonDialog" aria-labelledby="candidateComparisonTitle">
+  <div class="candidateComparisonHead">
+    <div><span>只读预览 · 不采用候选</span><h2 id="candidateComparisonTitle">候选对比</h2></div>
+    <button id="candidateComparisonClose" type="button" aria-label="关闭候选对比">×</button>
+  </div>
+  <div class="candidateComparisonToolbar">
+    <label>对比包<select id="candidateComparisonPack" aria-label="选择候选对比包"></select></label>
+    <button id="candidateComparisonLoad" type="button">载入</button>
+    <label>候选<select id="candidateComparisonRow" aria-label="选择候选对比记录"></select></label>
+    <button id="candidateComparisonRefresh" type="button">刷新</button>
+  </div>
+  <div id="candidateComparisonStatus" class="candidateComparisonStatus" role="status" aria-live="polite">正在检查本机候选对比包…</div>
+  <div id="candidateComparisonContent" class="candidateComparisonContent" aria-live="polite"></div>
+  <p class="candidateComparisonBoundary"><b>严格只读：</b>这里仅展示当前候选、替代候选、共识和指标。查看偏好只保存在当前浏览器会话，不会修改 mask、自动采用替代候选、写入人工真值或训练集。</p>
+</dialog>
 <dialog id="reviewPacketDialog" class="reviewPacketDialog" aria-labelledby="reviewPacketTitle">
   <div class="reviewPacketHead">
     <div><span>人工复核队列</span><h2 id="reviewPacketTitle">斜坡专项复核</h2></div>
@@ -695,6 +711,6 @@
   </div>
 </div>
 <div id="toast" role="status"></div>
-<script src="/pointcloud.js?v=64"></script><script src="/app.js?v=206"></script><script src="/inspection.js?v=109"></script><script src="/guide.js?v=121"></script><script src="/review.js?v=68"></script><script src="/batch-review.js?v=65"></script><script src="/compare.js?v=68"></script><script src="/human-review.js?v=98"></script><script src="/reference-prep.js?v=170"></script><script src="/component-review-core.js?v=1"></script><script src="/component-review.js?v=1"></script><script src="/review-packet-core.js?v=163"></script><script src="/review-packet.js?v=165"></script><script src="/pallet-candidate-review-entry.js?v=1"></script>
+<script src="/pointcloud.js?v=64"></script><script src="/app.js?v=207"></script><script src="/inspection.js?v=109"></script><script src="/guide.js?v=121"></script><script src="/review.js?v=68"></script><script src="/batch-review.js?v=65"></script><script src="/compare.js?v=68"></script><script src="/human-review.js?v=98"></script><script src="/reference-prep.js?v=170"></script><script src="/component-review-core.js?v=1"></script><script src="/component-review.js?v=1"></script><script src="/candidate-comparison-core.js?v=1"></script><script src="/candidate-comparison.js?v=1"></script><script src="/review-packet-core.js?v=163"></script><script src="/review-packet.js?v=165"></script><script src="/pallet-candidate-review-entry.js?v=1"></script>
 </body>
 </html>

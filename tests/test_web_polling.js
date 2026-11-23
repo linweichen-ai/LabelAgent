@@ -142,7 +142,7 @@ test('工作台持续显示新旧数据集身份和逐类别覆盖状态', () =>
   assert.match(app, /candidateNeedsReview/);
   assert.match(html, /style\.css\?v=120/);
   assert.match(html, /homepage-theme\.css\?v=5/);
-  assert.match(html, /app\.js\?v=207/);
+  assert.match(html, /app\.js\?v=208/);
   assert.match(app, /action\.dataset\.coverageRepair=label/);
   assert.match(app, /startCandidateCoverageRepair\(label\)/);
   assert.match(app, /不会自动运行模型或写入人工真值/);
@@ -1777,7 +1777,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
   assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=207/);
+  assert.match(source('index.html'), /app\.js\?v=208/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1839,7 +1839,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{\s*invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(currentGeneration=0\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=207/);
+  assert.match(source('index.html'), /app\.js\?v=208/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1898,7 +1898,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 4);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=207/);
+  assert.match(source('index.html'), /app\.js\?v=208/);
 });
 
 test('类别与推理类别保存绑定文件载入代次和类别状态版本', async () => {
@@ -1937,7 +1937,7 @@ test('类别与推理类别保存绑定文件载入代次和类别状态版本',
   assert.deepEqual(applied[0].labels, ['a','b']);
   assert.deepEqual(applied[0].auto_labels, ['b']);
   assert.equal(h.run('currentDescription'), null);
-  assert.match(source('index.html'), /app\.js\?v=207/);
+  assert.match(source('index.html'), /app\.js\?v=208/);
 });
 
 test('模型配置保存绑定工作区载入代次和配置版本', async () => {
@@ -1946,6 +1946,12 @@ test('模型配置保存绑定工作区载入代次和配置版本', async () =>
   const elements = {
     configSave: {}, llmUrl: {value:'http://localhost/v1'},
     llmModel: {value:'model'}, llmKey: {value:'local'}, config: dialog,
+    expertEnabled: {checked:true}, expertProvider: {value:'openai_responses'},
+    expertUrl: {value:'https://expert.example/v1'},
+    expertModel: {value:'expert-vision'},
+    expertKeyEnv: {value:'LABELAGENT_EXPERT_API_KEY'},
+    expertTimeout: {value:'120'}, expertShadowEnabled: {checked:true},
+    expertRoundThreshold: {value:'4'},
   };
   const h = harness({
     $(id) { return elements[id]; },
@@ -1960,6 +1966,11 @@ test('模型配置保存绑定工作区载入代次和配置版本', async () =>
   const stale = h.run("$('configSave').onclick()");
   assert.deepEqual(JSON.parse(JSON.stringify(calls[0])), {route:'config',body:{
     llm_url:'http://localhost/v1',llm_model:'model',llm_key:'local',
+    llm_expert_enabled:true,llm_expert_provider:'openai_responses',
+    llm_expert_url:'https://expert.example/v1',llm_expert_model:'expert-vision',
+    llm_expert_key_env:'LABELAGENT_EXPERT_API_KEY',
+    llm_expert_timeout_seconds:120,llm_expert_shadow_routing_enabled:true,
+    llm_expert_shadow_round_threshold:4,
     expected_path:'file-a',expected_topic:'/camera',
     expected_file_activation_generation:7,expected_config_state_sha256:'a'.repeat(64)}});
   h.run('loadedFileActivationGeneration=8');
@@ -1981,6 +1992,16 @@ test('模型配置保存绑定工作区载入代次和配置版本', async () =>
   assert.equal(h.run('workbenchConfig.llm_model'), 'model');
   assert.equal(h.run('currentDescription'), null);
   assert.equal(dialog.closed, true);
+});
+
+test('专家模型配置界面不接受原始密钥且明确影子模式不上传', () => {
+  const html = source('index.html'), app = source('app.js');
+  assert.match(html, /id="expertKeyEnv"/);
+  assert.doesNotMatch(html, /id="expertKey"/);
+  assert.match(html, /只记录困难帧分流建议（不上传图片）/);
+  assert.match(app, /llm_expert_key_env:\$\('expertKeyEnv'\)\.value/);
+  assert.doesNotMatch(app, /llm_expert_key:\$\('expert/);
+  assert.match(app, /请勿在工作台粘贴密钥/);
 });
 
 test('清除机器结果绑定文件代次及候选和过程记录哈希并以服务器读回为准', async () => {

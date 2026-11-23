@@ -755,13 +755,47 @@ $('truthSave').onclick=()=>saveCurrentTruth().catch(e=>toast(e.message));
 async function finalizeReferencePreparation(){const intent=referencePreparationIntent;if(!intent||referenceFinalizeBusy)return;if(intent.topic!==topic||intent.frame!==frame){try{await openFrameForReferencePreparation(intent.frame);updateReferenceFinalizeGuide()}catch(error){referenceFinalizeNotice=error.message;updateReferenceFinalizeGuide()}return}updateReferenceFinalizeGuide();if($('referenceFinalizePrimary').disabled){toast('请先完成逐个轮廓检查及待处理提醒；机器审核不能代替人工检查');return}referenceFinalizeBusy=true;referenceFinalizeNotice='正在进入人工确认…';updateReferenceFinalizeGuide();try{if(!truthIsVerified(intent.frame)){const data=await saveCurrentTruth();if(data?.rejected){clearReferenceFinalize();return}}referenceFinalizeNotice='人工真值与回执已核验，正在锁定参考帧…';updateReferenceFinalizeGuide();await lockReferenceFrame(intent.frame,intent.topic);clearStoredReferenceReviewProgress(selectedShapes(),intent);clearReferenceFinalize();toast(`帧 ${intent.frame} 已经人工确认并锁定为参考帧`)}catch(error){referenceFinalizeNotice=truthIsVerified(intent.frame)?`真值已保存；参考帧尚未锁定：${error.message}`:error.message;updateReferenceFinalizeGuide();toast(error.message)}finally{referenceFinalizeBusy=false;updateReferenceFinalizeGuide()}}
 $('referenceFinalizePrimary').onclick=finalizeReferencePreparation;
 $('referenceFinalizeCancel').onclick=()=>{clearReferenceFinalize();toast('已退出参考帧收尾；当前草稿仍保留')};
-$('openConfigDialog').onclick=()=>$('config').showModal();
+function populateExpertConfigFields(){
+ $('expertEnabled').checked=workbenchConfig.llm_expert_enabled===true;
+ $('expertProvider').value=workbenchConfig.llm_expert_provider||'openai_chat';
+ $('expertUrl').value=workbenchConfig.llm_expert_url||'';
+ $('expertModel').value=workbenchConfig.llm_expert_model||'';
+ $('expertKeyEnv').value=workbenchConfig.llm_expert_key_env||'LABELAGENT_EXPERT_API_KEY';
+ $('expertTimeout').value=workbenchConfig.llm_expert_timeout_seconds||120;
+ $('expertRoundThreshold').value=workbenchConfig.llm_expert_shadow_round_threshold||4;
+ $('expertShadowEnabled').checked=workbenchConfig.llm_expert_shadow_routing_enabled===true;
+}
+async function refreshExpertConfigStatus(){
+ const status=$('expertConfigStatus');status.className='expertConfigStatus';status.textContent='正在读取专家通道状态…';
+ try{const response=await fetch('/api/model_readiness',{cache:'no-store'}),data=await response.json();if(!response.ok)throw Error(data.error||'状态读取失败');const expert=data.expert_vlm||{};if(!expert.enabled){status.textContent=expert.shadow_routing_enabled?'专家调用关闭；困难帧仅记录分流建议，不上传图片':'专家通道与困难帧分流均关闭';return}if(!expert.configured){status.classList.add('warning');status.textContent='专家通道配置不完整，尚不能调用';return}if(!expert.credential_present){status.classList.add('warning');status.textContent=`缺少本机环境变量 ${expert.credential_env||''}；请勿在工作台粘贴密钥`;return}status.classList.add('ready');status.textContent='配置与环境变量已就绪；尚未执行外部连通性测试'}catch(error){status.classList.add('warning');status.textContent='无法读取专家通道状态：'+error.message}
+}
+$('openConfigDialog').onclick=()=>{populateExpertConfigFields();$('config').showModal();refreshExpertConfigStatus()};
 $('closeConfigDialog').onclick=()=>$('config').close();
 $('openFilesDialog').onclick=()=>{$('fileManager').showModal();refreshFiles()};
 $('datasetIdentitySwitch').onclick=()=>{$('fileManager').showModal();refreshFiles()};
 $('closeFilesDialog').onclick=()=>$('fileManager').close();
 $('doneFilesButton').onclick=()=>$('fileManager').close();
-$('configSave').onclick=async()=>{const requestPath=loadedDataPath,requestTopic=topic||null,requestGeneration=loadedFileActivationGeneration,expectedConfigState=configStateSha256;try{if(!expectedConfigState)throw Error('配置版本尚未载入完成，请刷新后重试');const data=await api('config',{llm_url:$('llmUrl').value,llm_model:$('llmModel').value,llm_key:$('llmKey').value,expected_path:requestPath,expected_topic:requestTopic,expected_file_activation_generation:requestGeneration,expected_config_state_sha256:expectedConfigState});if(loadedDataPath!==requestPath||(topic||null)!==requestTopic||loadedFileActivationGeneration!==requestGeneration||data.path!==requestPath||data.topic!==requestTopic||data.file_activation_generation!==requestGeneration||data.previous_config_state_sha256!==expectedConfigState||typeof data.config_state_sha256!=='string')throw Error('配置保存期间数据文件、相机、载入代次或配置版本已变化，拒绝更新当前页面');workbenchConfig=data.config||workbenchConfig;configStateSha256=data.config_state_sha256;currentDescription=null;$('config').close();toast('配置已保存；参考描述需要重新确认')}catch(e){toast(e.message)}};
+$('configSave').onclick=async()=>{
+ const requestPath=loadedDataPath,requestTopic=topic||null,requestGeneration=loadedFileActivationGeneration,expectedConfigState=configStateSha256;
+ try{
+  if(!expectedConfigState)throw Error('配置版本尚未载入完成，请刷新后重试');
+  const data=await api('config',{
+   llm_url:$('llmUrl').value,llm_model:$('llmModel').value,llm_key:$('llmKey').value,
+   llm_expert_enabled:$('expertEnabled').checked,
+   llm_expert_provider:$('expertProvider').value,
+   llm_expert_url:$('expertUrl').value,
+   llm_expert_model:$('expertModel').value,
+   llm_expert_key_env:$('expertKeyEnv').value,
+   llm_expert_timeout_seconds:Number($('expertTimeout').value),
+   llm_expert_shadow_routing_enabled:$('expertShadowEnabled').checked,
+   llm_expert_shadow_round_threshold:Number($('expertRoundThreshold').value),
+   expected_path:requestPath,expected_topic:requestTopic,
+   expected_file_activation_generation:requestGeneration,
+   expected_config_state_sha256:expectedConfigState});
+  if(loadedDataPath!==requestPath||(topic||null)!==requestTopic||loadedFileActivationGeneration!==requestGeneration||data.path!==requestPath||data.topic!==requestTopic||data.file_activation_generation!==requestGeneration||data.previous_config_state_sha256!==expectedConfigState||typeof data.config_state_sha256!=='string')throw Error('配置保存期间数据文件、相机、载入代次或配置版本已变化，拒绝更新当前页面');
+  workbenchConfig=data.config||workbenchConfig;configStateSha256=data.config_state_sha256;currentDescription=null;$('config').close();toast('配置已保存；参考描述需要重新确认');
+ }catch(e){toast(e.message)}
+};
 let currentDescription=null,descriptionRequest=null;
 async function regenerateReferenceDescription(targetFrame=frame){
  const selectedFrame=Number(targetFrame),targetTopic=topic,targetPath=loadedDataPath;

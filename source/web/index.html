@@ -396,6 +396,20 @@
     <label>大模型 API 基础地址 <input id="llmUrl" placeholder="https://.../v1"></label>
     <label>模型名 <input id="llmModel" placeholder="视觉语言模型"></label>
     <label>API Key <input id="llmKey" type="password" placeholder="留空保持原配置"></label>
+    <section class="expertConfigSection" aria-labelledby="expertConfigTitle">
+      <div class="expertConfigHeading"><div><span>可选 · 默认关闭</span><h3 id="expertConfigTitle">外部专家模型</h3></div><label class="expertToggle"><input id="expertEnabled" type="checkbox">允许显式调用</label></div>
+      <p>用于困难帧影子复核。密钥只能预先写入本机环境变量，不能在工作台或对话中粘贴。</p>
+      <div class="expertConfigGrid">
+        <label>接口协议<select id="expertProvider"><option value="openai_chat">OpenAI 兼容</option><option value="openai_responses">OpenAI Responses</option><option value="anthropic_messages">Claude Messages</option><option value="gemini_generate_content">Gemini 原生接口</option></select></label>
+        <label>模型名<input id="expertModel" placeholder="例如 qwen3-vl-plus"></label>
+        <label class="expertWide">API 基础地址<input id="expertUrl" placeholder="https://.../v1"></label>
+        <label class="expertWide">密钥环境变量名<input id="expertKeyEnv" value="LABELAGENT_EXPERT_API_KEY" placeholder="LABELAGENT_EXPERT_API_KEY"></label>
+        <label>请求超时（秒）<input id="expertTimeout" type="number" min="10" max="300" value="120"></label>
+        <label>困难帧轮数阈值<input id="expertRoundThreshold" type="number" min="1" max="100" value="4"></label>
+      </div>
+      <label class="expertToggle expertShadowToggle"><input id="expertShadowEnabled" type="checkbox">只记录困难帧分流建议（不上传图片）</label>
+      <p id="expertConfigStatus" class="expertConfigStatus" role="status">尚未读取专家通道状态</p>
+    </section>
   </div>
   <div class="dialogActions"><button id="configSave" class="primary"><img src="/icons/check.svg" alt="">保存并关闭</button></div>
 </dialog>
@@ -711,6 +725,6 @@
   </div>
 </div>
 <div id="toast" role="status"></div>
-<script src="/pointcloud.js?v=64"></script><script src="/app.js?v=207"></script><script src="/inspection.js?v=109"></script><script src="/guide.js?v=121"></script><script src="/review.js?v=68"></script><script src="/batch-review.js?v=65"></script><script src="/compare.js?v=68"></script><script src="/human-review.js?v=98"></script><script src="/reference-prep.js?v=170"></script><script src="/component-review-core.js?v=2"></script><script src="/component-review.js?v=2"></script><script src="/candidate-comparison-core.js?v=2"></script><script src="/candidate-comparison.js?v=2"></script><script src="/review-packet-core.js?v=163"></script><script src="/review-packet.js?v=165"></script><script src="/pallet-candidate-review-entry.js?v=1"></script>
+<script src="/pointcloud.js?v=64"></script><script src="/app.js?v=208"></script><script src="/inspection.js?v=109"></script><script src="/guide.js?v=121"></script><script src="/review.js?v=68"></script><script src="/batch-review.js?v=65"></script><script src="/compare.js?v=68"></script><script src="/human-review.js?v=98"></script><script src="/reference-prep.js?v=170"></script><script src="/component-review-core.js?v=2"></script><script src="/component-review.js?v=2"></script><script src="/candidate-comparison-core.js?v=2"></script><script src="/candidate-comparison.js?v=2"></script><script src="/review-packet-core.js?v=163"></script><script src="/review-packet.js?v=165"></script><script src="/pallet-candidate-review-entry.js?v=1"></script>
 </body>
 </html>

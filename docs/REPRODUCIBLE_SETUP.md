@@ -100,7 +100,7 @@ powershell -ExecutionPolicy Bypass -File tools\stop_local.ps1
 powershell -ExecutionPolicy Bypass -File tools\verify_checkout.ps1 -RequireCuda -RequireWeight
 ```
 
-该命令执行依赖一致性检查、Python 回归、浏览器逻辑测试，以及无需私有数据的真实 Edge 浏览器自检。若机器没有 Node.js 或无法运行浏览器验收，可明确使用 `-SkipWebTests`，但报告中必须写明网页逻辑和真实浏览器自检均未执行。
+该命令首先执行 release 文档引用门禁，再执行依赖一致性检查、Python 回归、浏览器逻辑测试，以及无需私有数据的真实 Edge 浏览器自检。文档门禁始终执行，即使明确使用 `-SkipPythonTests` 也不会跳过；它会阻止缺失的仓库内脚本、图片或文档路径继续进入后续验收。若机器没有 Node.js 或无法运行浏览器验收，可明确使用 `-SkipWebTests`，但报告中必须写明网页逻辑和真实浏览器自检均未执行。
 脚本会先检查 Node.js 并运行约数秒的公开合成 Edge 自检，确认浏览器环境可用后再进入完整 Python 回归，避免等待约1500项测试后才暴露浏览器依赖问题。脚本强制使用 UTF-8，并把测试临时文件隔离在 `.repro/test-temp`；可用空间不足 512 MiB 时会在测试前停止，而不是产生误导性的业务失败。Edge 无法启动时会直接提示安装或修复 Microsoft Edge。
 
 ### 服务读回

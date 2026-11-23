@@ -13,6 +13,18 @@ SPEC.loader.exec_module(checker)
 
 
 class ReleaseDocumentReferenceTests(unittest.TestCase):
+    def test_checkout_verification_runs_reference_gate_before_optional_suites(self):
+        verify_script = (
+            MODULE_PATH.parents[1] / "tools" / "verify_checkout.ps1"
+        ).read_text(encoding="utf-8")
+        gate = '& $Python tools\\check_release_doc_refs.py --json'
+        self.assertIn(gate, verify_script)
+        self.assertLess(verify_script.index(gate), verify_script.index("$doctorArgs"))
+        self.assertLess(
+            verify_script.index(gate),
+            verify_script.index("if (-not $SkipPythonTests)"),
+        )
+
     def test_release_documents_have_no_missing_local_references(self):
         report = checker.audit_release_documents()
         self.assertTrue(report["ready"], report["missing"])

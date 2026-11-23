@@ -1,0 +1,16 @@
+{
+  "schema_version": "labelagent.external-vlm-workbench-browser-acceptance.v1",
+  "url": "http://127.0.0.1:18768/",
+  "isolated_port": 18768,
+  "expert_enabled": false,
+  "shadow_enabled": false,
+  "provider_options": 4,
+  "credential_env_name": "LABELAGENT_EXPERT_API_KEY",
+  "raw_expert_key_fields": 0,
+  "status": "专家通道与困难帧分流均关闭",
+  "dark_theme": true,
+  "factory_data_loaded": false,
+  "external_request_performed": false,
+  "external_upload_performed": false,
+  "passed": true
+}

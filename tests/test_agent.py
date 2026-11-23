@@ -4,6 +4,7 @@ import base64
 import copy
 import json
 import logging
+import os
 import tempfile
 import threading
 import time
@@ -2821,6 +2822,70 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(request.call_args.args[0].full_url,
                          "http://fast/v1/chat/completions")
 
+    def test_external_expert_route_is_explicit_env_only_and_does_not_mutate_config(self):
+        success = io.BytesIO(
+            b'{"choices":[{"finish_reason":"stop","message":{"content":"{\\"status\\":\\"done\\"}"}}]}')
+        config = {
+            "llm_url": "http://primary/v1", "llm_model": "primary",
+            "llm_fast_url": "http://fast/v1", "llm_fast_model": "fast",
+            "llm_expert_enabled": True,
+            "llm_expert_provider": "openai_chat",
+            "llm_expert_url": "https://expert.example/v1/",
+            "llm_expert_model": "expert-vision",
+            "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
+        }
+        original = copy.deepcopy(config)
+        events = []
+        with patch.dict(os.environ, {"LABELAGENT_TEST_EXPERT_KEY": "expert-secret"}), \
+             patch.object(workflow.urllib.request, "urlopen", return_value=success) as request, \
+             workflow.trace_calls(events.append):
+            result = workflow.chat_external_expert(
+                config, "inspect", image_bytes())
+        self.assertEqual(result, {"status": "done"})
+        self.assertEqual(config, original)
+        sent = request.call_args.args[0]
+        self.assertEqual(sent.full_url,
+                         "https://expert.example/v1/chat/completions")
+        self.assertEqual(sent.get_header("Authorization"),
+                         "Bearer expert-secret")
+        self.assertEqual(json.loads(sent.data)["model"], "expert-vision")
+        self.assertEqual(events[-1]["output"]["model_route"],
+                         "external_expert")
+        self.assertNotIn("expert-secret", json.dumps(events))
+
+    def test_external_expert_route_fails_closed_before_network(self):
+        base = {
+            "llm_expert_provider": "openai_chat",
+            "llm_expert_url": "https://expert.example/v1",
+            "llm_expert_model": "expert-vision",
+            "llm_expert_key_env": "LABELAGENT_TEST_MISSING_KEY",
+        }
+        with patch.object(workflow.urllib.request, "urlopen") as request:
+            with self.assertRaisesRegex(ValueError, "尚未显式启用"):
+                workflow.chat_external_expert(base, "inspect", image_bytes())
+            enabled = dict(base, llm_expert_enabled=True)
+            with patch.dict(os.environ, {}, clear=True):
+                with self.assertRaisesRegex(ValueError, "密钥环境变量未配置"):
+                    workflow.chat_external_expert(
+                        enabled, "inspect", image_bytes())
+        request.assert_not_called()
+
+    def test_external_expert_route_rejects_unknown_protocol_and_embedded_credentials(self):
+        config = {
+            "llm_expert_enabled": True,
+            "llm_expert_provider": "unknown",
+            "llm_expert_url": "https://expert.example/v1",
+            "llm_expert_model": "expert-vision",
+            "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
+        }
+        with patch.dict(os.environ, {"LABELAGENT_TEST_EXPERT_KEY": "secret"}):
+            with self.assertRaisesRegex(ValueError, "暂不支持"):
+                workflow.external_expert_config(config)
+            config["llm_expert_provider"] = "openai_chat"
+            config["llm_expert_url"] = "https://user:secret@expert.example/v1"
+            with self.assertRaisesRegex(ValueError, "无内嵌凭据"):
+                workflow.external_expert_config(config)
+
     def test_small_image_fast_busy_falls_back_to_primary_without_waiting(self):
         workflow._reset_fast_route_circuits()
         self.addCleanup(workflow._reset_fast_route_circuits)
@@ -3454,6 +3519,74 @@ class ServerTests(unittest.TestCase):
                 self.assertEqual(disabled.status_code, 200, disabled.json)
                 self.assertNotIn("llm_fast_url", server.state["config"])
                 self.assertNotIn("llm_fast_model", server.state["config"])
+        finally:
+            server.state = old_state
+
+    def test_external_expert_config_is_env_only_and_readiness_does_not_contact_it(self):
+        old_state = server.state
+        server.state = {"config": {
+            "sam3_url": "http://sam", "llm_url": "http://vlm/v1",
+            "llm_model": "primary",
+        }}
+        try:
+            client = server.app.test_client()
+            with patch.object(server, "save"):
+                saved = client.post("/api/config", json={
+                    "llm_expert_enabled": True,
+                    "llm_expert_provider": "openai_chat",
+                    "llm_expert_url": "https://expert.example/v1",
+                    "llm_expert_model": "expert-vision",
+                    "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
+                    **active_config_write_scope(),
+                })
+            self.assertEqual(saved.status_code, 200, saved.json)
+            self.assertNotIn("llm_expert_key", server.state["config"])
+            self.assertEqual(saved.json["config"]["llm_expert_key_env"],
+                             "LABELAGENT_TEST_EXPERT_KEY")
+
+            calls = []
+            def probe(url, timeout=3):
+                calls.append(url)
+                if url == "http://sam/health":
+                    return {"status": "ok", "model_loaded": True}
+                return {"data": [{"id": "primary"}]}
+            with patch.dict(os.environ, {"LABELAGENT_TEST_EXPERT_KEY": "secret"}), \
+                 patch.object(server, "_fetch_readiness_json", side_effect=probe):
+                readiness = client.get("/api/model_readiness").json
+            self.assertTrue(readiness["ready"])
+            self.assertEqual(set(calls),
+                             {"http://sam/health", "http://vlm/v1/models"})
+            self.assertEqual(readiness["expert_vlm"]["status"],
+                             "configured_not_tested")
+            self.assertTrue(readiness["expert_vlm"]["credential_present"])
+            self.assertFalse(readiness["expert_vlm"]["connection_tested"])
+            self.assertFalse(readiness["expert_vlm"]["automatic_upload"])
+        finally:
+            server.state = old_state
+
+    def test_external_expert_config_rejects_partial_or_embedded_credentials(self):
+        old_state = server.state
+        server.state = {"config": {}}
+        try:
+            client = server.app.test_client()
+            with patch.object(server, "save"):
+                partial = client.post("/api/config", json={
+                    "llm_expert_enabled": True,
+                    "llm_expert_provider": "openai_chat",
+                    **active_config_write_scope(),
+                })
+                self.assertEqual(partial.status_code, 503, partial.json)
+                self.assertEqual(server.state["config"], {})
+                embedded = client.post("/api/config", json={
+                    "llm_expert_url": "https://user:secret@expert.example/v1",
+                })
+                self.assertEqual(embedded.status_code, 400, embedded.json)
+                raw_key = client.post("/api/config", json={
+                    "llm_expert_key": "must-not-be-accepted",
+                    **active_config_write_scope(),
+                })
+                self.assertEqual(raw_key.status_code, 400, raw_key.json)
+                self.assertNotIn("llm_expert_key", server.state["config"])
         finally:
             server.state = old_state
 

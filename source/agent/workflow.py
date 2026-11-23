@@ -16,6 +16,7 @@ import urllib.request
 import uuid
 from contextlib import contextmanager
 from contextvars import ContextVar, copy_context
+from urllib.parse import urlsplit
 from PIL import Image, ImageDraw
 import cv2
 import numpy as np
@@ -40,6 +41,8 @@ VISIBLE_VEHICLE_POINT_RECOVERY_VERSION = (
 VISIBLE_VEHICLE_POINT_MIN_SCORE = 0.55
 VISIBLE_VEHICLE_POINT_HIGH_SCORE = 0.75
 VISIBLE_VEHICLE_POINT_MAX_AREA_RATIO = 0.03
+EXTERNAL_VLM_PROVIDERS = frozenset({"openai_chat"})
+EXTERNAL_VLM_KEY_ENV_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]{0,127}$")
 
 
 class ModelOutputError(ValueError):
@@ -832,6 +835,52 @@ def chat_fast_only(config, instruction, image, extra_images=(), response_schema=
         response_schema=response_schema)
 
 
+def external_expert_config(config):
+    """Build an explicit external expert route without persisting its secret.
+
+    The route is disabled by default and reads its credential only from the
+    configured environment variable.  It deliberately removes the local fast
+    lane so an expert request cannot silently contact a different model.
+    """
+    if config.get("llm_expert_enabled") is not True:
+        raise ValueError("外部专家 VLM 尚未显式启用")
+    provider = str(config.get("llm_expert_provider") or "openai_chat").strip()
+    if provider not in EXTERNAL_VLM_PROVIDERS:
+        raise ValueError(f"暂不支持外部专家 VLM 协议：{provider}")
+    url = str(config.get("llm_expert_url") or "").strip().rstrip("/")
+    model = str(config.get("llm_expert_model") or "").strip()
+    key_env = str(config.get("llm_expert_key_env") or "").strip()
+    parsed = urlsplit(url)
+    if (parsed.scheme not in {"http", "https"} or not parsed.hostname
+            or parsed.username is not None or parsed.password is not None):
+        raise ValueError("外部专家 VLM 地址必须是无内嵌凭据的 HTTP(S) 地址")
+    if not model:
+        raise ValueError("请配置外部专家 VLM 模型名")
+    if not EXTERNAL_VLM_KEY_ENV_PATTERN.fullmatch(key_env):
+        raise ValueError("外部专家 VLM 密钥环境变量名无效")
+    credential = os.environ.get(key_env)
+    if not credential:
+        raise ValueError(f"外部专家 VLM 密钥环境变量未配置：{key_env}")
+    expert = {key: copy.deepcopy(value) for key, value in config.items()
+              if not key.startswith("llm_fast_")}
+    expert.update(
+        llm_url=url,
+        llm_model=model,
+        llm_key=credential,
+        llm_busy_retries=0,
+        _llm_route_name="external_expert",
+    )
+    return expert
+
+
+def chat_external_expert(config, instruction, image, extra_images=(),
+                         response_schema=None):
+    """Run one explicitly authorized expert review without local-route drift."""
+    return chat(
+        external_expert_config(config), instruction, image,
+        extra_images=extra_images, response_schema=response_schema)
+
+
 def _positive_int(value, default):
     if type(value) is not int or value < 1:
         return default
@@ -927,10 +976,16 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
         content.append({"type": "image_url", "image_url": {"url":
             "data:image/jpeg;base64," + base64.b64encode(data).decode()}})
     fast_only = config.get("_llm_fast_only") is True
+    explicit_route = config.get("_llm_route_name")
+    if explicit_route is not None and explicit_route != "external_expert":
+        raise ValueError("大模型显式路由无效")
     fast_fallback_reason = _fast_route_circuit_reason(config)
-    if fast_only and fast_fallback_reason is not None:
+    if explicit_route is not None:
+        selected_config, selected_route = config, explicit_route
+        fast_fallback_reason = None
+    elif fast_only and fast_fallback_reason is not None:
         raise ValueError(f"快速复核通道暂不可用：{fast_fallback_reason}")
-    if fast_fallback_reason is None:
+    elif fast_fallback_reason is None:
         selected_config, selected_route = select_vlm_route(
             config, image, extra_images=extra_images)
     else:

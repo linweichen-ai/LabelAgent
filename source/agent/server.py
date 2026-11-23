@@ -4723,9 +4723,15 @@ def set_config():
     body = request.get_json() or {}
     if not isinstance(body, dict):
         raise ValueError("配置必须是 JSON 对象")
+    if "llm_expert_key" in body:
+        raise ValueError("外部专家 VLM 密钥只能通过环境变量配置")
     if "llm_prompt_profile" in body and body["llm_prompt_profile"] not in ("full", "compact"):
         raise ValueError("Unknown model prompt profile")
     fast_string_keys = {"llm_fast_url", "llm_fast_model", "llm_fast_key"}
+    expert_string_keys = {
+        "llm_expert_provider", "llm_expert_url", "llm_expert_model",
+        "llm_expert_key_env",
+    }
     fast_integer_limits = {
         "llm_fast_max_pixels": (1024, 16_777_216),
         "llm_fast_max_long_edge": (32, 8192),
@@ -4750,6 +4756,33 @@ def set_config():
                     or parsed.username is not None or parsed.password is not None):
                 raise ValueError("快速 VLM 地址必须是无内嵌凭据的 HTTP(S) 地址")
         fast_updates[key] = value
+    expert_updates = {}
+    for key in expert_string_keys:
+        if key not in body:
+            continue
+        value = body[key]
+        if value in (None, ""):
+            expert_updates[key] = None
+            continue
+        if not isinstance(value, str) or len(value) > 500:
+            raise ValueError(f"Invalid {key}")
+        value = value.strip()
+        if key == "llm_expert_provider" and value != "openai_chat":
+            raise ValueError("外部专家 VLM 当前仅支持 openai_chat 协议")
+        if key == "llm_expert_url":
+            parsed = urlsplit(value)
+            if (parsed.scheme not in {"http", "https"} or not parsed.hostname
+                    or parsed.username is not None or parsed.password is not None):
+                raise ValueError("外部专家 VLM 地址必须是无内嵌凭据的 HTTP(S) 地址")
+        if (key == "llm_expert_key_env"
+                and re.fullmatch(r"[A-Z][A-Z0-9_]{0,127}", value) is None):
+            raise ValueError("外部专家 VLM 密钥环境变量名无效")
+        expert_updates[key] = value
+    expert_enabled_update = None
+    if "llm_expert_enabled" in body:
+        if type(body["llm_expert_enabled"]) is not bool:
+            raise ValueError("llm_expert_enabled 必须为布尔值")
+        expert_enabled_update = body["llm_expert_enabled"]
     for key, (minimum, maximum) in fast_integer_limits.items():
         if key not in body:
             continue
@@ -4797,6 +4830,24 @@ def set_config():
                 else:
                     state["config"][key] = value
                 updated_keys.append(key)
+            for key, value in expert_updates.items():
+                if value is None:
+                    state["config"].pop(key, None)
+                else:
+                    state["config"][key] = value
+                updated_keys.append(key)
+            if expert_enabled_update is not None:
+                state["config"]["llm_expert_enabled"] = expert_enabled_update
+                updated_keys.append("llm_expert_enabled")
+            if state["config"].get("llm_expert_enabled") is True:
+                required = (
+                    "llm_expert_provider", "llm_expert_url",
+                    "llm_expert_model", "llm_expert_key_env",
+                )
+                missing = [key for key in required if not state["config"].get(key)]
+                if missing:
+                    raise ValueError(
+                        "启用外部专家 VLM 前必须完整配置：" + ", ".join(missing))
             save()
         except Exception as error:
             state["config"] = previous_config
@@ -4825,6 +4876,11 @@ def model_readiness():
     configured_model = str(config.get("llm_model") or "").strip()
     fast_url = str(config.get("llm_fast_url") or "").rstrip("/")
     fast_model = str(config.get("llm_fast_model") or "").strip()
+    expert_enabled = config.get("llm_expert_enabled") is True
+    expert_provider = str(config.get("llm_expert_provider") or "").strip()
+    expert_url = str(config.get("llm_expert_url") or "").rstrip("/")
+    expert_model = str(config.get("llm_expert_model") or "").strip()
+    expert_key_env = str(config.get("llm_expert_key_env") or "").strip()
     def probe_sam():
         result = {"ready": False, "status": "unavailable", "model_loaded": False,
                   "on_demand": False}
@@ -4884,8 +4940,25 @@ def model_readiness():
         "llm_fast_max_extra_long_edge", fast_vlm["max_long_edge"] * 2)
     fast_vlm["cooldown_seconds"] = positive_config_int(
         "llm_fast_cooldown_seconds", 60)
+    expert_configured = bool(
+        expert_provider and expert_url and expert_model and expert_key_env)
+    expert_vlm = {
+        "enabled": expert_enabled,
+        "configured": expert_configured,
+        "provider": expert_provider,
+        "model": expert_model,
+        "credential_env": expert_key_env,
+        "credential_present": bool(
+            expert_key_env and os.environ.get(expert_key_env)),
+        "connection_tested": False,
+        "automatic_upload": False,
+        "status": ("disabled" if not expert_enabled else
+                   "missing_config" if not expert_configured else
+                   "missing_credential" if not os.environ.get(expert_key_env) else
+                   "configured_not_tested"),
+    }
     return jsonify(ready=sam["ready"] and vlm["ready"], sam=sam, vlm=vlm,
-                   fast_vlm=fast_vlm,
+                   fast_vlm=fast_vlm, expert_vlm=expert_vlm,
                    checked_at=datetime.now(timezone.utc).isoformat(),
                    elapsed_ms=round((time.perf_counter() - started) * 1000, 3))
 

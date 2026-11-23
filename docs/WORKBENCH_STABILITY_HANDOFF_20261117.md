@@ -4153,3 +4153,16 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
   `docs/PALLET_BOUNDARY_ROI_EVIDENCE_V8_ROUND742_20261123.md`。
 - 定向29 passed、14 subtests passed；固定UTF-8环境全量1766 passed、1 skipped、
   286 subtests passed；独立只读终审无P0/P1。
+
+## 2026-11-23 Round743 补充：真实补点边缘梯度审计
+
+- 只为v8被接受的边界补点增加Sobel梯度审计，不改变mask；164个after mask SHA与Round742
+  逐项相同。
+- frame15/candidate3的缺口梯度42.578、高于邻域30.609，风险较高；frame95/candidate4
+  为10.289、低于邻域14.578，局部更合理。
+- 梯度计算已收窄为仅显式v8审计启用，避免旧v6/full与v7为诊断承担整图Sobel开销；性能
+  收窄后164候选重放仍得到同一manifest SHA `07aa1053...b9b9`。
+- 只有两个触发样本，不据此冻结硬阈值；当前仍为候选审计，不部署、不训练。详见
+  `docs/PALLET_BOUNDARY_EDGE_AUDIT_ROUND743_20261123.md`。
+- 定向回归12项及4子测试通过（含旧策略Sobel零调用锁）；固定UTF-8全量1767项通过、
+  1项跳过、286子测试通过。

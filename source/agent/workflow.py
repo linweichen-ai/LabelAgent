@@ -3422,7 +3422,8 @@ def _image_guided_pallet_texture_holes(mask, image_rgb, components, stats,
 
 
 def _image_guided_pallet_boundary_notches(
-        mask, image_rgb, structural_holes, *, allow_roi_scale=False):
+        mask, image_rgb, structural_holes, *, allow_roi_scale=False,
+        collect_gradient_audit=False):
     """Find narrow, light neutral boundary notches without closing real gaps.
 
     Unlike enclosed holes, these SAM drop-outs remain connected to the outer
@@ -3452,6 +3453,13 @@ def _image_guided_pallet_boundary_notches(
     for hole_mask, _ in structural_holes:
         structural_union |= hole_mask
     rgb = image_rgb[..., :3].astype(np.float32)
+    gradient = None
+    if collect_gradient_audit:
+        gray = cv2.cvtColor(
+            image_rgb[..., :3].astype(np.uint8), cv2.COLOR_RGB2GRAY)
+        gradient_x = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3)
+        gradient_y = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3)
+        gradient = cv2.magnitude(gradient_x, gradient_y)
     ring_kernel = np.ones((5, 5), dtype=np.uint8)
     proposals = []
     image_height, image_width = mask.shape
@@ -3487,7 +3495,7 @@ def _image_guided_pallet_boundary_notches(
                          and ring_color_spread
                          <= PALLET_IMAGE_BOUNDARY_MAXIMUM_RING_COLOR_SPREAD))):
             continue
-        proposals.append({
+        proposal = {
             "mask": component_mask,
             "area": area,
             "bbox": [x, y, x + width - 1, y + height - 1],
@@ -3496,7 +3504,14 @@ def _image_guided_pallet_boundary_notches(
             "ring_gray": round(ring_gray, 3),
             "ring_color_spread": round(ring_color_spread, 3),
             "scale_evidence_route": scale_gate_audit["route"],
-        })
+        }
+        if gradient is not None:
+            proposal.update({
+                "notch_gradient_mean": round(
+                    float(gradient[component_mask].mean()), 3),
+                "ring_gradient_mean": round(float(gradient[ring].mean()), 3),
+            })
+        proposals.append(proposal)
     return proposals
 
 
@@ -3716,7 +3731,8 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         allow_roi_scale=allow_roi_scale)
     image_boundary_notches = _image_guided_pallet_boundary_notches(
         mask, image_rgb, protected_structural_holes,
-        allow_roi_scale=allow_roi_scale)
+        allow_roi_scale=allow_roi_scale,
+        collect_gradient_audit=(geometry_policy == "appearance_evidence_roi"))
     if appearance_evidence_policy:
         # V7 is a local add-only shadow policy.  One supported component must
         # never unlock the broader five/six-percent v6 budget elsewhere.
@@ -4074,6 +4090,9 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
     adjustment["minimum_structural_hole_retention"] = (
         round(minimum_structural_retention, 6)
         if minimum_structural_retention is not None else None)
+    if geometry_policy == "appearance_evidence_roi":
+        adjustment["filled_image_boundary_notch_evidence"] = copy.deepcopy(
+            filled_image_boundary_notches)
     return replacement, adjustment
 
 

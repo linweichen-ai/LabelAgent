@@ -793,12 +793,49 @@ class WorkflowTests(unittest.TestCase):
         self.assertIsNotNone(audit)
         self.assertEqual(audit["geometry_cleanup_version"], 8)
         self.assertGreater(audit["filled_image_boundary_notch_count"], 0)
+        self.assertEqual(
+            len(audit["filled_image_boundary_notch_evidence"]),
+            audit["filled_image_boundary_notch_count"])
+        self.assertIn(
+            "notch_gradient_mean",
+            audit["filled_image_boundary_notch_evidence"][0])
+        self.assertIn(
+            "ring_gradient_mean",
+            audit["filled_image_boundary_notch_evidence"][0])
+        self.assertEqual(
+            audit["filled_image_boundary_notch_evidence"][0][
+                "notch_gradient_mean"],
+            2.871)
+        self.assertEqual(
+            audit["filled_image_boundary_notch_evidence"][0][
+                "ring_gradient_mean"],
+            14.714)
         self.assertEqual(audit["image_evidence_scale"]["route"],
                          "roi_absolute")
         self.assertEqual(audit["component_merge_count"], 0)
         self.assertLessEqual(audit["changed_pixels"], 256)
         self.assertEqual(output[605, 853], 1)
         self.assertFalse(np.any((mask != 0) & (output == 0)))
+
+    def test_pallet_gradient_audit_is_not_computed_for_legacy_policy(self):
+        mask = np.zeros((480, 640), dtype=np.uint8)
+        mask[245:480, :] = 1
+        image = np.full((480, 640, 3), 180, dtype=np.uint8)
+
+        with patch.object(
+                workflow.cv2, "Sobel",
+                side_effect=AssertionError("legacy policy computed Sobel")) as sobel:
+            workflow._image_guided_pallet_boundary_notches(
+                mask, image, [], allow_roi_scale=False)
+        sobel.assert_not_called()
+
+        original_sobel = cv2.Sobel
+        with patch.object(
+                workflow.cv2, "Sobel", wraps=original_sobel) as sobel:
+            workflow._image_guided_pallet_boundary_notches(
+                mask, image, [], allow_roi_scale=False,
+                collect_gradient_audit=True)
+        self.assertEqual(sobel.call_count, 2)
 
     def test_pallet_roi_scale_gate_fails_each_threshold_independently(self):
         base = np.zeros((1536, 1920), dtype=np.uint8)

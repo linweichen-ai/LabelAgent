@@ -1,0 +1,37 @@
+{
+  "candidate_only": true,
+  "changed_candidate_count": 2,
+  "deployment_authorized": false,
+  "gradient_collection_scope": "appearance_evidence_roi_only",
+  "legacy_policy_gradient_work": false,
+  "mask_behavior_changed": false,
+  "mask_hash_mismatch_count_vs_round742": 0,
+  "pallet_candidate_count": 164,
+  "rows": [
+    {
+      "candidate_id": 3,
+      "changed_pixels": 9,
+      "color_distance": 15.027,
+      "frame": 15,
+      "notch_gradient_mean": 42.578,
+      "ring_gradient_mean": 30.609,
+      "risk": "higher_edge_risk"
+    },
+    {
+      "candidate_id": 4,
+      "changed_pixels": 31,
+      "color_distance": 4.701,
+      "frame": 95,
+      "notch_gradient_mean": 10.289,
+      "ring_gradient_mean": 14.578,
+      "risk": "locally_smoother_candidate"
+    }
+  ],
+  "schema_version": "labelagent.pallet-boundary-edge-audit-round743.v1",
+  "shadow_manifest_sha256": "07aa10539394855c2323d849148c194437ff4c89c226d05e9b7f3b72cb03b9b9",
+  "shadow_repeat_manifest_sha256": "07aa10539394855c2323d849148c194437ff4c89c226d05e9b7f3b72cb03b9b9",
+  "status": "audit_only_threshold_not_frozen",
+  "targeted_validation": "12 passed, 269 deselected, 4 subtests passed; legacy Sobel calls = 0",
+  "test_validation": "1767 passed, 1 skipped, 286 subtests passed",
+  "training_authorized": false
+}

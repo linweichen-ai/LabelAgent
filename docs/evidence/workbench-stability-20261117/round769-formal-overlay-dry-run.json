@@ -21,8 +21,9 @@
   "human_truth": false,
   "approved_for_training": false,
   "tests": {
-    "temporary_target_passed": 4,
+    "temporary_target_passed": 5,
     "temporary_target_failed": 0,
     "python_compile_passed": true
-  }
+  },
+  "rollback_failure_injection_passed": true
 }

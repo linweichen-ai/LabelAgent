@@ -6,6 +6,9 @@ import subprocess
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
+
+from tools import deploy_formal_minimal_overlay as deployer
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -111,6 +114,41 @@ class FormalMinimalOverlayDeployTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("formal target hash mismatch", result.stderr)
         self.assertEqual(target.read_bytes(), before)
+
+    def test_second_replace_failure_rolls_back_first_file(self):
+        rows = []
+        for name in ("one.js", "two.js"):
+            source = self.candidate / "files/source/web" / name
+            target = self.target / "source/web" / name
+            source.write_text(f"new-{name}\n", encoding="utf-8")
+            target.write_text(f"old-{name}\n", encoding="utf-8")
+            rows.append({
+                "relative": f"source/web/{name}",
+                "source": source,
+                "target": target,
+                "old_sha256": digest(target),
+                "new_sha256": digest(source),
+                "existed_before": True,
+                "needs_update": True,
+            })
+        before = {row["relative"]: row["target"].read_bytes() for row in rows}
+        real_replace = deployer.os.replace
+        calls = 0
+
+        def fail_second(source, target):
+            nonlocal calls
+            calls += 1
+            if calls == 2:
+                raise OSError("injected second replace failure")
+            return real_replace(source, target)
+
+        with patch.object(deployer.os, "replace", side_effect=fail_second):
+            with self.assertRaisesRegex(OSError, "injected second replace failure"):
+                deployer.deploy(rows, self.target, self.root / "rollback-backup")
+        self.assertEqual(
+            before,
+            {row["relative"]: row["target"].read_bytes() for row in rows},
+        )
 
 
 if __name__ == "__main__":

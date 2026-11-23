@@ -4414,6 +4414,6 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 
 - 新增哈希门控部署器，默认只读；只有显式执行且正式 `/api/run/status` 确认为 `idle`，才允许备份并原子替换。
 - 工具拒绝候选哈希不一致、正式旧文件漂移、路径逃逸、重复文件、服务忙碌和缺失状态地址；回执保持 `candidate_only=true`、`human_truth=false`、`approved_for_training=false`。
-- 临时目录测试 4/4 通过，覆盖默认零写入、受控替换与备份、忙碌阻断、目标漂移阻断。
+- 临时目录测试 5/5 通过，覆盖默认零写入、受控替换与备份、忙碌阻断、目标漂移阻断，以及第二个文件替换故障时对首个已替换文件的自动恢复。
 - 对正式目录的只读预检通过：6 个目标仍匹配冻结旧哈希，正式服务在线且 `idle`；部署文件 0、正式写入 0、备份目录未创建、服务未重启。
 - 本轮仍未正式部署。结构化回执见 `docs/evidence/workbench-stability-20261117/round769-formal-overlay-dry-run.json`，说明见 `docs/FORMAL_OVERLAY_DEPLOYER_DRY_RUN_ROUND769_20261124.md`。

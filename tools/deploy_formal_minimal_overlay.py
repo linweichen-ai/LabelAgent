@@ -133,9 +133,9 @@ def deploy(plan: list[dict], target_root: Path, backup_root: Path) -> list[dict]
 
         for row, temporary, backup in prepared:
             os.replace(temporary, row["target"])
+            applied.append((row, backup))
             if sha256(row["target"]) != row["new_sha256"]:
                 raise RuntimeError(f"deployed hash mismatch: {row['relative']}")
-            applied.append((row, backup))
     except Exception:
         for row, backup in reversed(applied):
             if backup is None:

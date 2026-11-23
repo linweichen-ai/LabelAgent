@@ -1,0 +1,86 @@
+{
+  "candidate_only": true,
+  "candidate_total": 222,
+  "candidate_visible_elapsed_ms": {
+    "maximum": 23941.173,
+    "mean": 21922.48,
+    "minimum": 20064.033
+  },
+  "changed_candidate_count": 5,
+  "changed_pixels_total": 282,
+  "deployment_authorized": false,
+  "frame_count": 16,
+  "formal_state_sha256_after": {
+    "file_sessions.json": "94e8bee324628585e7532e595348293df1da7b24041a1d4df1c2ec9fb734e02e",
+    "files.json": "7edb40a9bdfcf5577aea4c2bb183ef556a2b7d70b24564c49eeb46c5d9a8c5c1",
+    "last_run.json": "3bece2513c6f661054ac238ab185527d715a04b3b0c8e073274710be23e057da",
+    "state.json": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115"
+  },
+  "human_truth": false,
+  "inference_elapsed_ms": {
+    "maximum": 23941.595,
+    "mean": 21923.008,
+    "minimum": 20064.664
+  },
+  "pallet_candidate_count": 161,
+  "review_contact_sheet_sha256": "524634dabd9e5f4712c628ad5147911c63d7acc2af4b8e3f9dcbeeacf86e0259",
+  "roi_scale_gate_passed_count": 45,
+  "rows": [
+    {
+      "candidate_id": 4,
+      "changed_pixels": 10,
+      "frame": 22,
+      "maximum_gradient_excess": 3.272,
+      "maximum_notch_gradient": 43.462,
+      "notch_count": 1,
+      "review_priority": "high"
+    },
+    {
+      "candidate_id": 8,
+      "changed_pixels": 17,
+      "frame": 72,
+      "maximum_gradient_excess": -13.269,
+      "maximum_notch_gradient": 12.294,
+      "notch_count": 1,
+      "review_priority": "lower"
+    },
+    {
+      "candidate_id": 8,
+      "changed_pixels": 10,
+      "frame": 142,
+      "maximum_gradient_excess": 24.11,
+      "maximum_notch_gradient": 98.954,
+      "notch_count": 1,
+      "review_priority": "high"
+    },
+    {
+      "candidate_id": 16,
+      "changed_pixels": 24,
+      "frame": 149,
+      "maximum_gradient_excess": -8.921,
+      "maximum_notch_gradient": 37.929,
+      "notch_count": 2,
+      "review_priority": "lower"
+    },
+    {
+      "candidate_id": 8,
+      "changed_pixels": 221,
+      "frame": 149,
+      "maximum_gradient_excess": 8.065,
+      "maximum_notch_gradient": 32.014,
+      "notch_count": 4,
+      "review_priority": "high"
+    }
+  ],
+  "sam_failed_call_count": 1,
+  "sam_failure_recovery_status": "flow_completed_but_missing_candidate_impact_unknown",
+  "schema_version": "labelagent.pallet-boundary-edge-expansion-round744.v1",
+  "shadow_manifest_sha256_a": "cf544f8c4740482e0b371c92f29897af5ffdfb42a20c07c37993740e961891ee",
+  "shadow_manifest_sha256_b": "cf544f8c4740482e0b371c92f29897af5ffdfb42a20c07c37993740e961891ee",
+  "snapshot_manifest_sha256": "f5bdafd4bdbdfea92865ac40381fb8bc0e7ee3fb9cb493c4044ca4b3bd3d3030",
+  "smoke_summary_sha256": "6828bb5aa4ceaeec787db3937cc297c82c632b26894a8196147fdc5471ffd8f4",
+  "status": "assistant_review_priority_only",
+  "training_authorized": false,
+  "vlm_busy_retry_count": 0,
+  "workbench_write": false
+}

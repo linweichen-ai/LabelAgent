@@ -4166,3 +4166,16 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
   `docs/PALLET_BOUNDARY_EDGE_AUDIT_ROUND743_20261123.md`。
 - 定向回归12项及4子测试通过（含旧策略Sobel零调用锁）；固定UTF-8全量1767项通过、
   1项跳过、286子测试通过。
+
+## 2026-11-23 Round744 补充：第二批 16 帧真实触发扩充
+
+- 从正式152帧序列纯GET冻结另一组不重叠16帧，在隔离工作区只生成首轮候选；共222个机器
+  候选、161个pallet，平均候选可见耗时21.922秒，VLM busy重试0。
+- v8 ROI影子策略45个通过尺度门，5个发生add-only变化，共新增282像素；两次隔离同源扫描
+  manifest均为`cf544f8c...891ee`。
+- 梯度与私有图像助手复核将frame22/candidate4、frame142/candidate8、frame149/candidate8
+  列为优先人工复核；这只是复核顺序，不是真值或生产门。
+- frame2保留1次SAM调用失败记录，后续其他调用成功且流程产出候选JSON；是否因此漏候选
+  无法确认。正式工作台读回idle，四份核心状态SHA与Round743前完全一致，原图不提交远端。
+- 合并两批后共有325个真实pallet候选、98个通过ROI门、7个触发变化；仍不冻结阈值、不部署、
+  不训练。详见`docs/PALLET_BOUNDARY_EDGE_EXPANSION_ROUND744_20261123.md`。

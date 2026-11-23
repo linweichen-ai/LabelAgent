@@ -30,6 +30,9 @@ const stalePacket = {...packet, manifest_sha256: 'b'.repeat(64)};
 assert.equal(core.rowDraft(stalePacket, stalePacket.rows[0], drafts), null);
 assert.equal(core.summarize(stalePacket, drafts).reviewed, 0);
 assert.equal(core.validDraft(packet, packet.rows[0], {...drafts[key], local_only: false}), false);
+assert.equal(core.validDraft(packet, packet.rows[0], {
+  ...drafts[key], local_only: false, session_only: true,
+}), true);
 assert.equal(core.validDraft(packet, packet.rows[0], {...drafts[key], evidence_loaded: false}), false);
 assert.equal(core.validDraft(packet, packet.rows[0], {...drafts[key], image_sha256: 'x'.repeat(64)}), false);
 

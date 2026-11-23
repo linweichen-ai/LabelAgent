@@ -118,7 +118,20 @@ REVIEW_PACKET_ACCEPT_DECISIONS = {
     "uncertain",
 }
 COMPONENT_REVIEW_PACKET_SCHEMA = "labelagent.ego_tail_focused_review_pack.v1"
+COMPONENT_REVIEW_PACKET_GENERIC_SCHEMA = "labelagent.component-review-pack.v2"
+COMPONENT_REVIEW_PACKET_SCHEMAS = {
+    COMPONENT_REVIEW_PACKET_SCHEMA,
+    COMPONENT_REVIEW_PACKET_GENERIC_SCHEMA,
+}
 COMPONENT_REVIEW_PACKET_QUEUES = {"priority_review", "deferred_manual_review"}
+COMPONENT_REVIEW_PACKET_KINDS = {
+    "ego_tail_microhole",
+    "pallet_boundary_ownership",
+}
+COMPONENT_REVIEW_PACKET_EVIDENCE_MODES = {
+    "local_only",
+    "ownership_overlay",
+}
 
 
 def claim_file_activation():
@@ -2881,9 +2894,24 @@ def _read_component_review_packet(packet_id):
         value = json.loads(raw.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as error:
         raise ValueError("组件复核包清单不是有效 UTF-8 JSON") from error
-    if (not isinstance(value, dict)
-            or value.get("schema_version") != COMPONENT_REVIEW_PACKET_SCHEMA):
+    schema_version = value.get("schema_version") if isinstance(value, dict) else None
+    if schema_version not in COMPONENT_REVIEW_PACKET_SCHEMAS:
         raise ValueError("组件复核包版本不受支持")
+    is_generic = schema_version == COMPONENT_REVIEW_PACKET_GENERIC_SCHEMA
+    if is_generic:
+        display_name = value.get("display_name")
+        review_kind = value.get("review_kind")
+        evidence_mode = value.get("evidence_mode")
+        if (not isinstance(display_name, str) or not display_name.strip()
+                or len(display_name) > 80
+                or review_kind not in COMPONENT_REVIEW_PACKET_KINDS
+                or evidence_mode not in COMPONENT_REVIEW_PACKET_EVIDENCE_MODES):
+            raise ValueError("组件复核包展示元数据无效")
+        display_name = display_name.strip()
+    else:
+        display_name = "微孔聚焦复核"
+        review_kind = "ego_tail_microhole"
+        evidence_mode = "local_only"
     if (value.get("candidate_only") is not True
             or value.get("assistant_review_only") is not True
             or value.get("human_truth") is not False
@@ -2912,16 +2940,16 @@ def _read_component_review_packet(packet_id):
         queue = row.get("policy_queue")
         image_name = row.get("focused_image")
         image_sha256 = row.get("focused_image_sha256")
-        camera_rank = row.get("camera_rank")
+        review_rank = row.get("review_rank") if is_generic else row.get("camera_rank")
         policy_reason = row.get("policy_reason")
         if (not isinstance(component_id, str) or not component_id.strip()
                 or len(component_id) > 200 or component_id in seen_ids):
             raise ValueError("组件复核包包含无效或重复组件")
         if queue not in COMPONENT_REVIEW_PACKET_QUEUES:
             raise ValueError("组件复核包包含未知复核队列")
-        if (isinstance(camera_rank, bool) or not isinstance(camera_rank, int)
-                or camera_rank <= 0 or camera_rank in seen_ranks):
-            raise ValueError("组件复核包包含无效相机排名")
+        if (isinstance(review_rank, bool) or not isinstance(review_rank, int)
+                or review_rank <= 0 or review_rank in seen_ranks):
+            raise ValueError("组件复核包包含无效复核排名")
         if (not isinstance(policy_reason, str) or not policy_reason.strip()
                 or len(policy_reason) > 200):
             raise ValueError("组件复核包包含无效策略理由")
@@ -2959,16 +2987,16 @@ def _read_component_review_packet(packet_id):
         if image_name in allowed_images:
             raise ValueError("组件复核包重复使用图片")
         seen_ids.add(component_id)
-        seen_ranks.add(camera_rank)
+        seen_ranks.add(review_rank)
         queue_counts[queue] += 1
         allowed_images[image_name] = {
             "bytes": image_bytes,
             "mimetype": "image/png" if image_path.suffix.lower() == ".png"
             else "image/jpeg",
         }
-        normalized_rows.append({
+        normalized_row = {
             "component_id": component_id,
-            "camera_rank": camera_rank,
+            "review_rank": review_rank,
             "policy_queue": queue,
             "policy_reason": policy_reason.strip(),
             "focused_image": image_name,
@@ -2977,17 +3005,25 @@ def _read_component_review_packet(packet_id):
             "human_truth": False,
             "approved_for_training": False,
             "automatic_decision": None,
-        })
+        }
+        if not is_generic:
+            # Preserve the public v1 response contract for older clients while
+            # also exposing the schema-neutral rank used by the current UI.
+            normalized_row["camera_rank"] = review_rank
+        normalized_rows.append(normalized_row)
     ordered_ranks = sorted(seen_ranks)
     if ordered_ranks != list(range(ordered_ranks[0], ordered_ranks[-1] + 1)):
-        raise ValueError("组件复核包相机排名不连续")
+        raise ValueError("组件复核包复核排名不连续")
     if (value.get("priority_review") != queue_counts["priority_review"]
             or value.get("deferred_manual_review") !=
             queue_counts["deferred_manual_review"]):
         raise ValueError("组件复核包队列汇总与清单不一致")
     return {
-        "schema_version": COMPONENT_REVIEW_PACKET_SCHEMA,
+        "schema_version": schema_version,
         "packet_id": _review_packet_id(packet_id),
+        "display_name": display_name,
+        "review_kind": review_kind,
+        "evidence_mode": evidence_mode,
         "manifest_sha256": hashlib.sha256(raw).hexdigest(),
         "review_count": len(normalized_rows),
         "priority_review": queue_counts["priority_review"],
@@ -3003,7 +3039,8 @@ def _read_component_review_packet(packet_id):
 
 def _component_review_packet_summary(packet):
     return {key: copy.deepcopy(packet[key]) for key in (
-        "schema_version", "packet_id", "manifest_sha256", "review_count",
+        "schema_version", "packet_id", "display_name", "review_kind",
+        "evidence_mode", "manifest_sha256", "review_count",
         "priority_review", "deferred_manual_review", "read_only_packet",
         "session_drafts_only", "submits_human_truth", "training_data_writes")}
 

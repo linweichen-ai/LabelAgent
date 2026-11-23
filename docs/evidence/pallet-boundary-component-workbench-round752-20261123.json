@@ -1,0 +1,36 @@
+{
+  "schema_version": "labelagent.round752-component-workbench-receipt.v1",
+  "date": "2026-11-23",
+  "candidate_only": true,
+  "human_truth_written": false,
+  "training_data_written": false,
+  "production_deployed": false,
+  "automatic_decisions": false,
+  "source_manifest_sha256": [
+    "a8be64f8fd9c43fd208cb72561c667efac95ff93c46bdf2af8ff570c9c4d1d02",
+    "6473e8b35299ee546b344c65d3ffaf6f6678549c6ab7b55264fbbedd540bd4fb"
+  ],
+  "output_manifest_sha256": "673e53ebb1c775652772125df03e0f3f67d0d54bc70ca4ebdb648226cb1efab5",
+  "source_count": 2,
+  "review_count": 11,
+  "image_count": 11,
+  "image_total_bytes": 3458632,
+  "image_min_bytes": 226353,
+  "image_max_bytes": 449655,
+  "browser_acceptance": {
+    "isolated_port": 18765,
+    "visible_cards_first_page": 4,
+    "page_count": 3,
+    "natural_image_size": [3840, 480],
+    "rendered_image_size": [1116, 140],
+    "draft_action": "uncertain",
+    "draft_count_after_action": 1,
+    "session_drafts_only": true
+  },
+  "tests": {
+    "focused_pytest": "11 passed, 4 subtests passed",
+    "component_review_core": "passed",
+    "full_tests": "1790 passed, 1 skipped, 286 subtests passed",
+    "python_utf8_required_on_windows": true
+  }
+}

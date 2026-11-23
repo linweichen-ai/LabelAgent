@@ -60,6 +60,8 @@ class ComponentReviewPacketApiTests(unittest.TestCase):
         self.assertFalse(packet["submits_human_truth"])
         self.assertFalse(packet["training_data_writes"])
         row = packet["rows"][0]
+        self.assertEqual(row["camera_rank"], 1)
+        self.assertEqual(row["review_rank"], 1)
         self.assertTrue(row["candidate_only"])
         self.assertFalse(row["human_truth"])
         self.assertFalse(row["approved_for_training"])
@@ -121,7 +123,7 @@ class ComponentReviewPacketApiTests(unittest.TestCase):
         changed = json.loads(json.dumps(self.value))
         changed["rows"][0]["camera_rank"] = "1"
         manifest.write_text(json.dumps(changed), encoding="utf-8")
-        with self.assertRaisesRegex(ValueError, "相机排名"):
+        with self.assertRaisesRegex(ValueError, "复核排名"):
             server._read_component_review_packet("ego-tail")
         second = json.loads(json.dumps(self.value["rows"][0]))
         second["component_id"] = "004-camera1-c002"
@@ -152,6 +154,38 @@ class ComponentReviewPacketApiTests(unittest.TestCase):
         changed["rows"][0]["focused_image_sha256"] = hashlib.sha256(fake).hexdigest()
         manifest.write_text(json.dumps(changed), encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "安全解码"):
+            server._read_component_review_packet("ego-tail")
+
+    def test_accepts_generic_ownership_packet_and_normalizes_rank(self):
+        self.value.update({
+            "schema_version": "labelagent.component-review-pack.v2",
+            "display_name": "Pallet 边界所有权复核",
+            "review_kind": "pallet_boundary_ownership",
+            "evidence_mode": "ownership_overlay",
+        })
+        self.value["rows"][0]["review_rank"] = self.value["rows"][0].pop(
+            "camera_rank")
+        (self.packet / "focused_review_manifest.json").write_text(
+            json.dumps(self.value), encoding="utf-8")
+        packet = server._read_component_review_packet("ego-tail")
+        self.assertEqual(packet["display_name"], "Pallet 边界所有权复核")
+        self.assertEqual(packet["review_kind"], "pallet_boundary_ownership")
+        self.assertEqual(packet["evidence_mode"], "ownership_overlay")
+        self.assertEqual(packet["rows"][0]["review_rank"], 1)
+        self.assertNotIn("camera_rank", packet["rows"][0])
+
+    def test_rejects_generic_packet_with_unsafe_display_metadata(self):
+        self.value.update({
+            "schema_version": "labelagent.component-review-pack.v2",
+            "display_name": "",
+            "review_kind": "pallet_boundary_ownership",
+            "evidence_mode": "ownership_overlay",
+        })
+        self.value["rows"][0]["review_rank"] = self.value["rows"][0].pop(
+            "camera_rank")
+        (self.packet / "focused_review_manifest.json").write_text(
+            json.dumps(self.value), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "展示元数据"):
             server._read_component_review_packet("ego-tail")
 
     def test_bad_packet_is_counted_without_breaking_valid_index(self):

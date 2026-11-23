@@ -27,6 +27,17 @@ git clone --branch reproduce --single-branch https://github.com/linweichen-ai/La
 
 若只想先验证公开复核页面，不准备安装 CUDA/PyTorch、Node.js 或模型权重，可直接运行 `tools/setup_public_browser_check.ps1`。它在 `.repro` 下建立独立的轻量环境，仅安装固定版本的 Pillow 与 Playwright，完成后给出真实 Edge 浏览器回执。
 
+托盘边界候选的六联“所有权”证据可转换成工作台只读复核包。下面的命令只复制已绑定哈希的证据图，不修改候选 mask，也不会写入人工真值或训练集：
+
+```powershell
+.\.venv\Scripts\python.exe tools\build_pallet_boundary_component_review_pack.py `
+  --review-manifest <第一批所有权复核目录>\manifest.json `
+  --review-manifest <第二批所有权复核目录>\manifest.json `
+  --output work\component_review_packs\pallet-ownership-review
+```
+
+重新打开自动标注页，在“组件证据复核”中可查看；“倾向可补 / 不确定 / 倾向驳回”仅保存在当前浏览器会话。格式、安全门禁与验收证据见 [Round752 记录](docs/PALLET_BOUNDARY_COMPONENT_WORKBENCH_ROUND752_20261123.md)。
+
 团队内部收到已授权的 LoRA ZIP 时，可用 `tools/verify_qwen3vl_controlled_bundle.py` 独立核对
 整包摘要、逐文件哈希、基座身份和全部 LoRA 张量；公开仓库仍不分发权重。详见
 [受控 LoRA 复现包记录](docs/QWEN3VL2B_CONTROLLED_BUNDLE_ROUND497_20261122.md)。

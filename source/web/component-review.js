@@ -66,7 +66,8 @@
     else drafts[key] = {
       status: decision,
       recorded_at: new Date().toISOString(),
-      local_only: true,
+      session_only: true,
+      local_only: packet.evidence_mode === 'local_only',
       evidence_loaded: true,
       manifest_sha256: packet.manifest_sha256,
       image_sha256: row.focused_image_sha256,
@@ -85,7 +86,7 @@
   function renderCard(row, drafts) {
     const draft = core.rowDraft(packet, row, drafts);
     const card = document.createElement('article');
-    card.className = `componentReviewCard ${row.policy_queue}`;
+    card.className = `componentReviewCard ${row.policy_queue} ${packet.evidence_mode || ''}`.trim();
 
     const head = document.createElement('div');
     head.className = 'componentReviewCardHead';
@@ -93,7 +94,7 @@
     const title = document.createElement('strong');
     const meta = document.createElement('small');
     title.textContent = row.component_id;
-    meta.textContent = `camera1 排名 ${row.camera_rank} · ${row.policy_queue === 'priority_review' ? '优先复核' : '延后复核'}`;
+    meta.textContent = `${packet.display_name} · 排名 ${row.review_rank} · ${row.policy_queue === 'priority_review' ? '优先复核' : '延后复核'}`;
     identity.append(title, meta);
     const badge = document.createElement('span');
     badge.className = `componentDraftBadge ${draft?.status || 'pending'}`;
@@ -202,7 +203,8 @@
     setStatus('正在校验清单和每张聚焦图片…', 'checking');
     try {
       const value = await requestJson(`/api/component_review_packs/${encodeURIComponent(select.value)}`);
-      if (value.schema_version !== 'labelagent.ego_tail_focused_review_pack.v1'
+      if (!['labelagent.ego_tail_focused_review_pack.v1',
+            'labelagent.component-review-pack.v2'].includes(value.schema_version)
           || value.read_only_packet !== true || value.session_drafts_only !== true
           || value.submits_human_truth !== false || value.training_data_writes !== false) {
         throw new Error('复核包隔离边界不完整，已拒绝载入');
@@ -238,7 +240,7 @@
       const previous = select.value;
       select.replaceChildren();
       catalog.forEach(item => {
-        const option = new Option(`${item.packet_id} · ${item.review_count} 项`, item.packet_id);
+        const option = new Option(`${item.display_name || item.packet_id} · ${item.review_count} 项`, item.packet_id);
         select.append(option);
       });
       select.value = catalog.some(item => item.packet_id === previous)
@@ -248,7 +250,7 @@
       openButton.classList.toggle('ready', catalog.length > 0);
       if (!silent) setStatus(catalog.length
         ? `发现 ${catalog.length} 个只读复核包。`
-        : '没有发现可用的微孔聚焦复核包。', catalog.length ? 'ready' : 'empty');
+        : '没有发现可用的组件证据复核包。', catalog.length ? 'ready' : 'empty');
     } catch (error) {
       catalog = [];
       select.replaceChildren();

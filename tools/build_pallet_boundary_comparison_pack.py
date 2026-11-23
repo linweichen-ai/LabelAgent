@@ -165,15 +165,44 @@ def _validate_bootstrap(value):
     return path, topic, generation, catalog[topic]["count"]
 
 
-def _validate_frame_state(value, *, frame, scope):
+def _validate_frame_state(value, *, frame, scope,
+                          allow_unbound_empty=False):
     if (value.get("path") != scope["path"] or value.get("topic") != scope["topic"]
             or value.get("file_activation_generation") !=
             scope["file_activation_generation"] or value.get("frame") != frame):
         raise ValueError(f"frame {frame} 状态读回与请求作用域不一致")
-    candidates = _frame_values(value.get("candidates"), frame)
-    binding = (value.get("candidate_review_bindings") or {}).get(str(frame))
-    if not isinstance(binding, dict):
+    candidate_mapping = value.get("candidates")
+    frame_key = str(frame)
+    if not isinstance(candidate_mapping, dict):
+        raise ValueError(f"frame {frame} 候选字段缺失或类型无效")
+    binding_mapping = value.get("candidate_review_bindings")
+    if not isinstance(binding_mapping, dict):
+        raise ValueError(f"frame {frame} 候选绑定字段类型无效")
+    candidate_keys = set(candidate_mapping)
+    binding_keys = set(binding_mapping)
+    allowed_keys = {frame_key}
+    if (not candidate_keys.issubset(allowed_keys)
+            or not binding_keys.issubset(allowed_keys)):
+        raise ValueError(f"frame {frame} frame-scoped 状态含外来帧键")
+    if (frame_key in candidate_mapping
+            and not isinstance(candidate_mapping[frame_key], list)):
+        raise ValueError(f"frame {frame} 候选列表类型无效")
+    if (frame_key in binding_mapping
+            and not isinstance(binding_mapping[frame_key], dict)):
+        raise ValueError(f"frame {frame} 服务端候选绑定类型无效")
+    if candidate_keys != binding_keys:
+        if frame_key in candidate_keys and frame_key not in binding_keys:
+            raise ValueError(f"frame {frame} 缺少服务端候选绑定")
+        raise ValueError(f"frame {frame} 空候选状态字段不一致")
+    if not candidate_keys:
+        # The frame-scoped endpoint represents a verified empty frame as two
+        # empty sparse maps.  Any foreign key or one-sided entry is malformed,
+        # not an empty frame that may be skipped.
+        if allow_unbound_empty:
+            return None, None
         raise ValueError(f"frame {frame} 缺少服务端候选绑定")
+    candidates = candidate_mapping[frame_key]
+    binding = binding_mapping[frame_key]
     artifact_sha = binding.get("candidate_artifact_sha256")
     if artifact_sha != _candidate_binding(candidates):
         raise ValueError(f"frame {frame} 候选集合 SHA 读回不一致")
@@ -209,13 +238,16 @@ def _tree_sha256(folder):
 
 
 def build_pack(base_url, frames, output, *, opener=urlopen,
-               geometry_policy="full", include_unchanged=False):
+               geometry_policy="full", include_unchanged=False,
+               skip_unbound_empty_frames=False):
     """Build one deterministic comparison pack without any server mutation."""
     base_url = _safe_base_url(base_url)
     if geometry_policy not in {"full", "appearance_evidence_only"}:
         raise ValueError("未知 pallet geometry policy")
     if not isinstance(include_unchanged, bool):
         raise ValueError("include_unchanged 必须是布尔值")
+    if not isinstance(skip_unbound_empty_frames, bool):
+        raise ValueError("skip_unbound_empty_frames 必须是布尔值")
     output = Path(output).resolve()
     if output.exists():
         raise FileExistsError(f"输出目录已存在：{output}")
@@ -245,11 +277,16 @@ def build_pack(base_url, frames, output, *, opener=urlopen,
         staging = wrapper / "candidate_comparison_packs" / output.name
         staging.mkdir(parents=True)
         rows = []
+        skipped_unbound_frames = []
         for frame in normalized_frames:
             state_before = _get_json(
                 opener, base_url, f"/api/frame_state/{frame}", scope)
             candidates, binding = _validate_frame_state(
-                state_before, frame=frame, scope=scope)
+                state_before, frame=frame, scope=scope,
+                allow_unbound_empty=skip_unbound_empty_frames)
+            if candidates is None:
+                skipped_unbound_frames.append(frame)
+                continue
             encoded_frame, image_rgb = _get_frame(
                 opener, base_url, frame, scope)
             height, width = image_rgb.shape[:2]
@@ -366,6 +403,15 @@ def build_pack(base_url, frames, output, *, opener=urlopen,
 
         if not rows:
             raise ValueError("所选帧没有几何确实变化的 pallet 候选")
+        for frame in skipped_unbound_frames:
+            skipped_after = _get_json(
+                opener, base_url, f"/api/frame_state/{frame}", scope)
+            candidates_after, binding_after = _validate_frame_state(
+                skipped_after, frame=frame, scope=scope,
+                allow_unbound_empty=True)
+            if candidates_after is not None or binding_after is not None:
+                raise ValueError(
+                    f"frame {frame} 空候选状态在离线生成期间发生变化")
         bootstrap_after = _get_json(opener, base_url, "/api/bootstrap")
         if _validate_bootstrap(bootstrap_after)[:3] != (
                 source_path, topic, generation):
@@ -384,6 +430,7 @@ def build_pack(base_url, frames, output, *, opener=urlopen,
                        "file_activation_generation": generation},
             "geometry_policy": geometry_policy,
             "include_unchanged": include_unchanged,
+            "skipped_unbound_empty_frames": skipped_unbound_frames,
             "rows": rows,
         }
         (staging / "manifest.json").write_text(
@@ -401,6 +448,7 @@ def build_pack(base_url, frames, output, *, opener=urlopen,
             "tree_sha256": tree_sha,
             "file_count": len(files),
             "requested_frames": normalized_frames,
+            "skipped_unbound_empty_frames": skipped_unbound_frames,
             "comparison_count": len(rows),
             "changed_comparison_count": sum(
                 row["variants"][0]["metrics"]["changed_pixels"] > 0
@@ -434,11 +482,13 @@ def main():
                         choices=("full", "appearance_evidence_only"),
                         default="full")
     parser.add_argument("--include-unchanged", action="store_true")
+    parser.add_argument("--skip-unbound-empty-frames", action="store_true")
     args = parser.parse_args()
     result = build_pack(
         args.base_url, args.frames, args.output,
         geometry_policy=args.geometry_policy,
-        include_unchanged=args.include_unchanged)
+        include_unchanged=args.include_unchanged,
+        skip_unbound_empty_frames=args.skip_unbound_empty_frames)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0
 

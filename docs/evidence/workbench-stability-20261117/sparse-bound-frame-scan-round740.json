@@ -1,0 +1,25 @@
+{
+  "candidate_only": true,
+  "changed_comparison_count": 0,
+  "comparison_count": 34,
+  "formal_state_modified": false,
+  "geometry_policy": "appearance_evidence_only",
+  "manifest_sha256": "49b55613383aafa083136ac025eeb64cd397942162703b9f039e0801b4020d85",
+  "requested_frame_count": 152,
+  "repeat_outputs_identical": true,
+  "schema_version": "labelagent.sparse-bound-frame-scan-round740.v1",
+  "server_methods": [
+    "GET"
+  ],
+  "skipped_unbound_empty_frame_count": 149,
+  "status": "all_bound_candidates_scanned_no_effect_exercised",
+  "tests": {
+    "directed_passed": 10,
+    "directed_subtests_passed": 10,
+    "formal_passed": 1749,
+    "formal_skipped": 1,
+    "formal_subtests_passed": 282
+  },
+  "training_authorized": false,
+  "tree_sha256": "1088947d368fdf6375aabe5325479e776f8484ac1e73b7956cf7fb26ec2fe1b1"
+}

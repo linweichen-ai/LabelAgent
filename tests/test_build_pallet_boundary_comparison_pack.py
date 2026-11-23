@@ -44,7 +44,8 @@ def candidate(changed=True):
 
 
 class FakeWorkbench:
-    def __init__(self, candidates):
+    def __init__(self, candidates, *, unbound_frames=(),
+                 drift_unbound_on_second_read=False):
         self.requests = []
         self.path = str(Path(tempfile.gettempdir(), "generic-source.mcap").resolve())
         self.topic = "/generic/camera"
@@ -52,6 +53,9 @@ class FakeWorkbench:
         self.frame = 7
         self.image = image_bytes()
         self.candidates = candidates
+        self.unbound_frames = set(unbound_frames)
+        self.drift_unbound_on_second_read = drift_unbound_on_second_read
+        self.unbound_reads = {}
         self.binding = {
             "candidate_artifact_sha256": builder._candidate_binding(candidates),
             "candidates": [{
@@ -69,13 +73,30 @@ class FakeWorkbench:
                      "file_activation_generation": self.generation,
                      "catalog": {self.topic: {"count": 20}}}
             return FakeResponse(json.dumps(value).encode())
-        if parsed.path == f"/api/frame_state/{self.frame}":
+        if parsed.path.startswith("/api/frame_state/"):
+            frame = int(parsed.path.rsplit("/", 1)[1])
             query = parse_qs(parsed.query)
             if (query.get("path") != [self.path]
                     or query.get("topic") != [self.topic]
                     or query.get("file_activation_generation") !=
                     [str(self.generation)]):
                 raise AssertionError("scope query mismatch")
+            if frame in self.unbound_frames:
+                self.unbound_reads[frame] = self.unbound_reads.get(frame, 0) + 1
+                changed = (self.drift_unbound_on_second_read
+                           and self.unbound_reads[frame] > 1)
+                value = {
+                    "path": self.path, "topic": self.topic,
+                    "file_activation_generation": self.generation,
+                    "frame": frame,
+                    "candidates": ({str(frame): self.candidates}
+                                   if changed else {}),
+                    "candidate_review_bindings": ({str(frame): self.binding}
+                                                  if changed else {}),
+                }
+                return FakeResponse(json.dumps(value).encode())
+            if frame != self.frame:
+                raise AssertionError(f"unexpected frame {frame}")
             value = {
                 "path": self.path, "topic": self.topic,
                 "file_activation_generation": self.generation,
@@ -179,6 +200,100 @@ class BuildPalletBoundaryComparisonPackTests(unittest.TestCase):
         shutil.copytree(output, target)
         self.assertEqual(read_packet(packet_root, "replay-pack")[
             "comparison_count"], 1)
+
+    def test_explicitly_skips_only_empty_frames_without_binding(self):
+        workbench = FakeWorkbench([candidate(False)], unbound_frames={8})
+        output = self.root / "sparse" / "replay-pack"
+
+        result = builder.build_pack(
+            "http://example.test", [7, 8], output, opener=workbench,
+            geometry_policy="appearance_evidence_only",
+            include_unchanged=True, skip_unbound_empty_frames=True)
+
+        self.assertEqual(result["requested_frames"], [7, 8])
+        self.assertEqual(result["skipped_unbound_empty_frames"], [8])
+        manifest = json.loads((output / "manifest.json").read_text(
+            encoding="utf-8"))
+        self.assertEqual(manifest["skipped_unbound_empty_frames"], [8])
+        self.assertEqual([row["frame"] for row in manifest["rows"]], [7])
+        self.assertFalse(any("/api/frame/8" in item.full_url
+                             for item in workbench.requests))
+
+    def test_unbound_empty_frame_still_fails_closed_by_default(self):
+        workbench = FakeWorkbench([candidate(False)], unbound_frames={8})
+        output = self.root / "sparse-default" / "replay-pack"
+
+        with self.assertRaisesRegex(ValueError, "frame 8 缺少服务端候选绑定"):
+            builder.build_pack(
+                "http://example.test", [7, 8], output, opener=workbench,
+                geometry_policy="appearance_evidence_only",
+                include_unchanged=True)
+
+        self.assertFalse(output.exists())
+
+    def test_skip_rejects_malformed_or_ambiguous_empty_state(self):
+        scope = {"path": "C:\\data.mcap", "topic": "/camera",
+                 "file_activation_generation": 10}
+        base = {**scope, "frame": 8,
+                "candidates": {"8": []},
+                "candidate_review_bindings": {}}
+        invalid = [
+            ({key: value for key, value in base.items() if key != "candidates"},
+             "候选字段"),
+            ({**base, "candidates": []}, "候选字段"),
+            ({**base, "candidates": {"7": []}}, "外来帧键"),
+            ({**base, "candidates": {"8": {}}}, "候选列表"),
+            ({key: value for key, value in base.items()
+              if key != "candidate_review_bindings"}, "候选绑定字段"),
+            ({**base, "candidate_review_bindings": {"8": None}},
+             "候选绑定类型"),
+            ({**base, "candidate_review_bindings": {"8": []}},
+             "候选绑定类型"),
+            ({**base,
+              "candidates": {"8": [], "7": []},
+              "candidate_review_bindings": {"8": {}, "7": {}}},
+             "外来帧键"),
+            ({**base,
+              "candidates": {"8": [], "7": []},
+              "candidate_review_bindings": {"8": {}}},
+             "外来帧键"),
+            ({**base,
+              "candidates": {"8": []},
+              "candidate_review_bindings": {"8": {}, "7": {}}},
+             "外来帧键"),
+        ]
+        for value, message in invalid:
+            with self.subTest(message=message):
+                with self.assertRaisesRegex(ValueError, message):
+                    builder._validate_frame_state(
+                        value, frame=8, scope=scope,
+                        allow_unbound_empty=True)
+
+        skipped, skipped_binding = builder._validate_frame_state(
+            {**base, "candidates": {}, "candidate_review_bindings": {}},
+            frame=8, scope=scope, allow_unbound_empty=True)
+        self.assertIsNone(skipped)
+        self.assertIsNone(skipped_binding)
+
+        nonempty = {**base, "candidates": {"8": [candidate(False)]}}
+        with self.assertRaisesRegex(ValueError, "缺少服务端候选绑定"):
+            builder._validate_frame_state(
+                nonempty, frame=8, scope=scope, allow_unbound_empty=True)
+
+    def test_skipped_frame_drift_fails_before_output(self):
+        workbench = FakeWorkbench(
+            [candidate(False)], unbound_frames={8},
+            drift_unbound_on_second_read=True)
+        output = self.root / "sparse-drift" / "replay-pack"
+
+        with self.assertRaisesRegex(ValueError, "空候选状态.*发生变化"):
+            builder.build_pack(
+                "http://example.test", [7, 8], output, opener=workbench,
+                geometry_policy="appearance_evidence_only",
+                include_unchanged=True, skip_unbound_empty_frames=True)
+
+        self.assertFalse(output.exists())
+        self.assertEqual(list(output.parent.glob(".cc-*")), [])
 
     def test_two_runs_with_same_parameters_are_byte_reproducible(self):
         first = self.root / "first" / "same-pack"

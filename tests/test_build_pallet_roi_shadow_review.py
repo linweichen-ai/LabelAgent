@@ -82,13 +82,14 @@ class PalletRoiShadowReviewTests(unittest.TestCase):
         output = self.root / "details"
         result = build_review(
             self.snapshot, self.scan, output, include_details=True,
-            include_components=True)
+            include_components=True, include_component_context=True)
         manifest = json.loads((output / "manifest.json").read_text())
         row = manifest["rows"][0]
         detail = output / row["detail_sheet"]
 
         self.assertEqual(result["detail_sheet_count"], 1)
         self.assertEqual(result["component_sheet_count"], 1)
+        self.assertEqual(result["component_context_sheet_count"], 1)
         self.assertTrue(manifest["detail_sheets_included"])
         self.assertEqual(sha(detail), row["detail_sheet_sha256"])
         with Image.open(detail) as image:
@@ -104,6 +105,23 @@ class PalletRoiShadowReviewTests(unittest.TestCase):
         with Image.open(component_path) as image:
             self.assertEqual(image.size, (2560, 480))
             self.assertEqual(image.format, "PNG")
+        context_path = output / component["context_detail_sheet"]
+        self.assertEqual(
+            sha(context_path), component["context_detail_sheet_sha256"])
+        self.assertEqual(component["context_crop_box"], row["crop_box"])
+        with Image.open(context_path) as image:
+            self.assertEqual(image.size, (3200, 480))
+            self.assertEqual(image.format, "PNG")
+
+    def test_component_context_requires_component_sheets(self):
+        output = self.root / "invalid-context"
+
+        with self.assertRaisesRegex(
+                ValueError, "requires component sheets"):
+            build_review(
+                self.snapshot, self.scan, output,
+                include_component_context=True)
+        self.assertFalse(output.exists())
 
     def test_builds_one_sheet_per_connected_added_component(self):
         after_path = self.scan / "after.png"

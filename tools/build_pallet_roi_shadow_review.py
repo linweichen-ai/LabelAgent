@@ -113,10 +113,12 @@ def detail_box(mask, width, height, minimum_span=128, margin=48):
 
 
 def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False,
-                 include_components=False):
+                 include_components=False, include_component_context=False):
     snapshot_dir = Path(snapshot_dir).resolve()
     scan_dir = Path(scan_dir).resolve()
     output_dir = Path(output_dir).resolve()
+    if include_component_context and not include_components:
+        raise ValueError("component context requires component sheets")
     if output_dir.exists():
         raise FileExistsError(output_dir)
     snapshot_payload = (snapshot_dir / "manifest.json").read_bytes()
@@ -153,6 +155,7 @@ def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False,
         rendered = []
         identities = set()
         component_sheet_count = 0
+        component_context_sheet_count = 0
         for row in changed_rows:
             frame = row.get("frame")
             candidate_id = row.get("candidate_id")
@@ -324,6 +327,45 @@ def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False,
                         component_path, "PNG", optimize=False,
                         compress_level=9)
 
+                    component_context_row = {}
+                    if include_component_context:
+                        candidate_context = source.crop(box)
+                        context_detail = Image.new(
+                            "RGB", (640 * 5, 480), (12, 18, 24))
+                        context_panes = [
+                            detail_panel(
+                                candidate_context,
+                                f"{component_label} | candidate context"),
+                            detail_panel(
+                                component_source, "local source"),
+                            detail_panel(overlay(
+                                component_source, component_before,
+                                (25, 220, 145)), "local before"),
+                            detail_panel(overlay(
+                                component_source, component_after,
+                                (35, 170, 255)), "local after"),
+                            detail_panel(
+                                Image.fromarray(added_image),
+                                f"component pixels: {component_area}",
+                                nearest=True),
+                        ]
+                        for column, pane in enumerate(context_panes):
+                            context_detail.paste(pane, (column * 640, 0))
+                        context_name = (
+                            f"frame-{frame:06d}-candidate-{candidate_id}-"
+                            f"component-{component_index:02d}-context-detail.png")
+                        context_path = staging / context_name
+                        context_detail.save(
+                            context_path, "PNG", optimize=False,
+                            compress_level=9)
+                        component_context_row = {
+                            "context_detail_sheet": context_name,
+                            "context_detail_sheet_sha256": digest(
+                                context_path.read_bytes()),
+                            "context_crop_box": list(box),
+                        }
+                        component_context_sheet_count += 1
+
                     ring = (cv2.dilate(
                         component_mask.astype(np.uint8), ring_kernel,
                         iterations=1).astype(bool)
@@ -374,6 +416,7 @@ def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False,
                             component_path.read_bytes()),
                         "detail_crop_box": list(component_focus),
                     }
+                    component_row.update(component_context_row)
                     component_rows.append(component_row)
                     component_sheet_count += 1
                 if sum(item["area"] for item in component_rows) != int(
@@ -406,6 +449,10 @@ def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False,
         if include_components:
             manifest["component_sheets_included"] = True
             manifest["component_sheet_count"] = component_sheet_count
+        if include_component_context:
+            manifest["component_context_sheets_included"] = True
+            manifest["component_context_sheet_count"] = (
+                component_context_sheet_count)
         manifest_path = staging / "manifest.json"
         manifest_path.write_text(
             json.dumps(manifest, ensure_ascii=False, indent=2,
@@ -420,6 +467,7 @@ def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False,
             "detail_sheet_count": (
                 len(review_rows) if include_details else 0),
             "component_sheet_count": component_sheet_count,
+            "component_context_sheet_count": component_context_sheet_count,
             "manifest_sha256": manifest_sha,
         }
     finally:
@@ -433,11 +481,13 @@ def main():
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--include-details", action="store_true")
     parser.add_argument("--include-components", action="store_true")
+    parser.add_argument("--include-component-context", action="store_true")
     args = parser.parse_args()
     print(json.dumps(build_review(
         args.snapshot_dir, args.scan_dir, args.output,
         include_details=args.include_details,
-        include_components=args.include_components),
+        include_components=args.include_components,
+        include_component_context=args.include_component_context),
         ensure_ascii=False, indent=2))
     return 0
 

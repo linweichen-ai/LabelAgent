@@ -1,0 +1,347 @@
+{
+  "schema_version": "labelagent.slope-blind-cross-review.v1",
+  "source_manifest_sha256": "1c67cb8dc22b225a7b3b0d149539ec210b7386c0a2a4f1016b7384160092a79c",
+  "prior_assistant_review_sha256": "bbd212cf06cc0ce8df23817b04af9f26b01012a203279c3b66a2e2020b159e83",
+  "review_protocol": "three_disjoint_fresh_blind_assistant_groups_no_prior_answers",
+  "sample_count": 32,
+  "positive_proxy_count": 8,
+  "negative_cohort_count": 24,
+  "exact_decision_agreement_with_prior": 32,
+  "high_confidence_count": 30,
+  "medium_confidence_count": 2,
+  "priority_human_review_frames": [
+    95,
+    140
+  ],
+  "same_base_model_family_risk": true,
+  "cross_scene_generalization_evidence": false,
+  "human_reference_count": 0,
+  "assistant_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "ready_for_quality_ab": false,
+  "external_upload_authorized": false,
+  "test24_used": false,
+  "rows": [
+    {
+      "frame": 0,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 10,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 20,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 30,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 40,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 50,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 60,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 70,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 73,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 74,
+      "blind_decision": "slope_present_and_mask_acceptable",
+      "confidence": "high",
+      "prior_assistant_decision": "slope_present_and_mask_acceptable",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 75,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 77,
+      "blind_decision": "slope_present_and_mask_acceptable",
+      "confidence": "high",
+      "prior_assistant_decision": "slope_present_and_mask_acceptable",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 78,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 80,
+      "blind_decision": "slope_present_and_mask_acceptable",
+      "confidence": "high",
+      "prior_assistant_decision": "slope_present_and_mask_acceptable",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 81,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 83,
+      "blind_decision": "slope_present_and_mask_acceptable",
+      "confidence": "high",
+      "prior_assistant_decision": "slope_present_and_mask_acceptable",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 84,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 86,
+      "blind_decision": "slope_present_and_mask_acceptable",
+      "confidence": "high",
+      "prior_assistant_decision": "slope_present_and_mask_acceptable",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 87,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 90,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 94,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 95,
+      "blind_decision": "slope_present_and_mask_acceptable",
+      "confidence": "medium",
+      "prior_assistant_decision": "slope_present_and_mask_acceptable",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 96,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 97,
+      "blind_decision": "slope_present_and_mask_acceptable",
+      "confidence": "high",
+      "prior_assistant_decision": "slope_present_and_mask_acceptable",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 98,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 99,
+      "blind_decision": "slope_present_and_mask_acceptable",
+      "confidence": "high",
+      "prior_assistant_decision": "slope_present_and_mask_acceptable",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 100,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 110,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 120,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 130,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 140,
+      "blind_decision": "no_slope_present",
+      "confidence": "medium",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    },
+    {
+      "frame": 149,
+      "blind_decision": "no_slope_present",
+      "confidence": "high",
+      "prior_assistant_decision": "no_slope_present",
+      "decision_agrees_with_prior": true,
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false
+    }
+  ]
+}

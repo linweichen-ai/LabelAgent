@@ -18,6 +18,7 @@ from unittest.mock import patch
 from PIL import Image
 
 from source.agent import mcap_video, server, workflow
+from source.agent.expert_routing import evaluate_expert_shadow_route
 from source.agent.edit_agent import (_hole_regions, _candidate_gap_regions, _shape_from_mask,
                                      _rasterize, _valid_region, apply_operations, valid_shape)
 
@@ -362,6 +363,68 @@ class EditTests(unittest.TestCase):
 
 
 class WorkflowTests(unittest.TestCase):
+    def test_expert_shadow_routing_is_default_off_and_never_dispatches(self):
+        self.assertIsNone(evaluate_expert_shadow_route(
+            {}, discovery={"unknown_candidates": [{"candidate_name": "rack"}]}))
+        decision = evaluate_expert_shadow_route(
+            {"llm_expert_shadow_routing_enabled": True},
+            agent={"stop_reason": "done", "rounds": 1},
+            candidate_labels=["floor"])
+        self.assertFalse(decision["recommended"])
+        self.assertEqual(decision["route"], "local_result_sufficient")
+        self.assertFalse(decision["dispatch_performed"])
+        self.assertFalse(decision["external_upload_performed"])
+        self.assertTrue(decision["candidate_only"])
+        self.assertFalse(decision["human_truth"])
+        self.assertFalse(decision["approved_for_training"])
+
+    def test_expert_shadow_routing_escalates_bounded_difficult_signals(self):
+        decision = evaluate_expert_shadow_route(
+            {"llm_expert_shadow_routing_enabled": True,
+             "llm_expert_shadow_round_threshold": 3},
+            discovery={
+                "uncertain_labels": ["slope"],
+                "unknown_candidates": [{"candidate_name": "rack",
+                                        "evidence": "sensitive pixels"}],
+                "registry_conflicts": [{"label": "other_robot"}],
+                "assessments": [{"label": "slope", "confidence": 0.51}],
+            },
+            agent={"stop_reason": "no_progress", "rounds": 3,
+                   "protocol_retry_count": 1},
+            review_queue=[{"reason_code": "vlm_protocol_retries_exhausted"}],
+            class_audits=[{"route": "human_review_required"}],
+            candidate_labels=["pallet", "slope"])
+        self.assertTrue(decision["recommended"])
+        self.assertEqual(decision["route"],
+                         "external_expert_shadow_recommended")
+        self.assertEqual(decision["priority"], "high")
+        codes = {item["code"] for item in decision["reasons"]}
+        self.assertTrue({
+            "open_set_candidate", "registry_conflict", "visibility_uncertain",
+            "low_visibility_confidence", "agent_nonconvergence",
+            "high_review_round_count", "protocol_retry_used",
+            "protocol_failure", "human_review_queue", "class_audit_conflict",
+            "priority_class_involved",
+        }.issubset(codes))
+        serialized = json.dumps(decision)
+        self.assertNotIn("sensitive pixels", serialized)
+        self.assertNotIn("candidate_name", serialized)
+
+    def test_expert_shadow_routing_is_deterministic_and_deduplicates_reasons(self):
+        config = {"llm_expert_shadow_routing_enabled": True}
+        queue = [
+            {"reason_code": "invalid_json_protocol"},
+            {"reason_code": "invalid_json_protocol"},
+        ]
+        first = evaluate_expert_shadow_route(
+            config, review_queue=queue, candidate_labels=["pallet"])
+        second = evaluate_expert_shadow_route(
+            config, review_queue=copy.deepcopy(queue),
+            candidate_labels=["pallet"])
+        self.assertEqual(first, second)
+        codes = [item["code"] for item in first["reasons"]]
+        self.assertEqual(len(codes), len(set(codes)))
+
     def test_pallet_cleanup_fills_texture_holes_and_preserves_structural_opening(self):
         mask = np.zeros((100, 140), dtype=np.uint8)
         mask[10:90, 10:130] = 1
@@ -3651,6 +3714,8 @@ class ServerTests(unittest.TestCase):
                     "llm_expert_model": "expert-vision",
                     "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
                     "llm_expert_timeout_seconds": 90,
+                    "llm_expert_shadow_routing_enabled": True,
+                    "llm_expert_shadow_round_threshold": 3,
                     **active_config_write_scope(),
                 })
             self.assertEqual(saved.status_code, 200, saved.json)
@@ -3659,6 +3724,10 @@ class ServerTests(unittest.TestCase):
                              "LABELAGENT_TEST_EXPERT_KEY")
             self.assertEqual(saved.json["config"]["llm_expert_timeout_seconds"],
                              90)
+            self.assertTrue(saved.json["config"][
+                "llm_expert_shadow_routing_enabled"])
+            self.assertEqual(saved.json["config"][
+                "llm_expert_shadow_round_threshold"], 3)
 
             calls = []
             def probe(url, timeout=3):
@@ -3677,6 +3746,9 @@ class ServerTests(unittest.TestCase):
             self.assertTrue(readiness["expert_vlm"]["credential_present"])
             self.assertFalse(readiness["expert_vlm"]["connection_tested"])
             self.assertFalse(readiness["expert_vlm"]["automatic_upload"])
+            self.assertTrue(readiness["expert_vlm"]["shadow_routing_enabled"])
+            self.assertEqual(readiness["expert_vlm"]["shadow_round_threshold"],
+                             3)
         finally:
             server.state = old_state
 
@@ -5308,7 +5380,9 @@ class ServerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             server.WORK = Path(directory)
             server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
-                "truth": {}, "reference_frames": {}, "config": {"llm_model": "test-vlm"},
+                "truth": {}, "reference_frames": {}, "config": {
+                    "llm_model": "test-vlm",
+                    "llm_expert_shadow_routing_enabled": True},
                 "candidates": {}, "agent_runs": {}}
             server.run_status = {"status": "idle"}
             generated = shape(label="person")
@@ -5343,6 +5417,11 @@ class ServerTests(unittest.TestCase):
                     {"label": "person", "text": "person"}])
                 self.assertEqual(server.state["truth"], {})
                 self.assertEqual(server.state["reference_frames"], {})
+                routing = server.state["agent_runs"]["1"]["expert_shadow_routing"]
+                self.assertTrue(routing["recommended"])
+                self.assertEqual(routing["route"],
+                                 "external_expert_shadow_recommended")
+                self.assertFalse(routing["dispatch_performed"])
             finally:
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work
 
@@ -6735,7 +6814,8 @@ class ServerTests(unittest.TestCase):
             server.WORK = Path(directory)
             server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["a"],
                 "truth": {"0": [shape()]}, "reference_frames": {"camera0": [0]},
-                "config": {}, "candidates": {}, "agent_runs": {}}
+                "config": {"llm_expert_shadow_routing_enabled": True},
+                "candidates": {}, "agent_runs": {}}
             server.run_status = {"status": "idle"}
             observed = []
             def fake_run(config, image, description, labels, max_rounds, on_progress, reference):
@@ -6761,6 +6841,9 @@ class ServerTests(unittest.TestCase):
                 describe.assert_not_called()
                 self.assertIn("1", server.state["candidates"])
                 self.assertEqual(server.state["truth"], {"0": [shape()]})
+                routing = server.state["agent_runs"]["1"]["expert_shadow_routing"]
+                self.assertFalse(routing["recommended"])
+                self.assertEqual(routing["route"], "local_result_sufficient")
             finally:
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work
 

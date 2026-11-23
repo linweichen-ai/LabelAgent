@@ -58,6 +58,7 @@ from .candidate_comparison import (
     public_packet as public_candidate_comparison_packet,
     read_packet as read_candidate_comparison_packet,
 )
+from .expert_routing import evaluate_expert_shadow_route
 
 from . import candidate_class_audit as _candidate_audit_module
 
@@ -4741,6 +4742,7 @@ def set_config():
         "llm_fast_timeout_seconds": (10, 300),
         "llm_fast_cooldown_seconds": (10, 300),
         "llm_expert_timeout_seconds": (10, 300),
+        "llm_expert_shadow_round_threshold": (1, 100),
     }
     fast_updates = {}
     for key in fast_string_keys:
@@ -4782,10 +4784,16 @@ def set_config():
             raise ValueError("外部专家 VLM 密钥环境变量名无效")
         expert_updates[key] = value
     expert_enabled_update = None
+    expert_shadow_enabled_update = None
     if "llm_expert_enabled" in body:
         if type(body["llm_expert_enabled"]) is not bool:
             raise ValueError("llm_expert_enabled 必须为布尔值")
         expert_enabled_update = body["llm_expert_enabled"]
+    if "llm_expert_shadow_routing_enabled" in body:
+        if type(body["llm_expert_shadow_routing_enabled"]) is not bool:
+            raise ValueError("llm_expert_shadow_routing_enabled 必须为布尔值")
+        expert_shadow_enabled_update = body[
+            "llm_expert_shadow_routing_enabled"]
     for key, (minimum, maximum) in fast_integer_limits.items():
         if key not in body:
             continue
@@ -4842,6 +4850,10 @@ def set_config():
             if expert_enabled_update is not None:
                 state["config"]["llm_expert_enabled"] = expert_enabled_update
                 updated_keys.append("llm_expert_enabled")
+            if expert_shadow_enabled_update is not None:
+                state["config"]["llm_expert_shadow_routing_enabled"] = (
+                    expert_shadow_enabled_update)
+                updated_keys.append("llm_expert_shadow_routing_enabled")
             if state["config"].get("llm_expert_enabled") is True:
                 required = (
                     "llm_expert_provider", "llm_expert_url",
@@ -4955,6 +4967,10 @@ def model_readiness():
             expert_key_env and os.environ.get(expert_key_env)),
         "connection_tested": False,
         "automatic_upload": False,
+        "shadow_routing_enabled": (
+            config.get("llm_expert_shadow_routing_enabled") is True),
+        "shadow_round_threshold": positive_config_int(
+            "llm_expert_shadow_round_threshold", 4),
         "status": ("disabled" if not expert_enabled else
                    "missing_config" if not expert_configured else
                    "missing_credential" if not os.environ.get(expert_key_env) else
@@ -6331,6 +6347,14 @@ def generate_reference_draft():
             "discovery_prefetch_cache_hit": discovery_prefetch_cache_hit,
             "human_review_required": True,
             "inspection_trace": copy.deepcopy(trace)}
+        expert_shadow_routing = evaluate_expert_shadow_route(
+            config, discovery=discovery, agent=result.get("agent"),
+            review_queue=replacement_run["review_queue"],
+            class_audits=class_audits,
+            candidate_labels=[item.get("label") for item in combined
+                              if isinstance(item, dict)])
+        if expert_shadow_routing is not None:
+            replacement_run["expert_shadow_routing"] = expert_shadow_routing
         update_run_status(phase="committing", audit_completed=len(class_audits),
                           audit_total=audit_total, audit_candidate_id=None,
                           shape_count=len(combined), error=None)
@@ -6734,6 +6758,15 @@ def run_workflow():
                         if item.get("frame") == target
                         and item.get("purpose") != "生成真值描述"]),
                 }
+                expert_shadow_routing = evaluate_expert_shadow_route(
+                    config, agent=result.get("agent"),
+                    review_queue=final_review_queue,
+                    class_audits=class_audits,
+                    candidate_labels=[item.get("label") for item in combined
+                                      if isinstance(item, dict)])
+                if expert_shadow_routing is not None:
+                    replacement_run["expert_shadow_routing"] = (
+                        expert_shadow_routing)
                 if defer_agent_review and not failed:
                     replacement_run.update(
                         review_reference_frame=reference,

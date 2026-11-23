@@ -4302,3 +4302,11 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 外部专家默认超时为 120 秒，可在 10～300 秒内配置；空响应或未知结构失败关闭。原有本地结构化解码兼容重试只对 `openai_chat` 生效，避免向其他供应商发送错误格式。
 - 7 项专家通道定向测试和 `tests/test_agent.py` 全量 290 项通过；全程使用拦截请求的离线测试，无真实 API、无密钥、无外部图片上传、无训练、无推理、无部署，也未改动人工真值或 `test24`。
 - WorkBuddy 对话仍不可靠，本轮依据“连续性优先”由 Codex 直接接手并独立验证。详见 `docs/EXTERNAL_VLM_EXPERT_ROUTE_PHASE2_20261123.md`。下一步由用户选择首个供应商，在本机环境变量中安全配置 Key 后，用公开或脱敏图片做一次受控连通性测试。
+
+## 2026-11-24 Round755 补充：困难帧影子分流
+
+- 新增默认关闭的困难帧判定器，并接入参考帧草稿与普通批量推理保存路径；它只记录“是否建议专家复核及原因”，不会调用外部模型或上传图片。
+- 当前覆盖新类别、标签冲突、可见类别低置信度、Agent 不收敛、高复查轮数、协议失败、人工复核队列和类别审核冲突。托盘与斜坡只有同时出现困难证据时才提高优先级，不会让所有此类帧无条件走昂贵模型。
+- 影子结果固定保存 `dispatch_performed=false`、`external_upload_performed=false`、`candidate_only=true`、`human_truth=false`、`approved_for_training=false`，且不保存图片、坐标、未知类别原始描述或密钥。
+- 真实服务器路径测试确认参考帧 `no_progress` 会形成专家复核建议，普通成功帧保持 `local_result_sufficient`；全量 `tests/test_agent.py` 293 项、Python 编译和差异检查通过。
+- 本轮没有 API Key、外部请求、训练、推理或部署。WorkBuddy 仍未作为可信执行通道使用，由 Codex 直接实现并独立复核。详见 `docs/EXTERNAL_VLM_EXPERT_ROUTE_PHASE3_20261124.md`。

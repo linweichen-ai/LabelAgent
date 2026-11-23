@@ -4179,3 +4179,16 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
   无法确认。正式工作台读回idle，四份核心状态SHA与Round743前完全一致，原图不提交远端。
 - 合并两批后共有325个真实pallet候选、98个通过ROI门、7个触发变化；仍不冻结阈值、不部署、
   不训练。详见`docs/PALLET_BOUNDARY_EDGE_EXPANSION_ROUND744_20261123.md`。
+
+## 2026-11-23 Round745 补充：梯度门只读诊断
+
+- 新增失败关闭的离线对比器，输入必须由冻结input-map及SHA绑定；逐候选重验manifest、
+  before/after mask SHA、add-only像素差、v8审计字段和逐补点梯度，不访问或写入工作台。
+- 7个触发候选中，relative0放行3、relative+8放行4、absolute64放行6、combined放行4；
+  这些计数只表示松紧，没有人工真值，不能据此选择赢家或宣称准确率。
+- 多补点候选采用all-notches-pass；无梯度证据单列insufficient。输出不含路径、原图、mask
+  或坐标，双跑report SHA均为`5e8f25db...5fd71`。
+- 定向9项通过；包含符号链接逃逸、跨smoke重复候选、实际组件桥接和严格布尔失败关闭。
+  正式v6/v7/v8行为、训练、部署和人工真值均未修改。详见
+  `docs/PALLET_BOUNDARY_GRADIENT_POLICY_DIAGNOSTIC_ROUND745_20261123.md`。
+- 固定UTF-8全量1776项通过、1项跳过、286子测试通过。

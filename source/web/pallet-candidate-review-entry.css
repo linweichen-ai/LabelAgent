@@ -1,0 +1,67 @@
+.palletCandidateReviewEntry {
+  position: relative;
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border: 1px solid #9fc9ba;
+  border-radius: 7px;
+  color: #176c55;
+  background: #edf8f3;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.palletCandidateReviewEntry[hidden] {
+  display: none !important;
+}
+
+.palletCandidateReviewEntry:hover,
+.palletCandidateReviewEntry:focus-visible {
+  border-color: #58a286;
+  color: #0e5b45;
+  background: #e3f4ed;
+  outline: none;
+}
+
+.palletCandidateReviewEntry:focus-visible {
+  box-shadow: 0 0 0 3px #8cc9e866;
+}
+
+.palletCandidateReviewEntry > span {
+  display: inline-grid;
+  width: 17px;
+  height: 17px;
+  place-items: center;
+  border-radius: 5px;
+  color: #fff;
+  background: #168260;
+  font-size: 10px;
+}
+
+.palletCandidateReviewEntry em {
+  display: inline-grid;
+  min-width: 17px;
+  height: 17px;
+  place-items: center;
+  padding: 0 4px;
+  border-radius: 999px;
+  color: #fff;
+  background: #a94a42;
+  font-size: 9px;
+  font-style: normal;
+}
+
+body.darkTheme .palletCandidateReviewEntry {
+  border-color: #3b775f;
+  color: #a7dec9;
+  background: #173a30;
+}
+
+@media(max-width: 640px) {
+  .palletCandidateReviewEntry { flex: 0 0 auto; }
+}

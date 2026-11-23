@@ -1,0 +1,90 @@
+# @package _global_
+defaults:
+  - /configs/sfl_cpd15y/stage0_mask_embed
+  - _self_
+
+roboflow_train:
+  num_images: 15
+  val_transforms:
+    - _target_: sam3.train.transforms.basic_for_api.ComposeAPI
+      transforms:
+        - _target_: sam3.train.transforms.segmentation.DecodeRle
+        - _target_: sam3.train.transforms.basic_for_api.RandomResizeAPI
+          sizes: ${scratch.resolution}
+          max_size:
+            _target_: sam3.train.transforms.basic.get_random_resize_max_size
+            size: ${scratch.resolution}
+          square: true
+          consistent_transform: false
+        - _target_: sam3.train.transforms.basic_for_api.ToTensorAPI
+        - _target_: sam3.train.transforms.basic_for_api.NormalizeAPI
+          mean: ${scratch.train_norm_mean}
+          std: ${scratch.train_norm_std}
+
+trainer:
+  _target_: sam3.train.assistant_crop_holdout_evaluator.AssistantCropHoldoutEvaluator
+  mode: val
+  max_epochs: 1
+  evaluation_contract:
+    assistant_reviewed: true
+    human_truth: false
+    evaluation_only: true
+    not_for_deployment: true
+    training_return_allowed: false
+    test24_included: false
+  data:
+    train: null
+    val:
+      _target_: sam3.train.data.torch_dataset.TorchDataset
+      dataset:
+        _target_: sam3.train.data.sam3_image_dataset.Sam3ImageDataset
+        limit_ids: 15
+        load_segmentation: true
+        coco_json_loader:
+          _target_: sam3.train.data.coco_json_loaders.COCO_FROM_JSON
+          include_negatives: true
+          category_chunk_size: 2
+          _partial_: true
+        img_folder: ${oc.env:SAM3_ASSISTANT_HOLDOUT_ROOT}
+        ann_file: ${oc.env:SAM3_ASSISTANT_HOLDOUT_ROOT}/_assistant_delegated_pallet_crops_holdout15.coco.json
+        transforms: ${roboflow_train.val_transforms}
+        max_ann_per_img: 100000
+        multiplier: 1
+        training: false
+      shuffle: false
+      batch_size: 1
+      num_workers: 0
+      pin_memory: true
+      drop_last: false
+      collate_fn: ${scratch.collate_fn_val}
+  loss:
+    roboflow100: ${roboflow_train.loss}
+  model:
+    _target_: sam3.train.assistant_crop_holdout_evaluator.build_assistant_crop_holdout_model
+    candidate_checkpoint_path: ${oc.env:SAM3_EVAL_CANDIDATE_CHECKPOINT}
+    candidate_checkpoint_sha256: ${oc.env:SAM3_EVAL_CANDIDATE_SHA256}
+  meters:
+    val:
+      roboflow100:
+        detection:
+          pred_file_evaluators: null
+        segmentation:
+          _target_: sam3.eval.coco_writer.PredictionDumper
+          iou_type: segm
+          dump_dir: ${launcher.experiment_log_dir}/predictions
+          merge_predictions: true
+          gather_pred_via_filesys: false
+          maxdets: 10
+          pred_file_evaluators: null
+          postprocessor:
+            _target_: sam3.eval.postprocessors.PostProcessImage
+            max_dets_per_img: 10
+            iou_type: segm
+            to_cpu: true
+            use_original_ids: true
+            use_original_sizes_box: true
+            use_original_sizes_mask: true
+            convert_mask_to_rle: false
+            always_interpolate_masks_on_gpu: true
+            use_presence: true
+            detection_threshold: 0.30

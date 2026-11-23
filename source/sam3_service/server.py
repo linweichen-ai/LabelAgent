@@ -1,0 +1,200 @@
+"""HTTP service for SAM 3 image segmentation."""
+import os
+from time import perf_counter
+
+from flask import Flask, jsonify, request
+
+from .point_segment import (
+    model_loaded, segment, segment_many, segment_prompt_groups)
+from .sam_multi_helpers import evaluate_prompt_states, validate_prompt_map
+
+app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 64 * 1024 * 1024
+
+
+@app.get("/health")
+def health():
+    return jsonify(status="ok", model_loaded=model_loaded())
+
+
+@app.post("/segment_points")
+def segment_points():
+    body = request.get_json(silent=True) or {}
+    image = body.get("image")
+    points = body.get("points")
+    if not isinstance(image, str) or not isinstance(points, list):
+        return jsonify(error="image (base64) and points are required"), 400
+    try:
+        import base64
+
+        image_bytes = base64.b64decode(image, validate=True)
+        mask = body.get("mask")
+        if mask is not None and not isinstance(mask, str):
+            raise ValueError("mask must be a base64 PNG image")
+        prior_mask = base64.b64decode(mask, validate=True) if mask is not None else None
+        return jsonify(segment(image_bytes, points, prior_mask=prior_mask))
+    except (ValueError, TypeError) as error:
+        return jsonify(error=str(error)), 400
+
+
+@app.post("/segment_points_batch")
+def segment_points_batch():
+    """Generate independent point candidates with one image feature pass."""
+    body = request.get_json(silent=True) or {}
+    image = body.get("image")
+    points = body.get("points")
+    if not isinstance(image, str) or not isinstance(points, list):
+        return jsonify(error="image (base64) and points are required"), 400
+    try:
+        import base64
+
+        image_bytes = base64.b64decode(image, validate=True)
+        return jsonify(segment_many(image_bytes, points))
+    except (ValueError, TypeError) as error:
+        return jsonify(error=str(error)), 400
+
+
+@app.post("/segment_point_groups_batch")
+def segment_point_groups_batch():
+    """Generate independent positive/negative prompt groups with one encoding."""
+    body = request.get_json(silent=True) or {}
+    image = body.get("image")
+    prompt_groups = body.get("prompt_groups")
+    if not isinstance(image, str) or not isinstance(prompt_groups, list):
+        return jsonify(
+            error="image (base64) and prompt_groups are required"), 400
+    try:
+        import base64
+
+        image_bytes = base64.b64decode(image, validate=True)
+        return jsonify(segment_prompt_groups(image_bytes, prompt_groups))
+    except (ValueError, TypeError) as error:
+        return jsonify(error=str(error)), 400
+
+
+@app.post("/segment_text")
+def segment_text():
+    body = request.get_json(silent=True) or {}
+    image = body.get("image")
+    prompt = body.get("prompt")
+    if not isinstance(image, str) or not isinstance(prompt, str) or not prompt.strip():
+        return jsonify(error="image (base64) and prompt are required"), 400
+    try:
+        import base64
+        import cv2
+        import numpy as np
+        import torch
+        from contextlib import nullcontext
+        from PIL import Image
+        import io
+        from .point_segment import _model_lock, _predictor
+
+        image_bytes = base64.b64decode(image, validate=True)
+        pil_image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        with _model_lock:
+            _, processor = _predictor()
+            precision = torch.autocast("cuda", dtype=torch.bfloat16) if torch.cuda.is_available() else nullcontext()
+            with torch.inference_mode(), precision:
+                state = processor.set_image(pil_image)
+                state = processor.set_text_prompt(prompt.strip(), state)
+                masks = state["masks"].detach().cpu().numpy()
+                scores = state["scores"].detach().float().cpu().numpy()
+        results = []
+        discarded_contours = 0
+        for mask, score in zip(masks, scores):
+            binary = np.asarray(mask.squeeze(), dtype=np.uint8)
+            contours, hierarchy = cv2.findContours(binary, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+            if hierarchy is None:
+                continue
+            parts = []
+            for i, node in enumerate(hierarchy[0]):
+                if node[3] != -1 or cv2.contourArea(contours[i]) < 9:
+                    discarded_contours += 1
+                    continue
+                contour = cv2.approxPolyDP(contours[i], max(0.5, cv2.arcLength(contours[i], True) * 0.001), True)
+                points = [[int(x), int(y)] for [[x, y]] in contour]
+                holes = []
+                child = node[2]
+                while child != -1:
+                    hole = contours[child]
+                    hole = cv2.approxPolyDP(hole, max(0.5, cv2.arcLength(hole, True) * 0.001), True)
+                    vertices = [[int(x), int(y)] for [[x, y]] in hole]
+                    if len(vertices) >= 3:
+                        holes.append(vertices)
+                    child = hierarchy[0][child][0]
+                if len(points) >= 3:
+                    parts.append({"points": points, "holes": holes})
+            if parts:
+                results.append({"parts": parts, "score": float(score)})
+        return jsonify(results=results, diagnostics={
+            "confidence_threshold": processor.confidence_threshold,
+            "model_mask_count": len(masks), "returned_count": len(results),
+            "scores": [float(score) for score in scores],
+            "min_contour_area": 9, "discarded_contours": discarded_contours,
+            "empty_reason": ("模型在置信度过滤后没有返回 mask" if not len(masks)
+                             else "mask 没有可用轮廓" if not results else None)})
+    except (ValueError, TypeError) as error:
+        return jsonify(error=str(error)), 400
+
+
+@app.post("/segment_text_multi")
+def segment_text_multi():
+    """Evaluate several text prompts while encoding the image only once."""
+    body = request.get_json(silent=True) or {}
+    image = body.get("image")
+    if not isinstance(image, str):
+        return jsonify(error="image (base64) is required"), 400
+    try:
+        import base64
+        import io
+        from contextlib import nullcontext
+
+        import torch
+        from PIL import Image
+        from .point_segment import _model_lock, _predictor
+
+        image_bytes = base64.b64decode(image, validate=True)
+        prompts = validate_prompt_map(body.get("prompts"))
+        pil_image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        started = perf_counter()
+        with _model_lock:
+            _, processor = _predictor()
+            precision = (torch.autocast("cuda", dtype=torch.bfloat16)
+                         if torch.cuda.is_available() else nullcontext())
+            with torch.inference_mode(), precision:
+                encode_started = perf_counter()
+                state = processor.set_image(pil_image)
+                image_encoding_seconds = perf_counter() - encode_started
+                _, outputs, prompt_seconds = evaluate_prompt_states(
+                    processor, state, prompts)
+        return jsonify(prompts=outputs, diagnostics={
+            "image_encoded_once": True,
+            "image_encoding_seconds": image_encoding_seconds,
+            "prompt_seconds": prompt_seconds,
+            "total_seconds": perf_counter() - started,
+        })
+    except (ValueError, TypeError) as error:
+        return jsonify(error=str(error)), 400
+
+
+@app.post("/prefetch_text")
+def prefetch_text():
+    """Keep the local contract explicit when response caching is unavailable."""
+    return jsonify(prefetched=False, code="local_response_cache_unavailable"), 202
+
+
+@app.post("/prefetch_text_multi")
+def prefetch_text_multi():
+    """Avoid a misleading 404; foreground multi-prompt inference stays fast."""
+    return jsonify(prefetched=False, code="local_response_cache_unavailable"), 202
+
+
+def main():
+    host = os.environ.get("SAM3_HOST", "127.0.0.1")
+    port = int(os.environ.get("SAM3_PORT", "8766"))
+    print(f"SAM 3 service: http://{host}:{port}", flush=True)
+    app.run(host=host, port=port, threaded=True)
+
+
+if __name__ == "__main__":
+    main()

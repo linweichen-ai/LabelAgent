@@ -1,0 +1,1389 @@
+/*
+ * LabelAgent academic-light visual layer.
+ *
+ * This stylesheet deliberately changes presentation only.  The workbench
+ * structure, element ids, interaction order and inference controls remain in
+ * index.html and the existing component stylesheets.
+ *
+ * Palette and visual restraint follow the owner's personal homepage:
+ * white paper, deep blue headings, readable gray text, fine rules and modest
+ * shadows.  Green, amber and red remain reserved for machine-state semantics.
+ */
+
+:root {
+  --la-paper: #ffffff;
+  --la-canvas: #f1f4f8;
+  --la-ink: #404950;
+  --la-heading: #24354a;
+  --la-muted: #626a70;
+  --la-link: #224b8d;
+  --la-link-dark: #16335f;
+  --la-line: #e3e7eb;
+  --la-line-strong: #d4dbe3;
+  --la-blue-soft: #f2f6fb;
+  --la-blue-selected: #e9f0fa;
+  --la-shadow: 0 5px 18px rgba(32, 51, 75, .07);
+  --la-shadow-raised: 0 10px 28px rgba(32, 51, 75, .105);
+  --la-shadow-card: 0 1px 2px rgba(30, 45, 65, .04), 0 8px 24px rgba(30, 45, 65, .055);
+  --la-radius: 9px;
+  --la-radius-large: 12px;
+  --la-sans: "Segoe UI Variable", "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;
+}
+
+html {
+  color: var(--la-ink);
+  background: var(--la-canvas);
+  font-family: var(--la-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  color: var(--la-ink);
+  background: var(--la-canvas);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: var(--la-sans);
+}
+
+button {
+  border-color: var(--la-line-strong);
+  border-radius: 7px;
+  color: var(--la-heading);
+  background: var(--la-paper);
+  box-shadow: none;
+  transition: border-color .15s ease, color .15s ease, background-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+
+button:hover:not(:disabled) {
+  border-color: #9aaabd;
+  color: var(--la-link-dark);
+  background: #f7f9fb;
+  box-shadow: 0 4px 12px rgba(32, 51, 75, .09);
+  transform: translateY(-1px);
+}
+
+button:active:not(:disabled) {
+  box-shadow: none;
+  transform: translateY(0);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--la-link);
+  outline-offset: 2px;
+}
+
+button.primary,
+.guideAction,
+.guideAutoDraft,
+.workspaceModes .selected,
+.reviewFilterButtons button.selected,
+.compareModes button.selected {
+  border-color: var(--la-link) !important;
+  color: #fff !important;
+  background: linear-gradient(135deg, #2d5ba1, var(--la-link)) !important;
+  box-shadow: 0 5px 14px rgba(34, 75, 141, .20) !important;
+}
+
+button.primary:hover:not(:disabled),
+.guideAction:hover:not(:disabled),
+.guideAutoDraft:hover:not(:disabled) {
+  border-color: var(--la-link-dark) !important;
+  background: var(--la-link-dark) !important;
+}
+
+button.selected:not(.primary):not(.workspaceModes button):not(.reviewFilterButtons button):not(.compareModes button) {
+  border-color: #8299b5;
+  color: var(--la-link);
+  background: var(--la-blue-selected);
+}
+
+input,
+select,
+textarea {
+  border-color: var(--la-line-strong);
+  border-radius: 7px;
+  color: var(--la-ink);
+  background: var(--la-paper);
+  box-shadow: inset 0 1px 2px rgba(32, 51, 75, .035);
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: #aab6c3;
+}
+
+/* Top bar: visually mirrors the restrained homepage masthead. */
+.windowToolbar {
+  gap: 10px;
+  min-height: 50px;
+  padding: 7px 14px;
+  border-top: 3px solid var(--la-link);
+  border-bottom: 1px solid var(--la-line);
+  background: rgba(255, 255, 255, .94);
+  box-shadow: 0 4px 18px rgba(36, 53, 74, .055);
+  backdrop-filter: blur(14px) saturate(125%);
+}
+
+.productBrand {
+  padding-right: 12px;
+  border-right: 1px solid var(--la-line);
+}
+
+.brandMark {
+  border: 1px solid #183a69;
+  border-radius: 10px;
+  color: #fff;
+  background: linear-gradient(145deg, #315f9f, #173966);
+  box-shadow: 0 5px 14px rgba(27, 61, 108, .20), inset 0 1px 0 rgba(255, 255, 255, .25);
+}
+
+.brandCopy strong {
+  color: var(--la-heading);
+  letter-spacing: -.02em;
+}
+
+.brandCopy small,
+#workspaceModeHint {
+  color: var(--la-muted);
+}
+
+.brandLive {
+  border-color: #cbd9d2;
+  color: #45665b;
+  background: #f7faf8;
+}
+
+.workspaceModes {
+  padding: 3px;
+  border-color: var(--la-line-strong);
+  border-radius: 9px;
+  background: #f3f6fa;
+  box-shadow: inset 0 1px 2px rgba(32, 51, 75, .05);
+}
+
+.workspaceModes button {
+  min-height: 30px;
+  border-radius: 6px;
+}
+
+.modeShortcut {
+  border-color: #9bacc1;
+  color: var(--la-link);
+  background: var(--la-blue-soft);
+  box-shadow: none;
+}
+
+.toolbarActions {
+  gap: 5px;
+  padding: 3px;
+  border: 1px solid #e8ecf1;
+  border-radius: 10px;
+  background: rgba(247, 249, 252, .88);
+}
+
+.toolbarActions button {
+  border-color: transparent;
+  min-height: 30px;
+  border-radius: 7px;
+  color: #4d5b68;
+  background: transparent;
+}
+
+.toolbarActions button:hover:not(:disabled) {
+  border-color: var(--la-line);
+  background: #f5f7f9;
+}
+
+.reviewPacketsButton,
+.quickActionsButton,
+.tutorialButton {
+  box-shadow: none !important;
+}
+
+/* Dataset identity becomes a clean information strip instead of a banner. */
+.datasetIdentity {
+  min-height: 44px;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--la-line);
+  background: linear-gradient(90deg, #fbfcfd, #f4f7fb);
+  box-shadow: none;
+}
+
+.datasetIdentityKind {
+  border: 1px solid #a9b8ca;
+  border-radius: 999px;
+  color: var(--la-link);
+  background: var(--la-paper);
+}
+
+.datasetIdentityCopy strong {
+  color: var(--la-heading);
+  letter-spacing: -.01em;
+}
+
+.datasetIdentityCopy small {
+  color: var(--la-muted);
+}
+
+.datasetIdentity button {
+  border-color: var(--la-line-strong);
+  color: var(--la-link);
+  background: var(--la-paper);
+}
+
+/* Workflow guide: clearer hierarchy, same four steps and actions. */
+.workflowGuide {
+  border-bottom: 1px solid var(--la-line);
+  background: linear-gradient(180deg, #fff, #fbfcfe);
+  box-shadow: 0 4px 18px rgba(32, 51, 75, .05);
+}
+
+.guideSummary {
+  padding: 9px 14px 8px;
+  background: var(--la-paper);
+}
+
+.guideCopy {
+  padding-left: 10px;
+  border-left: 3px solid var(--la-link);
+}
+
+.guideEyebrow {
+  color: var(--la-link);
+  background: transparent;
+  letter-spacing: .035em;
+}
+
+.guideCopy strong,
+.panelHeading h2,
+.candidateReviewHead strong,
+.compareDockHead strong,
+.inspectionHeading strong {
+  color: var(--la-heading);
+}
+
+.guideCopy > span:last-child,
+.guideDetail,
+.guideSafety {
+  color: var(--la-muted);
+}
+
+.guideBadge {
+  border-radius: 4px;
+}
+
+.guideSteps {
+  border-top: 1px solid #eef0f3;
+  background: #fbfcfd;
+}
+
+.guideSteps li:not(:last-child)::after {
+  background: var(--la-line-strong);
+}
+
+.guideSteps li i {
+  border-color: #b4bfcc;
+  color: var(--la-muted);
+  background: var(--la-paper);
+}
+
+.guideSteps li {
+  border-radius: var(--la-radius);
+  background: linear-gradient(180deg, #fff, #fafbfd);
+  transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+
+.guideSteps li.active {
+  box-shadow: 0 0 0 3px rgba(34, 75, 141, .09), 0 4px 12px rgba(32, 51, 75, .06);
+  transform: translateY(-1px);
+}
+
+.guideSteps li.active i,
+.guideSteps li.done i {
+  border-color: var(--la-link);
+  background: var(--la-link);
+}
+
+.guideSteps b {
+  color: var(--la-heading);
+}
+
+.guideSteps small {
+  color: var(--la-muted);
+}
+
+.guideSafety {
+  border-top-color: var(--la-line);
+  background: #fff;
+}
+
+/* The image remains the visual focus; chrome is quieter and more precise. */
+.windowGrid {
+  gap: 7px;
+  padding: 8px;
+  background-color: #e7ecf2;
+  background-image:
+    radial-gradient(circle, rgba(116, 136, 157, .24) .7px, transparent .8px),
+    linear-gradient(145deg, rgba(246, 248, 251, .95), rgba(226, 232, 239, .95));
+  background-size: 16px 16px, auto;
+}
+
+.sensorWindow {
+  border-color: rgba(255, 255, 255, .92);
+  border-radius: var(--la-radius-large);
+  background: #e7ecf1;
+  box-shadow: 0 16px 38px rgba(32, 51, 75, .16), 0 0 0 1px rgba(120, 138, 157, .16);
+  overflow: hidden;
+}
+
+.canvasWrap,
+.imageStage {
+  background: radial-gradient(circle at 50% 38%, #f8fafc 0, #eef2f6 55%, #e3e8ee 100%);
+}
+
+.windowHeader,
+.primaryWindow .windowHeader {
+  color: #edf2f6;
+  background: linear-gradient(90deg, rgba(25, 42, 59, .97), rgba(35, 58, 79, .93));
+  backdrop-filter: blur(8px);
+}
+
+.playbackBar {
+  padding: 7px 11px;
+  border-color: var(--la-line);
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 -5px 16px rgba(32, 51, 75, .045);
+}
+
+.playbackControls button,
+.frameStepButton {
+  border-color: var(--la-line-strong) !important;
+  border-radius: 4px !important;
+  color: var(--la-heading) !important;
+  background: var(--la-paper) !important;
+}
+
+.timeSeek input,
+.compareSliders input[type="range"] {
+  accent-color: var(--la-link);
+}
+
+.timeSeek output,
+.frameJumpLabel,
+.playbackControls #frameTotal {
+  color: var(--la-muted);
+}
+
+#workbenchSplitter {
+  background: #eef1f4;
+}
+
+#workbenchSplitter::after {
+  background: #aeb9c5;
+}
+
+#workbench {
+  border-top-color: var(--la-line);
+  background: var(--la-paper);
+}
+
+.panel {
+  background: var(--la-paper);
+}
+
+/* Product-polish layer for the automatic annotation desk. */
+#inspectionPanel {
+  gap: 10px;
+  padding: 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background:
+    radial-gradient(circle at 100% 0, rgba(34, 75, 141, .055), transparent 32%),
+    #f4f6f9;
+}
+
+.inspectionHeading,
+.autoLabelBar,
+.candidateSummary,
+.batchReviewPanel,
+.candidateReviewPanel,
+.runProgress,
+.inspectionStages,
+#inspectionBody:not(:empty) {
+  border: 1px solid var(--la-line);
+  border-radius: var(--la-radius-large);
+  background: rgba(255, 255, 255, .96);
+  box-shadow: var(--la-shadow-card);
+}
+
+.inspectionHeading {
+  flex: 0 0 auto;
+  padding: 11px 13px;
+  border-left: 4px solid var(--la-link);
+  background: linear-gradient(120deg, #fff, #f8fafd 72%, #f2f6fb);
+}
+
+.inspectionTitle strong {
+  font-size: 15px;
+  letter-spacing: -.015em;
+}
+
+.inspectionTitle span {
+  color: var(--la-muted);
+}
+
+.inspectionActions label {
+  min-height: 31px;
+  padding: 3px 4px 3px 8px;
+  border: 1px solid var(--la-line);
+  border-radius: 7px;
+  color: var(--la-muted);
+  background: rgba(255, 255, 255, .9);
+  box-shadow: 0 1px 2px rgba(32, 51, 75, .035);
+}
+
+.inspectionActions label input {
+  border-color: transparent;
+  background: #f3f6fa;
+  box-shadow: none;
+}
+
+.runActions {
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--la-line);
+  border-radius: 9px;
+  background: #edf1f6;
+  box-shadow: inset 0 1px 2px rgba(32, 51, 75, .045);
+}
+
+.runActions button {
+  border-color: transparent;
+}
+
+#clearAutoResult {
+  color: #a0443e;
+  background: #fffafa;
+}
+
+#clearAutoResult:hover:not(:disabled) {
+  border-color: #d9aaa6;
+  color: #87332e;
+  background: #fff1f0;
+}
+
+.autoLabelBar,
+.candidateSummary {
+  flex: 0 0 auto;
+  padding: 9px 11px;
+}
+
+.autoLabelBar > strong,
+.candidateSummary > strong {
+  color: var(--la-heading);
+  letter-spacing: -.01em;
+}
+
+.autoLabelOptions label {
+  border-color: #d8e0e8;
+  background: #f8fafc;
+  transition: border-color .15s ease, background-color .15s ease, transform .15s ease;
+}
+
+.autoLabelOptions label:hover {
+  border-color: #9fb0c4;
+  background: var(--la-blue-soft);
+  transform: translateY(-1px);
+}
+
+.candidateCoverageChip {
+  border: 1px solid rgba(128, 145, 160, .18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
+  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+
+.candidateCoverageChip:hover {
+  border-color: #9eafc0;
+  box-shadow: 0 4px 10px rgba(32, 51, 75, .07);
+  transform: translateY(-1px);
+}
+
+.batchReviewPanel,
+.candidateReviewPanel {
+  overflow: hidden;
+}
+
+.candidateReviewPanel:has(.candidateReviewEmpty) {
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+.candidateReviewPanel:has(.candidateReviewEmpty) .candidateReviewEmpty {
+  min-height: 72px;
+}
+
+.batchReviewHead,
+.candidateReviewHead {
+  min-height: 48px;
+  padding: 9px 11px;
+  border-bottom-color: var(--la-line);
+  background: linear-gradient(90deg, #fff, #f7f9fc);
+}
+
+.batchReviewEyebrow,
+.reviewEyebrow {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18);
+}
+
+.candidateStat,
+.batchReviewStat,
+.runProgressStats > span {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 9px rgba(32, 51, 75, .04);
+}
+
+.candidateStat::before,
+.batchReviewStat::before,
+.runProgressStats > span::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: #cbd5df;
+}
+
+.candidateStat.warning::before,
+.batchReviewStat.warning::before {
+  background: #d89a27;
+}
+
+.candidateStat.safe::before,
+.batchReviewStat.safe::before {
+  background: #2c9b78;
+}
+
+.candidateStat.pending::before {
+  background: #3d86b1;
+}
+
+.candidateStat b,
+.batchReviewStat b,
+.runProgressStats b,
+.runProgressPercent {
+  font-variant-numeric: tabular-nums;
+}
+
+.candidateReviewItem {
+  border-radius: 10px;
+  box-shadow: 0 3px 12px rgba(32, 51, 75, .045);
+}
+
+.candidateReviewItem.selected {
+  box-shadow: 0 0 0 3px rgba(224, 169, 47, .15), var(--la-shadow);
+}
+
+.runProgress {
+  flex: 0 0 auto;
+  padding: 11px 12px;
+  background:
+    radial-gradient(circle at 100% 0, rgba(34, 75, 141, .07), transparent 34%),
+    linear-gradient(125deg, #fbfdfc, #f4f8fb);
+}
+
+.runProgressBar {
+  box-shadow: inset 0 1px 2px rgba(32, 51, 75, .09);
+}
+
+.inspectionStages {
+  flex: 0 0 auto;
+  padding: 5px;
+  background: #f4f7fb;
+}
+
+.inspectionStages button {
+  border-color: transparent;
+  border-radius: 7px;
+  background: transparent;
+}
+
+.inspectionStages .selected {
+  border-color: #b7c8dd;
+  color: var(--la-link);
+  background: var(--la-paper);
+  box-shadow: 0 3px 9px rgba(32, 51, 75, .08);
+}
+
+.reviewFilterButtons button,
+.batchReviewFilters button {
+  border-color: #dce3eb;
+  color: #536274;
+  background: #f8fafc;
+}
+
+.reviewFilterButtons button:hover:not(:disabled),
+.batchReviewFilters button:hover:not(:disabled) {
+  border-color: #9fb0c4;
+  background: #f1f5fa;
+}
+
+.reviewFilterButtons button.selected,
+.batchReviewFilters button.selected {
+  border-color: var(--la-link) !important;
+  color: #fff !important;
+  background: linear-gradient(135deg, #315f9f, var(--la-link)) !important;
+  box-shadow: 0 4px 11px rgba(34, 75, 141, .16);
+}
+
+#inspectionBody:not(:empty) {
+  padding: 11px;
+  overflow: auto;
+}
+
+.inspectionCard {
+  border-radius: var(--la-radius);
+  box-shadow: 0 4px 14px rgba(32, 51, 75, .05);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #aab6c4 transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #aab6c4;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #8797aa;
+  background-clip: padding-box;
+}
+
+@media (max-width: 1500px) {
+  #workspaceModeHint {
+    display: none;
+  }
+
+  .windowToolbar {
+    gap: 8px;
+  }
+
+  .toolbarActions {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 1320px) {
+  .brandCopy small,
+  .brandLive {
+    display: none;
+  }
+
+  .productBrand {
+    padding-right: 7px;
+  }
+
+  .toolbarActions button {
+    padding-right: 7px;
+    padding-left: 7px;
+  }
+}
+
+@media (min-width: 1800px) {
+  .brandCopy strong {
+    font-size: 15px;
+  }
+
+  .inspectionTitle strong {
+    font-size: 16px;
+  }
+
+  .inspectionHeading button,
+  .inspectionHeading label,
+  .inspectionHeading input,
+  .inspectionHeading select,
+  .autoLabelBar {
+    font-size: 13px;
+  }
+
+  .candidateSummary,
+  .candidateReviewHead strong,
+  .batchReviewHead strong,
+  .runProgressHeadline > strong {
+    font-size: 13px;
+  }
+
+  .candidateStat b,
+  .batchReviewStat b,
+  .runProgressStats b {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 1200px) and (max-height: 850px) {
+  body[data-workspace="auto"] #inspectionPanel {
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  body[data-workspace="auto"] .candidateReviewPanel:not(.compact) {
+    flex: 0 0 230px;
+  }
+}
+
+.panelHeading {
+  border-bottom: 1px solid var(--la-line);
+}
+
+.panelHeading h2 {
+  letter-spacing: -.015em;
+}
+
+.truthSettings,
+.toolrow,
+.autoLabelBar,
+.candidateSummary,
+.inspectionHeading,
+.inspectionStages,
+.candidateReviewHead {
+  border-color: var(--la-line);
+  background: var(--la-paper);
+}
+
+.shapeList {
+  border-top-color: var(--la-line);
+}
+
+.shapeItem {
+  border-bottom-color: var(--la-line);
+}
+
+.shapeItem:hover {
+  background: #f7f9fb;
+}
+
+.shapeItem.selected {
+  color: var(--la-link);
+  background: var(--la-blue-selected);
+}
+
+/* Cards and floating panels borrow the homepage's thin-rule language. */
+.candidateReviewPanel,
+#inspectionPanel {
+  border-color: var(--la-line);
+  background: #fafbfc;
+}
+
+.candidateReviewItem,
+.candidateStat,
+.inspectionCard,
+.compareLayers,
+.candidateCoverageDetail,
+.referenceReviewDockEvidencePanel {
+  border-color: var(--la-line);
+  border-radius: 5px;
+  background: var(--la-paper);
+  box-shadow: 0 2px 8px rgba(32, 51, 75, .035);
+}
+
+.candidateReviewItem:hover,
+.candidateReviewItem:focus-visible {
+  border-color: #9aaabd;
+  box-shadow: var(--la-shadow);
+  transform: translateY(-1px);
+}
+
+.candidateNumber {
+  border-radius: 4px;
+  color: var(--la-link);
+  background: var(--la-blue-selected);
+}
+
+.reviewEyebrow,
+.compareEyebrow {
+  border-radius: 3px;
+  background: var(--la-heading);
+}
+
+.candidateEvidence,
+.compareLegend {
+  border-radius: 4px;
+  background: #f6f8fa;
+}
+
+.compareDock {
+  border-color: #aeb9c5;
+  border-radius: 7px;
+  color: var(--la-ink);
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 12px 34px rgba(20, 33, 53, .18);
+}
+
+.compareDockHead {
+  border-bottom: 1px solid var(--la-line);
+  background: #fbfcfd;
+}
+
+.referenceReviewDock {
+  border-color: #aeb9c5;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 12px 32px rgba(20, 33, 53, .15);
+}
+
+.referenceReviewDockCopy strong {
+  color: var(--la-heading);
+}
+
+.referenceReviewDockCopy small {
+  color: var(--la-muted);
+}
+
+/* Dialogs retain their behavior but look like the homepage's figure preview. */
+dialog,
+#addWindowDialog,
+.runReadinessDialog,
+.inspectionZoom {
+  border-color: var(--la-line-strong);
+  border-radius: 7px;
+  color: var(--la-ink);
+  background: var(--la-paper);
+  box-shadow: 0 16px 60px rgba(20, 33, 53, .22);
+}
+
+dialog::backdrop,
+#addWindowDialog::backdrop,
+.runReadinessDialog::backdrop,
+.inspectionZoom::backdrop {
+  background: rgba(23, 35, 51, .62);
+  backdrop-filter: blur(3px);
+}
+
+.readinessHead,
+.readinessSummary {
+  background: #fbfcfd;
+}
+
+.readinessHead {
+  border-bottom: 1px solid var(--la-line);
+}
+
+.readinessHead h2 {
+  color: var(--la-heading);
+}
+
+.readinessHead span {
+  border-radius: 3px;
+  background: var(--la-heading);
+}
+
+.readinessList li {
+  border-color: var(--la-line);
+  border-radius: 5px;
+}
+
+.readinessActions {
+  border-color: var(--la-line);
+  background: #f8f9fb;
+}
+
+/* Dark mode remains available and coherent; semantic colors stay untouched. */
+body.darkTheme {
+  --la-paper: #121a22;
+  --la-canvas: #0e151c;
+  --la-ink: #d9e1e8;
+  --la-heading: #edf2f6;
+  --la-muted: #a8b2bc;
+  --la-link: #8fb4e8;
+  --la-link-dark: #b5cef0;
+  --la-line: #2c3946;
+  --la-line-strong: #3a4856;
+  --la-blue-soft: #17263a;
+  --la-blue-selected: #1a2e47;
+  background: var(--la-canvas);
+}
+
+body.darkTheme .windowToolbar,
+body.darkTheme .datasetIdentity,
+body.darkTheme .workflowGuide,
+body.darkTheme .guideSummary,
+body.darkTheme .guideSafety,
+body.darkTheme .playbackBar,
+body.darkTheme #workbench,
+body.darkTheme .panel,
+body.darkTheme .candidateReviewHead,
+body.darkTheme .inspectionHeading,
+body.darkTheme .inspectionStages,
+body.darkTheme .autoLabelBar,
+body.darkTheme .candidateSummary {
+  border-color: var(--la-line);
+  background: var(--la-paper);
+}
+
+body.darkTheme .guideSteps,
+body.darkTheme .compareDockHead,
+body.darkTheme .readinessHead,
+body.darkTheme .readinessSummary,
+body.darkTheme .readinessActions {
+  border-color: var(--la-line);
+  background: #151f29;
+}
+
+body.darkTheme .toolbarActions button {
+  color: #c4cdd6;
+}
+
+body.darkTheme .toolbarActions button:hover:not(:disabled) {
+  border-color: var(--la-line-strong);
+  background: #1a2530;
+}
+
+body.darkTheme .candidateReviewItem,
+body.darkTheme .candidateStat,
+body.darkTheme .inspectionCard,
+body.darkTheme .compareLayers,
+body.darkTheme .candidateCoverageDetail,
+body.darkTheme .referenceReviewDockEvidencePanel,
+body.darkTheme .readinessList li,
+body.darkTheme input,
+body.darkTheme select,
+body.darkTheme textarea,
+body.darkTheme button {
+  border-color: var(--la-line-strong);
+  color: var(--la-ink);
+  background: var(--la-paper);
+}
+
+body.darkTheme .compareDock,
+body.darkTheme .referenceReviewDock,
+body.darkTheme dialog,
+body.darkTheme .runReadinessDialog {
+  border-color: var(--la-line-strong);
+  color: var(--la-ink);
+  background: rgba(18, 26, 34, .97);
+}
+
+body.darkTheme .windowGrid {
+  background: linear-gradient(145deg, #17212a, #101820);
+}
+
+body.darkTheme .sensorWindow,
+body.darkTheme .canvasWrap,
+body.darkTheme .imageStage {
+  border-color: #40505e;
+  background: #101820;
+}
+
+/* Collapsed or unavailable review sections should occupy only their header. */
+.batchReviewPanel.compact,
+.candidateReviewPanel.unavailable,
+.candidateReviewPanel.noCandidates {
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+/*
+ * Wide-screen auto workspace.
+ *
+ * A 4:3 factory image cannot fill an ultra-wide viewport without either
+ * cropping the image or producing large side bars.  On wide monitors we use
+ * those pixels for the operation/review desk instead: image and playback stay
+ * on the left, while the existing workbench occupies the right column.  No
+ * controls are reordered in the DOM and narrower screens retain the original
+ * stacked layout.
+ */
+@media (min-width: 1200px) and (min-height: 680px) {
+  body[data-workspace="auto"] .viewer {
+    display: grid;
+    grid-template-columns: minmax(560px, 44vw) minmax(500px, 1fr);
+    grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "toolbar toolbar"
+      "dataset dataset"
+      "notice notice"
+      "guide guide"
+      "canvas desk"
+      "playback desk";
+    height: 100dvh;
+    overflow: hidden;
+    background: var(--la-canvas);
+  }
+
+  body[data-workspace="auto"] .windowToolbar { grid-area: toolbar; }
+  body[data-workspace="auto"] .datasetIdentity { grid-area: dataset; }
+  body[data-workspace="auto"] .uiVersionNotice { grid-area: notice; }
+  body[data-workspace="auto"] .workflowGuide { grid-area: guide; }
+
+  body[data-workspace="auto"] .windowGrid {
+    grid-area: canvas;
+    min-height: 0;
+    padding: 12px;
+    border-right: 1px solid var(--la-line-strong);
+    overflow: hidden;
+  }
+
+  body[data-workspace="auto"] .playbackBar {
+    grid-area: playback;
+    border-right: 1px solid var(--la-line-strong);
+  }
+
+  body[data-workspace="auto"] #workbenchSplitter {
+    display: none;
+  }
+
+  body[data-workspace="auto"] #workbench {
+    grid-area: desk;
+    width: 100%;
+    height: auto !important;
+    min-height: 0;
+    border-top: 0;
+    border-left: 1px solid var(--la-line);
+    box-shadow: -8px 0 22px rgba(32, 51, 75, .055);
+    overflow: hidden;
+  }
+
+  body[data-workspace="auto"] #autoDesk,
+  body[data-workspace="auto"] #inspectionPanel {
+    height: 100%;
+    min-height: 0;
+  }
+
+  body[data-workspace="auto"] .inspectionHeading {
+    align-items: flex-start;
+  }
+
+  body[data-workspace="auto"] .inspectionActions {
+    justify-content: flex-end;
+  }
+
+  body[data-workspace="auto"] .batchReviewPanel.compact {
+    flex: 0 0 auto;
+    min-height: 0;
+  }
+
+  body[data-workspace="auto"] .candidateReviewPanel.unavailable,
+  body[data-workspace="auto"] .candidateReviewPanel.noCandidates {
+    flex: 0 0 auto;
+    min-height: 0;
+  }
+
+  body[data-workspace="auto"] .candidateReviewStats {
+    grid-template-columns: repeat(4, minmax(72px, 1fr));
+  }
+
+  body[data-workspace="auto"] .candidateReviewList {
+    grid-template-columns: 1fr;
+  }
+
+  body[data-workspace="auto"].workbenchCollapsed .viewer {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "toolbar"
+      "dataset"
+      "notice"
+      "guide"
+      "canvas"
+      "playback";
+  }
+
+  body[data-workspace="auto"].workbenchCollapsed #workbench {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .productBrand {
+    padding-right: 0;
+    border-right: 0;
+  }
+
+  .toolbarActions {
+    width: 100%;
+    padding-top: 5px;
+    border-top: 1px solid var(--la-line);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  .candidateReviewItem {
+    transition: none;
+  }
+}
+
+/* Professional compact layer: keep every workflow, reduce visual chrome. */
+.windowToolbar {
+  gap: 7px;
+  min-height: 44px;
+  padding: 5px 12px;
+  border-top-width: 2px;
+  box-shadow: none;
+}
+
+.productBrand {
+  gap: 6px;
+  padding-right: 9px;
+}
+
+.brandMark {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  box-shadow: none;
+}
+
+.brandCopy small,
+#workspaceModeHint,
+.tutorialButton {
+  display: none;
+}
+
+.brandLive {
+  padding: 2px 6px;
+  font-size: 10px;
+}
+
+.workspaceModes {
+  padding: 2px;
+  border-radius: 7px;
+  box-shadow: none;
+}
+
+.workspaceModes button {
+  min-height: 28px;
+  padding: 4px 11px;
+}
+
+.modeShortcut {
+  min-height: 30px;
+  padding: 4px 10px;
+  box-shadow: none;
+}
+
+.toolbarActions {
+  gap: 3px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.toolbarActions button {
+  min-height: 30px;
+  box-shadow: none !important;
+}
+
+.focusModeButton,
+.canvasModeButton,
+.themeButton,
+#addWindowButton {
+  width: 32px;
+  min-width: 32px;
+  padding: 0 !important;
+  font-size: 0;
+}
+
+.focusModeButton > span,
+.canvasModeButton > span,
+.themeButton > span,
+#addWindowButton img {
+  width: 14px;
+  height: 14px;
+  font-size: 14px;
+}
+
+button:hover:not(:disabled),
+.candidateCoverageChip:hover,
+.candidateReviewItem:hover,
+.candidateReviewItem:focus-visible,
+.guideSteps li.active {
+  box-shadow: none;
+  transform: none;
+}
+
+.datasetIdentity {
+  min-height: 38px;
+  padding: 5px 12px;
+  box-shadow: none;
+}
+
+.datasetIdentityKind {
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.workflowGuide {
+  padding: 6px 12px;
+  box-shadow: none;
+}
+
+.guideSummary {
+  min-height: 34px;
+  padding: 0;
+}
+
+.guideEyebrow {
+  display: none;
+}
+
+.guideCopy {
+  grid-template-columns: 1fr;
+  gap: 1px;
+  padding-left: 0;
+  border-left: 0;
+}
+
+.guideCopy strong {
+  font-size: 13px;
+}
+
+.guideCopy > span:last-child {
+  font-size: 10.5px;
+}
+
+.guideBadge {
+  min-height: 22px;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.guideSteps {
+  gap: 5px;
+  margin: 6px 0 4px;
+  padding-top: 5px;
+}
+
+.guideSteps li {
+  min-height: 38px;
+  padding: 4px 7px;
+  border-radius: 5px;
+  box-shadow: none;
+}
+
+.guideSteps li i {
+  width: 22px;
+  height: 22px;
+  flex-basis: 22px;
+}
+
+.guideSafety {
+  padding-top: 4px;
+  font-size: 10px;
+}
+
+.shortcutLegend {
+  display: none;
+}
+
+.windowGrid {
+  gap: 4px;
+  padding: 4px;
+  background-image: none;
+}
+
+.sensorWindow {
+  border-radius: 7px;
+  box-shadow: 0 0 0 1px rgba(120, 138, 157, .18);
+}
+
+.playbackBar {
+  padding: 5px 9px;
+  box-shadow: none;
+}
+
+#workbenchSplitter {
+  height: 8px;
+}
+
+#workbench {
+  box-shadow: none;
+}
+
+.panelHeading {
+  min-height: 32px;
+  padding: 5px 12px;
+}
+
+.truthSettings,
+.toolrow,
+.truthActions {
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+.inspectionHeading,
+.autoLabelBar,
+.candidateSummary,
+.batchReviewPanel,
+.candidateReviewPanel,
+.runProgress,
+.inspectionStages,
+#inspectionBody:not(:empty) {
+  border-radius: 7px;
+  box-shadow: none;
+}
+
+.inspectionHeading {
+  padding: 8px 10px;
+  border-left-width: 3px;
+  background-image: none;
+}
+
+.runProgress {
+  padding: 8px 10px;
+  background-image: none;
+}
+
+.candidateReviewItem,
+.candidateStat,
+.batchReviewStat,
+.runProgressStats > span {
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+body:not(.darkTheme) .windowToolbar,
+body:not(.darkTheme) .datasetIdentity,
+body:not(.darkTheme) .workflowGuide,
+body:not(.darkTheme) .guideSummary,
+body:not(.darkTheme) .playbackBar,
+body:not(.darkTheme) #workbench {
+  background: #fff;
+}
+
+body:not(.darkTheme) .windowGrid {
+  background-color: #edf1f5;
+}
+
+@media (max-width: 1180px) {
+  .quickActionsButton kbd,
+  .reviewPacketsButton > span,
+  .brandLive {
+    display: none;
+  }
+}

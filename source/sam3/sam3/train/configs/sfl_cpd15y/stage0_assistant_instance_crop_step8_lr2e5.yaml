@@ -1,0 +1,14 @@
+# @package _global_
+defaults:
+  - /configs/sfl_cpd15y/stage0_assistant_instance_crop_epoch
+  - _self_
+
+trainer:
+  _target_: sam3.train.assistant_instance_crop_trainer.LowUpdateAssistantInstanceCropTrainer
+  max_optimizer_steps: 8
+  optim:
+    options:
+      lr:
+        - scheduler:
+            _target_: fvcore.common.param_scheduler.ConstantParamScheduler
+            value: 2.0e-5

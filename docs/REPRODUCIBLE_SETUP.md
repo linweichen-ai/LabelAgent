@@ -137,13 +137,21 @@ powershell -ExecutionPolicy Bypass -File tools\setup_public_browser_check.ps1
 
 ### 可选的只读托盘候选复核页
 
-仓库内 Round 561 示例包可用于复现 3D/LiDAR/时序路由后的只读候选展示。请只在隔离端口启动，不要覆盖正式工作目录：
+Round 561 示例包可用于复现 3D/LiDAR/时序路由后的只读候选展示，但它是历史开发证据，**不随精简后的 `release` 分支提供**。其历史资源标识为 `artifacts/round561-pallet-visibility-candidate-bundle-20261122`；不要把旧 `artifacts` 目录复制回 `release` 工作树。
+
+<!-- release-doc-ref: external artifacts/round561-pallet-visibility-candidate-bundle-20261122 -->
+
+如确需复核，请由项目维护者从完整开发快照或项目归档中提供一个已授权、已校验的只读目录，并把该目录的绝对路径写入 `LABELAGENT_AUTHORIZED_ROUND561_DIR`。该示例依赖未随 `release` 发布的历史输入和清单，当前分支没有可独立验证的一键重建命令；未取得授权目录时应跳过本节，不能用占位数据冒充。取得目录后只在隔离端口启动，不要覆盖正式工作目录：
 
 ```powershell
+$candidateReviewDir = $env:LABELAGENT_AUTHORIZED_ROUND561_DIR
+if ([string]::IsNullOrWhiteSpace($candidateReviewDir)) {
+  throw "请先由项目维护者提供已授权的 Round 561 只读目录"
+}
 $env:AUTOLABEL_PORT = "18767"
 $env:LABELAGENT_WORK_DIR = (Join-Path (Get-Location) ".repro\pallet-review-work")
 $env:LABELAGENT_PALLET_CANDIDATE_REVIEW_DIR = `
-  (Resolve-Path "artifacts\round561-pallet-visibility-candidate-bundle-20261122")
+  (Resolve-Path -LiteralPath $candidateReviewDir)
 New-Item -ItemType Directory -Force $env:LABELAGENT_WORK_DIR | Out-Null
 .\.venv\Scripts\python.exe -m source.agent.server
 ```

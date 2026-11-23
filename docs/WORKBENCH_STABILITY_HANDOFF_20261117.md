@@ -4395,3 +4395,10 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 已配置但目录、清单或资源损坏仍失败关闭，不会把真实安全故障伪装成正常未启用。
 - 托盘复核 4/4、斜坡专项 API 7/7、网页主逻辑 95/95 通过；隔离端口 18771 真实 Edge 复测的页面错误、失败请求、HTTP 错误、忽略错误和真值写请求全部为 0，结束后端口已关闭。
 - 本轮仍未部署正式工作台，也未修改人工真值、训练数据、模型或 `test24`；详见 `docs/OPTIONAL_PALLET_REVIEW_STATUS_ROUND766_20261124.md`。
+
+## 2026-11-24 Round767 补充：正式部署前只读审计
+
+- 正式 8765 服务在线且 `idle`，但 `D:\Apps\LabelAgent` 位于旧基线 `f70179e...`，现场有 76 条已修改或未跟踪记录，不能用整仓复制或普通 Git 切换覆盖。
+- 最新开发提交为 `9b0b21c...`；5 个相关源码文件均与正式目录不同，Round160 正式包缺少优先侧车，托盘候选状态仍返回旧版 404，确认 Round764–766 尚未部署。
+- 本轮没有修改或重启正式工作台；`automatic_overlay_safe=false`。下一步只能采用逐文件哈希、独立备份、最小补丁、原子替换、重启读回和失败回滚的受控方式。
+- 结构化证据见 `docs/evidence/workbench-stability-20261117/round767-formal-deployment-readiness.json`，说明见 `docs/FORMAL_DEPLOYMENT_READINESS_ROUND767_20261124.md`。

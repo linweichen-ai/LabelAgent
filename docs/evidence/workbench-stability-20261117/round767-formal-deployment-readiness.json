@@ -1,0 +1,63 @@
+{
+  "schema_version": "labelagent.formal-deployment-readiness.v1",
+  "observed_at": "2026-11-24T01:03:35.1052718+08:00",
+  "source_head": "9b0b21c5682982f357fafc85bf6b576471921684",
+  "formal_head": "f70179e1142336bbf3342c22245cb46a95eb606a",
+  "formal_branch": "codex/local-dataset-comparison-20261103",
+  "formal_dirty_entries": 76,
+  "formal_service_pid": 99952,
+  "formal_run_status": "idle",
+  "formal_pallet_status_http": 404,
+  "deployment_performed": false,
+  "automatic_overlay_safe": false,
+  "files": [
+    {
+      "source_relative": "source/agent/server.py",
+      "target_relative": "source/agent/server.py",
+      "source_sha256": "60db3571cf62175de91c2726d90febc1fbfb9fab57f3141f88e4c39c04da2f7d",
+      "target_exists": true,
+      "target_sha256": "9a63076d28263cd58693d62ad89a914eaf29f52613805d3807138a2599511139",
+      "same": false
+    },
+    {
+      "source_relative": "source/web/index.html",
+      "target_relative": "source/web/index.html",
+      "source_sha256": "3a3f89bf03e368af2981e82e3e7ef65d63c4092ff91cf36c286796fdcdc1fda7",
+      "target_exists": true,
+      "target_sha256": "d72e17d73d23e1d8f3a7e01edaf4244e1a95a7346a99d2576d9391da5de7f30c",
+      "same": false
+    },
+    {
+      "source_relative": "source/web/review-packet-core.js",
+      "target_relative": "source/web/review-packet-core.js",
+      "source_sha256": "a2b6dc34191ecce7740b6485711d6ba3e8e39c765b1e406e2542d3d0be6d610d",
+      "target_exists": true,
+      "target_sha256": "262c166060fbf82b1ab5b9585265e8c15034279b7436a1c20422cebbb410ff43",
+      "same": false
+    },
+    {
+      "source_relative": "source/web/review-packet.css",
+      "target_relative": "source/web/review-packet.css",
+      "source_sha256": "ce16d1aaa6c015e6bd993bd5e73cc3d4ebd377f57ead38df880985bc738423ed",
+      "target_exists": true,
+      "target_sha256": "ba7b4f05e1faa0f1c40ebec863cc38f1fa90695c66693b53a7e8685047294fc2",
+      "same": false
+    },
+    {
+      "source_relative": "source/web/review-packet.js",
+      "target_relative": "source/web/review-packet.js",
+      "source_sha256": "4df73c577adf2e79e521be77266d8cd04f961ddc48e3618a0441e354be0782c5",
+      "target_exists": true,
+      "target_sha256": "b6ce3955972034797a3a7ba1c6cbdcea0a6cefbfab6d2d4af13a4109dbeacc66",
+      "same": false
+    },
+    {
+      "source_relative": "artifacts/round160-slope-human-review-packet/review-priority.json",
+      "target_relative": "work/review_packets/slope-round160/review-priority.json",
+      "source_sha256": "e91a21a5b7115d1ca9d8dbc963e26124ed33de2dd5fd40907f73ed6cec9aeec2",
+      "target_exists": false,
+      "target_sha256": null,
+      "same": false
+    }
+  ]
+}

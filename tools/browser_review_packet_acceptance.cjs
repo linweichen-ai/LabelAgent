@@ -16,11 +16,14 @@ const output = path.resolve(process.env.LABELAGENT_ACCEPTANCE_OUTPUT || 'artifac
 const expectedPriorityFrames = String(process.env.LABELAGENT_ACCEPTANCE_PRIORITY_FRAMES || '')
   .split(',').map(value => Number(value.trim())).filter(Number.isInteger);
 const priorityOnly = process.env.LABELAGENT_ACCEPTANCE_PRIORITY_ONLY === '1';
+const viewportWidth = Number(process.env.LABELAGENT_ACCEPTANCE_VIEWPORT_WIDTH || 1600);
+const viewportHeight = Number(process.env.LABELAGENT_ACCEPTANCE_VIEWPORT_HEIGHT || 1000);
+const darkMode = process.env.LABELAGENT_ACCEPTANCE_DARK_MODE === '1';
 
 (async () => {
   fs.mkdirSync(output, {recursive: true});
   const browser = await chromium.launch({channel: 'msedge', headless: true});
-  const page = await browser.newPage({viewport: {width: 1600, height: 1000}, deviceScaleFactor: 1});
+  const page = await browser.newPage({viewport: {width: viewportWidth, height: viewportHeight}, deviceScaleFactor: 1});
   const errors = [], failedRequests = [], httpErrors = [], ignoredHttpErrors = [], writes = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
@@ -44,6 +47,10 @@ const priorityOnly = process.env.LABELAGENT_ACCEPTANCE_PRIORITY_ONLY === '1';
   try {
     await page.goto(base, {waitUntil: 'domcontentloaded', timeout: 60000});
     await page.locator('#openReviewPacketsButton').waitFor({state: 'visible', timeout: 30000});
+    if (darkMode) {
+      await page.locator('#themeButton').click();
+      await page.waitForFunction(() => document.body.classList.contains('darkTheme'));
+    }
     await page.locator('#openReviewPacketsButton').click();
     await page.locator('#reviewPacketDialog[open]').waitFor({state: 'visible'});
     await page.waitForFunction(() => document.querySelectorAll('.reviewPacketItem').length === 32);
@@ -74,7 +81,9 @@ const priorityOnly = process.env.LABELAGENT_ACCEPTANCE_PRIORITY_ONLY === '1';
         throw new Error(`Browser errors: ${[...relevantErrors, ...failedRequests, ...httpErrors].join(' | ')}`);
       }
       const result = {schema_version: 'labelagent.review-packet-priority-browser-acceptance.v1',
-        passed: true, elapsed_ms: Date.now() - started, before, priorityFrames,
+        passed: true, elapsed_ms: Date.now() - started, viewport: {
+          width: viewportWidth, height: viewportHeight, dark_mode: darkMode,
+        }, before, priorityFrames,
         truth_write_requests: writes, page_errors: relevantErrors, failed_requests: failedRequests,
         http_errors: httpErrors, ignored_optional_http_errors: ignoredHttpErrors,
         screenshot: path.join(output, 'review-packet-priority-queue.png')};

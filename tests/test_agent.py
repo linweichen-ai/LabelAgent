@@ -719,6 +719,136 @@ class WorkflowTests(unittest.TestCase):
         self.assertTrue(np.array_equal(_rasterize(repeated, 640, 480), output))
         self.assertIsNone(repeated_audit)
 
+    def test_pallet_roi_evidence_policy_repairs_large_local_instance_only(self):
+        mask = np.zeros((1536, 1920), dtype=np.uint8)
+        mask[600:700, 800:920] = 1
+        cv2.circle(mask, (860, 650), 5, 0, thickness=cv2.FILLED)
+        image = np.full((1536, 1920, 3), 24, dtype=np.uint8)
+        image[600:700, 800:920] = np.array([205, 190, 170], dtype=np.uint8)
+        image[644:657, 854:867] = np.array([198, 183, 164], dtype=np.uint8)
+        candidate = _shape_from_mask(mask, "pallet", 38)
+
+        legacy, legacy_audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 1920, 1536, image_rgb=image,
+            geometry_policy="appearance_evidence_only")
+        refined, audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 1920, 1536, image_rgb=image,
+            geometry_policy="appearance_evidence_roi")
+        output = _rasterize(refined, 1920, 1536)
+
+        self.assertIs(legacy, candidate)
+        self.assertIsNone(legacy_audit)
+        self.assertIsNotNone(audit)
+        self.assertEqual(audit["geometry_cleanup_version"], 8)
+        self.assertEqual(audit["geometry_cleanup_policy"],
+                         "appearance_evidence_roi")
+        self.assertEqual(audit["image_evidence_scale"]["route"],
+                         "roi_absolute")
+        self.assertTrue(audit["image_evidence_scale_gate_passed"])
+        self.assertTrue(audit["add_only"])
+        self.assertEqual(audit["component_merge_count"], 0)
+        self.assertIn(audit["minimum_structural_hole_retention"], (None, 1.0))
+        self.assertEqual(audit["required_structural_hole_retention"], 1.0)
+        self.assertLessEqual(audit["changed_pixels"], 256)
+        self.assertEqual(output[650, 860], 1)
+        self.assertFalse(np.any((mask != 0) & (output == 0)))
+
+    def test_pallet_roi_evidence_policy_rejects_small_local_instance(self):
+        mask = np.zeros((1536, 1920), dtype=np.uint8)
+        mask[600:640, 800:880] = 1
+        cv2.circle(mask, (840, 620), 4, 0, thickness=cv2.FILLED)
+        image = np.full((1536, 1920, 3), 24, dtype=np.uint8)
+        image[600:640, 800:880] = np.array([205, 190, 170], dtype=np.uint8)
+        image[615:626, 835:846] = np.array([198, 183, 164], dtype=np.uint8)
+        candidate = _shape_from_mask(mask, "pallet", 39)
+
+        refined, audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 1920, 1536, image_rgb=image,
+            geometry_policy="appearance_evidence_roi")
+
+        self.assertIs(refined, candidate)
+        self.assertIsNone(audit)
+        self.assertTrue(np.array_equal(
+            _rasterize(refined, 1920, 1536), mask))
+
+    def test_pallet_roi_boundary_evidence_is_color_invariant(self):
+        mask = np.zeros((1536, 1920), dtype=np.uint8)
+        mask[600:700, 800:920] = 1
+        mask[600:611, 850:857] = 0
+        image = np.full((1536, 1920, 3), 24, dtype=np.uint8)
+        image[600:700, 800:920] = np.array([20, 80, 160], dtype=np.uint8)
+        image[600:611, 850:857] = np.array([22, 82, 158], dtype=np.uint8)
+        candidate = _shape_from_mask(mask, "pallet", 40)
+
+        legacy, legacy_audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 1920, 1536, image_rgb=image,
+            geometry_policy="appearance_evidence_only")
+        refined, audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 1920, 1536, image_rgb=image,
+            geometry_policy="appearance_evidence_roi")
+        output = _rasterize(refined, 1920, 1536)
+
+        self.assertIs(legacy, candidate)
+        self.assertIsNone(legacy_audit)
+        self.assertIsNotNone(audit)
+        self.assertEqual(audit["geometry_cleanup_version"], 8)
+        self.assertGreater(audit["filled_image_boundary_notch_count"], 0)
+        self.assertEqual(audit["image_evidence_scale"]["route"],
+                         "roi_absolute")
+        self.assertEqual(audit["component_merge_count"], 0)
+        self.assertLessEqual(audit["changed_pixels"], 256)
+        self.assertEqual(output[605, 853], 1)
+        self.assertFalse(np.any((mask != 0) & (output == 0)))
+
+    def test_pallet_roi_scale_gate_fails_each_threshold_independently(self):
+        base = np.zeros((1536, 1920), dtype=np.uint8)
+        base[600:686, 800:896] = 1
+        passed, audit = workflow._pallet_image_evidence_scale_gate(
+            base, allow_roi_scale=True)
+        self.assertTrue(passed)
+        self.assertEqual(audit["route"], "roi_absolute")
+
+        area_too_small = np.zeros_like(base)
+        area_too_small[600:640, 800:896] = 1
+        area_too_small[685, 800] = 1
+        area_too_small[685, 895] = 1
+        bbox_too_small = np.zeros_like(base)
+        bbox_too_small[600:680, 800:896] = 1
+        width_too_small = np.zeros_like(base)
+        width_too_small[600:687, 800:895] = 1
+        height_too_small = np.zeros_like(base)
+        height_too_small[600:623, 800:1200] = 1
+        for name, mask in {
+                "candidate_area": area_too_small,
+                "bbox_area": bbox_too_small,
+                "bbox_width": width_too_small,
+                "bbox_height": height_too_small}.items():
+            with self.subTest(threshold=name):
+                passed, audit = workflow._pallet_image_evidence_scale_gate(
+                    mask, allow_roi_scale=True)
+                self.assertFalse(passed)
+                self.assertEqual(audit["route"], "rejected")
+
+    def test_pallet_roi_policy_keeps_full_image_absolute_color_gate(self):
+        mask = np.zeros((100, 100), dtype=np.uint8)
+        mask[20:100, :] = 1
+        mask[20:31, 45:52] = 0
+        image = np.full((100, 100, 3), 24, dtype=np.uint8)
+        image[20:100, :] = np.array([20, 80, 160], dtype=np.uint8)
+        image[20:31, 45:52] = np.array([22, 82, 158], dtype=np.uint8)
+        candidate = _shape_from_mask(mask, "pallet", 41)
+
+        refined, audit = workflow.refine_pallet_candidate_geometry(
+            candidate, 100, 100, image_rgb=image,
+            geometry_policy="appearance_evidence_roi")
+
+        self.assertIs(refined, candidate)
+        self.assertIsNone(audit)
+        passed, scale = workflow._pallet_image_evidence_scale_gate(
+            mask, allow_roi_scale=True)
+        self.assertTrue(passed)
+        self.assertEqual(scale["route"], "full_image_ratio")
+
     def test_pallet_evidence_only_policy_preserves_geometry_only_hole_and_island(self):
         main = {"points": [[20, 20], [180, 20], [180, 180], [20, 180]],
                 "holes": [[[70, 70], [75, 70], [75, 75], [70, 75]]]}

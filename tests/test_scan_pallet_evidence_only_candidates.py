@@ -108,6 +108,27 @@ class PalletEvidenceOnlyOfflineScanTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "identity invalid"):
             scan(self.snapshot, self.candidates, self.root / "traversal")
 
+    def test_roi_policy_uses_separate_schema_and_audit(self):
+        output = self.root / "roi-output"
+        result = scan(
+            self.snapshot, self.candidates, output,
+            geometry_policy="appearance_evidence_roi")
+        manifest = json.loads((output / "manifest.json").read_text())
+
+        self.assertEqual(
+            result["schema_version"],
+            "labelagent.pallet-evidence-roi-offline-scan.v2")
+        self.assertEqual(result["geometry_policy"],
+                         "appearance_evidence_roi")
+        self.assertEqual(manifest["geometry_policy"],
+                         "appearance_evidence_roi")
+        self.assertTrue(
+            manifest["rows"][0]["roi_evidence_scale_gate_passed"])
+        self.assertEqual(
+            manifest["roi_evidence_scale_gate_passed_count"], 1)
+        self.assertGreaterEqual(
+            manifest["rows"][0]["roi_image_texture_hole_count"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -201,6 +201,24 @@ class BuildPalletBoundaryComparisonPackTests(unittest.TestCase):
         self.assertEqual(read_packet(packet_root, "replay-pack")[
             "comparison_count"], 1)
 
+    def test_roi_evidence_policy_is_explicit_shadow_variant(self):
+        output = self.root / "v8" / "roi-shadow-pack"
+        result = builder.build_pack(
+            "http://example.test", [7], output,
+            opener=FakeWorkbench([candidate(False)]),
+            geometry_policy="appearance_evidence_roi",
+            include_unchanged=True)
+        manifest = json.loads((output / "manifest.json").read_text(
+            encoding="utf-8"))
+
+        self.assertEqual(result["geometry_policy"],
+                         "appearance_evidence_roi")
+        self.assertEqual(manifest["geometry_policy"],
+                         "appearance_evidence_roi")
+        variant = manifest["rows"][0]["variants"][0]
+        self.assertEqual(variant["alternative_id"],
+                         "pallet-boundary-cleanup-v8-roi-evidence")
+
     def test_explicitly_skips_only_empty_frames_without_binding(self):
         workbench = FakeWorkbench([candidate(False)], unbound_frames={8})
         output = self.root / "sparse" / "replay-pack"

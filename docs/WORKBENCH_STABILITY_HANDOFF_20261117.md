@@ -4140,3 +4140,16 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
   `docs/PALLET_V7_ISOLATED_POSITIVE_SCAN_ROUND741_20261123.md`。
 - 定向8项通过；固定UTF-8环境全量1757 passed、1 skipped、282 subtests passed；独立只读终审
   无P0/P1。
+
+## 2026-11-23 Round742 补充：ROI 尺度、去绝对颜色先验 v8 影子策略
+
+- 新增显式`appearance_evidence_roi`，用候选面积、候选框面积和最小宽高替代不适合多实例
+  画面的整图30%门；仅ROI路线取消明亮/低饱和绝对门，仍要求局部外观连续。
+- 164个真实pallet候选中53个通过尺度门，最终2个发生add-only变化，分别新增9、31像素；
+  删除0、组件合并0。两次manifest均为`2eeaaa79...e5771`。
+- frame 0的11个人工真值匹配全部no-op，指标零回退，但effect未被人工真值作用域覆盖，故
+  development gate仍为false；当前不部署、不训练、不宣称质量提升。
+- 复核图保留于私有`.repro`，仅公开SHA，不把工厂原图提交远端。详见
+  `docs/PALLET_BOUNDARY_ROI_EVIDENCE_V8_ROUND742_20261123.md`。
+- 定向29 passed、14 subtests passed；固定UTF-8环境全量1766 passed、1 skipped、
+  286 subtests passed；独立只读终审无P0/P1。

@@ -3289,6 +3289,39 @@ PALLET_IMAGE_BOUNDARY_MAXIMUM_SPAN = 96
 PALLET_IMAGE_BOUNDARY_MINIMUM_RING_GRAY = 110.0
 PALLET_IMAGE_BOUNDARY_MAXIMUM_RING_COLOR_SPREAD = 80.0
 PALLET_IMAGE_BOUNDARY_MAXIMUM_COMPONENT_MERGES = 2
+PALLET_ROI_EVIDENCE_MINIMUM_CANDIDATE_AREA = 4096
+PALLET_ROI_EVIDENCE_MINIMUM_BBOX_AREA = 8192
+PALLET_ROI_EVIDENCE_MINIMUM_BBOX_WIDTH = 96
+PALLET_ROI_EVIDENCE_MINIMUM_BBOX_HEIGHT = 24
+
+
+def _pallet_image_evidence_scale_gate(mask, *, allow_roi_scale=False):
+    """Authorize image evidence at legacy full-frame or bounded ROI scale."""
+    candidate_area = int(mask.sum())
+    full_image_ratio = candidate_area / max(mask.size, 1)
+    ys, xs = np.where(mask != 0)
+    bbox_width = int(xs.max() - xs.min() + 1) if len(xs) else 0
+    bbox_height = int(ys.max() - ys.min() + 1) if len(ys) else 0
+    bbox_area = bbox_width * bbox_height
+    legacy_passed = (
+        full_image_ratio >= PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO)
+    roi_passed = bool(
+        allow_roi_scale
+        and candidate_area >= PALLET_ROI_EVIDENCE_MINIMUM_CANDIDATE_AREA
+        and bbox_area >= PALLET_ROI_EVIDENCE_MINIMUM_BBOX_AREA
+        and bbox_width >= PALLET_ROI_EVIDENCE_MINIMUM_BBOX_WIDTH
+        and bbox_height >= PALLET_ROI_EVIDENCE_MINIMUM_BBOX_HEIGHT)
+    return legacy_passed or roi_passed, {
+        "route": (
+            "full_image_ratio" if legacy_passed else
+            "roi_absolute" if roi_passed else "rejected"),
+        "candidate_area": candidate_area,
+        "candidate_area_ratio": round(full_image_ratio, 8),
+        "bbox_width": bbox_width,
+        "bbox_height": bbox_height,
+        "bbox_area": bbox_area,
+        "roi_scale_allowed": bool(allow_roi_scale),
+    }
 
 
 def _compact_pallet_texture_hole(area, width, height, *, maximum_area=768,
@@ -3307,7 +3340,8 @@ def _image_guided_pallet_texture_holes(mask, image_rgb, components, stats,
                                        maximum_gray_delta=(
                                            PALLET_IMAGE_TEXTURE_MAXIMUM_GRAY_DELTA),
                                        maximum_color_distance=(
-                                           PALLET_IMAGE_TEXTURE_MAXIMUM_COLOR_DISTANCE)):
+                                           PALLET_IMAGE_TEXTURE_MAXIMUM_COLOR_DISTANCE),
+                                       allow_roi_scale=False):
     """Classify dense wooden-surface drop-outs while retaining real openings.
 
     A close pallet can contain dozens of irregular SAM holes caused by paint,
@@ -3321,9 +3355,9 @@ def _image_guided_pallet_texture_holes(mask, image_rgb, components, stats,
         return set(), {}
     if image_rgb.shape[:2] != mask.shape or image_rgb.shape[2] < 3:
         return set(), {}
-    candidate_area = int(mask.sum())
-    if (candidate_area / max(mask.size, 1)
-            < PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO):
+    scale_gate_passed, scale_gate_audit = _pallet_image_evidence_scale_gate(
+        mask, allow_roi_scale=allow_roi_scale)
+    if not scale_gate_passed:
         return set(), {}
 
     kernel = np.ones((5, 5), dtype=np.uint8)
@@ -3387,7 +3421,8 @@ def _image_guided_pallet_texture_holes(mask, image_rgb, components, stats,
     return selected, audit
 
 
-def _image_guided_pallet_boundary_notches(mask, image_rgb, structural_holes):
+def _image_guided_pallet_boundary_notches(
+        mask, image_rgb, structural_holes, *, allow_roi_scale=False):
     """Find narrow, light neutral boundary notches without closing real gaps.
 
     Unlike enclosed holes, these SAM drop-outs remain connected to the outer
@@ -3400,8 +3435,9 @@ def _image_guided_pallet_boundary_notches(mask, image_rgb, structural_holes):
         return []
     if image_rgb.shape[:2] != mask.shape or image_rgb.shape[2] < 3:
         return []
-    if (int(mask.sum()) / max(mask.size, 1)
-            < PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO):
+    scale_gate_passed, scale_gate_audit = _pallet_image_evidence_scale_gate(
+        mask, allow_roi_scale=allow_roi_scale)
+    if not scale_gate_passed:
         return []
 
     kernel = cv2.getStructuringElement(
@@ -3441,12 +3477,15 @@ def _image_guided_pallet_boundary_notches(mask, image_rgb, structural_holes):
         gray_delta = float(ring_gray - notch_mean.mean())
         color_distance = float(np.linalg.norm(ring_mean - notch_mean))
         ring_color_spread = float(ring_mean.max() - ring_mean.min())
+        roi_absolute_evidence = (
+            scale_gate_audit["route"] == "roi_absolute")
         if not (
                 gray_delta <= PALLET_IMAGE_TEXTURE_MAXIMUM_GRAY_DELTA
                 and color_distance <= PALLET_IMAGE_TEXTURE_MAXIMUM_COLOR_DISTANCE
-                and ring_gray >= PALLET_IMAGE_BOUNDARY_MINIMUM_RING_GRAY
-                and ring_color_spread
-                <= PALLET_IMAGE_BOUNDARY_MAXIMUM_RING_COLOR_SPREAD):
+                and (roi_absolute_evidence
+                     or (ring_gray >= PALLET_IMAGE_BOUNDARY_MINIMUM_RING_GRAY
+                         and ring_color_spread
+                         <= PALLET_IMAGE_BOUNDARY_MAXIMUM_RING_COLOR_SPREAD))):
             continue
         proposals.append({
             "mask": component_mask,
@@ -3456,6 +3495,7 @@ def _image_guided_pallet_boundary_notches(mask, image_rgb, structural_holes):
             "color_distance": round(color_distance, 3),
             "ring_gray": round(ring_gray, 3),
             "ring_color_spread": round(ring_color_spread, 3),
+            "scale_evidence_route": scale_gate_audit["route"],
         })
     return proposals
 
@@ -3463,7 +3503,8 @@ def _image_guided_pallet_boundary_notches(mask, image_rgb, structural_holes):
 def _structural_hole_masks(
         mask, *, image_rgb=None,
         minimum_compact_texture_candidate_area_ratio=(
-            PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO)):
+            PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO),
+        allow_roi_scale=False):
     background = (mask == 0).astype(np.uint8)
     count, components, stats, _ = cv2.connectedComponentsWithStats(
         background, connectivity=8)
@@ -3471,7 +3512,8 @@ def _structural_hole_masks(
         components[0, :], components[-1, :],
         components[:, 0], components[:, -1]))).tolist())
     image_texture_holes, _ = _image_guided_pallet_texture_holes(
-        mask, image_rgb, components, stats, border_labels)
+        mask, image_rgb, components, stats, border_labels,
+        allow_roi_scale=allow_roi_scale)
     image_guidance_available = (
         isinstance(image_rgb, np.ndarray) and image_rgb.ndim == 3
         and image_rgb.shape[:2] == mask.shape and image_rgb.shape[2] >= 3)
@@ -3629,7 +3671,8 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
     total-change budget.  Long openings (for example fork slots and inter-slat
     gaps) remain even when their area is modest.
     """
-    if geometry_policy not in {"full", "appearance_evidence_only"}:
+    if geometry_policy not in {
+            "full", "appearance_evidence_only", "appearance_evidence_roi"}:
         raise ValueError("unknown pallet geometry cleanup policy")
     if not isinstance(shape, dict) or str(shape.get("label", "")).casefold() != "pallet":
         return shape, None
@@ -3640,6 +3683,12 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         return shape, None
     original_component_count = _significant_component_count(mask)
     original_foreground_component_count = _foreground_component_count(mask)
+    appearance_evidence_policy = geometry_policy in {
+        "appearance_evidence_only", "appearance_evidence_roi"}
+    allow_roi_scale = geometry_policy == "appearance_evidence_roi"
+    image_evidence_scale_passed, image_evidence_scale = (
+        _pallet_image_evidence_scale_gate(
+            mask, allow_roi_scale=allow_roi_scale))
 
     refined = mask.copy()
     authorized_additions = np.zeros_like(mask, dtype=bool)
@@ -3655,17 +3704,20 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
     filled_image_boundary_notches = []
     used_image_texture_evidence = False
     image_texture_holes, image_texture_audit = _image_guided_pallet_texture_holes(
-        mask, image_rgb, components, stats, border_labels)
+        mask, image_rgb, components, stats, border_labels,
+        allow_roi_scale=allow_roi_scale)
     image_guidance_available = (
         isinstance(image_rgb, np.ndarray) and image_rgb.ndim == 3
         and image_rgb.shape[:2] == mask.shape and image_rgb.shape[2] >= 3)
     protected_structural_holes = _structural_hole_masks(
         mask, image_rgb=image_rgb,
         minimum_compact_texture_candidate_area_ratio=(
-            minimum_compact_texture_candidate_area_ratio))
+            minimum_compact_texture_candidate_area_ratio),
+        allow_roi_scale=allow_roi_scale)
     image_boundary_notches = _image_guided_pallet_boundary_notches(
-        mask, image_rgb, protected_structural_holes)
-    if geometry_policy == "appearance_evidence_only":
+        mask, image_rgb, protected_structural_holes,
+        allow_roi_scale=allow_roi_scale)
+    if appearance_evidence_policy:
         # V7 is a local add-only shadow policy.  One supported component must
         # never unlock the broader five/six-percent v6 budget elsewhere.
         effective_maximum_change_ratio = min(maximum_change_ratio, .01)
@@ -3696,7 +3748,7 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         image_texture_hole = component in image_texture_holes
         eligible_hole = (
             image_texture_hole
-            if geometry_policy == "appearance_evidence_only" else
+            if appearance_evidence_policy else
             (micro_hole or texture_hole or compact_texture_hole
              or image_texture_hole))
         if eligible_hole:
@@ -3722,12 +3774,12 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
             })
 
     fill_budget = max(int(area * effective_maximum_change_ratio), 1)
-    if geometry_policy == "appearance_evidence_only":
+    if appearance_evidence_policy:
         fill_budget = min(fill_budget, 256)
     used_fill_budget = 0
     for plan in sorted(hole_fill_plans, key=lambda item: item["priority"]):
         component_area = plan["record"]["area"]
-        if (geometry_policy == "appearance_evidence_only"
+        if (appearance_evidence_policy
                 and (not plan["image_texture_hole"]
                      or component_area > 256)):
             continue
@@ -3736,7 +3788,7 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         component = plan["component"]
         component_mask = components == component
         refined[component_mask] = 1
-        if geometry_policy == "appearance_evidence_only":
+        if appearance_evidence_policy:
             authorized_additions |= component_mask
         used_fill_budget += component_area
         record = plan["record"]
@@ -3761,7 +3813,7 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
             key=lambda item: (item["color_distance"], abs(item["gray_delta"]),
                               item["area"])):
         if (used_fill_budget + notch["area"] > fill_budget
-                or (geometry_policy == "appearance_evidence_only"
+                or (appearance_evidence_policy
                     and notch["area"] > 256)):
             continue
         proposal = refined.copy()
@@ -3770,14 +3822,14 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         proposal_foreground_component_count = _foreground_component_count(
             proposal)
         if (proposal_component_count > original_component_count
-                or (geometry_policy == "appearance_evidence_only"
+                or (appearance_evidence_policy
                     and proposal_foreground_component_count
                     != original_foreground_component_count)
                 or original_component_count - proposal_component_count
                 > PALLET_IMAGE_BOUNDARY_MAXIMUM_COMPONENT_MERGES):
             continue
         refined = proposal
-        if geometry_policy == "appearance_evidence_only":
+        if appearance_evidence_policy:
             authorized_additions |= notch["mask"]
         used_fill_budget += notch["area"]
         filled_image_boundary_notches.append({
@@ -3906,7 +3958,7 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
     replacement_foreground_component_count = _foreground_component_count(
         replacement_mask)
     component_merge_count = original_component_count - replacement_component_count
-    if geometry_policy == "appearance_evidence_only":
+    if appearance_evidence_policy:
         additions = (replacement_mask != 0) & (mask == 0)
         if (np.any((mask != 0) & (replacement_mask == 0))
                 or np.any(additions & ~authorized_additions)
@@ -3916,7 +3968,7 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
             return shape, None
     if (replacement_component_count > original_component_count
             or component_merge_count < 0
-            or (geometry_policy == "appearance_evidence_only"
+            or (appearance_evidence_policy
                 and component_merge_count != 0)
             or (component_merge_count
                 and (not filled_image_boundary_notches
@@ -3930,7 +3982,7 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
     minimum_structural_retention = (
         min(structural_retention) if structural_retention else None)
     required_structural_retention = (
-        1.0 if geometry_policy == "appearance_evidence_only" else .75)
+        1.0 if appearance_evidence_policy else .75)
     if (minimum_structural_retention is not None
             and minimum_structural_retention < required_structural_retention):
         return shape, None
@@ -3988,8 +4040,8 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
             PALLET_IMAGE_BOUNDARY_MAXIMUM_COMPONENT_MERGES),
         "effective_maximum_change_ratio": effective_maximum_change_ratio,
         "absolute_change_budget_pixels": (
-            256 if geometry_policy == "appearance_evidence_only" else None),
-        "add_only": geometry_policy == "appearance_evidence_only",
+            256 if appearance_evidence_policy else None),
+        "add_only": appearance_evidence_policy,
         "required_structural_hole_retention": required_structural_retention,
         "minimum_compact_texture_candidate_area_ratio": (
             minimum_compact_texture_candidate_area_ratio),
@@ -4000,8 +4052,11 @@ def refine_pallet_candidate_geometry(shape, width, height, *, maximum_hole_area=
         "foreground_component_count_after": replacement_foreground_component_count,
         "component_merge_count": component_merge_count,
         "geometry_cleanup_version": (
+            8 if geometry_policy == "appearance_evidence_roi" else
             7 if geometry_policy == "appearance_evidence_only" else 6),
         "geometry_cleanup_policy": geometry_policy,
+        "image_evidence_scale_gate_passed": image_evidence_scale_passed,
+        "image_evidence_scale": image_evidence_scale,
         "appearance_evidence_used": appearance_evidence_used,
         "route": "candidate_only",
     }

@@ -242,7 +242,8 @@ def build_pack(base_url, frames, output, *, opener=urlopen,
                skip_unbound_empty_frames=False):
     """Build one deterministic comparison pack without any server mutation."""
     base_url = _safe_base_url(base_url)
-    if geometry_policy not in {"full", "appearance_evidence_only"}:
+    if geometry_policy not in {
+            "full", "appearance_evidence_only", "appearance_evidence_roi"}:
         raise ValueError("未知 pallet geometry policy")
     if not isinstance(include_unchanged, bool):
         raise ValueError("include_unchanged 必须是布尔值")
@@ -357,11 +358,15 @@ def build_pack(base_url, frames, output, *, opener=urlopen,
                     },
                     "variants": [{
                         "alternative_id": (
+                            "pallet-boundary-cleanup-v8-roi-evidence"
+                            if geometry_policy == "appearance_evidence_roi" else
                             "pallet-boundary-cleanup-v7-evidence-only"
                             if geometry_policy == "appearance_evidence_only"
                             else "pallet-boundary-cleanup-v6"),
                         "kind": "alternative",
                         "label": (
+                            "pallet ROI evidence-only boundary cleanup"
+                            if geometry_policy == "appearance_evidence_roi" else
                             "pallet evidence-only boundary cleanup"
                             if geometry_policy == "appearance_evidence_only"
                             else "pallet boundary cleanup"),
@@ -385,6 +390,8 @@ def build_pack(base_url, frames, output, *, opener=urlopen,
                                 "component_count_after", after_components)),
                             "geometry_cleanup_version": int(audit.get(
                                 "geometry_cleanup_version",
+                                8 if geometry_policy ==
+                                "appearance_evidence_roi" else
                                 7 if geometry_policy ==
                                 "appearance_evidence_only" else 6)),
                             "geometry_cleanup_policy": geometry_policy,
@@ -479,7 +486,8 @@ def main():
     parser.add_argument("--frames", required=True, type=_parse_frames)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--geometry-policy",
-                        choices=("full", "appearance_evidence_only"),
+                        choices=("full", "appearance_evidence_only",
+                                 "appearance_evidence_roi"),
                         default="full")
     parser.add_argument("--include-unchanged", action="store_true")
     parser.add_argument("--skip-unbound-empty-frames", action="store_true")

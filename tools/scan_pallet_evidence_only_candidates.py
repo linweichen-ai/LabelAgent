@@ -13,6 +13,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+import cv2
 import numpy as np
 from PIL import Image
 
@@ -22,9 +23,15 @@ if __package__ in {None, ""}:
 from source.agent.edit_agent import _rasterize
 from source.agent.workflow import refine_pallet_candidate_geometry
 from source.agent.workflow import PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO
+from source.agent.workflow import _pallet_image_evidence_scale_gate
+from source.agent.workflow import _image_guided_pallet_texture_holes
+from source.agent.workflow import _image_guided_pallet_boundary_notches
+from source.agent.workflow import _structural_hole_masks
+from source.agent.workflow import PALLET_IMAGE_BOUNDARY_CLOSE_KERNEL
 
 
 SCHEMA_VERSION = "labelagent.pallet-evidence-only-offline-scan.v1"
+ROI_SCHEMA_VERSION = "labelagent.pallet-evidence-roi-offline-scan.v2"
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 
 
@@ -39,7 +46,13 @@ def png_bytes(mask: np.ndarray) -> bytes:
     return target.getvalue()
 
 
-def scan(snapshot_dir, candidate_dir, output_dir):
+def scan(snapshot_dir, candidate_dir, output_dir, *,
+         geometry_policy="appearance_evidence_only"):
+    if geometry_policy not in {
+            "appearance_evidence_only", "appearance_evidence_roi"}:
+        raise ValueError("unsupported evidence-only geometry policy")
+    roi_policy = geometry_policy == "appearance_evidence_roi"
+    schema_version = ROI_SCHEMA_VERSION if roi_policy else SCHEMA_VERSION
     snapshot_dir = Path(snapshot_dir).resolve()
     candidate_dir = Path(candidate_dir).resolve()
     output_dir = Path(output_dir).resolve()
@@ -131,7 +144,7 @@ def scan(snapshot_dir, candidate_dir, output_dir):
                 before = _rasterize(candidate, width, height).astype(np.uint8)
                 refined, audit = refine_pallet_candidate_geometry(
                     candidate, width, height, image_rgb=image_rgb,
-                    geometry_policy="appearance_evidence_only")
+                    geometry_policy=geometry_policy)
                 after = _rasterize(refined, width, height).astype(np.uint8)
                 before_png = png_bytes(before)
                 after_png = png_bytes(after)
@@ -168,6 +181,55 @@ def scan(snapshot_dir, candidate_dir, output_dir):
                         >= PALLET_COMPACT_TEXTURE_MINIMUM_CANDIDATE_AREA_RATIO),
                     "audit": audit,
                 }
+                if roi_policy:
+                    scale_passed, scale_audit = _pallet_image_evidence_scale_gate(
+                        before, allow_roi_scale=True)
+                    background = (before == 0).astype(np.uint8)
+                    _, components, stats, _ = cv2.connectedComponentsWithStats(
+                        background, connectivity=8)
+                    border_labels = set(np.unique(np.concatenate((
+                        components[0, :], components[-1, :],
+                        components[:, 0], components[:, -1]))).tolist())
+                    texture_holes, _ = _image_guided_pallet_texture_holes(
+                        before, image_rgb, components, stats, border_labels,
+                        allow_roi_scale=True)
+                    structural_holes = _structural_hole_masks(
+                        before, image_rgb=image_rgb, allow_roi_scale=True)
+                    boundary_notches = _image_guided_pallet_boundary_notches(
+                        before, image_rgb, structural_holes,
+                        allow_roi_scale=True)
+                    enclosed_components = [
+                        index for index in range(1, len(stats))
+                        if index not in border_labels]
+                    close_kernel = cv2.getStructuringElement(
+                        cv2.MORPH_ELLIPSE,
+                        (PALLET_IMAGE_BOUNDARY_CLOSE_KERNEL,
+                         PALLET_IMAGE_BOUNDARY_CLOSE_KERNEL))
+                    closed = cv2.morphologyEx(
+                        before.astype(np.uint8), cv2.MORPH_CLOSE, close_kernel)
+                    raw_boundary_additions = (
+                        (closed > 0) & (before == 0)).astype(np.uint8)
+                    raw_count, _, raw_stats, _ = cv2.connectedComponentsWithStats(
+                        raw_boundary_additions, connectivity=8)
+                    row.update({
+                        "roi_evidence_scale_gate_passed": scale_passed,
+                        "roi_evidence_scale": scale_audit,
+                        "roi_image_texture_hole_count": len(texture_holes),
+                        "roi_image_texture_hole_pixels": sum(
+                            int(stats[index, cv2.CC_STAT_AREA])
+                            for index in texture_holes),
+                        "roi_image_boundary_notch_count": len(boundary_notches),
+                        "roi_image_boundary_notch_pixels": sum(
+                            int(item["area"]) for item in boundary_notches),
+                        "roi_raw_enclosed_hole_count": len(enclosed_components),
+                        "roi_raw_enclosed_hole_pixels": sum(
+                            int(stats[index, cv2.CC_STAT_AREA])
+                            for index in enclosed_components),
+                        "roi_raw_boundary_addition_count": max(raw_count - 1, 0),
+                        "roi_raw_boundary_addition_pixels": sum(
+                            int(raw_stats[index, cv2.CC_STAT_AREA])
+                            for index in range(1, raw_count)),
+                    })
                 if changed:
                     prefix = f"frame-{frame:06d}-candidate-{identifier}"
                     before_name = f"{prefix}-before.png"
@@ -179,7 +241,7 @@ def scan(snapshot_dir, candidate_dir, output_dir):
                 rows.append(row)
 
         manifest = {
-            "schema_version": SCHEMA_VERSION,
+            "schema_version": schema_version,
             "snapshot_manifest_sha256": digest(snapshot_payload),
             "smoke_summary_sha256": digest(summary_payload),
             "frame_count": len(snapshot_images),
@@ -194,6 +256,16 @@ def scan(snapshot_dir, candidate_dir, output_dir):
             "workbench_write": False,
             "rows": rows,
         }
+        if roi_policy:
+            manifest.update({
+                "geometry_policy": geometry_policy,
+                "roi_evidence_scale_gate_passed_count": sum(
+                    row["roi_evidence_scale_gate_passed"] for row in rows),
+                "roi_image_texture_hole_candidate_count": sum(
+                    bool(row["roi_image_texture_hole_count"]) for row in rows),
+                "roi_image_boundary_notch_candidate_count": sum(
+                    bool(row["roi_image_boundary_notch_count"]) for row in rows),
+            })
         manifest_path = staging / "manifest.json"
         manifest_path.write_text(
             json.dumps(manifest, ensure_ascii=False, indent=2,
@@ -209,7 +281,7 @@ def scan(snapshot_dir, candidate_dir, output_dir):
         manifest_sha256 = digest(manifest_path.read_bytes())
         staging.replace(output_dir)
         return {
-            "schema_version": SCHEMA_VERSION,
+            "schema_version": schema_version,
             "frame_count": manifest["frame_count"],
             "pallet_candidate_count": len(rows),
             "changed_candidate_count": manifest["changed_candidate_count"],
@@ -217,7 +289,11 @@ def scan(snapshot_dir, candidate_dir, output_dir):
                 "image_texture_scale_gate_passed_count"],
             "manifest_sha256": manifest_sha256,
             "workbench_write": False,
-        }
+        } | ({
+            "geometry_policy": geometry_policy,
+            "roi_evidence_scale_gate_passed_count": manifest[
+                "roi_evidence_scale_gate_passed_count"],
+        } if roi_policy else {})
     finally:
         shutil.rmtree(wrapper, ignore_errors=True)
 
@@ -227,8 +303,14 @@ def main() -> int:
     parser.add_argument("--snapshot-dir", required=True, type=Path)
     parser.add_argument("--candidate-dir", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument(
+        "--geometry-policy",
+        choices=("appearance_evidence_only", "appearance_evidence_roi"),
+        default="appearance_evidence_only")
     args = parser.parse_args()
-    print(json.dumps(scan(args.snapshot_dir, args.candidate_dir, args.output),
+    print(json.dumps(scan(
+        args.snapshot_dir, args.candidate_dir, args.output,
+        geometry_policy=args.geometry_policy),
                      ensure_ascii=False, indent=2))
     return 0
 

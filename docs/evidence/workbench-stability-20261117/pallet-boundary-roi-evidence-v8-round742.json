@@ -1,0 +1,46 @@
+{
+  "candidate": "pallet-boundary-cleanup-v8-roi-evidence",
+  "candidate_only": true,
+  "default_policy_changed": false,
+  "deployment_authorized": false,
+  "geometry_policy": "appearance_evidence_roi",
+  "human_truth": false,
+  "formal_services_healthy": true,
+  "human_truth_gate": {
+    "changed_rows": 0,
+    "comparison_rows": 11,
+    "development_gate_passed": false,
+    "effect_exercised": false,
+    "matched": 11,
+    "non_regression_replay_passed": true,
+    "pack_manifest_sha256": "2f77234fee20f0c0c1764548037cd5812fc16a25cf0b24357d70072577072877",
+    "regression_gate_failures": 0,
+    "report_sha256": "5da09277be3fb87fce60081f23ecb6b4eef6502db8786c19803bd5777a38b1f5",
+    "status": "non_regression_replay_passed"
+  },
+  "real_shadow_scan": {
+    "assistant_visual_review": "assistant_candidate_unverified",
+    "candidate_count": 164,
+    "changed_candidate_count": 2,
+    "changed_pixels": [9, 31],
+    "contact_sheet_sha256": "84753756cd6342d2ae59289617673fc3aff06d8a1687c57d54bcc39bb661c44f",
+    "frame_count": 16,
+    "manifest_sha256": "2eeaaa793a5374c31f9913978aca4e8ac8de3cdb4ce74a17e3438209e1be5771",
+    "repeat_manifest_identical": true,
+    "review_manifest_sha256": "ce4f9f2d11d54298fda310da25ce728bddabc97426cdae34180ccee553eb9e1b",
+    "roi_scale_gate_passed_count": 53,
+    "source_total_candidate_count": 227
+  },
+  "schema_version": "labelagent.pallet-boundary-roi-evidence-v8-round742.v1",
+  "production_state_unchanged": true,
+  "status": "real_effect_exercised_human_truth_pending",
+  "tests": {
+    "directed_passed": 29,
+    "directed_subtests_passed": 14,
+    "formal_passed": 1766,
+    "formal_skipped": 1,
+    "formal_subtests_passed": 286
+  },
+  "training_authorized": false,
+  "v7_regression_manifest_sha256": "eed8b247a765158b6c2eb39464d5a4dd7bfca6e90daec6aec8d6e1e0dddc0b26"
+}

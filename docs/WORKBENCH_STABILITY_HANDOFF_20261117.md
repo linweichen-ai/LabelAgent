@@ -4249,3 +4249,17 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
   正式工作台、人工真值、训练数据、模型或生产mask。
 - 下一步在上下文pane增加组件定位框后重新盲审。详见
   `docs/PALLET_BOUNDARY_DUAL_SCALE_REVIEW_ROUND749_20261123.md`。
+
+## 2026-11-23 Round750 补充：定位框盲审负结果
+
+- 在候选上下文pane为11个候选补点组件加入洋红定位框；新一组两位助手仅4/11一致、kappa
+  0.0253。与Round749审阅者不相交，不能作定位框因果比较，也没有助手门禁可靠性证据。
+- 一位助手把若干区域描述为dog、car、metal structure，与pallet目标审阅契约不一致；因此
+  本轮标签全部保持assistant-only，不写人工真值、训练或自动放行。
+- locator只修改私有审阅图，且必须依赖context与component开关。Round743/744双跑分别8/8、
+  25/25文件SHA一致，manifest为`57031731...bf5f7`、`654b7cf6...676d8`，收据SHA为
+  `0b7bda80...bf4a65`；三个语义误读摘录已逐项绑定审阅者和组件身份。
+- 固定UTF-8环境定向10项、正式`tests/`全量1784项通过，1项跳过、286子测试通过；正式
+  工作台、人工真值、训练数据、模型和生产mask未修改。
+- 下一步把原mask覆盖、类别pallet与定位框同屏展示，再做同审阅者固定顺序配对复核；详见
+  `docs/PALLET_BOUNDARY_LOCATOR_REVIEW_ROUND750_20261123.md`。

@@ -82,7 +82,8 @@ class PalletRoiShadowReviewTests(unittest.TestCase):
         output = self.root / "details"
         result = build_review(
             self.snapshot, self.scan, output, include_details=True,
-            include_components=True, include_component_context=True)
+            include_components=True, include_component_context=True,
+            include_component_locator=True)
         manifest = json.loads((output / "manifest.json").read_text())
         row = manifest["rows"][0]
         detail = output / row["detail_sheet"]
@@ -109,6 +110,9 @@ class PalletRoiShadowReviewTests(unittest.TestCase):
         self.assertEqual(
             sha(context_path), component["context_detail_sheet_sha256"])
         self.assertEqual(component["context_crop_box"], row["crop_box"])
+        self.assertTrue(component["context_locator"])
+        self.assertEqual(component["context_locator_box"], [37, 10, 57, 27])
+        self.assertTrue(manifest["component_context_locator_included"])
         with Image.open(context_path) as image:
             self.assertEqual(image.size, (3200, 480))
             self.assertEqual(image.format, "PNG")
@@ -121,6 +125,16 @@ class PalletRoiShadowReviewTests(unittest.TestCase):
             build_review(
                 self.snapshot, self.scan, output,
                 include_component_context=True)
+        self.assertFalse(output.exists())
+
+    def test_component_locator_requires_component_context(self):
+        output = self.root / "invalid-locator"
+
+        with self.assertRaisesRegex(
+                ValueError, "requires component context"):
+            build_review(
+                self.snapshot, self.scan, output,
+                include_components=True, include_component_locator=True)
         self.assertFalse(output.exists())
 
     def test_builds_one_sheet_per_connected_added_component(self):

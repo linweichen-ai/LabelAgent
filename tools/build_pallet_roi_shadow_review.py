@@ -113,12 +113,15 @@ def detail_box(mask, width, height, minimum_span=128, margin=48):
 
 
 def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False,
-                 include_components=False, include_component_context=False):
+                 include_components=False, include_component_context=False,
+                 include_component_locator=False):
     snapshot_dir = Path(snapshot_dir).resolve()
     scan_dir = Path(scan_dir).resolve()
     output_dir = Path(output_dir).resolve()
     if include_component_context and not include_components:
         raise ValueError("component context requires component sheets")
+    if include_component_locator and not include_component_context:
+        raise ValueError("component locator requires component context")
     if output_dir.exists():
         raise FileExistsError(output_dir)
     snapshot_payload = (snapshot_dir / "manifest.json").read_bytes()
@@ -330,12 +333,29 @@ def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False,
                     component_context_row = {}
                     if include_component_context:
                         candidate_context = source.crop(box)
+                        locator_box = None
+                        if include_component_locator:
+                            locator_padding = 8
+                            locator_box = (
+                                max(x - box[0] - locator_padding, 0),
+                                max(y - box[1] - locator_padding, 0),
+                                min(x + component_width - box[0]
+                                    + locator_padding - 1,
+                                    candidate_context.width - 1),
+                                min(y + component_height - box[1]
+                                    + locator_padding - 1,
+                                    candidate_context.height - 1),
+                            )
+                            locator_draw = ImageDraw.Draw(candidate_context)
+                            locator_draw.rectangle(
+                                locator_box, outline=(255, 45, 125), width=4)
                         context_detail = Image.new(
                             "RGB", (640 * 5, 480), (12, 18, 24))
                         context_panes = [
                             detail_panel(
                                 candidate_context,
-                                f"{component_label} | candidate context"),
+                                f"{component_label} | candidate context"
+                                + (" + locator" if locator_box else "")),
                             detail_panel(
                                 component_source, "local source"),
                             detail_panel(overlay(
@@ -351,9 +371,12 @@ def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False,
                         ]
                         for column, pane in enumerate(context_panes):
                             context_detail.paste(pane, (column * 640, 0))
+                        context_suffix = (
+                            "locator-context-detail.png"
+                            if locator_box else "context-detail.png")
                         context_name = (
                             f"frame-{frame:06d}-candidate-{candidate_id}-"
-                            f"component-{component_index:02d}-context-detail.png")
+                            f"component-{component_index:02d}-{context_suffix}")
                         context_path = staging / context_name
                         context_detail.save(
                             context_path, "PNG", optimize=False,
@@ -364,6 +387,16 @@ def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False,
                                 context_path.read_bytes()),
                             "context_crop_box": list(box),
                         }
+                        if locator_box:
+                            component_context_row.update({
+                                "context_locator": True,
+                                "context_locator_box": [
+                                    locator_box[0] + box[0],
+                                    locator_box[1] + box[1],
+                                    locator_box[2] + box[0],
+                                    locator_box[3] + box[1],
+                                ],
+                            })
                         component_context_sheet_count += 1
 
                     ring = (cv2.dilate(
@@ -453,6 +486,8 @@ def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False,
             manifest["component_context_sheets_included"] = True
             manifest["component_context_sheet_count"] = (
                 component_context_sheet_count)
+        if include_component_locator:
+            manifest["component_context_locator_included"] = True
         manifest_path = staging / "manifest.json"
         manifest_path.write_text(
             json.dumps(manifest, ensure_ascii=False, indent=2,
@@ -482,12 +517,14 @@ def main():
     parser.add_argument("--include-details", action="store_true")
     parser.add_argument("--include-components", action="store_true")
     parser.add_argument("--include-component-context", action="store_true")
+    parser.add_argument("--include-component-locator", action="store_true")
     args = parser.parse_args()
     print(json.dumps(build_review(
         args.snapshot_dir, args.scan_dir, args.output,
         include_details=args.include_details,
         include_components=args.include_components,
-        include_component_context=args.include_component_context),
+        include_component_context=args.include_component_context,
+        include_component_locator=args.include_component_locator),
         ensure_ascii=False, indent=2))
     return 0
 

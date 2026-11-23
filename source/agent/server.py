@@ -112,6 +112,7 @@ RUN_STORAGE_BASE_RESERVE_BYTES = 256 * 1024 * 1024
 RUN_STORAGE_PER_FRAME_BYTES = 8 * 1024 * 1024
 REVIEW_PACKET_SCHEMA = "labelagent.slope-review-packet.v1"
 REVIEW_PACKET_ASSISTANT_SCHEMA = "labelagent.slope-assistant-review.v1"
+REVIEW_PACKET_PRIORITY_SCHEMA = "labelagent.slope-review-priority.v1"
 REVIEW_PACKET_DECISION_SCHEMA = "labelagent.slope-review-decision.v1"
 REVIEW_PACKET_ACCEPT_DECISIONS = {
     "slope_present_and_mask_acceptable",
@@ -3144,8 +3145,11 @@ def _read_review_packet(packet_id):
     manifest_sha256 = hashlib.sha256(raw).hexdigest()
     proposals = _read_review_packet_assistant_proposals(
         path.parent, _review_packet_id(packet_id), manifest_sha256, normalized_rows)
+    priorities = _read_review_packet_priorities(
+        path.parent, _review_packet_id(packet_id), manifest_sha256, normalized_rows)
     for row in normalized_rows:
         row["assistant_proposal"] = proposals.get(row["frame"])
+        row["review_priority"] = priorities.get(row["frame"])
     return {
         "schema_version": REVIEW_PACKET_SCHEMA,
         "packet_id": _review_packet_id(packet_id),
@@ -3166,6 +3170,7 @@ def _read_review_packet(packet_id):
         "read_only_packet": True,
         "submits_human_truth": False,
         "assistant_proposals_loaded": len(proposals),
+        "priority_reviews_loaded": len(priorities),
     }
 
 
@@ -3221,6 +3226,61 @@ def _read_review_packet_assistant_proposals(folder, packet_id, manifest_sha256, 
         sanitized["proposal_sha256"] = _sha256_json(sanitized)
         proposals[frame] = sanitized
     return proposals
+
+
+def _read_review_packet_priorities(folder, packet_id, manifest_sha256, rows):
+    """Read an optional assistant-only priority order without changing decisions."""
+    path = folder / "review-priority.json"
+    if not path.exists():
+        return {}
+    raw = path.read_bytes()
+    if len(raw) > 256 * 1024:
+        raise ValueError("专项复核优先级文件过大")
+    try:
+        value = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError("专项复核优先级不是有效 UTF-8 JSON") from error
+    if (not isinstance(value, dict)
+            or value.get("schema_version") != REVIEW_PACKET_PRIORITY_SCHEMA
+            or value.get("packet_id") != packet_id
+            or value.get("manifest_sha256") != manifest_sha256
+            or value.get("source_review_schema") !=
+            "labelagent.slope-blind-cross-review.v1"
+            or not _valid_sha256(value.get("source_review_sha256"))
+            or value.get("assistant_only") is not True
+            or value.get("human_truth") is not False
+            or value.get("approved_for_training") is not False
+            or value.get("auto_submit_allowed") is not False):
+        raise ValueError("专项复核优先级未绑定当前清单或越过隔离门禁")
+    packet_frames = {row["frame"] for row in rows}
+    priorities = {}
+    seen_ranks = set()
+    for item in value.get("rows", []):
+        if not isinstance(item, dict):
+            raise ValueError("专项复核优先级行无效")
+        frame = item.get("frame")
+        rank = item.get("priority_rank")
+        reason = item.get("priority_reason")
+        if (frame not in packet_frames or frame in priorities
+                or isinstance(rank, bool) or not isinstance(rank, int)
+                or rank <= 0 or rank in seen_ranks
+                or not isinstance(reason, str) or not reason.strip()
+                or len(reason) > 300
+                or item.get("assistant_only") is not True
+                or item.get("human_truth") is not False
+                or item.get("approved_for_training") is not False
+                or item.get("auto_submit_allowed") is not False):
+            raise ValueError("专项复核优先级行未绑定、重复或越过隔离门禁")
+        seen_ranks.add(rank)
+        priorities[frame] = {
+            "priority_rank": rank,
+            "priority_reason": reason.strip(),
+            "assistant_only": True,
+            "human_truth": False,
+            "approved_for_training": False,
+            "auto_submit_allowed": False,
+        }
+    return priorities
 
 
 def _review_packet_decision_folder(packet_id):

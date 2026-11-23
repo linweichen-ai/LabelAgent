@@ -91,13 +91,36 @@
 
   function adjacentPendingIndex(rows, completed, currentIndex, direction) {
     if (!Array.isArray(rows) || !rows.length) return -1;
+    const pending = prioritizedRows(rows, completed)
+      .filter(item => !completed.has(Number(item.row.frame)))
+      .map(item => item.index);
+    if (!pending.length) return -1;
     const step = direction < 0 ? -1 : 1;
-    for (let offset = 1; offset <= rows.length; offset += 1) {
-      const index = (currentIndex + step * offset + rows.length * 2) % rows.length;
-      if (!completed.has(Number(rows[index].frame))) return index;
-    }
-    return (currentIndex + step + rows.length) % rows.length;
+    const position = pending.indexOf(currentIndex);
+    if (position < 0) return direction < 0 ? pending[pending.length - 1] : pending[0];
+    return pending[(position + step + pending.length) % pending.length];
   }
 
-  return {normalizePath, stableJson, completionMap, dirtyDraft, adjacentPendingIndex};
+  function reviewPriority(row) {
+    const rank = row?.review_priority?.priority_rank;
+    return Number.isInteger(rank) && rank > 0 ? rank : Number.MAX_SAFE_INTEGER;
+  }
+
+  function isPriorityReview(row) {
+    return reviewPriority(row) < Number.MAX_SAFE_INTEGER;
+  }
+
+  function prioritizedRows(rows, completed = new Map()) {
+    if (!Array.isArray(rows)) return [];
+    return rows.map((row, index) => ({row, index})).sort((left, right) => {
+      const leftDone = completed.has(Number(left.row?.frame)) ? 1 : 0;
+      const rightDone = completed.has(Number(right.row?.frame)) ? 1 : 0;
+      return leftDone - rightDone
+        || reviewPriority(left.row) - reviewPriority(right.row)
+        || left.index - right.index;
+    });
+  }
+
+  return {normalizePath, stableJson, completionMap, dirtyDraft, adjacentPendingIndex,
+    reviewPriority, isPriorityReview, prioritizedRows};
 });

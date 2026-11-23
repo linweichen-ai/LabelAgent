@@ -1,23 +1,37 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const {chromium} = require(
-  'C:/Users/seer/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const playwrightCandidates = [
+  process.env.PLAYWRIGHT_NODE_MODULES,
+  path.resolve(path.dirname(process.execPath), '..', 'node_modules', 'playwright'),
+  'C:/Users/seer/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright',
+].filter(Boolean);
+const playwrightRoot = playwrightCandidates.find(candidate => fs.existsSync(candidate));
+if (!playwrightRoot) {
+  throw Error(`Playwright runtime not found; checked: ${playwrightCandidates.join(', ')}`);
+}
+const {chromium} = require(playwrightRoot);
 
 const base = process.env.LABELAGENT_ACCEPTANCE_URL || 'http://127.0.0.1:8875';
 const output = path.resolve(process.env.LABELAGENT_ACCEPTANCE_OUTPUT || 'artifacts/review-packet-browser-acceptance');
+const expectedPriorityFrames = String(process.env.LABELAGENT_ACCEPTANCE_PRIORITY_FRAMES || '')
+  .split(',').map(value => Number(value.trim())).filter(Number.isInteger);
+const priorityOnly = process.env.LABELAGENT_ACCEPTANCE_PRIORITY_ONLY === '1';
 
 (async () => {
   fs.mkdirSync(output, {recursive: true});
   const browser = await chromium.launch({channel: 'msedge', headless: true});
   const page = await browser.newPage({viewport: {width: 1600, height: 1000}, deviceScaleFactor: 1});
-  const errors = [], failedRequests = [], httpErrors = [], writes = [];
+  const errors = [], failedRequests = [], httpErrors = [], ignoredHttpErrors = [], writes = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   page.on('requestfailed', request => failedRequests.push(`${request.method()} ${request.url()} ${request.failure()?.errorText || ''}`));
   page.on('response', response => {
     if (response.status() >= 400) {
       const request = response.request();
-      httpErrors.push(`${request.method()} ${response.status()} ${response.url()}`);
+      const detail = `${request.method()} ${response.status()} ${response.url()}`;
+      if (response.status() === 404 && new URL(response.url()).pathname === '/api/pallet-candidate-review') {
+        ignoredHttpErrors.push(detail);
+      } else httpErrors.push(detail);
     }
   });
   page.on('request', request => {
@@ -28,16 +42,46 @@ const output = path.resolve(process.env.LABELAGENT_ACCEPTANCE_OUTPUT || 'artifac
   });
   const started = Date.now();
   try {
-    await page.goto(base, {waitUntil: 'networkidle', timeout: 60000});
+    await page.goto(base, {waitUntil: 'domcontentloaded', timeout: 60000});
+    await page.locator('#openReviewPacketsButton').waitFor({state: 'visible', timeout: 30000});
     await page.locator('#openReviewPacketsButton').click();
     await page.locator('#reviewPacketDialog[open]').waitFor({state: 'visible'});
     await page.waitForFunction(() => document.querySelectorAll('.reviewPacketItem').length === 32);
     const before = await page.evaluate(() => ({
       packetOptions: document.querySelectorAll('#reviewPacketSelect option').length,
       rows: document.querySelectorAll('.reviewPacketItem').length,
+      firstFrames: [...document.querySelectorAll('.reviewPacketItem')].slice(0, 4)
+        .map(item => Number(item.dataset.packetFrame)),
+      priorityLabels: [...document.querySelectorAll('.reviewPacketItem.priority strong')]
+        .map(item => item.textContent),
       status: document.querySelector('#reviewPacketStatus')?.textContent,
       bodyHidden: document.querySelector('#reviewPacketBody')?.hidden,
     }));
+    await page.locator('[data-packet-filter="priority"]').click();
+    const priorityFrames = await page.locator('.reviewPacketItem').evaluateAll(items =>
+      items.map(item => Number(item.dataset.packetFrame)));
+    await page.screenshot({path: path.join(output, 'review-packet-priority-queue.png'), fullPage: true});
+    await page.locator('[data-packet-filter="all"]').click();
+    if (expectedPriorityFrames.length
+        && JSON.stringify(priorityFrames) !== JSON.stringify(expectedPriorityFrames)) {
+      throw new Error(`Priority queue mismatch: ${JSON.stringify(priorityFrames)}`);
+    }
+    if (priorityOnly) {
+      const relevantErrors = errors.filter(message => !(ignoredHttpErrors.length
+        && message === 'Failed to load resource: the server responded with a status of 404 (NOT FOUND)'));
+      if (writes.length) throw new Error(`Unexpected review write requests: ${writes.join(', ')}`);
+      if (relevantErrors.length || failedRequests.length || httpErrors.length) {
+        throw new Error(`Browser errors: ${[...relevantErrors, ...failedRequests, ...httpErrors].join(' | ')}`);
+      }
+      const result = {schema_version: 'labelagent.review-packet-priority-browser-acceptance.v1',
+        passed: true, elapsed_ms: Date.now() - started, before, priorityFrames,
+        truth_write_requests: writes, page_errors: relevantErrors, failed_requests: failedRequests,
+        http_errors: httpErrors, ignored_optional_http_errors: ignoredHttpErrors,
+        screenshot: path.join(output, 'review-packet-priority-queue.png')};
+      fs.writeFileSync(path.join(output, 'result.json'), JSON.stringify(result, null, 2));
+      process.stdout.write(`${JSON.stringify(result)}\n`);
+      return;
+    }
     await page.locator('#reviewPacketActivate').click();
     await page.waitForFunction(() => document.querySelector('#reviewPacketStatus')?.textContent.includes('均已通过'), null, {timeout: 60000});
     const row74 = page.locator('.reviewPacketItem', {hasText: '第 74 帧'});
@@ -69,7 +113,7 @@ const output = path.resolve(process.env.LABELAGENT_ACCEPTANCE_OUTPUT || 'artifac
       throw new Error(`Browser errors: ${[...errors, ...failedRequests, ...httpErrors].join(' | ')}`);
     }
     const result = {schema_version: 'labelagent.review-packet-browser-acceptance.v1', passed: true,
-      elapsed_ms: Date.now() - started, before, frame74: {
+      elapsed_ms: Date.now() - started, before, priorityFrames, frame74: {
         path: readback.state.path, topic: readback.state.topic, frame: readback.state.frame,
         annotation_state: readback.state.annotation_state, truth_verified: readback.state.truth_verified,
         frame_sha256: readback.binding.frame_sha256, dock: readback.dock,
@@ -78,7 +122,8 @@ const output = path.resolve(process.env.LABELAGENT_ACCEPTANCE_OUTPUT || 'artifac
       }, dialog_closed_after_navigation: readback.dialogOpen === false,
       truth_write_requests: writes, page_errors: errors, failed_requests: failedRequests,
       http_errors: httpErrors,
-      screenshot: path.join(output, 'review-packet-frame74.png')};
+      screenshots: [path.join(output, 'review-packet-priority-queue.png'),
+        path.join(output, 'review-packet-frame74.png')]};
     fs.writeFileSync(path.join(output, 'result.json'), JSON.stringify(result, null, 2));
     process.stdout.write(`${JSON.stringify(result)}\n`);
   } finally { await browser.close(); }

@@ -84,12 +84,29 @@ test('next navigation skips completed rows and wraps', () => {
   assert.equal(core.adjacentPendingIndex(rows, completed, 0, -1), 2);
 });
 
+test('assistant uncertainty is prioritized without changing truth boundaries', () => {
+  const rows = [
+    {frame: 1, assistant_proposal: {confidence_band: 'medium'}},
+    {frame: 2, review_priority: {priority_rank: 2}},
+    {frame: 3},
+    {frame: 4, review_priority: {priority_rank: 1}},
+  ];
+  const ordered = core.prioritizedRows(rows, new Map());
+  assert.deepEqual(ordered.map(item => item.row.frame), [4, 2, 1, 3]);
+  assert.equal(core.isPriorityReview(rows[0]), false);
+  assert.equal(core.isPriorityReview(rows[1]), true);
+  assert.equal(core.isPriorityReview(rows[3]), true);
+  assert.equal(core.adjacentPendingIndex(rows, new Map(), 3, 1), 1);
+  assert.equal(core.adjacentPendingIndex(rows, new Map([[4, {}]]), 3, 1), 1);
+});
+
 test('assistant suggestion is shown but never preselected or auto-submitted', () => {
   const html = fs.readFileSync(path.join(__dirname, '../source/web/index.html'), 'utf8');
   const ui = fs.readFileSync(path.join(__dirname, '../source/web/review-packet.js'), 'utf8');
   assert.match(html, /id="reviewPacketReviewer"/);
   assert.match(html, /id="reviewPacketDecision"/);
   assert.match(html, /id="reviewPacketDecisionSubmit"/);
+  assert.match(html, /data-packet-filter="priority"/);
   assert.match(html, /请选择人工判断（助手不会代选）/);
   assert.match(ui, /decisionSelect\.value = ''/);
   assert.doesNotMatch(ui, /decisionSelect\.value\s*=\s*proposal/);
@@ -97,4 +114,5 @@ test('assistant suggestion is shown but never preselected or auto-submitted', ()
   assert.match(ui, /human_truth_written !== false/);
   assert.match(ui, /training_data_written !== false/);
   assert.match(ui, /currentDraftIsDirty\(\)/);
+  assert.match(ui, /core\.isPriorityReview/);
 });

@@ -78,6 +78,7 @@
     const done = completed.has(Number(row.frame));
     if (activeFilter === 'complete') return done;
     if (activeFilter === 'pending') return !done;
+    if (activeFilter === 'priority') return !done && core.isPriorityReview(row);
     if (activeFilter === 'positive_proxy' || activeFilter === 'negative_cohort') return row.cohort === activeFilter;
     return true;
   }
@@ -111,7 +112,8 @@
     const done = Boolean(receipt);
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = `reviewPacketItem ${row.cohort === 'positive_proxy' ? 'positive' : 'negative'}${done ? ' complete' : ''}${index === currentIndex ? ' current' : ''}`;
+    const priority = !done && core.isPriorityReview(row);
+    button.className = `reviewPacketItem ${row.cohort === 'positive_proxy' ? 'positive' : 'negative'}${priority ? ' priority' : ''}${done ? ' complete' : ''}${index === currentIndex ? ' current' : ''}`;
     button.dataset.packetFrame = String(row.frame);
     const frame = document.createElement('span');
     frame.className = 'reviewPacketFrame';
@@ -119,7 +121,7 @@
     const copy = document.createElement('span');
     copy.className = 'reviewPacketCopy';
     const title = document.createElement('strong');
-    title.textContent = `第 ${row.frame} 帧 · ${cohortLabel(row)}`;
+    title.textContent = `第 ${row.frame} 帧 · ${cohortLabel(row)}${priority ? ' · 优先核对' : ''}`;
     const detail = document.createElement('small');
     detail.textContent = receipt?.type === 'slope_scoped_decision'
       ? decisionLabels[receipt.decision] || receipt.decision
@@ -127,6 +129,8 @@
         : `${row.candidate_count} 个斜坡候选 · 等待人工复核`;
     const route = document.createElement('span');
     route.textContent = done ? '专项完成，但不会自动回流训练'
+      : row.review_priority
+        ? `优先原因：${row.review_priority.priority_reason}`
       : row.assistant_proposal
         ? `助手建议：${decisionLabels[row.assistant_proposal.proposed_decision] || row.assistant_proposal.proposed_decision}`
         : `来源：${row.target_provenance || '未验证保存标注'}`;
@@ -138,7 +142,7 @@
 
   function render() {
     const rows = packet?.rows || [];
-    const visible = rows.map((row, index) => ({row, index})).filter(item => matches(item.row));
+    const visible = core.prioritizedRows(rows, completed).filter(item => matches(item.row));
     const done = rows.filter(row => completed.has(Number(row.frame))).length;
     const percent = rows.length ? Math.round(done / rows.length * 100) : 0;
     byId('reviewPacketProgressTitle').textContent = `${done} / ${rows.length} 帧已专项复核`;

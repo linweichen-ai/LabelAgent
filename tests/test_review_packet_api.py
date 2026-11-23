@@ -138,6 +138,36 @@ class ReviewPacketApiTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "隔离门禁"):
             server._read_review_packet("slope-round")
 
+    def test_priority_sidecar_is_hash_bound_and_cannot_promote_truth(self):
+        packet = server._read_review_packet("slope-round")
+        priority = {
+            "schema_version": "labelagent.slope-review-priority.v1",
+            "packet_id": "slope-round",
+            "manifest_sha256": packet["manifest_sha256"],
+            "source_review_schema": "labelagent.slope-blind-cross-review.v1",
+            "source_review_sha256": "b" * 64,
+            "assistant_only": True,
+            "human_truth": False,
+            "approved_for_training": False,
+            "auto_submit_allowed": False,
+            "rows": [{
+                "frame": 7, "priority_rank": 1,
+                "priority_reason": "partially visible boundary",
+                "assistant_only": True, "human_truth": False,
+                "approved_for_training": False, "auto_submit_allowed": False,
+            }],
+        }
+        priority_path = self.packet / "review-priority.json"
+        priority_path.write_text(json.dumps(priority), encoding="utf-8")
+        loaded = server._read_review_packet("slope-round")
+        self.assertEqual(loaded["priority_reviews_loaded"], 1)
+        self.assertEqual(loaded["rows"][0]["review_priority"]["priority_rank"], 1)
+        self.assertFalse(loaded["rows"][0]["review_priority"]["human_truth"])
+        priority["rows"][0]["approved_for_training"] = True
+        priority_path.write_text(json.dumps(priority), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "隔离门禁"):
+            server._read_review_packet("slope-round")
+
     def test_scoped_decision_is_append_only_idempotent_and_writes_no_truth(self):
         frame_bytes = b"exact-review-frame"
         self.value = manifest(

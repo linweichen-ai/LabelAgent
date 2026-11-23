@@ -1,0 +1,31 @@
+{
+  "schema_version": "labelagent.slope-review-priority.v1",
+  "packet_id": "slope-round160",
+  "manifest_sha256": "1c67cb8dc22b225a7b3b0d149539ec210b7386c0a2a4f1016b7384160092a79c",
+  "source_review_schema": "labelagent.slope-blind-cross-review.v1",
+  "source_review_sha256": "d0697eaf57566272c3e5c681da95ebd81c797b145adaf716330de148d5aaa775",
+  "assistant_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "auto_submit_allowed": false,
+  "rows": [
+    {
+      "frame": 95,
+      "priority_rank": 1,
+      "priority_reason": "坡面只在画面左边缘露出局部切片，需优先人工核对边界。",
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "auto_submit_allowed": false
+    },
+    {
+      "frame": 140,
+      "priority_rank": 2,
+      "priority_reason": "纸箱遮挡范围最大，需优先人工确认可见区域没有坡面。",
+      "assistant_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "auto_submit_allowed": false
+    }
+  ]
+}

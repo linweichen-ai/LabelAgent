@@ -1,0 +1,53 @@
+{
+  "schema_version": "labelagent.external-expert-ab-report.v1",
+  "partition": "synthetic_dev_difficult",
+  "reference_mode": "synthetic_fixture",
+  "synthetic_fixture": true,
+  "human_reference": false,
+  "reviewer_confirmed": false,
+  "test24_used": false,
+  "sample_count": 2,
+  "quality_metrics_available": true,
+  "real_world_quality_evidence": false,
+  "models": [
+    {
+      "model": "example-a",
+      "attempted_samples": 2,
+      "structured_review_success_rate": 0.5,
+      "failed_runs": 0,
+      "fallback_runs": 1,
+      "candidate_verdict_exact_match": 0.5,
+      "candidate_verdict_correct": 1,
+      "candidate_verdict_total": 2,
+      "missing_label_precision": 1.0,
+      "missing_label_recall": 1.0,
+      "new_label_name_exact_precision": 1.0,
+      "new_label_name_exact_recall": 1.0,
+      "latency_ms_median": 200.0,
+      "latency_ms_p95": 300.0,
+      "estimated_cost_usd_total": 0.01
+    },
+    {
+      "model": "example-b",
+      "attempted_samples": 1,
+      "structured_review_success_rate": 1.0,
+      "failed_runs": 0,
+      "fallback_runs": 0,
+      "candidate_verdict_exact_match": 1.0,
+      "candidate_verdict_correct": 2,
+      "candidate_verdict_total": 2,
+      "missing_label_precision": null,
+      "missing_label_recall": 0.0,
+      "new_label_name_exact_precision": null,
+      "new_label_name_exact_recall": 0.0,
+      "latency_ms_median": 200.0,
+      "latency_ms_p95": 200.0,
+      "estimated_cost_usd_total": 0.02
+    }
+  ],
+  "automatic_winner_selected": false,
+  "deployment_decision": "not_evaluated",
+  "candidate_only": true,
+  "human_truth_written": false,
+  "approved_for_training": false
+}

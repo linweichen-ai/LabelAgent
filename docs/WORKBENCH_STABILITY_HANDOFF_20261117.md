@@ -4349,3 +4349,11 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 单模型失败不抹掉其他模型证据；汇总固定声明没有工厂数据、没有自动真值、没有训练批准、没有部署结论，也不宣称效果提升。
 - 新增矩阵测试 6 项；矩阵、合成连通和专家复核协议合计 16/16 通过。四模型占位配置 dry-run 为 4/4 配置通过、实际连通 0、上传 0。
 - 本轮没有 API Key、外部网络调用、工厂数据、训练、推理、正式部署、真值或 `test24` 写入。详见 `docs/EXTERNAL_VLM_SYNTHETIC_MATRIX_ROUND760_20261124.md` 和 `docs/evidence/workbench-stability-20261117/round760-expert-matrix-dry-run.json`。
+
+## 2026-11-24 Round761 补充：外部视觉专家人工参考 A/B 评测器
+
+- 新增严格的人工参考 A/B 汇总器；只有 `human_reference=true` 且 `reviewer_confirmed=true` 才计算质量指标，分区或输入涉及 `test24` 时直接拒绝。
+- 同时报告结构化复核成功率、失败/回退、候选 verdict 严格一致率、已知类别漏检、新类别名称精确匹配、延迟中位数/P95 和预计成本；失败样本不会被隐藏。
+- 模型结果必须保持 candidate-only 边界，逐项绑定人工候选 ID；失败/回退不得携带伪造复核。工具不会自动选择赢家，也不会给出部署决定。
+- A/B 新增 7 项测试；与矩阵、合成连通和专家复核协议合计 23/23 通过。2 个合成样本和 2 个虚拟模型报告固定标记为 synthetic fixture、非人工参考、非真实质量证据，只验证指标链路。
+- 本轮没有 API Key、外部调用、工厂数据、训练、推理、部署、真值写入或 `test24` 使用。详见 `docs/EXTERNAL_VLM_HUMAN_REFERENCED_AB_ROUND761_20261124.md` 和 `docs/evidence/workbench-stability-20261117/round761-expert-ab-synthetic-report.json`。

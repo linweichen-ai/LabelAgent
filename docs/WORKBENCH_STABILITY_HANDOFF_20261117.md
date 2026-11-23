@@ -4402,3 +4402,10 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 最新开发提交为 `9b0b21c...`；5 个相关源码文件均与正式目录不同，Round160 正式包缺少优先侧车，托盘候选状态仍返回旧版 404，确认 Round764–766 尚未部署。
 - 本轮没有修改或重启正式工作台；`automatic_overlay_safe=false`。下一步只能采用逐文件哈希、独立备份、最小补丁、原子替换、重启读回和失败回滚的受控方式。
 - 结构化证据见 `docs/evidence/workbench-stability-20261117/round767-formal-deployment-readiness.json`，说明见 `docs/FORMAL_DEPLOYMENT_READINESS_ROUND767_20261124.md`。
+
+## 2026-11-24 Round768 补充：正式最小覆盖候选包
+
+- 从正式目录实际文件生成隔离副本，只加入 Round764–766 必需的局部变化；没有把开发分支其他未部署功能带入 `index.html`，也没有覆盖正式现场文件。
+- 候选包含 6 个哈希绑定文件，逐项记录正式旧 SHA-256 与候选新 SHA-256；正式文件任一变化都必须停止部署。清单明确 `deployment_performed=false`、`formal_files_written=0`、`automatic_deployment_allowed=false`。
+- 使用正式源码副本和正式 Python 环境验证：Python 11/11、网页核心 7/7、语法检查通过；隔离端口 18772 的真实 Edge 验收首四帧为 95、140、74、77，优先筛选精确为 95、140，页面/HTTP/写入错误均为 0，结束后端口已关闭。
+- 正式 8765 全程未停止、未重启、未写入。候选清单见 `artifacts/round768-formal-minimal-overlay-candidate/manifest.json`，说明见 `docs/FORMAL_MINIMAL_OVERLAY_CANDIDATE_ROUND768_20261124.md`。

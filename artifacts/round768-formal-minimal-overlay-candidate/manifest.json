@@ -1,0 +1,54 @@
+{
+  "schema_version": "labelagent.formal-minimal-overlay-candidate.v1",
+  "created_from_formal_head": "f70179e1142336bbf3342c22245cb46a95eb606a",
+  "canonical_source_head": "36f78b90a6b16f3bbc505a5c9b6566f073149337",
+  "candidate_validated": true,
+  "deployment_performed": false,
+  "formal_files_written": 0,
+  "automatic_deployment_allowed": false,
+  "tests": {
+    "python_passed": 11,
+    "node_passed": 7,
+    "browser_passed": true,
+    "page_errors": 0,
+    "failed_requests": 0,
+    "http_errors": 0,
+    "truth_write_requests": 0
+  },
+  "browser_receipt": {
+    "path": "artifacts/round768-formal-minimal-overlay-browser/result.json",
+    "sha256": "aaf2cc867865a003b5d5211bc6532fd16f824fc78a025e77c262b52787aacd7b"
+  },
+  "files": [
+    {
+      "relative": "source/agent/server.py",
+      "formal_sha256": "9a63076d28263cd58693d62ad89a914eaf29f52613805d3807138a2599511139",
+      "candidate_sha256": "26c18089538f54460805f715027104cecb167316cdce25e09e9467e041c7b1c8"
+    },
+    {
+      "relative": "source/web/index.html",
+      "formal_sha256": "d72e17d73d23e1d8f3a7e01edaf4244e1a95a7346a99d2576d9391da5de7f30c",
+      "candidate_sha256": "d81faa8558343d2fd33b7bcd85aad23235499947fd461fd3464b8ea7416cb24e"
+    },
+    {
+      "relative": "source/web/review-packet-core.js",
+      "formal_sha256": "262c166060fbf82b1ab5b9585265e8c15034279b7436a1c20422cebbb410ff43",
+      "candidate_sha256": "a2b6dc34191ecce7740b6485711d6ba3e8e39c765b1e406e2542d3d0be6d610d"
+    },
+    {
+      "relative": "source/web/review-packet.css",
+      "formal_sha256": "ba7b4f05e1faa0f1c40ebec863cc38f1fa90695c66693b53a7e8685047294fc2",
+      "candidate_sha256": "ce16d1aaa6c015e6bd993bd5e73cc3d4ebd377f57ead38df880985bc738423ed"
+    },
+    {
+      "relative": "source/web/review-packet.js",
+      "formal_sha256": "b6ce3955972034797a3a7ba1c6cbdcea0a6cefbfab6d2d4af13a4109dbeacc66",
+      "candidate_sha256": "4df73c577adf2e79e521be77266d8cd04f961ddc48e3618a0441e354be0782c5"
+    },
+    {
+      "relative": "work/review_packets/slope-round160/review-priority.json",
+      "formal_sha256": null,
+      "candidate_sha256": "e91a21a5b7115d1ca9d8dbc963e26124ed33de2dd5fd40907f73ed6cec9aeec2"
+    }
+  ]
+}

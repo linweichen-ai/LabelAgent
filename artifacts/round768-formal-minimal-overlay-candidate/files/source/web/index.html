@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="labelagent-ui-version" content="172">
+  <title>标注 Agent 平台</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23224b8d'/%3E%3Ctext x='32' y='41' text-anchor='middle' font-family='Arial,sans-serif' font-size='26' font-weight='700' fill='white'%3ELA%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="/style.css?v=120">
+<link rel="stylesheet" href="/point-prompt-v19.css?v=64">
+  <link rel="stylesheet" href="/human-review.css?v=64">
+  <link rel="stylesheet" href="/reference-prep.css?v=103">
+  <link rel="stylesheet" href="/batch-review.css?v=64">
+  <link rel="stylesheet" href="/review-packet.css?v=164">
+  <link rel="stylesheet" href="/pallet-candidate-review-entry.css?v=1">
+  <link rel="stylesheet" href="/homepage-theme.css?v=5">
+</head>
+<body>
+<main class="workspace">
+  <section class="viewer">
+    <div class="windowToolbar">
+      <div class="productBrand" aria-label="LabelAgent 工厂自动标注工作台">
+        <span class="brandMark" aria-hidden="true">LA</span>
+        <span class="brandCopy"><strong>LabelAgent</strong><small>工厂自动标注工作台</small></span>
+        <span class="brandLive"><i></i>本机运行</span>
+      </div>
+      <div class="workspaceModes" role="group" aria-label="标注模式">
+        <button id="manualModeButton" class="selected" aria-pressed="true">人工标注 / 真值</button>
+        <button id="autoModeButton" aria-pressed="false" title="进入自动推理，并设置从当前帧向后连续处理多少帧">自动标注 / 候选</button>
+      </div>
+      <span id="workspaceModeHint">当前是人工真值界面</span>
+      <button id="goToAutoInference" class="modeShortcut" type="button" title="进入自动推理界面，设置从当前帧向后连续处理多少帧">连续推理 · N 帧</button>
+      <div class="toolbarActions" role="group" aria-label="工作台快捷操作">
+        <button id="openReviewPacketsButton" class="reviewPacketsButton" type="button" title="打开绑定原图哈希的专项人工复核队列"><span aria-hidden="true">✓</span>专项复核<em id="reviewPacketBadge" hidden>0</em></button>
+        <a id="palletCandidateReviewEntry" class="palletCandidateReviewEntry" href="/pallet-candidate-review/" target="_blank" rel="noopener" hidden title="在新窗口打开只读托盘候选复核页"><span aria-hidden="true">▦</span>托盘候选<em id="palletCandidateReviewBadge">0</em></a>
+        <button id="quickActionsButton" class="quickActionsButton" type="button" title="打开快捷操作面板（Ctrl+K）"><span aria-hidden="true">⌘</span>快捷操作<kbd>Ctrl K</kbd></button>
+        <button id="tutorialButton" class="tutorialButton" type="button" title="打开操作教程"><span aria-hidden="true">?</span>新手教程</button>
+        <button id="focusModeButton" class="focusModeButton" type="button" title="隐藏向导，扩大图像和操作区域" aria-pressed="false"><span aria-hidden="true">⛶</span>专注视图</button>
+        <button id="canvasModeButton" class="canvasModeButton" type="button" title="收起操作台，把空间留给图像（B）" aria-pressed="false"><span aria-hidden="true">▣</span>画布优先</button>
+        <button id="themeButton" class="themeButton" type="button" title="切换浅色或夜间主题" aria-pressed="false"><span aria-hidden="true">☾</span>夜间</button>
+        <button id="addWindowButton" title="添加窗口"><img src="/icons/plus.svg" alt="">添加窗口</button>
+        <button id="openFilesDialog" class="iconButton" title="加载文件" aria-label="加载文件"><img src="/icons/folder-open.svg" alt=""></button>
+        <button id="openConfigDialog" class="iconButton" title="设置" aria-label="设置"><img src="/icons/settings.svg" alt=""></button>
+      </div>
+    </div>
+    <section id="datasetIdentity" class="datasetIdentity unloaded" aria-label="当前数据集" aria-live="polite">
+      <span id="datasetIdentityKind" class="datasetIdentityKind">尚未加载数据</span>
+      <div class="datasetIdentityCopy">
+        <strong id="datasetIdentityName">请先选择图片或 MCAP 数据</strong>
+        <small id="datasetIdentityDetail">加载后会在这里持续显示数据集、批次、相机话题和帧数</small>
+      </div>
+      <button id="datasetIdentitySwitch" type="button">切换数据</button>
+    </section>
+    <aside id="uiVersionNotice" class="uiVersionNotice" hidden role="alert" aria-live="assertive">
+      <div>
+        <strong>页面已有新版，当前旧页面可能导致 SAM 按钮看起来没有反应</strong>
+        <span>刷新只更新界面，不会把机器候选保存成人工真值。</span>
+      </div>
+      <button id="reloadLatestUi" type="button">立即刷新到新版</button>
+    </aside>
+    <section id="workflowGuide" class="workflowGuide" aria-label="单帧自动标注演示向导">
+      <div class="guideSummary">
+        <div class="guideCopy">
+          <span class="guideEyebrow">单帧自动标注演示</span>
+          <strong id="guideTitle">正在读取工作台状态…</strong>
+          <span id="guideDetail">机器候选和人工真值会严格分开显示。</span>
+        </div>
+        <div class="guideBadges" aria-label="当前数据状态">
+          <span id="guideDataBadge" class="guideBadge neutral">数据检查中</span>
+          <span id="guideCandidateBadge" class="guideBadge neutral">候选检查中</span>
+          <span id="guideTruthBadge" class="guideBadge neutral">真值检查中</span>
+        </div>
+        <div class="guideControls">
+          <button id="guideToggle" type="button" class="guideToggle" aria-expanded="true" title="收起或展开详细步骤">收起步骤</button>
+          <button id="guideAutoDraft" type="button" class="guideAutoDraft" hidden title="直接运行 VLM 识别、SAM 分割、Agent 修正和 VLM 复核；结果只保存为机器候选">一键 SAM + VLM 起稿</button>
+          <button id="guideAction" type="button" class="guideAction">准备单帧演示</button>
+        </div>
+      </div>
+      <ol class="guideSteps">
+        <li data-guide-step="frame"><i>1</i><span><b>选择图像帧</b><small>确认相机和帧号</small></span></li>
+        <li data-guide-step="reference"><i>2</i><span><b>准备参考帧</b><small>人工轮廓与类别</small></span></li>
+        <li data-guide-step="run"><i>3</i><span><b>运行一帧</b><small>SAM → VLM → Agent</small></span></li>
+        <li data-guide-step="review"><i>4</i><span><b>人工复核</b><small>确认后才能成为真值</small></span></li>
+      </ol>
+      <p class="guideSafety"><b>安全提示：</b>绿色或彩色轮廓首先都是机器候选；未经过人工确认，不会被当作训练真值或自动部署。<span class="shortcutLegend"><kbd>1</kbd>人工 <kbd>2</kbd>自动 <kbd>?</kbd>教程 <kbd>G</kbd>向导 <kbd>F</kbd>专注 <kbd>B</kbd>画布 <kbd>T</kbd>主题 <kbd>Ctrl K</kbd>快捷</span></p>
+    </section>
+    <div class="windowGrid" id="windowGrid">
+      <article class="sensorWindow primaryWindow" id="primaryWindow" hidden>
+        <div class="windowHeader">
+          <span id="primaryTitle">图像窗口</span>
+          <button id="annotatePrimary" title="进入标注模式" aria-label="进入标注模式" aria-pressed="false">✎</button>
+          <button id="maximizePrimary" title="放大 / 还原">⛶</button>
+          <button id="closePrimary" title="关闭窗口">×</button>
+        </div>
+        <div class="canvasWrap"><div class="imageStage" id="stage">
+          <video id="playbackVideo" preload="auto" playsinline hidden></video>
+          <img id="frameImage" alt="视频帧"><canvas id="canvas"></canvas>
+          <div id="pointPromptCanvasStatus" class="pointPromptCanvasStatus" hidden aria-live="assertive" tabindex="-1"><i aria-hidden="true"></i><span>第 2 步：请直接点击目标内部，点击后才会运行 SAM</span></div>
+          <div id="compareDivider" class="compareDivider" hidden><span></span></div>
+        </div></div>
+      </article>
+      <div id="emptyWindows" class="emptyWindows" hidden>
+        <span class="emptyVisual" aria-hidden="true"><i></i></span>
+        <strong>还没有打开图像窗口</strong>
+        <span>添加相机或点云消息源后，就可以浏览帧并开始标注。</span>
+        <button id="emptyAddWindow" type="button">＋ 添加第一个窗口</button>
+      </div>
+      <section id="compareDock" class="compareDock compact" aria-labelledby="compareDockTitle">
+        <div class="compareDockHead">
+          <div><span class="compareEyebrow">V9 图层对比</span><strong id="compareDockTitle">结果查看</strong></div>
+          <button id="compareDockToggle" type="button" aria-expanded="false">展开</button>
+        </div>
+        <div class="compareDockBody">
+          <div class="compareModes" role="group" aria-label="对比模式">
+            <button type="button" class="selected" data-compare-mode="overlay">普通叠加</button>
+            <button type="button" data-compare-mode="split">左右对比</button>
+            <button type="button" data-compare-mode="wipe">拖动对比</button>
+            <button type="button" data-compare-mode="difference">差异查看</button>
+          </div>
+          <div class="compareLayers" aria-label="图层显示">
+            <label><input id="compareOriginal" type="checkbox" checked> 原图</label>
+            <label><input id="compareCandidate" type="checkbox" checked> 机器候选</label>
+            <label><input id="comparePending" type="checkbox" checked> 待人工复核标注</label>
+            <label><input id="compareTruth" type="checkbox" checked> 人工真值</label>
+            <label><input id="compareSelectedOnly" type="checkbox"> 只看选中</label>
+            <label><input id="compareLabels" type="checkbox" checked> 类别文字</label>
+            <label><input id="compareFill" type="checkbox" checked> 填充</label>
+            <label><input id="compareBoundaries" type="checkbox" checked> 边界</label>
+            <label class="traversableToggle"><input id="compareTraversable" type="checkbox"> 可通行合并层</label>
+          </div>
+          <div class="compareSliders">
+            <label>候选透明度 <input id="candidateOpacity" type="range" min="0" max="100" value="42"><output>42%</output></label>
+            <label>真值透明度 <input id="truthOpacity" type="range" min="0" max="100" value="32"><output>32%</output></label>
+            <label>边界粗细 <input id="boundaryWidth" type="range" min="1" max="10" value="2"><output>2</output></label>
+            <label id="wipeControl" hidden>对比分割线 <input id="wipePosition" type="range" min="5" max="95" value="50"><output>50%</output></label>
+          </div>
+          <div class="compareSelectedActions">
+            <button id="compareFocusSelected" type="button" disabled>放大选中目标</button>
+            <button id="compareResetView" type="button">返回全图</button>
+            <span id="compareSelectionInfo">尚未选中候选</span>
+          </div>
+          <div class="compareLegend" aria-label="图层颜色说明">
+            <span><i class="legendCandidate"></i>机器候选</span>
+            <span><i class="legendPending"></i>待人工复核标注</span>
+            <span><i class="legendTruth"></i>人工真值</span>
+            <span><i class="legendFloor"></i>floor</span>
+            <span><i class="legendSlope"></i>slope</span>
+            <span><i class="legendTraversable"></i>traversable_area</span>
+          </div>
+          <p id="compareStatus" class="compareStatus">正在读取当前帧的候选与真值。</p>
+          <p class="compareBoundary"><b>质量边界：</b>没有人工像素真值时，只展示机器结果，不计算或宣称 IoU、Dice、Boundary F1。</p>
+        </div>
+      </section>
+    </div>
+    <div class="playbackBar">
+      <div class="playbackControls playbackLeft">
+        <button id="playButton" title="播放 / 暂停" aria-label="播放 / 暂停">▶</button>
+        <button id="stopButton" title="停止并回到首帧" aria-label="停止并回到首帧">■</button>
+      </div>
+      <div class="timeSeek"><input id="timeTimeline" aria-label="播放时间" type="range" min="0" max="0" step="0.001" value="0"><output id="playbackTime">00:00.00 / 00:00.00</output></div>
+      <div class="playbackControls playbackRight">
+        <select id="playbackRate" title="播放速度" aria-label="播放速度"><option value="0.1">0.1×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select>
+        <button id="previousFrameButton" class="frameStepButton" type="button" title="上一帧（键盘 ←）" aria-label="上一帧">‹</button>
+        <span class="frameJumpLabel">帧</span><input id="frameNumber" aria-label="当前帧" type="text" inputmode="numeric" pattern="[0-9]*" value="0"><span id="frameTotal">/ 0</span>
+        <button id="nextFrameButton" class="frameStepButton" type="button" title="下一帧（键盘 →）" aria-label="下一帧">›</button>
+      </div>
+    </div>
+    <div id="imageInfo" role="status" hidden></div>
+    <div id="workbenchSplitter" role="separator" aria-label="调整操作台高度" aria-orientation="horizontal" aria-controls="workbench" tabindex="0" title="上下拖动调整操作台高度，也可使用上下方向键"></div>
+    <section id="workbench" aria-label="标注操作台">
+      <section class="panel" id="truth">
+        <div class="panelHeading"><h2>人工真值</h2><span id="referenceStatus" class="referenceStatus"></span></div>
+        <div class="truthSettings">
+          <label id="labelChoice">类别 <select id="labelSelect"></select></label>
+          <label>类别列表 <input id="labelsInput" value="person,pallet,ego,traversable_area,slope,obstacle,地面"></label>
+          <button id="labelsSave">保存类别</button>
+        </div>
+        <div id="candidateReuseBanner" class="candidateReuseBanner" hidden aria-live="polite">
+          <div>
+            <strong>当前帧已经有机器候选</strong>
+            <span id="candidateReuseSummary">无需重新运行 SAM，可直接载入并逐个检查。</span>
+          </div>
+          <button id="candidateReuseButton" type="button" class="primary">载入候选并开始复核</button>
+        </div>
+        <div class="toolrow" id="truthTools">
+          <button id="polygonButton" class="selected">多边形</button>
+          <button id="pointButton" title="进入后在目标内部点一下，第一次点图会立即运行 SAM">SAM 点选（点目标即运行）</button>
+          <button id="negativeButton" title="点选模式下点击非目标区域">排除点</button>
+          <button id="generateMaskButton">生成轮廓</button>
+          <button id="addRegionButton" title="仅手工圈出区域并补到选中标注，不会调用 SAM">手工补区域（非 SAM）</button>
+          <button id="eraseRegionButton" title="圈出区域并从选中标注中清除">橡皮擦</button>
+          <button id="undoButton" title="撤销上一个点">↶</button>
+          <button id="finishButton">闭合</button>
+          <button id="clearButton">清空本帧</button>
+        </div>
+        <div id="pointPromptCoach" class="pointPromptCoach" hidden aria-live="polite" tabindex="-1">
+          <div class="pointPromptCoachHead">
+            <strong>点提示 SAM</strong>
+            <span id="pointPromptStatus">尚未开始推理：在目标内部点一下即可自动生成</span>
+          </div>
+          <ol aria-label="点提示 SAM 操作步骤">
+            <li id="pointPromptStep1"><b>1</b><span>点选目标内部</span></li>
+            <li id="pointPromptStep2"><b>2</b><span>可选：排除背景</span></li>
+            <li id="pointPromptStep3"><b>3</b><span>自动生成轮廓</span></li>
+          </ol>
+          <p id="pointPromptRefinementHint" class="pointPromptRefinementHint"><b>轮廓不准时：</b>漏掉目标就在漏区加绿色目标点；粘到人、地面或其他物体，就点“排除点”后在错误区域加红点；加点后点击“重新生成轮廓”。</p>
+          <div class="pointPromptCoachActions">
+            <span id="positivePointCount">目标点 0</span>
+            <span id="negativePointCount">排除点 0</span>
+            <button id="pointPromptCancel" type="button">退出点选</button>
+            <button id="pointPromptGenerate" type="button" class="primary" disabled>生成轮廓</button>
+            <button id="pointPromptReview" type="button" class="primary" hidden>下一步：检查并确认</button>
+          </div>
+          <div class="pointPromptAlternative">
+            <div><strong>需要同时找出整张图里的多个目标？</strong><small>整帧流程会自动执行 VLM 识别 → SAM 分割 → Agent 修正 → VLM 复核；已有候选会直接复用。</small></div>
+            <button id="pointPromptFullPipeline" type="button">整帧 SAM + VLM 自动起稿</button>
+          </div>
+        </div>
+        <div id="referenceFinalizeGuide" class="referenceFinalizeGuide" hidden aria-live="polite">
+          <div>
+            <strong>参考帧收尾</strong>
+            <span id="referenceFinalizeStatus">检查轮廓后进入人工确认</span>
+          </div>
+          <div id="referenceFinalizeReview" class="referenceFinalizeReview" hidden>
+            <span><b id="referenceFinalizeCount">0</b> 个轮廓</span>
+            <span id="referenceFinalizeAiStatus">等待模型复核信息</span>
+            <span id="referenceReviewProgress">已检查 0 / 0</span>
+            <span id="referenceFinalizeTruthStatus">尚未写入人工真值</span>
+          </div>
+          <div id="classColorLegend" class="classColorLegend" hidden aria-label="类别颜色图例"></div>
+          <p id="referenceFinalizeAdvice" class="referenceFinalizeAdvice" hidden></p>
+          <div id="referenceReviewAlerts" class="referenceReviewAlerts" hidden aria-live="polite"></div>
+          <div id="referenceReviewNavigation" class="referenceReviewNavigation" hidden>
+            <button id="referenceReviewPrevious" type="button">← 上一个轮廓</button>
+            <button id="referenceReviewRisk" type="button" title="按低置信、模型冲突和轮廓异常优先检查">先查高风险</button>
+            <button id="referenceReviewSolo" type="button" aria-pressed="false">仅看当前：关</button>
+            <button id="referenceReviewFocus" type="button" aria-pressed="false">聚焦当前：关</button>
+            <button id="referenceReviewOriginal" type="button" aria-pressed="false" title="临时隐藏全部候选，检查漏标、远处小目标和标签表外目标">只看原图：关</button>
+            <span id="referenceReviewPosition">尚未逐个检查</span>
+            <button id="referenceReviewApprove" type="button" aria-pressed="false">当前轮廓检查通过</button>
+            <button id="referenceReviewApproveNext" type="button" class="primary">检查通过并下一个 →</button>
+            <button id="referenceReviewNext" type="button">下一个轮廓 →</button>
+          </div>
+          <ol aria-label="参考帧收尾步骤">
+            <li id="referenceFinalizeStep1"><b>1</b>检查轮廓</li>
+            <li id="referenceFinalizeStep2"><b>2</b>人工确认</li>
+            <li id="referenceFinalizeStep3"><b>3</b>锁定参考帧</li>
+          </ol>
+          <div class="referenceFinalizeActions">
+            <button id="referenceFinalizeCancel" type="button">退出收尾</button>
+            <button id="referenceFinalizePrimary" type="button" class="primary">人工确认并设为参考帧</button>
+          </div>
+        </div>
+        <div id="shapeList" class="shapeList"></div>
+        <div class="truthActions" id="truthActions">
+          <button id="truthSave" class="primary">保存当前帧真值</button>
+          <button id="referenceButton">设为参考帧</button>
+          <button id="openReferenceButton" hidden>打开参考帧</button>
+        </div>
+      </section>
+      <div id="autoDesk" hidden>
+        <section id="inspectionPanel" aria-label="自动标注过程">
+          <div class="inspectionHeading">
+            <div class="inspectionTitle"><strong>自动标注过程</strong><span id="inspectionContext"></span></div>
+            <div class="inspectionActions">
+              <label>本次处理 <input id="taskCount" type="number" min="1" max="100" value="1" title="从当前帧开始处理的帧数，首次演示建议只处理 1 帧"> 帧</label>
+              <label>最多复查 <input id="reviewRounds" type="number" min="1" max="12" value="6" title="每帧 VLM 与 Agent 最多复查轮数；结果稳定时会提前停止，展示建议 2～3，日常建议 4～6"> 轮</label>
+              <button id="describeButton" type="button">生成真值描述</button>
+              <button id="prepareReference" type="button">参考帧准备</button>
+              <div class="runActions">
+                <button id="runButton" type="button" class="primary">开始自动标注</button>
+                <button id="saveCandidate" type="button" class="primary">人工确认并保存为真值</button>
+                <button id="cleanupPalletGeometry" type="button" title="只优化当前帧旧机器候选中的栈板纹理孔和毛刺；人工真值保留">优化本帧栈板边界</button>
+                <button id="clearAutoResult" type="button" title="仅清除当前帧自动候选及过程记录；人工真值保留">清除本帧候选</button>
+              </div>
+              <button id="downloadDebug" type="button">下载记录</button>
+            </div>
+          </div>
+          <div class="autoLabelBar" aria-label="自动标注推理类别">
+            <strong>推理类别</strong>
+            <div id="autoLabelOptions" class="autoLabelOptions"></div>
+            <button id="autoLabelsAll" type="button">全选</button>
+            <button id="autoLabelsReference" type="button">仅参考帧类别</button>
+            <button id="autoLabelsSave" type="button" class="primary">应用类别</button>
+            <span id="autoLabelHint">勾选表示“逐类检查 / 允许生成”，不等于每帧必有该类。下方会区分：已生成、VLM 看见但 SAM 漏分、画面未见和尚未评估。</span>
+          </div>
+          <div id="candidateSummary" class="candidateSummary" aria-live="polite"></div>
+          <section id="batchReviewPanel" class="batchReviewPanel" aria-labelledby="batchReviewTitle">
+            <div class="batchReviewHead">
+              <div>
+                <span class="batchReviewEyebrow">V12 批量复核</span>
+                <div><strong id="batchReviewTitle">按风险逐帧检查</strong><small id="batchReviewContext">正在整理候选队列…</small></div>
+              </div>
+              <div class="batchReviewHeadActions">
+                <span id="batchSplitBadge" class="batchSplitBadge unassigned">split 未分配</span>
+                <button id="batchReviewToggle" type="button" aria-expanded="true">收起队列</button>
+              </div>
+            </div>
+            <div class="batchReviewBody">
+              <div class="batchProgressSummary">
+                <div><strong id="batchProgressTitle">等待候选</strong><span id="batchProgressDetail">复核草稿只保存在当前浏览器会话</span></div>
+                <b id="batchProgressPercent">0%</b>
+              </div>
+              <div id="batchProgressBar" class="batchProgressBar" role="progressbar" aria-label="批量复核进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
+              <div id="batchReviewStats" class="batchReviewStats" aria-label="批量复核统计"></div>
+              <div class="batchReviewControls">
+                <div class="batchReviewFilters" role="group" aria-label="批量队列筛选">
+                  <button type="button" class="selected" data-batch-filter="all">全部</button>
+                  <button type="button" data-batch-filter="priority">高风险优先</button>
+                  <button type="button" data-batch-filter="unknown">未知类</button>
+                  <button type="button" data-batch-filter="conflict">冲突 / QC</button>
+                  <button type="button" data-batch-filter="low">低置信</button>
+                  <button type="button" data-batch-filter="hard">疑难样本</button>
+                  <button type="button" data-batch-filter="pending">待复核</button>
+                  <button type="button" data-batch-filter="reviewed">已暂存</button>
+                </div>
+                <div class="batchNavigation" aria-label="队列导航">
+                  <button id="batchPrevious" type="button" title="上一条队列帧（K）">← 上一条 <kbd>K</kbd></button>
+                  <button id="batchJumpHard" type="button" title="跳到下一条疑难样本（H）">疑难样本 <kbd>H</kbd></button>
+                  <button id="batchNext" type="button" class="primary" title="下一条队列帧（J）">下一条 <kbd>J</kbd> →</button>
+                </div>
+              </div>
+              <div id="batchReviewQueue" class="batchReviewQueue" aria-live="polite"></div>
+              <p class="batchReviewBoundary"><b>隔离规则：</b>train72 只产生训练候选，test24 只能产生评测真值；未分配或混合 split 一律禁止训练回流。这里的接受/驳回仍是会话草稿，不等于正式人工真值。</p>
+            </div>
+          </section>
+          <section id="candidateReviewPanel" class="candidateReviewPanel" aria-labelledby="candidateReviewTitle">
+            <div class="candidateReviewHead">
+              <div>
+                <span class="reviewEyebrow">V53 风险复核</span>
+                <div><strong id="candidateReviewTitle">候选复核工作台</strong><small id="candidateReviewContext">读取当前帧候选中…</small></div>
+              </div>
+              <div class="candidateReviewHeadActions">
+                <button id="candidateComparisonOpen" type="button" title="只读比较当前候选、替代候选与共识">候选对比 <span id="candidateComparisonBadge">—</span></button>
+                <button id="componentReviewOpen" type="button" title="打开哈希校验后的微孔聚焦复核包">微孔聚焦复核 <span id="componentReviewBadge">—</span></button>
+                <button id="candidateReviewToggle" type="button" aria-expanded="true">收起复核台</button>
+              </div>
+            </div>
+            <div class="candidateReviewBody">
+              <div id="candidateReviewStats" class="candidateReviewStats" aria-label="当前帧候选统计"></div>
+              <div class="candidateReviewFilters" aria-label="候选筛选">
+                <div class="reviewFilterButtons" role="group" aria-label="风险筛选">
+                  <button type="button" class="selected" data-review-filter="all">全部</button>
+                  <button type="button" data-review-filter="risk">需关注</button>
+                  <button type="button" data-review-filter="geometry">轮廓风险</button>
+                  <button type="button" data-review-filter="low">低置信</button>
+                  <button type="button" data-review-filter="conflict">模型冲突</button>
+                  <button type="button" data-review-filter="unknown">未知类别</button>
+                  <button type="button" data-review-filter="modified">Agent 修改</button>
+                  <button type="button" data-review-filter="pending">待复核</button>
+                </div>
+                <label>类别 <select id="candidateLabelFilter"><option value="all">全部类别</option></select></label>
+                <label>低置信阈值 <select id="candidateConfidenceThreshold"><option value="0.5">0.50</option><option value="0.65" selected>0.65</option><option value="0.8">0.80</option></select></label>
+              </div>
+              <div id="candidateReviewList" class="candidateReviewList" aria-live="polite"></div>
+              <p class="candidateReviewBoundary"><b>证据边界：</b>接受、驳回、需修改和疑难标记目前只保存在本次浏览器会话，属于复核草稿；不会写入人工真值、训练集或正式审核记录。</p>
+            </div>
+          </section>
+          <section id="runProgress" class="runProgress" aria-label="标注推理进度" aria-live="polite" tabindex="-1">
+            <div class="runProgressSummary">
+              <div class="runProgressHeadline">
+                <span id="runProgressState" class="runProgressState idle">等待开始</span>
+                <strong id="runProgressTitle">尚未开始标注推理</strong>
+                <span id="runProgressDetail">点击“开始自动标注”后，这里会显示实时进度。</span>
+              </div>
+              <strong id="runProgressPercent" class="runProgressPercent">待开始</strong>
+            </div>
+            <div id="runProgressBar" class="runProgressBar" role="progressbar" aria-label="总体进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <span id="runProgressFill"></span>
+            </div>
+            <div class="runProgressStats" aria-label="实时统计">
+              <span><b id="runProgressFrames">0 / 0</b>已完成帧</span>
+              <span><b id="runProgressFrame">—</b>当前帧</span>
+              <span><b id="runProgressRound">—</b>复查轮次</span>
+              <span><b id="runProgressShapes">0</b>当前候选</span>
+              <span><b id="runProgressElapsed">0 秒</b>已用时间</span>
+            </div>
+            <ol id="runProgressStages" class="runProgressStages" aria-label="推理阶段">
+              <li data-progress-stage="prepare"><i>1</i><span>准备与读取</span></li>
+              <li data-progress-stage="sam"><i>2</i><span>SAM3 分割</span></li>
+              <li data-progress-stage="review"><i>3</i><span>VLM 复查</span></li>
+              <li data-progress-stage="edit"><i>4</i><span>Agent 修改</span></li>
+              <li data-progress-stage="save"><i>5</i><span>保存候选</span></li>
+            </ol>
+          </section>
+          <div class="inspectionStages" role="tablist" aria-label="自动标注阶段"></div>
+          <div id="inspectionBody" role="tabpanel"></div>
+        </section>
+      </div>
+    </section>
+  </section>
+</main>
+<dialog id="config" class="utilityDialog" aria-labelledby="configTitle">
+  <div class="dialogHeading"><h2 id="configTitle">设置</h2><button type="button" id="closeConfigDialog" class="iconButton" title="关闭" aria-label="关闭"><img src="/icons/x.svg" alt=""></button></div>
+  <div class="dialogContent">
+    <label>大模型 API 基础地址 <input id="llmUrl" placeholder="https://.../v1"></label>
+    <label>模型名 <input id="llmModel" placeholder="视觉语言模型"></label>
+    <label>API Key <input id="llmKey" type="password" placeholder="留空保持原配置"></label>
+  </div>
+  <div class="dialogActions"><button id="configSave" class="primary"><img src="/icons/check.svg" alt="">保存并关闭</button></div>
+</dialog>
+<dialog id="fileManager" class="utilityDialog" aria-labelledby="filesTitle">
+  <div class="dialogHeading"><h2 id="filesTitle">加载文件</h2><button type="button" id="closeFilesDialog" class="iconButton" title="关闭" aria-label="关闭"><img src="/icons/x.svg" alt=""></button></div>
+  <div class="dialogContent">
+    <div class="fileManagerActions"><input id="mcapPath" placeholder="图片或 MCAP 文件绝对路径" aria-label="图片或 MCAP 文件绝对路径"><button id="openButton">添加路径</button><input id="mcapFile" type="file" accept=".mcap,.jpg,.jpeg,.png" multiple hidden><button id="chooseButton">选择文件</button><button id="cancelUploadButton" type="button" hidden>取消上传</button></div>
+    <div id="fileList"></div><div id="fileManagerStatus" role="status"></div>
+    <p class="fileManagerHint">支持 JPG、JPEG、PNG 图片及 MCAP，可多选。图片加载后直接进入标注；删除仅移出列表，保留磁盘文件。</p>
+  </div>
+  <div class="dialogActions"><button id="doneFilesButton" class="primary"><img src="/icons/check.svg" alt="">完成</button></div>
+</dialog>
+<dialog id="addWindowDialog" aria-labelledby="addWindowTitle">
+  <form method="dialog" id="addWindowForm">
+    <div class="dialogHeading"><h2 id="addWindowTitle">添加窗口</h2><button type="button" id="closeWindowDialog" aria-label="关闭">×</button></div>
+    <label class="dialogType">窗口类型 <select id="windowType"><option value="image">图像</option><option value="pointcloud">点云</option></select></label>
+    <fieldset><legend>显示消息源（可多选）</legend><div id="windowSources"></div></fieldset>
+    <p class="dialogHint" id="windowHint">多个图像源按顺序透明叠加。</p>
+    <div class="dialogActions"><button type="button" id="cancelWindowDialog">取消</button><button type="submit" class="primary">添加窗口</button></div>
+  </form>
+</dialog>
+<section id="tutorialCoach" class="tutorialCoach" role="dialog" aria-labelledby="tutorialTitle" aria-describedby="tutorialText" hidden>
+  <div class="tutorialHead">
+    <span id="tutorialProgress">操作教程 1 / 11</span>
+    <button id="tutorialClose" type="button" aria-label="关闭教程" title="关闭教程">×</button>
+  </div>
+  <h2 id="tutorialTitle">先认识两种工作模式</h2>
+  <p id="tutorialText">人工标注用于编辑真值；自动标注用于查看机器候选。两类结果不会自动混在一起。</p>
+  <p id="tutorialTip" class="tutorialTip">建议第一次体验时只运行 1 帧。</p>
+  <div class="tutorialActions">
+    <button id="tutorialPrevious" type="button">上一步</button>
+    <button id="tutorialPrepare" type="button">准备单帧演示</button>
+    <button id="tutorialNext" type="button" class="primary">下一步</button>
+  </div>
+</section>
+<dialog id="runReadinessDialog" class="runReadinessDialog" aria-labelledby="runReadinessTitle">
+  <div class="readinessHead">
+    <div><span>安全启动</span><h2 id="runReadinessTitle">运行前检查</h2></div>
+    <button id="runReadinessClose" type="button" aria-label="关闭运行前检查" title="关闭">×</button>
+  </div>
+  <p id="runReadinessSummary" class="readinessSummary">正在检查当前帧是否可以运行完整 LabelAgent。</p>
+  <ol class="readinessList">
+    <li data-readiness="data"><i>1</i><span><strong>图像数据</strong><small>需要先载入图片或 MCAP 数据</small></span><b>检查中</b></li>
+    <li data-readiness="reference"><i>2</i><span><strong>人工参考帧</strong><small>完整流程需要一帧人工确认的参考轮廓</small></span><b>检查中</b></li>
+    <li data-readiness="description"><i>3</i><span><strong>参考场景描述</strong><small>缺失或过期时可在这里自动生成</small></span><b>检查中</b></li>
+    <li data-readiness="frame"><i>4</i><span><strong>当前帧号</strong><small>帧号必须在当前序列范围内</small></span><b>检查中</b></li>
+    <li data-readiness="count"><i>5</i><span><strong>本次处理数量</strong><small>首次体验建议只处理 1 帧</small></span><b>检查中</b></li>
+    <li data-readiness="storage"><i>6</i><span><strong>保存空间</strong><small>按本次帧数检查结果和缓存写入余量</small></span><b>检查中</b></li>
+  </ol>
+  <p class="readinessBoundary">机器输出只会保存为候选；仍需人工检查后，才能进入真值。</p>
+  <div class="readinessActions">
+    <button id="runReadinessCancel" type="button">暂不运行</button>
+    <button id="runReadinessPrepare" type="button">去准备参考帧</button>
+    <button id="runReadinessConfirm" type="button" class="primary">确认开始</button>
+  </div>
+</dialog>
+<dialog id="quickActionsDialog" class="quickActionsDialog" aria-labelledby="quickActionsTitle">
+  <div class="quickPaletteHead">
+    <div><span>工作台导航</span><h2 id="quickActionsTitle">快捷操作</h2></div>
+    <button id="quickActionsClose" type="button" aria-label="关闭快捷操作" title="关闭">×</button>
+  </div>
+  <p class="quickPaletteHint">快速跳到常用功能。这里只切换页面和视图，不会运行模型或保存标注。</p>
+  <div class="quickActionGrid">
+    <button type="button" class="quickAction" data-quick-action="manual"><span class="quickActionIcon">✎</span><strong>人工标注</strong><small>绘制和确认人工真值</small><kbd>1</kbd></button>
+    <button type="button" class="quickAction" data-quick-action="auto"><span class="quickActionIcon">✦</span><strong>自动标注</strong><small>查看机器候选和过程证据</small><kbd>2</kbd></button>
+    <button type="button" class="quickAction" data-quick-action="guide"><span class="quickActionIcon">✓</span><strong>展开状态向导</strong><small>查看当前进度和下一步</small><kbd>G</kbd></button>
+    <button type="button" class="quickAction" data-quick-action="tutorial"><span class="quickActionIcon">?</span><strong>新手教程</strong><small>跟随九步提示熟悉平台</small><kbd>?</kbd></button>
+    <button type="button" class="quickAction" data-quick-action="files"><span class="quickActionIcon">▣</span><strong>加载数据</strong><small>选择图片或 MCAP 文件</small></button>
+    <button type="button" class="quickAction" data-quick-action="window"><span class="quickActionIcon">＋</span><strong>添加窗口</strong><small>添加相机或点云视图</small></button>
+    <button type="button" class="quickAction" data-quick-action="focus"><span class="quickActionIcon">⛶</span><strong>专注视图</strong><small>隐藏向导，扩大查看区域</small><kbd>F</kbd></button>
+    <button type="button" class="quickAction" data-quick-action="theme"><span class="quickActionIcon">☾</span><strong>切换主题</strong><small>在浅色和夜间界面间切换</small><kbd>T</kbd></button>
+    <button type="button" class="quickAction" data-quick-action="canvas"><span class="quickActionIcon">▣</span><strong>画布优先</strong><small>收起底部操作台，专心查看图像</small><kbd>B</kbd></button>
+    <button type="button" class="quickAction" data-quick-action="reset"><span class="quickActionIcon">↺</span><strong>还原布局</strong><small>恢复向导、操作台和普通视图</small></button>
+  </div>
+  <div class="quickPaletteFoot"><span>按 <kbd>Esc</kbd> 关闭</span><span>按 <kbd>Ctrl K</kbd> 随时打开</span></div>
+</dialog>
+<dialog id="humanReviewDialog" class="humanReviewDialog" aria-labelledby="humanReviewTitle">
+  <div class="humanReviewHead">
+    <div><span>安全人工门禁</span><h2 id="humanReviewTitle">确认本帧的复核决定</h2></div>
+    <button id="humanReviewClose" type="button" aria-label="关闭人工复核" title="关闭">×</button>
+  </div>
+  <div class="humanReviewIdentity">
+    <label>复核人自报标识
+      <input id="humanReviewerDeclaredId" maxlength="100" autocomplete="off" required aria-describedby="humanReviewIdentityHint" placeholder="例如：clw-review-01">
+    </label>
+    <small id="humanReviewIdentityHint">当前尚未接入登录身份，因此只记录为 <b>self_declared</b>，不会宣称已认证。</small>
+  </div>
+  <div id="humanReviewBinding" class="humanReviewBinding" aria-live="polite">
+    <span>正在绑定当前图像和候选……</span>
+  </div>
+  <label class="humanReviewNote">复核备注（可选）
+    <textarea id="humanReviewNote" maxlength="1000" rows="3" placeholder="记录边界、漏标、粘连或修正原因"></textarea>
+  </label>
+  <div id="humanReviewDecisionSummary" class="humanReviewDecisionSummary"></div>
+  <label id="confirmedEmptyRow" class="confirmedEmptyRow" hidden>
+    <input id="confirmedEmptyCheck" type="checkbox">
+    <span><b>确认当前帧确实没有目标</b><small>空标注与驳回候选是两种不同决定。</small></span>
+  </label>
+  <p id="humanReviewWarning" class="humanReviewWarning">提交前会再次校验图像、候选、数据集版本和相机；内容变化时将拒绝保存。</p>
+  <div class="humanReviewActions">
+    <button id="humanReviewCancel" type="button">返回检查</button>
+    <button id="humanReviewReject" type="button" class="danger">驳回机器候选</button>
+    <button id="humanReviewCommit" type="button" class="primary">人工确认并保存</button>
+  </div>
+</dialog>
+<dialog id="referencePrepDialog" class="referencePrepDialog" aria-labelledby="referencePrepTitle">
+  <div class="referencePrepHead">
+    <div><span>参考帧助手 · 实时进度</span><h2 id="referencePrepTitle">不用从零画，选择一种准备方式</h2></div>
+    <button id="referencePrepClose" type="button" aria-label="关闭参考帧助手" title="关闭">×</button>
+  </div>
+  <div id="referencePrepSummary" class="referencePrepSummary" aria-live="polite">
+    正在检查已有人工标注和机器候选……
+  </div>
+  <div id="referencePrepRecommendation" class="referencePrepRecommendation" aria-live="polite">
+    <div><span>推荐路线</span><strong id="referencePrepRecommendationText">正在根据当前数据选择最省事的方式……</strong></div>
+    <button id="referenceRecommendedAction" type="button" disabled>按推荐继续</button>
+  </div>
+  <div id="referenceDraftProgress" class="referenceDraftProgress" hidden aria-live="polite" tabindex="-1">
+    <span class="referenceDraftSpinner" aria-hidden="true"></span>
+    <div><strong id="referenceDraftProgressTitle">正在启动 SAM 与 VLM…</strong><small id="referenceDraftProgressDetail">新图首批机器候选通常约 15～25 秒出现；后台精修会继续，请不要重复点击。</small></div>
+    <b id="referenceDraftElapsed">0 秒</b>
+  </div>
+  <ol class="referencePrepSteps" aria-label="参考帧准备步骤">
+    <li class="active"><i>1</i><span><b>选择来源</b><small>已有真值、SAM 草稿或空白绘制</small></span></li>
+    <li><i>2</i><span><b>检查与精修</b><small>重点检查类别、漏标和边界</small></span></li>
+    <li><i>3</i><span><b>人工确认</b><small>通过安全门禁后保存真值</small></span></li>
+    <li><i>4</i><span><b>锁定参考帧</b><small>锁定后机器不再修改</small></span></li>
+  </ol>
+  <div class="referenceSourceGrid">
+    <article class="referenceSourceCard recommended" data-reference-source="existing">
+      <div class="referenceSourceIcon" aria-hidden="true">✓</div>
+      <div class="referenceSourceCopy">
+        <span class="referenceSourceTag">最快 · 优先推荐</span>
+        <h3>复用已经标好的帧</h3>
+        <p>带当前人工确认回执的轮廓可直接采用；历史自动标注或来源混合的轮廓先作为草稿复核，不需要从零描。</p>
+        <label>已核验人工真值
+          <select id="existingTruthFrame" aria-label="选择已有人工真值帧"></select>
+        </label>
+        <div class="legacyTruthChoice">
+          <span>历史标注 · 需重新确认</span>
+          <label>选择历史已标帧
+            <select id="legacyTruthFrame" aria-label="选择历史已标注帧"></select>
+          </label>
+          <small>来源记录仅用于提醒，不等于已经通过当前人工门禁。</small>
+        </div>
+        <div class="legacyTruthChoice registeredAnnotationChoice">
+          <span>其他已登记数据 · 可直接切换复核</span>
+          <label>选择含标注的数据
+            <select id="registeredAnnotationSource" aria-label="选择其他含已有标注的数据"></select>
+          </label>
+          <button id="loadRegisteredAnnotationSource" type="button">切换并查看已有标注</button>
+          <small id="registeredAnnotationSourceDetail">切换前会保存当前文件的候选；外部标注仍按历史草稿处理，必须重新人工确认。</small>
+        </div>
+      </div>
+      <div class="referenceCardActions">
+        <button id="useExistingTruth" type="button" class="primary">直接采用已核验真值</button>
+        <button id="useLegacyTruthDraft" type="button">载入历史标注并复核</button>
+      </div>
+    </article>
+    <article class="referenceSourceCard" data-reference-source="sam">
+      <div class="referenceSourceIcon" aria-hidden="true">✦</div>
+      <div class="referenceSourceCopy">
+        <span class="referenceSourceTag">省力 · 推荐</span>
+        <h3>SAM 预标后由我精修</h3>
+        <p>可直接运行 SAM → VLM → Agent 生成机器草稿；也可以用正负点控制 SAM，再手工修边。</p>
+        <div id="referenceModelReadiness" class="referenceModelReadiness checking" aria-live="polite">
+          <span id="referenceSamReadiness"><i aria-hidden="true"></i><b>SAM</b><small>检查中</small></span>
+          <span id="referenceVlmReadiness"><i aria-hidden="true"></i><b>VLM</b><small>检查中</small></span>
+          <button id="refreshReferenceReadiness" type="button">重新检查</button>
+        </div>
+        <div id="referenceStartRule" class="referencePrepBoundary" role="note">
+          <strong>怎样判断是否真的启动？</strong>
+          <span>单目标点提示出现绿色点和“正在生成”计时才算提交；整帧全流程会立即显示实时进度。两者都没有就是尚未开始，不是速度慢。</span>
+        </div>
+        <label>一键起稿范围
+          <select id="referenceAutoLabel" aria-label="选择自动识别并补漏、仅识别可见类别、逐类尝试全部已选类别或指定单一类别"></select>
+          <small>默认先快速处理 VLM 识别到的类别；“已选类别补漏”会额外尝试全部已选类别，适合人工发现明显漏类时使用，但更慢且不保证产生有效轮廓。结果都只是待复核机器候选。</small>
+        </label>
+        <label>选择机器候选帧
+          <select id="candidateReferenceFrame" aria-label="选择机器候选帧"></select>
+        </label>
+      </div>
+      <div class="referenceCardActions">
+        <div class="referenceActionChoice fullPipelineChoice" data-reference-action="full_pipeline">
+          <span>整帧自动 · 点击后立即开始</span>
+          <button id="runReferenceAutoDraft" type="button" class="primary" aria-describedby="fullPipelineHint">立即运行整帧 SAM + VLM 全流程</button>
+          <small id="fullPipelineHint">无需再点图片；新图首批机器候选通常约 15～25 秒出现，随后 Agent 与高风险复核会在后台继续。</small>
+        </div>
+        <button id="useCandidateDraft" type="button" class="primary">载入候选并精修</button>
+        <div class="referenceActionChoice pointPromptChoice" data-reference-action="single_object_point">
+          <span>单目标补标 · 分两步，不会在这里直接运行</span>
+          <button id="startSamDraft" type="button" aria-describedby="pointPromptChoiceHint">第 1 步：进入点选；然后必须点图片</button>
+          <small id="pointPromptChoiceHint">第 2 步：回到上方图片，在目标内部点一下；出现绿色提示点和“正在生成”才代表 SAM 已启动，首次约 15～90 秒。</small>
+        </div>
+      </div>
+    </article>
+    <article class="referenceSourceCard" data-reference-source="manual">
+      <div class="referenceSourceIcon" aria-hidden="true">✎</div>
+      <div class="referenceSourceCopy">
+        <span class="referenceSourceTag">备用</span>
+        <h3>从空白开始手工标注</h3>
+        <p>仅在没有可复用标注、SAM 也难以给出合适轮廓时使用多边形工具从零绘制。</p>
+      </div>
+      <button id="startManualReference" type="button">进入手工绘制</button>
+    </article>
+  </div>
+  <div class="referencePrepBoundary">
+    <strong>结果边界</strong>
+    <span>机器候选只是草稿。SAM 预标不会自动成为参考帧；必须人工检查、保存真值，再由您锁定为参考帧。</span>
+  </div>
+  <div class="referencePrepFoot">
+    <span id="referencePrepCurrent">当前帧检查中</span>
+    <button id="referencePrepCancel" type="button">暂不准备</button>
+  </div>
+</dialog>
+<dialog id="componentReviewDialog" class="componentReviewDialog" aria-labelledby="componentReviewTitle">
+  <div class="componentReviewDialogHead">
+    <div><span>只读 · 会话草稿</span><h2 id="componentReviewTitle">微孔聚焦复核</h2></div>
+    <button id="componentReviewClose" type="button" aria-label="关闭微孔聚焦复核">×</button>
+  </div>
+  <div class="componentReviewToolbar">
+    <label>复核包<select id="componentReviewSelect" aria-label="选择微孔聚焦复核包"></select></label>
+    <button id="componentReviewLoad" type="button" class="primary">载入复核包</button>
+    <button id="componentReviewRefresh" type="button">刷新</button>
+  </div>
+  <div id="componentReviewStatus" class="componentReviewStatus" role="status" aria-live="polite">正在检查本机复核包…</div>
+  <div id="componentReviewBody" class="componentReviewBody" hidden>
+    <div class="componentReviewSummary">
+      <div><strong id="componentReviewProgressTitle">0 / 0 项已暂存</strong><span id="componentReviewProgressDetail">判断只保存在当前浏览器会话</span></div>
+      <b id="componentReviewProgressPercent">0%</b>
+    </div>
+    <div id="componentReviewStats" class="componentReviewStats" aria-label="微孔复核统计"></div>
+    <div class="componentReviewControls">
+      <div class="componentReviewFilters" role="group" aria-label="微孔复核筛选">
+        <button type="button" class="selected" data-component-filter="all">全部</button>
+        <button type="button" data-component-filter="priority">优先复核</button>
+        <button type="button" data-component-filter="deferred">延后复核</button>
+        <button type="button" data-component-filter="pending">待判断</button>
+        <button type="button" data-component-filter="reviewed">已暂存</button>
+      </div>
+      <div class="componentReviewPager">
+        <button id="componentReviewPrevious" type="button">← 上一页</button>
+        <span id="componentReviewPage">第 1 / 1 页</span>
+        <button id="componentReviewNext" type="button">下一页 →</button>
+      </div>
+    </div>
+    <div id="componentReviewGrid" class="componentReviewGrid" aria-live="polite"></div>
+    <p class="componentReviewBoundary"><b>严格隔离：</b>这里的“倾向可补 / 不确定 / 倾向驳回”只保存为当前浏览器会话草稿；不会修改 mask、写入人工真值、训练集、正式审核记录或触发自动审批。</p>
+  </div>
+</dialog>
+<dialog id="candidateComparisonDialog" class="candidateComparisonDialog" aria-labelledby="candidateComparisonTitle">
+  <div class="candidateComparisonHead">
+    <div><span>只读预览 · 不采用候选</span><h2 id="candidateComparisonTitle">候选对比</h2></div>
+    <button id="candidateComparisonClose" type="button" aria-label="关闭候选对比">×</button>
+  </div>
+  <div class="candidateComparisonToolbar">
+    <label>对比包<select id="candidateComparisonPack" aria-label="选择候选对比包"></select></label>
+    <button id="candidateComparisonLoad" type="button">载入</button>
+    <label>候选<select id="candidateComparisonRow" aria-label="选择候选对比记录"></select></label>
+    <button id="candidateComparisonRefresh" type="button">刷新</button>
+  </div>
+  <div id="candidateComparisonStatus" class="candidateComparisonStatus" role="status" aria-live="polite">正在检查本机候选对比包…</div>
+  <div id="candidateComparisonContent" class="candidateComparisonContent" aria-live="polite"></div>
+  <p class="candidateComparisonBoundary"><b>严格只读：</b>这里仅展示当前候选、替代候选、共识和指标。查看偏好只保存在当前浏览器会话，不会修改 mask、自动采用替代候选、写入人工真值或训练集。</p>
+</dialog>
+<dialog id="reviewPacketDialog" class="reviewPacketDialog" aria-labelledby="reviewPacketTitle">
+  <div class="reviewPacketHead">
+    <div><span>人工复核队列</span><h2 id="reviewPacketTitle">斜坡专项复核</h2></div>
+    <button id="reviewPacketClose" type="button" aria-label="关闭专项复核">×</button>
+  </div>
+  <div class="reviewPacketPicker">
+    <label>复核包<select id="reviewPacketSelect" aria-label="选择专项复核包"></select></label>
+    <button id="reviewPacketActivate" type="button" class="primary">校验并载入复核数据</button>
+    <button id="reviewPacketRefresh" type="button">刷新</button>
+  </div>
+  <div id="reviewPacketStatus" class="reviewPacketStatus" role="status" aria-live="polite">正在读取本机复核包…</div>
+  <div id="reviewPacketBody" class="reviewPacketBody" hidden>
+    <div class="reviewPacketSummary">
+      <div><strong id="reviewPacketProgressTitle">0 / 0 帧已专项复核</strong><span id="reviewPacketProgressDetail">只认可精确绑定原图的显式人工决定或完整真值回执</span></div>
+      <b id="reviewPacketProgressPercent">0%</b>
+    </div>
+    <div id="reviewPacketProgressBar" class="reviewPacketProgressBar" role="progressbar" aria-label="专项复核进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
+    <div class="reviewPacketFilters" role="group" aria-label="专项复核筛选">
+      <button type="button" class="selected" data-packet-filter="all">全部</button>
+      <button type="button" data-packet-filter="priority">优先复核</button>
+      <button type="button" data-packet-filter="pending">待人工复核</button>
+      <button type="button" data-packet-filter="positive_proxy">斜坡正候选</button>
+      <button type="button" data-packet-filter="negative_cohort">困难负样本</button>
+      <button type="button" data-packet-filter="complete">已复核</button>
+    </div>
+    <div id="reviewPacketQueue" class="reviewPacketQueue" aria-live="polite"></div>
+    <p class="reviewPacketBoundary"><b>不会自动审批：</b>助手建议只帮助定位。您可以签署“斜坡专项判断”，也可以修正轮廓后走完整真值门禁；专项判断只绑定斜坡存在性和当前候选几何，不会写入整帧真值或训练集。</p>
+  </div>
+</dialog>
+<div id="reviewPacketDock" class="reviewPacketDock" hidden>
+  <div class="reviewPacketDockSummary"><strong id="reviewPacketDockTitle">专项复核</strong><small id="reviewPacketDockDetail">等待选择帧</small></div>
+  <div id="reviewPacketAssistant" class="reviewPacketAssistant">助手建议将在校验原图后显示；不会自动代选。</div>
+  <div class="reviewPacketDecisionControls">
+    <input id="reviewPacketReviewer" type="text" maxlength="100" placeholder="复核人自报标识" aria-label="专项复核人自报标识">
+    <select id="reviewPacketDecision" aria-label="斜坡专项人工决定">
+      <option value="">请选择人工判断（助手不会代选）</option>
+      <option value="slope_present_and_mask_acceptable">有斜坡 · 当前掩码可接受</option>
+      <option value="slope_present_mask_needs_correction">有斜坡 · 掩码需要修正</option>
+      <option value="no_slope_present">当前画面没有斜坡</option>
+      <option value="uncertain">不确定 · 留待进一步复核</option>
+    </select>
+    <input id="reviewPacketDecisionNote" type="text" maxlength="500" placeholder="备注（可选）" aria-label="专项复核备注">
+    <button id="reviewPacketDecisionSubmit" type="button" class="primary">签署专项判断</button>
+  </div>
+  <div class="reviewPacketDockNav">
+    <button id="reviewPacketDockQueue" type="button">打开队列</button>
+    <button id="reviewPacketDockPrevious" type="button">← 上一帧</button>
+    <button id="reviewPacketDockNext" type="button" class="primary">下一帧 →</button>
+  </div>
+</div>
+<div id="toast" role="status"></div>
+<script src="/pointcloud.js?v=64"></script><script src="/app.js?v=207"></script><script src="/inspection.js?v=109"></script><script src="/guide.js?v=121"></script><script src="/review.js?v=68"></script><script src="/batch-review.js?v=65"></script><script src="/compare.js?v=68"></script><script src="/human-review.js?v=98"></script><script src="/reference-prep.js?v=170"></script><script src="/component-review-core.js?v=1"></script><script src="/component-review.js?v=1"></script><script src="/candidate-comparison-core.js?v=2"></script><script src="/candidate-comparison.js?v=2"></script><script src="/review-packet-core.js?v=164"></script><script src="/review-packet.js?v=166"></script><script src="/pallet-candidate-review-entry.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+{
+  "approved_for_training": false,
+  "candidate_only": true,
+  "candidate_visible_elapsed_ms": {
+    "maximum": 22985.796,
+    "mean": 21625.94,
+    "minimum": 20036.655
+  },
+  "changed_pallet_candidates": 0,
+  "first_scan_manifest_sha256": "1613abba94142546f0a238c1b91bf57cf6ae2af3cf6e26d339aafa9af14b4903",
+  "formal_state_hashes_unchanged": true,
+  "formal_state_hashes_before": {
+    "file_sessions.json": "94e8bee324628585e7532e595348293df1da7b24041a1d4df1c2ec9fb734e02e",
+    "files.json": "7edb40a9bdfcf5577aea4c2bb183ef556a2b7d70b24564c49eeb46c5d9a8c5c1",
+    "last_run.json": "3bece2513c6f661054ac238ab185527d715a04b3b0c8e073274710be23e057da",
+    "state.json": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115"
+  },
+  "formal_state_hashes_final_readback": {
+    "file_sessions.json": "94e8bee324628585e7532e595348293df1da7b24041a1d4df1c2ec9fb734e02e",
+    "files.json": "7edb40a9bdfcf5577aea4c2bb183ef556a2b7d70b24564c49eeb46c5d9a8c5c1",
+    "last_run.json": "3bece2513c6f661054ac238ab185527d715a04b3b0c8e073274710be23e057da",
+    "state.json": "9ef08118dd2ba0760cc93cf57bbeaae4b3bed062d383df4e6a454c389d4ab115"
+  },
+  "frame_count": 16,
+  "human_truth": false,
+  "image_texture_scale_gate_passed": 0,
+  "pallet_candidate_count": 164,
+  "roi_diagnostic_manifest_sha256": "eed8b247a765158b6c2eb39464d5a4dd7bfca6e90daec6aec8d6e1e0dddc0b26",
+  "schema_version": "labelagent.pallet-v7-isolated-positive-scan-round741.v1",
+  "snapshot_manifest_sha256": "b06792578c8b73d6defe22ff0bb7a4afe0c759e3b641b478f72289c2290acdde",
+  "smoke_summary_sha256": "bf62c28aa174ffd12617ff7bf0cee31c769b8acd03cd594aaa6373eb69375bdf",
+  "status": "no_effect_scale_gate_incompatible",
+  "total_candidate_count": 227,
+  "workbench_write": false
+}

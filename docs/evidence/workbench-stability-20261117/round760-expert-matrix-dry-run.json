@@ -1,0 +1,100 @@
+{
+  "schema_version": "labelagent.external-vlm-synthetic-matrix.v1",
+  "mode": "dry_run",
+  "profile_count": 4,
+  "profile_manifest_sha256": "71f6ab148e0ec06bb7c80331e3fa434b27b5613305ae890997f7970d2243855b",
+  "successful_profiles": 4,
+  "failed_profiles": 0,
+  "connections_tested": 0,
+  "external_uploads_performed": 0,
+  "uploaded_content": "none",
+  "factory_data_uploaded": false,
+  "test24_used": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "deployment_decision": "not_evaluated",
+  "quality_improvement_claimed": false,
+  "results": [
+    {
+      "name": "01-qwen3-vl-plus",
+      "ok": true,
+      "receipt": {
+        "schema_version": "labelagent.external-vlm-synthetic-smoke.v1",
+        "mode": "dry_run",
+        "provider": "openai_chat",
+        "model": "qwen3-vl-plus",
+        "endpoint_host": "provider.example.invalid",
+        "synthetic_image_sha256": "0a309a256896a8dbcd31c65624d62c9e522df38b171652d8b22066ab26cd6dd0",
+        "synthetic_image_bytes": 10335,
+        "factory_data_uploaded": false,
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "connection_tested": false,
+        "external_upload_performed": false,
+        "ready_to_execute": false
+      }
+    },
+    {
+      "name": "02-openai-expert",
+      "ok": true,
+      "receipt": {
+        "schema_version": "labelagent.external-vlm-synthetic-smoke.v1",
+        "mode": "dry_run",
+        "provider": "openai_responses",
+        "model": "model-to-configure",
+        "endpoint_host": "api.example.invalid",
+        "synthetic_image_sha256": "0a309a256896a8dbcd31c65624d62c9e522df38b171652d8b22066ab26cd6dd0",
+        "synthetic_image_bytes": 10335,
+        "factory_data_uploaded": false,
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "connection_tested": false,
+        "external_upload_performed": false,
+        "ready_to_execute": false
+      }
+    },
+    {
+      "name": "03-claude-expert",
+      "ok": true,
+      "receipt": {
+        "schema_version": "labelagent.external-vlm-synthetic-smoke.v1",
+        "mode": "dry_run",
+        "provider": "anthropic_messages",
+        "model": "model-to-configure",
+        "endpoint_host": "api.example.invalid",
+        "synthetic_image_sha256": "0a309a256896a8dbcd31c65624d62c9e522df38b171652d8b22066ab26cd6dd0",
+        "synthetic_image_bytes": 10335,
+        "factory_data_uploaded": false,
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "connection_tested": false,
+        "external_upload_performed": false,
+        "ready_to_execute": false
+      }
+    },
+    {
+      "name": "04-gemini-expert",
+      "ok": true,
+      "receipt": {
+        "schema_version": "labelagent.external-vlm-synthetic-smoke.v1",
+        "mode": "dry_run",
+        "provider": "gemini_generate_content",
+        "model": "model-to-configure",
+        "endpoint_host": "api.example.invalid",
+        "synthetic_image_sha256": "0a309a256896a8dbcd31c65624d62c9e522df38b171652d8b22066ab26cd6dd0",
+        "synthetic_image_bytes": 10335,
+        "factory_data_uploaded": false,
+        "candidate_only": true,
+        "human_truth": false,
+        "approved_for_training": false,
+        "connection_tested": false,
+        "external_upload_performed": false,
+        "ready_to_execute": false
+      }
+    }
+  ]
+}

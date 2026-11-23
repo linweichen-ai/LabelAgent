@@ -4341,3 +4341,11 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 第一次启动因当前 PowerShell 不接受目录创建参数组合而未启动服务；分别创建两个明确隔离目录后成功，正式端口和正式数据未受影响。
 - 验收结束后隔离进程已停止，端口不再监听。截图与结构化回执见 `docs/evidence/workbench-stability-20261117/round759-expert-settings-dark.png` 和 `round759-expert-settings-acceptance.json`。
 - 本轮没有工厂数据、API Key、外部调用、上传、训练、推理、正式部署、真值或 `test24` 写入。详见 `docs/EXTERNAL_VLM_WORKBENCH_BROWSER_ACCEPTANCE_ROUND759_20261124.md`。
+
+## 2026-11-24 Round760 补充：外部视觉专家多模型合成图矩阵
+
+- 新增最多 8 个模型的合成图矩阵入口，统一检查协议、认证、结构化输出、失败状态和延迟；默认只离线预检，联网仍需执行与合成图上传双确认。
+- 配置只允许模型名、协议、URL 和密钥环境变量名；原始凭据字段、`test24`、图片路径和额外字段全部拒绝。回执或异常意外包含凭据值时会失败关闭并删除凭据内容。
+- 单模型失败不抹掉其他模型证据；汇总固定声明没有工厂数据、没有自动真值、没有训练批准、没有部署结论，也不宣称效果提升。
+- 新增矩阵测试 6 项；矩阵、合成连通和专家复核协议合计 16/16 通过。四模型占位配置 dry-run 为 4/4 配置通过、实际连通 0、上传 0。
+- 本轮没有 API Key、外部网络调用、工厂数据、训练、推理、正式部署、真值或 `test24` 写入。详见 `docs/EXTERNAL_VLM_SYNTHETIC_MATRIX_ROUND760_20261124.md` 和 `docs/evidence/workbench-stability-20261117/round760-expert-matrix-dry-run.json`。

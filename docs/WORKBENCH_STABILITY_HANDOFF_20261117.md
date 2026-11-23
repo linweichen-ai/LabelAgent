@@ -4310,3 +4310,10 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 影子结果固定保存 `dispatch_performed=false`、`external_upload_performed=false`、`candidate_only=true`、`human_truth=false`、`approved_for_training=false`，且不保存图片、坐标、未知类别原始描述或密钥。
 - 真实服务器路径测试确认参考帧 `no_progress` 会形成专家复核建议，普通成功帧保持 `local_result_sufficient`；全量 `tests/test_agent.py` 293 项、Python 编译和差异检查通过。
 - 本轮没有 API Key、外部请求、训练、推理或部署。WorkBuddy 仍未作为可信执行通道使用，由 Codex 直接实现并独立复核。详见 `docs/EXTERNAL_VLM_EXPERT_ROUTE_PHASE3_20261124.md`。
+
+## 2026-11-24 Round756 补充：合成图安全连通性工具
+
+- 新增外部视觉模型连通性验收工具，只使用程序生成的确定性 640×512 合成工厂图；不会打开数据集、MCAP、工作台图片或真实工厂文件。
+- 默认 dry-run 且不联网；真正执行必须同时给出 `--execute` 与 `--acknowledge-synthetic-upload`。Key 只能来自环境变量，回执不保存 Key、图片 Base64 或模型原始输出。
+- 4 项工具测试通过；本地真实 dry-run 回执显示 `connection_tested=false`、`external_upload_performed=false`、`factory_data_uploaded=false` 和 `ready_to_execute=false`，合成图 SHA-256 为 `0a309a25...6dd0`。
+- 本轮仍没有 API Key、真实外部请求、上传、训练、推理、部署或真值修改。详见 `docs/EXTERNAL_VLM_SYNTHETIC_SMOKE_ROUND756_20261124.md`；下一步等待用户选择供应商和模型，并在本机安全设置环境变量后执行一次合成图连通性测试。

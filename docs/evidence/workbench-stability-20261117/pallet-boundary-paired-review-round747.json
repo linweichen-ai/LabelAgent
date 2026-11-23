@@ -1,0 +1,38 @@
+{
+  "assistant_review_only": true,
+  "deployment_authorized": false,
+  "four_reviewer_summary": [
+    {"accept": 4, "candidate_id": 3, "frame": 15, "reject": 0, "uncertain": 0},
+    {"accept": 0, "candidate_id": 4, "frame": 95, "reject": 3, "uncertain": 1},
+    {"accept": 2, "candidate_id": 4, "frame": 22, "reject": 1, "uncertain": 1},
+    {"accept": 3, "candidate_id": 8, "frame": 72, "reject": 0, "uncertain": 1},
+    {"accept": 0, "candidate_id": 8, "frame": 142, "reject": 4, "uncertain": 0},
+    {"accept": 4, "candidate_id": 16, "frame": 149, "reject": 0, "uncertain": 0},
+    {"accept": 2, "candidate_id": 8, "frame": 149, "reject": 1, "uncertain": 1}
+  ],
+  "human_truth": false,
+  "mask_write": false,
+  "paired_review": {
+    "cohen_kappa_high_detail": 0.481481,
+    "exact_agreement_high_detail": 5,
+    "fixed_order_low_then_high": true,
+    "memory_and_order_bias_possible": true,
+    "reviewer_a_changed_vs_low_detail": 5,
+    "reviewer_b_changed_vs_low_detail": 4,
+    "total": 7
+  },
+  "rows": [
+    {"a_high": "accept", "a_low": "reject", "b_high": "accept", "b_low": "accept", "candidate_id": 3, "frame": 15},
+    {"a_high": "reject", "a_low": "uncertain", "b_high": "reject", "b_low": "reject", "candidate_id": 4, "frame": 95},
+    {"a_high": "reject", "a_low": "uncertain", "b_high": "accept", "b_low": "accept", "candidate_id": 4, "frame": 22},
+    {"a_high": "accept", "a_low": "accept", "b_high": "uncertain", "b_low": "accept", "candidate_id": 8, "frame": 72},
+    {"a_high": "reject", "a_low": "accept", "b_high": "reject", "b_low": "accept", "candidate_id": 8, "frame": 142},
+    {"a_high": "accept", "a_low": "accept", "b_high": "accept", "b_low": "uncertain", "candidate_id": 16, "frame": 149},
+    {"a_high": "accept", "a_low": "uncertain", "b_high": "accept", "b_low": "uncertain", "candidate_id": 8, "frame": 149}
+  ],
+  "schema_version": "labelagent.pallet-boundary-paired-review-round747.v1",
+  "status": "assistant_paired_review_not_human_truth",
+  "training_authorized": false,
+  "visibility_causal_claim": false,
+  "workbench_write": false
+}

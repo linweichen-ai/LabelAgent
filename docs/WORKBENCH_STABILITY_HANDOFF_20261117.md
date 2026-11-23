@@ -4263,3 +4263,17 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
   工作台、人工真值、训练数据、模型和生产mask未修改。
 - 下一步把原mask覆盖、类别pallet与定位框同屏展示，再做同审阅者固定顺序配对复核；详见
   `docs/PALLET_BOUNDARY_LOCATOR_REVIEW_ROUND750_20261123.md`。
+
+## 2026-11-23 Round751 补充：候选所有权覆盖配对复核
+
+- 在locator上下文增加绿色pallet before-mask覆盖和明确标题，让Round750同两位助手按固定顺序
+  复核；完全一致从4/11增至8/11，kappa从0.0253增至0.4762，A/B分别改变2/6项。
+- 这是同审阅者固定locator→ownership顺序，存在记忆、学习、顺序和mask锚定偏差，只能说明
+  当前助手更一致，不能宣称准确率或因果提升；一条“狗体”语义误读仍存在。
+- ownership依赖locator/context/components，默认关闭；生成3840×480无损六联图。Round743/744
+  双跑分别8/8、25/25文件SHA一致，manifest为`a8be64f8...d1d02`、`6473e8b3...bd4fb`，
+  配对收据SHA为`3bcf891a...cedb3`。
+- 固定UTF-8环境定向11项、正式`tests/`全量1785项通过，1项跳过、286子测试通过；未修改
+  正式工作台、人工真值、训练数据、模型或生产mask。
+- 当前只把ownership sheet作为人工/助手复核界面候选，不作为自动门禁；详见
+  `docs/PALLET_BOUNDARY_OWNERSHIP_PAIRED_REVIEW_ROUND751_20261123.md`。

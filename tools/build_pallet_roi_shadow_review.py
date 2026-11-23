@@ -114,7 +114,8 @@ def detail_box(mask, width, height, minimum_span=128, margin=48):
 
 def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False,
                  include_components=False, include_component_context=False,
-                 include_component_locator=False):
+                 include_component_locator=False,
+                 include_component_ownership=False):
     snapshot_dir = Path(snapshot_dir).resolve()
     scan_dir = Path(scan_dir).resolve()
     output_dir = Path(output_dir).resolve()
@@ -122,6 +123,8 @@ def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False,
         raise ValueError("component context requires component sheets")
     if include_component_locator and not include_component_context:
         raise ValueError("component locator requires component context")
+    if include_component_ownership and not include_component_locator:
+        raise ValueError("component ownership requires component locator")
     if output_dir.exists():
         raise FileExistsError(output_dir)
     snapshot_payload = (snapshot_dir / "manifest.json").read_bytes()
@@ -332,7 +335,8 @@ def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False,
 
                     component_context_row = {}
                     if include_component_context:
-                        candidate_context = source.crop(box)
+                        raw_candidate_context = source.crop(box)
+                        candidate_context = raw_candidate_context.copy()
                         locator_box = None
                         if include_component_locator:
                             locator_padding = 8
@@ -349,15 +353,29 @@ def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False,
                             locator_draw = ImageDraw.Draw(candidate_context)
                             locator_draw.rectangle(
                                 locator_box, outline=(255, 45, 125), width=4)
+                        ownership_context = None
+                        if include_component_ownership:
+                            ownership_context = overlay(
+                                raw_candidate_context, before_crop,
+                                (25, 220, 145))
+                            ownership_draw = ImageDraw.Draw(ownership_context)
+                            ownership_draw.rectangle(
+                                locator_box, outline=(255, 45, 125), width=4)
+                        pane_count = 6 if ownership_context else 5
                         context_detail = Image.new(
-                            "RGB", (640 * 5, 480), (12, 18, 24))
+                            "RGB", (640 * pane_count, 480), (12, 18, 24))
                         context_panes = [
                             detail_panel(
                                 candidate_context,
                                 f"{component_label} | candidate context"
                                 + (" + locator" if locator_box else "")),
-                            detail_panel(
-                                component_source, "local source"),
+                        ]
+                        if ownership_context:
+                            context_panes.append(detail_panel(
+                                ownership_context,
+                                "pallet before mask + locator"))
+                        context_panes.extend([
+                            detail_panel(component_source, "local source"),
                             detail_panel(overlay(
                                 component_source, component_before,
                                 (25, 220, 145)), "local before"),
@@ -368,10 +386,12 @@ def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False,
                                 Image.fromarray(added_image),
                                 f"component pixels: {component_area}",
                                 nearest=True),
-                        ]
+                        ])
                         for column, pane in enumerate(context_panes):
                             context_detail.paste(pane, (column * 640, 0))
                         context_suffix = (
+                            "ownership-locator-context-detail.png"
+                            if ownership_context else
                             "locator-context-detail.png"
                             if locator_box else "context-detail.png")
                         context_name = (
@@ -397,6 +417,8 @@ def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False,
                                     locator_box[3] + box[1],
                                 ],
                             })
+                        if ownership_context:
+                            component_context_row["context_ownership"] = True
                         component_context_sheet_count += 1
 
                     ring = (cv2.dilate(
@@ -488,6 +510,8 @@ def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False,
                 component_context_sheet_count)
         if include_component_locator:
             manifest["component_context_locator_included"] = True
+        if include_component_ownership:
+            manifest["component_context_ownership_included"] = True
         manifest_path = staging / "manifest.json"
         manifest_path.write_text(
             json.dumps(manifest, ensure_ascii=False, indent=2,
@@ -518,13 +542,15 @@ def main():
     parser.add_argument("--include-components", action="store_true")
     parser.add_argument("--include-component-context", action="store_true")
     parser.add_argument("--include-component-locator", action="store_true")
+    parser.add_argument("--include-component-ownership", action="store_true")
     args = parser.parse_args()
     print(json.dumps(build_review(
         args.snapshot_dir, args.scan_dir, args.output,
         include_details=args.include_details,
         include_components=args.include_components,
         include_component_context=args.include_component_context,
-        include_component_locator=args.include_component_locator),
+        include_component_locator=args.include_component_locator,
+        include_component_ownership=args.include_component_ownership),
         ensure_ascii=False, indent=2))
     return 0
 

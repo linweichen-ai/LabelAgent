@@ -83,7 +83,8 @@ class PalletRoiShadowReviewTests(unittest.TestCase):
         result = build_review(
             self.snapshot, self.scan, output, include_details=True,
             include_components=True, include_component_context=True,
-            include_component_locator=True)
+            include_component_locator=True,
+            include_component_ownership=True)
         manifest = json.loads((output / "manifest.json").read_text())
         row = manifest["rows"][0]
         detail = output / row["detail_sheet"]
@@ -112,9 +113,11 @@ class PalletRoiShadowReviewTests(unittest.TestCase):
         self.assertEqual(component["context_crop_box"], row["crop_box"])
         self.assertTrue(component["context_locator"])
         self.assertEqual(component["context_locator_box"], [37, 10, 57, 27])
+        self.assertTrue(component["context_ownership"])
         self.assertTrue(manifest["component_context_locator_included"])
+        self.assertTrue(manifest["component_context_ownership_included"])
         with Image.open(context_path) as image:
-            self.assertEqual(image.size, (3200, 480))
+            self.assertEqual(image.size, (3840, 480))
             self.assertEqual(image.format, "PNG")
 
     def test_component_context_requires_component_sheets(self):
@@ -135,6 +138,17 @@ class PalletRoiShadowReviewTests(unittest.TestCase):
             build_review(
                 self.snapshot, self.scan, output,
                 include_components=True, include_component_locator=True)
+        self.assertFalse(output.exists())
+
+    def test_component_ownership_requires_component_locator(self):
+        output = self.root / "invalid-ownership"
+
+        with self.assertRaisesRegex(
+                ValueError, "requires component locator"):
+            build_review(
+                self.snapshot, self.scan, output,
+                include_components=True, include_component_context=True,
+                include_component_ownership=True)
         self.assertFalse(output.exists())
 
     def test_builds_one_sheet_per_connected_added_component(self):

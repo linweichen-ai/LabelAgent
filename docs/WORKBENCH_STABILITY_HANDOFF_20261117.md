@@ -4357,3 +4357,11 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 模型结果必须保持 candidate-only 边界，逐项绑定人工候选 ID；失败/回退不得携带伪造复核。工具不会自动选择赢家，也不会给出部署决定。
 - A/B 新增 7 项测试；与矩阵、合成连通和专家复核协议合计 23/23 通过。2 个合成样本和 2 个虚拟模型报告固定标记为 synthetic fixture、非人工参考、非真实质量证据，只验证指标链路。
 - 本轮没有 API Key、外部调用、工厂数据、训练、推理、部署、真值写入或 `test24` 使用。详见 `docs/EXTERNAL_VLM_HUMAN_REFERENCED_AB_ROUND761_20261124.md` 和 `docs/evidence/workbench-stability-20261117/round761-expert-ab-synthetic-report.json`。
+
+## 2026-11-24 Round762 补充：斜坡外部专家预评测队列冻结
+
+- 只读核对 Round160 斜坡包：32 帧中 8 个正样本代理、24 个困难负样本，但 32/32 仍待人工复核，人工参考和训练批准均为 0，不能直接计算真实质量指标。
+- 新增路径剥离的预评测清单工具，只保留数据/帧哈希、话题、帧号、分层和状态；不复制图片，不包含 MCAP、原图或复核图本地路径。
+- 工具拒绝 `test24`、重复帧、非 pending 状态和人工真值/训练批准边界漂移；当前清单固定 `ready_for_quality_ab=false`、`external_upload_authorized=false`。
+- 新增 5 项测试，与人工参考 A/B 评测器合计 12/12 通过。真实清单冻结为 32 帧、图片复制 0、图片路径 0、外部授权 0、`test24` 使用 0。
+- 本轮没有 API Key、外部调用、图片上传、训练、推理、部署、真值写入或 `test24` 使用。详见 `docs/SLOPE_EXTERNAL_EXPERT_PREAB_ROUND762_20261124.md` 和 `docs/evidence/workbench-stability-20261117/round762-slope-expert-preab-manifest.json`。

@@ -4409,3 +4409,11 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 候选包含 6 个哈希绑定文件，逐项记录正式旧 SHA-256 与候选新 SHA-256；正式文件任一变化都必须停止部署。清单明确 `deployment_performed=false`、`formal_files_written=0`、`automatic_deployment_allowed=false`。
 - 使用正式源码副本和正式 Python 环境验证：Python 11/11、网页核心 7/7、语法检查通过；隔离端口 18772 的真实 Edge 验收首四帧为 95、140、74、77，优先筛选精确为 95、140，页面/HTTP/写入错误均为 0，结束后端口已关闭。
 - 正式 8765 全程未停止、未重启、未写入。候选清单见 `artifacts/round768-formal-minimal-overlay-candidate/manifest.json`，说明见 `docs/FORMAL_MINIMAL_OVERLAY_CANDIDATE_ROUND768_20261124.md`。
+
+## 2026-11-24 Round769 补充：正式覆盖部署器与无写入预检
+
+- 新增哈希门控部署器，默认只读；只有显式执行且正式 `/api/run/status` 确认为 `idle`，才允许备份并原子替换。
+- 工具拒绝候选哈希不一致、正式旧文件漂移、路径逃逸、重复文件、服务忙碌和缺失状态地址；回执保持 `candidate_only=true`、`human_truth=false`、`approved_for_training=false`。
+- 临时目录测试 4/4 通过，覆盖默认零写入、受控替换与备份、忙碌阻断、目标漂移阻断。
+- 对正式目录的只读预检通过：6 个目标仍匹配冻结旧哈希，正式服务在线且 `idle`；部署文件 0、正式写入 0、备份目录未创建、服务未重启。
+- 本轮仍未正式部署。结构化回执见 `docs/evidence/workbench-stability-20261117/round769-formal-overlay-dry-run.json`，说明见 `docs/FORMAL_OVERLAY_DEPLOYER_DRY_RUN_ROUND769_20261124.md`。

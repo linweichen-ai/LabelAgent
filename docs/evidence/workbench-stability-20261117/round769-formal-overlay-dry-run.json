@@ -1,0 +1,28 @@
+{
+  "schema_version": "labelagent.formal-minimal-overlay-dry-run.v1",
+  "candidate_commit": "21e94fe54e0877a9348d13f23420f0034b202adb",
+  "candidate_schema": "labelagent.formal-minimal-overlay-candidate.v1",
+  "status": "dry_run",
+  "explicit_execute": false,
+  "formal_service_status": "idle",
+  "formal_service_listening": true,
+  "pending_files": [
+    "source/agent/server.py",
+    "source/web/index.html",
+    "source/web/review-packet-core.js",
+    "source/web/review-packet.css",
+    "source/web/review-packet.js",
+    "work/review_packets/slope-round160/review-priority.json"
+  ],
+  "deployed_files": [],
+  "backup_directory_created": false,
+  "formal_files_written": 0,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "tests": {
+    "temporary_target_passed": 4,
+    "temporary_target_failed": 0,
+    "python_compile_passed": true
+  }
+}

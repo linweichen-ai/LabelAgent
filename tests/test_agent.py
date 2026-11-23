@@ -2886,6 +2886,119 @@ class WorkflowTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "无内嵌凭据"):
                 workflow.external_expert_config(config)
 
+    def test_external_expert_openai_responses_native_envelope_and_normalization(self):
+        response = io.BytesIO(json.dumps({
+            "status": "completed",
+            "output": [{"content": [{
+                "type": "output_text", "text": '{"status":"done"}',
+            }]}],
+            "usage": {"input_tokens": 12, "output_tokens": 3,
+                      "total_tokens": 15},
+        }).encode())
+        config = {
+            "llm_expert_enabled": True,
+            "llm_expert_provider": "openai_responses",
+            "llm_expert_url": "https://api.openai.com/v1",
+            "llm_expert_model": "vision-expert",
+            "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
+        }
+        schema = {"type": "object", "properties": {
+            "status": {"type": "string"}}, "required": ["status"]}
+        with patch.dict(os.environ, {"LABELAGENT_TEST_EXPERT_KEY": "secret"}), \
+             patch.object(workflow.urllib.request, "urlopen",
+                          return_value=response) as opener:
+            result = workflow.chat_external_expert(
+                config, "inspect", image_bytes(), response_schema=schema)
+        self.assertEqual(result, {"status": "done"})
+        sent = opener.call_args.args[0]
+        payload = json.loads(sent.data)
+        self.assertEqual(sent.full_url, "https://api.openai.com/v1/responses")
+        self.assertEqual(sent.get_header("Authorization"), "Bearer secret")
+        self.assertNotIn("temperature", payload)
+        self.assertEqual(payload["input"][0]["content"][1]["type"],
+                         "input_image")
+        self.assertEqual(payload["text"]["format"]["schema"], schema)
+
+    def test_external_expert_anthropic_native_envelope_and_normalization(self):
+        response = io.BytesIO(json.dumps({
+            "content": [{"type": "text", "text": '{"status":"done"}'}],
+            "stop_reason": "end_turn",
+            "usage": {"input_tokens": 9, "output_tokens": 4},
+        }).encode())
+        config = {
+            "llm_expert_enabled": True,
+            "llm_expert_provider": "anthropic_messages",
+            "llm_expert_url": "https://api.anthropic.com/v1",
+            "llm_expert_model": "claude-vision",
+            "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
+        }
+        schema = {"type": "object"}
+        with patch.dict(os.environ, {"LABELAGENT_TEST_EXPERT_KEY": "secret"}), \
+             patch.object(workflow.urllib.request, "urlopen",
+                          return_value=response) as opener:
+            result = workflow.chat_external_expert(
+                config, "inspect", image_bytes(), response_schema=schema)
+        self.assertEqual(result, {"status": "done"})
+        sent = opener.call_args.args[0]
+        payload = json.loads(sent.data)
+        headers = {key.lower(): value for key, value in sent.header_items()}
+        self.assertEqual(sent.full_url, "https://api.anthropic.com/v1/messages")
+        self.assertEqual(headers["x-api-key"], "secret")
+        self.assertEqual(headers["anthropic-version"], "2023-06-01")
+        self.assertEqual(payload["messages"][0]["content"][1]["type"], "image")
+        self.assertEqual(payload["output_config"]["format"]["schema"], schema)
+
+    def test_external_expert_gemini_keeps_key_out_of_url_and_normalizes(self):
+        response = io.BytesIO(json.dumps({
+            "candidates": [{
+                "content": {"parts": [{"text": '{"status":"done"}'}]},
+                "finishReason": "STOP",
+            }],
+            "usageMetadata": {"promptTokenCount": 7,
+                              "candidatesTokenCount": 2,
+                              "totalTokenCount": 9},
+        }).encode())
+        config = {
+            "llm_expert_enabled": True,
+            "llm_expert_provider": "gemini_generate_content",
+            "llm_expert_url": "https://generativelanguage.googleapis.com/v1beta",
+            "llm_expert_model": "gemini-vision/latest",
+            "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
+        }
+        schema = {"type": "object"}
+        with patch.dict(os.environ, {"LABELAGENT_TEST_EXPERT_KEY": "secret"}), \
+             patch.object(workflow.urllib.request, "urlopen",
+                          return_value=response) as opener:
+            result = workflow.chat_external_expert(
+                config, "inspect", image_bytes(), response_schema=schema)
+        self.assertEqual(result, {"status": "done"})
+        sent = opener.call_args.args[0]
+        payload = json.loads(sent.data)
+        headers = {key.lower(): value for key, value in sent.header_items()}
+        self.assertNotIn("secret", sent.full_url)
+        self.assertIn("gemini-vision%2Flatest:generateContent", sent.full_url)
+        self.assertEqual(headers["x-goog-api-key"], "secret")
+        self.assertEqual(payload["contents"][0]["parts"][1]["inline_data"]
+                         ["mime_type"], "image/jpeg")
+        self.assertEqual(payload["generationConfig"]["responseJsonSchema"],
+                         schema)
+
+    def test_external_expert_native_protocol_fails_closed_on_empty_response(self):
+        response = io.BytesIO(b'{"status":"completed","output":[]}')
+        config = {
+            "llm_expert_enabled": True,
+            "llm_expert_provider": "openai_responses",
+            "llm_expert_url": "https://api.openai.com/v1",
+            "llm_expert_model": "vision-expert",
+            "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
+        }
+        with patch.dict(os.environ, {"LABELAGENT_TEST_EXPERT_KEY": "secret"}), \
+             patch.object(workflow.urllib.request, "urlopen",
+                          return_value=response):
+            with self.assertRaisesRegex(ValueError, "未返回文本结果"):
+                workflow.chat_external_expert(
+                    config, "inspect", image_bytes())
+
     def test_small_image_fast_busy_falls_back_to_primary_without_waiting(self):
         workflow._reset_fast_route_circuits()
         self.addCleanup(workflow._reset_fast_route_circuits)
@@ -3533,16 +3646,19 @@ class ServerTests(unittest.TestCase):
             with patch.object(server, "save"):
                 saved = client.post("/api/config", json={
                     "llm_expert_enabled": True,
-                    "llm_expert_provider": "openai_chat",
+                    "llm_expert_provider": "openai_responses",
                     "llm_expert_url": "https://expert.example/v1",
                     "llm_expert_model": "expert-vision",
                     "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
+                    "llm_expert_timeout_seconds": 90,
                     **active_config_write_scope(),
                 })
             self.assertEqual(saved.status_code, 200, saved.json)
             self.assertNotIn("llm_expert_key", server.state["config"])
             self.assertEqual(saved.json["config"]["llm_expert_key_env"],
                              "LABELAGENT_TEST_EXPERT_KEY")
+            self.assertEqual(saved.json["config"]["llm_expert_timeout_seconds"],
+                             90)
 
             calls = []
             def probe(url, timeout=3):

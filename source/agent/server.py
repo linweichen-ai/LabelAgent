@@ -29,7 +29,8 @@ from .media import IMAGE_SUFFIXES, SUPPORTED_SUFFIXES, open_media, read_image
 from .sensors import cloud_snapshot
 from .candidate_import import (prepare_candidate_import, merge_candidate_import,
                                merge_candidate_labels)
-from .workflow import (DESCRIPTION_INPUT_VERSION, MAX_REVIEW_ROUNDS, RunCancelled,
+from .workflow import (DESCRIPTION_INPUT_VERSION, EXTERNAL_VLM_PROVIDERS,
+                       MAX_REVIEW_ROUNDS, RunCancelled,
                        cancellation, candidate_labels_with_recall_probes,
                        canonical_unreferenced_description, describe,
                        discover_visible_labels, reference_labels, restrict_description,
@@ -4739,6 +4740,7 @@ def set_config():
         "llm_fast_max_extra_long_edge": (32, 16384),
         "llm_fast_timeout_seconds": (10, 300),
         "llm_fast_cooldown_seconds": (10, 300),
+        "llm_expert_timeout_seconds": (10, 300),
     }
     fast_updates = {}
     for key in fast_string_keys:
@@ -4767,8 +4769,9 @@ def set_config():
         if not isinstance(value, str) or len(value) > 500:
             raise ValueError(f"Invalid {key}")
         value = value.strip()
-        if key == "llm_expert_provider" and value != "openai_chat":
-            raise ValueError("外部专家 VLM 当前仅支持 openai_chat 协议")
+        if (key == "llm_expert_provider"
+                and value not in EXTERNAL_VLM_PROVIDERS):
+            raise ValueError("外部专家 VLM 协议不受支持")
         if key == "llm_expert_url":
             parsed = urlsplit(value)
             if (parsed.scheme not in {"http", "https"} or not parsed.hostname

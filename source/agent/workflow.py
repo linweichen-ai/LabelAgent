@@ -21,6 +21,8 @@ from PIL import Image, ImageDraw
 import cv2
 import numpy as np
 from .edit_agent import apply_operations, valid_shape, _candidate_gap_regions, _valid_region
+from .vlm_providers import (SUPPORTED_PROVIDERS, build_external_request,
+                            normalize_external_response)
 
 
 _trace_callback = ContextVar("model_trace_callback", default=None)
@@ -41,7 +43,7 @@ VISIBLE_VEHICLE_POINT_RECOVERY_VERSION = (
 VISIBLE_VEHICLE_POINT_MIN_SCORE = 0.55
 VISIBLE_VEHICLE_POINT_HIGH_SCORE = 0.75
 VISIBLE_VEHICLE_POINT_MAX_AREA_RATIO = 0.03
-EXTERNAL_VLM_PROVIDERS = frozenset({"openai_chat"})
+EXTERNAL_VLM_PROVIDERS = SUPPORTED_PROVIDERS
 EXTERNAL_VLM_KEY_ENV_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]{0,127}$")
 
 
@@ -867,6 +869,7 @@ def external_expert_config(config):
         llm_url=url,
         llm_model=model,
         llm_key=credential,
+        llm_expert_provider=provider,
         llm_busy_retries=0,
         _llm_route_name="external_expert",
     )
@@ -1003,20 +1006,34 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
             raw["model_route"] = route_name
             if fast_fallback_reason is not None:
                 raw["fast_fallback_reason"] = fast_fallback_reason
-        payload = {"model": route_config["llm_model"], "temperature": 0,
-                   "messages": [{"role": "user", "content": content}]}
-        if route_config.get("llm_prompt_profile") == "compact":
-            payload["max_tokens"] = int(route_config.get("llm_max_tokens") or 768)
-        if response_schema is not None:
-            payload["response_format"] = {"type": "json_schema", "json_schema": {"name": "labelagent", "schema": response_schema, "strict": True}}
-        request = urllib.request.Request(
-            route_config["llm_url"].rstrip("/") + "/chat/completions",
-            json.dumps(payload).encode(), headers={"Content-Type": "application/json",
-            "Authorization": "Bearer " + route_config.get("llm_key", "")})
+        provider = (route_config.get("llm_expert_provider", "openai_chat")
+                    if route_name == "external_expert" else "openai_chat")
+        max_tokens = int(route_config.get("llm_max_tokens") or 768)
+        if route_name == "external_expert":
+            request = build_external_request(
+                provider, route_config["llm_url"], route_config["llm_model"],
+                route_config.get("llm_key", ""), instruction,
+                (image, *extra_images), response_schema=response_schema,
+                max_tokens=max_tokens)
+            payload = json.loads(request.data)
+        else:
+            payload = {"model": route_config["llm_model"], "temperature": 0,
+                       "messages": [{"role": "user", "content": content}]}
+            if route_config.get("llm_prompt_profile") == "compact":
+                payload["max_tokens"] = max_tokens
+            if response_schema is not None:
+                payload["response_format"] = {"type": "json_schema", "json_schema": {"name": "labelagent", "schema": response_schema, "strict": True}}
+            request = urllib.request.Request(
+                route_config["llm_url"].rstrip("/") + "/chat/completions",
+                json.dumps(payload).encode(), headers={"Content-Type": "application/json",
+                "Authorization": "Bearer " + route_config.get("llm_key", "")})
         busy_retry_limit = max(0, min(8, int(route_config.get("llm_busy_retries", 5))))
         timeout_seconds = (max(10, min(300, _positive_int(
             config.get("llm_fast_timeout_seconds"), 60)))
-            if route_name == "small_image_fast" else 1200)
+            if route_name == "small_image_fast" else
+            max(10, min(300, _positive_int(
+                config.get("llm_expert_timeout_seconds"), 120)))
+            if route_name == "external_expert" else 1200)
         route_failed = False
         for busy_attempt in range(busy_retry_limit + 1):
             try:
@@ -1034,7 +1051,9 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
                     _open_fast_route_circuit(config, fast_fallback_reason)
                     route_failed = True
                     break
-                raise ValueError("llm_timeout: 大模型请求排队或推理超过 1200 秒") from error
+                raise ValueError(
+                    f"llm_timeout: 大模型请求排队或推理超过 {timeout_seconds} 秒"
+                ) from error
             except urllib.error.HTTPError as error:
                 try:
                     detail = error.read().decode("utf-8", "replace")[:300]
@@ -1044,6 +1063,7 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
                               ("local vlm is busy" in detail.lower()
                                or '"busy"' in detail.lower()))
                 structured_constraint_failure = (
+                    provider == "openai_chat" and
                     error.code == 400 and response_schema is not None
                     and ("prefix_allowed_tokens_fn" in detail
                          or "constraint is unsatisfiable" in detail.lower()))
@@ -1128,6 +1148,8 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
             break
     if result is None:
         raise ValueError("大模型请求失败：快速通道和主通道均未返回结果")
+    if final_route == "external_expert":
+        result = normalize_external_response(provider, result)
     if raw is not None:
         raw["busy_retry_count"] = busy_retry_count
         raw["model_route"] = final_route

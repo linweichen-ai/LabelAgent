@@ -11,6 +11,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
+import cv2
 import numpy as np
 from PIL import Image, ImageDraw
 
@@ -111,7 +112,8 @@ def detail_box(mask, width, height, minimum_span=128, margin=48):
     return (max(left, 0), max(top, 0), right, bottom)
 
 
-def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False):
+def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False,
+                 include_components=False):
     snapshot_dir = Path(snapshot_dir).resolve()
     scan_dir = Path(scan_dir).resolve()
     output_dir = Path(output_dir).resolve()
@@ -150,6 +152,7 @@ def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False):
         review_rows = []
         rendered = []
         identities = set()
+        component_sheet_count = 0
         for row in changed_rows:
             frame = row.get("frame")
             candidate_id = row.get("candidate_id")
@@ -184,6 +187,11 @@ def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False):
             added = after_bool & ~before_bool
             if int(np.count_nonzero(added)) != row.get("changed_pixels"):
                 raise ValueError("review candidate changed pixel count mismatch")
+            if (cv2.connectedComponents(
+                    before_bool.astype(np.uint8), connectivity=8)[0]
+                    != cv2.connectedComponents(
+                        after_bool.astype(np.uint8), connectivity=8)[0]):
+                raise ValueError("review candidate foreground component count changed")
             union = (before != 0) | (after != 0)
             ys, xs = np.where(union)
             if not len(xs):
@@ -246,6 +254,132 @@ def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False):
                     "detail_sheet_sha256": digest(detail_path.read_bytes()),
                     "detail_crop_box": list(focus),
                 })
+            if include_components:
+                source_array = np.asarray(source)
+                gray = cv2.cvtColor(source_array, cv2.COLOR_RGB2GRAY)
+                gradient_x = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3)
+                gradient_y = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3)
+                gradient = cv2.magnitude(gradient_x, gradient_y)
+                component_count, labels, stats, _ = cv2.connectedComponentsWithStats(
+                    added.astype(np.uint8), connectivity=8)
+                components = []
+                for label_index in range(1, component_count):
+                    x, y, component_width, component_height, component_area = [
+                        int(value) for value in stats[label_index]]
+                    component_mask = labels == label_index
+                    components.append((y, x, component_area, component_width,
+                                       component_height, component_mask))
+                components.sort(key=lambda item: (item[0], item[1], item[2]))
+                component_rows = []
+                ring_kernel = np.ones((5, 5), dtype=np.uint8)
+                contact_kernel = np.ones((3, 3), dtype=np.uint8)
+                before_dilated = cv2.dilate(
+                    before_bool.astype(np.uint8), contact_kernel,
+                    iterations=1).astype(bool)
+                for component_index, component in enumerate(components, start=1):
+                    (y, x, component_area, component_width,
+                     component_height, component_mask) = component
+                    component_focus = detail_box(
+                        component_mask, source.width, source.height,
+                        minimum_span=96, margin=32)
+                    component_source = source.crop(component_focus)
+                    component_before = before[
+                        component_focus[1]:component_focus[3],
+                        component_focus[0]:component_focus[2]]
+                    component_after_mask = (
+                        before_bool | component_mask).astype(np.uint8) * 255
+                    component_after = component_after_mask[
+                        component_focus[1]:component_focus[3],
+                        component_focus[0]:component_focus[2]]
+                    component_local = component_mask[
+                        component_focus[1]:component_focus[3],
+                        component_focus[0]:component_focus[2]]
+                    added_image = np.asarray(component_source).copy()
+                    added_image[component_local] = np.array(
+                        [255, 45, 125], dtype=np.uint8)
+                    detail = Image.new(
+                        "RGB", (640 * 4, 480), (12, 18, 24))
+                    component_label = (
+                        f"{label} | component {component_index}")
+                    panes = [
+                        detail_panel(
+                            component_source, f"{component_label} | source"),
+                        detail_panel(overlay(
+                            component_source, component_before,
+                            (25, 220, 145)), "before"),
+                        detail_panel(overlay(
+                            component_source, component_after,
+                            (35, 170, 255)), "after component"),
+                        detail_panel(
+                            Image.fromarray(added_image),
+                            f"component pixels: {component_area}", nearest=True),
+                    ]
+                    for column, pane in enumerate(panes):
+                        detail.paste(pane, (column * 640, 0))
+                    component_name = (
+                        f"frame-{frame:06d}-candidate-{candidate_id}-"
+                        f"component-{component_index:02d}-detail.png")
+                    component_path = staging / component_name
+                    detail.save(
+                        component_path, "PNG", optimize=False,
+                        compress_level=9)
+
+                    ring = (cv2.dilate(
+                        component_mask.astype(np.uint8), ring_kernel,
+                        iterations=1).astype(bool)
+                        & ~component_mask & before_bool)
+                    notch_mean = source_array[component_mask].astype(
+                        np.float32).mean(axis=0)
+                    ring_mean = (
+                        source_array[ring].astype(np.float32).mean(axis=0)
+                        if ring.any() else None)
+                    component_after_full = before_bool | component_mask
+                    standalone_component_count_preserved = (
+                        cv2.connectedComponents(
+                            before_bool.astype(np.uint8), connectivity=8)[0]
+                        == cv2.connectedComponents(
+                            component_after_full.astype(np.uint8),
+                            connectivity=8)[0])
+                    if not standalone_component_count_preserved:
+                        raise ValueError(
+                            "review component is not independently connected")
+                    component_row = {
+                        "component_index": component_index,
+                        "area": component_area,
+                        "bbox": [x, y, x + component_width - 1,
+                                 y + component_height - 1],
+                        "contact_pixels": int(np.count_nonzero(
+                            component_mask & before_dilated)),
+                        "contact_ratio": round(
+                            int(np.count_nonzero(
+                                component_mask & before_dilated))
+                            / component_area, 6),
+                        "notch_gradient_mean": round(float(
+                            gradient[component_mask].mean()), 3),
+                        "ring_gradient_mean": (
+                            round(float(gradient[ring].mean()), 3)
+                            if ring.any() else None),
+                        "gray_delta": (
+                            round(float(ring_mean.mean()
+                                        - notch_mean.mean()), 3)
+                            if ring_mean is not None else None),
+                        "color_distance": (
+                            round(float(np.linalg.norm(
+                                ring_mean - notch_mean)), 3)
+                            if ring_mean is not None else None),
+                        "standalone_component_count_preserved": (
+                            standalone_component_count_preserved),
+                        "detail_sheet": component_name,
+                        "detail_sheet_sha256": digest(
+                            component_path.read_bytes()),
+                        "detail_crop_box": list(component_focus),
+                    }
+                    component_rows.append(component_row)
+                    component_sheet_count += 1
+                if sum(item["area"] for item in component_rows) != int(
+                        np.count_nonzero(added)):
+                    raise ValueError("component pixel accounting mismatch")
+                review_row["component_sheets"] = component_rows
             review_rows.append(review_row)
 
         sheet = Image.new("RGB", (360 * 4, 300 * len(rendered)), (12, 18, 24))
@@ -269,6 +403,9 @@ def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False):
             "contact_sheet_sha256": digest(sheet_path.read_bytes()),
             "rows": review_rows,
         }
+        if include_components:
+            manifest["component_sheets_included"] = True
+            manifest["component_sheet_count"] = component_sheet_count
         manifest_path = staging / "manifest.json"
         manifest_path.write_text(
             json.dumps(manifest, ensure_ascii=False, indent=2,
@@ -282,6 +419,7 @@ def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False):
             "contact_sheet_sha256": manifest["contact_sheet_sha256"],
             "detail_sheet_count": (
                 len(review_rows) if include_details else 0),
+            "component_sheet_count": component_sheet_count,
             "manifest_sha256": manifest_sha,
         }
     finally:
@@ -294,10 +432,12 @@ def main():
     parser.add_argument("--scan-dir", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--include-details", action="store_true")
+    parser.add_argument("--include-components", action="store_true")
     args = parser.parse_args()
     print(json.dumps(build_review(
         args.snapshot_dir, args.scan_dir, args.output,
-        include_details=args.include_details),
+        include_details=args.include_details,
+        include_components=args.include_components),
         ensure_ascii=False, indent=2))
     return 0
 

@@ -81,18 +81,96 @@ class PalletRoiShadowReviewTests(unittest.TestCase):
     def test_builds_lossless_detail_sheet_around_added_pixels(self):
         output = self.root / "details"
         result = build_review(
-            self.snapshot, self.scan, output, include_details=True)
+            self.snapshot, self.scan, output, include_details=True,
+            include_components=True)
         manifest = json.loads((output / "manifest.json").read_text())
         row = manifest["rows"][0]
         detail = output / row["detail_sheet"]
 
         self.assertEqual(result["detail_sheet_count"], 1)
+        self.assertEqual(result["component_sheet_count"], 1)
         self.assertTrue(manifest["detail_sheets_included"])
         self.assertEqual(sha(detail), row["detail_sheet_sha256"])
         with Image.open(detail) as image:
             self.assertEqual(image.size, (2560, 480))
             self.assertEqual(image.format, "PNG")
         self.assertEqual(len(row["detail_crop_box"]), 4)
+        component = row["component_sheets"][0]
+        component_path = output / component["detail_sheet"]
+        self.assertEqual(component["area"], 10)
+        self.assertTrue(component["standalone_component_count_preserved"])
+        self.assertGreater(component["contact_ratio"], 0)
+        self.assertEqual(sha(component_path), component["detail_sheet_sha256"])
+        with Image.open(component_path) as image:
+            self.assertEqual(image.size, (2560, 480))
+            self.assertEqual(image.format, "PNG")
+
+    def test_builds_one_sheet_per_connected_added_component(self):
+        after_path = self.scan / "after.png"
+        after = np.asarray(Image.open(after_path).convert("L")).copy()
+        after[40:43, 18:20] = 255
+        Image.fromarray(after).save(after_path)
+        manifest_path = self.scan / "manifest.json"
+        manifest = json.loads(manifest_path.read_text())
+        manifest["rows"][0]["changed_pixels"] = 16
+        manifest["rows"][0]["after_mask_sha256"] = sha(after_path)
+        manifest_path.write_text(json.dumps(manifest))
+
+        output = self.root / "components"
+        result = build_review(
+            self.snapshot, self.scan, output, include_components=True)
+        review = json.loads((output / "manifest.json").read_text())
+        components = review["rows"][0]["component_sheets"]
+
+        self.assertEqual(result["component_sheet_count"], 2)
+        self.assertEqual([item["area"] for item in components], [10, 6])
+        self.assertEqual(sum(item["area"] for item in components), 16)
+        self.assertTrue(all(
+            item["standalone_component_count_preserved"]
+            for item in components))
+
+    def test_disconnected_added_component_fails_closed(self):
+        after_path = self.scan / "after.png"
+        after = np.asarray(Image.open(after_path).convert("L")).copy()
+        after[4:6, 4:6] = 255
+        Image.fromarray(after).save(after_path)
+        manifest_path = self.scan / "manifest.json"
+        manifest = json.loads(manifest_path.read_text())
+        manifest["rows"][0]["changed_pixels"] = 14
+        manifest["rows"][0]["after_mask_sha256"] = sha(after_path)
+        manifest_path.write_text(json.dumps(manifest))
+        output = self.root / "disconnected"
+
+        with self.assertRaisesRegex(
+                ValueError, "foreground component count changed"):
+            build_review(
+                self.snapshot, self.scan, output, include_components=True)
+        self.assertFalse(output.exists())
+
+    def test_balanced_bridge_and_island_hits_independent_component_gate(self):
+        before_path = self.scan / "before.png"
+        after_path = self.scan / "after.png"
+        before = np.zeros((80, 100), dtype=np.uint8)
+        before[20:40, 20:35] = 255
+        before[20:40, 40:55] = 255
+        after = before.copy()
+        after[28:32, 35:40] = 255
+        after[60:64, 70:75] = 255
+        Image.fromarray(before).save(before_path)
+        Image.fromarray(after).save(after_path)
+        manifest_path = self.scan / "manifest.json"
+        manifest = json.loads(manifest_path.read_text())
+        manifest["rows"][0]["changed_pixels"] = 40
+        manifest["rows"][0]["before_mask_sha256"] = sha(before_path)
+        manifest["rows"][0]["after_mask_sha256"] = sha(after_path)
+        manifest_path.write_text(json.dumps(manifest))
+        output = self.root / "balanced-bridge-and-island"
+
+        with self.assertRaisesRegex(
+                ValueError, "not independently connected"):
+            build_review(
+                self.snapshot, self.scan, output, include_components=True)
+        self.assertFalse(output.exists())
 
     def test_deletion_and_symlink_escape_fail_closed(self):
         after_path = self.scan / "after.png"

@@ -49,7 +49,8 @@ from .candidate_class_audit import (audit_candidate_class_blind, candidate_finge
                                     audit_high_risk_candidates,
                                     candidate_requires_class_audit,
                                     validate_blind_candidate_class_decision)
-from .pallet_candidate_review import (CandidateReviewUnavailable,
+from .pallet_candidate_review import (ENV_NAME as PALLET_CANDIDATE_REVIEW_ENV,
+                                      CandidateReviewUnavailable,
                                       load_review_page)
 from .candidate_comparison import (
     INDEX_SCHEMA_VERSION as CANDIDATE_COMPARISON_INDEX_SCHEMA,
@@ -2103,6 +2104,13 @@ def _candidate_review_response_headers(response):
 
 @app.get("/api/pallet-candidate-review")
 def pallet_candidate_review_status():
+    if not os.environ.get(PALLET_CANDIDATE_REVIEW_ENV, "").strip():
+        response = jsonify(
+            available=False, read_only=True, production_deployed=False,
+            human_truth_writes=0, training_data_writes=0,
+            reason="候选复核页未启用")
+        response.headers["Cache-Control"] = "no-store"
+        return response
     try:
         page = load_review_page()
     except CandidateReviewUnavailable as error:

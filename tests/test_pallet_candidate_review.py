@@ -44,8 +44,14 @@ class PalletCandidateReviewTest(unittest.TestCase):
             with self.assertRaises(CandidateReviewUnavailable):
                 load_review_page()
             client = app.test_client()
-            self.assertEqual(client.get(
-                "/api/pallet-candidate-review").status_code, 404)
+            status = client.get("/api/pallet-candidate-review")
+            self.assertEqual(status.status_code, 200)
+            self.assertFalse(status.json["available"])
+            self.assertTrue(status.json["read_only"])
+            self.assertFalse(status.json["production_deployed"])
+            self.assertEqual(status.json["human_truth_writes"], 0)
+            self.assertEqual(status.json["training_data_writes"], 0)
+            self.assertEqual(status.headers["Cache-Control"], "no-store")
             shell = client.get("/")
             self.assertIn(b'id="palletCandidateReviewEntry"', shell.data)
             self.assertIn(b"hidden", shell.data)

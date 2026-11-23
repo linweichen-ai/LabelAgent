@@ -23,15 +23,29 @@ def digest(payload: bytes) -> str:
 
 
 def safe_name(value, field):
-    if not isinstance(value, str) or not value or Path(value).name != value:
+    if (not isinstance(value, str) or not value or Path(value).name != value
+            or "/" in value or "\\" in value):
         raise ValueError(f"unsafe {field}")
     return value
+
+
+def safe_path(root, value, field):
+    name = safe_name(value, field)
+    root = Path(root).resolve()
+    target = (root / name).resolve()
+    try:
+        target.relative_to(root)
+    except ValueError as exc:
+        raise ValueError(f"unsafe {field} path escape") from exc
+    return target
 
 
 def read_bound_image(path, expected_sha):
     payload = path.read_bytes()
     if digest(payload) != expected_sha:
         raise ValueError(f"SHA-256 mismatch: {path.name}")
+    if path.read_bytes() != payload:
+        raise ValueError(f"input changed during read: {path.name}")
     with Image.open(io.BytesIO(payload)) as decoded:
         return decoded.convert("RGB")
 
@@ -56,7 +70,48 @@ def panel(image, title, size=(360, 300)):
     return canvas
 
 
-def build_review(snapshot_dir, scan_dir, output_dir):
+def detail_panel(image, title, size=(640, 480), *, nearest=False):
+    canvas = Image.new("RGB", size, (18, 24, 30))
+    available = (size[0] - 16, size[1] - 42)
+    scale = min(available[0] / image.width, available[1] / image.height)
+    target = (max(1, int(round(image.width * scale))),
+              max(1, int(round(image.height * scale))))
+    resample = Image.Resampling.NEAREST if nearest else Image.Resampling.LANCZOS
+    copy = image.resize(target, resample)
+    canvas.paste(copy, ((size[0] - copy.width) // 2,
+                        34 + (available[1] - copy.height) // 2))
+    ImageDraw.Draw(canvas).text((10, 9), title, fill=(238, 244, 248))
+    return canvas
+
+
+def detail_box(mask, width, height, minimum_span=128, margin=48):
+    ys, xs = np.where(mask)
+    if not len(xs):
+        raise ValueError("changed candidate contains no added pixels")
+    left = int(xs.min()) - margin
+    right = int(xs.max()) + margin + 1
+    top = int(ys.min()) - margin
+    bottom = int(ys.max()) + margin + 1
+    if right - left < minimum_span:
+        center = (left + right) // 2
+        left = center - minimum_span // 2
+        right = left + minimum_span
+    if bottom - top < minimum_span:
+        center = (top + bottom) // 2
+        top = center - minimum_span // 2
+        bottom = top + minimum_span
+    if left < 0:
+        right -= left; left = 0
+    if top < 0:
+        bottom -= top; top = 0
+    if right > width:
+        left -= right - width; right = width
+    if bottom > height:
+        top -= bottom - height; bottom = height
+    return (max(left, 0), max(top, 0), right, bottom)
+
+
+def build_review(snapshot_dir, scan_dir, output_dir, *, include_details=False):
     snapshot_dir = Path(snapshot_dir).resolve()
     scan_dir = Path(scan_dir).resolve()
     output_dir = Path(output_dir).resolve()
@@ -94,22 +149,41 @@ def build_review(snapshot_dir, scan_dir, output_dir):
         staging.mkdir()
         review_rows = []
         rendered = []
+        identities = set()
         for row in changed_rows:
             frame = row.get("frame")
+            candidate_id = row.get("candidate_id")
+            if (isinstance(candidate_id, bool)
+                    or not isinstance(candidate_id, int) or candidate_id < 0):
+                raise ValueError("candidate identity invalid")
+            identity = (frame, candidate_id)
+            if identity in identities:
+                raise ValueError("duplicate changed candidate identity")
+            identities.add(identity)
             item = images.get(frame)
             if not isinstance(item, dict):
                 raise ValueError(f"missing source frame {frame}")
-            source_name = safe_name(item.get("image"), "source image")
+            source_path = safe_path(
+                snapshot_dir, item.get("image"), "source image")
             source = read_bound_image(
-                snapshot_dir / source_name, item.get("sha256"))
-            before_name = safe_name(row.get("before_mask"), "before mask")
-            after_name = safe_name(row.get("after_mask"), "after mask")
+                source_path, item.get("sha256"))
+            before_path = safe_path(
+                scan_dir, row.get("before_mask"), "before mask")
+            after_path = safe_path(
+                scan_dir, row.get("after_mask"), "after mask")
             before = np.asarray(read_bound_image(
-                scan_dir / before_name, row.get("before_mask_sha256")).convert("L"))
+                before_path, row.get("before_mask_sha256")).convert("L"))
             after = np.asarray(read_bound_image(
-                scan_dir / after_name, row.get("after_mask_sha256")).convert("L"))
+                after_path, row.get("after_mask_sha256")).convert("L"))
             if before.shape != (source.height, source.width) or after.shape != before.shape:
                 raise ValueError("mask and source dimensions differ")
+            before_bool = before != 0
+            after_bool = after != 0
+            if np.any(before_bool & ~after_bool):
+                raise ValueError("review candidate is not add-only")
+            added = after_bool & ~before_bool
+            if int(np.count_nonzero(added)) != row.get("changed_pixels"):
+                raise ValueError("review candidate changed pixel count mismatch")
             union = (before != 0) | (after != 0)
             ys, xs = np.where(union)
             if not len(xs):
@@ -125,7 +199,7 @@ def build_review(snapshot_dir, scan_dir, output_dir):
             diff_crop = before_crop != after_crop
             diff_image = np.asarray(crop).copy()
             diff_image[diff_crop] = np.array([255, 45, 125], dtype=np.uint8)
-            label = f"frame {frame} / candidate {row.get('candidate_id')}"
+            label = f"frame {frame} / candidate {candidate_id}"
             rendered.append([
                 panel(crop, f"{label} | source"),
                 panel(overlay(crop, before_crop, (25, 220, 145)), "before"),
@@ -133,15 +207,46 @@ def build_review(snapshot_dir, scan_dir, output_dir):
                 panel(Image.fromarray(diff_image),
                       f"added pixels: {row['changed_pixels']}"),
             ])
-            review_rows.append({
+            review_row = {
                 "frame": frame,
-                "candidate_id": row.get("candidate_id"),
+                "candidate_id": candidate_id,
                 "changed_pixels": row.get("changed_pixels"),
                 "source_image_sha256": item.get("sha256"),
                 "before_mask_sha256": row.get("before_mask_sha256"),
                 "after_mask_sha256": row.get("after_mask_sha256"),
                 "crop_box": list(box),
-            })
+            }
+            if include_details:
+                focus = detail_box(added, source.width, source.height)
+                detail_source = source.crop(focus)
+                detail_before = before[focus[1]:focus[3], focus[0]:focus[2]]
+                detail_after = after[focus[1]:focus[3], focus[0]:focus[2]]
+                detail_added = added[focus[1]:focus[3], focus[0]:focus[2]]
+                added_image = np.asarray(detail_source).copy()
+                added_image[detail_added] = np.array([255, 45, 125], dtype=np.uint8)
+                detail = Image.new("RGB", (640 * 4, 480), (12, 18, 24))
+                panes = [
+                    detail_panel(detail_source, f"{label} | source detail"),
+                    detail_panel(overlay(
+                        detail_source, detail_before, (25, 220, 145)), "before"),
+                    detail_panel(overlay(
+                        detail_source, detail_after, (35, 170, 255)), "after"),
+                    detail_panel(Image.fromarray(added_image),
+                                 f"added pixels: {row['changed_pixels']}",
+                                 nearest=True),
+                ]
+                for column, pane in enumerate(panes):
+                    detail.paste(pane, (column * 640, 0))
+                detail_name = (
+                    f"frame-{frame:06d}-candidate-{candidate_id}-detail.png")
+                detail_path = staging / detail_name
+                detail.save(detail_path, "PNG", optimize=False, compress_level=9)
+                review_row.update({
+                    "detail_sheet": detail_name,
+                    "detail_sheet_sha256": digest(detail_path.read_bytes()),
+                    "detail_crop_box": list(focus),
+                })
+            review_rows.append(review_row)
 
         sheet = Image.new("RGB", (360 * 4, 300 * len(rendered)), (12, 18, 24))
         for row_index, panes in enumerate(rendered):
@@ -160,6 +265,7 @@ def build_review(snapshot_dir, scan_dir, output_dir):
             "deployment_authorized": False,
             "geometry_policy": "appearance_evidence_roi",
             "workbench_write": False,
+            "detail_sheets_included": include_details,
             "contact_sheet_sha256": digest(sheet_path.read_bytes()),
             "rows": review_rows,
         }
@@ -174,6 +280,8 @@ def build_review(snapshot_dir, scan_dir, output_dir):
             "changed_candidate_count": len(review_rows),
             "contact_sheet": str(output_dir / sheet_path.name),
             "contact_sheet_sha256": manifest["contact_sheet_sha256"],
+            "detail_sheet_count": (
+                len(review_rows) if include_details else 0),
             "manifest_sha256": manifest_sha,
         }
     finally:
@@ -185,9 +293,11 @@ def main():
     parser.add_argument("--snapshot-dir", required=True, type=Path)
     parser.add_argument("--scan-dir", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--include-details", action="store_true")
     args = parser.parse_args()
     print(json.dumps(build_review(
-        args.snapshot_dir, args.scan_dir, args.output),
+        args.snapshot_dir, args.scan_dir, args.output,
+        include_details=args.include_details),
         ensure_ascii=False, indent=2))
     return 0
 

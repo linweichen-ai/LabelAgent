@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 from PIL import Image
@@ -75,6 +76,68 @@ class PalletRoiShadowReviewTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "SHA-256 mismatch"):
             build_review(self.snapshot, self.scan, output)
+        self.assertFalse(output.exists())
+
+    def test_builds_lossless_detail_sheet_around_added_pixels(self):
+        output = self.root / "details"
+        result = build_review(
+            self.snapshot, self.scan, output, include_details=True)
+        manifest = json.loads((output / "manifest.json").read_text())
+        row = manifest["rows"][0]
+        detail = output / row["detail_sheet"]
+
+        self.assertEqual(result["detail_sheet_count"], 1)
+        self.assertTrue(manifest["detail_sheets_included"])
+        self.assertEqual(sha(detail), row["detail_sheet_sha256"])
+        with Image.open(detail) as image:
+            self.assertEqual(image.size, (2560, 480))
+            self.assertEqual(image.format, "PNG")
+        self.assertEqual(len(row["detail_crop_box"]), 4)
+
+    def test_deletion_and_symlink_escape_fail_closed(self):
+        after_path = self.scan / "after.png"
+        after = np.asarray(Image.open(after_path).convert("L")).copy()
+        after[30, 30] = 0
+        Image.fromarray(after).save(after_path)
+        manifest_path = self.scan / "manifest.json"
+        manifest = json.loads(manifest_path.read_text())
+        manifest["rows"][0]["after_mask_sha256"] = sha(after_path)
+        manifest_path.write_text(json.dumps(manifest))
+        with self.assertRaisesRegex(ValueError, "not add-only"):
+            build_review(self.snapshot, self.scan, self.root / "deletion")
+
+        before_path = self.scan / "before.png"
+        outside = self.root / "outside.png"
+        outside.write_bytes(before_path.read_bytes())
+        before_path.unlink()
+        try:
+            before_path.symlink_to(outside)
+        except OSError:
+            original_resolve = Path.resolve
+
+            def resolve_as_escape(path, *args, **kwargs):
+                if path == before_path:
+                    return outside
+                return original_resolve(path, *args, **kwargs)
+
+            with patch.object(Path, "resolve", new=resolve_as_escape):
+                with self.assertRaisesRegex(ValueError, "path escape"):
+                    build_review(
+                        self.snapshot, self.scan, self.root / "simulated-link")
+            return
+        with self.assertRaisesRegex(ValueError, "path escape"):
+            build_review(self.snapshot, self.scan, self.root / "link")
+
+    def test_duplicate_changed_candidate_identity_fails_closed(self):
+        manifest_path = self.scan / "manifest.json"
+        manifest = json.loads(manifest_path.read_text())
+        manifest["rows"].append(dict(manifest["rows"][0]))
+        manifest_path.write_text(json.dumps(manifest))
+        output = self.root / "duplicate"
+
+        with self.assertRaisesRegex(ValueError, "duplicate changed candidate"):
+            build_review(
+                self.snapshot, self.scan, output, include_details=True)
         self.assertFalse(output.exists())
 
 

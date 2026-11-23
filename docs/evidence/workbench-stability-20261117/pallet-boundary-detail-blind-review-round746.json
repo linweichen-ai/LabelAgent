@@ -1,0 +1,60 @@
+{
+  "assistant_review_only": true,
+  "deployment_authorized": false,
+  "detail_review": {
+    "cohen_kappa": 0.322581,
+    "consensus_accept": 3,
+    "consensus_reject": 1,
+    "exact_agreement": 4,
+    "reviewer_count": 2,
+    "total": 7,
+    "unresolved": 3
+  },
+  "detail_review_manifests": {
+    "round743": "63d01cd1e4d942f695d681fb39092d45250a85d60ba9f878e09d492dfca6c197",
+    "round744": "79de8588aac4a6e002a7709997d2195f5a86c6c5bc2dc772f10f325c38e8e52e"
+  },
+  "detail_sheets": [
+    {"candidate_id": 3, "frame": 15, "sha256": "ff745cf8286b8be22361ae0f77b6b7022cf406c8325112dbd828ac9087962b17"},
+    {"candidate_id": 4, "frame": 95, "sha256": "9635f69d522e905904637cdbacb0a55595fdad9dd8aad3af1771c55057de4fc8"},
+    {"candidate_id": 4, "frame": 22, "sha256": "4f740edfc5aff52da4155caec2f711ea8c7bf2fb72b2f77c10c5abe0c06d25b7"},
+    {"candidate_id": 8, "frame": 72, "sha256": "4d52bcc75eb8365bbb1ae43ca1f8e7f0c10597c4d3fa78ac1c280e3660b31fa6"},
+    {"candidate_id": 8, "frame": 142, "sha256": "449902323415fdafa2d05dbf0318ae7f1e28fa7e74c3216fa044c812c263cae9"},
+    {"candidate_id": 16, "frame": 149, "sha256": "40e126a85de7d535fe80a1dfc7b3bb7ac1ebe64dd66cd43a1f97f5d6f1d58f3f"},
+    {"candidate_id": 8, "frame": 149, "sha256": "66b77a2bca51f7f3cec46b1fd8d14972a93460e6bddf84e386e5e25b26d0b2eb"}
+  ],
+  "human_truth": false,
+  "legacy_review": {
+    "cohen_kappa": 0.066667,
+    "exact_agreement": 3,
+    "reviewer_count": 2,
+    "total": 7
+  },
+  "legacy_rows": [
+    {"candidate_id": 3, "frame": 15, "reviewer_a": "reject", "reviewer_b": "accept"},
+    {"candidate_id": 4, "frame": 95, "reviewer_a": "uncertain", "reviewer_b": "reject"},
+    {"candidate_id": 4, "frame": 22, "reviewer_a": "uncertain", "reviewer_b": "accept"},
+    {"candidate_id": 8, "frame": 72, "reviewer_a": "accept", "reviewer_b": "accept"},
+    {"candidate_id": 8, "frame": 142, "reviewer_a": "accept", "reviewer_b": "accept"},
+    {"candidate_id": 16, "frame": 149, "reviewer_a": "accept", "reviewer_b": "uncertain"},
+    {"candidate_id": 8, "frame": 149, "reviewer_a": "uncertain", "reviewer_b": "uncertain"}
+  ],
+  "mask_write": false,
+  "rows": [
+    {"candidate_id": 3, "consensus": "accept", "frame": 15, "reviewer_a": "accept", "reviewer_b": "accept"},
+    {"candidate_id": 4, "consensus": "unresolved", "frame": 95, "reviewer_a": "reject", "reviewer_b": "uncertain"},
+    {"candidate_id": 4, "consensus": "unresolved", "frame": 22, "reviewer_a": "uncertain", "reviewer_b": "accept"},
+    {"candidate_id": 8, "consensus": "accept", "frame": 72, "reviewer_a": "accept", "reviewer_b": "accept"},
+    {"candidate_id": 8, "consensus": "reject", "frame": 142, "reviewer_a": "reject", "reviewer_b": "reject"},
+    {"candidate_id": 16, "consensus": "accept", "frame": 149, "reviewer_a": "accept", "reviewer_b": "accept"},
+    {"candidate_id": 8, "consensus": "unresolved", "frame": 149, "reviewer_a": "uncertain", "reviewer_b": "reject"}
+  ],
+  "schema_version": "labelagent.pallet-boundary-detail-blind-review-round746.v1",
+  "status": "assistant_consensus_not_human_truth",
+  "visibility_causal_claim": false,
+  "visibility_comparison_confounded_by_different_reviewers": true,
+  "targeted_validation": "14 passed",
+  "test_validation": "1779 passed, 1 skipped, 286 subtests passed",
+  "training_authorized": false,
+  "workbench_write": false
+}

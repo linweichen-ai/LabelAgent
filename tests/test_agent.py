@@ -450,14 +450,31 @@ class WorkflowTests(unittest.TestCase):
 
     def test_expert_shadow_preserves_strong_edge_slope_signal(self):
         decision = evaluate_expert_shadow_route(
-            {"llm_expert_shadow_routing_enabled": True},
+            {"llm_expert_shadow_routing_enabled": True,
+             "llm_expert_shadow_score_threshold": 7},
             candidates=[{"label": "slope", "points": [
                 [0, 450], [50, 450], [50, 479], [0, 479]]}],
             candidate_labels=["slope"], image_size=(640, 480))
         self.assertTrue(decision["recommended"])
+        self.assertFalse(decision["selection"]["selected_by_score"])
+        self.assertTrue(decision["selection"]["selected_by_hard_signal"])
+        self.assertEqual(decision["selection"]["hard_signal_codes"],
+                         ["edge_slope_candidate"])
         self.assertEqual(decision["signals"]["edge_slope_candidate_count"], 1)
         self.assertIn("edge_slope_candidate",
                       {item["code"] for item in decision["reasons"]})
+
+    def test_expert_shadow_high_threshold_does_not_promote_weak_geometry(self):
+        decision = evaluate_expert_shadow_route(
+            {"llm_expert_shadow_routing_enabled": True,
+             "llm_expert_shadow_score_threshold": 7},
+            candidates=[{"label": "pallet", "points": [
+                [0, 0], [20, 0], [20, 20], [0, 20]]}],
+            candidate_labels=["pallet"], image_size=(640, 480))
+        self.assertFalse(decision["recommended"])
+        self.assertFalse(decision["selection"]["selected_by_score"])
+        self.assertFalse(decision["selection"]["selected_by_hard_signal"])
+        self.assertEqual(decision["selection"]["hard_signal_codes"], [])
 
     def test_pallet_cleanup_fills_texture_holes_and_preserves_structural_opening(self):
         mask = np.zeros((100, 140), dtype=np.uint8)

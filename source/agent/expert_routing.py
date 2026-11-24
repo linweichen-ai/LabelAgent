@@ -18,6 +18,15 @@ PROTOCOL_REASON_MARKERS = (
 PRIORITY_LABELS = frozenset({
     "pallet", "slope", "车辆", "vehicle", "other_robot", "cargo_floor",
 })
+HARD_SIGNAL_CODES = frozenset({
+    "edge_slope_candidate",
+    "class_audit_conflict",
+    "agent_nonconvergence",
+    "open_set_candidate",
+    "registry_conflict",
+    "protocol_failure",
+    "manual_priority",
+})
 GEOMETRY_LABELS = PRIORITY_LABELS | {"person"}
 GEOMETRY_LABEL_CASEFOLDS = frozenset(value.casefold() for value in GEOMETRY_LABELS)
 
@@ -304,7 +313,14 @@ def evaluate_expert_shadow_route(config, *, discovery=None, agent=None,
         add("priority_class_involved", "context", 0, {"labels": difficult})
 
     score = sum(item["points"] for item in reasons)
-    recommended = score >= score_threshold
+    hard_signal_codes = sorted(
+        item["code"] for item in reasons if item["code"] in HARD_SIGNAL_CODES)
+    selected_by_score = score >= score_threshold
+    # A high score is useful for combining several weak signals, but it must
+    # never suppress one of the explicit escalation conditions from the
+    # project contract.  This remains upload-free shadow advice only.
+    selected_by_hard_signal = bool(hard_signal_codes)
+    recommended = selected_by_score or selected_by_hard_signal
     latency = (round(float(local_model_latency_ms), 3)
                if type(local_model_latency_ms) in (int, float)
                and not isinstance(local_model_latency_ms, bool)
@@ -322,6 +338,11 @@ def evaluate_expert_shadow_route(config, *, discovery=None, agent=None,
                      else "normal"),
         "difficulty_score": score,
         "score_threshold": score_threshold,
+        "selection": {
+            "selected_by_score": selected_by_score,
+            "selected_by_hard_signal": selected_by_hard_signal,
+            "hard_signal_codes": hard_signal_codes,
+        },
         "thresholds": {
             "low_confidence_percent": confidence_percent,
             "agent_rounds": threshold,

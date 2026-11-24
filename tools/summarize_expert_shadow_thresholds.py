@@ -2,17 +2,14 @@
 import argparse
 import json
 from pathlib import Path
+import sys
 
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from source.agent.expert_routing import HARD_SIGNAL_CODES
 
-DEFAULT_HARD_CODES = (
-    "edge_slope_candidate",
-    "class_audit_conflict",
-    "agent_nonconvergence",
-    "open_set_candidate",
-    "registry_conflict",
-    "protocol_failure",
-    "manual_priority",
-)
+DEFAULT_HARD_CODES = tuple(sorted(HARD_SIGNAL_CODES))
 
 
 def summarize(audit, *, thresholds, hard_codes=DEFAULT_HARD_CODES):

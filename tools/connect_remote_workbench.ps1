@@ -3,12 +3,17 @@ param(
     [string]$Target = "factory-5090",
     [ValidateRange(1024, 65535)][int]$RemotePort = 18765,
     [ValidateRange(1024, 65535)][int]$LocalPort = 18765,
+    [string]$RuntimeDirectory = "",
     [switch]$NoBrowser
 )
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent (Split-Path -Parent $PSCommandPath)
-$runtime = Join-Path $root ".repro"
+$runtime = if ([string]::IsNullOrWhiteSpace($RuntimeDirectory)) {
+    Join-Path $root ".repro"
+} else {
+    [System.IO.Path]::GetFullPath($RuntimeDirectory)
+}
 $recordPath = Join-Path $runtime "remote-workbench-tunnel.json"
 $marker = "${LocalPort}:127.0.0.1:${RemotePort}"
 $url = "http://127.0.0.1:${LocalPort}"

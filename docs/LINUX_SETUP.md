@@ -118,6 +118,17 @@ powershell -ExecutionPolicy Bypass -File tools/connect_remote_workbench.ps1 `
 powershell -ExecutionPolicy Bypass -File tools/disconnect_remote_workbench.ps1
 ```
 
+默认运行记录保存在仓库的 `.repro`。若同一台电脑需要同时连接多个隔离工作台，可为每条通道指定不同的记录目录；连接与断开必须使用同一个目录：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/connect_remote_workbench.ps1 `
+  -Target factory-5090 -RemotePort 18765 -LocalPort 18767 `
+  -RuntimeDirectory work\tunnels\review -NoBrowser
+
+powershell -ExecutionPolicy Bypass -File tools/disconnect_remote_workbench.ps1 `
+  -RuntimeDirectory work\tunnels\review
+```
+
 也可手工建立隧道：
 
 ```bash

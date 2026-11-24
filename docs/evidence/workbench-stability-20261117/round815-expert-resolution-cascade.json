@@ -1,0 +1,17 @@
+{
+  "round": 815,
+  "date": "2026-11-24",
+  "change": "offline 512-first 640-on-uncertainty expert cascade evaluator",
+  "new_external_api_calls": 0,
+  "new_real_images_uploaded": 0,
+  "test24_used": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "deployment_gate_passed": false,
+  "targeted_tests_passed": 26,
+  "project_tests_passed": 1966,
+  "project_tests_skipped": 1,
+  "project_subtests_passed": 294,
+  "status": "implementation_ready_evaluation_waits_for_review_and_authorized_results"
+}

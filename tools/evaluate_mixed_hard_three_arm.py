@@ -65,6 +65,21 @@ def _validate_prediction_packet(packet, *, external=False):
     return mapped
 
 
+def _prediction_image_sha(row, *, external=False):
+    """Read the frozen image binding from local or external packet schemas."""
+    source = row.get("source_image_sha256")
+    copied = row.get("copied_image_sha256")
+    if external:
+        value = source
+    else:
+        if source is not None and copied is not None and source != copied:
+            raise ValueError("local prediction image hash aliases differ")
+        value = copied if copied is not None else source
+    if not isinstance(value, str) or len(value) != 64:
+        raise ValueError("prediction image hash is invalid")
+    return value
+
+
 def _binary_metrics(reference, predictions, label):
     tp = fp = fn = tn = 0
     for sample_id, truth in reference.items():
@@ -207,8 +222,9 @@ def evaluate_three_arm(manifest, manifest_sha256, adjudication, local_packet,
         raise ValueError("external suggestions are bound to another review manifest")
     for sample_id, truth in reference.items():
         expected_sha = truth["source_image_sha256"]
-        if (local_rows[sample_id].get("source_image_sha256") != expected_sha
-                or external_rows[sample_id].get("source_image_sha256") != expected_sha):
+        if (_prediction_image_sha(local_rows[sample_id]) != expected_sha
+                or _prediction_image_sha(
+                    external_rows[sample_id], external=True) != expected_sha):
             raise ValueError("prediction image hashes differ from the declared review")
     hybrid_samples = hybrid_queue.get("samples") if isinstance(hybrid_queue, dict) else None
     if (hybrid_queue.get("schema_version")

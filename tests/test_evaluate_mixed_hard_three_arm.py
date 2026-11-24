@@ -6,7 +6,9 @@ from pathlib import Path
 import pytest
 
 from tools.build_mixed_hard_adjudication_workspace import LABELS
-from tools.evaluate_mixed_hard_three_arm import evaluate_three_arm
+from tools.evaluate_mixed_hard_three_arm import (
+    _prediction_image_sha, evaluate_three_arm,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,6 +24,13 @@ def _prediction(present=()):
         "class_conflicts": ["none"], "difficulty_flags": ["none"],
         "unknown_candidates": [], "review_note": "fixture",
     }
+
+
+def test_local_image_binding_accepts_actual_copied_hash_schema():
+    assert _prediction_image_sha({"copied_image_sha256": "a" * 64}) == "a" * 64
+    with pytest.raises(ValueError, match="aliases differ"):
+        _prediction_image_sha({"copied_image_sha256": "a" * 64,
+                               "source_image_sha256": "b" * 64})
 
 
 def _fixture():

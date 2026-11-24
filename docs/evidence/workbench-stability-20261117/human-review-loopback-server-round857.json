@@ -18,6 +18,18 @@
     "workspace_write_performed": false,
     "model_call_performed": false
   },
+  "live_loopback_smoke": {
+    "url": "http://127.0.0.1:18766/reviewer.html",
+    "review_http_status": 200,
+    "review_response_bytes": 46152,
+    "undeclared_file_http_status": 404,
+    "cache_control": "no-store",
+    "content_security_policy_external_connect": "none",
+    "formal_workbench_ready": true,
+    "formal_sam_ready": true,
+    "formal_vlm_ready": true,
+    "formal_run_status": "completed"
+  },
   "tests": {
     "targeted_passed": 5,
     "review_related_passed": 14,

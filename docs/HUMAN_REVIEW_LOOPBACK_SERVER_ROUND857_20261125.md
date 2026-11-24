@@ -53,3 +53,16 @@ python tools/serve_mixed_hard_review.py <复核工作区目录> --check-only
 - 外部 Astra 调用：0。
 
 本轮改善的是人工复核入口的稳定性和可追溯性，不代表模型分割质量已经提升。完成 34 帧人工盲审后，才能计算三路方案的真实精确率、召回率与 F1。
+
+## 本机真实启动回执
+
+在 `127.0.0.1:18766` 启动真实 Round849 工作区后进行独立 HTTP 读回：
+
+- `reviewer.html`：HTTP 200，46,152 字节；
+- 未列入回执的 `private.txt`：HTTP 404；
+- `Cache-Control`：`no-store`；
+- CSP：`connect-src 'none'`；
+- 同时检查正式工作台 `127.0.0.1:18765`：总体、SAM、VLM 均为 ready；
+- 正式运行状态保持 completed，未被复核服务修改。
+
+该进程是本机临时人工复核入口，不是生产部署，不启动 GPU，也不执行 SAM/VLM/外部专家推理。

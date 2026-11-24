@@ -1,0 +1,51 @@
+{
+  "round": 812,
+  "date": "2026-11-24",
+  "status": "prepared_not_authorized_not_executed",
+  "queue": {
+    "sample_count": 17,
+    "sha256": "39e12f5f7fa5823ec925a364c0b630333a59e72dc9c8d3e0d1347320e012df9b"
+  },
+  "authorization_template": {
+    "schema_version": "labelagent.external-upload-authorization.v2",
+    "sha256": "27c00a3c04b168d009f610a0902569ee0534bab2242024248b08cf40efff8032",
+    "authorized": false,
+    "authorized_by": "",
+    "authorized_sample_count": 17,
+    "authorized_upload_count": 34,
+    "max_external_calls": 34,
+    "variants": [
+      {"name": "source_640x512", "mode": "source", "expected_width": 640, "expected_height": 512},
+      {"name": "resize_512x410", "mode": "resize_lanczos_jpeg", "width": 512, "height": 410, "jpeg_quality": 90}
+    ]
+  },
+  "gate_check": {
+    "exit_code": 1,
+    "error": "matching explicit external-upload authorization is required",
+    "result_created": false,
+    "network_request_performed": false
+  },
+  "implementation": {
+    "hash_bound_variants": true,
+    "source_dimension_check": true,
+    "deterministic_resize": true,
+    "upload_image_hash_recorded": true,
+    "resumable_result_binding": true,
+    "semantic_ab_evaluator_ready": true,
+    "pixel_mask_quality_evaluated": false
+  },
+  "validation": {
+    "tests_passed": 374,
+    "subtests_passed": 87,
+    "duration_seconds": 10.21
+  },
+  "safety": {
+    "external_api_calls_this_round": 0,
+    "real_images_uploaded": 0,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "test24_used": false,
+    "production_deployed": false
+  }
+}

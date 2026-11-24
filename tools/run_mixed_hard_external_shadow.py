@@ -1,11 +1,14 @@
 """Run an authorized, resumable external-expert shadow on a frozen queue."""
 import argparse
 import hashlib
+import io
 import json
 import statistics
 import sys
 import time
 from pathlib import Path
+
+from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,6 +23,7 @@ from tools.run_local_qwen_mixed_hard_suggestions import (
 
 QUEUE_SCHEMA = "labelagent.mixed-hard-expert-shadow-queue.v1"
 AUTH_SCHEMA = "labelagent.external-upload-authorization.v1"
+AUTH_SCHEMA_V2 = "labelagent.external-upload-authorization.v2"
 RESULT_SCHEMA = "labelagent.mixed-hard-external-shadow.v1"
 
 
@@ -27,8 +31,69 @@ def sha256_file(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def normalize_image_variant(value):
+    if not isinstance(value, dict):
+        raise ValueError("image variant must be an object")
+    name, mode = value.get("name"), value.get("mode")
+    if not isinstance(name, str) or not name or len(name) > 64:
+        raise ValueError("image variant name is invalid")
+    if mode == "source":
+        expected_width = value.get("expected_width")
+        expected_height = value.get("expected_height")
+        if expected_width is None and expected_height is None:
+            return {"name": name, "mode": "source"}
+        if (type(expected_width) is not int or type(expected_height) is not int
+                or not 128 <= expected_width <= 2048
+                or not 128 <= expected_height <= 2048):
+            raise ValueError("source image variant dimensions are invalid")
+        return {"name": name, "mode": "source",
+                "expected_width": expected_width,
+                "expected_height": expected_height}
+    if mode != "resize_lanczos_jpeg":
+        raise ValueError("image variant mode is invalid")
+    width, height, quality = (value.get("width"), value.get("height"),
+                              value.get("jpeg_quality"))
+    if (type(width) is not int or type(height) is not int
+            or not 128 <= width <= 2048 or not 128 <= height <= 2048
+            or type(quality) is not int or not 70 <= quality <= 100):
+        raise ValueError("resized image variant parameters are invalid")
+    return {"name": name, "mode": mode, "width": width, "height": height,
+            "jpeg_quality": quality}
+
+
+def prepare_upload_image(source_bytes, variant):
+    variant = normalize_image_variant(variant)
+    if variant["mode"] == "source":
+        metadata = {
+            "name": variant["name"], "mode": "source",
+            "upload_image_sha256": hashlib.sha256(source_bytes).hexdigest(),
+        }
+        if "expected_width" in variant:
+            with Image.open(io.BytesIO(source_bytes)) as source:
+                source_size = source.size
+            if source_size != (variant["expected_width"],
+                               variant["expected_height"]):
+                raise ValueError("source image dimensions differ from authorization")
+            metadata.update(source_width=source_size[0],
+                            source_height=source_size[1])
+        return source_bytes, metadata
+    with Image.open(io.BytesIO(source_bytes)) as source:
+        source_size = list(source.size)
+        resized = source.convert("RGB").resize(
+            (variant["width"], variant["height"]), Image.Resampling.LANCZOS)
+    buffer = io.BytesIO()
+    resized.save(buffer, "JPEG", quality=variant["jpeg_quality"],
+                 optimize=False, progressive=False)
+    upload = buffer.getvalue()
+    return upload, {
+        **variant, "source_width": source_size[0],
+        "source_height": source_size[1],
+        "upload_image_sha256": hashlib.sha256(upload).hexdigest(),
+    }
+
+
 def load_authorized_inputs(queue_path, manifest_path, receipt_path, image_root,
-                           authorization_path):
+                           authorization_path, image_variant_name="source"):
     queue_path, manifest_path = Path(queue_path), Path(manifest_path)
     receipt_path, authorization_path = Path(receipt_path), Path(authorization_path)
     image_root = Path(image_root)
@@ -50,11 +115,11 @@ def load_authorized_inputs(queue_path, manifest_path, receipt_path, image_root,
             or queue.get("images_copied") is not False
             or queue.get("image_paths_included") is not False):
         raise ValueError("expert queue identity or safety boundary differs")
-    if (authorization.get("schema_version") != AUTH_SCHEMA
+    auth_schema = authorization.get("schema_version")
+    if (auth_schema not in {AUTH_SCHEMA, AUTH_SCHEMA_V2}
             or authorization.get("queue_sha256") != queue_sha
             or authorization.get("authorized") is not True
             or authorization.get("authorized_sample_count") != len(samples)
-            or authorization.get("scope") != "mixed_hard_external_shadow"
             or not isinstance(authorization.get("authorized_by"), str)
             or not authorization["authorized_by"].strip()
             or authorization.get("candidate_only") is not True
@@ -62,6 +127,34 @@ def load_authorized_inputs(queue_path, manifest_path, receipt_path, image_root,
             or authorization.get("approved_for_training") is not False
             or authorization.get("test24_used") is not False):
         raise ValueError("matching explicit external-upload authorization is required")
+    if auth_schema == AUTH_SCHEMA:
+        if (authorization.get("scope") != "mixed_hard_external_shadow"
+                or image_variant_name != "source"):
+            raise ValueError("matching explicit external-upload authorization is required")
+        image_variant = {"name": "source", "mode": "source"}
+    else:
+        if authorization.get("scope") != "mixed_hard_external_resolution_ab_shadow":
+            raise ValueError("matching explicit external-upload authorization is required")
+        variants = authorization.get("authorized_image_variants")
+        if (not isinstance(variants, list) or not 2 <= len(variants) <= 4):
+            raise ValueError("matching explicit external-upload authorization is required")
+        try:
+            normalized_variants = [normalize_image_variant(item) for item in variants]
+        except ValueError as error:
+            raise ValueError(
+                "matching explicit external-upload authorization is required") from error
+        if len({item["name"] for item in normalized_variants}) != len(normalized_variants):
+            raise ValueError("matching explicit external-upload authorization is required")
+        if (authorization.get("authorized_upload_count")
+                != len(samples) * len(normalized_variants)
+                or authorization.get("max_external_calls")
+                != len(samples) * len(normalized_variants)):
+            raise ValueError("matching explicit external-upload authorization is required")
+        matching = [item for item in normalized_variants
+                    if item["name"] == image_variant_name]
+        if len(matching) != 1:
+            raise ValueError("matching explicit external-upload authorization is required")
+        image_variant = matching[0]
     rows = manifest.get("rows") if isinstance(manifest, dict) else None
     files = receipt.get("files") if isinstance(receipt, dict) else None
     if (manifest.get("summary", {}).get("test24_intersection_count") != 0
@@ -95,6 +188,10 @@ def load_authorized_inputs(queue_path, manifest_path, receipt_path, image_root,
         "manifest_sha256": sha256_file(manifest_path),
         "receipt_sha256": sha256_file(receipt_path),
         "authorized_by": authorization["authorized_by"].strip(),
+        "authorization_schema": auth_schema,
+        "image_variant": image_variant,
+        "authorized_upload_count": authorization.get(
+            "authorized_upload_count", len(samples)),
     }
 
 
@@ -115,7 +212,10 @@ def run_shadow(*, samples, bindings, output_path, config,
         if sample["sample_id"] in completed:
             records.append(completed[sample["sample_id"]])
             continue
-        image = sample["_image_path"].read_bytes()
+        source_image = sample["_image_path"].read_bytes()
+        image, upload_image = prepare_upload_image(
+            source_image, bindings.get("image_variant") or
+            {"name": "source", "mode": "source"})
         started = time.perf_counter()
         expert_metadata = {}
         try:
@@ -126,6 +226,7 @@ def run_shadow(*, samples, bindings, output_path, config,
             record = {
                 "sample_id": sample["sample_id"], "cohort": sample["cohort"],
                 "source_image_sha256": sample["source_image_sha256"],
+                "upload_image": upload_image,
                 "status": "passed",
                 "latency_ms": round((time.perf_counter() - started) * 1000, 3),
                 "expert_result": result,
@@ -193,6 +294,7 @@ def main(argv=None):
     parser.add_argument("--receipt", type=Path, required=True)
     parser.add_argument("--image-root", type=Path, required=True)
     parser.add_argument("--authorization", type=Path, required=True)
+    parser.add_argument("--image-variant", default="source")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--url", required=True)
     parser.add_argument("--model", required=True)
@@ -200,7 +302,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     samples, bindings = load_authorized_inputs(
         args.queue, args.manifest, args.receipt, args.image_root,
-        args.authorization)
+        args.authorization, args.image_variant)
     result = run_shadow(
         samples=samples, bindings=bindings, output_path=args.output,
         config={"llm_expert_enabled": True,

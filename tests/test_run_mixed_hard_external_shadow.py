@@ -1,11 +1,13 @@
 import hashlib
+import io
 import json
 
 import pytest
+from PIL import Image
 
 from tools.run_local_qwen_mixed_hard_suggestions import LABELS
 from tools.run_mixed_hard_external_shadow import (
-    load_authorized_inputs, run_shadow, sha256_file,
+    load_authorized_inputs, prepare_upload_image, run_shadow, sha256_file,
 )
 
 
@@ -55,6 +57,38 @@ def _fixture(tmp_path, authorize=True):
     return queue, manifest, receipt, root, auth
 
 
+def _v2_fixture(tmp_path):
+    queue, manifest, receipt, root, auth = _fixture(tmp_path)
+    buffer = io.BytesIO()
+    Image.new("RGB", (640, 512), (120, 130, 140)).save(buffer, "JPEG")
+    image_bytes = buffer.getvalue()
+    image_sha = hashlib.sha256(image_bytes).hexdigest()
+    (root / "raw" / "sample.jpg").write_bytes(image_bytes)
+    queue_payload = json.loads(queue.read_text(encoding="utf-8"))
+    queue_payload["samples"][0]["source_image_sha256"] = image_sha
+    queue.write_text(json.dumps(queue_payload), encoding="utf-8")
+    receipt_payload = json.loads(receipt.read_text(encoding="utf-8"))
+    receipt_payload["files"]["raw/sample.jpg"] = image_sha
+    receipt.write_text(json.dumps(receipt_payload), encoding="utf-8")
+    auth.write_text(json.dumps({
+        "schema_version": "labelagent.external-upload-authorization.v2",
+        "queue_sha256": sha256_file(queue), "authorized": True,
+        "authorized_sample_count": 1,
+        "scope": "mixed_hard_external_resolution_ab_shadow",
+        "authorized_by": "declared-user",
+        "authorized_image_variants": [
+            {"name": "source_640x512", "mode": "source",
+             "expected_width": 640, "expected_height": 512},
+            {"name": "resize_512x410", "mode": "resize_lanczos_jpeg",
+             "width": 512, "height": 410, "jpeg_quality": 90},
+        ],
+        "authorized_upload_count": 2, "max_external_calls": 2,
+        "candidate_only": True, "human_truth": False,
+        "approved_for_training": False, "test24_used": False,
+    }), encoding="utf-8")
+    return queue, manifest, receipt, root, auth
+
+
 def test_refuses_execution_without_matching_explicit_authorization(tmp_path):
     queue, manifest, receipt, root, auth = _fixture(tmp_path, authorize=False)
     unauthorized = auth.read_text(encoding="utf-8")
@@ -95,6 +129,48 @@ def test_authorized_fixture_runs_candidate_only_without_truth_write(tmp_path):
     assert result["rows"][0]["expert_metadata"]["external_vlm"]["usage"][
         "total_tokens"] == 25
     assert len(calls) == 1
+
+
+def test_v1_authorization_cannot_be_reused_for_resize(tmp_path):
+    queue, manifest, receipt, root, auth = _fixture(tmp_path)
+    with pytest.raises(ValueError, match="explicit external-upload authorization"):
+        load_authorized_inputs(
+            queue, manifest, receipt, root, auth, "resize_512x410")
+
+
+def test_v2_authorization_binds_and_records_resized_upload(tmp_path):
+    queue, manifest, receipt, root, auth = _v2_fixture(tmp_path)
+    samples, bindings = load_authorized_inputs(
+        queue, manifest, receipt, root, auth, "resize_512x410")
+    observed = {}
+    def respond(config, instruction, image, response_schema, metadata_out):
+        with Image.open(io.BytesIO(image)) as uploaded:
+            observed["size"] = uploaded.size
+        metadata_out.update({"external_vlm": {"usage": {
+            "prompt_tokens": 20, "completion_tokens": 5,
+            "total_tokens": 25}}})
+        return _expert_result()
+    result = run_shadow(
+        samples=samples, bindings=bindings,
+        output_path=tmp_path / "resized-result.json",
+        config={"llm_expert_model": "fixture"}, chat_fn=respond)
+    row = result["rows"][0]
+    assert observed["size"] == (512, 410)
+    assert row["upload_image"]["name"] == "resize_512x410"
+    assert row["upload_image"]["source_width"] == 640
+    assert row["upload_image"]["source_height"] == 512
+    assert len(row["upload_image"]["upload_image_sha256"]) == 64
+    assert result["image_variant"]["width"] == 512
+    assert result["authorized_upload_count"] == 2
+
+
+def test_source_variant_rejects_dimension_drift():
+    buffer = io.BytesIO()
+    Image.new("RGB", (320, 256), (1, 2, 3)).save(buffer, "JPEG")
+    with pytest.raises(ValueError, match="dimensions differ"):
+        prepare_upload_image(buffer.getvalue(), {
+            "name": "source_640x512", "mode": "source",
+            "expected_width": 640, "expected_height": 512})
 
 
 def test_rejects_image_hash_drift_before_model_call(tmp_path):

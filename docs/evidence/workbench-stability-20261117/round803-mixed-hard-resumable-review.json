@@ -1,0 +1,28 @@
+{
+  "round": 803,
+  "date": "2026-11-24",
+  "sample_count": 34,
+  "copied_image_count": 68,
+  "workspace_file_count": 71,
+  "workspace_bytes": 13665177,
+  "reviewer_html_sha256": "c8345e13985af30c63c090faeefa521c35bbd9e1f7dfdddb7a41d9a5a1c7bae4",
+  "receipt_sha256": "c36da631a18cebc72472d483b041d59b297c44a6f7b863d9a8264e37bfdb862a",
+  "javascript_syntax": "passed",
+  "features": [
+    "raw_review_side_by_side",
+    "fullscreen_zoom",
+    "next_incomplete",
+    "explicit_copy_previous",
+    "draft_export",
+    "hash_bound_draft_import"
+  ],
+  "tests": {
+    "review_and_benchmark": "18 passed",
+    "agent_and_expert_related": "308 passed, 87 subtests passed"
+  },
+  "test24_intersection_count": 0,
+  "uploaded": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false
+}

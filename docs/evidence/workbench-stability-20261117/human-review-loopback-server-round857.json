@@ -1,0 +1,37 @@
+{
+  "schema_version": "labelagent.human-review-loopback-server-evidence.v1",
+  "round": 857,
+  "date": "2026-11-25",
+  "real_workspace_check": {
+    "status": "ready",
+    "sample_count": 34,
+    "verified_file_count": 70,
+    "review_manifest_sha256": "4cd7eadb244cadad83208b4f2d9f304da457830b839070dd796edf77f53dad50",
+    "reviewer_sha256": "b59340c03839fb392c2bf94e20b175994ac0a027098bc26cc59c7da3f754b889"
+  },
+  "guards": {
+    "loopback_only": true,
+    "receipt_hashes_required": true,
+    "receipt_file_allowlist": true,
+    "directory_traversal_rejected": true,
+    "browser_external_connect_disabled": true,
+    "workspace_write_performed": false,
+    "model_call_performed": false
+  },
+  "tests": {
+    "targeted_passed": 5,
+    "review_related_passed": 14,
+    "full_passed": 2086,
+    "full_skipped": 1,
+    "full_subtests_passed": 294,
+    "failed": 0
+  },
+  "review_completed_rows": 0,
+  "review_remaining_rows": 34,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "test24_used": false,
+  "external_call_performed": false,
+  "production_deployed": false
+}

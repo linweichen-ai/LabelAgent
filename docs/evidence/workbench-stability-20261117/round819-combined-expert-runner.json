@@ -1,0 +1,21 @@
+{
+  "round": 819,
+  "date": "2026-11-24",
+  "maximum_authorized_external_attempts": 51,
+  "automatic_retry_enabled": false,
+  "failed_rows_retried_on_resume": false,
+  "both_stages_prevalidated_before_network": true,
+  "source_failure_stops_resized_stage": true,
+  "unauthorized_preflight_exit_code": 1,
+  "unauthorized_preflight_output_created": false,
+  "unauthorized_preflight_external_calls": 0,
+  "project_tests_passed": 1975,
+  "project_tests_skipped": 1,
+  "project_subtests_passed": 294,
+  "factory_data_uploaded": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "test24_used": false,
+  "production_deployed": false
+}

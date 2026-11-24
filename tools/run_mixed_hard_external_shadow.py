@@ -259,6 +259,8 @@ def load_authorized_inputs(queue_path, manifest_path, receipt_path, image_root,
 
 def run_shadow(*, samples, bindings, output_path, config,
                chat_fn=chat_external_expert):
+    if config.get("llm_expert_retry_count", 0) != 0:
+        raise ValueError("authorized shadow forbids automatic API retries")
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     completed = {}
@@ -267,8 +269,17 @@ def run_shadow(*, samples, bindings, output_path, config,
         if any(prior.get(key) != value for key, value in bindings.items()
                if key != "authorized_by"):
             raise ValueError("existing external results belong to a different authorization")
-        completed = {row["sample_id"]: row for row in prior.get("rows", [])
-                     if row.get("status") == "passed"}
+        prior_rows = prior.get("rows")
+        expected_ids = {sample["sample_id"] for sample in samples}
+        if (not isinstance(prior_rows, list)
+                or len({row.get("sample_id") for row in prior_rows})
+                != len(prior_rows)
+                or any(row.get("sample_id") not in expected_ids
+                       or row.get("status") not in {"passed", "failed"}
+                       or row.get("external_attempts") != 1
+                       for row in prior_rows)):
+            raise ValueError("existing external result attempt ledger differs")
+        completed = {row["sample_id"]: row for row in prior_rows}
     records = []
     for sample in samples:
         if sample["sample_id"] in completed:
@@ -293,6 +304,7 @@ def run_shadow(*, samples, bindings, output_path, config,
                 "latency_ms": round((time.perf_counter() - started) * 1000, 3),
                 "expert_result": result,
                 "expert_metadata": expert_metadata,
+                "external_attempts": 1,
                 "candidate_only": True, "human_truth": False,
                 "approved_for_training": False, "test24_used": False,
             }
@@ -302,6 +314,7 @@ def run_shadow(*, samples, bindings, output_path, config,
                 "source_image_sha256": sample["source_image_sha256"],
                 "status": "failed", "error_type": type(error).__name__,
                 "error": str(error)[:500],
+                "external_attempts": 1,
                 "candidate_only": True, "human_truth": False,
                 "approved_for_training": False, "test24_used": False,
             }
@@ -335,6 +348,9 @@ def _write_output(output_path, samples, records, bindings, config):
         "status": "completed" if len(passed) == len(samples) else "partial",
         "samples_total": len(samples), "samples_attempted": len(records),
         "samples_passed": len(passed), "samples_failed": len(failed),
+        "external_attempts": sum(
+            row.get("external_attempts", 0) for row in records),
+        "automatic_retry_enabled": False,
         "latency_median_ms": (round(statistics.median(latencies), 3)
                               if latencies else None),
         "external_usage": usage_summary,
@@ -373,7 +389,7 @@ def main(argv=None):
                 "llm_expert_url": args.url, "llm_expert_model": args.model,
                 "llm_expert_key_env": args.key_env,
                 "llm_expert_timeout_seconds": 120,
-                "llm_expert_retry_count": 1})
+                "llm_expert_retry_count": 0})
     print(json.dumps({key: result[key] for key in (
         "status", "samples_total", "samples_attempted", "samples_passed",
         "samples_failed", "latency_median_ms", "candidate_only",

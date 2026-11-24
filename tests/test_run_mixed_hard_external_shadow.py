@@ -190,7 +190,40 @@ def test_authorized_fixture_runs_candidate_only_without_truth_write(tmp_path):
     assert result["test24_used"] is False
     assert result["rows"][0]["expert_metadata"]["external_vlm"]["usage"][
         "total_tokens"] == 25
+    assert result["external_attempts"] == 1
+    assert result["automatic_retry_enabled"] is False
     assert len(calls) == 1
+
+
+def test_failed_authorized_attempt_is_not_retried_by_resume(tmp_path):
+    queue, manifest, receipt, root, auth = _fixture(tmp_path)
+    samples, bindings = load_authorized_inputs(queue, manifest, receipt, root, auth)
+    output = tmp_path / "failed-result.json"
+    calls = []
+    def fail(*args, **kwargs):
+        calls.append(1)
+        raise TimeoutError("fixture timeout")
+    first = run_shadow(samples=samples, bindings=bindings, output_path=output,
+                       config={"llm_expert_model": "fixture"}, chat_fn=fail)
+    second = run_shadow(samples=samples, bindings=bindings, output_path=output,
+                        config={"llm_expert_model": "fixture"}, chat_fn=fail)
+    assert first["status"] == "partial"
+    assert second["status"] == "partial"
+    assert first["external_attempts"] == 1
+    assert second["external_attempts"] == 1
+    assert len(calls) == 1
+    assert second["rows"][0]["status"] == "failed"
+
+
+def test_authorized_shadow_rejects_internal_retry_configuration(tmp_path):
+    queue, manifest, receipt, root, auth = _fixture(tmp_path)
+    samples, bindings = load_authorized_inputs(queue, manifest, receipt, root, auth)
+    with pytest.raises(ValueError, match="forbids automatic API retries"):
+        run_shadow(samples=samples, bindings=bindings,
+                   output_path=tmp_path / "result.json",
+                   config={"llm_expert_model": "fixture",
+                           "llm_expert_retry_count": 1},
+                   chat_fn=lambda *args, **kwargs: _expert_result())
 
 
 def test_v1_authorization_cannot_be_reused_for_resize(tmp_path):

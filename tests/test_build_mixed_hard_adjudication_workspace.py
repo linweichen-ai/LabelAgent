@@ -12,7 +12,7 @@ from PIL import Image
 
 from tools.build_mixed_hard_adjudication_workspace import (
     LABELS, SUBMISSION_SCHEMA, build_workspace, sha256, validate_packet,
-    validate_submission,
+    validate_submission, write_html,
 )
 from tools.audit_second_assistant_slope_triage import _sha256
 
@@ -94,6 +94,8 @@ class MixedHardAdjudicationWorkspaceTest(unittest.TestCase):
             self.assertIn("JSON.stringify(out,null,2)+'\\n'", page)
             self.assertIn("setImageMode('both')", page)
             self.assertIn("nextIncomplete", page)
+            self.assertIn(".actions{position:static", page)
+            self.assertNotIn(".actions{position:sticky", page)
             self.assertIn("addEventListener('change',save)", page)
             self.assertIn("key==='j'", page)
             self.assertIn("key==='k'", page)
@@ -118,6 +120,28 @@ class MixedHardAdjudicationWorkspaceTest(unittest.TestCase):
             self.assertIn('"raw_image": "raw/0.jpg"', decoded)
             self.assertTrue((output / "review" / "0.jpg").is_file())
             self.assertTrue((output / "raw" / "0.jpg").is_file())
+
+    def test_embedded_items_are_valid_json_and_escape_script_markup(self):
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / "reviewer.html"
+            dangerous = "</script><script>throw new Error('injected')</script>&"
+            manifest = {"rows": [{
+                "sample_id": "sample-safe", "cohort": "fixture",
+                "source_image_sha256": "1" * 64,
+                "review_image": "review/a.jpg", "raw_image": "raw/a.jpg",
+                "review_note": dangerous,
+            }]}
+            write_html(manifest, "2" * 64, destination)
+            page = destination.read_text(encoding="utf-8")
+            scripts = re.findall(
+                r"<script(?: [^>]*)?>(.*?)</script>", page, re.S)
+            self.assertEqual(len(scripts), 2)
+            items = json.loads(scripts[0])
+            self.assertEqual(items[0]["review_note"], dangerous)
+            self.assertNotIn("&quot;", scripts[0])
+            self.assertNotIn("</script><script>", scripts[0])
+            self.assertIn(r"\u003c/script\u003e", scripts[0])
+            self.assert_page_javascript_compiles(page)
 
     def test_optional_machine_hints_are_hash_bound_hidden_and_never_autofill(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -243,6 +267,8 @@ class MixedHardAdjudicationWorkspaceTest(unittest.TestCase):
             self.assertEqual(receipt["priority_triage_sha256"], _sha256(triage))
             self.assertIn("优先复核", page)
             self.assertIn("priority_review", page)
+            self.assertNotIn("优先复核 ·", page)
+            self.assertNotIn("高优先级", page)
             self.assertNotIn("candidate_decision:priority", page)
             self.assertNotIn("slope_presence:priority", page)
 

@@ -44,3 +44,5 @@ Round825 已经把 11 张模型分歧帧排到人工复核队列最前，但原�
 - 生成页面通过独立 JavaScript 编译检查；
 - 工厂图片外发、外部 API 调用、test24 使用、训练、正式部署均为 0；
 - Round825 v2 继续保留作可追溯历史，但新的人工复核应使用 Round826 入口。
+
+> 后续更新：真实浏览器验收发现并修复 JSON 实体初始化失败、机器置信度泄露和粘性操作栏遮挡。最终人工入口已升级为 Round830，详见 `docs/BLIND_ADJUDICATION_BROWSER_ACCEPTANCE_ROUND830_20261124.md`。

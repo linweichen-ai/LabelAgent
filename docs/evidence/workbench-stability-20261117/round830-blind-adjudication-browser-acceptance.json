@@ -1,0 +1,57 @@
+{
+  "schema_version": "labelagent.blind-adjudication-browser-acceptance-public.v1",
+  "round": 830,
+  "date": "2026-11-24",
+  "passed": true,
+  "workspace": {
+    "reviewed_sample_count": 34,
+    "priority_review_count": 11,
+    "assistant_hint_count": 34,
+    "assistant_hint_blind_gate": true,
+    "workspace_receipt_sha256": "3cf02d7bb20a04367e9e2e78e74d517f189e826e023f5402c1e8f1237cb43dc4",
+    "reviewer_html_sha256": "c8e9e71f4b1e974308c83194457e1935a1bd24df6eb4a13059d3c556e9b21459"
+  },
+  "browser": {
+    "blank_answers_initially": true,
+    "priority_confidence_hidden": true,
+    "form_control_overlap_count": 0,
+    "hint_blocked_before_complete_review": true,
+    "hint_available_after_complete_review": true,
+    "hint_changed_answers": false,
+    "draft_persisted_after_refresh": true,
+    "hint_closed_after_refresh": true,
+    "partial_draft_exported": true,
+    "official_export_blocked_while_incomplete": true,
+    "external_requests": 0,
+    "page_errors": [],
+    "synthetic_answers_only": true,
+    "elapsed_ms": 2915.266,
+    "acceptance_receipt_sha256": "7c6811d5d5c282e8052f3c450c6989b7fae3d771e4e8b6c07e6331aedf6a8f37",
+    "private_screenshot_sha256": "e76aa7548a2748963e499d3587d1fa2af97cdd2efa6164bab87dc5e198f97393",
+    "private_screenshot_published": false
+  },
+  "known_failures_retained": [
+    "entity-escaped JSON prevented browser initialization",
+    "machine confidence was visible before neutralization",
+    "sticky action bar overlapped two form controls"
+  ],
+  "regression": {
+    "python_passed": 2025,
+    "python_skipped": 1,
+    "python_subtests_passed": 294,
+    "web_passed": 201,
+    "web_failed": 0
+  },
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "training_authorized": false,
+    "automatic_approval": false,
+    "test24_used": false,
+    "external_api_calls": 0,
+    "factory_data_uploaded": false,
+    "training_started": false,
+    "production_deployed": false
+  }
+}

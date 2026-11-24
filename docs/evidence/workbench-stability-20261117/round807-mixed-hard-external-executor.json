@@ -1,0 +1,19 @@
+{
+  "schema_version": "labelagent.mixed-hard-external-executor-gate.v1",
+  "date": "2026-11-24",
+  "queue_sample_count": 17,
+  "authorization_present": false,
+  "missing_authorization_exit_code": 1,
+  "result_file_created": false,
+  "network_call_performed": false,
+  "tests_passed": 3,
+  "authorization_required": true,
+  "authorization_queue_hash_bound": true,
+  "image_hash_bound": true,
+  "resumable": true,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "test24_used": false,
+  "deployed": false
+}

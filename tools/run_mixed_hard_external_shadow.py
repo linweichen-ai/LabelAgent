@@ -1,0 +1,202 @@
+"""Run an authorized, resumable external-expert shadow on a frozen queue."""
+import argparse
+import hashlib
+import json
+import statistics
+import sys
+import time
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from source.agent.workflow import chat_external_expert
+from tools.run_local_qwen_mixed_hard_suggestions import (
+    INSTRUCTION, RESPONSE_SCHEMA, _validate_machine_result,
+)
+
+
+QUEUE_SCHEMA = "labelagent.mixed-hard-expert-shadow-queue.v1"
+AUTH_SCHEMA = "labelagent.external-upload-authorization.v1"
+RESULT_SCHEMA = "labelagent.mixed-hard-external-shadow.v1"
+
+
+def sha256_file(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def load_authorized_inputs(queue_path, manifest_path, receipt_path, image_root,
+                           authorization_path):
+    queue_path, manifest_path = Path(queue_path), Path(manifest_path)
+    receipt_path, authorization_path = Path(receipt_path), Path(authorization_path)
+    image_root = Path(image_root)
+    if not authorization_path.is_file():
+        raise ValueError("matching explicit external-upload authorization is required")
+    queue = json.loads(queue_path.read_text(encoding="utf-8"))
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    authorization = json.loads(authorization_path.read_text(encoding="utf-8"))
+    queue_sha = sha256_file(queue_path)
+    samples = queue.get("samples") if isinstance(queue, dict) else None
+    if (queue.get("schema_version") != QUEUE_SCHEMA
+            or not isinstance(samples, list) or not samples
+            or queue.get("sample_count") != len(samples)
+            or queue.get("candidate_only") is not True
+            or queue.get("human_truth") is not False
+            or queue.get("approved_for_training") is not False
+            or queue.get("test24_used") is not False
+            or queue.get("images_copied") is not False
+            or queue.get("image_paths_included") is not False):
+        raise ValueError("expert queue identity or safety boundary differs")
+    if (authorization.get("schema_version") != AUTH_SCHEMA
+            or authorization.get("queue_sha256") != queue_sha
+            or authorization.get("authorized") is not True
+            or authorization.get("authorized_sample_count") != len(samples)
+            or authorization.get("scope") != "mixed_hard_external_shadow"
+            or not isinstance(authorization.get("authorized_by"), str)
+            or not authorization["authorized_by"].strip()
+            or authorization.get("candidate_only") is not True
+            or authorization.get("human_truth") is not False
+            or authorization.get("approved_for_training") is not False
+            or authorization.get("test24_used") is not False):
+        raise ValueError("matching explicit external-upload authorization is required")
+    rows = manifest.get("rows") if isinstance(manifest, dict) else None
+    files = receipt.get("files") if isinstance(receipt, dict) else None
+    if (manifest.get("summary", {}).get("test24_intersection_count") != 0
+            or not isinstance(rows, list) or not isinstance(files, dict)
+            or receipt.get("candidate_only") is not True
+            or receipt.get("human_truth") is not False
+            or receipt.get("approved_for_training") is not False):
+        raise ValueError("review workspace safety boundary differs")
+    manifest_rows = {row.get("sample_id"): row for row in rows}
+    if len(manifest_rows) != len(rows):
+        raise ValueError("review manifest contains duplicate samples")
+    loaded, seen = [], set()
+    for sample in samples:
+        sample_id = sample.get("sample_id")
+        if sample_id in seen or sample_id not in manifest_rows:
+            raise ValueError("queue sample is duplicated or missing from the manifest")
+        seen.add(sample_id)
+        manifest_row = manifest_rows[sample_id]
+        relative = str(manifest_row.get("raw_image") or "")
+        if not relative.startswith("raw/") or ".." in Path(relative).parts:
+            raise ValueError("unsafe review image path")
+        path = image_root / Path(relative)
+        actual = sha256_file(path) if path.is_file() else None
+        if (actual != sample.get("source_image_sha256")
+                or files.get(relative) != actual):
+            raise ValueError(f"authorized image hash mismatch: {sample_id}")
+        loaded.append({**sample, "_image_path": path})
+    return loaded, {
+        "queue_sha256": queue_sha,
+        "authorization_sha256": sha256_file(authorization_path),
+        "manifest_sha256": sha256_file(manifest_path),
+        "receipt_sha256": sha256_file(receipt_path),
+        "authorized_by": authorization["authorized_by"].strip(),
+    }
+
+
+def run_shadow(*, samples, bindings, output_path, config,
+               chat_fn=chat_external_expert):
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    completed = {}
+    if output_path.is_file():
+        prior = json.loads(output_path.read_text(encoding="utf-8"))
+        if any(prior.get(key) != value for key, value in bindings.items()
+               if key != "authorized_by"):
+            raise ValueError("existing external results belong to a different authorization")
+        completed = {row["sample_id"]: row for row in prior.get("rows", [])
+                     if row.get("status") == "passed"}
+    records = []
+    for sample in samples:
+        if sample["sample_id"] in completed:
+            records.append(completed[sample["sample_id"]])
+            continue
+        image = sample["_image_path"].read_bytes()
+        started = time.perf_counter()
+        try:
+            result = chat_fn(config, INSTRUCTION, image,
+                             response_schema=RESPONSE_SCHEMA)
+            _validate_machine_result(result)
+            record = {
+                "sample_id": sample["sample_id"], "cohort": sample["cohort"],
+                "source_image_sha256": sample["source_image_sha256"],
+                "status": "passed",
+                "latency_ms": round((time.perf_counter() - started) * 1000, 3),
+                "expert_result": result,
+                "candidate_only": True, "human_truth": False,
+                "approved_for_training": False, "test24_used": False,
+            }
+        except Exception as error:
+            record = {
+                "sample_id": sample["sample_id"], "cohort": sample["cohort"],
+                "source_image_sha256": sample["source_image_sha256"],
+                "status": "failed", "error_type": type(error).__name__,
+                "error": str(error)[:500],
+                "candidate_only": True, "human_truth": False,
+                "approved_for_training": False, "test24_used": False,
+            }
+        records.append(record)
+        _write_output(output_path, samples, records, bindings, config)
+    return _write_output(output_path, samples, records, bindings, config)
+
+
+def _write_output(output_path, samples, records, bindings, config):
+    passed = [row for row in records if row.get("status") == "passed"]
+    failed = [row for row in records if row.get("status") == "failed"]
+    latencies = [row["latency_ms"] for row in passed]
+    result = {
+        "schema_version": RESULT_SCHEMA, **bindings,
+        "model": config.get("llm_expert_model"),
+        "status": "completed" if len(passed) == len(samples) else "partial",
+        "samples_total": len(samples), "samples_attempted": len(records),
+        "samples_passed": len(passed), "samples_failed": len(failed),
+        "latency_median_ms": (round(statistics.median(latencies), 3)
+                              if latencies else None),
+        "rows": records, "candidate_only": True, "human_truth": False,
+        "approved_for_training": False, "automatic_truth_write": False,
+        "test24_used": False,
+    }
+    temporary = output_path.with_suffix(output_path.suffix + ".tmp")
+    temporary.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n",
+                         encoding="utf-8")
+    temporary.replace(output_path)
+    return result
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--queue", type=Path, required=True)
+    parser.add_argument("--manifest", type=Path, required=True)
+    parser.add_argument("--receipt", type=Path, required=True)
+    parser.add_argument("--image-root", type=Path, required=True)
+    parser.add_argument("--authorization", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--url", required=True)
+    parser.add_argument("--model", required=True)
+    parser.add_argument("--key-env", required=True)
+    args = parser.parse_args(argv)
+    samples, bindings = load_authorized_inputs(
+        args.queue, args.manifest, args.receipt, args.image_root,
+        args.authorization)
+    result = run_shadow(
+        samples=samples, bindings=bindings, output_path=args.output,
+        config={"llm_expert_enabled": True,
+                "llm_expert_provider": "openai_chat",
+                "llm_expert_url": args.url, "llm_expert_model": args.model,
+                "llm_expert_key_env": args.key_env,
+                "llm_expert_timeout_seconds": 120,
+                "llm_expert_retry_count": 1})
+    print(json.dumps({key: result[key] for key in (
+        "status", "samples_total", "samples_attempted", "samples_passed",
+        "samples_failed", "latency_median_ms", "candidate_only",
+        "human_truth", "approved_for_training", "test24_used")},
+        ensure_ascii=False, indent=2))
+    return 0 if result["status"] == "completed" else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,35 @@
+{
+  "schema_version": "labelagent.external-preflight-only-evidence.v1",
+  "round": 856,
+  "date": "2026-11-25",
+  "preflight_only": {
+    "validates_authorization": true,
+    "validates_data_hashes": true,
+    "validates_safety_boundaries": true,
+    "validates_expert_target": true,
+    "validates_credential_locally": true,
+    "validates_ledger_conflicts": true,
+    "creates_ledger_claim": false,
+    "performs_external_call": false
+  },
+  "real_unauthorized_template_check": {
+    "status": "refused",
+    "exit_code": 2,
+    "error_type": "ValueError",
+    "ledger_created": false,
+    "output_created": false,
+    "external_call_performed": false,
+    "factory_image_uploaded": false
+  },
+  "tests": {
+    "targeted_passed": 42,
+    "full_passed": 2081,
+    "full_skipped": 1,
+    "full_subtests_passed": 294
+  },
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "test24_used": false,
+  "production_deployed": false
+}

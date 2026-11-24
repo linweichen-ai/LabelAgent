@@ -13,7 +13,7 @@ from tools.run_mixed_hard_external_shadow import (
     load_authorized_inputs, normalize_expert_target, run_shadow, sha256_file,
 )
 from tools.external_authorization_ledger import (
-    AuthorizationLedger, default_ledger_dir,
+    AuthorizationLedger, default_ledger_dir, inspect_ledger_session,
 )
 from source.agent.workflow import external_expert_config
 
@@ -140,20 +140,11 @@ def canary_guard(result, *, expected_attempts, max_median_latency_ms,
     }
 
 
-def run_combined(*, all_queue, hybrid_queue, manifest, receipt, image_root,
-                 authorization, output_dir, config,
-                 ledger_dir=None,
-                 source_canary_attempts=8,
-                 canary_max_median_latency_ms=60000,
-                 canary_max_average_tokens=30000,
-                 load_fn=load_authorized_inputs, run_fn=run_shadow,
-                 credential_preflight_fn=validate_execution_credential):
-    output_dir = Path(output_dir)
-    source_path = output_dir / "all34-source-results.json"
-    resized_path = output_dir / "hybrid17-resized-results.json"
-    run_receipt_path = output_dir / "combined-run-receipt.json"
-
-    # Validate both complete upload sets before the first network request.
+def preflight_combined(*, all_queue, hybrid_queue, manifest, receipt,
+                       image_root, authorization, output_dir, config,
+                       ledger_dir=None, load_fn=load_authorized_inputs,
+                       credential_preflight_fn=validate_execution_credential):
+    """Validate the complete combined run without claims or network activity."""
     source_samples, source_bindings = load_fn(
         all_queue, manifest, receipt, image_root, authorization,
         authorization_run_name="all34_source_640x512")
@@ -187,6 +178,62 @@ def run_combined(*, all_queue, hybrid_queue, manifest, receipt, image_root,
             or credential_preflight.get("credential_available") is not True
             or credential_preflight.get("expert_target") != configured_target):
         raise ValueError("external expert credential preflight differs")
+    authorization_sha = source_bindings["authorization_sha256"]
+    ledger_status = inspect_ledger_session(
+        ledger_dir or default_ledger_dir(),
+        authorization_sha256=authorization_sha, output_dir=output_dir)
+    return {
+        "source_samples": source_samples,
+        "source_bindings": source_bindings,
+        "resized_samples": resized_samples,
+        "resized_bindings": resized_bindings,
+        "credential_preflight": credential_preflight,
+        "ledger_status": ledger_status,
+        "summary": {
+            "status": "ready",
+            "authorization_schema": source_bindings["authorization_schema"],
+            "authorization_sha256": authorization_sha,
+            "source_sample_count": len(source_samples),
+            "resized_sample_count": len(resized_samples),
+            "maximum_external_calls": 51,
+            "expert_target": configured_target,
+            "credential_available": True,
+            "ledger_state": ledger_status["state"],
+            "existing_claimed_attempts": ledger_status["claimed_attempts"],
+            "ledger_claim_created": False,
+            "external_call_performed": False,
+            "candidate_only": True,
+            "human_truth": False,
+            "approved_for_training": False,
+            "test24_used": False,
+            "production_deployed": False,
+        },
+    }
+
+
+def run_combined(*, all_queue, hybrid_queue, manifest, receipt, image_root,
+                 authorization, output_dir, config,
+                 ledger_dir=None,
+                 source_canary_attempts=8,
+                 canary_max_median_latency_ms=60000,
+                 canary_max_average_tokens=30000,
+                 load_fn=load_authorized_inputs, run_fn=run_shadow,
+                 credential_preflight_fn=validate_execution_credential):
+    output_dir = Path(output_dir)
+    source_path = output_dir / "all34-source-results.json"
+    resized_path = output_dir / "hybrid17-resized-results.json"
+    run_receipt_path = output_dir / "combined-run-receipt.json"
+    preflight = preflight_combined(
+        all_queue=all_queue, hybrid_queue=hybrid_queue,
+        manifest=manifest, receipt=receipt, image_root=image_root,
+        authorization=authorization, output_dir=output_dir, config=config,
+        ledger_dir=ledger_dir, load_fn=load_fn,
+        credential_preflight_fn=credential_preflight_fn)
+    source_samples = preflight["source_samples"]
+    source_bindings = preflight["source_bindings"]
+    resized_samples = preflight["resized_samples"]
+    resized_bindings = preflight["resized_bindings"]
+    credential_preflight = preflight["credential_preflight"]
     authorization_sha = source_bindings["authorization_sha256"]
     ledger = AuthorizationLedger(
         ledger_dir or default_ledger_dir(),
@@ -264,6 +311,7 @@ def main(argv=None):
     parser.add_argument("--authorization", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--ledger-dir", type=Path)
+    parser.add_argument("--preflight-only", action="store_true")
     parser.add_argument("--url", required=True)
     parser.add_argument("--model", required=True)
     parser.add_argument("--key-env", required=True)
@@ -273,22 +321,44 @@ def main(argv=None):
     parser.add_argument("--canary-max-average-tokens", type=float,
                         default=30000)
     args = parser.parse_args(argv)
-    result = run_combined(
+    config = {"llm_expert_enabled": True,
+              "llm_expert_provider": "openai_chat",
+              "llm_expert_url": args.url,
+              "llm_expert_model": args.model,
+              "llm_expert_key_env": args.key_env,
+              "llm_expert_timeout_seconds": 120,
+              "llm_expert_retry_count": 0}
+    common = dict(
         all_queue=args.all_queue, hybrid_queue=args.hybrid_queue,
         manifest=args.manifest, receipt=args.receipt,
         image_root=args.image_root, authorization=args.authorization,
         output_dir=args.output_dir,
         ledger_dir=args.ledger_dir,
-        source_canary_attempts=args.source_canary_attempts,
-        canary_max_median_latency_ms=args.canary_max_median_latency_ms,
-        canary_max_average_tokens=args.canary_max_average_tokens,
-        config={"llm_expert_enabled": True,
-                "llm_expert_provider": "openai_chat",
-                "llm_expert_url": args.url,
-                "llm_expert_model": args.model,
-                "llm_expert_key_env": args.key_env,
-                "llm_expert_timeout_seconds": 120,
-                "llm_expert_retry_count": 0})
+        config=config)
+    try:
+        if args.preflight_only:
+            result = preflight_combined(**common)["summary"]
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+            return 0
+        result = run_combined(
+            **common,
+            source_canary_attempts=args.source_canary_attempts,
+            canary_max_median_latency_ms=args.canary_max_median_latency_ms,
+            canary_max_average_tokens=args.canary_max_average_tokens)
+    except (ValueError, OSError, json.JSONDecodeError) as error:
+        print(json.dumps({
+            "status": "refused",
+            "error_type": type(error).__name__,
+            "error": str(error)[:500],
+            "external_call_performed": False,
+            "ledger_claim_created": False,
+            "candidate_only": True,
+            "human_truth": False,
+            "approved_for_training": False,
+            "test24_used": False,
+            "production_deployed": False,
+        }, ensure_ascii=False, indent=2))
+        return 2
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if result["status"] == "completed" else 1
 

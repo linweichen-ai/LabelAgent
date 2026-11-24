@@ -6,8 +6,9 @@ from pathlib import Path
 
 import pytest
 
+import tools.run_combined_expert_shadow as combined_module
 from tools.run_combined_expert_shadow import (
-    canary_guard, run_combined, stratified_canary_order,
+    canary_guard, preflight_combined, run_combined, stratified_canary_order,
     validate_execution_credential,
 )
 
@@ -96,6 +97,31 @@ def test_runs_two_prevalidated_stages_with_exact_51_attempts(tmp_path):
     assert result["authorization_ledger"]["claimed_attempts"] == 51
     assert len(result["authorization_ledger"]["session_sha256"]) == 64
     assert result["credential_preflight"]["credential_available"] is True
+
+
+def test_preflight_only_validates_everything_without_claim_or_network(tmp_path):
+    args = arguments(tmp_path)
+    result = preflight_combined(**args, load_fn=loader)
+    assert result["summary"] == {
+        "status": "ready",
+        "authorization_schema": "labelagent.external-upload-authorization.v4",
+        "authorization_sha256": "a" * 64,
+        "source_sample_count": 34,
+        "resized_sample_count": 17,
+        "maximum_external_calls": 51,
+        "expert_target": TARGET,
+        "credential_available": True,
+        "ledger_state": "unclaimed",
+        "existing_claimed_attempts": 0,
+        "ledger_claim_created": False,
+        "external_call_performed": False,
+        "candidate_only": True,
+        "human_truth": False,
+        "approved_for_training": False,
+        "test24_used": False,
+        "production_deployed": False,
+    }
+    assert not (tmp_path / "ledger").exists()
 
 
 def test_stops_before_resized_stage_when_source_is_incomplete(tmp_path):
@@ -227,6 +253,29 @@ def test_cli_entrypoint_loads_from_project_root():
          "--help"], capture_output=True, text=True, check=False)
     assert result.returncode == 0
     assert "--all-queue" in result.stdout
+    assert "--preflight-only" in result.stdout
+
+
+def test_cli_preflight_refusal_is_structured_and_secret_free(
+        monkeypatch, capsys):
+    monkeypatch.setattr(
+        combined_module, "preflight_combined",
+        lambda **kwargs: (_ for _ in ()).throw(
+            ValueError("matching explicit external-upload authorization is required")))
+    result = combined_module.main([
+        "--all-queue", "all", "--hybrid-queue", "hybrid",
+        "--manifest", "manifest", "--receipt", "receipt",
+        "--image-root", "images", "--authorization", "authorization",
+        "--output-dir", "output", "--url", TARGET["url"],
+        "--model", TARGET["model"], "--key-env", "SECRET_ENV_NAME",
+        "--preflight-only",
+    ])
+    output = json.loads(capsys.readouterr().out)
+    assert result == 2
+    assert output["status"] == "refused"
+    assert output["external_call_performed"] is False
+    assert output["ledger_claim_created"] is False
+    assert "SECRET_ENV_NAME" not in json.dumps(output)
 
 
 def test_canary_order_covers_each_cohort_before_filling():

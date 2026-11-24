@@ -3,7 +3,9 @@ import threading
 
 import pytest
 
-from tools.external_authorization_ledger import AuthorizationLedger
+from tools.external_authorization_ledger import (
+    AuthorizationLedger, inspect_ledger_session,
+)
 
 
 AUTH = "a" * 64
@@ -13,11 +15,18 @@ UPLOAD = {"upload_image_sha256": "c" * 64}
 
 def test_same_session_can_resume_but_different_output_is_rejected(tmp_path):
     root = tmp_path / "ledger"
+    inspection = inspect_ledger_session(
+        root, authorization_sha256=AUTH, output_dir=tmp_path / "output")
+    assert inspection["state"] == "unclaimed"
+    assert not root.exists()
     first = AuthorizationLedger(root, authorization_sha256=AUTH,
                                 output_dir=tmp_path / "output")
     resumed = AuthorizationLedger(root, authorization_sha256=AUTH,
                                   output_dir=tmp_path / "output")
     assert first.session_path == resumed.session_path
+    assert inspect_ledger_session(
+        root, authorization_sha256=AUTH,
+        output_dir=tmp_path / "output")["state"] == "resume"
     with pytest.raises(ValueError, match="another output directory"):
         AuthorizationLedger(root, authorization_sha256=AUTH,
                             output_dir=tmp_path / "different")

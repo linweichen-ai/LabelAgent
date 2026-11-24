@@ -41,16 +41,46 @@ def _read_json(path):
         raise ValueError("external authorization ledger is unreadable") from error
 
 
+def inspect_ledger_session(root, *, authorization_sha256, output_dir):
+    """Validate an existing session binding without creating files or folders."""
+    if (not isinstance(authorization_sha256, str)
+            or len(authorization_sha256) != 64
+            or any(character not in "0123456789abcdef"
+                   for character in authorization_sha256.lower())):
+        raise ValueError("authorization ledger hash is invalid")
+    authorization_sha256 = authorization_sha256.lower()
+    output_dir = str(Path(output_dir).resolve())
+    directory = Path(root).expanduser().resolve() / authorization_sha256
+    session_path = directory / "session.json"
+    expected = {
+        "schema_version": SCHEMA_VERSION,
+        "authorization_sha256": authorization_sha256,
+        "output_dir": output_dir,
+    }
+    if not session_path.is_file():
+        return {"state": "unclaimed", "authorization_sha256": authorization_sha256,
+                "claimed_attempts": 0}
+    if _read_json(session_path) != expected:
+        raise ValueError(
+            "external authorization was already claimed by another output directory")
+    attempts = directory / "attempts"
+    return {
+        "state": "resume",
+        "authorization_sha256": authorization_sha256,
+        "claimed_attempts": (len(list(attempts.glob("*.json")))
+                             if attempts.is_dir() else 0),
+        "session_sha256": hashlib.sha256(session_path.read_bytes()).hexdigest(),
+    }
+
+
 class AuthorizationLedger:
     """Bind one authorization hash to one output and claim every paid call once."""
 
     def __init__(self, root, *, authorization_sha256, output_dir):
-        if (not isinstance(authorization_sha256, str)
-                or len(authorization_sha256) != 64
-                or any(character not in "0123456789abcdef"
-                       for character in authorization_sha256.lower())):
-            raise ValueError("authorization ledger hash is invalid")
-        self.authorization_sha256 = authorization_sha256.lower()
+        inspection = inspect_ledger_session(
+            root, authorization_sha256=authorization_sha256,
+            output_dir=output_dir)
+        self.authorization_sha256 = inspection["authorization_sha256"]
         self.output_dir = str(Path(output_dir).resolve())
         self.directory = Path(root).expanduser().resolve() / self.authorization_sha256
         self.session_path = self.directory / "session.json"
@@ -59,12 +89,13 @@ class AuthorizationLedger:
             "authorization_sha256": self.authorization_sha256,
             "output_dir": self.output_dir,
         }
-        try:
-            _exclusive_json(self.session_path, session)
-        except FileExistsError:
-            if _read_json(self.session_path) != session:
-                raise ValueError(
-                    "external authorization was already claimed by another output directory")
+        if inspection["state"] == "unclaimed":
+            try:
+                _exclusive_json(self.session_path, session)
+            except FileExistsError:
+                if _read_json(self.session_path) != session:
+                    raise ValueError(
+                        "external authorization was already claimed by another output directory")
 
     def claim_attempt(self, run_name, sample, upload_image):
         sample_id = sample.get("sample_id") if isinstance(sample, dict) else None

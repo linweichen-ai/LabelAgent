@@ -15,9 +15,21 @@ from tools.run_mixed_hard_external_shadow import (
 from tools.external_authorization_ledger import (
     AuthorizationLedger, default_ledger_dir,
 )
+from source.agent.workflow import external_expert_config
 
 
 SCHEMA_VERSION = "labelagent.combined-expert-shadow-run.v1"
+
+
+def validate_execution_credential(config):
+    """Validate the configured credential locally without returning its value."""
+    prepared = external_expert_config(config)
+    target = normalize_expert_target({
+        "provider": prepared.get("llm_expert_provider"),
+        "url": prepared.get("llm_url"),
+        "model": prepared.get("llm_model"),
+    })
+    return {"credential_available": True, "expert_target": target}
 
 
 def _attempts(path):
@@ -33,7 +45,8 @@ def _attempts(path):
 
 def _write_receipt(path, *, status, source_result, resized_result,
                    source_path, resized_path, prior_attempts,
-                   canary_guard=None, authorization_ledger=None):
+                   canary_guard=None, authorization_ledger=None,
+                   credential_preflight=None):
     source_attempts = source_result.get("external_attempts", 0)
     resized_attempts = (resized_result or {}).get("external_attempts", 0)
     total = source_attempts + resized_attempts
@@ -55,6 +68,7 @@ def _write_receipt(path, *, status, source_result, resized_result,
         "automatic_retry_enabled": False,
         "source_canary_guard": canary_guard,
         "authorization_ledger": authorization_ledger,
+        "credential_preflight": credential_preflight,
         "candidate_only": True,
         "human_truth": False,
         "approved_for_training": False,
@@ -132,7 +146,8 @@ def run_combined(*, all_queue, hybrid_queue, manifest, receipt, image_root,
                  source_canary_attempts=8,
                  canary_max_median_latency_ms=60000,
                  canary_max_average_tokens=30000,
-                 load_fn=load_authorized_inputs, run_fn=run_shadow):
+                 load_fn=load_authorized_inputs, run_fn=run_shadow,
+                 credential_preflight_fn=validate_execution_credential):
     output_dir = Path(output_dir)
     source_path = output_dir / "all34-source-results.json"
     resized_path = output_dir / "hybrid17-resized-results.json"
@@ -167,6 +182,11 @@ def run_combined(*, all_queue, hybrid_queue, manifest, receipt, image_root,
         raise ValueError("combined authorization target differs")
     if config.get("llm_expert_retry_count", 0) != 0:
         raise ValueError("combined shadow forbids automatic API retries")
+    credential_preflight = credential_preflight_fn(config)
+    if (not isinstance(credential_preflight, dict)
+            or credential_preflight.get("credential_available") is not True
+            or credential_preflight.get("expert_target") != configured_target):
+        raise ValueError("external expert credential preflight differs")
     authorization_sha = source_bindings["authorization_sha256"]
     ledger = AuthorizationLedger(
         ledger_dir or default_ledger_dir(),
@@ -193,7 +213,8 @@ def run_combined(*, all_queue, hybrid_queue, manifest, receipt, image_root,
             prior_attempts=prior_attempts,
             canary_guard={"passed": False,
                           "reasons": ["canary_has_failed_request"]},
-            authorization_ledger=ledger.snapshot())
+            authorization_ledger=ledger.snapshot(),
+            credential_preflight=credential_preflight)
     expected_canary = (source_canary_attempts if prior_source_attempts == 0
                        else prior_source_attempts)
     guard = canary_guard(
@@ -206,7 +227,8 @@ def run_combined(*, all_queue, hybrid_queue, manifest, receipt, image_root,
             source_result=source, resized_result=None,
             source_path=source_path, resized_path=resized_path,
             prior_attempts=prior_attempts, canary_guard=guard,
-            authorization_ledger=ledger.snapshot())
+            authorization_ledger=ledger.snapshot(),
+            credential_preflight=credential_preflight)
     if source.get("status") == "in_progress":
         source = run_fn(samples=source_samples, bindings=source_bindings,
                         output_path=source_path, config=config,
@@ -217,7 +239,8 @@ def run_combined(*, all_queue, hybrid_queue, manifest, receipt, image_root,
             source_result=source, resized_result=None,
             source_path=source_path, resized_path=resized_path,
             prior_attempts=prior_attempts, canary_guard=guard,
-            authorization_ledger=ledger.snapshot())
+            authorization_ledger=ledger.snapshot(),
+            credential_preflight=credential_preflight)
     resized = run_fn(samples=resized_samples, bindings=resized_bindings,
                      output_path=resized_path, config=config,
                      claim_attempt_fn=resized_claim)
@@ -227,7 +250,8 @@ def run_combined(*, all_queue, hybrid_queue, manifest, receipt, image_root,
         run_receipt_path, status=status, source_result=source,
         resized_result=resized, source_path=source_path,
         resized_path=resized_path, prior_attempts=prior_attempts,
-        canary_guard=guard, authorization_ledger=ledger.snapshot())
+        canary_guard=guard, authorization_ledger=ledger.snapshot(),
+        credential_preflight=credential_preflight)
 
 
 def main(argv=None):

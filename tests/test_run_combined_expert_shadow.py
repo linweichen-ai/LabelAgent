@@ -8,6 +8,7 @@ import pytest
 
 from tools.run_combined_expert_shadow import (
     canary_guard, run_combined, stratified_canary_order,
+    validate_execution_credential,
 )
 
 
@@ -72,6 +73,8 @@ def arguments(tmp_path):
     return dict(all_queue="all", hybrid_queue="hybrid", manifest="manifest",
                 receipt="receipt", image_root="images", authorization="auth",
                 output_dir=tmp_path, ledger_dir=tmp_path / "ledger",
+                credential_preflight_fn=lambda config: {
+                    "credential_available": True, "expert_target": TARGET},
                 config={"llm_expert_retry_count": 0,
                     "llm_expert_provider": TARGET["provider"],
                     "llm_expert_url": TARGET["url"],
@@ -92,6 +95,7 @@ def test_runs_two_prevalidated_stages_with_exact_51_attempts(tmp_path):
     assert result["human_truth"] is False
     assert result["authorization_ledger"]["claimed_attempts"] == 51
     assert len(result["authorization_ledger"]["session_sha256"]) == 64
+    assert result["credential_preflight"]["credential_available"] is True
 
 
 def test_stops_before_resized_stage_when_source_is_incomplete(tmp_path):
@@ -153,6 +157,37 @@ def test_rejects_model_or_endpoint_drift_before_network(tmp_path):
             run_combined(**args, load_fn=loader,
                          run_fn=runner(["in_progress"], calls))
         assert calls == []
+
+
+def test_missing_credential_is_rejected_before_ledger_or_network(
+        tmp_path, monkeypatch):
+    monkeypatch.delenv("LABELAGENT_MISSING_TEST_KEY", raising=False)
+    calls = []
+    args = arguments(tmp_path)
+    args.pop("credential_preflight_fn")
+    args["config"].update({
+        "llm_expert_enabled": True,
+        "llm_expert_key_env": "LABELAGENT_MISSING_TEST_KEY",
+    })
+    with pytest.raises(ValueError, match="密钥环境变量未配置"):
+        run_combined(**args, load_fn=loader,
+                     run_fn=runner(["in_progress"], calls))
+    assert calls == []
+    assert not (tmp_path / "ledger").exists()
+
+
+def test_credential_preflight_returns_only_safe_target_metadata(monkeypatch):
+    monkeypatch.setenv("LABELAGENT_TEST_EXPERT_KEY", "fixture-secret-value")
+    result = validate_execution_credential({
+        "llm_expert_enabled": True,
+        "llm_expert_provider": TARGET["provider"],
+        "llm_expert_url": TARGET["url"],
+        "llm_expert_model": TARGET["model"],
+        "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
+        "llm_expert_retry_count": 0,
+    })
+    assert result == {"credential_available": True, "expert_target": TARGET}
+    assert "fixture-secret-value" not in json.dumps(result)
 
 
 def test_authorization_cannot_be_reused_with_another_output_directory(tmp_path):

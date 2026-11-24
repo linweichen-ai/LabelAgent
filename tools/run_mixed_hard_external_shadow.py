@@ -388,6 +388,7 @@ def main(argv=None):
     parser.add_argument("--url", required=True)
     parser.add_argument("--model", required=True)
     parser.add_argument("--key-env", required=True)
+    parser.add_argument("--max-new-attempts", type=int)
     args = parser.parse_args(argv)
     samples, bindings = load_authorized_inputs(
         args.queue, args.manifest, args.receipt, args.image_root,
@@ -399,7 +400,8 @@ def main(argv=None):
                 "llm_expert_url": args.url, "llm_expert_model": args.model,
                 "llm_expert_key_env": args.key_env,
                 "llm_expert_timeout_seconds": 120,
-                "llm_expert_retry_count": 0})
+                "llm_expert_retry_count": 0},
+        max_new_attempts=args.max_new_attempts)
     print(json.dumps({key: result[key] for key in (
         "status", "samples_total", "samples_attempted", "samples_passed",
         "samples_failed", "latency_median_ms", "candidate_only",

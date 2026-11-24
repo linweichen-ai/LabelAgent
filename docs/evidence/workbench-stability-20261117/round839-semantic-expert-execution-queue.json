@@ -1,0 +1,37 @@
+{
+  "schema_version": "labelagent.semantic-expert-execution-queue-evidence.v1",
+  "date": "2026-11-24",
+  "canary_plan_sha256": "f4a2995abc85129cbbfb471bc4a2e9e89c00a75837524c8b2101261959ae6d3d",
+  "execution_queue_sha256": "2b055827e1f2eba63052e4b59731530df495511ba6dc9148bc3f30e346ce7a48",
+  "sample_count": 19,
+  "canary_count": 8,
+  "remainder_count": 11,
+  "source_hash_role": "original_acquisition_provenance",
+  "runner_hash_role": "copied_review_jpeg_bytes",
+  "first_sample_runner_hash_matches_copied_jpeg": true,
+  "maximum_new_attempts_supported": true,
+  "intended_first_stage_maximum_new_attempts": 8,
+  "unauthorized_execution_blocked": true,
+  "initial_gate_check_command_syntax_error_before_loader": true,
+  "corrected_gate_check_passed": true,
+  "tests": {
+    "focused_passed": 19,
+    "focused_failed": 0,
+    "full_project_passed": 2041,
+    "full_project_skipped": 1,
+    "full_project_subtests_passed": 294,
+    "startup_mutex_environment_test_excluded": true
+  },
+  "boundaries": {
+    "authorization_file_present": false,
+    "external_authorization_granted": false,
+    "dispatch_performed": false,
+    "external_upload_performed": false,
+    "factory_data_uploaded": false,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "test24_used": false,
+    "production_deployed": false
+  }
+}

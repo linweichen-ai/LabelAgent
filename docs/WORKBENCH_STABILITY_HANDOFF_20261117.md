@@ -4620,3 +4620,10 @@ Round824审计出的11张斜坡分歧帧已经接入新的离线复核工作区�
 - 相同合成图、提示词和 Astra 模型连续请求两次：第一次真实联网 7,880.064 ms，第二次缓存读取 0.364 ms；网络发送 1 次、缓存命中 1 次，响应哈希一致。
 - 真实网络调用用量为 149 输入、16 输出、165 总 Token，重试 0；工厂数据、人工真值和 `test24` 外发均为 0，正式外部专家路由保持关闭。
 - 定向测试 39/39、全量测试 `2061 passed, 1 skipped, 294 subtests passed`。详见 `docs/EXTERNAL_EXPERT_CACHE_LIVE_ROUND851_20261125.md` 和 `docs/evidence/workbench-stability-20261117/external-expert-cache-live-round851.json`。
+
+# Round 852：困难集跨文件身份门禁修正（2026-11-25）
+
+- 发现旧的本地未发布 readiness 审计误用了早期复核包，而本地建议和队列绑定当前 `round779`；旧工具没有强制跨文件 manifest 一致性，已补为失败关闭。
+- 本地建议现在必须绑定实际复核 manifest；混合与全外部队列必须绑定同一份本地建议文件。新增 manifest 错配和队列源错配测试。
+- 使用正确 34 帧冻结包重新审计：本地 34/34、混合队列 17/17、全外部队列 34/34 均准备完成；人工仍为 0/34、外发授权为否、外部结果缺失，三路质量门禁保持关闭。
+- 本次没有外部调用、没有 `test24`、没有部署。定向测试 5/5、全量测试 `2063 passed, 1 skipped, 294 subtests passed`。详见 `docs/MIXED_HARD_IDENTITY_GATE_ROUND852_20261125.md` 和 `docs/evidence/workbench-stability-20261117/mixed-hard-identity-gate-round852.json`。

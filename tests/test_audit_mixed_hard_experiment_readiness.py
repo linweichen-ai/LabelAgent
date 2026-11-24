@@ -16,11 +16,12 @@ def _prediction():
     }
 
 
-def _packet(ids, *, external):
+def _packet(ids, *, external, manifest_sha="f" * 64):
     key = "expert_result" if external else "suggestion"
     return {
         "schema_version": ("labelagent.mixed-hard-external-shadow.v1" if external
                            else "labelagent.local-qwen-mixed-hard-suggestions.v1"),
+        "manifest_sha256": manifest_sha,
         "status": "completed", "samples_passed": len(ids),
         "samples_failed": 0, "candidate_only": True, "human_truth": False,
         "approved_for_training": False, "test24_used": False,
@@ -33,9 +34,10 @@ def _packet(ids, *, external):
     }
 
 
-def _queue(ids):
+def _queue(ids, source_sha):
     return {
         "schema_version": "labelagent.mixed-hard-expert-shadow-queue.v1",
+        "source_suggestions_sha256": source_sha,
         "sample_count": len(ids), "samples": [{"sample_id": item} for item in ids],
         "candidate_only": True, "human_truth": False,
         "approved_for_training": False, "test24_used": False,
@@ -62,11 +64,13 @@ def _authorization(authorized):
 def _files(tmp_path, *, authorized=False, external=False):
     ids34 = [f"sample-{index:02d}" for index in range(34)]
     ids17 = ids34[:17]
+    local = _write(tmp_path / "local.json", _packet(ids34, external=False))
+    source_sha = audit.sha256_file(local)
     paths = {
         "adjudication": _write(tmp_path / "adjudication.json", {}),
-        "local": _write(tmp_path / "local.json", _packet(ids34, external=False)),
-        "hybrid": _write(tmp_path / "hybrid.json", _queue(ids17)),
-        "all_queue": _write(tmp_path / "all-queue.json", _queue(ids34)),
+        "local": local,
+        "hybrid": _write(tmp_path / "hybrid.json", _queue(ids17, source_sha)),
+        "all_queue": _write(tmp_path / "all-queue.json", _queue(ids34, source_sha)),
         "authorization": _write(tmp_path / "authorization.json",
                                 _authorization(authorized)),
     }
@@ -151,4 +155,42 @@ def test_audit_marks_quality_inputs_ready_but_never_production(tmp_path, monkeyp
     assert result["gates"]["production_deployment_ready"] is False
     assert result["next_actions"] == []
     assert result["candidate_only"] is True
+
+
+def test_audit_fails_closed_when_packet_and_local_manifest_differ(
+        tmp_path, monkeypatch):
+    paths, ids = _files(tmp_path)
+    payload = json.loads(paths["local"].read_text(encoding="utf-8"))
+    payload["manifest_sha256"] = "0" * 64
+    paths["local"] = _write(paths["local"], payload)
+    monkeypatch.setattr(audit, "validate_packet", lambda _: (
+        {"rows": [{"sample_id": item} for item in ids]}, "f" * 64))
+    result = audit.audit_readiness(
+        packet_dir=tmp_path, adjudication_path=paths["adjudication"],
+        local_path=paths["local"], hybrid_queue_path=paths["hybrid"],
+        all_queue_path=paths["all_queue"],
+        resolution_authorization_path=paths["authorization"])
+    assert result["components"]["local34"]["ready"] is False
+    assert result["components"]["local34"]["error"] == (
+        "review manifest binding differs")
+    assert result["gates"]["three_arm_quality_evaluation_ready"] is False
+
+
+def test_audit_fails_closed_when_queue_uses_different_local_suggestions(
+        tmp_path, monkeypatch):
+    paths, ids = _files(tmp_path)
+    queue = json.loads(paths["hybrid"].read_text(encoding="utf-8"))
+    queue["source_suggestions_sha256"] = "0" * 64
+    paths["hybrid"] = _write(paths["hybrid"], queue)
+    monkeypatch.setattr(audit, "validate_packet", lambda _: (
+        {"rows": [{"sample_id": item} for item in ids]}, "f" * 64))
+    result = audit.audit_readiness(
+        packet_dir=tmp_path, adjudication_path=paths["adjudication"],
+        local_path=paths["local"], hybrid_queue_path=paths["hybrid"],
+        all_queue_path=paths["all_queue"],
+        resolution_authorization_path=paths["authorization"])
+    assert result["components"]["local34"]["ready"] is True
+    assert result["components"]["hybrid17_queue"]["ready"] is False
+    assert result["components"]["hybrid17_queue"]["error"] == (
+        "queue source suggestions binding differs")
 

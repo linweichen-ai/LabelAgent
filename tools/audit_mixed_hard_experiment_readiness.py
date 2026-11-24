@@ -44,7 +44,7 @@ def _template_progress(payload, expected_count):
     }
 
 
-def _queue_status(path, expected_count):
+def _queue_status(path, expected_count, *, expected_source_sha=None):
     try:
         payload = read_json(path)
         samples = payload.get("samples") if isinstance(payload, dict) else None
@@ -55,24 +55,39 @@ def _queue_status(path, expected_count):
                  and payload.get("candidate_only") is True
                  and payload.get("human_truth") is False
                  and payload.get("approved_for_training") is False
-                 and payload.get("test24_used") is False)
+                 and payload.get("test24_used") is False
+                 and (expected_source_sha is None
+                      or payload.get("source_suggestions_sha256")
+                      == expected_source_sha))
+        error = None if ready else (
+            "queue source suggestions binding differs"
+            if expected_source_sha is not None
+            and payload.get("source_suggestions_sha256") != expected_source_sha
+            else "queue boundary differs")
         return {"ready": ready, "sample_count": len(samples or []),
-                "sha256": sha256_file(path), "error": None if ready else "queue boundary differs"}
+                "sha256": sha256_file(path), "error": error}
     except Exception as error:
         return {"ready": False, "sample_count": 0, "sha256": None,
                 "error": f"{type(error).__name__}: {str(error)[:200]}"}
 
 
-def _prediction_status(path, expected_count, *, external):
+def _prediction_status(path, expected_count, *, external,
+                       expected_manifest_sha=None):
     if path is None or not Path(path).is_file():
         return {"ready": False, "sample_count": 0, "sha256": None,
                 "error": "missing"}
     try:
         payload = read_json(path)
         rows = _validate_prediction_packet(payload, external=external)
-        ready = len(rows) == expected_count
+        manifest_matches = (expected_manifest_sha is None
+                            or payload.get("manifest_sha256")
+                            == expected_manifest_sha)
+        ready = len(rows) == expected_count and manifest_matches
+        error = None if ready else (
+            "review manifest binding differs" if not manifest_matches
+            else "sample count differs")
         return {"ready": ready, "sample_count": len(rows),
-                "sha256": sha256_file(path), "error": None if ready else "sample count differs"}
+                "sha256": sha256_file(path), "error": error}
     except Exception as error:
         return {"ready": False, "sample_count": 0,
                 "sha256": sha256_file(path),
@@ -147,9 +162,13 @@ def audit_readiness(*, packet_dir, adjudication_path, local_path,
                 review["error"] = "declared review is incomplete or uncertain"
     except Exception as error:
         review["error"] = f"{type(error).__name__}: {str(error)[:200]}"
-    local = _prediction_status(local_path, 34, external=False)
-    hybrid_queue = _queue_status(hybrid_queue_path, 17)
-    all_queue = _queue_status(all_queue_path, 34)
+    local = _prediction_status(
+        local_path, 34, external=False, expected_manifest_sha=manifest_sha)
+    local_source_sha = local.get("sha256") if local["ready"] else None
+    hybrid_queue = _queue_status(
+        hybrid_queue_path, 17, expected_source_sha=local_source_sha)
+    all_queue = _queue_status(
+        all_queue_path, 34, expected_source_sha=local_source_sha)
     all_external = _prediction_status(all_external_path, 34, external=True)
     authorization = _authorization_status(resolution_authorization_path)
     source_ab = _prediction_status(

@@ -1,0 +1,49 @@
+{
+  "schema_version": "labelagent.mixed-hard-identity-gate.v1",
+  "round": 852,
+  "date": "2026-11-25",
+  "review_manifest_sha256": "4cd7eadb244cadad83208b4f2d9f304da457830b839070dd796edf77f53dad50",
+  "components": {
+    "declared_review": {
+      "ready": false,
+      "sample_count": 34,
+      "completed_rows": 0,
+      "remaining_rows": 34
+    },
+    "local34": {
+      "ready": true,
+      "sample_count": 34,
+      "sha256": "b0bff89db15a664d0e6bae1ce1a06b3a357b89c7efd3825b517e4a90051c8b1b"
+    },
+    "hybrid17_queue": {
+      "ready": true,
+      "sample_count": 17,
+      "sha256": "39e12f5f7fa5823ec925a364c0b630333a59e72dc9c8d3e0d1347320e012df9b"
+    },
+    "all34_queue": {
+      "ready": true,
+      "sample_count": 34,
+      "sha256": "63638ee8754b0b274562cf279e564f5fcbf6ba72b4af16a8c58c87fb589b782c"
+    },
+    "external_authorization": {
+      "ready": false,
+      "authorized": false
+    }
+  },
+  "identity_gates": {
+    "local_manifest_binding_required": true,
+    "queue_source_suggestions_binding_required": true,
+    "mismatch_fails_closed": true
+  },
+  "targeted_tests_passed": 5,
+  "full_tests_passed": 2063,
+  "full_tests_skipped": 1,
+  "full_subtests_passed": 294,
+  "three_arm_quality_evaluation_ready": false,
+  "external_call_performed": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "test24_used": false,
+  "production_deployed": false
+}

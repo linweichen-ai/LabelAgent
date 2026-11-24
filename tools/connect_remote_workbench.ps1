@@ -15,13 +15,46 @@ $url = "http://127.0.0.1:${LocalPort}"
 New-Item -ItemType Directory -Force -Path $runtime | Out-Null
 
 $ssh = (Get-Command ssh.exe -ErrorAction Stop).Source
+
+function Get-WorkbenchReadiness([string]$BaseUrl) {
+    try {
+        $run = Invoke-RestMethod "$BaseUrl/api/run/status" -TimeoutSec 3
+        $models = Invoke-RestMethod "$BaseUrl/api/model_readiness" -TimeoutSec 5
+        return [pscustomobject]@{
+            reachable = $true
+            ready = ($models.ready -eq $true -and $models.sam.ready -eq $true -and $models.vlm.ready -eq $true)
+            run_status = [string]$run.status
+            sam_ready = ($models.sam.ready -eq $true)
+            vlm_ready = ($models.vlm.ready -eq $true)
+        }
+    } catch {
+        return [pscustomobject]@{
+            reachable = $false
+            ready = $false
+            run_status = "unreachable"
+            sam_ready = $false
+            vlm_ready = $false
+        }
+    }
+}
+
 if (Test-Path -LiteralPath $recordPath) {
     $existing = Get-Content -LiteralPath $recordPath -Raw | ConvertFrom-Json
     $process = Get-CimInstance Win32_Process -Filter "ProcessId=$($existing.pid)" -ErrorAction SilentlyContinue
     if ($process -and $process.ExecutablePath -eq $ssh -and $process.CommandLine -like "*${marker}*") {
-        Write-Output "Remote LabelAgent tunnel is already running: $url"
-        if (-not $NoBrowser) { Start-Process $url }
-        exit 0
+        $existingReadiness = Get-WorkbenchReadiness $url
+        if ($existingReadiness.ready) {
+            Write-Output "Remote LabelAgent is ready: $url (SAM3=true, Qwen8B=true, run=$($existingReadiness.run_status))"
+            if (-not $NoBrowser) { Start-Process $url }
+            exit 0
+        }
+        if ($existingReadiness.reachable) {
+            throw "Remote LabelAgent page is connected, but its models are not ready (SAM3=$($existingReadiness.sam_ready), Qwen8B=$($existingReadiness.vlm_ready)). The managed tunnel was kept unchanged."
+        }
+        # The recorded SSH process still exists but no longer forwards a usable
+        # page. It is safe to recycle only this identity-checked managed tunnel.
+        Stop-Process -Id $existing.pid
+        Wait-Process -Id $existing.pid -Timeout 5 -ErrorAction SilentlyContinue
     }
     Move-Item -LiteralPath $recordPath -Destination "$recordPath.stale.$([DateTime]::UtcNow.ToString('yyyyMMddTHHmmssZ'))"
 }
@@ -46,15 +79,14 @@ try {
     $ready = $false
     for ($attempt = 0; $attempt -lt 40; $attempt++) {
         if ($process.HasExited) { break }
-        try {
-            Invoke-WebRequest "$url/api/run/status" -UseBasicParsing -TimeoutSec 2 | Out-Null
-            $ready = $true
-            break
-        } catch {
-            Start-Sleep -Milliseconds 250
-        }
+        $observed = Get-WorkbenchReadiness $url
+        if ($observed.reachable) { $ready = $true; break }
+        Start-Sleep -Milliseconds 250
     }
     if (-not $ready) { throw "The local tunnel did not become ready." }
+    if (-not $observed.ready) {
+        throw "The remote page is reachable, but its models are not ready (SAM3=$($observed.sam_ready), Qwen8B=$($observed.vlm_ready))."
+    }
     [ordered]@{
         schema_version = "labelagent.remote_workbench_tunnel.v1"
         pid = $process.Id
@@ -70,6 +102,6 @@ try {
     throw
 }
 
-Write-Output "Remote LabelAgent ready: $url"
+Write-Output "Remote LabelAgent ready: $url (SAM3=true, Qwen8B=true, run=$($observed.run_status))"
 Write-Output "Tunnel PID: $($process.Id)"
 if (-not $NoBrowser) { Start-Process $url }

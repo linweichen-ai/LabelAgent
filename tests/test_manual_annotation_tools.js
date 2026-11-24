@@ -48,10 +48,41 @@ test('point signature detects coordinate, polarity, and ordering changes', () =>
   assert.notEqual(first, flipped);
 });
 
+test('vertex editing hit tests simple rings and refuses multipart or holed geometry', () => {
+  const context = geometryContext();
+  const items = [{points:[[10,10],[50,10],[50,50],[10,50]]}];
+  context.items = items;
+  const vertex = vm.runInContext('nearestEditableVertex({x:12,y:11},items,5)', context);
+  assert.equal(vertex.shapeIndex, 0);
+  assert.equal(vertex.vertexIndex, 0);
+  const edge = vm.runInContext('nearestEditableSegment({x:30,y:12},items,5)', context);
+  assert.equal(edge.afterVertexIndex, 0);
+  assert.deepEqual(JSON.parse(JSON.stringify(edge.point)), [30,10]);
+  context.complex = [{points:[[0,0],[20,0],[20,20]],parts:[
+    {points:[[0,0],[20,0],[20,20]],holes:[]},
+    {points:[[30,30],[40,30],[40,40]],holes:[]},
+  ]}];
+  assert.equal(vm.runInContext('nearestEditableVertex({x:0,y:0},complex,10)', context), null);
+  context.holed = [{points:[[0,0],[20,0],[20,20]],parts:[{
+    points:[[0,0],[20,0],[20,20]],holes:[[[5,5],[6,5],[6,6]]],
+  }]}];
+  assert.equal(vm.runInContext('nearestEditableVertex({x:0,y:0},holed,10)', context), null);
+});
+
+test('vertex editing rejects degenerate rings before committing geometry', () => {
+  const context = geometryContext();
+  assert.equal(vm.runInContext('polygonRingValid([[0,0],[20,0],[20,20]])', context), true);
+  assert.equal(vm.runInContext('polygonRingValid([[0,0],[0,0],[20,20]])', context), false);
+  assert.equal(vm.runInContext('polygonRingValid([[0,0],[10,0],[20,0]])', context), false);
+  assert.equal(vm.runInContext('polygonRingValid([[0,0],[20,20],[0,20],[20,0]])', context), false);
+});
+
 test('manual toolbar exposes persistent rectangle and documented shortcuts', () => {
   assert.match(html, /id="rectangleButton"[^>]*（R）/);
   assert.match(html, /id="ellipseButton"[^>]*（O）/);
   assert.match(html, /id="freehandButton"[^>]*（L）/);
+  assert.match(html, /id="vertexEditButton"[^>]*（M）/);
+  assert.match(html, /id="vertexEditHint"/);
   assert.match(html, /id="freehandSensitivity"/);
   assert.match(html, /id="polygonButton"[^>]*（V）/);
   assert.match(html, /id="pointButton"[^>]*（P）/);
@@ -62,6 +93,7 @@ test('manual toolbar exposes persistent rectangle and documented shortcuts', () 
   assert.match(app, /manualTool=tool/);
   assert.match(app, /\$\('rectangleButton'\)\.onclick=\(\)=>activateShapeTool\('rectangle'\)/);
   assert.match(app, /\$\('ellipseButton'\)\.onclick=\(\)=>activateShapeTool\('ellipse'\)/);
+  assert.match(app, /\$\('vertexEditButton'\)\.onclick=activateVertexEditTool/);
 });
 
 test('freehand lasso converts a dragged boundary into a closed segmentation polygon', () => {
@@ -78,7 +110,7 @@ test('freehand lasso converts a dragged boundary into a closed segmentation poly
 test('canvas uses pointer capture and requestAnimationFrame-coalesced preview', () => {
   assert.match(app, /onpointerdown=/);
   assert.match(app, /onpointermove=/);
-  assert.match(app, /onpointerup=finishRectangleDrag/);
+  assert.match(app, /onpointerup=e=>\{if\(finishVertexDrag\(e\)\)return;finishRectangleDrag\(e\)\}/);
   assert.match(app, /setPointerCapture\?\./);
   assert.match(app, /requestAnimationFrame\(\(\)=>\{canvasDrawFrame=null;draw\(\)\}\)/);
   assert.match(app, /if\(canvas\.width!==imageWidth\)canvas\.width=imageWidth/);
@@ -111,4 +143,19 @@ test('polygon can finish by double click and ellipse uses pointer capture', () =
   assert.match(app, /addEventListener\('dblclick'[^\n]*manualTool!=='polygon'/);
   assert.match(app, /rectangleDrag=\{pointerId:event\.pointerId,start:point,current:point,tool:'ellipse'\}/);
   assert.match(app, /ellipsePoints\(drag\.start,drag\.current\)/);
+});
+
+test('vertex edits are local drafts with rollback, scope binding, and explicit truth guard', () => {
+  assert.match(app, /function geometryScopeMatches\(scope\)/);
+  assert.match(app, /scope:\{frame,topic,path:loadedDataPath,fileGeneration:loadedFileActivationGeneration,workspaceMode:window\.workspaceMode\}/);
+  assert.match(app, /if\(truthIsVerified\(frame\)\)\{toast\('当前帧已通过人工确认/);
+  assert.match(app, /finishVertexDrag\(e,true\)/);
+  assert.match(app, /cancelVertexDrag\(true\)/);
+  assert.match(app, /invalidateEditedSamBinding\(shapeIndex\)/);
+  assert.match(app, /referenceReviewedShapeKeys\.delete\(reviewKey\)/);
+  assert.match(app, /event\.key==='Delete'\|\|event\.key==='Backspace'/);
+  assert.match(app, /event\.key\.toLowerCase\(\)==='m'/);
+  const start = app.indexOf('function editableShapeParts');
+  const end = app.indexOf('function scheduleCanvasDraw', start);
+  assert.doesNotMatch(app.slice(start, end), /api\(/);
 });

@@ -226,6 +226,29 @@ def test_authorized_shadow_rejects_internal_retry_configuration(tmp_path):
                    chat_fn=lambda *args, **kwargs: _expert_result())
 
 
+def test_bounded_canary_attempts_resume_without_duplicate_calls(tmp_path):
+    queue, manifest, receipt, root, auth = _fixture(tmp_path)
+    samples, bindings = load_authorized_inputs(queue, manifest, receipt, root, auth)
+    second = {**samples[0], "sample_id": "sample-2"}
+    samples = [samples[0], second]
+    output = tmp_path / "canary.json"
+    calls = []
+    def respond(*args, **kwargs):
+        calls.append(1)
+        return _expert_result()
+    first = run_shadow(samples=samples, bindings=bindings, output_path=output,
+                       config={"llm_expert_model": "fixture"},
+                       max_new_attempts=1, chat_fn=respond)
+    resumed = run_shadow(samples=samples, bindings=bindings, output_path=output,
+                         config={"llm_expert_model": "fixture"},
+                         chat_fn=respond)
+    assert first["status"] == "in_progress"
+    assert first["external_attempts"] == 1
+    assert resumed["status"] == "completed"
+    assert resumed["external_attempts"] == 2
+    assert len(calls) == 2
+
+
 def test_v1_authorization_cannot_be_reused_for_resize(tmp_path):
     queue, manifest, receipt, root, auth = _fixture(tmp_path)
     with pytest.raises(ValueError, match="explicit external-upload authorization"):

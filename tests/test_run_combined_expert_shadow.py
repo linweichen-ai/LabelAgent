@@ -5,7 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from tools.run_combined_expert_shadow import run_combined
+from tools.run_combined_expert_shadow import (
+    canary_guard, run_combined, stratified_canary_order,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,12 +24,24 @@ def loader(*args, **kwargs):
 
 
 def runner(statuses, calls):
-    def run(*, samples, bindings, output_path, config):
-        calls.append(len(samples))
+    cumulative = 0
+    def run(*, samples, bindings, output_path, config, max_new_attempts=None):
+        nonlocal cumulative
+        calls.append(max_new_attempts)
         status = statuses.pop(0)
+        if max_new_attempts is None:
+            cumulative = len(samples)
+        elif max_new_attempts > 0:
+            cumulative = min(len(samples), cumulative + max_new_attempts)
         payload = {
             "status": status,
-            "external_attempts": len(samples),
+            "external_attempts": cumulative,
+            "samples_passed": cumulative,
+            "latency_median_ms": 5000,
+            "external_usage": {
+                "complete": True, "samples_with_usage": cumulative,
+                "total_tokens": cumulative * 4000,
+            },
             "rows": [],
         }
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -45,8 +59,9 @@ def arguments(tmp_path):
 def test_runs_two_prevalidated_stages_with_exact_51_attempts(tmp_path):
     calls = []
     result = run_combined(**arguments(tmp_path), load_fn=loader,
-                          run_fn=runner(["completed", "completed"], calls))
-    assert calls == [34, 17]
+                          run_fn=runner(
+                              ["in_progress", "completed", "completed"], calls))
+    assert calls == [8, None, None]
     assert result["status"] == "completed"
     assert result["external_attempts"] == 51
     assert result["new_external_attempts"] == 51
@@ -59,10 +74,10 @@ def test_stops_before_resized_stage_when_source_is_incomplete(tmp_path):
     calls = []
     result = run_combined(**arguments(tmp_path), load_fn=loader,
                           run_fn=runner(["partial"], calls))
-    assert calls == [34]
-    assert result["status"] == "source_incomplete_resized_not_started"
+    assert calls == [8]
+    assert result["status"] == "source_canary_failed_resized_not_started"
     assert result["resized_status"] == "not_started"
-    assert result["external_attempts"] == 34
+    assert result["external_attempts"] == 8
 
 
 def test_validates_both_stages_before_any_network_call(tmp_path):
@@ -76,7 +91,7 @@ def test_validates_both_stages_before_any_network_call(tmp_path):
         return loader(*args, **kwargs)
     with pytest.raises(ValueError, match="resized hash mismatch"):
         run_combined(**arguments(tmp_path), load_fn=bad_loader,
-                     run_fn=runner(["completed"], calls))
+                     run_fn=runner(["in_progress"], calls))
     assert calls == []
 
 
@@ -86,7 +101,7 @@ def test_rejects_retry_configuration_before_network(tmp_path):
     args["config"] = {"llm_expert_retry_count": 1}
     with pytest.raises(ValueError, match="forbids automatic API retries"):
         run_combined(**args, load_fn=loader,
-                     run_fn=runner(["completed"], calls))
+                     run_fn=runner(["in_progress"], calls))
     assert calls == []
 
 
@@ -96,3 +111,36 @@ def test_cli_entrypoint_loads_from_project_root():
          "--help"], capture_output=True, text=True, check=False)
     assert result.returncode == 0
     assert "--all-queue" in result.stdout
+
+
+def test_canary_order_covers_each_cohort_before_filling():
+    samples = [
+        {"sample_id": "a1", "cohort": "a"},
+        {"sample_id": "a2", "cohort": "a"},
+        {"sample_id": "b1", "cohort": "b"},
+        {"sample_id": "c1", "cohort": "c"},
+        {"sample_id": "d1", "cohort": "d"},
+    ]
+    ordered = stratified_canary_order(samples, 4)
+    assert [row["sample_id"] for row in ordered[:4]] == ["a1", "b1", "c1", "d1"]
+    assert {row["sample_id"] for row in ordered} == {
+        "a1", "a2", "b1", "c1", "d1"}
+
+
+def test_canary_guard_rejects_latency_or_token_anomaly():
+    base = {"status": "in_progress", "external_attempts": 8,
+            "samples_passed": 8, "latency_median_ms": 5000,
+            "external_usage": {"complete": True, "samples_with_usage": 8,
+                               "total_tokens": 32000}}
+    assert canary_guard(base, expected_attempts=8,
+                        max_median_latency_ms=60000,
+                        max_average_tokens=30000)["passed"] is True
+    slow = {**base, "latency_median_ms": 61000}
+    assert "canary_latency_exceeds_guard" in canary_guard(
+        slow, expected_attempts=8, max_median_latency_ms=60000,
+        max_average_tokens=30000)["reasons"]
+    costly = {**base, "external_usage": {
+        "complete": True, "samples_with_usage": 8, "total_tokens": 240008}}
+    assert "canary_tokens_exceed_guard" in canary_guard(
+        costly, expected_attempts=8, max_median_latency_ms=60000,
+        max_average_tokens=30000)["reasons"]

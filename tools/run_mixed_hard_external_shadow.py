@@ -258,9 +258,12 @@ def load_authorized_inputs(queue_path, manifest_path, receipt_path, image_root,
 
 
 def run_shadow(*, samples, bindings, output_path, config,
-               chat_fn=chat_external_expert):
+               max_new_attempts=None, chat_fn=chat_external_expert):
     if config.get("llm_expert_retry_count", 0) != 0:
         raise ValueError("authorized shadow forbids automatic API retries")
+    if (max_new_attempts is not None
+            and (type(max_new_attempts) is not int or max_new_attempts < 0)):
+        raise ValueError("maximum new attempts must be a non-negative integer")
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     completed = {}
@@ -281,10 +284,15 @@ def run_shadow(*, samples, bindings, output_path, config,
             raise ValueError("existing external result attempt ledger differs")
         completed = {row["sample_id"]: row for row in prior_rows}
     records = []
+    new_attempts = 0
     for sample in samples:
         if sample["sample_id"] in completed:
             records.append(completed[sample["sample_id"]])
             continue
+        if (max_new_attempts is not None
+                and new_attempts >= max_new_attempts):
+            continue
+        new_attempts += 1
         source_image = sample["_image_path"].read_bytes()
         image, upload_image = prepare_upload_image(
             source_image, bindings.get("image_variant") or
@@ -345,7 +353,9 @@ def _write_output(output_path, samples, records, bindings, config):
     result = {
         "schema_version": RESULT_SCHEMA, **bindings,
         "model": config.get("llm_expert_model"),
-        "status": "completed" if len(passed) == len(samples) else "partial",
+        "status": ("partial" if failed else
+                   "completed" if len(passed) == len(samples) else
+                   "in_progress"),
         "samples_total": len(samples), "samples_attempted": len(records),
         "samples_passed": len(passed), "samples_failed": len(failed),
         "external_attempts": sum(

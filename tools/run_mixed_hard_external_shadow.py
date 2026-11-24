@@ -7,6 +7,7 @@ import statistics
 import sys
 import time
 from pathlib import Path
+from urllib.parse import urlsplit, urlunsplit
 
 from PIL import Image
 
@@ -25,11 +26,34 @@ QUEUE_SCHEMA = "labelagent.mixed-hard-expert-shadow-queue.v1"
 AUTH_SCHEMA = "labelagent.external-upload-authorization.v1"
 AUTH_SCHEMA_V2 = "labelagent.external-upload-authorization.v2"
 AUTH_SCHEMA_V3 = "labelagent.external-upload-authorization.v3"
+AUTH_SCHEMA_V4 = "labelagent.external-upload-authorization.v4"
 RESULT_SCHEMA = "labelagent.mixed-hard-external-shadow.v1"
 
 
 def sha256_file(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def normalize_expert_target(value):
+    """Return a secret-free, exact provider/endpoint/model authorization target."""
+    if not isinstance(value, dict):
+        raise ValueError("expert target must be an object")
+    provider, url, model = (value.get("provider"), value.get("url"),
+                            value.get("model"))
+    if provider != "openai_chat":
+        raise ValueError("expert target provider is invalid")
+    if (not isinstance(url, str) or not url.strip()
+            or not isinstance(model, str) or not model.strip()
+            or len(model.strip()) > 200):
+        raise ValueError("expert target endpoint or model is invalid")
+    parsed = urlsplit(url.strip())
+    if (parsed.scheme != "https" or not parsed.hostname
+            or parsed.username is not None or parsed.password is not None
+            or parsed.query or parsed.fragment):
+        raise ValueError("expert target URL must be a secret-free HTTPS endpoint")
+    endpoint = urlunsplit((parsed.scheme, parsed.netloc.lower(),
+                           parsed.path.rstrip("/"), "", ""))
+    return {"provider": provider, "url": endpoint, "model": model.strip()}
 
 
 def normalize_image_variant(value):
@@ -118,7 +142,8 @@ def load_authorized_inputs(queue_path, manifest_path, receipt_path, image_root,
             or queue.get("image_paths_included") is not False):
         raise ValueError("expert queue identity or safety boundary differs")
     auth_schema = authorization.get("schema_version")
-    if (auth_schema not in {AUTH_SCHEMA, AUTH_SCHEMA_V2, AUTH_SCHEMA_V3}
+    if (auth_schema not in {AUTH_SCHEMA, AUTH_SCHEMA_V2, AUTH_SCHEMA_V3,
+                            AUTH_SCHEMA_V4}
             or authorization.get("authorized") is not True
             or not isinstance(authorization.get("authorized_by"), str)
             or not authorization["authorized_by"].strip()
@@ -163,6 +188,20 @@ def load_authorized_inputs(queue_path, manifest_path, receipt_path, image_root,
         image_variant = matching[0]
         authorization_run = None
     else:
+        authorized_expert_target = None
+        if auth_schema == AUTH_SCHEMA_V4:
+            try:
+                authorized_expert_target = normalize_expert_target(
+                    authorization.get("expert_target"))
+            except ValueError as error:
+                raise ValueError(
+                    "matching explicit external-upload authorization is required") from error
+            if (authorization.get("review_manifest_sha256")
+                    != sha256_file(manifest_path)
+                    or authorization.get("review_receipt_sha256")
+                    != sha256_file(receipt_path)):
+                raise ValueError(
+                    "matching explicit external-upload authorization is required")
         runs = authorization.get("authorized_runs")
         if (authorization.get("scope") != "mixed_hard_combined_external_shadow"
                 or authorization.get("authorized_unique_source_samples") != 34
@@ -243,7 +282,7 @@ def load_authorized_inputs(queue_path, manifest_path, receipt_path, image_root,
                 or files.get(relative) != actual):
             raise ValueError(f"authorized image hash mismatch: {sample_id}")
         loaded.append({**sample, "_image_path": path})
-    return loaded, {
+    bindings = {
         "queue_sha256": queue_sha,
         "authorization_sha256": sha256_file(authorization_path),
         "manifest_sha256": sha256_file(manifest_path),
@@ -255,10 +294,25 @@ def load_authorized_inputs(queue_path, manifest_path, receipt_path, image_root,
             "authorized_upload_count", len(samples)),
         "authorization_run": authorization_run,
     }
+    if auth_schema == AUTH_SCHEMA_V4:
+        bindings["authorized_expert_target"] = authorized_expert_target
+    return loaded, bindings
 
 
 def run_shadow(*, samples, bindings, output_path, config,
                max_new_attempts=None, chat_fn=chat_external_expert):
+    authorized_target = bindings.get("authorized_expert_target")
+    if authorized_target is not None:
+        try:
+            configured_target = normalize_expert_target({
+                "provider": config.get("llm_expert_provider"),
+                "url": config.get("llm_expert_url"),
+                "model": config.get("llm_expert_model"),
+            })
+        except ValueError as error:
+            raise ValueError("configured expert target differs from authorization") from error
+        if configured_target != authorized_target:
+            raise ValueError("configured expert target differs from authorization")
     if config.get("llm_expert_retry_count", 0) != 0:
         raise ValueError("authorized shadow forbids automatic API retries")
     if (max_new_attempts is not None

@@ -14,6 +14,7 @@ from tools.build_mixed_hard_adjudication_workspace import (
     validate_submission,
 )
 from tools.evaluate_mixed_hard_three_arm import _validate_prediction_packet, sha256_file
+from tools.run_mixed_hard_external_shadow import normalize_expert_target
 
 
 SCHEMA_VERSION = "labelagent.mixed-hard-experiment-readiness.v1"
@@ -94,7 +95,10 @@ def _prediction_status(path, expected_count, *, external,
                 "error": f"{type(error).__name__}: {str(error)[:200]}"}
 
 
-def _authorization_status(path):
+def _authorization_status(path, *, expected_manifest_sha=None,
+                          expected_receipt_sha=None,
+                          expected_all_queue_sha=None,
+                          expected_hybrid_queue_sha=None):
     if path is None or not Path(path).is_file():
         return {"ready": False, "authorized": False, "sha256": None,
                 "schema_version": None, "error": "missing"}
@@ -103,7 +107,7 @@ def _authorization_status(path):
         schema = payload.get("schema_version")
         base_safe = (
                 schema in {"labelagent.external-upload-authorization.v2",
-                           "labelagent.external-upload-authorization.v3"}
+                           "labelagent.external-upload-authorization.v4"}
                 and payload.get("candidate_only") is True
                 and payload.get("human_truth") is False
                 and payload.get("approved_for_training") is False
@@ -112,8 +116,14 @@ def _authorization_status(path):
             safe = (base_safe and payload.get("authorized_sample_count") == 17
                     and payload.get("authorized_upload_count") == 34
                     and payload.get("max_external_calls") == 34)
-        else:
+        elif schema == "labelagent.external-upload-authorization.v4":
             runs = payload.get("authorized_runs")
+            runs_by_name = ({run.get("name"): run for run in runs}
+                            if isinstance(runs, list) else {})
+            try:
+                target = normalize_expert_target(payload.get("expert_target"))
+            except ValueError:
+                target = None
             safe = (base_safe
                     and payload.get("authorized_unique_source_samples") == 34
                     and payload.get("authorized_upload_count") == 51
@@ -121,14 +131,34 @@ def _authorization_status(path):
                     and isinstance(runs, list) and len(runs) == 2
                     and {run.get("name") for run in runs}
                     == {"all34_source_640x512",
-                        "hybrid17_resize_512x410"})
+                        "hybrid17_resize_512x410"}
+                    and payload.get("review_manifest_sha256")
+                    == expected_manifest_sha
+                    and payload.get("review_receipt_sha256")
+                    == expected_receipt_sha
+                    and runs_by_name["all34_source_640x512"].get(
+                        "queue_sha256") == expected_all_queue_sha
+                    and runs_by_name["hybrid17_resize_512x410"].get(
+                        "queue_sha256") == expected_hybrid_queue_sha
+                    and target is not None)
+        else:
+            safe = False
         authorized = (safe and payload.get("authorized") is True
                       and isinstance(payload.get("authorized_by"), str)
                       and bool(payload["authorized_by"].strip()))
+        if authorized:
+            error = None
+        elif schema == "labelagent.external-upload-authorization.v3":
+            error = "legacy combined authorization is not executable"
+        elif not safe:
+            error = "authorization identity or safety binding differs"
+        else:
+            error = "awaiting explicit user authorization"
         return {"ready": authorized, "authorized": authorized,
                 "schema_version": schema,
                 "safe_template": safe, "sha256": sha256_file(path),
-                "error": None if authorized else "awaiting explicit user authorization"}
+                "expert_target": target if schema.endswith(".v4") else None,
+                "error": error}
     except Exception as error:
         return {"ready": False, "authorized": False,
                 "schema_version": None,
@@ -170,7 +200,14 @@ def audit_readiness(*, packet_dir, adjudication_path, local_path,
     all_queue = _queue_status(
         all_queue_path, 34, expected_source_sha=local_source_sha)
     all_external = _prediction_status(all_external_path, 34, external=True)
-    authorization = _authorization_status(resolution_authorization_path)
+    receipt_path = Path(packet_dir) / "receipt.json"
+    receipt_sha = sha256_file(receipt_path) if receipt_path.is_file() else None
+    authorization = _authorization_status(
+        resolution_authorization_path,
+        expected_manifest_sha=manifest_sha,
+        expected_receipt_sha=receipt_sha,
+        expected_all_queue_sha=all_queue.get("sha256"),
+        expected_hybrid_queue_sha=hybrid_queue.get("sha256"))
     source_ab = _prediction_status(
         source_ab_path or all_external_path, 34, external=True)
     resized_ab = _prediction_status(resized_ab_path, 17, external=True)
@@ -190,7 +227,7 @@ def audit_readiness(*, packet_dir, adjudication_path, local_path,
         if not item["ready"]:
             blockers.append({"component": name, "reason": item.get("error")})
     combined_authorization = (authorization.get("schema_version")
-                              == "labelagent.external-upload-authorization.v3")
+                              == "labelagent.external-upload-authorization.v4")
     external_actions = ([
         "run authorized combined all34 source and hybrid17 resized shadows"
     ] if combined_authorization and (

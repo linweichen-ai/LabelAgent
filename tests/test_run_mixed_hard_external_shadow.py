@@ -146,6 +146,23 @@ def _v3_fixture(tmp_path):
     return all_queue, hybrid_queue, manifest, receipt, root, auth
 
 
+def _v4_fixture(tmp_path):
+    all_queue, hybrid_queue, manifest, receipt, root, auth = _v3_fixture(tmp_path)
+    payload = json.loads(auth.read_text(encoding="utf-8"))
+    payload.update({
+        "schema_version": "labelagent.external-upload-authorization.v4",
+        "review_manifest_sha256": sha256_file(manifest),
+        "review_receipt_sha256": sha256_file(receipt),
+        "expert_target": {
+            "provider": "openai_chat",
+            "url": "https://expert.example/v1/chat/completions",
+            "model": "openai/gpt-6-astra",
+        },
+    })
+    auth.write_text(json.dumps(payload), encoding="utf-8")
+    return all_queue, hybrid_queue, manifest, receipt, root, auth
+
+
 def _write_json(path, payload):
     path.write_text(json.dumps(payload), encoding="utf-8")
     return path
@@ -309,6 +326,46 @@ def test_v3_combined_authorization_binds_two_nonduplicated_runs(tmp_path):
         load_authorized_inputs(
             hybrid_queue, manifest, receipt, root, auth,
             authorization_run_name="all34_source_640x512")
+
+
+def test_v4_binds_manifest_receipt_and_exact_expert_target(tmp_path):
+    all_queue, _, manifest, receipt, root, auth = _v4_fixture(tmp_path)
+    samples, bindings = load_authorized_inputs(
+        all_queue, manifest, receipt, root, auth,
+        authorization_run_name="all34_source_640x512")
+    assert len(samples) == 34
+    assert bindings["authorization_schema"] == (
+        "labelagent.external-upload-authorization.v4")
+    assert bindings["authorized_expert_target"] == {
+        "provider": "openai_chat",
+        "url": "https://expert.example/v1/chat/completions",
+        "model": "openai/gpt-6-astra",
+    }
+
+    manifest.write_text('{"summary":{"test24_intersection_count":0},'
+                        '"rows":[]}', encoding="utf-8")
+    with pytest.raises(ValueError, match="explicit external-upload authorization"):
+        load_authorized_inputs(
+            all_queue, manifest, receipt, root, auth,
+            authorization_run_name="all34_source_640x512")
+
+
+def test_v4_rejects_target_drift_before_model_call(tmp_path):
+    all_queue, _, manifest, receipt, root, auth = _v4_fixture(tmp_path)
+    samples, bindings = load_authorized_inputs(
+        all_queue, manifest, receipt, root, auth,
+        authorization_run_name="all34_source_640x512")
+    calls = []
+    with pytest.raises(ValueError, match="target differs"):
+        run_shadow(
+            samples=samples, bindings=bindings,
+            output_path=tmp_path / "must-not-exist.json",
+            config={"llm_expert_provider": "openai_chat",
+                    "llm_expert_url": "https://expert.example/v1/chat/completions",
+                    "llm_expert_model": "wrong-model"},
+            chat_fn=lambda *args, **kwargs: calls.append(1))
+    assert calls == []
+    assert not (tmp_path / "must-not-exist.json").exists()
 
 
 def test_rejects_image_hash_drift_before_model_call(tmp_path):

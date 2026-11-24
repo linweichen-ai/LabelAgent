@@ -11,15 +11,19 @@ from tools.run_combined_expert_shadow import (
 
 
 ROOT = Path(__file__).resolve().parents[1]
+TARGET = {"provider": "openai_chat",
+          "url": "https://expert.example/v1/chat/completions",
+          "model": "openai/gpt-6-astra"}
 
 
 def loader(*args, **kwargs):
     name = kwargs.get("authorization_run_name")
     count = 34 if name == "all34_source_640x512" else 17
     return ([{"sample_id": f"sample-{index}"} for index in range(count)], {
-        "authorization_schema": "labelagent.external-upload-authorization.v3",
+        "authorization_schema": "labelagent.external-upload-authorization.v4",
         "authorization_sha256": "a" * 64,
         "authorized_upload_count": 51,
+        "authorized_expert_target": TARGET,
     })
 
 
@@ -53,7 +57,10 @@ def runner(statuses, calls):
 def arguments(tmp_path):
     return dict(all_queue="all", hybrid_queue="hybrid", manifest="manifest",
                 receipt="receipt", image_root="images", authorization="auth",
-                output_dir=tmp_path, config={"llm_expert_retry_count": 0})
+                output_dir=tmp_path, config={"llm_expert_retry_count": 0,
+                    "llm_expert_provider": TARGET["provider"],
+                    "llm_expert_url": TARGET["url"],
+                    "llm_expert_model": TARGET["model"]})
 
 
 def test_runs_two_prevalidated_stages_with_exact_51_attempts(tmp_path):
@@ -95,14 +102,40 @@ def test_validates_both_stages_before_any_network_call(tmp_path):
     assert calls == []
 
 
+def test_legacy_v3_combined_authorization_is_rejected_before_network(tmp_path):
+    calls = []
+    def legacy_loader(*args, **kwargs):
+        samples, bindings = loader(*args, **kwargs)
+        return samples, {**bindings,
+                         "authorization_schema":
+                         "labelagent.external-upload-authorization.v3"}
+    with pytest.raises(ValueError, match="combined authorization binding differs"):
+        run_combined(**arguments(tmp_path), load_fn=legacy_loader,
+                     run_fn=runner(["in_progress"], calls))
+    assert calls == []
+
+
 def test_rejects_retry_configuration_before_network(tmp_path):
     calls = []
     args = arguments(tmp_path)
-    args["config"] = {"llm_expert_retry_count": 1}
+    args["config"] = {**args["config"], "llm_expert_retry_count": 1}
     with pytest.raises(ValueError, match="forbids automatic API retries"):
         run_combined(**args, load_fn=loader,
                      run_fn=runner(["in_progress"], calls))
     assert calls == []
+
+
+def test_rejects_model_or_endpoint_drift_before_network(tmp_path):
+    for index, changed in enumerate((
+            {"llm_expert_model": "different-model"},
+            {"llm_expert_url": "https://different.example/v1/chat/completions"})):
+        calls = []
+        args = arguments(tmp_path / str(index))
+        args["config"].update(changed)
+        with pytest.raises(ValueError, match="authorization target differs"):
+            run_combined(**args, load_fn=loader,
+                         run_fn=runner(["in_progress"], calls))
+        assert calls == []
 
 
 def test_cli_entrypoint_loads_from_project_root():

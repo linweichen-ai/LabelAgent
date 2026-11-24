@@ -10,7 +10,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools.run_mixed_hard_external_shadow import (
-    load_authorized_inputs, run_shadow, sha256_file,
+    load_authorized_inputs, normalize_expert_target, run_shadow, sha256_file,
 )
 
 
@@ -142,12 +142,24 @@ def run_combined(*, all_queue, hybrid_queue, manifest, receipt, image_root,
         "resize_512x410", "hybrid17_resize_512x410")
     if (len(source_samples) != 34 or len(resized_samples) != 17
             or source_bindings.get("authorization_schema")
-            != "labelagent.external-upload-authorization.v3"
+            != "labelagent.external-upload-authorization.v4"
             or source_bindings.get("authorization_sha256")
             != resized_bindings.get("authorization_sha256")
             or source_bindings.get("authorized_upload_count") != 51
             or resized_bindings.get("authorized_upload_count") != 51):
         raise ValueError("combined authorization binding differs")
+    try:
+        configured_target = normalize_expert_target({
+            "provider": config.get("llm_expert_provider"),
+            "url": config.get("llm_expert_url"),
+            "model": config.get("llm_expert_model"),
+        })
+    except ValueError as error:
+        raise ValueError("combined authorization target differs") from error
+    if (source_bindings.get("authorized_expert_target") != configured_target
+            or resized_bindings.get("authorized_expert_target")
+            != configured_target):
+        raise ValueError("combined authorization target differs")
     if config.get("llm_expert_retry_count", 0) != 0:
         raise ValueError("combined shadow forbids automatic API retries")
     prior_source_attempts = _attempts(source_path)

@@ -9,10 +9,12 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools.run_mixed_hard_external_shadow import QUEUE_SCHEMA, sha256_file
+from tools.run_mixed_hard_external_shadow import (
+    QUEUE_SCHEMA, normalize_expert_target, sha256_file,
+)
 
 
-SCHEMA_VERSION = "labelagent.external-upload-authorization.v3"
+SCHEMA_VERSION = "labelagent.external-upload-authorization.v4"
 SOURCE_VARIANT = {"name": "source_640x512", "mode": "source",
                   "expected_width": 640, "expected_height": 512}
 RESIZED_VARIANT = {"name": "resize_512x410",
@@ -40,11 +42,14 @@ def _queue(path, expected_count):
     return payload, ids, sha256_file(path)
 
 
-def build_template(all_queue_path, hybrid_queue_path):
+def build_template(all_queue_path, hybrid_queue_path, manifest_path,
+                   receipt_path, *, provider, url, model):
     _, all_ids, all_sha = _queue(all_queue_path, 34)
     _, hybrid_ids, hybrid_sha = _queue(hybrid_queue_path, 17)
     if not hybrid_ids.issubset(all_ids):
         raise ValueError("hybrid17 queue is not a subset of all34 queue")
+    target = normalize_expert_target({
+        "provider": provider, "url": url, "model": model})
     return {
         "schema_version": SCHEMA_VERSION,
         "status": "awaiting_explicit_user_authorization",
@@ -53,6 +58,9 @@ def build_template(all_queue_path, hybrid_queue_path):
         "authorized_unique_source_samples": 34,
         "authorized_upload_count": 51,
         "max_external_calls": 51,
+        "review_manifest_sha256": sha256_file(manifest_path),
+        "review_receipt_sha256": sha256_file(receipt_path),
+        "expert_target": target,
         "authorized_runs": [
             {"name": "all34_source_640x512", "queue_sha256": all_sha,
              "sample_count": 34, "image_variant": SOURCE_VARIANT,
@@ -77,9 +85,16 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--all-queue", type=Path, required=True)
     parser.add_argument("--hybrid-queue", type=Path, required=True)
+    parser.add_argument("--manifest", type=Path, required=True)
+    parser.add_argument("--receipt", type=Path, required=True)
+    parser.add_argument("--provider", default="openai_chat")
+    parser.add_argument("--url", required=True)
+    parser.add_argument("--model", required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
-    result = build_template(args.all_queue, args.hybrid_queue)
+    result = build_template(
+        args.all_queue, args.hybrid_queue, args.manifest, args.receipt,
+        provider=args.provider, url=args.url, model=args.model)
     encoded = json.dumps(result, ensure_ascii=False, indent=2) + "\n"
     args.output.parent.mkdir(parents=True, exist_ok=True)
     temporary = args.output.with_suffix(args.output.suffix + ".tmp")

@@ -44,17 +44,27 @@ def _queue(ids, source_sha):
     }
 
 
-def _authorization(authorized):
+def _authorization(authorized, *, manifest_sha, receipt_sha,
+                   all_queue_sha, hybrid_queue_sha, schema="v4"):
     return {
-        "schema_version": "labelagent.external-upload-authorization.v3",
+        "schema_version": f"labelagent.external-upload-authorization.{schema}",
         "authorized": authorized,
         "authorized_by": "user" if authorized else "",
         "authorized_unique_source_samples": 34,
         "authorized_upload_count": 51, "max_external_calls": 51,
         "authorized_runs": [
-            {"name": "all34_source_640x512"},
-            {"name": "hybrid17_resize_512x410"},
+            {"name": "all34_source_640x512",
+             "queue_sha256": all_queue_sha},
+            {"name": "hybrid17_resize_512x410",
+             "queue_sha256": hybrid_queue_sha},
         ],
+        "review_manifest_sha256": manifest_sha,
+        "review_receipt_sha256": receipt_sha,
+        "expert_target": {
+            "provider": "openai_chat",
+            "url": "https://expert.example/v1",
+            "model": "openai/gpt-6-astra",
+        },
         "candidate_only": True,
         "human_truth": False, "approved_for_training": False,
         "test24_used": False,
@@ -64,15 +74,28 @@ def _authorization(authorized):
 def _files(tmp_path, *, authorized=False, external=False):
     ids34 = [f"sample-{index:02d}" for index in range(34)]
     ids17 = ids34[:17]
-    local = _write(tmp_path / "local.json", _packet(ids34, external=False))
+    manifest = _write(tmp_path / "manifest.json", {"rows": []})
+    receipt = _write(tmp_path / "receipt.json", {"files": {}})
+    manifest_sha = audit.sha256_file(manifest)
+    local = _write(tmp_path / "local.json", _packet(
+        ids34, external=False, manifest_sha=manifest_sha))
     source_sha = audit.sha256_file(local)
+    hybrid = _write(tmp_path / "hybrid.json", _queue(ids17, source_sha))
+    all_queue = _write(tmp_path / "all-queue.json", _queue(ids34, source_sha))
     paths = {
+        "manifest": manifest,
+        "receipt": receipt,
         "adjudication": _write(tmp_path / "adjudication.json", {}),
         "local": local,
-        "hybrid": _write(tmp_path / "hybrid.json", _queue(ids17, source_sha)),
-        "all_queue": _write(tmp_path / "all-queue.json", _queue(ids34, source_sha)),
+        "hybrid": hybrid,
+        "all_queue": all_queue,
         "authorization": _write(tmp_path / "authorization.json",
-                                _authorization(authorized)),
+                                _authorization(
+                                    authorized,
+                                    manifest_sha=manifest_sha,
+                                    receipt_sha=audit.sha256_file(receipt),
+                                    all_queue_sha=audit.sha256_file(all_queue),
+                                    hybrid_queue_sha=audit.sha256_file(hybrid))),
     }
     if external:
         paths.update(
@@ -84,10 +107,15 @@ def _files(tmp_path, *, authorized=False, external=False):
     return paths, ids34
 
 
+def _validated_packet(paths, ids):
+    return ({"rows": [{"sample_id": item} for item in ids]},
+            audit.sha256_file(paths["manifest"]))
+
+
 def test_audit_reports_exact_missing_components_without_running_models(tmp_path, monkeypatch):
     paths, ids = _files(tmp_path)
-    monkeypatch.setattr(audit, "validate_packet", lambda _: (
-        {"rows": [{"sample_id": item} for item in ids]}, "f" * 64))
+    monkeypatch.setattr(audit, "validate_packet",
+                        lambda _: _validated_packet(paths, ids))
     monkeypatch.setattr(audit, "validate_submission", lambda *args: {
         "benchmark_reference_ready": False})
     result = audit.audit_readiness(
@@ -121,8 +149,8 @@ def test_audit_describes_unfilled_review_template_as_progress_not_schema_error(
             "pallet_instance_count": None,
         } for sample_id in ids],
     })
-    monkeypatch.setattr(audit, "validate_packet", lambda _: (
-        {"rows": [{"sample_id": item} for item in ids]}, "f" * 64))
+    monkeypatch.setattr(audit, "validate_packet",
+                        lambda _: _validated_packet(paths, ids))
     result = audit.audit_readiness(
         packet_dir=tmp_path, adjudication_path=paths["adjudication"],
         local_path=paths["local"], hybrid_queue_path=paths["hybrid"],
@@ -139,8 +167,8 @@ def test_audit_describes_unfilled_review_template_as_progress_not_schema_error(
 
 def test_audit_marks_quality_inputs_ready_but_never_production(tmp_path, monkeypatch):
     paths, ids = _files(tmp_path, authorized=True, external=True)
-    monkeypatch.setattr(audit, "validate_packet", lambda _: (
-        {"rows": [{"sample_id": item} for item in ids]}, "f" * 64))
+    monkeypatch.setattr(audit, "validate_packet",
+                        lambda _: _validated_packet(paths, ids))
     monkeypatch.setattr(audit, "validate_submission", lambda *args: {
         "benchmark_reference_ready": True})
     result = audit.audit_readiness(
@@ -163,8 +191,8 @@ def test_audit_fails_closed_when_packet_and_local_manifest_differ(
     payload = json.loads(paths["local"].read_text(encoding="utf-8"))
     payload["manifest_sha256"] = "0" * 64
     paths["local"] = _write(paths["local"], payload)
-    monkeypatch.setattr(audit, "validate_packet", lambda _: (
-        {"rows": [{"sample_id": item} for item in ids]}, "f" * 64))
+    monkeypatch.setattr(audit, "validate_packet",
+                        lambda _: _validated_packet(paths, ids))
     result = audit.audit_readiness(
         packet_dir=tmp_path, adjudication_path=paths["adjudication"],
         local_path=paths["local"], hybrid_queue_path=paths["hybrid"],
@@ -182,8 +210,8 @@ def test_audit_fails_closed_when_queue_uses_different_local_suggestions(
     queue = json.loads(paths["hybrid"].read_text(encoding="utf-8"))
     queue["source_suggestions_sha256"] = "0" * 64
     paths["hybrid"] = _write(paths["hybrid"], queue)
-    monkeypatch.setattr(audit, "validate_packet", lambda _: (
-        {"rows": [{"sample_id": item} for item in ids]}, "f" * 64))
+    monkeypatch.setattr(audit, "validate_packet",
+                        lambda _: _validated_packet(paths, ids))
     result = audit.audit_readiness(
         packet_dir=tmp_path, adjudication_path=paths["adjudication"],
         local_path=paths["local"], hybrid_queue_path=paths["hybrid"],
@@ -193,4 +221,42 @@ def test_audit_fails_closed_when_queue_uses_different_local_suggestions(
     assert result["components"]["hybrid17_queue"]["ready"] is False
     assert result["components"]["hybrid17_queue"]["error"] == (
         "queue source suggestions binding differs")
+
+
+def test_audit_rejects_legacy_v3_combined_authorization(tmp_path, monkeypatch):
+    paths, ids = _files(tmp_path, authorized=True)
+    payload = json.loads(paths["authorization"].read_text(encoding="utf-8"))
+    payload["schema_version"] = "labelagent.external-upload-authorization.v3"
+    paths["authorization"] = _write(paths["authorization"], payload)
+    monkeypatch.setattr(audit, "validate_packet",
+                        lambda _: _validated_packet(paths, ids))
+    result = audit.audit_readiness(
+        packet_dir=tmp_path, adjudication_path=paths["adjudication"],
+        local_path=paths["local"], hybrid_queue_path=paths["hybrid"],
+        all_queue_path=paths["all_queue"],
+        resolution_authorization_path=paths["authorization"])
+    authorization = result["components"]["resolution_ab_authorization"]
+    assert authorization["ready"] is False
+    assert authorization["safe_template"] is False
+    assert authorization["error"] == (
+        "legacy combined authorization is not executable")
+
+
+def test_audit_rejects_v4_receipt_binding_drift(tmp_path, monkeypatch):
+    paths, ids = _files(tmp_path, authorized=True)
+    payload = json.loads(paths["authorization"].read_text(encoding="utf-8"))
+    payload["review_receipt_sha256"] = "0" * 64
+    paths["authorization"] = _write(paths["authorization"], payload)
+    monkeypatch.setattr(audit, "validate_packet",
+                        lambda _: _validated_packet(paths, ids))
+    result = audit.audit_readiness(
+        packet_dir=tmp_path, adjudication_path=paths["adjudication"],
+        local_path=paths["local"], hybrid_queue_path=paths["hybrid"],
+        all_queue_path=paths["all_queue"],
+        resolution_authorization_path=paths["authorization"])
+    authorization = result["components"]["resolution_ab_authorization"]
+    assert authorization["ready"] is False
+    assert authorization["safe_template"] is False
+    assert authorization["error"] == (
+        "authorization identity or safety binding differs")
 

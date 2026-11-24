@@ -2937,6 +2937,8 @@ class WorkflowTests(unittest.TestCase):
                          "http://fast/v1/chat/completions")
 
     def test_external_expert_route_is_explicit_env_only_and_does_not_mutate_config(self):
+        workflow._reset_external_expert_runtime_state()
+        self.addCleanup(workflow._reset_external_expert_runtime_state)
         success = io.BytesIO(
             b'{"choices":[{"finish_reason":"stop","message":{"content":"{\\"status\\":\\"done\\"}"}}]}')
         config = {
@@ -2966,6 +2968,143 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(events[-1]["output"]["model_route"],
                          "external_expert")
         self.assertNotIn("expert-secret", json.dumps(events))
+
+    def test_external_expert_reuses_exact_cached_result_without_second_call(self):
+        workflow._reset_external_expert_runtime_state()
+        self.addCleanup(workflow._reset_external_expert_runtime_state)
+        success = io.BytesIO(
+            b'{"choices":[{"finish_reason":"stop","message":{"content":"{\\"status\\":\\"done\\"}"}}]}')
+        config = {
+            "llm_expert_enabled": True,
+            "llm_expert_provider": "openai_chat",
+            "llm_expert_url": "https://expert.example/v1",
+            "llm_expert_model": "expert-vision",
+            "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
+            "llm_expert_cache_ttl_seconds": 3600,
+        }
+        events = []
+        with patch.dict(os.environ, {"LABELAGENT_TEST_EXPERT_KEY": "secret"}), \
+             patch.object(workflow.urllib.request, "urlopen",
+                          return_value=success) as opener, \
+             workflow.trace_calls(events.append):
+            first = workflow.chat_external_expert(
+                config, "inspect", image_bytes())
+            second = workflow.chat_external_expert(
+                config, "inspect", image_bytes())
+        self.assertEqual(first, {"status": "done"})
+        self.assertEqual(second, first)
+        self.assertIsNot(second, first)
+        self.assertEqual(opener.call_count, 1)
+        self.assertEqual(events[-1]["output"]["model_route"],
+                         "external_expert_cache")
+        self.assertTrue(events[-1]["output"]["expert_cache_hit"])
+        self.assertRegex(events[-1]["output"]["expert_request_key"],
+                         r"^[0-9a-f]{64}$")
+
+    def test_external_expert_transient_failure_falls_back_and_opens_circuit(self):
+        workflow._reset_external_expert_runtime_state()
+        self.addCleanup(workflow._reset_external_expert_runtime_state)
+        config = {
+            "llm_expert_enabled": True,
+            "llm_expert_provider": "openai_chat",
+            "llm_expert_url": "https://expert.example/v1",
+            "llm_expert_model": "expert-vision",
+            "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
+            "llm_expert_retry_count": 0,
+        }
+        local = {"status": "done", "source": "local"}
+        unavailable = workflow.urllib.error.HTTPError(
+            "https://expert.example/v1/chat/completions", 503,
+            "Service Unavailable", None, io.BytesIO(b'{"error":"busy"}'))
+        with patch.dict(os.environ, {"LABELAGENT_TEST_EXPERT_KEY": "secret"}), \
+             patch.object(workflow.urllib.request, "urlopen",
+                          side_effect=unavailable) as opener:
+            first, first_audit = workflow.chat_external_expert_or_local(
+                config, "inspect", image_bytes(), local)
+            second, second_audit = workflow.chat_external_expert_or_local(
+                config, "inspect", image_bytes(), local)
+        self.assertEqual(first, local)
+        self.assertIsNot(first, local)
+        self.assertEqual(first_audit["fallback_reason"], "expert_http_503")
+        self.assertTrue(first_audit["sam_result_reused"])
+        self.assertEqual(second, local)
+        self.assertEqual(second_audit["fallback_reason"],
+                         "expert_circuit_open")
+        self.assertEqual(opener.call_count, 1)
+
+    def test_external_expert_exact_cache_is_used_while_circuit_is_open(self):
+        workflow._reset_external_expert_runtime_state()
+        self.addCleanup(workflow._reset_external_expert_runtime_state)
+        success = io.BytesIO(
+            b'{"choices":[{"finish_reason":"stop","message":{"content":"{\\"status\\":\\"done\\"}"}}]}')
+        config = {
+            "llm_expert_enabled": True,
+            "llm_expert_provider": "openai_chat",
+            "llm_expert_url": "https://expert.example/v1",
+            "llm_expert_model": "expert-vision",
+            "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
+        }
+        with patch.dict(os.environ, {"LABELAGENT_TEST_EXPERT_KEY": "secret"}), \
+             patch.object(workflow.urllib.request, "urlopen",
+                          return_value=success) as opener:
+            first = workflow.chat_external_expert(
+                config, "inspect", image_bytes())
+            routed = workflow.external_expert_config(config)
+            workflow._open_expert_circuit(routed, "expert_http_503")
+            second = workflow.chat_external_expert(
+                config, "inspect", image_bytes())
+        self.assertEqual(first, second)
+        self.assertEqual(opener.call_count, 1)
+
+    def test_external_expert_missing_credential_fails_closed_to_local(self):
+        workflow._reset_external_expert_runtime_state()
+        self.addCleanup(workflow._reset_external_expert_runtime_state)
+        config = {
+            "llm_expert_enabled": True,
+            "llm_expert_provider": "openai_chat",
+            "llm_expert_url": "https://expert.example/v1",
+            "llm_expert_model": "expert-vision",
+            "llm_expert_key_env": "LABELAGENT_TEST_MISSING_KEY",
+        }
+        local = {"status": "done", "source": "local"}
+        with patch.dict(os.environ, {}, clear=True), \
+             patch.object(workflow.urllib.request, "urlopen") as opener:
+            result, audit = workflow.chat_external_expert_or_local(
+                config, "inspect", image_bytes(), local)
+        self.assertEqual(result, local)
+        self.assertEqual(audit["fallback_reason"], "expert_failed_closed")
+        self.assertTrue(audit["sam_result_reused"])
+        opener.assert_not_called()
+
+    def test_external_expert_retries_once_then_caches_success(self):
+        workflow._reset_external_expert_runtime_state()
+        self.addCleanup(workflow._reset_external_expert_runtime_state)
+        throttled = workflow.urllib.error.HTTPError(
+            "https://expert.example/v1/chat/completions", 429,
+            "Too Many Requests", None, io.BytesIO(b'{"error":"limited"}'))
+        success = io.BytesIO(
+            b'{"choices":[{"finish_reason":"stop","message":{"content":"{\\"status\\":\\"done\\"}"}}]}')
+        config = {
+            "llm_expert_enabled": True,
+            "llm_expert_provider": "openai_chat",
+            "llm_expert_url": "https://expert.example/v1",
+            "llm_expert_model": "expert-vision",
+            "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
+            "llm_expert_retry_count": 1,
+        }
+        events = []
+        with patch.dict(os.environ, {"LABELAGENT_TEST_EXPERT_KEY": "secret"}), \
+             patch.object(workflow.urllib.request, "urlopen",
+                          side_effect=[throttled, success]) as opener, \
+             patch.object(workflow, "_wait_cancellable") as waiting, \
+             workflow.trace_calls(events.append):
+            result = workflow.chat_external_expert(
+                config, "inspect", image_bytes())
+        self.assertEqual(result, {"status": "done"})
+        self.assertEqual(opener.call_count, 2)
+        waiting.assert_called_once_with(1)
+        self.assertEqual(events[-1]["output"]["expert_retry_count"], 1)
+        self.assertFalse(events[-1]["output"]["expert_cache_hit"])
 
     def test_external_expert_route_fails_closed_before_network(self):
         base = {
@@ -3783,6 +3922,10 @@ class ServerTests(unittest.TestCase):
                     "llm_expert_model": "expert-vision",
                     "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
                     "llm_expert_timeout_seconds": 90,
+                    "llm_expert_retry_count": 2,
+                    "llm_expert_cooldown_seconds": 120,
+                    "llm_expert_cache_ttl_seconds": 7200,
+                    "llm_expert_cache_max_entries": 64,
                     "llm_expert_shadow_routing_enabled": True,
                     "llm_expert_shadow_round_threshold": 3,
                     "llm_expert_shadow_score_threshold": 4,
@@ -3803,6 +3946,7 @@ class ServerTests(unittest.TestCase):
                              "LABELAGENT_TEST_EXPERT_KEY")
             self.assertEqual(saved.json["config"]["llm_expert_timeout_seconds"],
                              90)
+            self.assertEqual(saved.json["config"]["llm_expert_retry_count"], 2)
             self.assertTrue(saved.json["config"][
                 "llm_expert_shadow_routing_enabled"])
             self.assertEqual(saved.json["config"][
@@ -3835,6 +3979,10 @@ class ServerTests(unittest.TestCase):
             self.assertTrue(readiness["expert_vlm"]["credential_present"])
             self.assertFalse(readiness["expert_vlm"]["connection_tested"])
             self.assertFalse(readiness["expert_vlm"]["automatic_upload"])
+            self.assertEqual(readiness["expert_vlm"]["retry_count"], 2)
+            self.assertEqual(readiness["expert_vlm"]["cooldown_seconds"], 120)
+            self.assertEqual(readiness["expert_vlm"]["cache_ttl_seconds"], 7200)
+            self.assertEqual(readiness["expert_vlm"]["cache_max_entries"], 64)
             self.assertTrue(readiness["expert_vlm"]["shadow_routing_enabled"])
             self.assertEqual(readiness["expert_vlm"]["shadow_round_threshold"],
                              3)

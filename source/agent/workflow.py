@@ -14,6 +14,7 @@ import time
 import urllib.error
 import urllib.request
 import uuid
+from collections import OrderedDict
 from contextlib import contextmanager
 from contextvars import ContextVar, copy_context
 from urllib.parse import urlsplit
@@ -32,6 +33,9 @@ _review_call = ContextVar("review_call", default=None)
 _cancel_event = ContextVar("workflow_cancel_event", default=None)
 _fast_route_lock = threading.Lock()
 _fast_route_circuits = {}
+_expert_runtime_lock = threading.Lock()
+_expert_route_circuits = {}
+_expert_response_cache = OrderedDict()
 _sam_multi_protocol_lock = threading.Lock()
 _sam_multi_protocols = {}
 _sam_point_group_protocol_lock = threading.Lock()
@@ -68,6 +72,14 @@ class ReviewProtocolError(ValueError):
 
 class RunCancelled(Exception):
     """The user terminated this annotation run."""
+
+
+class ExternalExpertUnavailableError(ValueError):
+    """A transient expert failure for which the local result must be kept."""
+
+    def __init__(self, reason, message):
+        super().__init__(message)
+        self.reason = reason
 
 
 class SamHttpError(ValueError):
@@ -794,7 +806,10 @@ def chat(config, instruction, image, extra_images=(), response_schema=None):
         record.update(status="succeeded", output={"raw_text": raw.get("text"),
                                                    "finish_reason": raw.get("finish_reason"),
                                                    "busy_retry_count": raw.get("busy_retry_count", 0),
+                                                   "expert_retry_count": raw.get("expert_retry_count", 0),
                                                    "model_route": raw.get("model_route"),
+                                                   "expert_cache_hit": raw.get("expert_cache_hit"),
+                                                   "expert_request_key": raw.get("expert_request_key"),
                                                    "fast_fallback_reason": raw.get("fast_fallback_reason"),
                                                    "structured_fallback_reason": raw.get("structured_fallback_reason"),
                                                    "local_vlm": raw.get("local_vlm"),
@@ -806,7 +821,10 @@ def chat(config, instruction, image, extra_images=(), response_schema=None):
             record["output"] = {"raw_text": raw.get("text"),
                                 "finish_reason": raw.get("finish_reason"),
                                 "busy_retry_count": raw.get("busy_retry_count", 0),
+                                "expert_retry_count": raw.get("expert_retry_count", 0),
                                 "model_route": raw.get("model_route"),
+                                "expert_cache_hit": raw.get("expert_cache_hit"),
+                                "expert_request_key": raw.get("expert_request_key"),
                                 "fast_fallback_reason": raw.get("fast_fallback_reason")}
         raise
     finally:
@@ -872,7 +890,9 @@ def external_expert_config(config):
         llm_model=model,
         llm_key=credential,
         llm_expert_provider=provider,
-        llm_busy_retries=0,
+        llm_busy_retries=max(0, min(3, int(
+            config.get("llm_expert_retry_count", 1))))
+        if type(config.get("llm_expert_retry_count", 1)) is int else 1,
         _llm_route_name="external_expert",
     )
     return expert
@@ -886,10 +906,129 @@ def chat_external_expert(config, instruction, image, extra_images=(),
         extra_images=extra_images, response_schema=response_schema)
 
 
+def chat_external_expert_or_local(config, instruction, image, local_result,
+                                  extra_images=(), response_schema=None):
+    """Use the expert when available and otherwise preserve the local result."""
+    if not isinstance(local_result, dict):
+        raise ValueError("本地回退结果必须是 JSON 对象")
+    try:
+        result = chat_external_expert(
+            config, instruction, image, extra_images=extra_images,
+            response_schema=response_schema)
+        return result, {
+            "route": "external_expert",
+            "fallback_performed": False,
+            "sam_result_reused": True,
+        }
+    except ExternalExpertUnavailableError as error:
+        return copy.deepcopy(local_result), {
+            "route": "local_fallback",
+            "fallback_performed": True,
+            "fallback_reason": error.reason,
+            "sam_result_reused": True,
+        }
+    except (ModelOutputError, ValueError):
+        return copy.deepcopy(local_result), {
+            "route": "local_fallback",
+            "fallback_performed": True,
+            "fallback_reason": "expert_failed_closed",
+            "sam_result_reused": True,
+        }
+
+
 def _positive_int(value, default):
     if type(value) is not int or value < 1:
         return default
     return value
+
+
+def _expert_route_key(config):
+    return (str(config.get("llm_expert_provider") or "openai_chat").strip(),
+            str(config.get("llm_url") or config.get("llm_expert_url") or "").rstrip("/"),
+            str(config.get("llm_model") or config.get("llm_expert_model") or "").strip())
+
+
+def _expert_request_key(config, instruction, images, response_schema):
+    payload = {
+        "provider": str(config.get("llm_expert_provider") or "openai_chat"),
+        "url": str(config.get("llm_url") or "").rstrip("/"),
+        "model": str(config.get("llm_model") or ""),
+        "max_tokens": int(config.get("llm_max_tokens") or 768),
+        "instruction": instruction,
+        "response_schema": response_schema,
+        "image_sha256": [hashlib.sha256(data).hexdigest() for data in images],
+    }
+    return hashlib.sha256(json.dumps(
+        payload, ensure_ascii=False, sort_keys=True,
+        separators=(",", ":")).encode("utf-8")).hexdigest()
+
+
+def _expert_circuit_reason(config):
+    key = _expert_route_key(config)
+    if not all(key):
+        return None
+    now = time.monotonic()
+    with _expert_runtime_lock:
+        state = _expert_route_circuits.get(key)
+        if not state:
+            return None
+        if state["disabled_until"] <= now:
+            _expert_route_circuits.pop(key, None)
+            return None
+        return state["trigger"]
+
+
+def _open_expert_circuit(config, reason):
+    key = _expert_route_key(config)
+    if not all(key):
+        return
+    cooldown = max(10, min(3600, _positive_int(
+        config.get("llm_expert_cooldown_seconds"), 60)))
+    with _expert_runtime_lock:
+        _expert_route_circuits[key] = {
+            "disabled_until": time.monotonic() + cooldown,
+            "trigger": reason,
+        }
+
+
+def _close_expert_circuit(config):
+    with _expert_runtime_lock:
+        _expert_route_circuits.pop(_expert_route_key(config), None)
+
+
+def _expert_cache_get(config, request_key):
+    ttl = max(1, min(86400, _positive_int(
+        config.get("llm_expert_cache_ttl_seconds"), 3600)))
+    now = time.monotonic()
+    with _expert_runtime_lock:
+        entry = _expert_response_cache.get(request_key)
+        if not entry:
+            return None
+        if now - entry["stored_at"] > ttl:
+            _expert_response_cache.pop(request_key, None)
+            return None
+        _expert_response_cache.move_to_end(request_key)
+        return copy.deepcopy(entry["result"])
+
+
+def _expert_cache_put(config, request_key, result):
+    maximum = max(1, min(1024, _positive_int(
+        config.get("llm_expert_cache_max_entries"), 128)))
+    with _expert_runtime_lock:
+        _expert_response_cache[request_key] = {
+            "stored_at": time.monotonic(),
+            "result": copy.deepcopy(result),
+        }
+        _expert_response_cache.move_to_end(request_key)
+        while len(_expert_response_cache) > maximum:
+            _expert_response_cache.popitem(last=False)
+
+
+def _reset_external_expert_runtime_state():
+    """Clear process-local expert cache and circuit state for isolated tests."""
+    with _expert_runtime_lock:
+        _expert_route_circuits.clear()
+        _expert_response_cache.clear()
 
 
 def _fast_route_key(config):
@@ -976,8 +1115,9 @@ def select_vlm_route(config, image, extra_images=()):
 def _chat(config, instruction, image, extra_images=(), raw=None, response_schema=None):
     if not config.get("llm_url") or not config.get("llm_model"):
         raise ValueError("请先配置大模型地址和模型名")
+    all_images = (image, *extra_images)
     content = [{"type": "text", "text": instruction}]
-    for data in (image, *extra_images):
+    for data in all_images:
         content.append({"type": "image_url", "image_url": {"url":
             "data:image/jpeg;base64," + base64.b64encode(data).decode()}})
     fast_only = config.get("_llm_fast_only") is True
@@ -995,12 +1135,36 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
             config, image, extra_images=extra_images)
     else:
         selected_config, selected_route = config, "primary"
+    expert_request_key = None
+    if selected_route == "external_expert":
+        expert_request_key = _expert_request_key(
+            selected_config, instruction, all_images, response_schema)
+        cached = _expert_cache_get(selected_config, expert_request_key)
+        if cached is not None:
+            if raw is not None:
+                raw.update(
+                    model_route="external_expert_cache",
+                    expert_cache_hit=True,
+                    expert_request_key=expert_request_key,
+                    busy_retry_count=0,
+                    expert_retry_count=0,
+                )
+            return cached
+        circuit_reason = _expert_circuit_reason(selected_config)
+        if circuit_reason is not None:
+            raise ExternalExpertUnavailableError(
+                "expert_circuit_open",
+                f"外部专家暂时熔断，已保留本地结果：{circuit_reason}")
+        if raw is not None:
+            raw.update(expert_cache_hit=False,
+                       expert_request_key=expert_request_key)
     routes = [(selected_config, selected_route)]
     if fast_only and selected_route != "small_image_fast":
         raise ValueError("快速复核通道不适用于当前图像或尚未配置")
     if selected_route == "small_image_fast" and not fast_only:
         routes.append((config, "primary_fallback"))
     busy_retry_count = 0
+    expert_retry_count = 0
     result = None
     final_route = selected_route
     for route_config, route_name in routes:
@@ -1044,6 +1208,8 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
                 final_route = route_name
                 if route_name == "small_image_fast":
                     _close_fast_route_circuit(config)
+                elif route_name == "external_expert":
+                    _close_expert_circuit(route_config)
                 break
             except (TimeoutError, socket.timeout) as error:
                 if route_name == "small_image_fast":
@@ -1053,6 +1219,16 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
                     _open_fast_route_circuit(config, fast_fallback_reason)
                     route_failed = True
                     break
+                if route_name == "external_expert":
+                    if busy_attempt < busy_retry_limit:
+                        expert_retry_count += 1
+                        _wait_cancellable(min(2 ** busy_attempt, 4))
+                        continue
+                    _open_expert_circuit(route_config, "expert_timeout")
+                    raise ExternalExpertUnavailableError(
+                        "expert_timeout",
+                        f"外部专家请求超过 {timeout_seconds} 秒，已保留本地结果"
+                    ) from error
                 raise ValueError(
                     f"llm_timeout: 大模型请求排队或推理超过 {timeout_seconds} 秒"
                 ) from error
@@ -1117,6 +1293,18 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
                     _open_fast_route_circuit(config, fast_fallback_reason)
                     route_failed = True
                     break
+                if route_name == "external_expert" and (
+                        error.code in (408, 429) or 500 <= error.code <= 599):
+                    reason = f"expert_http_{error.code}"
+                    if busy_attempt < busy_retry_limit:
+                        expert_retry_count += 1
+                        _wait_cancellable(min(2 ** busy_attempt, 4))
+                        continue
+                    _open_expert_circuit(route_config, reason)
+                    raise ExternalExpertUnavailableError(
+                        reason,
+                        f"外部专家暂不可用（HTTP {error.code}），已保留本地结果"
+                    ) from error
                 if local_busy and busy_attempt < busy_retry_limit:
                     busy_retry_count += 1
                     # Newer VLM servers queue requests internally. Keep this
@@ -1143,6 +1331,15 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
                     _open_fast_route_circuit(config, fast_fallback_reason)
                     route_failed = True
                     break
+                if route_name == "external_expert":
+                    if busy_attempt < busy_retry_limit:
+                        expert_retry_count += 1
+                        _wait_cancellable(min(2 ** busy_attempt, 4))
+                        continue
+                    _open_expert_circuit(route_config, "expert_unavailable")
+                    raise ExternalExpertUnavailableError(
+                        "expert_unavailable",
+                        "外部专家网络不可用，已保留本地结果") from error
                 raise ValueError(f"大模型请求失败：{error.reason}") from error
         if result is not None:
             break
@@ -1154,6 +1351,7 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
         result = normalize_external_response(provider, result)
     if raw is not None:
         raw["busy_retry_count"] = busy_retry_count
+        raw["expert_retry_count"] = expert_retry_count
         raw["model_route"] = final_route
         if fast_fallback_reason is not None:
             raw["fast_fallback_reason"] = fast_fallback_reason
@@ -1228,6 +1426,8 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
         raise ModelOutputError(
             "大模型必须返回 JSON 对象", content[:20000],
             finish_reason=choice.get("finish_reason"))
+    if final_route == "external_expert" and expert_request_key is not None:
+        _expert_cache_put(config, expert_request_key, result)
     return result
 
 

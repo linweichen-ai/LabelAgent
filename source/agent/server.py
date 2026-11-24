@@ -4958,6 +4958,10 @@ def set_config():
         "llm_fast_timeout_seconds": (10, 300),
         "llm_fast_cooldown_seconds": (10, 300),
         "llm_expert_timeout_seconds": (10, 300),
+        "llm_expert_retry_count": (0, 3),
+        "llm_expert_cooldown_seconds": (10, 3600),
+        "llm_expert_cache_ttl_seconds": (1, 86400),
+        "llm_expert_cache_max_entries": (1, 1024),
         "llm_expert_shadow_round_threshold": (1, 100),
         "llm_expert_shadow_score_threshold": (1, 100),
         "llm_expert_shadow_low_confidence_percent": (0, 100),
@@ -5220,6 +5224,14 @@ def model_readiness():
             expert_key_env and os.environ.get(expert_key_env)),
         "connection_tested": False,
         "automatic_upload": False,
+        "retry_count": bounded_config_int(
+            "llm_expert_retry_count", 1, 0, 3),
+        "cooldown_seconds": bounded_config_int(
+            "llm_expert_cooldown_seconds", 60, 10, 3600),
+        "cache_ttl_seconds": bounded_config_int(
+            "llm_expert_cache_ttl_seconds", 3600, 1, 86400),
+        "cache_max_entries": bounded_config_int(
+            "llm_expert_cache_max_entries", 128, 1, 1024),
         "shadow_routing_enabled": (
             config.get("llm_expert_shadow_routing_enabled") is True),
         "shadow_round_threshold": bounded_config_int(

@@ -56,6 +56,13 @@ def url_json(url: str, timeout: float = 3.0) -> tuple[bool, str]:
 
 def port_available(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        # Flask/Gunicorn listeners on Linux use SO_REUSEADDR.  Mirror that
+        # behavior so a just-stopped workbench is not falsely reported busy
+        # only because accepted connections remain in TIME_WAIT.  Windows
+        # keeps its stricter default because SO_REUSEADDR has different
+        # exclusivity semantics there.
+        if sys.platform != "win32":
+            probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             probe.bind(("127.0.0.1", port))
         except OSError:

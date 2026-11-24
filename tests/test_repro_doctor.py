@@ -32,6 +32,15 @@ class ReproDoctorTests(unittest.TestCase):
             factory.return_value.__enter__.return_value.bind.side_effect = OSError("busy")
             self.assertFalse(doctor.port_available(8765))
 
+    def test_linux_port_probe_reuses_time_wait_without_hiding_bind_failures(self):
+        with mock.patch.object(doctor.sys, "platform", "linux"), \
+                mock.patch.object(doctor.socket, "socket") as factory:
+            probe = factory.return_value.__enter__.return_value
+            self.assertTrue(doctor.port_available(18765))
+            probe.setsockopt.assert_called_once_with(
+                socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            probe.bind.assert_called_once_with(("127.0.0.1", 18765))
+
     def test_port_available_rejects_a_real_windows_listener(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
             listener.bind(("127.0.0.1", 0))

@@ -8,8 +8,11 @@ from pathlib import Path
 
 
 MANIFEST_SCHEMA = "labelagent.mixed-hard-review-pack.v1"
-TEMPLATE_SCHEMA = "labelagent.mixed-hard-adjudication-template.v1"
-SUBMISSION_SCHEMA = "labelagent.mixed-hard-adjudication.v1"
+TEMPLATE_SCHEMA = "labelagent.mixed-hard-adjudication-template.v2"
+SUBMISSION_SCHEMA = "labelagent.mixed-hard-adjudication.v2"
+LEGACY_SUBMISSION_SCHEMA = "labelagent.mixed-hard-adjudication.v1"
+LABELS = ("车辆", "pallet", "person", "floor", "slope", "ego",
+          "other_robot", "cargo_floor")
 
 
 def sha256(path):
@@ -89,6 +92,8 @@ def template_for(manifest, manifest_sha256):
             "slope_presence": None,
             "class_conflict": None,
             "pallet_quality": None,
+            "class_presence": {label: None for label in LABELS},
+            "pallet_instance_count": None,
             "difficulty_flags": [],
             "note": "",
         } for row in manifest["rows"]],
@@ -103,7 +108,8 @@ def template_for(manifest, manifest_sha256):
 
 
 def validate_submission(manifest, manifest_sha256, submission):
-    if submission.get("schema_version") != SUBMISSION_SCHEMA:
+    schema = submission.get("schema_version")
+    if schema not in {SUBMISSION_SCHEMA, LEGACY_SUBMISSION_SCHEMA}:
         raise ValueError("unsupported adjudication schema")
     if submission.get("review_manifest_sha256") != manifest_sha256:
         raise ValueError("adjudication is bound to another manifest")
@@ -129,6 +135,7 @@ def validate_submission(manifest, manifest_sha256, submission):
                            "not_applicable", "uncertain"},
     }
     seen = set()
+    benchmark_ready = schema == SUBMISSION_SCHEMA
     for row in rows:
         sample_id = row.get("sample_id")
         if sample_id in seen or sample_id not in expected:
@@ -139,7 +146,25 @@ def validate_submission(manifest, manifest_sha256, submission):
         for key, values in allowed.items():
             if row.get(key) not in values:
                 raise ValueError(f"invalid {key}: {sample_id}")
+        if schema == SUBMISSION_SCHEMA:
+            presence = row.get("class_presence")
+            if (not isinstance(presence, dict) or set(presence) != set(LABELS)
+                    or any(value not in {"present", "absent", "uncertain"}
+                           for value in presence.values())):
+                raise ValueError(f"invalid class_presence: {sample_id}")
+            count = row.get("pallet_instance_count")
+            if type(count) is not int or count < 0:
+                raise ValueError(f"invalid pallet_instance_count: {sample_id}")
+            if presence["pallet"] == "absent" and count != 0:
+                raise ValueError(f"pallet count disagrees with absence: {sample_id}")
+            if presence["pallet"] == "present" and count == 0:
+                raise ValueError(f"pallet count disagrees with presence: {sample_id}")
+            if "uncertain" in presence.values():
+                benchmark_ready = False
+        else:
+            benchmark_ready = False
     return {"status": "valid_complete_review_record", "sample_count": len(rows),
+            "benchmark_reference_ready": benchmark_ready,
             "human_truth": False, "approved_for_training": False}
 
 
@@ -165,15 +190,19 @@ header{{position:sticky;top:0;background:#17202a;border-bottom:1px solid #39495a
 <label>斜坡存在性<select id="slope"><option value="">请选择</option><option>present</option><option>absent</option><option>not_applicable</option><option>uncertain</option></select></label>
 <label>类别冲突<select id="conflict"><option value="">请选择</option><option>none</option><option>vehicle_other_robot</option><option>ego_other_robot</option><option>pallet_cargo_floor</option><option>other</option><option>uncertain</option></select></label>
 <label>托盘质量<select id="pallet"><option value="">请选择</option><option>complete</option><option>hole_error</option><option>merged_instances</option><option>missed_instance</option><option>not_applicable</option><option>uncertain</option></select></label>
+<fieldset><legend>八类存在性（严格评测必填）</legend><div id="presence"></div></fieldset>
+<label>可见托盘实例数<input id="palletCount" type="number" min="0" step="1" value="0"></label>
 <div class="flags">困难因素：<label><input type="checkbox" value="edge">边缘</label><label><input type="checkbox" value="small">小目标</label><label><input type="checkbox" value="occluded">遮挡</label><label><input type="checkbox" value="material_or_light">材质/光照</label></div>
 <label>备注<textarea id="note" rows="4"></textarea></label><button id="prev">上一张</button><button id="next">保存并下一张</button><button id="export">导出完整复核记录</button></div></div></main>
 <script id="items" type="application/json">{payload}</script><script>
-const items=JSON.parse(document.getElementById('items').textContent);const key='labelagent-mixed-hard-{manifest_sha256}';let state=JSON.parse(localStorage.getItem(key)||'null')||{{index:0,reviewer:'',rows:{{}}}};
+const items=JSON.parse(document.getElementById('items').textContent);const labels={json.dumps(list(LABELS), ensure_ascii=False)};const key='labelagent-mixed-hard-v2-{manifest_sha256}';let state=JSON.parse(localStorage.getItem(key)||'null')||{{index:0,reviewer:'',rows:{{}}}};
 const $=id=>document.getElementById(id), selects=['candidate','slope','conflict','pallet'];
-function save(){{const item=items[state.index];state.reviewer=$('reviewer').value.trim();state.rows[item.sample_id]={{sample_id:item.sample_id,source_image_sha256:item.source_image_sha256,candidate_decision:$('candidate').value,slope_presence:$('slope').value,class_conflict:$('conflict').value,pallet_quality:$('pallet').value,difficulty_flags:[...document.querySelectorAll('.flags input:checked')].map(x=>x.value),note:$('note').value}};localStorage.setItem(key,JSON.stringify(state))}}
-function render(){{const item=items[state.index],row=state.rows[item.sample_id]||{{}};$('counter').textContent=`${{state.index+1}} / ${{items.length}}`;$('title').textContent=item.sample_id;$('meta').textContent=item.cohort+' · '+item.review_note;$('image').src=item.review_image;$('raw').href=item.raw_image;$('reviewer').value=state.reviewer||'';const values={{candidate:row.candidate_decision,slope:row.slope_presence,conflict:row.class_conflict,pallet:row.pallet_quality}};selects.forEach(x=>$(x).value=values[x]||'');document.querySelectorAll('.flags input').forEach(x=>x.checked=(row.difficulty_flags||[]).includes(x.value));$('note').value=row.note||''}}
+function presenceValues(){{return Object.fromEntries(labels.map(label=>[label,$('presence-'+labels.indexOf(label)).value]))}}
+function save(){{const item=items[state.index];state.reviewer=$('reviewer').value.trim();state.rows[item.sample_id]={{sample_id:item.sample_id,source_image_sha256:item.source_image_sha256,candidate_decision:$('candidate').value,slope_presence:$('slope').value,class_conflict:$('conflict').value,pallet_quality:$('pallet').value,class_presence:presenceValues(),pallet_instance_count:Number($('palletCount').value),difficulty_flags:[...document.querySelectorAll('.flags input:checked')].map(x=>x.value),note:$('note').value}};localStorage.setItem(key,JSON.stringify(state))}}
+function render(){{const item=items[state.index],row=state.rows[item.sample_id]||{{}};$('counter').textContent=`${{state.index+1}} / ${{items.length}}`;$('title').textContent=item.sample_id;$('meta').textContent=item.cohort+' · '+item.review_note;$('image').src=item.review_image;$('raw').href=item.raw_image;$('reviewer').value=state.reviewer||'';const values={{candidate:row.candidate_decision,slope:row.slope_presence,conflict:row.class_conflict,pallet:row.pallet_quality}};selects.forEach(x=>$(x).value=values[x]||'');labels.forEach((label,index)=>$('presence-'+index).value=(row.class_presence||{{}})[label]||'');$('palletCount').value=Number.isInteger(row.pallet_instance_count)?row.pallet_instance_count:0;document.querySelectorAll('.flags input').forEach(x=>x.checked=(row.difficulty_flags||[]).includes(x.value));$('note').value=row.note||''}}
 $('prev').onclick=()=>{{save();state.index=Math.max(0,state.index-1);render()}};$('next').onclick=()=>{{save();state.index=Math.min(items.length-1,state.index+1);render()}};
-$('export').onclick=()=>{{save();const rows=items.map(x=>state.rows[x.sample_id]).filter(Boolean);if(!state.reviewer||rows.length!==items.length||rows.some(r=>!r.candidate_decision||!r.slope_presence||!r.class_conflict||!r.pallet_quality))return alert('请填写复核人并完成全部必选项');const out={{schema_version:'{SUBMISSION_SCHEMA}',status:'declared_human_review_complete',review_manifest_sha256:'{manifest_sha256}',reviewer_declared_id:state.reviewer,reviewed_at:new Date().toISOString(),rows,candidate_only:true,human_truth:false,approved_for_training:false,training_authorized:false,automatic_approval:false}};const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,2)+'\\n'],{{type:'application/json'}}));a.download='mixed-hard-adjudication.json';a.click();URL.revokeObjectURL(a.href)}};render();
+$('export').onclick=()=>{{save();const rows=items.map(x=>state.rows[x.sample_id]).filter(Boolean);const missing=rows.some(r=>!r.candidate_decision||!r.slope_presence||!r.class_conflict||!r.pallet_quality||!r.class_presence||labels.some(label=>!r.class_presence[label])||!Number.isInteger(r.pallet_instance_count)||r.pallet_instance_count<0);if(!state.reviewer||rows.length!==items.length||missing)return alert('请填写复核人、全部类别存在性和托盘实例数');const disagreement=rows.some(r=>(r.class_presence.pallet==='absent'&&r.pallet_instance_count!==0)||(r.class_presence.pallet==='present'&&r.pallet_instance_count===0));if(disagreement)return alert('托盘存在性与实例数不一致');const out={{schema_version:'{SUBMISSION_SCHEMA}',status:'declared_human_review_complete',review_manifest_sha256:'{manifest_sha256}',reviewer_declared_id:state.reviewer,reviewed_at:new Date().toISOString(),rows,candidate_only:true,human_truth:false,approved_for_training:false,training_authorized:false,automatic_approval:false}};const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,2)+'\\n'],{{type:'application/json'}}));a.download='mixed-hard-adjudication.json';a.click();URL.revokeObjectURL(a.href)}};
+$('presence').innerHTML=labels.map((label,index)=>`<label>${{label}}<select id="presence-${{index}}"><option value="">请选择</option><option>present</option><option>absent</option><option>uncertain</option></select></label>`).join('');render();
 </script></body></html>''', encoding="utf-8")
 
 

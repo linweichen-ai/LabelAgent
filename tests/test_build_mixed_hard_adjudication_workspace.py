@@ -6,7 +6,7 @@ from pathlib import Path
 from PIL import Image
 
 from tools.build_mixed_hard_adjudication_workspace import (
-    SUBMISSION_SCHEMA, build_workspace, sha256, validate_packet,
+    LABELS, SUBMISSION_SCHEMA, build_workspace, sha256, validate_packet,
     validate_submission,
 )
 
@@ -47,7 +47,9 @@ class MixedHardAdjudicationWorkspaceTest(unittest.TestCase):
                 "rows": [{"sample_id": row["sample_id"],
                           "source_image_sha256": row["source_image_sha256"],
                           "candidate_decision": "uncertain", "slope_presence": "absent",
-                          "class_conflict": "none", "pallet_quality": "not_applicable"}
+                          "class_conflict": "none", "pallet_quality": "not_applicable",
+                          "class_presence": {label: "absent" for label in LABELS},
+                          "pallet_instance_count": 0}
                          for row in manifest["rows"]],
                 "candidate_only": True, "human_truth": False,
                 "approved_for_training": False, "training_authorized": False,
@@ -62,6 +64,8 @@ class MixedHardAdjudicationWorkspaceTest(unittest.TestCase):
             page = (output / "reviewer.html").read_text(encoding="utf-8")
             self.assertIn("localStorage", page)
             self.assertIn("mixed-hard-adjudication.json", page)
+            self.assertIn("八类存在性", page)
+            self.assertIn("pallet_instance_count", page)
             self.assertIn("human_truth:false", page)
             self.assertNotIn("approved_for_training:true", page)
             self.assertEqual(receipt["copied_image_count"], 48)
@@ -89,6 +93,7 @@ class MixedHardAdjudicationWorkspaceTest(unittest.TestCase):
             manifest, digest = validate_packet(packet)
             result = validate_submission(manifest, digest, self.submission(manifest, digest))
             self.assertEqual(result["sample_count"], 24)
+            self.assertTrue(result["benchmark_reference_ready"])
             self.assertFalse(result["human_truth"])
 
     def test_rejects_training_approval_and_hash_drift(self):
@@ -98,6 +103,24 @@ class MixedHardAdjudicationWorkspaceTest(unittest.TestCase):
             submission = self.submission(manifest, digest)
             submission["approved_for_training"] = True
             with self.assertRaisesRegex(ValueError, "approved_for_training"):
+                validate_submission(manifest, digest, submission)
+
+    def test_uncertain_presence_is_valid_review_but_not_benchmark_ready(self):
+        with tempfile.TemporaryDirectory() as directory:
+            packet = self.packet(Path(directory) / "packet")
+            manifest, digest = validate_packet(packet)
+            submission = self.submission(manifest, digest)
+            submission["rows"][0]["class_presence"]["slope"] = "uncertain"
+            result = validate_submission(manifest, digest, submission)
+            self.assertFalse(result["benchmark_reference_ready"])
+
+    def test_rejects_pallet_presence_count_disagreement(self):
+        with tempfile.TemporaryDirectory() as directory:
+            packet = self.packet(Path(directory) / "packet")
+            manifest, digest = validate_packet(packet)
+            submission = self.submission(manifest, digest)
+            submission["rows"][0]["class_presence"]["pallet"] = "present"
+            with self.assertRaisesRegex(ValueError, "count disagrees"):
                 validate_submission(manifest, digest, submission)
             submission = self.submission(manifest, digest)
             submission["rows"][0]["source_image_sha256"] = "0" * 64

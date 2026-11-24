@@ -1,0 +1,56 @@
+{
+  "schema_version": "labelagent.human-review-throughput-round846.v1",
+  "round": 846,
+  "recorded_at": "2026-11-25T01:17:50+08:00",
+  "status": "VERIFIED_NOT_DEPLOYED",
+  "implementation": {
+    "workspace_ready_gate": true,
+    "file_activation_generation_request_binding": true,
+    "file_activation_generation_readback_binding": true,
+    "explicit_save_only_action": true,
+    "explicit_save_and_next_action": true,
+    "keyboard_decision_selection_without_auto_submit": true,
+    "candidate_only_boundary_preserved": true
+  },
+  "browser_acceptance": {
+    "isolated_port": 18766,
+    "passed": true,
+    "elapsed_ms": 5770,
+    "packet_rows": 32,
+    "priority_frames": [95, 140],
+    "opened_frame": 74,
+    "frame_sha256": "10d8ed84741c0031c935349dd200804b465c149956728e50a37a2096a151c34c",
+    "decision_preselected": "",
+    "keyboard_selection": "no_slope_present",
+    "truth_write_requests": 0,
+    "page_errors": 0,
+    "failed_requests": 0,
+    "http_errors": 0,
+    "result_sha256": "5527aca476acb0bb9ccaa82839e5d95a6c761d15804add27dd8d311e0eb825c0",
+    "frame_screenshot_sha256": "feab6a913b2aba2af40f3db7b497aa9dfda20bb4831bb28a6776ce8af2fb4a6f",
+    "queue_screenshot_sha256": "d061ad93179f26d0e5d24c405992e52156f7c672c20a31dd3b16e2a3eb237927",
+    "local_untracked_artifacts": "artifacts/round846-review-throughput-browser"
+  },
+  "verification": {
+    "python": "2060 passed, 1 skipped, 294 subtests passed",
+    "javascript": "188 passed",
+    "git_diff_check": "passed",
+    "isolated_port_released": true,
+    "temporary_workdir_removed": true
+  },
+  "formal_runtime": {
+    "deployed": false,
+    "url": "http://127.0.0.1:18765",
+    "readiness": true,
+    "sam_ready": true,
+    "vlm_ready": true
+  },
+  "training_boundary": {
+    "training_started": false,
+    "external_api_calls": 0,
+    "human_truth_written": false,
+    "approved_for_training": false,
+    "test24_touched": false
+  },
+  "remaining_gate": "The mixed-hard review set still requires explicit human adjudication before three-arm F1 evaluation or post-training."
+}

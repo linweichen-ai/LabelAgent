@@ -19,11 +19,16 @@ const priorityOnly = process.env.LABELAGENT_ACCEPTANCE_PRIORITY_ONLY === '1';
 const viewportWidth = Number(process.env.LABELAGENT_ACCEPTANCE_VIEWPORT_WIDTH || 1600);
 const viewportHeight = Number(process.env.LABELAGENT_ACCEPTANCE_VIEWPORT_HEIGHT || 1000);
 const darkMode = process.env.LABELAGENT_ACCEPTANCE_DARK_MODE === '1';
+const isolatedInspectionStubs = process.env.LABELAGENT_ACCEPTANCE_ISOLATED_INSPECTION_STUBS === '1';
 
 (async () => {
   fs.mkdirSync(output, {recursive: true});
   const browser = await chromium.launch({channel: 'msedge', headless: true});
   const page = await browser.newPage({viewport: {width: viewportWidth, height: viewportHeight}, deviceScaleFactor: 1});
+  if (isolatedInspectionStubs) {
+    const transparentPng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAF/gL+XxKqWQAAAABJRU5ErkJggg==', 'base64');
+    await page.route('**/api/inspection/image/**', route => route.fulfill({status: 200, contentType: 'image/png', body: transparentPng}));
+  }
   const errors = [], failedRequests = [], httpErrors = [], ignoredHttpErrors = [], writes = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
@@ -46,6 +51,7 @@ const darkMode = process.env.LABELAGENT_ACCEPTANCE_DARK_MODE === '1';
   const started = Date.now();
   try {
     await page.goto(base, {waitUntil: 'domcontentloaded', timeout: 60000});
+    await page.evaluate(() => window.labelAgentWorkspaceReady);
     await page.locator('#openReviewPacketsButton').waitFor({state: 'visible', timeout: 30000});
     if (darkMode) {
       await page.locator('#themeButton').click();
@@ -64,11 +70,11 @@ const darkMode = process.env.LABELAGENT_ACCEPTANCE_DARK_MODE === '1';
       status: document.querySelector('#reviewPacketStatus')?.textContent,
       bodyHidden: document.querySelector('#reviewPacketBody')?.hidden,
     }));
-    await page.locator('[data-packet-filter="priority"]').click();
+    await page.locator('[data-packet-filter="priority"]').evaluate(button => button.click());
     const priorityFrames = await page.locator('.reviewPacketItem').evaluateAll(items =>
       items.map(item => Number(item.dataset.packetFrame)));
     await page.screenshot({path: path.join(output, 'review-packet-priority-queue.png'), fullPage: true});
-    await page.locator('[data-packet-filter="all"]').click();
+    await page.locator('[data-packet-filter="all"]').evaluate(button => button.click());
     if (expectedPriorityFrames.length
         && JSON.stringify(priorityFrames) !== JSON.stringify(expectedPriorityFrames)) {
       throw new Error(`Priority queue mismatch: ${JSON.stringify(priorityFrames)}`);
@@ -91,30 +97,68 @@ const darkMode = process.env.LABELAGENT_ACCEPTANCE_DARK_MODE === '1';
       process.stdout.write(`${JSON.stringify(result)}\n`);
       return;
     }
-    await page.locator('#reviewPacketActivate').click();
-    await page.waitForFunction(() => document.querySelector('#reviewPacketStatus')?.textContent.includes('均已通过'), null, {timeout: 60000});
+    const readyBeforeActivation = await page.evaluate(() => {
+      const status = document.querySelector('#reviewPacketStatus');
+      return status?.classList.contains('ready') && status.textContent.includes('topic 已就绪');
+    });
+    await page.locator('#reviewPacketActivate').evaluate(button => button.click());
+    await page.waitForFunction(() => {
+      const scope = window.currentWorkbenchFrameState?.();
+      const status = document.querySelector('#reviewPacketStatus');
+      return Number.isInteger(scope?.file_activation_generation)
+        && scope.file_activation_generation > 0
+        && status?.classList.contains('ready');
+    }, null, {timeout: 60000});
     const row74 = page.locator('.reviewPacketItem', {hasText: '第 74 帧'});
     await row74.click();
-    await page.waitForFunction(() => document.querySelector('#frameNumber')?.value === '74'
-      && !document.querySelector('#reviewPacketDock')?.hidden
-      && document.querySelector('#frameImage')?.naturalWidth > 0, null, {timeout: 30000});
+    try {
+      await page.waitForFunction(() => document.querySelector('#frameNumber')?.value === '74'
+        && !document.querySelector('#reviewPacketDock')?.hidden
+        && document.querySelector('#frameImage')?.naturalWidth > 0, null, {timeout: 30000});
+    } catch (error) {
+      const diagnostic = await page.evaluate(() => ({
+        frame: document.querySelector('#frameNumber')?.value,
+        dockHidden: document.querySelector('#reviewPacketDock')?.hidden,
+        imageWidth: document.querySelector('#frameImage')?.naturalWidth,
+        status: document.querySelector('#reviewPacketStatus')?.textContent,
+        toast: document.querySelector('#toast')?.textContent,
+        dialogOpen: document.querySelector('#reviewPacketDialog')?.open,
+      }));
+      throw new Error(`Frame 74 did not open: ${JSON.stringify({diagnostic, errors, failedRequests, httpErrors})}; ${error.message}`);
+    }
     const readback = await page.evaluate(async () => {
       const state = window.reviewPacketWorkbenchSnapshot();
       const response = await fetch('/api/human_review_binding', {method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({frame: 74, topic: state.topic})});
+        body: JSON.stringify({frame: 74, topic: state.topic,
+          file_activation_generation: state.file_activation_generation})});
       return {state, binding: await response.json(), status: response.status,
         dock: document.querySelector('#reviewPacketDockDetail')?.textContent,
         assistant: document.querySelector('#reviewPacketAssistant')?.textContent,
         decision: document.querySelector('#reviewPacketDecision')?.value,
+        decisionSaveText: document.querySelector('#reviewPacketDecisionSave')?.textContent,
+        decisionSubmitText: document.querySelector('#reviewPacketDecisionSubmit')?.textContent,
+        shortcutHint: document.querySelector('#reviewPacketShortcutHint')?.textContent,
         decisionSubmitDisabled: document.querySelector('#reviewPacketDecisionSubmit')?.disabled,
         dialogOpen: document.querySelector('#reviewPacketDialog')?.open};
     });
+    await page.keyboard.press('Alt+Digit3');
+    const keyboardSelection = await page.locator('#reviewPacketDecision').inputValue();
+    await page.locator('#reviewPacketDecision').selectOption('');
     await page.screenshot({path: path.join(output, 'review-packet-frame74.png'), fullPage: true});
-    if (readback.status !== 200 || readback.binding.frame_sha256 !== '10d8ed84741c0031c935349dd200804b465c149956728e50a37a2096a151c34c') {
-      throw new Error('Frame 74 binding does not match the packet');
+    if (readback.status !== 200 || readback.binding.frame_sha256 !== '10d8ed84741c0031c935349dd200804b465c149956728e50a37a2096a151c34c'
+        || readback.binding.file_activation_generation !== readback.state.file_activation_generation) {
+      throw new Error(`Frame 74 binding does not match the packet: ${JSON.stringify({
+        status: readback.status, frame_sha256: readback.binding.frame_sha256,
+        binding_generation: readback.binding.file_activation_generation,
+        state_generation: readback.state.file_activation_generation,
+      })}`);
     }
     if (writes.length) throw new Error(`Unexpected review write requests: ${writes.join(', ')}`);
     if (!readback.assistant?.includes('助手预审') || readback.decision !== ''
+        || readback.decisionSaveText?.trim() !== '仅签署'
+        || readback.decisionSubmitText?.trim() !== '签署并下一帧'
+        || !readback.shortcutHint?.includes('Ctrl+Enter')
+        || keyboardSelection !== 'no_slope_present'
         || readback.decisionSubmitDisabled !== true) {
       throw new Error('Assistant suggestion was not shown with a blank, disabled human decision gate');
     }
@@ -127,8 +171,14 @@ const darkMode = process.env.LABELAGENT_ACCEPTANCE_DARK_MODE === '1';
         annotation_state: readback.state.annotation_state, truth_verified: readback.state.truth_verified,
         frame_sha256: readback.binding.frame_sha256, dock: readback.dock,
         assistant: readback.assistant, decision_preselected: readback.decision,
+        keyboard_selection: keyboardSelection,
+        decision_save_text: readback.decisionSaveText,
+        decision_submit_text: readback.decisionSubmitText,
+        shortcut_hint: readback.shortcutHint,
         decision_submit_disabled: readback.decisionSubmitDisabled,
       }, dialog_closed_after_navigation: readback.dialogOpen === false,
+      packet_was_ready_before_activation: readyBeforeActivation,
+      isolated_inspection_stubs: isolatedInspectionStubs,
       truth_write_requests: writes, page_errors: errors, failed_requests: failedRequests,
       http_errors: httpErrors,
       screenshots: [path.join(output, 'review-packet-priority-queue.png'),

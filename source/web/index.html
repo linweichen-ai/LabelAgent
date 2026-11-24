@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="/human-review.css?v=64">
   <link rel="stylesheet" href="/reference-prep.css?v=103">
   <link rel="stylesheet" href="/batch-review.css?v=64">
-  <link rel="stylesheet" href="/review-packet.css?v=164">
+  <link rel="stylesheet" href="/review-packet.css?v=165">
   <link rel="stylesheet" href="/pallet-candidate-review-entry.css?v=1">
   <link rel="stylesheet" href="/homepage-theme.css?v=5">
 </head>
@@ -741,7 +741,11 @@
       <option value="uncertain">不确定 · 留待进一步复核</option>
     </select>
     <input id="reviewPacketDecisionNote" type="text" maxlength="500" placeholder="备注（可选）" aria-label="专项复核备注">
-    <button id="reviewPacketDecisionSubmit" type="button" class="primary">签署专项判断</button>
+    <div class="reviewPacketDecisionActions">
+      <button id="reviewPacketDecisionSave" type="button">仅签署</button>
+      <button id="reviewPacketDecisionSubmit" type="button" class="primary">签署并下一帧</button>
+    </div>
+    <small id="reviewPacketShortcutHint" class="reviewPacketShortcutHint">Alt+1/2/3/4 选择判断 · Ctrl+Enter 签署并进入下一帧 · Alt+←/→ 切换</small>
   </div>
   <div class="reviewPacketDockNav">
     <button id="reviewPacketDockQueue" type="button">打开队列</button>
@@ -750,6 +754,6 @@
   </div>
 </div>
 <div id="toast" role="status"></div>
-<script src="/pointcloud.js?v=64"></script><script src="/app.js?v=218"></script><script src="/inspection.js?v=109"></script><script src="/guide.js?v=121"></script><script src="/review.js?v=68"></script><script src="/batch-review.js?v=65"></script><script src="/compare.js?v=68"></script><script src="/human-review.js?v=98"></script><script src="/reference-prep.js?v=170"></script><script src="/component-review-core.js?v=2"></script><script src="/component-review.js?v=2"></script><script src="/candidate-comparison-core.js?v=2"></script><script src="/candidate-comparison.js?v=2"></script><script src="/review-packet-core.js?v=164"></script><script src="/review-packet.js?v=166"></script><script src="/pallet-candidate-review-entry.js?v=1"></script>
+<script src="/pointcloud.js?v=64"></script><script src="/app.js?v=219"></script><script src="/inspection.js?v=109"></script><script src="/guide.js?v=121"></script><script src="/review.js?v=68"></script><script src="/batch-review.js?v=65"></script><script src="/compare.js?v=68"></script><script src="/human-review.js?v=98"></script><script src="/reference-prep.js?v=170"></script><script src="/component-review-core.js?v=2"></script><script src="/component-review.js?v=2"></script><script src="/candidate-comparison-core.js?v=2"></script><script src="/candidate-comparison.js?v=2"></script><script src="/review-packet-core.js?v=164"></script><script src="/review-packet.js?v=167"></script><script src="/pallet-candidate-review-entry.js?v=1"></script>
 </body>
 </html>

@@ -15,6 +15,7 @@
   const reviewerInput = byId('reviewPacketReviewer');
   const decisionSelect = byId('reviewPacketDecision');
   const decisionNote = byId('reviewPacketDecisionNote');
+  const decisionSave = byId('reviewPacketDecisionSave');
   const decisionSubmit = byId('reviewPacketDecisionSubmit');
   let catalog = [];
   let packet = null;
@@ -64,8 +65,11 @@
     activateButton.disabled = value || !catalog.length;
     byId('reviewPacketRefresh').disabled = value;
     select.disabled = value || !catalog.length;
-    decisionSubmit.disabled = value || currentIndex < 0
+    const decisionDisabled = value || currentIndex < 0
       || !reviewerInput.value.trim() || !decisionSelect.value;
+    decisionSave.disabled = decisionDisabled;
+    decisionSubmit.disabled = decisionDisabled;
+    byId('reviewPacketDock')?.classList.toggle('busy', value);
     if (message) setStatus(message, value ? 'busy' : '');
   }
 
@@ -104,7 +108,9 @@
       : '当前帧没有助手预审建议；请独立作出人工判断。';
     byId('reviewPacketDockPrevious').disabled = busy || packet.rows.length < 2;
     byId('reviewPacketDockNext').disabled = busy || packet.rows.length < 2;
-    decisionSubmit.disabled = busy || !reviewerInput.value.trim() || !decisionSelect.value;
+    const decisionDisabled = busy || !reviewerInput.value.trim() || !decisionSelect.value;
+    decisionSave.disabled = decisionDisabled;
+    decisionSubmit.disabled = decisionDisabled;
   }
 
   function rowNode(row, index) {
@@ -272,15 +278,23 @@
     const row = packet.rows[index];
     setBusy(true, `正在校验第 ${row.frame} 帧原图哈希…`);
     try {
+      const workbenchScope = window.currentWorkbenchFrameState?.();
+      if (!Number.isInteger(workbenchScope?.file_activation_generation)) {
+        throw new Error('当前文件载入代次不可用，请重新载入复核数据');
+      }
       const binding = await request('/api/human_review_binding', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({frame: row.frame, topic: packet.topic}),
+        body: JSON.stringify({frame: row.frame, topic: packet.topic,
+          file_activation_generation: workbenchScope.file_activation_generation}),
       });
       if (String(binding.frame_sha256 || '').toLowerCase() !== row.source_frame_sha256) {
         throw new Error(`第 ${row.frame} 帧原图 SHA-256 与复核包不一致，已拒绝打开`);
       }
       if (binding.topic !== packet.topic || Number(binding.frame) !== Number(row.frame)) {
         throw new Error(`第 ${row.frame} 帧绑定读回与复核包作用域不一致`);
+      }
+      if (binding.file_activation_generation !== workbenchScope.file_activation_generation) {
+        throw new Error(`第 ${row.frame} 帧绑定读回与当前文件载入代次不一致`);
       }
       if (typeof window.openFrameForReferencePreparation !== 'function') throw new Error('工作台帧导航不可用');
       await window.openFrameForReferencePreparation(row.frame);
@@ -298,6 +312,7 @@
       decisionNote.value = '';
       dialog.close();
       render();
+      requestAnimationFrame(() => (reviewerInput.value.trim() ? decisionSelect : reviewerInput).focus({preventScroll: true}));
       window.labelAgentToast?.(`第 ${row.frame} 帧原图哈希已通过；可签署斜坡专项判断，修正轮廓则走完整真值门禁`);
     } catch (error) { setStatus(error.message, 'error'); window.labelAgentToast?.(error.message); }
     finally { setBusy(false); renderDock(); }
@@ -310,7 +325,7 @@
     if (next >= 0) await openRow(next);
   }
 
-  async function submitScopedDecision() {
+  async function submitScopedDecision(autoAdvance = false) {
     if (busy || currentIndex < 0 || !packet?.rows?.[currentIndex]) return;
     const row = packet.rows[currentIndex];
     const reviewer = reviewerInput.value.trim();
@@ -334,6 +349,8 @@
     const slopeGeometrySha256 = await sha256Json(slopeGeometry);
     sessionStorage.setItem('labelagentReviewerDeclaredId', reviewer);
     setBusy(true, '正在绑定原图、斜坡候选几何并写入专项人工决定；不会写入整帧真值或训练集…');
+    let shouldAdvance = false;
+    let allComplete = false;
     try {
       const data = await request(`/api/review_packets/${encodeURIComponent(packet.packet_id)}/decisions`, {
         method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -362,12 +379,55 @@
       decisionKey = makeDecisionKey();
       await refreshCompletion();
       setStatus(`第 ${row.frame} 帧专项人工决定已读回；没有写入整帧真值或训练集。`, 'ready');
-      window.labelAgentToast?.(`第 ${row.frame} 帧专项判断已签署；可进入下一帧`);
+      const next = core.adjacentPendingIndex(packet.rows, completed, currentIndex, 1);
+      shouldAdvance = autoAdvance && next >= 0;
+      allComplete = next < 0;
+      window.labelAgentToast?.(allComplete
+        ? `第 ${row.frame} 帧专项判断已签署；当前复核包已全部完成`
+        : autoAdvance ? `第 ${row.frame} 帧专项判断已签署；正在进入下一未完成帧`
+          : `第 ${row.frame} 帧专项判断已签署；可进入下一帧`);
     } catch (error) {
       setStatus(error.message, 'error');
       window.labelAgentToast?.(error.message);
     } finally { setBusy(false); renderDock(); }
+    if (shouldAdvance) await navigate(1);
   }
+
+  function chooseDecisionByShortcut(index) {
+    const row = packet?.rows?.[currentIndex];
+    const values = [
+      'slope_present_and_mask_acceptable', 'slope_present_mask_needs_correction',
+      'no_slope_present', 'uncertain',
+    ];
+    const value = values[index];
+    if (!row || !row.allowed_human_decisions?.includes(value)) {
+      window.labelAgentToast?.('当前复核包不允许该判断，请使用下拉框选择');
+      return false;
+    }
+    decisionSelect.value = value;
+    renderDock();
+    window.labelAgentToast?.(`已选择：${decisionLabels[value]}；尚未签署`);
+    return true;
+  }
+
+  document.addEventListener('keydown', event => {
+    if (dock.hidden || dialog.open || busy || currentIndex < 0 || event.defaultPrevented) return;
+    if (event.altKey && !event.ctrlKey && !event.metaKey && /^[1-4]$/.test(event.key)) {
+      event.preventDefault();
+      chooseDecisionByShortcut(Number(event.key) - 1);
+      return;
+    }
+    if (event.ctrlKey && !event.altKey && !event.metaKey && event.key === 'Enter') {
+      event.preventDefault();
+      submitScopedDecision(true);
+      return;
+    }
+    if (event.altKey && !event.ctrlKey && !event.metaKey
+        && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
+      event.preventDefault();
+      navigate(event.key === 'ArrowLeft' ? -1 : 1);
+    }
+  });
 
   byId('openReviewPacketsButton').addEventListener('click', async () => {
     dialog.showModal();
@@ -394,7 +454,8 @@
   byId('reviewPacketDockNext').addEventListener('click', () => navigate(1));
   reviewerInput.addEventListener('input', renderDock);
   decisionSelect.addEventListener('change', renderDock);
-  decisionSubmit.addEventListener('click', submitScopedDecision);
+  decisionSave.addEventListener('click', () => submitScopedDecision(false));
+  decisionSubmit.addEventListener('click', () => submitScopedDecision(true));
   document.addEventListener('labelagent:human-truth-saved', async event => {
     if (!packet || core.normalizePath(event.detail?.path) !== core.normalizePath(packet.mcap_path)
         || event.detail?.topic !== packet.topic) return;
@@ -406,5 +467,9 @@
     } catch (error) { setStatus(`真值已保存，但专项队列读回失败：${error.message}`, 'error'); }
   });
   dialog.addEventListener('cancel', event => { event.preventDefault(); dialog.close(); });
-  refreshCatalog();
+  if (window.labelAgentWorkspaceReady?.then) {
+    window.labelAgentWorkspaceReady.then(() => refreshCatalog()).catch(error => {
+      setStatus(`工作区恢复失败，专项复核尚未载入：${error.message}`, 'error');
+    });
+  } else refreshCatalog();
 })();

@@ -103,9 +103,13 @@ test('assistant uncertainty is prioritized without changing truth boundaries', (
 test('assistant suggestion is shown but never preselected or auto-submitted', () => {
   const html = fs.readFileSync(path.join(__dirname, '../source/web/index.html'), 'utf8');
   const ui = fs.readFileSync(path.join(__dirname, '../source/web/review-packet.js'), 'utf8');
+  const app = fs.readFileSync(path.join(__dirname, '../source/web/app.js'), 'utf8');
   assert.match(html, /id="reviewPacketReviewer"/);
   assert.match(html, /id="reviewPacketDecision"/);
+  assert.match(html, /id="reviewPacketDecisionSave"/);
   assert.match(html, /id="reviewPacketDecisionSubmit"/);
+  assert.match(html, /签署并下一帧/);
+  assert.match(html, /Ctrl\+Enter/);
   assert.match(html, /data-packet-filter="priority"/);
   assert.match(html, /请选择人工判断（助手不会代选）/);
   assert.match(ui, /decisionSelect\.value = ''/);
@@ -115,4 +119,13 @@ test('assistant suggestion is shown but never preselected or auto-submitted', ()
   assert.match(ui, /training_data_written !== false/);
   assert.match(ui, /currentDraftIsDirty\(\)/);
   assert.match(ui, /core\.isPriorityReview/);
+  assert.match(ui, /file_activation_generation: workbenchScope\.file_activation_generation/);
+  assert.match(ui, /binding\.file_activation_generation !== workbenchScope\.file_activation_generation/);
+  assert.match(ui, /submitScopedDecision\(false\)/);
+  assert.match(ui, /submitScopedDecision\(true\)/);
+  assert.match(ui, /if \(shouldAdvance\) await navigate\(1\)/);
+  assert.match(ui, /chooseDecisionByShortcut/);
+  assert.match(ui, /event\.key === 'ArrowLeft'/);
+  assert.match(ui, /window\.labelAgentWorkspaceReady\.then\(\(\) => refreshCatalog\(\)\)/);
+  assert.match(app, /reviewPacketWorkbenchSnapshot=.*file_activation_generation:loadedFileActivationGeneration/);
 });

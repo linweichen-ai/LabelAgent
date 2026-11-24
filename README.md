@@ -1,11 +1,28 @@
 # 视频全景自动标注原型
 
-## 最短复现路径
+## 推荐运行方式：模型与网页统一部署在 Linux 服务器
+
+生产和日常验收默认采用服务器优先架构：网页后端、SAM3、Qwen8B 以及可选外部专家路由都运行在 Linux GPU 服务器；Windows 本机只建立 SSH 安全通道并打开浏览器，不再启动本地 Python、SAM3 或 VLM。
+
+```text
+Windows 浏览器 -> SSH 安全通道 -> Linux 网页后端 -> 同机 SAM3 / Qwen8B
+```
+
+服务器已启动时，Windows 侧只需执行：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\connect_remote_workbench.ps1 `
+  -Target factory-5090 -RemotePort 18765 -LocalPort 18765
+```
+
+随后访问 `http://127.0.0.1:18765/`。该地址是安全通道的本机入口，实际网页和模型均在服务器运行。启动、停止、端口和故障排查见 [Linux 兼容版教程](docs/LINUX_SETUP.md)。
+
+## 独立复现路径
 
 **从 CNB 或 GitHub 复现时都只下载 `reproduce` 分支。** `labelagent` 是持续开发分支，其他
 `codex/*` 和 `backup/*` 分支仅保留历史记录，不作为复现入口。
 
-Windows + NVIDIA GPU 用户可直接执行：
+没有可用服务器、需要在独立 Windows + NVIDIA GPU 机器复现时，可执行：
 
 ```powershell
 git clone --branch reproduce --single-branch https://cnb.cool/seer-robotics/EIC/BEV/LabelAgent

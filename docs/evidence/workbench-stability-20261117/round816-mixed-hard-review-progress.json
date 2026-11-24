@@ -1,0 +1,17 @@
+{
+  "round": 816,
+  "date": "2026-11-24",
+  "review_sample_count": 34,
+  "review_completed_rows": 0,
+  "review_remaining_rows": 34,
+  "review_state": "review_template_not_submission",
+  "expected_export_filename": "mixed-hard-adjudication.json",
+  "readiness_sha256": "5129abc97dd3db356d4b19cc77147098a3817f54d3a8ebc37cabc15c8d1033c7",
+  "external_api_calls": 0,
+  "real_images_uploaded": 0,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "test24_used": false,
+  "production_deployed": false
+}

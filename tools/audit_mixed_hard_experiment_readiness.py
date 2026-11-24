@@ -10,12 +10,38 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools.build_mixed_hard_adjudication_workspace import (
-    read_json, validate_packet, validate_submission,
+    LABELS, TEMPLATE_SCHEMA, read_json, validate_packet,
+    validate_submission,
 )
 from tools.evaluate_mixed_hard_three_arm import _validate_prediction_packet, sha256_file
 
 
 SCHEMA_VERSION = "labelagent.mixed-hard-experiment-readiness.v1"
+
+
+def _template_progress(payload, expected_count):
+    rows = payload.get("rows") if isinstance(payload, dict) else None
+    if (payload.get("schema_version") != TEMPLATE_SCHEMA
+            or not isinstance(rows, list) or len(rows) != expected_count):
+        return None
+    required = ("candidate_decision", "slope_presence", "class_conflict",
+                "pallet_quality")
+    completed = 0
+    for row in rows:
+        presence = row.get("class_presence")
+        if (all(row.get(key) is not None for key in required)
+                and isinstance(presence, dict) and set(presence) == set(LABELS)
+                and all(value is not None for value in presence.values())
+                and type(row.get("pallet_instance_count")) is int):
+            completed += 1
+    return {
+        "state": "review_template_not_submission",
+        "sample_count": expected_count,
+        "completed_rows": completed,
+        "remaining_rows": expected_count - completed,
+        "expected_export_filename": "mixed-hard-adjudication.json",
+        "review_interface": "reviewer.html",
+    }
 
 
 def _queue_status(path, expected_count):
@@ -104,11 +130,21 @@ def audit_readiness(*, packet_dir, adjudication_path, local_path,
     review = {"ready": False, "error": None, "manifest_sha256": manifest_sha}
     try:
         adjudication = read_json(adjudication_path)
-        validation = validate_submission(manifest, manifest_sha, adjudication)
-        review.update(ready=validation.get("benchmark_reference_ready") is True,
-                      validation=validation)
-        if not review["ready"]:
-            review["error"] = "declared review is incomplete or uncertain"
+        progress = _template_progress(adjudication, len(manifest["rows"]))
+        if progress is not None:
+            review.update(progress)
+            review["error"] = (
+                f"human review has not been exported; {progress['remaining_rows']} "
+                "rows remain")
+        else:
+            validation = validate_submission(manifest, manifest_sha, adjudication)
+            review.update(ready=validation.get("benchmark_reference_ready") is True,
+                          validation=validation,
+                          state=("benchmark_ready" if validation.get(
+                              "benchmark_reference_ready") else
+                                 "complete_but_uncertain"))
+            if not review["ready"]:
+                review["error"] = "declared review is incomplete or uncertain"
     except Exception as error:
         review["error"] = f"{type(error).__name__}: {str(error)[:200]}"
     local = _prediction_status(local_path, 34, external=False)
@@ -145,7 +181,8 @@ def audit_readiness(*, packet_dir, adjudication_path, local_path,
         if not source_ab["ready"] or not resized_ab["ready"] else None,
     ])
     next_actions = [item for item in [
-        "complete benchmark-ready declared review" if not review["ready"] else None,
+        ("complete 34-row review in reviewer.html and export "
+         "mixed-hard-adjudication.json") if not review["ready"] else None,
         "obtain explicit resolution A/B authorization" if not authorization["ready"] else None,
         *external_actions,
     ] if item is not None]

@@ -102,6 +102,37 @@ def test_audit_reports_exact_missing_components_without_running_models(tmp_path,
     assert result["external_call_performed"] is False
 
 
+def test_audit_describes_unfilled_review_template_as_progress_not_schema_error(
+        tmp_path, monkeypatch):
+    paths, ids = _files(tmp_path)
+    paths["adjudication"] = _write(tmp_path / "adjudication-template.json", {
+        "schema_version": "labelagent.mixed-hard-adjudication-template.v2",
+        "rows": [{
+            "sample_id": sample_id,
+            "candidate_decision": None,
+            "slope_presence": None,
+            "class_conflict": None,
+            "pallet_quality": None,
+            "class_presence": {label: None for label in LABELS},
+            "pallet_instance_count": None,
+        } for sample_id in ids],
+    })
+    monkeypatch.setattr(audit, "validate_packet", lambda _: (
+        {"rows": [{"sample_id": item} for item in ids]}, "f" * 64))
+    result = audit.audit_readiness(
+        packet_dir=tmp_path, adjudication_path=paths["adjudication"],
+        local_path=paths["local"], hybrid_queue_path=paths["hybrid"],
+        all_queue_path=paths["all_queue"],
+        resolution_authorization_path=paths["authorization"])
+    review = result["components"]["declared_review"]
+    assert review["state"] == "review_template_not_submission"
+    assert review["completed_rows"] == 0
+    assert review["remaining_rows"] == 34
+    assert review["expected_export_filename"] == "mixed-hard-adjudication.json"
+    assert "unsupported adjudication schema" not in review["error"]
+    assert result["next_actions"][0].startswith("complete 34-row review")
+
+
 def test_audit_marks_quality_inputs_ready_but_never_production(tmp_path, monkeypatch):
     paths, ids = _files(tmp_path, authorized=True, external=True)
     monkeypatch.setattr(audit, "validate_packet", lambda _: (

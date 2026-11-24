@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="labelagent-ui-version" content="172">
+  <meta name="labelagent-ui-version" content="173">
   <title>标注 Agent 平台</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23224b8d'/%3E%3Ctext x='32' y='41' text-anchor='middle' font-family='Arial,sans-serif' font-size='26' font-weight='700' fill='white'%3ELA%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="/style.css?v=120">
+<link rel="stylesheet" href="/style.css?v=121">
 <link rel="stylesheet" href="/point-prompt-v19.css?v=64">
   <link rel="stylesheet" href="/human-review.css?v=64">
   <link rel="stylesheet" href="/reference-prep.css?v=103">
@@ -183,14 +183,16 @@
           <button id="candidateReuseButton" type="button" class="primary">载入候选并开始复核</button>
         </div>
         <div class="toolrow" id="truthTools">
-          <button id="polygonButton" class="selected">多边形</button>
-          <button id="pointButton" title="进入后在目标内部点一下，第一次点图会立即运行 SAM">SAM 点选（点目标即运行）</button>
-          <button id="negativeButton" title="点选模式下点击非目标区域">排除点</button>
+          <button id="polygonButton" class="selected" title="逐点绘制多边形（V）">多边形</button>
+          <button id="rectangleButton" title="按住并拖动绘制矩形（R）">矩形框</button>
+          <button id="freehandButton" title="按住并沿目标边界拖动，松开后自动闭合（L）">自由线 / 套索</button>
+          <button id="pointButton" title="正提示点（P）：进入后在目标内部点一下，第一次点图会立即运行 SAM">SAM 正点（P）</button>
+          <button id="negativeButton" title="负提示点（N）：点击非目标区域">SAM 负点（N）</button>
           <button id="generateMaskButton">生成轮廓</button>
           <button id="addRegionButton" title="仅手工圈出区域并补到选中标注，不会调用 SAM">手工补区域（非 SAM）</button>
-          <button id="eraseRegionButton" title="圈出区域并从选中标注中清除">橡皮擦</button>
-          <button id="undoButton" title="撤销上一个点">↶</button>
-          <button id="finishButton">闭合</button>
+          <button id="eraseRegionButton" title="圈出区域并从选中标注中清除（E）">橡皮擦</button>
+          <button id="undoButton" title="撤销当前草稿的上一个点（Ctrl+Z）">↶</button>
+          <button id="finishButton" title="闭合当前多边形（Enter）">闭合</button>
           <button id="clearButton">清空本帧</button>
         </div>
         <div id="pointPromptCoach" class="pointPromptCoach" hidden aria-live="polite" tabindex="-1">
@@ -734,6 +736,6 @@
   </div>
 </div>
 <div id="toast" role="status"></div>
-<script src="/pointcloud.js?v=64"></script><script src="/app.js?v=209"></script><script src="/inspection.js?v=109"></script><script src="/guide.js?v=121"></script><script src="/review.js?v=68"></script><script src="/batch-review.js?v=65"></script><script src="/compare.js?v=68"></script><script src="/human-review.js?v=98"></script><script src="/reference-prep.js?v=170"></script><script src="/component-review-core.js?v=2"></script><script src="/component-review.js?v=2"></script><script src="/candidate-comparison-core.js?v=2"></script><script src="/candidate-comparison.js?v=2"></script><script src="/review-packet-core.js?v=164"></script><script src="/review-packet.js?v=166"></script><script src="/pallet-candidate-review-entry.js?v=1"></script>
+<script src="/pointcloud.js?v=64"></script><script src="/app.js?v=211"></script><script src="/inspection.js?v=109"></script><script src="/guide.js?v=121"></script><script src="/review.js?v=68"></script><script src="/batch-review.js?v=65"></script><script src="/compare.js?v=68"></script><script src="/human-review.js?v=98"></script><script src="/reference-prep.js?v=170"></script><script src="/component-review-core.js?v=2"></script><script src="/component-review.js?v=2"></script><script src="/candidate-comparison-core.js?v=2"></script><script src="/candidate-comparison.js?v=2"></script><script src="/review-packet-core.js?v=164"></script><script src="/review-packet.js?v=166"></script><script src="/pallet-candidate-review-entry.js?v=1"></script>
 </body>
 </html>

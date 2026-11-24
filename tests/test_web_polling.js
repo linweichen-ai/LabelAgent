@@ -140,9 +140,9 @@ test('工作台持续显示新旧数据集身份和逐类别覆盖状态', () =>
   assert.match(app, /function candidateCoverageEvidence\(/);
   assert.match(app, /function candidateReviewCountsByLabel\(/);
   assert.match(app, /candidateNeedsReview/);
-  assert.match(html, /style\.css\?v=120/);
+  assert.match(html, /style\.css\?v=121/);
   assert.match(html, /homepage-theme\.css\?v=5/);
-  assert.match(html, /app\.js\?v=209/);
+  assert.match(html, /app\.js\?v=211/);
   assert.match(app, /action\.dataset\.coverageRepair=label/);
   assert.match(app, /startCandidateCoverageRepair\(label\)/);
   assert.match(app, /不会自动运行模型或写入人工真值/);
@@ -1720,6 +1720,8 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
     const h = harness({
       $(id) { return elements[id] || (elements[id] = {}); },
       setInterval() { return 1; }, clearInterval() {},
+      queueMicrotask(callback) { Promise.resolve().then(callback); },
+      requestAnimationFrame() { return 1; },
       updatePointPromptCoach() {}, refreshShapeList() {}, draw() {},
       toast(message) { notices.push(message); },
       selectedShapes() { return items; },
@@ -1734,7 +1736,9 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
       loadedFileActivationGeneration=7,
       generatedShapeFrame=null,generatedShapeTopic='',generatedShapeIndex=-1,
       selectedShapeIndex=-1,referenceReviewOriginalOnly=true,pointPromptGeneratedPointCount=0,
+      pointPromptGeneratedSignature='',pointPromptQueuedRerun=false,canvasDrawFrame=null,
       pointPromptRequiresRefinement=false,workspaceRestoreState='${restoreState}';`);
+    h.run(section(app, 'function pointSetSignature', 'function draw'));
     h.run(generate);
     return {h, elements, calls, items, notices, resolve(value) { resolveRequest(value); }};
   }
@@ -1743,7 +1747,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   const owner = first.h.run('generatePointMask()');
   const duplicate = first.h.run('generatePointMask()');
   assert.equal(first.calls.length, 1);
-  first.h.run("promptPoints[0].x=999;$('labelSelect').value='person'");
+  first.h.run("$('labelSelect').value='person'");
   first.resolve({path:'file-a',topic:'/camera',frame:3,file_activation_generation:7,points:[[1,1],[2,1],[2,2]],holes:[],parts:[{points:[[1,1],[2,1],[2,2]],holes:[]}],score:.9});
   await Promise.all([owner, duplicate]);
   assert.deepEqual(first.calls[0], {route:'segment_points', body:{frame:3, points:[{x:10,y:20,label:1}],path:'file-a',topic:'/camera',file_activation_generation:7}});
@@ -1752,6 +1756,21 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.equal(first.h.run('pointPromptGeneratedPointCount'), 1);
   assert.equal(first.h.run('segmentBusy'), false);
   assert.match(first.h.run('pointPromptNotice'), /提交时类别“pallet”/);
+
+  const coalesced = setup();
+  const initial = coalesced.h.run('generatePointMask()');
+  coalesced.h.run("promptPoints.push({x:30,y:40,label:1});promptChangedDuringRequest();promptPoints.push({x:50,y:60,label:0});promptChangedDuringRequest();");
+  assert.equal(coalesced.calls.length, 1);
+  coalesced.resolve({path:'file-a',topic:'/camera',frame:3,file_activation_generation:7,points:[[1,1],[2,1],[2,2]],holes:[],parts:[{points:[[1,1],[2,1],[2,2]],holes:[]}],score:.9});
+  await initial;
+  await coalesced.h.flush();
+  assert.equal(coalesced.calls.length, 2);
+  assert.deepEqual(coalesced.calls[1].body.points, [{x:10,y:20,label:1},{x:30,y:40,label:1},{x:50,y:60,label:0}]);
+  coalesced.resolve({path:'file-a',topic:'/camera',frame:3,file_activation_generation:7,points:[[5,5],[8,5],[8,8]],holes:[],parts:[{points:[[5,5],[8,5],[8,8]],holes:[]}],score:.9});
+  await coalesced.h.flush();
+  assert.equal(coalesced.calls.length, 2);
+  assert.equal(coalesced.items.length, 1);
+  assert.equal(coalesced.h.run('pointPromptGeneratedPointCount'), 3);
 
   const stale = setup();
   const pending = stale.h.run('generatePointMask()');
@@ -1774,10 +1793,10 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.equal(restoring.calls.length, 0);
   assert.ok(restoring.notices.includes('正在恢复上次工作帧，完成后才能运行 SAM'));
 
-  assert.match(app, /pointMode&&segmentBusy.*本次点位已锁定/);
-  assert.match(app, /pointMode&&segmentBusy.*完成后再撤销/);
+  assert.match(app, /pointPromptQueuedRerun=true/);
+  assert.match(app, /旧轮廓已丢弃，正在合并最新点集/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=209/);
+  assert.match(source('index.html'), /app\.js\?v=211/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1839,7 +1858,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{\s*invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(currentGeneration=0\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=209/);
+  assert.match(source('index.html'), /app\.js\?v=211/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1898,7 +1917,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 4);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=209/);
+  assert.match(source('index.html'), /app\.js\?v=211/);
 });
 
 test('类别与推理类别保存绑定文件载入代次和类别状态版本', async () => {
@@ -1937,7 +1956,7 @@ test('类别与推理类别保存绑定文件载入代次和类别状态版本',
   assert.deepEqual(applied[0].labels, ['a','b']);
   assert.deepEqual(applied[0].auto_labels, ['b']);
   assert.equal(h.run('currentDescription'), null);
-  assert.match(source('index.html'), /app\.js\?v=209/);
+  assert.match(source('index.html'), /app\.js\?v=211/);
 });
 
 test('模型配置保存绑定工作区载入代次和配置版本', async () => {

@@ -1,0 +1,26 @@
+{
+  "schema_version": "labelagent.new-class-observations.v1",
+  "observations": [
+    {
+      "observation_id": "sequence-frame-camera-model",
+      "sample_id": "sequence-frame-camera",
+      "sequence": "003",
+      "camera": 1,
+      "frame_id": "example-frame-id",
+      "split": "development",
+      "image_sha256": "replace-with-64-character-image-sha256",
+      "unknown_candidates": [
+        {
+          "candidate_name": "rack",
+          "evidence": "present",
+          "confidence": 0.8,
+          "reason": "visible upright shelf structure"
+        }
+      ]
+    }
+  ],
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "test24_used": false
+}

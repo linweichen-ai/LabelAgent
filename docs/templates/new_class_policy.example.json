@@ -1,0 +1,21 @@
+{
+  "schema_version": "labelagent.new-class-policy.v1",
+  "known_labels": {
+    "车辆": ["vehicle", "generic_vehicle"],
+    "pallet": ["栈板", "托盘"],
+    "person": ["人", "人员", "pedestrian"],
+    "floor": ["地面", "ground"],
+    "slope": ["斜坡", "ramp"],
+    "ego": ["ego_robot", "host_robot"],
+    "other_robot": ["other robot", "forklift", "叉车"],
+    "cargo_floor": ["cargo floor", "cargo_deck", "载货平台"]
+  },
+  "candidate_synonym_groups": {
+    "rack": ["shelf", "shelving", "货架"],
+    "chair": ["seat", "椅子"],
+    "box": ["carton", "纸箱", "箱子"]
+  },
+  "minimum_distinct_frames": 2,
+  "minimum_distinct_sequences": 1,
+  "automatic_registry_mutation": false
+}

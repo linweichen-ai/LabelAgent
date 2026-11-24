@@ -23,6 +23,18 @@ git clone --branch reproduce --single-branch https://github.com/linweichen-ai/La
 
 随后打开 `http://127.0.0.1:8765`。环境、依赖、权重及服务可用性可由 `tools/repro_doctor.py` 读回检查；完整代码回归使用 `tools/verify_checkout.ps1`。详细步骤、VLM 配置边界、验收口径和最小复现记录见 [可复现安装与验收](docs/REPRODUCIBLE_SETUP.md)。模型权重、MCAP、人工真值、运行状态与密钥不随 Git 发布，也不会被启动脚本上传。
 
+Linux 用户使用独立的 `linux` 分支：
+
+```bash
+git clone --branch linux --single-branch https://github.com/linweichen-ai/LabelAgent.git
+cd LabelAgent
+chmod +x tools/*_linux.sh
+tools/setup_linux.sh --web-only
+tools/start_linux.sh --sam-url http://SAM服务器地址:8766 --no-browser
+```
+
+完整 GPU 安装时去掉 `--web-only`。完整安装、SSH 隧道、停止方式和故障排查见 [Linux 兼容版教程](docs/LINUX_SETUP.md)。浏览器必须访问 `http://127.0.0.1:8765/`，不要直接打开 `source/web/index.html` 的 `file://` 静态页面。
+
 首次交接给团队同事时，建议直接使用包含操作截图、安装清单、完整验收流程和常见故障处理的 [同事完整复现教程](docs/LabelAgent_同事完整复现教程_20261123.md)。
 
 无需模型权重、MCAP 或私有标注，也可用公开合成数据真实验证离线人工复核页的草稿导出、刷新恢复、篡改拦截和训练授权门禁。`tools/setup_windows.ps1` 已安装所需浏览器验收依赖，标准 `tools/verify_checkout.ps1` 会自动执行该真实浏览器自检；该过程只访问本机回环地址，不会产生人工真值或训练批准。

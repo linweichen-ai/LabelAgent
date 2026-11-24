@@ -7166,13 +7166,20 @@ def get_inspection():
                        (belongs(output) or legacy_trace and trace) else None)
 
 
+def server_bind_address():
+    """Return the explicit workbench bind address for local or Linux deployment."""
+    host = os.environ.get("AUTOLABEL_HOST", "127.0.0.1").strip() or "127.0.0.1"
+    port = int(os.environ.get("AUTOLABEL_PORT", "8765"))
+    return host, port
+
+
 def main():
     load()
     if state.get("video_path") and Path(state["video_path"]).is_file():
         state["video"] = Video(state["video_path"])
-    port = int(os.environ.get("AUTOLABEL_PORT", "8765"))
-    print(f"Autolabel: http://127.0.0.1:{port}", flush=True)
-    app.run(host="127.0.0.1", port=port, threaded=True)
+    host, port = server_bind_address()
+    print(f"Autolabel: http://{host}:{port}", flush=True)
+    app.run(host=host, port=port, threaded=True)
 
 
 if __name__ == "__main__":

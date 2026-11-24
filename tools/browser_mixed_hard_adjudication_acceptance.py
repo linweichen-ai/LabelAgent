@@ -191,6 +191,18 @@ def run_acceptance(workspace: Path | str, output: Path | str,
                 if not dialogs or "请先完整填写本帧独立判断" not in dialogs[-1]:
                     raise AssertionError("blind-review refusal was not explained")
 
+                if page.input_value("#palletCount") != "":
+                    raise AssertionError("pallet count was silently defaulted")
+                initial_status = page.locator("#currentStatus").text_content()
+                if not initial_status or "本帧还缺" not in initial_status:
+                    raise AssertionError("missing-field status was not visible")
+                page.once("dialog", lambda dialog: (
+                    dialogs.append(dialog.message), dialog.dismiss()))
+                page.locator("#completeNext").click()
+                page.wait_for_timeout(100)
+                if not dialogs or "本帧尚未完整" not in dialogs[-1]:
+                    raise AssertionError("incomplete completion shortcut was not blocked")
+
                 page.select_option("#candidate", "accept_candidate")
                 page.select_option("#slope", "present")
                 page.select_option("#conflict", "none")
@@ -209,6 +221,17 @@ def run_acceptance(workspace: Path | str, output: Path | str,
                     raise AssertionError("assistant hint did not render after blind review")
                 if _values(page) != completed:
                     raise AssertionError("assistant hint changed review answers")
+
+                if "本帧填写完整" not in page.locator("#currentStatus").text_content():
+                    raise AssertionError("complete-field status was not visible")
+                page.keyboard.press("Control+Enter")
+                page.wait_for_function(
+                    "document.querySelector('#title').textContent !== "
+                    + json.dumps(first_sample))
+                page.locator("#prev").click()
+                page.wait_for_function(
+                    "document.querySelector('#title').textContent === "
+                    + json.dumps(first_sample))
 
                 page.reload(wait_until="domcontentloaded")
                 page.locator("#title").wait_for(state="visible")
@@ -261,6 +284,10 @@ def run_acceptance(workspace: Path | str, output: Path | str,
             "hint_blocked_before_complete_review": True,
             "hint_available_after_complete_review": True,
             "hint_changed_answers": False,
+            "blank_pallet_count_not_silently_completed": True,
+            "missing_field_status_visible": True,
+            "incomplete_ctrl_enter_blocked": True,
+            "complete_ctrl_enter_advanced": True,
             "draft_persisted_after_refresh": True,
             "hint_closed_after_refresh": True,
             "partial_draft_exported": True,

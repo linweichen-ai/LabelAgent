@@ -1,0 +1,44 @@
+{
+  "schema_version": "labelagent.human-review-completion-guard.v1",
+  "round": 849,
+  "date": "2026-11-25",
+  "mixed_hard_sample_count": 34,
+  "copied_image_count": 68,
+  "assistant_hint_count": 34,
+  "priority_review_count": 11,
+  "review_manifest_sha256": "4cd7eadb244cadad83208b4f2d9f304da457830b839070dd796edf77f53dad50",
+  "browser_acceptance": {
+    "passed": true,
+    "blank_answers_initially": true,
+    "blank_pallet_count_not_silently_completed": true,
+    "missing_field_status_visible": true,
+    "incomplete_ctrl_enter_blocked": true,
+    "complete_ctrl_enter_advanced": true,
+    "hint_blocked_before_complete_review": true,
+    "hint_available_after_complete_review": true,
+    "hint_changed_answers": false,
+    "draft_persisted_after_refresh": true,
+    "partial_draft_exported": true,
+    "official_export_blocked_while_incomplete": true,
+    "external_requests": 0,
+    "page_errors": [],
+    "elapsed_ms": 5703.274
+  },
+  "tests": {
+    "targeted_passed": 24,
+    "full_passed": 2060,
+    "full_skipped": 1,
+    "full_subtests_passed": 294,
+    "failed": 0
+  },
+  "storage_gate_preserved": true,
+  "d_drive_free_mib_after_readback_archive": 935.59,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "training_authorized": false,
+  "automatic_approval": false,
+  "test24_used": false,
+  "production_deployed": false
+}
+

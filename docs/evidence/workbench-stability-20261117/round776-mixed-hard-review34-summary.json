@@ -1,0 +1,56 @@
+{
+  "schema_version": "labelagent.mixed-hard-review34-summary.v1",
+  "round": 776,
+  "date": "2026-11-24",
+  "status": "candidate_only_pending_human_review_not_deployed",
+  "review_packet": {
+    "frames": 34,
+    "unique_source_hashes": 34,
+    "raw_images": 34,
+    "review_images": 34,
+    "receipt_entries": 71,
+    "receipt_failures": 0,
+    "test24_intersection_count": 0,
+    "bytes": 22568931,
+    "cohorts": {
+      "slope_positive_candidate": 4,
+      "slope_negative_candidate": 4,
+      "slope_hard_negative_candidate": 24,
+      "dense_pallet_candidate": 2
+    }
+  },
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "training_authorized": false,
+    "test24_used": false,
+    "production_deployed": false,
+    "human_truth_writes": 0,
+    "workbench_writes": 0,
+    "external_api_calls": 0,
+    "external_api_estimated_cost": 0
+  },
+  "tests": {
+    "targeted": "9 passed",
+    "formal_python": "1857 passed, 1 skipped, 286 subtests passed",
+    "formal_python_seconds": 60.07,
+    "unfiltered_collection_blocker": "optional matplotlib missing while collecting source/sam3/scripts/qualitative_test.py",
+    "unfiltered_collection_is_formal_protocol": false
+  },
+  "formal_workbench_readiness": {
+    "sam": "ready",
+    "fast_vlm": "ready",
+    "primary_vlm": "unavailable_connection_refused",
+    "overall_ready": false,
+    "development_code_deployed": false
+  },
+  "limitations": [
+    "The 24 hard-negative candidates come from one continuous scene.",
+    "Slope positives are still concentrated on one yellow-ramp sequence.",
+    "Vehicle, robot, cargo_floor and unknown-class conflicts lack independent human decisions.",
+    "Dense pallet coverage contains two source frames only.",
+    "No true precision, recall or F1 can be computed before human review."
+  ],
+  "next_gate": "Complete bounded human review, diversify missing cohorts, freeze hashes, then compare local-only, external-all and hybrid routing under one protocol."
+}

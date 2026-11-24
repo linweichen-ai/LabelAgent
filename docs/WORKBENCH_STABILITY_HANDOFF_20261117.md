@@ -4531,3 +4531,7 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 ## Round825：34帧困难集优先人工复核
 
 Round824审计出的11张斜坡分歧帧已经接入新的离线复核工作区，按高3张、中6张、低2张排在最前，其余23张保持原顺序。页面只显示中性优先标记，机器建议默认折叠，任何答案都不会自动填入；真实读回为34条建议、68张复制图像、71个文件，且`candidate_only=true`、`human_truth=false`、`approved_for_training=false`。定向测试22/22、全量Python 2009项通过（另1项跳过、294个子测试）、网页199/199通过；尚未产生人工裁决、未训练、未部署、未使用test24或外发真实工厂图。详见`docs/PRIORITY_ADJUDICATION_WORKSPACE_ROUND825_20261124.md`。
+
+## Round826：困难集先盲判、后对照
+
+为避免人工在判断前看到Qwen建议而产生确认偏差，Round826把机器提示改为失败关闭：只有当前帧候选结论、斜坡、冲突、托盘质量、八类存在性和托盘实例数全部填写后，鼠标或H键才能展开建议；否则面板立即关闭并明确提示。真实34帧工作区回执为`assistant_hint_blind_gate=true`，页面JavaScript独立编译通过，机器结果仍不预填、不授权训练、不写真值。详见`docs/BLIND_ADJUDICATION_GATE_ROUND826_20261124.md`。

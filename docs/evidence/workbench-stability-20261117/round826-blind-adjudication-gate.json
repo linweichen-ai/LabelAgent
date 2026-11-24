@@ -1,0 +1,42 @@
+{
+  "schema_version": "labelagent.blind-adjudication-gate.v1",
+  "round": 826,
+  "date": "2026-11-24",
+  "workspace": {
+    "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\artifacts\\round826-blind-priority-adjudication-workspace-20261124",
+    "reviewed_sample_count": 34,
+    "priority_review_count": 11,
+    "assistant_hint_count": 34,
+    "assistant_hint_blind_gate": true,
+    "reviewer_html_sha256": "c03b4ad4423b41d2c970a37eb8231ee943213edde953bb3493d42f7bcae4f87d",
+    "javascript_compile_passed": true
+  },
+  "required_before_hint": [
+    "candidate_decision",
+    "slope_presence",
+    "class_conflict",
+    "pallet_quality",
+    "eight_class_presence_values",
+    "nonnegative_integer_pallet_instance_count"
+  ],
+  "tests": {
+    "targeted_python_passed": 22,
+    "full_python_passed": 2009,
+    "full_python_skipped": 1,
+    "full_python_subtests_passed": 294,
+    "web_passed": 199,
+    "web_failed": 0
+  },
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "training_authorized": false,
+    "test24_used": false,
+    "external_api_calls": 0,
+    "factory_data_uploaded": false,
+    "training_started": false,
+    "production_deployed": false,
+    "autofill_enabled": false
+  }
+}

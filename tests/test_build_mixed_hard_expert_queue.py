@@ -74,3 +74,18 @@ def test_rejects_incomplete_or_duplicate_source_without_mutation():
     duplicate = _source(); duplicate["rows"][1]["sample_id"] = "sample-00"
     with pytest.raises(ValueError, match="incomplete"):
         build_queue(json.dumps(duplicate).encode())
+
+
+def test_all_mode_freezes_same_source_without_changing_default_queue():
+    encoded = json.dumps(_source(), sort_keys=True).encode()
+    recommended = build_queue(encoded)
+    full = build_queue(encoded, selection_mode="all")
+    assert recommended["sample_count"] == 17
+    assert "selection_mode" not in recommended
+    assert full["sample_count"] == 34
+    assert full["external_call_ratio"] == 1.0
+    assert full["selection_mode"] == "all"
+    assert all(sample["external_upload_authorized"] is False
+               for sample in full["samples"])
+    with pytest.raises(ValueError, match="selection mode"):
+        build_queue(encoded, selection_mode="unknown")

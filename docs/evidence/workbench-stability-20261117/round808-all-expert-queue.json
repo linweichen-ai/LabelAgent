@@ -1,0 +1,23 @@
+{
+  "schema_version": "labelagent.all-expert-queue-summary.v1",
+  "date": "2026-11-24",
+  "source_suggestions_sha256": "b0bff89db15a664d0e6bae1ce1a06b3a357b89c7efd3825b517e4a90051c8b1b",
+  "hybrid_queue_sha256": "39e12f5f7fa5823ec925a364c0b630333a59e72dc9c8d3e0d1347320e012df9b",
+  "all_expert_queue_sha256": "63638ee8754b0b274562cf279e564f5fcbf6ba72b4af16a8c58c87fb589b782c",
+  "hybrid_queue_rebuild_identical": true,
+  "source_sample_count": 34,
+  "selected_sample_count": 34,
+  "external_call_ratio": 1.0,
+  "estimated_expert_latency_ms_per_call": 21070.0,
+  "estimated_sequential_expert_latency_ms": 716380.0,
+  "estimated_cost_status": "unknown_requires_billing_rate",
+  "images_copied": false,
+  "image_paths_included": false,
+  "external_upload_authorized": false,
+  "ready_for_shadow_execution": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "test24_used": false,
+  "deployed": false
+}

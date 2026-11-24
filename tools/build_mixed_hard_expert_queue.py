@@ -15,7 +15,7 @@ def _sha256(data):
 
 
 def build_queue(source_bytes, *, expert_latency_ms=21070.0,
-                estimated_cost_per_call=None):
+                estimated_cost_per_call=None, selection_mode="recommended"):
     if not isinstance(source_bytes, bytes):
         raise ValueError("source suggestion bytes are required")
     payload = json.loads(source_bytes.decode("utf-8"))
@@ -39,6 +39,8 @@ def build_queue(source_bytes, *, expert_latency_ms=21070.0,
             and (type(estimated_cost_per_call) not in (int, float)
                  or estimated_cost_per_call < 0)):
         raise ValueError("estimated cost per call must be non-negative")
+    if selection_mode not in {"recommended", "all"}:
+        raise ValueError("selection mode must be recommended or all")
 
     selected, strata, signals = [], Counter(), Counter()
     for row in rows:
@@ -55,7 +57,7 @@ def build_queue(source_bytes, *, expert_latency_ms=21070.0,
                 or route.get("external_upload_performed") is not False
                 or not isinstance(selection, dict)):
             raise ValueError("source route is missing its no-dispatch attestation")
-        if route.get("recommended") is not True:
+        if selection_mode == "recommended" and route.get("recommended") is not True:
             continue
         sample_id = row.get("sample_id")
         image_sha = row.get("copied_image_sha256")
@@ -107,6 +109,7 @@ def build_queue(source_bytes, *, expert_latency_ms=21070.0,
         "approved_for_training": False,
         "test24_used": False,
         "samples": selected,
+        **({"selection_mode": "all"} if selection_mode == "all" else {}),
     }
 
 
@@ -116,10 +119,13 @@ def main(argv=None):
     parser.add_argument("--output", type=Path)
     parser.add_argument("--expert-latency-ms", type=float, default=21070.0)
     parser.add_argument("--estimated-cost-per-call", type=float)
+    parser.add_argument("--selection-mode", choices=("recommended", "all"),
+                        default="recommended")
     args = parser.parse_args(argv)
     result = build_queue(
         args.source.read_bytes(), expert_latency_ms=args.expert_latency_ms,
-        estimated_cost_per_call=args.estimated_cost_per_call)
+        estimated_cost_per_call=args.estimated_cost_per_call,
+        selection_mode=args.selection_mode)
     encoded = json.dumps(result, ensure_ascii=False, indent=2) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)

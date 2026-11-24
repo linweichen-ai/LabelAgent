@@ -1,0 +1,24 @@
+{
+  "round": 821,
+  "date": "2026-11-24",
+  "evaluations": [
+    "local_all_external_hybrid",
+    "source_vs_resized",
+    "adaptive_resolution_cascade"
+  ],
+  "single_hash_bound_input_set": true,
+  "model_calls_performed": 0,
+  "targeted_tests_passed": 20,
+  "project_tests_passed": 1981,
+  "project_tests_skipped": 1,
+  "project_subtests_passed": 294,
+  "incomplete_review_preflight_exit_code": 1,
+  "incomplete_review_output_created": false,
+  "deployment_gate_passed": false,
+  "factory_data_uploaded": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "test24_used": false,
+  "production_deployed": false
+}

@@ -1,0 +1,37 @@
+{
+  "schema_version": "labelagent.manual-pointer-validation.v1",
+  "round": 845,
+  "date": "2026-11-25",
+  "manual_tool_tests": {
+    "passed": 15,
+    "failed": 0
+  },
+  "javascript_tests": {
+    "passed": 188,
+    "failed": 0
+  },
+  "python_project_tests": {
+    "passed": 2060,
+    "skipped": 1,
+    "subtests_passed": 294,
+    "failed": 0,
+    "protocol": "PYTHONUTF8=1; temporary project venv junction; inherited GIT_CONFIG_* injection removed only inside the test process"
+  },
+  "browser_acceptance": {
+    "passed": true,
+    "factory_data_used": false,
+    "truth_writes": 0,
+    "model_calls": 0,
+    "write_requests": 0,
+    "console_errors": 0,
+    "page_errors": 0
+  },
+  "formal_workbench": {
+    "modified": false,
+    "readiness_after_test": true
+  },
+  "production_deployed": false,
+  "test24_used": false,
+  "human_truth": false,
+  "approved_for_training": false
+}

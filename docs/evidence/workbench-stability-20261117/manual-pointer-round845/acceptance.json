@@ -1,0 +1,28 @@
+{
+  "schema_version": "labelagent.manual-pointer-acceptance.v1",
+  "source": "synthetic_blank_image_only",
+  "factory_data_used": false,
+  "truth_writes": 0,
+  "model_calls": 0,
+  "moved_vertex": [
+    135,
+    125
+  ],
+  "restored_vertex": [
+    100,
+    100
+  ],
+  "freehand_vertex_count": 21,
+  "ellipse_vertex_count": 40,
+  "shape_count": 3,
+  "active_drags_after_completion": {
+    "freehand": false,
+    "rectangle": false,
+    "vertex": false
+  },
+  "write_requests": [],
+  "console_errors": [],
+  "page_errors": [],
+  "screenshot": "manual-pointer-tools.png",
+  "passed": true
+}

@@ -128,9 +128,14 @@ test('freehand lasso converts a dragged boundary into a closed segmentation poly
 });
 
 test('canvas uses pointer capture and requestAnimationFrame-coalesced preview', () => {
-  assert.match(app, /onpointerdown=/);
-  assert.match(app, /onpointermove=/);
-  assert.match(app, /onpointerup=e=>\{if\(finishVertexDrag\(e\)\)return;finishRectangleDrag\(e\)\}/);
+  assert.match(app, /onpointerdown=handleCanvasPointerDown/);
+  assert.match(app, /onpointermove=handleCanvasPointerMove/);
+  assert.match(app, /onpointerup=handleCanvasPointerUp/);
+  assert.match(app, /onpointercancel=handleCanvasPointerCancel/);
+  assert.match(app, /function handleCanvasPointerDown\(event\)/);
+  assert.match(app, /function handleCanvasPointerMove\(event\)/);
+  assert.match(app, /function handleCanvasPointerUp\(event\)/);
+  assert.doesNotMatch(app, /\$\('canvas'\)\.addEventListener\('pointer(?:down|move|up|cancel)'/);
   assert.match(app, /setPointerCapture\?\./);
   assert.match(app, /requestAnimationFrame\(\(\)=>\{canvasDrawFrame=null;draw\(\)\}\)/);
   assert.match(app, /if\(canvas\.width!==imageWidth\)canvas\.width=imageWidth/);
@@ -138,6 +143,14 @@ test('canvas uses pointer capture and requestAnimationFrame-coalesced preview', 
   assert.doesNotMatch(app, /canvas\.width=imageWidth;canvas\.height=imageHeight/);
   assert.match(css, /\.imageStage canvas\{touch-action:none\}/);
   assert.doesNotMatch(app, /\$\('canvas'\)\.onclick=/);
+});
+
+test('model health state is initialized before the manual toolbar first renders', () => {
+  const declaration = app.indexOf('modelHealthState=null');
+  const firstRefresh = app.indexOf('refreshPointTools();');
+  assert.ok(declaration >= 0);
+  assert.ok(firstRefresh >= 0);
+  assert.ok(declaration < firstRefresh, 'manual toolbar must not read a lexical binding in its TDZ');
 });
 
 test('SAM accepts point edits while busy and coalesces them into latest-only rerun', () => {
@@ -169,7 +182,7 @@ test('vertex edits are local drafts with rollback, scope binding, and explicit t
   assert.match(app, /function geometryScopeMatches\(scope\)/);
   assert.match(app, /scope:\{frame,topic,path:loadedDataPath,fileGeneration:loadedFileActivationGeneration,workspaceMode:window\.workspaceMode\}/);
   assert.match(app, /if\(truthIsVerified\(frame\)\)\{toast\('当前帧已通过人工确认/);
-  assert.match(app, /finishVertexDrag\(e,true\)/);
+  assert.match(app, /finishVertexDrag\(event,true\)/);
   assert.match(app, /cancelVertexDrag\(true\)/);
   assert.match(app, /invalidateEditedSamBinding\(shapeIndex\)/);
   assert.match(app, /referenceReviewedShapeKeys\.delete\(reviewKey\)/);

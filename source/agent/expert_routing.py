@@ -8,7 +8,7 @@ review path exists.
 import copy
 
 
-SCHEMA_VERSION = "labelagent.expert-shadow-routing.v1"
+SCHEMA_VERSION = "labelagent.expert-shadow-routing.v2"
 HARD_STOP_REASONS = frozenset({
     "error", "max_rounds", "no_progress", "review_deferred",
 })
@@ -30,6 +30,12 @@ def _bounded_int(config, key, default, minimum, maximum):
 def _bounded_round_threshold(config):
     return _bounded_int(
         config, "llm_expert_shadow_round_threshold", 2, 1, 100)
+
+
+def _signal_weight(config, name, default):
+    """Return a bounded, explicitly configurable shadow-routing weight."""
+    return _bounded_int(
+        config, f"llm_expert_shadow_weight_{name}", default, 0, 20)
 
 
 def _assessment_items(discovery):
@@ -61,12 +67,12 @@ def _candidate_geometry(candidates, image_size, edge_margin_percent,
             or not isinstance(image_size, (list, tuple)) or len(image_size) != 2
             or any(type(value) is not int or value <= 0 for value in image_size)):
         return {"eligible_candidates": 0, "edge_count": 0, "small_count": 0,
-                "edge_labels": [], "small_labels": []}
+                "edge_slope_count": 0, "edge_labels": [], "small_labels": []}
     width, height = image_size
     margin_x = width * edge_margin_percent / 100
     margin_y = height * edge_margin_percent / 100
     image_area = width * height
-    edge_labels, small_labels, eligible = [], [], 0
+    edge_labels, small_labels, eligible, edge_slope_count = [], [], 0, 0
     for shape in candidates:
         if not isinstance(shape, dict):
             continue
@@ -82,6 +88,8 @@ def _candidate_geometry(candidates, image_size, edge_margin_percent,
         if (left <= margin_x or right >= width - 1 - margin_x
                 or top <= margin_y or bottom >= height - 1 - margin_y):
             edge_labels.append(label)
+            if label.casefold() == "slope":
+                edge_slope_count += 1
         bbox_percent = ((right - left + 1) * (bottom - top + 1)
                         / image_area * 100)
         if bbox_percent <= small_candidate_percent:
@@ -90,6 +98,7 @@ def _candidate_geometry(candidates, image_size, edge_margin_percent,
         "eligible_candidates": eligible,
         "edge_count": len(edge_labels),
         "small_count": len(small_labels),
+        "edge_slope_count": edge_slope_count,
         "edge_labels": sorted(set(edge_labels))[:20],
         "small_labels": sorted(set(small_labels))[:20],
     }
@@ -168,6 +177,25 @@ def evaluate_expert_shadow_route(config, *, discovery=None, agent=None,
         config, "llm_expert_shadow_sam_mask_iou_percent", 70, 0, 100)
     sam_area_change_percent = _bounded_int(
         config, "llm_expert_shadow_sam_area_change_percent", 25, 0, 500)
+    weights = {
+        "open_set": _signal_weight(config, "open_set", 3),
+        "registry_conflict": _signal_weight(config, "registry_conflict", 3),
+        "visibility_uncertain": _signal_weight(config, "visibility_uncertain", 1),
+        "low_confidence": _signal_weight(config, "low_confidence", 2),
+        "agent_nonconvergence": _signal_weight(config, "agent_nonconvergence", 3),
+        "high_review_rounds": _signal_weight(config, "high_review_rounds", 2),
+        "protocol_retry": _signal_weight(config, "protocol_retry", 1),
+        "sam_instability": _signal_weight(config, "sam_instability", 3),
+        # Edge and small objects are common in factory imagery.  They remain
+        # visible routing evidence, but no longer escalate on geometry alone.
+        "edge_candidate": _signal_weight(config, "edge_candidate", 1),
+        "edge_slope": _signal_weight(config, "edge_slope", 2),
+        "small_candidate": _signal_weight(config, "small_candidate", 1),
+        "manual_priority": _signal_weight(config, "manual_priority", 4),
+        "protocol_failure": _signal_weight(config, "protocol_failure", 3),
+        "human_review_queue": _signal_weight(config, "human_review_queue", 1),
+        "class_audit_conflict": _signal_weight(config, "class_audit_conflict", 3),
+    }
     reasons = []
     seen = set()
 
@@ -182,13 +210,15 @@ def evaluate_expert_shadow_route(config, *, discovery=None, agent=None,
 
     unknown = discovery.get("unknown_candidates") or []
     if unknown:
-        add("open_set_candidate", "high", 3, {"count": len(unknown)})
+        add("open_set_candidate", "high", weights["open_set"],
+            {"count": len(unknown)})
     conflicts = discovery.get("registry_conflicts") or []
     if conflicts:
-        add("registry_conflict", "high", 3, {"count": len(conflicts)})
+        add("registry_conflict", "high", weights["registry_conflict"],
+            {"count": len(conflicts)})
     uncertain = discovery.get("uncertain_labels") or []
     if uncertain:
-        add("visibility_uncertain", "medium", 1,
+        add("visibility_uncertain", "medium", weights["visibility_uncertain"],
             {"labels": sorted({str(label) for label in uncertain})[:20]})
     low_confidence = []
     for item in _assessment_items(discovery):
@@ -198,44 +228,51 @@ def evaluate_expert_shadow_route(config, *, discovery=None, agent=None,
                 and isinstance(item.get("label"), str)):
             low_confidence.append(item["label"])
     if low_confidence:
-        add("low_visibility_confidence", "medium", 2,
+        add("low_visibility_confidence", "medium", weights["low_confidence"],
             {"labels": sorted(set(low_confidence))[:20],
              "threshold_percent": confidence_percent})
 
     stop_reason = str(agent.get("stop_reason") or "")
     if stop_reason in HARD_STOP_REASONS:
-        add("agent_nonconvergence", "high", 3, {"stop_reason": stop_reason})
+        add("agent_nonconvergence", "high", weights["agent_nonconvergence"],
+            {"stop_reason": stop_reason})
     rounds = agent.get("rounds")
     threshold = _bounded_round_threshold(config)
     if type(rounds) is int and rounds >= threshold:
-        add("high_review_round_count", "medium", 2,
+        add("high_review_round_count", "medium", weights["high_review_rounds"],
             {"rounds": rounds, "threshold": threshold})
     retry_count = agent.get("protocol_retry_count")
     if type(retry_count) is int and retry_count > 0:
-        add("protocol_retry_used", "medium", 1, {"count": retry_count})
+        add("protocol_retry_used", "medium", weights["protocol_retry"],
+            {"count": retry_count})
 
     sam = _sam_instability(
         agent, sam_filter_threshold, sam_mask_iou_percent,
         sam_area_change_percent)
     if sam["unstable"]:
-        add("sam_candidate_instability", "high", 3, sam)
+        add("sam_candidate_instability", "high", weights["sam_instability"], sam)
 
     geometry = _candidate_geometry(
         candidates, image_size, edge_margin_percent, small_candidate_percent)
     if geometry["edge_count"]:
-        add("edge_partial_candidate", "high", 3, {
+        add("edge_partial_candidate", "medium", weights["edge_candidate"], {
             "count": geometry["edge_count"],
             "labels": geometry["edge_labels"],
             "margin_percent": edge_margin_percent,
         })
+    if geometry["edge_slope_count"]:
+        add("edge_slope_candidate", "high", weights["edge_slope"], {
+            "count": geometry["edge_slope_count"],
+            "margin_percent": edge_margin_percent,
+        })
     if geometry["small_count"]:
-        add("small_candidate", "medium", 2, {
+        add("small_candidate", "medium", weights["small_candidate"], {
             "count": geometry["small_count"],
             "labels": geometry["small_labels"],
             "bbox_area_threshold_percent": small_candidate_percent,
         })
     if manual_priority is True:
-        add("manual_priority", "high", 4)
+        add("manual_priority", "high", weights["manual_priority"])
 
     queue_codes = []
     for item in review_queue:
@@ -245,9 +282,10 @@ def evaluate_expert_shadow_route(config, *, discovery=None, agent=None,
         if code:
             queue_codes.append(code)
         if any(marker in code.casefold() for marker in PROTOCOL_REASON_MARKERS):
-            add("protocol_failure", "high", 3, {"reason_code": code[:120]})
+            add("protocol_failure", "high", weights["protocol_failure"],
+                {"reason_code": code[:120]})
     if queue_codes:
-        add("human_review_queue", "medium", 1, {
+        add("human_review_queue", "medium", weights["human_review_queue"], {
             "count": len(queue_codes),
             "reason_codes": sorted(set(queue_codes))[:20],
         })
@@ -258,7 +296,8 @@ def evaluate_expert_shadow_route(config, *, discovery=None, agent=None,
                 and audit.get("route") not in {None, "candidate_only", "preserve"}):
             conflicting_audits += 1
     if conflicting_audits:
-        add("class_audit_conflict", "high", 3, {"count": conflicting_audits})
+        add("class_audit_conflict", "high", weights["class_audit_conflict"],
+            {"count": conflicting_audits})
 
     difficult = sorted(set(candidate_labels) & PRIORITY_LABELS)
     if difficult and reasons:
@@ -278,7 +317,8 @@ def evaluate_expert_shadow_route(config, *, discovery=None, agent=None,
         "recommended": recommended,
         "route": ("external_expert_shadow_recommended"
                   if recommended else "local_result_sufficient"),
-        "priority": ("high" if any(item["severity"] == "high" for item in reasons)
+        "priority": ("high" if any(item["severity"] == "high" and item["points"] > 0
+                                   for item in reasons)
                      else "normal"),
         "difficulty_score": score,
         "score_threshold": score_threshold,
@@ -291,12 +331,14 @@ def evaluate_expert_shadow_route(config, *, discovery=None, agent=None,
             "sam_mask_iou_percent": sam_mask_iou_percent,
             "sam_area_change_percent": sam_area_change_percent,
         },
+        "weights": weights,
         "signals": {
             "low_confidence_labels": sorted(set(low_confidence))[:20],
             "registry_conflict_count": len(conflicts),
             "sam_stability": sam,
             "agent_rounds": rounds if type(rounds) is int else None,
             "edge_candidate_count": geometry["edge_count"],
+            "edge_slope_candidate_count": geometry["edge_slope_count"],
             "small_candidate_count": geometry["small_count"],
             "unknown_candidate_count": len(unknown),
             "priority_labels": difficult,

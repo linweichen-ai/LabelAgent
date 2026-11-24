@@ -425,6 +425,40 @@ class WorkflowTests(unittest.TestCase):
         codes = [item["code"] for item in first["reasons"]]
         self.assertEqual(len(codes), len(set(codes)))
 
+    def test_expert_shadow_geometry_weights_are_configurable_and_conservative(self):
+        candidates = [{"label": "pallet", "points": [
+            [0, 0], [20, 0], [20, 20], [0, 20]]}]
+        conservative = evaluate_expert_shadow_route(
+            {"llm_expert_shadow_routing_enabled": True},
+            candidates=candidates, candidate_labels=["pallet"],
+            image_size=(640, 480))
+        self.assertFalse(conservative["recommended"])
+        self.assertEqual(conservative["difficulty_score"], 2)
+        self.assertEqual(conservative["weights"]["edge_candidate"], 1)
+        self.assertEqual(conservative["weights"]["small_candidate"], 1)
+
+        configured = evaluate_expert_shadow_route(
+            {"llm_expert_shadow_routing_enabled": True,
+             "llm_expert_shadow_weight_edge_candidate": 3,
+             "llm_expert_shadow_weight_small_candidate": 0},
+            candidates=candidates, candidate_labels=["pallet"],
+            image_size=(640, 480))
+        self.assertTrue(configured["recommended"])
+        self.assertEqual(configured["difficulty_score"], 3)
+        self.assertEqual(configured["weights"]["edge_candidate"], 3)
+        self.assertEqual(configured["weights"]["small_candidate"], 0)
+
+    def test_expert_shadow_preserves_strong_edge_slope_signal(self):
+        decision = evaluate_expert_shadow_route(
+            {"llm_expert_shadow_routing_enabled": True},
+            candidates=[{"label": "slope", "points": [
+                [0, 450], [50, 450], [50, 479], [0, 479]]}],
+            candidate_labels=["slope"], image_size=(640, 480))
+        self.assertTrue(decision["recommended"])
+        self.assertEqual(decision["signals"]["edge_slope_candidate_count"], 1)
+        self.assertIn("edge_slope_candidate",
+                      {item["code"] for item in decision["reasons"]})
+
     def test_pallet_cleanup_fills_texture_holes_and_preserves_structural_opening(self):
         mask = np.zeros((100, 140), dtype=np.uint8)
         mask[10:90, 10:130] = 1
@@ -3723,6 +3757,8 @@ class ServerTests(unittest.TestCase):
                     "llm_expert_shadow_sam_filter_threshold": 5,
                     "llm_expert_shadow_sam_mask_iou_percent": 75,
                     "llm_expert_shadow_sam_area_change_percent": 20,
+                    "llm_expert_shadow_weight_edge_candidate": 2,
+                    "llm_expert_shadow_weight_small_candidate": 0,
                     "llm_expert_shadow_priority_frames": [46, 12, 46],
                     **active_config_write_scope(),
                 })
@@ -3740,6 +3776,10 @@ class ServerTests(unittest.TestCase):
                 "llm_expert_shadow_score_threshold"], 4)
             self.assertEqual(saved.json["config"][
                 "llm_expert_shadow_low_confidence_percent"], 60)
+            self.assertEqual(saved.json["config"][
+                             "llm_expert_shadow_weight_edge_candidate"], 2)
+            self.assertEqual(saved.json["config"][
+                             "llm_expert_shadow_weight_small_candidate"], 0)
             self.assertEqual(saved.json["config"][
                 "llm_expert_shadow_priority_frames"], [12, 46])
 
@@ -3767,6 +3807,10 @@ class ServerTests(unittest.TestCase):
                              4)
             self.assertEqual(readiness["expert_vlm"][
                 "shadow_low_confidence_percent"], 60)
+            self.assertEqual(readiness["expert_vlm"]["shadow_weights"][
+                             "edge_candidate"], 2)
+            self.assertEqual(readiness["expert_vlm"]["shadow_weights"][
+                             "small_candidate"], 0)
 
             invalid_frames = client.post("/api/config", json={
                 "llm_expert_shadow_priority_frames": [1, -2],

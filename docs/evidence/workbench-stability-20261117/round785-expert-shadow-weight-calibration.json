@@ -1,0 +1,24 @@
+{
+  "schema_version": "labelagent.expert-shadow-weight-calibration-summary.v1",
+  "date": "2026-11-24",
+  "frames_audited": 30,
+  "test24_used": false,
+  "baseline": {
+    "recommended": 29,
+    "local_sufficient": 1,
+    "external_call_ratio": 0.9667,
+    "audit_sha256": "AD5E05DEE44DEDDDBDB964BC8C6FDC5D8BF079568A142E65B5129659A5ACE83F"
+  },
+  "calibrated": {
+    "recommended": 17,
+    "local_sufficient": 13,
+    "external_call_ratio": 0.5667,
+    "audit_sha256": "170551837BEAEB004A4AF3D3CEB2A895C0D25CC4C197E58264E4A1697F5E77B8"
+  },
+  "dispatch_performed": false,
+  "external_upload_performed": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "deployed": false
+}

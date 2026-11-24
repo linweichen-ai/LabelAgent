@@ -66,7 +66,7 @@ def audit_state(state, *, image_size):
         if code != "priority_class_involved")
     recommended = sum(row["recommended"] for row in rows)
     return {
-        "schema_version": "labelagent.expert-shadow-routing-audit.v1",
+        "schema_version": "labelagent.expert-shadow-routing-audit.v2",
         "status": "completed",
         "frames_audited": len(rows),
         "frames_recommended_for_external_expert": recommended,

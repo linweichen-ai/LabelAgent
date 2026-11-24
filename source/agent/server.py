@@ -4828,6 +4828,21 @@ def set_config():
         "llm_expert_shadow_sam_filter_threshold": (1, 200),
         "llm_expert_shadow_sam_mask_iou_percent": (0, 100),
         "llm_expert_shadow_sam_area_change_percent": (0, 500),
+        "llm_expert_shadow_weight_open_set": (0, 20),
+        "llm_expert_shadow_weight_registry_conflict": (0, 20),
+        "llm_expert_shadow_weight_visibility_uncertain": (0, 20),
+        "llm_expert_shadow_weight_low_confidence": (0, 20),
+        "llm_expert_shadow_weight_agent_nonconvergence": (0, 20),
+        "llm_expert_shadow_weight_high_review_rounds": (0, 20),
+        "llm_expert_shadow_weight_protocol_retry": (0, 20),
+        "llm_expert_shadow_weight_sam_instability": (0, 20),
+        "llm_expert_shadow_weight_edge_candidate": (0, 20),
+        "llm_expert_shadow_weight_edge_slope": (0, 20),
+        "llm_expert_shadow_weight_small_candidate": (0, 20),
+        "llm_expert_shadow_weight_manual_priority": (0, 20),
+        "llm_expert_shadow_weight_protocol_failure": (0, 20),
+        "llm_expert_shadow_weight_human_review_queue": (0, 20),
+        "llm_expert_shadow_weight_class_audit_conflict": (0, 20),
     }
     fast_updates = {}
     for key in fast_string_keys:
@@ -5085,6 +5100,38 @@ def model_readiness():
             "llm_expert_shadow_sam_mask_iou_percent", 70, 0, 100),
         "shadow_sam_area_change_percent": bounded_config_int(
             "llm_expert_shadow_sam_area_change_percent", 25, 0, 500),
+        "shadow_weights": {
+            "open_set": bounded_config_int(
+                "llm_expert_shadow_weight_open_set", 3, 0, 20),
+            "registry_conflict": bounded_config_int(
+                "llm_expert_shadow_weight_registry_conflict", 3, 0, 20),
+            "visibility_uncertain": bounded_config_int(
+                "llm_expert_shadow_weight_visibility_uncertain", 1, 0, 20),
+            "low_confidence": bounded_config_int(
+                "llm_expert_shadow_weight_low_confidence", 2, 0, 20),
+            "agent_nonconvergence": bounded_config_int(
+                "llm_expert_shadow_weight_agent_nonconvergence", 3, 0, 20),
+            "high_review_rounds": bounded_config_int(
+                "llm_expert_shadow_weight_high_review_rounds", 2, 0, 20),
+            "protocol_retry": bounded_config_int(
+                "llm_expert_shadow_weight_protocol_retry", 1, 0, 20),
+            "sam_instability": bounded_config_int(
+                "llm_expert_shadow_weight_sam_instability", 3, 0, 20),
+            "edge_candidate": bounded_config_int(
+                "llm_expert_shadow_weight_edge_candidate", 1, 0, 20),
+            "edge_slope": bounded_config_int(
+                "llm_expert_shadow_weight_edge_slope", 2, 0, 20),
+            "small_candidate": bounded_config_int(
+                "llm_expert_shadow_weight_small_candidate", 1, 0, 20),
+            "manual_priority": bounded_config_int(
+                "llm_expert_shadow_weight_manual_priority", 4, 0, 20),
+            "protocol_failure": bounded_config_int(
+                "llm_expert_shadow_weight_protocol_failure", 3, 0, 20),
+            "human_review_queue": bounded_config_int(
+                "llm_expert_shadow_weight_human_review_queue", 1, 0, 20),
+            "class_audit_conflict": bounded_config_int(
+                "llm_expert_shadow_weight_class_audit_conflict", 3, 0, 20),
+        },
         "shadow_priority_frames": list(config.get(
             "llm_expert_shadow_priority_frames", []))[:100],
         "status": ("disabled" if not expert_enabled else

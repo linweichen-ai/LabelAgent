@@ -81,6 +81,9 @@ test('canvas uses pointer capture and requestAnimationFrame-coalesced preview', 
   assert.match(app, /onpointerup=finishRectangleDrag/);
   assert.match(app, /setPointerCapture\?\./);
   assert.match(app, /requestAnimationFrame\(\(\)=>\{canvasDrawFrame=null;draw\(\)\}\)/);
+  assert.match(app, /if\(canvas\.width!==imageWidth\)canvas\.width=imageWidth/);
+  assert.match(app, /if\(canvas\.height!==imageHeight\)canvas\.height=imageHeight/);
+  assert.doesNotMatch(app, /canvas\.width=imageWidth;canvas\.height=imageHeight/);
   assert.match(css, /\.imageStage canvas\{touch-action:none\}/);
   assert.doesNotMatch(app, /\$\('canvas'\)\.onclick=/);
 });

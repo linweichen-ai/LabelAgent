@@ -140,9 +140,9 @@ test('工作台持续显示新旧数据集身份和逐类别覆盖状态', () =>
   assert.match(app, /function candidateCoverageEvidence\(/);
   assert.match(app, /function candidateReviewCountsByLabel\(/);
   assert.match(app, /candidateNeedsReview/);
-  assert.match(html, /style\.css\?v=122/);
+  assert.match(html, /style\.css\?v=123/);
   assert.match(html, /homepage-theme\.css\?v=5/);
-  assert.match(html, /app\.js\?v=213/);
+  assert.match(html, /app\.js\?v=215/);
   assert.match(app, /action\.dataset\.coverageRepair=label/);
   assert.match(app, /startCandidateCoverageRepair\(label\)/);
   assert.match(app, /不会自动运行模型或写入人工真值/);
@@ -945,6 +945,15 @@ test('刷新后有持久化结果时按钮先恢复结果且不会重复恢复',
   assert.equal(button.textContent, '重试 2 个失败帧');
   h.run("retryMode='resume';renderRunButton()");
   assert.equal(button.textContent, '继续 2 个未完成帧');
+  h.context.modelHealthState = {ready:false,sam:{ready:false},vlm:{ready:true}};
+  h.run('renderRunButton()');
+  assert.equal(button.disabled, true);
+  assert.equal(button.textContent, '模型暂不可用');
+  assert.match(button.title, /SAM3=不可用.*Qwen8B=正常/);
+  h.context.latestAgentJob = {status:'running',task_id:'active-1',round:1,max_rounds:6};
+  h.run('renderRunButton()');
+  assert.equal(button.disabled, false);
+  assert.match(button.textContent, /停止自动标注/);
 });
 
 test('中断回执恢复已完成结果并只排队未完成帧', async () => {
@@ -1238,6 +1247,39 @@ test('模型未就绪时预检明确失败且不伪装为推理已启动', async
   h.run(section(source('app.js'), 'async function ensureAutoLabelReadiness', "$('runButton').onclick"));
   await assert.rejects(() => h.context.ensureAutoLabelReadiness(), /尚未启动推理.*VLM：服务未连接/);
   assert.equal(calls, 3);
+});
+
+test('页面已打开后模型掉线会禁用新任务并在恢复时提示一次', async () => {
+  const classes = new Set();
+  const badge = {lastChild:{textContent:''},title:'',classList:{
+    add(...names){for(const name of names)classes.add(name)},
+    remove(...names){for(const name of names)classes.delete(name)},
+  }};
+  const notices = [];
+  const replies = [
+    {ready:false,sam:{ready:false},vlm:{ready:true}},
+    {ready:true,sam:{ready:true},vlm:{ready:true}},
+  ];
+  const h = harness({
+    $: id => id === 'modelHealthBadge' ? badge : null,
+    async fetch(){const value=replies.shift();return {ok:true,async json(){return value}}},
+    toast(message){notices.push(message)},renderRunButton(){},updatePointPromptCoach(){},
+    document:{getElementById(id){return id === 'modelHealthBadge' ? badge : null},dispatchEvent(){}},CustomEvent:function(name,options){return {name,...options}},
+    modelHealthState:{ready:true,sam:{ready:true},vlm:{ready:true}},
+    modelHealthFailureCount:0,modelHealthNoticeKey:'ready',
+  });
+  const text = source('app.js');
+  h.run(section(text, 'function modelHealthUiAvailable', 'function scheduleRunStatusPoll'));
+  assert.equal(await h.context.refreshModelHealth(), false);
+  assert.equal(h.context.modelHealthState.ready, false);
+  assert.equal(badge.lastChild.textContent, 'SAM3离线');
+  assert.deepEqual(notices, ['模型连接异常：SAM3 不可用，Qwen8B 正常；页面正在自动重试']);
+  assert.equal(await h.context.refreshModelHealth(), true);
+  assert.equal(badge.lastChild.textContent, '服务器模型正常');
+  assert.deepEqual(notices, [
+    '模型连接异常：SAM3 不可用，Qwen8B 正常；页面正在自动重试',
+    '服务器模型已恢复，可以继续标注',
+  ]);
 });
 
 test('参考帧描述失效时预检自动生成并重新检查后继续', async () => {
@@ -1796,7 +1838,7 @@ test('点提示请求同步单飞、等待工作台就绪并绑定提交时的�
   assert.match(app, /pointPromptQueuedRerun=true/);
   assert.match(app, /旧轮廓已丢弃，正在合并最新点集/);
   assert.match(app, /if\(segmentBusy\).*完成后再清空本帧/);
-  assert.match(source('index.html'), /app\.js\?v=213/);
+  assert.match(source('index.html'), /app\.js\?v=215/);
 });
 
 test('页面启动先恢复最终工作帧再开放点选推理', () => {
@@ -1858,7 +1900,7 @@ test('快速连续翻帧和拖动时间轴始终以最后一次操作为准', as
   assert.match(app, /async function loadVideo\(data\)\{\s*invalidateFrameNavigation\(\)/);
   assert.match(app, /function clearLoadedVideo\(currentGeneration=0\)\{invalidateFrameNavigation\(\)/);
   assert.match(app, /async function activateAnnotation\(view\).*const navigation=beginFrameNavigation\(\)/);
-  assert.match(source('index.html'), /app\.js\?v=213/);
+  assert.match(source('index.html'), /app\.js\?v=215/);
 });
 
 test('区域编辑结果严格绑定提交时的帧、数据作用域、模式和原轮廓', async () => {
@@ -1917,7 +1959,7 @@ test('区域编辑结果严格绑定提交时的帧、数据作用域、模式�
   await h.run('finish()');
   assert.equal(pendingRequests.length, 4);
   assert.ok(notices.includes('当前轮廓不存在，请重新选择后再编辑'));
-  assert.match(source('index.html'), /app\.js\?v=213/);
+  assert.match(source('index.html'), /app\.js\?v=215/);
 });
 
 test('类别与推理类别保存绑定文件载入代次和类别状态版本', async () => {
@@ -1956,7 +1998,7 @@ test('类别与推理类别保存绑定文件载入代次和类别状态版本',
   assert.deepEqual(applied[0].labels, ['a','b']);
   assert.deepEqual(applied[0].auto_labels, ['b']);
   assert.equal(h.run('currentDescription'), null);
-  assert.match(source('index.html'), /app\.js\?v=213/);
+  assert.match(source('index.html'), /app\.js\?v=215/);
 });
 
 test('模型配置保存绑定工作区载入代次和配置版本', async () => {

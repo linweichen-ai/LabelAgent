@@ -1,6 +1,12 @@
 # LabelAgent Linux 兼容版安装与使用教程
 
-## 1. 两种运行方式
+## 1. 推荐架构与两种运行方式
+
+推荐把网页后端、SAM3 和 VLM 全部放在同一台 Linux GPU 服务器。本机只运行一条 SSH 隧道并打开浏览器，不再运行 Python 后端：
+
+```text
+本机浏览器 -> SSH安全隧道 -> Linux网页后端 -> 同机SAM3 / 同机VLM
+```
 
 Linux 兼容版支持：
 
@@ -60,6 +66,21 @@ tools/setup_linux.sh
 
 ## 5. 启动
 
+服务器已经运行 SAM3 与 VLM 时，使用独立工作台端口启动完整网页后端：
+
+```bash
+tools/start_linux.sh \
+  --sam-url http://127.0.0.1:18766 \
+  --vlm-url http://127.0.0.1:18878/v1 \
+  --vlm-model labelagent-vlm8b \
+  --host 127.0.0.1 \
+  --port 18765 \
+  --work-dir /data/labelagent-work \
+  --no-browser
+```
+
+工作台默认端口仍为8765；共享服务器必须先检查端口归属，使用空闲端口，不得停止或覆盖其他用户的服务。启动记录会保存实际端口，`status_linux.sh` 会自动读取，不再假设固定8765。
+
 使用远端 SAM3：
 
 ```bash
@@ -78,19 +99,32 @@ tools/start_linux.sh --no-browser
 tools/status_linux.sh
 ```
 
-打开 `http://127.0.0.1:8765/`。
+默认启动时打开 `http://127.0.0.1:8765/`；若使用上面的服务器模式，则服务器内部地址为 `http://127.0.0.1:18765/`。
 
 **不要直接打开 `source/web/index.html`。** `file://` 页面没有后端来源，看起来像网页但无法连接 API。
 
 ## 6. 从另一台电脑访问
 
-默认只监听回环地址。推荐使用 SSH 隧道：
+默认只监听回环地址。Windows 本机可直接运行：
 
-```bash
-ssh -L 8765:127.0.0.1:8765 用户名@Linux服务器
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/connect_remote_workbench.ps1 `
+  -Target factory-5090 -RemotePort 18765 -LocalPort 18765
 ```
 
-然后在自己的电脑打开 `http://127.0.0.1:8765/`。
+脚本会先检查服务器页面，再建立隐藏的受管 SSH 隧道并打开 `http://127.0.0.1:18765`。停止隧道：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/disconnect_remote_workbench.ps1
+```
+
+也可手工建立隧道：
+
+```bash
+ssh -L 18765:127.0.0.1:18765 用户名@Linux服务器
+```
+
+然后在自己的电脑打开 `http://127.0.0.1:18765/`。
 
 只有在受控内网并已配置防火墙、反向代理和访问控制时，才显式监听其他地址：
 

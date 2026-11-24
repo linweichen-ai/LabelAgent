@@ -39,6 +39,21 @@ class ReproDoctorTests(unittest.TestCase):
             port = listener.getsockname()[1]
             self.assertFalse(doctor.port_available(port))
 
+    def test_report_uses_requested_workbench_port(self):
+        args = mock.MagicMock(
+            require_cuda=False, require_weight=False,
+            work_dir=tempfile.gettempdir(), require_services=False,
+            web_port=18765, sam_port=18766,
+            require_web_port=True, require_sam_port=False,
+        )
+        with mock.patch.object(doctor, "port_available", return_value=True), \
+                mock.patch.object(doctor, "import_check",
+                                  return_value=doctor.item("dependency", True, "ok")):
+            report = doctor.build_report(args)
+        names = {item["name"] for item in report["checks"]}
+        self.assertIn("port:18765", names)
+        self.assertNotIn("port:8765", names)
+
     def test_work_directory_check_is_reversible(self):
         with tempfile.TemporaryDirectory() as directory:
             marker = Path(directory) / ".labelagent-write-check"

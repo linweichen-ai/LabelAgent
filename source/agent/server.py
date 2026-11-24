@@ -1522,6 +1522,16 @@ def load():
         stored = _read_json(state_path())
         legacy_sessions = stored.pop("file_sessions", None)
         state.update(stored)
+    config = state.setdefault("config", {})
+    environment_defaults = {
+        "llm_url": os.environ.get("LABELAGENT_VLM_URL", "").strip(),
+        "llm_model": os.environ.get("LABELAGENT_VLM_MODEL", "").strip(),
+        "llm_fast_url": os.environ.get("LABELAGENT_FAST_VLM_URL", "").strip(),
+        "llm_fast_model": os.environ.get("LABELAGENT_FAST_VLM_MODEL", "").strip(),
+    }
+    for key, value in environment_defaults.items():
+        if value and not config.get(key):
+            config[key] = value
     if file_sessions_path().exists():
         state["file_sessions"] = _read_json(file_sessions_path())
     else:

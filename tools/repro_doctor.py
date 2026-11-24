@@ -112,12 +112,12 @@ def build_report(args: argparse.Namespace) -> dict:
         checks.append(item("service:sam3", sam_ok, sam_detail))
         checks.append(item("service:workbench", web_ok, web_detail))
     else:
-        web_port_available = port_available(8765)
-        sam_port_available = port_available(8766)
-        checks.append(item("port:8765", web_port_available,
+        web_port_available = port_available(args.web_port)
+        sam_port_available = port_available(args.sam_port)
+        checks.append(item(f"port:{args.web_port}", web_port_available,
                            "available" if web_port_available else "already in use",
                            required=args.require_web_port))
-        checks.append(item("port:8766", sam_port_available,
+        checks.append(item(f"port:{args.sam_port}", sam_port_available,
                            "available" if sam_port_available else "already in use",
                            required=args.require_sam_port))
 
@@ -138,6 +138,8 @@ def main() -> int:
     parser.add_argument("--work-dir", default=str(DEFAULT_WORK))
     parser.add_argument("--sam-url", default="http://127.0.0.1:8766")
     parser.add_argument("--web-url", default="http://127.0.0.1:8765")
+    parser.add_argument("--sam-port", type=int, default=8766)
+    parser.add_argument("--web-port", type=int, default=8765)
     parser.add_argument("--require-cuda", action="store_true")
     parser.add_argument("--require-weight", action="store_true")
     parser.add_argument("--require-web-port", action="store_true")

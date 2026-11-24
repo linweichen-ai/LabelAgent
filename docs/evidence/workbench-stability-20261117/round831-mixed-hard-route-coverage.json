@@ -1,0 +1,57 @@
+{
+  "schema_version": "labelagent.mixed-hard-route-coverage-public.v1",
+  "round": 831,
+  "date": "2026-11-24",
+  "status": "coverage_gap_detected",
+  "source_sample_count": 34,
+  "baseline_queue_count": 17,
+  "baseline_external_call_ratio": 0.5,
+  "priority_disagreement_count": 11,
+  "priority_routed_count": 6,
+  "priority_missed_count": 5,
+  "priority_coverage_ratio": 0.545455,
+  "coverage_by_confidence": {
+    "high": {"routed": 1, "missed": 2},
+    "medium": {"routed": 3, "missed": 3},
+    "low": {"routed": 2, "missed": 0}
+  },
+  "difficulty_flag_misses": {
+    "carried_cargo": 1,
+    "container_transition": 4,
+    "depth_change": 1,
+    "doorway_transition": 1,
+    "edge": 1,
+    "lighting_change": 1,
+    "occluded": 1,
+    "partial_visibility": 1
+  },
+  "supplemental_review_proposal_count": 5,
+  "augmented_shadow_candidate_count": 22,
+  "augmented_shadow_candidate_ratio": 0.647059,
+  "coverage_gate_passed": false,
+  "hashes": {
+    "source_suggestions_sha256": "b0bff89db15a664d0e6bae1ce1a06b3a357b89c7efd3825b517e4a90051c8b1b",
+    "expert_queue_sha256": "39e12f5f7fa5823ec925a364c0b630333a59e72dc9c8d3e0d1347320e012df9b",
+    "assistant_triage_sha256": "2c92ad1020b327578051b140e69f4f4990fab347940c11711482521f20783325",
+    "review_manifest_sha256": "4cd7eadb244cadad83208b4f2d9f304da457830b839070dd796edf77f53dad50",
+    "private_coverage_receipt_sha256": "f5f2230ccc6ac896dda2f963080ba2581f6221a3d92997741b2f92d60fb5a60e"
+  },
+  "regression": {
+    "targeted_passed": 3,
+    "python_passed": 2028,
+    "python_skipped": 1,
+    "python_subtests_passed": 294
+  },
+  "boundaries": {
+    "dispatch_performed": false,
+    "external_upload_performed": false,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "training_authorized": false,
+    "automatic_approval": false,
+    "test24_used": false,
+    "human_review_required": true,
+    "production_deployed": false
+  }
+}

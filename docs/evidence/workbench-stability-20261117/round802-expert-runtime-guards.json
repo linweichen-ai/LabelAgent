@@ -1,0 +1,30 @@
+{
+  "round": 802,
+  "date": "2026-11-24",
+  "capabilities": {
+    "exact_request_cache": true,
+    "bounded_retry": true,
+    "circuit_breaker": true,
+    "cache_before_circuit": true,
+    "local_fallback": true,
+    "sam_result_reused": true,
+    "secret_in_trace": false
+  },
+  "defaults": {
+    "retry_count": 1,
+    "cooldown_seconds": 60,
+    "cache_ttl_seconds": 3600,
+    "cache_max_entries": 128
+  },
+  "tests": {
+    "external_expert_focused": "15 passed",
+    "related_full": "308 passed, 87 subtests passed"
+  },
+  "external_api_calls": 0,
+  "external_uploads": 0,
+  "test24_used": false,
+  "deployed": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false
+}

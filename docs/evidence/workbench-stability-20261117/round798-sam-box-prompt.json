@@ -56,6 +56,26 @@
   "formal_status_after": "idle",
   "formal_sam_pid_unchanged": 14696,
   "formal_vlm_pid_unchanged": 1221856,
+  "real_frame_single_smoke": {
+    "dataset_scope": "current_development_data",
+    "topic": "/CVAT/Task3/images",
+    "frame": 83,
+    "image_sha256": "4be1791d3886179e62bac68517e8bd8b47a8669a942a1ede74013c3411e7da59",
+    "target": "slope",
+    "box": [228, 74, 560, 174],
+    "score": 0.98046875,
+    "parts": 1,
+    "outer_vertices": 50,
+    "holes": 0,
+    "warnings": [],
+    "scope_match": true,
+    "visual_assessment": "single slope boundary aligned; surrounding floor and cargo interior excluded",
+    "candidate_persisted": false,
+    "truth_persisted": false,
+    "isolated_state_hash_unchanged": true,
+    "local_untracked_images_only": true,
+    "generalization_claimed": false
+  },
   "formal_deployed": false,
   "real_frame_quality_evaluated": false
 }

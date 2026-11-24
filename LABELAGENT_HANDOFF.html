@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LabelAgent 实验与交接手册</title>
+<style>
+:root{color-scheme:dark;--bg:#111827;--panel:#1f2937;--text:#e5e7eb;--muted:#aab4c3;--line:#374151;--accent:#7dd3fc;--warn:#fbbf24;--ok:#86efac}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,"Microsoft YaHei",sans-serif}main{max-width:1050px;margin:auto;padding:32px 24px 70px}h1,h2,h3{line-height:1.3}h1{font-size:2.1rem}h2{margin-top:2.3em;border-bottom:1px solid var(--line);padding-bottom:.4em}h3{margin-top:1.5em;color:var(--accent)}a{color:var(--accent);overflow-wrap:anywhere}code,pre{font-family:Consolas,monospace;background:#0b1220;border:1px solid var(--line);border-radius:5px}code{padding:.1em .35em}pre{padding:14px;overflow:auto;white-space:pre-wrap}.box{padding:14px 18px;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;margin:16px 0}.warn{border-left-color:var(--warn)}.ok{border-left-color:var(--ok)}table{border-collapse:collapse;width:100%;margin:14px 0}th,td{text-align:left;vertical-align:top;border:1px solid var(--line);padding:9px}th{background:#273449}nav{position:sticky;top:0;background:#111827ed;padding:10px;border-bottom:1px solid var(--line);z-index:2}nav a{margin-right:12px;white-space:nowrap;font-size:.9rem}.small{font-size:.9rem;color:var(--muted)}li{margin:.35em 0}
+</style>
+</head>
+<body><main>
+<h1>LabelAgent 实验记录与接手手册</h1>
+<p class="small">整理日期：2026-11-24（Asia/Shanghai）｜目标：让后续 AI 无需翻阅聊天即可理解当前代码状态、实验结论、约束和下一步。内容根据本次可见交接上下文及本机 Git 元数据整理；没有读取数据集、签字材料、图片或凭证。</p>
+<nav><a href="#status">同步状态</a><a href="#scope">项目边界</a><a href="#experiments">实验记录</a><a href="#idea">当前 idea</a><a href="#next">下一步</a><a href="#handoff">接手指令</a></nav>
+<section id="status"><h2>1. GitHub / CNB 同步状态</h2>
+<div class="box warn"><strong>结论：不能确认已同步；已知本轮新增审计提交没有推送。</strong>本地两个 remote 配置存在，但本次没有查询远端服务，也没有执行 fetch/push。前序明确记录实验分支未推送。因此不要把本地提交链接当作已发布链接。</div>
+<table><thead><tr><th>平台</th><th>仓库地址（配置中）</th><th>本轮已核对</th></tr></thead><tbody>
+<tr><td>GitHub origin</td><td><a href="https://github.com/linweichen-ai/LabelAgent">https://github.com/linweichen-ai/LabelAgent</a></td><td>本地 remote 配置。尚未核实远端包含哪些提交。</td></tr>
+<tr><td>CNB cnb</td><td><a href="https://cnb.cool/seer-robotics/EIC/BEV/LabelAgent">https://cnb.cool/seer-robotics/EIC/BEV/LabelAgent</a></td><td>本地 remote 配置。主线跟踪状态显示相对 cnb/labelagent：ahead 71、behind 73；这是本地追踪引用的状态，不是新鲜远端查询，且分支有分叉，禁止盲目 push。</td></tr>
+</tbody></table>
+<p>可直接访问仓库主页，但目前没有可确认的 GitHub/CNB commit 页面链接。安全发布前应先在隔离克隆中 fetch 两个 remote、核对分支图和分叉提交，再决定 cherry-pick/合并；不要对共享主分支强推。</p>
+<h3>本地提交位置</h3><ul>
+<li>主工作区：LabelAgent 本地仓库，分支 <code>labelagent</code>，HEAD <code>da3b6f9</code>（本机核对）。最近提交主题包括“Bind semantic canary queue to upload bytes”。</li>
+<li>离线签字端到端/时间戳实验：隔离 worktree，分支 <code>codex/signoff-e2e-gate-20261122</code>，HEAD <code>39b8579</code>。</li>
+<li>端到端门禁提交：<code>a792ff458c7c1820db045db53cf4fc95eba39d18</code>，父基线 <code>107a12f</code>。时间戳奇偶审计提交：<code>39b8579</code>。</li>
+<li>草稿导入/导出相关提交曾在分支 <code>codex/offline-review-drafts-20261122</code>：<code>e717558</code>、<code>dd9569d</code>；前序交接声称主线已吸收。签字复核器、导入校验器亦有独立提交 <code>a270526</code>、<code>dc8047d</code>。接手时须用 Git ancestry 检查，勿仅凭对话记录假设所有提交都包含在当前 HEAD。</li>
+</ul></section>
+<section id="scope"><h2>2. 项目目标与硬约束</h2>
+<ul><li>项目：LabelAgent，BEV 视觉/LiDAR 标注辅助及离线评测工具。本交接重点为 Round503/511 人工签字复核链路与 Round385 ego 相机归一化点模板。</li>
+<li>隐私/安全边界：不读取 test24、真实私有签字、凭证、私有图片；不公开私有 ID、坐标、路径或样本内容。</li>
+<li>未明确授权不得训练、改真值、改权重、部署或推送。纯审阅/合成测试只读数据；新功能应走隔离 worktree 和独立分支。</li>
+<li>签字流程必须默认 fail-closed；人工 pass 不等同训练授权，训练/自动批准字段永远 false。导入失败不得部分输出或改变已有进度。</li>
+<li>证据和人工决定不得写入 <code>localStorage</code> 或联网；页面应纯离线，无外部脚本。</li></ul></section>
+<section id="experiments"><h2>3. 已完成实验与证据</h2>
+<h3>3.1 人工签字链路</h3>
+<p>链路设计：Round503 gated review manifest（81 项）→ Round511 signoff template → 私有离线复核页面 → 完整 JSON 导出 → <code>validate_cvat_human_signoff_import</code> fail-closed 导入校验与 receipt。</p>
+<ul><li>离线复核页：静态 HTML，预先校验 81 项身份/绑定与证据图 SHA；人工决策 pass/reject/uncertain，不预选；展示进度、筛选、上一项/下一项；全部完成且 reviewer/time 完整后才正式导出。</li>
+<li>草稿：导出/导入严格 SHA 绑定的草稿 JSON，只含四个人工字段（decision、reviewer、reviewed_at、note）和身份/五绑定；不含授权字段。导入整包校验后一次性恢复，错误不覆盖现有进度；无浏览器持久化。</li>
+<li>端到端测试提交 <code>a792ff4</code>：Node VM 执行页面 JS，生成实际导出 payload 再交正式导入器。合成 81 行通过；未完成时禁正式导出；伪造训练授权、篡改绑定/计数被拒。报告称相关 Python 测试 39 项通过，Node 草稿攻击用例通过；未做真实浏览器自动化。</li>
+</ul>
+<h3>3.2 时间戳一致性实验（阳性缺陷）</h3>
+<p>脚本：<code>tools/audit_signoff_timestamp_parity.py</code>（隔离分支提交 <code>39b8579</code>）。使用合成 81 项构建页面，从 HTML 提取内嵌 JS 的 <code>validTime</code>，与 Python 导入器的 <code>_valid_timestamp</code> 对同一组 17 个向量比对。</p>
+<table><thead><tr><th>输入</th><th>页面</th><th>正式导入器</th><th>影响</th></tr></thead><tbody>
+<tr><td><code>2026-02-30T12:00:00+08:00</code></td><td>放行</td><td>拒绝</td><td>页面允许正式导出，导入整包失败。</td></tr>
+<tr><td><code>2026-11-22T24:00:00Z</code></td><td>放行</td><td>拒绝</td><td>同上。</td></tr>
+<tr><td><code>2026-11-22T12:00:00.1234567Z</code></td><td>放行</td><td>拒绝</td><td>小数秒超出导入器约束。</td></tr>
+</tbody></table>
+<p>其余 14/17 向量一致。另做端到端复现：81 项其他字段完整，只将时间戳设为以上任一值，页面仍导出成功，正式导入器拒绝，3/3 可复现。结论：idea 的风险成立，但修复尚未完成，不能宣称“已 work”。</p>
+<h3>3.3 Round385 ego 模板（历史审阅结论）</h3>
+<ul><li>归一化坐标使用 <code>round(ratio * (dimension - 1))</code>，端点映射合理；旧代码校验对 NaN、布尔标签、非正尺寸、去空白重名等边界不足。</li>
+<li>四相机模板仍是影子诊断，不等于已进入正式 evaluator。进入 evaluator 前需默认关闭、拒绝异常、负控与状态前后快照不变测试。</li>
+<li>camera1 可见 ego 面积有约 3.5–4.0% 和 8.9–9.2% 双峰。不可将面积簇自动解释成漏分或以面积阈值膨胀掩膜；应按遮挡等级比较真值 IoU、person/floor 误纳入率。无像素真值时禁止调门禁以追双峰。</li></ul></section>
+<section id="idea"><h2>4. 当前核心 idea 与验证状态</h2>
+<div class="box ok"><strong>核心 idea：</strong>人工复核 UI 的输入校验必须与正式导入器使用同一规范/测试向量；页面可用性检查不能比下游导入门禁更宽松。性质：对任何页面允许导出的 payload，都必须通过导入校验器（export ⇒ import accepted）。</div>
+<p><strong>状态：</strong>风险已在实验分支版本中验证，idea 作为工程要求成立；本次未重新核对最新主线的时间戳实现，不能断言最新主线尚未修复。历史实验存在 3 个反例，应先复核最新代码，再决定是否需要修复及补测。</p>
+<p>推荐实现优先级：不要维护两套独立正则/日期解析。优先定义一份规范并生成共享测试向量：严格日历日期、小时 00–23、分钟/秒有效、偏移合法、最多 6 位小数秒、必须有时区。若无法让浏览器和 Python 共用运行时代码，则共享 JSON vectors，双端测试同一组 vectors。</p></section>
+<section id="next"><h2>5. 下一轮实验计划（低风险、可证伪）</h2>
+<ol><li><strong>确认当前代码仍有缺陷：</strong>在已跟踪源码上复跑 parity 脚本；先比较当前主线与实验分支的代码差异，避免把已修复问题误报为现状。只用合成输入。</li>
+<li><strong>隔离修复：</strong>从最新主线创建 worktree/分支；改页面 <code>validTime</code> 严格执行导入器规则。建议只触碰页面生成器、共享向量和测试，不碰签字数据或正式候选链。</li>
+<li><strong>同向量双端测试：</strong>至少涵盖合法闰日、非法日期、闰秒/24时、偏移边界、无时区、Z、0/1/6/7 位小数秒、空白和类型错误。对所有向量要求 Python/JS 结果完全相同。</li>
+<li><strong>端到端不变量：</strong>构建合成 81 项页面，分别将每个有效向量写入所有行并导出，导入器必须接受；对非法向量页面不得启用正式导出。断言无下载、无部分 payload。</li>
+<li><strong>回归与发布评估：</strong>运行签字页构建测试、导入器单测、草稿 Node VM 测试、export→import E2E；检查 diff 仅限预期文件。提交隔离分支，不推送，先让用户审阅。</li>
+<li><strong>真实浏览器验收（后续单独批准）：</strong>只用合成包测试离线打开、草稿导入/导出与正式导出；确认无网络请求。不要加载真实图片或签字。</li>
+<li><strong>ego 实验（分离项目）：</strong>先人工标注遮挡分层像素真值；按面积双峰分别报告 ego IoU、person/floor 误纳入率、拒绝率。真值未获批准前不调模板、不启用 evaluator。</li></ol>
+<div class="box warn"><strong>远端同步：</strong>主线本地状态相对 CNB 追踪分支 ahead 71 / behind 73 且有分叉。先 fetch 后审阅 DAG；禁止直接推送当前主线、禁止 force push。GitHub/CNB 远端内容本轮未检查。</div></section>
+<section id="handoff"><h2>6. 给下一个 AI 的启动指令</h2>
+<pre>你正在继续 LabelAgent 人工签字复核链路。先阅读本交接页，再只检查指定 Git worktree 的已跟踪源码和提交历史。不要读取 test24、真实私有签字、图片、凭证或未跟踪个人数据。不得训练、改真值/权重、部署或推送。
+首要任务：复核时间戳奇偶缺陷是否仍存在。基于最新 labelagent 主线新建隔离 worktree，使用合成 81 项夹具运行 tools/audit_signoff_timestamp_parity.py（若脚本不在该分支，使用隔离审计 worktree中的脚本并明确源码版本）。修复前确认 Python _valid_timestamp 的精确接受规则。修复页面校验并共享 vectors；补 Python、Node 和 export⇒import 端到端断言。严格限制 diff 到相关工具/测试。先跑定向测试和 git diff --check，提交隔离分支，不推送。最终报告：基线 commit、分支/worktree、文件与行号、测试数、parity 结果、commit hash、未解决盲区。不要把“本地提交”表述成 GitHub/CNB 已同步。</pre>
+<h3>接手时先执行（只读）</h3><pre>git -C "C:/Users/seer/Documents/ChatGPT/Seer2clw/task_workspaces/labelagent_stability_worktree_20261117" status --short --untracked-files=no
+git -C "C:/Users/seer/Documents/ChatGPT/Seer2clw/task_workspaces/labelagent_stability_worktree_20261117" log -8 --oneline --decorate labelagent
+git -C "D:/Workbuddy/2026-11-22-01-11-52/labelagent-e2e" show --stat --oneline 39b8579
+git -C "D:/Workbuddy/2026-11-22-01-11-52/labelagent-e2e" show --stat --oneline a792ff4</pre>
+<h3>已知限制与盲区</h3><ul><li>远端 GitHub/CNB 的最新分支与提交未通过远端查询核实；主页 URL 不代表 commit 已发布。</li><li>草稿/E2E 使用 Node DOM stub/VM，不是实际浏览器渲染测试。</li><li>Reviewer 身份是非空文本与时间声明，不是密码学签名/身份认证。</li><li>时间戳规则尚未统一，存在页面可导出、导入器拒绝的已复现反例。</li><li>Round385 相机遮挡面积双峰仍缺经批准的像素真值和正式 evaluator 状态测试。</li></ul></section>
+<footer class="small"><p>安全说明：本页不包含私有样本 ID、坐标、私有文件路径、签字内容或凭证。引用的本地路径仅用于当前机器接手；对外发布前请再次做隐私检查。</p></footer>
+</main></body></html>

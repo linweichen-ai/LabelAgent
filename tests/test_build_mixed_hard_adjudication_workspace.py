@@ -100,6 +100,59 @@ class MixedHardAdjudicationWorkspaceTest(unittest.TestCase):
             self.assertTrue((output / "review" / "0.jpg").is_file())
             self.assertTrue((output / "raw" / "0.jpg").is_file())
 
+    def test_optional_machine_hints_are_hash_bound_hidden_and_never_autofill(self):
+        with tempfile.TemporaryDirectory() as directory:
+            packet = self.packet(Path(directory) / "packet")
+            manifest, digest = validate_packet(packet)
+            suggestion = {
+                "assessments": {label: "absent" for label in LABELS},
+                "overall_confidence": 0.91,
+                "pallet_instance_count": 0,
+                "pallet_quality": "no_pallet",
+                "slope_geometry": "no_visible_slope",
+                "class_conflicts": [],
+                "difficulty_flags": [],
+                "unknown_candidates": [],
+                "review_note": "fixture",
+            }
+            suggestions = Path(directory) / "suggestions.json"
+            suggestions.write_text(json.dumps({
+                "schema_version": "labelagent.local-qwen-mixed-hard-suggestions.v1",
+                "manifest_sha256": digest,
+                "status": "completed",
+                "samples_passed": len(manifest["rows"]),
+                "samples_failed": 0,
+                "candidate_only": True,
+                "human_truth": False,
+                "approved_for_training": False,
+                "test24_used": False,
+                "rows": [{
+                    "sample_id": row["sample_id"],
+                    "copied_image_sha256": sha256(
+                        packet / row["raw_image"]),
+                    "suggestion": suggestion,
+                    "candidate_only": True,
+                    "human_truth": False,
+                    "approved_for_training": False,
+                    "test24_used": False,
+                } for row in manifest["rows"]],
+            }), encoding="utf-8")
+            output = Path(directory) / "workspace"
+            receipt = build_workspace(packet, output, suggestions)
+            page = (output / "reviewer.html").read_text(encoding="utf-8")
+            self.assertEqual(receipt["assistant_hint_count"], 24)
+            self.assertEqual(receipt["assistant_suggestions_sha256"], sha256(suggestions))
+            self.assertIn("显示机器建议 H", page)
+            self.assertIn("不会自动填表", page)
+            self.assertIn("hintText(item.assistant_hint)", page)
+            self.assertIn("$('assistantPanel').open=false", page)
+            self.assertNotIn("candidate_decision:hint", page)
+            payload = json.loads(suggestions.read_text(encoding="utf-8"))
+            payload["rows"][0]["copied_image_sha256"] = "0" * 64
+            suggestions.write_text(json.dumps(payload), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "binding differs"):
+                build_workspace(packet, Path(directory) / "drift", suggestions)
+
     def test_validates_complete_bound_submission(self):
         with tempfile.TemporaryDirectory() as directory:
             packet = self.packet(Path(directory) / "packet")

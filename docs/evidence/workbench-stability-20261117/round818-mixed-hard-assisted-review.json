@@ -1,0 +1,22 @@
+{
+  "round": 818,
+  "date": "2026-11-24",
+  "sample_count": 34,
+  "raw_image_count": 34,
+  "review_image_count": 34,
+  "assistant_hint_count": 34,
+  "assistant_suggestions_sha256": "b0bff89db15a664d0e6bae1ce1a06b3a357b89c7efd3825b517e4a90051c8b1b",
+  "reviewer_html_sha256": "b23c2ebb84d7ffb0deebf1c3aa6061eb5ee53a99217add62c698611f7fafd9c0",
+  "assistant_panel_default_open": false,
+  "assistant_autofill": false,
+  "project_tests_passed": 1968,
+  "project_tests_skipped": 1,
+  "project_subtests_passed": 294,
+  "external_api_calls": 0,
+  "factory_data_uploaded": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "test24_used": false,
+  "production_deployed": false
+}

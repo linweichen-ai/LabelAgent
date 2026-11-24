@@ -177,12 +177,55 @@ def validate_submission(manifest, manifest_sha256, submission):
             "human_truth": False, "approved_for_training": False}
 
 
-def write_html(manifest, manifest_sha256, destination):
+def load_assistant_hints(path, manifest, manifest_sha256, packet_dir):
+    """Load hash-bound local suggestions without turning them into answers."""
+    if path is None:
+        return {}, None
+    payload = read_json(path)
+    rows = payload.get("rows") if isinstance(payload, dict) else None
+    if (payload.get("schema_version")
+            != "labelagent.local-qwen-mixed-hard-suggestions.v1"
+            or payload.get("manifest_sha256") != manifest_sha256
+            or payload.get("status") != "completed"
+            or payload.get("samples_failed") != 0
+            or payload.get("candidate_only") is not True
+            or payload.get("human_truth") is not False
+            or payload.get("approved_for_training") is not False
+            or payload.get("test24_used") is not False
+            or not isinstance(rows, list)
+            or payload.get("samples_passed") != len(rows)):
+        raise ValueError("assistant suggestions boundary differs")
+    expected = {row["sample_id"]: row for row in manifest["rows"]}
+    raw_hashes = {row["sample_id"]: sha256(
+        _safe_child(packet_dir, row["raw_image"])) for row in manifest["rows"]}
+    hints = {}
+    for row in rows:
+        sample_id = row.get("sample_id")
+        suggestion = row.get("suggestion")
+        if (sample_id in hints or sample_id not in expected
+                or row.get("copied_image_sha256") != raw_hashes[sample_id]
+                or row.get("candidate_only") is not True
+                or row.get("human_truth") is not False
+                or row.get("approved_for_training") is not False
+                or row.get("test24_used") is not False
+                or not isinstance(suggestion, dict)
+                or not isinstance(suggestion.get("assessments"), dict)
+                or set(suggestion["assessments"]) != set(LABELS)):
+            raise ValueError("assistant suggestion identity or image binding differs")
+        hints[sample_id] = suggestion
+    if set(hints) != set(expected):
+        raise ValueError("assistant suggestions do not cover the review packet")
+    return hints, sha256(path)
+
+
+def write_html(manifest, manifest_sha256, destination, assistant_hints=None):
+    assistant_hints = assistant_hints or {}
     items = [{
         "sample_id": row["sample_id"], "cohort": row["cohort"],
         "source_image_sha256": row["source_image_sha256"],
         "review_image": row["review_image"], "raw_image": row["raw_image"],
         "review_note": row.get("review_note") or "",
+        "assistant_hint": assistant_hints.get(row["sample_id"]),
     } for row in manifest["rows"]]
     payload = html.escape(json.dumps(items, ensure_ascii=False))
     destination.write_text(f'''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
@@ -190,7 +233,7 @@ def write_html(manifest, manifest_sha256, destination):
 body{{font:16px system-ui;margin:0;background:#10151b;color:#eef3f8}}header,main{{max-width:1180px;margin:auto;padding:18px}}
 header{{position:sticky;top:0;background:#17202a;border-bottom:1px solid #39495a;z-index:2}}button,select,input,textarea{{font:inherit}}
 .row{{display:grid;grid-template-columns:1fr 1fr;gap:18px}}img{{width:100%;border-radius:10px;background:#000;cursor:zoom-in}}figure{{margin:0}}figcaption{{margin:6px 0 14px;color:#aebdca}}.image-grid{{display:grid;grid-template-columns:1fr;gap:12px}}.image-grid.both{{grid-template-columns:1fr 1fr}}.image-grid .hidden{{display:none}}
-.panel{{background:#19232d;padding:16px;border-radius:12px}}label{{display:block;margin:10px 0}}select,textarea,input{{width:100%;box-sizing:border-box;padding:8px;background:#0f171f;color:#fff;border:1px solid #52677b;border-radius:6px}}
+.panel{{background:#19232d;padding:16px;border-radius:12px}}label{{display:block;margin:10px 0}}select,textarea,input{{width:100%;box-sizing:border-box;padding:8px;background:#0f171f;color:#fff;border:1px solid #52677b;border-radius:6px}}details{{margin:12px 0;padding:10px;background:#111a22;border:1px solid #52677b;border-radius:8px}}summary{{cursor:pointer;color:#8ce2ba}}pre{{white-space:pre-wrap;word-break:break-word;color:#d8e4ed}}
 .flags label{{display:inline-block;margin-right:14px}}.flags input{{width:auto}}button{{padding:9px 15px;margin:4px 4px 4px 0}}.warn{{color:#ffd27a}}#presence{{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}}.actions{{position:sticky;bottom:0;padding:12px 0;background:#19232df2;border-top:1px solid #52677b}}#completion{{font-weight:700;color:#8ce2ba}}#zoom{{position:fixed;inset:0;background:#000d;z-index:9;display:none;align-items:center;justify-content:center;padding:24px}}#zoom.open{{display:flex}}#zoom img{{max-width:96vw;max-height:94vh;width:auto;cursor:zoom-out}}@media(max-width:850px){{.row{{grid-template-columns:1fr}}#presence{{grid-template-columns:1fr}}.image-grid.both{{grid-template-columns:1fr}}}}
 </style></head><body><header><b>困难帧受控复核</b>　<span id="counter"></span>　<span id="completion"></span><p class="warn">复核记录不是像素真值，不自动授权训练。选择后会立即保存到当前浏览器；J/K 可前后翻页。</p></header>
 <main><div class="row"><div class="panel"><h2 id="title"></h2><p id="meta"></p><div><button id="showReview">候选叠加 V</button><button id="showRaw">原图 R</button><button id="showBoth">左右对比 B</button></div><div id="imageGrid" class="image-grid"><figure id="reviewFigure"><img id="reviewImage"><figcaption>候选叠加图</figcaption></figure><figure id="rawFigure" class="hidden"><img id="rawImage"><figcaption>未经叠加的原图</figcaption></figure></div></div>
@@ -201,6 +244,7 @@ header{{position:sticky;top:0;background:#17202a;border-bottom:1px solid #39495a
 <label>托盘质量<select id="pallet"><option value="">请选择</option><option>complete</option><option>hole_error</option><option>merged_instances</option><option>missed_instance</option><option>not_applicable</option><option>uncertain</option></select></label>
 <fieldset><legend>八类存在性（严格评测必填）</legend><div id="presence"></div></fieldset>
 <label>可见托盘实例数<input id="palletCount" type="number" min="0" step="1" value="0"></label>
+<details id="assistantPanel"><summary>显示机器建议 H（先独立判断；不会自动填表）</summary><p class="warn">这是本地Qwen候选，不是人工答案。展开、关闭或复制文字都不会改变任何选择。</p><pre id="assistantHint"></pre></details>
 <div class="flags">困难因素：<label><input type="checkbox" value="edge">边缘</label><label><input type="checkbox" value="small">小目标</label><label><input type="checkbox" value="occluded">遮挡</label><label><input type="checkbox" value="material_or_light">材质/光照</label></div>
 <label>备注<textarea id="note" rows="4"></textarea></label><div class="actions"><button id="prev" title="快捷键 K">上一张 K</button><button id="next" title="快捷键 J">保存并下一张 J</button><button id="nextIncomplete" title="快捷键 G">下一张未完成 G</button><button id="copyPrevious">复制上一张填写</button><button id="exportDraft">导出草稿</button><button id="importDraft">导入草稿</button><input id="draftFile" type="file" accept="application/json" hidden><button id="export">导出完整复核记录</button></div></div></div></main><div id="zoom"><img id="zoomImage"></div>
 <script id="items" type="application/json">{payload}</script><script>
@@ -211,7 +255,8 @@ function rowComplete(row){{return !!(row&&row.candidate_decision&&row.slope_pres
 function updateProgress(){{const completed=items.filter(item=>rowComplete(state.rows[item.sample_id])).length;$('completion').textContent=`已完整填写 ${{completed}} / ${{items.length}}`;const current=state.rows[items[state.index].sample_id];$('counter').textContent=`${{state.index+1}} / ${{items.length}}${{rowComplete(current)?' · 本帧已完整':''}}`}}
 function save(){{const item=items[state.index];state.reviewer=$('reviewer').value.trim();state.rows[item.sample_id]={{sample_id:item.sample_id,source_image_sha256:item.source_image_sha256,candidate_decision:$('candidate').value,slope_presence:$('slope').value,class_conflict:$('conflict').value,pallet_quality:$('pallet').value,class_presence:presenceValues(),pallet_instance_count:Number($('palletCount').value),difficulty_flags:[...document.querySelectorAll('.flags input:checked')].map(x=>x.value),note:$('note').value}};localStorage.setItem(key,JSON.stringify(state));updateProgress()}}
 function setImageMode(mode){{state.imageMode=mode;const both=mode==='both',raw=mode==='raw';$('imageGrid').classList.toggle('both',both);$('reviewFigure').classList.toggle('hidden',raw);$('rawFigure').classList.toggle('hidden',!raw&&!both);localStorage.setItem(key,JSON.stringify(state))}}
-function render(){{state.index=Math.max(0,Math.min(items.length-1,Number(state.index)||0));const item=items[state.index],row=state.rows[item.sample_id]||{{}};$('title').textContent=item.sample_id;$('meta').textContent=item.cohort+' · '+item.review_note;$('reviewImage').src=item.review_image;$('rawImage').src=item.raw_image;$('reviewer').value=state.reviewer||'';const values={{candidate:row.candidate_decision,slope:row.slope_presence,conflict:row.class_conflict,pallet:row.pallet_quality}};selects.forEach(x=>$(x).value=values[x]||'');labels.forEach((label,index)=>$('presence-'+index).value=(row.class_presence||{{}})[label]||'');$('palletCount').value=Number.isInteger(row.pallet_instance_count)?row.pallet_instance_count:0;document.querySelectorAll('.flags input').forEach(x=>x.checked=(row.difficulty_flags||[]).includes(x.value));$('note').value=row.note||'';setImageMode(state.imageMode||'review');updateProgress()}}
+function hintText(hint){{if(!hint)return '本复核包没有可用的本地机器建议。';const present=labels.filter(x=>hint.assessments[x]==='present'),uncertain=labels.filter(x=>hint.assessments[x]==='uncertain');return [`存在：${{present.join('、')||'无'}}`,`不确定：${{uncertain.join('、')||'无'}}`,`总体置信度：${{hint.overall_confidence}}`,`斜坡形态：${{hint.slope_geometry}}`,`托盘实例：${{hint.pallet_instance_count}}；质量：${{hint.pallet_quality}}`,`类别冲突：${{(hint.class_conflicts||[]).join('、')||'无'}}`,`困难因素：${{(hint.difficulty_flags||[]).join('、')||'无'}}`,`未知候选：${{(hint.unknown_candidates||[]).join('、')||'无'}}`,`机器备注：${{hint.review_note||'无'}}`].join('\n')}}
+function render(){{state.index=Math.max(0,Math.min(items.length-1,Number(state.index)||0));const item=items[state.index],row=state.rows[item.sample_id]||{{}};$('title').textContent=item.sample_id;$('meta').textContent=item.cohort+' · '+item.review_note;$('reviewImage').src=item.review_image;$('rawImage').src=item.raw_image;$('assistantHint').textContent=hintText(item.assistant_hint);$('assistantPanel').open=false;$('reviewer').value=state.reviewer||'';const values={{candidate:row.candidate_decision,slope:row.slope_presence,conflict:row.class_conflict,pallet:row.pallet_quality}};selects.forEach(x=>$(x).value=values[x]||'');labels.forEach((label,index)=>$('presence-'+index).value=(row.class_presence||{{}})[label]||'');$('palletCount').value=Number.isInteger(row.pallet_instance_count)?row.pallet_instance_count:0;document.querySelectorAll('.flags input').forEach(x=>x.checked=(row.difficulty_flags||[]).includes(x.value));$('note').value=row.note||'';setImageMode(state.imageMode||'review');updateProgress()}}
 function navigate(delta){{save();state.index=Math.max(0,Math.min(items.length-1,state.index+delta));render();window.scrollTo({{top:0,behavior:'smooth'}})}}
 $('prev').onclick=()=>navigate(-1);$('next').onclick=()=>navigate(1);
 $('showReview').onclick=()=>setImageMode('review');$('showRaw').onclick=()=>setImageMode('raw');$('showBoth').onclick=()=>setImageMode('both');
@@ -221,7 +266,7 @@ $('exportDraft').onclick=()=>{{save();const out={{schema_version:'{TEMPLATE_SCHE
 $('importDraft').onclick=()=>$('draftFile').click();$('draftFile').onchange=async event=>{{const file=event.target.files[0];if(!file)return;try{{const incoming=JSON.parse(await file.text());if(!['{TEMPLATE_SCHEMA}','{SUBMISSION_SCHEMA}'].includes(incoming.schema_version)||incoming.review_manifest_sha256!=='{manifest_sha256}'||incoming.candidate_only!==true||incoming.human_truth!==false||incoming.approved_for_training!==false||incoming.training_authorized!==false||incoming.automatic_approval!==false||!Array.isArray(incoming.rows))throw new Error('文件边界或数据包哈希不匹配');const allowed=new Set(items.map(item=>item.sample_id));const rows={{}};for(const row of incoming.rows){{if(!row||!allowed.has(row.sample_id)||rows[row.sample_id])throw new Error('样本缺失、重复或不属于本复核包');const item=items.find(x=>x.sample_id===row.sample_id);if(row.source_image_sha256!==item.source_image_sha256)throw new Error('图像哈希不匹配');rows[row.sample_id]=row}}state.rows=rows;state.reviewer=String(incoming.reviewer_declared_id||'');localStorage.setItem(key,JSON.stringify(state));render();alert('草稿已导入')}}catch(error){{alert('导入失败：'+error.message)}}finally{{event.target.value=''}}}};
 $('reviewImage').onclick=$('rawImage').onclick=event=>{{$('zoomImage').src=event.target.src;$('zoom').classList.add('open')}};$('zoom').onclick=()=>$('zoom').classList.remove('open');
 $('export').onclick=()=>{{save();const rows=items.map(x=>state.rows[x.sample_id]).filter(Boolean);const missing=rows.some(r=>!r.candidate_decision||!r.slope_presence||!r.class_conflict||!r.pallet_quality||!r.class_presence||labels.some(label=>!r.class_presence[label])||!Number.isInteger(r.pallet_instance_count)||r.pallet_instance_count<0);if(!state.reviewer||rows.length!==items.length||missing)return alert('请填写复核人、全部类别存在性和托盘实例数');const disagreement=rows.some(r=>(r.class_presence.pallet==='absent'&&r.pallet_instance_count!==0)||(r.class_presence.pallet==='present'&&r.pallet_instance_count===0));if(disagreement)return alert('托盘存在性与实例数不一致');const out={{schema_version:'{SUBMISSION_SCHEMA}',status:'declared_human_review_complete',review_manifest_sha256:'{manifest_sha256}',reviewer_declared_id:state.reviewer,reviewed_at:new Date().toISOString(),rows,candidate_only:true,human_truth:false,approved_for_training:false,training_authorized:false,automatic_approval:false}};const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,2)+'\\n'],{{type:'application/json'}}));a.download='mixed-hard-adjudication.json';a.click();URL.revokeObjectURL(a.href)}};
-$('presence').innerHTML=labels.map((label,index)=>`<label>${{label}}<select id="presence-${{index}}"><option value="">请选择</option><option>present</option><option>absent</option><option>uncertain</option></select></label>`).join('');document.querySelectorAll('select,input,textarea').forEach(element=>element.addEventListener('change',save));['reviewer','palletCount','note'].forEach(id=>$(id).addEventListener('input',save));document.addEventListener('keydown',event=>{{if(/^(INPUT|SELECT|TEXTAREA)$/.test(event.target.tagName))return;const key=event.key.toLowerCase();if(key==='j')navigate(1);if(key==='k')navigate(-1);if(key==='g')$('nextIncomplete').click();if(key==='r')setImageMode('raw');if(key==='v')setImageMode('review');if(key==='b')setImageMode('both');if(key==='escape')$('zoom').classList.remove('open')}});render();
+$('presence').innerHTML=labels.map((label,index)=>`<label>${{label}}<select id="presence-${{index}}"><option value="">请选择</option><option>present</option><option>absent</option><option>uncertain</option></select></label>`).join('');document.querySelectorAll('select,input,textarea').forEach(element=>element.addEventListener('change',save));['reviewer','palletCount','note'].forEach(id=>$(id).addEventListener('input',save));document.addEventListener('keydown',event=>{{if(/^(INPUT|SELECT|TEXTAREA)$/.test(event.target.tagName))return;const key=event.key.toLowerCase();if(key==='j')navigate(1);if(key==='k')navigate(-1);if(key==='g')$('nextIncomplete').click();if(key==='r')setImageMode('raw');if(key==='v')setImageMode('review');if(key==='b')setImageMode('both');if(key==='h')$('assistantPanel').open=!$('assistantPanel').open;if(key==='escape')$('zoom').classList.remove('open')}});render();
 </script></body></html>''', encoding="utf-8")
 
 
@@ -250,8 +295,10 @@ def copy_review_assets(manifest, packet_dir, output_dir):
     return copied
 
 
-def build_workspace(packet_dir, output_dir):
+def build_workspace(packet_dir, output_dir, assistant_suggestions=None):
     manifest, digest = validate_packet(packet_dir)
+    assistant_hints, assistant_sha = load_assistant_hints(
+        assistant_suggestions, manifest, digest, packet_dir)
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
     copied_assets = copy_review_assets(manifest, packet_dir, output)
@@ -259,7 +306,7 @@ def build_workspace(packet_dir, output_dir):
     template_path = output / "adjudication-template.json"
     template_path.write_text(json.dumps(template, ensure_ascii=False, indent=2) + "\n",
                              encoding="utf-8")
-    write_html(manifest, digest, output / "reviewer.html")
+    write_html(manifest, digest, output / "reviewer.html", assistant_hints)
     files = {name: sha256(output / name) for name in
              ("adjudication-template.json", "reviewer.html")}
     files.update(copied_assets)
@@ -267,6 +314,8 @@ def build_workspace(packet_dir, output_dir):
                "review_manifest_sha256": digest,
                "files": dict(sorted(files.items())),
                "copied_image_count": len(copied_assets),
+               "assistant_hint_count": len(assistant_hints),
+               "assistant_suggestions_sha256": assistant_sha,
                "candidate_only": True, "human_truth": False,
                "approved_for_training": False, "automatic_approval": False}
     (output / "receipt.json").write_text(
@@ -279,6 +328,7 @@ def main():
     parser.add_argument("--packet", required=True)
     parser.add_argument("--output")
     parser.add_argument("--validate-submission")
+    parser.add_argument("--assistant-suggestions")
     args = parser.parse_args()
     manifest, digest = validate_packet(args.packet)
     if args.validate_submission:
@@ -287,7 +337,8 @@ def main():
     else:
         if not args.output:
             parser.error("--output is required when building a workspace")
-        print(json.dumps(build_workspace(args.packet, args.output), ensure_ascii=False))
+        print(json.dumps(build_workspace(
+            args.packet, args.output, args.assistant_suggestions), ensure_ascii=False))
 
 
 if __name__ == "__main__":

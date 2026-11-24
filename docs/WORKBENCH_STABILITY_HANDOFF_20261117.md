@@ -4524,3 +4524,6 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 ## Round822：困难集后训练候选包门禁（2026-11-24）
 
 新增 `tools/build_mixed_hard_posttraining_proposal.py`，把完整、无歧义且哈希绑定的困难集人工复核转换为仍待目标编写与单独授权的后训练提案。工具拒绝任何 `uncertain`、不完整复核、无时区时间戳、哈希漂移或 `test24` 交集；输出固定保持 `approved_for_training=false`、`training_authorized=false`、`model_training_started=false`，因此不会因完成人工语义复核而自动开训。
+## Round824：本地第二助手斜坡分歧复核（2026-11-24）
+
+在不调用外部API的前提下，本地第二助手目视检查34帧困难集并与Qwen建议做哈希绑定比较，筛出11张优先分歧帧：Qwen判`absent`5张、`uncertain`6张，第二助手给出3张高置信、6张中等、2张低置信坡道候选。主要困难来自货物遮挡4帧、画面边缘3帧、局部可见3帧和集装箱过渡5帧。新增只读审计器验证复核包、Qwen文件、样本和安全边界；结果仍为机器建议，`human_truth=false`、`approved_for_training=false`，必须由人工确认。

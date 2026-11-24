@@ -1,0 +1,46 @@
+{
+  "schema_version": "labelagent.semantic-expert-canary-plan-evidence.v1",
+  "date": "2026-11-24",
+  "cascade_evaluation_sha256": "3fb0a7cf20b7cedaf5c240d5107264cb6ad976f02228b8add3840af256cafc37",
+  "canary_plan_sha256": "f4a2995abc85129cbbfb471bc4a2e9e89c00a75837524c8b2101261959ae6d3d",
+  "external_candidate_count": 19,
+  "canary_count": 8,
+  "remainder_count": 11,
+  "tests": {
+    "targeted_passed": 17,
+    "targeted_failed": 0,
+    "full_project_passed": 2039,
+    "full_project_skipped": 1,
+    "full_project_subtests_passed": 294,
+    "startup_mutex_environment_test_excluded": true
+  },
+  "canary": [
+    {"sample_id":"008_1789899740482474075_camera_1","cohort":"slope_negative_candidate","source_image_sha256":"2400a8d957b0c8e9129dc75f40f6a57254ec2cb37e9b119bef2d1319e25d84e6","copied_image_sha256":"e9dce70303bf5ea3b6fb8a769ced73eaf940e50a02fcea22a6ebd2ffea4eaa19","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"008_1789899740482474075_camera_2","cohort":"slope_positive_candidate","source_image_sha256":"6403f0f196f18653898e5413fd651d89309bd93841d44745be3f06523e7a586a","copied_image_sha256":"671e3bb7fe650f407ccba82ae6f7df985033610ecbc36e38ff4c52a6ee4c3372","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"heldout-slope-negative-frame-0","cohort":"slope_hard_negative_candidate","source_image_sha256":"0c7d2fd26538538ea39e743f812989ce316dcd74b3da092f8cd9979dae503f14","copied_image_sha256":"1cf6caac30f0e43720c629e7289afae32bbba952a5a566404313877b044934f2","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"batchb-003-camera1-1793759973309529695","cohort":"batchb_class_conflict_candidate","source_image_sha256":"84e2c5a52543b3e1cbfbad55c0abc32585cb00cba615a488442642d9adc47d8e","copied_image_sha256":"358881d84cf4d9da5ac0f0fe2c606e72bff14bb509551d9737cff1d1098863f0","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"batchb-004-camera2-1793760675842790695","cohort":"batchb_flat_negative_candidate","source_image_sha256":"991147eb0c165d7a21aa3908231b9f04052e4916db8768544dc17d212e845522","copied_image_sha256":"c01cea1744aec1e58b561b5b30a108c63bb2ac0c5d52a33d5d0697a4af247736","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"batchb-003-camera3-1793759980309508695","cohort":"batchb_ramp_candidate","source_image_sha256":"064cd29c36bc7442d96f32973f791b228018149efce047a0c7f50c5c7c64fa55","copied_image_sha256":"94758e7a5a15053348308c9cffde334c44bd5e2a00dd9830486073eec0bec410","route_source":"semantic_context_second_pass","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"008_1789899740482474075_camera_3","cohort":"slope_positive_candidate","source_image_sha256":"cb30781c2fe5a02f5db30c382c244408d84bed2b1a3c7c3f7e575aa874ee1ef6","copied_image_sha256":"ad300036d49fc907aa947d8a8a0e9ce5bc4478fabb6c248ad7185e3b79ce0d08","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"008_1789899770782473075_camera_0","cohort":"slope_negative_candidate","source_image_sha256":"bda2fdb367f2ca96b619e5c08f09081cc99fbe23c816007023ce0ff95eb655ad","copied_image_sha256":"bff3ed21cef40d745a1d95b68e0a541080fddb253ec378fa59e4d5b572ba54e9","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true}
+  ],
+  "technical_gate": {
+    "required_passed_requests": 8,
+    "maximum_attempts_per_image": 1,
+    "automatic_retry_enabled": false,
+    "maximum_median_latency_ms": 60000,
+    "maximum_average_tokens_per_call": 30000,
+    "usage_required_for_every_request": true
+  },
+  "boundaries": {
+    "external_authorization_granted": false,
+    "dispatch_performed": false,
+    "external_upload_performed": false,
+    "factory_data_uploaded": false,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "test24_used": false,
+    "production_deployed": false
+  }
+}

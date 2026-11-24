@@ -174,6 +174,7 @@ def evaluate_prompt_cascade(
         context_external = base_route or context_extra_external
         queue_base = {
             "sample_id": sample_id,
+            "cohort": base.get("cohort"),
             "source_image_sha256": source_hashes[sample_id],
             "copied_image_sha256": base["copied_image_sha256"],
             "external_upload_authorized": False,

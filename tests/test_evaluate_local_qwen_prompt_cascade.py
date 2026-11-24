@@ -122,7 +122,7 @@ def test_evaluates_two_stage_candidate_without_dispatch(tmp_path):
     assert [row["sample_id"] for row in result["external_queue"]] == [
         "sample-00", "sample-01", "sample-03", "sample-04"]
     assert all(set(row) == {
-        "sample_id", "source_image_sha256", "copied_image_sha256",
+        "sample_id", "cohort", "source_image_sha256", "copied_image_sha256",
         "route_source", "external_upload_authorized", "candidate_only"
     } for row in result["external_queue"])
     assert result["max_external_calls_if_authorized"] == 4

@@ -119,6 +119,14 @@ def test_evaluates_two_stage_candidate_without_dispatch(tmp_path):
     assert result["priority_covered_count"] == 3
     assert result["priority_uncovered_count"] == 0
     assert result["negative_external_count"] == 1
+    assert [row["sample_id"] for row in result["external_queue"]] == [
+        "sample-00", "sample-01", "sample-03", "sample-04"]
+    assert all(set(row) == {
+        "sample_id", "source_image_sha256", "copied_image_sha256",
+        "route_source", "external_upload_authorized", "candidate_only"
+    } for row in result["external_queue"])
+    assert result["max_external_calls_if_authorized"] == 4
+    assert result["external_authorization_granted"] is False
     context = result["semantic_context_cascade"]
     assert context["focused_second_pass_count"] == 2
     assert context["focused_local_slope_resolved_count"] == 1
@@ -126,6 +134,15 @@ def test_evaluates_two_stage_candidate_without_dispatch(tmp_path):
     assert context["cascade_external_count"] == 3
     assert context["priority_covered_count"] == 3
     assert context["negative_external_count"] == 1
+    assert [row["sample_id"] for row in context["focused_second_pass_queue"]] == [
+        "sample-02", "sample-03"]
+    assert [row["sample_id"] for row in context["external_queue"]] == [
+        "sample-00", "sample-01", "sample-03"]
+    assert all("path" not in row for row in context["external_queue"])
+    assert all(row["external_upload_authorized"] is False
+               for row in context["external_queue"])
+    assert context["max_external_calls_if_authorized"] == 3
+    assert context["external_authorization_granted"] is False
     assert result["dispatch_performed"] is False
     assert result["external_upload_performed"] is False
     assert result["human_truth"] is False

@@ -1,0 +1,49 @@
+{
+  "schema_version": "labelagent.hash-bound-semantic-expert-queue.v1",
+  "date": "2026-11-24",
+  "evaluation_sha256": "bd530136fd6da122d65790932c4adab6cd582f52c41110e83dbb1f1122f8e337",
+  "source_sample_count": 34,
+  "focused_second_pass_count": 3,
+  "external_candidate_count": 19,
+  "max_external_calls_if_authorized": 19,
+  "external_authorization_granted": false,
+  "path_count": 0,
+  "tests": {
+    "targeted_passed": 14,
+    "targeted_failed": 0,
+    "full_project_passed": 2036,
+    "full_project_skipped": 1,
+    "full_project_subtests_passed": 294,
+    "startup_mutex_environment_test_excluded": true
+  },
+  "rows": [
+    {"sample_id":"008_1789899740482474075_camera_1","source_image_sha256":"2400a8d957b0c8e9129dc75f40f6a57254ec2cb37e9b119bef2d1319e25d84e6","copied_image_sha256":"e9dce70303bf5ea3b6fb8a769ced73eaf940e50a02fcea22a6ebd2ffea4eaa19","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"008_1789899740482474075_camera_2","source_image_sha256":"6403f0f196f18653898e5413fd651d89309bd93841d44745be3f06523e7a586a","copied_image_sha256":"671e3bb7fe650f407ccba82ae6f7df985033610ecbc36e38ff4c52a6ee4c3372","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"008_1789899740482474075_camera_3","source_image_sha256":"cb30781c2fe5a02f5db30c382c244408d84bed2b1a3c7c3f7e575aa874ee1ef6","copied_image_sha256":"ad300036d49fc907aa947d8a8a0e9ce5bc4478fabb6c248ad7185e3b79ce0d08","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"008_1789899770782473075_camera_0","source_image_sha256":"bda2fdb367f2ca96b619e5c08f09081cc99fbe23c816007023ce0ff95eb655ad","copied_image_sha256":"bff3ed21cef40d745a1d95b68e0a541080fddb253ec378fa59e4d5b572ba54e9","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"008_1789899770782473075_camera_1","source_image_sha256":"08253fcf0538d9112fd6c8cea07b358be62ec85c827f466a7f85e0bc48036c5e","copied_image_sha256":"b065772587b56f14bc7b03027437b24efc1b9ae4784f3df84b1458782c94d269","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"008_1789899770782473075_camera_2","source_image_sha256":"fefaa5a1df6c20180847d68d99327489dc33b54176f8c9b8cc3c7de8ac2590de","copied_image_sha256":"afc160dd4cc711de0710aa4971773178760496b9c0ae04e78bbedd22f7150028","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"heldout-slope-negative-frame-0","source_image_sha256":"0c7d2fd26538538ea39e743f812989ce316dcd74b3da092f8cd9979dae503f14","copied_image_sha256":"1cf6caac30f0e43720c629e7289afae32bbba952a5a566404313877b044934f2","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"heldout-slope-negative-frame-13","source_image_sha256":"45e6d52b32ddcffbdf2cdab2ab42902a98b4527eb796492aa283bd2c620962f8","copied_image_sha256":"4d3acab4fe121c4a187f1bc56fcd68b6011b0105fb65449ded33aca28831df6e","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"heldout-slope-negative-frame-39","source_image_sha256":"63edbd88809c6266768bf6dbcc676b6e26697d9f6796282afb5b38b6f058cf7f","copied_image_sha256":"63a3cc16b9793dcbe80fd229c2659b12100308d769c1d63a127e24b281d2e2e8","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"heldout-slope-negative-frame-53","source_image_sha256":"133898385f056c93a15c69d7947de28eab3687ac83a40d1b92d336e0e58b2829","copied_image_sha256":"67ed5571706fcaad1737019786004a43d660ef022f8e756f94c2adb5f9e6d4f8","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"heldout-slope-negative-frame-66","source_image_sha256":"4666622a32a7e2e91f2f221d83b719611caa1c2153b3cb8a1a0136fe5040c8a8","copied_image_sha256":"ba65d1e6e92f7d5fa3d4b2e8ce8da28301afe9191c9e727439190f3f13c5da8c","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"heldout-slope-negative-frame-92","source_image_sha256":"35c5b358c3e9d389a3177b3b9441e3b01867930d26893fc34f53729ef115fe6f","copied_image_sha256":"ad774f055aca8eb9fd46923dae666df10c95a1d1d0e939a7a4d21630831988dc","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"heldout-slope-negative-frame-131","source_image_sha256":"2db1d0c2275b13cc2f73186ccf4a772f29d87a89ffab7ca5f53d4fde988b53e9","copied_image_sha256":"337cf5a5485cfeef4f14e4834db86c9e555af97f0c0446c612e4e5a856fd8964","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"batchb-003-camera1-1793759973309529695","source_image_sha256":"84e2c5a52543b3e1cbfbad55c0abc32585cb00cba615a488442642d9adc47d8e","copied_image_sha256":"358881d84cf4d9da5ac0f0fe2c606e72bff14bb509551d9737cff1d1098863f0","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"batchb-004-camera2-1793760675842790695","source_image_sha256":"991147eb0c165d7a21aa3908231b9f04052e4916db8768544dc17d212e845522","copied_image_sha256":"c01cea1744aec1e58b561b5b30a108c63bb2ac0c5d52a33d5d0697a4af247736","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"batchb-004-camera3-1793760675842790695","source_image_sha256":"da35a1a14d0566bb174e0c5ee176daa31119001c6128caf97c16cd75737ce240","copied_image_sha256":"028a3bfd270d370ff34a21a6ebc483ff5ef8f7ef67e8076ce6b33d32ec550d93","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"batchb-004-camera3-1793760680013744695","source_image_sha256":"b9c75a3604b24406a363c5004c72d2e7cbc695f404fb5d0d95017786c1dab71a","copied_image_sha256":"f251316ecbccb6c35620fb8ebceeb339f768421d158c68d7ba10fb10f8c5e2b9","route_source":"baseline_hard_route","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"batchb-003-camera3-1793759980309508695","source_image_sha256":"064cd29c36bc7442d96f32973f791b228018149efce047a0c7f50c5c7c64fa55","copied_image_sha256":"94758e7a5a15053348308c9cffde334c44bd5e2a00dd9830486073eec0bec410","route_source":"semantic_context_second_pass","external_upload_authorized":false,"candidate_only":true},
+    {"sample_id":"batchb-004-camera3-1793760721942855696","source_image_sha256":"4bac12c1e9c441f22f18e9eba2d4866fbacf367e9936d9224db24dd3602c1e7b","copied_image_sha256":"74bfedd9abdf1d9920e02c27f3c48b1cd4e7372fc48dc18b2bddba681c2014c3","route_source":"semantic_context_second_pass","external_upload_authorized":false,"candidate_only":true}
+  ],
+  "boundaries": {
+    "external_upload_performed": false,
+    "factory_data_uploaded": false,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "test24_used": false,
+    "production_deployed": false
+  }
+}

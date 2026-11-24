@@ -20,6 +20,7 @@ if str(REPOSITORY_ROOT) not in sys.path:
 from tools.audit_second_assistant_slope_triage import (
     audit_second_assistant_triage,
 )
+from tools.build_mixed_hard_adjudication_workspace import validate_packet
 from tools.run_local_qwen_mixed_hard_suggestions import (
     CONTAINER_TRANSITION_V3_INSTRUCTION,
     SCHEMA_VERSION,
@@ -97,6 +98,11 @@ def evaluate_prompt_cascade(
         raise ValueError("expert latency estimate must be positive")
     triage_audit = audit_second_assistant_triage(
         packet_dir, baseline_path, triage_path)
+    manifest, _ = validate_packet(packet_dir)
+    source_hashes = {
+        row["sample_id"]: row["source_image_sha256"]
+        for row in manifest["rows"]
+    }
     baseline_payload, focused_payload, triage = map(
         _read_json, (baseline_path, focused_path, triage_path))
     baseline = _validate_suggestions(baseline_payload, focused=False)
@@ -131,6 +137,9 @@ def evaluate_prompt_cascade(
     context_priority_covered = 0
     context_local_ms = 0.0
     context_uncovered = []
+    full_external_queue = []
+    context_external_queue = []
+    context_second_pass_queue = []
     for sample_id, base in baseline.items():
         focus = focused[sample_id]
         base_route = base["expert_shadow_route"].get("recommended") is True
@@ -163,6 +172,27 @@ def evaluate_prompt_cascade(
         context_local_resolved += int(context_resolved)
         context_external_added += int(context_extra_external)
         context_external = base_route or context_extra_external
+        queue_base = {
+            "sample_id": sample_id,
+            "source_image_sha256": source_hashes[sample_id],
+            "copied_image_sha256": base["copied_image_sha256"],
+            "external_upload_authorized": False,
+            "candidate_only": True,
+        }
+        if external:
+            full_external_queue.append({
+                **queue_base,
+                "route_source": ("baseline_hard_route" if base_route
+                                 else "focused_second_pass"),
+            })
+        if context_focus:
+            context_second_pass_queue.append(queue_base)
+        if context_external:
+            context_external_queue.append({
+                **queue_base,
+                "route_source": ("baseline_hard_route" if base_route
+                                 else "semantic_context_second_pass"),
+            })
         if external:
             for reason in base["expert_shadow_route"].get("reasons") or []:
                 if isinstance(reason, dict) and reason.get("code"):
@@ -236,6 +266,9 @@ def evaluate_prompt_cascade(
         "negative_external_count": negative_external,
         "route_reason_counts": dict(sorted(route_reasons.items())),
         "uncovered_review_proposal": uncovered,
+        "external_queue": full_external_queue,
+        "max_external_calls_if_authorized": len(full_external_queue),
+        "external_authorization_granted": False,
         "latency": {
             "baseline_local_observed_ms": round(baseline_local_ms, 3),
             "focused_second_pass_observed_ms": round(focused_local_ms, 3),
@@ -259,6 +292,10 @@ def evaluate_prompt_cascade(
                 context_priority_covered / len(priority), 6),
             "negative_external_count": context_negative_external,
             "uncovered_review_proposal": context_uncovered,
+            "focused_second_pass_queue": context_second_pass_queue,
+            "external_queue": context_external_queue,
+            "max_external_calls_if_authorized": len(context_external_queue),
+            "external_authorization_granted": False,
             "focused_second_pass_observed_ms": round(context_local_ms, 3),
             "sequential_estimate_ms": round(context_estimated_ms, 3),
             "minus_baseline_ms": round(

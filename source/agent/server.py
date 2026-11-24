@@ -4,6 +4,7 @@ import copy
 import logging
 import json
 import math
+import mimetypes
 import os
 import re
 import shutil
@@ -19,7 +20,7 @@ import marshal
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from functools import wraps
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from werkzeug.utils import secure_filename
 from flask import Flask, jsonify, request, send_file
 from PIL import Image, ImageDraw
@@ -2101,6 +2102,66 @@ def stale_human_review(error):
 @app.get("/")
 def index():
     return app.send_static_file("index.html")
+
+
+def _hard_review_asset(workspace_id, relative):
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}", workspace_id or ""):
+        raise ValueError("invalid hard review workspace id")
+    pure = PurePosixPath(relative)
+    if (not relative or relative.startswith("/") or "\\" in relative
+            or any(part in {"", ".", ".."} for part in pure.parts)):
+        raise ValueError("invalid hard review asset path")
+    workspace = (WORK / "hard_review" / workspace_id).resolve()
+    root = (WORK / "hard_review").resolve()
+    if root not in workspace.parents:
+        raise ValueError("hard review workspace escapes root")
+    receipt = json.loads((workspace / "receipt.json").read_text(encoding="utf-8"))
+    if receipt.get("schema_version") != "labelagent.mixed-hard-adjudication-workspace-receipt.v2":
+        raise ValueError("unsupported hard review receipt")
+    for key, expected in {
+        "candidate_only": True, "human_truth": False,
+        "approved_for_training": False, "automatic_approval": False,
+    }.items():
+        if receipt.get(key) is not expected:
+            raise ValueError(f"unsafe hard review boundary: {key}")
+    expected_sha256 = receipt.get("files", {}).get(pure.as_posix())
+    if not isinstance(expected_sha256, str) or len(expected_sha256) != 64:
+        raise ValueError("hard review asset is not receipt-bound")
+    asset = (workspace / Path(*pure.parts)).resolve()
+    if workspace not in asset.parents or not asset.is_file():
+        raise ValueError("hard review asset is unavailable")
+    data = asset.read_bytes()
+    if hashlib.sha256(data).hexdigest() != expected_sha256:
+        raise ValueError("hard review asset hash mismatch")
+    mimetype = mimetypes.guess_type(asset.name)[0] or "application/octet-stream"
+    return data, mimetype
+
+
+def _hard_review_response(workspace_id, relative):
+    try:
+        data, mimetype = _hard_review_asset(workspace_id, relative)
+    except (OSError, ValueError, json.JSONDecodeError):
+        return jsonify(error="困难帧复核工作区不可用或校验失败"), 404
+    response = send_file(io.BytesIO(data), mimetype=mimetype, max_age=0)
+    response.headers["Cache-Control"] = "private, no-store, no-cache, must-revalidate"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    if relative == "reviewer.html":
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; "
+            "script-src 'unsafe-inline'; connect-src 'none'; object-src 'none'; "
+            "base-uri 'none'; form-action 'none'; frame-ancestors 'self'")
+    return response
+
+
+@app.get("/hard-review/<workspace_id>/")
+def hard_review_index(workspace_id):
+    """Serve one receipt-bound offline reviewer without adding write APIs."""
+    return _hard_review_response(workspace_id, "reviewer.html")
+
+
+@app.get("/hard-review/<workspace_id>/<path:asset_name>")
+def hard_review_asset(workspace_id, asset_name):
+    return _hard_review_response(workspace_id, asset_name)
 
 
 def _candidate_review_response_headers(response):

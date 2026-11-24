@@ -1,0 +1,35 @@
+{
+  "schema_version": "labelagent.semantic-expert-authorization-template-evidence.v1",
+  "date": "2026-11-24",
+  "execution_queue_sha256": "2b055827e1f2eba63052e4b59731530df495511ba6dc9148bc3f30e346ce7a48",
+  "authorization_schema": "labelagent.external-upload-authorization.v1",
+  "authorized_sample_count": 19,
+  "canary_count": 8,
+  "remainder_count": 11,
+  "first_stage_maximum_new_attempts": 8,
+  "automatic_retry_enabled": false,
+  "queue_hash_matches_template": true,
+  "unauthorized_template_rejected_by_runner": true,
+  "runner_rejection": "matching explicit external-upload authorization is required",
+  "tests": {
+    "focused_passed": 22,
+    "focused_failed": 0,
+    "full_project_passed": 2044,
+    "full_project_skipped": 1,
+    "full_project_subtests_passed": 294,
+    "startup_mutex_environment_test_excluded": true
+  },
+  "boundaries": {
+    "authorization_template_is_user_consent": false,
+    "external_authorization_granted": false,
+    "authorized_upload_count": 0,
+    "dispatch_performed": false,
+    "external_upload_performed": false,
+    "factory_data_uploaded": false,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "test24_used": false,
+    "production_deployed": false
+  }
+}

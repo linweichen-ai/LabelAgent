@@ -405,7 +405,15 @@
         <label class="expertWide">API 基础地址<input id="expertUrl" placeholder="https://.../v1"></label>
         <label class="expertWide">密钥环境变量名<input id="expertKeyEnv" value="LABELAGENT_EXPERT_API_KEY" placeholder="LABELAGENT_EXPERT_API_KEY"></label>
         <label>请求超时（秒）<input id="expertTimeout" type="number" min="10" max="300" value="120"></label>
-        <label>困难帧轮数阈值<input id="expertRoundThreshold" type="number" min="1" max="100" value="4"></label>
+        <label>困难帧轮数阈值<input id="expertRoundThreshold" type="number" min="1" max="100" value="2"></label>
+        <label>综合分数阈值<input id="expertScoreThreshold" type="number" min="1" max="100" value="3"></label>
+        <label>低置信度阈值（%）<input id="expertConfidenceThreshold" type="number" min="0" max="100" value="65"></label>
+        <label>画面边缘范围（%）<input id="expertEdgeMargin" type="number" min="0" max="20" value="3"></label>
+        <label>小目标框面积（%）<input id="expertSmallCandidate" type="number" min="0" max="20" value="1"></label>
+        <label>SAM候选过滤数阈值<input id="expertSamFilterThreshold" type="number" min="1" max="200" value="3"></label>
+        <label>SAM掩膜一致度阈值（%）<input id="expertSamMaskIou" type="number" min="0" max="100" value="70"></label>
+        <label>SAM面积变化阈值（%）<input id="expertSamAreaChange" type="number" min="0" max="500" value="25"></label>
+        <label class="expertWide">人工重点复核帧<input id="expertPriorityFrames" placeholder="例如 12, 46, 83；留空表示无"></label>
       </div>
       <label class="expertToggle expertShadowToggle"><input id="expertShadowEnabled" type="checkbox">只记录困难帧分流建议（不上传图片）</label>
       <p id="expertConfigStatus" class="expertConfigStatus" role="status">尚未读取专家通道状态</p>
@@ -726,6 +734,6 @@
   </div>
 </div>
 <div id="toast" role="status"></div>
-<script src="/pointcloud.js?v=64"></script><script src="/app.js?v=208"></script><script src="/inspection.js?v=109"></script><script src="/guide.js?v=121"></script><script src="/review.js?v=68"></script><script src="/batch-review.js?v=65"></script><script src="/compare.js?v=68"></script><script src="/human-review.js?v=98"></script><script src="/reference-prep.js?v=170"></script><script src="/component-review-core.js?v=2"></script><script src="/component-review.js?v=2"></script><script src="/candidate-comparison-core.js?v=2"></script><script src="/candidate-comparison.js?v=2"></script><script src="/review-packet-core.js?v=164"></script><script src="/review-packet.js?v=166"></script><script src="/pallet-candidate-review-entry.js?v=1"></script>
+<script src="/pointcloud.js?v=64"></script><script src="/app.js?v=209"></script><script src="/inspection.js?v=109"></script><script src="/guide.js?v=121"></script><script src="/review.js?v=68"></script><script src="/batch-review.js?v=65"></script><script src="/compare.js?v=68"></script><script src="/human-review.js?v=98"></script><script src="/reference-prep.js?v=170"></script><script src="/component-review-core.js?v=2"></script><script src="/component-review.js?v=2"></script><script src="/candidate-comparison-core.js?v=2"></script><script src="/candidate-comparison.js?v=2"></script><script src="/review-packet-core.js?v=164"></script><script src="/review-packet.js?v=166"></script><script src="/pallet-candidate-review-entry.js?v=1"></script>
 </body>
 </html>

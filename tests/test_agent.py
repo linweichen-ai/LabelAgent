@@ -3716,6 +3716,14 @@ class ServerTests(unittest.TestCase):
                     "llm_expert_timeout_seconds": 90,
                     "llm_expert_shadow_routing_enabled": True,
                     "llm_expert_shadow_round_threshold": 3,
+                    "llm_expert_shadow_score_threshold": 4,
+                    "llm_expert_shadow_low_confidence_percent": 60,
+                    "llm_expert_shadow_edge_margin_percent": 4,
+                    "llm_expert_shadow_small_candidate_percent": 2,
+                    "llm_expert_shadow_sam_filter_threshold": 5,
+                    "llm_expert_shadow_sam_mask_iou_percent": 75,
+                    "llm_expert_shadow_sam_area_change_percent": 20,
+                    "llm_expert_shadow_priority_frames": [46, 12, 46],
                     **active_config_write_scope(),
                 })
             self.assertEqual(saved.status_code, 200, saved.json)
@@ -3728,6 +3736,12 @@ class ServerTests(unittest.TestCase):
                 "llm_expert_shadow_routing_enabled"])
             self.assertEqual(saved.json["config"][
                 "llm_expert_shadow_round_threshold"], 3)
+            self.assertEqual(saved.json["config"][
+                "llm_expert_shadow_score_threshold"], 4)
+            self.assertEqual(saved.json["config"][
+                "llm_expert_shadow_low_confidence_percent"], 60)
+            self.assertEqual(saved.json["config"][
+                "llm_expert_shadow_priority_frames"], [12, 46])
 
             calls = []
             def probe(url, timeout=3):
@@ -3749,6 +3763,16 @@ class ServerTests(unittest.TestCase):
             self.assertTrue(readiness["expert_vlm"]["shadow_routing_enabled"])
             self.assertEqual(readiness["expert_vlm"]["shadow_round_threshold"],
                              3)
+            self.assertEqual(readiness["expert_vlm"]["shadow_score_threshold"],
+                             4)
+            self.assertEqual(readiness["expert_vlm"][
+                "shadow_low_confidence_percent"], 60)
+
+            invalid_frames = client.post("/api/config", json={
+                "llm_expert_shadow_priority_frames": [1, -2],
+                **active_config_write_scope(),
+            })
+            self.assertEqual(invalid_frames.status_code, 400, invalid_frames.json)
         finally:
             server.state = old_state
 
@@ -5422,6 +5446,9 @@ class ServerTests(unittest.TestCase):
                 self.assertEqual(routing["route"],
                                  "external_expert_shadow_recommended")
                 self.assertFalse(routing["dispatch_performed"])
+                self.assertIsNotNone(routing["timing"]["local_model_latency_ms"])
+                self.assertIsNone(routing["timing"]["external_model_latency_ms"])
+                self.assertTrue(routing["sam_result_reused"])
             finally:
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work
 
@@ -6844,6 +6871,8 @@ class ServerTests(unittest.TestCase):
                 routing = server.state["agent_runs"]["1"]["expert_shadow_routing"]
                 self.assertFalse(routing["recommended"])
                 self.assertEqual(routing["route"], "local_result_sufficient")
+                self.assertIsNotNone(routing["timing"]["local_model_latency_ms"])
+                self.assertEqual(routing["difficulty_score"], 0)
             finally:
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work
 

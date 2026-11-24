@@ -1,0 +1,29 @@
+{
+  "schema_version": "labelagent.expert-shadow-routing-summary.v1",
+  "status": "implemented_and_offline_verified",
+  "frames_audited": 1,
+  "frames_recommended_for_external_expert": 1,
+  "frames_local_result_sufficient": 0,
+  "external_call_ratio": 1.0,
+  "reason_counts": {
+    "agent_nonconvergence": 1,
+    "class_audit_conflict": 1,
+    "edge_partial_candidate": 1,
+    "human_review_queue": 1,
+    "small_candidate": 1
+  },
+  "external_api_calls": 0,
+  "external_upload_performed": false,
+  "test24_used": false,
+  "formal_workbench_modified": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "targeted_router_tests_passed": 7,
+  "targeted_integration_tests_passed": 21,
+  "web_tests_passed": 95,
+  "full_python_tests_passed": 1855,
+  "full_python_tests_skipped": 1,
+  "full_python_subtests_passed": 286,
+  "deployment_status": "not_deployed_shadow_only"
+}

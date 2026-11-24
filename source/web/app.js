@@ -762,7 +762,15 @@ function populateExpertConfigFields(){
  $('expertModel').value=workbenchConfig.llm_expert_model||'';
  $('expertKeyEnv').value=workbenchConfig.llm_expert_key_env||'LABELAGENT_EXPERT_API_KEY';
  $('expertTimeout').value=workbenchConfig.llm_expert_timeout_seconds||120;
- $('expertRoundThreshold').value=workbenchConfig.llm_expert_shadow_round_threshold||4;
+ $('expertRoundThreshold').value=workbenchConfig.llm_expert_shadow_round_threshold||2;
+ $('expertScoreThreshold').value=workbenchConfig.llm_expert_shadow_score_threshold||3;
+ $('expertConfidenceThreshold').value=workbenchConfig.llm_expert_shadow_low_confidence_percent??65;
+ $('expertEdgeMargin').value=workbenchConfig.llm_expert_shadow_edge_margin_percent??3;
+ $('expertSmallCandidate').value=workbenchConfig.llm_expert_shadow_small_candidate_percent??1;
+ $('expertSamFilterThreshold').value=workbenchConfig.llm_expert_shadow_sam_filter_threshold||3;
+ $('expertSamMaskIou').value=workbenchConfig.llm_expert_shadow_sam_mask_iou_percent??70;
+ $('expertSamAreaChange').value=workbenchConfig.llm_expert_shadow_sam_area_change_percent??25;
+ $('expertPriorityFrames').value=(workbenchConfig.llm_expert_shadow_priority_frames||[]).join(', ');
  $('expertShadowEnabled').checked=workbenchConfig.llm_expert_shadow_routing_enabled===true;
 }
 async function refreshExpertConfigStatus(){
@@ -779,6 +787,8 @@ $('configSave').onclick=async()=>{
  const requestPath=loadedDataPath,requestTopic=topic||null,requestGeneration=loadedFileActivationGeneration,expectedConfigState=configStateSha256;
  try{
   if(!expectedConfigState)throw Error('配置版本尚未载入完成，请刷新后重试');
+  const priorityFrames=$('expertPriorityFrames').value.split(',').map(value=>value.trim()).filter(Boolean).map(Number);
+  if(priorityFrames.some(value=>!Number.isInteger(value)||value<0))throw Error('人工重点复核帧必须是非负整数，并以逗号分隔');
   const data=await api('config',{
    llm_url:$('llmUrl').value,llm_model:$('llmModel').value,llm_key:$('llmKey').value,
    llm_expert_enabled:$('expertEnabled').checked,
@@ -789,6 +799,14 @@ $('configSave').onclick=async()=>{
    llm_expert_timeout_seconds:Number($('expertTimeout').value),
    llm_expert_shadow_routing_enabled:$('expertShadowEnabled').checked,
    llm_expert_shadow_round_threshold:Number($('expertRoundThreshold').value),
+   llm_expert_shadow_score_threshold:Number($('expertScoreThreshold').value),
+   llm_expert_shadow_low_confidence_percent:Number($('expertConfidenceThreshold').value),
+   llm_expert_shadow_edge_margin_percent:Number($('expertEdgeMargin').value),
+   llm_expert_shadow_small_candidate_percent:Number($('expertSmallCandidate').value),
+   llm_expert_shadow_sam_filter_threshold:Number($('expertSamFilterThreshold').value),
+   llm_expert_shadow_sam_mask_iou_percent:Number($('expertSamMaskIou').value),
+   llm_expert_shadow_sam_area_change_percent:Number($('expertSamAreaChange').value),
+   llm_expert_shadow_priority_frames:[...new Set(priorityFrames)].sort((a,b)=>a-b),
    expected_path:requestPath,expected_topic:requestTopic,
    expected_file_activation_generation:requestGeneration,
    expected_config_state_sha256:expectedConfigState});

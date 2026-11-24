@@ -4811,6 +4811,13 @@ def set_config():
         "llm_fast_cooldown_seconds": (10, 300),
         "llm_expert_timeout_seconds": (10, 300),
         "llm_expert_shadow_round_threshold": (1, 100),
+        "llm_expert_shadow_score_threshold": (1, 100),
+        "llm_expert_shadow_low_confidence_percent": (0, 100),
+        "llm_expert_shadow_edge_margin_percent": (0, 20),
+        "llm_expert_shadow_small_candidate_percent": (0, 20),
+        "llm_expert_shadow_sam_filter_threshold": (1, 200),
+        "llm_expert_shadow_sam_mask_iou_percent": (0, 100),
+        "llm_expert_shadow_sam_area_change_percent": (0, 500),
     }
     fast_updates = {}
     for key in fast_string_keys:
@@ -4853,6 +4860,7 @@ def set_config():
         expert_updates[key] = value
     expert_enabled_update = None
     expert_shadow_enabled_update = None
+    expert_priority_frames_update = None
     if "llm_expert_enabled" in body:
         if type(body["llm_expert_enabled"]) is not bool:
             raise ValueError("llm_expert_enabled 必须为布尔值")
@@ -4862,6 +4870,12 @@ def set_config():
             raise ValueError("llm_expert_shadow_routing_enabled 必须为布尔值")
         expert_shadow_enabled_update = body[
             "llm_expert_shadow_routing_enabled"]
+    if "llm_expert_shadow_priority_frames" in body:
+        value = body["llm_expert_shadow_priority_frames"]
+        if (not isinstance(value, list) or len(value) > 100
+                or any(type(frame) is not int or frame < 0 for frame in value)):
+            raise ValueError("llm_expert_shadow_priority_frames 必须是至多100个非负整数")
+        expert_priority_frames_update = sorted(set(value))
     for key, (minimum, maximum) in fast_integer_limits.items():
         if key not in body:
             continue
@@ -4922,6 +4936,10 @@ def set_config():
                 state["config"]["llm_expert_shadow_routing_enabled"] = (
                     expert_shadow_enabled_update)
                 updated_keys.append("llm_expert_shadow_routing_enabled")
+            if expert_priority_frames_update is not None:
+                state["config"]["llm_expert_shadow_priority_frames"] = (
+                    expert_priority_frames_update)
+                updated_keys.append("llm_expert_shadow_priority_frames")
             if state["config"].get("llm_expert_enabled") is True:
                 required = (
                     "llm_expert_provider", "llm_expert_url",
@@ -5015,6 +5033,10 @@ def model_readiness():
     def positive_config_int(key, default):
         value = config.get(key)
         return value if type(value) is int and value > 0 else default
+    def bounded_config_int(key, default, minimum, maximum):
+        value = config.get(key)
+        return (value if type(value) is int and minimum <= value <= maximum
+                else default)
     fast_vlm["max_pixels"] = positive_config_int("llm_fast_max_pixels", 640 * 512)
     fast_vlm["max_long_edge"] = positive_config_int("llm_fast_max_long_edge", 640)
     fast_vlm["max_extra_pixels"] = positive_config_int(
@@ -5037,8 +5059,24 @@ def model_readiness():
         "automatic_upload": False,
         "shadow_routing_enabled": (
             config.get("llm_expert_shadow_routing_enabled") is True),
-        "shadow_round_threshold": positive_config_int(
-            "llm_expert_shadow_round_threshold", 4),
+        "shadow_round_threshold": bounded_config_int(
+            "llm_expert_shadow_round_threshold", 2, 1, 100),
+        "shadow_score_threshold": bounded_config_int(
+            "llm_expert_shadow_score_threshold", 3, 1, 100),
+        "shadow_low_confidence_percent": bounded_config_int(
+            "llm_expert_shadow_low_confidence_percent", 65, 0, 100),
+        "shadow_edge_margin_percent": bounded_config_int(
+            "llm_expert_shadow_edge_margin_percent", 3, 0, 20),
+        "shadow_small_candidate_percent": bounded_config_int(
+            "llm_expert_shadow_small_candidate_percent", 1, 0, 20),
+        "shadow_sam_filter_threshold": bounded_config_int(
+            "llm_expert_shadow_sam_filter_threshold", 3, 1, 200),
+        "shadow_sam_mask_iou_percent": bounded_config_int(
+            "llm_expert_shadow_sam_mask_iou_percent", 70, 0, 100),
+        "shadow_sam_area_change_percent": bounded_config_int(
+            "llm_expert_shadow_sam_area_change_percent", 25, 0, 500),
+        "shadow_priority_frames": list(config.get(
+            "llm_expert_shadow_priority_frames", []))[:100],
         "status": ("disabled" if not expert_enabled else
                    "missing_config" if not expert_configured else
                    "missing_credential" if not os.environ.get(expert_key_env) else
@@ -6120,6 +6158,8 @@ def generate_reference_draft():
         config = copy.deepcopy(state["config"])
         labels = list(state["labels"])
         target_image = frame_image(index)
+        with Image.open(io.BytesIO(target_image)) as decoded:
+            routing_image_size = decoded.size
         input_sha256 = hashlib.sha256(target_image).hexdigest()
         file_name, selected_topic = str(video.path), state["topic"]
         config_sha256 = _sha256_json(config)
@@ -6179,6 +6219,7 @@ def generate_reference_draft():
                                       shape_count=record["shape_count"])
             run_status["events"] = (run_status.get("events", []) + [record])[-150:]
 
+    local_pipeline_started = time.perf_counter()
     try:
         with cancellation(run_stop_event), trace_calls(on_trace, save_inspection_image):
             discovery = None
@@ -6420,7 +6461,14 @@ def generate_reference_draft():
             review_queue=replacement_run["review_queue"],
             class_audits=class_audits,
             candidate_labels=[item.get("label") for item in combined
-                              if isinstance(item, dict)])
+                              if isinstance(item, dict)],
+            candidates=combined, image_size=routing_image_size,
+            manual_priority=(isinstance(config.get(
+                "llm_expert_shadow_priority_frames"), list)
+                and index in config["llm_expert_shadow_priority_frames"]),
+            local_model_latency_ms=(
+                time.perf_counter() - local_pipeline_started) * 1000,
+            sam_result_reused=True)
         if expert_shadow_routing is not None:
             replacement_run["expert_shadow_routing"] = expert_shadow_routing
         update_run_status(phase="committing", audit_completed=len(class_audits),
@@ -6659,6 +6707,9 @@ def run_workflow():
                     check_cancelled()
                     _update_run_status_locked(frame=target, phase="loading", round=0, shape_count=0)
                 target_image = video.frame(topic, target)
+                local_pipeline_started = time.perf_counter()
+                with Image.open(io.BytesIO(target_image)) as decoded:
+                    routing_image_size = decoded.size
                 def on_progress(event, target=target):
                     record = {"time": time.time(), "frame": target,
                         "phase": event["phase"], "round": event["round"],
@@ -6831,7 +6882,15 @@ def run_workflow():
                     review_queue=final_review_queue,
                     class_audits=class_audits,
                     candidate_labels=[item.get("label") for item in combined
-                                      if isinstance(item, dict)])
+                                      if isinstance(item, dict)],
+                    candidates=combined, image_size=routing_image_size,
+                    manual_priority=(isinstance(config.get(
+                        "llm_expert_shadow_priority_frames"), list)
+                        and target in config[
+                            "llm_expert_shadow_priority_frames"]),
+                    local_model_latency_ms=(
+                        time.perf_counter() - local_pipeline_started) * 1000,
+                    sam_result_reused=True)
                 if expert_shadow_routing is not None:
                     replacement_run["expert_shadow_routing"] = (
                         expert_shadow_routing)

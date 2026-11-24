@@ -1,0 +1,43 @@
+{
+  "schema_version": "labelagent.semantic-expert-canary-evaluator-evidence.v1",
+  "date": "2026-11-24",
+  "queue_sample_count": 19,
+  "canary_count": 8,
+  "remainder_count": 11,
+  "identity_bindings": [
+    "canary_plan_sha256",
+    "execution_queue_sha256",
+    "canary_result_sha256",
+    "ordered_sample_id",
+    "source_image_sha256"
+  ],
+  "technical_gates": {
+    "all_requests_passed": true,
+    "usage_complete": true,
+    "maximum_median_latency_ms": 60000,
+    "maximum_average_tokens_per_call": 30000,
+    "maximum_attempts_per_image": 1,
+    "automatic_retry_enabled": false
+  },
+  "tests": {
+    "focused_passed": 29,
+    "focused_failed": 0,
+    "full_project_passed": 2051,
+    "full_project_skipped": 1,
+    "full_project_subtests_passed": 294,
+    "startup_mutex_environment_test_excluded": true
+  },
+  "boundaries": {
+    "real_canary_result_available": false,
+    "technical_gate_claimed_passed": false,
+    "automatic_remainder_dispatch": false,
+    "external_authorization_granted": false,
+    "external_upload_performed": false,
+    "external_api_calls_performed": 0,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "test24_used": false,
+    "production_deployed": false
+  }
+}

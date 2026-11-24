@@ -18,7 +18,8 @@ from unittest.mock import patch
 from PIL import Image
 
 from source.agent import mcap_video, server, workflow
-from source.agent.expert_routing import evaluate_expert_shadow_route
+from source.agent.expert_routing import (evaluate_expert_shadow_route,
+                                         finalize_expert_route_receipt)
 from source.agent.edit_agent import (_hole_regions, _candidate_gap_regions, _shape_from_mask,
                                      _rasterize, _valid_region, apply_operations, valid_shape)
 
@@ -363,6 +364,106 @@ class EditTests(unittest.TestCase):
 
 
 class WorkflowTests(unittest.TestCase):
+    def _expert_shadow_decision(self, **overrides):
+        config = {"llm_expert_shadow_routing_enabled": True}
+        config.update(overrides)
+        return evaluate_expert_shadow_route(
+            config,
+            discovery={"unknown_candidates": [{"candidate_name": "rack"}]},
+            candidate_labels=["pallet"], local_model_latency_ms=12.345)
+
+    def test_expert_route_receipt_keeps_local_only_decision_auditable(self):
+        decision = evaluate_expert_shadow_route(
+            {"llm_expert_shadow_routing_enabled": True},
+            candidate_labels=["floor"], local_model_latency_ms=9.876)
+        receipt = finalize_expert_route_receipt(decision)
+        self.assertEqual(receipt["schema_version"],
+                         "labelagent.expert-route-receipt.v1")
+        self.assertEqual(receipt["shadow_schema_version"],
+                         "labelagent.expert-shadow-routing.v2")
+        self.assertEqual(receipt["route"], "local_result_sufficient")
+        self.assertFalse(receipt["execution"]["external_attempted"])
+        self.assertEqual(receipt["execution"]["external_calls"], 0)
+        self.assertIsNone(receipt["timing"]["external_model_latency_ms"])
+        self.assertTrue(receipt["candidate_only"])
+        self.assertFalse(receipt["human_truth"])
+        self.assertFalse(receipt["approved_for_training"])
+
+    def test_expert_route_receipt_records_success_cache_and_fallback(self):
+        decision = self._expert_shadow_decision()
+        request_key = "a" * 64
+        success = finalize_expert_route_receipt(
+            decision,
+            execution={"external_attempted": True,
+                       "dispatch_performed": True,
+                       "external_upload_performed": True,
+                       "fallback_performed": False,
+                       "sam_result_reused": True},
+            external_model_latency_ms=3405.653,
+            external_metadata={"expert_request_key": request_key,
+                               "expert_retry_count": 0})
+        self.assertEqual(success["route"], "external_expert_completed")
+        self.assertEqual(success["execution"]["external_calls"], 1)
+        self.assertEqual(success["timing"]["external_model_latency_ms"],
+                         3405.653)
+        self.assertTrue(success["sam_result_reused"])
+
+        cached = finalize_expert_route_receipt(
+            decision,
+            execution={"external_attempted": True,
+                       "dispatch_performed": False,
+                       "external_upload_performed": False,
+                       "fallback_performed": False},
+            external_model_latency_ms=0.25,
+            external_metadata={"expert_cache_hit": True,
+                               "expert_request_key": request_key})
+        self.assertEqual(cached["route"], "external_expert_cache")
+        self.assertEqual(cached["execution"]["external_calls"], 0)
+        self.assertTrue(cached["cache"]["external_result_cache_hit"])
+
+        fallback = finalize_expert_route_receipt(
+            decision,
+            execution={"external_attempted": True,
+                       "dispatch_performed": False,
+                       "external_upload_performed": False,
+                       "fallback_performed": True,
+                       "fallback_reason": "expert_concurrency_limit",
+                       "sam_result_reused": True},
+            external_model_latency_ms=5000)
+        self.assertEqual(fallback["route"], "local_fallback_after_expert")
+        self.assertEqual(fallback["fallback_reason"],
+                         "expert_concurrency_limit")
+        self.assertTrue(fallback["sam_result_reused"])
+
+    def test_expert_route_receipt_rejects_unsafe_or_inconsistent_facts(self):
+        decision = self._expert_shadow_decision()
+        unsafe = copy.deepcopy(decision)
+        unsafe["human_truth"] = True
+        with self.assertRaisesRegex(ValueError, "safety boundary"):
+            finalize_expert_route_receipt(unsafe)
+        with self.assertRaisesRegex(ValueError, "requires an attempted route"):
+            finalize_expert_route_receipt(
+                decision, execution={"dispatch_performed": True},
+                external_model_latency_ms=1)
+        with self.assertRaisesRegex(ValueError, "measured latency"):
+            finalize_expert_route_receipt(
+                decision,
+                execution={"external_attempted": True,
+                           "fallback_performed": True,
+                           "fallback_reason": "expert_timeout"})
+        with self.assertRaisesRegex(ValueError, "no terminal outcome"):
+            finalize_expert_route_receipt(
+                decision, execution={"external_attempted": True},
+                external_model_latency_ms=1)
+        with self.assertRaisesRegex(ValueError, "SHA-256"):
+            finalize_expert_route_receipt(
+                decision,
+                execution={"external_attempted": True,
+                           "dispatch_performed": True,
+                           "external_upload_performed": True},
+                external_model_latency_ms=1,
+                external_metadata={"expert_request_key": "secret"})
+
     def test_expert_shadow_routing_is_default_off_and_never_dispatches(self):
         self.assertIsNone(evaluate_expert_shadow_route(
             {}, discovery={"unknown_candidates": [{"candidate_name": "rack"}]}))

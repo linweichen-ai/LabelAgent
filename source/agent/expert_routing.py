@@ -6,9 +6,12 @@ machine-candidate provenance before a separate, explicitly authorized expert
 review path exists.
 """
 import copy
+import re
 
 
 SCHEMA_VERSION = "labelagent.expert-shadow-routing.v2"
+EXECUTION_RECEIPT_SCHEMA_VERSION = "labelagent.expert-route-receipt.v1"
+SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 HARD_STOP_REASONS = frozenset({
     "error", "max_rounds", "no_progress", "review_deferred",
 })
@@ -390,3 +393,122 @@ def evaluate_expert_shadow_route(config, *, discovery=None, agent=None,
         "human_truth": False,
         "approved_for_training": False,
     }
+
+
+def finalize_expert_route_receipt(shadow_decision, *, execution=None,
+                                  external_model_latency_ms=None,
+                                  external_metadata=None):
+    """Merge bounded expert execution facts into one candidate-only receipt.
+
+    This function performs no model request and accepts no image, prompt or raw
+    provider response.  It is intentionally strict so an external review can
+    be audited without turning a machine result into truth or training data.
+    """
+    if not isinstance(shadow_decision, dict):
+        raise ValueError("shadow decision must be an object")
+    if shadow_decision.get("schema_version") != SCHEMA_VERSION:
+        raise ValueError("shadow decision schema differs")
+    if (shadow_decision.get("candidate_only") is not True
+            or shadow_decision.get("human_truth") is not False
+            or shadow_decision.get("approved_for_training") is not False):
+        raise ValueError("shadow decision safety boundary differs")
+    if (shadow_decision.get("dispatch_performed") is not False
+            or shadow_decision.get("external_upload_performed") is not False):
+        raise ValueError("shadow decision must precede expert execution")
+
+    execution = execution if isinstance(execution, dict) else {}
+    metadata = external_metadata if isinstance(external_metadata, dict) else {}
+    attempted = execution.get("external_attempted") is True
+    dispatched = execution.get("dispatch_performed") is True
+    uploaded = execution.get("external_upload_performed") is True
+    fallback = execution.get("fallback_performed") is True
+    sam_reused = execution.get(
+        "sam_result_reused", shadow_decision.get("sam_result_reused")) is True
+    cache_hit = metadata.get("expert_cache_hit") is True
+
+    if dispatched and not attempted:
+        raise ValueError("expert dispatch requires an attempted route")
+    if uploaded and not dispatched:
+        raise ValueError("external upload requires a dispatched request")
+    if fallback and not attempted:
+        raise ValueError("expert fallback requires an attempted route")
+    if attempted and shadow_decision.get("recommended") is not True:
+        raise ValueError("expert execution requires a recommended shadow route")
+    if cache_hit and (dispatched or uploaded):
+        raise ValueError("cached expert result cannot be a new dispatch")
+    if cache_hit and not attempted:
+        raise ValueError("cached expert result requires an attempted route")
+    if attempted and not (dispatched or cache_hit or fallback):
+        raise ValueError("attempted expert route has no terminal outcome")
+
+    timing = shadow_decision.get("timing")
+    if (not isinstance(timing, dict)
+            or "local_model_latency_ms" not in timing
+            or not isinstance(shadow_decision.get("route"), str)
+            or type(shadow_decision.get("recommended")) is not bool):
+        raise ValueError("shadow decision audit fields are incomplete")
+
+    latency = None
+    if external_model_latency_ms is not None:
+        if (type(external_model_latency_ms) not in (int, float)
+                or isinstance(external_model_latency_ms, bool)
+                or external_model_latency_ms < 0):
+            raise ValueError("external model latency must be non-negative")
+        latency = round(float(external_model_latency_ms), 3)
+    if attempted and latency is None:
+        raise ValueError("attempted expert route requires measured latency")
+    if not attempted and latency is not None:
+        raise ValueError("unattempted expert route cannot have external latency")
+
+    fallback_reason = execution.get("fallback_reason")
+    if fallback:
+        if not isinstance(fallback_reason, str) or not fallback_reason.strip():
+            raise ValueError("expert fallback requires a bounded reason")
+        fallback_reason = fallback_reason.strip()[:160]
+    elif fallback_reason not in (None, ""):
+        raise ValueError("fallback reason requires fallback_performed")
+    else:
+        fallback_reason = None
+
+    request_key = metadata.get("expert_request_key")
+    if request_key is not None:
+        request_key = str(request_key).lower()
+        if SHA256_PATTERN.fullmatch(request_key) is None:
+            raise ValueError("expert request key must be a SHA-256 digest")
+    retry_count = metadata.get("expert_retry_count", 0)
+    if type(retry_count) is not int or retry_count < 0 or retry_count > 8:
+        raise ValueError("expert retry count is invalid")
+
+    receipt = copy.deepcopy(shadow_decision)
+    if not attempted:
+        final_route = shadow_decision["route"]
+    elif fallback:
+        final_route = "local_fallback_after_expert"
+    elif cache_hit:
+        final_route = "external_expert_cache"
+    else:
+        final_route = "external_expert_completed"
+    receipt.update(
+        schema_version=EXECUTION_RECEIPT_SCHEMA_VERSION,
+        shadow_schema_version=SCHEMA_VERSION,
+        route=final_route,
+        dispatch_performed=dispatched,
+        external_upload_performed=uploaded,
+        fallback_performed=fallback,
+        fallback_reason=fallback_reason,
+        sam_result_reused=sam_reused,
+        execution={
+            "external_attempted": attempted,
+            "external_calls": 1 if dispatched else 0,
+            "retry_count": retry_count,
+        },
+        cache={
+            "external_result_cache_hit": cache_hit,
+            "external_request_key": request_key,
+        },
+    )
+    receipt["timing"]["external_model_latency_ms"] = latency
+    receipt["candidate_only"] = True
+    receipt["human_truth"] = False
+    receipt["approved_for_training"] = False
+    return receipt

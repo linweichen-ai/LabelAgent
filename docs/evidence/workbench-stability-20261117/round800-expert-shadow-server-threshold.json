@@ -1,0 +1,46 @@
+{
+  "schema_version": "labelagent.expert-shadow-server-threshold.v1",
+  "date": "2026-11-24",
+  "isolated_server_acceptance": {
+    "server": "factory-5090",
+    "port": 18768,
+    "expert_status": "configured_not_tested",
+    "expert_enabled": true,
+    "expert_configured": true,
+    "credential_present": true,
+    "shadow_routing_enabled": true,
+    "shadow_score_threshold": 7,
+    "automatic_upload": false,
+    "sam_ready": true,
+    "local_vlm_ready": true,
+    "agent_runs_available": 0,
+    "stopped": true,
+    "port_released": true,
+    "credential_persisted_on_server": false
+  },
+  "formal_state_sha256_before": "7043442106bffcde99b0fd8a9ce7cc7f459cb94ab9f77a323291778b57d7fb51",
+  "formal_state_sha256_after": "7043442106bffcde99b0fd8a9ce7cc7f459cb94ab9f77a323291778b57d7fb51",
+  "metadata_replay": {
+    "frames": 30,
+    "input_audit": "artifacts/round785-expert-shadow-audit-20261124/audit-calibrated.json",
+    "output_sha256": "c61fb41bd35b7aad4228bda0d080842957dbc93bb18f8e7dc5e98559573d6331",
+    "thresholds": [
+      {"threshold": 3, "selected": 17, "ratio": 0.5667},
+      {"threshold": 5, "selected": 15, "ratio": 0.5},
+      {"threshold": 7, "selected": 10, "ratio": 0.3333},
+      {"threshold": 9, "selected": 7, "ratio": 0.2333}
+    ],
+    "threshold7_coverage": {
+      "edge_slope_candidate": "2/2",
+      "class_audit_conflict": "4/4",
+      "agent_nonconvergence": "3/3"
+    }
+  },
+  "deployed": false,
+  "dispatch_performed": false,
+  "external_upload_performed": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "test24_used": false
+}

@@ -17,6 +17,17 @@ SUPPORTED_PROVIDERS = frozenset({
 })
 
 
+def validate_external_credential(credential):
+    """Reject malformed secrets without ever echoing their value."""
+    if not isinstance(credential, str) or not credential:
+        raise ValueError("外部专家 VLM 凭据为空")
+    if (credential != credential.strip()
+            or any(ord(character) < 32 or ord(character) == 127
+                   for character in credential)):
+        raise ValueError("外部专家 VLM 凭据包含空白或控制字符，请重新安全配置")
+    return credential
+
+
 def _encoded_images(images):
     return [base64.b64encode(data).decode("ascii") for data in images]
 
@@ -26,6 +37,7 @@ def build_external_request(provider, base_url, model, credential, instruction,
     """Return a provider-native request without placing credentials in URLs."""
     if provider not in SUPPORTED_PROVIDERS:
         raise ValueError(f"暂不支持外部专家 VLM 协议：{provider}")
+    credential = validate_external_credential(credential)
     base_url = base_url.rstrip("/")
     encoded = _encoded_images(images)
     headers = {"Content-Type": "application/json"}

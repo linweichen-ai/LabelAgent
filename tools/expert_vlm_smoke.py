@@ -16,7 +16,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from source.agent.vlm_providers import SUPPORTED_PROVIDERS
+from source.agent.vlm_providers import (SUPPORTED_PROVIDERS,
+                                        validate_external_credential)
 from source.agent.workflow import chat_external_expert
 
 
@@ -88,8 +89,10 @@ def run_smoke(*, provider, url, model, key_env, execute=False,
         return receipt
     if acknowledge_synthetic_upload is not True:
         raise ValueError("execute requires explicit synthetic-upload acknowledgement")
-    if not environ.get(key_env):
+    credential = environ.get(key_env)
+    if not credential:
         raise ValueError(f"expert credential environment variable is missing: {key_env}")
+    validate_external_credential(credential)
     config = {
         "llm_expert_enabled": True,
         "llm_expert_provider": provider,

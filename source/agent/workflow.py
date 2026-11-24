@@ -22,7 +22,8 @@ import cv2
 import numpy as np
 from .edit_agent import apply_operations, valid_shape, _candidate_gap_regions, _valid_region
 from .vlm_providers import (SUPPORTED_PROVIDERS, build_external_request,
-                            normalize_external_response)
+                            normalize_external_response,
+                            validate_external_credential)
 
 
 _trace_callback = ContextVar("model_trace_callback", default=None)
@@ -863,6 +864,7 @@ def external_expert_config(config):
     credential = os.environ.get(key_env)
     if not credential:
         raise ValueError(f"外部专家 VLM 密钥环境变量未配置：{key_env}")
+    validate_external_credential(credential)
     expert = {key: copy.deepcopy(value) for key, value in config.items()
               if not key.startswith("llm_fast_")}
     expert.update(

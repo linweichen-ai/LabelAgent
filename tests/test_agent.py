@@ -2983,6 +2983,24 @@ class WorkflowTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "无内嵌凭据"):
                 workflow.external_expert_config(config)
 
+    def test_external_expert_route_rejects_control_characters_without_echoing_secret(self):
+        config = {
+            "llm_expert_enabled": True,
+            "llm_expert_provider": "openai_chat",
+            "llm_expert_url": "https://expert.example/v1",
+            "llm_expert_model": "expert-vision",
+            "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
+        }
+        malformed = "private-secret-value\r"
+        with patch.dict(os.environ,
+                        {"LABELAGENT_TEST_EXPERT_KEY": malformed}), \
+             patch.object(workflow.urllib.request, "urlopen") as request:
+            with self.assertRaisesRegex(ValueError, "控制字符") as captured:
+                workflow.chat_external_expert(
+                    config, "inspect", image_bytes())
+        request.assert_not_called()
+        self.assertNotIn("private-secret-value", str(captured.exception))
+
     def test_external_expert_openai_responses_native_envelope_and_normalization(self):
         response = io.BytesIO(json.dumps({
             "status": "completed",

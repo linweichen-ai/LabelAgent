@@ -67,6 +67,19 @@ class ExpertVlmSmokeTests(unittest.TestCase):
                 environ={"LABELAGENT_TEST_KEY": "secret"},
                 chat_fn=lambda *args, **kwargs: {"status": "wrong"})
 
+    def test_rejects_control_character_credential_without_network_or_secret_echo(self):
+        calls = []
+        malformed = "private-secret-value\r"
+        with self.assertRaisesRegex(ValueError, "控制字符") as captured:
+            run_smoke(
+                provider="openai_chat", url="https://api.example/v1",
+                model="vision", key_env="LABELAGENT_TEST_KEY", execute=True,
+                acknowledge_synthetic_upload=True,
+                environ={"LABELAGENT_TEST_KEY": malformed},
+                chat_fn=lambda *args, **kwargs: calls.append(args))
+        self.assertEqual(calls, [])
+        self.assertNotIn("private-secret-value", str(captured.exception))
+
 
 if __name__ == "__main__":
     unittest.main()

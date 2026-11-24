@@ -1,0 +1,53 @@
+{
+  "round": 811,
+  "date": "2026-11-24",
+  "status": "synthetic_efficiency_candidate_only",
+  "provider": "openai_chat",
+  "model": "openai/gpt-6-astra",
+  "first_matrix": {
+    "artifact_sha256": "580d645cdde438389e7bd906d056c7123e4932b5d96e08e297678b10b400b338",
+    "rows": [
+      {"width": 640, "height": 512, "prompt_tokens": 23316, "completion_tokens": 12, "total_tokens": 23328, "latency_ms": 13065.804},
+      {"width": 512, "height": 410, "prompt_tokens": 302, "completion_tokens": 16, "total_tokens": 318, "latency_ms": 3219.150},
+      {"width": 384, "height": 307, "prompt_tokens": 197, "completion_tokens": 16, "total_tokens": 213, "latency_ms": 5157.710},
+      {"width": 320, "height": 256, "prompt_tokens": 149, "completion_tokens": 16, "total_tokens": 165, "latency_ms": 3050.883}
+    ]
+  },
+  "repeat_matrix": {
+    "artifact_sha256": "8a65def97833dc3a37256a3e5f6274284e33344e9931329a8ea0dca77639ea49",
+    "rows": [
+      {"width": 640, "height": 512, "prompt_tokens": 23316, "completion_tokens": 12, "total_tokens": 23328, "latency_ms": 13600.101},
+      {"width": 512, "height": 410, "prompt_tokens": 4415, "completion_tokens": 16, "total_tokens": 4431, "latency_ms": 5246.517}
+    ]
+  },
+  "interpretation": {
+    "640x512_total_tokens_stable": true,
+    "512x410_usage_variable": true,
+    "512x410_worst_observed_token_reduction_vs_640x512": 0.810057,
+    "candidate_size_for_real_quality_ab": "512x410",
+    "quality_evaluated": false,
+    "deployment_recommendation": false
+  },
+  "validation": {
+    "focused_tests_passed": 10,
+    "focused_test_duration_seconds": 0.42,
+    "expanded_regression_tests_passed": 366,
+    "expanded_regression_subtests_passed": 87,
+    "expanded_regression_duration_seconds": 10.31
+  },
+  "safety": {
+    "synthetic_external_calls": 6,
+    "factory_data_uploaded": false,
+    "real_images_uploaded": 0,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "test24_used": false,
+    "production_deployed": false
+  },
+  "billing": {
+    "usage_observed": true,
+    "billing_rate_available": false,
+    "actual_cost_status": "unknown_requires_gateway_billing_rate"
+  }
+}

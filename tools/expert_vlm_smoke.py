@@ -35,8 +35,11 @@ RESPONSE_SCHEMA = {
 }
 
 
-def synthetic_factory_image():
+def synthetic_factory_image(width=640, height=512):
     """Create a deterministic, data-free image that cannot contain factory IP."""
+    if (type(width) is not int or type(height) is not int
+            or not 128 <= width <= 2048 or not 128 <= height <= 2048):
+        raise ValueError("synthetic image dimensions must be integers in 128..2048")
     image = Image.new("RGB", (640, 512), (225, 228, 232))
     draw = ImageDraw.Draw(image)
     draw.rectangle((0, 320, 639, 511), fill=(135, 138, 142))
@@ -46,6 +49,8 @@ def synthetic_factory_image():
     draw.rectangle((470, 205, 525, 255), fill=(75, 78, 82))
     draw.polygon([(350, 320), (610, 320), (639, 460), (400, 460)],
                  fill=(190, 180, 145))
+    if (width, height) != (640, 512):
+        image = image.resize((width, height), Image.Resampling.LANCZOS)
     output = io.BytesIO()
     image.save(output, "JPEG", quality=90, optimize=False, progressive=False)
     return output.getvalue()
@@ -68,10 +73,10 @@ def validate_config(provider, url, model, key_env):
 
 def run_smoke(*, provider, url, model, key_env, execute=False,
               acknowledge_synthetic_upload=False, environ=None,
-              chat_fn=chat_external_expert):
+              chat_fn=chat_external_expert, width=640, height=512):
     environ = os.environ if environ is None else environ
     provider, host = validate_config(provider, url, model, key_env)
-    image = synthetic_factory_image()
+    image = synthetic_factory_image(width, height)
     receipt = {
         "schema_version": SCHEMA_VERSION,
         "mode": "execute" if execute else "dry_run",
@@ -80,6 +85,8 @@ def run_smoke(*, provider, url, model, key_env, execute=False,
         "endpoint_host": host,
         "synthetic_image_sha256": hashlib.sha256(image).hexdigest(),
         "synthetic_image_bytes": len(image),
+        "synthetic_image_width": width,
+        "synthetic_image_height": height,
         "factory_data_uploaded": False,
         "candidate_only": True,
         "human_truth": False,
@@ -142,11 +149,14 @@ def main(argv=None):
     parser.add_argument("--key-env", required=True)
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--acknowledge-synthetic-upload", action="store_true")
+    parser.add_argument("--width", type=int, default=640)
+    parser.add_argument("--height", type=int, default=512)
     args = parser.parse_args(argv)
     receipt = run_smoke(
         provider=args.provider, url=args.url, model=args.model,
         key_env=args.key_env, execute=args.execute,
-        acknowledge_synthetic_upload=args.acknowledge_synthetic_upload)
+        acknowledge_synthetic_upload=args.acknowledge_synthetic_upload,
+        width=args.width, height=args.height)
     print(json.dumps(receipt, ensure_ascii=False, indent=2))
     return 0
 

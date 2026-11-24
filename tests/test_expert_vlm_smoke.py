@@ -22,6 +22,12 @@ class ExpertVlmSmokeTests(unittest.TestCase):
         self.assertEqual(calls, [])
         self.assertEqual(synthetic_factory_image(), synthetic_factory_image())
 
+    def test_synthetic_image_supports_bounded_resolution_variants(self):
+        resized = synthetic_factory_image(320, 256)
+        self.assertNotEqual(resized, synthetic_factory_image())
+        with self.assertRaisesRegex(ValueError, "128..2048"):
+            synthetic_factory_image(64, 256)
+
     def test_execute_requires_acknowledgement_and_credential_before_call(self):
         calls = []
         base = dict(

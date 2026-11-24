@@ -504,6 +504,73 @@ def reference_visibility_review_queue(discovery, candidates):
     return queue
 
 
+def new_class_observation_manifest(current_state):
+    """Export persisted open-set observations without mutating ontology state."""
+    video = current_state.get("video")
+    topic = current_state.get("topic")
+    runs = current_state.get("agent_runs") or {}
+    if video is None or not isinstance(topic, str) or not topic:
+        raise ValueError("请先加载数据和图像源")
+    file_name = str(getattr(video, "path", ""))
+    sequence = hashlib.sha256(file_name.encode("utf-8")).hexdigest()[:16]
+    observations = []
+    for frame_key, run_item in sorted(runs.items(), key=lambda item: str(item[0])):
+        if not isinstance(run_item, dict):
+            continue
+        discovery = run_item.get("visible_label_discovery")
+        unknown = discovery.get("unknown_candidates") if isinstance(discovery, dict) else None
+        if not isinstance(unknown, list) or not unknown:
+            continue
+        split = str(run_item.get("dataset_split") or "development")
+        if "test24" in split.casefold():
+            raise ValueError("test24 未知类观察禁止导出到开发候选池")
+        candidates = []
+        for item in unknown:
+            if not isinstance(item, dict) or not str(item.get("candidate_name") or "").strip():
+                raise ValueError("未知类观察格式无效")
+            raw_evidence = str(item.get("evidence") or "").strip()
+            evidence = raw_evidence.casefold()
+            if evidence not in {"present", "absent", "uncertain"}:
+                evidence = "uncertain"
+            confidence = item.get("confidence")
+            if (type(confidence) not in (int, float) or isinstance(confidence, bool)
+                    or not 0 <= confidence <= 1):
+                raise ValueError("未知类观察置信度无效")
+            candidates.append({
+                "candidate_name": str(item["candidate_name"]).strip(),
+                "evidence": evidence,
+                "confidence": float(confidence),
+                "reason": raw_evidence,
+            })
+        identity = _sha256_json({"sequence": sequence, "topic": topic,
+                                 "frame": str(frame_key),
+                                 "discovery_sha256": run_item.get("discovery_sha256")})
+        observations.append({
+            "observation_id": identity,
+            "sample_id": identity,
+            "sequence": sequence,
+            "camera": topic,
+            "frame_id": str(frame_key),
+            "split": split,
+            "test24": False,
+            "unknown_candidates": candidates,
+        })
+    return {
+        "schema_version": "labelagent.new-class-observations.v1",
+        "observations": observations,
+        "summary": {"observation_count": len(observations),
+                    "unknown_candidate_count": sum(
+                        len(item["unknown_candidates"]) for item in observations)},
+        "source_scope": {"sequence_anonymized": True, "topic": topic},
+        "candidate_only": True,
+        "human_truth": False,
+        "approved_for_training": False,
+        "test24_used": False,
+        "automatic_registry_mutation": False,
+        "registry_mutated": False,
+    }
+
+
 def recover_reference_ego_candidate(config, image, discovery, result):
     """Add one guarded ego proposal only for a high-confidence discovery miss."""
     status = {"enabled": config.get("ego_bottom_point_fallback") is True,
@@ -7191,6 +7258,13 @@ def get_run_debug():
         return jsonify(trace=[])
     output = json.loads(path.read_text(encoding="utf-8"))
     return jsonify(trace=output.get("trace", []))
+
+
+@app.get("/api/new_class_observations")
+def get_new_class_observations():
+    """Export active-scope open-set proposals for offline candidate pooling."""
+    with lock:
+        return jsonify(new_class_observation_manifest(state))
 
 
 @app.get("/api/run/inspection")

@@ -5984,6 +5984,49 @@ class ServerTests(unittest.TestCase):
             finally:
                 server.state, server.run_status, server.WORK = old_state, old_status, old_work
 
+    def test_new_class_observation_export_bridges_runs_without_registry_write(self):
+        old_state = server.state
+        try:
+            server.state = {"video": FakeVideo(), "topic": "camera0", "agent_runs": {
+                "7": {"dataset_split": "development",
+                      "discovery_sha256": "1" * 64,
+                      "visible_label_discovery": {"unknown_candidates": [
+                          {"candidate_name": "rack", "evidence": "visible rack",
+                           "confidence": .72},
+                          {"candidate_name": "chair", "evidence": "present",
+                           "confidence": .81}]}}}}
+            response = server.app.test_client().get("/api/new_class_observations")
+            self.assertEqual(response.status_code, 200, response.json)
+            payload = response.json
+            self.assertEqual(payload["schema_version"],
+                             "labelagent.new-class-observations.v1")
+            self.assertEqual(payload["summary"], {
+                "observation_count": 1, "unknown_candidate_count": 2})
+            self.assertEqual(payload["observations"][0]["unknown_candidates"][0]
+                             ["evidence"], "uncertain")
+            self.assertEqual(payload["observations"][0]["unknown_candidates"][1]
+                             ["evidence"], "present")
+            self.assertEqual(len(payload["observations"][0]["sequence"]), 16)
+            self.assertNotIn(str(FakeVideo.path), json.dumps(payload))
+            self.assertFalse(payload["registry_mutated"])
+            self.assertFalse(payload["approved_for_training"])
+        finally:
+            server.state = old_state
+
+    def test_new_class_observation_export_rejects_test24(self):
+        old_state = server.state
+        try:
+            server.state = {"video": FakeVideo(), "topic": "camera0", "agent_runs": {
+                "7": {"dataset_split": "test24",
+                      "visible_label_discovery": {"unknown_candidates": [
+                          {"candidate_name": "rack", "evidence": "present",
+                           "confidence": .72}]}}}}
+            response = server.app.test_client().get("/api/new_class_observations")
+            self.assertEqual(response.status_code, 400, response.json)
+            self.assertIn("test24", response.json["error"])
+        finally:
+            server.state = old_state
+
     def test_reference_draft_auto_detection_without_visible_known_label_fails_closed(self):
         old_state, old_status, old_work = server.state, server.run_status, server.WORK
         with tempfile.TemporaryDirectory() as directory:

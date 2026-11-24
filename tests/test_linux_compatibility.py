@@ -45,6 +45,7 @@ class LinuxCompatibilityTest(unittest.TestCase):
         self.assertIn("AUTOLABEL_HOST", start)
         self.assertIn("source.agent.server", start)
         self.assertIn("source.sam3_service.server", start)
+        self.assertEqual(start.count("9>&- &"), 2)
         self.assertIn('cmdline" != *"$module"*', stop)
         self.assertNotIn("pkill", stop)
         self.assertNotIn("killall", stop)

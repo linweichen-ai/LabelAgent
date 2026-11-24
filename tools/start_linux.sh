@@ -75,14 +75,14 @@ trap cleanup_failed_start EXIT
 cd "$ROOT"
 if [[ "$SAM_URL" == "http://127.0.0.1:8766" ]]; then
   "$PY" tools/repro_doctor.py --require-web-port --require-sam-port --require-cuda --require-weight
-  nohup "$PY" -m source.sam3_service.server >"$LOGS/sam3.out.log" 2>"$LOGS/sam3.err.log" &
+  nohup "$PY" -m source.sam3_service.server >"$LOGS/sam3.out.log" 2>"$LOGS/sam3.err.log" 9>&- &
   sam_pid=$!
 else
   curl --fail --silent --show-error --max-time 5 "${SAM_URL%/}/health" >/dev/null
   "$PY" tools/repro_doctor.py --require-web-port
 fi
 
-nohup "$PY" -m source.agent.server >"$LOGS/workbench.out.log" 2>"$LOGS/workbench.err.log" &
+nohup "$PY" -m source.agent.server >"$LOGS/workbench.out.log" 2>"$LOGS/workbench.err.log" 9>&- &
 web_pid=$!
 "$PY" - "$RECORD" "$ROOT" "$SAM_URL" "$sam_pid" "$web_pid" <<'PY'
 import datetime, json, os, pathlib, sys, tempfile

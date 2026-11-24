@@ -2969,6 +2969,23 @@ class WorkflowTests(unittest.TestCase):
                          "external_expert")
         self.assertNotIn("expert-secret", json.dumps(events))
 
+    def test_external_expert_rejects_invalid_metadata_sink_before_network(self):
+        workflow._reset_external_expert_runtime_state()
+        self.addCleanup(workflow._reset_external_expert_runtime_state)
+        config = {
+            "llm_expert_enabled": True,
+            "llm_expert_provider": "openai_chat",
+            "llm_expert_url": "https://expert.example/v1",
+            "llm_expert_model": "expert-vision",
+            "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
+        }
+        with patch.dict(os.environ, {"LABELAGENT_TEST_EXPERT_KEY": "secret"}), \
+             patch.object(workflow.urllib.request, "urlopen") as opener:
+            with self.assertRaisesRegex(ValueError, "元数据接收器"):
+                workflow.chat_external_expert(
+                    config, "inspect", image_bytes(), metadata_out=[])
+        opener.assert_not_called()
+
     def test_external_expert_historical_ui_alias_uses_canonical_protocol(self):
         workflow._reset_external_expert_runtime_state()
         self.addCleanup(workflow._reset_external_expert_runtime_state)
@@ -3032,6 +3049,120 @@ class WorkflowTests(unittest.TestCase):
         self.assertTrue(second_metadata["expert_cache_hit"])
         self.assertRegex(events[-1]["output"]["expert_request_key"],
                          r"^[0-9a-f]{64}$")
+
+    def test_external_expert_coalesces_concurrent_identical_paid_requests(self):
+        workflow._reset_external_expert_runtime_state()
+        self.addCleanup(workflow._reset_external_expert_runtime_state)
+        config = {
+            "llm_expert_enabled": True,
+            "llm_expert_provider": "openai_chat",
+            "llm_expert_url": "https://expert.example/v1",
+            "llm_expert_model": "expert-vision",
+            "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
+            "llm_expert_queue_timeout_seconds": 2,
+        }
+        entered, release = threading.Event(), threading.Event()
+        calls, results, metadata, errors = [], [], [], []
+
+        def respond(*_args, **_kwargs):
+            calls.append(time.monotonic())
+            entered.set()
+            self.assertTrue(release.wait(2))
+            return io.BytesIO(
+                b'{"choices":[{"finish_reason":"stop","message":{"content":"{\\"status\\":\\"done\\"}"}}]}')
+
+        def invoke():
+            details = {}
+            try:
+                results.append(workflow.chat_external_expert(
+                    config, "inspect", image_bytes(), metadata_out=details))
+                metadata.append(details)
+            except Exception as error:
+                errors.append(error)
+
+        with patch.dict(os.environ, {"LABELAGENT_TEST_EXPERT_KEY": "secret"}), \
+             patch.object(workflow.urllib.request, "urlopen", side_effect=respond):
+            first = threading.Thread(target=invoke)
+            second = threading.Thread(target=invoke)
+            first.start()
+            self.assertTrue(entered.wait(1))
+            second.start()
+            time.sleep(0.05)
+            release.set()
+            first.join(2); second.join(2)
+        self.assertFalse(errors)
+        self.assertEqual(results, [{"status": "done"}, {"status": "done"}])
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(sorted(item["expert_coalesced"] for item in metadata),
+                         [False, True])
+        self.assertTrue(any(item.get("expert_cache_hit") for item in metadata))
+
+    def test_external_expert_distinct_requests_obey_concurrency_limit(self):
+        workflow._reset_external_expert_runtime_state()
+        self.addCleanup(workflow._reset_external_expert_runtime_state)
+        config = {
+            "llm_expert_enabled": True,
+            "llm_expert_provider": "openai_chat",
+            "llm_expert_url": "https://expert.example/v1",
+            "llm_expert_model": "expert-vision",
+            "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
+            "llm_expert_max_concurrency": 1,
+            "llm_expert_queue_timeout_seconds": 1,
+        }
+        entered, release = threading.Event(), threading.Event()
+        calls, first_result = [], []
+
+        def respond(*_args, **_kwargs):
+            calls.append(time.monotonic())
+            entered.set()
+            self.assertTrue(release.wait(3))
+            return io.BytesIO(
+                b'{"choices":[{"finish_reason":"stop","message":{"content":"{\\"status\\":\\"done\\"}"}}]}')
+
+        def invoke_first():
+            first_result.append(workflow.chat_external_expert(
+                config, "first", image_bytes()))
+
+        local = {"status": "done", "source": "local"}
+        with patch.dict(os.environ, {"LABELAGENT_TEST_EXPERT_KEY": "secret"}), \
+             patch.object(workflow.urllib.request, "urlopen", side_effect=respond):
+            first = threading.Thread(target=invoke_first)
+            first.start()
+            self.assertTrue(entered.wait(1))
+            second, audit = workflow.chat_external_expert_or_local(
+                config, "second", image_bytes(), local)
+            release.set(); first.join(3)
+        self.assertEqual(first_result, [{"status": "done"}])
+        self.assertEqual(second, local)
+        self.assertEqual(audit["fallback_reason"], "expert_concurrency_limit")
+        self.assertTrue(audit["sam_result_reused"])
+        self.assertEqual(len(calls), 1)
+
+    def test_external_expert_invalid_paid_response_is_failure_cached(self):
+        workflow._reset_external_expert_runtime_state()
+        self.addCleanup(workflow._reset_external_expert_runtime_state)
+        config = {
+            "llm_expert_enabled": True,
+            "llm_expert_provider": "openai_chat",
+            "llm_expert_url": "https://expert.example/v1",
+            "llm_expert_model": "expert-vision",
+            "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
+        }
+        malformed = io.BytesIO(
+            b'{"choices":[{"finish_reason":"stop","message":{"content":"not-json"}}]}')
+        local = {"status": "done", "source": "local"}
+        with patch.dict(os.environ, {"LABELAGENT_TEST_EXPERT_KEY": "secret"}), \
+             patch.object(workflow.urllib.request, "urlopen",
+                          return_value=malformed) as opener:
+            with self.assertRaises(workflow.ModelOutputError):
+                workflow.chat_external_expert(
+                    config, "inspect", image_bytes())
+            result, audit = workflow.chat_external_expert_or_local(
+                config, "inspect", image_bytes(), local)
+        self.assertEqual(result, local)
+        self.assertEqual(audit["fallback_reason"], "expert_invalid_output")
+        self.assertTrue(audit["sam_result_reused"])
+        self.assertEqual(opener.call_count, 1)
 
     def test_external_expert_transient_failure_falls_back_and_opens_circuit(self):
         workflow._reset_external_expert_runtime_state()
@@ -3958,6 +4089,9 @@ class ServerTests(unittest.TestCase):
                     "llm_expert_cooldown_seconds": 120,
                     "llm_expert_cache_ttl_seconds": 7200,
                     "llm_expert_cache_max_entries": 64,
+                    "llm_expert_failure_cache_ttl_seconds": 240,
+                    "llm_expert_max_concurrency": 2,
+                    "llm_expert_queue_timeout_seconds": 15,
                     "llm_expert_shadow_routing_enabled": True,
                     "llm_expert_shadow_round_threshold": 3,
                     "llm_expert_shadow_score_threshold": 4,
@@ -4015,6 +4149,11 @@ class ServerTests(unittest.TestCase):
             self.assertEqual(readiness["expert_vlm"]["cooldown_seconds"], 120)
             self.assertEqual(readiness["expert_vlm"]["cache_ttl_seconds"], 7200)
             self.assertEqual(readiness["expert_vlm"]["cache_max_entries"], 64)
+            self.assertEqual(readiness["expert_vlm"][
+                "failure_cache_ttl_seconds"], 240)
+            self.assertEqual(readiness["expert_vlm"]["max_concurrency"], 2)
+            self.assertEqual(readiness["expert_vlm"][
+                "queue_timeout_seconds"], 15)
             self.assertTrue(readiness["expert_vlm"]["shadow_routing_enabled"])
             self.assertEqual(readiness["expert_vlm"]["shadow_round_threshold"],
                              3)

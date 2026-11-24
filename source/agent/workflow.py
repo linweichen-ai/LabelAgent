@@ -37,6 +37,9 @@ _fast_route_circuits = {}
 _expert_runtime_lock = threading.Lock()
 _expert_route_circuits = {}
 _expert_response_cache = OrderedDict()
+_expert_failure_cache = OrderedDict()
+_expert_inflight = {}
+_expert_route_semaphores = {}
 _sam_multi_protocol_lock = threading.Lock()
 _sam_multi_protocols = {}
 _sam_point_group_protocol_lock = threading.Lock()
@@ -915,11 +918,66 @@ def external_expert_config(config):
 
 def chat_external_expert(config, instruction, image, extra_images=(),
                          response_schema=None, metadata_out=None):
-    """Run one explicitly authorized expert review without local-route drift."""
-    return chat(
-        external_expert_config(config), instruction, image,
-        extra_images=extra_images, response_schema=response_schema,
-        metadata_out=metadata_out)
+    """Run one bounded expert review, coalescing identical paid requests."""
+    if metadata_out is not None and not isinstance(metadata_out, dict):
+        raise ValueError("大模型元数据接收器必须是字典")
+    expert = external_expert_config(config)
+    images = (image, *extra_images)
+    request_key = _expert_request_key(
+        expert, instruction, images, response_schema)
+    circuit_reason = _expert_circuit_reason(expert)
+    if circuit_reason is None:
+        failure_reason = _expert_failure_cache_get(expert, request_key)
+        if failure_reason is not None:
+            raise ExternalExpertUnavailableError(
+                failure_reason,
+                "相同外部专家请求此前已失败，已阻止重复付费并保留本地结果")
+
+    state, owner = _expert_inflight_claim(request_key)
+    queue_timeout = max(1, min(300, _positive_int(
+        expert.get("llm_expert_queue_timeout_seconds"), 5)))
+    if not owner:
+        if not state["event"].wait(queue_timeout):
+            raise ExternalExpertUnavailableError(
+                "expert_coalesced_timeout",
+                "相同外部专家请求仍在处理中，已超出排队上限并保留本地结果")
+        if state.get("error_reason"):
+            raise ExternalExpertUnavailableError(
+                state["error_reason"],
+                "相同外部专家请求已失败，已阻止重复付费并保留本地结果")
+        result = chat(
+            expert, instruction, image, extra_images=extra_images,
+            response_schema=response_schema, metadata_out=metadata_out)
+        if metadata_out is not None:
+            metadata_out["expert_coalesced"] = True
+        return result
+
+    semaphore = _expert_route_semaphore(expert)
+    if not semaphore.acquire(timeout=queue_timeout):
+        _expert_inflight_finish(
+            request_key, state, error_reason="expert_concurrency_limit")
+        raise ExternalExpertUnavailableError(
+            "expert_concurrency_limit",
+            "外部专家并发槽繁忙，已超出排队上限并保留本地结果")
+    try:
+        result = chat(
+            expert, instruction, image, extra_images=extra_images,
+            response_schema=response_schema, metadata_out=metadata_out)
+    except Exception as error:
+        reason = (error.reason if isinstance(error, ExternalExpertUnavailableError)
+                  else "expert_invalid_output" if isinstance(error, ModelOutputError)
+                  else "expert_failed_closed")
+        if not isinstance(error, ExternalExpertUnavailableError):
+            _expert_failure_cache_put(expert, request_key, reason)
+        _expert_inflight_finish(request_key, state, error_reason=reason)
+        raise
+    else:
+        _expert_inflight_finish(request_key, state)
+        if metadata_out is not None:
+            metadata_out["expert_coalesced"] = False
+        return result
+    finally:
+        semaphore.release()
 
 
 def chat_external_expert_or_local(config, instruction, image, local_result,
@@ -1043,11 +1101,70 @@ def _expert_cache_put(config, request_key, result, metadata=None):
             _expert_response_cache.popitem(last=False)
 
 
+def _expert_failure_cache_get(config, request_key):
+    ttl = max(1, min(3600, _positive_int(
+        config.get("llm_expert_failure_cache_ttl_seconds"), 300)))
+    now = time.monotonic()
+    with _expert_runtime_lock:
+        entry = _expert_failure_cache.get(request_key)
+        if not entry:
+            return None
+        if now - entry["stored_at"] > ttl:
+            _expert_failure_cache.pop(request_key, None)
+            return None
+        _expert_failure_cache.move_to_end(request_key)
+        return entry["reason"]
+
+
+def _expert_failure_cache_put(config, request_key, reason):
+    maximum = max(1, min(1024, _positive_int(
+        config.get("llm_expert_cache_max_entries"), 128)))
+    with _expert_runtime_lock:
+        _expert_failure_cache[request_key] = {
+            "stored_at": time.monotonic(), "reason": str(reason)[:80]}
+        _expert_failure_cache.move_to_end(request_key)
+        while len(_expert_failure_cache) > maximum:
+            _expert_failure_cache.popitem(last=False)
+
+
+def _expert_inflight_claim(request_key):
+    with _expert_runtime_lock:
+        state = _expert_inflight.get(request_key)
+        if state is not None:
+            return state, False
+        state = {"event": threading.Event(), "error_reason": None}
+        _expert_inflight[request_key] = state
+        return state, True
+
+
+def _expert_inflight_finish(request_key, state, error_reason=None):
+    with _expert_runtime_lock:
+        state["error_reason"] = error_reason
+        state["event"].set()
+        if _expert_inflight.get(request_key) is state:
+            _expert_inflight.pop(request_key, None)
+
+
+def _expert_route_semaphore(config):
+    maximum = max(1, min(8, _positive_int(
+        config.get("llm_expert_max_concurrency"), 1)))
+    key = (*_expert_route_key(config), maximum)
+    with _expert_runtime_lock:
+        semaphore = _expert_route_semaphores.get(key)
+        if semaphore is None:
+            semaphore = threading.BoundedSemaphore(maximum)
+            _expert_route_semaphores[key] = semaphore
+        return semaphore
+
+
 def _reset_external_expert_runtime_state():
-    """Clear process-local expert cache and circuit state for isolated tests."""
+    """Clear process-local expert state for isolated tests."""
     with _expert_runtime_lock:
         _expert_route_circuits.clear()
         _expert_response_cache.clear()
+        _expert_failure_cache.clear()
+        _expert_inflight.clear()
+        _expert_route_semaphores.clear()
 
 
 def _fast_route_key(config):

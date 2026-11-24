@@ -1,0 +1,45 @@
+{
+  "schema_version": "labelagent.expert-concurrency-guards-evidence.v1",
+  "date": "2026-11-24",
+  "defaults": {
+    "max_concurrency": 1,
+    "queue_timeout_seconds": 5,
+    "failure_cache_ttl_seconds": 300
+  },
+  "verified_behaviors": {
+    "concurrent_identical_requests_network_calls": 1,
+    "concurrent_identical_requests_coalesced": true,
+    "distinct_request_concurrency_limit_enforced": true,
+    "concurrency_timeout_local_fallback": true,
+    "concurrency_timeout_sam_result_reused": true,
+    "invalid_paid_response_failure_cached": true,
+    "invalid_paid_response_duplicate_network_calls": 0,
+    "configuration_persisted_by_api": true,
+    "configuration_visible_in_readiness": true,
+    "configuration_editable_in_workbench": true
+  },
+  "tests": {
+    "expert_focused_passed": 21,
+    "related_python_passed": 341,
+    "related_python_subtests_passed": 87,
+    "full_project_passed": 2055,
+    "full_project_skipped": 1,
+    "full_project_subtests_passed": 294,
+    "web_logic_passed": 187,
+    "web_logic_failed": 0,
+    "initial_web_environment_failure": "system_python_missing_Pillow",
+    "web_rerun_python": "project_virtual_environment"
+  },
+  "boundaries": {
+    "external_expert_default_enabled": false,
+    "external_authorization_granted": false,
+    "external_upload_performed": false,
+    "external_api_calls_performed": 0,
+    "factory_data_uploaded": false,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "test24_used": false,
+    "production_deployed": false
+  }
+}

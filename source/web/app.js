@@ -888,6 +888,12 @@ function populateExpertConfigFields(){
  $('expertModel').value=workbenchConfig.llm_expert_model||'';
  $('expertKeyEnv').value=workbenchConfig.llm_expert_key_env||'LABELAGENT_EXPERT_API_KEY';
  $('expertTimeout').value=workbenchConfig.llm_expert_timeout_seconds||120;
+ $('expertRetryCount').value=workbenchConfig.llm_expert_retry_count??1;
+ $('expertCooldown').value=workbenchConfig.llm_expert_cooldown_seconds||60;
+ $('expertMaxConcurrency').value=workbenchConfig.llm_expert_max_concurrency||1;
+ $('expertQueueTimeout').value=workbenchConfig.llm_expert_queue_timeout_seconds||5;
+ $('expertCacheTtl').value=workbenchConfig.llm_expert_cache_ttl_seconds||3600;
+ $('expertFailureCacheTtl').value=workbenchConfig.llm_expert_failure_cache_ttl_seconds||300;
  $('expertRoundThreshold').value=workbenchConfig.llm_expert_shadow_round_threshold||2;
  $('expertScoreThreshold').value=workbenchConfig.llm_expert_shadow_score_threshold||3;
  $('expertConfidenceThreshold').value=workbenchConfig.llm_expert_shadow_low_confidence_percent??65;
@@ -923,6 +929,12 @@ $('configSave').onclick=async()=>{
    llm_expert_model:$('expertModel').value,
    llm_expert_key_env:$('expertKeyEnv').value,
    llm_expert_timeout_seconds:Number($('expertTimeout').value),
+   llm_expert_retry_count:Number($('expertRetryCount').value),
+   llm_expert_cooldown_seconds:Number($('expertCooldown').value),
+   llm_expert_max_concurrency:Number($('expertMaxConcurrency').value),
+   llm_expert_queue_timeout_seconds:Number($('expertQueueTimeout').value),
+   llm_expert_cache_ttl_seconds:Number($('expertCacheTtl').value),
+   llm_expert_failure_cache_ttl_seconds:Number($('expertFailureCacheTtl').value),
    llm_expert_shadow_routing_enabled:$('expertShadowEnabled').checked,
    llm_expert_shadow_round_threshold:Number($('expertRoundThreshold').value),
    llm_expert_shadow_score_threshold:Number($('expertScoreThreshold').value),

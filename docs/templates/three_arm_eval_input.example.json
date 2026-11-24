@@ -1,0 +1,89 @@
+{
+  "schema_version": "labelagent.three-arm-eval-input.v1",
+  "partition": "synthetic_protocol_example",
+  "test24": false,
+  "synthetic_fixture": true,
+  "human_reference": false,
+  "reviewer_confirmed": false,
+  "samples": [
+    {
+      "sample_id": "synthetic-1",
+      "class_presence": {
+        "车辆": "absent",
+        "pallet": "present",
+        "person": "absent",
+        "floor": "present",
+        "slope": "present",
+        "ego": "absent",
+        "other_robot": "absent",
+        "cargo_floor": "absent"
+      },
+      "pallet_instance_count": 1
+    }
+  ],
+  "runs": [
+    {
+      "arm": "local_only",
+      "sample_id": "synthetic-1",
+      "status": "passed",
+      "external_called": false,
+      "fallback_occurred": false,
+      "timeout": false,
+      "latency_ms": 120,
+      "estimated_cost_usd": 0,
+      "sam_artifact_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "prediction": {
+        "present_labels": ["pallet", "floor"],
+        "pallet_instance_count": 1,
+        "pallet_hole_errors": 1,
+        "pallet_merge_errors": 0,
+        "vehicle_robot_conflicts": 0
+      }
+    },
+    {
+      "arm": "all_external",
+      "sample_id": "synthetic-1",
+      "status": "passed",
+      "external_called": true,
+      "fallback_occurred": false,
+      "timeout": false,
+      "latency_ms": 21000,
+      "estimated_cost_usd": 0.01,
+      "sam_artifact_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "prediction": {
+        "present_labels": ["pallet", "floor", "slope"],
+        "pallet_instance_count": 1,
+        "pallet_hole_errors": 0,
+        "pallet_merge_errors": 0,
+        "vehicle_robot_conflicts": 0
+      }
+    },
+    {
+      "arm": "hybrid",
+      "sample_id": "synthetic-1",
+      "status": "passed",
+      "external_called": true,
+      "fallback_occurred": false,
+      "timeout": false,
+      "latency_ms": 21200,
+      "estimated_cost_usd": 0.01,
+      "sam_artifact_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "candidate_only": true,
+      "human_truth": false,
+      "approved_for_training": false,
+      "prediction": {
+        "present_labels": ["pallet", "floor", "slope"],
+        "pallet_instance_count": 1,
+        "pallet_hole_errors": 0,
+        "pallet_merge_errors": 0,
+        "vehicle_robot_conflicts": 0
+      }
+    }
+  ]
+}

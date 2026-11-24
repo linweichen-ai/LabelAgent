@@ -37,6 +37,9 @@ function rememberedViewedFrame(selectedTopic=topic,sourcePath=loadedDataPath){co
 function rememberViewedFrame(){if(restoringFrameNavigation)return;const scope=viewedFrameScope(),count=Number(topics?.[topic]?.count||0);if(!scope||!Number.isInteger(frame)||frame<0||frame>=count)return;const all=readViewedFrames();all[scope]={frame,recorded_at:new Date().toISOString(),browser_session_only:true};try{sessionStorage.setItem(viewedFrameStorageKey,JSON.stringify(all))}catch{}}
 function focusPointPromptCanvas(){requestAnimationFrame(()=>{const status=$('pointPromptCanvasStatus'),stage=$('stage');stage?.scrollIntoView({behavior:'smooth',block:'center'});status?.focus({preventScroll:true})})}
 function toast(message){$('toast').textContent=message;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',3500)}
+async function downloadNewClassObservations(button){if(button?.disabled)return;if(button)button.disabled=true;try{const response=await fetch('/api/new_class_observations',{cache:'no-store'}),data=await response.json();if(!response.ok)throw Error(data.error||'无法导出新类别观察');if(!data?.summary?.observation_count)throw Error('当前数据和图像源还没有可导出的疑似新类记录');const blob=new Blob([JSON.stringify(data,null,2)+'\n'],{type:'application/json'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='labelagent-new-class-observations.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast(`已导出 ${data.summary.observation_count} 帧疑似新类观察`)}catch(error){toast(error.message)}finally{if(button)button.disabled=false}}
+window.downloadNewClassObservations=downloadNewClassObservations;
+$('exportNewClassObservations').onclick=event=>downloadNewClassObservations(event.currentTarget);
 window.labelAgentToast=toast;
 window.workspaceMode='manual';let manualDrafts={},autoDrafts={};
 const workbenchHeights={},workbenchSplitter=$('workbenchSplitter');

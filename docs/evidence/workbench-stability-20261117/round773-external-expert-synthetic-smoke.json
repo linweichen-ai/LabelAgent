@@ -1,0 +1,23 @@
+{
+  "schema_version": "labelagent.external-vlm-synthetic-smoke-evidence.v1",
+  "provider": "openai_chat",
+  "model": "openai/gpt-6-astra",
+  "endpoint_host": "vibeg.seer-robotics.cn",
+  "credential_present": true,
+  "credential_recorded_in_evidence": false,
+  "connection_tested": true,
+  "status": "passed",
+  "synthetic_image_sha256": "0a309a256896a8dbcd31c65624d62c9e522df38b171652d8b22066ab26cd6dd0",
+  "synthetic_image_bytes": 10335,
+  "latency_ms": 35608.801,
+  "response_sha256": "31344e20570663a00501bf951bbb272d7b277c3b95131fb715b552e1c7d0390d",
+  "external_upload_performed": true,
+  "uploaded_content": "generated_synthetic_image_only",
+  "factory_data_uploaded": false,
+  "test24_used": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "protocol_tests_passed": 10,
+  "formal_service_status_after_test": "idle"
+}

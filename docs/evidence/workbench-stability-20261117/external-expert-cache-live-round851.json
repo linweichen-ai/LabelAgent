@@ -1,0 +1,56 @@
+{
+  "schema_version": "labelagent.external-vlm-cache-live-smoke.v2",
+  "round": 851,
+  "date": "2026-11-25",
+  "provider": "openai_chat",
+  "model": "openai/gpt-6-astra",
+  "synthetic_image_sha256": "a9335145e1cff839f93aa7321ed6a14f6bd847ca1bbf0bd8944d4044e1e7b162",
+  "attempts": [
+    {
+      "latency_ms": 7880.064,
+      "external_upload_performed": true,
+      "uploaded_content": "generated_synthetic_image_only",
+      "response_sha256": "31344e20570663a00501bf951bbb272d7b277c3b95131fb715b552e1c7d0390d",
+      "route": "external_expert",
+      "cache_hit": false,
+      "network_dispatched": true,
+      "retry_count": 0,
+      "usage": {
+        "prompt_tokens": 149,
+        "completion_tokens": 16,
+        "total_tokens": 165
+      }
+    },
+    {
+      "latency_ms": 0.364,
+      "external_upload_performed": false,
+      "uploaded_content": "none_cache_reuse",
+      "response_sha256": "31344e20570663a00501bf951bbb272d7b277c3b95131fb715b552e1c7d0390d",
+      "route": "external_expert_cache",
+      "cache_hit": true,
+      "network_dispatched": false,
+      "retry_count": 0,
+      "usage": {
+        "prompt_tokens": 149,
+        "completion_tokens": 16,
+        "total_tokens": 165
+      }
+    }
+  ],
+  "network_dispatch_count": 1,
+  "cache_hit_count": 1,
+  "factory_data_uploaded": false,
+  "estimated_cost_usd": null,
+  "tests": {
+    "targeted_passed": 39,
+    "full_passed": 2061,
+    "full_skipped": 1,
+    "full_subtests_passed": 294,
+    "failed": 0
+  },
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "test24_used": false,
+  "production_deployed": false
+}

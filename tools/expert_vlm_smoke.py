@@ -123,10 +123,16 @@ def run_smoke(*, provider, url, model, key_env, execute=False,
     latency_ms = round((time.perf_counter() - started) * 1000, 3)
     if result != {"status": "synthetic_image_received"}:
         raise ValueError("external expert returned an unexpected smoke response")
+    # A repeated identical smoke may be served from the bounded in-process
+    # expert cache.  In that case the function was exercised successfully but
+    # no image bytes crossed the network during this attempt.  Older receipts
+    # incorrectly reported every successful cache read as another upload.
+    network_dispatched = metadata.get("expert_network_dispatched") is not False
     receipt.update(
         connection_tested=True,
-        external_upload_performed=True,
-        uploaded_content="generated_synthetic_image_only",
+        external_upload_performed=network_dispatched,
+        uploaded_content=("generated_synthetic_image_only" if network_dispatched
+                          else "none_cache_reuse"),
         latency_ms=latency_ms,
         response_sha256=hashlib.sha256(
             json.dumps(result, sort_keys=True, separators=(",", ":")).encode()

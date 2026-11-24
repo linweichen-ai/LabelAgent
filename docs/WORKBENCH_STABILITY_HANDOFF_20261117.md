@@ -4613,3 +4613,10 @@ Round824审计出的11张斜坡分歧帧已经接入新的离线复核工作区�
 - 使用当前配置的 `openai/gpt-6-astra` 完成 1 次真实联网合成图调用，状态 `passed`，延迟 4,720.7 ms，Token 为 149 输入、16 输出、165 总计，重试 0、缓存未命中。
 - 上传内容仅为程序生成的 320×240 合成图，工厂数据、人工真值和 `test24` 均未外发；正式工作台外部专家路由保持关闭。
 - 接口未返回可核验费用字段，因此费用记录为未知，不虚构金额。详见 `docs/EXTERNAL_EXPERT_SYNTHETIC_RETEST_ROUND850_20261125.md` 和 `docs/evidence/workbench-stability-20261117/external-expert-synthetic-retest-round850.json`。
+
+# Round 851：外部专家真实缓存与上传回执修正（2026-11-25）
+
+- 修复合成图冒烟工具把缓存命中误报为再次外部上传的问题；缓存读取现在明确记录 `external_upload_performed=false` 和 `uploaded_content=none_cache_reuse`。
+- 相同合成图、提示词和 Astra 模型连续请求两次：第一次真实联网 7,880.064 ms，第二次缓存读取 0.364 ms；网络发送 1 次、缓存命中 1 次，响应哈希一致。
+- 真实网络调用用量为 149 输入、16 输出、165 总 Token，重试 0；工厂数据、人工真值和 `test24` 外发均为 0，正式外部专家路由保持关闭。
+- 定向测试 39/39、全量测试 `2061 passed, 1 skipped, 294 subtests passed`。详见 `docs/EXTERNAL_EXPERT_CACHE_LIVE_ROUND851_20261125.md` 和 `docs/evidence/workbench-stability-20261117/external-expert-cache-live-round851.json`。

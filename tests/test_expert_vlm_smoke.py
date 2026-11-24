@@ -66,6 +66,26 @@ class ExpertVlmSmokeTests(unittest.TestCase):
         self.assertEqual(observed[0][2], synthetic_factory_image())
         self.assertNotIn("secret-value", json.dumps(receipt))
 
+    def test_cached_success_does_not_claim_a_second_external_upload(self):
+        def cached(config, instruction, image, response_schema, metadata_out):
+            metadata_out.update({
+                "model_route": "external_expert_cache",
+                "expert_cache_hit": True,
+                "expert_network_dispatched": False,
+            })
+            return {"status": "synthetic_image_received"}
+
+        receipt = run_smoke(
+            provider="openai_chat", url="https://api.example/v1",
+            model="vision-model", key_env="LABELAGENT_TEST_KEY",
+            execute=True, acknowledge_synthetic_upload=True,
+            environ={"LABELAGENT_TEST_KEY": "secret-value"}, chat_fn=cached)
+        self.assertTrue(receipt["connection_tested"])
+        self.assertFalse(receipt["external_upload_performed"])
+        self.assertEqual(receipt["uploaded_content"], "none_cache_reuse")
+        self.assertTrue(receipt["expert_metadata"]["expert_cache_hit"])
+        self.assertNotIn("secret-value", json.dumps(receipt))
+
     def test_historical_ui_alias_is_canonicalized_before_dispatch(self):
         observed = []
         receipt = run_smoke(

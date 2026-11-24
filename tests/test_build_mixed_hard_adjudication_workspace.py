@@ -1,4 +1,9 @@
 import json
+import html
+import re
+import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -9,9 +14,23 @@ from tools.build_mixed_hard_adjudication_workspace import (
     LABELS, SUBMISSION_SCHEMA, build_workspace, sha256, validate_packet,
     validate_submission,
 )
+from tools.audit_second_assistant_slope_triage import _sha256
 
 
 class MixedHardAdjudicationWorkspaceTest(unittest.TestCase):
+    def assert_page_javascript_compiles(self, page):
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("node is unavailable")
+        scripts = re.findall(r"<script(?: [^>]*)?>(.*?)</script>", page, re.S)
+        self.assertGreaterEqual(len(scripts), 2)
+        result = subprocess.run(
+            [node, "-e", "new Function(require('fs').readFileSync(0,'utf8'))"],
+            input=html.unescape(scripts[-1]), capture_output=True, text=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def packet(self, root):
         root = Path(root)
         (root / "raw").mkdir(parents=True)
@@ -147,11 +166,100 @@ class MixedHardAdjudicationWorkspaceTest(unittest.TestCase):
             self.assertIn("hintText(item.assistant_hint)", page)
             self.assertIn("$('assistantPanel').open=false", page)
             self.assertNotIn("candidate_decision:hint", page)
+            self.assert_page_javascript_compiles(page)
             payload = json.loads(suggestions.read_text(encoding="utf-8"))
             payload["rows"][0]["copied_image_sha256"] = "0" * 64
             suggestions.write_text(json.dumps(payload), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "binding differs"):
                 build_workspace(packet, Path(directory) / "drift", suggestions)
+
+    def test_priority_triage_reorders_review_without_autofilling_answers(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            packet = self.packet(root / "packet")
+            manifest, digest = validate_packet(packet)
+            suggestion = {
+                "assessments": {label: "absent" for label in LABELS},
+                "overall_confidence": 0.8,
+                "pallet_instance_count": 0,
+                "pallet_quality": "no_pallet",
+                "slope_geometry": "no_visible_slope",
+                "class_conflicts": [], "difficulty_flags": [],
+                "unknown_candidates": [], "review_note": "fixture",
+            }
+            suggestions = root / "suggestions.json"
+            suggestions.write_text(json.dumps({
+                "schema_version": "labelagent.local-qwen-mixed-hard-suggestions.v1",
+                "manifest_sha256": digest, "status": "completed",
+                "samples_passed": len(manifest["rows"]), "samples_failed": 0,
+                "candidate_only": True, "human_truth": False,
+                "approved_for_training": False, "test24_used": False,
+                "rows": [{
+                    "sample_id": row["sample_id"],
+                    "copied_image_sha256": sha256(packet / row["raw_image"]),
+                    "suggestion": suggestion, "candidate_only": True,
+                    "human_truth": False, "approved_for_training": False,
+                    "test24_used": False,
+                } for row in manifest["rows"]],
+            }), encoding="utf-8")
+            selected = [(manifest["rows"][7], "low"),
+                        (manifest["rows"][9], "high"),
+                        (manifest["rows"][8], "medium")]
+            triage = root / "triage.json"
+            triage.write_text(json.dumps({
+                "schema_version": "labelagent.local-second-assistant-slope-triage.v1",
+                "status": "assistant_review_complete_human_confirmation_pending",
+                "review_manifest_sha256": digest,
+                "local_qwen_suggestions_sha256": _sha256(suggestions),
+                "reviewed_sample_count": len(manifest["rows"]),
+                "priority_disagreement_count": len(selected),
+                "rows": [{
+                    "sample_id": row["sample_id"],
+                    "source_image_sha256": row["source_image_sha256"],
+                    "local_qwen_slope": "absent",
+                    "assistant_slope_candidate": "present",
+                    "assistant_confidence": confidence,
+                    "difficulty_flags": ["edge"],
+                    "rationale": "fixture disagreement",
+                } for row, confidence in selected],
+                "candidate_only": True, "human_truth": False,
+                "approved_for_training": False, "training_authorized": False,
+                "automatic_approval": False, "test24_used": False,
+                "external_api_calls": 0, "factory_data_uploaded": False,
+                "production_deployed": False, "human_review_required": True,
+            }), encoding="utf-8")
+            output = root / "workspace"
+            receipt = build_workspace(packet, output, suggestions, triage)
+            page = (output / "reviewer.html").read_text(encoding="utf-8")
+            decoded = page.replace("&quot;", '"')
+            positions = [decoded.index(f'"sample_id": "sample-{index}"')
+                         for index in (9, 8, 7, 0)]
+            self.assertEqual(positions, sorted(positions))
+            self.assertEqual(receipt["priority_review_count"], 3)
+            self.assertEqual(receipt["priority_triage_sha256"], _sha256(triage))
+            self.assertIn("优先复核", page)
+            self.assertIn("priority_review", page)
+            self.assertNotIn("candidate_decision:priority", page)
+            self.assertNotIn("slope_presence:priority", page)
+
+    def test_priority_triage_requires_bound_assistant_suggestions(self):
+        with tempfile.TemporaryDirectory() as directory:
+            packet = self.packet(Path(directory) / "packet")
+            triage = Path(directory) / "triage.json"
+            triage.write_text("{}", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "requires assistant suggestions"):
+                build_workspace(packet, Path(directory) / "workspace", None, triage)
+
+    def test_script_entrypoint_can_import_priority_auditor(self):
+        script = (Path(__file__).resolve().parents[1] / "tools" /
+                  "build_mixed_hard_adjudication_workspace.py")
+        result = subprocess.run(
+            [sys.executable, str(script), "--help"],
+            cwd=Path(tempfile.gettempdir()), capture_output=True, text=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("--priority-triage", result.stdout)
 
     def test_validates_complete_bound_submission(self):
         with tempfile.TemporaryDirectory() as directory:

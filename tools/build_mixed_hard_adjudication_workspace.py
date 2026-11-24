@@ -5,6 +5,12 @@ import html
 import json
 import shutil
 from pathlib import Path
+import sys
+
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+if str(REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT))
 
 
 MANIFEST_SCHEMA = "labelagent.mixed-hard-review-pack.v1"
@@ -218,25 +224,57 @@ def load_assistant_hints(path, manifest, manifest_sha256, packet_dir):
     return hints, sha256(path)
 
 
-def write_html(manifest, manifest_sha256, destination, assistant_hints=None):
+def load_priority_triage(path, packet_dir, assistant_suggestions):
+    """Validate a second-assistant queue and return neutral review priorities."""
+    if path is None:
+        return {}, None
+    if assistant_suggestions is None:
+        raise ValueError("priority triage requires assistant suggestions")
+    # Local import avoids a module cycle: the audit tool reuses validate_packet.
+    from tools.audit_second_assistant_slope_triage import (
+        audit_second_assistant_triage,
+    )
+
+    audit = audit_second_assistant_triage(
+        packet_dir, assistant_suggestions, path)
+    payload = read_json(path)
+    priorities = {
+        row["sample_id"]: row["assistant_confidence"]
+        for row in payload["rows"]
+    }
+    if len(priorities) != audit["priority_disagreement_count"]:
+        raise ValueError("priority triage count differs after audit")
+    return priorities, audit["assistant_triage_sha256"]
+
+
+def write_html(manifest, manifest_sha256, destination, assistant_hints=None,
+               review_priorities=None):
     assistant_hints = assistant_hints or {}
+    review_priorities = review_priorities or {}
+    confidence_rank = {"high": 0, "medium": 1, "low": 2}
+    rows = list(enumerate(manifest["rows"]))
+    rows.sort(key=lambda pair: (
+        confidence_rank.get(review_priorities.get(pair[1]["sample_id"]), 3),
+        pair[0],
+    ))
     items = [{
         "sample_id": row["sample_id"], "cohort": row["cohort"],
         "source_image_sha256": row["source_image_sha256"],
         "review_image": row["review_image"], "raw_image": row["raw_image"],
         "review_note": row.get("review_note") or "",
         "assistant_hint": assistant_hints.get(row["sample_id"]),
-    } for row in manifest["rows"]]
+        "priority_review": review_priorities.get(row["sample_id"]),
+    } for _, row in rows]
     payload = html.escape(json.dumps(items, ensure_ascii=False))
     destination.write_text(f'''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
 <title>LabelAgent 困难帧受控复核</title><style>
 body{{font:16px system-ui;margin:0;background:#10151b;color:#eef3f8}}header,main{{max-width:1180px;margin:auto;padding:18px}}
 header{{position:sticky;top:0;background:#17202a;border-bottom:1px solid #39495a;z-index:2}}button,select,input,textarea{{font:inherit}}
 .row{{display:grid;grid-template-columns:1fr 1fr;gap:18px}}img{{width:100%;border-radius:10px;background:#000;cursor:zoom-in}}figure{{margin:0}}figcaption{{margin:6px 0 14px;color:#aebdca}}.image-grid{{display:grid;grid-template-columns:1fr;gap:12px}}.image-grid.both{{grid-template-columns:1fr 1fr}}.image-grid .hidden{{display:none}}
-.panel{{background:#19232d;padding:16px;border-radius:12px}}label{{display:block;margin:10px 0}}select,textarea,input{{width:100%;box-sizing:border-box;padding:8px;background:#0f171f;color:#fff;border:1px solid #52677b;border-radius:6px}}details{{margin:12px 0;padding:10px;background:#111a22;border:1px solid #52677b;border-radius:8px}}summary{{cursor:pointer;color:#8ce2ba}}pre{{white-space:pre-wrap;word-break:break-word;color:#d8e4ed}}
+.panel{{background:#19232d;padding:16px;border-radius:12px}}label{{display:block;margin:10px 0}}select,textarea,input{{width:100%;box-sizing:border-box;padding:8px;background:#0f171f;color:#fff;border:1px solid #52677b;border-radius:6px}}details{{margin:12px 0;padding:10px;background:#111a22;border:1px solid #52677b;border-radius:8px}}summary{{cursor:pointer;color:#8ce2ba}}pre{{white-space:pre-wrap;word-break:break-word;color:#d8e4ed}}#priorityBadge{{display:none;margin-left:8px;padding:3px 8px;border-radius:999px;background:#654b12;color:#ffe39a;font-size:14px}}#priorityBadge.visible{{display:inline-block}}
 .flags label{{display:inline-block;margin-right:14px}}.flags input{{width:auto}}button{{padding:9px 15px;margin:4px 4px 4px 0}}.warn{{color:#ffd27a}}#presence{{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}}.actions{{position:sticky;bottom:0;padding:12px 0;background:#19232df2;border-top:1px solid #52677b}}#completion{{font-weight:700;color:#8ce2ba}}#zoom{{position:fixed;inset:0;background:#000d;z-index:9;display:none;align-items:center;justify-content:center;padding:24px}}#zoom.open{{display:flex}}#zoom img{{max-width:96vw;max-height:94vh;width:auto;cursor:zoom-out}}@media(max-width:850px){{.row{{grid-template-columns:1fr}}#presence{{grid-template-columns:1fr}}.image-grid.both{{grid-template-columns:1fr}}}}
 </style></head><body><header><b>困难帧受控复核</b>　<span id="counter"></span>　<span id="completion"></span><p class="warn">复核记录不是像素真值，不自动授权训练。选择后会立即保存到当前浏览器；J/K 可前后翻页。</p></header>
-<main><div class="row"><div class="panel"><h2 id="title"></h2><p id="meta"></p><div><button id="showReview">候选叠加 V</button><button id="showRaw">原图 R</button><button id="showBoth">左右对比 B</button></div><div id="imageGrid" class="image-grid"><figure id="reviewFigure"><img id="reviewImage"><figcaption>候选叠加图</figcaption></figure><figure id="rawFigure" class="hidden"><img id="rawImage"><figcaption>未经叠加的原图</figcaption></figure></div></div>
+<main><div class="row"><div class="panel"><h2 id="title"></h2><p id="meta"></p><span id="priorityBadge"></span><div><button id="showReview">候选叠加 V</button><button id="showRaw">原图 R</button><button id="showBoth">左右对比 B</button></div><div id="imageGrid" class="image-grid"><figure id="reviewFigure"><img id="reviewImage"><figcaption>候选叠加图</figcaption></figure><figure id="rawFigure" class="hidden"><img id="rawImage"><figcaption>未经叠加的原图</figcaption></figure></div></div>
 <div class="panel"><label>复核人声明 ID<input id="reviewer"></label>
 <label>候选结论<select id="candidate"><option value="">请选择</option><option>accept_candidate</option><option>correct_candidate</option><option>reject_candidate</option><option>uncertain</option></select></label>
 <label>斜坡存在性<select id="slope"><option value="">请选择</option><option>present</option><option>absent</option><option>not_applicable</option><option>uncertain</option></select></label>
@@ -255,8 +293,8 @@ function rowComplete(row){{return !!(row&&row.candidate_decision&&row.slope_pres
 function updateProgress(){{const completed=items.filter(item=>rowComplete(state.rows[item.sample_id])).length;$('completion').textContent=`已完整填写 ${{completed}} / ${{items.length}}`;const current=state.rows[items[state.index].sample_id];$('counter').textContent=`${{state.index+1}} / ${{items.length}}${{rowComplete(current)?' · 本帧已完整':''}}`}}
 function save(){{const item=items[state.index];state.reviewer=$('reviewer').value.trim();state.rows[item.sample_id]={{sample_id:item.sample_id,source_image_sha256:item.source_image_sha256,candidate_decision:$('candidate').value,slope_presence:$('slope').value,class_conflict:$('conflict').value,pallet_quality:$('pallet').value,class_presence:presenceValues(),pallet_instance_count:Number($('palletCount').value),difficulty_flags:[...document.querySelectorAll('.flags input:checked')].map(x=>x.value),note:$('note').value}};localStorage.setItem(key,JSON.stringify(state));updateProgress()}}
 function setImageMode(mode){{state.imageMode=mode;const both=mode==='both',raw=mode==='raw';$('imageGrid').classList.toggle('both',both);$('reviewFigure').classList.toggle('hidden',raw);$('rawFigure').classList.toggle('hidden',!raw&&!both);localStorage.setItem(key,JSON.stringify(state))}}
-function hintText(hint){{if(!hint)return '本复核包没有可用的本地机器建议。';const present=labels.filter(x=>hint.assessments[x]==='present'),uncertain=labels.filter(x=>hint.assessments[x]==='uncertain');return [`存在：${{present.join('、')||'无'}}`,`不确定：${{uncertain.join('、')||'无'}}`,`总体置信度：${{hint.overall_confidence}}`,`斜坡形态：${{hint.slope_geometry}}`,`托盘实例：${{hint.pallet_instance_count}}；质量：${{hint.pallet_quality}}`,`类别冲突：${{(hint.class_conflicts||[]).join('、')||'无'}}`,`困难因素：${{(hint.difficulty_flags||[]).join('、')||'无'}}`,`未知候选：${{(hint.unknown_candidates||[]).join('、')||'无'}}`,`机器备注：${{hint.review_note||'无'}}`].join('\n')}}
-function render(){{state.index=Math.max(0,Math.min(items.length-1,Number(state.index)||0));const item=items[state.index],row=state.rows[item.sample_id]||{{}};$('title').textContent=item.sample_id;$('meta').textContent=item.cohort+' · '+item.review_note;$('reviewImage').src=item.review_image;$('rawImage').src=item.raw_image;$('assistantHint').textContent=hintText(item.assistant_hint);$('assistantPanel').open=false;$('reviewer').value=state.reviewer||'';const values={{candidate:row.candidate_decision,slope:row.slope_presence,conflict:row.class_conflict,pallet:row.pallet_quality}};selects.forEach(x=>$(x).value=values[x]||'');labels.forEach((label,index)=>$('presence-'+index).value=(row.class_presence||{{}})[label]||'');$('palletCount').value=Number.isInteger(row.pallet_instance_count)?row.pallet_instance_count:0;document.querySelectorAll('.flags input').forEach(x=>x.checked=(row.difficulty_flags||[]).includes(x.value));$('note').value=row.note||'';setImageMode(state.imageMode||'review');updateProgress()}}
+function hintText(hint){{if(!hint)return '本复核包没有可用的本地机器建议。';const present=labels.filter(x=>hint.assessments[x]==='present'),uncertain=labels.filter(x=>hint.assessments[x]==='uncertain');return [`存在：${{present.join('、')||'无'}}`,`不确定：${{uncertain.join('、')||'无'}}`,`总体置信度：${{hint.overall_confidence}}`,`斜坡形态：${{hint.slope_geometry}}`,`托盘实例：${{hint.pallet_instance_count}}；质量：${{hint.pallet_quality}}`,`类别冲突：${{(hint.class_conflicts||[]).join('、')||'无'}}`,`困难因素：${{(hint.difficulty_flags||[]).join('、')||'无'}}`,`未知候选：${{(hint.unknown_candidates||[]).join('、')||'无'}}`,`机器备注：${{hint.review_note||'无'}}`].join('\\n')}}
+function render(){{state.index=Math.max(0,Math.min(items.length-1,Number(state.index)||0));const item=items[state.index],row=state.rows[item.sample_id]||{{}};$('title').textContent=item.sample_id;$('meta').textContent=item.cohort+' · '+item.review_note;const priority=item.priority_review;$('priorityBadge').textContent=priority?`优先复核 · ${{{{high:'高',medium:'中',low:'低'}}[priority]}}优先级`:'';$('priorityBadge').classList.toggle('visible',!!priority);$('reviewImage').src=item.review_image;$('rawImage').src=item.raw_image;$('assistantHint').textContent=hintText(item.assistant_hint);$('assistantPanel').open=false;$('reviewer').value=state.reviewer||'';const values={{candidate:row.candidate_decision,slope:row.slope_presence,conflict:row.class_conflict,pallet:row.pallet_quality}};selects.forEach(x=>$(x).value=values[x]||'');labels.forEach((label,index)=>$('presence-'+index).value=(row.class_presence||{{}})[label]||'');$('palletCount').value=Number.isInteger(row.pallet_instance_count)?row.pallet_instance_count:0;document.querySelectorAll('.flags input').forEach(x=>x.checked=(row.difficulty_flags||[]).includes(x.value));$('note').value=row.note||'';setImageMode(state.imageMode||'review');updateProgress()}}
 function navigate(delta){{save();state.index=Math.max(0,Math.min(items.length-1,state.index+delta));render();window.scrollTo({{top:0,behavior:'smooth'}})}}
 $('prev').onclick=()=>navigate(-1);$('next').onclick=()=>navigate(1);
 $('showReview').onclick=()=>setImageMode('review');$('showRaw').onclick=()=>setImageMode('raw');$('showBoth').onclick=()=>setImageMode('both');
@@ -295,10 +333,13 @@ def copy_review_assets(manifest, packet_dir, output_dir):
     return copied
 
 
-def build_workspace(packet_dir, output_dir, assistant_suggestions=None):
+def build_workspace(packet_dir, output_dir, assistant_suggestions=None,
+                    priority_triage=None):
     manifest, digest = validate_packet(packet_dir)
     assistant_hints, assistant_sha = load_assistant_hints(
         assistant_suggestions, manifest, digest, packet_dir)
+    review_priorities, priority_sha = load_priority_triage(
+        priority_triage, packet_dir, assistant_suggestions)
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
     copied_assets = copy_review_assets(manifest, packet_dir, output)
@@ -306,7 +347,8 @@ def build_workspace(packet_dir, output_dir, assistant_suggestions=None):
     template_path = output / "adjudication-template.json"
     template_path.write_text(json.dumps(template, ensure_ascii=False, indent=2) + "\n",
                              encoding="utf-8")
-    write_html(manifest, digest, output / "reviewer.html", assistant_hints)
+    write_html(manifest, digest, output / "reviewer.html", assistant_hints,
+               review_priorities)
     files = {name: sha256(output / name) for name in
              ("adjudication-template.json", "reviewer.html")}
     files.update(copied_assets)
@@ -316,6 +358,8 @@ def build_workspace(packet_dir, output_dir, assistant_suggestions=None):
                "copied_image_count": len(copied_assets),
                "assistant_hint_count": len(assistant_hints),
                "assistant_suggestions_sha256": assistant_sha,
+               "priority_review_count": len(review_priorities),
+               "priority_triage_sha256": priority_sha,
                "candidate_only": True, "human_truth": False,
                "approved_for_training": False, "automatic_approval": False}
     (output / "receipt.json").write_text(
@@ -329,6 +373,7 @@ def main():
     parser.add_argument("--output")
     parser.add_argument("--validate-submission")
     parser.add_argument("--assistant-suggestions")
+    parser.add_argument("--priority-triage")
     args = parser.parse_args()
     manifest, digest = validate_packet(args.packet)
     if args.validate_submission:
@@ -338,7 +383,8 @@ def main():
         if not args.output:
             parser.error("--output is required when building a workspace")
         print(json.dumps(build_workspace(
-            args.packet, args.output, args.assistant_suggestions), ensure_ascii=False))
+            args.packet, args.output, args.assistant_suggestions,
+            args.priority_triage), ensure_ascii=False))
 
 
 if __name__ == "__main__":

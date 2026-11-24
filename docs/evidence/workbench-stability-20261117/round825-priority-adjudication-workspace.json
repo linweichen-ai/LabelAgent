@@ -1,0 +1,50 @@
+{
+  "schema_version": "labelagent.priority-adjudication-workspace.v1",
+  "round": 825,
+  "date": "2026-11-24",
+  "workspace": {
+    "path": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\artifacts\\round825-priority-adjudication-workspace-v2-20261124",
+    "reviewed_sample_count": 34,
+    "priority_review_count": 11,
+    "priority_confidence_counts": {
+      "high": 3,
+      "medium": 6,
+      "low": 2
+    },
+    "assistant_hint_count": 34,
+    "copied_image_count": 68,
+    "file_count": 71,
+    "priority_prefix_count": 11,
+    "priority_after_prefix_count": 0,
+    "priority_triage_sha256": "2c92ad1020b327578051b140e69f4f4990fab347940c11711482521f20783325",
+    "review_manifest_sha256": "4cd7eadb244cadad83208b4f2d9f304da457830b839070dd796edf77f53dad50",
+    "reviewer_html_sha256": "12fc8944cff96c6b5039e252e3ec67999cf8b9547aa2d7f2b138b22517592b31",
+    "javascript_compile_passed": true
+  },
+  "tests": {
+    "targeted_python_passed": 22,
+    "full_python_passed": 2009,
+    "full_python_skipped": 1,
+    "full_python_subtests_passed": 294,
+    "web_passed": 199,
+    "web_failed": 0
+  },
+  "failures_retained": [
+    "direct script import failed before repository root was placed on sys.path",
+    "first full run had 18 environment failures from GBK decoding and incomplete Git config",
+    "first web run had 1 environment failure because Node selected system Python without Pillow",
+    "first generated HTML failed independent JavaScript compilation because a newline was not escaped"
+  ],
+  "boundaries": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "training_authorized": false,
+    "test24_used": false,
+    "external_api_calls": 0,
+    "factory_data_uploaded": false,
+    "training_started": false,
+    "production_deployed": false,
+    "autofill_enabled": false
+  }
+}

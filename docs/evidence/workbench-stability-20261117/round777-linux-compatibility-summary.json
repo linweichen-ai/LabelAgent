@@ -1,0 +1,35 @@
+{
+  "schema_version": "labelagent.linux-compatibility-summary.v1",
+  "round": 777,
+  "date": "2026-11-24",
+  "commit": "43c01f953fc335e3189573c61006b9d9e332f609",
+  "platform": "WSL2 Ubuntu",
+  "python": "3.12.16",
+  "clone": "/home/seer/labelagent-linux-acceptance-v2-1795501700",
+  "tracked_files": 2797,
+  "web_only_install": true,
+  "sam3_health_source": "local mock health service",
+  "checks": {
+    "setup_ready": true,
+    "start_ready": true,
+    "status_identity_match": true,
+    "root_http_status": 200,
+    "status_http_status": 200,
+    "runtime_status": "idle",
+    "stop_succeeded": true,
+    "port_closed_after_stop": true,
+    "final_clone_clean": true
+  },
+  "not_verified": [
+    "real SAM3 weights on Linux",
+    "CUDA segmentation inference on Linux",
+    "segmentation quality",
+    "external ChatGPT API",
+    "production deployment"
+  ],
+  "data_boundaries": {
+    "training_data_modified": false,
+    "human_truth_modified": false,
+    "test24_touched": false
+  }
+}

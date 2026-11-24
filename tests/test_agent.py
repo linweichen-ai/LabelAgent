@@ -5130,7 +5130,7 @@ class ServerTests(unittest.TestCase):
                               return_value=io.BytesIO(json.dumps(payload).encode())) as opened:
                 response = server.app.test_client().post("/api/segment_points", json={
                     **active_request_scope(), "frame": 1,
-                    "points": [{"x": 1, "y": 1, "label": 1}]})
+                    "points": [], "box": [1, 1, 8, 8]})
             self.assertEqual(response.status_code, 200, response.json)
             self.assertGreaterEqual(response.json["inference_elapsed_seconds"], 0)
             self.assertEqual(response.json["path"], str(FakeVideo.path))
@@ -5139,6 +5139,25 @@ class ServerTests(unittest.TestCase):
             self.assertEqual(response.json["file_activation_generation"],
                              server.current_file_activation_generation())
             self.assertEqual(opened.call_args.kwargs["timeout"], 180)
+            service_payload = json.loads(opened.call_args.args[0].data)
+            self.assertEqual(service_payload["points"], [])
+            self.assertEqual(service_payload["box"], [1, 1, 8, 8])
+        finally:
+            server.state = old_state
+
+    def test_point_segment_rejects_malformed_box_before_sam(self):
+        old_state = server.state
+        server.state = {"video": FakeVideo(), "topic": "camera0", "labels": ["person"],
+            "truth": {}, "reference_frames": {}, "config": {}, "candidates": {},
+            "agent_runs": {}}
+        try:
+            client = server.app.test_client()
+            with patch.object(server.urllib.request, "urlopen") as opened:
+                malformed = client.post("/api/segment_points", json={
+                    **active_request_scope(), "frame": 1, "points": [],
+                    "box": [1, 2, 3]})
+            self.assertEqual(malformed.status_code, 400, malformed.json)
+            opened.assert_not_called()
         finally:
             server.state = old_state
 

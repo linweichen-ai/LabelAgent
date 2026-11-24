@@ -128,8 +128,25 @@ def _prediction_result(masks, scores, coords, labels, previous=None):
             "parts": parts, "score": float(scores[best]), "warnings": warnings}
 
 
-def segment(image_bytes, points, prior_mask=None):
-    """Return a simplified polygon and quality score for positive/negative clicks."""
+def _normalize_box(box, width, height):
+    """Validate one XYXY box before any model work and return float values."""
+    if box is None:
+        return None
+    if not isinstance(box, (list, tuple)) or len(box) != 4:
+        raise ValueError("SAM 框选必须是 [x1, y1, x2, y2]")
+    if any(isinstance(value, bool) or not isinstance(value, (int, float))
+           or not np.isfinite(value) for value in box):
+        raise ValueError("SAM 框选坐标必须是有限数字")
+    x1, y1, x2, y2 = (float(value) for value in box)
+    if not (0 <= x1 < x2 < width and 0 <= y1 < y2 < height):
+        raise ValueError("SAM 框选超出图像范围或方向无效")
+    if x2 - x1 < 2 or y2 - y1 < 2:
+        raise ValueError("SAM 框选区域过小")
+    return [x1, y1, x2, y2]
+
+
+def segment(image_bytes, points, prior_mask=None, box=None):
+    """Return a polygon for box and/or positive/negative interactive prompts."""
     import cv2
 
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
@@ -140,8 +157,12 @@ def segment(image_bytes, points, prior_mask=None):
         if mask_image.size != image.size:
             raise ValueError("输入 mask 尺寸必须与原图一致")
         previous = np.asarray(mask_image) > 127
-    if not points or not any(point["label"] == 1 for point in points):
-        raise ValueError("至少需要一个目标内的正点")
+    if not isinstance(points, list):
+        raise ValueError("提示点必须是列表")
+    normalized_box = _normalize_box(box, width, height)
+    if normalized_box is None and (
+            not points or not any(point["label"] == 1 for point in points)):
+        raise ValueError("至少需要一个目标内的正点或一个 SAM 框选")
     if len(points) > 32:
         raise ValueError("最多支持 32 个提示点")
     coords = []
@@ -169,11 +190,20 @@ def segment(image_bytes, points, prior_mask=None):
                 dense = np.where(previous, 10.0, -10.0).astype(np.float32)
                 dense = cv2.resize(dense, (mask_width, mask_height), interpolation=cv2.INTER_LINEAR)
                 mask_prompt["mask_input"] = dense[None, :, :]
-            masks, scores, _ = model.predict_inst(state,
-                point_coords=np.asarray(coords, dtype=np.float32),
-                point_labels=np.asarray(labels, dtype=np.int32),
-                multimask_output=previous is None and len(coords) == 1, **mask_prompt)
-    return _prediction_result(masks, scores, coords, labels, previous)
+            masks, scores, _ = model.predict_inst(
+                state,
+                point_coords=(np.asarray(coords, dtype=np.float32)
+                              if coords else None),
+                point_labels=(np.asarray(labels, dtype=np.int32)
+                              if labels else None),
+                box=(np.asarray(normalized_box, dtype=np.float32)
+                     if normalized_box is not None else None),
+                multimask_output=previous is None and len(coords) <= 1,
+                **mask_prompt)
+    result = _prediction_result(masks, scores, coords, labels, previous)
+    if normalized_box is not None:
+        result["prompt_box"] = normalized_box
+    return result
 
 
 def segment_many(image_bytes, points):

@@ -2779,12 +2779,12 @@ class _PointSegmentFlight:
         self.error = None
 
 
-def _point_segment_result(image, points, service_url):
+def _point_segment_result(image, points, service_url, box=None):
     """Run one point request under the existing global and SAM safety gates."""
     if not point_segment_lock.acquire(blocking=False):
         raise RuntimeError("已有不同的点提示 SAM 请求正在计算，请稍后再试")
     payload = json.dumps({"image": base64.b64encode(image).decode("ascii"),
-                          "points": points}).encode()
+                          "points": points, "box": box}).encode()
     service_request = urllib.request.Request(service_url + "/segment_points", data=payload,
         headers={"Content-Type": "application/json"})
     started = time.monotonic()
@@ -2816,6 +2816,15 @@ def get_point_segment():
         service_url = (state["config"].get("sam3_url") or os.environ.get("SAM3_URL")
                        or "http://127.0.0.1:8766").rstrip("/")
     points = body["points"]
+    box = body.get("box")
+    if not isinstance(points, list):
+        raise ValueError("提示点必须是列表")
+    if box is not None and (not isinstance(box, list) or len(box) != 4
+                            or any(isinstance(value, bool)
+                                   or not isinstance(value, (int, float))
+                                   or not math.isfinite(value)
+                                   for value in box)):
+        raise ValueError("SAM 框选必须包含 4 个有限数字")
     request_key = _sha256_json({
         "schema_version": "labelagent.point-segment-flight.v1",
         "service_url": service_url,
@@ -2825,6 +2834,7 @@ def get_point_segment():
         "frame": index,
         "image_sha256": hashlib.sha256(image).hexdigest(),
         "points": points,
+        "box": box,
     })
     with point_segment_flights_lock:
         flight = point_segment_flights.get(request_key)
@@ -2851,7 +2861,7 @@ def get_point_segment():
         return jsonify(result)
 
     compute = run_claimed(lambda: _point_segment_result(
-        image, points, service_url))
+        image, points, service_url, box=box))
     try:
         result = compute()
         with lock:

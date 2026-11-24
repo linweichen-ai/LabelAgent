@@ -32,7 +32,8 @@ def segment_points():
         if mask is not None and not isinstance(mask, str):
             raise ValueError("mask must be a base64 PNG image")
         prior_mask = base64.b64decode(mask, validate=True) if mask is not None else None
-        return jsonify(segment(image_bytes, points, prior_mask=prior_mask))
+        return jsonify(segment(image_bytes, points, prior_mask=prior_mask,
+                               box=body.get("box")))
     except (ValueError, TypeError) as error:
         return jsonify(error=str(error)), 400
 

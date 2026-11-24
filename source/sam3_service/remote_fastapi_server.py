@@ -189,7 +189,7 @@ def segment_points(body: dict):
         mask = body.get("mask")
         prior = base64.b64decode(mask, validate=True) if isinstance(mask, str) else None
         with request_lock:
-            return segment(image, points, prior_mask=prior)
+            return segment(image, points, prior_mask=prior, box=body.get("box"))
     except (ValueError, TypeError) as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
 

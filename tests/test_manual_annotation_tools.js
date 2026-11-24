@@ -48,6 +48,15 @@ test('point signature detects coordinate, polarity, and ordering changes', () =>
   assert.notEqual(first, flipped);
 });
 
+test('SAM prompt signature also detects box changes', () => {
+  const context = geometryContext();
+  const first = vm.runInContext("promptSetSignature([{x:10,y:21,label:1}],[1,2,30,40])", context);
+  const sameRounded = vm.runInContext("promptSetSignature([{x:10.2,y:20.7,label:1}],[1.2,2.1,29.7,40.1])", context);
+  const movedBox = vm.runInContext("promptSetSignature([{x:10,y:21,label:1}],[2,2,30,40])", context);
+  assert.equal(first, sameRounded);
+  assert.notEqual(first, movedBox);
+});
+
 test('vertex editing hit tests simple rings and refuses multipart or holed geometry', () => {
   const context = geometryContext();
   const items = [{points:[[10,10],[50,10],[50,50],[10,50]]}];
@@ -87,6 +96,7 @@ test('manual toolbar exposes persistent rectangle and documented shortcuts', () 
   assert.match(html, /id="polygonButton"[^>]*（V）/);
   assert.match(html, /id="pointButton"[^>]*（P）/);
   assert.match(html, /id="negativeButton"[^>]*（N）/);
+  assert.match(html, /id="samBoxButton"[^>]*（X）/);
   assert.match(html, /id="eraseRegionButton"[^>]*（E）/);
   assert.match(html, /id="undoButton"[^>]*Ctrl\+Z/);
   assert.match(html, /id="finishButton"[^>]*Enter/);
@@ -94,6 +104,16 @@ test('manual toolbar exposes persistent rectangle and documented shortcuts', () 
   assert.match(app, /\$\('rectangleButton'\)\.onclick=\(\)=>activateShapeTool\('rectangle'\)/);
   assert.match(app, /\$\('ellipseButton'\)\.onclick=\(\)=>activateShapeTool\('ellipse'\)/);
   assert.match(app, /\$\('vertexEditButton'\)\.onclick=activateVertexEditTool/);
+});
+
+test('SAM box prompt drags an XYXY box, auto-runs, and keeps point refinement', () => {
+  assert.match(app, /function activateSamBoxTool\(\)/);
+  assert.match(app, /tool:'sam_box'/);
+  assert.match(app, /promptBox=\[Math\.round\(Math\.min\(\.\.\.xs\)\)/);
+  assert.match(app, /box:requestBox/);
+  assert.match(app, /queueMicrotask\(generatePointMask\)/);
+  assert.match(app, /if\(key==='x'\)\{\$\('samBoxButton'\)\.click\(\)/);
+  assert.match(app, /promptPoints\.some\(point=>point\.label===1\)\|\|promptBox/);
 });
 
 test('freehand lasso converts a dragged boundary into a closed segmentation polygon', () => {
@@ -122,7 +142,7 @@ test('canvas uses pointer capture and requestAnimationFrame-coalesced preview', 
 
 test('SAM accepts point edits while busy and coalesces them into latest-only rerun', () => {
   assert.match(app, /function promptChangedDuringRequest\(\)\{if\(segmentBusy\)\{pointPromptQueuedRerun=true/);
-  assert.match(app, /if\(pointSetSignature\(\)!==requestSignature\)\{pointPromptQueuedRerun=true/);
+  assert.match(app, /if\(promptSetSignature\(\)!==requestSignature\)\{pointPromptQueuedRerun=true/);
   assert.match(app, /rerun=pointPromptQueuedRerun&&latestSignature!==requestSignature/);
   assert.match(app, /pointPromptQueuedRerun=false;if\(rerun\)/);
   assert.match(app, /queueMicrotask\(generatePointMask\)/);

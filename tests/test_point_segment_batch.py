@@ -28,10 +28,18 @@ class FakeModel:
     def __init__(self):
         self.calls = []
 
-    def predict_inst(self, state, point_coords, point_labels, multimask_output):
-        self.calls.append((point_coords.copy(), point_labels.copy(), multimask_output))
+    def predict_inst(self, state, point_coords, point_labels, multimask_output,
+                     box=None):
+        coords_copy = point_coords.copy() if point_coords is not None else None
+        labels_copy = point_labels.copy() if point_labels is not None else None
+        box_copy = box.copy() if box is not None else None
+        self.calls.append((coords_copy, labels_copy, multimask_output, box_copy))
         width, height = state["size"]
-        x, y = [int(value) for value in point_coords[0]]
+        if point_coords is not None:
+            x, y = [int(value) for value in point_coords[0]]
+        else:
+            x = int((box[0] + box[2]) / 2)
+            y = int((box[1] + box[3]) / 2)
         mask = np.zeros((height, width), dtype=np.uint8)
         mask[max(0, y - 3):min(height, y + 4),
              max(0, x - 3):min(width, x + 4)] = 1
@@ -78,6 +86,48 @@ class PointSegmentBatchTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json(), payload)
         self.assertEqual(run.call_args.args[1], [{"x": 8, "y": 8}])
+
+    def test_box_only_prompt_reaches_predictor_and_can_be_refined_with_points(self):
+        model, processor = FakeModel(), FakeProcessor()
+        with mock.patch.object(
+                point_segment, "_predictor", return_value=(model, processor)):
+            box_only = point_segment.segment(
+                image_bytes(), [], box=[4, 5, 20, 18])
+            refined = point_segment.segment(
+                image_bytes(), [{"x": 8, "y": 8, "label": 1}],
+                box=[4, 5, 20, 18])
+
+        self.assertEqual(box_only["prompt_box"], [4.0, 5.0, 20.0, 18.0])
+        self.assertEqual(refined["prompt_box"], [4.0, 5.0, 20.0, 18.0])
+        self.assertIsNone(model.calls[0][0])
+        self.assertEqual(model.calls[0][3].tolist(), [4, 5, 20, 18])
+        self.assertEqual(model.calls[1][0].tolist(), [[8, 8]])
+        self.assertEqual(processor.calls, 2)
+
+    def test_box_prompt_fails_closed_before_model_work(self):
+        invalid = ([1, 2, 3], [10, 5, 4, 18], [-1, 2, 10, 12],
+                   [1, 2, float("inf"), 12], [1, 2, 2, 12])
+        for box in invalid:
+            with self.subTest(box=box), mock.patch.object(
+                    point_segment, "_predictor") as predictor:
+                with self.assertRaises(ValueError):
+                    point_segment.segment(image_bytes(), [], box=box)
+                predictor.assert_not_called()
+
+    def test_http_point_endpoint_forwards_optional_box(self):
+        payload = {"points": [[4, 5], [20, 5], [20, 18]],
+                   "holes": [], "parts": [], "score": .9,
+                   "warnings": [], "prompt_box": [4, 5, 20, 18]}
+        import base64
+
+        with mock.patch.object(server, "segment", return_value=payload) as run:
+            response = server.app.test_client().post("/segment_points", json={
+                "image": base64.b64encode(image_bytes()).decode("ascii"),
+                "points": [], "box": [4, 5, 20, 18],
+            })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), payload)
+        self.assertEqual(run.call_args.kwargs["box"], [4, 5, 20, 18])
 
     def test_prompt_groups_reuse_one_encoding_and_preserve_negative_points(self):
         model, processor = FakeModel(), FakeProcessor()

@@ -1,0 +1,34 @@
+{
+  "boundaries": {
+    "test24_evaluation_only": true,
+    "test24_used_for_training": false,
+    "machine_candidates_are_human_truth": false,
+    "production_deployed": false
+  },
+  "dataset": {
+    "sample_count": 34,
+    "human_reviewed_count": 0,
+    "approved_for_training_count": 0,
+    "candidate_only": true,
+    "human_truth": false,
+    "contains_test24": false,
+    "manifest_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "training": {
+    "status": "not_started",
+    "dataset_manifest_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "config_sha256": null,
+    "log_sha256": null,
+    "adapter_sha256": null,
+    "steps": 0,
+    "gpu": {"device_count": 0, "devices": [], "max_memory_mib": 0}
+  },
+  "baseline_eval": {},
+  "candidate_eval": {},
+  "thresholds": {"min_overall_f1_delta": 0.01, "max_slope_fp_delta": 0},
+  "rollback": {
+    "incumbent_artifact_sha256": null,
+    "restore_command": null,
+    "verified": false
+  }
+}

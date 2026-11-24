@@ -1,0 +1,44 @@
+{
+  "round": 782,
+  "date": "2026-11-24",
+  "status": "implemented_and_fail_closed_on_current_candidate_state",
+  "authoritative_parent_commit": "cf60715d025948c0cb14f33fd14d21467967534d",
+  "tool": {
+    "path": "tools/gate_posttraining_release.py",
+    "sha256": "16492dc26b148f783e8a299a15955c21c751ea97bc38e2ea83cd85920af7dbf9"
+  },
+  "test": {
+    "path": "tests/test_gate_posttraining_release.py",
+    "sha256": "8f9b393c1a3e97bf13b890bccbe46258b409cb4b1b72b779b66a8b4e7d17e2ad",
+    "targeted_passed": 17,
+    "project_passed": 1887,
+    "project_skipped": 1,
+    "project_subtests_passed": 286,
+    "python_utf8": true
+  },
+  "current_state_probe": {
+    "manifest_path": "docs/templates/posttraining_release_manifest.example.json",
+    "manifest_sha256": "1fbf54ac32ca8f061f5d55589bdd673a443c4b8859d99d8cea183986af1cc8ac",
+    "training_samples": 34,
+    "human_reviewed_samples": 0,
+    "approved_training_samples": 0,
+    "gate_status": "blocked",
+    "gate_exit_code": 2,
+    "artifact_path": "artifacts/round782-posttraining-release-gate-20261124/blocked-report.json",
+    "artifact_sha256": "4f4c12d46e34a6844f0d10f49132427645ab98b51f0a62a51ae33756ce5f8b9e"
+  },
+  "boundaries": {
+    "training_started": false,
+    "inference_started": false,
+    "external_api_calls": 0,
+    "formal_workbench_writes": 0,
+    "human_truth_writes": 0,
+    "test24_used": false,
+    "production_deployed": false,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false
+  },
+  "failure_note": "Unbounded repository collection also finds an upstream optional qualitative script that requires matplotlib. The authoritative project regression scope is tests/.",
+  "next_gate": "Complete human adjudication of the diversified 34-frame development set before preparing an isolated training manifest."
+}

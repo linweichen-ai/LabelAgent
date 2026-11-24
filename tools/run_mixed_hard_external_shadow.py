@@ -117,9 +117,11 @@ def run_shadow(*, samples, bindings, output_path, config,
             continue
         image = sample["_image_path"].read_bytes()
         started = time.perf_counter()
+        expert_metadata = {}
         try:
             result = chat_fn(config, INSTRUCTION, image,
-                             response_schema=RESPONSE_SCHEMA)
+                             response_schema=RESPONSE_SCHEMA,
+                             metadata_out=expert_metadata)
             _validate_machine_result(result)
             record = {
                 "sample_id": sample["sample_id"], "cohort": sample["cohort"],
@@ -127,6 +129,7 @@ def run_shadow(*, samples, bindings, output_path, config,
                 "status": "passed",
                 "latency_ms": round((time.perf_counter() - started) * 1000, 3),
                 "expert_result": result,
+                "expert_metadata": expert_metadata,
                 "candidate_only": True, "human_truth": False,
                 "approved_for_training": False, "test24_used": False,
             }
@@ -148,6 +151,21 @@ def _write_output(output_path, samples, records, bindings, config):
     passed = [row for row in records if row.get("status") == "passed"]
     failed = [row for row in records if row.get("status") == "failed"]
     latencies = [row["latency_ms"] for row in passed]
+    usage_rows = []
+    for row in passed:
+        usage = (row.get("expert_metadata", {}).get("external_vlm", {})
+                 .get("usage", {}))
+        if all(type(usage.get(key)) is int and usage[key] >= 0 for key in
+               ("prompt_tokens", "completion_tokens", "total_tokens")):
+            usage_rows.append(usage)
+    usage_summary = {
+        "samples_with_usage": len(usage_rows),
+        "samples_missing_usage": len(passed) - len(usage_rows),
+        "complete": len(usage_rows) == len(passed),
+        "prompt_tokens": sum(row["prompt_tokens"] for row in usage_rows),
+        "completion_tokens": sum(row["completion_tokens"] for row in usage_rows),
+        "total_tokens": sum(row["total_tokens"] for row in usage_rows),
+    }
     result = {
         "schema_version": RESULT_SCHEMA, **bindings,
         "model": config.get("llm_expert_model"),
@@ -156,6 +174,7 @@ def _write_output(output_path, samples, records, bindings, config):
         "samples_passed": len(passed), "samples_failed": len(failed),
         "latency_median_ms": (round(statistics.median(latencies), 3)
                               if latencies else None),
+        "external_usage": usage_summary,
         "rows": records, "candidate_only": True, "human_truth": False,
         "approved_for_training": False, "automatic_truth_write": False,
         "test24_used": False,

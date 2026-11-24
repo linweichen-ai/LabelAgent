@@ -2994,8 +2994,12 @@ class WorkflowTests(unittest.TestCase):
     def test_external_expert_reuses_exact_cached_result_without_second_call(self):
         workflow._reset_external_expert_runtime_state()
         self.addCleanup(workflow._reset_external_expert_runtime_state)
-        success = io.BytesIO(
-            b'{"choices":[{"finish_reason":"stop","message":{"content":"{\\"status\\":\\"done\\"}"}}]}')
+        success = io.BytesIO(json.dumps({
+            "choices": [{"finish_reason": "stop", "message": {
+                "content": '{"status":"done"}'}}],
+            "usage": {"prompt_tokens": 10, "completion_tokens": 2,
+                      "total_tokens": 12},
+        }).encode())
         config = {
             "llm_expert_enabled": True,
             "llm_expert_provider": "openai_chat",
@@ -3005,14 +3009,15 @@ class WorkflowTests(unittest.TestCase):
             "llm_expert_cache_ttl_seconds": 3600,
         }
         events = []
+        first_metadata, second_metadata = {}, {}
         with patch.dict(os.environ, {"LABELAGENT_TEST_EXPERT_KEY": "secret"}), \
              patch.object(workflow.urllib.request, "urlopen",
                           return_value=success) as opener, \
              workflow.trace_calls(events.append):
             first = workflow.chat_external_expert(
-                config, "inspect", image_bytes())
+                config, "inspect", image_bytes(), metadata_out=first_metadata)
             second = workflow.chat_external_expert(
-                config, "inspect", image_bytes())
+                config, "inspect", image_bytes(), metadata_out=second_metadata)
         self.assertEqual(first, {"status": "done"})
         self.assertEqual(second, first)
         self.assertIsNot(second, first)
@@ -3020,6 +3025,11 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(events[-1]["output"]["model_route"],
                          "external_expert_cache")
         self.assertTrue(events[-1]["output"]["expert_cache_hit"])
+        self.assertEqual(
+            first_metadata["external_vlm"]["usage"]["total_tokens"], 12)
+        self.assertEqual(
+            second_metadata["external_vlm"]["usage"]["total_tokens"], 12)
+        self.assertTrue(second_metadata["expert_cache_hit"])
         self.assertRegex(events[-1]["output"]["expert_request_key"],
                          r"^[0-9a-f]{64}$")
 

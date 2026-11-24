@@ -105,11 +105,13 @@ def run_smoke(*, provider, url, model, key_env, execute=False,
         "llm_expert_timeout_seconds": 120,
     }
     started = time.perf_counter()
+    metadata = {}
     result = chat_fn(
         config,
         "This is a generated synthetic test image. Return only the requested JSON status.",
         image,
         response_schema=RESPONSE_SCHEMA,
+        metadata_out=metadata,
     )
     latency_ms = round((time.perf_counter() - started) * 1000, 3)
     if result != {"status": "synthetic_image_received"}:
@@ -124,6 +126,8 @@ def run_smoke(*, provider, url, model, key_env, execute=False,
         ).hexdigest(),
         status="passed",
     )
+    if metadata:
+        receipt["expert_metadata"] = metadata
     return receipt
 
 

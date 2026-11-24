@@ -36,8 +36,11 @@ class ExpertVlmSmokeTests(unittest.TestCase):
 
     def test_execute_records_only_synthetic_receipt_and_never_echoes_key(self):
         observed = []
-        def respond(config, instruction, image, response_schema):
+        def respond(config, instruction, image, response_schema, metadata_out):
             observed.append((config, instruction, image, response_schema))
+            metadata_out.update({"external_vlm": {
+                "usage": {"prompt_tokens": 12, "completion_tokens": 3,
+                          "total_tokens": 15}, "usage_available": True}})
             return {"status": "synthetic_image_received"}
         receipt = run_smoke(
             provider="gemini_generate_content",
@@ -51,6 +54,9 @@ class ExpertVlmSmokeTests(unittest.TestCase):
         self.assertEqual(receipt["uploaded_content"],
                          "generated_synthetic_image_only")
         self.assertEqual(len(observed), 1)
+        self.assertEqual(
+            receipt["expert_metadata"]["external_vlm"]["usage"]["total_tokens"],
+            15)
         self.assertEqual(observed[0][2], synthetic_factory_image())
         self.assertNotIn("secret-value", json.dumps(receipt))
 

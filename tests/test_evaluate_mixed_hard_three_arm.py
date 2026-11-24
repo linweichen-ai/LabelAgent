@@ -74,10 +74,16 @@ def _fixture():
         "rows": [
             {"sample_id": "a", "status": "passed", "latency_ms": 20,
              "source_image_sha256": "a" * 64,
+             "expert_metadata": {"external_vlm": {"usage": {
+                 "prompt_tokens": 100, "completion_tokens": 10,
+                 "total_tokens": 110}}},
              "expert_result": _prediction({"pallet", "slope"}), "candidate_only": True,
              "human_truth": False, "approved_for_training": False, "test24_used": False},
             {"sample_id": "b", "status": "passed", "latency_ms": 20,
              "source_image_sha256": "b" * 64,
+             "expert_metadata": {"external_vlm": {"usage": {
+                 "prompt_tokens": 200, "completion_tokens": 20,
+                 "total_tokens": 220}}},
              "expert_result": _prediction(), "candidate_only": True,
              "human_truth": False, "approved_for_training": False, "test24_used": False},
         ],
@@ -98,7 +104,9 @@ def test_scores_three_arms_and_counts_latency_and_calls():
     result = evaluate_three_arm(
         manifest, "f" * 64, adjudication, local, external, queue,
         "e" * 64,
-        estimated_cost_per_call=0.1)
+        estimated_cost_per_call=0.1,
+        input_cost_per_million_tokens=2.0,
+        output_cost_per_million_tokens=8.0)
     assert result["arms"]["local_only"]["slope_positive_recall"] == 0
     assert result["arms"]["all_external"]["slope_positive_recall"] == 1
     assert result["arms"]["hybrid"]["slope_positive_recall"] == 1
@@ -106,7 +114,12 @@ def test_scores_three_arms_and_counts_latency_and_calls():
     assert result["arms"]["hybrid"]["external_calls"] == 1
     assert result["arms"]["all_external"]["external_calls"] == 2
     assert result["arms"]["hybrid"]["latency_mean_ms"] == 15
-    assert result["arms"]["hybrid"]["estimated_cost"] == 0.1
+    assert result["arms"]["local_only"]["estimated_cost"] == 0
+    assert result["arms"]["hybrid"]["external_usage"]["total_tokens"] == 110
+    assert result["arms"]["hybrid"]["estimated_cost"] == 0.00028
+    assert result["arms"]["hybrid"]["cost_basis"] == "token_usage"
+    assert result["arms"]["all_external"]["external_usage"]["total_tokens"] == 330
+    assert result["arms"]["all_external"]["estimated_cost"] == 0.00084
     assert result["human_truth"] is False
     assert result["deployment_gate_passed"] is False
 
@@ -175,3 +188,15 @@ def test_direct_cli_entrypoint_loads_project_modules():
          "--help"], cwd=ROOT, capture_output=True, text=True, check=False)
     assert completed.returncode == 0, completed.stderr
     assert "--hybrid-queue" in completed.stdout
+
+
+def test_rejects_partial_or_negative_cost_rates():
+    manifest, adjudication, local, external, queue = _fixture()
+    with pytest.raises(ValueError, match="provided together"):
+        evaluate_three_arm(
+            manifest, "f" * 64, adjudication, local, external, queue,
+            "e" * 64, input_cost_per_million_tokens=2.0)
+    with pytest.raises(ValueError, match="finite non-negative"):
+        evaluate_three_arm(
+            manifest, "f" * 64, adjudication, local, external, queue,
+            "e" * 64, estimated_cost_per_call=-1)

@@ -1,0 +1,57 @@
+{
+  "round": 810,
+  "date": "2026-11-24",
+  "status": "passed",
+  "live_synthetic_smoke": {
+    "provider": "openai_chat",
+    "model": "openai/gpt-6-astra",
+    "endpoint_host": "vibeg.seer-robotics.cn",
+    "synthetic_image_sha256": "0a309a256896a8dbcd31c65624d62c9e522df38b171652d8b22066ab26cd6dd0",
+    "synthetic_image_bytes": 10335,
+    "latency_ms": 12986.048,
+    "response_sha256": "31344e20570663a00501bf951bbb272d7b277c3b95131fb715b552e1c7d0390d",
+    "model_route": "external_expert",
+    "expert_cache_hit": false,
+    "expert_retry_count": 0,
+    "usage": {
+      "prompt_tokens": 23316,
+      "completion_tokens": 12,
+      "total_tokens": 23328
+    }
+  },
+  "same_round_latency_observations_ms": [
+    3249.729,
+    12986.048
+  ],
+  "implementation": {
+    "bounded_external_metadata": true,
+    "cache_metadata_preserved": true,
+    "per_frame_usage_recorded": true,
+    "batch_usage_aggregated": true,
+    "token_rate_cost_estimation": true,
+    "per_call_cost_fallback": true
+  },
+  "validation": {
+    "focused_tests_passed": 57,
+    "focused_subtests_passed": 37,
+    "focused_duration_seconds": 3.38,
+    "expanded_regression_tests_passed": 362,
+    "expanded_regression_subtests_passed": 87,
+    "expanded_regression_duration_seconds": 10.30
+  },
+  "safety": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "test24_used": false,
+    "factory_data_uploaded": false,
+    "real_images_uploaded": 0,
+    "synthetic_external_calls": 2,
+    "production_deployed": false
+  },
+  "billing": {
+    "usage_observed": true,
+    "billing_rate_available": false,
+    "actual_cost_status": "unknown_requires_gateway_billing_rate"
+  }
+}

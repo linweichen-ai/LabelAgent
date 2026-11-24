@@ -75,10 +75,16 @@ def test_authorized_fixture_runs_candidate_only_without_truth_write(tmp_path):
     queue, manifest, receipt, root, auth = _fixture(tmp_path)
     samples, bindings = load_authorized_inputs(queue, manifest, receipt, root, auth)
     calls = []
+    def respond(*args, **kwargs):
+        kwargs["metadata_out"].update({"external_vlm": {
+            "usage": {"prompt_tokens": 20, "completion_tokens": 5,
+                      "total_tokens": 25}, "usage_available": True}})
+        calls.append(args)
+        return _expert_result()
     result = run_shadow(
         samples=samples, bindings=bindings, output_path=tmp_path / "result.json",
         config={"llm_expert_model": "fixture"},
-        chat_fn=lambda *args, **kwargs: calls.append(args) or _expert_result())
+        chat_fn=respond)
     assert result["status"] == "completed"
     assert result["samples_passed"] == 1
     assert result["automatic_truth_write"] is False
@@ -86,6 +92,8 @@ def test_authorized_fixture_runs_candidate_only_without_truth_write(tmp_path):
     assert result["human_truth"] is False
     assert result["approved_for_training"] is False
     assert result["test24_used"] is False
+    assert result["rows"][0]["expert_metadata"]["external_vlm"]["usage"][
+        "total_tokens"] == 25
     assert len(calls) == 1
 
 

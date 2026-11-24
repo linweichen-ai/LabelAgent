@@ -783,7 +783,10 @@ def sam_text_multi_prefetch(image, prompts, config):
     return response | {"prefetched": True}
 
 
-def chat(config, instruction, image, extra_images=(), response_schema=None):
+def chat(config, instruction, image, extra_images=(), response_schema=None,
+         metadata_out=None):
+    if metadata_out is not None and not isinstance(metadata_out, dict):
+        raise ValueError("大模型元数据接收器必须是字典")
     record = {"id": uuid.uuid4().hex, "service": "GPT", "status": "running",
               "started_at": time.time(), "input": {"model": config.get("llm_model"),
               "instruction": instruction, "images": [_image_summary(data)
@@ -804,6 +807,15 @@ def chat(config, instruction, image, extra_images=(), response_schema=None):
     try:
         options = {"response_schema": response_schema} if response_schema is not None else {}
         response = _cancellable_call(_chat, config, instruction, image, extra_images, raw, **options)
+        if metadata_out is not None:
+            metadata_out.clear()
+            for key in ("model_route", "expert_cache_hit", "expert_request_key",
+                        "expert_retry_count"):
+                if raw.get(key) is not None:
+                    metadata_out[key] = copy.deepcopy(raw[key])
+            external_vlm = raw.get("external_vlm")
+            if isinstance(external_vlm, dict):
+                metadata_out["external_vlm"] = copy.deepcopy(external_vlm)
         record.update(status="succeeded", output={"raw_text": raw.get("text"),
                                                    "finish_reason": raw.get("finish_reason"),
                                                    "busy_retry_count": raw.get("busy_retry_count", 0),
@@ -811,6 +823,7 @@ def chat(config, instruction, image, extra_images=(), response_schema=None):
                                                    "model_route": raw.get("model_route"),
                                                    "expert_cache_hit": raw.get("expert_cache_hit"),
                                                    "expert_request_key": raw.get("expert_request_key"),
+                                                   "external_vlm": raw.get("external_vlm"),
                                                    "fast_fallback_reason": raw.get("fast_fallback_reason"),
                                                    "structured_fallback_reason": raw.get("structured_fallback_reason"),
                                                    "local_vlm": raw.get("local_vlm"),
@@ -901,11 +914,12 @@ def external_expert_config(config):
 
 
 def chat_external_expert(config, instruction, image, extra_images=(),
-                         response_schema=None):
+                         response_schema=None, metadata_out=None):
     """Run one explicitly authorized expert review without local-route drift."""
     return chat(
         external_expert_config(config), instruction, image,
-        extra_images=extra_images, response_schema=response_schema)
+        extra_images=extra_images, response_schema=response_schema,
+        metadata_out=metadata_out)
 
 
 def chat_external_expert_or_local(config, instruction, image, local_result,
@@ -1012,16 +1026,17 @@ def _expert_cache_get(config, request_key):
             _expert_response_cache.pop(request_key, None)
             return None
         _expert_response_cache.move_to_end(request_key)
-        return copy.deepcopy(entry["result"])
+        return copy.deepcopy(entry)
 
 
-def _expert_cache_put(config, request_key, result):
+def _expert_cache_put(config, request_key, result, metadata=None):
     maximum = max(1, min(1024, _positive_int(
         config.get("llm_expert_cache_max_entries"), 128)))
     with _expert_runtime_lock:
         _expert_response_cache[request_key] = {
             "stored_at": time.monotonic(),
             "result": copy.deepcopy(result),
+            "metadata": copy.deepcopy(metadata) if isinstance(metadata, dict) else {},
         }
         _expert_response_cache.move_to_end(request_key)
         while len(_expert_response_cache) > maximum:
@@ -1153,7 +1168,10 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
                     busy_retry_count=0,
                     expert_retry_count=0,
                 )
-            return cached
+                metadata = cached.get("metadata")
+                if isinstance(metadata, dict) and metadata:
+                    raw["external_vlm"] = copy.deepcopy(metadata)
+            return cached["result"]
         circuit_reason = _expert_circuit_reason(selected_config)
         if circuit_reason is not None:
             raise ExternalExpertUnavailableError(
@@ -1358,6 +1376,20 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
         raw["busy_retry_count"] = busy_retry_count
         raw["expert_retry_count"] = expert_retry_count
         raw["model_route"] = final_route
+        if final_route == "external_expert":
+            usage = result.get("usage")
+            bounded_usage = {
+                key: value for key, value in (usage.items()
+                                               if isinstance(usage, dict) else ())
+                if key in {"prompt_tokens", "completion_tokens", "total_tokens"}
+                and type(value) is int and value >= 0
+            }
+            raw["external_vlm"] = {
+                "provider": provider,
+                "model": str(route_config.get("llm_model") or ""),
+                "usage": bounded_usage,
+                "usage_available": bool(bounded_usage),
+            }
         if fast_fallback_reason is not None:
             raw["fast_fallback_reason"] = fast_fallback_reason
         metadata = result.get("local_vlm")
@@ -1432,7 +1464,9 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
             "大模型必须返回 JSON 对象", content[:20000],
             finish_reason=choice.get("finish_reason"))
     if final_route == "external_expert" and expert_request_key is not None:
-        _expert_cache_put(config, expert_request_key, result)
+        _expert_cache_put(
+            config, expert_request_key, result,
+            raw.get("external_vlm") if isinstance(raw, dict) else None)
     return result
 
 

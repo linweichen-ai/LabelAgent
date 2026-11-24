@@ -101,8 +101,30 @@ def _normalize_pallet_quality(value):
     }.get(value, "unmapped_or_uncertain")
 
 
+def _external_usage(rows, sample_ids):
+    observed, missing = [], []
+    for sample_id in sample_ids:
+        usage = (rows[sample_id].get("expert_metadata", {})
+                 .get("external_vlm", {}).get("usage", {}))
+        if all(type(usage.get(key)) is int and usage[key] >= 0 for key in
+               ("prompt_tokens", "completion_tokens", "total_tokens")):
+            observed.append(usage)
+        else:
+            missing.append(sample_id)
+    return {
+        "samples_with_usage": len(observed),
+        "samples_missing_usage": len(missing),
+        "complete": not missing,
+        "prompt_tokens": sum(row["prompt_tokens"] for row in observed),
+        "completion_tokens": sum(row["completion_tokens"] for row in observed),
+        "total_tokens": sum(row["total_tokens"] for row in observed),
+    }
+
+
 def _arm_metrics(reference, predictions, latencies, external_calls,
-                 estimated_cost_per_call=None):
+                 external_usage, estimated_cost_per_call=None,
+                 input_cost_per_million_tokens=None,
+                 output_cost_per_million_tokens=None):
     per_label = {label: _binary_metrics(reference, predictions, label)
                  for label in LABELS}
     macro_f1 = statistics.mean(item["f1"] for item in per_label.values())
@@ -119,8 +141,23 @@ def _arm_metrics(reference, predictions, latencies, external_calls,
         pallet_quality_correct += (
             _normalize_pallet_quality(prediction.get("pallet_quality"))
             == truth["pallet_quality"])
-    cost = (round(external_calls * estimated_cost_per_call, 8)
-            if estimated_cost_per_call is not None else None)
+    token_rates_ready = (input_cost_per_million_tokens is not None
+                         and output_cost_per_million_tokens is not None)
+    if external_calls == 0:
+        cost, cost_status, cost_basis = 0.0, "no_external_calls", "none"
+    elif token_rates_ready and external_usage["complete"]:
+        cost = round(
+            external_usage["prompt_tokens"] / 1_000_000
+            * input_cost_per_million_tokens
+            + external_usage["completion_tokens"] / 1_000_000
+            * output_cost_per_million_tokens, 8)
+        cost_status, cost_basis = "estimated", "token_usage"
+    elif estimated_cost_per_call is not None:
+        cost = round(external_calls * estimated_cost_per_call, 8)
+        cost_status, cost_basis = "estimated", "per_call_fallback"
+    else:
+        cost, cost_status, cost_basis = (
+            None, "unknown_requires_billing_rate", "unavailable")
     return {
         "per_label": per_label,
         "macro_f1": round(macro_f1, 6),
@@ -134,15 +171,28 @@ def _arm_metrics(reference, predictions, latencies, external_calls,
         "latency_p95_ms": round(_p95(latencies), 3),
         "external_calls": external_calls,
         "external_call_ratio": round(external_calls / len(reference), 6),
+        "external_usage": external_usage,
         "estimated_cost": cost,
-        "cost_status": "estimated" if cost is not None else "unknown_requires_billing_rate",
+        "cost_status": cost_status,
+        "cost_basis": cost_basis,
     }
 
 
 def evaluate_three_arm(manifest, manifest_sha256, adjudication, local_packet,
                        external_packet, hybrid_queue,
                        local_packet_sha256,
-                       estimated_cost_per_call=None):
+                       estimated_cost_per_call=None,
+                       input_cost_per_million_tokens=None,
+                       output_cost_per_million_tokens=None):
+    rates = (estimated_cost_per_call, input_cost_per_million_tokens,
+             output_cost_per_million_tokens)
+    if any(value is not None and (
+            not isinstance(value, (int, float)) or isinstance(value, bool)
+            or not math.isfinite(float(value)) or value < 0) for value in rates):
+        raise ValueError("cost rates must be finite non-negative numbers")
+    if ((input_cost_per_million_tokens is None)
+            != (output_cost_per_million_tokens is None)):
+        raise ValueError("input and output token rates must be provided together")
     validation = validate_submission(manifest, manifest_sha256, adjudication)
     if validation.get("benchmark_reference_ready") is not True:
         raise ValueError("declared review is incomplete or uncertain and cannot score the benchmark")
@@ -188,19 +238,25 @@ def evaluate_three_arm(manifest, manifest_sha256, adjudication, local_packet,
                      for sample_id, row in local_rows.items()}
     external_latency = {sample_id: float(row["latency_ms"])
                         for sample_id, row in external_rows.items()}
+    no_external_usage = _external_usage(external_rows, ())
+    all_external_usage = _external_usage(external_rows, reference)
+    hybrid_external_usage = _external_usage(external_rows, hybrid_ids)
     arms = {
         "local_only": _arm_metrics(
             reference, local_predictions, list(local_latency.values()), 0,
-            estimated_cost_per_call),
+            no_external_usage, estimated_cost_per_call,
+            input_cost_per_million_tokens, output_cost_per_million_tokens),
         "all_external": _arm_metrics(
             reference, external_predictions, list(external_latency.values()),
-            len(reference), estimated_cost_per_call),
+            len(reference), all_external_usage, estimated_cost_per_call,
+            input_cost_per_million_tokens, output_cost_per_million_tokens),
         "hybrid": _arm_metrics(
             reference, hybrid_predictions,
             [local_latency[sample_id]
              + (external_latency[sample_id] if sample_id in hybrid_ids else 0)
              for sample_id in reference],
-            len(hybrid_ids), estimated_cost_per_call),
+            len(hybrid_ids), hybrid_external_usage, estimated_cost_per_call,
+            input_cost_per_million_tokens, output_cost_per_million_tokens),
     }
     return {
         "schema_version": SCHEMA_VERSION,
@@ -225,13 +281,17 @@ def main(argv=None):
     parser.add_argument("--hybrid-queue", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--estimated-cost-per-call", type=float)
+    parser.add_argument("--input-cost-per-million-tokens", type=float)
+    parser.add_argument("--output-cost-per-million-tokens", type=float)
     args = parser.parse_args(argv)
     manifest, digest = validate_packet(args.packet)
     result = evaluate_three_arm(
         manifest, digest, read_json(args.adjudication), read_json(args.local),
         read_json(args.external), read_json(args.hybrid_queue),
         sha256_file(args.local),
-        estimated_cost_per_call=args.estimated_cost_per_call)
+        estimated_cost_per_call=args.estimated_cost_per_call,
+        input_cost_per_million_tokens=args.input_cost_per_million_tokens,
+        output_cost_per_million_tokens=args.output_cost_per_million_tokens)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     temporary = args.output.with_suffix(args.output.suffix + ".tmp")
     temporary.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n",

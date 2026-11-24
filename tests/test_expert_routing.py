@@ -100,6 +100,24 @@ def test_thresholds_are_configurable_and_invalid_values_fall_back():
     assert invalid["score_threshold"] == 3
 
 
+def test_priority_semantic_uncertainty_is_hard_signal_even_with_high_scalar_confidence():
+    decision = evaluate_expert_shadow_route(
+        {"llm_expert_shadow_routing_enabled": True,
+         "llm_expert_shadow_score_threshold": 99},
+        discovery={
+            "assessments": {
+                "slope": {"evidence": "uncertain", "confidence": 0.95},
+            },
+            "uncertain_labels": ["slope"],
+        })
+    assert decision["difficulty_score"] == 1
+    assert decision["selection"]["selected_by_score"] is False
+    assert decision["selection"]["selected_by_hard_signal"] is True
+    assert decision["selection"]["hard_signal_codes"] == [
+        "priority_semantic_uncertainty"]
+    assert decision["recommended"] is True
+
+
 def test_router_is_deterministic_and_does_not_copy_sensitive_unknown_evidence():
     config = {"llm_expert_shadow_routing_enabled": True}
     discovery = {"unknown_candidates": [{

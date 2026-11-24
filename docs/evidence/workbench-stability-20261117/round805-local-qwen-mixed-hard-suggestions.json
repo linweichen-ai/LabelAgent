@@ -1,0 +1,36 @@
+{
+  "schema_version": "labelagent.local-qwen-mixed-hard-summary.v1",
+  "date": "2026-11-24",
+  "review_manifest_sha256": "4cd7eadb244cadad83208b4f2d9f304da457830b839070dd796edf77f53dad50",
+  "workspace_receipt_sha256": "c36da631a18cebc72472d483b041d59b297c44a6f7b863d9a8264e37bfdb862a",
+  "assistant_suggestions_sha256": "b0bff89db15a664d0e6bae1ce1a06b3a357b89c7efd3825b517e4a90051c8b1b",
+  "model": "labelagent-vlm8b",
+  "samples_total": 34,
+  "samples_passed": 34,
+  "samples_failed": 0,
+  "latency_median_ms": 4701.896,
+  "latency_p95_ms": 5010.241,
+  "slope_assessment": {
+    "present": 0,
+    "uncertain": 16,
+    "absent": 18,
+    "positive_candidate_uncertain": 4,
+    "batchb_ramp_candidate_absent": 3
+  },
+  "pallet_quality_uncertain": 32,
+  "shadow_routing_projection": {
+    "external_expert_recommended": 17,
+    "local_result_sufficient": 17,
+    "selected_by_hard_signal": 17,
+    "selected_by_score": 0,
+    "dispatch_performed": false,
+    "external_upload_performed": false
+  },
+  "negative_result": "A verbose per-label reasoning schema produced truncated invalid JSON on the first pilot; the compact schema passed before batch expansion.",
+  "candidate_cohorts_are_human_truth": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "test24_used": false,
+  "deployed": false
+}

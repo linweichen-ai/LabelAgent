@@ -20,6 +20,7 @@ PRIORITY_LABELS = frozenset({
 })
 HARD_SIGNAL_CODES = frozenset({
     "edge_slope_candidate",
+    "priority_semantic_uncertainty",
     "class_audit_conflict",
     "agent_nonconvergence",
     "open_set_candidate",
@@ -227,8 +228,17 @@ def evaluate_expert_shadow_route(config, *, discovery=None, agent=None,
             {"count": len(conflicts)})
     uncertain = discovery.get("uncertain_labels") or []
     if uncertain:
+        uncertain_labels = sorted({str(label) for label in uncertain})[:20]
         add("visibility_uncertain", "medium", weights["visibility_uncertain"],
-            {"labels": sorted({str(label) for label in uncertain})[:20]})
+            {"labels": uncertain_labels})
+        priority_uncertain = sorted(set(uncertain_labels) & PRIORITY_LABELS)
+        if priority_uncertain:
+            # Do not double-count the same semantic uncertainty in the score.
+            # Priority-class uncertainty is nevertheless an explicit expert
+            # escalation condition, independent of a potentially overconfident
+            # scalar confidence emitted by the local model.
+            add("priority_semantic_uncertainty", "high", 0,
+                {"labels": priority_uncertain})
     low_confidence = []
     for item in _assessment_items(discovery):
         confidence = item.get("confidence")

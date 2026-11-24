@@ -3237,7 +3237,66 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(second, local)
         self.assertEqual(audit["fallback_reason"], "expert_concurrency_limit")
         self.assertTrue(audit["sam_result_reused"])
+        self.assertTrue(audit["external_attempted"])
+        self.assertFalse(audit["dispatch_performed"])
+        self.assertFalse(audit["external_upload_performed"])
+        self.assertGreaterEqual(audit["external_model_latency_ms"], 0)
         self.assertEqual(len(calls), 1)
+
+    def test_external_expert_or_local_emits_complete_success_and_cache_receipts(self):
+        workflow._reset_external_expert_runtime_state()
+        self.addCleanup(workflow._reset_external_expert_runtime_state)
+        success = io.BytesIO(json.dumps({
+            "choices": [{"finish_reason": "stop", "message": {
+                "content": '{"status":"done"}'}}],
+            "usage": {"prompt_tokens": 10, "completion_tokens": 2,
+                      "total_tokens": 12},
+        }).encode())
+        config = {
+            "llm_expert_enabled": True,
+            "llm_expert_provider": "openai_chat",
+            "llm_expert_url": "https://expert.example/v1",
+            "llm_expert_model": "expert-vision",
+            "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
+        }
+        local = {"status": "done", "source": "local"}
+        with patch.dict(os.environ, {"LABELAGENT_TEST_EXPERT_KEY": "secret"}), \
+             patch.object(workflow.urllib.request, "urlopen",
+                          return_value=success) as opener:
+            first, first_audit = workflow.chat_external_expert_or_local(
+                config, "inspect", image_bytes(), local)
+            second, second_audit = workflow.chat_external_expert_or_local(
+                config, "inspect", image_bytes(), local)
+        self.assertEqual(first, {"status": "done"})
+        self.assertEqual(second, first)
+        self.assertEqual(opener.call_count, 1)
+        self.assertEqual(first_audit["route"], "external_expert")
+        self.assertTrue(first_audit["dispatch_performed"])
+        self.assertTrue(first_audit["external_upload_performed"])
+        self.assertFalse(first_audit["fallback_performed"])
+        self.assertFalse(first_audit["expert_metadata"]["expert_cache_hit"])
+        self.assertEqual(second_audit["route"], "external_expert_cache")
+        self.assertFalse(second_audit["dispatch_performed"])
+        self.assertFalse(second_audit["external_upload_performed"])
+        self.assertTrue(second_audit["expert_metadata"]["expert_cache_hit"])
+        self.assertGreaterEqual(first_audit["external_model_latency_ms"], 0)
+        self.assertGreaterEqual(second_audit["external_model_latency_ms"], 0)
+
+        decision = self._expert_shadow_decision()
+        first_receipt = finalize_expert_route_receipt(
+            decision, execution=first_audit,
+            external_model_latency_ms=first_audit[
+                "external_model_latency_ms"],
+            external_metadata=first_audit["expert_metadata"])
+        cached_receipt = finalize_expert_route_receipt(
+            decision, execution=second_audit,
+            external_model_latency_ms=second_audit[
+                "external_model_latency_ms"],
+            external_metadata=second_audit["expert_metadata"])
+        self.assertEqual(first_receipt["route"], "external_expert_completed")
+        self.assertEqual(first_receipt["execution"]["external_calls"], 1)
+        self.assertEqual(cached_receipt["route"], "external_expert_cache")
+        self.assertEqual(cached_receipt["execution"]["external_calls"], 0)
 
     def test_external_expert_invalid_paid_response_is_failure_cached(self):
         workflow._reset_external_expert_runtime_state()
@@ -3255,14 +3314,21 @@ class WorkflowTests(unittest.TestCase):
         with patch.dict(os.environ, {"LABELAGENT_TEST_EXPERT_KEY": "secret"}), \
              patch.object(workflow.urllib.request, "urlopen",
                           return_value=malformed) as opener:
-            with self.assertRaises(workflow.ModelOutputError):
-                workflow.chat_external_expert(
-                    config, "inspect", image_bytes())
-            result, audit = workflow.chat_external_expert_or_local(
+            first, first_audit = workflow.chat_external_expert_or_local(
                 config, "inspect", image_bytes(), local)
-        self.assertEqual(result, local)
-        self.assertEqual(audit["fallback_reason"], "expert_invalid_output")
-        self.assertTrue(audit["sam_result_reused"])
+            second, second_audit = workflow.chat_external_expert_or_local(
+                config, "inspect", image_bytes(), local)
+        self.assertEqual(first, local)
+        self.assertEqual(second, local)
+        self.assertEqual(first_audit["fallback_reason"],
+                         "expert_invalid_output")
+        self.assertTrue(first_audit["dispatch_performed"])
+        self.assertTrue(first_audit["external_upload_performed"])
+        self.assertEqual(second_audit["fallback_reason"],
+                         "expert_invalid_output")
+        self.assertFalse(second_audit["dispatch_performed"])
+        self.assertFalse(second_audit["external_upload_performed"])
+        self.assertTrue(first_audit["sam_result_reused"])
         self.assertEqual(opener.call_count, 1)
 
     def test_external_expert_transient_failure_falls_back_and_opens_circuit(self):
@@ -3290,10 +3356,14 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(first, local)
         self.assertIsNot(first, local)
         self.assertEqual(first_audit["fallback_reason"], "expert_http_503")
+        self.assertTrue(first_audit["dispatch_performed"])
+        self.assertTrue(first_audit["external_upload_performed"])
         self.assertTrue(first_audit["sam_result_reused"])
         self.assertEqual(second, local)
         self.assertEqual(second_audit["fallback_reason"],
                          "expert_circuit_open")
+        self.assertFalse(second_audit["dispatch_performed"])
+        self.assertFalse(second_audit["external_upload_performed"])
         self.assertEqual(opener.call_count, 1)
 
     def test_external_expert_exact_cache_is_used_while_circuit_is_open(self):

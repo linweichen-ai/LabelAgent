@@ -1,0 +1,36 @@
+{
+  "schema_version": "labelagent.expert-execution-audit-evidence.v1",
+  "round": 844,
+  "date": "2026-11-25",
+  "status": "passed",
+  "verified_routes": [
+    "external_expert",
+    "external_expert_cache",
+    "local_fallback_concurrency_limit",
+    "local_fallback_invalid_output",
+    "local_fallback_http_503",
+    "local_fallback_circuit_open",
+    "local_fallback_missing_credential"
+  ],
+  "audit_fields": [
+    "external_attempted",
+    "dispatch_performed",
+    "external_upload_performed",
+    "external_model_latency_ms",
+    "fallback_performed",
+    "fallback_reason",
+    "sam_result_reused",
+    "expert_metadata"
+  ],
+  "related_tests_passed": 199,
+  "pytest_passed": 2060,
+  "pytest_skipped": 1,
+  "pytest_subtests_passed": 294,
+  "new_external_api_calls": 0,
+  "factory_data_uploaded": false,
+  "test24_used": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "production_deployed": false
+}

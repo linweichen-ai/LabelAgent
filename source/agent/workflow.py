@@ -813,7 +813,7 @@ def chat(config, instruction, image, extra_images=(), response_schema=None,
         if metadata_out is not None:
             metadata_out.clear()
             for key in ("model_route", "expert_cache_hit", "expert_request_key",
-                        "expert_retry_count"):
+                        "expert_retry_count", "expert_network_dispatched"):
                 if raw.get(key) is not None:
                     metadata_out[key] = copy.deepcopy(raw[key])
             external_vlm = raw.get("external_vlm")
@@ -826,6 +826,8 @@ def chat(config, instruction, image, extra_images=(), response_schema=None,
                                                    "model_route": raw.get("model_route"),
                                                    "expert_cache_hit": raw.get("expert_cache_hit"),
                                                    "expert_request_key": raw.get("expert_request_key"),
+                                                   "expert_network_dispatched": raw.get(
+                                                       "expert_network_dispatched"),
                                                    "external_vlm": raw.get("external_vlm"),
                                                    "fast_fallback_reason": raw.get("fast_fallback_reason"),
                                                    "structured_fallback_reason": raw.get("structured_fallback_reason"),
@@ -833,6 +835,12 @@ def chat(config, instruction, image, extra_images=(), response_schema=None,
                                                    "parsed": response})
         return response
     except Exception as error:
+        if metadata_out is not None:
+            metadata_out.clear()
+            for key in ("model_route", "expert_cache_hit", "expert_request_key",
+                        "expert_retry_count", "expert_network_dispatched"):
+                if raw.get(key) is not None:
+                    metadata_out[key] = copy.deepcopy(raw[key])
         record.update(status="failed", error=str(error)[:500])
         if raw:
             record["output"] = {"raw_text": raw.get("text"),
@@ -842,6 +850,8 @@ def chat(config, instruction, image, extra_images=(), response_schema=None,
                                 "model_route": raw.get("model_route"),
                                 "expert_cache_hit": raw.get("expert_cache_hit"),
                                 "expert_request_key": raw.get("expert_request_key"),
+                                "expert_network_dispatched": raw.get(
+                                    "expert_network_dispatched"),
                                 "fast_fallback_reason": raw.get("fast_fallback_reason")}
         raise
     finally:
@@ -925,6 +935,14 @@ def chat_external_expert(config, instruction, image, extra_images=(),
     images = (image, *extra_images)
     request_key = _expert_request_key(
         expert, instruction, images, response_schema)
+    if metadata_out is not None:
+        metadata_out.clear()
+        metadata_out.update(
+            expert_cache_hit=False,
+            expert_request_key=request_key,
+            expert_retry_count=0,
+            expert_network_dispatched=False,
+        )
     circuit_reason = _expert_circuit_reason(expert)
     if circuit_reason is None:
         failure_reason = _expert_failure_cache_get(expert, request_key)
@@ -985,29 +1003,46 @@ def chat_external_expert_or_local(config, instruction, image, local_result,
     """Use the expert when available and otherwise preserve the local result."""
     if not isinstance(local_result, dict):
         raise ValueError("本地回退结果必须是 JSON 对象")
+    started = time.perf_counter()
+    metadata = {}
+
+    def audit(*, route, fallback_performed, fallback_reason=None):
+        network_dispatched = metadata.get("expert_network_dispatched") is True
+        payload = {
+            "route": route,
+            "external_attempted": True,
+            "dispatch_performed": network_dispatched,
+            "external_upload_performed": network_dispatched,
+            "external_model_latency_ms": round(
+                (time.perf_counter() - started) * 1000, 3),
+            "fallback_performed": fallback_performed,
+            "sam_result_reused": True,
+            "expert_metadata": copy.deepcopy(metadata),
+        }
+        if fallback_reason is not None:
+            payload["fallback_reason"] = fallback_reason
+        return payload
+
     try:
         result = chat_external_expert(
             config, instruction, image, extra_images=extra_images,
-            response_schema=response_schema)
-        return result, {
-            "route": "external_expert",
-            "fallback_performed": False,
-            "sam_result_reused": True,
-        }
+            response_schema=response_schema, metadata_out=metadata)
+        return result, audit(
+            route=("external_expert_cache"
+                   if metadata.get("expert_cache_hit") is True
+                   else "external_expert"),
+            fallback_performed=False)
     except ExternalExpertUnavailableError as error:
-        return copy.deepcopy(local_result), {
-            "route": "local_fallback",
-            "fallback_performed": True,
-            "fallback_reason": error.reason,
-            "sam_result_reused": True,
-        }
+        return copy.deepcopy(local_result), audit(
+            route="local_fallback", fallback_performed=True,
+            fallback_reason=error.reason)
     except (ModelOutputError, ValueError):
-        return copy.deepcopy(local_result), {
-            "route": "local_fallback",
-            "fallback_performed": True,
-            "fallback_reason": "expert_failed_closed",
-            "sam_result_reused": True,
-        }
+        reason = ("expert_invalid_output"
+                  if metadata.get("expert_network_dispatched") is True
+                  else "expert_failed_closed")
+        return copy.deepcopy(local_result), audit(
+            route="local_fallback", fallback_performed=True,
+            fallback_reason=reason)
 
 
 def _positive_int(value, default):
@@ -1282,6 +1317,7 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
                     model_route="external_expert_cache",
                     expert_cache_hit=True,
                     expert_request_key=expert_request_key,
+                    expert_network_dispatched=False,
                     busy_retry_count=0,
                     expert_retry_count=0,
                 )
@@ -1296,7 +1332,8 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
                 f"外部专家暂时熔断，已保留本地结果：{circuit_reason}")
         if raw is not None:
             raw.update(expert_cache_hit=False,
-                       expert_request_key=expert_request_key)
+                       expert_request_key=expert_request_key,
+                       expert_network_dispatched=False)
     routes = [(selected_config, selected_route)]
     if fast_only and selected_route != "small_image_fast":
         raise ValueError("快速复核通道不适用于当前图像或尚未配置")
@@ -1343,6 +1380,8 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
         route_failed = False
         for busy_attempt in range(busy_retry_limit + 1):
             try:
+                if raw is not None and route_name == "external_expert":
+                    raw["expert_network_dispatched"] = True
                 with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
                     result = json.load(response)
                 final_route = route_name

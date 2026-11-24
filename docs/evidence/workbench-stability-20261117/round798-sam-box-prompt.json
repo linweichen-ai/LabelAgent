@@ -54,7 +54,9 @@
   "formal_state_sha256_before": "7043442106bffcde99b0fd8a9ce7cc7f459cb94ab9f77a323291778b57d7fb51",
   "formal_state_sha256_after": "7043442106bffcde99b0fd8a9ce7cc7f459cb94ab9f77a323291778b57d7fb51",
   "formal_status_after": "idle",
-  "formal_sam_pid_unchanged": 14696,
+  "formal_sam_pid_before": 14696,
+  "formal_sam_pid_after": 3825876,
+  "formal_web_pid_after": 3822464,
   "formal_vlm_pid_unchanged": 1221856,
   "real_frame_single_smoke": {
     "dataset_scope": "current_development_data",
@@ -76,6 +78,28 @@
     "local_untracked_images_only": true,
     "generalization_claimed": false
   },
-  "formal_deployed": false,
-  "real_frame_quality_evaluated": false
+  "formal_deployment": {
+    "web_commit_before": "5924db7c5841eaac4695dbb56c0f378a3b7602fe",
+    "web_commit_after": "6edbb2c44587e581aadbc3db6cb12621ab03d045",
+    "ui_readback": true,
+    "app_asset_readback": 217,
+    "sam_ready": true,
+    "local_vlm_ready": true,
+    "expert_vlm_enabled": false,
+    "first_full_file_attempt_failed": true,
+    "failure_reason": "formal SAM checkout lacked sam_multi_helpers",
+    "rollback_succeeded": true,
+    "minimal_compatible_deployment_succeeded": true,
+    "formal_frame83_box_smoke": {
+      "score": 0.98046875,
+      "parts": 1,
+      "outer_vertices": 50,
+      "warnings": [],
+      "scope_match": true,
+      "state_hash_unchanged": true,
+      "shape_count": 0
+    }
+  },
+  "formal_deployed": true,
+  "real_frame_quality_evaluated": true
 }

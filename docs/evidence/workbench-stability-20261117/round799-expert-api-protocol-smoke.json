@@ -1,0 +1,36 @@
+{
+  "schema_version": "labelagent.expert-api-protocol-smoke.v1",
+  "date": "2026-11-24",
+  "model": "openai/gpt-6-astra",
+  "text_probe": {
+    "http_status": 200,
+    "elapsed_seconds": 5.63,
+    "response_ok": true,
+    "factory_data_uploaded": false
+  },
+  "vision_probe": {
+    "status": "passed",
+    "provider": "openai_chat",
+    "synthetic_image_sha256": "0a309a256896a8dbcd31c65624d62c9e522df38b171652d8b22066ab26cd6dd0",
+    "synthetic_image_bytes": 10335,
+    "latency_ms": 3341.862,
+    "factory_data_uploaded": false,
+    "uploaded_content": "generated_synthetic_image_only"
+  },
+  "configuration_bug": {
+    "old_ui_alias": "openai",
+    "runtime_protocol": "openai_chat",
+    "fixed": true,
+    "credential_value_recorded": false
+  },
+  "tests": {
+    "passed": 15,
+    "subtests_passed": 3,
+    "failed": 0
+  },
+  "formal_expert_enabled": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "test24_used": false
+}

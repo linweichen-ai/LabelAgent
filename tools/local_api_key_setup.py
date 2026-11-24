@@ -14,9 +14,12 @@ import winreg
 
 
 PROVIDERS = {
-    "openai": ("OpenAI / ChatGPT API", "LABELAGENT_OPENAI_API_KEY"),
-    "qwen": ("阿里云 Qwen API", "LABELAGENT_QWEN_API_KEY"),
-    "custom": ("自定义 OpenAI 兼容接口", "LABELAGENT_EXPERT_API_KEY"),
+    "openai": ("OpenAI / ChatGPT API", "LABELAGENT_OPENAI_API_KEY",
+               "openai_chat"),
+    "qwen": ("阿里云 Qwen API", "LABELAGENT_QWEN_API_KEY",
+             "openai_chat"),
+    "custom": ("自定义 OpenAI 兼容接口", "LABELAGENT_EXPERT_API_KEY",
+               "openai_chat"),
 }
 
 
@@ -29,7 +32,7 @@ def set_user_env(name: str, value: str) -> None:
 def page(token: str, message: str = "", success: bool = False) -> bytes:
     options = "".join(
         f'<option value="{html.escape(key)}">{html.escape(label)}</option>'
-        for key, (label, _) in PROVIDERS.items()
+        for key, (label, _, _) in PROVIDERS.items()
     )
     banner = (f'<div class="banner {"ok" if success else "error"}">'
               f'{html.escape(message)}</div>') if message else ""
@@ -90,9 +93,9 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError("配置内容不完整或页面已失效")
             if base_url and not base_url.startswith(("https://", "http://")):
                 raise ValueError("接口地址必须以 https:// 或 http:// 开头")
-            label, env_name = PROVIDERS[provider]
+            label, env_name, runtime_provider = PROVIDERS[provider]
             set_user_env(env_name, key)
-            set_user_env("LABELAGENT_EXPERT_PROVIDER", provider)
+            set_user_env("LABELAGENT_EXPERT_PROVIDER", runtime_provider)
             set_user_env("LABELAGENT_EXPERT_BASE_URL", base_url)
             set_user_env("LABELAGENT_EXPERT_MODEL", model)
             self.send_page(page(self.token, f"{label} 已安全保存。请返回 Codex 并回复：API 已配置。", True))

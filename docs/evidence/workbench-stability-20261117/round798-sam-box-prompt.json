@@ -29,6 +29,33 @@
   "test24_used": false,
   "external_expert_requests": 0,
   "factory_data_uploaded": false,
+  "isolated_acceptance": {
+    "server": "factory-5090",
+    "workbench_port": 18768,
+    "sam_port": 18769,
+    "synthetic_box_only": {
+      "scope_match": true,
+      "score": 0.96875,
+      "parts": 1,
+      "outer_vertices": 17,
+      "warnings": []
+    },
+    "synthetic_box_plus_points": {
+      "score": 0.98828125,
+      "parts": 1,
+      "outer_vertices": 35,
+      "warnings": []
+    },
+    "candidate_persisted": false,
+    "truth_persisted": false,
+    "stopped": true,
+    "ports_released": [18768, 18769]
+  },
+  "formal_state_sha256_before": "7043442106bffcde99b0fd8a9ce7cc7f459cb94ab9f77a323291778b57d7fb51",
+  "formal_state_sha256_after": "7043442106bffcde99b0fd8a9ce7cc7f459cb94ab9f77a323291778b57d7fb51",
+  "formal_status_after": "idle",
+  "formal_sam_pid_unchanged": 14696,
+  "formal_vlm_pid_unchanged": 1221856,
   "formal_deployed": false,
   "real_frame_quality_evaluated": false
 }

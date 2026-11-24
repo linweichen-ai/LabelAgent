@@ -1,0 +1,41 @@
+{
+  "round": 813,
+  "date": "2026-11-24",
+  "status": "audited_not_ready",
+  "readiness_artifact_sha256": "1b7dcbb55ec10100e7d544889461dc808a0b44bdfb2a684356866d62b4893462",
+  "components": {
+    "local34_ready": true,
+    "hybrid17_queue_ready": true,
+    "all34_queue_ready": true,
+    "declared_review_ready": false,
+    "resolution_ab_authorized": false,
+    "all34_external_results_ready": false,
+    "source17_ab_results_ready": false,
+    "resized17_ab_results_ready": false
+  },
+  "gates": {
+    "three_arm_quality_evaluation_ready": false,
+    "resolution_ab_quality_evaluation_ready": false,
+    "production_deployment_ready": false
+  },
+  "call_reuse_opportunity": {
+    "separate_plan_calls": 68,
+    "combined_plan_calls": 51,
+    "calls_avoided": 17,
+    "relative_reduction": 0.25,
+    "basis": "all34 source results contain the hybrid17 source subset"
+  },
+  "validation": {
+    "focused_tests_passed": 12,
+    "focused_duration_seconds": 0.97
+  },
+  "safety": {
+    "external_api_calls": 0,
+    "real_images_uploaded": 0,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "test24_used": false,
+    "production_deployed": false
+  }
+}

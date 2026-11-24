@@ -2969,6 +2969,28 @@ class WorkflowTests(unittest.TestCase):
                          "external_expert")
         self.assertNotIn("expert-secret", json.dumps(events))
 
+    def test_external_expert_historical_ui_alias_uses_canonical_protocol(self):
+        workflow._reset_external_expert_runtime_state()
+        self.addCleanup(workflow._reset_external_expert_runtime_state)
+        success = io.BytesIO(
+            b'{"choices":[{"finish_reason":"stop","message":{"content":"{\\"status\\":\\"done\\"}"}}]}')
+        config = {
+            "llm_expert_enabled": True,
+            "llm_expert_provider": "openai",
+            "llm_expert_url": "https://expert.example/v1",
+            "llm_expert_model": "expert-vision",
+            "llm_expert_key_env": "LABELAGENT_TEST_EXPERT_KEY",
+        }
+        with patch.dict(os.environ, {"LABELAGENT_TEST_EXPERT_KEY": "secret"}), \
+             patch.object(workflow.urllib.request, "urlopen",
+                          return_value=success) as opener:
+            result = workflow.chat_external_expert(
+                config, "inspect", image_bytes())
+            routed = workflow.external_expert_config(config)
+        self.assertEqual(result, {"status": "done"})
+        self.assertEqual(opener.call_count, 1)
+        self.assertEqual(routed["llm_expert_provider"], "openai_chat")
+
     def test_external_expert_reuses_exact_cached_result_without_second_call(self):
         workflow._reset_external_expert_runtime_state()
         self.addCleanup(workflow._reset_external_expert_runtime_state)
@@ -4000,6 +4022,30 @@ class ServerTests(unittest.TestCase):
                 **active_config_write_scope(),
             })
             self.assertEqual(invalid_frames.status_code, 400, invalid_frames.json)
+        finally:
+            server.state = old_state
+
+    def test_external_expert_historical_ui_alias_is_saved_and_reported_canonically(self):
+        old_state = server.state
+        server.state = {"config": {
+            "sam3_url": "http://sam", "llm_url": "http://vlm/v1",
+            "llm_model": "primary",
+        }}
+        try:
+            client = server.app.test_client()
+            with patch.object(server, "save"):
+                saved = client.post("/api/config", json={
+                    "llm_expert_provider": "openai",
+                    **active_config_write_scope(),
+                })
+            self.assertEqual(saved.status_code, 200, saved.json)
+            self.assertEqual(server.state["config"]["llm_expert_provider"],
+                             "openai_chat")
+            self.assertEqual(saved.json["config"]["llm_expert_provider"],
+                             "openai_chat")
+            server.state["config"]["llm_expert_provider"] = "openai"
+            self.assertEqual(server.public_model_config()[
+                             "llm_expert_provider"], "openai_chat")
         finally:
             server.state = old_state
 

@@ -24,6 +24,7 @@ import numpy as np
 from .edit_agent import apply_operations, valid_shape, _candidate_gap_regions, _valid_region
 from .vlm_providers import (SUPPORTED_PROVIDERS, build_external_request,
                             normalize_external_response,
+                            normalize_external_provider,
                             validate_external_credential)
 
 
@@ -865,7 +866,8 @@ def external_expert_config(config):
     """
     if config.get("llm_expert_enabled") is not True:
         raise ValueError("外部专家 VLM 尚未显式启用")
-    provider = str(config.get("llm_expert_provider") or "openai_chat").strip()
+    provider = normalize_external_provider(
+        config.get("llm_expert_provider") or "openai_chat")
     if provider not in EXTERNAL_VLM_PROVIDERS:
         raise ValueError(f"暂不支持外部专家 VLM 协议：{provider}")
     url = str(config.get("llm_expert_url") or "").strip().rstrip("/")
@@ -943,14 +945,16 @@ def _positive_int(value, default):
 
 
 def _expert_route_key(config):
-    return (str(config.get("llm_expert_provider") or "openai_chat").strip(),
+    return (normalize_external_provider(
+                config.get("llm_expert_provider") or "openai_chat"),
             str(config.get("llm_url") or config.get("llm_expert_url") or "").rstrip("/"),
             str(config.get("llm_model") or config.get("llm_expert_model") or "").strip())
 
 
 def _expert_request_key(config, instruction, images, response_schema):
     payload = {
-        "provider": str(config.get("llm_expert_provider") or "openai_chat"),
+        "provider": normalize_external_provider(
+            config.get("llm_expert_provider") or "openai_chat"),
         "url": str(config.get("llm_url") or "").rstrip("/"),
         "model": str(config.get("llm_model") or ""),
         "max_tokens": int(config.get("llm_max_tokens") or 768),
@@ -1172,8 +1176,9 @@ def _chat(config, instruction, image, extra_images=(), raw=None, response_schema
             raw["model_route"] = route_name
             if fast_fallback_reason is not None:
                 raw["fast_fallback_reason"] = fast_fallback_reason
-        provider = (route_config.get("llm_expert_provider", "openai_chat")
-                    if route_name == "external_expert" else "openai_chat")
+        provider = normalize_external_provider(
+            route_config.get("llm_expert_provider", "openai_chat")
+            if route_name == "external_expert" else "openai_chat")
         max_tokens = int(route_config.get("llm_max_tokens") or 768)
         if route_name == "external_expert":
             request = build_external_request(

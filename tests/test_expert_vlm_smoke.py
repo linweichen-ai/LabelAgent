@@ -54,6 +54,18 @@ class ExpertVlmSmokeTests(unittest.TestCase):
         self.assertEqual(observed[0][2], synthetic_factory_image())
         self.assertNotIn("secret-value", json.dumps(receipt))
 
+    def test_historical_ui_alias_is_canonicalized_before_dispatch(self):
+        observed = []
+        receipt = run_smoke(
+            provider="openai", url="https://api.example/v1",
+            model="vision-model", key_env="LABELAGENT_TEST_KEY",
+            execute=True, acknowledge_synthetic_upload=True,
+            environ={"LABELAGENT_TEST_KEY": "secret"},
+            chat_fn=lambda config, *args, **kwargs: (
+                observed.append(config) or {"status": "synthetic_image_received"}))
+        self.assertEqual(receipt["provider"], "openai_chat")
+        self.assertEqual(observed[0]["llm_expert_provider"], "openai_chat")
+
     def test_rejects_embedded_credentials_and_unexpected_response(self):
         with self.assertRaisesRegex(ValueError, "without embedded credentials"):
             run_smoke(

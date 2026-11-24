@@ -1,0 +1,35 @@
+{
+  "schema_version": "labelagent.expert-provider-alias-migration.v1",
+  "date": "2026-11-24",
+  "legacy_input_provider": "openai",
+  "canonical_runtime_provider": "openai_chat",
+  "accepted_legacy_aliases": ["custom", "openai", "qwen"],
+  "unknown_provider_fail_closed": true,
+  "synthetic_smoke": {
+    "status": "passed",
+    "model": "openai/gpt-6-astra",
+    "latency_ms": 3294.338,
+    "synthetic_image_sha256": "0a309a256896a8dbcd31c65624d62c9e522df38b171652d8b22066ab26cd6dd0",
+    "response_sha256": "31344e20570663a00501bf951bbb272d7b277c3b95131fb715b552e1c7d0390d",
+    "factory_data_uploaded": false
+  },
+  "tests": {
+    "focused_passed": 17,
+    "regression_passed": 354,
+    "subtests_passed": 90,
+    "failed": 0,
+    "environment": "PYTHONUTF8=1; PYTHONIOENCODING=utf-8"
+  },
+  "formal_server": {
+    "head": "6edbb2c44587e581aadbc3db6cb12621ab03d045",
+    "workbench_ready": true,
+    "sam_ready": true,
+    "qwen8b_ready": true,
+    "expert_enabled": false,
+    "deployed": false
+  },
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "test24_used": false
+}

@@ -16,6 +16,22 @@ SUPPORTED_PROVIDERS = frozenset({
     "gemini_generate_content",
 })
 
+# These names were written by the original local credential form before it
+# started persisting the transport protocol explicitly.  Accept only those
+# known historical UI choices and immediately canonicalize them; arbitrary
+# provider names must still fail closed.
+LEGACY_PROVIDER_ALIASES = {
+    "openai": "openai_chat",
+    "qwen": "openai_chat",
+    "custom": "openai_chat",
+}
+
+
+def normalize_external_provider(provider):
+    """Return the canonical transport protocol for a known provider value."""
+    value = str(provider or "").strip()
+    return LEGACY_PROVIDER_ALIASES.get(value, value)
+
 
 def validate_external_credential(credential):
     """Reject malformed secrets without ever echoing their value."""
@@ -35,6 +51,7 @@ def _encoded_images(images):
 def build_external_request(provider, base_url, model, credential, instruction,
                            images, response_schema=None, max_tokens=768):
     """Return a provider-native request without placing credentials in URLs."""
+    provider = normalize_external_provider(provider)
     if provider not in SUPPORTED_PROVIDERS:
         raise ValueError(f"暂不支持外部专家 VLM 协议：{provider}")
     credential = validate_external_credential(credential)
@@ -132,6 +149,7 @@ def build_external_request(provider, base_url, model, credential, instruction,
 
 def normalize_external_response(provider, result):
     """Normalize native provider responses to the existing choices contract."""
+    provider = normalize_external_provider(provider)
     if not isinstance(result, dict):
         raise ValueError("外部专家 VLM 返回格式无效")
     if provider == "openai_chat":

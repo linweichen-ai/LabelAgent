@@ -16,7 +16,9 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from source.agent.vlm_providers import (SUPPORTED_PROVIDERS,
+from source.agent.vlm_providers import (LEGACY_PROVIDER_ALIASES,
+                                        SUPPORTED_PROVIDERS,
+                                        normalize_external_provider,
                                         validate_external_credential)
 from source.agent.workflow import chat_external_expert
 
@@ -50,6 +52,7 @@ def synthetic_factory_image():
 
 
 def validate_config(provider, url, model, key_env):
+    provider = normalize_external_provider(provider)
     if provider not in SUPPORTED_PROVIDERS:
         raise ValueError(f"unsupported provider: {provider}")
     parsed = urlsplit(url)
@@ -60,14 +63,14 @@ def validate_config(provider, url, model, key_env):
         raise ValueError("expert model is required")
     if KEY_ENV_PATTERN.fullmatch(key_env) is None:
         raise ValueError("expert key environment variable name is invalid")
-    return parsed.hostname
+    return provider, parsed.hostname
 
 
 def run_smoke(*, provider, url, model, key_env, execute=False,
               acknowledge_synthetic_upload=False, environ=None,
               chat_fn=chat_external_expert):
     environ = os.environ if environ is None else environ
-    host = validate_config(provider, url, model, key_env)
+    provider, host = validate_config(provider, url, model, key_env)
     image = synthetic_factory_image()
     receipt = {
         "schema_version": SCHEMA_VERSION,
@@ -127,7 +130,9 @@ def run_smoke(*, provider, url, model, key_env, execute=False,
 def main(argv=None):
     parser = argparse.ArgumentParser(
         description="Validate or execute a synthetic-only external VLM smoke test")
-    parser.add_argument("--provider", required=True, choices=sorted(SUPPORTED_PROVIDERS))
+    parser.add_argument(
+        "--provider", required=True,
+        choices=sorted(SUPPORTED_PROVIDERS | LEGACY_PROVIDER_ALIASES.keys()))
     parser.add_argument("--url", required=True)
     parser.add_argument("--model", required=True)
     parser.add_argument("--key-env", required=True)

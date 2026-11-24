@@ -45,6 +45,7 @@ from .workflow import (DESCRIPTION_INPUT_VERSION, EXTERNAL_VLM_PROVIDERS,
                        sam_text_multi_prefetch, sam_text_prefetch,
                        slope_overlap_crop_images, sam_request,
                        VISIBLE_LABEL_DEFINITIONS)
+from .vlm_providers import normalize_external_provider
 from .ego_shadow import evaluate_camera_ego_shadow
 from .candidate_class_audit import (audit_candidate_class_blind, candidate_fingerprint,
                                     audit_high_risk_candidates,
@@ -1850,10 +1851,14 @@ CONFIG_SECRET_KEYS = {"llm_key", "llm_fast_key"}
 def public_model_config(config=None):
     """Return browser-safe model settings without either credential field."""
     current = state.get("config", {}) if config is None else config
-    return {
+    public = {
         key: copy.deepcopy(value) for key, value in current.items()
         if key not in CONFIG_SECRET_KEYS
     }
+    if public.get("llm_expert_provider"):
+        public["llm_expert_provider"] = normalize_external_provider(
+            public["llm_expert_provider"])
+    return public
 
 
 def config_state_sha256(config=None):
@@ -5013,9 +5018,10 @@ def set_config():
         if not isinstance(value, str) or len(value) > 500:
             raise ValueError(f"Invalid {key}")
         value = value.strip()
-        if (key == "llm_expert_provider"
-                and value not in EXTERNAL_VLM_PROVIDERS):
-            raise ValueError("外部专家 VLM 协议不受支持")
+        if key == "llm_expert_provider":
+            value = normalize_external_provider(value)
+            if value not in EXTERNAL_VLM_PROVIDERS:
+                raise ValueError("外部专家 VLM 协议不受支持")
         if key == "llm_expert_url":
             parsed = urlsplit(value)
             if (parsed.scheme not in {"http", "https"} or not parsed.hostname
@@ -5145,7 +5151,8 @@ def model_readiness():
     fast_url = str(config.get("llm_fast_url") or "").rstrip("/")
     fast_model = str(config.get("llm_fast_model") or "").strip()
     expert_enabled = config.get("llm_expert_enabled") is True
-    expert_provider = str(config.get("llm_expert_provider") or "").strip()
+    expert_provider = normalize_external_provider(
+        config.get("llm_expert_provider") or "")
     expert_url = str(config.get("llm_expert_url") or "").rstrip("/")
     expert_model = str(config.get("llm_expert_model") or "").strip()
     expert_key_env = str(config.get("llm_expert_key_env") or "").strip()

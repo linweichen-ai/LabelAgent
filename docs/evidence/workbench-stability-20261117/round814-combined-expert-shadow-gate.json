@@ -1,0 +1,46 @@
+{
+  "round": 814,
+  "date": "2026-11-24",
+  "status": "prepared_not_authorized_not_executed",
+  "authorization_template": {
+    "schema_version": "labelagent.external-upload-authorization.v3",
+    "sha256": "dfe5402ebbd1f7d7319c534993f5d3d087d6ba3eb70e600fe609b1a8449b6b84",
+    "authorized": false,
+    "authorized_by": "",
+    "authorized_unique_source_samples": 34,
+    "authorized_upload_count": 51,
+    "max_external_calls": 51,
+    "runs": [
+      {"name": "all34_source_640x512", "sample_count": 34, "max_external_calls": 34},
+      {"name": "hybrid17_resize_512x410", "sample_count": 17, "max_external_calls": 17}
+    ]
+  },
+  "reuse": {
+    "separate_plan_calls": 68,
+    "combined_plan_calls": 51,
+    "duplicate_calls_avoided": 17,
+    "relative_reduction": 0.25,
+    "source17_reused_from_all34": true
+  },
+  "gate_check": {
+    "exit_code": 1,
+    "error": "matching explicit external-upload authorization is required",
+    "result_created": false,
+    "network_request_performed": false
+  },
+  "readiness_audit_sha256": "718ea0006331d0c497cfbd29031be98f6d272a537ff88de1271ddb022558ff89",
+  "validation": {
+    "tests_passed": 379,
+    "subtests_passed": 87,
+    "duration_seconds": 9.70
+  },
+  "safety": {
+    "external_api_calls": 0,
+    "real_images_uploaded": 0,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "test24_used": false,
+    "production_deployed": false
+  }
+}

@@ -89,6 +89,68 @@ def _v2_fixture(tmp_path):
     return queue, manifest, receipt, root, auth
 
 
+def _v3_fixture(tmp_path):
+    root = tmp_path / "combined-workspace"
+    (root / "raw").mkdir(parents=True)
+    buffer = io.BytesIO()
+    Image.new("RGB", (640, 512), (80, 90, 100)).save(buffer, "JPEG")
+    image_bytes = buffer.getvalue()
+    image_sha = hashlib.sha256(image_bytes).hexdigest()
+    ids = [f"sample-{index:02d}" for index in range(34)]
+    rows, files = [], {}
+    for sample_id in ids:
+        relative = f"raw/{sample_id}.jpg"
+        (root / relative).write_bytes(image_bytes)
+        rows.append({"sample_id": sample_id, "raw_image": relative})
+        files[relative] = image_sha
+    manifest = _write_json(tmp_path / "combined-manifest.json", {
+        "summary": {"test24_intersection_count": 0}, "rows": rows})
+    receipt = _write_json(tmp_path / "combined-receipt.json", {
+        "files": files, "candidate_only": True, "human_truth": False,
+        "approved_for_training": False})
+    def queue(path, selected):
+        return _write_json(path, {
+            "schema_version": "labelagent.mixed-hard-expert-shadow-queue.v1",
+            "sample_count": len(selected), "images_copied": False,
+            "image_paths_included": False, "candidate_only": True,
+            "human_truth": False, "approved_for_training": False,
+            "test24_used": False,
+            "samples": [{"sample_id": sample_id, "cohort": "hard",
+                         "source_image_sha256": image_sha}
+                        for sample_id in selected],
+        })
+    all_queue = queue(tmp_path / "all34.json", ids)
+    hybrid_queue = queue(tmp_path / "hybrid17.json", ids[:17])
+    auth = _write_json(tmp_path / "combined-authorization.json", {
+        "schema_version": "labelagent.external-upload-authorization.v3",
+        "scope": "mixed_hard_combined_external_shadow",
+        "authorized": True, "authorized_by": "declared-user",
+        "authorized_unique_source_samples": 34,
+        "authorized_upload_count": 51, "max_external_calls": 51,
+        "authorized_runs": [
+            {"name": "all34_source_640x512",
+             "queue_sha256": sha256_file(all_queue), "sample_count": 34,
+             "max_external_calls": 34,
+             "image_variant": {"name": "source_640x512", "mode": "source",
+                               "expected_width": 640, "expected_height": 512}},
+            {"name": "hybrid17_resize_512x410",
+             "queue_sha256": sha256_file(hybrid_queue), "sample_count": 17,
+             "max_external_calls": 17,
+             "image_variant": {"name": "resize_512x410",
+                               "mode": "resize_lanczos_jpeg", "width": 512,
+                               "height": 410, "jpeg_quality": 90}},
+        ],
+        "candidate_only": True, "human_truth": False,
+        "approved_for_training": False, "test24_used": False,
+    })
+    return all_queue, hybrid_queue, manifest, receipt, root, auth
+
+
+def _write_json(path, payload):
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    return path
+
+
 def test_refuses_execution_without_matching_explicit_authorization(tmp_path):
     queue, manifest, receipt, root, auth = _fixture(tmp_path, authorize=False)
     unauthorized = auth.read_text(encoding="utf-8")
@@ -171,6 +233,26 @@ def test_source_variant_rejects_dimension_drift():
         prepare_upload_image(buffer.getvalue(), {
             "name": "source_640x512", "mode": "source",
             "expected_width": 640, "expected_height": 512})
+
+
+def test_v3_combined_authorization_binds_two_nonduplicated_runs(tmp_path):
+    all_queue, hybrid_queue, manifest, receipt, root, auth = _v3_fixture(tmp_path)
+    all_samples, all_bindings = load_authorized_inputs(
+        all_queue, manifest, receipt, root, auth,
+        authorization_run_name="all34_source_640x512")
+    hybrid_samples, hybrid_bindings = load_authorized_inputs(
+        hybrid_queue, manifest, receipt, root, auth,
+        authorization_run_name="hybrid17_resize_512x410")
+    assert len(all_samples) == 34
+    assert len(hybrid_samples) == 17
+    assert all_bindings["image_variant"]["expected_width"] == 640
+    assert hybrid_bindings["image_variant"]["width"] == 512
+    assert all_bindings["authorized_upload_count"] == 51
+    assert hybrid_bindings["authorized_upload_count"] == 51
+    with pytest.raises(ValueError, match="explicit external-upload authorization"):
+        load_authorized_inputs(
+            hybrid_queue, manifest, receipt, root, auth,
+            authorization_run_name="all34_source_640x512")
 
 
 def test_rejects_image_hash_drift_before_model_call(tmp_path):

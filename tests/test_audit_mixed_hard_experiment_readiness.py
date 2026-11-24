@@ -44,11 +44,16 @@ def _queue(ids):
 
 def _authorization(authorized):
     return {
-        "schema_version": "labelagent.external-upload-authorization.v2",
+        "schema_version": "labelagent.external-upload-authorization.v3",
         "authorized": authorized,
         "authorized_by": "user" if authorized else "",
-        "authorized_sample_count": 17, "authorized_upload_count": 34,
-        "max_external_calls": 34, "candidate_only": True,
+        "authorized_unique_source_samples": 34,
+        "authorized_upload_count": 51, "max_external_calls": 51,
+        "authorized_runs": [
+            {"name": "all34_source_640x512"},
+            {"name": "hybrid17_resize_512x410"},
+        ],
+        "candidate_only": True,
         "human_truth": False, "approved_for_training": False,
         "test24_used": False,
     }
@@ -69,7 +74,7 @@ def _files(tmp_path, *, authorized=False, external=False):
         paths.update(
             all_external=_write(tmp_path / "all-external.json",
                                 _packet(ids34, external=True)),
-            source=_write(tmp_path / "source.json", _packet(ids17, external=True)),
+            source=_write(tmp_path / "source.json", _packet(ids34, external=True)),
             resized=_write(tmp_path / "resized.json", _packet(ids17, external=True)),
         )
     return paths, ids34
@@ -91,6 +96,9 @@ def test_audit_reports_exact_missing_components_without_running_models(tmp_path,
     assert result["components"]["resolution_ab_authorization"]["ready"] is False
     assert result["gates"]["three_arm_quality_evaluation_ready"] is False
     assert "obtain explicit resolution A/B authorization" in result["next_actions"]
+    assert "run authorized combined all34 source and hybrid17 resized shadows" in result[
+        "next_actions"]
+    assert "run complete all-34 external shadow" not in result["next_actions"]
     assert result["external_call_performed"] is False
 
 

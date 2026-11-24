@@ -19,7 +19,8 @@ def _prediction(*, slope=False):
 
 
 def _fixture():
-    ids = [f"sample-{index:02d}" for index in range(17)]
+    ids = [f"sample-{index:02d}" for index in range(34)]
+    hybrid_ids = ids[:17]
     hashes = {sample_id: f"{index + 1:064x}"
               for index, sample_id in enumerate(ids)}
     manifest = {"rows": [{"sample_id": sample_id,
@@ -48,11 +49,15 @@ def _fixture():
         "schema_version": "labelagent.mixed-hard-expert-shadow-queue.v1",
         "sample_count": 17, "candidate_only": True, "human_truth": False,
         "approved_for_training": False, "test24_used": False,
+        "samples": [{"sample_id": sample_id} for sample_id in hybrid_ids],
+    }
+    all_queue = {
+        **queue, "sample_count": 34,
         "samples": [{"sample_id": sample_id} for sample_id in ids],
     }
-    def packet(name, mode, *, resized=False):
+    def packet(name, mode, selected_ids, queue_sha, run_name, *, resized=False):
         rows = []
-        for index, sample_id in enumerate(ids):
+        for index, sample_id in enumerate(selected_ids):
             upload = {"name": name, "mode": mode,
                       "upload_image_sha256": ("b" * 64 if resized
                                                else hashes[sample_id])}
@@ -73,26 +78,30 @@ def _fixture():
             })
         return {
             "schema_version": "labelagent.mixed-hard-external-shadow.v1",
-            "status": "completed", "samples_passed": 17,
+            "status": "completed", "samples_passed": len(selected_ids),
             "samples_failed": 0, "manifest_sha256": "f" * 64,
-            "queue_sha256": "q" * 64,
+            "queue_sha256": queue_sha,
             "authorization_sha256": "a" * 64,
-            "authorization_schema": "labelagent.external-upload-authorization.v2",
-            "authorized_upload_count": 34,
+            "authorization_schema": "labelagent.external-upload-authorization.v3",
+            "authorized_upload_count": 51,
+            "authorization_run": {"name": run_name},
             "image_variant": {"name": name, "mode": mode},
             "candidate_only": True, "human_truth": False,
             "approved_for_training": False, "test24_used": False,
             "rows": rows,
         }
-    return (manifest, adjudication, queue,
-            packet("source_640x512", "source"),
-            packet("resize_512x410", "resize_lanczos_jpeg", resized=True))
+    return (manifest, adjudication, queue, all_queue,
+            packet("source_640x512", "source", ids, "a" * 64,
+                   "all34_source_640x512"),
+            packet("resize_512x410", "resize_lanczos_jpeg", hybrid_ids,
+                   "h" * 64, "hybrid17_resize_512x410", resized=True))
 
 
 def test_evaluates_bound_resolution_ab_without_deployment_claim():
-    manifest, adjudication, queue, source, resized = _fixture()
+    manifest, adjudication, queue, all_queue, source, resized = _fixture()
     result = evaluate_resolution_ab(
-        manifest, "f" * 64, adjudication, queue, "q" * 64,
+        manifest, "f" * 64, adjudication, queue, "h" * 64,
+        all_queue, "a" * 64,
         source, resized, input_cost_per_million_tokens=2,
         output_cost_per_million_tokens=8)
     assert result["sample_count"] == 17
@@ -106,29 +115,33 @@ def test_evaluates_bound_resolution_ab_without_deployment_claim():
 
 
 def test_rejects_variant_authorization_and_upload_drift():
-    manifest, adjudication, queue, source, resized = _fixture()
+    manifest, adjudication, queue, all_queue, source, resized = _fixture()
     wrong_auth = copy.deepcopy(resized)
     wrong_auth["authorization_sha256"] = "0" * 64
     with pytest.raises(ValueError, match="different authorizations"):
         evaluate_resolution_ab(
-            manifest, "f" * 64, adjudication, queue, "q" * 64,
+            manifest, "f" * 64, adjudication, queue, "h" * 64,
+            all_queue, "a" * 64,
             source, wrong_auth)
     wrong_upload = copy.deepcopy(resized)
     wrong_upload["rows"][0]["upload_image"]["width"] = 640
     with pytest.raises(ValueError, match="upload image attestations"):
         evaluate_resolution_ab(
-            manifest, "f" * 64, adjudication, queue, "q" * 64,
+            manifest, "f" * 64, adjudication, queue, "h" * 64,
+            all_queue, "a" * 64,
             source, wrong_upload)
 
 
 def test_rejects_invalid_cost_rates():
-    manifest, adjudication, queue, source, resized = _fixture()
+    manifest, adjudication, queue, all_queue, source, resized = _fixture()
     with pytest.raises(ValueError, match="provided together"):
         evaluate_resolution_ab(
-            manifest, "f" * 64, adjudication, queue, "q" * 64,
+            manifest, "f" * 64, adjudication, queue, "h" * 64,
+            all_queue, "a" * 64,
             source, resized, input_cost_per_million_tokens=2)
     with pytest.raises(ValueError, match="finite non-negative"):
         evaluate_resolution_ab(
-            manifest, "f" * 64, adjudication, queue, "q" * 64,
+            manifest, "f" * 64, adjudication, queue, "h" * 64,
+            all_queue, "a" * 64,
             source, resized, estimated_cost_per_call=-1)
 

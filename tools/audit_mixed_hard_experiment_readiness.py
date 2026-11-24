@@ -56,26 +56,41 @@ def _prediction_status(path, expected_count, *, external):
 def _authorization_status(path):
     if path is None or not Path(path).is_file():
         return {"ready": False, "authorized": False, "sha256": None,
-                "error": "missing"}
+                "schema_version": None, "error": "missing"}
     try:
         payload = read_json(path)
-        safe = (payload.get("schema_version")
-                == "labelagent.external-upload-authorization.v2"
+        schema = payload.get("schema_version")
+        base_safe = (
+                schema in {"labelagent.external-upload-authorization.v2",
+                           "labelagent.external-upload-authorization.v3"}
                 and payload.get("candidate_only") is True
                 and payload.get("human_truth") is False
                 and payload.get("approved_for_training") is False
-                and payload.get("test24_used") is False
-                and payload.get("authorized_sample_count") == 17
-                and payload.get("authorized_upload_count") == 34
-                and payload.get("max_external_calls") == 34)
+                and payload.get("test24_used") is False)
+        if schema == "labelagent.external-upload-authorization.v2":
+            safe = (base_safe and payload.get("authorized_sample_count") == 17
+                    and payload.get("authorized_upload_count") == 34
+                    and payload.get("max_external_calls") == 34)
+        else:
+            runs = payload.get("authorized_runs")
+            safe = (base_safe
+                    and payload.get("authorized_unique_source_samples") == 34
+                    and payload.get("authorized_upload_count") == 51
+                    and payload.get("max_external_calls") == 51
+                    and isinstance(runs, list) and len(runs) == 2
+                    and {run.get("name") for run in runs}
+                    == {"all34_source_640x512",
+                        "hybrid17_resize_512x410"})
         authorized = (safe and payload.get("authorized") is True
                       and isinstance(payload.get("authorized_by"), str)
                       and bool(payload["authorized_by"].strip()))
         return {"ready": authorized, "authorized": authorized,
+                "schema_version": schema,
                 "safe_template": safe, "sha256": sha256_file(path),
                 "error": None if authorized else "awaiting explicit user authorization"}
     except Exception as error:
         return {"ready": False, "authorized": False,
+                "schema_version": None,
                 "sha256": sha256_file(path),
                 "error": f"{type(error).__name__}: {str(error)[:200]}"}
 
@@ -101,7 +116,8 @@ def audit_readiness(*, packet_dir, adjudication_path, local_path,
     all_queue = _queue_status(all_queue_path, 34)
     all_external = _prediction_status(all_external_path, 34, external=True)
     authorization = _authorization_status(resolution_authorization_path)
-    source_ab = _prediction_status(source_ab_path, 17, external=True)
+    source_ab = _prediction_status(
+        source_ab_path or all_external_path, 34, external=True)
     resized_ab = _prediction_status(resized_ab_path, 17, external=True)
     three_arm_ready = all(item["ready"] for item in
                           (review, local, hybrid_queue, all_queue, all_external))
@@ -114,16 +130,24 @@ def audit_readiness(*, packet_dir, adjudication_path, local_path,
             ("hybrid17_queue", hybrid_queue), ("all34_queue", all_queue),
             ("all34_external_results", all_external),
             ("resolution_ab_authorization", authorization),
-            ("source17_ab_results", source_ab),
+            ("source34_reused_for_ab", source_ab),
             ("resized17_ab_results", resized_ab)):
         if not item["ready"]:
             blockers.append({"component": name, "reason": item.get("error")})
-    next_actions = [item for item in [
-        "complete benchmark-ready declared review" if not review["ready"] else None,
-        "obtain explicit resolution A/B authorization" if not authorization["ready"] else None,
+    combined_authorization = (authorization.get("schema_version")
+                              == "labelagent.external-upload-authorization.v3")
+    external_actions = ([
+        "run authorized combined all34 source and hybrid17 resized shadows"
+    ] if combined_authorization and (
+        not all_external["ready"] or not resized_ab["ready"]) else [
         "run complete all-34 external shadow" if not all_external["ready"] else None,
         "run both authorized 17-frame resolution variants"
         if not source_ab["ready"] or not resized_ab["ready"] else None,
+    ])
+    next_actions = [item for item in [
+        "complete benchmark-ready declared review" if not review["ready"] else None,
+        "obtain explicit resolution A/B authorization" if not authorization["ready"] else None,
+        *external_actions,
     ] if item is not None]
     return {
         "schema_version": SCHEMA_VERSION,
@@ -132,7 +156,7 @@ def audit_readiness(*, packet_dir, adjudication_path, local_path,
             "hybrid17_queue": hybrid_queue, "all34_queue": all_queue,
             "all34_external_results": all_external,
             "resolution_ab_authorization": authorization,
-            "source17_ab_results": source_ab,
+            "source34_reused_for_ab": source_ab,
             "resized17_ab_results": resized_ab,
         },
         "gates": {

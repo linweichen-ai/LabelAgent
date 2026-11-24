@@ -1,0 +1,38 @@
+{
+  "schema_version": "labelagent.formal-minimal-overlay-deployment-evidence.v1",
+  "deployed": true,
+  "deployed_files": 6,
+  "backup_root": "D:\\Apps\\LabelAgent\\.local\\deploy-backups\\formal-minimal-overlay-20261124-112141",
+  "deploy_receipt_sha256": "e4fe69ab80a17447363e52d8b4452210426138852e7880e34326a672b4a0f056",
+  "service_restarted": true,
+  "postdeploy_verification_passed": true,
+  "formal_service_status": "idle",
+  "review_packet_frames": 32,
+  "priority_frames": [95, 140],
+  "pallet_review_http_status": 200,
+  "pallet_review_available": false,
+  "browser_acceptance": {
+    "wide": {
+      "passed": true,
+      "viewport": [1600, 1000],
+      "result_sha256": "b6e96d5b6f1cc41ae6a61943c0b202d5edc9aa0db5948b4beeb9804d4da4ef1a",
+      "screenshot_sha256": "6846317706ce6502524e6dcc90e41f68d41b9de671eb3242e26f9d142ff8d123"
+    },
+    "dark_narrow": {
+      "passed": true,
+      "viewport": [620, 900],
+      "dark_mode": true,
+      "result_sha256": "db835aab376273b6b101b63128097269b80fe4df78add19a2b2eaa0f804b9626",
+      "screenshot_sha256": "1f489cad19f007a9056214a1b5bb97b9921d006a452c4d7940e482b275e36bdb"
+    },
+    "page_errors": 0,
+    "failed_requests": 0,
+    "http_errors": 0,
+    "truth_write_requests": 0
+  },
+  "rollback_performed": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "test24_touched": false
+}

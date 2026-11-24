@@ -1,0 +1,36 @@
+{
+  "schema_version": "labelagent.review-packet-priority-browser-acceptance.v1",
+  "passed": true,
+  "elapsed_ms": 1506,
+  "viewport": {
+    "width": 620,
+    "height": 900,
+    "dark_mode": true
+  },
+  "before": {
+    "packetOptions": 1,
+    "rows": 32,
+    "firstFrames": [
+      95,
+      140,
+      74,
+      77
+    ],
+    "priorityLabels": [
+      "第 95 帧 · 斜坡正候选 · 优先核对",
+      "第 140 帧 · 困难负样本 · 优先核对"
+    ],
+    "status": "复核包已读取；点击“校验并载入复核数据”会先保护当前文件会话，再切换到绑定数据。",
+    "bodyHidden": false
+  },
+  "priorityFrames": [
+    95,
+    140
+  ],
+  "truth_write_requests": [],
+  "page_errors": [],
+  "failed_requests": [],
+  "http_errors": [],
+  "ignored_optional_http_errors": [],
+  "screenshot": "C:\\Users\\seer\\Documents\\ChatGPT\\Seer2clw\\task_workspaces\\labelagent_stability_worktree_20261117\\artifacts\\round772-formal-overlay-browser-dark-narrow\\review-packet-priority-queue.png"
+}

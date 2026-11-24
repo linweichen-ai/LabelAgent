@@ -4520,3 +4520,7 @@ SHA-256均为`912919B0...B883B4F`；首页等五项探针HTTP200，工作台idle
 - 新增单一只读入口，同时运行本地/全外部/混合三路对照、640与512分辨率A/B、512优先动态级联，并记录全部输入哈希。
 - 门禁摘要检查宏F1、斜坡召回与误检、托盘数量/质量和缩放质量；像素边界、类别冲突、回退、跨数据集及工作台体验仍列为未测，因此不会自动部署。
 - 当前空白人工模板预演按预期退出1、未创建输出、模型/API调用0；定向测试20项通过。详见`docs/MIXED_HARD_EVALUATION_SUITE_ROUND821_20261124.md`。
+
+## Round822：困难集后训练候选包门禁（2026-11-24）
+
+新增 `tools/build_mixed_hard_posttraining_proposal.py`，把完整、无歧义且哈希绑定的困难集人工复核转换为仍待目标编写与单独授权的后训练提案。工具拒绝任何 `uncertain`、不完整复核、无时区时间戳、哈希漂移或 `test24` 交集；输出固定保持 `approved_for_training=false`、`training_authorized=false`、`model_training_started=false`，因此不会因完成人工语义复核而自动开训。

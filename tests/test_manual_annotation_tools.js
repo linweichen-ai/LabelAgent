@@ -27,6 +27,16 @@ test('rectangle drag produces a normalized four-corner polygon and closed previe
   assert.deepEqual(JSON.parse(JSON.stringify(preview[0])), JSON.parse(JSON.stringify(preview[4])));
 });
 
+test('ellipse drag produces a smooth closed polygon inside the dragged box', () => {
+  const context = geometryContext();
+  const ellipse = vm.runInContext('ellipsePoints({x:10,y:20},{x:50,y:60},40)', context);
+  assert.equal(ellipse.length, 40);
+  assert.ok(ellipse.every(([x, y]) => x >= 10 && x <= 50 && y >= 20 && y <= 60));
+  const preview = vm.runInContext("dragPreviewPoints({x:10,y:20},{x:50,y:60},'ellipse')", context);
+  assert.equal(preview.length, 41);
+  assert.deepEqual(JSON.parse(JSON.stringify(preview[0])), JSON.parse(JSON.stringify(preview.at(-1))));
+});
+
 test('point signature detects coordinate, polarity, and ordering changes', () => {
   const context = geometryContext();
   const first = vm.runInContext("pointSetSignature([{x:10.2,y:20.7,label:1},{x:30,y:40,label:0}])", context);
@@ -40,7 +50,9 @@ test('point signature detects coordinate, polarity, and ordering changes', () =>
 
 test('manual toolbar exposes persistent rectangle and documented shortcuts', () => {
   assert.match(html, /id="rectangleButton"[^>]*（R）/);
+  assert.match(html, /id="ellipseButton"[^>]*（O）/);
   assert.match(html, /id="freehandButton"[^>]*（L）/);
+  assert.match(html, /id="freehandSensitivity"/);
   assert.match(html, /id="polygonButton"[^>]*（V）/);
   assert.match(html, /id="pointButton"[^>]*（P）/);
   assert.match(html, /id="negativeButton"[^>]*（N）/);
@@ -49,12 +61,16 @@ test('manual toolbar exposes persistent rectangle and documented shortcuts', () 
   assert.match(html, /id="finishButton"[^>]*Enter/);
   assert.match(app, /manualTool=tool/);
   assert.match(app, /\$\('rectangleButton'\)\.onclick=\(\)=>activateShapeTool\('rectangle'\)/);
+  assert.match(app, /\$\('ellipseButton'\)\.onclick=\(\)=>activateShapeTool\('ellipse'\)/);
 });
 
 test('freehand lasso converts a dragged boundary into a closed segmentation polygon', () => {
   assert.match(app, /function activateFreehandTool\(\)/);
   assert.match(app, /freehandDrag=\{pointerId:event\.pointerId,points:\[point\]\}/);
   assert.match(app, /freehandDrag\.points\.push\(point\)/);
+  assert.match(app, /getCoalescedEvents\?\.\(\)\|\|\[event\]/);
+  assert.match(app, /freehandImagePoint\(sample,event\.currentTarget\)/);
+  assert.match(app, /function freehandMinimumDistance\(\)/);
   assert.match(app, /items\.push\(\{label:\$\('labelSelect'\)\.value,points\}\)/);
   assert.match(app, /event\.key\.toLowerCase\(\)==='l'/);
 });
@@ -85,4 +101,11 @@ test('keyboard mappings cover tools, finish, undo, and draft cancellation', () =
   assert.match(app, /e\.key==='Enter'[^}]*finish\(\)/);
   assert.match(app, /e\.key\.toLowerCase\(\)==='z'[^}]*undoCurrentInput\(\)/);
   assert.match(app, /e\.key==='Escape'[^}]*cancelCurrentDraft\(\)/);
+  assert.match(app, /event\.key\.toLowerCase\(\)==='o'[^}]*activateShapeTool\('ellipse'\)/);
+});
+
+test('polygon can finish by double click and ellipse uses pointer capture', () => {
+  assert.match(app, /addEventListener\('dblclick'[^\n]*manualTool!=='polygon'/);
+  assert.match(app, /rectangleDrag=\{pointerId:event\.pointerId,start:point,current:point,tool:'ellipse'\}/);
+  assert.match(app, /ellipsePoints\(drag\.start,drag\.current\)/);
 });

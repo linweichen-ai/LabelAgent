@@ -185,7 +185,11 @@
         <div class="toolrow" id="truthTools">
           <button id="polygonButton" class="selected" title="逐点绘制多边形（V）">多边形</button>
           <button id="rectangleButton" title="按住并拖动绘制矩形（R）">矩形框</button>
+          <button id="ellipseButton" title="按住并拖动绘制椭圆（O）">椭圆框</button>
           <button id="freehandButton" title="按住并沿目标边界拖动，松开后自动闭合（L）">自由线 / 套索</button>
+          <label class="compactToolSetting" title="精细更灵敏，快速产生更少的轮廓点">线条灵敏度
+            <select id="freehandSensitivity" aria-label="自由线灵敏度"><option value="fine" selected>精细</option><option value="balanced">平衡</option><option value="fast">快速</option></select>
+          </label>
           <button id="pointButton" title="正提示点（P）：进入后在目标内部点一下，第一次点图会立即运行 SAM">SAM 正点（P）</button>
           <button id="negativeButton" title="负提示点（N）：点击非目标区域">SAM 负点（N）</button>
           <button id="generateMaskButton">生成轮廓</button>

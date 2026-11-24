@@ -64,6 +64,24 @@ class MixedHardAdjudicationWorkspaceTest(unittest.TestCase):
             self.assertIn("mixed-hard-adjudication.json", page)
             self.assertIn("human_truth:false", page)
             self.assertNotIn("approved_for_training:true", page)
+            self.assertEqual(receipt["copied_image_count"], 48)
+            for relative in ("raw/0.jpg", "review/0.jpg", "raw/23.jpg", "review/23.jpg"):
+                copied = output / relative
+                self.assertTrue(copied.is_file())
+                self.assertEqual(sha256(copied), sha256(packet / relative))
+                self.assertEqual(receipt["files"][relative], sha256(copied))
+
+    def test_reviewer_image_links_resolve_inside_portable_workspace(self):
+        with tempfile.TemporaryDirectory() as directory:
+            packet = self.packet(Path(directory) / "packet")
+            output = Path(directory) / "portable-workspace"
+            build_workspace(packet, output)
+            page = (output / "reviewer.html").read_text(encoding="utf-8")
+            decoded = page.replace("&quot;", '"')
+            self.assertIn('"review_image": "review/0.jpg"', decoded)
+            self.assertIn('"raw_image": "raw/0.jpg"', decoded)
+            self.assertTrue((output / "review" / "0.jpg").is_file())
+            self.assertTrue((output / "raw" / "0.jpg").is_file())
 
     def test_validates_complete_bound_submission(self):
         with tempfile.TemporaryDirectory() as directory:

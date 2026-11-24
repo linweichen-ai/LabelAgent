@@ -3,6 +3,7 @@ import argparse
 import hashlib
 import html
 import json
+import shutil
 from pathlib import Path
 
 
@@ -176,19 +177,48 @@ $('export').onclick=()=>{{save();const rows=items.map(x=>state.rows[x.sample_id]
 </script></body></html>''', encoding="utf-8")
 
 
+def copy_review_assets(manifest, packet_dir, output_dir):
+    """Make the browser review workspace portable without changing its sources."""
+    packet = Path(packet_dir).resolve()
+    output = Path(output_dir).resolve()
+    if packet == output:
+        raise ValueError("review workspace must not overwrite its source packet")
+    copied = {}
+    for row in manifest["rows"]:
+        for key in ("raw_image", "review_image"):
+            relative = row[key]
+            source = _safe_child(packet, relative)
+            destination = _safe_child(output, relative)
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            expected = sha256(source)
+            if destination.is_file() and sha256(destination) == expected:
+                copied[relative] = expected
+                continue
+            shutil.copy2(source, destination)
+            actual = sha256(destination)
+            if actual != expected:
+                raise ValueError(f"copied review asset hash mismatch: {relative}")
+            copied[relative] = actual
+    return copied
+
+
 def build_workspace(packet_dir, output_dir):
     manifest, digest = validate_packet(packet_dir)
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
+    copied_assets = copy_review_assets(manifest, packet_dir, output)
     template = template_for(manifest, digest)
     template_path = output / "adjudication-template.json"
     template_path.write_text(json.dumps(template, ensure_ascii=False, indent=2) + "\n",
                              encoding="utf-8")
     write_html(manifest, digest, output / "reviewer.html")
-    receipt = {"schema_version": "labelagent.mixed-hard-adjudication-workspace-receipt.v1",
+    files = {name: sha256(output / name) for name in
+             ("adjudication-template.json", "reviewer.html")}
+    files.update(copied_assets)
+    receipt = {"schema_version": "labelagent.mixed-hard-adjudication-workspace-receipt.v2",
                "review_manifest_sha256": digest,
-               "files": {name: sha256(output / name) for name in
-                         ("adjudication-template.json", "reviewer.html")},
+               "files": dict(sorted(files.items())),
+               "copied_image_count": len(copied_assets),
                "candidate_only": True, "human_truth": False,
                "approved_for_training": False, "automatic_approval": False}
     (output / "receipt.json").write_text(

@@ -1,0 +1,103 @@
+{
+  "schema_version": "labelagent.local-qwen-cascade-and-expert-recheck.v1",
+  "date": "2026-11-24",
+  "source_sample_count": 34,
+  "baseline": {
+    "profile": "mixed-hard-baseline-v1",
+    "sha256": "b0bff89db15a664d0e6bae1ce1a06b3a357b89c7efd3825b517e4a90051c8b1b",
+    "external_candidate_count": 17,
+    "external_candidate_ratio": 0.5
+  },
+  "prompt_v2": {
+    "round": 832,
+    "status": "rejected_overconservative",
+    "sha256": "7b7315fed43c46a2831496d7470b04b435911eb02a3cdaa3529051add612bb7b",
+    "passed": 34,
+    "failed": 0,
+    "external_candidate_count": 34,
+    "priority_covered_count": 11,
+    "priority_count": 11,
+    "latency_median_ms": 4675.384,
+    "latency_p95_ms": 5075.999
+  },
+  "prompt_v3": {
+    "round": 833,
+    "status": "rejected_as_standalone_too_strict",
+    "sha256": "90c4ebf3a718bb8cdb7c39f86270682f317ed2088835a91190d1b13c5917035b",
+    "passed": 34,
+    "failed": 0,
+    "external_candidate_count": 5,
+    "priority_covered_count": 4,
+    "priority_count": 11,
+    "latency_median_ms": 4650.454,
+    "latency_p95_ms": 4986.982
+  },
+  "full_second_pass_cascade": {
+    "round": 834,
+    "status": "rejected_for_excess_second_pass_latency",
+    "evaluation_sha256": "992662e1c87a6a2d2e3613a7306450a7e06e476b51c8e653517b2f58cb3398a3",
+    "focused_second_pass_count": 17,
+    "focused_local_resolved_count": 1,
+    "external_candidate_count": 19,
+    "priority_covered_count": 9,
+    "priority_count": 11,
+    "negative_external_count": 10,
+    "sequential_minus_baseline_ms": 122201.939
+  },
+  "semantic_context_cascade": {
+    "round": 835,
+    "status": "shadow_candidate_human_confirmation_pending",
+    "evaluation_sha256": "992662e1c87a6a2d2e3613a7306450a7e06e476b51c8e653517b2f58cb3398a3",
+    "context_terms": [
+      "container",
+      "doorway",
+      "entrance",
+      "threshold"
+    ],
+    "focused_second_pass_count": 3,
+    "focused_local_resolved_count": 1,
+    "focused_external_added_count": 2,
+    "external_candidate_count": 19,
+    "external_candidate_ratio": 0.558824,
+    "priority_covered_count": 9,
+    "priority_count": 11,
+    "priority_coverage_ratio": 0.818182,
+    "negative_external_count": 10,
+    "sequential_minus_baseline_ms": 56020.901,
+    "human_truth_available": false
+  },
+  "expert_api_synthetic_recheck": {
+    "round": 836,
+    "status": "passed",
+    "provider": "openai_chat",
+    "model": "openai/gpt-6-astra",
+    "endpoint_host": "vibeg.seer-robotics.cn",
+    "synthetic_image_sha256": "098e35364953ac7dc0d28771a4e2a30f5311fb2aab8d6cbe6e8bc3fd347c3738",
+    "synthetic_image_bytes": 8628,
+    "latency_ms": 14722.81,
+    "retry_count": 0,
+    "prompt_tokens": 302,
+    "completion_tokens": 16,
+    "total_tokens": 318,
+    "response_sha256": "31344e20570663a00501bf951bbb272d7b277c3b95131fb715b552e1c7d0390d",
+    "factory_data_uploaded": false
+  },
+  "tests": {
+    "targeted_passed": 14,
+    "targeted_failed": 0,
+    "full_project_passed": 2036,
+    "full_project_skipped": 1,
+    "full_project_subtests_passed": 294,
+    "startup_mutex_environment_test_excluded": true
+  },
+  "boundaries": {
+    "dispatch_performed_by_cascade": false,
+    "real_factory_image_uploaded_to_external_api": false,
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "test24_used": false,
+    "training_started": false,
+    "production_deployed": false
+  }
+}

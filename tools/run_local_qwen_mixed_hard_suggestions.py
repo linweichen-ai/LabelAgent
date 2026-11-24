@@ -72,7 +72,8 @@ RESPONSE_SCHEMA = {
     "additionalProperties": False,
 }
 
-INSTRUCTION = """You are independently reviewing one factory mobile-robot camera image.
+DEFAULT_PROMPT_PROFILE = "mixed-hard-baseline-v1"
+BASELINE_INSTRUCTION = """You are independently reviewing one factory mobile-robot camera image.
 Do not assume a class from color or from any prior candidate. Inspect visible evidence only.
 The exact project labels are: 车辆, pallet, person, floor, slope, ego, other_robot, cargo_floor.
 Treat slope as a physically inclined traversable surface, not merely orange/yellow paint.
@@ -81,6 +82,47 @@ raised cargo/loading floor. Count visible pallet instances conservatively. Repor
 when an edge crop, occlusion, distance, or texture prevents a reliable decision. Keep the
 review_note under 60 characters. Return only the requested compact JSON. This is an assistant
 suggestion, never human truth."""
+
+CONTAINER_TRANSITION_V2_INSTRUCTION = """You are independently reviewing one factory mobile-robot camera image.
+Do not assume a class from color or from any prior candidate. Inspect visible evidence only.
+The exact project labels are: 车辆, pallet, person, floor, slope, ego, other_robot, cargo_floor.
+Treat slope as a physically inclined traversable surface, not merely orange/yellow paint.
+Distinguish ego robot body/forks from other robots and vehicles. Distinguish pallet from a
+raised cargo/loading floor. Explicitly inspect the ground transition at every container or
+doorway entrance, including narrow regions beside or below carried cargo. If a possible ramp
+or threshold is only partly visible, use slope=uncertain and partial_edge_slope,
+occluded_slope, or uncertain rather than confidently absent. Do not infer a slope merely
+because a container, doorway, or yellow paint exists; a clearly flat transition remains
+absent. Count visible pallet instances conservatively. Report uncertain when an edge crop,
+occlusion, distance, or texture prevents a reliable decision. Keep the review_note under 60
+characters. Return only the requested compact JSON. This is an assistant suggestion, never
+human truth."""
+
+CONTAINER_TRANSITION_V3_INSTRUCTION = """You are independently reviewing one factory mobile-robot camera image.
+Do not assume a class from color or from any prior candidate. Inspect visible evidence only.
+The exact project labels are: 车辆, pallet, person, floor, slope, ego, other_robot, cargo_floor.
+Treat slope as a physically inclined traversable surface, not merely orange/yellow paint.
+Distinguish ego robot body/forks from other robots and vehicles. Distinguish pallet from a
+raised cargo/loading floor. Explicitly inspect the ground transition at every container or
+doorway entrance, including narrow regions beside or below carried cargo. Use this strict
+slope_geometry order: full_slope only for a clearly visible inclined surface;
+partial_edge_slope only for a visible inclined fragment at an image edge; occluded_slope only
+when visible ramp fragments or continuation support a ramp behind an occluder; uncertain only
+when a specific visible transition cannot be classified; otherwise no_visible_slope. Never
+use uncertain as a default. Do not infer a slope merely because a container, doorway, yellow
+paint, or cargo exists; a clearly flat transition remains absent. Count visible pallet
+instances conservatively. Report uncertain when an edge crop, occlusion, distance, or texture
+prevents a reliable decision. Keep the review_note under 60 characters. Return only the
+requested compact JSON. This is an assistant suggestion, never human truth."""
+
+PROMPT_PROFILES = {
+    DEFAULT_PROMPT_PROFILE: BASELINE_INSTRUCTION,
+    "mixed-hard-container-transition-v2": CONTAINER_TRANSITION_V2_INSTRUCTION,
+    "mixed-hard-container-transition-v3": CONTAINER_TRANSITION_V3_INSTRUCTION,
+}
+# Backward-compatible names for callers that import the original constants.
+PROMPT_PROFILE = DEFAULT_PROMPT_PROFILE
+INSTRUCTION = BASELINE_INSTRUCTION
 
 
 def sha256_bytes(data):
@@ -167,15 +209,27 @@ def load_inputs(manifest_path, receipt_path, image_root):
 
 
 def run_suggestions(*, rows, bindings, output_path, config, resume=True,
-                    limit=None, chat_fn=chat):
+                    limit=None, chat_fn=chat, instruction=None,
+                    prompt_profile=DEFAULT_PROMPT_PROFILE):
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    if instruction is None:
+        instruction = PROMPT_PROFILES.get(prompt_profile)
+        if instruction is None:
+            raise ValueError("unknown local Qwen prompt profile")
+    else:
+        prompt_profile = "custom"
+    if not isinstance(instruction, str) or not instruction.strip():
+        raise ValueError("a non-empty local Qwen instruction is required")
+    instruction_sha256 = sha256_bytes(instruction.encode("utf-8"))
     existing = {}
     if resume and output_path.is_file():
         prior = json.loads(output_path.read_text(encoding="utf-8"))
         if (prior.get("manifest_sha256") != bindings["manifest_sha256"]
-                or prior.get("receipt_sha256") != bindings["receipt_sha256"]):
-            raise ValueError("existing suggestions belong to a different review pack")
+                or prior.get("receipt_sha256") != bindings["receipt_sha256"]
+                or prior.get("instruction_sha256") != instruction_sha256):
+            raise ValueError(
+                "existing suggestions belong to a different review pack or instruction")
         existing = {row["sample_id"]: row for row in prior.get("rows", [])
                     if row.get("status") == "passed"}
     records = []
@@ -190,7 +244,7 @@ def run_suggestions(*, rows, bindings, output_path, config, resume=True,
         image = row["_image_path"].read_bytes()
         started = time.perf_counter()
         try:
-            result = chat_fn(config, INSTRUCTION, image,
+            result = chat_fn(config, instruction, image,
                              response_schema=RESPONSE_SCHEMA)
             _validate_machine_result(result)
             record = {
@@ -212,11 +266,14 @@ def run_suggestions(*, rows, bindings, output_path, config, resume=True,
                 "approved_for_training": False, "test24_used": False,
             }
         records.append(record)
-        _write_output(output_path, rows, records, bindings, config)
-    return _write_output(output_path, rows, records, bindings, config)
+        _write_output(output_path, rows, records, bindings, config,
+                      instruction_sha256, prompt_profile)
+    return _write_output(output_path, rows, records, bindings, config,
+                         instruction_sha256, prompt_profile)
 
 
-def _write_output(output_path, source_rows, records, bindings, config):
+def _write_output(output_path, source_rows, records, bindings, config,
+                  instruction_sha256, prompt_profile):
     records = [_with_shadow_route(record) for record in records]
     passed = [row for row in records if row.get("status") == "passed"]
     failed = [row for row in records if row.get("status") == "failed"]
@@ -224,6 +281,8 @@ def _write_output(output_path, source_rows, records, bindings, config):
     payload = {
         "schema_version": SCHEMA_VERSION,
         **bindings,
+        "prompt_profile": prompt_profile,
+        "instruction_sha256": instruction_sha256,
         "model": str(config.get("llm_model") or ""),
         "status": "completed" if len(passed) == len(source_rows) else "partial",
         "samples_total": len(source_rows), "samples_attempted": len(records),
@@ -251,6 +310,9 @@ def _with_shadow_route(record):
     assessments = suggestion.get("assessments") or {}
     uncertain = [label for label, evidence in assessments.items()
                  if evidence == "uncertain"]
+    if suggestion.get("slope_geometry") in {
+            "partial_edge_slope", "occluded_slope"}:
+        uncertain.append("slope")
     conflicts = [value for value in suggestion.get("class_conflicts") or []
                  if value not in {"none", "uncertain"}]
     updated["expert_shadow_route"] = evaluate_expert_shadow_route(
@@ -283,6 +345,8 @@ def main(argv=None):
     parser.add_argument("--url", required=True)
     parser.add_argument("--model", default="labelagent-vlm8b")
     parser.add_argument("--limit", type=int)
+    parser.add_argument("--prompt-profile", choices=tuple(PROMPT_PROFILES),
+                        default=DEFAULT_PROMPT_PROFILE)
     parser.add_argument("--no-resume", action="store_true")
     args = parser.parse_args(argv)
     rows, bindings = load_inputs(args.manifest, args.receipt, args.image_root)
@@ -291,7 +355,8 @@ def main(argv=None):
         config={"llm_url": args.url.rstrip("/"), "llm_model": args.model,
                 "llm_prompt_profile": "compact", "llm_max_tokens": 768,
                 "llm_timeout_seconds": 90, "llm_busy_retries": 2},
-        resume=not args.no_resume, limit=args.limit)
+        resume=not args.no_resume, limit=args.limit,
+        prompt_profile=args.prompt_profile)
     print(json.dumps({key: result[key] for key in (
         "status", "samples_total", "samples_attempted", "samples_passed",
         "samples_failed", "latency_median_ms", "latency_p95_ms",

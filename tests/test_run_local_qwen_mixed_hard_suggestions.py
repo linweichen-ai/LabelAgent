@@ -4,7 +4,14 @@ import json
 import pytest
 
 from tools.run_local_qwen_mixed_hard_suggestions import (
-    LABELS, load_inputs, run_suggestions,
+    CONTAINER_TRANSITION_V2_INSTRUCTION,
+    CONTAINER_TRANSITION_V3_INSTRUCTION,
+    DEFAULT_PROMPT_PROFILE,
+    LABELS,
+    _with_shadow_route,
+    load_inputs,
+    run_suggestions,
+    sha256_bytes,
 )
 
 
@@ -67,6 +74,8 @@ def test_generates_separate_candidate_only_resume_packet(tmp_path):
     assert first["status"] == "partial"
     assert first["samples_passed"] == 2
     assert first["automatic_truth_prefill"] is False
+    assert len(first["instruction_sha256"]) == 64
+    assert first["prompt_profile"] == DEFAULT_PROMPT_PROFILE
     second = run_suggestions(
         rows=rows, bindings=bindings, output_path=output,
         config={"llm_model": "fixture"}, limit=1, chat_fn=fake_chat)
@@ -100,6 +109,52 @@ def test_rejects_foreign_resume_packet(tmp_path):
         "manifest_sha256": "0" * 64, "receipt_sha256": "1" * 64,
         "rows": [],
     }), encoding="utf-8")
-    with pytest.raises(ValueError, match="different review pack"):
+    with pytest.raises(ValueError, match="different review pack or instruction"):
         run_suggestions(rows=rows, bindings=bindings, output_path=output,
                         config={}, chat_fn=lambda *args, **kwargs: _result())
+
+
+def test_rejects_resume_after_instruction_change(tmp_path):
+    manifest, receipt, image_root = _fixture(tmp_path)
+    rows, bindings = load_inputs(manifest, receipt, image_root)
+    output = tmp_path / "suggestions.json"
+    run_suggestions(
+        rows=rows, bindings=bindings, output_path=output,
+        config={"llm_model": "fixture"}, limit=1,
+        instruction="prompt one", chat_fn=lambda *args, **kwargs: _result())
+    with pytest.raises(ValueError, match="different review pack or instruction"):
+        run_suggestions(
+            rows=rows, bindings=bindings, output_path=output,
+            config={"llm_model": "fixture"}, limit=1,
+            instruction="prompt two", chat_fn=lambda *args, **kwargs: _result())
+
+
+def test_difficult_slope_geometry_is_a_hard_shadow_signal():
+    result = _result()
+    result["slope_geometry"] = "occluded_slope"
+    record = _with_shadow_route({
+        "status": "passed", "latency_ms": 1000, "suggestion": result,
+    })
+    route = record["expert_shadow_route"]
+    assert route["recommended"] is True
+    assert "priority_semantic_uncertainty" in route["selection"]["hard_signal_codes"]
+    assert route["dispatch_performed"] is False
+    assert route["external_upload_performed"] is False
+
+
+def test_generic_uncertain_geometry_does_not_override_absent_slope():
+    result = _result()
+    result["slope_geometry"] = "uncertain"
+    record = _with_shadow_route({
+        "status": "passed", "latency_ms": 1000, "suggestion": result,
+    })
+    route = record["expert_shadow_route"]
+    assert route["recommended"] is False
+    assert route["selection"]["hard_signal_codes"] == []
+
+
+def test_experimental_prompt_profiles_reproduce_frozen_runs():
+    assert sha256_bytes(CONTAINER_TRANSITION_V2_INSTRUCTION.encode("utf-8")) == (
+        "3045ef13947e1bd56e50c1f16f64d036763660a34866074b73159e903e7a32df")
+    assert sha256_bytes(CONTAINER_TRANSITION_V3_INSTRUCTION.encode("utf-8")) == (
+        "62f07a69d7af3994cb1ff6fcd7b332aa3f14814ef0675f9382136f31ed3e48a1")

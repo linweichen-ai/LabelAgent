@@ -1,0 +1,23 @@
+{
+  "round": 817,
+  "date": "2026-11-24",
+  "model": "openai/gpt-6-astra",
+  "endpoint_host": "vibeg.seer-robotics.cn",
+  "synthetic_image_sha256": "098e35364953ac7dc0d28771a4e2a30f5311fb2aab8d6cbe6e8bc3fd347c3738",
+  "synthetic_image_bytes": 8628,
+  "synthetic_image_width": 512,
+  "synthetic_image_height": 410,
+  "latency_ms": 5390.778,
+  "retry_count": 0,
+  "prompt_tokens": 4415,
+  "completion_tokens": 16,
+  "total_tokens": 4431,
+  "response_sha256": "31344e20570663a00501bf951bbb272d7b277c3b95131fb715b552e1c7d0390d",
+  "status": "passed",
+  "factory_data_uploaded": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "test24_used": false,
+  "production_deployed": false
+}

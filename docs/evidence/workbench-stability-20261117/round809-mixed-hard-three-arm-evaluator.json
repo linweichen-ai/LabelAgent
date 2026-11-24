@@ -1,0 +1,50 @@
+{
+  "round": 809,
+  "date": "2026-11-24",
+  "status": "evaluator_ready_inputs_incomplete",
+  "tool": "tools/evaluate_mixed_hard_three_arm.py",
+  "test_file": "tests/test_evaluate_mixed_hard_three_arm.py",
+  "evaluation_scope": {
+    "sample_count": 34,
+    "arms": [
+      "local_only",
+      "all_external",
+      "hybrid"
+    ],
+    "hybrid_external_sample_count": 17,
+    "reference_kind": "declared_human_review_not_pixel_truth"
+  },
+  "frozen_inputs": {
+    "manifest_sha256": "4cd7eadb244cadad83208b4f2d9f304da457830b839070dd796edf77f53dad50",
+    "local_suggestions_sha256": "b0bff89db15a664d0e6bae1ce1a06b3a357b89c7efd3825b517e4a90051c8b1b",
+    "hybrid_queue_sha256": "39e12f5f7fa5823ec925a364c0b630333a59e72dc9c8d3e0d1347320e012df9b",
+    "all_external_queue_sha256": "63638ee8754b0b274562cf279e564f5fcbf6ba72b4af16a8c58c87fb589b782c"
+  },
+  "validation": {
+    "focused_tests_passed": 6,
+    "related_tests_passed": 36,
+    "related_test_duration_seconds": 4.52,
+    "expanded_regression_tests_passed": 361,
+    "expanded_regression_subtests_passed": 87,
+    "expanded_regression_duration_seconds": 10.27,
+    "direct_cli_import_verified": true,
+    "incomplete_adjudication_exit_code": 1,
+    "incomplete_adjudication_error": "unsupported adjudication schema",
+    "output_created_on_failed_gate": false
+  },
+  "safety": {
+    "candidate_only": true,
+    "human_truth": false,
+    "approved_for_training": false,
+    "test24_used": false,
+    "deployment_gate_passed": false,
+    "external_api_calls_this_round": 0,
+    "real_images_uploaded_this_round": 0,
+    "incremental_api_cost": 0
+  },
+  "missing_inputs": [
+    "complete benchmark-ready declared human review",
+    "authorized complete external expert results for all 34 samples"
+  ],
+  "quality_metrics_claimed": false
+}

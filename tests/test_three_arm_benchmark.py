@@ -88,6 +88,20 @@ class ThreeArmBenchmarkTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 build_three_arm_report(item)
 
+    def test_real_reference_requires_pallet_quality_and_scores_it(self):
+        item = payload()
+        item.update(synthetic_fixture=False, human_reference=True,
+                    reviewer_confirmed=True)
+        with self.assertRaisesRegex(ValueError, "pallet_quality"):
+            build_three_arm_report(item)
+        item["samples"][0]["pallet_quality"] = "hole_error"
+        item["samples"][1]["pallet_quality"] = "not_applicable"
+        report = build_three_arm_report(item)
+        local = report["arms"][0]
+        self.assertTrue(local["pallet_quality_human_referenced"])
+        self.assertEqual(local["pallet_quality_metrics"]["hole_error"]["recall"], 1.0)
+        self.assertFalse(report["pixel_truth"])
+
     def test_requires_exact_three_arm_coverage(self):
         missing = payload(); missing["runs"].pop()
         with self.assertRaisesRegex(ValueError, "exactly one"):

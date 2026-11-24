@@ -70,6 +70,7 @@ class PrepareThreeArmReferenceTest(unittest.TestCase):
             self.assertTrue(payload["reviewer_confirmed"])
             self.assertFalse(payload["pixel_truth"])
             self.assertFalse(payload["approved_for_training"])
+            self.assertEqual(payload["samples"][0]["pallet_quality"], "not_applicable")
             self.assertEqual(payload["samples"][0]["source_image_sha256"],
                              manifest["rows"][0]["source_image_sha256"])
 

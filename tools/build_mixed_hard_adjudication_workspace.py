@@ -161,6 +161,15 @@ def validate_submission(manifest, manifest_sha256, submission):
                 raise ValueError(f"pallet count disagrees with presence: {sample_id}")
             if "uncertain" in presence.values():
                 benchmark_ready = False
+            quality = row.get("pallet_quality")
+            if quality == "uncertain":
+                benchmark_ready = False
+            if presence["pallet"] == "absent" and quality != "not_applicable":
+                raise ValueError(f"pallet quality disagrees with absence: {sample_id}")
+            if (presence["pallet"] == "present"
+                    and quality not in {"complete", "hole_error", "merged_instances",
+                                        "missed_instance"}):
+                raise ValueError(f"pallet quality disagrees with presence: {sample_id}")
         else:
             benchmark_ready = False
     return {"status": "valid_complete_review_record", "sample_count": len(rows),

@@ -66,8 +66,17 @@ def _validate_reference(payload):
                                     "pallet_instance_count", integer=True)
         if (presence["pallet"] == "absent") != (pallet_count == 0):
             raise ValueError("pallet presence and instance count disagree")
+        pallet_quality = sample.get("pallet_quality")
+        if not synthetic and pallet_quality not in {
+                "complete", "hole_error", "merged_instances", "missed_instance",
+                "not_applicable"}:
+            raise ValueError("real reference requires adjudicated pallet_quality")
+        if (not synthetic and presence["pallet"] == "absent"
+                and pallet_quality != "not_applicable"):
+            raise ValueError("pallet quality disagrees with absent reference")
         references[sample_id] = {"class_presence": presence,
-                                 "pallet_instance_count": pallet_count}
+                                 "pallet_instance_count": pallet_count,
+                                 "pallet_quality": pallet_quality}
     return partition.strip(), references, synthetic
 
 
@@ -159,6 +168,8 @@ def build_three_arm_report(payload):
         counts = {label: {"tp": 0, "fp": 0, "fn": 0} for label in LABELS}
         reference_pallets = recovered_pallets = missed_pallets = extra_pallets = 0
         holes = merges = conflicts = slope_fp_on_floor = 0
+        quality_counts = {name: {"tp": 0, "fp": 0, "fn": 0}
+                          for name in ("hole_error", "merged_instances")}
         for item in arm_runs:
             reference = references[item["sample_id"]]
             predicted = item["prediction"]
@@ -186,6 +197,16 @@ def build_three_arm_report(payload):
                 holes += predicted["pallet_hole_errors"]
                 merges += predicted["pallet_merge_errors"]
                 conflicts += predicted["vehicle_robot_conflicts"]
+            for name, key in (("hole_error", "pallet_hole_errors"),
+                              ("merged_instances", "pallet_merge_errors")):
+                expected_error = reference.get("pallet_quality") == name
+                predicted_error = bool(predicted and predicted[key] > 0)
+                if expected_error and predicted_error:
+                    quality_counts[name]["tp"] += 1
+                elif predicted_error:
+                    quality_counts[name]["fp"] += 1
+                elif expected_error:
+                    quality_counts[name]["fn"] += 1
         per_class, total = {}, {"tp": 0, "fp": 0, "fn": 0}
         for label in LABELS:
             item = counts[label]
@@ -200,6 +221,14 @@ def build_three_arm_report(payload):
         slope_negative_floor_frames = sum(
             ref["class_presence"]["slope"] == "absent"
             and ref["class_presence"]["floor"] == "present" for ref in references.values())
+        quality_metrics = {}
+        for name, item in quality_counts.items():
+            quality_metrics[name] = {
+                **item,
+                "precision": _ratio(item["tp"], item["tp"] + item["fp"]),
+                "recall": _ratio(item["tp"], item["tp"] + item["fn"]),
+                "f1": _f1_counts(item["tp"], item["fp"], item["fn"]),
+            }
         reports.append({
             "arm": arm,
             "attempted_samples": len(arm_runs),
@@ -230,6 +259,8 @@ def build_three_arm_report(payload):
             "pallet_extra_instances": extra_pallets,
             "pallet_hole_errors": holes,
             "pallet_merge_errors": merges,
+            "pallet_quality_metrics": quality_metrics if not synthetic else None,
+            "pallet_quality_human_referenced": not synthetic,
             "vehicle_robot_class_conflicts": conflicts,
             "sam_artifacts_reused_across_arms": True,
         })
@@ -237,6 +268,9 @@ def build_three_arm_report(payload):
         "schema_version": OUTPUT_SCHEMA,
         "partition": partition,
         "reference_mode": "synthetic_fixture" if synthetic else "reviewer_confirmed_human",
+        "reference_scope": ("synthetic_protocol" if synthetic else
+                            "declared_human_class_presence_pallet_count_and_quality"),
+        "pixel_truth": False,
         "synthetic_fixture": synthetic,
         "human_reference": not synthetic,
         "reviewer_confirmed": not synthetic,

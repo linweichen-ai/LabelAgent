@@ -26,6 +26,7 @@ def build_reference(packet_dir, submission):
             "source_image_sha256": source["source_image_sha256"],
             "class_presence": {label: presence[label] for label in LABELS},
             "pallet_instance_count": row["pallet_instance_count"],
+            "pallet_quality": row["pallet_quality"],
         })
     return {
         "schema_version": INPUT_SCHEMA,

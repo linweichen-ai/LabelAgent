@@ -1,0 +1,31 @@
+{
+  "schema_version": "labelagent.external-authorization-ledger-evidence.v1",
+  "round": 854,
+  "date": "2026-11-25",
+  "ledger_schema": "labelagent.external-authorization-ledger.v1",
+  "properties": {
+    "authorization_hash_namespaced": true,
+    "single_output_directory_bound": true,
+    "per_attempt_atomic_claim": true,
+    "claim_precedes_model_or_network_call": true,
+    "deleted_result_replay_rejected": true,
+    "different_output_reuse_rejected": true,
+    "concurrent_duplicate_rejected": true,
+    "corrupt_ledger_fails_closed": true,
+    "windows_linux_compatible": true,
+    "image_bytes_stored": false,
+    "credentials_stored": false
+  },
+  "tests": {
+    "targeted_passed": 38,
+    "full_passed": 2077,
+    "full_skipped": 1,
+    "full_subtests_passed": 294
+  },
+  "external_call_performed": false,
+  "candidate_only": true,
+  "human_truth": false,
+  "approved_for_training": false,
+  "test24_used": false,
+  "production_deployed": false
+}

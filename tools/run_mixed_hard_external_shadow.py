@@ -300,7 +300,8 @@ def load_authorized_inputs(queue_path, manifest_path, receipt_path, image_root,
 
 
 def run_shadow(*, samples, bindings, output_path, config,
-               max_new_attempts=None, chat_fn=chat_external_expert):
+               max_new_attempts=None, chat_fn=chat_external_expert,
+               claim_attempt_fn=None):
     authorized_target = bindings.get("authorized_expert_target")
     if authorized_target is not None:
         try:
@@ -346,11 +347,13 @@ def run_shadow(*, samples, bindings, output_path, config,
         if (max_new_attempts is not None
                 and new_attempts >= max_new_attempts):
             continue
-        new_attempts += 1
         source_image = sample["_image_path"].read_bytes()
         image, upload_image = prepare_upload_image(
             source_image, bindings.get("image_variant") or
             {"name": "source", "mode": "source"})
+        if claim_attempt_fn is not None:
+            claim_attempt_fn(sample, upload_image)
+        new_attempts += 1
         started = time.perf_counter()
         expert_metadata = {}
         try:

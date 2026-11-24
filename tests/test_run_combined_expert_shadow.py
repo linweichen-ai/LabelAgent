@@ -1,3 +1,4 @@
+import hashlib
 import json
 import subprocess
 import sys
@@ -19,7 +20,9 @@ TARGET = {"provider": "openai_chat",
 def loader(*args, **kwargs):
     name = kwargs.get("authorization_run_name")
     count = 34 if name == "all34_source_640x512" else 17
-    return ([{"sample_id": f"sample-{index}"} for index in range(count)], {
+    return ([{"sample_id": f"sample-{index}", "cohort": "hard",
+              "source_image_sha256": f"{index + 1:064x}"}
+             for index in range(count)], {
         "authorization_schema": "labelagent.external-upload-authorization.v4",
         "authorization_sha256": "a" * 64,
         "authorized_upload_count": 51,
@@ -28,15 +31,26 @@ def loader(*args, **kwargs):
 
 
 def runner(statuses, calls):
-    cumulative = 0
-    def run(*, samples, bindings, output_path, config, max_new_attempts=None):
-        nonlocal cumulative
+    completed_by_path = {}
+    def run(*, samples, bindings, output_path, config, max_new_attempts=None,
+            claim_attempt_fn=None):
         calls.append(max_new_attempts)
         status = statuses.pop(0)
+        key = str(output_path)
+        cumulative = completed_by_path.get(key, 0)
         if max_new_attempts is None:
-            cumulative = len(samples)
+            target = len(samples)
         elif max_new_attempts > 0:
-            cumulative = min(len(samples), cumulative + max_new_attempts)
+            target = min(len(samples), cumulative + max_new_attempts)
+        else:
+            target = cumulative
+        for sample in samples[cumulative:target]:
+            upload_sha = hashlib.sha256(
+                (key + sample["sample_id"]).encode("utf-8")).hexdigest()
+            if claim_attempt_fn is not None:
+                claim_attempt_fn(sample, {"upload_image_sha256": upload_sha})
+        cumulative = target
+        completed_by_path[key] = cumulative
         payload = {
             "status": status,
             "external_attempts": cumulative,
@@ -57,7 +71,8 @@ def runner(statuses, calls):
 def arguments(tmp_path):
     return dict(all_queue="all", hybrid_queue="hybrid", manifest="manifest",
                 receipt="receipt", image_root="images", authorization="auth",
-                output_dir=tmp_path, config={"llm_expert_retry_count": 0,
+                output_dir=tmp_path, ledger_dir=tmp_path / "ledger",
+                config={"llm_expert_retry_count": 0,
                     "llm_expert_provider": TARGET["provider"],
                     "llm_expert_url": TARGET["url"],
                     "llm_expert_model": TARGET["model"]})
@@ -75,6 +90,8 @@ def test_runs_two_prevalidated_stages_with_exact_51_attempts(tmp_path):
     assert result["automatic_retry_enabled"] is False
     assert result["candidate_only"] is True
     assert result["human_truth"] is False
+    assert result["authorization_ledger"]["claimed_attempts"] == 51
+    assert len(result["authorization_ledger"]["session_sha256"]) == 64
 
 
 def test_stops_before_resized_stage_when_source_is_incomplete(tmp_path):
@@ -136,6 +153,37 @@ def test_rejects_model_or_endpoint_drift_before_network(tmp_path):
             run_combined(**args, load_fn=loader,
                          run_fn=runner(["in_progress"], calls))
         assert calls == []
+
+
+def test_authorization_cannot_be_reused_with_another_output_directory(tmp_path):
+    shared_ledger = tmp_path / "shared-ledger"
+    first = arguments(tmp_path / "first")
+    first["ledger_dir"] = shared_ledger
+    run_combined(**first, load_fn=loader,
+                 run_fn=runner(["in_progress", "completed", "completed"], []))
+    second_calls = []
+    second = arguments(tmp_path / "second")
+    second["ledger_dir"] = shared_ledger
+    with pytest.raises(ValueError, match="already claimed by another output"):
+        run_combined(**second, load_fn=loader,
+                     run_fn=runner(["in_progress"], second_calls))
+    assert second_calls == []
+
+
+def test_deleted_result_cannot_repeat_an_already_claimed_paid_call(tmp_path):
+    args = arguments(tmp_path)
+    first_calls = []
+    result = run_combined(**args, load_fn=loader,
+                          run_fn=runner(["partial"], first_calls))
+    assert result["external_attempts"] == 8
+    (tmp_path / "all34-source-results.json").unlink()
+    second_calls = []
+    with pytest.raises(ValueError, match="already claimed"):
+        run_combined(**args, load_fn=loader,
+                     run_fn=runner(["in_progress"], second_calls))
+    assert second_calls == [8]
+    assert len(list((tmp_path / "ledger" / ("a" * 64) /
+                     "attempts").glob("*.json"))) == 8
 
 
 def test_cli_entrypoint_loads_from_project_root():

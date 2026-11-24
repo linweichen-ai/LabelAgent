@@ -12,6 +12,9 @@ if str(ROOT) not in sys.path:
 from tools.run_mixed_hard_external_shadow import (
     load_authorized_inputs, normalize_expert_target, run_shadow, sha256_file,
 )
+from tools.external_authorization_ledger import (
+    AuthorizationLedger, default_ledger_dir,
+)
 
 
 SCHEMA_VERSION = "labelagent.combined-expert-shadow-run.v1"
@@ -30,7 +33,7 @@ def _attempts(path):
 
 def _write_receipt(path, *, status, source_result, resized_result,
                    source_path, resized_path, prior_attempts,
-                   canary_guard=None):
+                   canary_guard=None, authorization_ledger=None):
     source_attempts = source_result.get("external_attempts", 0)
     resized_attempts = (resized_result or {}).get("external_attempts", 0)
     total = source_attempts + resized_attempts
@@ -51,6 +54,7 @@ def _write_receipt(path, *, status, source_result, resized_result,
         "maximum_authorized_external_attempts": 51,
         "automatic_retry_enabled": False,
         "source_canary_guard": canary_guard,
+        "authorization_ledger": authorization_ledger,
         "candidate_only": True,
         "human_truth": False,
         "approved_for_training": False,
@@ -124,6 +128,7 @@ def canary_guard(result, *, expected_attempts, max_median_latency_ms,
 
 def run_combined(*, all_queue, hybrid_queue, manifest, receipt, image_root,
                  authorization, output_dir, config,
+                 ledger_dir=None,
                  source_canary_attempts=8,
                  canary_max_median_latency_ms=60000,
                  canary_max_average_tokens=30000,
@@ -162,6 +167,14 @@ def run_combined(*, all_queue, hybrid_queue, manifest, receipt, image_root,
         raise ValueError("combined authorization target differs")
     if config.get("llm_expert_retry_count", 0) != 0:
         raise ValueError("combined shadow forbids automatic API retries")
+    authorization_sha = source_bindings["authorization_sha256"]
+    ledger = AuthorizationLedger(
+        ledger_dir or default_ledger_dir(),
+        authorization_sha256=authorization_sha, output_dir=output_dir)
+    source_claim = lambda sample, upload: ledger.claim_attempt(
+        "all34_source_640x512", sample, upload)
+    resized_claim = lambda sample, upload: ledger.claim_attempt(
+        "hybrid17_resize_512x410", sample, upload)
     prior_source_attempts = _attempts(source_path)
     prior_attempts = prior_source_attempts + _attempts(resized_path)
     source_samples = stratified_canary_order(
@@ -169,6 +182,7 @@ def run_combined(*, all_queue, hybrid_queue, manifest, receipt, image_root,
     source = run_fn(
         samples=source_samples, bindings=source_bindings,
         output_path=source_path, config=config,
+        claim_attempt_fn=source_claim,
         max_new_attempts=(source_canary_attempts
                           if prior_source_attempts == 0 else 0))
     if source.get("status") == "partial":
@@ -178,7 +192,8 @@ def run_combined(*, all_queue, hybrid_queue, manifest, receipt, image_root,
             source_path=source_path, resized_path=resized_path,
             prior_attempts=prior_attempts,
             canary_guard={"passed": False,
-                          "reasons": ["canary_has_failed_request"]})
+                          "reasons": ["canary_has_failed_request"]},
+            authorization_ledger=ledger.snapshot())
     expected_canary = (source_canary_attempts if prior_source_attempts == 0
                        else prior_source_attempts)
     guard = canary_guard(
@@ -190,25 +205,29 @@ def run_combined(*, all_queue, hybrid_queue, manifest, receipt, image_root,
             run_receipt_path, status="source_canary_guard_failed",
             source_result=source, resized_result=None,
             source_path=source_path, resized_path=resized_path,
-            prior_attempts=prior_attempts, canary_guard=guard)
+            prior_attempts=prior_attempts, canary_guard=guard,
+            authorization_ledger=ledger.snapshot())
     if source.get("status") == "in_progress":
         source = run_fn(samples=source_samples, bindings=source_bindings,
-                        output_path=source_path, config=config)
+                        output_path=source_path, config=config,
+                        claim_attempt_fn=source_claim)
     if source.get("status") != "completed":
         return _write_receipt(
             run_receipt_path, status="source_incomplete_resized_not_started",
             source_result=source, resized_result=None,
             source_path=source_path, resized_path=resized_path,
-            prior_attempts=prior_attempts, canary_guard=guard)
+            prior_attempts=prior_attempts, canary_guard=guard,
+            authorization_ledger=ledger.snapshot())
     resized = run_fn(samples=resized_samples, bindings=resized_bindings,
-                     output_path=resized_path, config=config)
+                     output_path=resized_path, config=config,
+                     claim_attempt_fn=resized_claim)
     status = ("completed" if resized.get("status") == "completed"
               else "resized_incomplete")
     return _write_receipt(
         run_receipt_path, status=status, source_result=source,
         resized_result=resized, source_path=source_path,
         resized_path=resized_path, prior_attempts=prior_attempts,
-        canary_guard=guard)
+        canary_guard=guard, authorization_ledger=ledger.snapshot())
 
 
 def main(argv=None):
@@ -220,6 +239,7 @@ def main(argv=None):
     parser.add_argument("--image-root", type=Path, required=True)
     parser.add_argument("--authorization", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--ledger-dir", type=Path)
     parser.add_argument("--url", required=True)
     parser.add_argument("--model", required=True)
     parser.add_argument("--key-env", required=True)
@@ -234,6 +254,7 @@ def main(argv=None):
         manifest=args.manifest, receipt=args.receipt,
         image_root=args.image_root, authorization=args.authorization,
         output_dir=args.output_dir,
+        ledger_dir=args.ledger_dir,
         source_canary_attempts=args.source_canary_attempts,
         canary_max_median_latency_ms=args.canary_max_median_latency_ms,
         canary_max_average_tokens=args.canary_max_average_tokens,

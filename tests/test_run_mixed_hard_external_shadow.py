@@ -243,6 +243,27 @@ def test_authorized_shadow_rejects_internal_retry_configuration(tmp_path):
                    chat_fn=lambda *args, **kwargs: _expert_result())
 
 
+def test_durable_attempt_claim_runs_before_any_model_or_network_call(tmp_path):
+    queue, manifest, receipt, root, auth = _fixture(tmp_path)
+    samples, bindings = load_authorized_inputs(queue, manifest, receipt, root, auth)
+    calls = []
+    claims = []
+    def refuse_claim(sample, upload_image):
+        claims.append((sample["sample_id"], upload_image["upload_image_sha256"]))
+        raise ValueError("already claimed")
+    with pytest.raises(ValueError, match="already claimed"):
+        run_shadow(
+            samples=samples, bindings=bindings,
+            output_path=tmp_path / "must-not-exist.json",
+            config={"llm_expert_model": "fixture"},
+            claim_attempt_fn=refuse_claim,
+            chat_fn=lambda *args, **kwargs: calls.append(1))
+    assert len(claims) == 1
+    assert len(claims[0][1]) == 64
+    assert calls == []
+    assert not (tmp_path / "must-not-exist.json").exists()
+
+
 def test_bounded_canary_attempts_resume_without_duplicate_calls(tmp_path):
     queue, manifest, receipt, root, auth = _fixture(tmp_path)
     samples, bindings = load_authorized_inputs(queue, manifest, receipt, root, auth)

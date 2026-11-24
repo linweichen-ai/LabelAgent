@@ -4607,3 +4607,9 @@ Round824审计出的11张斜坡分歧帧已经接入新的离线复核工作区�
 - 定向测试 24/24、全量测试 `2060 passed, 1 skipped, 294 subtests passed`；工厂图片工作区仅本地保留、未跟踪、未上传，正式工作台未部署。
 - 全量测试曾因 D 盘低于既有 264 MiB 存储门槛被正确拒绝；未放宽门槛。两个可重建的远端回读副本完整迁移到 C 盘归档后，D 盘可用空间约 936 MiB，临时虚拟环境挂接已移除。
 - 详见 `docs/HUMAN_REVIEW_COMPLETION_GUARD_ROUND849_20261125.md` 和 `docs/evidence/workbench-stability-20261117/human-review-completion-guard-round849.json`。
+
+# Round 850：外部专家 API 合成图复测（2026-11-25）
+
+- 使用当前配置的 `openai/gpt-6-astra` 完成 1 次真实联网合成图调用，状态 `passed`，延迟 4,720.7 ms，Token 为 149 输入、16 输出、165 总计，重试 0、缓存未命中。
+- 上传内容仅为程序生成的 320×240 合成图，工厂数据、人工真值和 `test24` 均未外发；正式工作台外部专家路由保持关闭。
+- 接口未返回可核验费用字段，因此费用记录为未知，不虚构金额。详见 `docs/EXTERNAL_EXPERT_SYNTHETIC_RETEST_ROUND850_20261125.md` 和 `docs/evidence/workbench-stability-20261117/external-expert-synthetic-retest-round850.json`。

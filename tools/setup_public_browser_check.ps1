@@ -1,14 +1,18 @@
 param(
     [string]$Python = "py",
-    [string]$TempDir = ""
+    [string]$TempDir = "",
+    [string]$VenvDir = ""
 )
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 . (Join-Path $PSScriptRoot "resolve_python312.ps1")
-$Venv = Join-Path $Root ".repro\public-browser-venv"
+$Requirements = Join-Path $Root "tools\requirements-public-browser-qa.txt"
+$RequirementsHash = (Get-FileHash -LiteralPath $Requirements -Algorithm SHA256).Hash.Substring(0, 12).ToLowerInvariant()
+$CacheRoot = if ($env:LOCALAPPDATA) { Join-Path $env:LOCALAPPDATA "LabelAgent" } else { Join-Path ([IO.Path]::GetTempPath()) "LabelAgent" }
+$Venv = if ($VenvDir) { [IO.Path]::GetFullPath($VenvDir) } else { Join-Path $CacheRoot "public-browser-$RequirementsHash" }
 $VenvPython = Join-Path $Venv "Scripts\python.exe"
-$ResolvedTemp = if ($TempDir) { [IO.Path]::GetFullPath($TempDir) } else { Join-Path $Root ".repro\public-browser-temp" }
+$ResolvedTemp = if ($TempDir) { [IO.Path]::GetFullPath($TempDir) } else { Join-Path ([IO.Path]::GetTempPath()) "LabelAgent-public-browser-$RequirementsHash" }
 
 Set-Location $Root
 New-Item -ItemType Directory -Force -Path $ResolvedTemp | Out-Null
@@ -26,7 +30,8 @@ if (-not (Test-Path $VenvPython)) {
     if ($LASTEXITCODE -ne 0) { throw "Python 3.12 browser-check virtual environment creation failed" }
 }
 
-& $VenvPython -m pip install -r tools\requirements-public-browser-qa.txt
+Write-Host "Using short browser-check environment: $Venv"
+& $VenvPython -m pip install -r $Requirements
 if ($LASTEXITCODE -ne 0) { throw "Public browser-check dependency installation failed" }
 & $VenvPython -m pip check
 if ($LASTEXITCODE -ne 0) { throw "Public browser-check dependency consistency check failed" }

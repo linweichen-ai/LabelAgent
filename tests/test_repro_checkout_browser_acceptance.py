@@ -6,6 +6,14 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ReproCheckoutBrowserAcceptanceTests(unittest.TestCase):
+    def test_public_browser_setup_uses_short_dependency_keyed_environment(self):
+        source = (ROOT / "tools" / "setup_public_browser_check.ps1").read_text(encoding="utf-8")
+        self.assertIn('Get-FileHash -LiteralPath $Requirements -Algorithm SHA256', source)
+        self.assertIn('Join-Path $env:LOCALAPPDATA "LabelAgent"', source)
+        self.assertIn('"public-browser-$RequirementsHash"', source)
+        self.assertIn('[string]$VenvDir = ""', source)
+        self.assertNotIn('Join-Path $Root ".repro\\public-browser-venv"', source)
+
     def test_setup_installs_pinned_browser_qa_dependencies(self):
         source = (ROOT / "tools" / "setup_windows.ps1").read_text(encoding="utf-8")
         self.assertIn("pip install -r tools\\requirements-browser-qa.txt", source)

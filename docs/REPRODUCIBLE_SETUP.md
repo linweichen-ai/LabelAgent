@@ -124,7 +124,7 @@ HTTP 200 只证明服务连通。完整验收还应在一张已授权图片上�
 powershell -ExecutionPolicy Bypass -File tools\setup_public_browser_check.ps1
 ```
 
-脚本在 `.repro/public-browser-venv` 建立独立环境，仅安装固定版本的 Pillow 与 Playwright，执行依赖一致性检查和真实 Edge 自检。它不会读取模型权重、MCAP、人工真值或本地工作状态，也不会把合成决定写成训练批准。
+脚本在用户本地缓存中建立按依赖哈希隔离的短路径环境，仅安装固定版本的 Pillow 与 Playwright，避免仓库位于深层 Windows 目录时触发路径长度限制；也可用 `-VenvDir` 显式指定其他短路径。随后脚本会执行依赖一致性检查和真实 Edge 自检。它不会读取模型权重、MCAP、人工真值或本地工作状态，也不会把合成决定写成训练批准。
 
 `tools/setup_windows.ps1` 已默认安装固定版本的浏览器验收依赖。只有在本轮更新前已经创建过 `.venv` 且不重新执行安装脚本时，才需要手动补装 `tools/requirements-browser-qa.txt`。单独运行命令为：
 

@@ -317,6 +317,8 @@ powershell -ExecutionPolicy Bypass -File `
 
 这条路径不读取私有数据、权重、密钥或人工真值，只证明页面、草稿、哈希篡改拦截和训练授权门禁可复现，不证明真实分割质量。
 
+脚本默认使用用户本地缓存中的短路径虚拟环境，仓库即使放在较深目录也不会因 Playwright 的文件路径过长而安装失败；如需自定义，可追加 `-VenvDir D:\LabelAgentBrowserQA`。
+
 ## 13 可选的 LoRA 候选验收
 
 如果团队另行提供了授权 LoRA ZIP，应先核对提供方给出的整包 SHA-256：

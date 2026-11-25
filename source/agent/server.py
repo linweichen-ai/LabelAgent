@@ -81,7 +81,13 @@ app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024 * 1024
 # image request to a long-lived disk log.  The browser already exposes live
 # progress, while routine access lines can otherwise exhaust a small volume.
 logging.getLogger("werkzeug").setLevel(logging.WARNING)
-state = {"video": None, "topic": None, "labels": [], "truth": {}, "reference_frames": {}, "config": {}, "candidates": {}, "candidates_by_topic": {}, "agent_runs": {}, "agent_runs_by_topic": {}, "candidate_revisions": {}, "candidate_revisions_by_topic": {}, "candidate_review_status": {}, "candidate_review_proposals": [], "human_review_transactions": {}, "rejected_candidates": {}}
+DEFAULT_PROJECT_LABELS = (
+    "车辆", "pallet", "person", "floor", "slope", "ego",
+    "other_robot", "cargo_floor",
+)
+
+
+state = {"video": None, "topic": None, "labels": list(DEFAULT_PROJECT_LABELS), "truth": {}, "reference_frames": {}, "config": {}, "candidates": {}, "candidates_by_topic": {}, "agent_runs": {}, "agent_runs_by_topic": {}, "candidate_revisions": {}, "candidate_revisions_by_topic": {}, "candidate_review_status": {}, "candidate_review_proposals": [], "human_review_transactions": {}, "rejected_candidates": {}}
 lock = threading.RLock()
 file_activation_intent_lock = threading.RLock()
 # A process-unique, JavaScript-safe base makes every service restart a new
@@ -1591,6 +1597,8 @@ def load():
         stored = _read_json(state_path())
         legacy_sessions = stored.pop("file_sessions", None)
         state.update(stored)
+    if not isinstance(state.get("labels"), list) or not state.get("labels"):
+        state["labels"] = list(DEFAULT_PROJECT_LABELS)
     config = state.setdefault("config", {})
     environment_defaults = {
         "llm_url": os.environ.get("LABELAGENT_VLM_URL", "").strip(),
@@ -1632,6 +1640,7 @@ def load():
     state.setdefault("candidate_review_proposals", [])
     state.setdefault("human_review_transactions", {})
     state.setdefault("rejected_candidates", {})
+    reconcile_project_labels_with_truth()
     recover_pending_human_reviews()
 
 
@@ -1834,6 +1843,56 @@ def current_inference_label_state():
         "auto_labels": auto_labels,
         "reference_only_labels": reference_only_labels,
     }
+
+
+def _labels_from_truth_frames(frames, output):
+    if not isinstance(frames, dict):
+        return
+    for shapes in frames.values():
+        if not isinstance(shapes, list):
+            continue
+        for shape in shapes:
+            label = shape.get("label") if isinstance(shape, dict) else None
+            if isinstance(label, str) and label.strip() and label.strip() not in output:
+                output.append(label.strip())
+
+
+def truth_labels_in_use():
+    """Return labels already present in persisted human truth, never candidates."""
+    output = []
+    _labels_from_truth_frames(state.get("truth"), output)
+    for frames in (state.get("truths_by_topic") or {}).values():
+        _labels_from_truth_frames(frames, output)
+    for session in (state.get("file_sessions") or {}).values():
+        if not isinstance(session, dict):
+            continue
+        _labels_from_truth_frames(session.get("truth"), output)
+        for frames in (session.get("truths_by_topic") or {}).values():
+            _labels_from_truth_frames(frames, output)
+    return output
+
+
+def reconcile_project_labels_with_truth():
+    """Repair legacy registry drift using only labels already in human truth.
+
+    This does not inspect machine candidates and cannot introduce an open-set
+    model proposal. It only restores the registry side of an already persisted
+    human annotation so a copied workspace remains usable after checkout.
+    """
+    labels = state.get("labels")
+    if not isinstance(labels, list) or not labels:
+        labels = list(DEFAULT_PROJECT_LABELS)
+    labels = [label.strip() for label in labels
+              if isinstance(label, str) and label.strip()]
+    for label in truth_labels_in_use():
+        if label not in labels:
+            labels.append(label)
+    state["labels"] = list(dict.fromkeys(labels))
+    selected = state.get("auto_labels")
+    if selected is not None:
+        state["auto_labels"] = [label for label in labels
+                                if label in selected]
+    return state["labels"]
 
 
 def label_state_sha256(label_state=None):
@@ -3564,6 +3623,7 @@ def activate_file(item, activation_generation=None):
         state.update(video=video, video_path=str(video.path), topic=next(iter(video.topics), None),
                      truth={}, truths_by_topic={}, reference_frames={}, candidates={}, candidates_by_topic={}, agent_runs={}, agent_runs_by_topic={}, candidate_revisions={}, candidate_revisions_by_topic={})
         state.update(previous)
+        reconcile_project_labels_with_truth()
         if state['topic'] not in video.topics:
             state['topic'] = next(iter(video.topics), None)
         session_swapped = time.perf_counter()
@@ -4415,9 +4475,21 @@ def set_labels():
     body = request.get_json() or {}
     with lock:
         generation, path, topic, _ = assert_request_label_state(body)
-        labels = [x.strip() for x in body["labels"] if x.strip()]
+        raw_labels = body.get("labels")
+        if not isinstance(raw_labels, list) or any(
+                not isinstance(label, str) for label in raw_labels):
+            raise ValueError("类别列表必须是字符串数组")
+        labels = [label.strip() for label in raw_labels if label.strip()]
         if len(set(labels)) != len(labels) or not labels:
             raise ValueError("类别不能为空或重复")
+        missing_truth_labels = [label for label in truth_labels_in_use()
+                                if label not in labels]
+        if missing_truth_labels:
+            raise ValueError(
+                "类别列表缺少已有人工标注类别："
+                + "、".join(missing_truth_labels)
+                + "。请保留这些类别；如需重命名，请先迁移对应标注")
+        previous_labels = list(state.get("labels") or [])
         state["labels"] = labels
         if state.get("auto_labels"):
             state["auto_labels"] = [label for label in labels if label in state["auto_labels"]]
@@ -4425,6 +4497,10 @@ def set_labels():
         label_state = current_inference_label_state()
         return jsonify(**label_state,
                        label_state_sha256=label_state_sha256(label_state),
+                       added_labels=[label for label in labels
+                                     if label not in previous_labels],
+                       removed_labels=[label for label in previous_labels
+                                       if label not in labels],
                        path=path, topic=topic,
                        file_activation_generation=generation,
                        description_invalidated=True)

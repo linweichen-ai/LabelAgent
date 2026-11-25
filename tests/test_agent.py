@@ -7462,6 +7462,53 @@ class ServerTests(unittest.TestCase):
             finally:
                 server.state = previous
 
+    def test_project_labels_add_explicit_class_and_reject_dropping_truth_class(self):
+        previous = server.state
+        with tempfile.TemporaryDirectory() as directory, \
+             patch.object(server, "WORK", Path(directory)):
+            server.state = {"video": FakeVideo(), "topic": "camera0",
+                "labels": ["pallet", "floor"], "auto_labels": ["pallet"],
+                "truth": {"0": [{"label": "floor", "points": [[0, 0], [2, 0], [2, 2]]}]},
+                "truths_by_topic": {}, "reference_frames": {}, "config": {},
+                "candidates": {}, "agent_runs": {}, "file_sessions": {}}
+            try:
+                client = server.app.test_client()
+                added = client.post("/api/labels", json={
+                    **active_label_write_scope(),
+                    "labels": ["pallet", "floor", "box"]})
+                self.assertEqual(added.status_code, 200, added.json)
+                self.assertEqual(added.json["added_labels"], ["box"])
+                self.assertEqual(added.json["removed_labels"], [])
+
+                dropped = client.post("/api/labels", json={
+                    **active_label_write_scope(), "labels": ["pallet", "box"]})
+                self.assertEqual(dropped.status_code, 400, dropped.json)
+                self.assertIn("缺少已有人工标注类别：floor", dropped.json["error"])
+                self.assertEqual(server.state["labels"], ["pallet", "floor", "box"])
+            finally:
+                server.state = previous
+
+    def test_legacy_registry_recovery_uses_truth_but_never_machine_candidates(self):
+        previous = server.state
+        server.state = {
+            "labels": ["pallet"],
+            "truth": {"0": [{"label": "floor", "points": [[0, 0], [2, 0], [2, 2]]}]},
+            "truths_by_topic": {"camera1": {
+                "1": [{"label": "slope", "points": [[0, 0], [3, 0], [3, 3]]}]}},
+            "file_sessions": {"other": {"truth": {
+                "2": [{"label": "person", "points": [[0, 0], [4, 0], [4, 4]]}]}}},
+            "candidates": {"0": [{"label": "machine_only_new_class",
+                                    "points": [[0, 0], [5, 0], [5, 5]]}]},
+            "auto_labels": ["pallet", "machine_only_new_class"],
+        }
+        try:
+            labels = server.reconcile_project_labels_with_truth()
+            self.assertEqual(labels, ["pallet", "floor", "slope", "person"])
+            self.assertNotIn("machine_only_new_class", labels)
+            self.assertEqual(server.state["auto_labels"], ["pallet"])
+        finally:
+            server.state = previous
+
     def test_separate_class_batch_preserves_other_class_candidates(self):
         existing = [{"label": "pallet", "points": [[0, 0], [2, 0], [2, 2]]},
                     {"label": "floor", "points": [[0, 0], [3, 0], [3, 3]]}]

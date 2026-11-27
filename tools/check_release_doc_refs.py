@@ -14,8 +14,10 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DOCUMENTS = (
     "README.md",
     "docs/ARCHITECTURE.md",
+    "docs/CURRENT_RELEASE_AND_REPRODUCTION_20261127.md",
     "docs/LabelAgent_同事完整复现教程_20261123.md",
     "docs/REPRODUCIBLE_SETUP.md",
+    "docs/REFERENCES.md",
 )
 REPOSITORY_ROOTS = ("tools", "docs", "source", "tests", "artifacts")
 CHECKABLE_DIRECTORY_ROOTS = ("tools", "docs", "source", "tests")
@@ -48,6 +50,10 @@ class Reference:
 
 def normalize_reference(raw: str) -> str:
     value = raw.strip().strip("'\"").replace("\\", "/")
+    # PurePosixPath intentionally collapses repeated slashes, which would turn
+    # an HTTPS URL into ``https:/...`` and make it look like a missing file.
+    if re.match(r"^[A-Za-z][A-Za-z0-9+.-]*://", value):
+        return value
     while value.startswith("./"):
         value = value[2:]
     value = value.rstrip("/.,;:，。；：！？")
@@ -71,8 +77,8 @@ def _line_number(text: str, offset: int) -> int:
 
 
 def _candidate_references(text: str, document: str) -> Iterable[tuple[int, str, str]]:
+    del document  # Kept in the signature so callers can attach richer policy later.
     seen: set[tuple[int, str]] = set()
-
     for match in MARKDOWN_LINK_RE.finditer(text):
         raw = match.group(1).strip().split(maxsplit=1)[0]
         normalized = normalize_reference(raw)
@@ -108,15 +114,13 @@ def _candidate_references(text: str, document: str) -> Iterable[tuple[int, str, 
                 yield line, raw, normalized
 
 
-def audit_release_documents(
-    root: Path = ROOT,
-    documents: Iterable[str] = DEFAULT_DOCUMENTS,
-) -> dict:
+def audit_release_documents(root: Path = ROOT, documents: Iterable[str] = DEFAULT_DOCUMENTS) -> dict:
+    """Return an inspectable report without changing the checkout."""
     root = root.resolve()
     results: list[Reference] = []
     missing_documents: list[str] = []
-
-    for relative_document in documents:
+    document_list = list(documents)
+    for relative_document in document_list:
         document_path = root / relative_document
         if not document_path.is_file():
             missing_documents.append(relative_document)
@@ -129,21 +133,20 @@ def audit_release_documents(
         for line, raw, normalized in _candidate_references(text, relative_document):
             if normalized in external:
                 status = "external"
-                resolved = normalized
             else:
-                if not normalized.startswith(REPOSITORY_ROOTS):
-                    resolved_path = document_path.parent / normalized
-                else:
-                    resolved_path = root / normalized
-                resolved = normalized
+                resolved_path = (
+                    root / normalized
+                    if normalized.startswith(REPOSITORY_ROOTS)
+                    else document_path.parent / normalized
+                )
                 status = "present" if resolved_path.exists() else "missing"
-            results.append(Reference(relative_document, line, raw, resolved, status))
+            results.append(Reference(relative_document, line, raw, normalized, status))
 
     missing = [asdict(item) for item in results if item.status == "missing"]
     return {
         "schema_version": 1,
         "root": str(root),
-        "documents": list(documents),
+        "documents": document_list,
         "ready": not missing_documents and not missing,
         "missing_documents": missing_documents,
         "missing": missing,
@@ -153,9 +156,7 @@ def audit_release_documents(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Check repository-local paths referenced by release documentation"
-    )
+    parser = argparse.ArgumentParser(description="Check repository-local paths in release documents")
     parser.add_argument("--root", type=Path, default=ROOT)
     parser.add_argument("--json", action="store_true", dest="as_json")
     args = parser.parse_args()
@@ -165,12 +166,7 @@ def main() -> int:
     else:
         for item in report["missing"]:
             print(f"[MISSING] {item['document']}:{item['line']} -> {item['path']}")
-        for item in report["external"]:
-            print(f"[EXTERNAL] {item['document']}:{item['line']} -> {item['path']}")
-        print(
-            f"checked={len(report['checked'])} external={len(report['external'])} "
-            f"missing={len(report['missing'])}"
-        )
+        print(f"checked={len(report['checked'])} missing={len(report['missing'])}")
         print("READY" if report["ready"] else "NOT READY")
     return 0 if report["ready"] else 1
 

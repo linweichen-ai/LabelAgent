@@ -4,14 +4,13 @@
 
 ## 1. 获取同一份代码
 
-面向同事的交付入口固定为单提交的 `release` 分支。`labelagent` 是持续开发分支，
+面向同事的交付入口固定为精简的 `release` 分支。`labelagent` 是持续开发分支，
 `reproduce` 保留完整研发快照，历史 `codex/*` 与 `backup/*` 分支不作为交付入口：
 
 ```powershell
 git clone --branch release --single-branch https://github.com/linweichen-ai/LabelAgent.git
 cd LabelAgent
 git rev-parse HEAD
-git rev-list --count HEAD
 ```
 
 CNB 保持同提交的团队内部镜像，但当前需要组织权限和已配置的 CNB 凭证；未授权的新环境会返回“仓库不存在”。已获内部权限时可使用：
@@ -20,7 +19,7 @@ CNB 保持同提交的团队内部镜像，但当前需要组织权限和已配�
 git clone --branch release --single-branch https://cnb.cool/seer-robotics/EIC/BEV/LabelAgent
 ```
 
-不要把 CNB 内部镜像当作匿名公开下载入口。GitHub 与 CNB 的 `release` 提交号必须一致，且 `git rev-list --count HEAD` 应为 `1`。
+不要把 CNB 内部仓库当作匿名公开下载入口。GitHub 与 CNB 因平台专用说明而采用独立提交历史；复现时应记录所用平台、分支和 `git rev-parse HEAD`，并由文档引用检查与测试结果确认内容完整。
 
 若团队提供了指定提交号，请使用 `git checkout <commit>` 固定版本，不要只记录“最新版”。
 

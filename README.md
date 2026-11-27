@@ -4,7 +4,7 @@
 
 ## 交付入口
 
-团队同事只使用 `release` 分支。该分支是单提交、精简后的正式交付版本；完整研发历史仍保留在 `labelagent` 与 `reproduce` 分支，不影响追溯。
+团队同事只使用 `release` 分支。该分支是精简后的正式交付版本；完整研发历史仍保留在 `labelagent` 与历史分支，不影响追溯。
 
 ```powershell
 git clone --branch release --single-branch https://cnb.cool/seer-robotics/EIC/BEV/LabelAgent
@@ -85,13 +85,16 @@ powershell -ExecutionPolicy Bypass -File tools\verify_checkout.ps1
 - [同事完整复现教程](docs/LabelAgent_同事完整复现教程_20261123.md)
 - [架构与数据边界](docs/ARCHITECTURE.md)
 - [可复现安装与验收](docs/REPRODUCIBLE_SETUP.md)
+- [当前交付与完整复现说明](docs/CURRENT_RELEASE_AND_REPRODUCTION_20261127.md)
+- [模型资产与运行原理](docs/MODEL_ASSETS_AND_RUNTIME.md)
+- [参考文献与上游依赖](docs/REFERENCES.md)
 - [图片、MCAP 与四路相机导入](docs/capture-comparison.md)
 - [本地 GPU 说明](docs/local-gpu.md)
 - [托盘组件证据复核](docs/PALLET_BOUNDARY_COMPONENT_WORKBENCH_ROUND752_20261123.md)
 
 ## 历史与发布关系
 
-- `release`：同事安装、演示和复现；单提交、精简树。
+- `release`：同事安装、演示和复现；精简、受测的交付树。
 - `reproduce`：完整可复现开发快照和详细过程证据。
 - `labelagent`：持续开发分支。
 - `main`：不作为当前交付入口。

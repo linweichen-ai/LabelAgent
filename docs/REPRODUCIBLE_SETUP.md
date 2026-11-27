@@ -4,11 +4,11 @@
 
 ## 1. 获取同一份代码
 
-GitHub 的对外复现入口固定为 `reproduce`。`labelagent` 是持续开发分支，历史
+GitHub 的对外复现入口固定为 `release`。`labelagent` 是持续开发分支，历史
 `codex/*` 与 `backup/*` 分支不作为复现入口：
 
 ```powershell
-git clone --branch reproduce --single-branch https://github.com/linweichen-ai/LabelAgent.git
+git clone --branch release --single-branch https://github.com/linweichen-ai/LabelAgent.git
 cd LabelAgent
 git rev-parse HEAD
 ```
@@ -16,7 +16,7 @@ git rev-parse HEAD
 CNB 保持同提交的团队内部镜像，但当前需要组织权限和已配置的 CNB 凭证；未授权的新环境会返回“仓库不存在”。已获内部权限时可使用：
 
 ```powershell
-git clone --branch reproduce --single-branch https://cnb.cool/seer-robotics/EIC/BEV/LabelAgent
+git clone --branch release --single-branch https://cnb.cool/seer-robotics/EIC/BEV/LabelAgent
 ```
 
 不要把 CNB 内部镜像当作匿名公开下载入口。GitHub 与 CNB 分支提交号必须一致，但外部复现以 GitHub 为准。

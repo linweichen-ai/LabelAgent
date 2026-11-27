@@ -85,7 +85,7 @@ Agent 校验并执行受控局部修改
 在 PowerShell 中执行：
 
 ```powershell
-git clone --branch reproduce --single-branch https://cnb.cool/seer-robotics/EIC/BEV/LabelAgent
+git clone --branch release --single-branch https://cnb.cool/seer-robotics/EIC/BEV/LabelAgent
 cd LabelAgent
 git rev-parse HEAD
 ```

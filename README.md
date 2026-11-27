@@ -19,23 +19,24 @@ powershell -ExecutionPolicy Bypass -File tools\connect_remote_workbench.ps1 `
 
 ## 独立复现路径
 
-**从 CNB 或 GitHub 复现时都只下载 `reproduce` 分支。** `labelagent` 是持续开发分支，其他
-`codex/*` 和 `backup/*` 分支仅保留历史记录，不作为复现入口。
+**从 CNB 或 GitHub 复现时都只下载 `release` 分支。** `release` 是经过精简和回读验收的交付入口；
+`linux` 用于 Linux 服务器部署；`labelagent` 保留完整研发记录。其他 `codex/*`、
+`backup/*` 和旧 `reproduce` 分支只用于历史追溯，不作为新的复现入口。
 
 没有可用服务器、需要在独立 Windows + NVIDIA GPU 机器复现时，可执行：
 
 ```powershell
-git clone --branch reproduce --single-branch https://cnb.cool/seer-robotics/EIC/BEV/LabelAgent
+git clone --branch release --single-branch https://cnb.cool/seer-robotics/EIC/BEV/LabelAgent
 cd LabelAgent
 powershell -ExecutionPolicy Bypass -File tools\setup_windows.ps1
 # 将获得授权的 sam3.pt 放入 source\sam3\weights\
 powershell -ExecutionPolicy Bypass -File tools\start_local.ps1
 ```
 
-若使用 GitHub，复现入口同样为 `reproduce`：
+若使用 GitHub，复现入口同样为 `release`：
 
 ```powershell
-git clone --branch reproduce --single-branch https://github.com/linweichen-ai/LabelAgent.git
+git clone --branch release --single-branch https://github.com/linweichen-ai/LabelAgent.git
 ```
 
 随后打开 `http://127.0.0.1:8765`。环境、依赖、权重及服务可用性可由 `tools/repro_doctor.py` 读回检查；完整代码回归使用 `tools/verify_checkout.ps1`。详细步骤、VLM 配置边界、验收口径和最小复现记录见 [可复现安装与验收](docs/REPRODUCIBLE_SETUP.md)。模型权重、MCAP、人工真值、运行状态与密钥不随 Git 发布，也不会被启动脚本上传。
@@ -52,7 +53,7 @@ tools/start_linux.sh --sam-url http://SAM服务器地址:8766 --no-browser
 
 完整 GPU 安装时去掉 `--web-only`。完整安装、SSH 隧道、停止方式和故障排查见 [Linux 兼容版教程](docs/LINUX_SETUP.md)。浏览器必须访问 `http://127.0.0.1:8765/`，不要直接打开 `source/web/index.html` 的 `file://` 静态页面。
 
-首次交接给团队同事时，建议直接使用包含操作截图、安装清单、完整验收流程和常见故障处理的 [同事完整复现教程](docs/LabelAgent_同事完整复现教程_20261123.md)。
+首次交接给团队同事时，建议直接使用包含操作截图、安装清单、完整验收流程和常见故障处理的 [同事完整复现教程](docs/LabelAgent_同事完整复现教程_20261123.md)。当前稳定范围、分支职责、模型资产、后训练状态和清理恢复方式见 [当前交付与完整复现说明](docs/CURRENT_RELEASE_AND_REPRODUCTION_20261127.md)，相关论文与官方实现见 [参考文献与上游依赖](docs/REFERENCES.md)。
 
 无需模型权重、MCAP 或私有标注，也可用公开合成数据真实验证离线人工复核页的草稿导出、刷新恢复、篡改拦截和训练授权门禁。`tools/setup_windows.ps1` 已安装所需浏览器验收依赖，标准 `tools/verify_checkout.ps1` 会自动执行该真实浏览器自检；该过程只访问本机回环地址，不会产生人工真值或训练批准。
 

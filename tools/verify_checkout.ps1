@@ -23,6 +23,11 @@ if ($free -lt 512MB) {
     throw "At least 512 MiB free space is required for isolated regression tests: $TestTemp"
 }
 
+# Documentation is part of the release contract.  Fail before the long model
+# and browser suites when a tutorial points to a file that is not shipped.
+& $Python tools\check_release_doc_refs.py --json
+if ($LASTEXITCODE -ne 0) { throw "Release documentation reference check failed" }
+
 $doctorArgs = @("tools\repro_doctor.py")
 if ($RequireWeight) { $doctorArgs += "--require-weight" }
 if ($RequireCuda) { $doctorArgs += "--require-cuda" }

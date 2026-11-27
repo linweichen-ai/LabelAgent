@@ -35,6 +35,8 @@ tools/start_linux.sh --sam-url http://SAM服务器地址:8766 --no-browser
 
 完整 GPU 安装时去掉 `--web-only`。完整安装、SSH 隧道、停止方式和故障排查见 [Linux 兼容版教程](docs/LINUX_SETUP.md)。浏览器必须访问 `http://127.0.0.1:8765/`，不要直接打开 `source/web/index.html` 的 `file://` 静态页面。
 
+当前稳定范围、分支职责、模型资产、后训练状态和清理恢复方式见 [当前交付与完整复现说明](docs/CURRENT_RELEASE_AND_REPRODUCTION_20261127.md)；服务和数据边界见 [架构说明](docs/ARCHITECTURE.md)；相关论文与官方实现见 [参考文献与上游依赖](docs/REFERENCES.md)。
+
 首次交接给团队同事时，建议直接使用包含操作截图、安装清单、完整验收流程和常见故障处理的 [同事完整复现教程](docs/LabelAgent_同事完整复现教程_20261123.md)。
 
 无需模型权重、MCAP 或私有标注，也可用公开合成数据真实验证离线人工复核页的草稿导出、刷新恢复、篡改拦截和训练授权门禁。`tools/setup_windows.ps1` 已安装所需浏览器验收依赖，标准 `tools/verify_checkout.ps1` 会自动执行该真实浏览器自检；该过程只访问本机回环地址，不会产生人工真值或训练批准。
